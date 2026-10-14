@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.6**. Registration and private text chat are implemented behind explicit private configuration. The default server stays neutral. Media, CRM, diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
+Status: **development 0.7**. Registration, private text/photo chat, conversation galleries and an owner media library are implemented behind explicit private configuration. The default server stays neutral. CRM, diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
 
 ## Purpose
 

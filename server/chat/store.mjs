@@ -37,11 +37,22 @@ const activeClient = (user, now) => Boolean(user && user.role === "client" && us
   && user.age_assured_at !== null && timestamp(user.age_assured_at) <= now
   && user.access_approved_at !== null && timestamp(user.access_approved_at) <= now
   && (user.access_expires_at === null || timestamp(user.access_expires_at) > now));
-const messageProjection = "m.id, m.conversation_id, m.sequence_no, m.sender_id, m.sender_role, m.client_message_id, m.body_encrypted, m.body_fingerprint, m.created_at, m.deleted_at";
+const messageProjection = `m.id, m.conversation_id, m.sequence_no, m.sender_id, m.sender_role, m.client_message_id,
+  m.body_encrypted, m.body_fingerprint, m.created_at, m.deleted_at, mm.media_id AS linked_media_id,
+  ma.deleted_at AS media_deleted_at, ma.owner_id AS media_owner_id, ma.width AS media_width, ma.height AS media_height,
+  ma.thumbnail_width AS media_thumbnail_width, ma.thumbnail_height AS media_thumbnail_height,
+  ma.full_bytes AS media_full_bytes, ma.thumbnail_bytes AS media_thumbnail_bytes`;
+const messageJoins = `LEFT JOIN message_media mm ON mm.conversation_id = m.conversation_id AND mm.message_id = m.id
+  LEFT JOIN media_assets ma ON ma.id = mm.media_id`;
 const rawMessage = (row, actorId) => ({ id: row.id, conversationId: row.conversation_id, sequence: storedSequence(row.sequence_no),
   senderId: row.sender_id, senderRole: row.sender_role, clientMessageId: row.client_message_id,
   bodyEncrypted: row.body_encrypted, bodyFingerprint: row.body_fingerprint, createdAt: timestamp(row.created_at),
-  deletedAt: dateOrNull(row.deleted_at), isMine: row.sender_id.equals(actorId) });
+  deletedAt: dateOrNull(row.deleted_at), isMine: row.sender_id.equals(actorId),
+  media: row.deleted_at === null && row.linked_media_id && row.media_deleted_at === null && row.media_owner_id?.equals(row.sender_id) ? {
+    id: row.linked_media_id, width: Number(row.media_width), height: Number(row.media_height),
+    thumbnailWidth: Number(row.media_thumbnail_width), thumbnailHeight: Number(row.media_thumbnail_height),
+    fullBytes: Number(row.media_full_bytes), thumbnailBytes: Number(row.media_thumbnail_bytes),
+  } : null });
 
 const schemaColumns = {
   messages: { id: ["varbinary", false, 16], conversation_id: ["varbinary", false, 16], sequence_no: ["bigint", false], sender_id: ["varbinary", false, 16], sender_role: ["varchar", false, 8], client_message_id: ["varbinary", false, 16], body_encrypted: ["varchar", true, 22000], body_fingerprint: ["varbinary", false, 32], created_at: ["datetime", false], deleted_at: ["datetime", true] },
@@ -260,6 +271,29 @@ export function createChatStore(pool) {
   function validateRequest(request) { roleValue(request.role); bytes(request.tokenHash, 32); bytes(request.conversationId, 16); instant(request.now); }
 
   return Object.freeze({
+    // These callbacks are trusted server code. They reuse the complete live
+    // SQL authorization and transaction rather than accepting a claimed user.
+    async withActor({ role, tokenHash, now }, operation) {
+      roleValue(role); bytes(tokenHash, 32); instant(now); if (typeof operation !== "function") input();
+      return run(async (connection) => {
+        const actorId = await candidateActor(connection, tokenHash);
+        if (role === "client") {
+          const candidate = (await connection.query("SELECT id FROM conversations WHERE client_id = ? LIMIT 1", [actorId]))[0];
+          if (!candidate) fail("CHAT_FORBIDDEN");
+          return operation(connection, await authorize(connection, { role, tokenHash, conversationId: candidate.id, now }));
+        }
+        const admin = await lockUser(connection, actorId);
+        const mfa = await lockMfa(connection, admin, now);
+        await actorSession(connection, tokenHash, admin, role, mfa, now);
+        return operation(connection, { actor: admin, admin, now });
+      });
+    },
+
+    async withConversation(request, operation) {
+      validateRequest(request); if (typeof operation !== "function" || (request.send !== undefined && typeof request.send !== "boolean")) input();
+      return run(async (connection) => operation(connection, await authorize(connection, request)));
+    },
+
     async assertSchema() {
       return run(async (connection) => {
         const database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
@@ -360,7 +394,7 @@ export function createChatStore(pool) {
         const direction = after !== null ? "ASC" : "DESC";
         const comparison = before !== null ? "AND m.sequence_no < ?" : after !== null ? "AND m.sequence_no > ?" : "";
         const parameters = [conversationId, ...(before !== null ? [before] : after !== null ? [after] : []), limit + 1];
-        let rows = await connection.query(`SELECT ${messageProjection} FROM messages m WHERE m.conversation_id = ? ${comparison} ORDER BY m.sequence_no ${direction} LIMIT ?`, parameters);
+        let rows = await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? ${comparison} ORDER BY m.sequence_no ${direction} LIMIT ?`, parameters);
         rows = rows.slice(0, limit); if (direction === "DESC") rows.reverse();
         let hasMoreBefore = false, hasMoreAfter = false;
         if (rows.length) {
@@ -379,7 +413,7 @@ export function createChatStore(pool) {
       return run(async (connection) => {
         const context = await authorize(connection, { role, tokenHash, conversationId, now });
         const rows = await connection.query(`SELECT e.event_sequence, e.kind, e.occurred_at, ${messageProjection}
-          FROM chat_events e JOIN messages m ON m.conversation_id = e.conversation_id AND m.id = e.message_id
+          FROM chat_events e JOIN messages m ON m.conversation_id = e.conversation_id AND m.id = e.message_id ${messageJoins}
           WHERE e.conversation_id = ? AND e.event_sequence > ? ORDER BY e.event_sequence ASC LIMIT ?`, [conversationId, after, limit + 1]);
         const selected = rows.slice(0, limit);
         return { conversation: await summary(connection, context), events: selected.map((row) => ({ sequence: storedSequence(row.event_sequence),
@@ -390,13 +424,20 @@ export function createChatStore(pool) {
 
     async sendMessage({ role, tokenHash, conversationId, now, message }) {
       validateRequest({ role, tokenHash, conversationId, now }); bytes(message?.id, 16); bytes(message?.clientMessageId, 16); bytes(message?.bodyFingerprint, 32);
+      const mediaId = message.mediaId ?? null; if (mediaId !== null) bytes(mediaId, 16);
       if (typeof message?.bodyEncrypted !== "string" || message.bodyEncrypted.length < 1 || message.bodyEncrypted.length > 22000 || !/^[\x20-\x7e]+$/.test(message.bodyEncrypted)) input();
       return run(async (connection) => {
         const context = await authorize(connection, { role, tokenHash, conversationId, now, send: true });
-        const previous = (await connection.query(`SELECT ${messageProjection} FROM messages m WHERE m.conversation_id = ? AND m.sender_id = ? AND m.client_message_id = ? FOR UPDATE`, [conversationId, context.actor.id, message.clientMessageId]))[0];
+        const previous = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.sender_id = ? AND m.client_message_id = ? FOR UPDATE`, [conversationId, context.actor.id, message.clientMessageId]))[0];
         if (previous) {
-          if (!timingSafeEqual(previous.body_fingerprint, message.bodyFingerprint)) fail("CHAT_CONFLICT");
+          if (!timingSafeEqual(previous.body_fingerprint, message.bodyFingerprint)
+            || (mediaId === null ? previous.linked_media_id !== null : !previous.linked_media_id?.equals(mediaId))) fail("CHAT_CONFLICT");
           return { message: rawMessage(previous, context.actor.id), duplicate: true };
+        }
+        if (mediaId !== null) {
+          const asset = (await connection.query("SELECT id, owner_id, owner_role, created_at, deleted_at FROM media_assets WHERE id = ? FOR UPDATE", [mediaId]))[0];
+          if (!asset || !asset.owner_id.equals(context.actor.id) || asset.owner_role !== role || asset.deleted_at !== null) fail("CHAT_NOT_FOUND");
+          if (timestamp(asset.created_at) > now) fail("CHAT_FORBIDDEN");
         }
         const lastSequence = storedSequence((await connection.query("SELECT COALESCE(MAX(sequence_no), 0) AS value FROM messages WHERE conversation_id = ?", [conversationId]))[0].value);
         if (lastSequence === "18446744073709551615") state();
@@ -405,8 +446,9 @@ export function createChatStore(pool) {
         await connection.query(`INSERT INTO messages (id, conversation_id, sequence_no, sender_id, sender_role,
           client_message_id, body_encrypted, body_fingerprint, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [message.id, conversationId, nextSequence, context.actor.id, role, message.clientMessageId, message.bodyEncrypted, message.bodyFingerprint, sqlDate(now)]);
+        if (mediaId !== null) await connection.query("INSERT INTO message_media (message_id, conversation_id, media_id, created_at) VALUES (?, ?, ?, ?)", [message.id, conversationId, mediaId, sqlDate(now)]);
         await connection.query("INSERT INTO chat_events (conversation_id, event_sequence, message_id, kind, occurred_at) VALUES (?, ?, ?, 'message', ?)", [conversationId, eventSequence, message.id, sqlDate(now)]);
-        const row = (await connection.query(`SELECT ${messageProjection} FROM messages m WHERE m.conversation_id = ? AND m.id = ?`, [conversationId, message.id]))[0];
+        const row = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.id = ?`, [conversationId, message.id]))[0];
         return { message: rawMessage(row, context.actor.id), duplicate: false };
       });
     },
@@ -427,7 +469,7 @@ export function createChatStore(pool) {
       validateRequest({ role, tokenHash, conversationId, now }); bytes(messageId, 16);
       return run(async (connection) => {
         const context = await authorize(connection, { role, tokenHash, conversationId, now });
-        const row = (await connection.query(`SELECT ${messageProjection} FROM messages m WHERE m.conversation_id = ? AND m.id = ? FOR UPDATE`, [conversationId, messageId]))[0];
+        const row = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.id = ? FOR UPDATE`, [conversationId, messageId]))[0];
         if (!row || !row.sender_id.equals(context.actor.id)) fail("CHAT_NOT_FOUND");
         if (row.deleted_at !== null) return rawMessage(row, context.actor.id);
         if (timestamp(row.created_at) > now) fail("CHAT_FORBIDDEN");

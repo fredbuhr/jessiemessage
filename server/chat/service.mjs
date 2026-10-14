@@ -1,6 +1,7 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
 import { decryptMessageBody, encryptMessageBody, messageFingerprint, validateMessageBody } from "./crypto.mjs";
+import { mediaDTO } from "../media/dto.mjs";
 
 export class ChatError extends Error {
   constructor(code, retryAfter) {
@@ -63,10 +64,23 @@ export async function createChatService({ store, authStore, authService, accessS
   }
   function messageDTO(row, session) {
     const mine = row.senderId.equals(idBytes(session.user.id));
-    const body = row.deletedAt === null ? decryptMessageBody(row.bodyEncrypted, key, {
+    let body = row.deletedAt === null ? decryptMessageBody(row.bodyEncrypted, key, {
       messageId: row.id, conversationId: row.conversationId, senderId: row.senderId,
     }) : null;
+    let media;
+    if (row.deletedAt === null && row.media) {
+      const payload = JSON.parse(body);
+      if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.keys(payload).length !== 2
+        || !Object.hasOwn(payload, "mediaId") || !Object.hasOwn(payload, "caption")
+        || payload.mediaId !== row.media.id.toString("hex") || typeof payload.caption !== "string" || payload.caption.length > 1000) fail("CHAT_UNAVAILABLE");
+      if (payload.caption !== "") { try { validateMessageBody(payload.caption); } catch { fail("CHAT_UNAVAILABLE"); } }
+      body = payload.caption;
+      media = mediaDTO({ ...row.media, createdAt: row.createdAt, sharedHere: true }, session.user.role, {
+        conversationId: row.conversationId.toString("hex"), messageId: row.id.toString("hex"),
+      });
+    }
     return { id: row.id.toString("hex"), sequence: row.sequence, sender: mine ? "me" : "peer", body,
+      ...(media ? { media } : {}),
       createdAt: row.createdAt, deletedAt: row.deletedAt, clientMessageId: mine ? row.clientMessageId.toString("hex") : null };
   }
   async function mutationLimit(userId, kind, now) {
@@ -114,6 +128,21 @@ export async function createChatService({ store, authStore, authService, accessS
       const id = randomBytes(16), senderId = idBytes(session.user.id);
       const binding = { messageId: id, conversationId: request.conversationId, senderId };
       const result = await store.sendMessage({ ...request, message: { id, clientMessageId: clientId,
+        bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: messageFingerprint(body, key, binding) } });
+      return { message: messageDTO(result.message, session), duplicate: result.duplicate };
+    }),
+    sendImage: (role, token, conversationId, input) => guarded(async () => {
+      if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((name) => !["clientMessageId", "mediaId", "caption"].includes(name))) fail("CHAT_INPUT");
+      const { clientMessageId, mediaId, caption } = input;
+      const clientId = idBytes(clientMessageId), assetId = idBytes(mediaId);
+      if (typeof caption !== "string" || caption.length > 1000) fail("CHAT_INPUT");
+      if (caption !== "") validateMessageBody(caption);
+      const { session, request } = await context(role, token, conversationId);
+      await mutationLimit(session.user.id, "send", request.now);
+      const messageId = randomBytes(16), senderId = idBytes(session.user.id);
+      const body = JSON.stringify({ mediaId, caption });
+      const binding = { messageId, conversationId: request.conversationId, senderId };
+      const result = await store.sendMessage({ ...request, message: { id: messageId, clientMessageId: clientId, mediaId: assetId,
         bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: messageFingerprint(body, key, binding) } });
       return { message: messageDTO(result.message, session), duplicate: result.duplicate };
     }),
