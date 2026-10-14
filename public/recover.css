@@ -1,0 +1,4 @@
+@import url("/admin-login.css");
+.recovery-actions { display: grid; gap: 18px; margin-top: 20px; }
+.recovery-login { justify-self: center; color: #d8b999; font-size: 13px; line-height: 1.6; text-underline-offset: 3px; }
+.field-help.is-error { color: #ffb8cb; }

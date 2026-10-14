@@ -39,10 +39,10 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler } = {}) {
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler } = {}) {
   const server = createServer(async (request, response) => {
     const method = request.method ?? "GET";
-    for (const handler of [crmHandler, mediaHandler, chatHandler, accessHandler, authHandler]) {
+    for (const handler of [resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler]) {
       if (!handler) continue;
       try { if (await handler(request, response)) return; }
       catch {
@@ -98,11 +98,13 @@ export async function createConfiguredServer(env = process.env) {
   const { chatConfiguration } = await import("./chat/config.mjs");
   const { mediaConfiguration } = await import("./media/config.mjs");
   const { crmConfiguration } = await import("./crm/config.mjs");
+  const { clientRecoveryConfiguration } = await import("./reset/config.mjs");
   const config = authConfiguration(env);
   const accessConfig = accessConfiguration(env);
   const chatConfig = chatConfiguration(env);
   const mediaConfig = mediaConfiguration(env);
   const crmConfig = crmConfiguration(env);
+  const resetConfig = clientRecoveryConfiguration(env);
   if (!config.enabled) return { server: createAppServer(), pool: null };
   const { createRuntimePool } = await import("./db/runtime.mjs");
   const { createAuthStore } = await import("./auth/store.mjs");
@@ -128,6 +130,20 @@ export async function createConfiguredServer(env = process.env) {
     await mailStore.assertSchema();
     const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
       totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin });
+    let resetHandler;
+    let resetMailStore;
+    if (resetConfig.enabled) {
+      const { createResetStore } = await import("./reset/store.mjs");
+      const { createResetMailStore } = await import("./reset/mail-store.mjs");
+      const { createResetService } = await import("./reset/service.mjs");
+      const { createResetHandler } = await import("./reset/http.mjs");
+      const resetStore = createResetStore(pool);
+      resetMailStore = createResetMailStore(pool);
+      await resetStore.assertSchema();
+      await resetMailStore.assertSchema();
+      const resetService = await createResetService({ store: resetStore, authStore: store, mailKey: resetConfig.key });
+      resetHandler = createResetHandler(resetService, { origin: resetConfig.origin });
+    }
     let chatHandler;
     let mediaHandler;
     let crmHandler;
@@ -166,20 +182,26 @@ export async function createConfiguredServer(env = process.env) {
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler });
-    let worker;
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler });
+    const workers = [];
     let closing;
     const mailWorker = {
       close() {
-        if (!closing) closing = worker ? worker.close() : transport.close();
+        if (!closing) closing = (async () => {
+          await Promise.allSettled(workers.map((worker) => worker.close()));
+          await transport.close();
+        })();
         return closing;
       },
     };
     // Queue delivery starts only once the HTTP listener is available, and stops
     // before the application pool is closed during graceful shutdown.
     server.once("listening", () => {
-      if (!closing) worker = startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key,
-        onError: () => console.error("JessieMessage verification mail worker unavailable.") });
+      if (closing) return;
+      workers.push(startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key, closeTransport: false,
+        onError: () => console.error("JessieMessage verification mail worker unavailable.") }));
+      if (resetMailStore) workers.push(startMailWorker({ store: resetMailStore, transport, key: resetConfig.key, purpose: "password-reset", closeTransport: false,
+        onError: () => console.error("JessieMessage recovery mail worker unavailable.") }));
     });
     return { server, pool, mailWorker };
   } catch {

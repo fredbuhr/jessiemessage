@@ -4,7 +4,7 @@ import { tokenDigest } from "../auth/crypto.mjs";
 
 export class MailDeliveryError extends Error {
   constructor(code = "MAIL_DELIVERY_FAILED") {
-    super("Verification email delivery could not be confirmed.");
+    super("Private email delivery could not be confirmed.");
     this.name = "MailDeliveryError";
     this.code = code;
   }
@@ -59,6 +59,27 @@ export async function createVerificationTransport(config, { createTransport } = 
           messageId: `<verification-${jobId.toString("hex")}@${new URL(config.origin).hostname}>`,
           subject: "Confirmez votre adresse e-mail — JessieMessage",
           text: `Bonjour,\n\nPour confirmer votre adresse e-mail sur JessieMessage, ouvrez ce lien :\n${link}\n\nCe lien est personnel, temporaire et utilisable une seule fois. Si vous n'avez pas demandé cette inscription, ignorez ce message.\n\nJessieMessage`,
+        });
+        const accepted = Array.isArray(result?.accepted) && result.accepted.some((address) => {
+          try { return canonicalEmail(address) === email; } catch { return false; }
+        });
+        if (!accepted) throw new Error();
+        return true;
+      } catch { throw new MailDeliveryError(); }
+    },
+    async sendPasswordReset(input) {
+      if (closed) throw new MailDeliveryError();
+      validateMessage(input);
+      const { email, token, jobId } = input;
+      const link = `${config.origin}/recover#reset=${token}`;
+      try {
+        const result = await transport.sendMail({
+          from: config.smtp.from,
+          to: email,
+          envelope: { from: config.smtp.from, to: [email] },
+          messageId: `<password-reset-${jobId.toString("hex")}@${new URL(config.origin).hostname}>`,
+          subject: "Réinitialisez votre mot de passe — JessieMessage",
+          text: `Bonjour,\n\nPour choisir un nouveau mot de passe JessieMessage, ouvrez ce lien :\n${link}\n\nCe lien est personnel, valable 30 minutes et utilisable une seule fois. Si vous n'avez pas demandé cette réinitialisation, ignorez ce message. Votre mot de passe reste inchangé tant que vous n'en avez pas choisi un nouveau.\n\nJessieMessage`,
         });
         const accepted = Array.isArray(result?.accepted) && result.accepted.some((address) => {
           try { return canonicalEmail(address) === email; } catch { return false; }
