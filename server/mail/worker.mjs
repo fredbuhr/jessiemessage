@@ -1,16 +1,19 @@
 import { openVerificationPayload } from "./crypto.mjs";
+import { openResetPayload } from "../reset/mail-crypto.mjs";
 
 export class MailWorkerError extends Error {
   constructor() {
-    super("Verification email worker could not complete its batch.");
+    super("Private email worker could not complete its batch.");
     this.name = "MailWorkerError";
     this.code = "MAIL_WORKER_FAILED";
   }
 }
 
-export async function runMailBatch({ store, transport, key, clock = Date.now, batchSize = 5 }) {
+export async function runMailBatch({ store, transport, key, clock = Date.now, batchSize = 5, purpose = "verification" }) {
   if (!Buffer.isBuffer(key) || key.length !== 32 || !Number.isInteger(batchSize) || batchSize < 1 || batchSize > 20
-    || typeof clock !== "function") throw new MailWorkerError();
+    || typeof clock !== "function" || !["verification", "password-reset"].includes(purpose)) throw new MailWorkerError();
+  const openPayload = purpose === "password-reset" ? openResetPayload : openVerificationPayload;
+  const deliveryMethod = purpose === "password-reset" ? "sendPasswordReset" : "sendVerification";
   let sent = 0;
   let failed = 0;
   try {
@@ -19,7 +22,7 @@ export async function runMailBatch({ store, transport, key, clock = Date.now, ba
       if (!job) break;
       let payload;
       try {
-        payload = openVerificationPayload(job.payloadEncrypted, key, job.id);
+        payload = openPayload(job.payloadEncrypted, key, job.id);
         if (payload.email !== job.recipientEmail) throw new Error();
       } catch {
         await store.markFailed(job.id, job.leaseToken, { now: clock(), code: "PAYLOAD_INVALID", permanent: true });
@@ -27,7 +30,7 @@ export async function runMailBatch({ store, transport, key, clock = Date.now, ba
         continue;
       }
       try {
-        if (await transport.sendVerification({ ...payload, jobId: job.id }) !== true) throw new Error();
+        if (await transport[deliveryMethod]({ ...payload, jobId: job.id }) !== true) throw new Error();
       } catch {
         await store.markFailed(job.id, job.leaseToken, { now: clock(), code: "MAIL_DELIVERY_FAILED" });
         failed += 1;
@@ -45,7 +48,10 @@ export async function runMailBatch({ store, transport, key, clock = Date.now, ba
 
 export function startMailWorker(options) {
   const intervalMilliseconds = options.intervalMilliseconds ?? 15000;
-  if (!Number.isInteger(intervalMilliseconds) || intervalMilliseconds < 1000 || intervalMilliseconds > 300000) throw new MailWorkerError();
+  const closeTransport = options.closeTransport === undefined ? true : options.closeTransport;
+  const purpose = options.purpose === undefined ? "verification" : options.purpose;
+  if (!Number.isInteger(intervalMilliseconds) || intervalMilliseconds < 1000 || intervalMilliseconds > 300000
+    || typeof closeTransport !== "boolean" || !["verification", "password-reset"].includes(purpose)) throw new MailWorkerError();
   let closed = false;
   let active = null;
   let timer = null;
@@ -72,7 +78,9 @@ export function startMailWorker(options) {
       if (timer) clearTimeout(timer);
       closing = (async () => {
         if (active) await active;
-        try { await options.transport.close(); } catch { throw new MailWorkerError(); }
+        if (closeTransport) {
+          try { await options.transport.close(); } catch { throw new MailWorkerError(); }
+        }
       })();
       return closing;
     },

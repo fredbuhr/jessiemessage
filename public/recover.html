@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#100d12" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" />
+    <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="/recover.css" />
+    <link rel="stylesheet" href="/brand/brand.css" />
+    <title>JessieMessage — Retrouver ton accès</title>
+    <script type="module" src="/recover.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
+        <span class="private-label">ESPACE PRIVÉ</span>
+      </header>
+      <main class="access-main">
+        <section class="access-card" aria-labelledby="recovery-title">
+          <div class="eyebrow">TON ACCÈS PRIVÉ</div>
+          <h1 id="recovery-title">Retrouver ton accès.</h1>
+          <p id="recovery-intro" class="intro">Demande un lien par e-mail pour choisir un nouveau mot de passe.</p>
+          <p id="recovery-status" class="status" role="status" aria-live="polite">Vérification de la disponibilité…</p>
+          <form id="recovery-request-form" hidden>
+            <div class="field"><label for="recovery-email">Adresse e-mail</label><input id="recovery-email" type="email" autocomplete="email" maxlength="254" required /></div>
+            <button class="button button-primary" type="submit">Recevoir un lien</button>
+          </form>
+          <form id="recovery-reset-form" hidden>
+            <div class="field"><label for="recovery-password">Nouveau mot de passe</label><input id="recovery-password" type="password" autocomplete="new-password" minlength="14" maxlength="128" aria-describedby="recovery-password-help" required /><p id="recovery-password-help" class="field-help">Entre 14 et 128 caractères. Les espaces et les accents sont conservés.</p></div>
+            <div class="field"><label for="recovery-confirmation">Confirmer le nouveau mot de passe</label><input id="recovery-confirmation" type="password" autocomplete="new-password" minlength="14" maxlength="128" aria-describedby="recovery-confirmation-help" required /><p id="recovery-confirmation-help" class="field-help">Saisis exactement le même mot de passe.</p></div>
+            <button class="button button-primary" type="submit">Enregistrer mon mot de passe</button>
+          </form>
+          <div class="recovery-actions">
+            <button id="recovery-new-request" class="button button-secondary" type="button" hidden>Demander un nouveau lien</button>
+            <a class="recovery-login" href="/access">Revenir à la connexion</a>
+          </div>
+          <noscript><p class="status">Active JavaScript pour demander ou utiliser un lien de récupération.</p></noscript>
+        </section>
+      </main>
+      <footer class="footer">JessieMessage · Accès privé sur invitation</footer>
+    </div>
+  </body>
+</html>

@@ -12,6 +12,8 @@ let csrf = null;
 let busy = false;
 let generation = 0;
 let expiryTimer = null;
+let recoveryEnabled = null;
+let recoveryCapabilityPending = false;
 const controllers = new Set();
 
 // Tokens travel in URL fragments, never query strings, storage or page markup.
@@ -37,12 +39,14 @@ function signedOut(message = "") {
   element("access-title").textContent = invitationToken ? "Ton invitation." : "Bienvenue.";
   loginForm.reset(); element("client-name").textContent = "";
   notice(message);
+  updateRecoveryLink();
 }
 function signedIn(session) {
   invalidate(); csrf = session.csrf; loginForm.reset(); registrationForm.reset();
   element("client-chat-link").hidden = true;
   element("client-chat-note").textContent = "La messagerie sera disponible quand ton accès sera validé et le service activé.";
   loginForm.hidden = true; registrationForm.hidden = true; connected.hidden = false;
+  updateRecoveryLink();
   verificationSection.hidden = !verificationToken;
   element("access-title").textContent = "Ton espace privé.";
   element("client-name").textContent = session.user.pseudonym;
@@ -56,6 +60,22 @@ function signedIn(session) {
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(() => signedOut("Ta session a expiré. Reconnecte-toi pour continuer."), Math.max(0, session.expiresAt - Date.now()));
   if (session.user.role === "client" && access.state === "active") void loadChatAccess();
+}
+function updateRecoveryLink() {
+  element("client-recovery-link").hidden = recoveryEnabled !== true || loginForm.hidden;
+  if (!loginForm.hidden && recoveryEnabled === null && !recoveryCapabilityPending) void loadRecoveryCapability();
+}
+async function loadRecoveryCapability() {
+  recoveryCapabilityPending = true;
+  try {
+    const capability = await request("/api/access/recovery/capabilities");
+    recoveryEnabled = capability.enabled === true;
+  } catch (error) {
+    if (!error.stale) recoveryEnabled = false;
+  } finally {
+    recoveryCapabilityPending = false;
+    updateRecoveryLink();
+  }
 }
 async function loadChatAccess() {
   const ticket = generation;

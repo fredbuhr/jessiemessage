@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.8**. Registration, private text/photo chat, conversation galleries, an owner media library and private administrator client files are implemented behind explicit private configuration. The [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) passes; browser/device acceptance and external access integrations remain pending. The default server stays neutral. Diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
+Status: **development 0.9**. Registration, private text/photo chat, galleries, administrator CRM and opt-in client password recovery are implemented behind explicit private configuration. The earlier [CRM 0.8 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) passed; recovery 0.9 CI is pending. Real SMTP, browser/device acceptance and external access integrations remain pending. The default server stays neutral. Diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
 
 ## Purpose
 
@@ -30,6 +30,8 @@ An invitation-only private messaging application between Jessie (creator/admin) 
 - Web Push notifications opt-in, neutral text on lock screen; iOS instructions if installation is required.
 - Account preferences, data download and deletion requests.
 - No payment on the site.
+- Optional password recovery by email for an email-verified pending or active client. The request confirms neither account existence nor eligibility. A reset link expires after 30 minutes and is usable once; opening it changes nothing.
+- After an explicit successful reset, all client sessions are revoked and the client signs in again. An expired access period is not renewed; verification, age assurance, administrator approval and account status are unchanged. Suspended, revoked/deleted accounts and administrators cannot recover through this client flow. See [client recovery](client-recovery.md).
 
 ## Admin experience
 

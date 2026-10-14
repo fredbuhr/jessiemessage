@@ -20,7 +20,7 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host), "integration tests require loopback");
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "runtime DML credentials must be separately provisioned");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 20);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 22);
   const ownedTables = migrations.map((migration) => {
     const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
     assert.ok(match, "cleanup only accepts reviewed single-table migrations"); return match[1];
@@ -68,9 +68,9 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
 
     await t.test("all twenty migrations and read-only schema verification reject dirty ledgers and column, key, FK and CHECK drift", async () => {
       assert.equal(await crm.assertSchema(), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 20");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 22");
       try { await assert.rejects(crm.assertSchema(), code("CHAT_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 20"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 22"); }
       await connection.query("ALTER TABLE crm_profiles MODIFY notes_revision INT NOT NULL");
       try { await assert.rejects(crm.assertSchema(), code("CRM_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE crm_profiles MODIFY notes_revision INT UNSIGNED NOT NULL"); }
