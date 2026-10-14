@@ -167,18 +167,30 @@ export function createAuthStore(pool) {
       bytes(tokenHash, 32); instant(now);
       if (!Number.isSafeInteger(idleSeconds) || idleSeconds < 1 || idleSeconds > 86400) invalid();
       return withConnection(async (connection) => {
-        const row = (await connection.query(`SELECT s.id, s.user_id, s.expires_at, s.revoked_at,
-          u.role, u.status, u.pseudonym, a.last_seen_at, a.mfa_version, m.version, m.enabled_at
-          FROM sessions s JOIN users u ON u.id = s.user_id
-          JOIN auth_session_state a ON a.session_id = s.id JOIN admin_mfa m ON m.user_id = u.id
-          WHERE s.token_hash = ? FOR UPDATE`, [tokenHash]))[0];
-        if (!row || row.role !== "admin" || row.status !== "active" || row.revoked_at !== null
-          || row.enabled_at === null || Number(row.mfa_version) !== Number(row.version)) return null;
+        // A nonlocking candidate lookup must not take a session lock before
+        // the account. Login, recovery and administrator mutations all lock
+        // users -> admin_mfa -> sessions; keep readers on that same order.
+        const candidate = (await connection.query("SELECT user_id FROM sessions WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
+        if (!candidate) return null;
+        const user = (await connection.query("SELECT role, status, pseudonym FROM users WHERE id = ? FOR UPDATE", [candidate.user_id]))[0];
+        if (!user || user.role !== "admin" || user.status !== "active") return null;
+        const mfa = (await connection.query("SELECT version, enabled_at FROM admin_mfa WHERE user_id = ? FOR UPDATE", [candidate.user_id]))[0];
+        if (!mfa || mfa.enabled_at === null) return null;
+        const enrolledAt = fromSqlDate(mfa.enabled_at);
+        if (enrolledAt > now) return null;
+        const row = (await connection.query(`SELECT s.id, s.user_id, s.created_at, s.expires_at, s.revoked_at,
+          a.last_seen_at, a.mfa_verified_at, a.mfa_version FROM sessions s
+          JOIN auth_session_state a ON a.session_id = s.id
+          WHERE s.token_hash = ? AND s.user_id = ? FOR UPDATE`, [tokenHash, candidate.user_id]))[0];
+        if (!row || row.revoked_at !== null || Number(row.mfa_version) !== Number(mfa.version)) return null;
+        const createdAt = fromSqlDate(row.created_at);
         const expiresAt = fromSqlDate(row.expires_at);
         const lastSeen = fromSqlDate(row.last_seen_at);
-        if (now >= expiresAt || now >= lastSeen + idleSeconds * 1000 || now < lastSeen) return null;
+        const verifiedAt = fromSqlDate(row.mfa_verified_at);
+        if (createdAt > now || verifiedAt < createdAt || verifiedAt < enrolledAt || verifiedAt > lastSeen
+          || now >= expiresAt || now >= lastSeen + idleSeconds * 1000 || now < lastSeen) return null;
         if (now - lastSeen >= 60000) await connection.query("UPDATE auth_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now), row.id]);
-        return { id: row.id, userId: row.user_id, role: row.role, pseudonym: row.pseudonym, expiresAt, mfaVersion: Number(row.mfa_version) };
+        return { id: row.id, userId: row.user_id, role: user.role, pseudonym: user.pseudonym, expiresAt, mfaVersion: Number(row.mfa_version) };
       }, true);
     },
 

@@ -11,6 +11,24 @@ const logoutAllButton = document.getElementById("logout-all-button");
 let csrf = null;
 let expiryTimer = null;
 let busy = false;
+let generation = 0;
+const controllers = new Set();
+const accessTools = document.getElementById("access-tools");
+
+function invalidate() {
+  generation += 1;
+  for (const controller of controllers) controller.abort();
+  controllers.clear();
+}
+
+function clearAccess() {
+  accessTools.hidden = true;
+  document.body.classList.remove("has-access");
+  document.getElementById("new-invitation").hidden = true;
+  document.getElementById("invitation-link").value = "";
+  document.getElementById("invitations-list").replaceChildren();
+  document.getElementById("clients-list").replaceChildren();
+}
 
 function notice(message, error = false) {
   status.textContent = message;
@@ -18,6 +36,8 @@ function notice(message, error = false) {
 }
 
 function signedOut(message = "") {
+  invalidate();
+  clearAccess();
   csrf = null;
   clearTimeout(expiryTimer);
   expiryTimer = null;
@@ -31,6 +51,8 @@ function signedOut(message = "") {
 }
 
 function signedIn(session) {
+  invalidate();
+  clearAccess();
   csrf = session.csrf;
   form.reset();
   form.hidden = true;
@@ -42,6 +64,7 @@ function signedIn(session) {
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(() => signedOut("Ta session a expiré. Reconnecte-toi pour continuer."), Math.max(0, session.expiresAt - Date.now()));
   if (location.pathname === "/admin/login") history.replaceState(null, "", "/admin");
+  void loadAccess();
 }
 
 function setBusy(value) {
@@ -50,6 +73,7 @@ function setBusy(value) {
   logoutButton.disabled = value;
   logoutAllButton.disabled = value;
   form.setAttribute("aria-busy", String(value));
+  for (const button of accessTools.querySelectorAll("button")) button.disabled = value || button.dataset.unavailable === "true";
 }
 
 async function request(path, { body, mutation = false, login = false } = {}) {
@@ -60,6 +84,8 @@ async function request(path, { body, mutation = false, login = false } = {}) {
     else headers["X-CSRF-Token"] = csrf ?? "";
   }
   const controller = new AbortController();
+  controllers.add(controller);
+  const ticket = generation;
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
     const response = await fetch(path, {
@@ -71,9 +97,13 @@ async function request(path, { body, mutation = false, login = false } = {}) {
       signal: controller.signal,
     });
     const data = await response.json();
+    if (ticket !== generation) throw Object.assign(new Error("stale_response"), { stale: true });
     if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error });
     return data;
-  } finally { clearTimeout(timeout); }
+  } catch (error) {
+    if (ticket !== generation) throw Object.assign(new Error("stale_response"), { stale: true });
+    throw error;
+  } finally { clearTimeout(timeout); controllers.delete(controller); }
 }
 
 function errorMessage(error, login = false) {
@@ -81,6 +111,7 @@ function errorMessage(error, login = false) {
   if (error.status === 429) return "Trop de tentatives. Patiente un moment avant de réessayer.";
   if (error.status === 403) return "La demande a été refusée. Recharge la page puis réessaie.";
   if (error.status === 400) return "Vérifie l’adresse e-mail, le mot de passe et le code de sécurité.";
+  if (error.status === 409) return "La vérification de l’e-mail et de la majorité est nécessaire avant l’approbation.";
   return "La connexion est indisponible pour le moment. Réessaie dans quelques instants.";
 }
 
@@ -101,6 +132,7 @@ form.addEventListener("submit", async (event) => {
     });
     signedIn(session);
   } catch (error) {
+    if (error.stale) return;
     document.getElementById("factor").value = "";
     document.getElementById("password").value = "";
     notice(errorMessage(error, true), true);
@@ -115,6 +147,7 @@ async function logout(all) {
     signedOut(all ? "Toutes tes sessions sont déconnectées." : "Tu es déconnectée.");
     history.replaceState(null, "", "/admin/login");
   } catch (error) {
+    if (error.stale) return;
     if (error.status === 401) signedOut(errorMessage(error));
     else notice(errorMessage(error), true);
   } finally { setBusy(false); }
@@ -126,6 +159,7 @@ async function refreshSession() {
   if (busy) return;
   try { signedIn(await request("/api/auth/session")); }
   catch (error) {
+    if (error.stale) return;
     if (error.status === 401) signedOut();
     else { signedOut(); notice(errorMessage(error), true); }
   }
@@ -135,3 +169,97 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("pageshow", (event) => { if (event.persisted) void refreshSession(); });
 void refreshSession();
+
+function dateText(value) { return new Date(value).toLocaleString("fr-FR"); }
+function item(titleText, lines) {
+  const card = document.createElement("article"); card.className = "access-item";
+  const heading = document.createElement("h3"); heading.textContent = titleText; card.append(heading);
+  for (const line of lines) { const paragraph = document.createElement("p"); paragraph.textContent = line; card.append(paragraph); }
+  return card;
+}
+function emptyList(container, message) {
+  const paragraph = document.createElement("p"); paragraph.className = "empty-list"; paragraph.textContent = message; container.append(paragraph);
+}
+function actionButton(card, label, action, disabled = false) {
+  const button = document.createElement("button"); button.type = "button"; button.className = "button button-secondary"; button.textContent = label;
+  button.disabled = disabled || busy;
+  button.dataset.unavailable = String(disabled);
+  button.addEventListener("click", () => { void accessAction(action); }); card.append(button);
+}
+function paintInvitations(invitations) {
+  const container = document.getElementById("invitations-list"); container.replaceChildren();
+  if (!invitations.length) emptyList(container, "Aucune invitation créée.");
+  const states = { pending: "Disponible", used: "Utilisée", expired: "Expirée", revoked: "Révoquée" };
+  for (const invitation of invitations) {
+    const card = item(`Invitation · ${states[invitation.state]}`, [`Créée le ${dateText(invitation.createdAt)} · valable jusqu’au ${dateText(invitation.expiresAt)}`, invitation.accessDays === null ? "Accès sans limite de durée après validation." : `Accès de ${invitation.accessDays} jours après validation.`]);
+    if (invitation.state === "pending") actionButton(card, "Révoquer le lien", async () => {
+      await request(`/api/admin/invitations/${invitation.id}/revoke`, { mutation: true });
+      document.getElementById("new-invitation").hidden = true; document.getElementById("invitation-link").value = "";
+      await refreshAccessLists(); notice("L’invitation est révoquée.");
+    });
+    container.append(card);
+  }
+}
+function paintClients(clients) {
+  const container = document.getElementById("clients-list"); container.replaceChildren();
+  if (!clients.length) emptyList(container, "Aucun compte client inscrit.");
+  const states = { pending: "En attente", active: "Actif", suspended: "Suspendu", revoked: "Révoqué", deleted: "Supprimé" };
+  for (const client of clients) {
+    const card = item(client.pseudonym, [client.email, `État : ${states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"} · Majorité : ${client.ageAssured ? "vérifiée" : "en attente"}`, client.accessExpiresAt === null ? "Aucune date de fin d’accès." : `Fin d’accès : ${dateText(client.accessExpiresAt)}`]);
+    if (client.status === "pending") actionButton(card, "Approuver l’accès", async () => {
+      await request(`/api/admin/clients/${client.id}/approve`, { mutation: true }); await refreshAccessLists(); notice("L’accès client est approuvé.");
+    }, !client.emailVerified || !client.ageAssured);
+    if (["pending", "active", "suspended"].includes(client.status)) actionButton(card, "Révoquer l’accès", async () => {
+      await request(`/api/admin/clients/${client.id}/revoke`, { mutation: true }); await refreshAccessLists(); notice("L’accès client est révoqué.");
+    });
+    container.append(card);
+  }
+}
+async function refreshAccessLists() {
+  const ticket = generation;
+  const [invitations, clients] = await Promise.all([request("/api/admin/invitations"), request("/api/admin/clients")]);
+  if (ticket !== generation) throw Object.assign(new Error("stale_response"), { stale: true });
+  paintInvitations(invitations.invitations); paintClients(clients.clients);
+}
+async function loadAccess() {
+  const ticket = generation;
+  try {
+    await request("/api/admin/access");
+    await refreshAccessLists();
+    if (ticket !== generation) return;
+    accessTools.hidden = false; document.body.classList.add("has-access");
+  } catch (error) {
+    if (error.stale) return;
+    if (error.status === 404) { clearAccess(); return; }
+    if (error.status === 401) signedOut(errorMessage(error));
+    else notice(errorMessage(error), true);
+  }
+}
+async function accessAction(action) {
+  if (busy) return; setBusy(true);
+  try { await action(); }
+  catch (error) {
+    if (error.stale) return;
+    if (error.status === 401) signedOut(errorMessage(error));
+    else notice(errorMessage(error), true);
+  } finally { setBusy(false); }
+}
+document.getElementById("invitation-unlimited").addEventListener("change", (event) => {
+  document.getElementById("invitation-days").disabled = event.target.checked;
+  document.getElementById("invitation-days").required = !event.target.checked;
+});
+document.getElementById("invitation-form").addEventListener("submit", (event) => {
+  event.preventDefault(); void accessAction(async () => {
+    const invitation = await request("/api/admin/invitations", { mutation: true, body: { lifetimeHours: Number(document.getElementById("invitation-hours").value), accessDays: document.getElementById("invitation-unlimited").checked ? null : Number(document.getElementById("invitation-days").value) } });
+    document.getElementById("invitation-link").value = invitation.url;
+    document.getElementById("new-invitation").hidden = false;
+    await refreshAccessLists(); notice("L’invitation est créée. Tu peux transmettre le lien au client.");
+  });
+});
+document.getElementById("copy-invitation").addEventListener("click", () => { void accessAction(async () => {
+  const ticket = generation;
+  const input = document.getElementById("invitation-link");
+  try { await navigator.clipboard.writeText(input.value); if (ticket === generation) notice("Le lien est copié."); }
+  catch { if (ticket !== generation) return; input.focus(); input.select(); notice("Sélectionne puis copie le lien affiché."); }
+}); });
+document.getElementById("refresh-access").addEventListener("click", () => { void accessAction(async () => { await refreshAccessLists(); notice("Les accès sont actualisés."); }); });

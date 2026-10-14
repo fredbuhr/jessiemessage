@@ -1,12 +1,12 @@
 # Technical architecture — draft
 
-## Current development: opt-in administrator authentication
+## Current development: opt-in administrator and invited client access
 
-A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. With explicit private configuration it adds administrator login, MFA and revocable MariaDB sessions. Client registration, chat and media routes remain pending.
+A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. Private flags enable administrator MFA and then invitations, registration, email verification and separate restricted client sessions. The mail worker starts with the listener and stops before the pool. An age declaration never opens access; independently recorded assurance and administrator approval are required. Provider integration, chat and media routes remain pending.
 
 The initial code is **not** a production chat service.
 
-Eight migrations provide the original users/invitations/sessions/conversations tables plus MFA, recovery codes, session state and anti-abuse counters. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns and keys before enabling authentication. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI covers disposable MariaDB 10.11 and 11.4, including a real authentication flow. See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
+Twelve migrations provide those foundation and administrator tables plus client authentication, email verification, client session state and an encrypted mail outbox. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns and keys before enabling authentication. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI covers disposable MariaDB 10.11 and 11.4, including a real authentication flow. See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
 
 ## Planned application
 
@@ -28,6 +28,7 @@ Eight migrations provide the original users/invitations/sessions/conversations t
 - `age_assurance`: minimal necessary verification status/reference without ID copies.
 - `sessions`: revocable, secure browser sessions.
 - `admin_mfa`, `admin_recovery_codes`, `auth_session_state`, `auth_rate_limits`: implemented administrator authentication state.
+- `client_auth_state`, `email_verifications`, `client_session_state`, `mail_outbox`: implemented client onboarding, restricted sessions and encrypted mail jobs.
 - `conversations`: only a client and a permitted creator/admin.
 - `messages`: sender, recipient conversation, kind, timestamps and deletion state.
 - `media_assets`: content digest, storage handle, dimensions, MIME, owner.
@@ -54,8 +55,8 @@ Subject to data minimization, retention and legal review before schema stabiliza
 
 1. Freeze key architecture and privacy assumptions.
 2. Schema migrations + test database (all synthetic data).
-3. Administrator authentication implemented; complete recovery/rotation and add invitations.
-4. Email verification, age-assurance integration and account onboarding.
+3. Administrator authentication/recovery, invitations and client onboarding implemented; master-key rotation remains separate launch work.
+4. Configure/test real SMTP, connect independently verified age assurance, and finalize client password recovery and HTTPS acceptance.
 5. One-to-one text chat with strict per-conversation access checks.
 6. Private file upload, per-recipient media audit and retention controls.
 7. Tags, segments, bulk sends and tasks.

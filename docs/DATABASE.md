@@ -1,6 +1,6 @@
 # MariaDB foundation — development only
 
-Eight immutable migrations now supply the four original foundation tables plus administrator MFA, recovery codes, session state and persistent rate limits. The migration command remains explicit. Version 0.4 can separately enable MariaDB-backed administrator authentication and its one-time private setup CLI; see [administrator configuration](auth-admin.md). No default administrator, active invitation links, client signup or private messages/media are supplied. All fixtures are synthetic and use `example.invalid` addresses.
+Twelve immutable migrations now supply the foundation/administrator tables plus client state, email verification, client sessions and encrypted mail jobs. The migration command remains explicit. Version 0.5 separately enables administrator authentication/recovery and [invited client onboarding](invitations-client-access.md). No default credentials, age-assurance provider, private messages or media are supplied. SMTP and access features require explicit configuration. All fixtures are synthetic and use `example.invalid` addresses.
 
 ## Dedicated database and compatibility
 
@@ -8,7 +8,7 @@ Provision a new **empty database reserved for JessieMessage** in the hosting con
 
 The runner requires MariaDB 10.11 or later. CI exercises disposable MariaDB 10.11 and 11.4. Infomaniak's actual database engine/version, TLS certificate chain, available grants and `GET_LOCK` capability for this account **have not been verified**. Verify them in the Manager and on a disposable dedicated schema before any hosting integration. MySQL is explicitly refused. This batch does not deploy or migrate production.
 
-The pinned `mariadb` connector is used by the dedicated migration connection and, only when authentication is enabled, the bounded application pool. Pinned `otpauth` provides TOTP; passwords use Node's native scrypt. The default neutral HTTP server opens no database connection.
+The pinned `mariadb` connector is used by the dedicated migration connection and, only when authentication is enabled, the bounded application pool. Pinned `otpauth` provides TOTP; pinned `nodemailer` provides SMTP with mandatory TLS. Passwords use Node's native scrypt. The default neutral HTTP server opens no database connection.
 
 ## Configuration
 
@@ -48,14 +48,18 @@ node scripts/migrate.mjs up
 | `admin_recovery_codes` | Per-administrator recovery digests, MFA version and consumption timestamp. Application row locking makes consumption single-use. |
 | `auth_session_state` | Session linkage, last recognized activity, MFA confirmation and version. The service checks absolute and idle expiry plus current administrator status/version. |
 | `auth_rate_limits` | Exact bucket digest, start timestamp and positive attempt count; indexed bounded cleanup of old windows. |
+| `client_auth_state` | Client role, credential version and age declaration timestamp; declaration supplies no age assurance. |
+| `email_verifications` | Unique challenge digest, owner, expiry, single consumption and revocation. |
+| `client_session_state` | Client session activity and credential version. |
+| `mail_outbox` | Encrypted challenge linked to its intended owner, leased delivery, bounded attempts and terminal states. |
 
-The administrator service generates cryptographic IDs and opaque session tokens, stores SHA-256 token digests and uses fixed-parameter scrypt hashes. Cookie handling, administrator MFA, anti-replay transactions, session revocation and persistent anti-abuse limits are implemented in this development lot. Invitation redemption and client authentication remain pending. Password hashes stay nullable for pending accounts. Tokens, addresses and passwords must never appear in logs.
+The administrator service generates cryptographic IDs and opaque session tokens, stores SHA-256 token digests and uses fixed-parameter scrypt hashes. Cookie handling, administrator MFA, anti-replay transactions, session revocation and persistent anti-abuse limits are implemented in this development lot. Invitation redemption, pending-account registration and the encrypted verification job are atomic. Verified clients can sign in to a restricted account-status view; active access additionally requires the recorded age/approval gates. Password hashes stay nullable for pending accounts. Tokens, addresses and passwords must never appear in logs.
 
-Administrator setup and login currently validate ASCII email addresses and canonicalize them to lowercase. The future client service must apply a deliberate compatible policy before writing the unique value; binary comparison itself provides neither normalization nor mailbox equivalence. Pseudonyms are display values, not account identifiers.
+Administrator setup and login currently validate ASCII email addresses and canonicalize them to lowercase. Client registration applies the same canonical policy before writing the unique value; binary comparison itself provides neither normalization nor mailbox equivalence. Pseudonyms are display values, not account identifiers.
 
-Schema timestamps record gate completion; they do not prove lawful age assurance or administrator review. `access_days` is a proposed grant duration, not automatic access: a future activation transaction must calculate the actual account access expiry after all gates succeed. A static CHECK cannot enforce expiry as time passes. Every future client request must check expiry/revocation and current account status, access expiry and onboarding gates. Administrator requests already check session expiry/revocation, current active status and confirmed MFA version. Password recovery, MFA rotation and HTTPS browser acceptance remain launch work.
+Schema timestamps record gate completion; they do not prove lawful age assurance or administrator review. `access_days` is a proposed grant duration: the approval transaction computes expiry from approval time only after email and age-assurance gates succeed, then creates one conversation atomically. A static CHECK cannot enforce expiry as time passes. Every future client request must check expiry/revocation and current account status, access expiry and onboarding gates. Administrator requests already check session expiry/revocation, current active status and confirmed MFA version. Controlled administrator password/TOTP recovery is implemented in a private CLI. Client password recovery, master-key rotation and HTTPS browser acceptance remain launch work.
 
-Single-use redemption must use a transaction with row locking or a conditional consumed/revoked/expiry update and verify exactly one affected row. Account/conversation creation and consumption need to succeed together. The schema alone does not prevent a privileged writer from replacing a consumption record. There are no cascade deletes: retention, exports and account deletion need a separate reviewed policy.
+Registration locks the current issuer and invitation, creates the pending account, consumes the invitation and queues its encrypted challenge in one transaction. Approval separately locks the client, validates its gates and records access plus conversation together. The schema alone does not prevent a privileged writer from replacing a consumption record. There are no cascade deletes: retention, exports and account deletion need a separate reviewed policy.
 
 Messages, media, assurance-provider references, notes, tags, segments, bulk sends and Push subscriptions are intentionally deferred.
 

@@ -1,6 +1,6 @@
 {
   "name": "jessiemessage",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "Invite-only messaging PWA for Jessie (prototype, approved identity)",
@@ -10,15 +10,17 @@
   "scripts": {
     "start": "node server/index.mjs",
     "dev": "node --watch server/index.mjs",
-    "check": "node --check server/index.mjs && node --check public/app.js && node --check design/admin-tools.js && node --check design/admin-tools-ui.js && node --check design/dark-ui.js && node --check scripts/build-workbench.mjs && node --check server/db/connection.mjs && node --check server/db/migrations.mjs && node --check scripts/migrate.mjs && node --check server/auth/config.mjs && node --check server/auth/crypto.mjs && node --check server/auth/service.mjs && node --check server/auth/store.mjs && node --check server/auth/http.mjs && node --check server/db/runtime.mjs && node --check public/admin-login.js && node --check scripts/admin-bootstrap.mjs",
+    "check": "node --check server/index.mjs && node --check public/app.js && node --check design/admin-tools.js && node --check design/admin-tools-ui.js && node --check design/dark-ui.js && node --check scripts/build-workbench.mjs && node --check server/db/connection.mjs && node --check server/db/migrations.mjs && node --check scripts/migrate.mjs && node --check server/auth/config.mjs && node --check server/auth/crypto.mjs && node --check server/auth/service.mjs && node --check server/auth/store.mjs && node --check server/auth/http.mjs && node --check server/db/runtime.mjs && node --check public/admin-login.js && node --check scripts/admin-bootstrap.mjs && node --check server/auth/recovery-store.mjs && node --check scripts/admin-recover.mjs && node --check server/access/config.mjs && node --check server/access/service.mjs && node --check server/access/store.mjs && node --check server/access/http.mjs && node --check server/mail/config.mjs && node --check server/mail/crypto.mjs && node --check server/mail/store.mjs && node --check server/mail/transport.mjs && node --check server/mail/worker.mjs && node --check public/access.js",
     "build": "npm run check && node scripts/build-workbench.mjs",
     "test": "node --test tests/*.test.mjs",
     "db:migrate": "node scripts/migrate.mjs",
-    "test:db": "node --test tests/migrations.integration.test.mjs && node --test tests/auth-store.integration.test.mjs",
-    "admin:bootstrap": "node scripts/admin-bootstrap.mjs"
+    "test:db": "node --test tests/migrations.integration.test.mjs && node --test tests/auth-store.integration.test.mjs && node --test tests/admin-recovery.integration.test.mjs && node --test tests/access-store.integration.test.mjs && node --test tests/mail-store.integration.test.mjs && node --test tests/access-flow.integration.test.mjs",
+    "admin:bootstrap": "node scripts/admin-bootstrap.mjs",
+    "admin:recover": "node scripts/admin-recover.mjs"
   },
   "dependencies": {
     "mariadb": "3.5.4",
+    "nodemailer": "10.1.1",
     "otpauth": "9.5.2"
   }
 }
