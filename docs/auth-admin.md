@@ -32,19 +32,19 @@ La clé MFA doit être générée et sauvegardée dans un support privé chiffr�
 
 Le compte de migration décrit dans [DATABASE.md](DATABASE.md) dispose uniquement des droits DDL et du registre de migration sur cette base. Ses variables `JESSIEMESSAGE_DB_USER`, `JESSIEMESSAGE_DB_PASSWORD` et `JESSIEMESSAGE_MIGRATION_DATABASE` servent au script de migration, pas au serveur HTTP. Le démarrage HTTP ne lance aucune migration : il vérifie le registre et les structures attendues en lecture seule, puis refuse l'authentification si des migrations manquent, sont interrompues ou divergent du code.
 
-Le compte d'application n'a aucun droit DDL, global, `FILE`, création de base ou gestion d'utilisateurs, aucun droit de modification du registre `schema_migrations` et aucun accès à ZTIKIX. Les droits nécessaires à ce lot sont :
+Le compte d'application n'a aucun droit DDL, global, `FILE`, création de base ou gestion d'utilisateurs, aucun droit de modification du registre `schema_migrations` et aucun accès à ZTIKIX. Ces droits couvrent l’administration ; les droits supplémentaires de l’inscription sont décrits dans [invitations-client-access.md](invitations-client-access.md).
 
 | Table | Droits de données |
 |---|---|
-| `users` | `SELECT`, `INSERT` ; l'insertion sert à l'initialisation unique de l'administrateur. |
+| `users` | `SELECT`, `INSERT`, `UPDATE` ; initialisation, inscription et récupération contrôlée du hash de mot de passe. |
 | `sessions` | `SELECT`, `INSERT`, `UPDATE`. |
 | `admin_mfa` | `SELECT`, `INSERT`, `UPDATE`. |
-| `admin_recovery_codes` | `SELECT`, `INSERT`, `UPDATE`. |
+| `admin_recovery_codes` | `SELECT`, `INSERT`, `UPDATE` ; `DELETE` supplémentaire pour le CLI de récupération, à réserver au compte opérateur si possible. |
 | `auth_session_state` | `SELECT`, `INSERT`, `UPDATE`. |
 | `auth_rate_limits` | `SELECT`, `INSERT`, `UPDATE`, `DELETE` pour éliminer les anciens compteurs. |
 | `schema_migrations` | `SELECT` uniquement, pour vérifier l'historique au démarrage ; jamais `INSERT`, `UPDATE` ou `DELETE`. |
 
-L'accès aux tables d'invitations et de conversations n'est pas nécessaire à ce premier lot. Le droit `INSERT` sur `users` peut être retiré après le bootstrap jusqu'à l'implémentation de l'inscription. Vérifier aussi que le compte peut utiliser le verrou MariaDB `GET_LOCK` : il sérialise les initialisations concurrentes sur la même base. Les possibilités réelles de l'hébergement et de son contrôle des droits restent à vérifier avant intégration.
+Les tables d'invitations et de conversations deviennent nécessaires lorsque l'inscription est activée. `INSERT` sur `users` reste alors nécessaire ; il ne peut être retiré après le bootstrap que si ces inscriptions sont désactivées. Vérifier aussi que le compte peut utiliser le verrou MariaDB `GET_LOCK` : il sérialise les initialisations concurrentes sur la même base. Les possibilités réelles de l'hébergement et de son contrôle des droits restent à vérifier avant intégration.
 
 ## Initialisation unique de l'administrateur
 
@@ -105,6 +105,6 @@ Les tests unitaires couvrent les primitives, la configuration, les routes et leu
 
 `/api/health` indique uniquement que le serveur HTTP répond. Il ne prouve ni la disponibilité de MariaDB, ni un compte opérationnel, ni une configuration d'hébergement prête. La suite HTTP ne remplace pas une recette dans un navigateur avec HTTPS, une validation de l'hébergement ou un audit de sécurité externe.
 
-Les invitations, inscriptions clients, vérification mail, assurance d'âge, chat, médias privés, CRM, campagnes et Push restent à implémenter. La récupération du mot de passe, la rotation MFA et la régénération des codes de secours n'ont pas de route ni de CLI dans ce lot. Un code de secours permet une connexion avec le mot de passe ; il ne réinitialise pas celui-ci ni le TOTP. Une perte du mot de passe ou de tous les facteurs nécessite une procédure opérateur hors ligne contrôlée, à réaliser et tester avant une ouverture publique.
+Les invitations, inscriptions, vérification mail et sessions clients restreintes disposent désormais du [lot d'accès 0.5](invitations-client-access.md). Le contrôle de majorité externe, le chat, les médias privés, le CRM complet, les campagnes et Push restent à construire. La récupération du mot de passe administrateur, le renouvellement du TOTP et des codes de secours disposent d'un [CLI privé testé](admin-recovery.md), qui révoque toutes les sessions et impose une nouvelle confirmation TOTP. Aucune route publique de récupération administrateur n'est exposée. La rotation de la clé maître MFA reste distincte et non implémentée ; un code de secours ordinaire ne réinitialise pas le mot de passe.
 
 Aucun chiffrement de bout en bout des futurs messages n'est implémenté. L'authentification administrateur ne remplace pas les contrôles d'accès des conversations, les protections des médias ou les conditions légales, d'âge et d'hébergement décrites dans [SECURITY.md](SECURITY.md). La publication doit attendre la revue de la PR, la recette HTTPS et les étapes restantes du plan d'audit.

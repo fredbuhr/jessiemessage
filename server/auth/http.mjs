@@ -32,11 +32,11 @@ const publicFiles = new Map([
   ["/admin-login.css", ["admin-login.css", "text/css; charset=utf-8"]],
 ]);
 
-function httpError(status, code) {
+export function httpError(status, code) {
   return Object.assign(new Error(code), { httpStatus: status, publicCode: code });
 }
 
-function reply(response, method, status, body, headers = {}) {
+export function reply(response, method, status, body, headers = {}) {
   response.writeHead(status, {
     ...AUTH_HEADERS,
     "Content-Type": "application/json; charset=utf-8",
@@ -45,39 +45,39 @@ function reply(response, method, status, body, headers = {}) {
   response.end(method === "HEAD" ? undefined : typeof body === "string" || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 }
 
-function isToken(value) {
+export function isToken(value) {
   return typeof value === "string" && /^[A-Za-z0-9_-]{43}$/.test(value)
     && Buffer.from(value, "base64url").toString("base64url") === value;
 }
 
-function sessionToken(request) {
+export function sessionToken(request, cookieName = COOKIE_NAME) {
   const header = request.headers.cookie;
   if (typeof header !== "string" || header.length > 8192) return null;
-  const entries = header.split(";").map((entry) => entry.trim()).filter((entry) => entry.startsWith(`${COOKIE_NAME}=`));
+  const entries = header.split(";").map((entry) => entry.trim()).filter((entry) => entry.startsWith(`${cookieName}=`));
   if (entries.length !== 1) return null;
-  const token = entries[0].slice(COOKIE_NAME.length + 1);
+  const token = entries[0].slice(cookieName.length + 1);
   return isToken(token) ? token : null;
 }
 
-function sameText(left, right) {
+export function sameText(left, right) {
   if (typeof left !== "string" || typeof right !== "string" || left.length > 256 || right.length > 256) return false;
   const a = Buffer.from(left);
   const b = Buffer.from(right);
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-function sessionCookie(token, expiresAt) {
+export function sessionCookie(token, expiresAt, cookieName = COOKIE_NAME) {
   if (!isToken(token) || !Number.isFinite(expiresAt)) throw httpError(503, "authentication_unavailable");
   const seconds = Math.min(MAX_SESSION_SECONDS, Math.floor((expiresAt - Date.now()) / 1000));
   if (seconds < 1) throw httpError(503, "authentication_unavailable");
-  return `${COOKIE_NAME}=${token}; Path=/; Max-Age=${seconds}; Secure; HttpOnly; SameSite=Strict`;
+  return `${cookieName}=${token}; Path=/; Max-Age=${seconds}; Secure; HttpOnly; SameSite=Strict`;
 }
 
-function clearCookie() {
-  return `${COOKIE_NAME}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict`;
+export function clearCookie(cookieName = COOKIE_NAME) {
+  return `${cookieName}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict`;
 }
 
-function safeSession(session) {
+export function safeSession(session) {
   const user = session?.user;
   if (!user || typeof user.id !== "string" || !/^[a-f0-9]{32}$/i.test(user.id)
     || user.role !== "admin" || typeof user.pseudonym !== "string" || user.pseudonym.length > 64
@@ -91,7 +91,7 @@ function safeSession(session) {
   };
 }
 
-function checkMutation(request, origin, pathname) {
+export function checkMutation(request, origin, pathname, preAuth = pathname === "/api/auth/login") {
   if (request.headers.origin !== origin) throw httpError(403, "request_rejected");
   const site = request.headers["sec-fetch-site"];
   if (site !== undefined && site !== "same-origin" && site !== "none") throw httpError(403, "request_rejected");
@@ -99,10 +99,10 @@ function checkMutation(request, origin, pathname) {
   if (typeof contentType !== "string" || !/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(contentType)) {
     throw httpError(415, "json_required");
   }
-  if (pathname === "/api/auth/login" && request.headers["x-jessie-request"] !== "1") throw httpError(403, "request_rejected");
+  if (preAuth && request.headers["x-jessie-request"] !== "1") throw httpError(403, "request_rejected");
 }
 
-function readJson(request) {
+export function readJson(request) {
   const length = request.headers["content-length"];
   if (length !== undefined && (!/^\d+$/.test(length) || Number(length) > MAX_BODY_BYTES)) {
     throw httpError(413, "request_too_large");

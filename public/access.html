@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#100d12" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" />
+    <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="/access.css" />
+    <link rel="stylesheet" href="/brand/brand.css" />
+    <title>JessieMessage — Ton accès privé</title>
+    <script src="/access.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
+        <span class="private-label">ESPACE PRIVÉ</span>
+      </header>
+      <main class="access-main">
+        <section class="access-card" aria-labelledby="access-title">
+          <div class="eyebrow">TON ACCÈS PRIVÉ</div>
+          <h1 id="access-title">Bienvenue.</h1>
+          <p id="access-intro" class="intro">Un espace privé, accessible sur invitation de Jessie.</p>
+          <p id="access-status" class="status" role="status" aria-live="polite">Vérification de ton accès…</p>
+          <form id="client-login-form" hidden>
+            <div class="field"><label for="login-email">Adresse e-mail</label><input id="login-email" type="email" autocomplete="username" maxlength="254" required /></div>
+            <div class="field"><label for="login-password">Mot de passe</label><input id="login-password" type="password" autocomplete="current-password" maxlength="128" required /></div>
+            <button class="button button-primary" type="submit">Se connecter</button>
+          </form>
+          <form id="registration-form" hidden>
+            <p id="invitation-summary" class="session-note"></p>
+            <div class="field"><label for="registration-email">Adresse e-mail</label><input id="registration-email" type="email" autocomplete="email" maxlength="254" required /></div>
+            <div class="field"><label for="registration-name">Pseudonyme</label><input id="registration-name" type="text" autocomplete="nickname" maxlength="64" required /></div>
+            <div class="field"><label for="registration-password">Mot de passe</label><input id="registration-password" type="password" autocomplete="new-password" minlength="14" maxlength="128" aria-describedby="password-help" required /><p id="password-help" class="field-help">Choisis au moins 14 caractères.</p></div>
+            <div class="field"><label class="checkbox-field" for="age-declared"><input id="age-declared" type="checkbox" required /><span>Je déclare avoir au moins 18 ans.</span></label><p class="field-help">Cette déclaration ne vérifie pas ta majorité. L’accès restera en attente de vérification de ton e-mail, de ta majorité et de l’accord de Jessie.</p></div>
+            <button class="button button-primary" type="submit">Créer mon compte</button>
+            <button id="show-login" class="button button-secondary" type="button">J’ai déjà un compte</button>
+          </form>
+          <section id="email-verification" hidden aria-label="Vérification de l’e-mail">
+            <p class="intro">Confirme cette adresse e-mail pour poursuivre la préparation de ton accès.</p>
+            <button id="verify-email-button" class="button button-primary" type="button">Vérifier mon e-mail</button>
+          </section>
+          <section id="client-connected" hidden aria-label="État de ton accès">
+            <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong id="client-name"></strong></div>
+            <p id="client-access-state" class="intro"></p>
+            <ul id="client-checks" class="check-list"></ul>
+            <p class="session-note">La messagerie sera disponible à une prochaine étape.</p>
+            <div class="actions"><button id="client-logout" class="button button-primary" type="button">Se déconnecter</button><button id="client-logout-all" class="button button-secondary" type="button">Déconnecter toutes mes sessions</button></div>
+          </section>
+          <details id="resend-section" hidden>
+            <summary>Je n’ai pas reçu l’e-mail de vérification</summary>
+            <form id="resend-form">
+              <p class="field-help">Saisis les identifiants choisis à l’inscription pour demander un nouvel e-mail.</p>
+              <div class="field"><label for="resend-email">Adresse e-mail</label><input id="resend-email" type="email" autocomplete="username" maxlength="254" required /></div>
+              <div class="field"><label for="resend-password">Mot de passe</label><input id="resend-password" type="password" autocomplete="current-password" maxlength="128" required /></div>
+              <button class="button button-secondary" type="submit">Renvoyer la vérification</button>
+            </form>
+          </details>
+          <noscript><p class="status">Active JavaScript pour utiliser cet accès sécurisé.</p></noscript>
+        </section>
+      </main>
+      <footer class="footer">JessieMessage · Accès privé sur invitation</footer>
+    </div>
+  </body>
+</html>

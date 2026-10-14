@@ -39,11 +39,12 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler } = {}) {
+export function createAppServer({ authHandler, accessHandler } = {}) {
   const server = createServer(async (request, response) => {
     const method = request.method ?? "GET";
-    if (authHandler) {
-      try { if (await authHandler(request, response)) return; }
+    for (const handler of [accessHandler, authHandler]) {
+      if (!handler) continue;
+      try { if (await handler(request, response)) return; }
       catch {
         if (response.headersSent) response.destroy();
         else reply(response, method, 503, "application/json; charset=utf-8", '{"error":"service_unavailable"}');
@@ -93,19 +94,53 @@ export function createAppServer({ authHandler } = {}) {
 
 export async function createConfiguredServer(env = process.env) {
   const { authConfiguration } = await import("./auth/config.mjs");
+  const { accessConfiguration } = await import("./access/config.mjs");
   const config = authConfiguration(env);
+  const accessConfig = accessConfiguration(env);
   if (!config.enabled) return { server: createAppServer(), pool: null };
   const { createRuntimePool } = await import("./db/runtime.mjs");
   const { createAuthStore } = await import("./auth/store.mjs");
   const { createAuthService } = await import("./auth/service.mjs");
   const { createAuthHandler } = await import("./auth/http.mjs");
   const pool = await createRuntimePool(env);
+  let transport;
   try {
     const store = createAuthStore(pool);
     await store.assertSchema();
     const service = await createAuthService({ store, totpKey: config.totpKey });
-    return { server: createAppServer({ authHandler: createAuthHandler(service, { origin: config.origin }) }), pool };
+    const authHandler = createAuthHandler(service, { origin: config.origin });
+    if (!accessConfig.enabled) return { server: createAppServer({ authHandler }), pool, mailWorker: null };
+    const { createAccessStore } = await import("./access/store.mjs");
+    const { createAccessService } = await import("./access/service.mjs");
+    const { createAccessHandler } = await import("./access/http.mjs");
+    const { createMailStore } = await import("./mail/store.mjs");
+    const { createVerificationTransport } = await import("./mail/transport.mjs");
+    const { startMailWorker } = await import("./mail/worker.mjs");
+    const accessStore = createAccessStore(pool);
+    const mailStore = createMailStore(pool);
+    await accessStore.assertSchema();
+    await mailStore.assertSchema();
+    const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
+      totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin });
+    transport = await createVerificationTransport(accessConfig.mail);
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }) });
+    let worker;
+    let closing;
+    const mailWorker = {
+      close() {
+        if (!closing) closing = worker ? worker.close() : transport.close();
+        return closing;
+      },
+    };
+    // Queue delivery starts only once the HTTP listener is available, and stops
+    // before the application pool is closed during graceful shutdown.
+    server.once("listening", () => {
+      if (!closing) worker = startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key,
+        onError: () => console.error("JessieMessage verification mail worker unavailable.") });
+    });
+    return { server, pool, mailWorker };
   } catch {
+    await transport?.close().catch(() => {});
     await pool.end().catch(() => {});
     throw new Error("Authentication startup failed; check private configuration, database schema and runtime permissions.");
   }
@@ -114,22 +149,30 @@ export async function createConfiguredServer(env = process.env) {
 async function start() {
   const rawPort = Number(process.env.PORT ?? 3000);
   const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3000;
-  const { server, pool } = await createConfiguredServer();
+  const { server, pool, mailWorker } = await createConfiguredServer();
   server.listen(port, "0.0.0.0", () => {
     console.info(`JessieMessage listening on port ${port}`);
   });
   let closing = false;
-  const shutdown = () => {
+  const shutdown = (exitCode = 0) => {
     if (closing) return;
     closing = true;
-    server.close(async () => {
+    const closeResources = async () => {
+      await mailWorker?.close().catch(() => {});
       await pool?.end().catch(() => {});
-      process.exitCode = 0;
-    });
-    server.closeIdleConnections();
+      process.exitCode = exitCode;
+    };
+    if (server.listening) {
+      server.close(() => { void closeResources(); });
+      server.closeIdleConnections();
+    } else void closeResources();
   };
-  process.once("SIGTERM", shutdown);
-  process.once("SIGINT", shutdown);
+  server.once("error", () => {
+    console.error("JessieMessage HTTP listener unavailable.");
+    shutdown(1);
+  });
+  process.once("SIGTERM", () => shutdown());
+  process.once("SIGINT", () => shutdown());
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

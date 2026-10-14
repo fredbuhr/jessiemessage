@@ -5,6 +5,7 @@ import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore, AuthStoreError } from "../server/auth/store.mjs";
+import { createAccessStore } from "../server/access/store.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
 import { createAuthHandler } from "../server/auth/http.mjs";
 import { createAppServer } from "../server/index.mjs";
@@ -15,7 +16,7 @@ const id = () => randomBytes(16);
 const digest = () => randomBytes(32);
 const now = Date.UTC(2026, 9, 14, 12);
 const passwordHash = "synthetic-password-hash-not-a-real-credential";
-const allowedTables = ["auth_session_state", "admin_recovery_codes", "admin_mfa", "auth_rate_limits", "conversations", "sessions", "invitations", "users", "migration_probe", "schema_migrations"];
+const allowedTables = ["mail_outbox", "client_session_state", "email_verifications", "client_auth_state", "auth_session_state", "admin_recovery_codes", "admin_mfa", "auth_rate_limits", "conversations", "sessions", "invitations", "users", "migration_probe", "schema_migrations"];
 
 test("real MariaDB administrator authentication persistence (synthetic disposable database only)", { skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.", timeout: 120000 }, async (t) => {
   const options = databaseOptions();
@@ -38,9 +39,9 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
     assert.equal(await store.assertSchema(), true);
 
     await t.test("read-only startup checks reject dirty history, nullable state drift and missing uniqueness", async () => {
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 8");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 12");
       try { await assert.rejects(store.assertSchema(), (error) => error.code === "AUTH_DATABASE_STATE"); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 8"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 12"); }
       await connection.query("ALTER TABLE auth_session_state MODIFY last_seen_at DATETIME(6) NULL");
       try { await assert.rejects(store.assertSchema(), (error) => error.code === "AUTH_DATABASE_STATE"); }
       finally { await connection.query("ALTER TABLE auth_session_state MODIFY last_seen_at DATETIME(6) NOT NULL"); }
@@ -112,6 +113,42 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
       assert.equal(await lookup(now + 1860000), null);
       assert.equal(await lookup(session.expiresAt, 86400), null);
       assert.equal(await store.getSession(digest(), { now, idleSeconds: 1800 }), null);
+    });
+
+    await t.test("administrator session reads and invitation mutations share a consistent lock order under concurrency", async () => {
+      const { session } = await login();
+      const access = createAccessStore(pool);
+      const initialCount = Number((await connection.query("SELECT COUNT(*) AS count FROM invitations"))[0].count);
+      // Four outstanding operations per wave stay within the real pool's cap.
+      // Reads and mutations contend on the same administrator and session.
+      for (let wave = 0; wave < 10; wave += 1) {
+        const results = await Promise.all([
+          store.getSession(session.tokenHash, { now, idleSeconds: 1800 }),
+          access.createInvitation({ actorTokenHash: session.tokenHash, now, id: id(), tokenHash: digest(), expiresAt: now + 3600000, accessDays: 30 }),
+          store.getSession(session.tokenHash, { now, idleSeconds: 1800 }),
+          access.createInvitation({ actorTokenHash: session.tokenHash, now, id: id(), tokenHash: digest(), expiresAt: now + 3600000, accessDays: null }),
+        ]);
+        assert.ok(results.every(Boolean), "all valid concurrent reads and mutations must complete without database errors");
+        assert.deepEqual(results[0].userId, admin.id);
+        assert.deepEqual(results[2].userId, admin.id);
+      }
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM invitations"))[0].count), initialCount + 20);
+    });
+
+    await t.test("administrator session timestamps cannot claim a future enrollment or verification before session creation", async () => {
+      const { session } = await login();
+      const lookup = () => store.getSession(session.tokenHash, { now, idleSeconds: 1800 });
+      assert.ok(await lookup());
+      await connection.query("UPDATE admin_mfa SET enabled_at = '2026-10-14 12:00:01' WHERE user_id = ?", [admin.id]);
+      try { assert.equal(await lookup(), null); }
+      finally { await connection.query("UPDATE admin_mfa SET enabled_at = '2026-10-14 12:00:00' WHERE user_id = ?", [admin.id]); }
+      await connection.query("UPDATE auth_session_state SET mfa_verified_at = '2026-10-14 11:59:59' WHERE session_id = ?", [session.id]);
+      try { assert.equal(await lookup(), null); }
+      finally { await connection.query("UPDATE auth_session_state SET mfa_verified_at = '2026-10-14 12:00:00' WHERE session_id = ?", [session.id]); }
+      await connection.query("UPDATE sessions SET created_at = '2026-10-14 12:00:01' WHERE id = ?", [session.id]);
+      try { assert.equal(await lookup(), null); }
+      finally { await connection.query("UPDATE sessions SET created_at = '2026-10-14 12:00:00' WHERE id = ?", [session.id]); }
+      assert.ok(await lookup());
     });
 
     await t.test("revocation, account suspension and MFA version changes immediately deny existing sessions", async () => {

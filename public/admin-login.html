@@ -48,7 +48,29 @@
           <section id="connected" hidden aria-label="Session administrateur">
             <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong>Connexion sécurisée</strong></div>
             <p class="intro">Tu es connectée en tant que <strong id="connected-name"></strong>.</p>
-            <p class="session-note">L’accès administrateur est prêt. La messagerie et les invitations seront disponibles lors des prochaines étapes.</p>
+            <p id="admin-session-note" class="session-note">L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.</p>
+            <section id="access-tools" hidden aria-labelledby="invitation-title">
+              <div class="access-section">
+                <h2 id="invitation-title">Inviter un client</h2>
+                <form id="invitation-form">
+                  <div class="form-pair">
+                    <div class="field"><label for="invitation-hours">Validité du lien (heures)</label><input id="invitation-hours" type="number" min="1" max="720" value="72" required /></div>
+                    <div class="field"><label for="invitation-days">Durée d’accès (jours)</label><input id="invitation-days" type="number" min="1" max="3650" value="30" required /></div>
+                  </div>
+                  <label class="checkbox-field" for="invitation-unlimited"><input id="invitation-unlimited" type="checkbox" /><span>Accès sans limite de durée</span></label>
+                  <button class="button button-primary" type="submit">Créer une invitation</button>
+                </form>
+                <div id="new-invitation" class="new-invitation" hidden>
+                  <label for="invitation-link">Lien à transmettre au client</label>
+                  <input id="invitation-link" type="text" readonly autocomplete="off" spellcheck="false" />
+                  <p class="field-help">Ce lien n’est affiché qu’à sa création.</p>
+                  <button id="copy-invitation" class="button button-secondary" type="button">Copier le lien</button>
+                </div>
+              </div>
+              <div class="access-section"><h2>Invitations</h2><div id="invitations-list" class="access-list"></div></div>
+              <div class="access-section"><h2>Comptes clients</h2><p class="field-help">L’approbation nécessite un e-mail et une majorité vérifiés. La procédure de vérification de majorité reste à activer.</p><div id="clients-list" class="access-list"></div></div>
+              <button id="refresh-access" class="button button-secondary" type="button">Actualiser les accès</button>
+            </section>
             <div class="actions">
               <button id="logout-button" class="button button-primary" type="button">Se déconnecter</button>
               <button id="logout-all-button" class="button button-secondary" type="button">Déconnecter toutes mes sessions</button>
