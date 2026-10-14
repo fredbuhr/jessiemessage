@@ -18,7 +18,7 @@ Le propriétaire a validé **JessieMessage — Nuit**, en mode sombre, mobile-fi
 
 Le nom affiché dans l'en-tête est **Jessie** et le service/domaine reste **JessieMessage**. L'icône approuvée est **la silhouette dorée originale sur fond bleu nuit, à deux formes fluides et espace négatif**. Ne jamais la remplacer par les silhouettes alternatives générées ensuite ; ne pas la redessiner. Les assets exacts seront remis par le propriétaire.
 
-Une archive de mise à jour **`JessieMessage-Integration-Identite.zip`** a été préparée et testée localement *après* le commit GitHub `54ee1cdbea0398ae2a50c321d47fae59da30c3b1`. Elle contient les fichiers à copier à la racine du dépôt depuis `fichiers-a-deposer/`, dont des icônes binaires. Le contenu de cette archive **n'est pas encore commité** : vérifier soigneusement les changements avant publication. Elle ne contient pas de portraits personnels, ni de données clients.
+Une archive de mise à jour **`JessieMessage-Integration-Identite.zip`** a été préparée et testée localement *après* le commit GitHub `54ee1cdbea0398ae2a50c321d47fae59da30c3b1`. Elle contient les fichiers à copier à la racine du dépôt depuis `fichiers-a-deposer/`, dont des icônes binaires. Le contenu de cette archive a été intégré dans la livraison **0.3.1** sur cette branche ; les icônes ont été vérifiées par SHA-256 et conservées octet pour octet. Elle ne contient pas de portraits personnels, ni de données clients.
 
 ## État du développement
 
@@ -29,13 +29,13 @@ La branche comprend actuellement :
 - FR/EN, thème sombre responsive et tests GitHub Actions.
 - Aucune connexion réelle à MariaDB, aucun système d'identité et de permissions de production, aucun échange réel, aucun Web Push.
 
-La version graphique finale a été préparée **localement** : dernier bilan annoncé 46 tests locaux et 42 contrôles d'affichage. Ne pas les considérer comme des tests CI tant que la mise à jour n'a pas été envoyée et contrôlée par GitHub Actions.
+La version graphique finale est intégrée : 47 tests exécutés avec succès sous Node.js 24.19.0. Les résultats CI et contrôles navigateur doivent être lus sur la livraison concernée, sans reprendre les anciens bilans comme nouvelle preuve.
 
 ## À faire d'abord
 
-1. Obtenir auprès du propriétaire l'archive `JessieMessage-Integration-Identite.zip` si elle n'est pas accessible dans la nouvelle conversation.
-2. Examiner le contenu et les instructions `LIRE-EN-PREMIER.txt` et `BASE-COMMIT.txt`, vérifier les SHA256 et les modifications sur la branche existante.
-3. Intégrer les assets **approuvés** avec les fichiers de design, les favicons et le manifeste PWA ; ne pas publier de portraits, secrets ou messages privés.
+1. **Terminé (0.3.1)** — Obtenir auprès du propriétaire l'archive `JessieMessage-Integration-Identite.zip` si elle n'est pas accessible dans la nouvelle conversation.
+2. **Terminé (0.3.1)** — Examiner le contenu et les instructions `LIRE-EN-PREMIER.txt` et `BASE-COMMIT.txt`, vérifier les SHA256 et les modifications sur la branche existante.
+3. **Terminé (0.3.1)** — Intégrer les assets **approuvés** avec les fichiers de design, les favicons et le manifeste PWA ; ne pas publier de portraits, secrets ou messages privés.
 4. Exécuter les tests Node et les vérifications mobile/desktop ; vérifier en particulier l'icône exacte, les écrans 320–1440 px, le favicon, le manifeste PWA et le responsive.
 5. Mettre à jour la PR #1, sans fusion ni déploiement automatique. Présenter le résultat concret, pas un nouveau cycle de propositions de design.
 

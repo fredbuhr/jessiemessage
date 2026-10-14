@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Script } from 'node:vm';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 const read = file => readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const css=read('design/dark.css');
 const code=read('design/dark-ui.js');
@@ -54,5 +55,11 @@ test('built artifact includes all layers with private branding excluded',()=>{
   assert.match(html,/content="#100d12"/);
   assert.match(html,/connect-src 'none'/);
   assert.match(html,/<script id="local-branding" type="application\/json">\{\}<\/script>/);
-  assert.doesNotMatch(html,/data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]{30}/);
+  // Approved public icons are allowed; arbitrary embedded portraits remain forbidden.
+  const registry=JSON.parse(read('public/brand/asset-manifest.json'));
+  const allowed=new Set(registry.assets.map(asset=>asset.sha256));
+  for(const match of html.matchAll(/data:image\/(?:jpeg|png|webp);base64,([A-Za-z0-9+/=]+)/g)) {
+    const bytes=Buffer.from(match[1],'base64');
+    assert.ok(allowed.has(createHash('sha256').update(bytes).digest('hex')),'unapproved embedded image');
+  }
 });

@@ -11,7 +11,17 @@ const publicFiles = new Map([
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
   ["/app.js", ["app.js", "text/javascript; charset=utf-8"]],
   ["/manifest.webmanifest", ["manifest.webmanifest", "application/manifest+json"]],
-  ["/icon.svg", ["icon.svg", "image/svg+xml"]],
+  ["/favicon.ico", ["favicon.ico", "image/x-icon"]],
+  ["/apple-touch-icon.png", ["apple-touch-icon.png", "image/png"]],
+  ["/brand/brand.css", ["brand/brand.css", "text/css; charset=utf-8"]],
+  ["/brand/icon-16.png", ["brand/icon-16.png", "image/png"]],
+  ["/brand/icon-32.png", ["brand/icon-32.png", "image/png"]],
+  ["/brand/icon-48.png", ["brand/icon-48.png", "image/png"]],
+  ["/brand/icon-64.png", ["brand/icon-64.png", "image/png"]],
+  ["/brand/icon-128.png", ["brand/icon-128.png", "image/png"]],
+  ["/brand/icon-192.png", ["brand/icon-192.png", "image/png"]],
+  ["/brand/icon-512.png", ["brand/icon-512.png", "image/png"]],
+  ["/brand/icon-maskable-512.png", ["brand/icon-maskable-512.png", "image/png"]],
 ]);
 
 const securityHeaders = Object.freeze({
