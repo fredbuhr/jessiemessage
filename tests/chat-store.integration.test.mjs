@@ -143,7 +143,11 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       const fixture = await pair();
       await assert.rejects(read(fixture, "client", { tokenHash: digest() }), errorCode("CHAT_UNAUTHORIZED"));
       await assert.rejects(read(fixture, "client", { now: now + 1800000 }), errorCode("CHAT_UNAUTHORIZED"));
-      await assert.rejects(read(fixture, "client", { now: now - 1 }), errorCode("CHAT_UNAUTHORIZED"));
+      // Keep the creator's enrollment valid at this earlier instant so this
+      // assertion reaches the actor session's future-created/last-seen check.
+      await connection.query("UPDATE admin_mfa SET enabled_at = ? WHERE user_id = ?", [sqlDate(now - 1000), fixture.admin.id]);
+      try { await assert.rejects(read(fixture, "client", { now: now - 1 }), errorCode("CHAT_UNAUTHORIZED")); }
+      finally { await connection.query("UPDATE admin_mfa SET enabled_at = ? WHERE user_id = ?", [sqlDate(now), fixture.admin.id]); }
       await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [sqlDate(now), fixture.client.sessionId]);
       try { await assert.rejects(read(fixture), errorCode("CHAT_UNAUTHORIZED")); }
       finally { await connection.query("UPDATE sessions SET revoked_at = NULL WHERE id = ?", [fixture.client.sessionId]); }
