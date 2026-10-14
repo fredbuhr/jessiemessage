@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
 
@@ -67,7 +67,7 @@ export function createAppServer() {
   });
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === fileURLToPath(new URL(`file://${process.argv[1].startsWith("/") ? "" : "/"}${process.argv[1]}`))) {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const rawPort = Number(process.env.PORT ?? 3000);
   const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3000;
   createAppServer().listen(port, "0.0.0.0", () => {
