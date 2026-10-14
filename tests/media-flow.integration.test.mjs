@@ -50,7 +50,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 17);
+  assert.equal(migrations.length, 20);
   const allowedTables = [...migrations.map((migration) => {
     const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
     assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");

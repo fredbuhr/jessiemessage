@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.7**. Registration, private text/photo chat, conversation galleries and an owner media library are implemented behind explicit private configuration. The default server stays neutral. CRM, diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
+Status: **development 0.8**. Registration, private text/photo chat, conversation galleries, an owner media library and private administrator client files are implemented behind explicit private configuration. CRM CI verification is pending for this revision. The default server stays neutral. Diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
 
 ## Purpose
 
@@ -33,16 +33,21 @@ An invitation-only private messaging application between Jessie (creator/admin) 
 
 ## Admin experience
 
-- Inbox with search, filters, unread status and reminders.
-- Private client file: nickname, verified contact, status, last activity, account notes.
-- Arbitrary admin-only tags (avoid gratuitous intimate profiling).
-- Internal groups, including saved tag-based segments, invisible to clients.
+- Implemented CRM inbox search across pseudonym, private nickname and known email, with tag **and** group, access, unread and reminder filters.
+- Private client file: nickname, contact email, status, up to 8,000 characters of encrypted notes and an optional reminder date. The inbox includes neither email nor notes.
+- Up to 100 tags and 100 groups per administrator, with at most 32 labels on one client file. Avoid gratuitous intimate profiling.
+- Internal groups are invisible to clients and collect private memberships; they do not create shared chat rooms. Saved automatic segments remain planned.
+- Reminder dates support private follow-up filters; they do not send notifications or create scheduled tasks.
+- Profile saves are atomic and detect concurrent edits. A conflict preserves the draft for explicit review rather than overwriting a newer file.
+- Deleting a label removes its memberships and invalidates stale profile saves while preserving the private notes.
 - One-to-many sends, always delivered as **individual messages**, never a shared group chat.
 - Distinguish requested service deliveries from optional promotional messages. Respect consent/opt-outs.
 - Queue bulk deliveries; track queued, delivered and failed recipients; retry safely.
 - Shared media library with one stored master per asset plus derivative previews.
 - Record delivery receipts at least by media ID + recipient ID; detect repeat sends.
 - Support limited-term access and admin tasks without displaying payment data.
+
+Queued bulk sends, automatic saved segments and promotional consent handling remain planned. CRM is available only to a currently authenticated administrator assigned to the conversation. The client receives no private nickname, label, reminder or note through their chat/access/media APIs. An expired or revoked client can retain an assigned administrator file without regaining chat access or permitting a new send. See [current CRM behavior and limits](private-crm.md).
 
 ## Media deduplication
 

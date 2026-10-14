@@ -39,10 +39,10 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler } = {}) {
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler } = {}) {
   const server = createServer(async (request, response) => {
     const method = request.method ?? "GET";
-    for (const handler of [mediaHandler, chatHandler, accessHandler, authHandler]) {
+    for (const handler of [crmHandler, mediaHandler, chatHandler, accessHandler, authHandler]) {
       if (!handler) continue;
       try { if (await handler(request, response)) return; }
       catch {
@@ -97,10 +97,12 @@ export async function createConfiguredServer(env = process.env) {
   const { accessConfiguration } = await import("./access/config.mjs");
   const { chatConfiguration } = await import("./chat/config.mjs");
   const { mediaConfiguration } = await import("./media/config.mjs");
+  const { crmConfiguration } = await import("./crm/config.mjs");
   const config = authConfiguration(env);
   const accessConfig = accessConfiguration(env);
   const chatConfig = chatConfiguration(env);
   const mediaConfig = mediaConfiguration(env);
+  const crmConfig = crmConfiguration(env);
   if (!config.enabled) return { server: createAppServer(), pool: null };
   const { createRuntimePool } = await import("./db/runtime.mjs");
   const { createAuthStore } = await import("./auth/store.mjs");
@@ -128,6 +130,7 @@ export async function createConfiguredServer(env = process.env) {
       totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin });
     let chatHandler;
     let mediaHandler;
+    let crmHandler;
     if (chatConfig.enabled) {
       const { createChatStore } = await import("./chat/store.mjs");
       const { createChatService } = await import("./chat/service.mjs");
@@ -142,6 +145,15 @@ export async function createConfiguredServer(env = process.env) {
       const { createMediaStore } = await import("./media/store.mjs");
       const mediaStore = createMediaStore({ pool, chatStore });
       await mediaStore.assertSchema();
+      if (crmConfig.enabled) {
+        const { createCrmStore } = await import("./crm/store.mjs");
+        const { createCrmService } = await import("./crm/service.mjs");
+        const { createCrmHandler } = await import("./crm/http.mjs");
+        const crmStore = createCrmStore({ pool, chatStore });
+        await crmStore.assertSchema();
+        const crmService = await createCrmService({ store: crmStore, authStore: store, authService: service, key: crmConfig.key });
+        crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin });
+      }
       if (mediaConfig.enabled) {
         const { createMediaStorage } = await import("./media/storage.mjs");
         const { createMediaService } = await import("./media/service.mjs");
@@ -154,7 +166,7 @@ export async function createConfiguredServer(env = process.env) {
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler });
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler });
     let worker;
     let closing;
     const mailWorker = {

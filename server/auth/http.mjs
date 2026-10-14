@@ -103,7 +103,7 @@ export function checkMutation(request, origin, pathname, preAuth = pathname === 
 }
 
 export function readJson(request, { maxBytes = MAX_BODY_BYTES } = {}) {
-  if (!Number.isInteger(maxBytes) || maxBytes < 1 || maxBytes > 32768) {
+  if (!Number.isInteger(maxBytes) || maxBytes < 1 || maxBytes > 65536) {
     throw new TypeError("A bounded JSON byte limit is required");
   }
   const length = request.headers["content-length"];

@@ -1,110 +1,59 @@
-# JessieMessage — reprise de développement (14 octobre 2026)
+# JessieMessage — bilan et chemin vers le pilote
 
-> **Document de travail public : aucune donnée de client, aucun secret et aucune photographie personnelle.**
-> Les décisions métier, la conformité applicable et les images privées doivent être gérées hors du dépôt public.
+Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de client, photographie personnelle ni configuration de production.
 
-## Source de vérité
+## État de référence
 
-- Dépôt : `fredbuhr/jessiemessage` (public).
-- Branche de travail actuelle : `feat/private-media`, empilée sur `feat/private-messaging`, puis `feat/invitations-client-access`, puis `feat/admin-auth`, puis `feat/schema-mariadb` et `feat/fondations-pwa`.
-- Pull requests brouillons : [#1 — identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 — MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 — authentification administrateur](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 — invitations et accès client](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 — messagerie privée](https://github.com/fredbuhr/jessiemessage/pull/5), [#6 — photos privées](https://github.com/fredbuhr/jessiemessage/pull/6).
-- Domaine cible : `jessiemessage.com`.
-- Hébergement cible : Infomaniak mutualisé ; site Node.js 24 déclaré créé dans la passation, séparé de ZTIKIX. Configuration réelle à vérifier ; aucun déploiement de ce lot.
-- Branche `main` : ne pas fusionner sans tests et validation ; aucun déploiement automatique.
+Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
 
-## Direction graphique approuvée
+Branche courante : `feat/private-crm`, construite sur `feat/private-media`. Les modifications restent empilées, sans fusion ni déploiement automatique : [#1 identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 authentification](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 accès](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 messagerie](https://github.com/fredbuhr/jessiemessage/pull/5), [#6 médias](https://github.com/fredbuhr/jessiemessage/pull/6). Le lot CRM est préparé pour une septième PR brouillon.
 
-Le propriétaire a validé **JessieMessage — Nuit**, en mode sombre, mobile-first, avec surfaces prune, touches bordeaux et champagne, texte ivoire, accents raffinés, aucune surcharge ni imitation littérale de WhatsApp/Messenger.
+L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée sur bleu nuit. Les portraits personnels restent hors Git et des artefacts publics. Le prototype autonome 0.3.1 contient des données fictives ; il ne démontre pas le fonctionnement des comptes réels.
 
-Le nom affiché dans l'en-tête est **Jessie** et le service/domaine reste **JessieMessage**. L'icône approuvée est **la silhouette dorée originale sur fond bleu nuit, à deux formes fluides et espace négatif**. Ne jamais la remplacer par les silhouettes alternatives générées ensuite ; ne pas la redessiner. Les assets exacts seront remis par le propriétaire.
+## Ce qui est implémenté
 
-Une archive de mise à jour **`JessieMessage-Integration-Identite.zip`** a été préparée et testée localement *après* le commit GitHub `54ee1cdbea0398ae2a50c321d47fae59da30c3b1`. Elle contient les fichiers à copier à la racine du dépôt depuis `fichiers-a-deposer/`, dont des icônes binaires. Le contenu de cette archive a été intégré dans la livraison **0.3.1** sur cette branche ; les icônes ont été vérifiées par SHA-256 et conservées octet pour octet. Elle ne contient pas de portraits personnels, ni de données clients.
+| Domaine | Comportement disponible dans le code | Limite avant utilisation réelle |
+| --- | --- | --- |
+| Accès administrateur | Mot de passe, MFA, codes de secours, sessions révocables, récupération privée | Initialisation du vrai compte et conservation des clés à organiser |
+| Accès client | Invitation unique, inscription atomique, vérification e-mail en file chiffrée, approbation et expiration | SMTP réel, fournisseur de majorité et récupération client à intégrer |
+| Messagerie 1:1 | Persistance chiffrée, isolation par conversation, pagination, reprise sans doublon, lecture, suppression par auteur | Recette HTTPS, charge et appareils réels à vérifier |
+| Photos privées | JPEG/PNG/WebP normalisés sans métadonnées, stockage chiffré, lectures autorisées, galerie et médiathèque propriétaire | Hébergement natif, ressources, sauvegarde et nettoyage des orphelins à valider |
+| Outils clients 0.8 | Surnoms et notes privées, tags/groupes, dates de suivi, recherche et filtres ; conflits entre onglets | CI MariaDB du lot en attente ; recette de l'interface à réaliser |
+| Présentation | Identité Nuit, icônes approuvées, aperçu autonome fictif | Contrôles navigateur, accessibilité et responsive réels à terminer |
 
-## État du développement
+Les outils clients restent réservés à l'administrateur affecté. Les notes sont chiffrées ; les listes n'incluent ni notes ni adresse e-mail. Les dates de suivi ne déclenchent aucune notification. Les groupes sont des classements privés, pas des salons.
 
-La branche comprend actuellement :
-- Serveur Node.js 24 : page d'accueil neutre et `/api/health` par défaut ; authentification administrateur activable uniquement par configuration privée explicite.
-- Prototype HTML autonome pour accueil, conversation client et tableau de bord admin.
-- Gestion **fictive** des tags, groupes privés, invitations, accès, messages, médias, diffusions ciblées et prévention des doublons.
-- FR/EN, thème sombre responsive et tests GitHub Actions.
-- Schéma MariaDB dédié et migrations explicites, avec tables MFA, codes de secours, état des sessions et compteurs anti-abus. Connexion administrateur avec mot de passe + MFA, sessions révocables, écran d'accès et initialisation privée du premier compte : voir [authentification](auth-admin.md). Les invitations, inscriptions, vérification mail, sessions clients restreintes et récupération administrateur sont implémentés sur la branche d'accès. La messagerie texte persistante est implémentée en 0.6, avec chiffrement au repos, isolation SQL, pagination, lecture et suppression par auteur. Les photos privées et galeries sont ajoutées en 0.7. SMTP réel, majorité externe, outils CRM/diffusion et Web Push restent à compléter.
+## Ce qui est vérifié, ce qui ne l'est pas
 
-La version graphique finale est intégrée : 47 tests exécutés avec succès sous Node.js 24.19.0. Les résultats CI et contrôles navigateur doivent être lus sur la livraison concernée, sans reprendre les anciens bilans comme nouvelle preuve.
+- Médias 0.7 : révision finale `189d742a7e6d93936f159d14c318d3a62d85c91f`, [CI 38651204840](https://github.com/fredbuhr/jessiemessage/actions/runs/38651204840) réussie : 320 tests généraux, 10 groupes DB ignorés dans le job sans base, puis 126 tests réels sans saut sur **chacune** des versions MariaDB 10.11 et 11.4. Sharp 0.35.5 est verrouillé ; aucune vulnérabilité npm signalée lors de ce lot.
+- CRM 0.8 : les contrôles locaux initiaux passent avec 399 tests généraux ; les 12 groupes DB attendent leur exécution dédiée. Le résultat final doit être lu sur la révision et la CI du lot ci-dessous.
+- Les intégrations HTTP/SQL emploient exclusivement des fixtures synthétiques et des bases jetables, avec un compte d'exécution limité aux opérations DML.
+- Aucune livraison SMTP réelle, preuve de majorité externe, migration de base Infomaniak, création de compte réel ou mise en production n'a été effectuée.
+- Aucune nouvelle recette navigateur n'a été exécutée : aucun moteur installé ; un téléchargement antérieur a été refusé par le contrôle automatique d'autorisation. Les tests de modèle et de protocole ne remplacent pas les essais sur iPhone/Android.
 
-## À faire d'abord
+## Risques et travail manquant
 
-1. **Terminé (0.3.1)** — Obtenir auprès du propriétaire l'archive `JessieMessage-Integration-Identite.zip` si elle n'est pas accessible dans la nouvelle conversation.
-2. **Terminé (0.3.1)** — Examiner le contenu et les instructions `LIRE-EN-PREMIER.txt` et `BASE-COMMIT.txt`, vérifier les SHA256 et les modifications sur la branche existante.
-3. **Terminé (0.3.1)** — Intégrer les assets **approuvés** avec les fichiers de design, les favicons et le manifeste PWA ; ne pas publier de portraits, secrets ou messages privés.
-4. Exécuter les tests Node et les vérifications mobile/desktop ; vérifier en particulier l'icône exacte, les écrans 320–1440 px, le favicon, le manifeste PWA et le responsive.
-5. Mettre à jour la PR #1, sans fusion ni déploiement automatique. Présenter le résultat concret, pas un nouveau cycle de propositions de design.
+Les fonctions du prototype de diffusion et de Push restent fictives. Le serveur ne fournit pas encore de diffusion durable ni de notifications Web Push. Le parcours client de mot de passe oublié manque. Les textes légaux, la rétention, les exports, les sauvegardes et leur restauration doivent être finalisés avec les informations réelles. La récupération/rotation des clés n'est pas automatisée. Les fichiers photo pouvant rester après un résultat SQL incertain sont conservés par prudence ; aucun nettoyage automatique n'est encore implémenté.
 
-## Construction de la véritable application — par lots testables
+Les exigences d'accès des majeurs et les conditions d'hébergement doivent être résolues avant ouverture de contenus concernés. Une déclaration « 18+ » ne constitue pas une preuve. Aucun chemin actuel ne transforme cette déclaration en vérification.
 
-1. Concevoir une architecture minimale adaptée à l'hébergement Infomaniak : Node 24, MariaDB dédiée, stockage privé et migrations versionnées.
-2. Identité/accès : compte admin protégé avec MFA, invitations aléatoires à usage unique, expiration/révocation, preuve de possession d'e-mail, sessions révocables et protection anti-abus.
-3. Messagerie 1:1 : isolation stricte des conversations, messages persistants, pagination, accusés adaptés, gestion des erreurs et suppression.
-4. Médias : accès autorisé côté serveur, vérification/réencodage et retrait des métadonnées, galerie, digest SHA-256 et historique par destinataire.
-5. Mini-CRM : tags, groupes administrateur invisibles aux utilisateurs, notes, rappels, accès limités en durée.
-6. Diffusion : segmentation, exclusion des comptes suspendus/expirés, préférences de communication, envois individuels, contrôle des doublons et journal durable.
-7. PWA : mode installable, notifications Web Push opt-in et discrètes, prise en compte des particularités iPhone/Android.
-8. Pages légales et sécurité : mentions légales, confidentialité, CGU, signalement, traitement RGPD, rétention, export, sauvegardes chiffrées et tests de restauration.
-9. Vérifier préalablement les obligations d'accès des majeurs applicables, les conditions d'Infomaniak et les conditions des canaux d'acquisition. Une case « 18+ » n'est **pas une vérification de majorité**. Aucune mise en service de médias explicites tant que les obligations ne sont pas respectées.
-10. Tester sur vrais appareils, effectuer une revue de sécurité et des essais de charge ; seulement ensuite organiser un déploiement contrôlé.
+## Plan de livraison réaliste
 
-## Principes de travail
+Les durées ci-dessous sont des ordres de grandeur de travail, à recalibrer après chaque lot ; les accès externes peuvent allonger le calendrier. On peut avancer le code sans attendre ces accès.
 
-- **KISS** : client = une conversation et accès discret à la galerie/paramètres ; administration = Messages, Médiathèque, Diffusion, Accès.
-- Mobile-first, mais excellent rendu ordinateur ; simple, confortable, lisible et discret.
-- Ne jamais déployer une démo client/admin sans contrôle d'accès réel.
-- Développer et tester avec des données fictives, ne rien enregistrer d'intime dans GitHub ou CI.
-- Préférer interface graphique GitHub + Infomaniak ; réduire SSH/console au strict nécessaire.
-- Livrer du code et des PR vérifiées, en sollicitant le propriétaire uniquement pour les décisions nécessaires ou les permissions d'accès.
+| Étape | Résultat concret et critère de sortie | Ordre de grandeur |
+| --- | --- | --- |
+| 1. Terminer le CRM | CI verte sur Node 24 et les deux MariaDB ; conflits et confidentialité vérifiés ; PR brouillon documentée | Lot en cours |
+| 2. Débloquer le parcours pilote | SMTP testé sur domaine réel, majorité intégrée, récupération du mot de passe client avec jetons uniques et révocation | 2 à 4 jours de code, plus délai des fournisseurs |
+| 3. Diffusion individuelle | Sélection explicite des destinataires, préférences, exclusion des accès inactifs, reprise sans doublon et journal durable | 2 à 3 jours |
+| 4. Recette privée sous HTTPS | Environnement de test isolé ; parcours invitation → accès → texte/photo → révocation sur iPhone/Android ; corrections de l'interface | 1 à 2 jours après accès à l'hébergement |
+| 5. Exploitation et publication | Sauvegarde/restauration éprouvée, rétention et nettoyage, limites de charge, pages légales ; revue puis fusion ordonnée des PR | 2 à 3 jours, avec validations externes |
+| 6. PWA et notifications | Installation vérifiée ; Push volontaire discret, désinscription et révocation ; compatibilité appareils | 1 à 2 jours, peut suivre le pilote si non indispensable |
 
-## Prochain lot serveur
+Pour publier rapidement, le pilote peut viser d'abord les conversations privées texte/photo et les fiches clients, avec un nombre limité de comptes. La diffusion et le Push peuvent arriver ensuite si le périmètre du pilote le permet. Les prérequis d'accès et la restauration restent nécessaires dans tous les cas.
 
-Le lot d'accès implémente les invitations à usage unique, inscriptions, preuve de possession d'e-mail et sessions clients restreintes, ainsi qu'une récupération administrateur privée. Le lot 0.6 construit la messagerie 1:1 persistante en utilisant le garde d'accès actif. Le lot 0.7 implémente le stockage privé et la distribution autorisée des photos. Le prochain lot reprend les outils administrateur, tags et groupes privés. Avant le pilote : brancher et valider SMTP, contrôle de majorité, récupération du mot de passe client et recette HTTPS sur appareils réels. Aucun compte réel, aucune migration ni configuration de la base Infomaniak n'a été effectué.
+Le déploiement sera préparé comme une opération explicite : sauvegarde, état des migrations, revue des paramètres, test de santé, parcours complet, possibilité de retour à la version précédente et observation. Aucun changement de ZTIKIX ni publication automatique depuis une branche de travail.
 
-## Résultats vérifiés de la reprise Work
+## Preuve finale du lot CRM
 
-- Identité intégrée, [PR nº 1](https://github.com/fredbuhr/jessiemessage/pull/1), commit `2c818adbf7047d39d3bb301f8db502672dafa39b` : [CI 38628983228](https://github.com/fredbuhr/jessiemessage/actions/runs/38628983228) réussie sous Node.js 24.21.0, 47 tests ; les 10 PNG/ICO approuvés restent identiques. Le recadrage involontaire de l’avatar de secours a été corrigé.
-- Premier lot serveur, [PR nº 2](https://github.com/fredbuhr/jessiemessage/pull/2), commit de code `812d9b00d9c58cfcada8ad002d313e8a267f8528` : [CI 38630438051](https://github.com/fredbuhr/jessiemessage/actions/runs/38630438051) réussie sous Node.js 24.21.0. Contrôle général : 63 tests réussis, 1 groupe d’intégration explicitement sauté dans ce job sans DB ; les jobs MariaDB séparés réussissent chacun leurs 12 tests, sans saut, sur 10.11 et 11.4.
-- [Aperçu autonome issu de cette CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38630438051/artifacts/11924969489) : décompresser puis ouvrir `JessieMessage.html`. Données fictives, aucun portrait personnel. L’export public et le build local ont la même source.
-- Nouveaux tests visuels non exécutés : aucun moteur navigateur installé ; leur téléchargement a été refusé par le contrôle automatique d’autorisation. Les anciens contrôles Chromium du paquet ne sont pas de nouveaux essais Work. Les parcours mobile/desktop et les essais physiques iPhone/Android restent à vérifier.
-- Authentification administrateur 0.4, [PR nº 3](https://github.com/fredbuhr/jessiemessage/pull/3), commit de code `7cf16c5a1e6659b5492c637e888d0bcd091bfec0` : [CI 38639207749](https://github.com/fredbuhr/jessiemessage/actions/runs/38639207749) réussie sous Node.js 24.21.0. Contrôle général : 118 tests réussis, 2 groupes DB explicitement sautés dans ce job ; chaque version MariaDB réussit ensuite 12 tests de migrations et 14 tests d'authentification, sans saut. Le parcours HTTP connecté à MariaDB valide connexion, session, anti-CSRF, déconnexion et refus du rejeu MFA. Audit npm du 14 octobre : aucune vulnérabilité signalée.
-- Invitations et accès client 0.5, [PR nº 4](https://github.com/fredbuhr/jessiemessage/pull/4), commit de code `8f657e3b5d03ea9c77ccbc4c4d533ae6ca99c6f8` : [CI 38644134261](https://github.com/fredbuhr/jessiemessage/actions/runs/38644134261) réussie sous Node.js 24.21.0. Contrôle général : 173 tests réussis, 6 groupes DB explicitement sautés dans ce job ; chaque version MariaDB réussit ensuite 69 tests, sans saut, dans six groupes séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file d'e-mail 11, parcours HTTP complet 9. Tous les mails passent par des transports injectés ; aucune livraison SMTP réelle. Audit npm : aucune vulnérabilité signalée.
-- Les six PR restent en brouillon ; aucune fusion, configuration Infomaniak, migration de vraie base ou mise en production n'a été effectuée. Le parcours d'accès et ses validations sont testés avec fixtures. Les vrais clients restent en attente tant que le contrôle de majorité externe n'est pas intégré ; sa preuve n'est simulée que dans les fixtures synthétiques. Livraison SMTP réelle, recette HTTPS et essais sur appareils restent à effectuer.
-
-## Lot messagerie 0.6 et chemin vers le pilote
-
-La messagerie texte comprend les échanges persistants, reprise d'envoi sans doublon, historique paginé, accusés de lecture et suppression du contenu par son auteur. La synchronisation passe par un journal de changements limité à la conversation, consulté seulement quand la page est visible. L'interface réelle conserve Nuit et ne remplace aucun portrait par un grand logo. Les portraits et galeries attendent leur service privé.
-
-Ordre de livraison restant, avec critères concrets :
-
-1. **Médias privés — implémentés en 0.7** : stockage chiffré hors accès public, autorisation de chaque lecture, formats bornés, réencodage sans métadonnées, galerie et suppression. Recette HTTPS/mobile, charge et politique de nettoyage restent à valider avant utilisation réelle.
-2. **Outils administrateur** : tags/groupes/notes privés, puis diffusion individuelle avec préférences, exclusion des accès expirés et idempotence durable. Reprendre les contrôles du prototype sans exposer le CRM au client.
-3. **PWA et finition** : installation, Push discret volontaire, traductions, essais clavier et appareils iPhone/Android sous HTTPS. Les vérifications HTTP et de modèle ne remplacent pas ces essais.
-4. **Préparation du pilote en parallèle** : SMTP réel, fournisseur de majorité, récupération client, rétention/export, sauvegarde/restauration et rotation des clés. Finaliser les textes juridiques et les conditions d'hébergement avec les informations réelles.
-5. **Publication contrôlée** : revue des PR empilées, recette d'un parcours complet sur environnement privé, migration explicite de la base dédiée sauvegardée, déploiement limité puis observation. Aucun déploiement automatique depuis une branche de travail.
-
-Le calendrier du pilote dépend des accès hébergeur, SMTP et fournisseur de majorité. La réalisation des lots de code peut avancer avec des fixtures pendant ces intégrations ; cela ne débloque pas les vrais comptes.
-
-## Résultat vérifié du lot messagerie
-
-Messagerie privée 0.6, [PR nº 5](https://github.com/fredbuhr/jessiemessage/pull/5), révision testée `96730e37018f270d25c3e79e53b7f43e3f2ef13e` (implémentation `108a7009af30754eb4700b9aef85ccdb2be1e94e`) : [CI 38648349063](https://github.com/fredbuhr/jessiemessage/actions/runs/38648349063) réussie sous Node.js 24.21.0. Contrôle général : **238 tests réussis**, 8 groupes DB explicitement ignorés dans le job sans base. Chaque version MariaDB **10.11 et 11.4** réussit ensuite **100 tests**, sans saut, dans huit groupes séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file d'e-mail 11, parcours HTTP d'accès 9, persistance messagerie 19, parcours HTTP messagerie 12. Syntaxe et build réussis ; aucune dépendance ajoutée ni icône modifiée.
-
-Les essais couvrent de vrais échanges HTTP connectés à MariaDB, mais aucune recette visuelle navigateur, aucune livraison SMTP réelle et aucun compte de production. Le code reste derrière un drapeau explicite et les prérequis d'accès ; aucune fusion ou mise en production. Voir [périmètre et limites de la messagerie](private-messaging.md).
-
-## Lot photos privées 0.7
-
-Une photo peut accompagner chaque message, avec une légende facultative. Les clients voient uniquement les images de leur conversation ; chaque propriétaire peut réutiliser ses propres images dans la médiathèque. La suppression d'un message retire cette livraison, sans casser les autres envois de la même image. La suppression d'un fichier n'est permise qu'après retrait de ses messages encore visibles.
-
-La source et ses métadonnées ne sont pas conservées : formats JPEG/PNG/WebP fixes, limites de taille/pixels, normalisation isolée et miniatures. Les fichiers sont chiffrés avec une clé distincte, hors dépôt et dossier public. Ce lot ne fournit ni GIF/vidéo/HEIC, ni portrait public, ni chiffrement de bout en bout. Les portraits réels restent hors Git et des artefacts CI.
-
-Avant le pilote, vérifier les chemins/permissions et ressources du véritable hébergement, les limites de proxy, l'installation native du traitement d'image, la sauvegarde/restauration des fichiers avec leurs clés et la politique de rétention/nettoyage. Un échec de confirmation SQL peut laisser un fichier chiffré orphelin ; aucun nettoyage automatique ne risque de supprimer un fichier dont la transaction pourrait avoir réussi.
-
-## Résultat vérifié du lot photos
-
-Photos privées 0.7, [PR nº 6](https://github.com/fredbuhr/jessiemessage/pull/6), révision vérifiée `6bec59cfda4c76b40adc45bc4916692ca121ca4c` (implémentation `bf4eb1d1c8819178298698f6d3517da19454018b`) : [CI 38650927708](https://github.com/fredbuhr/jessiemessage/actions/runs/38650927708) réussie sous Node.js 24.21.0. **320 tests généraux réussis**, 10 groupes DB explicitement ignorés dans ce job sans base ; **126 tests réels réussis sans saut sur chacune des versions MariaDB 10.11 et 11.4**. Dix groupes séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file e-mail 11, HTTP accès 9, persistance chat 19, HTTP chat 12, persistance médias 16, HTTP médias 10. Syntaxe et build réussis ; audit npm : aucune vulnérabilité signalée. Sharp 0.35.5 est verrouillé ; les icônes approuvées restent identiques.
-
-Les parcours médias utilisent uniquement des images synthétiques et un stockage temporaire chiffré hors dépôt. Les fixtures d'accès attestent les prérequis pour le test, sans fournir de preuve de majorité réelle. Aucune recette visuelle navigateur, livraison SMTP, migration Infomaniak ou mise en production. [Configuration et limites du stockage photo](private-media.md). Prochain lot : outils administrateur privés (tags/groupes/notes), puis diffusion individuelle et PWA.
+À compléter après publication de la PR et exécution réelle de la CI. Voir [périmètre, configuration et limites du CRM](private-crm.md).

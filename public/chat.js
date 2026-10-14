@@ -17,11 +17,12 @@ const imageUrls = createObjectUrlCache(); const imageRequests = new Map();
 let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previewIdentity = null;
 let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersion = 0; let lightboxItem = null;
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
+let crm = null;
 
 function notice(message, error = false, id = "chat-status") { const node = el(id); node.textContent = message; node.classList.toggle("is-error", error); }
 function currentState() { return selected ? states.get(selected) : null; }
 function visible() { return document.visibilityState === "visible"; }
-function abortRequests() { for (const controller of controllers) controller.abort(); controllers.clear(); }
+function abortRequests(selectionOnly = false) { for (const controller of controllers) { if (selectionOnly && controller.accountScope) continue; controller.abort(); controllers.delete(controller); } }
 function stopPolling() { clearTimeout(pollTimer); pollTimer = null; clearTimeout(readTimer); readTimer = null; }
 function revokePreview() { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; previewIdentity = null; el("image-preview").replaceChildren(); }
 function closeLightbox(restoreFocus = true) {
@@ -56,6 +57,7 @@ function clearChat() {
 function clearPrivate() {
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
   mediaEnabled = false;
+  crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   stopPolling(); abortRequests(); clearTimeout(expiryTimer); expiryTimer = null;
   states.clear(); inbox.clear(); selected = null; el("conversations").replaceChildren(); clearChat();
   inboxCursor = null; inboxMore = false; inboxRefreshCursor = null; lastInboxRefresh = 0; inboxLoading = false;
@@ -64,21 +66,23 @@ function clearPrivate() {
 }
 function signOut() { clearPrivate(); location.replace(role === "admin" ? "/admin/login" : "/access"); }
 function snapshot(state = null) { return { generation, visibilityGeneration, selectionEpoch, id: state?.id, epoch: state?.epoch }; }
-function fresh(ticket) { return ticket.generation === generation && ticket.visibilityGeneration === visibilityGeneration && ticket.selectionEpoch === selectionEpoch && (!ticket.id || belongsTo(currentState(), ticket.id, ticket.epoch)); }
-async function request(path, { body, rawBody, contentType, mutation = false, state = null } = {}) {
+function fresh(ticket, account = false) { return ticket.generation === generation && ticket.visibilityGeneration === visibilityGeneration && (account || (ticket.selectionEpoch === selectionEpoch && (!ticket.id || belongsTo(currentState(), ticket.id, ticket.epoch)))); }
+async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null } = {}) {
   const ticket = snapshot(state); const controller = new AbortController(); controllers.add(controller);
+  controller.accountScope = account;
+  const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
   const timeout = setTimeout(() => controller.abort(), rawBody ? 30000 : 15000);
   const headers = mutation ? { "Content-Type": contentType ?? "application/json", "X-CSRF-Token": csrf ?? "" } : {};
   try {
     const response = await fetch(path, { method: mutation ? "POST" : "GET", credentials: "same-origin", cache: "no-store", headers, body: mutation ? rawBody ?? JSON.stringify(body ?? {}) : undefined, signal: controller.signal });
     let data; try { data = await response.json(); } catch { data = {}; }
-    if (!fresh(ticket)) throw Object.assign(new Error("stale_response"), { stale: true });
+    if (!fresh(ticket, account)) throw Object.assign(new Error("stale_response"), { stale: true });
     if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error });
     return data;
   } catch (error) {
-    if (!fresh(ticket)) throw Object.assign(new Error("stale_response"), { stale: true });
+    if (!fresh(ticket, account)) throw Object.assign(new Error("stale_response"), { stale: true });
     throw error;
-  } finally { clearTimeout(timeout); controllers.delete(controller); }
+  } finally { clearTimeout(timeout); signal?.removeEventListener("abort", abort); controllers.delete(controller); }
 }
 async function refreshSession() {
   const session = await request(`${sessionBase}/session`);
@@ -106,7 +110,7 @@ async function handleError(error, state = null) {
   }
   if (error.status === 401 || (role === "client" && error.status === 403)) { signOut(); return; }
   if (state && error.status === 404 && belongsTo(currentState(), state.id, state.epoch)) {
-    states.delete(state.id); inbox.delete(state.id); selected = null; selectionEpoch += 1; selectionLoading = false; clearChat(); renderInbox(); notice("Cette conversation n’est plus accessible.", true); return;
+    states.delete(state.id); inbox.delete(state.id); selected = null; crm?.removeConversation(state.id); selectionEpoch += 1; selectionLoading = false; clearChat(); renderInbox(); notice("Cette conversation n’est plus accessible.", true); schedulePolling(); return;
   }
   if (role === "admin" && error.status === 403) {
     try {
@@ -217,6 +221,37 @@ async function refreshMediaCapability() {
   try { const value = await request(`${mediaBase}/capabilities`); mediaEnabled = value.enabled === true; }
   catch (error) { if (error.status === 404) mediaEnabled = false; else if (error.status === 401 || (role === "client" && error.status === 403)) { signOut(); throw error; } else mediaEnabled = false; }
 }
+async function refreshCrmCapability() {
+  if (role !== "admin") return;
+  const ticket = snapshot();
+  try {
+    const capability = await request("/api/admin/crm/capabilities", { account: true });
+    if (capability.enabled !== true) return;
+    const module = await import("/crm.js");
+    if (!fresh(ticket, true)) return;
+    const style = document.createElement("link"); style.id = "crm-style"; style.rel = "stylesheet"; style.href = "/crm.css"; document.head.append(style);
+    crm = module.createCrmUI({
+      request, inboxHead: document.querySelector(".inbox-head"), chatHead: document.querySelector(".chat-head"),
+      onError: (error) => handleError(error),
+      onUnavailable(id) {
+        states.delete(id); inbox.delete(id);
+        if (selected === id) { selected = null; selectionEpoch += 1; selectionLoading = false; clearChat(); }
+        renderInbox(); notice("Cette conversation n’est plus accessible.", true); schedulePolling();
+      },
+      onContacts(contacts, page) {
+        inbox.clear(); for (const contact of contacts) inbox.set(contact.id, contact);
+        inboxCursor = page.cursor; inboxMore = page.hasMore; inboxLoading = page.loading;
+        renderInbox();
+        const state = currentState(); if (state?.conversation) el("peer-name").textContent = crm?.displayName(inbox.get(state.id) ?? state.conversation) ?? state.conversation.peerName;
+      }
+    });
+    await crm.initialize();
+  } catch (error) {
+    if (error.stale) return;
+    if (error.status === 401 || error.status === 403) { signOut(); throw error; }
+    if (error.status !== 404) notice("Les fiches privées sont indisponibles pour le moment.", true, "session-status");
+  }
+}
 function chooseFile() {
   const state = currentState(); const file = el("image-file").files?.[0]; el("image-file").value = "";
   if (!state || !file || state.pending || sendBusy || !state.conversation?.canSend) return;
@@ -324,9 +359,16 @@ function renderInbox() {
   for (const conversation of [...inbox.values()].sort((a, b) => (b.lastActivityAt ?? b.createdAt) - (a.lastActivityAt ?? a.createdAt) || a.id.localeCompare(b.id))) {
     const button = document.createElement("button"); button.type = "button"; button.className = "contact";
     button.classList.toggle("active", conversation.id === selected); button.setAttribute("aria-pressed", String(conversation.id === selected));
-    const text = document.createElement("span"); const name = document.createElement("strong"); name.textContent = conversation.peerName;
+    const text = document.createElement("span"); const name = document.createElement("strong"); name.textContent = crm?.displayName(conversation) ?? conversation.peerName;
     const time = document.createElement("time"); time.dateTime = new Date(conversation.lastActivityAt ?? conversation.createdAt).toISOString(); time.textContent = dateText(conversation.lastActivityAt ?? conversation.createdAt, true);
-    text.append(name, time); button.append(text);
+    text.append(name, time);
+    if (crm && conversation.crm) {
+      const details = document.createElement("span"); details.className = "crm-contact-meta";
+      details.textContent = conversation.crm.labels.map((label) => label.name).join(" · ");
+      if (conversation.crm.reminderAt !== null && conversation.crm.reminderAt <= Date.now()) details.textContent += `${details.textContent ? " · " : ""}Rappel à traiter`;
+      if (details.textContent) text.append(details);
+    }
+    button.append(text);
     if (conversation.unreadCount > 0) { const count = document.createElement("span"); count.className = "unread"; count.textContent = String(conversation.unreadCount); count.setAttribute("aria-label", `${conversation.unreadCount} messages non lus`); button.append(count); }
     button.addEventListener("click", () => { void selectConversation(conversation.id); }); container.append(button);
   }
@@ -334,6 +376,7 @@ function renderInbox() {
   el("more-conversations").hidden = !inboxMore; el("more-conversations").disabled = inboxLoading;
 }
 async function loadInbox(more = false, refresh = false) {
+  if (crm) { await crm.loadInbox(more, refresh); lastInboxRefresh = Date.now(); return; }
   if (inboxLoading) return;
   if (more && (!inboxMore || !inboxCursor)) return;
   const ticket = snapshot();
@@ -368,7 +411,7 @@ async function loadInbox(more = false, refresh = false) {
 }
 function renderMeta(state) {
   const conversation = state.conversation; if (!conversation) return;
-  el("peer-name").textContent = conversation.peerName;
+  el("peer-name").textContent = crm?.displayName(inbox.get(state.id) ?? conversation) ?? conversation.peerName;
   el("conversation-status").textContent = conversation.closedAt != null ? "Conversation fermée · historique disponible" : !conversation.canSend ? "Accès à l’envoi suspendu · historique disponible" : "Conversation privée";
   el("message-body").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image");
@@ -379,7 +422,10 @@ function renderMeta(state) {
   el("pending-controls").hidden = state.pending?.status !== "retry";
   el("retry-send").disabled = !conversation.canSend || sendBusy;
   el("older-messages").hidden = !state.hasMoreBefore; el("older-messages").disabled = olderBusy;
-  if (role === "admin") { inbox.set(state.id, conversation); renderInbox(); }
+  if (role === "admin") {
+    if (crm) crm.updateConversation(conversation);
+    else { inbox.set(state.id, conversation); renderInbox(); }
+  }
 }
 function viewportAnchor() {
   const box = el("message-scroll").getBoundingClientRect();
@@ -429,8 +475,9 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
 async function selectConversation(id) {
   if (id === selected) return;
   const previous = currentState(); if (previous) { previous.draft = el("message-body").value; if (previous.pending?.status === "sending") retrySend(previous); }
-  selectionEpoch += 1; stopPolling(); abortRequests(); inboxLoading = false; olderBusy = false; sendBusy = false; readBusy = false; selectionLoading = true;
+  selectionEpoch += 1; stopPolling(); abortRequests(true); inboxLoading = false; olderBusy = false; sendBusy = false; readBusy = false; selectionLoading = true;
   selected = id;
+  crm?.selectConversation(id);
   const oldState = states.get(id);
   const state = oldState ? { ...oldState, epoch: selectionEpoch } : makeConversationState(id, selectionEpoch);
   if (state.pending?.status === "sending") retrySend(state);
@@ -600,17 +647,17 @@ el("new-messages").addEventListener("click", () => { el("message-scroll").scroll
 el("message-scroll").addEventListener("scroll", () => { if (nearBottom(el("message-scroll"))) el("new-messages").hidden = true; scheduleRead(); }, { passive: true });
 el("back-to-inbox").addEventListener("click", () => {
   const state = currentState(); if (state) { state.draft = el("message-body").value; if (state.pending?.status === "sending") retrySend(state); }
-  selectionEpoch += 1; abortRequests(); inboxLoading = false; selected = null; clearChat(); renderInbox(); schedulePolling();
+  selectionEpoch += 1; abortRequests(true); inboxLoading = false; selected = null; crm?.selectConversation(null); clearChat(); renderInbox(); schedulePolling();
   selectionLoading = false;
 });
 el("logout").addEventListener("click", () => { void logout(); });
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
-    stopPolling(); visibilityGeneration += 1; abortRequests(); clearImages();
+    stopPolling(); visibilityGeneration += 1; abortRequests(); clearImages(); crm?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
     sendBusy = false; olderBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
   } else if (ready) {
-    void refreshSession().then(() => { const state = currentState(); if (state) renderMessages(state); retryDelay = 3000; schedulePolling(0); }).catch((error) => handleError(error));
+    void refreshSession().then(async () => { if (crm) await crm.resume(); const state = currentState(); if (state) renderMessages(state); retryDelay = 3000; schedulePolling(0); }).catch((error) => handleError(error));
   } else if (!loggingOut) void start();
 });
 window.addEventListener("pagehide", clearPrivate);
@@ -623,6 +670,7 @@ async function start() {
     if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
     ready = true; el("workspace").hidden = false; el("workspace").classList.toggle("is-admin", role === "admin");
     await refreshMediaCapability();
+    await refreshCrmCapability();
     el("inbox").hidden = role !== "admin"; el("client-aside").hidden = role !== "client"; el("back-to-inbox").hidden = role !== "admin";
     notice("", false, "session-status"); clearChat();
     if (role === "admin") { await loadInbox(); }
