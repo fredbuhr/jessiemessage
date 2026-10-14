@@ -32,7 +32,7 @@ test("health endpoint works without leaking configuration", async () => {
 });
 
 test("private or unknown paths are inaccessible", async () => {
-  for (const path of ["/.env", "/server/index.mjs", "/api/messages", "/admin", "/messages", "/admin/messages", "/chat.js", "/chat-model.js", "/chat.css", "/api/chat/client/conversation", "/api/chat/admin/conversations"]) {
+  for (const path of ["/.env", "/server/index.mjs", "/api/messages", "/admin", "/messages", "/admin/messages", "/chat.js", "/chat-model.js", "/chat.css", "/api/chat/client/conversation", "/api/chat/admin/conversations", "/api/media/client/capabilities", "/api/media/admin/assets"]) {
     const response = await fetch(`${base}${path}`);
     assert.equal(response.status, 404, path);
   }

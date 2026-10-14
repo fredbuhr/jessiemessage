@@ -23,6 +23,13 @@ const message = (overrides = {}) => ({
   id: messageId, sequence: "1", sender: "me", body: "Bonjour 👋 <script>example</script>", createdAt: now,
   deletedAt: null, clientMessageId, encryptedBody: "private-ciphertext", senderId: adminId, fingerprint: "private-fingerprint", ...overrides,
 });
+function deliveredMedia(role, overrides = {}) {
+  const base = `/api/media/${role}/conversations/${conversationId}/messages/${messageId}`;
+  return { id: "e".repeat(32), width: 100, height: 150, thumbnailWidth: 100, thumbnailHeight: 150,
+    bytes: 1000, thumbnailBytes: 500, createdAt: now, sharedHere: true,
+    fullUrl: `${base}/full`, thumbnailUrl: `${base}/thumb`, storageKey: "private-storage-key",
+    contentDigest: "private-fingerprint", originalFilename: "private-filename", ...overrides };
+}
 
 async function fixture(t, overrides = {}) {
   const calls = [];
@@ -71,6 +78,47 @@ test("chat handler requires canonical HTTPS origin and its full service contract
   const service = Object.fromEntries(["actor", "listConversations", "clientConversation", "messages", "events", "send", "markRead", "delete"].map((key) => [key, () => {}]));
   for (const value of ["http://example.invalid", `${origin}/`, `${origin}/messages`, `${origin}?x=1`, "https://user:pass@example.invalid"]) assert.throws(() => createChatHandler(service, { origin: value }));
   assert.throws(() => createChatHandler({}, { origin }));
+});
+
+test("chat reads and events expose images through authorized delivery URLs while preserving text DTOs", async (t) => {
+  const { base, service } = await fixture(t);
+  for (const role of ["admin", "client"]) {
+    service.messages = async () => ({ conversation: conversation(role), messages: [message({ body: "", media: deliveredMedia(role) })], hasMoreBefore: false, hasMoreAfter: false, nextBefore: "1", nextAfter: "1", eventCursor: "1" });
+    const response = await fetch(`${base}${path(role)}`, { headers: { Cookie: cookie(role) } });
+    assert.equal(response.status, 200); const result = await response.json(); privateFieldsAbsent(result);
+    assert.equal(result.messages[0].body, "");
+    assert.deepEqual(Object.keys(result.messages[0].media).sort(), ["bytes", "createdAt", "fullUrl", "height", "id", "sharedHere", "thumbnailBytes", "thumbnailHeight", "thumbnailUrl", "thumbnailWidth", "width"]);
+    assert.equal(result.messages[0].media.fullUrl, `/api/media/${role}/conversations/${conversationId}/messages/${messageId}/full`);
+    service.events = async () => ({ conversation: conversation(role), events: [{ sequence: "1", kind: "message", occurredAt: now, message: message({ body: "<script>plain caption</script>", media: deliveredMedia(role) }) }], nextCursor: "1", hasMore: false });
+    const events = await fetch(`${base}${path(role, "events")}`, { headers: { Cookie: cookie(role) } });
+    assert.equal(events.status, 200); assert.equal((await events.json()).events[0].message.body, "<script>plain caption</script>");
+  }
+  service.messages = async () => ({ conversation: conversation("admin"), messages: [message()], hasMoreBefore: false, hasMoreAfter: false, nextBefore: "1", nextAfter: "1", eventCursor: "1" });
+  const response = await fetch(`${base}${path("admin")}`, { headers: { Cookie: cookie("admin") } });
+  assert.equal(Object.hasOwn((await response.json()).messages[0], "media"), false);
+});
+
+test("chat images reject foreign URLs, invalid metadata or captions and remove media on tombstones", async (t) => {
+  const { base, service } = await fixture(t);
+  const read = () => fetch(`${base}${path("admin")}`, { headers: { Cookie: cookie("admin") } });
+  for (const value of [
+    message({ body: "", media: deliveredMedia("client") }),
+    message({ body: "", media: deliveredMedia("admin", { fullUrl: "https://other.example/photo.jpg" }) }),
+    message({ body: "", media: deliveredMedia("admin", { fullUrl: `/api/media/admin/assets/${"e".repeat(32)}/full` }) }),
+    message({ body: "", media: deliveredMedia("admin", { sharedHere: false }) }),
+    message({ body: "", media: deliveredMedia("admin", { bytes: 10485761 }) }),
+    message({ body: "x".repeat(1001), media: deliveredMedia("admin") }),
+    message({ body: "\u200b", media: deliveredMedia("admin") }),
+    message({ body: "\ud800", media: deliveredMedia("admin") }),
+    message({ body: null, deletedAt: now + 1, media: deliveredMedia("admin") }),
+  ]) {
+    service.messages = async () => ({ conversation: conversation("admin"), messages: [value], hasMoreBefore: false, hasMoreAfter: false, nextBefore: "1", nextAfter: "1", eventCursor: "1" });
+    const response = await read(); assert.equal(response.status, 503); assert.deepEqual(await response.json(), { error: "messaging_unavailable" });
+  }
+  service.events = async () => ({ conversation: conversation("admin"), events: [{ sequence: "1", kind: "delete", occurredAt: now + 1, message: message({ body: null, deletedAt: now + 1, media: null }) }], nextCursor: "1", hasMore: false });
+  const deleted = await fetch(`${base}${path("admin", "events")}`, { headers: { Cookie: cookie("admin") } });
+  assert.equal(deleted.status, 200); const body = await deleted.json();
+  assert.equal(body.events[0].message.body, null); assert.equal(Object.hasOwn(body.events[0].message, "media"), false);
 });
 
 test("chat capability and conversation responses authenticate roles and whitelist private DTOs", async (t) => {

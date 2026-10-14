@@ -2,7 +2,7 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-> **Current delivery: private text messaging 0.6.0 + Nuit workbench 0.3.1.** Explicit configuration enables administrator MFA, private recovery, invitations, verified client access and persistent private text conversations. Messages are encrypted at rest, with pagination, read receipts and author deletion. The offline preview remains fictional. SMTP delivery, age-assurance integration and HTTPS browser acceptance remain launch work; no automatic Infomaniak deployment.
+> **Current delivery: private images 0.7.0 + Nuit workbench 0.3.1.** Explicit configuration enables private text/photo messages, a conversation gallery and a reusable owner library. Photos are normalized without source metadata, encrypted outside the checkout and served only after live authorization. The offline preview remains fictional. Real SMTP, age-assurance integration and HTTPS/mobile acceptance remain launch work; no automatic Infomaniak deployment.
 
 ## Try without a terminal
 
@@ -23,6 +23,7 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 - [Private administrator recovery](docs/admin-recovery.md)
 - [Encrypted verification email queue](docs/verification-mail.md)
 - [Private text messaging and operational limits](docs/private-messaging.md)
+- [Private images, gallery and storage setup](docs/private-media.md)
 
 ## Maintainer checks
 
@@ -36,7 +37,7 @@ The development branch adds a dedicated MariaDB 10.11+ schema for users, hashed 
 
 `npm run db:migrate -- status` is read-only apart from connection session settings and a temporary advisory lock; `npm run db:migrate -- up` initializes/applies the reviewed schema in an explicitly confirmed dedicated database. No migration runs on server startup. CI uses disposable, synthetic MariaDB 10.11 and 11.4 databases.
 
-Administrator sign-in now combines an exact password with a fresh authenticator code or a single-use recovery code. Sessions use a Secure/HttpOnly host cookie, an eight-hour maximum, a thirty-minute idle timeout, database revocation, strict Origin/CSRF checks and persistent rate limits. The one-time private setup CLI creates no default credentials. See [setup and operational limits](docs/auth-admin.md). Invitations, atomic registration and encrypted verification mail jobs are implemented. Verified email permits a limited client session; active access additionally requires independently recorded age assurance and administrator approval. No API converts an age declaration into verification. The separately enabled text chat checks live conversation ownership, session generation and client gates inside each database transaction. `/messages` gives an active client one conversation; `/admin/messages` gives the assigned administrator a private inbox. Media, CRM, bulk sends and Web Push remain separate milestones.
+Administrator sign-in now combines an exact password with a fresh authenticator code or a single-use recovery code. Sessions use a Secure/HttpOnly host cookie, an eight-hour maximum, a thirty-minute idle timeout, database revocation, strict Origin/CSRF checks and persistent rate limits. The one-time private setup CLI creates no default credentials. See [setup and operational limits](docs/auth-admin.md). Invitations, atomic registration and encrypted verification mail jobs are implemented. Verified email permits a limited client session; active access additionally requires independently recorded age assurance and administrator approval. No API converts an age declaration into verification. The separately enabled text chat checks live conversation ownership, session generation and client gates inside each database transaction. `/messages` gives an active client one conversation; `/admin/messages` gives the assigned administrator a private inbox. An additional media flag/key/private directory enables photo messages, a private gallery and reusable owner assets. CRM, bulk sends and Web Push remain separate milestones.
 
 ## Data rules
 

@@ -58,17 +58,42 @@ function safeConversation(value, role, expectedId = null) {
   };
 }
 
-function safeMessage(value) {
+/** Validate media metadata and rebuild the only URLs this role may consume. */
+export function safeMedia(value, { role, conversationId = null, messageId = null } = {}) {
+  const integer = (field, maximum) => Number.isSafeInteger(value?.[field]) && value[field] >= 1 && value[field] <= maximum;
+  if (!["admin", "client"].includes(role) || !value || !id(value.id)
+    || !integer("width", 2048) || !integer("height", 2048)
+    || !integer("thumbnailWidth", 480) || !integer("thumbnailHeight", 480)
+    || !integer("bytes", 10485760) || !integer("thumbnailBytes", 524288)
+    || !date(value.createdAt) || typeof value.sharedHere !== "boolean"
+    || (conversationId === null) !== (messageId === null)
+    || conversationId !== null && (!id(conversationId) || !id(messageId) || value.sharedHere !== true)) throw unavailable();
+  const base = conversationId === null ? `/api/media/${role}/assets/${value.id}`
+    : `/api/media/${role}/conversations/${conversationId}/messages/${messageId}`;
+  if (value.fullUrl !== `${base}/full` || value.thumbnailUrl !== `${base}/thumb`) throw unavailable();
+  return { id: value.id, width: value.width, height: value.height,
+    thumbnailWidth: value.thumbnailWidth, thumbnailHeight: value.thumbnailHeight,
+    bytes: value.bytes, thumbnailBytes: value.thumbnailBytes, createdAt: value.createdAt,
+    sharedHere: value.sharedHere, fullUrl: `${base}/full`, thumbnailUrl: `${base}/thumb` };
+}
+
+export function safeMessage(value, context = {}) {
   if (!value || !id(value.id) || !sequence(value.sequence, true) || !["me", "peer"].includes(value.sender)
     || !date(value.createdAt) || !nullableDate(value.deletedAt)
     || !(value.clientMessageId === null || id(value.clientMessageId))
     || value.sender === "peer" && value.clientMessageId !== null
     || value.deletedAt !== null && (value.deletedAt < value.createdAt || value.body !== null)) throw unavailable();
+  let media;
   if (value.deletedAt === null) {
-    try { validateMessageBody(value.body); } catch { throw unavailable(); }
-  }
+    if (value.media !== undefined) {
+      media = safeMedia(value.media, { ...context, messageId: value.id });
+      if (typeof value.body !== "string" || value.body.length > 1000) throw unavailable();
+      if (value.body !== "") { try { validateMessageBody(value.body); } catch { throw unavailable(); } }
+    } else { try { validateMessageBody(value.body); } catch { throw unavailable(); } }
+  } else if (value.media !== undefined && value.media !== null) throw unavailable();
   return { id: value.id, sequence: value.sequence, sender: value.sender, body: value.body,
-    createdAt: value.createdAt, deletedAt: value.deletedAt, clientMessageId: value.clientMessageId };
+    createdAt: value.createdAt, deletedAt: value.deletedAt, clientMessageId: value.clientMessageId,
+    ...(media ? { media } : {}) };
 }
 
 function shape(body, keys) {
@@ -186,7 +211,7 @@ export function createChatHandler(service, { origin }) {
           || ["hasMoreBefore", "hasMoreAfter"].some((key) => typeof result[key] !== "boolean")
           || ["nextBefore", "nextAfter"].some((key) => !(result[key] === null || sequence(result[key])))
           || !sequence(result.eventCursor)) throw unavailable();
-        reply(response, method, 200, { conversation: safeConversation(result.conversation, route.role, route.conversationId), messages: result.messages.map(safeMessage),
+        reply(response, method, 200, { conversation: safeConversation(result.conversation, route.role, route.conversationId), messages: result.messages.map((value) => safeMessage(value, { role: route.role, conversationId: route.conversationId })),
           hasMoreBefore: result.hasMoreBefore, hasMoreAfter: result.hasMoreAfter, nextBefore: result.nextBefore, nextAfter: result.nextAfter, eventCursor: result.eventCursor });
       } else if (route.kind === "events") {
         const options = query(url, ["after", "limit"], 100);
@@ -200,7 +225,7 @@ export function createChatHandler(service, { origin }) {
           if (!value || !sequence(value.sequence, true) || BigInt(value.sequence) <= last
             || !["message", "delete"].includes(value.kind) || !date(value.occurredAt)) throw unavailable();
           last = BigInt(value.sequence);
-          const message = safeMessage(value.message);
+          const message = safeMessage(value.message, { role: route.role, conversationId: route.conversationId });
           if (value.kind === "delete" && message.deletedAt === null) throw unavailable();
           return { sequence: value.sequence, kind: value.kind, occurredAt: value.occurredAt, message };
         });
@@ -213,7 +238,7 @@ export function createChatHandler(service, { origin }) {
         validateMessageBody(body.body);
         const result = await service.send(route.role, token, route.conversationId, body);
         if (!result || typeof result.duplicate !== "boolean") throw unavailable();
-        reply(response, method, result.duplicate ? 200 : 201, { message: safeMessage(result.message), duplicate: result.duplicate });
+        reply(response, method, result.duplicate ? 200 : 201, { message: safeMessage(result.message, { role: route.role, conversationId: route.conversationId }), duplicate: result.duplicate });
       } else if (route.kind === "read") {
         query(url, []);
         const body = shape(await readJson(request), ["throughSequence"]);
@@ -224,7 +249,7 @@ export function createChatHandler(service, { origin }) {
       } else {
         query(url, []);
         shape(await readJson(request), []);
-        reply(response, method, 200, { message: safeMessage(await service.delete(route.role, token, route.conversationId, route.messageId)) });
+        reply(response, method, 200, { message: safeMessage(await service.delete(route.role, token, route.conversationId, route.messageId), { role: route.role, conversationId: route.conversationId }) });
       }
     } catch (error) {
       if (!response.headersSent && !response.destroyed) {

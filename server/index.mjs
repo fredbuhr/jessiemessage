@@ -39,10 +39,10 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler } = {}) {
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler } = {}) {
   const server = createServer(async (request, response) => {
     const method = request.method ?? "GET";
-    for (const handler of [chatHandler, accessHandler, authHandler]) {
+    for (const handler of [mediaHandler, chatHandler, accessHandler, authHandler]) {
       if (!handler) continue;
       try { if (await handler(request, response)) return; }
       catch {
@@ -96,9 +96,11 @@ export async function createConfiguredServer(env = process.env) {
   const { authConfiguration } = await import("./auth/config.mjs");
   const { accessConfiguration } = await import("./access/config.mjs");
   const { chatConfiguration } = await import("./chat/config.mjs");
+  const { mediaConfiguration } = await import("./media/config.mjs");
   const config = authConfiguration(env);
   const accessConfig = accessConfiguration(env);
   const chatConfig = chatConfiguration(env);
+  const mediaConfig = mediaConfiguration(env);
   if (!config.enabled) return { server: createAppServer(), pool: null };
   const { createRuntimePool } = await import("./db/runtime.mjs");
   const { createAuthStore } = await import("./auth/store.mjs");
@@ -125,6 +127,7 @@ export async function createConfiguredServer(env = process.env) {
     const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
       totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin });
     let chatHandler;
+    let mediaHandler;
     if (chatConfig.enabled) {
       const { createChatStore } = await import("./chat/store.mjs");
       const { createChatService } = await import("./chat/service.mjs");
@@ -134,9 +137,24 @@ export async function createConfiguredServer(env = process.env) {
       const chatService = await createChatService({ store: chatStore, authStore: store, authService: service,
         accessService, key: chatConfig.key });
       chatHandler = createChatHandler(chatService, { origin: chatConfig.origin });
+      // Chat history joins attachment metadata even when image transfer is off.
+      // Verify those tables before accepting any private history requests.
+      const { createMediaStore } = await import("./media/store.mjs");
+      const mediaStore = createMediaStore({ pool, chatStore });
+      await mediaStore.assertSchema();
+      if (mediaConfig.enabled) {
+        const { createMediaStorage } = await import("./media/storage.mjs");
+        const { createMediaService } = await import("./media/service.mjs");
+        const { createMediaHandler } = await import("./media/http.mjs");
+        const mediaStorage = await createMediaStorage({ root: mediaConfig.root, key: mediaConfig.key });
+        await mediaStorage.assertReady();
+        const mediaService = await createMediaService({ store: mediaStore, chatService, authStore: store,
+          storage: mediaStorage, key: mediaConfig.key });
+        mediaHandler = createMediaHandler(mediaService, { origin: mediaConfig.origin });
+      }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler });
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler });
     let worker;
     let closing;
     const mailWorker = {
