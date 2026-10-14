@@ -287,7 +287,7 @@ test("extended readJson still rejects malformed UTF-8 transport data", async (t)
 });
 
 test("readJson optional limit preserves the default and rejects unbounded programmer configuration", async () => {
-  for (const maxBytes of [0, -1, 32769, NaN, Infinity, "4096", 1.1]) assert.throws(() => readJson({ headers: {} }, { maxBytes }), TypeError);
+  for (const maxBytes of [0, -1, 65537, NaN, Infinity, "4096", 1.1]) assert.throws(() => readJson({ headers: {} }, { maxBytes }), TypeError);
   const request = new PassThrough(); request.headers = {};
   const promise = readJson(request, { maxBytes: 8192 });
   request.end(JSON.stringify({ body: "界".repeat(2000) }));

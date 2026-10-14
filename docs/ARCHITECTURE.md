@@ -1,12 +1,12 @@
 # Technical architecture — draft
 
-## Current development: opt-in access, text and private photos
+## Current development: opt-in access, text, private photos and CRM
 
-A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. Private flags enable administrator MFA and then invitations, registration, email verification and separate restricted client sessions. The mail worker starts with the listener and stops before the pool. An age declaration never opens access; independently recorded assurance and administrator approval are required. A separate chat flag enables private text conversations, transactional authorization and encrypted message bodies. An additional media flag enables normalized JPEG photo storage, encrypted outside the checkout, with per-request owner/delivery authorization. External provider integrations remain pending.
+A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. Private flags enable administrator MFA and then invitations, registration, email verification and separate restricted client sessions. The mail worker starts with the listener and stops before the pool. An age declaration never opens access; independently recorded assurance and administrator approval are required. A separate chat flag enables private text conversations, transactional authorization and encrypted message bodies. An additional media flag enables normalized JPEG photo storage, encrypted outside the checkout, with per-request owner/delivery authorization. CRM 0.8 adds administrator-only profiles, tags/groups and filtered contacts behind its own flag/key; it requires chat, while media remains optional. External provider integrations remain pending.
 
 The initial code is **not** a production chat service.
 
-Seventeen migrations provide those foundation and administrator tables plus client authentication, email verification, client session state an encrypted mail outbox, messages, per-participant read receipts and per-conversation change events, owner media assets and audited message attachments. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns and keys before enabling authentication. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI covers disposable MariaDB 10.11 and 11.4, including a real authentication flow. See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
+Twenty migrations provide those foundation and administrator tables plus client authentication, email verification, client session state, an encrypted mail outbox, messages, per-participant read receipts and per-conversation change events, owner media assets, audited message attachments and three CRM tables. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns, indexes, foreign keys and checks before enabling configured features. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI targets disposable MariaDB 10.11 and 11.4; CRM passes the [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864). See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
 
 ## Planned application
 
@@ -33,13 +33,23 @@ Seventeen migrations provide those foundation and administrator tables plus clie
 - `messages`, `chat_receipts`, `chat_events`: implemented encrypted text, sender-scoped idempotency, monotonic read receipts and deletion synchronization.
 - `media_assets`: implemented owner-scoped digest/deduplication, private encrypted storage handle, normalized dimensions, deletion state.
 - `message_media`: implemented one-image-per-message references; the message and conversation bind each delivery.
-- `tags` and `user_tags`: private internal labels.
-- `segments` and `segment_members`: private admin-managed recipient sets.
+- `crm_profiles`: implemented owner/conversation-scoped nickname, encrypted notes, reminder date, optimistic version and internal note-encryption revision.
+- `crm_labels`: implemented owner-scoped tags/groups with normalized names and optimistic versions.
+- `crm_memberships`: implemented composite-owner bindings between a client profile and its private labels.
+- Saved automatic segments: planned recipient-selection rules, separate from current explicit group memberships.
 - `campaigns` and `campaign_recipients`: bulk send idempotency and delivery status.
 - `notification_subscriptions`: user/device Push subscriptions with consent.
 - `tasks` and `audit_events`: limited operational tracking.
 
 Subject to data minimization, retention and legal review before schema stabilization.
+
+## Private CRM boundary
+
+`JESSIEMESSAGE_ENABLE_CRM=1` requires enabled chat and a distinct 32-byte `JESSIEMESSAGE_CRM_KEY`; the key must differ from MFA, mail, message and any supplied media key. CRM assets and endpoints require the administrator host cookie and a current MFA session. Database hooks recheck the actor and assigned conversation inside each transaction. The client chat module does not import the CRM module or request its data.
+
+Profile updates replace nickname, notes, reminder and memberships atomically against an expected version. Notes use AES-256-GCM bound to the administrator, conversation and internal `notes_revision`. Explicit saves advance both versions. Removing a label advances affected profile versions, while retaining the note revision and ciphertext so notes still decrypt and stale drafts conflict. Public DTOs never expose this internal revision or ciphertext.
+
+The contacts query searches pseudonym, nickname and email as literal substrings and combines tag/group, live access, unread and reminder filters. Results contain no email or notes; only the private selected profile includes them. Pages use stable conversation-ID cursors and bounded batch label reads. The reminder is a date used by filters, with no background notification job. Full contracts and operational limits are in [private-crm.md](private-crm.md).
 
 ## Hosting and deployment
 
@@ -59,7 +69,7 @@ Subject to data minimization, retention and legal review before schema stabiliza
 4. Configure/test real SMTP, connect independently verified age assurance, and finalize client password recovery and HTTPS acceptance.
 5. One-to-one text chat implemented; browser/HTTPS acceptance, retention/export and key-rotation tooling remain release work.
 6. Private photo upload/gallery and per-delivery audit implemented; retention/orphan cleanup, restore and storage load acceptance remain release work.
-7. Tags, segments, bulk sends and tasks.
+7. Private tags/groups, notes and reminders implemented; current CRM CI verified. Next: queued individual bulk sends and operational tasks.
 8. Web Push notifications and PWA installation.
 9. Legal pages, i18n, pen-testing, restore and load tests.
 10. Controlled production rollout.
