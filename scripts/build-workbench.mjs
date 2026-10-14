@@ -1,0 +1,21 @@
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const read = path => readFile(join(root,path),'utf8');
+const template = await read('design/preview.html');
+const files = ['design/admin-tools.js','design/admin-tools-ui.js'];
+const scripts = await Promise.all(files.map(read));
+for (const script of scripts) if (/<\/script/i.test(script)) throw new Error('Unsafe inline script delimiter');
+const html = template.replace('</body>', scripts.map((text,i)=>`<script id="admin-extension-${i}">\n${text}\n</script>`).join('\n')+'\n</body>');
+if (!html.includes('admin-extension-1')) throw new Error('Missing insertion point');
+if (!html.includes('<script id="local-branding" type="application/json">{}</script>')) throw new Error('Do not publish personal branding in build artifacts');
+if (/data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]{30}/.test(html)) throw new Error('Embedded personal image');
+const out = join(root,'artifacts');
+await mkdir(out,{recursive:true});
+await writeFile(join(out,'JessieMessage.html'),html);
+await writeFile(join(out,'SHA256.txt'),createHash('sha256').update(html).digest('hex')+'  JessieMessage.html\n');
+await writeFile(join(out,'LIRE-EN-PREMIER.txt'),`JESSIEMESSAGE — ATELIER V0.2\n\nDouble-cliquez sur JessieMessage.html pour explorer Accueil, Côté client et Administration.\nAucune installation ni console. Les données sont fictives et restent en mémoire.\nLes invitations générées sont des exemples inactifs : ne pas les transmettre aux clients.\nMessages / Médiathèque / Diffusion / Accès permettent de tester les parcours.\nDans Accès : membres, invitations à usage unique simulé, groupes manuels.\nLes informations disparaissent au rechargement. Aucun e-mail, notification ou envoi réel.\nAucune photo personnelle n'est incluse dans cet export GitHub. Le bouton Photo charge une image localement.\nNe pas installer cet atelier comme application de production : il ne contient pas d'authentification.\n`);
+console.info('Atelier autonome créé : artifacts/JessieMessage.html (sans données réelles)');

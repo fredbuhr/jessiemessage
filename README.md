@@ -1,39 +1,39 @@
 # JessieMessage
 
-**Invitation-only private messaging PWA** — project website: [jessiemessage.com](https://jessiemessage.com)
+Invitation-only private messaging PWA. Public source, private user data.
 
-> **Development status: initial scaffold only.** No logins, invitations, messaging, photo exchange, age checks or client data are enabled yet. Do not use this branch as a production messaging platform.
+> **Development status: interactive workbench V0.2, not a production messenger.** No real accounts, database connection, messaging delivery, email or push notifications are enabled. No automatic deployment to Infomaniak.
 
-## What this repository contains today
+## Try the interface without a terminal
 
-- Minimal Node.js 24 HTTP server, with zero runtime npm dependencies.
-- Mobile-friendly, neutral French/English public placeholder.
-- PWA web manifest and provisional SVG icon.
-- Basic browser-facing security headers, explicit public file allowlist, health check.
-- GitHub Actions syntax checks and HTTP tests.
+Open the latest successful **CI** run on the development branch in GitHub Actions. Download the artifact named **JessieMessage-apercu-…**, extract it and open **JessieMessage.html** in your browser.
 
-## Product vision
+The self-contained preview includes Welcome, Client view and Administration. The admin workspace has Messages / Media library / Broadcast / Access. It supports fictional conversations, emojis, media history, private notes and tags, manual groups, one-time invitation simulation, access expiry/suspension and targeted deliveries with duplicate protection.
 
-JessieMessage will provide private one-to-one conversations between Jessie and invited clients. Admin-only tools will manage expiring invitations, private tags and groups, scheduled tasks, targeted bulk messages and a media library tracking what was delivered to each client. All bulk deliveries should appear as individual conversations, never shared group chats. The application will have no in-app payments or public gallery.
+Everything is kept in memory and resets on reload. Example invitation links are inactive. No real clients or intimate files belong in this workshop. The client/admin switch is a presentation control, **not authentication**.
 
-**Read before developing:**
-
-- [Product scope and milestones](docs/PRODUCT.md)
-- [Technical architecture](docs/ARCHITECTURE.md)
+- [V0.2 delivery notes and checks](docs/WORKBENCH-V02.md)
+- [Product scope](docs/PRODUCT.md)
+- [KISS direction and initial design](docs/DESIGN-KISS.md)
+- [Planned architecture](docs/ARCHITECTURE.md)
 - [Security and privacy launch gates](docs/SECURITY.md)
 
-## Running and deploying
+## Code and checks
 
-The initial scaffold has no dependencies. It starts using `npm start` on Node.js 24 and listens on `process.env.PORT` (default: 3000). `npm test` verifies its public routes and security headers; `npm run build` verifies syntax. The GitHub Actions workflow runs these checks automatically.
+The neutral public placeholder remains served by a minimal Node.js 24 HTTP server with no runtime npm dependencies. It serves only explicit public files and a health endpoint; `design/` and generated `artifacts/` are not publicly served.
 
-**Production deployment is not automated yet.** The Infomaniak Node.js site already exists separately; no changes to Infomaniak or ZTIKIX are made by GitHub commits or pull requests. Only deploy reviewed versions when the required legal and security mechanisms are in place.
+- `npm start`: start the placeholder using `PORT` (default 3000).
+- `npm run check`: verify JavaScript syntax.
+- `npm test`: run 28 tests on the placeholder and workshop rules.
+- `npm run build`: assemble the downloadable, offline HTML workbench.
 
-## Important repository rules
+GitHub Actions performs these checks and prepares the download automatically. These commands are for maintainers; normal interface review needs only the downloaded HTML file.
 
-- Public code, private data: never commit personal information, real messages, photos, database dumps, authentication tokens, passwords or server access credentials.
-- All automated tests use synthetic data.
-- Real user onboarding and intimate media handling must remain disabled until applicable legal age controls, hosting terms, permissions, privacy information and security checks are completed.
-- All code changes should be reviewed in pull requests before merging into `main`.
+## Data and deployment rules
+
+Never commit credentials, real messages, client lists, personal photos, database dumps or production logs. The public preview uses fictional data and has no embedded portrait. Its Photo button can load an image locally without uploading it.
+
+Production will run separately on Infomaniak. The existing site, ZTIKIX and the `main` branch are unchanged by a proposal on the development branch. Real access requires server-side authorization, durable private storage and completion of the security/legal launch gates. A declarative 18+ checkbox is not labelled as verified adulthood.
 
 ## License
 
