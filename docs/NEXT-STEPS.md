@@ -27,7 +27,7 @@ La branche comprend actuellement :
 - Prototype HTML autonome pour accueil, conversation client et tableau de bord admin.
 - Gestion **fictive** des tags, groupes privés, invitations, accès, messages, médias, diffusions ciblées et prévention des doublons.
 - FR/EN, thème sombre responsive et tests GitHub Actions.
-- Aucune connexion réelle à MariaDB, aucun système d'identité et de permissions de production, aucun échange réel, aucun Web Push.
+- Premier lot serveur : schéma MariaDB versionné et outil de migration explicite (voir `docs/DATABASE.md`), préparés sur une PR séparée. Le serveur HTTP ne connecte pas encore de base. Aucun système d'identité et de permissions de production, aucun échange réel, aucun Web Push.
 
 La version graphique finale est intégrée : 47 tests exécutés avec succès sous Node.js 24.19.0. Les résultats CI et contrôles navigateur doivent être lus sur la livraison concernée, sans reprendre les anciens bilans comme nouvelle preuve.
 
@@ -60,3 +60,7 @@ La version graphique finale est intégrée : 47 tests exécutés avec succès so
 - Développer et tester avec des données fictives, ne rien enregistrer d'intime dans GitHub ou CI.
 - Préférer interface graphique GitHub + Infomaniak ; réduire SSH/console au strict nécessaire.
 - Livrer du code et des PR vérifiées, en sollicitant le propriétaire uniquement pour les décisions nécessaires ou les permissions d'accès.
+
+## Prochain lot serveur
+
+Après revue du schéma : authentification administrateur et MFA, sessions sûres et révocables avec anti-CSRF/anti-abus, puis invitations à usage unique et vérification d’e-mail. Les tables seules ne fournissent aucune de ces protections. Développer avec comptes synthétiques et tester l’isolation avant connexion de la vraie UI. Aucune migration ni configuration de la base Infomaniak n’a été effectuée.

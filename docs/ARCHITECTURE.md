@@ -1,10 +1,12 @@
 # Technical architecture — draft
 
-## Current branch: phase 0
+## Current development: public placeholder plus database foundation
 
 A minimal zero-dependency Node.js 24 HTTP server serves **only** a neutral static, bilingual landing page and `/api/health`. This deliberately does not contain registration, chat, storage or authentication endpoints.
 
 The initial code is **not** a production chat service.
+
+The first server lot supplies four versioned MariaDB migrations (`users`, `invitations`, `sessions`, `conversations`) and an explicit migration CLI. This CLI alone imports the official connector; the HTTP server has no DB connection or migration-on-startup side effect. Migration operations require an exact dedicated database confirmation, TLS by default, a database-scoped advisory lock, immutable SHA-256 history and manual resolution of interrupted DDL. Integration tests run on disposable MariaDB 10.11 and 11.4 schemas. See `docs/DATABASE.md`. Session and invitation tables are storage groundwork, not implemented authentication.
 
 ## Planned application
 

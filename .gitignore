@@ -1,4 +1,7 @@
 # Logs
+private-media/
+private-data/
+database-dumps/
 logs
 *.log
 npm-debug.log*
