@@ -18,8 +18,8 @@ const errorCode = (code) => (error) => error.code === code;
 
 test("all committed migrations have consecutive names, exact SHA-256 checksums and a supported SQL format", async () => {
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 4);
-  assert.deepEqual(migrations.map((item) => item.version), [1, 2, 3, 4]);
+  assert.equal(migrations.length, 8);
+  assert.deepEqual(migrations.map((item) => item.version), [1, 2, 3, 4, 5, 6, 7, 8]);
   assert.ok(migrations.every((item) => /^[0-9a-f]{64}$/.test(item.checksum)));
 });
 

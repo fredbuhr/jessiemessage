@@ -2,7 +2,7 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-> **Current delivery: Nuit + approved identity / workbench 0.3.1.** A dark mobile-first interactive prototype, not a production messenger. No real accounts, database connection, email, notifications or message delivery. No automatic Infomaniak deployment.
+> **Current delivery: administrator authentication 0.4.0 + Nuit workbench 0.3.1.** The server can explicitly enable MariaDB-backed administrator login, MFA and revocable sessions. The offline preview remains fictional. Email, client signup, messages and notifications are still pending. No automatic Infomaniak deployment.
 
 ## Try without a terminal
 
@@ -18,12 +18,13 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 - [Product scope](docs/PRODUCT.md)
 - [Planned architecture](docs/ARCHITECTURE.md)
 - [Security and privacy launch gates](docs/SECURITY.md)
+- [Administrator authentication and private setup](docs/auth-admin.md)
 
 ## Maintainer checks
 
-Node.js 24. The separate migration CLI uses the pinned official MariaDB connector; the public placeholder does not connect to a database. Run `npm ci --ignore-scripts` to install the lockfile. `npm run check` validates syntax, `npm test` runs the preview and migration unit tests (database integration is opt-in), and `npm run build` generates the self-contained HTML. GitHub Actions performs these checks and publishes the artifact. Test results depend on the actual CI run; screenshots and static contrast checks are not a security or accessibility certification.
+Node.js 24. Runtime and migration credentials are separate; migrations never run on server startup. Run `npm ci --ignore-scripts` to install the pinned lockfile. `npm run check` validates syntax, `npm test` runs the preview and authentication tests (database integration is opt-in), and `npm run build` generates the self-contained offline preview. CI runs the disposable MariaDB migration and authentication groups sequentially on 10.11 and 11.4, including a real HTTP/login/session/logout flow and DML-only runtime privileges. Only the three explicit public preview files are uploaded. Test results depend on the actual CI run; static checks are not a browser or accessibility certification.
 
-`npm start` still serves only the original neutral public placeholder and health endpoint. The design and artifact directories are not served by that application. No changes to Infomaniak, ZTIKIX or `main` are made by this development branch.
+`npm start` defaults to the original neutral page and liveness endpoint. With explicit private authentication configuration, it also serves `/admin/login`, the protected `/admin` access screen and authentication endpoints. Enabled authentication refuses startup when configuration or required tables are missing. The design and artifact directories are not served. No changes to Infomaniak, ZTIKIX or `main` are made by this development branch.
 
 ## First server foundation
 
@@ -31,7 +32,7 @@ The development branch adds a dedicated MariaDB 10.11+ schema for users, hashed 
 
 `npm run db:migrate -- status` is read-only apart from connection session settings and a temporary advisory lock; `npm run db:migrate -- up` initializes/applies the reviewed schema in an explicitly confirmed dedicated database. No migration runs on server startup. CI uses disposable, synthetic MariaDB 10.11 and 11.4 databases.
 
-This supplies storage foundations only: no administrator sign-in, MFA, live invitation links, secure sessions or real messaging API are enabled. These are the next server milestone.
+Administrator sign-in now combines an exact password with a fresh authenticator code or a single-use recovery code. Sessions use a Secure/HttpOnly host cookie, an eight-hour maximum, a thirty-minute idle timeout, database revocation, strict Origin/CSRF checks and persistent rate limits. The one-time private setup CLI creates no default credentials. See [setup and operational limits](docs/auth-admin.md). Live invitations, email verification and the messaging API are the next milestones.
 
 ## Data rules
 

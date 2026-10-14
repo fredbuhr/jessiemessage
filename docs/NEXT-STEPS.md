@@ -6,10 +6,10 @@
 ## Source de vérité
 
 - Dépôt : `fredbuhr/jessiemessage` (public).
-- Branche de travail : `feat/fondations-pwa`.
-- Pull request brouillon : [#1](https://github.com/fredbuhr/jessiemessage/pull/1).
+- Branche de travail actuelle : `feat/admin-auth`, empilée sur `feat/schema-mariadb`, elle-même sur `feat/fondations-pwa`.
+- Pull requests brouillons : [#1 — identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 — MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 — authentification administrateur](https://github.com/fredbuhr/jessiemessage/pull/3).
 - Domaine cible : `jessiemessage.com`.
-- Hébergement cible : Infomaniak mutualisé ; site Node.js 24 déjà créé, séparé de ZTIKIX.
+- Hébergement cible : Infomaniak mutualisé ; site Node.js 24 déclaré créé dans la passation, séparé de ZTIKIX. Configuration réelle à vérifier ; aucun déploiement de ce lot.
 - Branche `main` : ne pas fusionner sans tests et validation ; aucun déploiement automatique.
 
 ## Direction graphique approuvée
@@ -23,11 +23,11 @@ Une archive de mise à jour **`JessieMessage-Integration-Identite.zip`** a été
 ## État du développement
 
 La branche comprend actuellement :
-- Serveur Node.js 24 *minimal* qui sert uniquement une page d'accueil neutre et `/api/health`.
+- Serveur Node.js 24 : page d'accueil neutre et `/api/health` par défaut ; authentification administrateur activable uniquement par configuration privée explicite.
 - Prototype HTML autonome pour accueil, conversation client et tableau de bord admin.
 - Gestion **fictive** des tags, groupes privés, invitations, accès, messages, médias, diffusions ciblées et prévention des doublons.
 - FR/EN, thème sombre responsive et tests GitHub Actions.
-- Premier lot serveur livré dans la [PR brouillon nº 2](https://github.com/fredbuhr/jessiemessage/pull/2) : schéma MariaDB versionné et outil de migration explicite (voir `docs/DATABASE.md`). Le serveur HTTP ne connecte pas encore de base. Aucun système d'identité et de permissions de production, aucun échange réel, aucun Web Push.
+- Schéma MariaDB dédié et migrations explicites, avec tables MFA, codes de secours, état des sessions et compteurs anti-abus. Connexion administrateur avec mot de passe + MFA, sessions révocables, écran d'accès et initialisation privée du premier compte : voir [authentification](auth-admin.md). Les invitations côté serveur, les comptes clients, les échanges réels et Web Push restent à construire.
 
 La version graphique finale est intégrée : 47 tests exécutés avec succès sous Node.js 24.19.0. Les résultats CI et contrôles navigateur doivent être lus sur la livraison concernée, sans reprendre les anciens bilans comme nouvelle preuve.
 
@@ -63,7 +63,7 @@ La version graphique finale est intégrée : 47 tests exécutés avec succès so
 
 ## Prochain lot serveur
 
-Après revue du schéma : authentification administrateur et MFA, sessions sûres et révocables avec anti-CSRF/anti-abus, puis invitations à usage unique et vérification d’e-mail. Les tables seules ne fournissent aucune de ces protections. Développer avec comptes synthétiques et tester l’isolation avant connexion de la vraie UI. Aucune migration ni configuration de la base Infomaniak n’a été effectuée.
+Le premier lot d'authentification administrateur est implémenté sur la branche actuelle et doit être relu avec sa CI propre. Le lot suivant ajoute les invitations à usage unique, la preuve de possession d'e-mail et l'accès client, avec tests d'isolation et de concurrence. La procédure de réinitialisation du mot de passe et de rotation du MFA reste à compléter avant un pilote réel. Aucun compte réel, aucune migration ni configuration de la base Infomaniak n'a été effectué.
 
 ## Résultats vérifiés de la reprise Work
 
@@ -71,4 +71,5 @@ Après revue du schéma : authentification administrateur et MFA, sessions sûre
 - Premier lot serveur, [PR nº 2](https://github.com/fredbuhr/jessiemessage/pull/2), commit de code `812d9b00d9c58cfcada8ad002d313e8a267f8528` : [CI 38630438051](https://github.com/fredbuhr/jessiemessage/actions/runs/38630438051) réussie sous Node.js 24.21.0. Contrôle général : 63 tests réussis, 1 groupe d’intégration explicitement sauté dans ce job sans DB ; les jobs MariaDB séparés réussissent chacun leurs 12 tests, sans saut, sur 10.11 et 11.4.
 - [Aperçu autonome issu de cette CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38630438051/artifacts/11924969489) : décompresser puis ouvrir `JessieMessage.html`. Données fictives, aucun portrait personnel. L’export public et le build local ont la même source.
 - Nouveaux tests visuels non exécutés : aucun moteur navigateur installé ; leur téléchargement a été refusé par le contrôle automatique d’autorisation. Les anciens contrôles Chromium du paquet ne sont pas de nouveaux essais Work. Les parcours mobile/desktop et les essais physiques iPhone/Android restent à vérifier.
-- Les deux PR restent en brouillon ; aucune fusion, configuration Infomaniak, migration de vraie base ou mise en production n’a été effectuée. La présence des tables de sessions et d’invitations ne signifie pas que l’authentification ou leurs API existent.
+- Authentification administrateur 0.4, [PR nº 3](https://github.com/fredbuhr/jessiemessage/pull/3), commit de code `7cf16c5a1e6659b5492c637e888d0bcd091bfec0` : [CI 38639207749](https://github.com/fredbuhr/jessiemessage/actions/runs/38639207749) réussie sous Node.js 24.21.0. Contrôle général : 118 tests réussis, 2 groupes DB explicitement sautés dans ce job ; chaque version MariaDB réussit ensuite 12 tests de migrations et 14 tests d'authentification, sans saut. Le parcours HTTP connecté à MariaDB valide connexion, session, anti-CSRF, déconnexion et refus du rejeu MFA. Audit npm du 14 octobre : aucune vulnérabilité signalée.
+- Les trois PR restent en brouillon ; aucune fusion, configuration Infomaniak, migration de vraie base ou mise en production n'a été effectuée. L'authentification administrateur est implémentée et testée avec fixtures ; invitations et API clients restent absentes. La recette navigateur en HTTPS et sur appareils réels reste à effectuer.

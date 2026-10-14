@@ -39,9 +39,17 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer() {
-  return createServer(async (request, response) => {
+export function createAppServer({ authHandler } = {}) {
+  const server = createServer(async (request, response) => {
     const method = request.method ?? "GET";
+    if (authHandler) {
+      try { if (await authHandler(request, response)) return; }
+      catch {
+        if (response.headersSent) response.destroy();
+        else reply(response, method, 503, "application/json; charset=utf-8", '{"error":"service_unavailable"}');
+        return;
+      }
+    }
     if (method !== "GET" && method !== "HEAD") {
       reply(response, method, 405, "application/json; charset=utf-8", '{"error":"method_not_allowed"}');
       return;
@@ -60,7 +68,8 @@ export function createAppServer() {
       return;
     }
 
-    // No public authentication, messaging or media routes exist yet.
+    // Authentication is registered only by explicit private configuration.
+    // Messaging and media routes remain unavailable until their own release lot.
     // Never serve arbitrary file paths from the filesystem.
     const file = publicFiles.get(pathname);
     if (!file) {
@@ -75,12 +84,57 @@ export function createAppServer() {
       reply(response, method, 500, "text/plain; charset=utf-8", "Internal server error");
     }
   });
+  server.requestTimeout = 15000;
+  server.headersTimeout = 10000;
+  server.keepAliveTimeout = 5000;
+  server.maxRequestsPerSocket = 100;
+  return server;
+}
+
+export async function createConfiguredServer(env = process.env) {
+  const { authConfiguration } = await import("./auth/config.mjs");
+  const config = authConfiguration(env);
+  if (!config.enabled) return { server: createAppServer(), pool: null };
+  const { createRuntimePool } = await import("./db/runtime.mjs");
+  const { createAuthStore } = await import("./auth/store.mjs");
+  const { createAuthService } = await import("./auth/service.mjs");
+  const { createAuthHandler } = await import("./auth/http.mjs");
+  const pool = await createRuntimePool(env);
+  try {
+    const store = createAuthStore(pool);
+    await store.assertSchema();
+    const service = await createAuthService({ store, totpKey: config.totpKey });
+    return { server: createAppServer({ authHandler: createAuthHandler(service, { origin: config.origin }) }), pool };
+  } catch {
+    await pool.end().catch(() => {});
+    throw new Error("Authentication startup failed; check private configuration, database schema and runtime permissions.");
+  }
+}
+
+async function start() {
+  const rawPort = Number(process.env.PORT ?? 3000);
+  const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3000;
+  const { server, pool } = await createConfiguredServer();
+  server.listen(port, "0.0.0.0", () => {
+    console.info(`JessieMessage listening on port ${port}`);
+  });
+  let closing = false;
+  const shutdown = () => {
+    if (closing) return;
+    closing = true;
+    server.close(async () => {
+      await pool?.end().catch(() => {});
+      process.exitCode = 0;
+    });
+    server.closeIdleConnections();
+  };
+  process.once("SIGTERM", shutdown);
+  process.once("SIGINT", shutdown);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const rawPort = Number(process.env.PORT ?? 3000);
-  const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3000;
-  createAppServer().listen(port, "0.0.0.0", () => {
-    console.info(`JessieMessage placeholder listening on port ${port}`);
+  start().catch(() => {
+    console.error("JessieMessage startup failed; check private configuration and database readiness.");
+    process.exitCode = 1;
   });
 }

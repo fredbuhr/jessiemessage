@@ -37,7 +37,10 @@ jobs:
           name: JessieMessage-apercu-${{ github.run_number }}
           retention-days: 7
           if-no-files-found: error
-          path: artifacts/
+          path: |
+            artifacts/JessieMessage.html
+            artifacts/SHA256.txt
+            artifacts/LIRE-EN-PREMIER.txt
           include-hidden-files: false
 
   database:
@@ -72,6 +75,11 @@ jobs:
           node-version: "24"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
+      - name: Create disposable runtime account with DML privileges only
+        run: >-
+          docker exec -e MYSQL_PWD=ci-only-root-not-a-secret
+          ${{ job.services.mariadb.id }} mariadb --user=root
+          --execute="CREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret'; GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_ci.* TO 'jessiemessage_runtime_test'@'%';"
       - name: Exercise migrations and constraints on disposable database
         run: npm run test:db
         env:
@@ -83,3 +91,6 @@ jobs:
           JESSIEMESSAGE_DB_PASSWORD: ci-only-not-a-secret
           JESSIEMESSAGE_MIGRATION_DATABASE: jessiemessage_test_ci
           JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL: "1"
+          JESSIEMESSAGE_RUNTIME_DB_USER: jessiemessage_runtime_test
+          JESSIEMESSAGE_RUNTIME_DB_PASSWORD: ci-runtime-only-not-a-secret
+          JESSIEMESSAGE_APPLICATION_DATABASE: jessiemessage_test_ci

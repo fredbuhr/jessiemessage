@@ -1,21 +1,21 @@
 # Technical architecture — draft
 
-## Current development: public placeholder plus database foundation
+## Current development: opt-in administrator authentication
 
-A minimal zero-dependency Node.js 24 HTTP server serves **only** a neutral static, bilingual landing page and `/api/health`. This deliberately does not contain registration, chat, storage or authentication endpoints.
+A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. With explicit private configuration it adds administrator login, MFA and revocable MariaDB sessions. Client registration, chat and media routes remain pending.
 
 The initial code is **not** a production chat service.
 
-The first server lot supplies four versioned MariaDB migrations (`users`, `invitations`, `sessions`, `conversations`) and an explicit migration CLI. This CLI alone imports the official connector; the HTTP server has no DB connection or migration-on-startup side effect. Migration operations require an exact dedicated database confirmation, TLS by default, a database-scoped advisory lock, immutable SHA-256 history and manual resolution of interrupted DDL. Integration tests run on disposable MariaDB 10.11 and 11.4 schemas. See `docs/DATABASE.md`. Session and invitation tables are storage groundwork, not implemented authentication.
+Eight migrations provide the original users/invitations/sessions/conversations tables plus MFA, recovery codes, session state and anti-abuse counters. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns and keys before enabling authentication. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI covers disposable MariaDB 10.11 and 11.4, including a real authentication flow. See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
 
 ## Planned application
 
-- Frontend: React + TypeScript + Vite (mobile-first PWA), delivered over HTTPS.
+- Frontend: modularize the approved HTML/CSS/JavaScript interface while preserving its design; deliver the mobile-first PWA over HTTPS.
 - API: Node.js 24; request validation; centralized policy enforcement and granular authorization.
-- Real-time: authenticated Socket.IO or equivalent after evaluating host limits.
+- Initial updates: authenticated REST and bounded polling while visible; evaluate a persistent connection after measuring host limits and actual needs.
 - Database: dedicated MariaDB schema on Infomaniak, using migrations committed to Git.
 - Media: non-public file/object storage with per-request authorization and short-lived download permissions.
-- Background queue: process bulk sends and notification deliveries in bounded batches.
+- Background queue: durable MariaDB jobs and bounded batches for bulk sends and notifications.
 - Web Push: VAPID keys as deployment secrets, never in the public Git repository except the public key.
 - Email: transactional verification and recovery via a provider approved for the use case.
 - Installation: manifest, appropriate PNG icons and service worker caching **only** public static assets; never cache private media or messages.
@@ -27,6 +27,7 @@ The first server lot supplies four versioned MariaDB migrations (`users`, `invit
 - `invitations`: hashed token, created by, expiry, consumed/revoked status.
 - `age_assurance`: minimal necessary verification status/reference without ID copies.
 - `sessions`: revocable, secure browser sessions.
+- `admin_mfa`, `admin_recovery_codes`, `auth_session_state`, `auth_rate_limits`: implemented administrator authentication state.
 - `conversations`: only a client and a permitted creator/admin.
 - `messages`: sender, recipient conversation, kind, timestamps and deletion state.
 - `media_assets`: content digest, storage handle, dimensions, MIME, owner.
@@ -43,7 +44,7 @@ Subject to data minimization, retention and legal review before schema stabiliza
 
 - Source: public GitHub repository; **no** production secrets or user data.
 - CI: non-privileged tests on GitHub Actions; no automatic deployment from untrusted branches.
-- Production: separate Infomaniak Node.js 24 site at jessiemessage.com.
+- Hosting target: separate Infomaniak Node.js 24 site at jessiemessage.com; runtime configuration and deployment remain to be verified.
 - Code deploy only from a reviewed release. Database migrations and storage backups are separate operations.
 - Existing ZTIKIX deployment and database must remain untouched.
 - Validate memory, connection limits, file storage, background processes and WebSockets on shared hosting with actual load tests.
@@ -53,7 +54,7 @@ Subject to data minimization, retention and legal review before schema stabiliza
 
 1. Freeze key architecture and privacy assumptions.
 2. Schema migrations + test database (all synthetic data).
-3. Secure admin authentication and inviting.
+3. Administrator authentication implemented; complete recovery/rotation and add invitations.
 4. Email verification, age-assurance integration and account onboarding.
 5. One-to-one text chat with strict per-conversation access checks.
 6. Private file upload, per-recipient media audit and retention controls.

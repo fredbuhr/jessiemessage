@@ -10,7 +10,7 @@ const id = () => randomBytes(16);
 const tokenHash = () => randomBytes(32);
 const fixture = (sql) => [{ version: 1, name: "0001_probe.sql", sql, checksum: checksumSql(sql) }];
 const probeSql = "CREATE TABLE migration_probe (id INT NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
-const allowedTables = ["conversations", "sessions", "invitations", "users", "migration_probe", "schema_migrations"];
+const allowedTables = ["auth_session_state", "admin_recovery_codes", "admin_mfa", "auth_rate_limits", "conversations", "sessions", "invitations", "users", "migration_probe", "schema_migrations"];
 
 test("real MariaDB migration and foundation constraints (synthetic disposable database only)", { skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.", timeout: 120000 }, async (t) => {
   const options = databaseOptions();
@@ -38,11 +38,11 @@ test("real MariaDB migration and foundation constraints (synthetic disposable da
   try {
     await reset();
     await t.test("status is read-only on an empty schema; application is ordered and repeatable", async () => {
-      assert.deepEqual((await migrationStatus(connection, context)).map((item) => item.state), ["pending", "pending", "pending", "pending"]);
+      assert.deepEqual((await migrationStatus(connection, context)).map((item) => item.state), Array(8).fill("pending"));
       assert.equal((await connection.query("SHOW TABLES")).length, 0);
-      assert.deepEqual(await applyMigrations(connection, context), { applied: [1, 2, 3, 4], unchanged: 0 });
-      assert.deepEqual(await applyMigrations(connection, context), { applied: [], unchanged: 4 });
-      assert.deepEqual((await migrationStatus(connection, context)).map((item) => item.state), ["applied", "applied", "applied", "applied"]);
+      assert.deepEqual(await applyMigrations(connection, context), { applied: [1, 2, 3, 4, 5, 6, 7, 8], unchanged: 0 });
+      assert.deepEqual(await applyMigrations(connection, context), { applied: [], unchanged: 8 });
+      assert.deepEqual((await migrationStatus(connection, context)).map((item) => item.state), Array(8).fill("applied"));
       const timezone = await connection.query("SELECT @@session.time_zone AS value");
       assert.equal(timezone[0].value, "+00:00");
     });
@@ -56,7 +56,7 @@ test("real MariaDB migration and foundation constraints (synthetic disposable da
         await connection.query("SELECT RELEASE_LOCK(?)", [lockName]);
         await competitor.end();
       }
-      assert.deepEqual(await applyMigrations(connection, context), { applied: [], unchanged: 4 });
+      assert.deepEqual(await applyMigrations(connection, context), { applied: [], unchanged: 8 });
     });
     await t.test("edited and removed applied migrations are rejected before new DDL", async () => {
       const changed = migrations.map((migration) => ({ ...migration }));
@@ -64,7 +64,7 @@ test("real MariaDB migration and foundation constraints (synthetic disposable da
       changed[0].checksum = checksumSql(changed[0].sql);
       await assert.rejects(applyMigrations(connection, { database, migrations: changed }), errorCode("CHECKSUM_DRIFT"));
       await assert.rejects(applyMigrations(connection, { database, migrations: migrations.slice(0, -1) }), errorCode("HISTORY_DIVERGED"));
-      assert.equal((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count, 4n);
+      assert.equal((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count, 8n);
     });
     await t.test("client activation and access expiry require all recorded gate prerequisites", async () => {
       const { client } = await seed();
