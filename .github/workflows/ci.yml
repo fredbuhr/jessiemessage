@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, "feat/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "feat/**"]
 
 permissions:
   contents: read
@@ -23,6 +23,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
       - name: Check JavaScript syntax
         run: npm run check
       - name: Run tests
@@ -37,3 +39,47 @@ jobs:
           if-no-files-found: error
           path: artifacts/
           include-hidden-files: false
+
+  database:
+    name: MariaDB ${{ matrix.mariadb }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mariadb: ["10.11", "11.4"]
+    services:
+      mariadb:
+        image: mariadb:${{ matrix.mariadb }}
+        env:
+          # Disposable synthetic CI credentials; never used in deployment.
+          MARIADB_ROOT_PASSWORD: ci-only-root-not-a-secret
+          MARIADB_DATABASE: jessiemessage_test_ci
+          MARIADB_USER: jessiemessage_test
+          MARIADB_PASSWORD: ci-only-not-a-secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Exercise migrations and constraints on disposable database
+        run: npm run test:db
+        env:
+          JESSIEMESSAGE_DB_TEST: "1"
+          JESSIEMESSAGE_DB_HOST: "127.0.0.1"
+          JESSIEMESSAGE_DB_PORT: "3306"
+          JESSIEMESSAGE_DB_NAME: jessiemessage_test_ci
+          JESSIEMESSAGE_DB_USER: jessiemessage_test
+          JESSIEMESSAGE_DB_PASSWORD: ci-only-not-a-secret
+          JESSIEMESSAGE_MIGRATION_DATABASE: jessiemessage_test_ci
+          JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL: "1"

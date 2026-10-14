@@ -21,9 +21,17 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 
 ## Maintainer checks
 
-Node.js 24; no runtime npm dependencies. `npm run check` validates syntax, `npm test` runs 47 tests, and `npm run build` generates the self-contained HTML. GitHub Actions performs these checks and publishes the artifact. Test results depend on the actual CI run; screenshots and static contrast checks are not a security or accessibility certification.
+Node.js 24. The separate migration CLI uses the pinned official MariaDB connector; the public placeholder does not connect to a database. Run `npm ci --ignore-scripts` to install the lockfile. `npm run check` validates syntax, `npm test` runs the preview and migration unit tests (database integration is opt-in), and `npm run build` generates the self-contained HTML. GitHub Actions performs these checks and publishes the artifact. Test results depend on the actual CI run; screenshots and static contrast checks are not a security or accessibility certification.
 
 `npm start` still serves only the original neutral public placeholder and health endpoint. The design and artifact directories are not served by that application. No changes to Infomaniak, ZTIKIX or `main` are made by this development branch.
+
+## First server foundation
+
+The development branch adds a dedicated MariaDB 10.11+ schema for users, hashed invitations, revocable sessions and one conversation per client. A migration ledger detects source drift and interrupted DDL, serializes migrators with a database-scoped lock and requires explicit recovery. See [database configuration, migration and recovery](docs/DATABASE.md).
+
+`npm run db:migrate -- status` is read-only apart from connection session settings and a temporary advisory lock; `npm run db:migrate -- up` initializes/applies the reviewed schema in an explicitly confirmed dedicated database. No migration runs on server startup. CI uses disposable, synthetic MariaDB 10.11 and 11.4 databases.
+
+This supplies storage foundations only: no administrator sign-in, MFA, live invitation links, secure sessions or real messaging API are enabled. These are the next server milestone.
 
 ## Data rules
 
