@@ -13,6 +13,7 @@ const filename = (root, storageKey, variant) => path.join(root, `${storageKey.to
 const unavailable = (promise) => assert.rejects(promise, (error) => error instanceof MediaStorageError && error.code === "MEDIA_UNAVAILABLE"
   && error.cause === undefined && !error.message.includes(base) && !error.message.includes("secret"));
 async function fixture(t) {
+  await mkdir(base, { recursive: true, mode: 0o700 });
   const root = await mkdtemp(path.join(base, "media-storage-test-"));
   t.after(() => rm(root, { recursive: true, force: true }));
   const key = randomBytes(32);
