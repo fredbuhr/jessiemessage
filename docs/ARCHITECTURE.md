@@ -6,7 +6,7 @@ A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness en
 
 The initial code is **not** a production chat service.
 
-Twenty migrations provide those foundation and administrator tables plus client authentication, email verification, client session state, an encrypted mail outbox, messages, per-participant read receipts and per-conversation change events, owner media assets, audited message attachments and three CRM tables. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns, indexes, foreign keys and checks before enabling configured features. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI targets disposable MariaDB 10.11 and 11.4; CRM verification for this revision is pending. See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
+Twenty migrations provide those foundation and administrator tables plus client authentication, email verification, client session state, an encrypted mail outbox, messages, per-participant read receipts and per-conversation change events, owner media assets, audited message attachments and three CRM tables. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns, indexes, foreign keys and checks before enabling configured features. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI targets disposable MariaDB 10.11 and 11.4; CRM passes the [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864). See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
 
 ## Planned application
 
@@ -69,7 +69,7 @@ The contacts query searches pseudonym, nickname and email as literal substrings 
 4. Configure/test real SMTP, connect independently verified age assurance, and finalize client password recovery and HTTPS acceptance.
 5. One-to-one text chat implemented; browser/HTTPS acceptance, retention/export and key-rotation tooling remain release work.
 6. Private photo upload/gallery and per-delivery audit implemented; retention/orphan cleanup, restore and storage load acceptance remain release work.
-7. Private tags/groups, notes and reminders implemented; current CRM CI verification pending. Next: queued individual bulk sends and operational tasks.
+7. Private tags/groups, notes and reminders implemented; current CRM CI verified. Next: queued individual bulk sends and operational tasks.
 8. Web Push notifications and PWA installation.
 9. Legal pages, i18n, pen-testing, restore and load tests.
 10. Controlled production rollout.

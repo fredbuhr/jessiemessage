@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.8**. Registration, private text/photo chat, conversation galleries, an owner media library and private administrator client files are implemented behind explicit private configuration. CRM CI verification is pending for this revision. The default server stays neutral. Diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
+Status: **development 0.8**. Registration, private text/photo chat, conversation galleries, an owner media library and private administrator client files are implemented behind explicit private configuration. The [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) passes; browser/device acceptance and external access integrations remain pending. The default server stays neutral. Diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
 
 ## Purpose
 

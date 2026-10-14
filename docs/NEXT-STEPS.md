@@ -6,7 +6,7 @@ Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de cl
 
 Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
 
-Branche courante : `feat/private-crm`, construite sur `feat/private-media`. Les modifications restent empilées, sans fusion ni déploiement automatique : [#1 identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 authentification](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 accès](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 messagerie](https://github.com/fredbuhr/jessiemessage/pull/5), [#6 médias](https://github.com/fredbuhr/jessiemessage/pull/6). Le lot CRM est préparé pour une septième PR brouillon.
+Branche courante : `feat/private-crm`, construite sur `feat/private-media`. Les modifications restent empilées, sans fusion ni déploiement automatique : [#1 identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 authentification](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 accès](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 messagerie](https://github.com/fredbuhr/jessiemessage/pull/5), [#6 médias](https://github.com/fredbuhr/jessiemessage/pull/6). Le lot CRM est disponible dans la [PR brouillon #7](https://github.com/fredbuhr/jessiemessage/pull/7).
 
 L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée sur bleu nuit. Les portraits personnels restent hors Git et des artefacts publics. Le prototype autonome 0.3.1 contient des données fictives ; il ne démontre pas le fonctionnement des comptes réels.
 
@@ -18,7 +18,7 @@ L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée
 | Accès client | Invitation unique, inscription atomique, vérification e-mail en file chiffrée, approbation et expiration | SMTP réel, fournisseur de majorité et récupération client à intégrer |
 | Messagerie 1:1 | Persistance chiffrée, isolation par conversation, pagination, reprise sans doublon, lecture, suppression par auteur | Recette HTTPS, charge et appareils réels à vérifier |
 | Photos privées | JPEG/PNG/WebP normalisés sans métadonnées, stockage chiffré, lectures autorisées, galerie et médiathèque propriétaire | Hébergement natif, ressources, sauvegarde et nettoyage des orphelins à valider |
-| Outils clients 0.8 | Surnoms et notes privées, tags/groupes, dates de suivi, recherche et filtres ; conflits entre onglets | CI MariaDB du lot en attente ; recette de l'interface à réaliser |
+| Outils clients 0.8 | Surnoms et notes privées, tags/groupes, dates de suivi, recherche et filtres ; conflits entre onglets | CI MariaDB vérifiée ; recette de l'interface à réaliser |
 | Présentation | Identité Nuit, icônes approuvées, aperçu autonome fictif | Contrôles navigateur, accessibilité et responsive réels à terminer |
 
 Les outils clients restent réservés à l'administrateur affecté. Les notes sont chiffrées ; les listes n'incluent ni notes ni adresse e-mail. Les dates de suivi ne déclenchent aucune notification. Les groupes sont des classements privés, pas des salons.
@@ -26,7 +26,7 @@ Les outils clients restent réservés à l'administrateur affecté. Les notes so
 ## Ce qui est vérifié, ce qui ne l'est pas
 
 - Médias 0.7 : révision finale `189d742a7e6d93936f159d14c318d3a62d85c91f`, [CI 38651204840](https://github.com/fredbuhr/jessiemessage/actions/runs/38651204840) réussie : 320 tests généraux, 10 groupes DB ignorés dans le job sans base, puis 126 tests réels sans saut sur **chacune** des versions MariaDB 10.11 et 11.4. Sharp 0.35.5 est verrouillé ; aucune vulnérabilité npm signalée lors de ce lot.
-- CRM 0.8 : les contrôles locaux initiaux passent avec 399 tests généraux ; les 12 groupes DB attendent leur exécution dédiée. Le résultat final doit être lu sur la révision et la CI du lot ci-dessous.
+- CRM 0.8 : 402 tests généraux réussis et 159 tests réels sans saut sur chacune des deux versions MariaDB ; détail et révision ci-dessous. Les 12 groupes DB sont explicitement ignorés uniquement dans le job général sans base.
 - Les intégrations HTTP/SQL emploient exclusivement des fixtures synthétiques et des bases jetables, avec un compte d'exécution limité aux opérations DML.
 - Aucune livraison SMTP réelle, preuve de majorité externe, migration de base Infomaniak, création de compte réel ou mise en production n'a été effectuée.
 - Aucune nouvelle recette navigateur n'a été exécutée : aucun moteur installé ; un téléchargement antérieur a été refusé par le contrôle automatique d'autorisation. Les tests de modèle et de protocole ne remplacent pas les essais sur iPhone/Android.
@@ -43,7 +43,7 @@ Les durées ci-dessous sont des ordres de grandeur de travail, à recalibrer apr
 
 | Étape | Résultat concret et critère de sortie | Ordre de grandeur |
 | --- | --- | --- |
-| 1. Terminer le CRM | CI verte sur Node 24 et les deux MariaDB ; conflits et confidentialité vérifiés ; PR brouillon documentée | Lot en cours |
+| 1. Terminer le CRM | CI verte sur Node 24 et les deux MariaDB ; conflits et confidentialité vérifiés ; PR brouillon documentée | Terminé pour ce lot de code |
 | 2. Débloquer le parcours pilote | SMTP testé sur domaine réel, majorité intégrée, récupération du mot de passe client avec jetons uniques et révocation | 2 à 4 jours de code, plus délai des fournisseurs |
 | 3. Diffusion individuelle | Sélection explicite des destinataires, préférences, exclusion des accès inactifs, reprise sans doublon et journal durable | 2 à 3 jours |
 | 4. Recette privée sous HTTPS | Environnement de test isolé ; parcours invitation → accès → texte/photo → révocation sur iPhone/Android ; corrections de l'interface | 1 à 2 jours après accès à l'hébergement |
@@ -56,4 +56,6 @@ Le déploiement sera préparé comme une opération explicite : sauvegarde, éta
 
 ## Preuve finale du lot CRM
 
-À compléter après publication de la PR et exécution réelle de la CI. Voir [périmètre, configuration et limites du CRM](private-crm.md).
+Implémentation `9e399e6dd5589d21597fb35b0a3fe6d2d2856ee0`, [PR brouillon #7](https://github.com/fredbuhr/jessiemessage/pull/7) : [CI 38653885864](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) réussie sous Node.js 24.21.0. **402 tests généraux réussis**, 12 groupes DB explicitement ignorés dans ce job sans base ; **159 tests réels réussis sans saut sur chacune des versions MariaDB 10.11 et 11.4**. Douze groupes séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file e-mail 11, HTTP accès 9, persistance chat 19, HTTP chat 12, persistance médias 16, HTTP médias 10, persistance CRM 19 et HTTP CRM 14. Syntaxe et build réussis ; aucune nouvelle dépendance ou modification des icônes approuvées.
+
+Les tests vérifient notamment l'autorisation SQL actuelle, les conflits entre onglets, les notes chiffrées, la suppression d'étiquette sans perte des notes et l'absence de CRM dans les réponses client. La revue des réponses tardives corrige aussi fermeture/réouverture de fiche, ordre des listes d'étiquettes et changement d'affectation. Aucune recette visuelle, SMTP réel ou mise en production. Voir [périmètre, configuration et limites du CRM](private-crm.md).

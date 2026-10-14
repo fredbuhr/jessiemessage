@@ -2,7 +2,7 @@
 
 This lot adds administrator-only client files and inbox filtering to the persistent private chat. A client file contains a private nickname, encrypted notes, optional reminder date and explicit tag/group memberships. The approved Nuit interface is preserved. The downloadable offline workbench remains fictional and does not contain real CRM data.
 
-CRM CI verification for this revision is pending. All automated fixtures are synthetic; no real contact, note, account, photograph or email delivery is supplied by this lot.
+Implementation `9e399e6dd5589d21597fb35b0a3fe6d2d2856ee0` passed [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) under Node.js 24.21.0: 402 general tests, 12 explicitly skipped database groups in that job, then 159 real tests without skips on each of MariaDB 10.11 and 11.4. [Draft PR #7](https://github.com/fredbuhr/jessiemessage/pull/7) is stacked on private media. All automated fixtures are synthetic; no real contact, note, account, photograph or email delivery is supplied by this lot.
 
 ## Private configuration
 
@@ -103,6 +103,6 @@ Authenticated data reads have persistent HMAC-derived budgets of 300/minute glob
 
 Unit/HTTP/model tests cover validation, encryption context, explicit DTOs, private assets, Origin/CSRF, memory drafts, filter pagination and conflict behavior. Two sequential MariaDB groups cover real store/HTTP ownership, assignment, canonical labels, atomic rollback, simultaneous saves, ciphertext privacy, note-revision preservation after label deletion, combined literal filters, expiry and revocation. They require explicit loopback opt-in, a disposable `jessiemessage_test…` schema, DML-only runtime credentials and all 20 migrations. They never run concurrently with the other groups against the same schema.
 
-CRM CI results are pending for this revision; consult the exact successful run before reporting verification. No browser visual, HTTPS/mobile, penetration, load, restore, hosting or production deployment validation is claimed.
+The verified database run executes twelve sequential groups: migrations 12, administrator authentication 16, recovery 8, client access 13, mail queue 11, HTTP access 9, chat persistence 19, HTTP chat 12, media persistence 16, HTTP media 10, CRM persistence 19 and HTTP CRM 14. Syntax and build also pass; no new dependency or approved icon change is included. No browser visual, HTTPS/mobile, penetration, load, restore, hosting or production deployment validation is claimed.
 
 The next application lots remain individual queued bulk sends, consent/opt-out behavior, Web Push and installable PWA behavior. Real SMTP, independently verified majority integration, client password recovery, legal/privacy acceptance, retention/export/erasure, key rotation, encrypted backup/restore drills and photo reconciliation/orphan cleanup remain before release. No automatic notifications or delivery campaigns are supplied by the current CRM lot.

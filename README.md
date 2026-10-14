@@ -2,7 +2,7 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-> **Current delivery: private CRM 0.8.0 + Nuit workbench 0.3.1.** Explicit configuration enables private text/photo messages, a conversation gallery, an owner media library and administrator-only client files. Private nicknames, encrypted notes, tags, groups and reminder dates support a filtered inbox. CRM verification for this revision is pending CI. The offline preview remains fictional. Real SMTP, age-assurance integration and HTTPS/mobile acceptance remain launch work; no automatic Infomaniak deployment.
+> **Current delivery: private CRM 0.8.0 + Nuit workbench 0.3.1.** Explicit configuration enables private text/photo messages, a conversation gallery, an owner media library and administrator-only client files. Private nicknames, encrypted notes, tags, groups and reminder dates support a filtered inbox. [CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) passes 402 general tests and 159 real tests on each supported MariaDB version. The offline preview remains fictional. Real SMTP, age-assurance integration and HTTPS/mobile acceptance remain launch work; no automatic Infomaniak deployment.
 
 ## Try without a terminal
 
@@ -28,7 +28,7 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 
 ## Maintainer checks
 
-Node.js 24. Runtime and migration credentials are separate; migrations never run on server startup. Run `npm ci --ignore-scripts` to install the pinned lockfile. `npm run check` validates syntax, `npm test` runs unit/HTTP/model tests (database integration is opt-in), and `npm run build` generates the self-contained offline preview. CI runs the disposable MariaDB groups sequentially on 10.11 and 11.4, including real HTTP flows and DML-only runtime privileges. The CRM groups cover private ownership, ciphertext, version conflicts, filters and live revocation; their current CI result is pending. Only the three explicit public preview files are uploaded. Static checks are not a browser or accessibility certification.
+Node.js 24. Runtime and migration credentials are separate; migrations never run on server startup. Run `npm ci --ignore-scripts` to install the pinned lockfile. `npm run check` validates syntax, `npm test` runs unit/HTTP/model tests (database integration is opt-in), and `npm run build` generates the self-contained offline preview. CI runs the disposable MariaDB groups sequentially on 10.11 and 11.4, including real HTTP flows and DML-only runtime privileges. The CRM groups cover private ownership, ciphertext, version conflicts, filters and live revocation; their [verified CI result](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) is recorded in the CRM documentation. Only the three explicit public preview files are uploaded. Static checks are not a browser or accessibility certification.
 
 `npm start` defaults to the original neutral page and liveness endpoint. Private authentication enables administrator access. Additional access/mail flags and SMTP configuration enable invitation tools and `/access`, whose client account remains restricted until its gates are satisfied. The mail worker starts with the HTTP listener and stops before the pool closes. Enabled authentication refuses startup when configuration or required tables are missing. The design and artifact directories are not served. No changes to Infomaniak, ZTIKIX or `main` are made by this development branch.
 
