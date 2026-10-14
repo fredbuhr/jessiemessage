@@ -48,7 +48,7 @@ Le contrôle de validité précède la requête SMTP. Une révocation concurrent
 
 La file de récupération possède ses propres jobs, locations, tentatives et worker. Son lien discret utilise `/recover#reset=…`, valable 30 minutes et à usage unique. Une simple ouverture ne consomme rien. Le worker ne peut livrer que pour un client encore éligible dont l'adresse et la version d'identifiants correspondent au challenge. Une révocation après la prise du job peut laisser partir un e-mail dont le lien est déjà inutilisable. La livraison reste au moins une fois ; aucun système ne garantit ici la réception ni la déduplication chez le destinataire.
 
-Réémettre un lien annule les anciens challenges et jobs sans modifier le mot de passe ni les sessions. La consommation réussie change le mot de passe et révoque toutes les sessions client, sans connecter le client ni ouvrir ses droits d'accès. Les administrateurs utilisent toujours leur procédure privée distincte. Voir [configuration, éligibilité et garanties de récupération](client-recovery.md). Les essais 0.9 sont en attente de leur preuve CI ; aucun SMTP réel n'a été utilisé.
+Réémettre un lien annule les anciens challenges et jobs sans modifier le mot de passe ni les sessions. La consommation réussie change le mot de passe et révoque toutes les sessions client, sans connecter le client ni ouvrir ses droits d'accès. Les administrateurs utilisent toujours leur procédure privée distincte. Voir [configuration, éligibilité et garanties de récupération](client-recovery.md). Les essais 0.9 réussissent dans la [CI 0.9 vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) ; aucun SMTP réel n'a été utilisé.
 
 ## Conservation et essais restants
 

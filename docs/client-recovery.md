@@ -1,6 +1,6 @@
 # Récupération du mot de passe client — développement 0.9
 
-Ce lot ajoute une récupération optionnelle par e-mail. Elle reste désactivée par défaut. Elle ne crée aucun compte, ne connecte pas le client et ne renouvelle pas son accès. La preuve CI 0.9 est en attente ; les tests emploient exclusivement des comptes synthétiques, des adresses `example.invalid` et un transport de mail injecté. Aucun SMTP réel, déploiement, test visuel ou essai mobile sous HTTPS n'est revendiqué.
+Ce lot ajoute une récupération optionnelle par e-mail. Elle reste désactivée par défaut. Elle ne crée aucun compte, ne connecte pas le client et ne renouvelle pas son accès. La [CI 0.9 vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) réussit ; les tests emploient exclusivement des comptes synthétiques, des adresses `example.invalid` et un transport de mail injecté. Aucun SMTP réel, déploiement, test visuel ou essai mobile sous HTTPS n'est revendiqué.
 
 La [récupération administrateur](admin-recovery.md) reste une procédure privée distincte. Les fonctionnalités de [messagerie](private-messaging.md), [photos](private-media.md) et [CRM](private-crm.md) conservent leurs droits et leur configuration.
 
@@ -74,6 +74,10 @@ La purge de la nouvelle file est bornée : au plus toutes les cinq minutes par i
 
 ## Vérification et travail avant publication
 
-Les tests locaux couvrent la configuration, la neutralité des réponses, les limites opaques, la séparation cryptographique des finalités, le transport injecté, les routes et le modèle de page. Les groupes MariaDB dédiés doivent vérifier avec des données synthétiques les contraintes, snapshots, transactions, conflits, locations et véritables parcours HTTP. Les 14 groupes de `npm run test:db` partagent le même schéma jetable et s'exécutent séquentiellement. **La preuve CI 0.9 est en attente ; ne pas reprendre le résultat CRM 0.8 comme validation de ce lot.**
+Les tests locaux couvrent la configuration, la neutralité des réponses, les limites opaques, la séparation cryptographique des finalités, le transport injecté, les routes et le modèle de page. Les groupes MariaDB dédiés vérifient avec des données synthétiques les contraintes, snapshots, transactions, conflits, locations et véritables parcours HTTP. Les 14 groupes de `npm run test:db` partagent le même schéma jetable et s'exécutent séquentiellement. **La [CI 0.9 vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) réussit ; ne pas reprendre le résultat CRM 0.8 comme validation de ce lot.**
 
 Avant publication : vérifier SMTP et les conditions du fournisseur, tester le parcours sous HTTPS sur les appareils retenus, finaliser le contrôle de majorité et les textes de confidentialité, définir la conservation des challenges/comptes, tester une sauvegarde/restauration complète et documenter la rotation des clés avec les deux files chiffrées. La rotation et le restore ne sont pas automatisés par ce lot. Aucun compte, média ou secret réel n'est utilisé dans Git, les tests ou les artefacts publics.
+
+## Preuve automatisée du lot
+
+Implémentation `56827b5054511cff9a4cede91a986507da6547aa`, [PR brouillon #8](https://github.com/fredbuhr/jessiemessage/pull/8) : [CI 38655526255](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255), Node.js 24.21.0, réussie. Le contrôle général compte 461 tests réussis et 14 groupes DB explicitement ignorés sans base ; chaque version MariaDB 10.11 et 11.4 réussit ensuite 190 tests sans saut dans quatorze groupes séquentiels. Les deux nouveaux groupes comptent 19 tests de persistance/file et 12 tests HTTP. Syntaxe et build réussis. Les tests emploient uniquement des fixtures synthétiques et un transport injecté, sans preuve de livraison SMTP réelle ni recette navigateur.

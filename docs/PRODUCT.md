@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.9**. Registration, private text/photo chat, galleries, administrator CRM and opt-in client password recovery are implemented behind explicit private configuration. The earlier [CRM 0.8 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) passed; recovery 0.9 CI is pending. Real SMTP, browser/device acceptance and external access integrations remain pending. The default server stays neutral. Diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
+Status: **development 0.9**. Registration, private text/photo chat, galleries, administrator CRM and opt-in client password recovery are implemented behind explicit private configuration. The earlier [CRM 0.8 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) passed; recovery 0.9 passes the [verified recovery CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) with 461 general tests and 190 real tests per MariaDB version. Real SMTP, browser/device acceptance and external access integrations remain pending. The default server stays neutral. Diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
 
 ## Purpose
 

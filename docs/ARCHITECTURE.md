@@ -6,7 +6,7 @@ A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness en
 
 The initial code is **not** a production chat service.
 
-Twenty-two migrations provide those foundation and administrator tables plus client authentication, email verification, client session state, an encrypted mail outbox, messages, per-participant read receipts and per-conversation change events, owner media assets, audited message attachments, three CRM tables, hashed client reset challenges and a separate encrypted reset outbox. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns, indexes, foreign keys and checks before enabling configured features. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI targets disposable MariaDB 10.11 and 11.4; CRM passes the [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864). Recovery 0.9 CI is pending. See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
+Twenty-two migrations provide those foundation and administrator tables plus client authentication, email verification, client session state, an encrypted mail outbox, messages, per-participant read receipts and per-conversation change events, owner media assets, audited message attachments, three CRM tables, hashed client reset challenges and a separate encrypted reset outbox. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns, indexes, foreign keys and checks before enabling configured features. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI targets disposable MariaDB 10.11 and 11.4; CRM passes the [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864). Recovery 0.9 passes the [verified recovery CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255). See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
 
 ## Planned application
 
@@ -75,7 +75,7 @@ The public enabled-only `/recover` page reads the canonical token from a fragmen
 1. Freeze key architecture and privacy assumptions.
 2. Schema migrations + test database (all synthetic data).
 3. Administrator authentication/recovery, invitations, client onboarding and opt-in client password recovery implemented; master-key rotation remains separate launch work.
-4. Configure/test real SMTP, connect independently verified age assurance, and complete HTTPS acceptance; client password recovery is implemented with its CI pending.
+4. Configure/test real SMTP, connect independently verified age assurance, and complete HTTPS acceptance; client password recovery passes the [verified recovery CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255).
 5. One-to-one text chat implemented; browser/HTTPS acceptance, retention/export and key-rotation tooling remain release work.
 6. Private photo upload/gallery and per-delivery audit implemented; retention/orphan cleanup, restore and storage load acceptance remain release work.
 7. Private tags/groups, notes and reminders implemented; current CRM CI verified. Next: queued individual bulk sends and operational tasks.
