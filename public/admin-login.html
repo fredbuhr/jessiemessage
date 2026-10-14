@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#100d12" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" />
+    <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="/admin-login.css" />
+    <link rel="stylesheet" href="/brand/brand.css" />
+    <title>JessieMessage — Accès administrateur</title>
+    <script src="/admin-login.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="JessieMessage">
+          <span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span>
+          <span class="brand-name">Jessie</span>
+        </a>
+        <span class="private-label">ESPACE PRIVÉ</span>
+      </header>
+      <main class="access-main">
+        <section class="access-card" aria-labelledby="access-title">
+          <div class="eyebrow">ADMINISTRATION</div>
+          <h1 id="access-title">Bienvenue, Jessie.</h1>
+          <p id="access-intro" class="intro">Connecte-toi avec ton mot de passe et ton code de sécurité.</p>
+          <p id="auth-status" class="status" role="status" aria-live="polite">Vérification de la connexion…</p>
+          <form id="login-form" hidden>
+            <div class="field">
+              <label for="email">Adresse e-mail</label>
+              <input id="email" name="email" type="email" autocomplete="username" maxlength="254" required />
+            </div>
+            <div class="field">
+              <label for="password">Mot de passe</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required />
+            </div>
+            <div class="field">
+              <label for="factor">Code de sécurité</label>
+              <input id="factor" name="factor" type="text" autocomplete="one-time-code" maxlength="64" aria-describedby="factor-help" required />
+              <p id="factor-help" class="field-help">Les 6 chiffres de ton application d’authentification, ou un code de récupération.</p>
+            </div>
+            <button id="login-button" class="button button-primary" type="submit">Se connecter</button>
+          </form>
+          <section id="connected" hidden aria-label="Session administrateur">
+            <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong>Connexion sécurisée</strong></div>
+            <p class="intro">Tu es connectée en tant que <strong id="connected-name"></strong>.</p>
+            <p class="session-note">L’accès administrateur est prêt. La messagerie et les invitations seront disponibles lors des prochaines étapes.</p>
+            <div class="actions">
+              <button id="logout-button" class="button button-primary" type="button">Se déconnecter</button>
+              <button id="logout-all-button" class="button button-secondary" type="button">Déconnecter toutes mes sessions</button>
+            </div>
+          </section>
+          <noscript><p class="status">Active JavaScript pour utiliser la connexion sécurisée.</p></noscript>
+        </section>
+      </main>
+      <footer class="footer">JessieMessage · Accès privé sur invitation</footer>
+    </div>
+  </body>
+</html>

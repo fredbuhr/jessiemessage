@@ -6,7 +6,7 @@
 ## Source de vérité
 
 - Dépôt : `fredbuhr/jessiemessage` (public).
-- Branche de travail : `feat/fondations-pwa`.
+- Branche de travail actuelle : `feat/admin-auth`, empilée sur `feat/schema-mariadb`, elle-même sur `feat/fondations-pwa`.
 - Pull request brouillon : [#1](https://github.com/fredbuhr/jessiemessage/pull/1).
 - Domaine cible : `jessiemessage.com`.
 - Hébergement cible : Infomaniak mutualisé ; site Node.js 24 déjà créé, séparé de ZTIKIX.
@@ -23,11 +23,11 @@ Une archive de mise à jour **`JessieMessage-Integration-Identite.zip`** a été
 ## État du développement
 
 La branche comprend actuellement :
-- Serveur Node.js 24 *minimal* qui sert uniquement une page d'accueil neutre et `/api/health`.
+- Serveur Node.js 24 : page d'accueil neutre et `/api/health` par défaut ; authentification administrateur activable uniquement par configuration privée explicite.
 - Prototype HTML autonome pour accueil, conversation client et tableau de bord admin.
 - Gestion **fictive** des tags, groupes privés, invitations, accès, messages, médias, diffusions ciblées et prévention des doublons.
 - FR/EN, thème sombre responsive et tests GitHub Actions.
-- Premier lot serveur livré dans la [PR brouillon nº 2](https://github.com/fredbuhr/jessiemessage/pull/2) : schéma MariaDB versionné et outil de migration explicite (voir `docs/DATABASE.md`). Le serveur HTTP ne connecte pas encore de base. Aucun système d'identité et de permissions de production, aucun échange réel, aucun Web Push.
+- Schéma MariaDB dédié et migrations explicites, avec tables MFA, codes de secours, état des sessions et compteurs anti-abus. Connexion administrateur avec mot de passe + MFA, sessions révocables, écran d'accès et initialisation privée du premier compte : voir [authentification](auth-admin.md). Les invitations côté serveur, les comptes clients, les échanges réels et Web Push restent à construire.
 
 La version graphique finale est intégrée : 47 tests exécutés avec succès sous Node.js 24.19.0. Les résultats CI et contrôles navigateur doivent être lus sur la livraison concernée, sans reprendre les anciens bilans comme nouvelle preuve.
 
@@ -63,7 +63,7 @@ La version graphique finale est intégrée : 47 tests exécutés avec succès so
 
 ## Prochain lot serveur
 
-Après revue du schéma : authentification administrateur et MFA, sessions sûres et révocables avec anti-CSRF/anti-abus, puis invitations à usage unique et vérification d’e-mail. Les tables seules ne fournissent aucune de ces protections. Développer avec comptes synthétiques et tester l’isolation avant connexion de la vraie UI. Aucune migration ni configuration de la base Infomaniak n’a été effectuée.
+Le premier lot d'authentification administrateur est implémenté sur la branche actuelle et doit être relu avec sa CI propre. Le lot suivant ajoute les invitations à usage unique, la preuve de possession d'e-mail et l'accès client, avec tests d'isolation et de concurrence. La procédure de réinitialisation du mot de passe et de rotation du MFA reste à compléter avant un pilote réel. Aucun compte réel, aucune migration ni configuration de la base Infomaniak n'a été effectué.
 
 ## Résultats vérifiés de la reprise Work
 
