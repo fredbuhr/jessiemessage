@@ -39,10 +39,10 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler } = {}) {
+export function createAppServer({ authHandler, accessHandler, chatHandler } = {}) {
   const server = createServer(async (request, response) => {
     const method = request.method ?? "GET";
-    for (const handler of [accessHandler, authHandler]) {
+    for (const handler of [chatHandler, accessHandler, authHandler]) {
       if (!handler) continue;
       try { if (await handler(request, response)) return; }
       catch {
@@ -70,7 +70,7 @@ export function createAppServer({ authHandler, accessHandler } = {}) {
     }
 
     // Authentication is registered only by explicit private configuration.
-    // Messaging and media routes remain unavailable until their own release lot.
+    // Private routes require their explicitly configured feature handlers.
     // Never serve arbitrary file paths from the filesystem.
     const file = publicFiles.get(pathname);
     if (!file) {
@@ -95,8 +95,10 @@ export function createAppServer({ authHandler, accessHandler } = {}) {
 export async function createConfiguredServer(env = process.env) {
   const { authConfiguration } = await import("./auth/config.mjs");
   const { accessConfiguration } = await import("./access/config.mjs");
+  const { chatConfiguration } = await import("./chat/config.mjs");
   const config = authConfiguration(env);
   const accessConfig = accessConfiguration(env);
+  const chatConfig = chatConfiguration(env);
   if (!config.enabled) return { server: createAppServer(), pool: null };
   const { createRuntimePool } = await import("./db/runtime.mjs");
   const { createAuthStore } = await import("./auth/store.mjs");
@@ -122,8 +124,19 @@ export async function createConfiguredServer(env = process.env) {
     await mailStore.assertSchema();
     const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
       totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin });
+    let chatHandler;
+    if (chatConfig.enabled) {
+      const { createChatStore } = await import("./chat/store.mjs");
+      const { createChatService } = await import("./chat/service.mjs");
+      const { createChatHandler } = await import("./chat/http.mjs");
+      const chatStore = createChatStore(pool);
+      await chatStore.assertSchema();
+      const chatService = await createChatService({ store: chatStore, authStore: store, authService: service,
+        accessService, key: chatConfig.key });
+      chatHandler = createChatHandler(chatService, { origin: chatConfig.origin });
+    }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }) });
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler });
     let worker;
     let closing;
     const mailWorker = {

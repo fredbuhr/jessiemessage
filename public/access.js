@@ -28,6 +28,7 @@ function invalidate() { generation += 1; for (const controller of controllers) c
 function setBusy(value) { busy = value; for (const button of document.querySelectorAll("button")) button.disabled = value; }
 function signedOut(message = "") {
   invalidate(); csrf = null; clearTimeout(expiryTimer); expiryTimer = null;
+  element("client-chat-link").hidden = true;
   loginForm.hidden = Boolean(invitationToken || verificationToken);
   registrationForm.hidden = !invitationToken;
   verificationSection.hidden = !verificationToken;
@@ -39,6 +40,8 @@ function signedOut(message = "") {
 }
 function signedIn(session) {
   invalidate(); csrf = session.csrf; loginForm.reset(); registrationForm.reset();
+  element("client-chat-link").hidden = true;
+  element("client-chat-note").textContent = "La messagerie sera disponible quand ton accès sera validé et le service activé.";
   loginForm.hidden = true; registrationForm.hidden = true; connected.hidden = false;
   verificationSection.hidden = !verificationToken;
   element("access-title").textContent = "Ton espace privé.";
@@ -52,6 +55,19 @@ function signedIn(session) {
   element("resend-section").hidden = access.emailVerified;
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(() => signedOut("Ta session a expiré. Reconnecte-toi pour continuer."), Math.max(0, session.expiresAt - Date.now()));
+  if (session.user.role === "client" && access.state === "active") void loadChatAccess();
+}
+async function loadChatAccess() {
+  const ticket = generation;
+  try {
+    const capability = await request("/api/chat/client/capabilities");
+    if (ticket !== generation || capability.enabled !== true) return;
+    element("client-chat-link").hidden = false;
+    element("client-chat-note").textContent = "Ton accès à la conversation privée est ouvert.";
+  } catch (error) {
+    if (error.stale || error.status === 404) return;
+    if (error.status === 401 || error.status === 403) signedOut("Ton accès doit être vérifié. Reconnecte-toi pour continuer.");
+  }
 }
 async function request(path, { body, mutation = false, authenticated = false } = {}) {
   const headers = {};

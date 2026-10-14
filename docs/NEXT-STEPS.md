@@ -6,8 +6,8 @@
 ## Source de vérité
 
 - Dépôt : `fredbuhr/jessiemessage` (public).
-- Branche de travail actuelle : `feat/invitations-client-access`, empilée sur `feat/admin-auth`, puis `feat/schema-mariadb` et `feat/fondations-pwa`.
-- Pull requests brouillons : [#1 — identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 — MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 — authentification administrateur](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 — invitations et accès client](https://github.com/fredbuhr/jessiemessage/pull/4).
+- Branche de travail actuelle : `feat/private-messaging`, empilée sur `feat/invitations-client-access`, puis `feat/admin-auth`, puis `feat/schema-mariadb` et `feat/fondations-pwa`.
+- Pull requests brouillons : [#1 — identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 — MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 — authentification administrateur](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 — invitations et accès client](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 — messagerie privée](https://github.com/fredbuhr/jessiemessage/pull/5).
 - Domaine cible : `jessiemessage.com`.
 - Hébergement cible : Infomaniak mutualisé ; site Node.js 24 déclaré créé dans la passation, séparé de ZTIKIX. Configuration réelle à vérifier ; aucun déploiement de ce lot.
 - Branche `main` : ne pas fusionner sans tests et validation ; aucun déploiement automatique.
@@ -27,7 +27,7 @@ La branche comprend actuellement :
 - Prototype HTML autonome pour accueil, conversation client et tableau de bord admin.
 - Gestion **fictive** des tags, groupes privés, invitations, accès, messages, médias, diffusions ciblées et prévention des doublons.
 - FR/EN, thème sombre responsive et tests GitHub Actions.
-- Schéma MariaDB dédié et migrations explicites, avec tables MFA, codes de secours, état des sessions et compteurs anti-abus. Connexion administrateur avec mot de passe + MFA, sessions révocables, écran d'accès et initialisation privée du premier compte : voir [authentification](auth-admin.md). Les invitations, inscriptions, vérification mail, sessions clients restreintes et récupération administrateur sont implémentés sur la branche d'accès. SMTP réel, majorité externe, échanges et Web Push restent à compléter.
+- Schéma MariaDB dédié et migrations explicites, avec tables MFA, codes de secours, état des sessions et compteurs anti-abus. Connexion administrateur avec mot de passe + MFA, sessions révocables, écran d'accès et initialisation privée du premier compte : voir [authentification](auth-admin.md). Les invitations, inscriptions, vérification mail, sessions clients restreintes et récupération administrateur sont implémentés sur la branche d'accès. La messagerie texte persistante est implémentée en 0.6, avec chiffrement au repos, isolation SQL, pagination, lecture et suppression par auteur. SMTP réel, majorité externe, médias et Web Push restent à compléter.
 
 La version graphique finale est intégrée : 47 tests exécutés avec succès sous Node.js 24.19.0. Les résultats CI et contrôles navigateur doivent être lus sur la livraison concernée, sans reprendre les anciens bilans comme nouvelle preuve.
 
@@ -63,7 +63,7 @@ La version graphique finale est intégrée : 47 tests exécutés avec succès so
 
 ## Prochain lot serveur
 
-Le lot d'accès implémente les invitations à usage unique, inscriptions, preuve de possession d'e-mail et sessions clients restreintes, ainsi qu'une récupération administrateur privée. Le prochain lot construit la messagerie 1:1 persistante en utilisant le garde d'accès actif. Avant le pilote : brancher et valider SMTP, contrôle de majorité, récupération du mot de passe client et recette HTTPS sur appareils réels. Aucun compte réel, aucune migration ni configuration de la base Infomaniak n'a été effectué.
+Le lot d'accès implémente les invitations à usage unique, inscriptions, preuve de possession d'e-mail et sessions clients restreintes, ainsi qu'une récupération administrateur privée. Le lot 0.6 construit la messagerie 1:1 persistante en utilisant le garde d'accès actif. Le prochain lot prépare le stockage privé et la distribution autorisée des médias. Avant le pilote : brancher et valider SMTP, contrôle de majorité, récupération du mot de passe client et recette HTTPS sur appareils réels. Aucun compte réel, aucune migration ni configuration de la base Infomaniak n'a été effectué.
 
 ## Résultats vérifiés de la reprise Work
 
@@ -73,4 +73,24 @@ Le lot d'accès implémente les invitations à usage unique, inscriptions, preuv
 - Nouveaux tests visuels non exécutés : aucun moteur navigateur installé ; leur téléchargement a été refusé par le contrôle automatique d’autorisation. Les anciens contrôles Chromium du paquet ne sont pas de nouveaux essais Work. Les parcours mobile/desktop et les essais physiques iPhone/Android restent à vérifier.
 - Authentification administrateur 0.4, [PR nº 3](https://github.com/fredbuhr/jessiemessage/pull/3), commit de code `7cf16c5a1e6659b5492c637e888d0bcd091bfec0` : [CI 38639207749](https://github.com/fredbuhr/jessiemessage/actions/runs/38639207749) réussie sous Node.js 24.21.0. Contrôle général : 118 tests réussis, 2 groupes DB explicitement sautés dans ce job ; chaque version MariaDB réussit ensuite 12 tests de migrations et 14 tests d'authentification, sans saut. Le parcours HTTP connecté à MariaDB valide connexion, session, anti-CSRF, déconnexion et refus du rejeu MFA. Audit npm du 14 octobre : aucune vulnérabilité signalée.
 - Invitations et accès client 0.5, [PR nº 4](https://github.com/fredbuhr/jessiemessage/pull/4), commit de code `8f657e3b5d03ea9c77ccbc4c4d533ae6ca99c6f8` : [CI 38644134261](https://github.com/fredbuhr/jessiemessage/actions/runs/38644134261) réussie sous Node.js 24.21.0. Contrôle général : 173 tests réussis, 6 groupes DB explicitement sautés dans ce job ; chaque version MariaDB réussit ensuite 69 tests, sans saut, dans six groupes séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file d'e-mail 11, parcours HTTP complet 9. Tous les mails passent par des transports injectés ; aucune livraison SMTP réelle. Audit npm : aucune vulnérabilité signalée.
-- Les quatre PR restent en brouillon ; aucune fusion, configuration Infomaniak, migration de vraie base ou mise en production n'a été effectuée. Le parcours d'accès et ses validations sont testés avec fixtures. Les vrais clients restent en attente tant que le contrôle de majorité externe n'est pas intégré ; sa preuve n'est simulée que dans les fixtures synthétiques. Livraison SMTP réelle, recette HTTPS et essais sur appareils restent à effectuer.
+- Les cinq PR restent en brouillon ; aucune fusion, configuration Infomaniak, migration de vraie base ou mise en production n'a été effectuée. Le parcours d'accès et ses validations sont testés avec fixtures. Les vrais clients restent en attente tant que le contrôle de majorité externe n'est pas intégré ; sa preuve n'est simulée que dans les fixtures synthétiques. Livraison SMTP réelle, recette HTTPS et essais sur appareils restent à effectuer.
+
+## Lot messagerie 0.6 et chemin vers le pilote
+
+La messagerie texte comprend les échanges persistants, reprise d'envoi sans doublon, historique paginé, accusés de lecture et suppression du contenu par son auteur. La synchronisation passe par un journal de changements limité à la conversation, consulté seulement quand la page est visible. L'interface réelle conserve Nuit et ne remplace aucun portrait par un grand logo. Les portraits et galeries attendent leur service privé.
+
+Ordre de livraison restant, avec critères concrets :
+
+1. **Médias privés** : stockage hors accès public, autorisation de chaque lecture, limites/reconnaissance de format, réencodage sans métadonnées, galerie et suppression ; tests d'isolation et de nettoyage avant utilisation réelle.
+2. **Outils administrateur** : tags/groupes/notes privés, puis diffusion individuelle avec préférences, exclusion des accès expirés et idempotence durable. Reprendre les contrôles du prototype sans exposer le CRM au client.
+3. **PWA et finition** : installation, Push discret volontaire, traductions, essais clavier et appareils iPhone/Android sous HTTPS. Les vérifications HTTP et de modèle ne remplacent pas ces essais.
+4. **Préparation du pilote en parallèle** : SMTP réel, fournisseur de majorité, récupération client, rétention/export, sauvegarde/restauration et rotation des clés. Finaliser les textes juridiques et les conditions d'hébergement avec les informations réelles.
+5. **Publication contrôlée** : revue des PR empilées, recette d'un parcours complet sur environnement privé, migration explicite de la base dédiée sauvegardée, déploiement limité puis observation. Aucun déploiement automatique depuis une branche de travail.
+
+Le calendrier du pilote dépend des accès hébergeur, SMTP et fournisseur de majorité. La réalisation des lots de code peut avancer avec des fixtures pendant ces intégrations ; cela ne débloque pas les vrais comptes.
+
+## Résultat vérifié du lot messagerie
+
+Messagerie privée 0.6, [PR nº 5](https://github.com/fredbuhr/jessiemessage/pull/5), révision testée `96730e37018f270d25c3e79e53b7f43e3f2ef13e` (implémentation `108a7009af30754eb4700b9aef85ccdb2be1e94e`) : [CI 38648349063](https://github.com/fredbuhr/jessiemessage/actions/runs/38648349063) réussie sous Node.js 24.21.0. Contrôle général : **238 tests réussis**, 8 groupes DB explicitement ignorés dans le job sans base. Chaque version MariaDB **10.11 et 11.4** réussit ensuite **100 tests**, sans saut, dans huit groupes séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file d'e-mail 11, parcours HTTP d'accès 9, persistance messagerie 19, parcours HTTP messagerie 12. Syntaxe et build réussis ; aucune dépendance ajoutée ni icône modifiée.
+
+Les essais couvrent de vrais échanges HTTP connectés à MariaDB, mais aucune recette visuelle navigateur, aucune livraison SMTP réelle et aucun compte de production. Le code reste derrière un drapeau explicite et les prérequis d'accès ; aucune fusion ou mise en production. Voir [périmètre et limites de la messagerie](private-messaging.md).
