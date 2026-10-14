@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#100d12" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-title" content="Jessie" />
+    <meta name="application-name" content="JessieMessage" />
+    <meta name="description" content="JessieMessage — espace de messagerie privée accessible sur invitation." />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" />
+    <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/brand/icon-48.png" type="image/png" sizes="48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/brand/brand.css" />
+    <title>JessieMessage — Espace privé</title>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="JessieMessage">
+          <span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span>
+          <span class="brand-name">Jessie</span>
+        </a>
+        <button id="language-switch" class="language" type="button" aria-label="Switch language">EN</button>
+      </header>
+
+      <main class="main">
+        <section class="intro" aria-labelledby="hero-title">
+          <div class="eyebrow" data-i18n="badge">ESPACE PRIVÉ</div>
+          <h1 id="hero-title" data-i18n="title">Un espace simple pour garder le contact.</h1>
+          <p class="subtitle" data-i18n="subtitle">
+            JessieMessage est une messagerie personnelle accessible uniquement sur invitation.
+          </p>
+          <div class="notice" role="status">
+            <span class="notice-dot" aria-hidden="true"></span>
+            <span data-i18n="notice">Ouverture prochaine — les inscriptions sont désactivées pour le moment.</span>
+          </div>
+        </section>
+
+        <section class="preview" aria-label="Application preview">
+          <div class="preview-header">
+            <span class="avatar" aria-hidden="true"><img src="/brand/icon-64.png" width="44" height="44" alt="" /></span>
+            <span class="preview-details">
+              <strong>Jessie</strong>
+              <small data-i18n="conversation">Conversation privée</small>
+            </span>
+            <span class="preview-lock" aria-hidden="true">●</span>
+          </div>
+          <div class="preview-body">
+            <div class="bubble bubble-other" data-i18n="bubble1">Bienvenue sur JessieMessage !</div>
+            <div class="bubble bubble-own" data-i18n="bubble2">À bientôt 👋</div>
+          </div>
+          <div class="preview-footer">
+            <span data-i18n="composer">Messagerie bientôt disponible</span>
+            <span aria-hidden="true">➤</span>
+          </div>
+          <div class="preview-cover" data-i18n="preview">Aperçu illustratif — aucun compte n'est encore actif.</div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p data-i18n="footer">JessieMessage · Accès privé sur invitation · Aucun paiement sur ce site</p>
+      </footer>
+    </div>
+  </body>
+</html>
