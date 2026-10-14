@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **planning**. No registration, private chat, media sharing or adult-content access is enabled in the initial scaffold.
+Status: **development 0.6**. Registration and private text chat are implemented behind explicit private configuration. The default server stays neutral. Media, CRM, diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
 
 ## Purpose
 

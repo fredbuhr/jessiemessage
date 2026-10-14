@@ -1,12 +1,12 @@
 # Technical architecture — draft
 
-## Current development: opt-in administrator and invited client access
+## Current development: opt-in access and private text messaging
 
-A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. Private flags enable administrator MFA and then invitations, registration, email verification and separate restricted client sessions. The mail worker starts with the listener and stops before the pool. An age declaration never opens access; independently recorded assurance and administrator approval are required. Provider integration, chat and media routes remain pending.
+A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. Private flags enable administrator MFA and then invitations, registration, email verification and separate restricted client sessions. The mail worker starts with the listener and stops before the pool. An age declaration never opens access; independently recorded assurance and administrator approval are required. A separate chat flag enables private text conversations, transactional authorization and encrypted message bodies. Provider integration and media routes remain pending.
 
 The initial code is **not** a production chat service.
 
-Twelve migrations provide those foundation and administrator tables plus client authentication, email verification, client session state and an encrypted mail outbox. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns and keys before enabling authentication. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI covers disposable MariaDB 10.11 and 11.4, including a real authentication flow. See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
+Fifteen migrations provide those foundation and administrator tables plus client authentication, email verification, client session state an encrypted mail outbox, messages, per-participant read receipts and per-conversation change events. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns and keys before enabling authentication. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI covers disposable MariaDB 10.11 and 11.4, including a real authentication flow. See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
 
 ## Planned application
 
@@ -30,7 +30,7 @@ Twelve migrations provide those foundation and administrator tables plus client 
 - `admin_mfa`, `admin_recovery_codes`, `auth_session_state`, `auth_rate_limits`: implemented administrator authentication state.
 - `client_auth_state`, `email_verifications`, `client_session_state`, `mail_outbox`: implemented client onboarding, restricted sessions and encrypted mail jobs.
 - `conversations`: only a client and a permitted creator/admin.
-- `messages`: sender, recipient conversation, kind, timestamps and deletion state.
+- `messages`, `chat_receipts`, `chat_events`: implemented encrypted text, sender-scoped idempotency, monotonic read receipts and deletion synchronization.
 - `media_assets`: content digest, storage handle, dimensions, MIME, owner.
 - `message_media`: per-message references to reusable media assets.
 - `tags` and `user_tags`: private internal labels.
@@ -57,7 +57,7 @@ Subject to data minimization, retention and legal review before schema stabiliza
 2. Schema migrations + test database (all synthetic data).
 3. Administrator authentication/recovery, invitations and client onboarding implemented; master-key rotation remains separate launch work.
 4. Configure/test real SMTP, connect independently verified age assurance, and finalize client password recovery and HTTPS acceptance.
-5. One-to-one text chat with strict per-conversation access checks.
+5. One-to-one text chat implemented; browser/HTTPS acceptance, retention/export and key-rotation tooling remain release work.
 6. Private file upload, per-recipient media audit and retention controls.
 7. Tags, segments, bulk sends and tasks.
 8. Web Push notifications and PWA installation.

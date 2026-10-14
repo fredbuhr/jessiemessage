@@ -1,6 +1,6 @@
 # MariaDB foundation — development only
 
-Twelve immutable migrations now supply the foundation/administrator tables plus client state, email verification, client sessions and encrypted mail jobs. The migration command remains explicit. Version 0.5 separately enables administrator authentication/recovery and [invited client onboarding](invitations-client-access.md). No default credentials, age-assurance provider, private messages or media are supplied. SMTP and access features require explicit configuration. All fixtures are synthetic and use `example.invalid` addresses.
+Fifteen immutable migrations now supply the foundation/administrator tables plus client state, email verification, client sessions encrypted mail jobs, encrypted text messages, read receipts and change events. The migration command remains explicit. Version 0.6 separately enables administrator authentication/recovery and [invited client onboarding](invitations-client-access.md). Optional [private text chat](private-messaging.md) uses the existing conversations. No default credentials, age-assurance provider, real messages or media are supplied. SMTP and access features require explicit configuration. All fixtures are synthetic and use `example.invalid` addresses.
 
 ## Dedicated database and compatibility
 

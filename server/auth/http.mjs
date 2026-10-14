@@ -102,9 +102,12 @@ export function checkMutation(request, origin, pathname, preAuth = pathname === 
   if (preAuth && request.headers["x-jessie-request"] !== "1") throw httpError(403, "request_rejected");
 }
 
-export function readJson(request) {
+export function readJson(request, { maxBytes = MAX_BODY_BYTES } = {}) {
+  if (!Number.isInteger(maxBytes) || maxBytes < 1 || maxBytes > 32768) {
+    throw new TypeError("A bounded JSON byte limit is required");
+  }
   const length = request.headers["content-length"];
-  if (length !== undefined && (!/^\d+$/.test(length) || Number(length) > MAX_BODY_BYTES)) {
+  if (length !== undefined && (!/^\d+$/.test(length) || Number(length) > maxBytes)) {
     throw httpError(413, "request_too_large");
   }
   return new Promise((resolve, reject) => {
@@ -126,7 +129,7 @@ export function readJson(request) {
     };
     const onData = (chunk) => {
       bytes += chunk.length;
-      if (bytes > MAX_BODY_BYTES) finish(httpError(413, "request_too_large"));
+      if (bytes > maxBytes) finish(httpError(413, "request_too_large"));
       else chunks.push(chunk);
     };
     const onEnd = () => {

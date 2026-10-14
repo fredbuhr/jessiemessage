@@ -38,6 +38,7 @@ function notice(message, error = false) {
 function signedOut(message = "") {
   invalidate();
   clearAccess();
+  document.getElementById("admin-chat-link").hidden = true;
   csrf = null;
   clearTimeout(expiryTimer);
   expiryTimer = null;
@@ -53,6 +54,7 @@ function signedOut(message = "") {
 function signedIn(session) {
   invalidate();
   clearAccess();
+  document.getElementById("admin-chat-link").hidden = true;
   csrf = session.csrf;
   form.reset();
   form.hidden = true;
@@ -65,6 +67,21 @@ function signedIn(session) {
   expiryTimer = setTimeout(() => signedOut("Ta session a expiré. Reconnecte-toi pour continuer."), Math.max(0, session.expiresAt - Date.now()));
   if (location.pathname === "/admin/login") history.replaceState(null, "", "/admin");
   void loadAccess();
+  if (session.user.role === "admin") void loadChatAccess();
+}
+
+async function loadChatAccess() {
+  const ticket = generation;
+  document.getElementById("admin-session-note").textContent = "L’accès administrateur est prêt. La messagerie sera disponible dès son activation.";
+  try {
+    const capability = await request("/api/chat/admin/capabilities");
+    if (ticket !== generation || capability.enabled !== true) return;
+    document.getElementById("admin-chat-link").hidden = false;
+    document.getElementById("admin-session-note").textContent = "Tes conversations privées sont accessibles.";
+  } catch (error) {
+    if (error.stale || error.status === 404) return;
+    if (error.status === 401 || error.status === 403) signedOut(errorMessage(error));
+  }
 }
 
 function setBusy(value) {
