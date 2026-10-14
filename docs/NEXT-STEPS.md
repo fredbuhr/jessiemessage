@@ -7,9 +7,9 @@
 
 - Dépôt : `fredbuhr/jessiemessage` (public).
 - Branche de travail actuelle : `feat/admin-auth`, empilée sur `feat/schema-mariadb`, elle-même sur `feat/fondations-pwa`.
-- Pull request brouillon : [#1](https://github.com/fredbuhr/jessiemessage/pull/1).
+- Pull requests brouillons : [#1 — identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 — MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 — authentification administrateur](https://github.com/fredbuhr/jessiemessage/pull/3).
 - Domaine cible : `jessiemessage.com`.
-- Hébergement cible : Infomaniak mutualisé ; site Node.js 24 déjà créé, séparé de ZTIKIX.
+- Hébergement cible : Infomaniak mutualisé ; site Node.js 24 déclaré créé dans la passation, séparé de ZTIKIX. Configuration réelle à vérifier ; aucun déploiement de ce lot.
 - Branche `main` : ne pas fusionner sans tests et validation ; aucun déploiement automatique.
 
 ## Direction graphique approuvée
@@ -71,4 +71,5 @@ Le premier lot d'authentification administrateur est implémenté sur la branche
 - Premier lot serveur, [PR nº 2](https://github.com/fredbuhr/jessiemessage/pull/2), commit de code `812d9b00d9c58cfcada8ad002d313e8a267f8528` : [CI 38630438051](https://github.com/fredbuhr/jessiemessage/actions/runs/38630438051) réussie sous Node.js 24.21.0. Contrôle général : 63 tests réussis, 1 groupe d’intégration explicitement sauté dans ce job sans DB ; les jobs MariaDB séparés réussissent chacun leurs 12 tests, sans saut, sur 10.11 et 11.4.
 - [Aperçu autonome issu de cette CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38630438051/artifacts/11924969489) : décompresser puis ouvrir `JessieMessage.html`. Données fictives, aucun portrait personnel. L’export public et le build local ont la même source.
 - Nouveaux tests visuels non exécutés : aucun moteur navigateur installé ; leur téléchargement a été refusé par le contrôle automatique d’autorisation. Les anciens contrôles Chromium du paquet ne sont pas de nouveaux essais Work. Les parcours mobile/desktop et les essais physiques iPhone/Android restent à vérifier.
-- Les deux PR restent en brouillon ; aucune fusion, configuration Infomaniak, migration de vraie base ou mise en production n’a été effectuée. La présence des tables de sessions et d’invitations ne signifie pas que l’authentification ou leurs API existent.
+- Authentification administrateur 0.4, [PR nº 3](https://github.com/fredbuhr/jessiemessage/pull/3), commit de code `7cf16c5a1e6659b5492c637e888d0bcd091bfec0` : [CI 38639207749](https://github.com/fredbuhr/jessiemessage/actions/runs/38639207749) réussie sous Node.js 24.21.0. Contrôle général : 118 tests réussis, 2 groupes DB explicitement sautés dans ce job ; chaque version MariaDB réussit ensuite 12 tests de migrations et 14 tests d'authentification, sans saut. Le parcours HTTP connecté à MariaDB valide connexion, session, anti-CSRF, déconnexion et refus du rejeu MFA. Audit npm du 14 octobre : aucune vulnérabilité signalée.
+- Les trois PR restent en brouillon ; aucune fusion, configuration Infomaniak, migration de vraie base ou mise en production n'a été effectuée. L'authentification administrateur est implémentée et testée avec fixtures ; invitations et API clients restent absentes. La recette navigateur en HTTPS et sur appareils réels reste à effectuer.

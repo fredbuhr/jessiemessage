@@ -34,4 +34,4 @@ Public source code is compatible with a secure product only if every release han
 
 ## Current status
 
-This initial scaffold serves only static informational content. It has no registration or upload routes. **It has not undergone a penetration test or legal approval and must not be presented as a working secure messenger.**
+Version 0.4 can enable administrator MFA, recovery codes, revocable sessions and an access screen with explicit private configuration. Without it, the server remains on its neutral public page. Client registration, invitation redemption, chat and upload routes remain pending. Recovery/rotation procedures and browser HTTPS acceptance also remain to be completed. **This development lot has not undergone a penetration test or legal approval and must not be presented as a production messenger.** See [implemented protections and operational limits](auth-admin.md).
