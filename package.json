@@ -1,16 +1,14 @@
 {
   "name": "jessiemessage",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "Invite-only messaging PWA for Jessie (initial secure shell)",
-  "engines": {
-    "node": ">=24 <25"
-  },
+  "description": "Invite-only messaging PWA for Jessie (offline design workbench)",
+  "engines": { "node": ">=24 <25" },
   "scripts": {
     "start": "node server/index.mjs",
     "dev": "node --watch server/index.mjs",
-    "check": "node --check server/index.mjs && node --check public/app.js && node --check design/admin-tools.js && node --check design/admin-tools-ui.js && node --check scripts/build-workbench.mjs",
+    "check": "node --check server/index.mjs && node --check public/app.js && node --check design/admin-tools.js && node --check design/admin-tools-ui.js && node --check design/dark-ui.js && node --check scripts/build-workbench.mjs",
     "build": "npm run check && node scripts/build-workbench.mjs",
     "test": "node --test tests/*.test.mjs"
   }

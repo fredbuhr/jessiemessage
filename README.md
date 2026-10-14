@@ -2,38 +2,31 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-> **Development status: interactive workbench V0.2, not a production messenger.** No real accounts, database connection, messaging delivery, email or push notifications are enabled. No automatic deployment to Infomaniak.
+> **Current delivery: Nuit V2 / workbench 0.3.** A dark mobile-first interactive prototype, not a production messenger. No real accounts, database connection, email, notifications or message delivery. No automatic Infomaniak deployment.
 
-## Try the interface without a terminal
+## Try without a terminal
 
-Open the latest successful **CI** run on the development branch in GitHub Actions. Download the artifact named **JessieMessage-apercu-…**, extract it and open **JessieMessage.html** in your browser.
+Open the latest successful **CI** run on the development branch in GitHub Actions. Download **JessieMessage-apercu-…**, extract it and open **JessieMessage.html** in a browser.
 
-The self-contained preview includes Welcome, Client view and Administration. The admin workspace has Messages / Media library / Broadcast / Access. It supports fictional conversations, emojis, media history, private notes and tags, manual groups, one-time invitation simulation, access expiry/suspension and targeted deliveries with duplicate protection.
+Explore Welcome, Messages and Admin. The client gets one simple conversation. Admin tools include messages, media library, bulk sends and access management, plus fictional invitations, groups, tags and notes. All data resets on reload. The client/admin switch is a preview control, not authentication.
 
-Everything is kept in memory and resets on reload. Example invitation links are inactive. No real clients or intimate files belong in this workshop. The client/admin switch is a presentation control, **not authentication**.
+The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follows the visible screen height; desktop has a secondary portrait/gallery panel. Photos supplied for private review are **not** included in this repository or its build artifacts. The Photo button loads a reference locally.
 
-- [V0.2 delivery notes and checks](docs/WORKBENCH-V02.md)
+- [Nuit V2 delivery, design and test scope](docs/NUIT-V2.md)
+- [Previous management workbench V0.2](docs/WORKBENCH-V02.md)
 - [Product scope](docs/PRODUCT.md)
-- [KISS direction and initial design](docs/DESIGN-KISS.md)
 - [Planned architecture](docs/ARCHITECTURE.md)
 - [Security and privacy launch gates](docs/SECURITY.md)
 
-## Code and checks
+## Maintainer checks
 
-The neutral public placeholder remains served by a minimal Node.js 24 HTTP server with no runtime npm dependencies. It serves only explicit public files and a health endpoint; `design/` and generated `artifacts/` are not publicly served.
+Node.js 24; no runtime npm dependencies. `npm run check` validates syntax, `npm test` runs 36 tests, and `npm run build` generates the self-contained HTML. GitHub Actions performs these checks and publishes the artifact. Test results depend on the actual CI run; screenshots and static contrast checks are not a security or accessibility certification.
 
-- `npm start`: start the placeholder using `PORT` (default 3000).
-- `npm run check`: verify JavaScript syntax.
-- `npm test`: run 28 tests on the placeholder and workshop rules.
-- `npm run build`: assemble the downloadable, offline HTML workbench.
+`npm start` still serves only the original neutral public placeholder and health endpoint. The design and artifact directories are not served by that application. No changes to Infomaniak, ZTIKIX or `main` are made by this development branch.
 
-GitHub Actions performs these checks and prepares the download automatically. These commands are for maintainers; normal interface review needs only the downloaded HTML file.
+## Data rules
 
-## Data and deployment rules
-
-Never commit credentials, real messages, client lists, personal photos, database dumps or production logs. The public preview uses fictional data and has no embedded portrait. Its Photo button can load an image locally without uploading it.
-
-Production will run separately on Infomaniak. The existing site, ZTIKIX and the `main` branch are unchanged by a proposal on the development branch. Real access requires server-side authorization, durable private storage and completion of the security/legal launch gates. A declarative 18+ checkbox is not labelled as verified adulthood.
+Never commit real messages, client data, private media, passwords, API keys, production logs or database dumps. Development uses fictional data. The 18+ declaration is not reported as verified adulthood. Legal pages and production privacy/access controls remain unfinished.
 
 ## License
 
