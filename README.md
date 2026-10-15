@@ -2,6 +2,8 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
+**Resume development:** the [15 October recovery audit](docs/AUDIT-REPRISE-2026-10-15.md) fixes the reference at 0.16 (`0ecb31e`), verifies tests/CI, and records remaining launch work. Fix unchanged-poll chat DOM replacement first, then continue 0.17 operations/data work. The audit itself changes documentation only.
+
 > **Current development: isolated backup recovery 0.16.0 + Nuit workbench 0.3.1.** This lot prepares a signed pre-backup manifest, verifies five keys and existing ciphertext, and repairs known pending storage objects on a distinct database/directory clone. See the [offline restore procedure](docs/backup-clone-recovery.md). The [verified 0.16 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38703160199) passed 991 general tests and 287 real tests per MariaDB version. `contact@jessiemessage.com` remains the official contact, sender and reply address. Real hosting, mail delivery, age assurance, backup operations and HTTPS/mobile acceptance remain launch work; no deployment has occurred.
 
 ## Try without a terminal
