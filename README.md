@@ -2,7 +2,7 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-> **Current delivery: client password recovery 0.9.0 + Nuit workbench 0.3.1.** Optional recovery adds a discreet email link for an eligible client, without signing in or reopening expired/revoked access. The existing private text/photo messages, galleries and administrator-only CRM remain available behind their explicit configuration. [CRM 0.8 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) passed 402 general tests and 159 real tests on each supported MariaDB version; recovery 0.9 passes the [verified recovery CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) with 461 general tests and 190 real tests per MariaDB version. Real SMTP, age-assurance integration and HTTPS/mobile acceptance remain launch work; no automatic Infomaniak deployment.
+> **Current development: site email and preparation tools 0.10.0 + Nuit workbench 0.3.1.** `contact@jessiemessage.com` is the single site contact, sender, reply and envelope address on the official domain. An administrator-only preparation page inventories configured features and can verify the encrypted SMTP connection and authentication without sending mail. The existing private messages, photos, CRM and optional client recovery remain behind their configuration. CI for 0.10 is pending. The earlier [verified recovery 0.9 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) passed 461 general tests and 190 real tests per MariaDB version. Actual mailbox/DNS configuration, mail reception, age assurance and HTTPS/mobile acceptance remain launch work; no deployment has occurred.
 
 ## Try without a terminal
 
@@ -22,6 +22,7 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 - [Invitations, client access and remaining gates](docs/invitations-client-access.md)
 - [Private administrator recovery](docs/admin-recovery.md)
 - [Encrypted verification email queue](docs/verification-mail.md)
+- [Official contact, private SMTP check and remaining mail acceptance](docs/mail-readiness.md)
 - [Opt-in client password recovery](docs/client-recovery.md)
 - [Private text messaging and operational limits](docs/private-messaging.md)
 - [Private images, gallery and storage setup](docs/private-media.md)
@@ -29,9 +30,11 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 
 ## Maintainer checks
 
-Node.js 24. Runtime and migration credentials are separate; migrations never run on server startup. Run `npm ci --ignore-scripts` to install the pinned lockfile. `npm run check` validates syntax, `npm test` runs unit/HTTP/model tests (database integration is opt-in), and `npm run build` generates the self-contained offline preview. CI runs the disposable MariaDB groups sequentially on 10.11 and 11.4, including real HTTP flows and DML-only runtime privileges. Fourteen database groups run sequentially, including separate recovery store and HTTP flows. The [verified recovery CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) passes 461 general tests and 190 real tests on each MariaDB version. The earlier CRM groups cover private ownership, ciphertext, version conflicts, filters and live revocation; their [verified 0.8 CI result](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) is recorded in the CRM documentation. Only the three explicit public preview files are uploaded. Static checks are not a browser or accessibility certification.
+Node.js 24. Runtime and migration credentials are separate; migrations never run on server startup. Run `npm ci --ignore-scripts` to install the pinned lockfile. `npm run check` validates syntax, `npm test` runs unit/HTTP/model tests (database integration is opt-in), and `npm run build` generates the self-contained offline preview. CI targets disposable MariaDB 10.11 and 11.4, real HTTP flows and DML-only runtime privileges. Fifteen database groups run sequentially, including separate recovery store/HTTP flows and the preparation-page flow. Version 0.10 results are pending; the historical [verified recovery 0.9 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) passed 461 general tests and 190 real tests per MariaDB version. CRM ownership, ciphertext, version conflicts, filters and revocation are covered by the earlier [verified 0.8 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864). Only the three explicit public preview files are uploaded. Static checks are not browser or accessibility certification.
 
 `npm start` defaults to the original neutral page and liveness endpoint. Private authentication enables administrator access. Additional access/mail flags and SMTP configuration enable invitation tools and `/access`, whose client account remains restricted until its gates are satisfied. Mail workers start with the HTTP listener. With recovery enabled, verification and reset workers share one SMTP transport; shutdown waits for both before closing that transport and the pool. Enabled authentication refuses startup when configuration or required tables are missing. The design and artifact directories are not served. No changes to Infomaniak, ZTIKIX or `main` are made by this development branch.
+
+With administrator authentication enabled, `/admin/readiness` provides the private **Préparer le site** page, including when client access is disabled. Its optional SMTP verification uses a fresh transport, a 20-second deadline and current administrator authentication; it never uses the delivery workers' shared transport or sends a message. The default contact address does not enable SMTP or provide credentials. See [mail preparation and its exact limits](docs/mail-readiness.md).
 
 ## First server foundation
 

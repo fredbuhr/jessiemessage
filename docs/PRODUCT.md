@@ -1,10 +1,12 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.9**. Registration, private text/photo chat, galleries, administrator CRM and opt-in client password recovery are implemented behind explicit private configuration. The earlier [CRM 0.8 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) passed; recovery 0.9 passes the [verified recovery CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) with 461 general tests and 190 real tests per MariaDB version. Real SMTP, browser/device acceptance and external access integrations remain pending. The default server stays neutral. Diffusion and Web Push remain planned; production access gates still require external integration and acceptance.
+Status: **development 0.10; CI pending for this lot**. The official site email is `contact@jessiemessage.com`. This lot adds a private administrator preparation page and an SMTP connection/authentication check without sending mail. Registration, private text/photo chat, galleries, CRM and optional client recovery remain behind explicit configuration. Historical [recovery 0.9 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) passed 461 general tests and 190 real tests per MariaDB version. Actual mail delivery, browser/device acceptance and external access integrations remain pending. The default server stays neutral; diffusion and Web Push remain planned.
 
 ## Purpose
 
 An invitation-only private messaging application between Jessie (creator/admin) and each invited client. The public site must be neutral and have no payments, public gallery or public chat room. The client only sees their own conversations and media.
+
+`contact@jessiemessage.com` is the public contact/help address and the official-domain identity for outgoing service mail, replies and the SMTP envelope. This choice does not create a mailbox or activate delivery.
 
 ## Intended scale
 
@@ -35,6 +37,8 @@ An invitation-only private messaging application between Jessie (creator/admin) 
 
 ## Admin experience
 
+- **Préparer le site** shows which features and email delivery are configured, with age assurance, actual email reception and device acceptance kept visibly pending. It does not certify readiness for production.
+- An explicit **Vérifier la connexion e-mail** action checks encrypted SMTP connection/authentication without sending an email. A successful result still requires a separate reception test. No password, recipient or SMTP-server input is exposed in this page. See [mail preparation](mail-readiness.md).
 - Implemented CRM inbox search across pseudonym, private nickname and known email, with tag **and** group, access, unread and reminder filters.
 - Private client file: nickname, contact email, status, up to 8,000 characters of encrypted notes and an optional reminder date. The inbox includes neither email nor notes.
 - Up to 100 tags and 100 groups per administrator, with at most 32 labels on one client file. Avoid gratuitous intimate profiling.

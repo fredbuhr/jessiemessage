@@ -1,5 +1,6 @@
 import { isIP } from "node:net";
 import { canonicalEmail } from "../auth/config.mjs";
+import { SITE_CONTACT_EMAIL, isOfficialOrigin } from "../site.mjs";
 
 export class MailConfigError extends Error {
   constructor() {
@@ -35,12 +36,16 @@ export function mailConfiguration(env = process.env) {
   const password = env.JESSIEMESSAGE_SMTP_PASSWORD;
   if (!credential(user, 256) || !credential(password, 1024)) fail();
   let from;
-  try { from = canonicalEmail(env.JESSIEMESSAGE_SMTP_FROM); } catch { fail(); }
+  try {
+    from = canonicalEmail(env.JESSIEMESSAGE_SMTP_FROM === undefined
+      ? SITE_CONTACT_EMAIL : env.JESSIEMESSAGE_SMTP_FROM);
+  } catch { fail(); }
+  if (isOfficialOrigin(origin) && from !== SITE_CONTACT_EMAIL) fail();
   const caPath = env.JESSIEMESSAGE_SMTP_TLS_CA_PATH;
   if (caPath !== undefined && (typeof caPath !== "string" || !caPath.length
     || caPath.length > 4096 || caPath.includes("\0"))) fail();
   return Object.freeze({ enabled: true, origin, key, smtp: Object.freeze({
-    host, port: Number(portText), user, password, from,
+    host, port: Number(portText), user, password, from, replyTo: from,
     ...(caPath === undefined ? {} : { caPath }),
   }) });
 }

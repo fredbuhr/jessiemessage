@@ -9,7 +9,8 @@ const translations = {
     bubble2: "À bientôt 👋",
     composer: "Messagerie bientôt disponible",
     preview: "Aperçu illustratif — aucun compte n'est encore actif.",
-    footer: "JessieMessage · Accès privé sur invitation · Aucun paiement sur ce site"
+    footer: "JessieMessage · Accès privé sur invitation · Aucun paiement sur ce site",
+    contact: "Contact"
   },
   en: {
     badge: "PRIVATE SPACE",
@@ -21,7 +22,8 @@ const translations = {
     bubble2: "See you soon 👋",
     composer: "Messaging coming soon",
     preview: "Illustrative preview — no accounts are active yet.",
-    footer: "JessieMessage · Invitation-only access · No payments on this site"
+    footer: "JessieMessage · Invitation-only access · No payments on this site",
+    contact: "Contact"
   }
 };
 

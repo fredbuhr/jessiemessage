@@ -4,9 +4,9 @@ Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de cl
 
 ## État de référence
 
-Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
+Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Adresse officielle retenue pour l'expédition, les réponses, le contact et la préparation du compte administrateur initial : **contact@jessiemessage.com**. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
 
-Branche courante : `feat/client-recovery`, construite sur `feat/private-crm`, puis `feat/private-media`. Les modifications restent empilées, sans fusion ni déploiement automatique : [#1 identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 authentification](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 accès](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 messagerie](https://github.com/fredbuhr/jessiemessage/pull/5), [#6 médias](https://github.com/fredbuhr/jessiemessage/pull/6). Le lot CRM est disponible dans la [PR brouillon #7](https://github.com/fredbuhr/jessiemessage/pull/7). Le lot récupération client est disponible dans la [PR brouillon #8](https://github.com/fredbuhr/jessiemessage/pull/8).
+Branche courante : `feat/mail-readiness`, construite sur `feat/client-recovery`, puis `feat/private-crm` et `feat/private-media`. Les modifications restent empilées, sans fusion ni déploiement automatique : [#1 identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 authentification](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 accès](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 messagerie](https://github.com/fredbuhr/jessiemessage/pull/5), [#6 médias](https://github.com/fredbuhr/jessiemessage/pull/6). Le lot CRM est disponible dans la [PR brouillon #7](https://github.com/fredbuhr/jessiemessage/pull/7). Le lot récupération client est disponible dans la [PR brouillon #8](https://github.com/fredbuhr/jessiemessage/pull/8). La préparation e-mail forme le prochain lot 0.10.
 
 L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée sur bleu nuit. Les portraits personnels restent hors Git et des artefacts publics. Le prototype autonome 0.3.1 contient des données fictives ; il ne démontre pas le fonctionnement des comptes réels.
 
@@ -20,6 +20,7 @@ L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée
 | Photos privées | JPEG/PNG/WebP normalisés sans métadonnées, stockage chiffré, lectures autorisées, galerie et médiathèque propriétaire | Hébergement natif, ressources, sauvegarde et nettoyage des orphelins à valider |
 | Outils clients 0.8 | Surnoms et notes privées, tags/groupes, dates de suivi, recherche et filtres ; conflits entre onglets | CI MariaDB vérifiée ; recette de l'interface à réaliser |
 | Récupération client 0.9 | Lien e-mail unique de 30 minutes, changement atomique, anciens liens et sessions révoqués | CI vérifiée ; SMTP et recette HTTPS à valider |
+| Identité e-mail et préparation 0.10 | Adresse contact unique, page administrateur et vérification SMTP sans envoi | CI en cours ; boîte, DNS et livraison réels non vérifiés |
 | Présentation | Identité Nuit, icônes approuvées, aperçu autonome fictif | Contrôles navigateur, accessibilité et responsive réels à terminer |
 
 Les outils clients restent réservés à l'administrateur affecté. Les notes sont chiffrées ; les listes n'incluent ni notes ni adresse e-mail. Les dates de suivi ne déclenchent aucune notification. Les groupes sont des classements privés, pas des salons.
@@ -45,7 +46,7 @@ Les durées ci-dessous sont des ordres de grandeur de travail, à recalibrer apr
 | Étape | Résultat concret et critère de sortie | Ordre de grandeur |
 | --- | --- | --- |
 | 1. Terminer le CRM | CI verte sur Node 24 et les deux MariaDB ; conflits et confidentialité vérifiés ; PR brouillon documentée | Terminé pour ce lot de code |
-| 2. Débloquer le parcours pilote | Récupération client implémentée en 0.9 ; CI vérifiée, tester SMTP sur domaine réel et intégrer la majorité | Délais des accès et du fournisseur, puis recette |
+| 2. Débloquer le parcours pilote | Récupération client implémentée en 0.9 ; CI vérifiée, contrôle SMTP sans envoi préparé en 0.10 ; tester la connexion et la réception réelles, puis intégrer la majorité | Délais des accès et du fournisseur, puis recette |
 | 3. Diffusion individuelle | Sélection explicite des destinataires, préférences, exclusion des accès inactifs, reprise sans doublon et journal durable | 2 à 3 jours |
 | 4. Recette privée sous HTTPS | Environnement de test isolé ; parcours invitation → accès → texte/photo → révocation sur iPhone/Android ; corrections de l'interface | 1 à 2 jours après accès à l'hébergement |
 | 5. Exploitation et publication | Sauvegarde/restauration éprouvée, rétention et nettoyage, limites de charge, pages légales ; revue puis fusion ordonnée des PR | 2 à 3 jours, avec validations externes |
@@ -76,3 +77,13 @@ L’implémentation est vérifiée par la CI détaillée ci-dessous. Voir [confi
 Implémentation `56827b5054511cff9a4cede91a986507da6547aa`, [PR brouillon #8](https://github.com/fredbuhr/jessiemessage/pull/8) : [CI 38655526255](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) réussie sous Node.js 24.21.0. **461 tests généraux réussis**, 14 groupes DB explicitement ignorés dans ce job sans base ; **190 tests réels sans saut sur chacune des versions MariaDB 10.11 et 11.4**. Les quatorze groupes sont séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file e-mail 11, HTTP accès 9, persistance chat 19, HTTP chat 12, persistance médias 16, HTTP médias 10, persistance CRM 19, HTTP CRM 14, persistance récupération et file dédiée 19, HTTP récupération 12.
 
 Syntaxe et build réussis ; aucune nouvelle dépendance ni modification des icônes approuvées. Les tests de récupération couvrent de vrais appels HTTP et changements scrypt, le refus de l'ancien mot de passe, les courses de consommation, le remplacement/expiration des liens, la révocation des sessions et l'invariance des droits d'accès. Les envois utilisent un transport injecté. SMTP réel, majorité externe et recette HTTPS/appareils restent les prochaines validations du pilote ; aucune fusion ni mise en production effectuée.
+
+## Identité e-mail et préparation du site 0.10
+
+`contact@jessiemessage.com` devient l'adresse du site pour les liens de contact, l'expéditeur visible, l'enveloppe SMTP et les réponses. Les origines officielles et leurs sous-domaines refusent un autre expéditeur. Ce défaut ne suffit pas à activer les e-mails : serveur, port, identifiant, mot de passe et clé de file restent explicitement configurés en privé. Les tests hors domaine officiel peuvent conserver leurs adresses synthétiques.
+
+La page administrateur « Préparer le site » présente les fonctionnalités activées et les validations restantes, sans afficher identifiants, clés, serveur SMTP ou détails MariaDB. Son bouton teste seulement DNS/TCP/TLS et l'authentification SMTP via une connexion dédiée ; aucun e-mail n'est envoyé et aucune réception n'est certifiée. Session MFA actuelle, Origin, CSRF, quotas persistants et contrôle de concurrence protègent cette action. Une session révoquée pendant le contrôle ne reçoit pas de résultat de réussite.
+
+Les réglages publics Infomaniak sont documentés : `mail.infomaniak.com`, port 587 avec STARTTLS recommandé, et identifiant `contact@jessiemessage.com` si cette adresse correspond à une boîte authentifiable. Le mot de passe SMTP doit être créé dans le Manager et placé dans les variables privées ; aucun secret n'est demandé dans l'interface de diagnostic. SPF/DKIM/DMARC doivent être vérifiés dans le Service Mail avec les valeurs réellement fournies, sans inventer de sélecteur DKIM.
+
+Les 22 migrations restent identiques. Un quinzième groupe HTTP/MariaDB couvre le diagnostic avec un transport simulé. CI finale en attente ; aucun SMTP réel contacté, e-mail envoyé, changement DNS, recette visuelle ou déploiement. Voir [configuration et limites](mail-readiness.md).
