@@ -126,8 +126,8 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         age_assured_at, access_approved_at, created_at, updated_at) VALUES (?, ?, 'active', ?, ?, 'synthetic-not-a-password', ?, ?, ?, ?, ?)`,
       [user.id, user.role, `Synthetic backup ${user.role}`, user.email ?? "backup-admin@example.invalid",
         user.role === "client" ? sqlDate(now) : null, user.role === "client" ? sqlDate(now) : null, user.role === "client" ? sqlDate(now) : null, sqlDate(now), sqlDate(now)]);
-      if (user.role === "admin") await sourceConnection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, ?, 1, -1, ?)",
-        [user.id, sealTotpSecret(makeTotpSecret(), keys.totpKey, user.id), sqlDate(now)]);
+      if (user.role === "admin") await sourceConnection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, ?, 1, ?, ?)",
+        [user.id, sealTotpSecret(makeTotpSecret(), keys.totpKey, user.id), Math.floor(now / 30000), sqlDate(now)]);
       else await sourceConnection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [user.id, sqlDate(now)]);
       await sourceConnection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [user.sessionId, user.id, user.tokenHash, sqlDate(now), sqlDate(now + 28800000)]);
       if (user.role === "admin") await sourceConnection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [user.sessionId, sqlDate(now), sqlDate(now)]);
