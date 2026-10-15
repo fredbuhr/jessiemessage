@@ -338,6 +338,7 @@ function chooseFile() {
   state.imageDraft = { file, asset: null }; renderMeta(state); notice("Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
 }
 function mediaErrorText(error) {
+  if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite. Contacte Jessie.";
   if (error.status === 409 && error.code === "media_in_use") return "Cette photo est encore présente dans une conversation. Supprime d’abord tous tes messages qui la contiennent.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
   if (error.status === 415 || error.status === 400 || error.status === 413) return "Photo refusée. Utilise une image JPEG, PNG ou WebP de 10 Mo maximum, avec une légende de 1 000 caractères maximum.";

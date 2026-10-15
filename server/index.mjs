@@ -210,7 +210,13 @@ export async function createConfiguredServer(env = process.env) {
       // Chat history joins attachment metadata even when image transfer is off.
       // Verify those tables before accepting any private history requests.
       const { createMediaStore } = await import("./media/store.mjs");
-      const mediaStore = createMediaStore({ pool, chatStore });
+      let mediaStorage, mediaCapacity;
+      if (mediaConfig.enabled) {
+        const { createMediaStorage } = await import("./media/storage.mjs");
+        mediaStorage = await createMediaStorage({ root: mediaConfig.root, key: mediaConfig.key });
+        mediaCapacity = { ...mediaConfig.capacity, rootFingerprint: await mediaStorage.fingerprint() };
+      }
+      const mediaStore = createMediaStore({ pool, chatStore, capacity: mediaCapacity });
       await mediaStore.assertSchema();
       if (crmConfig.enabled) {
         const { createCrmStore } = await import("./crm/store.mjs");
@@ -222,13 +228,16 @@ export async function createConfiguredServer(env = process.env) {
         crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin });
       }
       if (mediaConfig.enabled) {
-        const { createMediaStorage } = await import("./media/storage.mjs");
+        const { createMediaCapacityStore } = await import("./media/capacity-store.mjs");
         const { createMediaService } = await import("./media/service.mjs");
         const { createMediaHandler } = await import("./media/http.mjs");
-        const mediaStorage = await createMediaStorage({ root: mediaConfig.root, key: mediaConfig.key });
-        await mediaStorage.assertReady();
+        const capacityStore = createMediaCapacityStore({ pool, capacity: mediaCapacity });
+        if (!(await capacityStore.status()).ready) {
+          const error = new Error("Private media capacity must be initialized offline.");
+          error.code = "MEDIA_CAPACITY_UNAVAILABLE"; throw error;
+        }
         const mediaService = await createMediaService({ store: mediaStore, chatService, authStore: store,
-          storage: mediaStorage, key: mediaConfig.key });
+          storage: mediaStorage, key: mediaConfig.key, minimumFreeBytes: mediaConfig.minimumFreeBytes });
         mediaHandler = createMediaHandler(mediaService, { origin: mediaConfig.origin });
       }
       if (broadcastConfig.enabled) {

@@ -20,7 +20,7 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host), "integration tests require loopback");
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "runtime DML credentials must be separately provisioned");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 25);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
   const ownedTables = migrations.map((migration) => {
     const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
     assert.ok(match, "cleanup only accepts reviewed single-table migrations"); return match[1];

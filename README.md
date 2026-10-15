@@ -2,7 +2,7 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-> **Current development: access renewal and administrator pagination 0.14.0 + Nuit workbench 0.3.1.** This lot extends already-approved finite access with an exact expiry snapshot and pages through all clients and invitations without accumulating private rows in the browser. The final review also corrected authorization times retained across quota waits in existing private services. The [verified 0.14 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38694142246) passed 863 general tests and 260 real tests per MariaDB version. `contact@jessiemessage.com` remains the official contact, sender and reply address. Hosting, actual mail delivery, age assurance, storage/restore readiness and HTTPS/mobile acceptance remain launch work; no deployment has occurred.
+> **Current development: media capacity and private inventory 0.15.0 + Nuit workbench 0.3.1.** This lot reserves durable capacity before media writes, keeps uncertain operations charged and adds a bounded local inventory without deleting unknown files. The 0.15 CI proof is pending. The [verified 0.14 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38694142246) passed 863 general tests and 260 real tests per MariaDB version. `contact@jessiemessage.com` remains the official contact, sender and reply address. Hosting, actual mail delivery, age assurance, storage recovery/restore readiness and HTTPS/mobile acceptance remain launch work; no deployment has occurred.
 
 ## Try without a terminal
 
@@ -31,6 +31,7 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 - [Private interface corrections and regression coverage](docs/private-ui-reliability.md)
 - [Request admission, read/upload budgets and bounded shutdown](docs/server-availability.md)
 - [Approved access renewal and complete administrator lists](docs/access-renewal-pagination.md)
+- [Media capacity, offline initialization and private inventory](docs/media-capacity-inventory.md)
 - [Audit findings, current state and launch plan](docs/NEXT-STEPS.md)
 
 ## Maintainer checks

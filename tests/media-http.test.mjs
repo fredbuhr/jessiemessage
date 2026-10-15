@@ -48,8 +48,8 @@ async function fixture(t, overrides = {}) {
   // while these protocol tests keep decoding and metadata as explicit fakes.
   const unused = () => { throw new Error("No image or metadata operation belongs in admission"); };
   const admissionService = await createMediaService({
-    store: Object.fromEntries(["registerAsset", "listAssets", "getOwnedAsset", "getMessageAsset", "deleteAsset", "gallery"].map((name) => [name, unused])),
-    storage: { put: unused, get: unused, remove: unused }, key: Buffer.alloc(32, 20), clock: () => now,
+    store: Object.fromEntries(["reserveAsset", "registerAsset", "releaseStorageObject", "listAssets", "getOwnedAsset", "getMessageAsset", "deleteAsset", "gallery"].map((name) => [name, unused])),
+    storage: { put: unused, get: unused, remove: unused, availableSpace: unused }, key: Buffer.alloc(32, 20), clock: () => now,
     chatService: { actor: (...args) => service.actor(...args), sendImage: unused },
     authStore: { async consumeRateLimit(bucket, options) { admissionRates.push({ bucket, options }); return { allowed: true }; } },
   });
@@ -403,13 +403,26 @@ test("invalid or cross-role service metadata, URLs and byte buffers fail closed"
 
 test("media service errors are bounded and clear only the unauthorized role cookie", async (t) => {
   const { base, service } = await fixture(t);
-  for (const [code, status, publicCode] of [["CHAT_UNAUTHORIZED", 401, "authentication_required"], ["AUTH_INVALID", 401, "authentication_required"], ["ACCESS_EXPIRED", 403, "request_rejected"], ["ACCESS_PREREQUISITES", 403, "request_rejected"], ["CHAT_FORBIDDEN", 403, "request_rejected"], ["MEDIA_NOT_FOUND", 404, "not_found"], ["MEDIA_INPUT", 400, "invalid_request"], ["MEDIA_FORMAT", 415, "media_format"], ["MEDIA_BUSY", 429, "try_again_later"], ["MEDIA_RATE_LIMIT", 429, "try_again_later"], ["MEDIA_UNAVAILABLE", 503, "media_unavailable"], ["ER_PRIVATE_SQL", 503, "media_unavailable"]]) {
+  for (const [code, status, publicCode] of [["CHAT_UNAUTHORIZED", 401, "authentication_required"], ["AUTH_INVALID", 401, "authentication_required"], ["ACCESS_EXPIRED", 403, "request_rejected"], ["ACCESS_PREREQUISITES", 403, "request_rejected"], ["CHAT_FORBIDDEN", 403, "request_rejected"], ["MEDIA_NOT_FOUND", 404, "not_found"], ["MEDIA_INPUT", 400, "invalid_request"], ["MEDIA_FORMAT", 415, "media_format"], ["MEDIA_BUSY", 429, "try_again_later"], ["MEDIA_RATE_LIMIT", 429, "try_again_later"], ["MEDIA_STORAGE_LIMIT", 507, "storage_limit"], ["MEDIA_CAPACITY_UNAVAILABLE", 503, "media_unavailable"], ["MEDIA_UNAVAILABLE", 503, "media_unavailable"], ["ER_PRIVATE_SQL", 503, "media_unavailable"]]) {
     service.listAssets = async () => { throw Object.assign(new Error("private SQL, original name and filesystem path"), { code, retryAfter: 5, privateKey: "secret" }); };
     const response = await fetch(`${base}${assetsPath("client")}`, { headers: { Cookie: cookie("client") } }); assert.equal(response.status, status, code); assert.deepEqual(await response.json(), { error: publicCode });
     assert.equal(response.headers.get("set-cookie") !== null, status === 401); if (status === 429) assert.equal(response.headers.get("retry-after"), "5");
   }
   service.listAssets = async () => { throw Object.assign(new Error("private"), { httpStatus: 400, publicCode: "private SQL" }); };
   const unexpected = await fetch(`${base}${assetsPath("client")}`, { headers: { Cookie: cookie("client") } }); assert.equal(unexpected.status, 503); assert.deepEqual(await unexpected.json(), { error: "media_unavailable" });
+});
+
+test("upload capacity refusals distinguish exhausted storage from an unavailable capacity check without leaking details", async (t) => {
+  const { base, service } = await fixture(t);
+  for (const role of ["admin", "client"]) for (const [code, status, error] of [
+    ["MEDIA_STORAGE_LIMIT", 507, "storage_limit"], ["MEDIA_CAPACITY_UNAVAILABLE", 503, "media_unavailable"],
+  ]) {
+    service.upload = async () => { throw Object.assign(new Error("Private disk path /private/photos and usage 99"), { code, usedBytes: 99, limitBytes: 100 }); };
+    const response = await post(base, assetsPath(role), jpeg, uploadHeaders(role));
+    assert.equal(response.status, status); privateHeaders(response);
+    assert.deepEqual(await response.json(), { error });
+    assert.equal(response.headers.get("set-cookie"), null); assert.equal(response.headers.get("retry-after"), null);
+  }
 });
 
 test("media routing is exact, unexpected methods do not touch service and HEAD never emits JSON", async (t) => {
