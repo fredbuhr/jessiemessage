@@ -10,6 +10,8 @@
 
 **Suivi hébergement — étape 0.23 :** le [relevé public et le parcours Manager](hosting-inventory-2026-10-15.md) confirment à 13:31–13:32 UTC la page Infomaniak par défaut et les 404 de `/app`, `/api/health`, `/api/ready` et du manifeste sur le domaine public. Aucun projet privé ou environnement de préproduction n’est encore identifié. Le lot est documentaire ; version applicative 0.24.0 inchangée, CI d’authentification #25 verte. La prochaine action est le relevé privé en consultation ; aucun déploiement ni changement de service.
 
+**Suivi réel — étapes 0.23–0.24 :** l’[inventaire du compte et le premier démarrage neutre](first-hosted-start.md) sont effectués. Le projet existant choisi par l’utilisateur exécute maintenant la révision `55fb30aa` / application 0.24.0 sur le domaine public, avec les huit fonctions privées explicitement désactivées. Node/Sharp, HTTP local, HTTPS public et FR/EN ont été vérifiés ; `/api/ready` reste volontairement à 503. Le modèle initial est conservé pour repli. Aucune base ni compte créé, aucune action sur ZTIKIX. Les PR restent empilées sans fusion : ce démarrage manuel n’est pas une ouverture du pilote privé. Suite : préparer la base dédiée, TLS, les permissions, le schéma et l’authentification avant toute activation privée.
+
 ## Décision de reprise
 
 **Suivi après audit :** le [correctif 0.16.1](chat-stable-history.md) traite A15 dans le code et ajoute les régressions du contrôleur. La recette navigateur reste à réaliser. Le rapport ci-dessous conserve l’état observé sur 0.16 ; prochaine étape de développement : 0.17a supervision.

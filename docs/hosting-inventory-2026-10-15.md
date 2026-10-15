@@ -2,6 +2,8 @@
 
 Relevé du 15 octobre 2026. Lot documentaire sur `feat/hosting-inventory`, construit sur la PR #25, commit `bdcdb833e4bc76ae057d0884bb6bcf7d97ab9b08`. La version applicative reste 0.24.0 ; ce lot ne change aucun code, migration ou paramètre de service.
 
+**Suivi ultérieur :** le [compte a ensuite été consulté et la version neutre démarrée](first-hosted-start.md). Les observations et inconnues ci-dessous sont conservées comme état initial horodaté ; elles ne décrivent plus seules l’état actuel du site.
+
 ## Constat public
 
 Cinq requêtes HTTPS GET anonymes ont été effectuées, sans cookie, sans suivi des redirections et avec la vérification TLS habituelle de curl. Les réponses ont été reçues entre **13:31:37 et 13:32:13 UTC**, soit **15:31:37–15:32:13 à Paris**.
