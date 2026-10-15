@@ -210,6 +210,22 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
     }
 
     await t.test("prepare binds real encrypted data and five keys without exporting secrets or changing the source", async () => {
+      const { createBackupInspectionPool, assertBackupInspection } = await import("../server/backup/inspection.mjs");
+      const { createBackupSnapshotStore, captureBackupSnapshot } = await import("../server/backup/snapshot.mjs");
+      const inspectionPool = await createBackupInspectionPool(process.env);
+      try {
+        const inspector = await inspectionPool.getConnection();
+        try {
+          const grants = await inspector.query("SHOW GRANTS");
+          // Synthetic disposable schemas only: emit scope, never account
+          // authentication clauses, ciphertext, SQL parameters or raw errors.
+          t.diagnostic(`inspection scopes: ${JSON.stringify(grants.flatMap((row) => Object.values(row).filter((value) => typeof value === "string" && value.startsWith("GRANT ALL PRIVILEGES ON ")).map((value) => value.split(" TO ")[0])))}`);
+          await assertBackupInspection(inspector, options.database);
+        } finally { inspector.release(); }
+        t.diagnostic("inspection guards passed");
+        await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool }) });
+        t.diagnostic("source snapshot passed");
+      } finally { await inspectionPool.end(); }
       const result = await run("prepare", { env: process.env, root: sourceRoot, databaseName: options.database });
       assert.equal(result.command, "prepare"); assert.equal(result.verified, true); assert.equal(result.restored, false);
       assert.match(result.manifestHash, /^[a-f0-9]{64}$/);
