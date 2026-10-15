@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { createRequestAdmission } from "./http/admission.mjs";
 import { createShutdown } from "./lifecycle.mjs";
 import { createEntryHandler } from "./entry/http.mjs";
+import { createRequestOriginGuard, isOriginFormTarget, RequestOriginError } from "./http/request-origin.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
 
@@ -54,7 +55,8 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
 }
 
 export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler,
-  entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null } = {}) {
+  entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null } = {}) {
+  const requestOriginAllowed = requestOrigin === null ? null : createRequestOriginGuard(requestOrigin);
   if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
   const privateHandlers = [broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
@@ -72,6 +74,22 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
       response.end(method === "HEAD" ? undefined : '{"error":"service_unavailable"}');
       request.resume();
       return;
+    }
+    if (requestOriginAllowed) {
+      // A reverse proxy may probe with its own Host. This exact public endpoint
+      // remains a fixed process signal, with no handlers, admission or SQL.
+      if (isOriginFormTarget(request.url) && request.url.split("?", 1)[0] === "/api/health") {
+        if (!["GET", "HEAD"].includes(method)) {
+          reply(response, method, 405, "application/json; charset=utf-8", '{"error":"method_not_allowed"}', { Allow: "GET, HEAD", Connection: "close" });
+          request.resume(); return;
+        }
+        reply(response, method, 200, "application/json; charset=utf-8", '{"status":"ok"}');
+        return;
+      }
+      if (!requestOriginAllowed(request)) {
+        reply(response, method, 421, "application/json; charset=utf-8", '{"error":"misdirected_request"}', { Connection: "close" });
+        request.resume(); return;
+      }
     }
     let pathname, url;
     try { url = new URL(request.url ?? "/", "http://localhost"); pathname = url.pathname; }
@@ -160,7 +178,8 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   return server;
 }
 
-export async function createConfiguredServer(env = process.env) {
+export async function createConfiguredServer(env = process.env, { requestOrigin = null } = {}) {
+  if (requestOrigin !== null) createRequestOriginGuard(requestOrigin);
   const { authConfiguration } = await import("./auth/config.mjs");
   const { accessConfiguration } = await import("./access/config.mjs");
   const { chatConfiguration } = await import("./chat/config.mjs");
@@ -169,13 +188,14 @@ export async function createConfiguredServer(env = process.env) {
   const { clientRecoveryConfiguration } = await import("./reset/config.mjs");
   const { broadcastConfiguration } = await import("./broadcast/config.mjs");
   const config = authConfiguration(env);
+  if (requestOrigin !== null && (!config.enabled || config.origin !== requestOrigin)) throw new RequestOriginError();
   const accessConfig = accessConfiguration(env);
   const chatConfig = chatConfiguration(env);
   const mediaConfig = mediaConfiguration(env);
   const crmConfig = crmConfiguration(env);
   const resetConfig = clientRecoveryConfiguration(env);
   const broadcastConfig = broadcastConfiguration(env, { crmEnabled: crmConfig.enabled });
-  if (!config.enabled) return { server: createAppServer(), pool: null };
+  if (!config.enabled) return { server: createAppServer({ requestOrigin }), pool: null };
   const { mailConfiguration } = await import("./mail/config.mjs");
   const mailConfig = mailConfiguration(env);
   const { createRuntimePool } = await import("./db/runtime.mjs");
@@ -216,7 +236,7 @@ export async function createConfiguredServer(env = process.env) {
     } };
     const observe = (name) => (event) => operations.observe(name, event);
     if (!accessConfig.enabled) {
-      const server = createAppServer({ authHandler, readinessHandler, operations,
+      const server = createAppServer({ authHandler, readinessHandler, operations, requestOrigin,
         entryHandler: createEntryHandler({ adminSession: (token) => service.session(token) }) });
       server.once("listening", () => operations.start());
       return { server, pool, mailWorker: null, diagnostics };
@@ -308,7 +328,7 @@ export async function createConfiguredServer(env = process.env) {
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, operations,
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, operations, requestOrigin,
       entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled }) });
     const workers = [];
     let closing, stopping, aborting;
@@ -355,17 +375,15 @@ export async function createConfiguredServer(env = process.env) {
   }
 }
 
-async function start() {
-  const rawPort = Number(process.env.PORT ?? 3000);
+export async function start(env = process.env, { requestOrigin = null } = {}) {
+  const rawPort = Number(env.PORT ?? 3000);
   const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3000;
-  const { server, pool, mailWorker, diagnostics } = await createConfiguredServer();
-  server.listen(port, "0.0.0.0", () => {
-    console.info(`JessieMessage listening on port ${port}`);
-  });
+  const { server, pool, mailWorker, diagnostics } = await createConfiguredServer(env, { requestOrigin });
   const drain = createShutdown({ server, pool, mailWorker, diagnostics });
+  let listening = false, rejectBinding;
   const shutdown = (exitCode = 0) => {
     if (exitCode) process.exitCode = exitCode;
-    void drain().then((result) => {
+    return drain().then((result) => {
       if (result.failed || result.timedOut) process.exitCode = 1;
       if (result.timedOut) {
         console.error("JessieMessage shutdown deadline reached; pending operations remain uncertain.");
@@ -373,12 +391,45 @@ async function start() {
       }
     });
   };
-  server.once("error", () => {
+  const onError = () => {
     console.error("JessieMessage HTTP listener unavailable.");
-    shutdown(1);
-  });
-  process.once("SIGTERM", () => shutdown());
-  process.once("SIGINT", () => shutdown());
+    if (!listening) rejectBinding?.();
+    else void shutdown(1);
+  };
+  const onSignal = () => {
+    if (!listening) { rejectBinding?.(); void drain(); }
+    else void shutdown();
+  };
+  server.once("error", onError);
+  process.once("SIGTERM", onSignal);
+  process.once("SIGINT", onSignal);
+  let onListening, onClose;
+  try {
+    await new Promise((resolveBinding, reject) => {
+      rejectBinding = () => reject(new Error("JessieMessage HTTP listener could not start."));
+      onListening = () => {
+        listening = true;
+        console.info(`JessieMessage listening on port ${port}`);
+        resolveBinding();
+      };
+      onClose = () => { if (!listening) rejectBinding(); };
+      server.once("listening", onListening);
+      server.once("close", onClose);
+      try { server.listen(port, "0.0.0.0"); }
+      catch { rejectBinding(); }
+    });
+  } catch {
+    await drain();
+    server.off("error", onError);
+    process.off("SIGTERM", onSignal);
+    process.off("SIGINT", onSignal);
+    throw new Error("JessieMessage HTTP listener could not start.");
+  } finally {
+    server.off("listening", onListening);
+    server.off("close", onClose);
+    rejectBinding = null;
+  }
+  return { server, pool, mailWorker, diagnostics, drain };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
