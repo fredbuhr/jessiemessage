@@ -1,6 +1,6 @@
 # Adresse du site et préparation des e-mails
 
-**Lot de développement 0.10 — CI en attente.** L'adresse retenue pour tous les e-mails du site est **contact@jessiemessage.com** : contact/aide, expéditeur des messages de service, adresse de réponse et expéditeur d'enveloppe SMTP. La préparation du compte administrateur initial retient également cette adresse. Ce lot prépare les réglages et leur contrôle privé. Il ne crée aucune boîte, ne modifie aucun DNS, n'envoie aucun e-mail et ne déploie pas l'application.
+**Lot de développement 0.10 — CI vérifiée.** L'adresse retenue pour tous les e-mails du site est **contact@jessiemessage.com** : contact/aide, expéditeur des messages de service, adresse de réponse et expéditeur d'enveloppe SMTP. La préparation du compte administrateur initial retient également cette adresse. Ce lot prépare les réglages et leur contrôle privé. Il ne crée aucune boîte, ne modifie aucun DNS, n'envoie aucun e-mail et ne déploie pas l'application.
 
 ## Une identité cohérente
 
@@ -53,6 +53,10 @@ Cette liste décrit les essais restants, pas des résultats acquis. Les contrôl
 
 ## Validation du lot
 
-Les essais automatisés emploient des comptes fictifs et des transports injectés ; ils couvrent l'identité, l'absence d'envoi par la vérification, les erreurs neutres, les limites, la fermeture du transport et la révocation en cours de requête. Le nouveau groupe HTTP/MariaDB s'ajoute aux groupes exécutés séquentiellement ; les 22 migrations restent inchangées. Les résultats de CI 0.10 sont encore en attente. La [CI 0.9 vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255), antérieure à ces modifications, a réussi avec 461 tests généraux et 190 tests sur chaque version MariaDB ; ce résultat ne valide pas le nouveau lot.
+Les essais automatisés emploient des comptes fictifs et des transports injectés ; ils couvrent l'identité, l'absence d'envoi par la vérification, les erreurs neutres, les limites, la fermeture du transport et la révocation en cours de requête. Le nouveau groupe HTTP/MariaDB s'ajoute aux groupes exécutés séquentiellement ; les 22 migrations restent inchangées. La CI 0.10 détaillée ci-dessous réussit sur les deux versions MariaDB. La [CI 0.9 vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255), antérieure à ces modifications, a réussi avec 461 tests généraux et 190 tests sur chaque version MariaDB ; ce résultat ne valide pas le nouveau lot.
 
 Aucun SMTP réel, test de délivrabilité, changement DNS, déploiement, fusion ni recette visuelle/mobile n'est revendiqué.
+
+## Résultat CI
+
+Implémentation `7909458c922a696e51590186c78692b1fe317753`, [PR brouillon #9](https://github.com/fredbuhr/jessiemessage/pull/9) : [CI 38657493833](https://github.com/fredbuhr/jessiemessage/actions/runs/38657493833) réussie sous Node.js 24.21.0. Le job général compte 524 tests réussis et 15 groupes DB explicitement ignorés ; chaque version MariaDB 10.11 et 11.4 réussit ensuite 200 tests sans saut dans quinze groupes séquentiels. Le nouveau groupe de préparation compte 10 tests, dont la vérification des quotas SQL persistants et de la révocation en cours de contrôle. Syntaxe et build réussis. Ces résultats utilisent uniquement des transports injectés et ne valident pas la connexion ou la réception réelles.

@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.10; CI pending for this lot**. The official site email is `contact@jessiemessage.com`. This lot adds a private administrator preparation page and an SMTP connection/authentication check without sending mail. Registration, private text/photo chat, galleries, CRM and optional client recovery remain behind explicit configuration. Historical [recovery 0.9 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) passed 461 general tests and 190 real tests per MariaDB version. Actual mail delivery, browser/device acceptance and external access integrations remain pending. The default server stays neutral; diffusion and Web Push remain planned.
+Status: **development 0.10; CI verified for this lot**. The official site email is `contact@jessiemessage.com`. This lot adds a private administrator preparation page and an SMTP connection/authentication check without sending mail. Registration, private text/photo chat, galleries, CRM and optional client recovery remain behind explicit configuration. Historical [recovery 0.9 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) passed 461 general tests and 190 real tests per MariaDB version. Actual mail delivery, browser/device acceptance and external access integrations remain pending. The default server stays neutral; diffusion and Web Push remain planned.
 
 ## Purpose
 
