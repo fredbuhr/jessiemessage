@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CONTACT_EMAIL, createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, parseReadinessSummary, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck } from "../public/readiness-model.js";
+import { CONTACT_EMAIL, createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, parseReadinessSummary, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, parseOperations, queueCountText, queueDelayMinutes } from "../public/readiness-model.js";
 
 const now = 1800000000000;
 const admin = (extra = {}) => ({ user: { id: "a".repeat(32), role: "admin", pseudonym: "Jessie" }, csrf: "x".repeat(43), expiresAt: now + 3600000, ...extra });
@@ -121,4 +121,106 @@ test("summary rejects a changed contact identity, guessed readiness or malformed
     summary({ checks: { ageAssurance: "verified", smtpDelivery: "delivered", deviceAcceptance: "passed" } }), summary({ features: { clientAccess: "true" } })];
   for (const input of inputs) assert.throws(() => parseReadinessSummary(input), /invalid_readiness_summary/);
   const parsed = parseReadinessSummary(summary()); assert.equal(parsed.features.photos, false); assert.equal(Object.hasOwn(parsed, "ready"), false);
+});
+
+const operations = () => ({ status: "ready", database: { state: "ok", checkedAt: now },
+  workers: [{ name: "verification", state: "idle", lastCompletedAt: now - 60000, lastErrorAt: null, consecutiveFailures: 0, processed: 3, failures: 0 }],
+  queues: [{ name: "verification", pending: { count: 1000, truncated: true }, sending: { count: 2, truncated: false }, failed: { count: 0, truncated: false }, oldestDueAt: now - 120000 }], queuesCheckedAt: now });
+
+test("operational measures remain optional and never complete delivery, age or device acceptance", () => {
+  const legacy = parseReadinessSummary(summary()); assert.equal(Object.hasOwn(legacy, "operations"), false);
+  const parsed = parseReadinessSummary(summary({ operations: operations() }));
+  assert.deepEqual(parsed.operations, operations()); assert.deepEqual(parsed.checks, legacy.checks);
+  assert.equal(parsed.checks.smtpDelivery, "not_checked"); assert.equal(Object.hasOwn(parsed, "readyForProduction"), false);
+  const empty = operations(); empty.workers = []; empty.queues = []; empty.queuesCheckedAt = null; empty.database = { state: "starting", checkedAt: null }; empty.status = "unavailable";
+  assert.deepEqual(parseReadinessSummary(summary({ operations: empty })).operations, empty);
+  for (const input of [null, undefined, {}, [], false]) assert.throws(() => parseReadinessSummary(summary({ operations: input })), /invalid_readiness_operations/);
+});
+
+test("operational measures retain only whitelisted aggregate fields and detach every nested reference", () => {
+  const expected = operations(), input = operations();
+  input.secret = "private-secret"; input.path = "/private/storage"; input.database.connectionString = "private-database";
+  input.workers[0].lastError = "private-email-and-error"; input.workers[0].userId = "private-client-id";
+  input.queues[0].recipients = ["private@example.invalid"]; input.queues[0].pending.message = "private-message";
+  const parsed = parseReadinessSummary(summary({ operations: input })).operations;
+  assert.deepEqual(parsed, expected); assert.doesNotMatch(JSON.stringify(parsed), /private/);
+  input.database.state = "unavailable"; input.workers[0].processed = 20; input.queues[0].pending.count = 0;
+  assert.deepEqual(parsed, expected);
+});
+
+test("operational worker and queue names are bounded, unique and fixed rather than arbitrary text", () => {
+  const inputs = [];
+  for (const key of ["workers", "queues"]) {
+    for (const name of ["__proto__", "constructor", "smtp-hostname", "verification\n", "<script>", null, 0, {}, ["verification"], { toString: null }]) {
+      const value = operations(); value[key][0].name = name; inputs.push(value);
+    }
+    for (const list of [null, {}, "verification", new Array(1)]) { const value = operations(); value[key] = list; inputs.push(value); }
+    const duplicate = operations(); duplicate[key].push(structuredClone(duplicate[key][0])); inputs.push(duplicate);
+    const many = operations(); many[key] = ["verification", "recovery", "broadcasts", "verification"].map((name) => ({ ...structuredClone(many[key][0]), name })); inputs.push(many);
+  }
+  for (const value of inputs) assert.throws(() => parseOperations(value), /invalid_readiness_operations/);
+  const all = operations();
+  for (const key of ["workers", "queues"]) all[key] = ["verification", "recovery", "broadcasts"].map((name) => ({ ...structuredClone(all[key][0]), name }));
+  assert.deepEqual(parseOperations(all), all);
+});
+
+test("operational states and dates reject malformed snapshots and accept the documented boundaries", () => {
+  for (const value of ["ok", "production", true, null]) { const input = operations(); input.status = value; assert.throws(() => parseOperations(input), /invalid_readiness_operations/); }
+  for (const value of ["ready", "__proto__", "error text", null, {}, ["ok"], { toString: null }]) { const input = operations(); input.database.state = value; assert.throws(() => parseOperations(input), /invalid_readiness_operations/); }
+  for (const value of ["ok", "__proto__", "private-error", null, {}, ["idle"], { toString: null }]) { const input = operations(); input.workers[0].state = value; assert.throws(() => parseOperations(input), /invalid_readiness_operations/); }
+  const dates = [(input, value) => { input.database.checkedAt = value; }, (input, value) => { input.queuesCheckedAt = value; },
+    (input, value) => { input.workers[0].lastCompletedAt = value; }, (input, value) => { input.workers[0].lastErrorAt = value; }, (input, value) => { input.queues[0].oldestDueAt = value; }];
+  for (const set of dates) {
+    for (const value of [-1, NaN, Infinity, now + 0.5, String(now), undefined, 253402300800000]) {
+      const input = operations(); set(input, value); assert.throws(() => parseOperations(input), /invalid_readiness_operations/);
+    }
+    for (const value of [null, 0, 253402300799999]) {
+      const input = operations(); input.status = "unavailable"; set(input, value);
+      if (input.database.checkedAt === null) input.database.state = "starting";
+      if (input.queuesCheckedAt === null) input.queues = [];
+      assert.deepEqual(parseOperations(input), input);
+    }
+  }
+  for (const value of ["starting", "ok", "unavailable", "stale"]) { const input = operations(); input.status = "unavailable"; input.database.state = value; assert.equal(parseOperations(input).database.state, value); }
+  for (const value of ["starting", "running", "idle", "error", "stopping", "stopped", "stale"]) { const input = operations(); input.status = "unavailable"; input.workers[0].state = value; assert.equal(parseOperations(input).workers[0].state, value); }
+  const inconsistent = [];
+  const noDatabaseDate = operations(); noDatabaseDate.status = "unavailable"; noDatabaseDate.database.checkedAt = null; inconsistent.push(noDatabaseDate);
+  const noQueueDate = operations(); noQueueDate.status = "unavailable"; noQueueDate.queuesCheckedAt = null; inconsistent.push(noQueueDate);
+  for (const state of ["starting", "unavailable", "stale"]) { const input = operations(); input.database.state = state; inconsistent.push(input); }
+  for (const state of ["starting", "error", "stopping", "stopped", "stale"]) { const input = operations(); input.workers[0].state = state; inconsistent.push(input); }
+  const noCompletedCycle = operations(); noCompletedCycle.workers[0].lastCompletedAt = null; inconsistent.push(noCompletedCycle);
+  const currentFailure = operations(); currentFailure.workers[0].consecutiveFailures = 1; inconsistent.push(currentFailure);
+  for (const input of inconsistent) assert.throws(() => parseOperations(input), /invalid_readiness_operations/);
+});
+
+test("operational counters preserve safe totals and refuse invalid numbers or queue counts beyond the cap", () => {
+  for (const key of ["consecutiveFailures", "processed", "failures"]) {
+    for (const value of [-1, 1.5, NaN, Infinity, "1", undefined, Number.MAX_SAFE_INTEGER + 1]) {
+      const input = operations(); input.workers[0][key] = value; assert.throws(() => parseOperations(input), /invalid_readiness_operations/);
+    }
+    const input = operations(); input.status = "unavailable"; input.workers[0][key] = Number.MAX_SAFE_INTEGER; assert.deepEqual(parseOperations(input), input);
+  }
+  for (const key of ["pending", "sending", "failed"]) {
+    for (const value of [-1, 0.5, NaN, Infinity, "1", undefined, 1001]) { const input = operations(); input.queues[0][key].count = value; assert.throws(() => parseOperations(input), /invalid_readiness_operations/); }
+    for (const value of [0, "false", null, undefined]) { const input = operations(); input.queues[0][key].truncated = value; assert.throws(() => parseOperations(input), /invalid_readiness_operations/); }
+    for (const count of [0, 1, 999]) { const input = operations(); input.queues[0][key] = { count, truncated: true }; assert.throws(() => parseOperations(input), /invalid_readiness_operations/); }
+    const input = operations(); input.queues[0][key] = { count: 1000, truncated: false }; assert.deepEqual(parseOperations(input), input);
+  }
+});
+
+test("queue presentation distinguishes capped counts and scheduling age at the sample from delivery", () => {
+  assert.equal(queueCountText({ count: 0, truncated: false }), "0");
+  assert.equal(queueCountText({ count: 1000, truncated: false }), (1000).toLocaleString("fr-FR"));
+  assert.equal(queueCountText({ count: 1000, truncated: true }), `au moins ${(1000).toLocaleString("fr-FR")}`);
+  assert.equal(queueDelayMinutes(now - 150000, now), 2);
+  assert.equal(queueDelayMinutes(now + 60000, now), 0);
+  assert.equal(queueDelayMinutes(null, now), null); assert.equal(queueDelayMinutes(now, null), null);
+});
+
+test("clearing the private preparation also clears operations and rejects their late response", () => {
+  const state = connected(), ticket = readinessTicket(state);
+  acceptReadinessSummary(state, ticket, summary({ operations: operations() })); assert.ok(state.summary.operations);
+  clearReadiness(state); assert.equal(state.summary, null);
+  assert.equal(acceptReadinessSummary(state, ticket, summary({ operations: operations() })), false);
+  assert.equal(state.summary, null);
 });

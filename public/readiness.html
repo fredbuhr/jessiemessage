@@ -35,6 +35,17 @@
             <p class="small-copy">Cette vérification contrôle la connexion chiffrée et l’authentification. Elle n’envoie aucun e-mail et ne confirme pas la réception des invitations ou des liens de récupération.</p>
           </section>
           <section class="card" aria-labelledby="features-title"><div class="card-heading"><span class="eyebrow">DANS TON ESPACE</span><h2 id="features-title">Fonctions configurées</h2></div><ul id="feature-list" class="feature-list"></ul><p class="small-copy">« Activée » indique la configuration du site. Cela ne remplace pas une vérification en conditions réelles.</p></section>
+          <section class="card operations-card" aria-labelledby="operations-title">
+            <div class="card-heading"><span class="eyebrow">EXPLOITATION</span><h2 id="operations-title">État du service</h2></div>
+            <p id="operations-status" class="status" role="status" aria-live="polite">Mesure non disponible.</p>
+            <p class="small-copy">Instantané global de ce processus serveur. Les compteurs de traitement repartent à zéro à son redémarrage. Ces mesures ne certifient pas la mise en production ni la réception des messages.</p>
+            <div id="operations-details" hidden>
+              <dl id="operations-database" class="operations-database"></dl>
+              <div class="operations-columns"><section aria-labelledby="operations-workers-title"><h3 id="operations-workers-title">Traitements</h3><ul id="operations-workers" class="operation-list"></ul></section><section aria-labelledby="operations-queues-title"><h3 id="operations-queues-title">Files d’attente</h3><ul id="operations-queues" class="operation-list"></ul></section></div>
+              <p class="small-copy">Le retard correspond à l’échéance planifiée d’un élément en attente. Il ne mesure pas la livraison d’un e-mail ou la lecture d’un message. Les nombres plafonnés sont indiqués par « au moins ».</p>
+              <p id="operations-sample" class="small-copy"></p>
+            </div>
+          </section>
           <section class="card remaining-card" aria-labelledby="remaining-title"><div class="card-heading"><span class="eyebrow">AVANT L’OUVERTURE</span><h2 id="remaining-title">Les prochaines vérifications</h2></div><ul class="remaining-list"><li><strong>Réception des e-mails</strong><span>Recevoir et utiliser une invitation et un lien de récupération sur de vraies boîtes e-mail.</span></li><li><strong>Contrôle de majorité</strong><span>Activer et vérifier le parcours de contrôle avant d’approuver l’accès des clients.</span></li><li><strong>Essai sur les appareils</strong><span>Vérifier les parcours sur téléphone et ordinateur avec le site en HTTPS.</span></li></ul></section>
         </div>
         <noscript><p class="status">Active JavaScript pour consulter la préparation du site.</p></noscript>

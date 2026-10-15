@@ -39,11 +39,23 @@ h2 { margin: 9px 0 0; font-size: 21px; line-height: 1.35; letter-spacing: -.025e
 .feature-list li:first-child { padding-top: 0; }
 .feature-status { flex-shrink: 0; color: #bcaebb; font-size: 12px; }
 .feature-status.enabled { color: #d8b999; }
+.operations-card { grid-column: 1 / -1; }
+.operations-database { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding-bottom: 22px; border-bottom: 1px solid #423343; }
+.operations-database dt, .operation-counts dt { color: #bcaebb; font-size: 12px; line-height: 1.6; }
+.operations-database dd, .operation-counts dd { margin: 5px 0 0; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.operations-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.operations-columns h3 { font-size: 16px; margin: 0 0 18px; }
+.operation-list { padding: 0; margin: 0; list-style: none; }
+.operation-item { padding: 18px 0; border-top: 1px solid #423343; }
+.operation-item:first-child { border-top: 0; padding-top: 0; }
+.operation-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.operation-item h4 { margin: 0; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.operation-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
 .remaining-card { grid-column: 1 / -1; }
 .remaining-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
 .remaining-list strong, .remaining-list span { display: block; }
 .remaining-list strong { margin-bottom: 10px; font-size: 14px; }
 .remaining-list span { color: #bcaebb; font-size: 13px; line-height: 1.8; }
 .footer { border-top: 1px solid #423343; padding: 20px 0 28px; color: #bcaebb; font-size: 12px; line-height: 1.8; }
-@media (max-width: 720px) { .readiness-grid { grid-template-columns: 1fr; } .remaining-list { grid-template-columns: 1fr; gap: 20px; } .readiness-main { margin-top: 18px; } }
+@media (max-width: 720px) { .readiness-grid { grid-template-columns: 1fr; } .remaining-list { grid-template-columns: 1fr; gap: 20px; } .readiness-main { margin-top: 18px; } .operations-columns, .operations-database { grid-template-columns: 1fr; } .operations-columns { gap: 20px; } }
 @media (max-width: 480px) { .topbar { align-items: flex-start; padding: 20px 0; gap: 18px; } .account-nav { max-width: 150px; gap: 2px 12px; font-size: 12px; } .footer { text-align: center; } .button { width: 100%; } }

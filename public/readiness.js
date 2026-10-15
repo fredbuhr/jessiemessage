@@ -1,4 +1,4 @@
-import { createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, featureNames } from "/readiness-model.js";
+import { createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, featureNames, operationNames, databaseStateNames, workerStateNames, queueCountText, queueDelayMinutes } from "/readiness-model.js";
 
 const el = (id) => document.getElementById(id);
 const state = createReadinessState();
@@ -12,9 +12,43 @@ function clearDisplay() {
   el("readiness-content").hidden = true; el("logout").hidden = true; el("refresh").hidden = true;
   el("refresh").disabled = false;
   el("mail-sender").textContent = ""; el("mail-status").textContent = ""; el("feature-list").replaceChildren();
+  el("operations-details").hidden = true; el("operations-status").textContent = ""; el("operations-sample").textContent = "";
+  for (const id of ["operations-database", "operations-workers", "operations-queues"]) el(id).replaceChildren();
   el("smtp-proof-date").textContent = ""; el("smtp-proof-date").hidden = true; el("verify-smtp").hidden = true;
   el("verify-smtp").disabled = false; el("verify-smtp").textContent = "Vérifier la connexion e-mail";
   notice(""); notice("", false, "smtp-status");
+}
+const node = (tag, text, className = "") => { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; };
+const observedDate = (value) => value === null ? "aucune mesure disponible" : new Date(value).toLocaleString("fr-FR");
+function detail(label, value) { const row = node("div"); row.append(node("dt", label), node("dd", value)); return row; }
+function renderOperations(operations) {
+  el("operations-details").hidden = !operations;
+  el("operations-status").textContent = !operations ? "Mesure non disponible." : operations.status === "ready" ? "Signal de service : disponible." : "Signal de service : indisponible.";
+  el("operations-status").classList.toggle("is-error", operations?.status === "unavailable");
+  if (!operations) return;
+  el("operations-database").replaceChildren(detail("Base de données", databaseStateNames[operations.database.state]), detail("Dernier contrôle de la base", observedDate(operations.database.checkedAt)));
+  const workers = operations.workers.map((worker) => {
+    const item = node("li", undefined, "operation-item");
+    const heading = node("div", undefined, "operation-heading"); heading.append(node("h4", operationNames[worker.name]), node("span", workerStateNames[worker.state], "feature-status"));
+    const counts = node("dl", undefined, "operation-counts");
+    counts.append(detail("Traités", worker.processed.toLocaleString("fr-FR")), detail("Échecs", worker.failures.toLocaleString("fr-FR")), detail("Échecs consécutifs", worker.consecutiveFailures.toLocaleString("fr-FR")));
+    item.append(heading, counts, node("p", `Dernier cycle terminé : ${observedDate(worker.lastCompletedAt)}. Dernière erreur : ${observedDate(worker.lastErrorAt)}.`, "small-copy"));
+    return item;
+  });
+  el("operations-workers").replaceChildren(...workers);
+  if (!workers.length) el("operations-workers").append(node("li", "Aucun traitement suivi dans cette mesure.", "small-copy"));
+  const queues = operations.queues.map((queue) => {
+    const item = node("li", undefined, "operation-item"); item.append(node("h4", operationNames[queue.name]));
+    const counts = node("dl", undefined, "operation-counts");
+    for (const [key, name] of [["pending", "En attente"], ["sending", "En traitement"], ["failed", "En échec"]]) counts.append(detail(name, queueCountText(queue[key])));
+    item.append(counts);
+    const delay = queueDelayMinutes(queue.oldestDueAt, operations.queuesCheckedAt);
+    item.append(node("p", queue.oldestDueAt === null ? "Plus ancienne échéance en attente : non disponible." : `Plus ancienne échéance en attente : ${observedDate(queue.oldestDueAt)}.${delay === null ? " Ancienneté non mesurée." : queue.oldestDueAt > operations.queuesCheckedAt ? " Échéance à venir au moment de la mesure." : ` Retard planifié à la mesure : ${delay.toLocaleString("fr-FR")} min.`}`, "small-copy"));
+    return item;
+  });
+  el("operations-queues").replaceChildren(...queues);
+  if (!queues.length) el("operations-queues").append(node("li", "Aucune file suivie dans cette mesure.", "small-copy"));
+  el("operations-sample").textContent = `Mesure des files : ${observedDate(operations.queuesCheckedAt)}. Les mesures sont mises à jour périodiquement ; « Actualiser la page » recharge le dernier instantané disponible.`;
 }
 function clearPrivate(isVisible = false) {
   for (const controller of controllers) controller.abort(); controllers.clear();
@@ -56,6 +90,7 @@ function render() {
     status.textContent = summary.features[key] ? "Activée" : "Non activée"; row.append(label, status); rows.push(row);
   }
   el("feature-list").replaceChildren(...rows);
+  renderOperations(summary.operations);
   if (state.proof) {
     notice("Connexion chiffrée et authentification réussies. La réception d’un e-mail reste à tester.", false, "smtp-status");
     el("smtp-proof-date").textContent = `Vérification de cette session : ${new Date(state.proof.checkedAt).toLocaleString("fr-FR")}.`;

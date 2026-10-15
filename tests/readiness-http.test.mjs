@@ -285,3 +285,18 @@ test("known routes expose only their exact methods and unknown URLs fall through
   }
   assert.deepEqual(calls, []);
 });
+
+test("operational diagnostics are administrator-only and projected to aggregate safe fields", async (t) => {
+  let reads = 0;
+  const operations = { status: "unavailable", database: { state: "unavailable", checkedAt: now, hostname: "private-host" },
+    workers: [{ name: "broadcasts", state: "error", lastCompletedAt: now - 1, lastErrorAt: now, consecutiveFailures: 1, processed: 2, failures: 1, token: "private-token" }],
+    queues: [{ name: "broadcasts", pending: { count: 1, truncated: false, payload: "private-payload" }, sending: { count: 0, truncated: false }, failed: { count: 0, truncated: false }, oldestDueAt: now - 2000, conversationId: "private-conversation" }],
+    queuesCheckedAt: now, error: "private-driver-error" };
+  const { base } = await fixture(t, { async summary() { reads++; return summary({ operations }); } });
+  const anonymous = await get(base, root, {}); await errorBody(anonymous, 401, "authentication_required"); assert.equal(reads, 0);
+  const response = await get(base); assert.equal(response.status, 200); const data = await response.json();
+  assert.equal(data.operations.workers[0].failures, 1); assert.equal(data.operations.queues[0].pending.count, 1);
+  assert.doesNotMatch(JSON.stringify(data), /private-|hostname|conversationId|payload|token/); assert.equal(reads, 1);
+  operations.status = "ready";
+  await errorBody(await get(base), 503, "readiness_unavailable");
+});

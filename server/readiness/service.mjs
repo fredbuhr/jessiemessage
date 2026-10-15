@@ -3,6 +3,7 @@ import { canonicalEmail } from "../auth/config.mjs";
 import { tokenDigest } from "../auth/crypto.mjs";
 import { createVerificationTransport } from "../mail/transport.mjs";
 import { SITE_CONTACT_EMAIL } from "../site.mjs";
+import { safeOperationsSnapshot } from "../operations/dto.mjs";
 
 const FEATURE_NAMES = ["clientAccess", "chat", "photos", "clientFiles", "passwordRecovery", "broadcasts"];
 const MAX_DATE = 253402300799999;
@@ -17,11 +18,12 @@ const instant = (value) => Number.isSafeInteger(value) && value >= 0 && value <=
 function safeToken(value) { try { tokenDigest(value); return true; } catch { return false; } }
 
 export async function createReadinessService({ authService, authStore, mailConfig, features, key,
-  createTransport = createVerificationTransport, clock = Date.now }) {
+  createTransport = createVerificationTransport, clock = Date.now, operations = null }) {
   if (typeof authService?.session !== "function" || typeof authStore?.consumeRateLimit !== "function"
     || !Buffer.isBuffer(key) || key.length !== 32 || typeof createTransport !== "function" || typeof clock !== "function"
     || !mailConfig || typeof mailConfig.enabled !== "boolean" || !features || typeof features !== "object" || Array.isArray(features)
-    || Object.keys(features).length !== FEATURE_NAMES.length || FEATURE_NAMES.some((name) => typeof features[name] !== "boolean")) fail("READINESS_CONFIG");
+    || Object.keys(features).length !== FEATURE_NAMES.length || FEATURE_NAMES.some((name) => typeof features[name] !== "boolean")
+    || operations !== null && typeof operations?.snapshot !== "function") fail("READINESS_CONFIG");
   let sender = SITE_CONTACT_EMAIL;
   if (mailConfig.enabled) {
     try {
@@ -137,6 +139,7 @@ export async function createReadinessService({ authService, authStore, mailConfi
       await actor(token);
       if (closed) fail("READINESS_UNAVAILABLE");
       return { contactEmail: SITE_CONTACT_EMAIL, mail: { configured, sender, replyTo: sender }, features: { ...featureSnapshot },
+        ...(operations === null ? {} : { operations: safeOperationsSnapshot(operations.snapshot()) }),
         checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
     }),
     verifySmtp,
