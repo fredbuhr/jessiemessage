@@ -10,12 +10,15 @@ import { fileURLToPath } from "node:url";
 import {
   RuntimeDatabaseConfigurationError, readRuntimeDatabaseConfiguration, runtimeDatabaseEnvironment,
   validateRuntimeDatabaseConfiguration, writeRuntimeDatabaseConfiguration,
+  readRuntimeDiagnosticConfiguration, validateRuntimeDiagnosticConfiguration, writeRuntimeDiagnosticConfiguration,
 } from "../server/config/runtime-database-file.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const supported = process.platform === "linux" && await statfs("/proc/self/fd", { bigint: true }).then((value) => value.type === 0x9fa0n, () => false);
 const config = () => ({ format: "jessiemessage-runtime-database", version: 1, host: "sql.example.invalid", port: "3306",
   database: "ONLY_RECIPE", user: "application_account", password: " private ' \" $() ` & é 😀 ", privilegeProfile: "infomaniak-shared" });
+const diagnostic = () => ({ format: "jessiemessage-runtime-diagnostic", version: 1,
+  createdAt: "2026-10-15T18:00:00.000Z", credentials: config() });
 const unavailable = (error) => error instanceof RuntimeDatabaseConfigurationError
   && error.code === "RUNTIME_DATABASE_CONFIGURATION" && error.message === "Private runtime database configuration is unavailable."
   && error.cause === undefined && Object.keys(error).sort().join(",") === "code,name";
@@ -65,11 +68,52 @@ test("the derived environment keeps TLS defaults and disables all private featur
   env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD = ""; assert.notEqual(source.password, "");
 });
 
+test("diagnostic records are separately typed, deeply cloned and cannot act as runtime configuration", () => {
+  const source = diagnostic(), record = validateRuntimeDiagnosticConfiguration(source);
+  assert.deepEqual(record, source); assert.notEqual(record, source); assert.notEqual(record.credentials, source.credentials);
+  record.credentials.password = ""; assert.notEqual(source.credentials.password, "");
+  assert.throws(() => validateRuntimeDatabaseConfiguration(source), unavailable);
+  assert.throws(() => runtimeDatabaseEnvironment(source), unavailable);
+  assert.throws(() => validateRuntimeDiagnosticConfiguration(config()), unavailable);
+  assert.equal(validateRuntimeDiagnosticConfiguration({ ...source, createdAt: "2000-01-01T00:00:00.000Z" }).createdAt,
+    "2000-01-01T00:00:00.000Z");
+  const immutable = Object.freeze({ ...source, credentials: Object.freeze({ ...source.credentials }) });
+  const mutable = validateRuntimeDiagnosticConfiguration(immutable); mutable.credentials.password = "";
+  assert.notEqual(immutable.credentials.password, "");
+});
+
+test("diagnostic records reject added privileges, accessors, noncanonical dates and oversized complete envelopes", () => {
+  const source = diagnostic(), invalid = [null, [], Object.create(null), { ...source, format: "jessiemessage-runtime-database" },
+    { ...source, version: "1" }, { ...source, enabled: true }, { ...source, expiresAt: source.createdAt },
+    { ...source, credentials: { ...source.credentials, JESSIEMESSAGE_ENABLE_AUTH: "1" } },
+    { ...source, credentials: { ...source.credentials, migrationUser: "admin" } },
+    { ...source, credentials: { ...source.credentials, password: "private\nsecret" } },
+    { ...source, [Symbol("private")]: true },
+    ...[undefined, null, 0, new Date(source.createdAt), "", "invalid", "2026-02-30T00:00:00.000Z",
+      "2026-10-15T18:00:00Z", "2026-10-15T20:00:00.000+02:00", "2026-10-15T18:00:00.000Z\n"]
+      .map((createdAt) => ({ ...source, createdAt }))];
+  let invoked = false;
+  invalid.push(Object.defineProperty({ ...source }, "credentials", { get() { invoked = true; throw new Error("private-secret-getter"); } }));
+  for (const value of invalid) assert.throws(() => validateRuntimeDiagnosticConfiguration(value), unavailable);
+  assert.equal(invoked, false); assert.notEqual(source.credentials.password, "");
+  // A nested configuration may fit alone while its diagnostic envelope exceeds the same hard limit.
+  let fitsAlone;
+  for (let length = 2600; length <= 2730; length += 1) {
+    const candidate = { ...source.credentials, password: "\x01".repeat(length) };
+    if (Buffer.byteLength(JSON.stringify(candidate)) + 1 <= 16384
+      && Buffer.byteLength(JSON.stringify({ ...source, credentials: candidate })) + 1 > 16384) { fitsAlone = candidate; break; }
+  }
+  assert.ok(fitsAlone); validateRuntimeDatabaseConfiguration(fitsAlone);
+  assert.throws(() => validateRuntimeDiagnosticConfiguration({ ...source, credentials: fitsAlone }), unavailable);
+});
+
 test("checkout locations and unclean path aliases are rejected before secret file access", async () => {
   for (const directory of [repository, path.join(repository, "public"), path.join(repository, "private-config"),
     "relative", "/private/../other", "/private//other", null]) {
     await assert.rejects(writeRuntimeDatabaseConfiguration(directory, config()), unavailable);
     await assert.rejects(readRuntimeDatabaseConfiguration(directory), unavailable);
+    await assert.rejects(writeRuntimeDiagnosticConfiguration(directory, diagnostic()), unavailable);
+    await assert.rejects(readRuntimeDiagnosticConfiguration(directory), unavailable);
   }
 });
 
@@ -259,4 +303,84 @@ test("foreign ownership and descriptor close failures are masked without leaking
   }, () => assert.rejects(readRuntimeDatabaseConfiguration(f.directory), unavailable));
   assert.equal(injected, true);
   assert.deepEqual(await readRuntimeDatabaseConfiguration(f.directory), config());
+});
+
+test("diagnostic capture publishes only its separate private file and never enables or overwrites runtime configuration", { skip: !supported }, async (t) => {
+  const f = await fixture(t), source = diagnostic(), diagnosticFile = path.join(f.directory, "runtime-diagnostic.json");
+  assert.deepEqual(await writeRuntimeDiagnosticConfiguration(f.directory, source), { saved: true });
+  assert.notEqual(source.credentials.password, "");
+  assert.deepEqual(await readdir(f.directory), ["runtime-diagnostic.json"]);
+  await assert.rejects(lstat(f.filename), { code: "ENOENT" });
+  await assert.rejects(readRuntimeDatabaseConfiguration(f.directory), unavailable);
+  await assert.rejects(writeRuntimeDatabaseConfiguration(f.directory, source), unavailable);
+  const record = await readRuntimeDiagnosticConfiguration(f.directory);
+  assert.deepEqual(record, source); record.credentials.password = "";
+  assert.deepEqual(await readRuntimeDiagnosticConfiguration(f.directory), source);
+  const metadata = await lstat(diagnosticFile);
+  assert.equal(metadata.mode & 0o7777, 0o600); assert.equal(metadata.nlink, 1); assert.equal(metadata.uid, process.getuid());
+  const bytes = await readFile(diagnosticFile);
+  await assert.rejects(writeRuntimeDiagnosticConfiguration(f.directory, { ...source, createdAt: "2026-10-16T18:00:00.000Z" }), unavailable);
+  assert.deepEqual(await readFile(diagnosticFile), bytes);
+  await writeRuntimeDatabaseConfiguration(f.directory, source.credentials);
+  assert.deepEqual(await readRuntimeDatabaseConfiguration(f.directory), source.credentials);
+  assert.deepEqual(await readRuntimeDiagnosticConfiguration(f.directory), source);
+});
+
+test("normal and diagnostic readers refuse each other's on-disk formats even under the expected basename", { skip: !supported }, async (t) => {
+  const f = await fixture(t), diagnosticFile = path.join(f.directory, "runtime-diagnostic.json");
+  await writeFile(f.filename, JSON.stringify(diagnostic()), { mode: 0o600 });
+  await writeFile(diagnosticFile, JSON.stringify(config()), { mode: 0o600 });
+  await assert.rejects(readRuntimeDatabaseConfiguration(f.directory), unavailable);
+  await assert.rejects(readRuntimeDiagnosticConfiguration(f.directory), unavailable);
+  await chmod(diagnosticFile, 0o640);
+  await assert.rejects(readRuntimeDiagnosticConfiguration(f.directory), unavailable);
+  await chmod(diagnosticFile, 0o600);
+  await writeFile(diagnosticFile, Buffer.alloc(16385, 32));
+  await assert.rejects(readRuntimeDiagnosticConfiguration(f.directory), unavailable);
+});
+
+test("failed diagnostic capture cleans only its owned temporary inode and closes all descriptors", { skip: !supported }, async (t) => {
+  const f = await fixture(t), source = diagnostic(); let opened = 0, closed = 0, injected = false;
+  await hookOpen(async (original, args) => {
+    const handle = await original(...args), close = handle.close.bind(handle); opened += 1;
+    handle.close = async () => { await close(); closed += 1; };
+    if (path.basename(String(args[0])).startsWith(".runtime-diagnostic.json."))
+      handle.sync = async () => { injected = true; throw new Error("private-diagnostic-secret-fsync"); };
+    return handle;
+  }, () => assert.rejects(writeRuntimeDiagnosticConfiguration(f.directory, source), unavailable));
+  assert.equal(injected, true); assert.equal(opened, closed); assert.notEqual(source.credentials.password, "");
+  assert.deepEqual(await readdir(f.directory), []);
+  await assert.rejects(lstat(f.filename), { code: "ENOENT" });
+});
+
+test("diagnostic cleanup leaves a foreign replacement inode intact and does not publish normal configuration", { skip: !supported }, async (t) => {
+  const f = await fixture(t); let replaced = false, temporaryName;
+  await hookOpen(async (original, args) => {
+    const handle = await original(...args);
+    if (path.basename(String(args[0])).startsWith(".runtime-diagnostic.json.")) {
+      const sync = handle.sync.bind(handle); temporaryName = path.basename(String(args[0]));
+      handle.sync = async () => {
+        await sync(); replaced = true; await rename(String(args[0]), path.join(f.root, "retained-diagnostic-inode"));
+        await writeFile(String(args[0]), "foreign-diagnostic-keep", { mode: 0o600 });
+      };
+    }
+    return handle;
+  }, () => assert.rejects(writeRuntimeDiagnosticConfiguration(f.directory, diagnostic()), unavailable));
+  assert.equal(replaced, true);
+  assert.equal(await readFile(path.join(f.directory, temporaryName), "utf8"), "foreign-diagnostic-keep");
+  await assert.rejects(lstat(f.filename), { code: "ENOENT" });
+  await assert.rejects(lstat(path.join(f.directory, "runtime-diagnostic.json")), { code: "ENOENT" });
+});
+
+test("uncertain diagnostic durability preserves its private copy without creating the normal file", { skip: !supported }, async (t) => {
+  const f = await fixture(t); let injected = false;
+  await hookOpen(async (original, args) => {
+    const handle = await original(...args);
+    if (String(args[0]).endsWith("/private")) handle.sync = async () => { injected = true; throw new Error("private-diagnostic-directory-sync"); };
+    return handle;
+  }, () => assert.rejects(writeRuntimeDiagnosticConfiguration(f.directory, diagnostic()), unavailable));
+  assert.equal(injected, true);
+  assert.deepEqual(await readRuntimeDiagnosticConfiguration(f.directory), diagnostic());
+  await assert.rejects(lstat(f.filename), { code: "ENOENT" });
+  assert.deepEqual(await readdir(f.directory), ["runtime-diagnostic.json"]);
 });

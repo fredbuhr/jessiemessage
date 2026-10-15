@@ -7,9 +7,11 @@ import { fileURLToPath } from "node:url";
 import { inspectDirectoryIdentities, withPrivateDirectory } from "../files/private-directory.mjs";
 
 const BASENAME = "runtime-database.json";
+const DIAGNOSTIC_BASENAME = "runtime-diagnostic.json";
 const MAX_BYTES = 16384;
 const REPOSITORY = fileURLToPath(new URL("../../", import.meta.url));
 const FIELDS = ["format", "version", "host", "port", "database", "user", "password", "privilegeProfile"];
+const DIAGNOSTIC_FIELDS = ["format", "version", "createdAt", "credentials"];
 const FLAGS = ["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY"];
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 
@@ -25,6 +27,17 @@ const inside = (filename, root) => {
   const suffix = path.relative(root, filename);
   return suffix === "" || suffix !== ".." && !suffix.startsWith(`..${path.sep}`) && !path.isAbsolute(suffix);
 };
+
+function clearSecrets(value) {
+  if (!value || typeof value !== "object") return;
+  const nested = Object.getOwnPropertyDescriptor(value, "credentials")?.value;
+  for (const record of [value, nested]) {
+    if (record && typeof record === "object") {
+      const descriptor = Object.getOwnPropertyDescriptor(record, "password");
+      if (descriptor && Object.hasOwn(descriptor, "value") && descriptor.writable) record.password = "";
+    }
+  }
+}
 
 export function validateRuntimeDatabaseConfiguration(value) {
   try {
@@ -49,6 +62,27 @@ export function validateRuntimeDatabaseConfiguration(value) {
       || Buffer.byteLength(JSON.stringify(selected), "utf8") + 1 > MAX_BYTES) fail();
     return selected;
   } catch { fail(); }
+}
+
+export function validateRuntimeDiagnosticConfiguration(value) {
+  let selected;
+  try {
+    if (!value || Object.getPrototypeOf(value) !== Object.prototype
+      || Object.getOwnPropertySymbols(value).length || Object.getOwnPropertyNames(value).sort().join(",") !== [...DIAGNOSTIC_FIELDS].sort().join(",")) fail();
+    selected = {};
+    for (const name of DIAGNOSTIC_FIELDS) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, name);
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) fail();
+      // The nested source is untrusted and must never be cleared or mutated.
+      if (name !== "credentials") selected[name] = descriptor.value;
+      else selected.credentials = validateRuntimeDatabaseConfiguration(descriptor.value);
+    }
+    if (selected.format !== "jessiemessage-runtime-diagnostic" || selected.version !== 1
+      || typeof selected.createdAt !== "string" || selected.createdAt.length > 27
+      || new Date(selected.createdAt).toISOString() !== selected.createdAt
+      || Buffer.byteLength(JSON.stringify(selected), "utf8") + 1 > MAX_BYTES) fail();
+    return selected;
+  } catch { clearSecrets(selected); fail(); }
 }
 
 export function runtimeDatabaseEnvironment(value) {
@@ -95,12 +129,15 @@ async function removeOwned(filename, identity) {
   await unlink(filename);
 }
 
-export async function writeRuntimeDatabaseConfiguration(directory, value) {
-  const config = validateRuntimeDatabaseConfiguration(value);
-  const contents = Buffer.from(`${JSON.stringify(config)}\n`, "utf8");
+async function writeConfiguration(directory, config, basename) {
+  let contents;
   try {
+    // Only the two typed entry points select these internal, fixed filenames.
+    if (basename !== BASENAME && basename !== DIAGNOSTIC_BASENAME) fail();
+    contents = Buffer.from(`${JSON.stringify(config)}\n`, "utf8");
+    if (contents.length > MAX_BYTES) fail();
     return await privateScope(directory, async (scope) => {
-      const temporary = scope.file(`.${BASENAME}.${randomBytes(16).toString("hex")}.tmp`), published = scope.file(BASENAME);
+      const temporary = scope.file(`.${basename}.${randomBytes(16).toString("hex")}.tmp`), published = scope.file(basename);
       let file, identity;
       try {
         await scope.assertReady();
@@ -130,14 +167,28 @@ export async function writeRuntimeDatabaseConfiguration(directory, value) {
       }
     });
   } catch { fail(); }
-  finally { contents.fill(0); config.password = ""; }
+  finally { contents?.fill(0); }
 }
 
-export async function readRuntimeDatabaseConfiguration(directory) {
+export async function writeRuntimeDatabaseConfiguration(directory, value) {
+  const config = validateRuntimeDatabaseConfiguration(value);
+  try { return await writeConfiguration(directory, config, BASENAME); }
+  finally { clearSecrets(config); }
+}
+
+export async function writeRuntimeDiagnosticConfiguration(directory, value) {
+  const record = validateRuntimeDiagnosticConfiguration(value);
+  try { return await writeConfiguration(directory, record, DIAGNOSTIC_BASENAME); }
+  finally { clearSecrets(record); }
+}
+
+async function readConfiguration(directory, basename, validate) {
+  let result;
   try {
+    if (basename !== BASENAME && basename !== DIAGNOSTIC_BASENAME) fail();
     return await privateScope(directory, async (scope) => {
-      const filename = scope.file(BASENAME);
-      let file;
+      const filename = scope.file(basename);
+      let file, parsed;
       const bytes = Buffer.alloc(MAX_BYTES + 1);
       try {
         await scope.assertReady();
@@ -155,8 +206,18 @@ export async function readRuntimeDatabaseConfiguration(directory) {
         const visible = await lstat(filename, { bigint: true }); regular(visible); sameSnapshot(after, visible);
         await scope.assertReady();
         const decoded = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes.subarray(0, length));
-        return validateRuntimeDatabaseConfiguration(JSON.parse(decoded));
-      } finally { bytes.fill(0); await file?.close(); }
+        parsed = JSON.parse(decoded);
+        result = validate(parsed);
+        return result;
+      } finally { bytes.fill(0); clearSecrets(parsed); await file?.close(); }
     });
-  } catch { fail(); }
+  } catch { clearSecrets(result); fail(); }
+}
+
+export async function readRuntimeDatabaseConfiguration(directory) {
+  return readConfiguration(directory, BASENAME, validateRuntimeDatabaseConfiguration);
+}
+
+export async function readRuntimeDiagnosticConfiguration(directory) {
+  return readConfiguration(directory, DIAGNOSTIC_BASENAME, validateRuntimeDiagnosticConfiguration);
 }

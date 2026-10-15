@@ -7,6 +7,7 @@ import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { DATABASE_CHECK_NAMES, inspectDatabase } from "../server/preflight/database.mjs";
 import { makePreflightReport } from "../server/preflight/report.mjs";
+import { describeRuntimePrivileges } from "../server/preflight/privilege-diagnostics.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const states = (value) => Object.fromEntries(value.checks.map(({ name, status }) => [name, status]));
@@ -158,6 +159,24 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
       assert.equal(await digest(), before, "the shared-profile diagnostic is still read-only");
       const strict = await probe({ ...sharedEnv, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "strict" });
       assert.equal(states(strict).privileges, "fail"); assert.equal(strict.privilegeObservation.ledgerWritable, null);
+    });
+    await t.test("closed privilege diagnostics classify actual MariaDB grants without exposing account or authentication metadata", async () => {
+      const before = await digest(), pool = await createRuntimePool(sharedEnv); let runtime;
+      try {
+        runtime = await pool.getConnection();
+        const report = describeRuntimePrivileges(await runtime.query("SHOW GRANTS FOR CURRENT_USER"), options.database);
+        assert.equal(report.available, true); assert.equal(report.scope, "exact_literal");
+        assert.equal(Object.values(report.rights).filter(Boolean).length, 6);
+        assert.equal(report.extraRights, false); assert.equal(report.resources.maxUserConnections, true);
+        assert.equal(report.delegation, false); assert.equal(report.roleOrProxy, false);
+        for (const value of [options.database, sharedUser, sharedPassword, preflightUser]) {
+          assert.equal(JSON.stringify(report).includes(value), false);
+        }
+      } finally {
+        try { if (runtime) await runtime.release(); }
+        finally { await pool.end(); }
+      }
+      assert.equal(await digest(), before, "grant observation leaves all application and ledger rows unchanged");
     });
     await t.test("the shared-profile account verifies the physical authentication schema without changing rows", async () => {
       const before = await digest();
