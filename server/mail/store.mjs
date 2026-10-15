@@ -128,6 +128,21 @@ export function createMailStore(pool) {
       return null;
     },
 
+    async releaseClaim(jobId, leaseToken, { now }) {
+      bytes(jobId); bytes(leaseToken); instant(now);
+      // Trusted worker use only: SMTP must not have started. This single CAS
+      // takes only the outbox row, never later acquires an account/proof lock,
+      // and cannot modify a replaced, expired or terminal reservation.
+      return connectionRun(async (connection) => {
+        const result = await connection.query(`UPDATE mail_outbox SET status = 'pending', attempts = attempts - 1,
+          available_at = ?, lease_token = NULL, lease_until = NULL, last_error = NULL
+          WHERE id = ? AND status = 'sending' AND lease_token = ? AND lease_until > ?
+            AND created_at <= ? AND expires_at > ? AND attempts BETWEEN 1 AND 8`,
+        [sqlDate(now), jobId, leaseToken, sqlDate(now), sqlDate(now), sqlDate(now)]);
+        return Number(result.affectedRows) === 1;
+      });
+    },
+
     async markSent(jobId, leaseToken, { now }) {
       bytes(jobId); bytes(leaseToken); instant(now);
       return connectionRun(async (connection) => {

@@ -91,15 +91,29 @@ export async function createChatService({ store, authStore, authService, accessS
       if (!result.allowed) throw new ChatError("CHAT_RATE_LIMIT", result.retryAfter);
     }
   }
+  async function readLimit(userId, now) {
+    // Polling, history pages and event catch-up share one read allowance for
+    // the authenticated account. Session proofs do not consume this budget.
+    for (const [name, identity, limit] of [["user-read", userId, 120], ["global-read", "all", 1200]]) {
+      const bucket = createHmac("sha256", key).update("jessiemessage:chat-rate:v1:").update(name).update("\0").update(identity).digest();
+      const result = await authStore.consumeRateLimit(bucket, { now, windowSeconds: 60, limit });
+      if (!result || typeof result.allowed !== "boolean") fail("CHAT_UNAVAILABLE");
+      if (!result.allowed) throw new ChatError("CHAT_RATE_LIMIT", Number.isFinite(result.retryAfter)
+        ? Math.max(1, Math.min(60, Math.ceil(result.retryAfter))) : 60);
+    }
+  }
   return Object.freeze({
     actor: (role, token) => guarded(() => actor(role, token)),
     listConversations: (token, { afterId = null, limit = 50 } = {}) => guarded(async () => {
-      await actor("admin", token); limitValue(limit);
-      const result = await store.listConversations({ tokenHash: tokenDigest(token), now: nowValue(), afterId: afterId === null ? null : idBytes(afterId), limit });
+      limitValue(limit); const after = afterId === null ? null : idBytes(afterId);
+      const session = await actor("admin", token), now = nowValue();
+      await readLimit(session.user.id, now);
+      const result = await store.listConversations({ tokenHash: tokenDigest(token), now: nowValue(), afterId: after, limit });
       return { conversations: result.conversations.map((row) => conversationDTO(row, "admin")), nextCursor: result.nextCursor?.toString("hex") ?? null, hasMore: result.hasMore };
     }),
     clientConversation: (token) => guarded(async () => {
-      await actor("client", token);
+      const session = await actor("client", token), now = nowValue();
+      await readLimit(session.user.id, now);
       const row = await store.getClientConversation({ tokenHash: tokenDigest(token), now: nowValue() });
       if (!row) fail("CHAT_NOT_FOUND");
       return conversationDTO(row, "client");
@@ -108,14 +122,16 @@ export async function createChatService({ store, authStore, authService, accessS
       if (before !== null) sequence(before); if (after !== null) sequence(after);
       if (before !== null && after !== null) fail("CHAT_INPUT"); limitValue(limit);
       const { session, request } = await context(role, token, conversationId);
-      const result = await store.readMessages({ ...request, before, after, limit });
+      await readLimit(session.user.id, request.now);
+      const result = await store.readMessages({ ...request, now: nowValue(), before, after, limit });
       return { conversation: conversationDTO(result.conversation, role), messages: result.messages.map((row) => messageDTO(row, session)),
         hasMoreBefore: result.hasMoreBefore, hasMoreAfter: result.hasMoreAfter, nextBefore: result.nextBefore, nextAfter: result.nextAfter, eventCursor: result.eventCursor };
     }),
     events: (role, token, conversationId, { after = "0", limit = 100 } = {}) => guarded(async () => {
       sequence(after); limitValue(limit);
       const { session, request } = await context(role, token, conversationId);
-      const result = await store.readEvents({ ...request, after, limit });
+      await readLimit(session.user.id, request.now);
+      const result = await store.readEvents({ ...request, now: nowValue(), after, limit });
       return { conversation: conversationDTO(result.conversation, role), events: result.events.map((event) => ({ sequence: event.sequence,
         kind: event.kind, occurredAt: event.occurredAt, message: messageDTO(event.message, session) })), nextCursor: result.nextCursor, hasMore: result.hasMore };
     }),

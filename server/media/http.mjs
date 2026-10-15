@@ -3,9 +3,6 @@ import { safeMedia, safeMessage } from "../chat/http.mjs";
 import { validateMessageBody } from "../chat/crypto.mjs";
 
 const MAX_UPLOAD_BYTES = 10485760;
-const MAX_ACTIVE_UPLOADS = 3;
-// This covers body buffering and the normalizer queue together, across handlers.
-let activeUploads = 0;
 const MAX_ACTIVE_BINARY_READS = 8;
 let activeBinaryReads = 0;
 const FORMATS = Object.freeze(["image/jpeg", "image/png", "image/webp"]);
@@ -72,6 +69,7 @@ function matchesDeclaredFormat(bytes, type) {
 
 /** The caller authenticates the role and CSRF before this attaches a body reader. */
 export function readUpload(request) {
+  if (request.aborted || request.destroyed) throw invalid();
   const declared = request.headers["content-length"];
   if (declared !== undefined) {
     if (typeof declared !== "string" || !/^(?:0|[1-9][0-9]*)$/.test(declared) || !Number.isSafeInteger(Number(declared))) throw invalid();
@@ -177,7 +175,7 @@ function reserveBinaryRead(response) {
 export function createMediaHandler(service, { origin }) {
   const configured = new URL(origin);
   if (configured.protocol !== "https:" || configured.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
-  for (const method of ["actor", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "send"]) {
+  for (const method of ["actor", "admitUpload", "releaseUpload", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "send"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("A media service is required");
   }
   return async (request, response) => {
@@ -210,15 +208,15 @@ export function createMediaHandler(service, { origin }) {
         reply(response, method, 200, { enabled: true, maxUploadBytes: MAX_UPLOAD_BYTES, formats: [...FORMATS] });
       } else if (upload) {
         query(url, []);
-        if (activeUploads >= MAX_ACTIVE_UPLOADS) throw Object.assign(new Error("MEDIA_BUSY"), { code: "MEDIA_BUSY", retryAfter: 5 });
-        activeUploads += 1;
+        const admission = await service.admitUpload(route.role, token);
+        if (!admission || typeof admission !== "object") throw unavailable();
         try {
           const bytes = await readUpload(request);
           if (!matchesDeclaredFormat(bytes, request.headers["content-type"])) throw httpError(415, "media_format");
-          const result = await service.upload(route.role, token, bytes);
+          const result = await service.upload(route.role, token, bytes, admission);
           if (!result || typeof result.duplicate !== "boolean") throw unavailable();
           reply(response, method, result.duplicate ? 200 : 201, { asset: safeMedia(result.asset, { role: route.role }), duplicate: result.duplicate });
-        } finally { activeUploads -= 1; }
+        } finally { service.releaseUpload(admission); }
       } else if (route.kind === "assets") {
         const options = query(url, ["conversationId", "afterId", "limit"], 50);
         const conversationId = options.conversationId ?? null, afterId = options.afterId ?? null;

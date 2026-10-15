@@ -33,7 +33,8 @@ export async function createReadinessService({ authService, authStore, mailConfi
   mailConfig = configured ? { ...mailConfig, key: Buffer.isBuffer(mailConfig.key) ? Buffer.from(mailConfig.key) : mailConfig.key, smtp: { ...mailConfig.smtp } } : { enabled: false };
   const featureSnapshot = Object.freeze(Object.fromEntries(FEATURE_NAMES.map((name) => [name, features[name]])));
   key = Buffer.from(key);
-  let active = false;
+  let active = false, closed = false, closing, activeTransport, closeFailed = false;
+  const diagnostics = new Set();
   const nowValue = () => { const now = clock(); if (!instant(now)) fail("READINESS_UNAVAILABLE"); return now; };
   async function guarded(operation) {
     try { return await operation(); }
@@ -57,11 +58,72 @@ export async function createReadinessService({ authService, authStore, mailConfi
     const budgets = operation === "read" ? [["global-read", "all", 240, 60], ["user-read", session.user.id, 60, 60]]
       : [["global-verify", "all", 10, 60], ["user-verify", session.user.id, 3, 900]];
     for (const [name, identity, maximum, windowSeconds] of budgets) {
+      if (closed) fail("READINESS_UNAVAILABLE");
       const bucket = createHmac("sha256", key).update("jessiemessage:readiness-rate:v1:").update(name).update("\0").update(identity).digest();
       const result = await authStore.consumeRateLimit(bucket, { now, windowSeconds, limit: maximum });
       if (!result || typeof result.allowed !== "boolean") fail("READINESS_UNAVAILABLE");
       if (!result.allowed) throw new ReadinessError("READINESS_RATE_LIMIT", Number.isFinite(result.retryAfter) ? Math.max(1, Math.min(3600, Math.ceil(result.retryAfter))) : 60);
     }
+  }
+  function dispose(lease) {
+    if (!lease) return Promise.resolve();
+    if (!lease.closing) {
+      try { lease.closing = Promise.resolve(lease.transport.close()); }
+      catch { lease.closing = Promise.reject(new ReadinessError("READINESS_UNAVAILABLE")); }
+      // Closing can be signalled synchronously before the diagnostic reaches
+      // its own finally block; always attach a handler immediately.
+      void lease.closing.catch(() => { closeFailed = true; });
+    }
+    return lease.closing;
+  }
+  function close() {
+    if (closing) return closing;
+    closed = true;
+    const cleanup = dispose(activeTransport);
+    closing = (async () => {
+      await Promise.allSettled([...diagnostics]);
+      try { await cleanup; } catch { closeFailed = true; }
+      if (closeFailed) fail("READINESS_UNAVAILABLE");
+    })();
+    return closing;
+  }
+  function verifySmtp(token) {
+    if (closed) return Promise.reject(new ReadinessError("READINESS_UNAVAILABLE"));
+    const pending = guarded(async () => {
+      const session = await actor(token);
+      if (closed) fail("READINESS_UNAVAILABLE");
+      if (!configured) fail("READINESS_MAIL_DISABLED");
+      if (active) throw new ReadinessError("READINESS_BUSY", 5);
+      // Reserve before awaiting quotas or the factory: concurrent callers can
+      // never create another diagnostic transport while this check is active.
+      active = true;
+      let transport, lease, failure;
+      try {
+        await limit(session, "verify");
+        if (closed) fail("READINESS_UNAVAILABLE");
+        try { transport = await createTransport(mailConfig); } catch { fail("READINESS_UNAVAILABLE"); }
+        if (typeof transport?.close === "function") activeTransport = lease = { transport };
+        if (!transport || typeof transport.verify !== "function" || !lease) fail("READINESS_UNAVAILABLE");
+        if (closed) fail("READINESS_UNAVAILABLE");
+        try { if (await transport.verify() !== true) fail("READINESS_SMTP_FAILED"); }
+        catch { fail("READINESS_SMTP_FAILED"); }
+      } catch (error) { failure = error instanceof ReadinessError ? error : new ReadinessError("READINESS_UNAVAILABLE"); }
+      finally {
+        try { await dispose(lease); }
+        catch { failure ??= new ReadinessError("READINESS_UNAVAILABLE"); }
+        finally { if (activeTransport === lease) activeTransport = undefined; active = false; }
+      }
+      if (closed) fail("READINESS_UNAVAILABLE");
+      // A completed connection is not permission to disclose a result after
+      // the administrator session was revoked during network work or cleanup.
+      await actor(token);
+      if (closed) fail("READINESS_UNAVAILABLE");
+      if (failure) throw failure;
+      return { status: "verified", checkedAt: nowValue(), scope: "smtp_authentication", delivery: "not_checked" };
+    });
+    diagnostics.add(pending);
+    void pending.then(() => diagnostics.delete(pending), () => diagnostics.delete(pending));
+    return pending;
   }
   return Object.freeze({
     actor: (token) => guarded(() => actor(token)),
@@ -70,31 +132,7 @@ export async function createReadinessService({ authService, authStore, mailConfi
       return { contactEmail: SITE_CONTACT_EMAIL, mail: { configured, sender, replyTo: sender }, features: { ...featureSnapshot },
         checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
     }),
-    verifySmtp: (token) => guarded(async () => {
-      const session = await actor(token);
-      if (!configured) fail("READINESS_MAIL_DISABLED");
-      if (active) throw new ReadinessError("READINESS_BUSY", 5);
-      // Reserve before awaiting quotas or the factory: concurrent callers can
-      // never create another diagnostic transport while this check is active.
-      active = true;
-      let transport, failure;
-      try {
-        await limit(session, "verify");
-        try { transport = await createTransport(mailConfig); } catch { fail("READINESS_UNAVAILABLE"); }
-        if (!transport || typeof transport.verify !== "function" || typeof transport.close !== "function") fail("READINESS_UNAVAILABLE");
-        try { if (await transport.verify() !== true) fail("READINESS_SMTP_FAILED"); }
-        catch { fail("READINESS_SMTP_FAILED"); }
-      } catch (error) { failure = error instanceof ReadinessError ? error : new ReadinessError("READINESS_UNAVAILABLE"); }
-      finally {
-        try { if (typeof transport?.close === "function") await transport.close(); }
-        catch { failure ??= new ReadinessError("READINESS_UNAVAILABLE"); }
-        finally { active = false; }
-      }
-      // A completed connection is not permission to disclose a result after
-      // the administrator session was revoked during network work or cleanup.
-      await actor(token);
-      if (failure) throw failure;
-      return { status: "verified", checkedAt: nowValue(), scope: "smtp_authentication", delivery: "not_checked" };
-    }),
+    verifySmtp,
+    close,
   });
 }

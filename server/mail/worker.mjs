@@ -9,17 +9,24 @@ export class MailWorkerError extends Error {
   }
 }
 
-export async function runMailBatch({ store, transport, key, clock = Date.now, batchSize = 5, purpose = "verification" }) {
+export async function runMailBatch({ store, transport, key, clock = Date.now, batchSize = 5, purpose = "verification", signal = null }) {
   if (!Buffer.isBuffer(key) || key.length !== 32 || !Number.isInteger(batchSize) || batchSize < 1 || batchSize > 20
-    || typeof clock !== "function" || !["verification", "password-reset"].includes(purpose)) throw new MailWorkerError();
+    || typeof clock !== "function" || !["verification", "password-reset"].includes(purpose)
+    || (signal !== null && !(signal instanceof AbortSignal))) throw new MailWorkerError();
   const openPayload = purpose === "password-reset" ? openResetPayload : openVerificationPayload;
   const deliveryMethod = purpose === "password-reset" ? "sendPasswordReset" : "sendVerification";
   let sent = 0;
   let failed = 0;
   try {
-    for (let index = 0; index < batchSize; index += 1) {
+    for (let index = 0; index < batchSize && !signal?.aborted; index += 1) {
       const job = await store.claim({ now: clock() });
       if (!job) break;
+      if (signal?.aborted) {
+        // No SMTP call has started. Return this exact live reservation, even
+        // its eighth claim, rather than consuming an attempt during shutdown.
+        await store.releaseClaim(job.id, job.leaseToken, { now: clock() });
+        break;
+      }
       let payload;
       try {
         payload = openPayload(job.payloadEncrypted, key, job.id);
@@ -29,6 +36,7 @@ export async function runMailBatch({ store, transport, key, clock = Date.now, ba
         failed += 1;
         continue;
       }
+      if (signal?.aborted) { await store.releaseClaim(job.id, job.leaseToken, { now: clock() }); break; }
       try {
         if (await transport[deliveryMethod]({ ...payload, jobId: job.id }) !== true) throw new Error();
       } catch {
@@ -41,25 +49,27 @@ export async function runMailBatch({ store, transport, key, clock = Date.now, ba
       if (await store.markSent(job.id, job.leaseToken, { now: clock() })) sent += 1;
       else failed += 1;
     }
-    await store.prune({ now: clock() });
+    if (!signal?.aborted) await store.prune({ now: clock() });
     return { sent, failed };
   } catch { throw new MailWorkerError(); }
 }
 
-export function startMailWorker(options) {
+export function startMailWorker(options = {}) {
   const intervalMilliseconds = options.intervalMilliseconds ?? 15000;
   const closeTransport = options.closeTransport === undefined ? true : options.closeTransport;
   const purpose = options.purpose === undefined ? "verification" : options.purpose;
   if (!Number.isInteger(intervalMilliseconds) || intervalMilliseconds < 1000 || intervalMilliseconds > 300000
     || typeof closeTransport !== "boolean" || !["verification", "password-reset"].includes(purpose)) throw new MailWorkerError();
   let closed = false;
+  const controller = new AbortController();
+  let stopping = null;
   let active = null;
   let timer = null;
   function schedule(delay) {
     if (closed) return;
     timer = setTimeout(() => {
       timer = null;
-      active = runMailBatch(options).catch(() => {
+      active = runMailBatch({ ...options, signal: controller.signal }).catch(() => {
         // Only a fixed code may be surfaced; never propagate SQL/SMTP details.
         try { options.onError?.({ code: "MAIL_WORKER_FAILED" }); } catch {}
       }).finally(() => {
@@ -71,13 +81,23 @@ export function startMailWorker(options) {
   }
   schedule(0);
   let closing;
+  function stop() {
+    if (stopping) return stopping;
+    // The flag and signal change before returning the drain promise. A caller
+    // can stop every shared-transport worker before waiting for any one batch.
+    closed = true; controller.abort();
+    if (timer) clearTimeout(timer);
+    timer = null;
+    stopping = active ? active.then(() => {}) : Promise.resolve();
+    return stopping;
+  }
   return Object.freeze({
+    stop,
     close() {
       if (closing) return closing;
-      closed = true;
-      if (timer) clearTimeout(timer);
+      const drained = stop();
       closing = (async () => {
-        if (active) await active;
+        await drained;
         if (closeTransport) {
           try { await options.transport.close(); } catch { throw new MailWorkerError(); }
         }
