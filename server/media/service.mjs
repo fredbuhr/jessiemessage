@@ -134,7 +134,7 @@ export async function createMediaService({ store, chatService, authStore, storag
       pageSize(limit); const conversation = conversationId === null ? null : id(conversationId), after = afterId === null ? null : id(afterId);
       const { actor, request } = await context(role, raw);
       await consumeBudget(actor.user.id, "library", request.now);
-      const result = await store.listAssets({ ...request, conversationId: conversation, afterId: after, limit });
+      const result = await store.listAssets({ ...request, now: currentTime(), conversationId: conversation, afterId: after, limit });
       return { assets: result.assets.map((row) => mediaDTO(row, role)), nextCursor: result.nextCursor?.toString("hex") ?? null, hasMore: result.hasMore };
     }),
     asset: (role, raw, assetId, variant) => guarded(async () => {
@@ -152,7 +152,7 @@ export async function createMediaService({ store, chatService, authStore, storag
       if (before !== null) cursor(before); pageSize(limit);
       const conversation = id(conversationId); const { actor, request } = await context(role, raw);
       await consumeBudget(actor.user.id, "gallery", request.now);
-      const result = await store.gallery({ ...request, conversationId: conversation, before, limit });
+      const result = await store.gallery({ ...request, now: currentTime(), conversationId: conversation, before, limit });
       return { items: result.items.map((item) => ({ messageId: item.messageId.toString("hex"), sequence: item.sequence,
         sender: item.senderId.equals(id(actor.user.id)) ? "me" : "peer", createdAt: item.createdAt,
         media: mediaDTO({ ...item.asset, createdAt: item.createdAt, sharedHere: true }, role, { conversationId, messageId: item.messageId.toString("hex") }) })), nextBefore: result.nextBefore, hasMore: result.hasMore };

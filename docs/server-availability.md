@@ -30,7 +30,7 @@ Les limites suivantes utilisent les compteurs HMAC persistants déjà présents 
 | Galerie de conversation | 60 | 300 partagé avec la liste |
 | Admission d'import photo | 10 | 30 |
 
-Le budget utilisateur est consommé avant le global : un utilisateur déjà limité ne dépense plus la capacité commune sur ses refus. Les budgets existants des lectures de photos complètes et miniatures restent distincts.
+Le budget utilisateur est consommé avant le global : un utilisateur déjà limité ne dépense plus la capacité commune sur ses refus. Les nouvelles lectures reprennent l'heure après les attentes de quota avant la réautorisation SQL ; une session ou un accès expiré pendant cette attente ne conserve pas l'autorisation de l'heure initiale. Les budgets existants des lectures de photos complètes et miniatures restent distincts.
 
 Un import réserve au maximum **une place par compte authentifié**, toutes ses sessions confondues, dans les **trois places du processus**. La réservation et ses quotas précèdent la lecture du corps et la normalisation. Un import admis puis incomplet, abandonné ou invalide reste compté. Le service remet au handler un ticket opaque à usage unique, lié au rôle, au condensat de session et au compte ; un ticket forgé, réutilisé, d'un autre service ou d'une autre session ne permet pas d'importer. Un appel direct à `upload()` sans ticket passe par la même admission.
 

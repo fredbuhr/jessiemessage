@@ -424,3 +424,28 @@ test("metadata registration uses a fresh authorization time and retains its uplo
   assert.equal(f.calls.some((entry) => entry.name === "storage.remove"), false, "an ambiguous SQL outcome preserves the encrypted files");
   const next = await other.service.admitUpload("admin", other.token); other.service.releaseUpload(next);
 });
+
+for (const [method, operation] of [
+  ["listAssets", (service, token) => service.listAssets("client", token)],
+  ["gallery", (service, token) => service.gallery("client", token, conversationHex)],
+]) {
+  test(`${method} rechecks access at the time after its persistent quotas complete`, async () => {
+    const f = await fixture(); const expiresAt = now + 1000; let current = now; let budgets = 0; const authorizations = [];
+    const consume = f.options.authStore.consumeRateLimit;
+    f.options.authStore.consumeRateLimit = async (...args) => {
+      const result = await consume(...args);
+      if (++budgets === 2) current = expiresAt;
+      return result;
+    };
+    const read = f.store[method];
+    f.store[method] = async (request) => {
+      authorizations.push(request.now);
+      if (request.now >= expiresAt) throw Object.assign(new Error("Synthetic current access has expired"), { code: "ACCESS_EXPIRED" });
+      return read(request);
+    };
+    const service = await createMediaService({ ...f.options, clock: () => current });
+    await assert.rejects(operation(service, f.token), hasCode("ACCESS_EXPIRED"));
+    assert.equal(budgets, 2); assert.deepEqual(authorizations, [expiresAt]);
+    assert.equal(f.calls.length, 0, "current SQL authorization refuses the read before any DTO or filesystem work");
+  });
+}

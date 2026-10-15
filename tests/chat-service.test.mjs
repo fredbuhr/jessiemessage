@@ -252,6 +252,31 @@ test("session proofs and rejected principals do not consume chat read quotas", a
   assert.equal(f.rateCalls.length, 0); assert.equal(f.calls.length, 0);
 });
 
+test("each chat read reauthorizes with time sampled after slow quotas rather than its earlier session snapshot", async () => {
+  const reads = [
+    ["listConversations", (service, token) => service.listConversations(token)],
+    ["getClientConversation", (service, token) => service.clientConversation(token)],
+    ["readMessages", (service, token) => service.messages("admin", token, conversationHex)],
+    ["readEvents", (service, token) => service.events("client", token, conversationHex)],
+  ];
+  for (const [method, read] of reads) {
+    const f = await fixture(), expiresAt = now + 1500;
+    const timestamps = []; let privateReads = 0, decisions = 0;
+    const store = { ...f.store, async [method](request) {
+      timestamps.push(request.now);
+      if (request.now >= expiresAt) throw Object.assign(new Error("Private expired-session metadata"), { code: "CHAT_UNAUTHORIZED" });
+      privateReads += 1;
+      return f.store[method](request);
+    } };
+    const service = await createChatService({ ...f.options, store, authStore: { async consumeRateLimit() {
+      f.state.now += 1000; decisions += 1; return { allowed: true };
+    } } });
+    await assert.rejects(read(service, f.token), hasCode("CHAT_UNAUTHORIZED"), method);
+    assert.deepEqual(timestamps, [now + 2000], `${method} receives the fresh time after both SQL quotas`);
+    assert.equal(decisions, 2); assert.equal(privateReads, 0); assert.equal(f.calls.length, 0);
+  }
+});
+
 test("chat read quotas follow the authenticated user across tokens, services and read kinds and reopen after their shared window", async () => {
   const f = await fixture(), ledger = new Map(), rateCalls = [];
   const authStore = { async consumeRateLimit(bucket, options) {
