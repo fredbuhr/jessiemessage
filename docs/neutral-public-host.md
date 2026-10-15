@@ -2,13 +2,23 @@
 
 ## État et portée
 
-L’export est préparé. Le premier probe HTTPS réel a exécuté 91 requêtes et 1 033 assertions sur le site Apache de préparation. Les fichiers publics, `/app`, les JSON neutres, le 503 de disponibilité et les refus privés/internes ont passé leurs contrôles. Deux écarts empêchaient encore la validation : GET/HEAD `/` renvoyaient 403 sans les en-têtes prévus ; trois réponses 405 ajoutaient une virgule finale à `Allow`.
+Le **15 octobre 2026 à 20:48:01.679 UTC**, le probe HTTPS réel a réussi ses **91 requêtes et 1 033 assertions**, sans assertion en échec, sur le site Apache de préparation. Le client vérifiait le certificat et utilisait TLS 1.2 au minimum, avec un User-Agent explicite identifiant fidèlement l’outil. Les SHA-256 des 22 routes publiques, les méthodes et requêtes invalides, les JSON neutres, les HEAD sans corps, les en-têtes de sécurité, l’absence de cookie, le 503 avec `Retry-After` et les refus privés/internes ont passé leurs contrôles.
 
-La correction préparée donne un index explicite à la racine et efface `Allow` dans les deux tables d’en-têtes avant de définir sa valeur. Elle doit encore être redéployée et le probe complet relancé. Les tests de construction ne remplacent pas cette seconde preuve Apache, ni une validation de l’installation PWA.
+Le 403 initial sur `/` venait du premier client Node, qui omettait User-Agent : les journaux du site ont confirmé le refus par ModSecurity des requêtes de ce type. L’identification du client a été corrigée ; le WAF est resté actif. Ce diagnostic remplace l’hypothèse initiale d’un problème d’index.
+
+Quatre avertissements de format restent signalés : les réponses 405 à HEAD/POST/OPTIONS `/api/entry` et POST `/styles.css` ajoutent un élément vide final à `Allow`. Le destinataire ignore cet élément et vérifie l’ensemble exact des méthodes ; la sémantique attendue passe. La génération de cet élément vide reste une particularité non conforme de l’émetteur, décrite ci-dessous, et n’est pas présentée comme corrigée.
+
+Les dix jobs CI associés au code d’export hébergé, révision `921919b4`, sont verts. Chrome a aussi confirmé l’accueil, le passage FR/EN et la nouvelle vérification de `/app`. Cette preuve précède la bascule de l’origine publique ; elle ne certifie pas l’installation PWA ni le fonctionnement de services privés.
 
 Le but est de conserver l’accueil `/` et l’ouverture neutre `/app` sur un site Apache ordinaire, pendant que le projet Node sert à la recette. Le bundle ne contient ni PHP, ni proxy vers Node, ni authentification, ni connexion SQL, ni fichier de configuration privée. Les fichiers sources du projet restent hors du document root public.
 
 La séparation des sites, des routes et des document roots ne crée pas une isolation entre UID ou ressources d’hébergement partagées.
+
+## Bascule des domaines en attente
+
+Le site Apache de préparation est opérationnel en HTTPS avec le résultat de probe ci-dessus. Le projet Node existant reste associé à l’origine publique actuelle et à celle de recette ; ses fonctionnalités privées restent désactivées. Aucune inversion de domaine principal, déliaison ou modification DNS n’a été validée.
+
+Dans le Manager, l’action destinée à rendre le domaine de recette principal a affiché un avertissement explicite de perte des statistiques Web de l’ancien nom. Cet avertissement n’a pas été confirmé. Le changement reste en attente d’une validation explicite de cet impact, au moment de l’action, sur la base du site public neutre préparé et vérifiable. Le succès du probe ne vaut pas autorisation de cette perte de données.
 
 ## Contenu fermé : 25 fichiers
 
@@ -69,7 +79,9 @@ Vérifier aussi le HTTPS et le certificat du domaine de préparation. Aucun acha
 
 ## Matrice HTTP à prouver avant tout déplacement DNS ou de domaine
 
-Effectuer les contrôles sur le nouveau site de préparation, avec un client HTTP réel. Les statuts, les en-têtes et les corps ci-dessous sont les résultats attendus. La matrice complète doit être rejouée après la correction, notamment GET/HEAD `/` et la valeur exacte, sans doublon ni virgule finale, de `Allow` pour HEAD/POST/OPTIONS `/api/entry` et POST `/styles.css`.
+Effectuer les contrôles avec un client HTTP réel s’identifiant explicitement. La campagne réussie décrite plus haut porte sur les routes fixes du site de préparation. Le tableau reste la spécification à rejouer sur chaque nouvelle origine ; les variantes de traversée constituent un contrôle complémentaire.
+
+Pour `Allow`, comparer l’ensemble exact des jetons de méthode, en conservant leur casse, plutôt que la chaîne brute. [RFC 9110, §10.2.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-10.2.1) définit `Allow` comme une liste `#method`. Le [§5.6.1.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-5.6.1.2) impose au destinataire d’ignorer un nombre raisonnable d’éléments vides ; le [§5.6.1.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-5.6.1.1) interdit à l’émetteur d’en générer. Le probe conserve donc un avertissement distinct pour cette anomalie Apache tout en refusant les méthodes supplémentaires ou manquantes.
 
 | Requête | Résultat attendu |
 |---|---|
@@ -77,7 +89,7 @@ Effectuer les contrôles sur le nouveau site de préparation, avec un client HTT
 | HEAD `/`, `/app`, fichier CSS ou PNG | Statut correspondant, sans corps de réponse |
 | GET des 20 fichiers directement autorisés | 200 ; MIME correct, octets et SHA-256 identiques au manifeste |
 | GET `/api/entry` | 200 JSON neutre exact, aucune identité ni destination privée |
-| HEAD, POST ou OPTIONS `/api/entry` | 405, `Allow: GET` ; HEAD sans corps |
+| HEAD, POST ou OPTIONS `/api/entry` | 405 ; ensemble `Allow` exactement `{GET}` ; HEAD sans corps ; élément vide signalé séparément |
 | GET `/api/entry?x=1` et `/api/entry?` | 400 |
 | GET `/api/health` | 200 JSON `{"status":"ok"}` |
 | HEAD `/api/health` | 200, sans corps |
@@ -87,7 +99,7 @@ Effectuer les contrôles sur le nouveau site de préparation, avec un client HTT
 | GET/HEAD `/admin`, `/admin/login`, `/access`, `/messages`, `/api/auth/session`, `/chat.js`, `/server/index.mjs` | 404 |
 | GET/HEAD `/brand/` et chemins inconnus | 404, sans listing |
 | Tentatives de traversée vers un fichier hors allowlist | Refus HTTP, sans dépassement du document root |
-| POST d’un fichier public | 405, `Allow: GET, HEAD` |
+| POST d’un fichier public | 405 ; ensemble `Allow` exactement `{GET, HEAD}` ; élément vide signalé séparément |
 
 Vérifier `Cache-Control: no-store` sur les réponses de succès et d’erreur, les en-têtes de sécurité générés et l’absence de `Set-Cookie`. Le `ErrorDocument 503` doit conserver le statut 503 et servir le JSON interne avec le bon MIME, sans rendre son URL directement accessible. Les corps d’erreur 400/404/405 peuvent différer des réponses JSON du serveur Node ; `/app` rejette les réponses non-200 avant d’en lire le contenu.
 
@@ -103,6 +115,6 @@ curl --silent --show-error --dump-header - "$NEUTRAL_PREVIEW_ORIGIN/_neutral/una
 curl --silent --show-error --request POST --dump-header - "$NEUTRAL_PREVIEW_ORIGIN/api/entry"
 ```
 
-Compléter avec un navigateur : rendu FR/EN, navigation `/` vers `/app`, message de préparation sans lien de connexion, nouvelle vérification et retour après masquage de l’onglet. Aucune requête ne doit être transférée au projet Node de recette.
+Compléter avec un navigateur : rendu FR/EN, navigation `/` vers `/app`, message de préparation sans lien de connexion, nouvelle vérification et retour après masquage de l’onglet. Le rendu et la nouvelle vérification ont été observés sur le site de préparation ; conserver ces contrôles lors du changement d’origine. Aucune requête ne doit être transférée au projet Node de recette.
 
-Un sous-domaine de préparation permet cette preuve sans déplacer immédiatement l’origine publique. Le manifeste conserve `id: "/"` et `start_url: "/app"` : une PWA installée sur une autre origine reste distincte. Le maintien des URL et de la PWA publiques exige donc de vérifier ensuite le rattachement de l’origine publique au site Apache, avec un plan de retour établi avant toute bascule.
+Le probe horodaté ci-dessus a été effectué avant la bascule de l’origine publique, sur le sous-domaine de préparation. Le manifeste conserve `id: "/"` et `start_url: "/app"` : une PWA installée sur une autre origine reste distincte. Le maintien des URL et de la PWA publiques exige donc de vérifier ensuite le rattachement de l’origine publique au site Apache et de rejouer les contrôles, avec un plan de retour établi avant toute bascule.
