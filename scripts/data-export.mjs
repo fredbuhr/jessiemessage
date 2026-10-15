@@ -5,6 +5,8 @@ import { withClientData } from "../server/data/store.mjs";
 import { DATA_POLICY, DATA_POLICY_METADATA } from "../server/data/policy.mjs";
 import { exportClientContent } from "../server/data/export.mjs";
 import { createDataWriter } from "../server/data/writer.mjs";
+import { buildDeletionPlan } from "../server/data/deletion.mjs";
+import { loadMigrations } from "../server/db/migrations.mjs";
 
 const CHECKOUT = fileURLToPath(new URL("../", import.meta.url));
 const MAX_DATE = 253402300799999;
@@ -25,7 +27,7 @@ function key(value) {
 }
 export function parseArguments(args) {
   if (!Array.isArray(args) || args.length !== 10 || args.some((value) => typeof value !== "string")
-    || !["inventory", "export"].includes(args[0]) || args[1] !== "--offline" || args[2] !== "--database"
+    || !["inventory", "export", "plan"].includes(args[0]) || args[1] !== "--offline" || args[2] !== "--database"
     || !/^[a-zA-Z0-9_]{1,64}$/.test(args[3]) || args[4] !== "--client" || !/^[a-f0-9]{32}$/.test(args[5])
     || args[6] !== "--confirm-client" || args[7] !== args[5] || args[8] !== "--output" || !pathValue(args[9])) fail("DATA_USAGE");
   return { command: args[0], offline: true, databaseName: args[3], clientId: Buffer.from(args[5], "hex"), output: args[9] };
@@ -49,8 +51,9 @@ function inventoryDTO(value, policy) {
     return { table: item.table, scope: item.scope, count: item.count, truncated: item.truncated };
   });
 }
-function safeSummary(value, inventory = false) {
-  const fields = inventory ? ["inventoryCategories"] : ["messages", "mediaFiles", "libraryItems", "mediaBytes", "rows"];
+function safeSummary(value, command = "export") {
+  const fields = command === "plan" ? ["inventoryCategories", "observations", "affectedCategories", "blockers"]
+    : command === "inventory" ? ["inventoryCategories"] : ["messages", "mediaFiles", "libraryItems", "mediaBytes", "rows"];
   if (!value || fields.some((field) => !Number.isSafeInteger(value[field]) || value[field] < 0)) fail("DATA_OPERATION");
   return Object.fromEntries(fields.map((field) => [field, value[field]]));
 }
@@ -78,6 +81,15 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       if (reader?.account?.role !== "client" || !Buffer.isBuffer(reader.account.id) || !reader.account.id.equals(options.clientId)) fail("DATA_OPERATION");
       writer = await (dependencies.makeWriter ?? createDataWriter)({ output: options.output,
         protectedRoots: [resolve(CHECKOUT), ...(config.mediaRoot === null ? [] : [config.mediaRoot])] });
+      if (options.command === "plan") {
+        const inventory = inventoryDTO(await reader.inventory(), policy); checkAbort();
+        const facts = await reader.deletionFacts(); checkAbort();
+        const migrations = await (dependencies.loadMigrations ?? loadMigrations)(); checkAbort();
+        const plan = buildDeletionPlan({ inventory, facts, now, migrations });
+        await writer.json("deletion-plan.json", plan); checkAbort();
+        return { inventoryCategories: plan.categories.length, observations: plan.observations.length,
+          affectedCategories: plan.affectedCategories, blockers: plan.blockers.length };
+      }
       if (options.command === "inventory") {
         const categories = inventoryDTO(await reader.inventory(), policy); checkAbort();
         await writer.json("policy.json", { format: "jessiemessage-data-policy", version: 1, automaticPurge: false, categories: policy,
@@ -110,7 +122,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     // Finish the read transaction and close its pool before declaring files
     // complete. A failed acknowledgement/cleanup never produces success output.
     const sourcePool = pool; pool = null; await sourcePool.end(); checkAbort();
-    const aggregate = safeSummary(summary, options.command === "inventory");
+    const aggregate = safeSummary(summary, options.command);
     await writer.finalize(aggregate);
     result = { command: options.command, status: "complete", ...aggregate };
   } catch (error) { failure = error instanceof DataCliError ? error : new DataCliError(); }

@@ -1,4 +1,5 @@
 import { DATA_POLICY } from "./policy.mjs";
+import { readDeletionFacts } from "./deletion-store.mjs";
 
 const MAX_DATE = 253402300799999;
 const MAX_SEQUENCE = 18446744073709551615n;
@@ -125,6 +126,7 @@ export async function withClientData(input = {}, callback) {
       ...(context ? { broadcast_recipients: ["broadcast_recipients WHERE client_id = ? AND conversation_id = ?", [target, context.id]] } : {}),
     };
     const reader = Object.freeze({ account, conversation, preference,
+      deletionFacts: () => run(() => readDeletionFacts({ connection, clientId: target, conversation: context, nowSql })),
       inventory: () => run(async () => {
         const result = [];
         for (const entry of DATA_POLICY) {
