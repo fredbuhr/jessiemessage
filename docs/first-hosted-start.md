@@ -2,7 +2,7 @@
 
 Relevé du 15 octobre 2026. Version applicative **0.24.0**, révision préparée **`55fb30aa191fb75f898e5818324c4ec35341ac74`**. L’inventaire privé complète le [relevé public initial](hosting-inventory-2026-10-15.md).
 
-**JessieMessage est désormais servi publiquement en mode neutre.** La release reste distincte du dossier initial conservé. La bascule a été constatée dans le Manager, puis par des requêtes HTTPS anonymes sur le domaine public. L’authentification et toutes les fonctions client restent désactivées.
+**Le premier démarrage public neutre a été observé ; la disponibilité actuelle n’est pas confirmée après un 502 ultérieur.** La release reste distincte du dossier initial conservé. La bascule a été constatée dans le Manager, puis par des requêtes HTTPS anonymes sur le domaine public. L’authentification et toutes les fonctions client restent désactivées.
 
 ## 0.23 — Éléments constatés dans le Manager
 
@@ -32,7 +32,7 @@ Le build vérifie la syntaxe et installe les dépendances verrouillées. Il ne l
 
 La commande **Start** rejoint maintenant la release par un chemin relatif, vérifie le SHA exact, fixe les huit drapeaux à `0`, puis exécute `npm start`. Le chemin de site configuré dans le Manager reste inchangé. Le redémarrage a été confirmé dans le Manager après son avertissement ; le navigateur a ensuite affiché l’accueil JessieMessage, son identité et le contact officiel.
 
-Le Manager indique le processus Node actif et ses logs confirment le lancement de **JessieMessage 0.24.0** par `node server/index.mjs`, sur le port **3000**. Dans Chrome, le parcours français → anglais → français a été vérifié sur l’accueil et l’entrée `/app`, avec traduction du titre et du contenu, accès en préparation et aucun choix de rôle ; aucun compte ni aucune base n’ont été créés.
+Lors du premier contrôle, le Manager indiquait le processus Node actif et ses logs confirmaient le lancement de **JessieMessage 0.24.0** par `node server/index.mjs`, sur le port **3000**. Dans Chrome, le parcours français → anglais → français a été vérifié sur l’accueil et l’entrée `/app`, avec traduction du titre et du contenu, accès en préparation et aucun choix de rôle ; aucun compte ni aucune base n’ont été créés.
 
 ## Premier lancement : site neutre
 
@@ -64,6 +64,21 @@ Les assets contrôlés ont été sélectionnés dans le HTML effectivement reçu
 
 Le 503 de disponibilité correspond aux fonctions privées désactivées. Ces observations attestent le routage HTTPS neutre à cet instant ; elles ne prouvent ni SQL, ni compte administrateur, ni parcours client, ni charge, persistance ou arrêt par l’hébergeur.
 
+## Incident après le premier contrôle : disponibilité non confirmée
+
+Après les réponses HTTPS et le parcours FR/EN réussis ci-dessus, une nouvelle navigation Chrome sur l’accueil a affiché **`502 Bad Gateway`**, avec le message **`peer closed connection`**. Ce 502 est inattendu et distinct du 503 volontaire de `/api/ready`. Sa cause et sa durée ne sont pas établies.
+
+La session technique a ensuite été déconnectée : les outils du navigateur et du terminal signalent une perte de connexion à leur environnement. Il n’a donc pas été possible de consulter à nouveau le processus ou les journaux du Manager, de confirmer l’effet du dernier rechargement, ni d’exécuter un retour arrière. La déconnexion des outils ne démontre pas à elle seule une panne de l’hébergement.
+
+Les tentatives indépendantes du connecteur web public à **15:11:07–15:11:31 UTC** échouent sur `/`, `/app`, `/api/health`, `/api/ready` et `/styles.css` sans statut HTTP ni corps serveur exploitable ; `/` et `/api/health` ont été essayés une seconde fois. Ce résultat de proxy ne confirme ni le maintien du 502 ni un rétablissement. **La disponibilité publique actuelle reste non confirmée ; la stabilisation de l’étape 0.24 n’est pas validée.**
+
+À la reprise de l’accès technique :
+
+1. Lire l’état du processus et les journaux du Manager avant toute relance ; relever l’erreur et son heure sans exposer de secrets.
+2. Recontrôler l’accueil, `/app`, la santé et les assets par HTTPS, en distinguant le 503 de disponibilité attendu.
+3. Si le 502 persiste et ne peut pas être corrigé avec les éléments disponibles, appliquer le retour arrière préparé ci-dessous, puis vérifier publiquement le modèle restauré.
+4. Consigner le résultat et la cause seulement si elle est établie avant de poursuivre vers la base et l’authentification. Les huit fonctions privées restent désactivées.
+
 ## État des vérifications
 
 - [x] Diagnostic de plateforme hébergé : Node et JPEG Sharp réussis ; système de fichiers non sondé, rapport incomplet.
@@ -73,6 +88,8 @@ Le 503 de disponibilité correspond aux fonctions privées désactivées. Ces ob
 - [x] Bascule du lancement vers la release et démarrage public de JessieMessage.
 - [x] Smoke HTTPS horodaté et routage public constatés ci-dessus.
 - [x] Dossier du modèle initial conservé ; retour arrière non exercé.
+- [ ] Disponibilité rétablie ou confirmée après le 502 ; diagnostic des logs et contrôle du processus à reprendre.
+- [ ] Retour arrière appliqué et vérifié si nécessaire.
 
 ## Retour arrière préparé, non exercé
 
@@ -82,6 +99,6 @@ Après un retour arrière, constater à nouveau l’accueil du modèle et les r�
 
 L’activation ultérieure de l’authentification demeure une phase distincte : base isolée, TLS SQL, permissions, schéma, clé MFA et initialisation administrateur doivent suivre les [diagnostics opérateur](preproduction-preflight.md) et la [recette de préproduction](preproduction-acceptance.md). L’adresse officielle reste **contact@jessiemessage.com**.
 
-Capture de contrôle de l’accueil public, sans information du Manager :
+Capture historique du premier accueil public réussi, **avant le 502**, sans information du Manager. Elle ne constitue pas une preuve de disponibilité actuelle :
 
 ![Accueil JessieMessage hébergé](evidence/first-hosted-home-1792076222830.jpg)

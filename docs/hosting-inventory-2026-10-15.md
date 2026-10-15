@@ -2,7 +2,7 @@
 
 Relevé du 15 octobre 2026. Lot documentaire sur `feat/hosting-inventory`, construit sur la PR #25, commit `bdcdb833e4bc76ae057d0884bb6bcf7d97ab9b08`. La version applicative reste 0.24.0 ; ce lot ne change aucun code, migration ou paramètre de service.
 
-**Suivi ultérieur :** le [compte a ensuite été consulté et la version neutre démarrée](first-hosted-start.md). Les observations et inconnues ci-dessous sont conservées comme état initial horodaté ; elles ne décrivent plus seules l’état actuel du site.
+**Suivi ultérieur :** le [compte a ensuite été consulté et la version neutre démarrée](first-hosted-start.md). Un 502 observé après les premiers contrôles reste à diagnostiquer ; la disponibilité actuelle n’est pas confirmée. Les observations et inconnues ci-dessous sont conservées comme état initial horodaté ; elles ne décrivent plus seules l’état actuel du site.
 
 ## Constat public
 
