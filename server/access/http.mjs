@@ -49,7 +49,7 @@ function credentials(body) {
     || typeof body.password !== "string" || !body.password.length || body.password.length > 128 || Buffer.byteLength(body.password) > 512) throw httpError(400, "invalid_request");
   return { email: body.email, password: body.password };
 }
-function safeClientSession(session) {
+export function safeClientSession(session) {
   const { user, access } = session ?? {};
   if (!user || typeof user.id !== "string" || !idPattern.test(user.id) || user.role !== "client" || typeof user.pseudonym !== "string" || user.pseudonym.length > 64
     || !Number.isFinite(session.expiresAt) || !isToken(session.csrf) || !access || !["pending", "active", "expired"].includes(access.state)

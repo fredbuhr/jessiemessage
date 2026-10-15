@@ -12,6 +12,30 @@ const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const sqlDate = (value) => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
 const id = () => randomBytes(16);
 
+test("configured neutral server exposes the installed entry without authentication, database or mail", async () => {
+  const configured = await createConfiguredServer({});
+  assert.equal(configured.pool, null);
+  const shutdown = createShutdown(configured);
+  try {
+    await new Promise((resolve) => configured.server.listen(0, "127.0.0.1", resolve));
+    const base = `http://127.0.0.1:${configured.server.address().port}`;
+    const entry = await fetch(`${base}/api/entry`);
+    assert.equal(entry.status, 200);
+    assert.deepEqual(await entry.json(), { status: "unavailable", client: null, administrator: null });
+    assert.match(entry.headers.get("cache-control"), /no-store/);
+    const page = await fetch(`${base}/app`);
+    assert.equal(page.status, 200); assert.match(page.headers.get("content-type"), /text\/html/);
+    assert.match(await page.text(), /<html\b/i); assert.match(page.headers.get("cache-control"), /no-store/);
+    const manifest = await fetch(`${base}/manifest.webmanifest`);
+    assert.equal(manifest.status, 200);
+    const value = await manifest.json(); assert.equal(value.start_url, "/app"); assert.equal(value.id, "/");
+    const health = await fetch(`${base}/api/health`); assert.equal(health.status, 200); await health.arrayBuffer();
+    const ready = await fetch(`${base}/api/ready`); assert.equal(ready.status, 503); await ready.arrayBuffer();
+  } finally {
+    const result = await shutdown(); assert.equal(result.failed, false); assert.equal(result.timedOut, false);
+  }
+});
+
 test("operational metadata samples real MariaDB queues with runtime DML rights and no queue mutation (synthetic disposable database only)", {
   skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.", timeout: 120000,
 }, async (t) => {
@@ -135,6 +159,22 @@ test("operational metadata samples real MariaDB queues with runtime DML rights a
       try {
         await new Promise((resolve) => configured.server.listen(0, "127.0.0.1", resolve));
         const base = `http://127.0.0.1:${configured.server.address().port}`;
+        const entry = await fetch(`${base}/api/entry`);
+        assert.equal(entry.status, 200);
+        assert.deepEqual(await entry.json(), { status: "available", client: null,
+          administrator: { state: "signed_out", href: "/admin/login" } });
+        assert.match(entry.headers.get("cache-control"), /no-store/);
+        assert.equal(entry.headers.get("set-cookie"), null);
+        const page = await fetch(`${base}/app`);
+        assert.equal(page.status, 200); assert.match(page.headers.get("content-type"), /text\/html/);
+        const entryHtml = await page.text(); assert.match(entryHtml, /<html\b/i);
+        assert.doesNotMatch(entryHtml, /operations-client@example\.invalid|synthetic-private-payload/);
+        assert.match(page.headers.get("cache-control"), /no-store/);
+        const head = await fetch(`${base}/app`, { method: "HEAD" });
+        assert.equal(head.status, 200); assert.equal(await head.text(), "");
+        const manifest = await fetch(`${base}/manifest.webmanifest`);
+        assert.equal(manifest.status, 200);
+        const webmanifest = await manifest.json(); assert.equal(webmanifest.start_url, "/app"); assert.equal(webmanifest.id, "/");
         const health = await fetch(`${base}/api/health`);
         assert.equal(health.status, 200);
         assert.deepEqual(await health.json(), { status: "ok" });

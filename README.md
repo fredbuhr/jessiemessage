@@ -2,9 +2,9 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-**Resume development:** the [15 October recovery audit](docs/AUDIT-REPRISE-2026-10-15.md) fixes the audit reference at 0.16 (`0ecb31e`). The [chat correction](docs/chat-stable-history.md) preserves unchanged controls/photos. [0.17a supervision](docs/operations-readiness.md) adds cached service availability, safe worker events and private capped queue observations. [0.17b private data tools](docs/private-data-export.md) add an offline operator inventory and client-content export. [0.17c deletion simulation](docs/data-deletion-rollback.md) adds scoped dependency observations and history compatibility regressions. Retention decisions, destructive execution and real rollback acceptance remain open.
+**Resume development:** the [15 October recovery audit](docs/AUDIT-REPRISE-2026-10-15.md) fixes the audit reference at 0.16 (`0ecb31e`). The [chat correction](docs/chat-stable-history.md) preserves unchanged controls/photos. [0.17a supervision](docs/operations-readiness.md) adds cached service availability, safe worker events and private capped queue observations. [0.17b private data tools](docs/private-data-export.md) add an offline operator inventory and client-content export. [0.17c deletion simulation](docs/data-deletion-rollback.md) adds scoped dependency observations and history compatibility regressions. [The application entry](docs/pwa-entry.md) now connects installed launches to the existing private routes. Retention decisions, destructive execution and real rollback acceptance remain open.
 
-> **Current development: deletion simulation 0.19.0 (lot 0.17c) + private data tools 0.18.0 (lot 0.17b) + operations 0.17.0 (lot 0.17a) + stable chat history 0.16.1 + isolated backup recovery 0.16 + Nuit workbench 0.3.1.** `/api/health` remains HTTP liveness; `/api/ready` reads cached SQL/worker readiness only. The private preparation page shows capped queue metadata and per-process worker observations without client content. This is not a production or delivery certificate. `contact@jessiemessage.com` remains the official contact, sender and reply address. Real hosting, mail delivery, age assurance, backup operations and HTTPS/mobile acceptance remain launch work; no deployment has occurred. See [supervision, bounds and remaining work](docs/operations-readiness.md) and the [offline restore procedure](docs/backup-clone-recovery.md).
+> **Current development: application entry 0.20.0 (stage 0.18).** `/app` opens the invitation-only client or administrator journey with explicit role choices and no private content preview. Installed launches target `/app` while retaining the approved manifest identity and icons. Private features remain disabled by default. `contact@jessiemessage.com` is the official contact, sender and reply address. No deployment has occurred; real hosting, email delivery, age assurance, retention/deletion, restoration and device acceptance remain launch work. See [entry behavior](docs/pwa-entry.md) and the [preproduction acceptance procedure](docs/preproduction-acceptance.md).
 
 ## Try without a terminal
 
@@ -36,6 +36,8 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 - [Media capacity, offline initialization and private inventory](docs/media-capacity-inventory.md)
 - [Offline client inventory/export and undecided retention policy](docs/private-data-export.md)
 - [Read-only deletion simulation and rollback safeguards](docs/data-deletion-rollback.md)
+- [Application entry, installation and role choices](docs/pwa-entry.md)
+- [Isolated preproduction acceptance](docs/preproduction-acceptance.md)
 - [Audit findings, current state and launch plan](docs/NEXT-STEPS.md)
 
 ## Maintainer checks

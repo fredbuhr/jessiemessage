@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
 import { createRequestAdmission } from "./http/admission.mjs";
 import { createShutdown } from "./lifecycle.mjs";
+import { createEntryHandler } from "./entry/http.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
 
@@ -12,6 +13,10 @@ const publicFiles = new Map([
   ["/index.html", ["index.html", "text/html; charset=utf-8"]],
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
   ["/app.js", ["app.js", "text/javascript; charset=utf-8"]],
+  ["/app", ["entry.html", "text/html; charset=utf-8"]],
+  ["/entry.js", ["entry.js", "text/javascript; charset=utf-8"]],
+  ["/entry-model.js", ["entry-model.js", "text/javascript; charset=utf-8"]],
+  ["/entry.css", ["entry.css", "text/css; charset=utf-8"]],
   ["/manifest.webmanifest", ["manifest.webmanifest", "application/manifest+json"]],
   ["/favicon.ico", ["favicon.ico", "image/x-icon"]],
   ["/apple-touch-icon.png", ["apple-touch-icon.png", "image/png"]],
@@ -42,9 +47,11 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
 }
 
 export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler,
-  admission = createRequestAdmission(), operations = null } = {}) {
+  entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null } = {}) {
   if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
-  const handlers = [broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
+  if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
+  const privateHandlers = [broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
+  const handlers = [entryHandler, ...privateHandlers];
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness",
     "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/broadcast-preference.js",
     "/crm.js", "/crm-model.js", "/crm.css", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
@@ -78,7 +85,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
     }
     let done;
     try {
-      if (handlers.length && (pathname.startsWith("/api/") && pathname !== "/api/health" || protectedFiles.has(pathname))) {
+      if ((privateHandlers.length || pathname === "/api/entry") && (pathname.startsWith("/api/") && pathname !== "/api/health" || protectedFiles.has(pathname))) {
         done = admission.enter(request, response);
       }
     } catch (error) {
@@ -202,7 +209,8 @@ export async function createConfiguredServer(env = process.env) {
     } };
     const observe = (name) => (event) => operations.observe(name, event);
     if (!accessConfig.enabled) {
-      const server = createAppServer({ authHandler, readinessHandler, operations });
+      const server = createAppServer({ authHandler, readinessHandler, operations,
+        entryHandler: createEntryHandler({ adminSession: (token) => service.session(token) }) });
       server.once("listening", () => operations.start());
       return { server, pool, mailWorker: null, diagnostics };
     }
@@ -293,7 +301,8 @@ export async function createConfiguredServer(env = process.env) {
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, operations });
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, operations,
+      entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled }) });
     const workers = [];
     let closing, stopping, aborting;
     const mailWorker = {

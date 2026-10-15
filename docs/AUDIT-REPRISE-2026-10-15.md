@@ -10,6 +10,8 @@
 
 **Suivi 0.17c :** la [simulation opérateur et les protections de repli](data-deletion-rollback.md), version 0.19.0, ajoutent des comptages ciblés, l’ordre de revue des dépendances et la matrice d’historique 25/27. Aucune suppression ni bascule réalisée ; A03/A17 restent ouverts pour les décisions, l’exécuteur destructif et l’acceptation réelle.
 
+**Suivi entrée PWA — étape 0.18 :** [l’entrée `/app`](pwa-entry.md), version 0.20.0, relie le lancement installé aux accès existants en conservant l’identité et les icônes. Les choix de rôle sont explicites, les erreurs restent réessayables et aucune donnée privée n’est mise en cache. La [recette de préproduction](preproduction-acceptance.md) reste à exécuter sur l’hébergement et les appareils ; ce lot n’est pas une publication.
+
 Le développement reprend **après le lot 0.16**, depuis `feat/backup-clone-recovery`, commit `0ecb31eafca03f85ba501cc6b632ca207c7ab94e`. Le prochain lot fonctionnel prévu est **0.17 — données et exploitation**. Cet audit ne constitue pas une version 0.17 ni une validation de mise en production.
 
 Le dépôt contient un backend et des interfaces privées substantiels, testés automatiquement. Il reste à terminer les parcours produit et à valider leur exploitation réelle. Au contrôle public du 15 octobre à 10:00 UTC (12:00 à Paris), `https://jessiemessage.com/` répondait HTTP 200 avec **« Welcome to your new website »**, la page Node.js par défaut d’Infomaniak. Le contenu de la branche de développement n’était pas visible à cette adresse. Ce contrôle HTTP ne permet pas d’inventorier la configuration privée de l’hébergement.

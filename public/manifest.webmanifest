@@ -3,7 +3,7 @@
   "name": "JessieMessage",
   "short_name": "Jessie",
   "description": "Private messaging by invitation",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#100d12",
