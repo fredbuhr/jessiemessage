@@ -16,7 +16,7 @@ const env = {
 const grants = (scope = "`jessiemessage_test_ci`.*", privileges = "SELECT, INSERT, UPDATE, DELETE") => ({
   "Grants for private-account@private-host": `GRANT ${privileges} ON ${scope} TO 'private-account'@'private-host'`,
 });
-const usage = { grant: "GRANT USAGE ON *.* TO 'private-account'@'private-host' IDENTIFIED BY PASSWORD '*PRIVATEHASH'" };
+const usage = { grant: "GRANT USAGE ON *.* TO 'private-account'@'private-host' IDENTIFIED BY PASSWORD '*ABCDEF0123456789'" };
 const completeGrants = () => [usage,
   grants("`jessiemessage_test_ci`.`schema_migrations`", "SELECT"),
   ...appTables.map((table) => grants(`\`jessiemessage_test_ci\`.\`${table}\``)),
@@ -29,7 +29,7 @@ const deferred = () => {
   return { promise, resolve, reject };
 };
 
-function fixture({ selected, cipher, grantRows, rows, query, release, end, rollback, getConnection, createPool, loadPlan } = {}) {
+function fixture({ selected, cipher, grantRows, rows, query, release, end, rollback, getConnection, createPool, loadPlan, environment = env } = {}) {
   const calls = [];
   const connection = {
     async query(command) {
@@ -53,17 +53,22 @@ function fixture({ selected, cipher, grantRows, rows, query, release, end, rollb
   return {
     calls,
     dependencies: {
-      async createPool(received) { calls.push({ action: "createPool" }); assert.equal(received, env); return createPool ? createPool() : pool; },
+      async createPool(received) { calls.push({ action: "createPool" }); assert.equal(received, environment); return createPool ? createPool() : pool; },
       loadPlan: loadPlan ?? (async () => plan),
     },
   };
 }
 
 function safeDto(result) {
-  assert.deepEqual(Object.keys(result), ["valid", "checks"]);
+  assert.deepEqual(Object.keys(result), ["valid", "checks", "privilegeObservation"]);
   assert.equal(typeof result.valid, "boolean");
   assert.deepEqual(result.checks.map(({ name }) => name), DATABASE_CHECK_NAMES);
   assert.ok(result.checks.every((check) => Object.keys(check).join() === "name,status" && ["pass", "fail", "not_checked"].includes(check.status)));
+  assert.deepEqual(Object.keys(result.privilegeObservation), ["profile", "source", "ledgerWritable", "tempTables", "tableLocks", "permanentDdl"]);
+  if (statuses(result).privileges !== "pass") {
+    assert.equal(result.privilegeObservation.source, "unverified");
+    for (const field of ["ledgerWritable", "tempTables", "tableLocks", "permanentDdl"]) assert.equal(result.privilegeObservation[field], null);
+  }
   assert.doesNotMatch(JSON.stringify(result), /private|password|MariaDB|SELECT|host|account|hash|error|cause|database\.example/i);
 }
 
@@ -232,6 +237,92 @@ test("every application table needs all four DML rights and the ledger needs exp
     const setup = fixture({ grantRows });
     const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
     assert.equal(statuses(result).privileges, "fail", missing); safeDto(result);
+  }
+});
+
+const sharedEnv = { ...env, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "infomaniak-shared" };
+const sharedScope = "`jessiemessage\\_test\\_ci`.*";
+const sharedGrantRows = () => [usage, grants(sharedScope, "SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES")];
+
+test("the shared hosting profile is explicit and observes its writable ledger and additional rights honestly", async () => {
+  for (const grantRows of [sharedGrantRows(), [usage, grants(sharedScope, "SELECT"), grants(sharedScope, "INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES")]]) {
+    const setup = fixture({ grantRows, environment: sharedEnv });
+    const result = await inspectDatabase({ env: sharedEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(result.valid, true); safeDto(result);
+    assert.deepEqual(result.privilegeObservation, { profile: "infomaniak-shared", source: "show_grants",
+      ledgerWritable: true, tempTables: true, tableLocks: true, permanentDdl: false });
+    assert.equal(setup.calls.some(({ sql }) => /^(?:INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|GRANT|REVOKE|LOCK)\b/.test(sql ?? "")), false);
+  }
+  const setup = fixture({ grantRows: sharedGrantRows() });
+  const strict = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+  assert.equal(statuses(strict).privileges, "fail"); safeDto(strict);
+});
+
+test("shared SHOW GRANTS accepts native account quoting and only the bounded provider connection limit on global USAGE", async () => {
+  for (const account of ["'private-account'@'private-host'", "`private-account`@`private-host`", "'private-account'@`private-host`", "`private``account`@'private-host'", "'private\\'account'@'private-host'"]) {
+    for (const suffix of ["", " WITH MAX_USER_CONNECTIONS 0", " WITH MAX_USER_CONNECTIONS 1", " WITH MAX_USER_CONNECTIONS 38", " WITH MAX_USER_CONNECTIONS 39", " WITH MAX_USER_CONNECTIONS 2147483647", " REQUIRE SSL WITH MAX_USER_CONNECTIONS 38"]) {
+      const grantRows = sharedGrantRows().map((row) => ({ grant: Object.values(row)[0].replace("'private-account'@'private-host'", account) }));
+      grantRows[0].grant += suffix;
+      const setup = fixture({ grantRows, environment: sharedEnv });
+      const result = await inspectDatabase({ env: sharedEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+      assert.equal(statuses(result).privileges, "pass", `${account}${suffix}`); safeDto(result);
+    }
+  }
+  for (const suffix of [" WITH MAX_USER_CONNECTIONS 2147483648", " WITH MAX_USER_CONNECTIONS 99999999999999999999",
+    " WITH MAX_USER_CONNECTIONS -1", " WITH MAX_USER_CONNECTIONS +38", " WITH MAX_USER_CONNECTIONS 038", " WITH MAX_USER_CONNECTIONS 1.5",
+    " WITH MAX_USER_CONNECTIONS 38 WITH GRANT OPTION", " WITH MAX_USER_CONNECTIONS 38 MAX_QUERIES_PER_HOUR 5",
+    " WITH MAX_USER_CONNECTIONS 38 MAX_USER_CONNECTIONS 1", " WITH MAX_CONNECTIONS_PER_HOUR 38", " WITH MAX_USER_CONNECTIONS 38 garbage"]) {
+    const grantRows = sharedGrantRows(); grantRows[0] = { grant: `${Object.values(usage)[0]}${suffix}` };
+    const setup = fixture({ grantRows, environment: sharedEnv });
+    const result = await inspectDatabase({ env: sharedEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail", suffix); safeDto(result);
+  }
+  for (const account of ["PUBLIC", "'private-account'", "`application_role`", "'private-account'@'private-host' garbage"]) {
+    const grantRows = sharedGrantRows().map((row) => ({ grant: Object.values(row)[0].replace("'private-account'@'private-host'", account) }));
+    const setup = fixture({ grantRows, environment: sharedEnv });
+    const result = await inspectDatabase({ env: sharedEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail", account); safeDto(result);
+  }
+});
+
+test("unknown privilege profiles fail before opening a pool and never claim observed permissions", async () => {
+  for (const profile of ["", "shared", "STRICT", "infomaniak-shared ", "synthetic-private-profile", 1, null]) {
+    let calls = 0;
+    const result = await inspectDatabase({ env: { ...env, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: profile }, databaseName: env.JESSIEMESSAGE_DB_NAME }, {
+      createPool() { calls++; throw new Error("private credentials"); }, loadPlan() { calls++; },
+    });
+    assert.equal(calls, 0); assert.equal(statuses(result).config, "fail");
+    assert.equal(result.privilegeObservation.profile, null); safeDto(result);
+  }
+  const explicitEnv = { ...env, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "strict" }, setup = fixture({ environment: explicitEnv });
+  const result = await inspectDatabase({ env: explicitEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.privilegeObservation, { profile: "strict", source: "show_grants",
+    ledgerWritable: false, tempTables: false, tableLocks: false, permanentDdl: false });
+});
+
+test("the shared profile rejects wildcards, other databases, table grants, missing rights and unknown grant forms", async () => {
+  const all = "SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES";
+  const invalid = [
+    [], [usage], [grants(sharedScope, all)], completeGrants(),
+    ...["`jessiemessage_test_ci`.*", "`jessiemessage\\_test_ci`.*", "`jessiemessage%`.*", "`%`.*", "`another\\_database`.*", "`jessiemessage\\\\_test\\_ci`.*", "*.*", "`jessiemessage\\_test\\_ci`.`users`"]
+      .map((scope) => [usage, grants(scope, all)]),
+    ...all.split(", ").map((missing) => [usage, grants(sharedScope, all.split(", ").filter((right) => right !== missing).join(", "))]),
+    ...["CREATE", "ALTER", "DROP", "INDEX", "FILE", "ALL PRIVILEGES", "GRANT OPTION", "USAGE"].map((extra) => [usage, grants(sharedScope, `${all}, ${extra}`)]),
+    [usage, grants(sharedScope, `${all}, SELECT`)],
+    [...sharedGrantRows(), grants("`another\\_database`.*", "SELECT")],
+    [...sharedGrantRows(), { grant: "GRANT `application_role` TO 'private-account'@'private-host'" }],
+    [...sharedGrantRows(), { grant: "GRANT PROXY ON 'another'@'%' TO 'private-account'@'private-host'" }],
+    ...[" WITH GRANT OPTION", " WITH MAX_USER_CONNECTIONS 5", "; GRANT ALL ON *.* TO 'a'@'%'", "\n"].map((suffix) =>
+      [usage, { grant: `${Object.values(grants(sharedScope, all))[0]}${suffix}` }]),
+    [{ grant: "GRANT USAGE ON *.* TO 'private-account'@'private-host' WITH GRANT OPTION" }, grants(sharedScope, all)],
+    [{ grant: "x".repeat(16385) }], Array.from({ length: 129 }, () => usage), [{ first: "private", second: "private" }],
+  ];
+  for (const grantRows of invalid) {
+    const setup = fixture({ grantRows, environment: sharedEnv });
+    const result = await inspectDatabase({ env: sharedEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail", JSON.stringify(grantRows));
+    assert.equal(statuses(result).history, "pass"); safeDto(result);
   }
 });
 

@@ -2,6 +2,7 @@ import { constants } from "node:fs";
 import * as filesystem from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { privatePathMode, withPrivateDirectory } from "../files/private-directory.mjs";
 
 const CHECKOUT = fileURLToPath(new URL("../../", import.meta.url));
 const FS_METHODS = ["lstat", "realpath", "mkdir", "open", "rename", "link", "unlink", "rmdir"];
@@ -30,11 +31,12 @@ function plain(value, keys) {
   return Object.fromEntries(Object.entries(descriptors).map(([key, descriptor]) => [key, descriptor.value]));
 }
 function options(value) {
-  const { scratch = null, mediaRoot = null } = plain(value, ["scratch", "mediaRoot"]);
+  const { scratch = null, mediaRoot = null, pathMode } = plain(value, ["scratch", "mediaRoot", "pathMode"]);
+  const mode = pathMode === undefined ? privatePathMode() : privatePathMode({ JESSIEMESSAGE_PRIVATE_PATH_MODE: pathMode });
   if (mediaRoot !== null && !absolute(mediaRoot) || scratch !== null && (!absolute(scratch)
     || scratch === path.parse(scratch).root || inside(scratch, CHECKOUT) || inside(CHECKOUT, scratch)
     || mediaRoot !== null && (inside(scratch, mediaRoot) || inside(mediaRoot, scratch)))) fail();
-  return { scratch, mediaRoot };
+  return { scratch, mediaRoot, pathMode: mode };
 }
 function adapters(value) {
   const input = plain(value, ["nodeVersion", "loadSharp", "fs", "signal"]);
@@ -75,7 +77,7 @@ async function jpegProbe(loadSharp, signal) {
 /** A disposable, explicitly selected directory only. No production root is
  * opened or listed. Portable identity checks are not an openat guarantee or
  * protection against a malicious same-UID operator or all bind-mount aliases. */
-async function scratchProbe(scratch, fs, signal) {
+async function scratchProbe(scratch, fs, signal, anchor = null) {
   let parentHandle, rootHandle, rootIdentity, parentIdentity, ancestors;
   const files = new Map(), handles = new Set(), body = Buffer.alloc(BODY_BYTES, 0x5a);
   let passed = false, cleaned = true, cleaning = false;
@@ -83,6 +85,10 @@ async function scratchProbe(scratch, fs, signal) {
   const parent = path.dirname(scratch), filename = (name) => path.join(scratch, name);
   async function ancestry(directory) {
     progress();
+    if (anchor !== null) {
+      const stats = await anchor.assertReady(); progress();
+      return [{ path: anchor.path, stats }];
+    }
     const result = []; let current = path.parse(directory).root;
     for (const component of ["", ...directory.slice(current.length).split(path.sep).filter(Boolean)]) {
       if (component) current = path.join(current, component);
@@ -125,7 +131,9 @@ async function scratchProbe(scratch, fs, signal) {
     if (!constants.O_NOFOLLOW || !constants.O_DIRECTORY || !constants.O_NONBLOCK) fail();
     ancestors = await ancestry(parent); parentIdentity = ancestors.at(-1).stats;
     if (!privateDirectory(parentIdentity)) fail();
-    parentHandle = await fs.open(parent, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+    // The procfs FD itself is a magic link; resolve its anchored "." entry
+    // instead, retaining O_NOFOLLOW on the final directory entry.
+    parentHandle = await fs.open(anchor === null ? parent : `${parent}/.`, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
     if (!same(await parentHandle.stat({ bigint: true }), parentIdentity)) fail(); progress();
     // mkdir has no recursive option and refuses every existing destination.
     await fs.mkdir(scratch, { mode: 0o700 });
@@ -203,6 +211,14 @@ export async function inspectPlatform(input = {}, dependencies = {}) {
   catch { checks[2].status = "fail"; return { valid: false, checks }; }
   checks[0].status = /^24\.(?:0|[1-9][0-9]{0,3})\.(?:0|[1-9][0-9]{0,3})$/.test(deps.nodeVersion) ? "pass" : "fail";
   checks[1].status = await jpegProbe(deps.loadSharp, deps.signal) ? "pass" : "fail";
-  if (config.scratch !== null) checks[2].status = await scratchProbe(config.scratch, deps.fs, deps.signal) ? "pass" : "fail";
+  if (config.scratch !== null) {
+    try {
+      checkpoint(deps.signal);
+      const passed = config.pathMode === "linux-dirfd"
+        ? await withPrivateDirectory(path.dirname(config.scratch), (anchor) => scratchProbe(anchor.file(path.basename(config.scratch)), deps.fs, deps.signal, anchor))
+        : await scratchProbe(config.scratch, deps.fs, deps.signal);
+      checks[2].status = passed ? "pass" : "fail";
+    } catch { checks[2].status = "fail"; }
+  }
   return { valid: checks.every((check) => check.status !== "fail"), checks };
 }

@@ -5,6 +5,7 @@ import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { DATABASE_CHECK_NAMES, inspectDatabase } from "../server/preflight/database.mjs";
+import { makePreflightReport } from "../server/preflight/report.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const states = (value) => Object.fromEntries(value.checks.map(({ name, status }) => [name, status]));
@@ -29,13 +30,22 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
   const preflightEnv = { ...process.env,
     JESSIEMESSAGE_RUNTIME_DB_USER: preflightUser,
     JESSIEMESSAGE_RUNTIME_DB_PASSWORD: preflightPassword,
+    JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "strict",
   };
+  const sharedUser = process.env.JESSIEMESSAGE_SHARED_PREFLIGHT_DB_USER;
+  const sharedPassword = process.env.JESSIEMESSAGE_SHARED_PREFLIGHT_DB_PASSWORD;
+  assert.ok(typeof sharedUser === "string" && sharedUser.length <= 80
+    && /^jessiemessage_shared_test(?:_[a-z0-9]+)*$/.test(sharedUser), "a separately precreated synthetic shared-profile account is required");
+  assert.ok(typeof sharedPassword === "string" && sharedPassword.length > 0, "the shared-profile fixture requires a synthetic password");
+  assert.ok(![options.user, preflightUser, process.env.JESSIEMESSAGE_RUNTIME_DB_USER].includes(sharedUser), "all fixture identities must be distinct");
+  const sharedEnv = { ...process.env, JESSIEMESSAGE_RUNTIME_DB_USER: sharedUser,
+    JESSIEMESSAGE_RUNTIME_DB_PASSWORD: sharedPassword, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "infomaniak-shared" };
   const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
   const appTables = migrations.map((migration) => {
     const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
     assert.ok(match, "cleanup accepts only explicit unqualified CREATE TABLE migrations"); return match[1];
   });
-  const allowedTables = [...appTables].reverse().concat("migration_probe", "schema_migrations");
+  const allowedTables = [...appTables].reverse().concat("migration_probe", "preflight_ddl_probe", "schema_migrations");
   const connection = await connectDatabase();
   async function cleanup() {
     const tables = await connection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [options.database]);
@@ -73,7 +83,7 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
     assert.equal(closed, true, "the real pool is closed before returning a report");
     assert.equal(acquisitions, 1); assert.equal(releases, 1);
     assert.deepEqual(lifecycle, ["pool", "release", "end"]);
-    assert.deepEqual(Object.keys(result), ["valid", "checks"]);
+    assert.deepEqual(Object.keys(result), ["valid", "checks", "privilegeObservation"]);
     assert.deepEqual(result.checks.map(({ name }) => name), DATABASE_CHECK_NAMES);
     assert.doesNotMatch(JSON.stringify(result), /synthetic-private|example\.invalid|password|pseudonym|SELECT|MariaDB|host|user/i);
     return result;
@@ -134,6 +144,69 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
       const before = await digest(); const result = await probe(process.env);
       assert.equal(result.valid, false); assert.equal(states(result).privileges, "fail");
       assert.equal(states(result).history, "pass"); assert.equal(states(result).schema_reads, "pass");
+      assert.equal(await digest(), before);
+    });
+    await t.test("the Infomaniak profile observes only the six documented rights and declares the writable ledger", async () => {
+      const before = await digest(); const result = await probe(sharedEnv);
+      for (const check of result.checks) {
+        assert.equal(check.status, check.name === "transport" && process.env.JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL === "1" ? "fail" : "pass", check.name);
+      }
+      const report = makePreflightReport("database", result);
+      assert.deepEqual(report.privilegeObservation, { profile: "infomaniak-shared", source: "show_grants",
+        ledgerWritable: true, tempTables: true, tableLocks: true, permanentDdl: false });
+      assert.equal(await digest(), before, "the shared-profile diagnostic is still read-only");
+      const strict = await probe({ ...sharedEnv, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "strict" });
+      assert.equal(states(strict).privileges, "fail"); assert.equal(strict.privilegeObservation.ledgerWritable, null);
+    });
+    await t.test("the shared-profile fixture can perform application DML and ledger writes, with all row changes rolled back", async () => {
+      const before = await digest(), pool = await createRuntimePool(sharedEnv); let runtime;
+      try {
+        runtime = await pool.getConnection(); await runtime.beginTransaction();
+        const bucket = randomBytes(32);
+        assert.equal((await runtime.query("INSERT INTO auth_rate_limits (bucket_hash, window_started_at, attempts) VALUES (?, '2026-10-15 00:00:00', 1)", [bucket])).affectedRows, 1);
+        assert.equal((await runtime.query("UPDATE auth_rate_limits SET attempts = 2 WHERE bucket_hash = ?", [bucket])).affectedRows, 1);
+        assert.equal(Number((await runtime.query("SELECT attempts FROM auth_rate_limits WHERE bucket_hash = ?", [bucket]))[0].attempts), 2);
+        assert.equal((await runtime.query("DELETE FROM auth_rate_limits WHERE bucket_hash = ?", [bucket])).affectedRows, 1);
+        assert.equal((await runtime.query(`INSERT INTO schema_migrations (version, name, checksum, state, attempts, finished_at)
+          VALUES (28, 'synthetic_shared_probe', ?, 'applied', 1, '2026-10-15 00:00:00')`, ["0".repeat(64)])).affectedRows, 1);
+        assert.equal((await runtime.query("UPDATE schema_migrations SET attempts = 2 WHERE version = 28")).affectedRows, 1);
+        assert.equal(Number((await runtime.query("SELECT attempts FROM schema_migrations WHERE version = 28"))[0].attempts), 2);
+        assert.equal((await runtime.query("DELETE FROM schema_migrations WHERE version = 28")).affectedRows, 1);
+      } finally {
+        try { if (runtime) await runtime.rollback(); }
+        finally { if (runtime) runtime.release(); await pool.end(); }
+      }
+      assert.equal(await digest(), before);
+    });
+    await t.test("shared-profile temporary tables and explicit locks are available, while permanent DDL is denied", async () => {
+      await connection.query("CREATE TABLE migration_probe (id INT NOT NULL PRIMARY KEY, value INT NOT NULL) ENGINE=InnoDB");
+      await connection.query("INSERT INTO migration_probe VALUES (1, 7)");
+      const before = await digest(), pool = await createRuntimePool(sharedEnv); let runtime;
+      try {
+        runtime = await pool.getConnection();
+        const grants = await runtime.query("SHOW GRANTS FOR CURRENT_USER");
+        assert.ok(grants.some((row) => / WITH MAX_USER_CONNECTIONS 38$/.test(Object.values(row)[0])), "the real fixture exposes the configured native connection-limit suffix");
+        await runtime.query("CREATE TEMPORARY TABLE preflight_temp_probe (id INT NOT NULL)");
+        await runtime.query("INSERT INTO preflight_temp_probe VALUES (1)");
+        assert.equal(Number((await runtime.query("SELECT COUNT(*) AS total FROM preflight_temp_probe"))[0].total), 1);
+        await runtime.query("DROP TEMPORARY TABLE preflight_temp_probe");
+        await runtime.query("LOCK TABLES migration_probe READ");
+        assert.equal(Number((await runtime.query("SELECT value FROM migration_probe WHERE id = 1"))[0].value), 7);
+        await runtime.query("UNLOCK TABLES");
+        for (const sql of [
+          "CREATE TABLE preflight_ddl_probe (id INT NOT NULL)",
+          "ALTER TABLE migration_probe ADD COLUMN unexpected INT",
+          "DROP TABLE migration_probe", "TRUNCATE TABLE migration_probe",
+        ]) await assert.rejects(runtime.query(sql), (error) => error?.errno === 1142);
+        assert.deepEqual((await runtime.query("SHOW COLUMNS FROM migration_probe")).map((column) => column.Field), ["id", "value"]);
+        assert.equal(Number((await runtime.query("SELECT value FROM migration_probe WHERE id = 1"))[0].value), 7);
+        const created = await connection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'preflight_ddl_probe'", [options.database]);
+        assert.equal(created.length, 0);
+      } finally {
+        try { if (runtime) await runtime.query("UNLOCK TABLES"); }
+        finally { if (runtime) runtime.release(); await pool.end(); }
+        await connection.query("DROP TABLE IF EXISTS migration_probe");
+      }
       assert.equal(await digest(), before);
     });
     await t.test("the actual migration identity fails the DML-only privilege check without writing or repairing anything", async () => {

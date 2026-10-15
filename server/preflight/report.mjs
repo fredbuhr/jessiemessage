@@ -25,6 +25,21 @@ function envelope(command, status, checks) {
     checks, remainingChecks: [...remaining] };
 }
 
+function privilegeObservation(result, checks) {
+  const observation = data(result, "privilegeObservation"), profile = data(observation, "profile"), source = data(observation, "source");
+  if (![null, "strict", "infomaniak-shared"].includes(profile) || !["unverified", "show_grants"].includes(source)) invalid();
+  const observed = source === "show_grants";
+  if (observed !== (checks.find((check) => check.name === "privileges")?.status === "pass") || (observed && profile === null)) invalid();
+  const rebuilt = { profile, source };
+  for (const name of ["ledgerWritable", "tempTables", "tableLocks", "permanentDdl"]) {
+    const value = data(observation, name);
+    const expected = observed ? name !== "permanentDdl" && profile === "infomaniak-shared" : null;
+    if (value !== expected) invalid();
+    rebuilt[name] = value;
+  }
+  return rebuilt;
+}
+
 /** Rebuild every field; component objects and their extra properties are never serialized. */
 export function makePreflightReport(command, result) {
   if (!Object.hasOwn(catalogue, command)) invalid();
@@ -39,7 +54,9 @@ export function makePreflightReport(command, result) {
   const checks = names.map((name) => ({ name, status: seen.get(name) ?? "not_checked" }));
   const failed = checks.some((check) => check.status === "fail");
   if (valid === failed) invalid();
-  return envelope(command, failed ? "blocked" : checks.some((check) => check.status === "not_checked") ? "incomplete" : "checks_passed", checks);
+  const report = envelope(command, failed ? "blocked" : checks.some((check) => check.status === "not_checked") ? "incomplete" : "checks_passed", checks);
+  if (command === "database") report.privilegeObservation = privilegeObservation(result, checks);
+  return report;
 }
 
 export function preflightFailure(command, code = "PREFLIGHT_OPERATION") {

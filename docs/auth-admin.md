@@ -6,6 +6,8 @@ La page `/admin/login` conserve l'identité Jessie validée. Après connexion, e
 
 Par défaut, le serveur reste sur sa page publique neutre : les routes d'authentification et d'administration sont désactivées. Ce changement ne publie rien sur Infomaniak, ne modifie pas ZTIKIX et ne crée aucun compte réel automatiquement.
 
+**Compatibilité mutualisée explicite :** le [profil Infomaniak](infomaniak-runtime-profile.md) conserve le compte HTTP distinct et le refus du DDL permanent, mais déclare honnêtement les droits groupés et le registre accessible en écriture. Il ne satisfait pas la recommandation stricte de registre en lecture seule ci-dessous. Les chemins de remise privée peuvent utiliser le mode Linux ancré décrit dans ce guide ; les fichiers restent privés, exclusifs et durables avant initialisation SQL. Les modes stricts restent les défauts.
+
 ## Configuration privée
 
 Utiliser Node.js 24 et une base MariaDB dédiée à JessieMessage. Les variables sont fournies par la configuration privée du processus ; les scripts ne chargent pas automatiquement de fichier `.env`. Ne jamais placer les valeurs dans le dépôt, un ticket, les journaux, une capture ou un artefact Actions.

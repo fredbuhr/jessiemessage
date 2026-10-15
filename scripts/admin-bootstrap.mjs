@@ -4,6 +4,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 import { fileURLToPath } from "node:url";
 import { authConfiguration, canonicalEmail } from "../server/auth/config.mjs";
 import * as authCrypto from "../server/auth/crypto.mjs";
+import { privatePathMode, withPrivateDirectory } from "../server/files/private-directory.mjs";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../", import.meta.url));
 const MAX_INPUT_BYTES = 4096;
@@ -77,14 +78,34 @@ function inside(path, root) {
 }
 
 // Setup material must never become a source file, HTTP asset or CI artifact.
-// The nearest directory is private; writable or symlinked ancestors are refused.
-export async function validateOutputPath(outputPath, { repoRoot = REPOSITORY_ROOT } = {}) {
+// Strict mode refuses writable ancestors; Linux mode validates an anchored
+// directory chain. The nearest directory remains private in either mode.
+export async function validateOutputPath(outputPath, { repoRoot = REPOSITORY_ROOT, pathMode = privatePathMode() } = {}) {
   if (typeof outputPath !== "string" || !isAbsolute(outputPath) || outputPath.includes("\0")) {
     fail("SETUP_PATH", "Setup output must use an absolute private path outside the repository.");
   }
   const path = resolve(outputPath);
   const parent = dirname(path);
   const root = await realpath(repoRoot).catch(() => fail("SETUP_PATH", "Cannot verify the repository location."));
+  if (pathMode !== "strict" && pathMode !== "linux-dirfd") {
+    fail("SETUP_PATH", "The private path mode is not supported.");
+  }
+  if (inside(path, root)) fail("SETUP_PATH", "Setup output must be outside the entire repository.");
+  if (pathMode === "linux-dirfd") {
+    try {
+      return await withPrivateDirectory(parent, async (scope) => {
+        await scope.assertReady();
+        const actualParent = await realpath(scope.path);
+        if (inside(join(actualParent, basename(path)), root)) {
+          fail("SETUP_PATH", "Setup output must be outside the entire repository.");
+        }
+        return { path, parent, actualParent };
+      });
+    } catch (error) {
+      if (error instanceof AdminBootstrapError) throw error;
+      fail("SETUP_PATH", "Cannot verify an anchored private output directory.");
+    }
+  }
   const actualParent = await realpath(parent).catch(() => fail("SETUP_PATH", "The private output directory must already exist."));
   if (inside(path, root) || inside(join(actualParent, basename(path)), root)) {
     fail("SETUP_PATH", "Setup output must be outside the entire repository.");
@@ -137,7 +158,8 @@ async function removeOwnedFile(path, identity) {
   await unlink(path).catch(() => fail("SETUP_CLEANUP", "Private setup cleanup failed; inspect the selected output privately."));
 }
 
-export async function bootstrap({ input, outputPath, config, store, repoRoot = REPOSITORY_ROOT, now = Date.now(), crypto = authCrypto }) {
+export async function bootstrap({ input, outputPath, config, store, repoRoot = REPOSITORY_ROOT, now = Date.now(), crypto = authCrypto,
+  pathMode = privatePathMode() }) {
   if (config?.enabled !== true || !Buffer.isBuffer(config.totpKey) || config.totpKey.length !== 32) {
     fail("SETUP_CONFIG", "Administrator authentication must be explicitly configured before initialization.");
   }
@@ -145,7 +167,7 @@ export async function bootstrap({ input, outputPath, config, store, repoRoot = R
     fail("SETUP_CONFIG", "Administrator initialization is not configured.");
   }
   const { email, pseudonym, password } = validateInput(input);
-  const destination = await validateOutputPath(outputPath, { repoRoot });
+  const destination = await validateOutputPath(outputPath, { repoRoot, pathMode });
   const id = crypto.newId();
   const passwordHash = await crypto.hashPassword(password);
   const secret = crypto.makeTotpSecret();
@@ -153,53 +175,89 @@ export async function bootstrap({ input, outputPath, config, store, repoRoot = R
   const recoveryCodes = crypto.createRecoveryCodes(8);
   const recoveryDigests = recoveryCodes.map((code) => crypto.recoveryCodeDigest(code));
   const document = `${JSON.stringify(setupDocument({ email, pseudonym, secret, recoveryCodes, now }), null, 2)}\n`;
+  if (pathMode === "linux-dirfd") {
+    try {
+      return await withPrivateDirectory(destination.parent, async (scope) => {
+        // Keep this descriptor alive through the durable write, database outcome
+        // and possible cleanup. No secret I/O returns to the user-supplied path.
+        const actualParent = await realpath(scope.path);
+        if (actualParent !== destination.actualParent) {
+          fail("SETUP_PATH", "The private output location changed during initialization.");
+        }
+        return writeAndInitialize({ destination, document, scope, repoRoot, pathMode, store,
+          record: { id, email, pseudonym, passwordHash, secretEncrypted, recoveryDigests, now },
+          recoveryCodeCount: recoveryCodes.length });
+      });
+    } catch (error) {
+      if (error instanceof AdminBootstrapError) throw error;
+      fail("SETUP_PATH", "Cannot verify an anchored private output directory.");
+    }
+  }
+  return writeAndInitialize({ destination, document, repoRoot, pathMode, store,
+    record: { id, email, pseudonym, passwordHash, secretEncrypted, recoveryDigests, now },
+    recoveryCodeCount: recoveryCodes.length });
+}
+
+async function writeAndInitialize({ destination, document, scope, repoRoot, pathMode, store, record, recoveryCodeCount }) {
+  const selectedPath = scope ? scope.file(basename(destination.path)) : destination.path;
   let file;
   let identity;
   try {
-    file = await open(destination.path, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | constants.O_NOFOLLOW, 0o600);
+    await scope?.assertReady();
+    file = await open(selectedPath, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | constants.O_NOFOLLOW, 0o600);
     identity = await file.stat();
     await file.chmod(0o600);
-    const checked = await validateOutputPath(destination.path, { repoRoot });
-    const visible = await lstat(destination.path);
-    if (checked.actualParent !== destination.actualParent || visible.dev !== identity.dev || visible.ino !== identity.ino) {
+    if (scope) await scope.assertReady();
+    else {
+      const checked = await validateOutputPath(destination.path, { repoRoot, pathMode });
+      if (checked.actualParent !== destination.actualParent) {
+        fail("SETUP_PATH", "The private output location changed during initialization.");
+      }
+    }
+    const visible = await lstat(selectedPath);
+    if (visible.dev !== identity.dev || visible.ino !== identity.ino) {
       fail("SETUP_PATH", "The private output location changed during initialization.");
     }
     await file.writeFile(document, "utf8");
     await file.sync();
     await file.close();
     file = null;
-    const directory = await open(destination.parent, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
-    try { await directory.sync(); }
-    finally { await directory.close(); }
+    if (scope) await scope.sync();
+    else {
+      const directory = await open(destination.parent, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+      try { await directory.sync(); }
+      finally { await directory.close(); }
+    }
   } catch (error) {
     await file?.close().catch(() => {});
-    if (identity) await removeOwnedFile(destination.path, identity);
+    if (identity) await removeOwnedFile(selectedPath, identity);
     if (error instanceof AdminBootstrapError) throw error;
     fail("SETUP_FILE", "Cannot create the private setup output; existing files are never overwritten.");
   }
   try {
     // All secret material has been durably written before the database can commit.
-    await store.initializeAdmin({ id, email, pseudonym, passwordHash, secretEncrypted, recoveryDigests, now });
+    await store.initializeAdmin(record);
   } catch (error) {
     // A lost COMMIT reply may have created the account. Preserve its sole setup
     // copy until an operator establishes the actual database outcome.
     if (error?.preserveSetupFile === true) {
       fail("SETUP_UNCERTAIN", "Database outcome is uncertain; keep the private setup output and inspect the account before retrying.");
     }
-    await removeOwnedFile(destination.path, identity);
+    await removeOwnedFile(selectedPath, identity);
     fail("SETUP_DATABASE", "Administrator initialization failed; no setup file was retained. Inspect private configuration and existing accounts.");
   }
-  return { created: true, mfaEnrollmentPending: true, recoveryCodeCount: recoveryCodes.length };
+  return { created: true, mfaEnrollmentPending: true, recoveryCodeCount };
 }
 
 export async function main(args = process.argv.slice(2), env = process.env, dependencies = {}) {
   const { outputPath } = parseArguments(args);
+  const pathMode = privatePathMode(env);
   const config = (dependencies.configure ?? authConfiguration)(env);
   if (config.enabled !== true) fail("SETUP_CONFIG", "Set JESSIEMESSAGE_ENABLE_AUTH=1 and configure authentication explicitly.");
   const inputStream = dependencies.inputStream ?? process.stdin;
   if (inputStream.isTTY) fail("SETUP_INPUT", "Read setup JSON from a private file through stdin; interactive secret entry is refused.");
   const input = await readInput(inputStream);
-  await validateOutputPath(outputPath, { repoRoot: dependencies.repoRoot ?? REPOSITORY_ROOT });
+  await validateOutputPath(outputPath, { repoRoot: dependencies.repoRoot ?? REPOSITORY_ROOT, pathMode });
   const createPool = dependencies.createPool ?? (await import("../server/db/runtime.mjs")).createRuntimePool;
   const makeStore = dependencies.makeStore ?? (await import("../server/auth/store.mjs")).createAuthStore;
   const pool = await createPool(env);
@@ -208,7 +266,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     if (typeof store?.assertSchema !== "function") fail("SETUP_CONFIG", "Administrator setup requires a verified database schema.");
     await store.assertSchema();
     const result = await bootstrap({ input, outputPath, config, store, repoRoot: dependencies.repoRoot,
-      now: dependencies.now, crypto: dependencies.crypto ?? authCrypto });
+      now: dependencies.now, crypto: dependencies.crypto ?? authCrypto, pathMode });
     (dependencies.outputStream ?? process.stdout).write("Administrator created. Complete the first TOTP login using the private setup file.\n");
     return result;
   } finally {

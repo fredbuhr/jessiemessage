@@ -3,6 +3,8 @@ import { lstat, realpath, open, link, unlink, opendir, statfs } from "node:fs/pr
 import { createCipheriv, createDecipheriv, createHmac, randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { privatePathMode, withPrivateDirectory } from "../files/private-directory.mjs";
 
 const CHECKOUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const NAMESPACE = Buffer.from("jessiemessage:media-file:v1:", "ascii");
@@ -65,15 +67,46 @@ function unseal(envelope, key, assetId, variant) {
   finally { plaintext?.fill(0); tail?.fill(0); }
 }
 
-export async function createMediaStorage({ root, key } = {}) {
+export async function createMediaStorage({ root, key, pathMode = privatePathMode() } = {}) {
   if (typeof root !== "string" || !path.isAbsolute(root) || root !== path.resolve(root)
     || root === path.parse(root).root || root.includes("\0") || inside(root, CHECKOUT) || inside(CHECKOUT, root)) invalid();
   buffer(key, 32);
+  if (!["strict", "linux-dirfd"].includes(pathMode)) invalid();
   const secret = Buffer.from(key);
+  const directoryContext = new AsyncLocalStorage();
   let identity;
+
+  function activeScope() {
+    const scope = directoryContext.getStore();
+    if (pathMode === "linux-dirfd" && !scope) throw new MediaStorageError();
+    return scope;
+  }
+
+  // A directory descriptor pins every operation, including cleanup, to the
+  // checked physical root. The configured path remains the fingerprint input.
+  function directoryPath() { return pathMode === "linux-dirfd" ? `${activeScope().path}/.` : root; }
+  function namedPath(name) { return pathMode === "linux-dirfd" ? activeScope().file(name) : path.join(root, name); }
+
+  function scoped(operation) {
+    return async (...args) => {
+      try {
+        if (pathMode === "strict") return await operation(...args);
+        return await withPrivateDirectory(root, (scope) => directoryContext.run(scope, () => operation(...args)));
+      } catch (error) {
+        if (error instanceof MediaStorageError) throw error;
+        throw new MediaStorageError();
+      }
+    };
+  }
 
   async function assertReady() {
     try {
+      if (pathMode === "linux-dirfd") {
+        const stats = await activeScope().assertReady();
+        if (identity && (identity.dev !== stats.dev || identity.ino !== stats.ino)) throw new Error();
+        identity ??= { dev: stats.dev, ino: stats.ino };
+        return;
+      }
       // Check each path component. A symlink anywhere, including an ancestor,
       // is rejected instead of being resolved to a potentially public location.
       let current = path.parse(root).root;
@@ -97,7 +130,7 @@ export async function createMediaStorage({ root, key } = {}) {
   function filename(storageKey, variant) {
     buffer(storageKey, 32);
     variantName(variant);
-    return path.join(root, `${storageKey.toString("hex")}.${variant}.enc`);
+    return namedPath(`${storageKey.toString("hex")}.${variant}.enc`);
   }
 
   async function privateFile(filenameValue, flags) {
@@ -110,7 +143,7 @@ export async function createMediaStorage({ root, key } = {}) {
   }
 
   async function privateDirectory() {
-    const handle = await open(root, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+    const handle = await open(directoryPath(), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
     try {
       const stats = await handle.stat({ bigint: true });
       if (!stats.isDirectory() || (stats.mode & 0o777n) !== 0o700n || !owned(stats)
@@ -121,6 +154,11 @@ export async function createMediaStorage({ root, key } = {}) {
 
   async function syncDirectory() {
     await assertReady();
+    if (pathMode === "linux-dirfd") {
+      await activeScope().sync();
+      await assertReady();
+      return;
+    }
     const handle = await privateDirectory();
     try { await handle.sync(); }
     finally { await handle.close(); }
@@ -151,7 +189,7 @@ export async function createMediaStorage({ root, key } = {}) {
   async function availableSpace() {
     try {
       await assertReady();
-      const stats = await statfs(root, { bigint: true });
+      const stats = await statfs(directoryPath(), { bigint: true });
       if (typeof stats.bavail !== "bigint" || stats.bavail < 0n || typeof stats.bsize !== "bigint" || stats.bsize <= 0n) throw new Error();
       const availableBytes = stats.bavail * stats.bsize;
       await assertReady();
@@ -184,7 +222,7 @@ export async function createMediaStorage({ root, key } = {}) {
   async function inspectNamed(name, entry) {
     let handle, header;
     try {
-      const target = path.join(root, name);
+      const target = namedPath(name);
       let initial;
       try { initial = await lstat(target, { bigint: true }); }
       catch (error) { if (error?.code === "ENOENT") return null; throw error; }
@@ -247,7 +285,7 @@ export async function createMediaStorage({ root, key } = {}) {
     try {
       checkAbort(); await assertReady();
       directoryHandle = await privateDirectory();
-      directory = await opendir(root, { bufferSize: 32 });
+      directory = await opendir(directoryPath(), { bufferSize: 32 });
       await assertReady();
       let count = 0;
       while (true) {
@@ -283,7 +321,7 @@ export async function createMediaStorage({ root, key } = {}) {
       await assertReady();
       for (const [variant, plaintext] of [["full", full], ["thumb", thumbnail]]) {
         const destination = filename(storageKey, variant);
-        const staging = path.join(root, `.${storageKey.toString("hex")}.${variant}.${randomBytes(16).toString("hex")}.tmp`);
+        const staging = namedPath(`.${storageKey.toString("hex")}.${variant}.${randomBytes(16).toString("hex")}.tmp`);
         const { handle } = await privateFile(staging, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL);
         temporary.push(staging);
         try { await handle.writeFile(seal(plaintext, secret, assetId, variant)); await handle.sync(); }
@@ -349,6 +387,45 @@ export async function createMediaStorage({ root, key } = {}) {
     } catch { throw new MediaStorageError(); }
   }
 
-  await assertReady();
-  return { assertReady, put, get, remove, fingerprint, rootIdentity, availableSpace, scanEntries, inspectEntry };
+  async function* scopedScanEntries(options) {
+    if (pathMode === "strict") { yield* scanEntries(options); return; }
+    let resolveReady, rejectReady, release;
+    const ready = new Promise((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
+    const released = new Promise((resolve) => { release = resolve; });
+    // Keep the descriptor open across yields. Merely returning an async iterator
+    // from withPrivateDirectory would close it before its first next() call.
+    const lifetime = withPrivateDirectory(root, async (scope) => {
+      resolveReady(scope);
+      await released;
+    });
+    lifetime.catch(rejectReady);
+    let scope, iterator;
+    try {
+      scope = await ready;
+      iterator = scanEntries(options);
+      while (true) {
+        const result = await directoryContext.run(scope, () => iterator.next());
+        if (result.done) return;
+        yield result.value;
+      }
+    } catch (error) {
+      if (error instanceof MediaStorageError) throw error;
+      throw new MediaStorageError();
+    } finally {
+      try {
+        if (iterator) await directoryContext.run(scope, () => iterator.return());
+      } finally {
+        release();
+        try { await lifetime; }
+        catch { throw new MediaStorageError(); }
+      }
+    }
+  }
+
+  await scoped(assertReady)();
+  return {
+    assertReady: scoped(assertReady), put: scoped(put), get: scoped(get), remove: scoped(remove),
+    fingerprint: scoped(fingerprint), rootIdentity: scoped(rootIdentity), availableSpace: scoped(availableSpace),
+    scanEntries: scopedScanEntries, inspectEntry: scoped(inspectEntry),
+  };
 }

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { chmod, lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { bootstrap, main, parseArguments, readInput, validateInput, validateOutputPath } from "../scripts/admin-bootstrap.mjs";
@@ -21,6 +21,8 @@ const crypto = {
   recoveryCodeDigest: (code) => createHash("sha256").update(code).digest(),
 };
 const codeIs = (code) => (error) => error.code === code;
+const dirfdTests = { skip: process.platform !== "linux" ? "Linux descriptor paths are unavailable on this platform"
+  : await lstat("/proc/self/fd").then(() => false, () => "Linux proc descriptor paths are unavailable") };
 
 async function fixture(callback) {
   const root = await mkdtemp(join(process.cwd(), ".jessiemessage-bootstrap-unit-"));
@@ -212,5 +214,128 @@ test("main requires schema verification before generating a setup file and close
     }), codeIs("SETUP_CONFIG"));
     assert.equal(closed, 2);
     assert.equal(generated, 0);
+  });
+});
+
+test("Linux descriptor bootstrap refuses unavailable proc descriptor paths before database initialization", {
+  skip: dirfdTests.skip === false ? "Real proc descriptor paths are available" : false,
+}, async () => {
+  await fixture(async ({ repoRoot, outputPath }) => {
+    const store = { initializeAdmin: async () => assert.fail("Unavailable descriptor paths must not initialize the database") };
+    await assert.rejects(bootstrap({ input, outputPath, config, store, repoRoot, crypto, pathMode: "linux-dirfd" }), codeIs("SETUP_PATH"));
+    await assert.rejects(lstat(outputPath), codeIs("ENOENT"));
+  });
+});
+
+test("Linux descriptor output validation retains repository, ownership and symlink guards", dirfdTests, async () => {
+  await fixture(async ({ root, repoRoot, privateRoot, outputPath }) => {
+    const options = { repoRoot, pathMode: "linux-dirfd" };
+    assert.equal((await validateOutputPath(outputPath, options)).path, outputPath);
+    await assert.rejects(validateOutputPath(join(repoRoot, "setup.json"), options), codeIs("SETUP_PATH"));
+    await assert.rejects(validateOutputPath(outputPath, { repoRoot, pathMode: "unknown" }), codeIs("SETUP_PATH"));
+    await chmod(privateRoot, 0o755);
+    await assert.rejects(validateOutputPath(outputPath, options), codeIs("SETUP_PATH"));
+    await chmod(privateRoot, 0o700);
+    const linkedParent = join(root, "linked-private");
+    await symlink(privateRoot, linkedParent);
+    await assert.rejects(validateOutputPath(join(linkedParent, "setup.json"), options), codeIs("SETUP_PATH"));
+  });
+});
+
+test("Linux descriptor bootstrap writes private setup before database initialization", dirfdTests, async () => {
+  await fixture(async ({ repoRoot, outputPath }) => {
+    let calls = 0;
+    const store = { initializeAdmin: async () => {
+      calls += 1;
+      assert.equal((await lstat(outputPath)).mode & 0o777, 0o600);
+      const text = await readFile(outputPath, "utf8");
+      assert.equal(JSON.parse(text).totp.secret, secret);
+      assert.equal(text.includes(input.password), false);
+      assert.equal(text.includes(config.totpKey.toString("base64url")), false);
+    } };
+    assert.deepEqual(await bootstrap({ input, outputPath, config, store, repoRoot, crypto, now: clock, pathMode: "linux-dirfd" }),
+      { created: true, mfaEnrollmentPending: true, recoveryCodeCount: 8 });
+    assert.equal(calls, 1);
+  });
+});
+
+test("Linux descriptor reservations never replace existing files or output symlinks", dirfdTests, async () => {
+  await fixture(async ({ repoRoot, privateRoot, outputPath }) => {
+    const options = { input, outputPath, config, repoRoot, crypto, pathMode: "linux-dirfd",
+      store: { initializeAdmin: async () => assert.fail("Database must not be modified") } };
+    await writeFile(outputPath, "previous private material", { mode: 0o600 });
+    await assert.rejects(bootstrap(options), codeIs("SETUP_FILE"));
+    const symlinkPath = join(privateRoot, "symlink.json");
+    await symlink(outputPath, symlinkPath);
+    await assert.rejects(bootstrap({ ...options, outputPath: symlinkPath }), codeIs("SETUP_FILE"));
+    assert.equal((await lstat(symlinkPath)).isSymbolicLink(), true);
+    assert.equal(await readFile(outputPath, "utf8"), "previous private material");
+  });
+});
+
+test("Linux descriptor concurrent output reservations allow only one database initializer", dirfdTests, async () => {
+  await fixture(async ({ repoRoot, outputPath }) => {
+    let calls = 0;
+    const store = { initializeAdmin: async () => { calls += 1; } };
+    const results = await Promise.allSettled(Array.from({ length: 2 }, () => bootstrap({
+      input, outputPath, config, store, repoRoot, crypto, pathMode: "linux-dirfd",
+    })));
+    assert.equal(results.filter((value) => value.status === "fulfilled").length, 1);
+    assert.equal(results.find((value) => value.status === "rejected").reason.code, "SETUP_FILE");
+    assert.equal(calls, 1);
+    assert.equal(JSON.parse(await readFile(outputPath, "utf8")).totp.secret, secret);
+  });
+});
+
+test("Linux descriptor cleanup remains anchored when the absolute parent is replaced during the transaction", dirfdTests, async () => {
+  await fixture(async ({ root, repoRoot, privateRoot, outputPath }) => {
+    const movedParent = join(root, "original-private");
+    const store = { initializeAdmin: async () => {
+      assert.equal(JSON.parse(await readFile(outputPath, "utf8")).totp.secret, secret);
+      await rename(privateRoot, movedParent);
+      await mkdir(privateRoot, { mode: 0o700 });
+      await writeFile(outputPath, "replacement must survive", { mode: 0o600 });
+      throw new Error(`private database error ${input.password}`);
+    } };
+    await assert.rejects(bootstrap({ input, outputPath, config, store, repoRoot, crypto, pathMode: "linux-dirfd" }), (error) => {
+      assert.equal(error.code, "SETUP_DATABASE");
+      assert.equal(error.message.includes(input.password), false);
+      return true;
+    });
+    await assert.rejects(lstat(join(movedParent, "setup.json")), codeIs("ENOENT"));
+    assert.equal(await readFile(outputPath, "utf8"), "replacement must survive");
+  });
+});
+
+test("Linux descriptor uncertain commit preserves the anchored setup after an absolute parent replacement", dirfdTests, async () => {
+  await fixture(async ({ root, repoRoot, privateRoot, outputPath }) => {
+    const movedParent = join(root, "original-private");
+    const store = { initializeAdmin: async () => {
+      await rename(privateRoot, movedParent);
+      await mkdir(privateRoot, { mode: 0o700 });
+      await writeFile(outputPath, "replacement must survive", { mode: 0o600 });
+      throw Object.assign(new Error("commit reply lost"), { preserveSetupFile: true });
+    } };
+    await assert.rejects(bootstrap({ input, outputPath, config, store, repoRoot, crypto, pathMode: "linux-dirfd" }), codeIs("SETUP_UNCERTAIN"));
+    assert.equal((await lstat(join(movedParent, "setup.json"))).mode & 0o777, 0o600);
+    assert.equal(JSON.parse(await readFile(join(movedParent, "setup.json"), "utf8")).totp.secret, secret);
+    assert.equal(await readFile(outputPath, "utf8"), "replacement must survive");
+  });
+});
+
+test("main passes the explicit Linux descriptor environment mode to the private bootstrap", dirfdTests, async () => {
+  await fixture(async ({ repoRoot, outputPath }) => {
+    let closed = 0;
+    let calls = 0;
+    const pool = { end: async () => { closed += 1; } };
+    await main(["--output", outputPath], { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" }, {
+      configure: () => config, repoRoot, crypto,
+      inputStream: Readable.from([JSON.stringify(input)]), outputStream: { write: () => {} },
+      createPool: async () => pool,
+      makeStore: () => ({ assertSchema: async () => {}, initializeAdmin: async () => { calls += 1; } }),
+    });
+    assert.equal(calls, 1);
+    assert.equal(closed, 1);
+    assert.equal(JSON.parse(await readFile(outputPath, "utf8")).totp.secret, secret);
   });
 });

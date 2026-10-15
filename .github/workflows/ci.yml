@@ -150,6 +150,8 @@ jobs:
           GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_ci.* TO 'jessiemessage_runtime_test'@'%';
           GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_restore_ci.* TO 'jessiemessage_runtime_test'@'%';
           CREATE USER 'jessiemessage_preflight_test'@'%' IDENTIFIED BY 'ci-preflight-only-not-a-secret';
+          CREATE USER 'jessiemessage_shared_test'@'%' IDENTIFIED BY 'ci-shared-only-not-a-secret' WITH MAX_USER_CONNECTIONS 38;
+          GRANT SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_shared_test'@'%';
           GRANT ALL PRIVILEGES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_test'@'%' WITH GRANT OPTION;
           CREATE USER 'jessiemessage_backup_test'@'%' IDENTIFIED BY 'ci-backup-only-not-a-secret';
           GRANT ALL PRIVILEGES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_backup_test'@'%';
@@ -174,3 +176,5 @@ jobs:
           JESSIEMESSAGE_APPLICATION_DATABASE: jessiemessage_test_ci
           JESSIEMESSAGE_PREFLIGHT_DB_USER: jessiemessage_preflight_test
           JESSIEMESSAGE_PREFLIGHT_DB_PASSWORD: ci-preflight-only-not-a-secret
+          JESSIEMESSAGE_SHARED_PREFLIGHT_DB_USER: jessiemessage_shared_test
+          JESSIEMESSAGE_SHARED_PREFLIGHT_DB_PASSWORD: ci-shared-only-not-a-secret

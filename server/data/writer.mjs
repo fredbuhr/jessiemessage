@@ -2,6 +2,7 @@ import { constants } from "node:fs";
 import { lstat, realpath, open, mkdir, readdir, link, unlink } from "node:fs/promises";
 import { createHash, randomBytes } from "node:crypto";
 import path from "node:path";
+import { inspectDirectoryIdentities, openPrivateDirectory, privatePathMode } from "../files/private-directory.mjs";
 
 const MAX_BYTES = 285212672;
 const MAX_FILES = 10010;
@@ -69,21 +70,29 @@ async function ancestry(directory) {
   return result;
 }
 
-/** Offline, operator-private output. Concurrent filesystem changes by the same
- * operator are unsupported; pre/post identity checks are not an openat claim
- * and do not prove the absence of every bind-mounted alias. */
-export async function createDataWriter({ output, protectedRoots, maximumBytes = MAX_BYTES, maximumFiles = MAX_FILES } = {}) {
-  let rootHandle = null, mediaHandle = null;
-  const records = new Map(); let rootIdentity, mediaIdentity = null, ancestors, protectedIdentities;
+/** Offline, operator-private output. Linux dirfd mode anchors all output I/O
+ * to opened directories; strict mode retains its pathname identity checks.
+ * Concurrent changes by the same operator and bind-mounted aliases remain
+ * outside this output writer's isolation contract. */
+export async function createDataWriter({ output, protectedRoots, maximumBytes = MAX_BYTES, maximumFiles = MAX_FILES, pathMode } = {}) {
+  let rootHandle = null, mediaHandle = null, parentScope = null, mode;
+  const records = new Map(); let rootIdentity, mediaIdentity = null, ancestors, protectedIdentities, parentIdentity;
   let totalBytes = 0, failed = false, closed = false, finalized = false, closing = null, chain = Promise.resolve();
   const parent = absolute(output) ? path.dirname(output) : null;
   async function check(verifyHandles = true) {
-    const current = await ancestry(output);
-    if (current.length !== ancestors.length || current.some((item, index) => item.name !== ancestors[index].name || !same(item.stats, ancestors[index].stats))
-      || !privateDirectory(current.at(-1).stats) || !privateDirectory(current.at(-2).stats) || verifyHandles && rootHandle && !same(await rootHandle.stat({ bigint: true }), rootIdentity)) fail();
-    if (protectedIdentities.some((protectedRoot) => current.some((item) => same(item.stats, protectedRoot.root)))) fail();
+    if (mode === "linux-dirfd") {
+      const parentStats = await parentScope.assertReady(), stats = await lstat(parentScope.file(path.basename(output)), { bigint: true });
+      if (!privateDirectory(parentStats) || !same(parentStats, parentIdentity) || !privateDirectory(stats) || !same(stats, rootIdentity)
+        || verifyHandles && rootHandle && !same(await rootHandle.stat({ bigint: true }), rootIdentity)) fail();
+      if (protectedIdentities.some((protectedRoot) => ancestors.some((item) => same(item.stats, protectedRoot.root)))) fail();
+    } else {
+      const current = await ancestry(output);
+      if (current.length !== ancestors.length || current.some((item, index) => item.name !== ancestors[index].name || !same(item.stats, ancestors[index].stats))
+        || !privateDirectory(current.at(-1).stats) || !privateDirectory(current.at(-2).stats) || verifyHandles && rootHandle && !same(await rootHandle.stat({ bigint: true }), rootIdentity)) fail();
+      if (protectedIdentities.some((protectedRoot) => current.some((item) => same(item.stats, protectedRoot.root)))) fail();
+    }
     if (mediaIdentity) {
-      const stats = await lstat(path.join(output, "media"), { bigint: true });
+      const stats = await lstat(filename("media"), { bigint: true });
       if (!privateDirectory(stats) || !same(stats, mediaIdentity) || verifyHandles && mediaHandle && !same(await mediaHandle.stat({ bigint: true }), mediaIdentity)) fail();
     }
   }
@@ -97,7 +106,10 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
   function room(bytes, newFile = false) {
     if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > maximumBytes - totalBytes || newFile && records.size + 1 > maximumFiles) fail();
   }
-  const filename = (name) => path.join(output, name);
+  const rootPath = () => mode === "linux-dirfd"
+    ? rootHandle && rootHandle.fd >= 0 ? `/proc/self/fd/${rootHandle.fd}` : parentScope.file(path.basename(output)) : output;
+  const filename = (name) => mode === "linux-dirfd" && name.startsWith("media/") && mediaHandle
+    ? `/proc/self/fd/${mediaHandle.fd}/${name.slice(6)}` : path.join(rootPath(), name);
   async function verify(record, handle = record.handle) {
     const local = await lstat(filename(record.name), { bigint: true });
     if (!privateFile(local) || !same(local, record.identity) || local.size !== BigInt(record.bytes)) fail();
@@ -141,20 +153,28 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
     if (!absolute(output) || output === path.parse(output).root || !Array.isArray(protectedRoots) || protectedRoots.length < 1 || protectedRoots.length > 32
       || !Number.isSafeInteger(maximumBytes) || maximumBytes < 1 || maximumBytes > MAX_BYTES
       || !Number.isSafeInteger(maximumFiles) || maximumFiles < 1 || maximumFiles > MAX_FILES || !constants.O_NOFOLLOW || !constants.O_DIRECTORY) fail();
-    const parentAncestors = await ancestry(parent); if (!privateDirectory(parentAncestors.at(-1).stats)) fail();
+    mode = pathMode === undefined ? privatePathMode() : privatePathMode({ JESSIEMESSAGE_PRIVATE_PATH_MODE: pathMode });
+    let parentAncestors;
+    if (mode === "linux-dirfd") {
+      parentScope = await openPrivateDirectory(parent); parentIdentity = await parentScope.assertReady();
+      parentAncestors = (await inspectDirectoryIdentities(parent)).map((stats) => ({ stats }));
+      if (!same(parentAncestors.at(-1).stats, parentIdentity)) fail();
+    } else parentAncestors = await ancestry(parent);
+    if (!privateDirectory(mode === "linux-dirfd" ? parentIdentity : parentAncestors.at(-1).stats)) fail();
     protectedIdentities = [];
     for (const protectedRoot of protectedRoots) {
       if (!absolute(protectedRoot) || inside(output, protectedRoot) || inside(protectedRoot, output)) fail();
-      const protectedAncestors = await ancestry(protectedRoot);
+      const protectedAncestors = mode === "linux-dirfd" ? (await inspectDirectoryIdentities(protectedRoot)).map((stats) => ({ stats })) : await ancestry(protectedRoot);
       if (parentAncestors.some((item) => same(item.stats, protectedAncestors.at(-1).stats))) fail();
       protectedIdentities.push({ root: protectedAncestors.at(-1).stats, ancestors: protectedAncestors });
     }
-    await mkdir(output, { mode: 0o700 });
-    rootIdentity = await lstat(output, { bigint: true }); if (!privateDirectory(rootIdentity)) fail();
+    const initialRoot = mode === "linux-dirfd" ? parentScope.file(path.basename(output)) : output;
+    await mkdir(initialRoot, { mode: 0o700 });
+    rootIdentity = await lstat(initialRoot, { bigint: true }); if (!privateDirectory(rootIdentity)) fail();
     if (protectedIdentities.some((item) => item.ancestors.some((ancestor) => same(ancestor.stats, rootIdentity)))) fail();
     ancestors = [...parentAncestors, { name: output, stats: rootIdentity }];
-    rootHandle = await open(output, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW); await check();
-  } catch { await mediaHandle?.close().catch(() => {}); await rootHandle?.close().catch(() => {}); throw new DataWriterError(); }
+    rootHandle = await open(initialRoot, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW); await check();
+  } catch { await mediaHandle?.close().catch(() => {}); await rootHandle?.close().catch(() => {}); await parentScope?.close().catch(() => {}); throw new DataWriterError(); }
 
   return {
     empty(name) { return run(async () => { if (!LINE_FILES.has(name)) fail(); await create(name, Buffer.alloc(0), true); }); },
@@ -173,7 +193,7 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
         if (!Object.hasOwn(descriptor, "value") || !Number.isSafeInteger(descriptor.value) || descriptor.value < 0) fail(); counts[name] = descriptor.value;
       }
       const expectedRoot = new Set([...records.keys()].map((name) => name.split("/")[0]));
-      const rootNames = await readdir(output); if (rootNames.length !== expectedRoot.size || rootNames.some((name) => !expectedRoot.has(name))) fail();
+      const rootNames = await readdir(rootPath()); if (rootNames.length !== expectedRoot.size || rootNames.some((name) => !expectedRoot.has(name))) fail();
       if (mediaIdentity) {
         const expectedMedia = new Set([...records.keys()].filter((name) => name.startsWith("media/")).map((name) => name.slice(6)));
         const mediaNames = await readdir(filename("media")); if (mediaNames.length !== expectedMedia.size || mediaNames.some((name) => !expectedMedia.has(name))) fail();
@@ -220,6 +240,7 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
         let bad = false;
         for (const handle of [...records.values()].map((record) => record.handle).filter(Boolean)) { try { await handle.sync(); } catch { bad = true; } try { await handle.close(); } catch { bad = true; } }
         for (const handle of [mediaHandle, rootHandle].filter(Boolean)) { try { await handle.sync(); } catch { bad = true; } try { await handle.close(); } catch { bad = true; } }
+        try { await parentScope?.close(); } catch { bad = true; }
         if (bad) { failed = true; throw new DataWriterError(); }
       });
       return closing;
