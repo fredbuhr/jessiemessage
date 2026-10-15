@@ -192,7 +192,28 @@ test("root replacement prevents all cleanup in its replacement and leaves uncert
 
 test("simultaneous probes for one fresh path admit only its exclusive owner", async (t) => {
   const f = await fixture(t);
-  const reports = await Promise.all([inspectPlatform(f.options), inspectPlatform(f.options)]);
+  let holdReady, releaseOwner, firstReport, contenderCreates = 0;
+  const ownerReady = new Promise((resolve) => { holdReady = resolve; });
+  const ownerGate = new Promise((resolve) => { releaseOwner = resolve; });
+  // Starting both inspectors also starts independent Sharp work. Hold the first
+  // actual mkdir so a faster probe cannot finish and remove its directory before
+  // the other reaches the filesystem; that would be two valid sequential runs.
+  const owner = inspectPlatform(f.options, { fs: { async mkdir(...args) {
+    await fs.mkdir(...args); holdReady(); await ownerGate;
+  } } });
+  let contender;
+  try {
+    await Promise.race([ownerReady, owner.then(() => { assert.fail("owner finished before creating the held probe directory"); })]);
+    const held = await fs.lstat(f.scratch, { bigint: true });
+    contender = await inspectPlatform(f.options, { fs: { async mkdir(...args) {
+      contenderCreates++; return fs.mkdir(...args);
+    } } });
+    assert.equal(contenderCreates, 1, "the contender actually attempts creation while the owner's directory exists");
+    assert.equal(status(neutral(contender), "scratch_filesystem"), "fail");
+    const retained = await fs.lstat(f.scratch, { bigint: true });
+    assert.equal(retained.dev, held.dev); assert.equal(retained.ino, held.ino, "the contender preserves the owner's directory");
+  } finally { releaseOwner(); firstReport = await owner; }
+  const reports = [firstReport, contender];
   reports.forEach(neutral); assert.equal(reports.filter((report) => report.valid).length, 1);
   assert.equal(reports.filter((report) => status(report, "scratch_filesystem") === "fail").length, 1); await absent(f.scratch);
 });

@@ -3,25 +3,21 @@
 // Run with Chrome + ChromeDriver installed. Missing binaries are a test failure.
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { spawn } from "node:child_process";
-import { constants } from "node:fs";
-import { access, readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import { createServer as createPortServer } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
+import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 
 const publicRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../public");
-const elementKey = "element-6066-11e4-a52e-4f735466cecf";
-const sessions = new Set();
 const id = (n) => n.toString(16).padStart(32, "0");
 const conversationId = id(100);
 const photoMessageId = id(203);
 const peerName = "AlexFixture";
 // Generated 2 x 2 solid-colour JPEG. No personal photograph is used.
 const jpeg = Buffer.from("/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDlqKKKo9M//9k=", "base64");
-let server, driver, baseUrl, driverUrl, driverLog = "", driverExited = false;
+let server, driver, baseUrl;
 let fixture;
 
 function resetFixture() {
@@ -129,70 +125,7 @@ async function startFixtureServer() {
   baseUrl = `http://127.0.0.1:${server.address().port}`;
 }
 
-async function freePort() {
-  const socket = createPortServer();
-  await new Promise((resolveReady, reject) => { socket.once("error", reject); socket.listen(0, "127.0.0.1", resolveReady); });
-  const port = socket.address().port;
-  await new Promise((resolveClosed) => socket.close(resolveClosed));
-  return port;
-}
-async function executable(candidate, label) {
-  try { await access(candidate, constants.X_OK); if (!(await stat(candidate)).isFile()) throw new Error(); }
-  catch { throw new Error(`${label} unavailable. Install Chrome and ChromeDriver, and set CHROME_BIN / CHROMEWEBDRIVER; browser tests never skip this prerequisite.`); }
-  return candidate;
-}
-async function webdriver(method, path, body) {
-  const response = await fetch(`${driverUrl}${path}`, { method, ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }), signal: AbortSignal.timeout(25000) });
-  const data = await response.json();
-  if (!response.ok || data.value?.error) throw new Error(`WebDriver ${method} ${path}: ${data.value?.error ?? response.status}: ${data.value?.message ?? "failed"}`);
-  return data.value;
-}
-async function waitUntil(check, description, timeout = 10000) {
-  const deadline = Date.now() + timeout;
-  do { if (await check()) return; await delay(100); } while (Date.now() < deadline);
-  throw new Error(`Timed out: ${description}`);
-}
-async function startDriver() {
-  let driverPath = process.env.CHROMEWEBDRIVER ?? "/usr/local/share/chromedriver-linux64";
-  if ((await stat(driverPath).catch(() => null))?.isDirectory()) driverPath = join(driverPath, "chromedriver");
-  await executable(driverPath, "ChromeDriver");
-  const port = await freePort(); driverUrl = `http://127.0.0.1:${port}`;
-  driver = spawn(driverPath, [`--port=${port}`, "--allowed-ips=127.0.0.1"], { stdio: ["ignore", "pipe", "pipe"] });
-  const capture = (chunk) => { driverLog = (driverLog + chunk.toString()).slice(-8000); };
-  driver.stdout.on("data", capture); driver.stderr.on("data", capture);
-  driver.on("error", (error) => { driverExited = true; capture(error.message); });
-  driver.on("exit", () => { driverExited = true; });
-  await waitUntil(async () => {
-    if (driverExited) throw new Error(`ChromeDriver exited before readiness: ${driverLog}`);
-    try { return Boolean(await webdriver("GET", "/status")); } catch { return false; }
-  }, "ChromeDriver startup", 15000);
-}
-async function browser(width = 1280) {
-  const chromeBin = await executable(process.env.CHROME_BIN ?? "/usr/bin/google-chrome", "Chrome");
-  const value = await webdriver("POST", "/session", { capabilities: { alwaysMatch: { browserName: "chrome", "goog:chromeOptions": {
-    binary: chromeBin, args: ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-background-networking", "--disable-component-update", "--disable-default-apps", "--disable-sync", "--no-first-run", "--lang=fr-FR", "--window-size=1280,900"],
-    prefs: { "intl.accept_languages": "fr-FR,fr" },
-    ...(width < 800 ? { mobileEmulation: { deviceMetrics: { width, height: 844, pixelRatio: 1, mobile: true, touch: true } } } : {})
-  } } } });
-  const sessionId = value.sessionId; assert.ok(sessionId, "W3C session id"); sessions.add(sessionId);
-  const endpoint = `/session/${sessionId}`;
-  await webdriver("POST", `${endpoint}/timeouts`, { implicit: 0, pageLoad: 20000, script: 10000 });
-  return {
-    execute: (script, ...args) => webdriver("POST", `${endpoint}/execute/sync`, { script, args }),
-    executeAsync: (script, ...args) => webdriver("POST", `${endpoint}/execute/async`, { script, args }),
-    navigate: (path) => webdriver("POST", `${endpoint}/url`, { url: `${baseUrl}${path}` }),
-    async click(selector) { const element = await webdriver("POST", `${endpoint}/element`, { using: "css selector", value: selector }); await webdriver("POST", `${endpoint}/element/${element[elementKey]}/click`, {}); },
-    key: (value) => webdriver("POST", `${endpoint}/actions`, { actions: [{ type: "key", id: "keyboard", actions: [{ type: "keyDown", value }, { type: "keyUp", value }] }] }),
-    async close() { try { await webdriver("DELETE", endpoint); } finally { sessions.delete(sessionId); } }
-  };
-}
-async function tabUntil(page, selector) {
-  for (let count = 0; count < 45; count += 1) {
-    await page.key("\uE004");
-    if (await page.execute("return document.activeElement?.matches(arguments[0])", selector)) return;
-  }
-  assert.fail(`Real Tab navigation did not reach ${selector}; active element: ${await page.execute("return document.activeElement?.outerHTML?.slice(0, 500)")}`);
-}
+const browser = (width = 1280) => driver.browser({ origin: baseUrl, width });
 async function loaded(page, path) {
   await page.navigate(path);
   await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden"), "private workspace bootstrap");
@@ -202,19 +135,10 @@ async function loadedPhoto(page) {
 }
 async function noJavascriptErrors(page) { assert.deepEqual(await page.execute("return window.__browserErrors"), [], "no JavaScript / promise / CSP errors"); }
 
-before(async () => { resetFixture(); await startFixtureServer(); await startDriver(); }, { timeout: 30000 });
+before(async () => { resetFixture(); await startFixtureServer(); driver = await startWebDriver(); }, { timeout: 30000 });
 after(async () => {
-  for (const sessionId of sessions) { try { await webdriver("DELETE", `/session/${sessionId}`); } catch {} }
-  sessions.clear();
-  if (server) { server.closeAllConnections(); await new Promise((resolveClosed) => server.close(resolveClosed)); }
-  if (driver && !driverExited) {
-    driver.kill("SIGTERM");
-    await Promise.race([new Promise((resolveExit) => driver.once("exit", resolveExit)), delay(3000)]);
-    if (!driverExited) {
-      driver.kill("SIGKILL");
-      await Promise.race([new Promise((resolveExit) => driver.once("exit", resolveExit)), delay(1000)]);
-    }
-  }
+  try { await driver?.close(); }
+  finally { if (server) { server.closeAllConnections(); await new Promise((resolveClosed) => server.close(resolveClosed)); } }
 }, { timeout: 35000 });
 
 test("Chrome desktop and 320px: actual Tab / Enter contact selection and return, French / English", { timeout: 60000 }, async () => {

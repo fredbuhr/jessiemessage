@@ -1,10 +1,10 @@
-# Recette de préproduction — étapes 0.18–0.21, version 0.23.0
+# Recette de préproduction — étapes 0.18–0.22, version 0.24.0
 
 Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. Il ne constate aucun déploiement, changement DNS, compte réel, réception e-mail ou installation sur téléphone. Les essais locaux et CI utilisent des identités fictives, des données synthétiques et des services maîtrisés.
 
 ## 1. Fixer l'environnement et la révision
 
-- [ ] Consigner le SHA exact et les quatre résultats CI de cette révision : tests généraux, MariaDB 10.11, MariaDB 11.4 et Chrome. Relever également la version Node.js 24 installée.
+- [ ] Consigner le SHA exact et les cinq résultats CI de cette révision : tests généraux, MariaDB 10.11, MariaDB 11.4, Chrome chat et Chrome HTTPS/authentification. Relever également la version Node.js 24 installée.
 - [ ] Réserver un sous-domaine HTTPS de `jessiemessage.com` à cette recette ; par exemple `preprod.jessiemessage.com`, uniquement après sa configuration effective. `JESSIEMESSAGE_SITE_ORIGIN` doit correspondre exactement à cette origine, sans chemin ni barre finale. L'expéditeur officiel reste `contact@jessiemessage.com`.
 - [ ] Utiliser une base MariaDB dédiée et jetable, un répertoire média privé persistant hors du checkout, et des clés propres à la préproduction. Ne copier aucun compte, clé, portrait, média ou message de production. Préserver les ressources ZTIKIX.
 - [ ] Confirmer MariaDB 10.11+, TLS avec vérification du certificat, `GET_LOCK`, compte DML d'exécution distinct du compte de migration et contraintes SQL actives. Les confirmations de base doivent désigner uniquement la base de recette. Voir [DATABASE.md](DATABASE.md) et [auth-admin.md](auth-admin.md).
@@ -47,6 +47,8 @@ Le build produit l'atelier HTML fictif. Il ne prouve pas le fonctionnement des c
 - [ ] Les contrôleurs synthétiques vérifient les réponses tardives, changements de session et masquage de page. Cette preuve ne remplace pas une recette visuelle dans de vrais navigateurs.
 
 Avant le premier démarrage, suivre les [diagnostics opérateur](preproduction-preflight.md) : configuration de la seule authentification, Node/Sharp et répertoire de sonde neuf, puis SQL en lecture seule avec confirmation explicite. Le résultat ne certifie pas l’arrêt des autres producteurs, la bonne clé des données existantes, la persistance du média ou l’isolation de l’abonnement.
+
+La [recette intégrée d’authentification](authentication-rehearsal.md) ajoute un job Chrome avec le vrai serveur, HTTPS local et MariaDB 10.11. Sa commande dédiée crée et supprime des tables dans une base jetable initialement vide ; elle ne doit jamais viser une base à conserver ni être exécutée sur l’hébergement comme diagnostic. Elle ne prouve pas le certificat public, le proxy ou l’arrêt Infomaniak.
 
 ## 3. Premier démarrage HTTPS, authentification seule
 
