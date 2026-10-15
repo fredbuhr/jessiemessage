@@ -3,7 +3,7 @@ const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 253402300799999;
 export function parseBroadcastPreference(input) {
   if (typeof input?.enabled !== "boolean" || typeof input.version !== "string" || input.version.length > 20 || !/^(0|[1-9][0-9]*)$/.test(input.version)
-    || BigInt(input.version) > 18446744073709551615n || input.updatedAt !== null && !date(input.updatedAt)
+    || BigInt(input.version) > 18446744073709551615n || BigInt(input.version).toString() !== input.version || input.updatedAt !== null && !date(input.updatedAt)
     || input.version === "0" && (input.enabled || input.updatedAt !== null) || input.version !== "0" && input.updatedAt === null) throw new TypeError("invalid_broadcast_preference");
   return { enabled: input.enabled, version: input.version, updatedAt: input.updatedAt };
 }
@@ -31,13 +31,12 @@ export function preferenceSaveBody(state, enabled, now = Date.now()) {
 export function mountBroadcastPreference(container, { isCurrent = () => true } = {}) {
   const state = createPreferenceState(); const controllers = new Set(); let disposed = false; let expiryTimer = null;
   const section = document.createElement("section"); section.className = "broadcast-preference"; section.setAttribute("aria-label", "Messages de diffusion");
-  section.style.marginTop = "24px"; section.style.paddingTop = "20px"; section.style.borderTop = "1px solid #554353";
-  const heading = document.createElement("h2"); heading.textContent = "Les nouvelles de Jessie"; heading.style.fontSize = "18px";
+  const heading = document.createElement("h2"); heading.textContent = "Les nouvelles de Jessie";
   const copy = document.createElement("p"); copy.className = "session-note"; copy.textContent = "Tu peux accepter les messages que Jessie propose à plusieurs clients. Chacun les reçoit dans sa conversation privée. Ce choix est facultatif et tu peux le retirer à tout moment ; tes échanges directs avec Jessie restent disponibles selon ton accès.";
   const form = document.createElement("form"); const label = document.createElement("label"); label.className = "checkbox-field";
   const checkbox = document.createElement("input"); checkbox.type = "checkbox"; const span = document.createElement("span"); span.textContent = "Je souhaite recevoir les messages de diffusion de Jessie."; label.append(checkbox, span);
-  const save = document.createElement("button"); save.type = "submit"; save.className = "button button-secondary secondary"; save.textContent = "Enregistrer mon choix"; save.style.marginTop = "14px";
-  const reload = document.createElement("button"); reload.type = "button"; reload.className = "button button-secondary secondary"; reload.textContent = "Recharger mon choix"; reload.style.marginTop = "14px";
+  const save = document.createElement("button"); save.type = "submit"; save.className = "button button-secondary secondary"; save.textContent = "Enregistrer mon choix";
+  const reload = document.createElement("button"); reload.type = "button"; reload.className = "button button-secondary secondary"; reload.textContent = "Recharger mon choix";
   const status = document.createElement("p"); status.className = "status"; status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite");
   form.append(label, save); section.append(heading, copy, form, status, reload); container.append(section);
   const visible = () => document.visibilityState === "visible";

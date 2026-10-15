@@ -277,7 +277,11 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
 
     await subtest("failure after message/event insertion rolls back the entire recipient delivery transaction", async () => {
       const fixture = await pair(); await consent(fixture); const created = await create(fixture), job = await store.claim({ now }), payload = message(job);
-      await connection.query("ALTER TABLE broadcast_recipients ADD CONSTRAINT broadcast_delivery_probe CHECK (state <> 'delivered')");
+      // Scope the fault to this synthetic campaign; earlier subtests retain
+      // delivered history that must continue to satisfy the temporary CHECK.
+      const probeCampaignHex = created.campaign.id.toString("hex");
+      assert.match(probeCampaignHex, /^[a-f0-9]{32}$/);
+      await connection.query(`ALTER TABLE broadcast_recipients ADD CONSTRAINT broadcast_delivery_probe CHECK (campaign_id <> X'${probeCampaignHex}' OR state <> 'delivered')`);
       try { await assert.rejects(store.deliver(job, { now, message: payload }), code("CHAT_DATABASE_OPERATION")); }
       finally { await connection.query("ALTER TABLE broadcast_recipients DROP CONSTRAINT broadcast_delivery_probe"); }
       await assertMessages(fixture.conversationId, 0);

@@ -96,6 +96,7 @@ async function refreshSession() {
   return session;
 }
 async function refreshBroadcastAccess() {
+  if (role === "client" && broadcastPreference) return;
   const ticket = snapshot();
   try {
     if (role === "admin") {
@@ -676,7 +677,7 @@ document.addEventListener("visibilitychange", () => {
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
     sendBusy = false; olderBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
   } else if (ready) {
-    void refreshSession().then(async () => { if (crm) await crm.resume(); const state = currentState(); if (state) renderMessages(state); retryDelay = 3000; schedulePolling(0); }).catch((error) => handleError(error));
+    void refreshSession().then(async () => { if (crm) await crm.resume(); void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state); retryDelay = 3000; schedulePolling(0); }).catch((error) => handleError(error));
   } else if (!loggingOut) void start();
 });
 window.addEventListener("pagehide", clearPrivate);

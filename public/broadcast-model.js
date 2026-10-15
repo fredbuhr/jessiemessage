@@ -6,15 +6,18 @@ export const campaignNames = Object.freeze({ queued: "En attente", running: "En 
 export const reasonNames = Object.freeze({ access_inactive: "Accès non actif", opted_out: "Diffusions non acceptées", conversation_unavailable: "Conversation indisponible", media_unavailable: "Photo indisponible", repeat_media: "Photo déjà partagée", expired: "Délai d’envoi dépassé", administrator_invalid: "Autorisation de Jessie à renouveler", processing_failed: "Envoi non abouti", cancelled: "Annulé par Jessie" });
 const id = (value) => typeof value === "string" && value.length === 32 && ID.test(value);
 const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 253402300799999;
-const text = (value, max) => typeof value === "string" && value.length <= max && value.isWellFormed() && !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u.test(value);
+const text = (value, max) => typeof value === "string" && value.length <= max && value.isWellFormed() && !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/u.test(value);
 const label = (value, max = 64) => text(value, max) && value.length > 0 && !/[\r\n\t]/u.test(value);
+const title = (value) => label(value, 80) && value.trim().length > 0 && !/^[\p{C}\p{Z}]*$/u.test(value) && !/[\u202A-\u202E\u2066-\u2069]/u.test(value);
+const body = (value, mediaId) => text(value, mediaId === null ? 4096 : 1000) && (mediaId !== null && value === "" || value.trim().length > 0 && !/^[\p{C}\p{Z}]*$/u.test(value));
 export function createBroadcastState() {
-  return { epoch: 0, visible: false, session: null, contacts: new Map(), selected: new Map(), filterEpoch: 0, previewEpoch: 0,
+  return { epoch: 0, visible: false, session: null, contacts: new Map(), selected: new Map(), filterEpoch: 0, contactQuery: "limit=50", previewEpoch: 0,
     preview: null, draft: { title: "", body: "", mediaId: null, allowRepeatMedia: false }, acknowledged: false, pending: null, csrfFailed: false };
 }
 export function clearBroadcast(state, { visible = false } = {}) {
   state.epoch += 1; state.filterEpoch += 1; state.previewEpoch += 1; state.visible = visible; state.session = null;
   state.contacts.clear(); state.selected.clear(); state.preview = null; state.draft = { title: "", body: "", mediaId: null, allowRepeatMedia: false };
+  state.contactQuery = "limit=50";
   state.acknowledged = false; state.pending = null; state.csrfFailed = false; return broadcastTicket(state);
 }
 export function broadcastTicket(state) { return { epoch: state.epoch, adminId: state.session?.id ?? null }; }
@@ -27,7 +30,11 @@ export function acceptBroadcastSession(state, ticket, input, now = Date.now()) {
   if (state.session && (state.session.id !== user.id || state.session.csrf !== input.csrf)) { clearBroadcast(state, { visible: true }); return false; }
   state.session = { id: user.id, csrf: input.csrf, expiresAt: input.expiresAt, mediaEnabled: input.mediaEnabled }; return true;
 }
-export function resetContacts(state) { state.filterEpoch += 1; state.contacts.clear(); return state.filterEpoch; }
+export function resetContacts(state, query = "limit=50") { state.filterEpoch += 1; state.contactQuery = query; state.contacts.clear(); return state.filterEpoch; }
+export function contactPageQuery(state, afterId = null) {
+  if (afterId !== null && !id(afterId)) throw new TypeError("invalid_contact_cursor");
+  const query = new URLSearchParams(state.contactQuery); query.delete("afterId"); if (afterId) query.set("afterId", afterId); return query.toString();
+}
 export function acceptContacts(state, input, { epoch = state.filterEpoch } = {}) {
   if (!state.visible || epoch !== state.filterEpoch) return false;
   if (!Array.isArray(input.contacts) || input.contacts.length > 100 || typeof input.hasMore !== "boolean" || input.nextCursor !== null && !id(input.nextCursor)) throw new TypeError("invalid_contacts");
@@ -70,9 +77,8 @@ export function acceptPreview(state, ticket, input) {
 }
 export function compositionValid(state) {
   const draft = state.draft;
-  if (!label(draft.title, 80) || !draft.title.trim() || !text(draft.body, draft.mediaId === null ? 4096 : 1000)
+  if (!title(draft.title) || !body(draft.body, draft.mediaId)
     || draft.mediaId !== null && (!id(draft.mediaId) || !state.session?.mediaEnabled) || typeof draft.allowRepeatMedia !== "boolean") return false;
-  if (draft.mediaId === null && (!draft.body.trim() || !/[^\s\p{Cf}\p{Cc}]/u.test(draft.body))) return false;
   return new TextEncoder().encode(draft.body).length <= (draft.mediaId === null ? 16384 : 4096);
 }
 export function canConfirmBroadcast(state, now = Date.now()) {
@@ -89,12 +95,13 @@ export function retryCampaign(state) {
   if (!state.visible || !state.session || state.csrfFailed || state.pending?.status !== "uncertain") return null;
   state.pending.status = "sending"; return state.pending.payload;
 }
-export function rejectCampaign(state, ticket, { csrfFailed = false } = {}) {
+export function rejectCampaign(state, ticket, { csrfFailed = false, definitiveRejected = false } = {}) {
   if (!currentBroadcast(state, ticket) || !state.pending) return false;
+  if (definitiveRejected && !csrfFailed) { state.pending = null; invalidatePreview(state); return true; }
   state.pending.status = "uncertain"; state.csrfFailed = csrfFailed; return true;
 }
 export function parseCampaign(input, { detail = false } = {}) {
-  if (!id(input?.id) || !id(input.clientCampaignId) || !label(input.title, 80) || !text(input.body, input.mediaId === null ? 4096 : 1000)
+  if (!id(input?.id) || !id(input.clientCampaignId) || !title(input.title) || !body(input.body, input.mediaId)
     || input.mediaId !== null && !id(input.mediaId) || typeof input.allowRepeatMedia !== "boolean" || !Object.hasOwn(campaignNames, input.status)
     || !date(input.createdAt) || !date(input.updatedAt) || !date(input.expiresAt) || input.updatedAt < input.createdAt || input.expiresAt < input.createdAt) throw new TypeError("invalid_campaign");
   const counts = {};

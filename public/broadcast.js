@@ -1,4 +1,4 @@
-import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, acceptCampaign, campaignNames, recipientNames, reasonNames } from "/broadcast-model.js";
+import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, acceptCampaign, campaignNames, recipientNames, reasonNames } from "/broadcast-model.js";
 
 const el = (id) => document.getElementById(id);
 const state = createBroadcastState(); const controllers = new Set(); const campaigns = new Map(); const assets = new Map();
@@ -105,7 +105,11 @@ function renderPreview() {
   const all = state.preview.eligibleCount === state.selected.size;
   notice(`${state.preview.eligibleCount} / ${state.selected.size} destinataires éligibles.${state.preview.repeatCount ? ` Photo déjà partagée avec ${state.preview.repeatCount} client${state.preview.repeatCount > 1 ? "s" : ""}.` : ""}${all ? "" : " Retire les destinataires non éligibles avant de confirmer."}`, !all, "preview-status");
 }
-function compositionChanged() { el("acknowledge").checked = false; renderSelection(); renderPreview(); }
+function compositionChanged() {
+  el("acknowledge").checked = false; el("campaign-body").maxLength = state.draft.mediaId ? 1000 : 4096;
+  el("body-help").textContent = state.draft.mediaId ? "Légende facultative · 1 000 caractères maximum." : "De 1 à 4 096 caractères.";
+  renderSelection(); renderPreview();
+}
 function contactQuery(afterId = null) {
   const query = new URLSearchParams({ limit: "50" });
   for (const [key, element] of [["q", "search"], ["tagId", "tag-filter"], ["groupId", "group-filter"]]) if (el(element).value) query.set(key, el(element).value);
@@ -114,10 +118,10 @@ function contactQuery(afterId = null) {
   if (el("unread-filter").checked) query.set("unread", "1"); if (afterId) query.set("afterId", afterId); return query;
 }
 async function loadContacts(more = false) {
-  if (contactsBusy || more && !contactMore) return;
-  const epoch = more ? state.filterEpoch : resetContacts(state); contactsBusy = true; renderContacts(); renderControls(); notice("Recherche…", false, "contacts-status");
+  if (more && (contactsBusy || !contactMore)) return;
+  const epoch = more ? state.filterEpoch : resetContacts(state, contactQuery().toString()); contactsBusy = true; renderContacts(); renderControls(); notice("Recherche…", false, "contacts-status");
   try {
-    const page = await request(`/api/admin/crm/contacts?${contactQuery(more ? contactCursor : null)}`);
+    const page = await request(`/api/admin/crm/contacts?${contactPageQuery(state, more ? contactCursor : null)}`);
     if (!acceptContacts(state, page, { epoch })) return; contactCursor = page.nextCursor; contactMore = page.hasMore;
     renderContacts(); notice(state.contacts.size ? "" : "Aucun client ne correspond à ces filtres.", false, "contacts-status");
   } catch (error) { if (epoch === state.filterEpoch) report(error, "contacts-status"); }
@@ -128,7 +132,7 @@ async function loadLabels() {
   for (let pageIndex = 0; pageIndex < 10; pageIndex += 1) {
     const page = await request(`/api/admin/crm/labels?limit=100${cursor ? `&afterId=${cursor}` : ""}`);
     if (!Array.isArray(page.labels) || typeof page.hasMore !== "boolean" || page.hasMore && !validId(page.nextCursor)) throw new TypeError("invalid_labels");
-    for (const label of page.labels) { if (!validId(label?.id) || !["tag", "group"].includes(label.kind) || typeof label.name !== "string" || label.name.length > 40) throw new TypeError("invalid_labels"); labels.push({ id: label.id, name: label.name, kind: label.kind }); }
+    for (const label of page.labels) { if (!validId(label?.id) || !["tag", "group"].includes(label.kind) || typeof label.name !== "string" || label.name.length > 64) throw new TypeError("invalid_labels"); labels.push({ id: label.id, name: label.name, kind: label.kind }); }
     if (!page.hasMore) { cursor = null; break; } if (cursor !== null && page.nextCursor <= cursor) throw new TypeError("invalid_labels"); cursor = page.nextCursor;
   }
   if (cursor) throw new TypeError("too_many_labels");
@@ -183,7 +187,10 @@ async function send(retry = false) {
     campaigns.set(campaign.id, campaign); el("campaign-form").reset(); el("photo-select").value = ""; clearPhoto(); compositionChanged();
     notice(`Diffusion enregistrée pour ${campaign.counts.total} client${campaign.counts.total > 1 ? "s" : ""}. Suis les remises et les éventuels destinataires ignorés dans l’historique.`, false, "send-status");
     renderHistory(); await showCampaign(campaign.id); void loadHistory();
-  } catch (error) { if (rejectCampaign(state, ticket, { csrfFailed: error.status === 403 })) report(error, "send-status"); }
+  } catch (error) {
+    const definitiveRejected = [400, 413].includes(error.status) || error.status === 409 && ["recipients_unavailable", "media_unavailable", "repeat_confirmation_required", "limit_reached"].includes(error.code);
+    if (rejectCampaign(state, ticket, { csrfFailed: error.status === 403, definitiveRejected })) { compositionChanged(); report(error, "send-status"); }
+  }
   finally { if (currentBroadcast(state, ticket)) { sendBusy = false; renderControls(); } }
 }
 const countSummary = (campaign) => `${campaign.counts.delivered} remis · ${campaign.counts.pending + campaign.counts.sending} en attente · ${campaign.counts.skipped} ignorés · ${campaign.counts.cancelled} annulés · ${campaign.counts.failed} en échec`;
