@@ -2,6 +2,8 @@
 
 Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de client, photographie personnelle ni configuration de production.
 
+**Reprise après interruption de la discussion :** voir l’[audit du 15 octobre](AUDIT-REPRISE-2026-10-15.md), réalisé sur le HEAD final 0.16 `0ecb31e`. Il confirme les tests/CI et la pile de 15 PR non fusionnées. Le chat reconstruit encore ses nœuds à chaque polling vide (A15) : correction ciblée préalable, puis 0.17a supervision et suite du lot données/exploitation. Cet audit ne livre pas une version 0.17 et ne modifie aucun déploiement.
+
 ## État de référence
 
 Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Adresse officielle retenue pour l'expédition, les réponses, le contact et la préparation du compte administrateur initial : **contact@jessiemessage.com**. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
