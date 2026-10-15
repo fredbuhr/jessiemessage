@@ -449,3 +449,74 @@ for (const [method, operation] of [
     assert.equal(f.calls.length, 0, "current SQL authorization refuses the read before any DTO or filesystem work");
   });
 }
+
+const fileOperations = [
+  ["owned full image", "getOwnedAsset", (service, role, token) => service.asset(role, token, assetHex, "full")],
+  ["owned thumbnail", "getOwnedAsset", (service, role, token) => service.asset(role, token, assetHex, "thumb")],
+  ["delivered full image", "getMessageAsset", (service, role, token) => service.messageAsset(role, token, conversationHex, messageHex, "full")],
+  ["delivered thumbnail", "getMessageAsset", (service, role, token) => service.messageAsset(role, token, conversationHex, messageHex, "thumb")],
+  ["asset removal", "deleteAsset", (service, role, token) => service.removeAsset(role, token, assetHex)],
+];
+
+for (const [name, method, operation] of fileOperations) {
+  test(`${name} refuses access expiring exactly while its persistent quota waits`, async () => {
+    const f = await fixture(), expiresAt = now + 1000; let current = now;
+    const authorizations = [], consume = f.options.authStore.consumeRateLimit, persist = f.store[method];
+    f.options.authStore.consumeRateLimit = async (...args) => {
+      const result = await consume(...args); current = expiresAt; return result;
+    };
+    f.store[method] = async (request) => {
+      authorizations.push(request);
+      if (request.now >= expiresAt) throw Object.assign(new Error("Synthetic current access has expired"), { code: "ACCESS_EXPIRED" });
+      return persist(request);
+    };
+    const service = await createMediaService({ ...f.options, clock: () => current });
+    await assert.rejects(operation(service, "client", f.token), hasCode("ACCESS_EXPIRED"));
+    assert.equal(f.actorCalls.length, 1); assert.equal(f.rateCalls.length, 1); assert.equal(authorizations.length, 1);
+    assert.equal(authorizations[0].now, expiresAt); assert.equal(authorizations[0].role, "client");
+    assert.deepEqual(authorizations[0].tokenHash, tokenDigest(f.token));
+    assert.equal(f.calls.length, 0, "current SQL authorization rejects before metadata changes or filesystem access");
+    assert.equal(f.state.removed, false);
+  });
+}
+
+test("file reads and removal recheck current SQL revocation and permissions after a pending quota", async () => {
+  for (const role of ["admin", "client"]) for (const [name, method, operation] of fileOperations) {
+    for (const code of ["CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN"]) {
+      const f = await fixture(); let current = now, revoked = false, startQuota, finishQuota;
+      const started = new Promise((resolve) => { startQuota = resolve; });
+      const pending = new Promise((resolve) => { finishQuota = resolve; });
+      const authorizations = [], consume = f.options.authStore.consumeRateLimit, persist = f.store[method];
+      f.options.authStore.consumeRateLimit = async (...args) => {
+        startQuota(); await pending; return consume(...args);
+      };
+      f.store[method] = async (request) => {
+        authorizations.push(request);
+        if (revoked) throw Object.assign(new Error("Synthetic current SQL authorization revoked"), { code });
+        return persist(request);
+      };
+      const service = await createMediaService({ ...f.options, clock: () => current });
+      const attempted = operation(service, role, f.token);
+      await started; revoked = true; current += 1000; finishQuota();
+      await assert.rejects(attempted, hasCode(code), `${role} ${name} ${code}`);
+      assert.equal(f.actorCalls.length, 1); assert.equal(f.rateCalls.length, 1); assert.equal(authorizations.length, 1);
+      assert.equal(authorizations[0].now, current); assert.equal(authorizations[0].role, role);
+      assert.deepEqual(authorizations[0].tokenHash, tokenDigest(f.token));
+      assert.equal(f.calls.length, 0, "a previously valid preflight cannot bypass current SQL or touch storage");
+      assert.equal(f.state.removed, false);
+    }
+  }
+});
+
+test("an invalid clock after a file quota fails before SQL authorization or filesystem access", async () => {
+  for (const current of [NaN, -1, 1.5, 253402300800000]) for (const [name, , operation] of fileOperations) {
+    const f = await fixture(); let sampled = now;
+    const consume = f.options.authStore.consumeRateLimit;
+    f.options.authStore.consumeRateLimit = async (...args) => {
+      const result = await consume(...args); sampled = current; return result;
+    };
+    const service = await createMediaService({ ...f.options, clock: () => sampled });
+    await assert.rejects(operation(service, "client", f.token), hasCode("MEDIA_UNAVAILABLE"), name);
+    assert.equal(f.rateCalls.length, 1); assert.equal(f.calls.length, 0); assert.equal(f.state.removed, false);
+  }
+});

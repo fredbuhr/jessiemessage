@@ -88,6 +88,7 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
     let firstClientId;
     let clientCookie;
     let clientCsrf;
+    let renewedExpiry;
     const clientEmail = "first-flow-client@example.invalid";
     const clientPassword = "Synthetic first invited client password 2026!";
     const adminHeaders = () => ({ Cookie: adminCookie, "X-CSRF-Token": adminCsrf });
@@ -239,6 +240,31 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       assert.equal((await request("/api/admin/clients", { headers: { Cookie: adminCookie } })).body.clients.length, 2);
     });
 
+    await t.test("administrator pages preserve their collections and cursors across the actual HTTP and SQL boundary", async () => {
+      const cursors = {};
+      for (const kind of ["invitations", "clients"]) {
+        const first = await request(`/api/admin/${kind}?limit=1`, { headers: adminHeaders() });
+        assert.equal(first.status, 200);
+        assert.deepEqual(Object.keys(first.body).sort(), [kind, "hasMore", "nextCursor"].sort());
+        assert.equal(first.body[kind].length, 1); assert.equal(first.body.hasMore, true);
+        assert.equal(typeof first.body.nextCursor, "string"); cursors[kind] = first.body.nextCursor;
+        const second = await request(`/api/admin/${kind}?limit=1&cursor=${encodeURIComponent(first.body.nextCursor)}`, { headers: adminHeaders() });
+        assert.equal(second.status, 200);
+        assert.equal(second.body[kind].length, 1); assert.equal(second.body.hasMore, false); assert.equal(second.body.nextCursor, null);
+        const rows = [...first.body[kind], ...second.body[kind]];
+        assert.equal(new Set(rows.map((row) => row.id)).size, 2);
+        assert.ok(rows[0].createdAt >= rows[1].createdAt);
+        if (kind === "clients") assert.deepEqual(new Set(rows.map((row) => row.id)), new Set([firstClientId, secondClientId]));
+        assert.equal(JSON.stringify(first.body).includes("#invitation="), false);
+        assert.equal((await request(`/api/admin/${kind}?limit=1`, { headers: clientHeaders() })).status, 401);
+      }
+      assert.equal((await request(`/api/admin/clients?cursor=${encodeURIComponent(cursors.invitations)}`, { headers: adminHeaders() })).status, 400);
+      assert.equal((await request(`/api/admin/invitations?cursor=${encodeURIComponent(cursors.clients)}`, { headers: adminHeaders() })).status, 400);
+      for (const query of ["limit=1&limit=2", "limit=101", "offset=1", "cursor="]) {
+        assert.equal((await request(`/api/admin/clients?${query}`, { headers: adminHeaders() })).status, 400);
+      }
+    });
+
     await t.test("access expires at its exact boundary and the existing session cannot authorize protected client work", async () => {
       // Shorten this synthetic entitlement so the same live session spans the
       // boundary without bypassing the independently tested eight-hour limit.
@@ -254,6 +280,48 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       await assert.rejects(accessService.requireActiveClient(tokenFromCookie(clientCookie)));
     });
 
+    await t.test("renewing expired approved access is atomic and preserves its conversation, credentials and existing sessions", async () => {
+      const path = `/api/admin/clients/${firstClientId}/renew`;
+      const body = { accessDays: 1, expectedExpiresAt: now };
+      const userId = Buffer.from(firstClientId, "hex");
+      const preserved = () => connection.query("SELECT email_verified_at, age_assured_at, access_approved_at, password_hash FROM users WHERE id = ?", [userId]);
+      const sessions = () => connection.query("SELECT id, user_id, token_hash, created_at, expires_at, revoked_at FROM sessions WHERE user_id = ? ORDER BY id", [userId]);
+      const conversations = () => connection.query("SELECT id, client_id, admin_id, created_at, closed_at FROM conversations WHERE client_id = ?", [userId]);
+      const credentials = () => connection.query("SELECT credential_version, age_declared_at FROM client_auth_state WHERE user_id = ?", [userId]);
+      const before = { user: await preserved(), sessions: await sessions(), conversations: await conversations(), credentials: await credentials() };
+      assert.equal((await request(path, { method: "POST", body, headers: { ...adminHeaders(), "X-CSRF-Token": clientCsrf } })).status, 403);
+      assert.equal((await request(path, { method: "POST", body, headers: clientHeaders() })).status, 401);
+      const pending = await request(`/api/admin/clients/${secondClientId}/renew`, { method: "POST", body, headers: adminHeaders() });
+      assert.equal(pending.status, 409); assert.deepEqual(pending.body, { error: "verification_required" });
+      const attempts = await Promise.all([1, 2].map(() => request(path, { method: "POST", body, headers: adminHeaders() })));
+      assert.deepEqual(attempts.map((result) => result.status).sort(), [200, 409]);
+      const success = attempts.find((result) => result.status === 200), conflict = attempts.find((result) => result.status === 409);
+      renewedExpiry = now + 86400000;
+      assert.deepEqual(success.body, { status: "renewed", client: { id: firstClientId, accessExpiresAt: renewedExpiry } });
+      assert.deepEqual(conflict.body, { error: "access_changed" });
+      assert.equal(success.headers.get("set-cookie"), null);
+      assert.equal(success.headers.get("cache-control"), "no-store");
+      assert.deepEqual(await preserved(), before.user);
+      assert.deepEqual(await sessions(), before.sessions);
+      assert.deepEqual(await conversations(), before.conversations);
+      assert.deepEqual(await credentials(), before.credentials);
+      const current = await request("/api/access/session", { headers: clientHeaders() });
+      assert.equal(current.status, 200); assert.equal(current.body.access.state, "active"); assert.equal(current.body.access.expiresAt, renewedExpiry);
+      assert.ok(await accessService.requireActiveClient(tokenFromCookie(clientCookie)));
+      assert.equal((await request(path, { method: "POST", body, headers: adminHeaders() })).status, 409);
+      assert.equal(instant((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [userId]))[0].access_expires_at), renewedExpiry);
+    });
+
+    await t.test("renewing before expiry adds to the existing deadline and refuses an excessive horizon or a non-client target", async () => {
+      const path = `/api/admin/clients/${firstClientId}/renew`;
+      const result = await request(path, { method: "POST", headers: adminHeaders(), body: { accessDays: 1, expectedExpiresAt: renewedExpiry } });
+      renewedExpiry += 86400000;
+      assert.equal(result.status, 200); assert.deepEqual(result.body, { status: "renewed", client: { id: firstClientId, accessExpiresAt: renewedExpiry } });
+      assert.equal((await request(path, { method: "POST", headers: adminHeaders(), body: { accessDays: 3650, expectedExpiresAt: renewedExpiry } })).status, 400);
+      assert.equal((await request(`/api/admin/clients/${adminId.toString("hex")}/renew`, { method: "POST", headers: adminHeaders(), body: { accessDays: 1, expectedExpiresAt: renewedExpiry } })).status, 404);
+      assert.equal(instant((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0].access_expires_at), renewedExpiry);
+    });
+
     await t.test("administrator revocation immediately rejects both client sessions and verification tokens", async () => {
       assert.equal((await request(`/api/admin/clients/${firstClientId}/revoke`, { method: "POST", headers: adminHeaders(), body: {} })).status, 200);
       assert.equal((await request("/api/access/session", { headers: clientHeaders() })).status, 401);
@@ -263,6 +331,15 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       assert.equal((await request("/api/access/verify-email", { method: "POST", body: { token: secondToken } })).status, 401);
       assert.equal((await connection.query("SELECT COUNT(*) AS count FROM sessions s JOIN users u ON u.id = s.user_id WHERE u.role = 'client' AND s.revoked_at IS NULL"))[0].count, 0n);
       assert.deepEqual(await deliver(), { sent: 0, failed: 0 });
+    });
+
+    await t.test("renewal never reactivates a revoked account or its old client session", async () => {
+      const result = await request(`/api/admin/clients/${firstClientId}/renew`, { method: "POST", headers: adminHeaders(), body: { accessDays: 1, expectedExpiresAt: renewedExpiry } });
+      assert.equal(result.status, 409); assert.deepEqual(result.body, { error: "verification_required" });
+      assert.equal((await request("/api/access/session", { headers: clientHeaders() })).status, 401);
+      const user = (await connection.query("SELECT status, access_expires_at FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0];
+      assert.equal(user.status, "revoked"); assert.equal(instant(user.access_expires_at), renewedExpiry);
+      assert.equal(await count("conversations"), 1);
     });
 
     await t.test("revoking a client before email delivery cancels the private queued challenge without sending it", async () => {

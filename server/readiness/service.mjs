@@ -101,6 +101,10 @@ export async function createReadinessService({ authService, authStore, mailConfi
       try {
         await limit(session, "verify");
         if (closed) fail("READINESS_UNAVAILABLE");
+        // Quota storage can wait behind other work. Its admission does not
+        // preserve an administrator session that expired or was revoked meanwhile.
+        await actor(token);
+        if (closed) fail("READINESS_UNAVAILABLE");
         try { transport = await createTransport(mailConfig); } catch { fail("READINESS_UNAVAILABLE"); }
         if (typeof transport?.close === "function") activeTransport = lease = { transport };
         if (!transport || typeof transport.verify !== "function" || !lease) fail("READINESS_UNAVAILABLE");
@@ -129,6 +133,9 @@ export async function createReadinessService({ authService, authStore, mailConfi
     actor: (token) => guarded(() => actor(token)),
     summary: (token) => guarded(async () => {
       const session = await actor(token); await limit(session, "read");
+      if (closed) fail("READINESS_UNAVAILABLE");
+      await actor(token);
+      if (closed) fail("READINESS_UNAVAILABLE");
       return { contactEmail: SITE_CONTACT_EMAIL, mail: { configured, sender, replyTo: sender }, features: { ...featureSnapshot },
         checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
     }),

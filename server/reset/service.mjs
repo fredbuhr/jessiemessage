@@ -65,8 +65,9 @@ export async function createResetService({ store, authStore, mailKey, clock = Da
         || Buffer.byteLength(input.email, "utf8") > 1016) fail("RESET_INPUT");
       let email;
       try { email = canonicalEmail(input.email); } catch { email = null; }
+      const quotaTime = nowValue();
+      await limit("request", email ?? "invalid-email", input.peerAddress, quotaTime);
       const now = nowValue();
-      await limit("request", email ?? "invalid-email", input.peerAddress, now);
       if (email !== null) {
         if (now > MAX_INSTANT - LIFETIME) fail("RESET_UNAVAILABLE");
         // Generate the same encrypted candidate for every canonical address;

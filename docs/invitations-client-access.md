@@ -2,7 +2,7 @@
 
 Ce lot relie l'administration à de vrais comptes clients MariaDB : invitations à usage unique, inscription, preuve de possession de l'adresse e-mail, session client et décision d'accès. La page administrateur `/admin/login` conserve l'identité Jessie validée et ajoute les invitations et les comptes clients. La page `/access` permet l'inscription, la vérification de l'e-mail, la connexion et le suivi de son propre accès.
 
-Les messages, photos privées, campagnes et outils CRM ne sont pas disponibles dans ces pages. Le prototype sous `design/` reste distinct de ces fonctions serveur. Aucun compte réel, envoi réel, déploiement ou modification de ZTIKIX n'est effectué par les tests ou par l'ajout de ce code.
+Les conversations texte/photo, les diffusions et le CRM disposent de routes privées et d'options séparées ; voir [messagerie](private-messaging.md), [médias](private-media.md), [CRM](private-crm.md) et [diffusions](targeted-broadcasts.md). Le prototype sous `design/` reste distinct de ces fonctions serveur. Aucun compte réel, envoi réel, déploiement ou modification de ZTIKIX n'est effectué par les tests ou par l'ajout de ce code.
 
 ## Activation explicite
 
@@ -46,7 +46,7 @@ La validité du lien d'inscription (`lifetimeHours`) va de **1 à 720 heures**, 
 
 La durée d'accès (`accessDays`) va de **1 à 3 650 jours** ; `null` signifie explicitement sans limite de durée. L'interface propose 30 jours et permet de choisir l'absence de limite. Le compteur commence **à l'approbation du client**, pas à la création, à l'utilisation ou à l'expiration de l'invitation. Une invitation consommée conserve cette décision pour l'approbation ultérieure. À la borne exacte d'expiration de l'accès, le client passe à l'état exposé `expired`.
 
-La révocation d'une invitation concerne un lien non encore utilisé. Révoquer un client est une opération différente : elle modifie son statut, révoque ses sessions et ses vérifications d'e-mail restantes, puis annule les messages de vérification encore en attente. Ce lot n'a pas de route de renouvellement d'accès, de réactivation ou de changement de durée d'un compte déjà approuvé.
+La révocation d'une invitation concerne un lien non encore utilisé. Révoquer un client est une opération différente : elle modifie son statut, révoque ses sessions et ses vérifications d'e-mail restantes, puis annule les messages de vérification encore en attente. Depuis 0.14, une action distincte prolonge un accès déjà approuvé et limité dans le temps, avec comparaison exacte de son ancienne échéance. Elle ne réactive pas un compte révoqué/suspendu, ne fabrique aucun prérequis et ne transforme pas un accès en durée illimitée. Les listes administratives disposent aussi de pages de 50 lignes par défaut, 100 au maximum, au-delà de l'ancienne limite de 500. Voir [règles et garanties du renouvellement/pagination](access-renewal-pagination.md).
 
 ## Jetons, inscription et preuve d'e-mail
 
@@ -80,11 +80,12 @@ L'adresse réseau provient du socket ; `X-Forwarded-For` n'est pas utilisé comm
 |---|---|---|
 | `/access` | `GET`, `HEAD` | Page client, uniquement lorsque le lot est activé. |
 | `/api/admin/access` | `GET` | Session administrateur ; indique la configuration e-mail et l'assurance d'âge encore en attente. Ce n'est pas un test de livraison SMTP. |
-| `/api/admin/invitations` | `GET`, `POST` | Liste bornée sans jeton brut ; création d'un lien affiché une fois. |
+| `/api/admin/invitations` | `GET`, `POST` | Liste paginée par `cursor` et `limit`, sans jeton brut ; création d'un lien affiché une fois. |
 | `/api/admin/invitations/{id}/revoke` | `POST` | Révocation d'une invitation non utilisée. |
-| `/api/admin/clients` | `GET` | Liste bornée pour la revue administrateur : pseudonyme, e-mail, statut, prérequis et expiration. |
+| `/api/admin/clients` | `GET` | Liste paginée par `cursor` et `limit` : pseudonyme, e-mail, statut, prérequis et expiration. |
 | `/api/admin/clients/{id}/approve` | `POST` | Approbation avec e-mail et assurance d'âge déjà prouvés ; création atomique de conversation. |
 | `/api/admin/clients/{id}/revoke` | `POST` | Révocation du compte et de ses accès restants. |
+| `/api/admin/clients/{id}/renew` | `POST` | Prolongation d’un accès déjà approuvé et fini : `accessDays` et `expectedExpiresAt` exacts ; conflit sans double prolongation. |
 | `/api/access/invitation` | `POST` | Inspection d'un jeton valide, limitée à ses durées. |
 | `/api/access/register` | `POST` | Inscription atomique sur invitation, réponse `verification_pending`. |
 | `/api/access/verify-email` | `POST` | Consommation d'une preuve de possession de la boîte mail. |
@@ -121,4 +122,4 @@ Le droit `DELETE` sur les codes de secours n'est pas utilisé par le serveur HTT
 
 La réussite avec un transport simulé et des fixtures synthétiques ne valide pas une boîte mail réelle, un navigateur HTTPS, une preuve d'âge ou l'hébergement Infomaniak. `/api/health` reste une preuve de réponse HTTP uniquement.
 
-Avant un pilote réel, il reste à choisir et intégrer un parcours d'assurance d'âge adapté, valider les conditions d'usage du fournisseur d'e-mails et la réception réelle, ajouter la récupération de mot de passe client, effectuer la recette HTTPS sur ordinateur et mobile, et confirmer l'hébergement ainsi que les conditions juridiques du service. Le prochain lot fonctionnel est la conversation privée avec contrôle d'accès effectif ; les médias privés viennent ensuite. Les comptes en attente et les seules tables de conversations ne constituent pas encore une messagerie utilisable.
+La [récupération de mot de passe client](client-recovery.md), la messagerie et les médias sont désormais implémentés avec leurs propres contrôles. Avant un pilote réel, il reste à choisir et intégrer un parcours d'assurance d'âge adapté, valider le SMTP et la réception réels, éprouver stockage/sauvegarde/restauration et rétention, effectuer la recette HTTPS sur ordinateur et mobile, puis confirmer l'hébergement et les informations juridiques du service. L'approbation et le renouvellement ne remplacent pas la preuve de majorité. Voir le [bilan et l'ordre de publication](NEXT-STEPS.md).

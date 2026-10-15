@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
 
 export class AuthAccessStoreError extends Error {
   constructor(code, message = "Client access persistence operation failed.") {
@@ -214,16 +215,23 @@ export function createAccessStore(pool) {
       }, true);
     },
 
-    async listInvitations(actorTokenHash, { now }) {
+    async listInvitations(actorTokenHash, { now, cursor = null, limit = 50 }) {
       bytes(actorTokenHash, 32); instant(now);
+      const page = validateAccessPage("invitations", { cursor, limit });
       return withConnection(async (connection) => {
         if (!await administrator(connection, actorTokenHash, now)) return null;
         const rows = await connection.query(`SELECT id, created_at, expires_at, access_days, consumed_at,
-          consumed_by_id, revoked_at FROM invitations ORDER BY created_at DESC, id DESC LIMIT 500`);
-        return rows.map((row) => ({ id: row.id.toString("hex"), createdAt: fromSqlDate(row.created_at),
+          consumed_by_id, revoked_at, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s.%f') AS cursor_created_at
+          FROM invitations ${page.position ? "WHERE created_at < ? OR (created_at = ? AND id < ?)" : ""}
+          ORDER BY created_at DESC, id DESC LIMIT ?`, page.position
+          ? [page.position.createdAt, page.position.createdAt, Buffer.from(page.position.id, "hex"), page.limit + 1] : [page.limit + 1]);
+        const selected = rows.slice(0, page.limit), hasMore = rows.length > page.limit;
+        const invitations = selected.map((row) => ({ id: row.id.toString("hex"), createdAt: fromSqlDate(row.created_at),
           expiresAt: fromSqlDate(row.expires_at), accessDays: row.access_days === null ? null : Number(row.access_days),
           state: row.consumed_at !== null ? "used" : row.revoked_at !== null ? "revoked" : now >= fromSqlDate(row.expires_at) ? "expired" : "pending",
           consumedById: row.consumed_by_id === null ? null : row.consumed_by_id.toString("hex") }));
+        const last = selected.at(-1);
+        return { invitations, nextCursor: hasMore ? encodeAccessCursor("invitations", { createdAt: last.cursor_created_at, id: last.id.toString("hex") }) : null, hasMore };
       }, true);
     },
 
@@ -371,17 +379,51 @@ export function createAccessStore(pool) {
       }, true);
     },
 
-    async listClients(actorTokenHash, { now }) {
+    async listClients(actorTokenHash, { now, cursor = null, limit = 50 }) {
       bytes(actorTokenHash, 32); instant(now);
+      const page = validateAccessPage("clients", { cursor, limit });
       return withConnection(async (connection) => {
         if (!await administrator(connection, actorTokenHash, now)) return null;
-        const rows = await connection.query(`SELECT id, pseudonym, email, status, email_verified_at, age_assured_at,
-          access_approved_at, access_expires_at FROM users WHERE role = 'client' ORDER BY created_at DESC, id DESC LIMIT 500`);
-        return rows.map((row) => ({ id: row.id.toString("hex"), pseudonym: row.pseudonym, email: row.email, status: row.status,
+        const rows = await connection.query(`SELECT id, pseudonym, email, status, email_verified_at, age_assured_at, created_at,
+          access_approved_at, access_expires_at, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s.%f') AS cursor_created_at
+          FROM users WHERE role = 'client' ${page.position ? "AND (created_at < ? OR (created_at = ? AND id < ?))" : ""}
+          ORDER BY created_at DESC, id DESC LIMIT ?`, page.position
+          ? [page.position.createdAt, page.position.createdAt, Buffer.from(page.position.id, "hex"), page.limit + 1] : [page.limit + 1]);
+        const selected = rows.slice(0, page.limit), hasMore = rows.length > page.limit;
+        const clients = selected.map((row) => ({ id: row.id.toString("hex"), createdAt: fromSqlDate(row.created_at), pseudonym: row.pseudonym, email: row.email, status: row.status,
           emailVerified: row.email_verified_at !== null && fromSqlDate(row.email_verified_at) <= now,
           ageAssured: row.age_assured_at !== null && fromSqlDate(row.age_assured_at) <= now,
           approved: row.access_approved_at !== null && fromSqlDate(row.access_approved_at) <= now,
           accessExpiresAt: optionalDate(row.access_expires_at) }));
+        const last = selected.at(-1);
+        return { clients, nextCursor: hasMore ? encodeAccessCursor("clients", { createdAt: last.cursor_created_at, id: last.id.toString("hex") }) : null, hasMore };
+      }, true);
+    },
+
+    async renewClient(actorTokenHash, userId, { now, expectedExpiresAt, accessDays }) {
+      bytes(actorTokenHash, 32); bytes(userId, 16); instant(now);
+      if (!Number.isSafeInteger(expectedExpiresAt) || expectedExpiresAt < 0 || expectedExpiresAt > 253402300799999
+        || !Number.isSafeInteger(accessDays) || accessDays < 1 || accessDays > 3650) throw new AuthAccessStoreError("ACCESS_INPUT");
+      return withConnection(async (connection) => {
+        // Keep administrator -> MFA -> session -> client ordering shared with
+        // approval and revocation. The locked expiry is the mutation's CAS.
+        if (!await administrator(connection, actorTokenHash, now)) throw new AuthAccessStoreError("ACCESS_FORBIDDEN");
+        const user = (await connection.query(`SELECT role, status, email_verified_at, age_assured_at,
+          access_approved_at, access_expires_at, DATE_FORMAT(access_expires_at, '%Y-%m-%d %H:%i:%s.%f') AS exact_expiry
+          FROM users WHERE id = ? FOR UPDATE`, [userId]))[0];
+        if (!user || user.role !== "client") return null;
+        if (user.status !== "active" || user.email_verified_at === null || user.age_assured_at === null || user.access_approved_at === null
+          || fromSqlDate(user.email_verified_at) > now || fromSqlDate(user.age_assured_at) > now || fromSqlDate(user.access_approved_at) > now
+          || user.access_expires_at === null) throw new AuthAccessStoreError("ACCESS_PREREQUISITES");
+        const currentExpiry = fromSqlDate(user.access_expires_at);
+        if (currentExpiry !== expectedExpiresAt || user.exact_expiry !== sqlDate(expectedExpiresAt)) throw new AuthAccessStoreError("ACCESS_CONFLICT");
+        const accessExpiresAt = Math.max(now, currentExpiry) + accessDays * 86400000;
+        if (!Number.isSafeInteger(accessExpiresAt) || accessExpiresAt > 253402300799999
+          || accessExpiresAt > now + 3650 * 86400000) throw new AuthAccessStoreError("ACCESS_INPUT");
+        // Do not rewrite the first approval, conversation owner, credential
+        // generation or session rows: renewal extends this approved access only.
+        await connection.query("UPDATE users SET access_expires_at = ?, updated_at = ? WHERE id = ?", [sqlDate(accessExpiresAt), sqlDate(now), userId]);
+        return { id: userId.toString("hex"), accessExpiresAt };
       }, true);
     },
 

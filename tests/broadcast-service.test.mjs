@@ -43,6 +43,28 @@ async function fixture({ mediaEnabled = false } = {}) {
   return { key, token, state, calls, authCalls, rateCalls, store, authStore, options, service: await createBroadcastService(options) };
 }
 
+const contextCommands = [
+  { name: "preference", storeMethod: "getPreference", budgets: 2, invoke: (service, token) => service.preference(token) },
+  { name: "savePreference", storeMethod: "savePreference", budgets: 1, mutation: true, invoke: (service, token) => service.savePreference(token, { enabled: true, expectedVersion: "0" }) },
+  { name: "preview", storeMethod: "preview", budgets: 2, invoke: (service, token) => service.preview(token, { conversationIds: [conversationHex], mediaId: null }) },
+  { name: "create", storeMethod: "create", budgets: 1, mutation: true, invoke: (service, token) => service.create(token, input()) },
+  { name: "activity", storeMethod: "activity", budgets: 2, invoke: (service, token) => service.activity(token) },
+  { name: "list", storeMethod: "list", budgets: 2, invoke: (service, token) => service.list(token) },
+  { name: "get", storeMethod: "get", budgets: 2, invoke: (service, token) => service.get(token, campaignId.toString("hex")) },
+  { name: "cancel", storeMethod: "cancel", budgets: 1, mutation: true, invoke: (service, token) => service.cancel(token, campaignId.toString("hex")) },
+];
+
+function heldBudget(f, count) {
+  let release, notify, consumed = 0;
+  const hold = new Promise((resolve) => { release = resolve; });
+  const blocked = new Promise((resolve) => { notify = resolve; });
+  return { blocked, release, authStore: { consumeRateLimit: async (...args) => {
+    const result = await f.authStore.consumeRateLimit(...args);
+    if (++consumed === count) { notify(); await hold; }
+    return result;
+  } } };
+}
+
 test("broadcast service requires fixed key, complete dependencies and explicit valid options", async () => {
   const f = await fixture();
   for (const key of [undefined, null, f.key.toString("hex"), Buffer.alloc(31), Buffer.alloc(33)]) await assert.rejects(createBroadcastService({ ...f.options, key }), hasCode("BROADCAST_CONFIG"));
@@ -119,6 +141,54 @@ test("broadcast service quotas are opaque scoped and reject before private data 
   assert.equal(f.calls.length, count);
   f.state.rates = [{ allowed: "true" }];
   await assert.rejects(f.service.list(f.token), hasCode("BROADCAST_UNAVAILABLE"));
+});
+
+test("every broadcast context rechecks the operation time after a held quota crosses session expiry", async () => {
+  for (const command of contextCommands) {
+    const f = await fixture(), budget = heldBudget(f, command.budgets), observed = [], durable = [];
+    let currentTime = now;
+    const original = f.store[command.storeMethod], expiresAt = now + 10000;
+    const store = { ...f.store, [command.storeMethod]: async (options) => {
+      observed.push(options);
+      if (options.now >= expiresAt) throw Object.assign(new Error("Current session expired"), { code: "CHAT_UNAUTHORIZED" });
+      if (command.mutation) durable.push(command.name);
+      return original(options);
+    } };
+    const service = await createBroadcastService({ ...f.options, store, authStore: budget.authStore, clock: () => currentTime });
+    const pending = command.invoke(service, f.token);
+    await budget.blocked;
+    assert.deepEqual(observed, [], `${command.name}: private access must wait for all budgets`);
+    assert.equal(f.rateCalls.length, command.budgets, command.name);
+    currentTime = expiresAt + 1;
+    budget.release();
+    await assert.rejects(pending, hasCode("BROADCAST_UNAUTHORIZED"), command.name);
+    assert.equal(observed.length, 1, command.name);
+    assert.equal(observed[0].now, currentTime, `${command.name}: store must receive the final time`);
+    assert.deepEqual(observed[0].tokenHash, tokenDigest(f.token), command.name);
+    assert.deepEqual(durable, [], `${command.name}: expired authorization must not commit a mutation`);
+  }
+});
+
+test("every broadcast context rejects a clock that becomes invalid during quota waits before operation access", async () => {
+  for (const command of contextCommands) {
+    for (const invalidTime of [NaN, -1, now + 0.5, 253402300800000]) {
+      const f = await fixture(), budget = heldBudget(f, command.budgets), observed = [];
+      let currentTime = now;
+      const original = f.store[command.storeMethod];
+      const store = { ...f.store, [command.storeMethod]: async (options) => { observed.push(options); return original(options); } };
+      const service = await createBroadcastService({ ...f.options, store, authStore: budget.authStore, clock: () => currentTime });
+      const pending = command.invoke(service, f.token);
+      await budget.blocked;
+      const before = f.calls.length;
+      assert.deepEqual(observed, [], command.name);
+      assert.equal(f.rateCalls.length, command.budgets, command.name);
+      currentTime = invalidTime;
+      budget.release();
+      await assert.rejects(pending, hasCode("BROADCAST_UNAVAILABLE"), `${command.name}: ${invalidTime}`);
+      assert.deepEqual(observed, [], `${command.name}: invalid final time must not reach the operation store`);
+      assert.equal(f.calls.length, before, command.name);
+    }
+  }
 });
 
 test("creation rejects a cryptographically valid store response for a different confirmed immutable payload", async () => {

@@ -277,6 +277,46 @@ test("each chat read reauthorizes with time sampled after slow quotas rather tha
   }
 });
 
+const mutationOperations = [
+  ["sendMessage", "send", (service, token, role) => service.send(role, token, conversationHex, { clientMessageId: "7".repeat(32), body: "Synthetic boundary text" })],
+  ["sendMessage", "sendImage", (service, token, role) => service.sendImage(role, token, conversationHex, { clientMessageId: "7".repeat(32), mediaId: "8".repeat(32), caption: "Synthetic boundary image" })],
+  ["markRead", "markRead", (service, token, role) => service.markRead(role, token, conversationHex, { throughSequence: "0" })],
+  ["deleteMessage", "delete", (service, token, role) => service.delete(role, token, conversationHex, "9".repeat(32))],
+];
+
+test("each chat mutation reauthorizes at session and access deadlines reached during quota waits", async () => {
+  for (const [method, name, mutation] of mutationOperations) {
+    for (const role of ["admin", "client"]) for (const code of ["CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN"]) for (const offset of [0, 1]) {
+      const f = await fixture(), expiresAt = now + 1500, checked = [];
+      let decisions = 0, mutations = 0;
+      const store = { ...f.store, async [method](request) {
+        checked.push(request.now);
+        if (request.now >= expiresAt) throw Object.assign(new Error("Private expired authorization details"), { code });
+        mutations += 1; return f.store[method](request);
+      } };
+      const service = await createChatService({ ...f.options, store, authStore: { async consumeRateLimit() {
+        f.state.now = expiresAt + offset; decisions += 1; return { allowed: true };
+      } } });
+      await assert.rejects(mutation(service, f.token, role), hasCode(code), `${name}/${role}/${code}/${offset}`);
+      assert.deepEqual(checked, [expiresAt + offset], name);
+      assert.equal(decisions, name === "send" || name === "sendImage" ? 2 : 1);
+      assert.equal(mutations, 0); assert.equal(f.calls.length, 0, "expired requests cannot mutate or replay");
+    }
+  }
+});
+
+test("each chat mutation fails closed before persistence if the post-quota clock becomes invalid", async () => {
+  for (const [method, name, mutation] of mutationOperations) for (const invalidTime of [-1, NaN, 1.5, 253402300800000]) {
+    const f = await fixture(); let decisions = 0;
+    const service = await createChatService({ ...f.options, authStore: { async consumeRateLimit() {
+      f.state.now = invalidTime; decisions += 1; return { allowed: true };
+    } } });
+    await assert.rejects(mutation(service, f.token, "admin"), hasCode("CHAT_UNAVAILABLE"), `${name}/${invalidTime}`);
+    assert.equal(decisions, method === "sendMessage" ? 2 : 1);
+    assert.equal(f.calls.length, 0); assert.equal(f.state.sendRow, null);
+  }
+});
+
 test("chat read quotas follow the authenticated user across tokens, services and read kinds and reopen after their shared window", async () => {
   const f = await fixture(), ledger = new Map(), rateCalls = [];
   const authStore = { async consumeRateLimit(bucket, options) {

@@ -6,6 +6,7 @@ import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAccessStore, AuthAccessStoreError } from "../server/access/store.mjs";
+import { decodeAccessCursor, encodeAccessCursor } from "../server/access/pagination.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16);
@@ -102,8 +103,8 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       await connection.query("UPDATE users SET status = 'active' WHERE id = ?", [admin.id]);
       assert.ok(await store.createInvitation({ ...payload, actorTokenHash: admin.tokenHash }));
       const listed = await store.listInvitations(admin.tokenHash, { now });
-      assert.ok(listed.length);
-      assert.ok(listed.every((item) => !Object.hasOwn(item, "tokenHash") && !Object.hasOwn(item, "token")));
+      assert.ok(listed.invitations.length);
+      assert.ok(listed.invitations.every((item) => !Object.hasOwn(item, "tokenHash") && !Object.hasOwn(item, "token")));
     });
 
     await t.test("concurrent invitation use creates exactly one pending client and atomically enqueues its encrypted verification", async () => {
@@ -218,9 +219,9 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), true);
       const session = (await login(fixture)).session;
       assert.equal((await lookup(session)).access.expiresAt, null);
-      const clients = await store.listClients(admin.tokenHash, { now });
+      const { clients } = await store.listClients(admin.tokenHash, { now });
       const metadata = clients.find((item) => item.id === fixture.user.id.toString("hex"));
-      assert.deepEqual(metadata, { id: fixture.user.id.toString("hex"), pseudonym: fixture.user.pseudonym, email: fixture.user.email,
+      assert.deepEqual(metadata, { id: fixture.user.id.toString("hex"), createdAt: now, pseudonym: fixture.user.pseudonym, email: fixture.user.email,
         status: "active", emailVerified: true, ageAssured: true, approved: true, accessExpiresAt: null });
       assert.ok(clients.every((item) => !Object.hasOwn(item, "passwordHash") && !Object.hasOwn(item, "tokenHash")));
       assert.equal(await store.listClients(session.tokenHash, { now }), null);
@@ -288,6 +289,170 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal(await store.revokeClient(admin.tokenHash, connected.user.id, { now }), true);
       assert.equal(await lookup(a), null); assert.equal(await lookup(b), null);
       assert.equal((await login(connected)).accepted, false);
+    });
+
+    async function renewable(expiresAt = now + 2 * 86400000) {
+      const fixture = await registered(); await verify(fixture);
+      const approvedAt = now - 3 * 86400000;
+      await connection.query(`UPDATE users SET status = 'active', created_at = ?, email_verified_at = ?, age_assured_at = ?, access_approved_at = ?, access_expires_at = ?
+        WHERE id = ?`, [sqlDate(approvedAt - 1000), sqlDate(approvedAt), sqlDate(approvedAt), sqlDate(approvedAt), sqlDate(expiresAt), fixture.user.id]);
+      const conversationId = id();
+      await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [conversationId, fixture.user.id, admin.id, sqlDate(approvedAt)]);
+      const { accepted, session } = await login(fixture); assert.equal(accepted, true);
+      return { ...fixture, conversationId, session, expiresAt };
+    }
+
+    await t.test("renewal extends approved finite access once and preserves its first approval, owner, credentials and sessions", async () => {
+      const fixture = await renewable();
+      const protectedUser = async () => ({ ...(await connection.query(`SELECT id, role, status, pseudonym, email, password_hash,
+        email_verified_at, age_assured_at, access_approved_at, created_at FROM users WHERE id = ?`, [fixture.user.id]))[0] });
+      const protectedRows = async () => ({
+        user: await protectedUser(),
+        conversations: (await connection.query("SELECT * FROM conversations WHERE client_id = ?", [fixture.user.id])).map((row) => ({ ...row })),
+        auth: (await connection.query("SELECT * FROM client_auth_state WHERE user_id = ?", [fixture.user.id])).map((row) => ({ ...row })),
+        sessions: (await connection.query("SELECT * FROM sessions WHERE user_id = ? ORDER BY id", [fixture.user.id])).map((row) => ({ ...row })),
+        sessionState: (await connection.query("SELECT c.* FROM client_session_state c JOIN sessions s ON s.id = c.session_id WHERE s.user_id = ? ORDER BY c.session_id", [fixture.user.id])).map((row) => ({ ...row })),
+      });
+      const before = await protectedRows();
+      assert.deepEqual(await store.renewClient(admin.tokenHash, fixture.user.id, { now, expectedExpiresAt: fixture.expiresAt, accessDays: 7 }),
+        { id: fixture.user.id.toString("hex"), accessExpiresAt: fixture.expiresAt + 7 * 86400000 });
+      assert.deepEqual(await protectedRows(), before);
+      assert.equal((await lookup(fixture.session)).access.expiresAt, fixture.expiresAt + 7 * 86400000);
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { now, expectedExpiresAt: fixture.expiresAt, accessDays: 7 }), (error) => error.code === "ACCESS_CONFLICT");
+    });
+
+    await t.test("expired approved access renews from now and concurrent identical snapshots produce one extension", async () => {
+      const fixture = await renewable(now - 86400000);
+      assert.equal((await lookup(fixture.session)).access.state, "expired");
+      const results = await Promise.allSettled([1, 2].map(() => store.renewClient(admin.tokenHash, fixture.user.id,
+        { now, expectedExpiresAt: fixture.expiresAt, accessDays: 3 })));
+      const successes = results.filter((result) => result.status === "fulfilled"), failures = results.filter((result) => result.status === "rejected");
+      assert.equal(successes.length, 1); assert.equal(failures.length, 1);
+      assert.deepEqual(successes[0].value, { id: fixture.user.id.toString("hex"), accessExpiresAt: now + 3 * 86400000 });
+      assert.equal(failures[0].reason.code, "ACCESS_CONFLICT");
+      assert.equal((await lookup(fixture.session)).access.state, "active");
+      assert.equal((await lookup(fixture.session)).access.expiresAt, now + 3 * 86400000);
+    });
+
+    await t.test("renewal refuses wrong accounts, nonactive statuses, future gates and unlimited access without altering them", async () => {
+      const fixture = await renewable();
+      const request = { now, expectedExpiresAt: fixture.expiresAt, accessDays: 1 };
+      assert.equal(await store.renewClient(admin.tokenHash, id(), request), null);
+      assert.equal(await store.renewClient(admin.tokenHash, admin.id, request), null);
+      for (const status of ["pending", "suspended", "revoked", "deleted"]) {
+        await connection.query("UPDATE users SET status = ? WHERE id = ?", [status, fixture.user.id]);
+        await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_PREREQUISITES");
+      }
+      await connection.query("UPDATE users SET status = 'active' WHERE id = ?", [fixture.user.id]);
+      for (const column of ["email_verified_at", "age_assured_at", "access_approved_at"]) {
+        const original = (await connection.query(`SELECT ${column} AS value FROM users WHERE id = ?`, [fixture.user.id]))[0].value;
+        await connection.query(`UPDATE users SET ${column} = ? WHERE id = ?`, [sqlDate(now + 1000), fixture.user.id]);
+        try { await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_PREREQUISITES"); }
+        finally { await connection.query(`UPDATE users SET ${column} = ? WHERE id = ?`, [original, fixture.user.id]); }
+      }
+      await connection.query("UPDATE users SET access_expires_at = NULL WHERE id = ?", [fixture.user.id]);
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_PREREQUISITES");
+      assert.equal((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0].access_expires_at, null);
+    });
+
+    await t.test("renewal rechecks current administrator status, session expiry, revocation and MFA generation in its transaction", async () => {
+      const fixture = await renewable(), request = { now, expectedExpiresAt: fixture.expiresAt, accessDays: 1 };
+      for (const token of [digest(), fixture.session.tokenHash]) await assert.rejects(store.renewClient(token, fixture.user.id, request), (error) => error.code === "ACCESS_FORBIDDEN");
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, now: now + 1800000 }), (error) => error.code === "ACCESS_FORBIDDEN");
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, now: now + 8 * 3600000 }), (error) => error.code === "ACCESS_FORBIDDEN");
+      for (const [alter, restore, parameters] of [
+        ["UPDATE sessions SET revoked_at = ? WHERE id = ?", "UPDATE sessions SET revoked_at = NULL WHERE id = ?", [sqlDate(now), admin.sessionId]],
+        ["UPDATE admin_mfa SET version = 2 WHERE user_id = ?", "UPDATE admin_mfa SET version = 1 WHERE user_id = ?", [admin.id]],
+        ["UPDATE users SET status = 'suspended' WHERE id = ?", "UPDATE users SET status = 'active' WHERE id = ?", [admin.id]],
+        ["UPDATE admin_mfa SET enabled_at = ? WHERE user_id = ?", "UPDATE admin_mfa SET enabled_at = ? WHERE user_id = ?", [sqlDate(now + 1000), admin.id]],
+      ]) {
+        await connection.query(alter, parameters);
+        try { await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_FORBIDDEN"); }
+        finally { await connection.query(restore, restore.includes("enabled_at") ? [sqlDate(now), admin.id] : [parameters.at(-1)]); }
+      }
+      assert.equal((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0].access_expires_at, sqlDate(fixture.expiresAt));
+    });
+
+    await t.test("renewal input, exact expiry snapshot and ten-year horizon fail without shortening access", async () => {
+      const fixture = await renewable(), request = { now, expectedExpiresAt: fixture.expiresAt, accessDays: 1 };
+      for (const patch of [{ accessDays: null }, { accessDays: 0 }, { accessDays: 3651 }, { accessDays: 1.5 }, { expectedExpiresAt: null }, { expectedExpiresAt: -1 }, { expectedExpiresAt: 1.1 }]) {
+        await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, ...patch }), (error) => error.code === "ACCESS_INPUT");
+      }
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, accessDays: 3650 }), (error) => error.code === "ACCESS_INPUT");
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, expectedExpiresAt: fixture.expiresAt + 1 }), (error) => error.code === "ACCESS_CONFLICT");
+      const microExpiry = sqlDate(fixture.expiresAt).slice(0, -3) + "001";
+      await connection.query("UPDATE users SET access_expires_at = ? WHERE id = ?", [microExpiry, fixture.user.id]);
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_CONFLICT");
+      assert.equal((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0].access_expires_at, microExpiry);
+      const expired = await renewable(now - 1000);
+      assert.deepEqual(await store.renewClient(admin.tokenHash, expired.user.id, { now, expectedExpiresAt: expired.expiresAt, accessDays: 3650 }),
+        { id: expired.user.id.toString("hex"), accessExpiresAt: now + 3650 * 86400000 });
+    });
+
+    await t.test("concurrent client revocation and renewal leave revoked access and revoked sessions authoritative", async () => {
+      const fixture = await renewable(), request = { now, expectedExpiresAt: fixture.expiresAt, accessDays: 1 };
+      const outcomes = await Promise.allSettled([store.renewClient(admin.tokenHash, fixture.user.id, request), store.revokeClient(admin.tokenHash, fixture.user.id, { now })]);
+      assert.equal(outcomes[1].status, "fulfilled"); assert.equal(outcomes[1].value, true);
+      if (outcomes[0].status === "rejected") assert.equal(outcomes[0].reason.code, "ACCESS_PREREQUISITES");
+      else assert.equal(outcomes[0].value.accessExpiresAt, fixture.expiresAt + 86400000);
+      assert.equal((await connection.query("SELECT status FROM users WHERE id = ?", [fixture.user.id]))[0].status, "revoked");
+      assert.equal(await lookup(fixture.session), null);
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_PREREQUISITES");
+    });
+
+    await t.test("administrator keyset pages pass 500 rows, preserve tied microseconds, survive cursor deletion and skip newer inserts", async () => {
+      const otherAdmin = { id: id(), sessionId: id(), tokenHash: digest() };
+      await connection.query("INSERT INTO users (id, role, status, pseudonym, email, created_at, updated_at) VALUES (?, 'admin', 'active', 'Other page administrator', ?, ?, ?)", [otherAdmin.id, `other-page-admin-${sequence++}@example.invalid`, sqlDate(now), sqlDate(now)]);
+      await connection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, 'synthetic-encrypted-secret', 1, 1, ?)", [otherAdmin.id, sqlDate(now)]);
+      await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [otherAdmin.sessionId, otherAdmin.id, otherAdmin.tokenHash, sqlDate(now), sqlDate(now + 8 * 3600000)]);
+      await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [otherAdmin.sessionId, sqlDate(now), sqlDate(now)]);
+      const otherInvitation = await invitation({ actorTokenHash: otherAdmin.tokenHash });
+      const sharedClient = await renewable();
+      await connection.query("UPDATE conversations SET admin_id = ? WHERE id = ?", [otherAdmin.id, sharedClient.conversationId]);
+      assert.ok((await store.listInvitations(admin.tokenHash, { now, limit: 100 })).invitations.some((row) => row.id === otherInvitation.id.toString("hex")));
+      assert.ok((await store.listClients(admin.tokenHash, { now, limit: 100 })).clients.some((row) => row.id === sharedClient.user.id.toString("hex")));
+      assert.ok((await store.listClients(otherAdmin.tokenHash, { now, limit: 100 })).clients.some((row) => row.id === sharedClient.user.id.toString("hex")));
+      const invitationRows = [], clientRows = [];
+      for (let index = 0; index < 520; index++) {
+        const createdAt = `2026-10-14 11:59:59.${String(123400 + Math.floor(index / 40)).padStart(6, "0")}`;
+        invitationRows.push([id(), digest(), admin.id, createdAt, sqlDate(now + 3600000)]);
+        clientRows.push([id(), `page-${sequence++}@example.invalid`, createdAt, createdAt]);
+      }
+      for (let start = 0; start < invitationRows.length; start += 80) {
+        const invites = invitationRows.slice(start, start + 80), clients = clientRows.slice(start, start + 80);
+        await connection.query(`INSERT INTO invitations (id, token_hash, created_by_id, created_at, expires_at)
+          VALUES ${invites.map(() => "(?, ?, ?, ?, ?)").join(",")}`, invites.flat());
+        await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, created_at, updated_at)
+          VALUES ${clients.map(() => "(?, 'client', 'pending', 'Synthetic page client', ?, ?, ?)").join(",")}`, clients.flat());
+      }
+      for (const kind of ["invitations", "clients"]) {
+        const table = kind === "clients" ? "users" : "invitations", where = kind === "clients" ? "WHERE role = 'client'" : "";
+        const expected = (await connection.query(`SELECT id FROM ${table} ${where} ORDER BY created_at DESC, id DESC`)).map((row) => row.id.toString("hex"));
+        assert.ok(expected.length > 500);
+        const list = (cursor = null) => kind === "clients" ? store.listClients(admin.tokenHash, { now, cursor, limit: 73 }) : store.listInvitations(admin.tokenHash, { now, cursor, limit: 73 });
+        let page = await list(), seen = page[kind].map((row) => row.id), previousCursor = null;
+        assert.equal(page.hasMore, true); assert.equal(page[kind].length, 73);
+        const position = decodeAccessCursor(kind, page.nextCursor);
+        assert.match(position.createdAt, /\.\d{6}$/); assert.equal(position.id, seen.at(-1));
+        // A cursor is a position, not a foreign key to a row that must survive.
+        await connection.query(`DELETE FROM ${table} WHERE id = ?`, [Buffer.from(position.id, "hex")]);
+        const newer = id();
+        if (kind === "clients") await connection.query("INSERT INTO users (id, role, status, pseudonym, email, created_at, updated_at) VALUES (?, 'client', 'pending', 'New page client', ?, ?, ?)", [newer, `page-new-${sequence++}@example.invalid`, sqlDate(now + 1000), sqlDate(now + 1000)]);
+        else await connection.query("INSERT INTO invitations (id, token_hash, created_by_id, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [newer, digest(), admin.id, sqlDate(now + 1000), sqlDate(now + 3600000)]);
+        let pages = 1;
+        while (page.hasMore) {
+          assert.equal(typeof page.nextCursor, "string"); assert.notEqual(page.nextCursor, previousCursor); previousCursor = page.nextCursor;
+          page = await list(page.nextCursor); pages++; assert.ok(pages < 20);
+          assert.ok(page[kind].length <= 73); seen.push(...page[kind].map((row) => row.id));
+        }
+        assert.equal(page.nextCursor, null); assert.deepEqual(seen, expected); assert.equal(new Set(seen).size, seen.length);
+        assert.ok(!seen.includes(newer.toString("hex")));
+        const emptyCursor = encodeAccessCursor(kind, { createdAt: "1970-01-01 00:00:00.000000", id: "00000000000000000000000000000000" });
+        assert.deepEqual(await list(emptyCursor), { [kind]: [], nextCursor: null, hasMore: false });
+        const otherCursor = encodeAccessCursor(kind === "clients" ? "invitations" : "clients", position);
+        await assert.rejects(list(otherCursor), (error) => error.code === "ACCESS_INPUT");
+        for (const limit of [0, 101]) await assert.rejects(kind === "clients" ? store.listClients(admin.tokenHash, { now, limit }) : store.listInvitations(admin.tokenHash, { now, limit }), (error) => error.code === "ACCESS_INPUT");
+      }
     });
 
     await t.test("new database constraints reject role confusion, malformed tokens, invalid lifetimes and zero versions", async () => {

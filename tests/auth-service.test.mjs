@@ -8,17 +8,19 @@ const password = "Synthetic test password 123!";
 const secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
 const userId = randomBytes(16);
 const key = randomBytes(32);
+const initialNow = 1800000000000;
 let passwordHash;
 before(async () => { passwordHash = await hashPassword(password); });
 
 async function fixture() {
-  let now = 1800000000000;
-  const calls = [];
-  const state = { active: true, record: true, lastStep: -1, session: null, allowed: true, available: true };
+  let now = initialNow;
+  const calls = [], loginAttempts = [];
+  const state = { active: true, record: true, lastStep: -1, session: null, allowed: true, available: true, rateHook: null };
   const store = {
-    consumeRateLimit: async (digest, options) => { calls.push({ digest, options }); return { allowed: state.allowed, retryAfter: 77 }; },
+    consumeRateLimit: async (digest, options) => { calls.push({ digest, options }); if (state.rateHook) await state.rateHook(options, calls.length); return { allowed: state.allowed, retryAfter: 77 }; },
     getLoginRecord: async () => state.record ? { id: userId, role: "admin", status: state.active ? "active" : "suspended", passwordHash } : null,
     completeAdminLogin: async (options) => {
+      loginAttempts.push(options);
       if (!state.active || options.expectedPasswordHash !== passwordHash) return false;
       const factor = options.factorCheck({ secretEncrypted: sealTotpSecret(secret, key, userId), version: 1, lastStep: state.lastStep, enabled: state.lastStep >= 0 });
       if (!factor || factor.step === undefined) return false;
@@ -34,7 +36,13 @@ async function fixture() {
     revokeAllSessions: async (id) => { assert.deepEqual(id, userId); state.session = null; },
   };
   const service = await createAuthService({ store, totpKey: key, clock: () => now });
-  return { service, state, calls, advance: (delta) => { now += delta; }, login: (extra = {}) => service.login({ email: "ADMIN@Example.INVALID", password, factor: totpCode(secret, { now }), peerAddress: "127.0.0.1", ...extra }) };
+  return { service, state, calls, loginAttempts, advance: (delta) => { now += delta; }, setNow: (value) => { now = value; }, login: (extra = {}) => service.login({ email: "ADMIN@Example.INVALID", password, factor: totpCode(secret, { now }), peerAddress: "127.0.0.1", ...extra }) };
+}
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((done) => { resolve = done; });
+  return { promise, resolve };
 }
 
 test("service requires the password and a fresh MFA factor before issuing a safe session", async () => {
@@ -82,4 +90,44 @@ test("malformed cookies are anonymous and database failure yields only a sanitiz
   for (const token of [undefined, "short", newToken() + "="]) assert.equal(await f.service.session(token), null);
   f.state.available = false;
   await assert.rejects(f.service.session(newToken()), (error) => error.code === "AUTH_UNAVAILABLE" && !error.message.includes("private driver"));
+});
+
+test("an administrator TOTP that ages outside its window while a quota waits cannot create a session", async () => {
+  const f = await fixture(), entered = deferred(), resume = deferred();
+  f.state.rateHook = async (_options, count) => { if (count === 1) { entered.resolve(); await resume.promise; } };
+  const pending = f.login({ factor: totpCode(secret, { now: initialNow }) });
+  await entered.promise; f.advance(120000); resume.resolve();
+  await assert.rejects(pending, { code: "AUTH_INVALID" });
+  assert.deepEqual(f.calls.map(({ options }) => options.now), [initialNow, initialNow, initialNow]);
+  assert.equal(f.loginAttempts.length, 1); assert.equal(f.loginAttempts[0].now, initialNow + 120000);
+  assert.equal(f.state.lastStep, -1); assert.equal(f.state.session, null);
+});
+
+test("administrator factors and the full session lifetime use the time after quota and password work", async () => {
+  const f = await fixture(), entered = deferred(), resume = deferred(), current = initialNow + 120000;
+  f.state.rateHook = async (_options, count) => { if (count === 1) { entered.resolve(); await resume.promise; } };
+  const pending = f.login({ factor: totpCode(secret, { now: current }) });
+  await entered.promise; f.setNow(current); resume.resolve();
+  const connected = await pending;
+  assert.equal(f.loginAttempts.length, 1); assert.equal(f.loginAttempts[0].now, current);
+  assert.equal(f.state.lastStep, Math.floor(current / 30000));
+  assert.equal(f.loginAttempts[0].session.expiresAt, current + 8 * 3600000);
+  assert.equal(connected.expiresAt, current + 8 * 3600000);
+  assert.deepEqual(f.calls.map(({ options }) => options.now), [initialNow, initialNow, initialNow]);
+});
+
+test("an invalid or overflowing administrator clock after quotas stops before factor consumption or session mutation", async () => {
+  const f = await fixture();
+  for (const current of [NaN, -1, 1.5, 253402300800000, 253402300799999]) {
+    f.setNow(initialNow);
+    f.state.rateHook = async (_options, count) => { if (count % 3 === 0) f.setNow(current); };
+    await assert.rejects(f.login(), (error) => error.code === "AUTH_UNAVAILABLE" && error.cause === undefined);
+    assert.equal(f.loginAttempts.length, 0); assert.equal(f.state.lastStep, -1); assert.equal(f.state.session, null);
+  }
+  f.state.rateHook = null;
+  for (const current of [NaN, -1, 1.5, 253402300800000]) {
+    f.setNow(current); const before = f.calls.length;
+    await assert.rejects(f.service.login({ email: "admin@example.invalid", password, factor: "123456" }), { code: "AUTH_UNAVAILABLE" });
+    assert.equal(f.calls.length, before); assert.equal(f.loginAttempts.length, 0);
+  }
 });
