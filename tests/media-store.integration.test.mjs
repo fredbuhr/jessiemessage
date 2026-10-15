@@ -6,6 +6,7 @@ import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 import { createMediaStore, MediaStoreError } from "../server/media/store.mjs";
+import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), digest = () => randomBytes(32);
@@ -36,7 +37,9 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
   try {
     await reset(); await applyMigrations(connection, { database: options.database, migrations });
     pool = await createRuntimePool(process.env);
-    const chat = createChatStore(pool), media = createMediaStore({ pool, chatStore: chat });
+    const capacity = { ownerBytes: 20000000, totalBytes: 80000000, rootFingerprint: digest() };
+    const chat = createChatStore(pool), media = createMediaStore({ pool, chatStore: chat, capacity });
+    const capacityStore = createMediaCapacityStore({ pool, capacity });
     async function user(role) {
       const result = { id: id(), sessionId: id(), tokenHash: digest(), role, pseudonym: `Synthetic ${role} ${fixtureNumber++}` };
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash, email_verified_at,
@@ -59,7 +62,11 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
     const request = (fixture, role = "client", extra = {}) => ({ ...actor(fixture, role), conversationId: fixture.conversationId, ...extra });
     const asset = (extra = {}) => ({ id: id(), storageKey: digest(), digest: digest(), width: 1200, height: 800,
       thumbnailWidth: 480, thumbnailHeight: 320, fullBytes: 42000, thumbnailBytes: 7000, ...extra });
-    const register = (fixture, role = "client", value = asset(), extra = {}) => media.registerAsset({ ...actor(fixture, role, extra), asset: value });
+    const register = async (fixture, role = "client", value = asset(), extra = {}) => {
+      const command = { ...actor(fixture, role, extra), asset: value };
+      const reserved = await media.reserveAsset(command);
+      return reserved.duplicate ? reserved : media.registerAsset(command);
+    };
     const payload = (extra = {}) => ({ id: id(), clientMessageId: id(), bodyEncrypted: `v1.synthetic-${digest().toString("base64url")}`, bodyFingerprint: digest(), ...extra });
     const send = (fixture, role, mediaId, value = payload(), extra = {}) => chat.sendMessage({ ...request(fixture, role, extra), message: { ...value, mediaId } });
     const delivered = (fixture, role, messageId, extra = {}) => media.getMessageAsset({ ...request(fixture, role, extra), messageId });
@@ -72,9 +79,9 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
 
     await t.test("read-only schema checks reject dirty history, dimension type drift, lost ownership uniqueness and weaker CHECKs", async () => {
       assert.equal(await media.assertSchema(), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 25");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
       try { await assert.rejects(media.assertSchema(), code("CHAT_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 25"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
       await connection.query("ALTER TABLE media_assets MODIFY width SMALLINT NOT NULL");
       try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE media_assets MODIFY width SMALLINT UNSIGNED NOT NULL"); }
@@ -94,6 +101,53 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE message_media ADD CONSTRAINT message_media_asset_fk FOREIGN KEY (media_id) REFERENCES media_assets (id) ON UPDATE RESTRICT ON DELETE RESTRICT"); }
       assert.equal(await media.assertSchema(), true);
+    });
+
+    await t.test("capacity schema checks reject engine, counter type, nullable root, lost uniqueness, foreign keys and weaker byte accounting", async () => {
+      await connection.query("ALTER TABLE media_storage_state ENGINE = MyISAM");
+      try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
+      finally { await connection.query("ALTER TABLE media_storage_state ENGINE = InnoDB"); }
+      await connection.query("ALTER TABLE media_storage_state MODIFY held_bytes BIGINT NOT NULL");
+      try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
+      finally { await connection.query("ALTER TABLE media_storage_state MODIFY held_bytes BIGINT UNSIGNED NOT NULL"); }
+      await connection.query("ALTER TABLE media_storage_state MODIFY root_fingerprint VARBINARY(32) NULL");
+      try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
+      finally { await connection.query("ALTER TABLE media_storage_state MODIFY root_fingerprint VARBINARY(32) NOT NULL"); }
+      await connection.query("ALTER TABLE media_storage_objects DROP INDEX media_storage_objects_key");
+      try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
+      finally { await connection.query("ALTER TABLE media_storage_objects ADD UNIQUE KEY media_storage_objects_key (storage_key)"); }
+      await connection.query("ALTER TABLE media_storage_objects DROP FOREIGN KEY media_storage_objects_asset_fk");
+      try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
+      finally { await connection.query("ALTER TABLE media_storage_objects ADD CONSTRAINT media_storage_objects_asset_fk FOREIGN KEY (asset_id) REFERENCES media_assets (id) ON UPDATE RESTRICT ON DELETE RESTRICT"); }
+      await connection.query("ALTER TABLE media_storage_objects DROP CONSTRAINT media_storage_objects_bytes");
+      await connection.query("ALTER TABLE media_storage_objects ADD CONSTRAINT media_storage_objects_bytes CHECK (full_bytes > 0)");
+      try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
+      finally {
+        await connection.query("ALTER TABLE media_storage_objects DROP CONSTRAINT media_storage_objects_bytes");
+        await connection.query("ALTER TABLE media_storage_objects ADD CONSTRAINT media_storage_objects_bytes CHECK (full_bytes BETWEEN 1 AND 10485760 AND thumbnail_bytes BETWEEN 1 AND 524288 AND stored_bytes = full_bytes + thumbnail_bytes + 80)");
+      }
+      assert.equal(await media.assertSchema(), true);
+    });
+
+    await t.test("capacity remains unavailable before explicit offline initialization and binds root and both limits", async () => {
+      const fixture = await pair(), value = asset();
+      assert.equal((await capacityStore.status()).ready, false);
+      assert.deepEqual(await capacityStore.listObjects(), { objects: [], nextCursor: null, hasMore: false });
+      await assert.rejects(media.reserveAsset({ ...actor(fixture), asset: value }), code("MEDIA_CAPACITY_UNAVAILABLE"));
+      await assert.rejects(capacityStore.initialize({ now, offline: false }), code("MEDIA_INPUT"));
+      const empty = await capacityStore.initialize({ now, offline: true });
+      assert.equal(empty.ready, true); assert.equal(empty.heldBytes, 0); assert.equal(empty.pendingBytes, 0);
+      assert.deepEqual(await capacityStore.initialize({ now, offline: true }), empty);
+      const readOnlyStore = createMediaStore({ pool, chatStore: chat });
+      assert.deepEqual((await readOnlyStore.listAssets(actor(fixture))).assets, []);
+      await assert.rejects(readOnlyStore.reserveAsset({ ...actor(fixture), asset: value }), code("MEDIA_CAPACITY_UNAVAILABLE"));
+      for (const changed of [{ ...capacity, ownerBytes: capacity.ownerBytes - 1 }, { ...capacity, totalBytes: capacity.totalBytes + 1 }, { ...capacity, rootFingerprint: digest() }]) {
+        const other = createMediaCapacityStore({ pool, capacity: changed });
+        await assert.rejects(other.status(), code("MEDIA_CAPACITY_UNAVAILABLE"));
+        await assert.rejects(other.initialize({ now, offline: true }), code("MEDIA_CAPACITY_UNAVAILABLE"));
+        await assert.rejects(createMediaStore({ pool, chatStore: chat, capacity: changed }).reserveAsset({ ...actor(fixture), asset: value }), code("MEDIA_CAPACITY_UNAVAILABLE"));
+      }
+      assert.equal((await capacityStore.status()).heldBytes, 0);
     });
 
     await t.test("trusted actor callbacks recheck current SQL session, role, client gates and creator MFA and roll back failures", async () => {
@@ -290,6 +344,154 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       await connection.query("UPDATE conversations SET closed_at = ? WHERE id = ?", [sqlDate(now), fixture.conversationId]);
       assert.ok((await delivered(fixture, "client", sent.message.id)).id.equals(image.id), "closed conversations retain authorized history");
       await assert.rejects(send(fixture, "client", image.id), code("CHAT_FORBIDDEN"));
+    });
+
+    await t.test("durable reservations charge encrypted bytes before registration and reject forged allocations or foreign owners", async () => {
+      const fixture = await pair(), other = await pair(fixture.admin), value = asset(), bytes = value.fullBytes + value.thumbnailBytes + 80;
+      const before = await capacityStore.status(), command = { ...actor(fixture), asset: value };
+      await assert.rejects(media.registerAsset(command), code("MEDIA_INPUT"));
+      const reservation = await media.reserveAsset(command);
+      assert.deepEqual({ id: reservation.reservation.id, storageKey: reservation.reservation.storageKey, bytes: reservation.reservation.bytes }, { id: value.id, storageKey: value.storageKey, bytes });
+      assert.equal(reservation.reservation.pendingBytes, before.pendingBytes + bytes);
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes);
+      assert.equal((await capacityStore.status()).pendingBytes, before.pendingBytes + bytes);
+      await assert.rejects(media.releaseStorageObject({ ...actor(fixture), objectId: value.id, storageKey: value.storageKey }), code("MEDIA_INPUT"));
+      for (const patch of [{ id: id() }, { storageKey: digest() }, { digest: digest() }, { fullBytes: value.fullBytes + 1 }, { thumbnailBytes: value.thumbnailBytes + 1 }]) {
+        await assert.rejects(media.registerAsset({ ...command, asset: { ...value, ...patch } }), code("MEDIA_INPUT"));
+      }
+      await assert.rejects(media.registerAsset({ ...actor(other), asset: value }), code("MEDIA_INPUT"));
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes);
+      assert.equal((await media.registerAsset(command)).duplicate, false);
+      const after = await capacityStore.status(); assert.equal(after.heldBytes, before.heldBytes + bytes); assert.equal(after.pendingBytes, before.pendingBytes);
+      await assert.rejects(media.releaseStorageObject({ ...actor(fixture), objectId: value.id, storageKey: value.storageKey }), code("MEDIA_INPUT"));
+    });
+
+    await t.test("early owner deduplication avoids reservation and late concurrent deduplication holds cleanup until release", async () => {
+      const fixture = await pair(), first = asset(), second = { ...first, id: id(), storageKey: digest() }, bytes = first.fullBytes + first.thumbnailBytes + 80;
+      const before = await capacityStore.status();
+      assert.equal((await media.reserveAsset({ ...actor(fixture), asset: first })).duplicate, false);
+      assert.equal((await media.reserveAsset({ ...actor(fixture), asset: second })).duplicate, false);
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + 2 * bytes);
+      const saved = await media.registerAsset({ ...actor(fixture), asset: first });
+      const duplicate = await media.registerAsset({ ...actor(fixture), asset: second });
+      assert.equal(duplicate.duplicate, true); assert.ok(duplicate.asset.id.equals(saved.asset.id));
+      assert.equal((await connection.query("SELECT state, asset_id FROM media_storage_objects WHERE id = ?", [second.id]))[0].state, "cleanup_pending");
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + 2 * bytes);
+      const early = await media.reserveAsset({ ...actor(fixture), asset: { ...first, id: id(), storageKey: digest() } });
+      assert.equal(early.duplicate, true); assert.ok(early.asset.id.equals(first.id));
+      assert.equal((await media.reserveAsset({ ...actor(fixture), asset: first })).duplicate, true);
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + 2 * bytes);
+      assert.deepEqual(await media.releaseStorageObject({ ...actor(fixture), objectId: second.id, storageKey: second.storageKey }), { released: true });
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes);
+      await media.releaseStorageObject({ ...actor(fixture), objectId: second.id, storageKey: second.storageKey });
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes);
+    });
+
+    await t.test("tombstones keep capacity charged through failed erasure and release replay cannot refund twice", async () => {
+      const fixture = await pair(), other = await pair(fixture.admin), value = asset(), bytes = value.fullBytes + value.thumbnailBytes + 80;
+      const before = await capacityStore.status(); await register(fixture, "client", value);
+      await remove(fixture, "client", value.id);
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes);
+      assert.equal((await capacityStore.status()).pendingBytes, before.pendingBytes + bytes);
+      assert.equal((await remove(fixture, "client", value.id)).deletedAt, now);
+      await assert.rejects(media.releaseStorageObject({ ...actor(other), objectId: value.id, storageKey: value.storageKey }), code("MEDIA_NOT_FOUND"));
+      await assert.rejects(media.releaseStorageObject({ ...actor(fixture), objectId: value.id, storageKey: digest() }), code("MEDIA_NOT_FOUND"));
+      await connection.query("UPDATE users SET access_expires_at = ? WHERE id = ?", [sqlDate(now + 1000), fixture.client.id]);
+      await assert.rejects(media.releaseStorageObject({ ...actor(fixture, "client", { now: now + 1000 }), objectId: value.id, storageKey: value.storageKey }), code("CHAT_FORBIDDEN"));
+      await connection.query("UPDATE users SET access_expires_at = NULL WHERE id = ?", [fixture.client.id]);
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes);
+      await media.releaseStorageObject({ ...actor(fixture), objectId: value.id, storageKey: value.storageKey });
+      await media.releaseStorageObject({ ...actor(fixture), objectId: value.id, storageKey: value.storageKey });
+      const after = await capacityStore.status(); assert.equal(after.heldBytes, before.heldBytes); assert.equal(after.pendingBytes, before.pendingBytes);
+      assert.equal((await remove(fixture, "client", value.id)).deletedAt, now);
+      assert.equal((await connection.query("SELECT state FROM media_storage_objects WHERE id = ?", [value.id]))[0].state, "released");
+    });
+
+    await t.test("owner and global ceilings serialize concurrent reservations without overshoot", async () => {
+      const bytes = 1180, smallAsset = () => asset({ fullBytes: 1000, thumbnailBytes: 100 });
+      for (const scope of ["owner", "global"]) {
+        const fixture = await pair(), other = scope === "owner" ? fixture : await pair();
+        const before = await capacityStore.status();
+        const limited = { ...capacity, ownerBytes: bytes, totalBytes: scope === "owner" ? capacity.totalBytes : before.heldBytes + bytes };
+        await connection.query("UPDATE media_storage_state SET owner_bytes = ?, total_bytes = ? WHERE id = 1", [limited.ownerBytes, limited.totalBytes]);
+        try {
+          const limitedStore = createMediaStore({ pool, chatStore: chat, capacity: limited });
+          const results = await Promise.allSettled([
+            limitedStore.reserveAsset({ ...actor(fixture), asset: smallAsset() }), limitedStore.reserveAsset({ ...actor(other), asset: smallAsset() }),
+          ]);
+          assert.equal(results.filter((result) => result.status === "fulfilled").length, 1, scope);
+          const rejected = results.find((result) => result.status === "rejected"); assert.equal(rejected.reason.code, "MEDIA_STORAGE_LIMIT", scope);
+          const usage = await createMediaCapacityStore({ pool, capacity: limited }).status();
+          assert.equal(usage.heldBytes, before.heldBytes + bytes); assert.equal(usage.pendingBytes, before.pendingBytes + bytes);
+        } finally { await connection.query("UPDATE media_storage_state SET owner_bytes = ?, total_bytes = ? WHERE id = 1", [capacity.ownerBytes, capacity.totalBytes]); }
+      }
+    });
+
+    await t.test("registration and cleanup transitions roll back journal and counters on metadata failure", async () => {
+      const fixture = await pair(), value = asset(), command = { ...actor(fixture), asset: value };
+      await media.reserveAsset(command); const before = await capacityStore.status();
+      await connection.query("CREATE TRIGGER synthetic_fail_capacity BEFORE INSERT ON media_assets FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic capacity failure'");
+      try { await assert.rejects(media.registerAsset(command), code("CHAT_DATABASE_OPERATION")); }
+      finally { await connection.query("DROP TRIGGER synthetic_fail_capacity"); }
+      assert.deepEqual(await capacityStore.status(), before);
+      assert.equal((await connection.query("SELECT state FROM media_storage_objects WHERE id = ?", [value.id]))[0].state, "reserved");
+      assert.equal((await connection.query("SELECT id FROM media_assets WHERE id = ?", [value.id])).length, 0);
+      await media.registerAsset(command); await remove(fixture, "client", value.id);
+      const cleanup = await capacityStore.status();
+      await connection.query("CREATE TRIGGER synthetic_fail_capacity BEFORE UPDATE ON media_storage_state FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic capacity failure'");
+      try { await assert.rejects(media.releaseStorageObject({ ...actor(fixture), objectId: value.id, storageKey: value.storageKey }), code("CHAT_DATABASE_OPERATION")); }
+      finally { await connection.query("DROP TRIGGER synthetic_fail_capacity"); }
+      assert.deepEqual(await capacityStore.status(), cleanup);
+      assert.equal((await connection.query("SELECT state FROM media_storage_objects WHERE id = ?", [value.id]))[0].state, "cleanup_pending");
+    });
+
+    await t.test("offline initialization imports legacy active and deleted assets in bounded pages even above ceilings", async () => {
+      const fixture = await pair(); let microsecondAssetId;
+      for (let index = 0; index < 105; index++) {
+        const value = asset({ fullBytes: 1000, thumbnailBytes: 100 });
+        if (index === 0) microsecondAssetId = value.id;
+        const createdAt = index === 0 ? "2026-10-15 12:00:01.123456" : sqlDate(now);
+        const deletedAt = index === 0 ? "2026-10-15 12:00:01.124789" : index % 2 ? null : sqlDate(now);
+        await connection.query(`INSERT INTO media_assets (id, owner_id, owner_role, storage_key, content_digest, active_digest,
+          width, height, thumbnail_width, thumbnail_height, full_bytes, thumbnail_bytes, created_at, deleted_at)
+          VALUES (?, ?, 'client', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [value.id, fixture.client.id, value.storageKey, value.digest,
+          index % 2 ? value.digest : null, value.width, value.height, value.thumbnailWidth, value.thumbnailHeight, value.fullBytes, value.thumbnailBytes, createdAt, deletedAt]);
+      }
+      // Synthetic fixture reset recreates the pre-capacity upgrade condition.
+      await connection.query("DELETE FROM media_storage_state");
+      assert.equal((await capacityStore.status()).ready, false);
+      assert.ok((await capacityStore.listObjects({ limit: 1 })).objects.length);
+      await assert.rejects(capacityStore.initialize({ now, offline: true }), code("MEDIA_DATABASE_STATE"));
+      await connection.query("DELETE FROM media_storage_objects");
+      const legacyCapacity = { ...capacity, ownerBytes: 82, totalBytes: 82 }, legacy = createMediaCapacityStore({ pool, capacity: legacyCapacity });
+      const expected = (await connection.query("SELECT COUNT(*) AS count, SUM(full_bytes + thumbnail_bytes + 80) AS bytes FROM media_assets"))[0];
+      // A prior fixture also created a photo at now + 1000. Future metadata
+      // must refuse initialization atomically rather than weaken lifetime checks.
+      await assert.rejects(legacy.initialize({ now, offline: true }), code("MEDIA_DATABASE_STATE"));
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM media_storage_state"))[0].count), 0);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM media_storage_objects"))[0].count), 0);
+      // Creation is already in the past here; a deletion 789 microseconds
+      // ahead must still refuse the bootstrap without leaving partial rows.
+      await assert.rejects(legacy.initialize({ now: now + 1124, offline: true }), code("MEDIA_DATABASE_STATE"));
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM media_storage_state"))[0].count), 0);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM media_storage_objects"))[0].count), 0);
+      const maximum = (await connection.query(`SELECT DATE_FORMAT(MAX(GREATEST(created_at, COALESCE(deleted_at, created_at))),
+        '%Y-%m-%d %H:%i:%s.%f') AS value FROM media_assets`))[0].value;
+      const initializedAt = Date.parse(maximum.slice(0, 23).replace(" ", "T") + "Z") + (maximum.slice(-3) === "000" ? 0 : 1);
+      assert.ok(initializedAt > now);
+      const initialized = await legacy.initialize({ now: initializedAt, offline: true });
+      const preserved = (await connection.query("SELECT created_at, updated_at FROM media_storage_objects WHERE id = ?", [microsecondAssetId]))[0];
+      assert.equal(preserved.created_at, "2026-10-15 12:00:01.123456"); assert.equal(preserved.updated_at, sqlDate(initializedAt));
+      assert.equal(initialized.heldBytes, Number(expected.bytes)); assert.ok(initialized.heldBytes > legacyCapacity.totalBytes);
+      const deleted = (await connection.query("SELECT COALESCE(SUM(full_bytes + thumbnail_bytes + 80), 0) AS bytes FROM media_assets WHERE deleted_at IS NOT NULL"))[0];
+      assert.equal(initialized.pendingBytes, Number(deleted.bytes));
+      let page = await legacy.listObjects({ limit: 37 }), collected = [...page.objects];
+      while (page.hasMore) { page = await legacy.listObjects({ afterId: page.nextCursor, limit: 37 }); collected.push(...page.objects); }
+      assert.equal(collected.length, Number(expected.count)); assert.ok(collected.length > 100);
+      assert.equal(new Set(collected.map((row) => row.id.toString("hex"))).size, collected.length);
+      assert.ok(collected.every((row) => row.storedBytes === row.fullBytes + row.thumbnailBytes + 80 && row.assetId.equals(row.id)));
+      await assert.rejects(createMediaStore({ pool, chatStore: chat, capacity: legacyCapacity }).reserveAsset({ ...actor(fixture), asset: asset() }), code("MEDIA_STORAGE_LIMIT"));
+      assert.equal((await legacy.status()).heldBytes, initialized.heldBytes);
     });
   } finally {
     if (pool) await pool.end();

@@ -1,5 +1,6 @@
 import { ChatStoreError } from "../chat/store.mjs";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { lockMediaCapacity, ownerMediaBytes, pendingMediaBytes, validateMediaCapacity } from "./capacity-store.mjs";
 
 // Chat transactions preserve this subclass while rolling back every callback
 // failure. No database exception, file key or message content escapes here.
@@ -34,21 +35,28 @@ const definitions = {
     thumbnail_height: ["smallint", false], full_bytes: ["int", false], thumbnail_bytes: ["int", false],
     created_at: ["datetime", false], deleted_at: ["datetime", true] },
   message_media: { message_id: ["varbinary", false, 16], conversation_id: ["varbinary", false, 16], media_id: ["varbinary", false, 16], created_at: ["datetime", false] },
+  media_storage_state: { id: ["tinyint", false], owner_bytes: ["bigint", false], total_bytes: ["bigint", false], root_fingerprint: ["varbinary", false, 32], held_bytes: ["bigint", false], initialized_at: ["datetime", false] },
+  media_storage_objects: { id: ["varbinary", false, 16], owner_id: ["varbinary", false, 16], owner_role: ["varchar", false, 8], storage_key: ["varbinary", false, 32], content_digest: ["varbinary", false, 32],
+    full_bytes: ["int", false], thumbnail_bytes: ["int", false], stored_bytes: ["int", false], state: ["varchar", false, 16], asset_id: ["varbinary", true, 16], created_at: ["datetime", false], updated_at: ["datetime", false], released_at: ["datetime", true] },
 };
 const indexes = {
   media_assets: { PRIMARY: [0, "id"], media_assets_storage: [0, "storage_key"], media_assets_owner_digest: [0, "owner_id", "active_digest"], media_assets_owner_page: [1, "owner_id", "id"] },
   message_media: { PRIMARY: [0, "message_id"], message_media_message: [1, "conversation_id", "message_id"], message_media_asset: [1, "media_id", "message_id"] },
+  media_storage_state: { PRIMARY: [0, "id"] },
+  media_storage_objects: { PRIMARY: [0, "id"], media_storage_objects_key: [0, "storage_key"], media_storage_objects_asset: [0, "asset_id"], media_storage_objects_owner: [1, "owner_id", "state", "id"], media_storage_objects_state: [1, "state", "id"] },
 };
 const foreignKeys = [
   ["media_assets", "media_assets_owner_fk", "users", ["owner_id", "owner_role"], ["id", "role"]],
   ["message_media", "message_media_message_fk", "messages", ["conversation_id", "message_id"], ["conversation_id", "id"]],
   ["message_media", "message_media_asset_fk", "media_assets", ["media_id"], ["id"]],
+  ["media_storage_objects", "media_storage_objects_owner_fk", "users", ["owner_id", "owner_role"], ["id", "role"]],
+  ["media_storage_objects", "media_storage_objects_asset_fk", "media_assets", ["asset_id"], ["id"]],
 ];
 
 // Compare semantic trees of the restricted migration CHECK grammar. MariaDB
 // rewrites redundant parentheses; removing all parentheses would weaken AND/OR.
 function checkTree(expression) {
-  const tokens = [], pattern = /\s+|`([a-z_][a-z0-9_]*)`|'(?:''|[^'])*'|>=|<=|<>|!=|[=<>(),]|[0-9]+|[a-z_][a-z0-9_]*/iy;
+  const tokens = [], pattern = /\s+|`([a-z_][a-z0-9_]*)`|'(?:''|[^'])*'|>=|<=|<>|!=|[=<>(),+]|[0-9]+|[a-z_][a-z0-9_]*/iy;
   let offset = 0;
   while (offset < expression.length) {
     pattern.lastIndex = offset; const match = pattern.exec(expression); if (!match) state(); offset = pattern.lastIndex;
@@ -56,12 +64,17 @@ function checkTree(expression) {
   }
   let position = 0;
   const take = (expected) => { if (tokens[position++] !== expected) state(); };
-  function operand() {
+  function primary() {
     const token = tokens[position++]; if (!token || !/^(?:[a-z_][a-z0-9_]*|[0-9]+|'(?:''|[^'])*')$/i.test(token)) state();
     if (tokens[position] === "(") {
       position++; if (!["octet_length", "char_length"].includes(token)) state(); const argument = operand(); take(")"); return ["call", token, argument];
     }
     return ["value", token];
+  }
+  function operand() {
+    let result = primary();
+    while (tokens[position] === "+") { position++; result = ["+", result, primary()]; }
+    return result;
   }
   function predicate() {
     if (tokens[position] === "(") { position++; const result = or(); take(")"); return result; }
@@ -88,14 +101,28 @@ function authoredChecks(sql) {
   return result;
 }
 
-export function createMediaStore({ pool, chatStore }) {
+export function createMediaStore({ pool, chatStore, capacity = null }) {
   if (!pool || typeof pool.getConnection !== "function" || !chatStore || typeof chatStore.withActor !== "function" || typeof chatStore.withConversation !== "function") input();
+  capacity = capacity === null ? null : validateMediaCapacity(capacity);
   const withContext = (request, callback) => request.conversationId === null || request.conversationId === undefined
     ? chatStore.withActor(request, callback) : chatStore.withConversation(request, callback);
   async function owned(connection, context, assetId, allowDeleted = false) {
     const row = (await connection.query(`SELECT ${assetProjection} FROM media_assets a WHERE a.id = ? AND a.owner_id = ? FOR UPDATE`, [assetId, context.actor.id]))[0];
     if (!row || (!allowDeleted && row.deleted_at !== null) || timestamp(row.created_at) > context.now) fail("MEDIA_NOT_FOUND");
     return row;
+  }
+  function validateAsset(asset) {
+    bytes(asset?.id, 16); bytes(asset?.storageKey, 32); bytes(asset?.digest, 32);
+    integer(asset.width, 2048); integer(asset.height, 2048); integer(asset.thumbnailWidth, 480); integer(asset.thumbnailHeight, 480);
+    integer(asset.fullBytes, 10485760); integer(asset.thumbnailBytes, 524288);
+    if (asset.thumbnailWidth > asset.width || asset.thumbnailHeight > asset.height) input();
+  }
+  const allocation = async (connection, objectId) => (await connection.query("SELECT * FROM media_storage_objects WHERE id = ? FOR UPDATE", [objectId]))[0];
+  function matches(row, context, asset) {
+    return row && row.owner_id.equals(context.actor.id) && row.owner_role === context.actor.role
+      && row.storage_key.equals(asset.storageKey) && row.content_digest.equals(asset.digest)
+      && Number(row.full_bytes) === asset.fullBytes && Number(row.thumbnail_bytes) === asset.thumbnailBytes
+      && Number(row.stored_bytes) === asset.fullBytes + asset.thumbnailBytes + 80;
   }
 
   return Object.freeze({
@@ -107,7 +134,7 @@ export function createMediaStore({ pool, chatStore }) {
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
         if (Number(enforcement.foreignKeys) !== 1 || Number(enforcement.checkConstraints) !== 1) state();
         const migrations = await loadMigrations(), history = await migrationStatus(connection, { database, migrations });
-        if (history.length < 17 || history.some((item) => item.state !== "applied")) state();
+        if (history.length < 27 || history.some((item) => item.state !== "applied")) state();
         const tables = await connection.query("SELECT TABLE_NAME AS name, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
         const columns = await connection.query(`SELECT TABLE_NAME AS tableName, COLUMN_NAME AS columnName, DATA_TYPE AS dataType,
           IS_NULLABLE AS nullable, CHARACTER_MAXIMUM_LENGTH AS length, DATETIME_PRECISION AS precisionValue,
@@ -118,7 +145,7 @@ export function createMediaStore({ pool, chatStore }) {
             const column = columns.find((item) => item.tableName === table && item.columnName === name);
             if (!column || column.dataType !== type || (column.nullable === "YES") !== nullable
               || (length !== undefined && Number(column.length) !== length) || (type === "datetime" && Number(column.precisionValue) !== 6)
-              || (["int", "smallint"].includes(type) && !column.columnType.includes("unsigned"))
+              || (["tinyint", "int", "smallint", "bigint"].includes(type) && !column.columnType.includes("unsigned"))
               || (type === "varchar" && column.collationName !== "ascii_bin")) state();
           }
         }
@@ -152,18 +179,47 @@ export function createMediaStore({ pool, chatStore }) {
       finally { if (connection) { try { connection.release(); } catch {} } }
     },
 
-    async registerAsset({ role, tokenHash, now, asset }) {
-      bytes(asset?.id, 16); bytes(asset?.storageKey, 32); bytes(asset?.digest, 32);
-      integer(asset.width, 2048); integer(asset.height, 2048); integer(asset.thumbnailWidth, 480); integer(asset.thumbnailHeight, 480);
-      integer(asset.fullBytes, 10485760); integer(asset.thumbnailBytes, 524288);
-      if (asset.thumbnailWidth > asset.width || asset.thumbnailHeight > asset.height) input();
+    async reserveAsset({ role, tokenHash, now, asset }) {
+      validateAsset(asset);
       return chatStore.withActor({ role, tokenHash, now }, async (connection, context) => {
+        const { heldBytes } = await lockMediaCapacity(connection, capacity);
+        const existing = await allocation(connection, asset.id);
+        if (existing && (!matches(existing, context, asset) || !["reserved", "registered"].includes(existing.state) || timestamp(existing.created_at) > now)) input();
+        const pendingBytes = await pendingMediaBytes(connection);
+        const ownerHeld = await ownerMediaBytes(connection, context.actor.id);
         const previous = (await connection.query(`SELECT ${assetProjection} FROM media_assets a WHERE a.owner_id = ? AND a.active_digest = ? FOR UPDATE`, [context.actor.id, asset.digest]))[0];
         if (previous) { if (timestamp(previous.created_at) > now) fail("MEDIA_NOT_FOUND"); return { asset: rawAsset(previous), duplicate: true }; }
+        if (existing && existing.state !== "reserved") input();
+        const storedBytes = asset.fullBytes + asset.thumbnailBytes + 80;
+        if (!existing) {
+          if (heldBytes > capacity.totalBytes - storedBytes || ownerHeld > capacity.ownerBytes - storedBytes) fail("MEDIA_STORAGE_LIMIT");
+          await connection.query(`INSERT INTO media_storage_objects
+            (id, owner_id, owner_role, storage_key, content_digest, full_bytes, thumbnail_bytes, stored_bytes, state, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reserved', ?, ?)`, [asset.id, context.actor.id, role, asset.storageKey, asset.digest,
+            asset.fullBytes, asset.thumbnailBytes, storedBytes, sqlDate(now), sqlDate(now)]);
+          await connection.query("UPDATE media_storage_state SET held_bytes = held_bytes + ? WHERE id = 1", [storedBytes]);
+        }
+        return { duplicate: false, reservation: { id: asset.id, storageKey: asset.storageKey, bytes: storedBytes, pendingBytes: pendingBytes + (existing ? 0 : storedBytes) } };
+      });
+    },
+
+    async registerAsset({ role, tokenHash, now, asset }) {
+      validateAsset(asset);
+      return chatStore.withActor({ role, tokenHash, now }, async (connection, context) => {
+        await lockMediaCapacity(connection, capacity);
+        const reserved = await allocation(connection, asset.id);
+        if (!matches(reserved, context, asset) || reserved.state !== "reserved" || timestamp(reserved.created_at) > now) input();
+        const previous = (await connection.query(`SELECT ${assetProjection} FROM media_assets a WHERE a.owner_id = ? AND a.active_digest = ? FOR UPDATE`, [context.actor.id, asset.digest]))[0];
+        if (previous) {
+          if (timestamp(previous.created_at) > now) fail("MEDIA_NOT_FOUND");
+          await connection.query("UPDATE media_storage_objects SET state = 'cleanup_pending', updated_at = ? WHERE id = ?", [sqlDate(now), asset.id]);
+          return { asset: rawAsset(previous), duplicate: true };
+        }
         await connection.query(`INSERT INTO media_assets (id, owner_id, owner_role, storage_key, content_digest, active_digest,
           width, height, thumbnail_width, thumbnail_height, full_bytes, thumbnail_bytes, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [asset.id, context.actor.id, role, asset.storageKey, asset.digest, asset.digest,
           asset.width, asset.height, asset.thumbnailWidth, asset.thumbnailHeight, asset.fullBytes, asset.thumbnailBytes, sqlDate(now)]);
+        await connection.query("UPDATE media_storage_objects SET state = 'registered', asset_id = ?, updated_at = ? WHERE id = ?", [asset.id, sqlDate(now), asset.id]);
         const row = (await connection.query(`SELECT ${assetProjection} FROM media_assets a WHERE a.id = ?`, [asset.id]))[0];
         return { asset: rawAsset(row), duplicate: false };
       });
@@ -190,15 +246,39 @@ export function createMediaStore({ pool, chatStore }) {
     async deleteAsset({ role, tokenHash, now, assetId }) {
       bytes(assetId, 16);
       return chatStore.withActor({ role, tokenHash, now }, async (connection, context) => {
+        await lockMediaCapacity(connection, capacity);
+        const object = await allocation(connection, assetId);
         const row = await owned(connection, context, assetId, true);
-        if (row.deleted_at !== null) return rawAsset(row);
+        if (!matches(object, context, rawAsset(row)) || !object.asset_id?.equals(row.id)) fail("MEDIA_DATABASE_STATE");
+        if (row.deleted_at !== null) {
+          if (!["cleanup_pending", "released"].includes(object.state)) fail("MEDIA_DATABASE_STATE");
+          return rawAsset(row);
+        }
+        if (object.state !== "registered") fail("MEDIA_DATABASE_STATE");
         // The owner account lock serializes every owner send/delete. Avoid
         // locking arbitrary recipient conversations after the asset lock.
         const references = await connection.query(`SELECT 1 FROM message_media mm JOIN messages m
           ON m.id = mm.message_id AND m.conversation_id = mm.conversation_id WHERE mm.media_id = ? AND m.deleted_at IS NULL LIMIT 1`, [assetId]);
         if (references.length) fail("MEDIA_IN_USE");
         await connection.query("UPDATE media_assets SET deleted_at = ?, active_digest = NULL WHERE id = ?", [sqlDate(now), assetId]);
+        await connection.query("UPDATE media_storage_objects SET state = 'cleanup_pending', updated_at = ? WHERE id = ?", [sqlDate(now), object.id]);
         return rawAsset({ ...row, deleted_at: sqlDate(now) });
+      });
+    },
+
+    async releaseStorageObject({ role, tokenHash, now, objectId, storageKey }) {
+      bytes(objectId, 16); bytes(storageKey, 32);
+      return chatStore.withActor({ role, tokenHash, now }, async (connection, context) => {
+        const { heldBytes } = await lockMediaCapacity(connection, capacity);
+        const object = await allocation(connection, objectId);
+        if (!object || !object.owner_id.equals(context.actor.id) || object.owner_role !== role || !object.storage_key.equals(storageKey)) fail("MEDIA_NOT_FOUND");
+        if (object.state === "released") return { released: true };
+        if (object.state !== "cleanup_pending" || timestamp(object.updated_at) > now) input();
+        const storedBytes = Number(object.stored_bytes);
+        if (!Number.isSafeInteger(storedBytes) || storedBytes < 1 || heldBytes < storedBytes) state();
+        await connection.query("UPDATE media_storage_objects SET state = 'released', updated_at = ?, released_at = ? WHERE id = ? AND state = 'cleanup_pending'", [sqlDate(now), sqlDate(now), objectId]);
+        await connection.query("UPDATE media_storage_state SET held_bytes = held_bytes - ? WHERE id = 1", [storedBytes]);
+        return { released: true };
       });
     },
 

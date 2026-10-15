@@ -19,11 +19,14 @@ import { createChatStore } from "../server/chat/store.mjs";
 import { createChatService } from "../server/chat/service.mjs";
 import { createChatHandler } from "../server/chat/http.mjs";
 import { createMediaStore } from "../server/media/store.mjs";
+import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
+import { createMediaInventoryStore } from "../server/media/inventory-store.mjs";
+import { inspectMediaInventory } from "../server/media/inventory.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { createMediaService } from "../server/media/service.mjs";
 import { createMediaHandler } from "../server/media/http.mjs";
 import { createAppServer } from "../server/index.mjs";
-import { createRecoveryCodes, hashPassword, makeTotpSecret, recoveryCodeDigest, sealTotpSecret, totpCode } from "../server/auth/crypto.mjs";
+import { createRecoveryCodes, hashPassword, makeTotpSecret, recoveryCodeDigest, sealTotpSecret, tokenDigest, totpCode } from "../server/auth/crypto.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const sqlDate = (value) => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
@@ -50,7 +53,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 25);
+  assert.equal(migrations.length, 27);
   const allowedTables = [...migrations.map((migration) => {
     const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
     assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
@@ -72,8 +75,6 @@ test("real HTTP private media uses normalized encrypted files and current delive
     const authStore = createAuthStore(pool);
     const accessStore = createAccessStore(pool);
     const chatStore = createChatStore(pool);
-    const mediaStore = createMediaStore({ pool, chatStore });
-    for (const store of [authStore, accessStore, chatStore, mediaStore]) assert.equal(await store.assertSchema(), true);
     const temporaryParent = path.join(path.dirname(repositoryRoot), "audit");
     await mkdir(temporaryParent, { recursive: true, mode: 0o700 });
     storageRoot = await mkdtemp(path.join(temporaryParent, "media-flow-"));
@@ -81,17 +82,42 @@ test("real HTTP private media uses normalized encrypted files and current delive
     const mediaKey = randomBytes(32);
     const storage = await createMediaStorage({ root: storageRoot, key: mediaKey });
     await storage.assertReady();
+    let now = Date.now();
+    const capacity = { ownerBytes: 1048576, totalBytes: 2097152, rootFingerprint: await storage.fingerprint() };
+    const capacityStore = createMediaCapacityStore({ pool, capacity });
+    const mediaStore = createMediaStore({ pool, chatStore, capacity });
+    for (const store of [authStore, accessStore, chatStore, mediaStore, capacityStore]) assert.equal(await store.assertSchema(), true);
+    assert.deepEqual(await filesUnder(storageRoot), []);
+    assert.equal((await capacityStore.initialize({ now, offline: true })).heldBytes, 0);
     let uploadPutGate = null;
+    let uploadPutCalls = 0;
+    let removeFailure = false;
+    let loseRegisterAcknowledgement = false;
+    let uncertainAsset = null;
     const uploadStorage = {
+      ...storage,
       async put(options) {
+        uploadPutCalls += 1;
         const gate = uploadPutGate;
         if (gate) { uploadPutGate = null; gate.entered(); await gate.wait; }
         return storage.put(options);
       },
-      get: (...args) => storage.get(...args),
-      remove: (...args) => storage.remove(...args),
+      async remove(options) {
+        if (removeFailure) { removeFailure = false; throw new Error("synthetic_unlink_failure"); }
+        return storage.remove(options);
+      },
     };
-    let now = Date.now();
+    const serviceStore = {
+      ...mediaStore,
+      async registerAsset(options) {
+        const result = await mediaStore.registerAsset(options);
+        if (loseRegisterAcknowledgement) {
+          loseRegisterAcknowledgement = false; uncertainAsset = options.asset;
+          throw new Error("synthetic_lost_commit_acknowledgement");
+        }
+        return result;
+      },
+    };
     const clock = () => now;
     const totpKey = randomBytes(32);
     const mailKey = randomBytes(32);
@@ -106,7 +132,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
       passwordHash: await hashPassword(adminPassword), secretEncrypted: sealTotpSecret(secret, totpKey, adminId),
       recoveryDigests: createRecoveryCodes().map(recoveryCodeDigest), now });
     const clientHash = await hashPassword(clientPassword);
-    const clients = ["a", "b"].map((suffix) => ({ id: randomBytes(16), conversationId: randomBytes(16),
+    const clients = ["a", "b", "c", "d", "e"].map((suffix) => ({ id: randomBytes(16), conversationId: randomBytes(16),
       email: `media-flow-client-${suffix}@example.invalid`, pseudonym: `Synthetic media client ${suffix.toUpperCase()}` }));
     // Synthetic independently assured fixtures exercise authorization; this is not an age-proof API.
     // No invitation, mail delivery, private portrait or real account is created.
@@ -125,7 +151,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
     const authService = await createAuthService({ store: authStore, totpKey, clock });
     const accessService = await createAccessService({ store: accessStore, authStore, authService, totpKey, mailKey, origin, clock });
     const chatService = await createChatService({ store: chatStore, authStore, authService, accessService, key: messageKey, clock });
-    const mediaService = await createMediaService({ store: mediaStore, chatService, authStore, storage: uploadStorage, key: mediaKey, clock });
+    const mediaService = await createMediaService({ store: serviceStore, chatService, authStore, storage: uploadStorage, key: mediaKey, minimumFreeBytes: 0, clock });
     server = createAppServer({ authHandler: createAuthHandler(authService, { origin }),
       accessHandler: createAccessHandler(accessService, { origin }), chatHandler: createChatHandler(chatService, { origin }),
       mediaHandler: createMediaHandler(mediaService, { origin }) });
@@ -203,7 +229,22 @@ test("real HTTP private media uses normalized encrypted files and current delive
     });
 
     await t.test("normalization strips source metadata and stores only encrypted files while identical retries deduplicate", async () => {
-      const uploaded = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+      let entered, release;
+      const putStarted = new Promise((resolve) => { entered = resolve; });
+      const putReleased = new Promise((resolve) => { release = resolve; });
+      uploadPutGate = { entered, wait: putReleased };
+      const firstUpload = request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+      let uploaded;
+      try {
+        await Promise.race([putStarted, firstUpload.then(() => { throw new Error("The first upload completed before reaching the storage gate"); })]);
+        const busy = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+        assert.equal(busy.status, 429); assert.deepEqual(busy.body, { error: "try_again_later" });
+        assert.equal(busy.headers.get("retry-after"), "5");
+        assert.equal(await count("media_assets"), 0);
+        assert.deepEqual(await filesUnder(storageRoot), [], "the rejected competing upload writes no proposed files");
+        assert.ok((await capacityStore.status()).pendingBytes > 0, "the blocked first upload already owns durable capacity");
+        release(); uploaded = await firstUpload;
+      } finally { uploadPutGate = null; release(); await firstUpload.catch(() => {}); }
       assert.equal(uploaded.status, 201);
       assert.equal(uploaded.body.duplicate, false);
       assetA = uploaded.body.asset;
@@ -238,38 +279,47 @@ test("real HTTP private media uses normalized encrypted files and current delive
         assert.equal(publicJson.includes(secretValue), false);
       }
       const persistedFiles = await Promise.all(firstFiles.map(async (filename) => [filename, await readFile(filename)]));
-      let entered, release;
-      const putStarted = new Promise((resolve) => { entered = resolve; });
-      const putReleased = new Promise((resolve) => { release = resolve; });
-      uploadPutGate = { entered, wait: putReleased };
-      const firstDuplicate = request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
-      try {
-        // The first retry has completed normalization and owns its account's
-        // upload place. Keep storage blocked until the competing request ends.
-        await Promise.race([putStarted, firstDuplicate.then(() => { throw new Error("The duplicate upload completed before reaching the storage gate"); })]);
-        const busy = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
-        assert.equal(busy.status, 429);
-        assert.deepEqual(busy.body, { error: "try_again_later" });
-        assert.equal(busy.headers.get("retry-after"), "5");
-        assert.equal(await count("media_assets"), 1);
-        assert.deepEqual(await filesUnder(storageRoot), firstFiles, "the rejected competing upload writes no proposed files");
-        release();
-        const duplicate = await firstDuplicate;
-        assert.equal(duplicate.status, 200);
-        assert.equal(duplicate.body.duplicate, true);
-        assert.equal(duplicate.body.asset.id, assetA.id);
-        // This is a new explicit HTTP attempt after the occupied place clears.
-        const retried = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
-        assert.equal(retried.status, 200);
-        assert.equal(retried.body.duplicate, true);
-        assert.equal(retried.body.asset.id, assetA.id);
-      } finally {
-        uploadPutGate = null; release();
-        await firstDuplicate.catch(() => {});
+      const beforeDuplicate = await capacityStore.status(), putsBeforeDuplicate = uploadPutCalls;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const duplicate = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+        assert.equal(duplicate.status, 200); assert.equal(duplicate.body.duplicate, true); assert.equal(duplicate.body.asset.id, assetA.id);
       }
+      assert.equal(uploadPutCalls, putsBeforeDuplicate, "an early duplicate never starts an encrypted file write");
+      assert.deepEqual(await capacityStore.status(), beforeDuplicate, "duplicate retries consume no additional durable capacity");
+      assert.equal((await capacityStore.listObjects()).objects.length, 1);
       assert.equal(await count("media_assets"), 1);
-      assert.deepEqual(await filesUnder(storageRoot), firstFiles, "deduplicated proposed files are removed without unlinking the persisted asset");
+      assert.deepEqual(await filesUnder(storageRoot), firstFiles, "early duplicates leave exactly the two persisted files");
       for (const [filename, encrypted] of persistedFiles) assert.deepEqual(await readFile(filename), encrypted, "deduplicated retries leave both persisted encrypted files unchanged");
+    });
+
+    await t.test("read-only inventory reconciles real SQL storage-key lookups and both passes against the two encrypted files", async () => {
+      const reader = createMediaInventoryStore({ pool });
+      const [object] = (await capacityStore.listObjects()).objects;
+      const known = await reader.lookupStorageKey({ storageKey: object.storageKey });
+      assert.equal(known.asset.id.toString("hex"), assetA.id); assert.equal(known.asset.deleted, false);
+      assert.equal(known.object.state, "registered"); assert.deepEqual(known.object.assetId, known.asset.id);
+      assert.deepEqual(known.asset.ownerId, clientA.id);
+      assert.deepEqual(await reader.lookupStorageKey({ storageKey: randomBytes(32) }), { asset: null, object: null });
+      const calls = { assets: 0, objects: 0, lookups: 0 };
+      // These wrappers observe calls only; every response still comes from the
+      // real SELECT-only adapter and the separately provisioned runtime pool.
+      const observedReader = {
+        async listAssets(input) { calls.assets += 1; return reader.listAssets(input); },
+        async listObjects(input) { calls.objects += 1; return reader.listObjects(input); },
+        async lookupStorageKey(input) { calls.lookups += 1; return reader.lookupStorageKey(input); },
+      };
+      const before = await capacityStore.status(), filesBefore = await filesUnder(storageRoot);
+      const report = await inspectMediaInventory({ store: observedReader, capacityStore, storage,
+        capacity: { ownerBytes: capacity.ownerBytes, totalBytes: capacity.totalBytes }, minimumFreeBytes: 0 });
+      assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.equal(report.canInitialize, false);
+      assert.equal(report.integrity, "structure_only"); assert.deepEqual(report.issues, []);
+      assert.deepEqual(report.counts, { assets: 1, activeAssets: 1, deletedAssets: 0, journalObjects: 1, reserved: 0,
+        cleanupPending: 0, released: 0, files: 2, knownPublished: 2, unknown: 0, staging: 0,
+        missingActive: 0, missingDeleted: 0, blockingIssues: 0 });
+      assert.deepEqual(calls, { assets: 2, objects: 2, lookups: 4 }, "the SQL manifest is checked twice and each filesystem variant has a real storage-key lookup");
+      assert.equal(report.bytes.declared, String(object.storedBytes));
+      assert.equal(report.bytes.observedEncrypted, String(object.storedBytes));
+      assert.deepEqual(await capacityStore.status(), before); assert.deepEqual(await filesUnder(storageRoot), filesBefore);
     });
 
     await t.test("image sends persist once, reconcile concurrent retries and keep media bound to the exact sender and content", async () => {
@@ -423,6 +473,62 @@ test("real HTTP private media uses normalized encrypted files and current delive
       assert.equal(await count("message_media"), 3, "historical delivery links remain while all deleted content is absent from reads");
     });
 
+    await t.test("failed physical removal retains the full charge until an explicit delete retry acknowledges unlink", async () => {
+      now += 61000;
+      const beforeUpload = await capacityStore.status();
+      const uploaded = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+      assert.equal(uploaded.status, 201);
+      const object = (await capacityStore.listObjects()).objects.find((row) => row.id.toString("hex") === uploaded.body.asset.id);
+      assert.ok(object); assert.equal(object.state, "registered");
+      const charged = await capacityStore.status();
+      assert.equal(charged.heldBytes, beforeUpload.heldBytes + object.storedBytes);
+      const filenames = (await filesUnder(storageRoot)).filter((filename) => path.basename(filename).startsWith(object.storageKey.toString("hex")));
+      assert.equal(filenames.length, 2);
+      const removePath = mediaPath("client", `assets/${uploaded.body.asset.id}/delete`);
+      removeFailure = true;
+      const failed = await request(removePath, { method: "POST", headers: headersFor(a), body: {} });
+      assert.equal(failed.status, 503); assert.deepEqual(failed.body, { error: "media_unavailable" });
+      assert.equal((await capacityStore.status()).heldBytes, charged.heldBytes);
+      assert.equal((await capacityStore.status()).pendingBytes, object.storedBytes);
+      assert.equal((await capacityStore.listObjects()).objects.find((row) => row.id.equals(object.id)).state, "cleanup_pending");
+      assert.deepEqual(await Promise.all(filenames.map(async (filename) => (await lstat(filename)).isFile())), [true, true]);
+      assert.equal((await request(uploaded.body.asset.fullUrl, { headers: headersFor(a) })).status, 404, "metadata denial precedes physical cleanup");
+      assert.equal((await request(removePath, { method: "POST", headers: headersFor(a), body: {} })).status, 200);
+      assert.equal((await capacityStore.status()).heldBytes, beforeUpload.heldBytes);
+      assert.equal((await capacityStore.status()).pendingBytes, beforeUpload.pendingBytes);
+      assert.equal((await capacityStore.listObjects()).objects.find((row) => row.id.equals(object.id)).state, "released");
+      for (const filename of filenames) await assert.rejects(lstat(filename), { code: "ENOENT" });
+    });
+
+    await t.test("a lost successful registration acknowledgement preserves encrypted files and capacity until safe retry reconciliation", async () => {
+      now += 61000;
+      const before = await capacityStore.status(), filesBefore = await filesUnder(storageRoot), putsBefore = uploadPutCalls;
+      loseRegisterAcknowledgement = true; uncertainAsset = null;
+      const failed = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+      assert.equal(failed.status, 503); assert.deepEqual(failed.body, { error: "media_unavailable" });
+      assert.ok(uncertainAsset, "the real SQL registration committed before the synthetic acknowledgement loss");
+      const row = (await connection.query("SELECT id, storage_key, deleted_at FROM media_assets WHERE id = ?", [uncertainAsset.id]))[0];
+      assert.ok(row); assert.equal(row.deleted_at, null); assert.deepEqual(row.storage_key, uncertainAsset.storageKey);
+      const object = (await capacityStore.listObjects()).objects.find((item) => item.id.equals(uncertainAsset.id));
+      assert.equal(object.state, "registered"); assert.equal(object.storedBytes, uncertainAsset.fullBytes + uncertainAsset.thumbnailBytes + 80);
+      const held = await capacityStore.status();
+      assert.equal(held.heldBytes, before.heldBytes + object.storedBytes); assert.equal(held.pendingBytes, before.pendingBytes);
+      assert.equal((await filesUnder(storageRoot)).length, filesBefore.length + 2);
+      for (const variant of ["full", "thumb"]) {
+        const bytes = await storage.get({ assetId: uncertainAsset.id, storageKey: uncertainAsset.storageKey, variant });
+        assert.equal(bytes.length, variant === "full" ? uncertainAsset.fullBytes : uncertainAsset.thumbnailBytes);
+      }
+      const retried = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+      assert.equal(retried.status, 200); assert.equal(retried.body.duplicate, true);
+      assert.equal(retried.body.asset.id, uncertainAsset.id.toString("hex"));
+      assert.equal(uploadPutCalls, putsBefore + 1, "the explicit retry takes the early duplicate path without a second write");
+      assert.deepEqual(await capacityStore.status(), held);
+      assert.equal((await request(retried.body.asset.fullUrl, { headers: headersFor(a) })).status, 200);
+      assert.equal((await request(mediaPath("client", `assets/${retried.body.asset.id}/delete`), { method: "POST", headers: headersFor(a), body: {} })).status, 200);
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes);
+      assert.deepEqual(await filesUnder(storageRoot), filesBefore);
+    });
+
     await t.test("access expiration denies library, gallery, image GET/HEAD and uploads while the assigned administrator retains history", async () => {
       const boundary = now + 60000;
       await connection.query("UPDATE users SET access_expires_at = ? WHERE id = ?", [sqlDate(boundary), clientA.id]);
@@ -474,6 +580,49 @@ test("real HTTP private media uses normalized encrypted files and current delive
       assert.equal((await request(adminAsset.fullUrl, { headers: headersFor(admin) })).status, 401);
       assert.equal((await request(adminHistory.body.items[0].media.fullUrl, { method: "HEAD", headers: headersFor(admin) })).status, 401);
       assert.equal(await count("messages"), 4);
+    });
+
+    // These three additional independently assured synthetic accounts isolate
+    // each quota. Reservations intentionally remain charged without any file
+    // write until disposable-schema teardown; no unproven release is claimed.
+    const c = await loginClient(clients[2]), d = await loginClient(clients[3]), e = await loginClient(clients[4]);
+    async function fillReservedBytes(session, amount) {
+      assert.ok(Number.isSafeInteger(amount) && amount > 81 && amount <= capacity.ownerBytes);
+      const asset = { id: randomBytes(16), storageKey: randomBytes(32), digest: randomBytes(32),
+        width: 1, height: 1, thumbnailWidth: 1, thumbnailHeight: 1, fullBytes: amount - 81, thumbnailBytes: 1 };
+      const result = await mediaStore.reserveAsset({ role: "client", tokenHash: tokenDigest(session.cookie.slice(session.cookie.indexOf("=") + 1)), now, asset });
+      assert.equal(result.duplicate, false); assert.equal(result.reservation.bytes, amount);
+      return asset;
+    }
+    await t.test("an owner's durable ceiling rejects HTTP uploads with 507 before every encrypted file write", async () => {
+      now += 61000;
+      const filesBefore = await filesUnder(storageRoot), putsBefore = uploadPutCalls;
+      const held = await capacityStore.status();
+      const reserved = await fillReservedBytes(c, capacity.ownerBytes - 128);
+      const before = await capacityStore.status(), objectsBefore = (await capacityStore.listObjects()).objects.length;
+      assert.equal(before.heldBytes, held.heldBytes + capacity.ownerBytes - 128);
+      assert.ok(capacity.totalBytes - before.heldBytes > 10000, "the shared ceiling leaves enough room, isolating the owner ceiling");
+      const denied = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(c) });
+      assert.equal(denied.status, 507); assert.deepEqual(denied.body, { error: "storage_limit" });
+      assert.equal(uploadPutCalls, putsBefore); assert.deepEqual(await filesUnder(storageRoot), filesBefore);
+      assert.deepEqual(await capacityStore.status(), before); assert.equal((await capacityStore.listObjects()).objects.length, objectsBefore);
+      assert.equal((await capacityStore.listObjects()).objects.find((row) => row.id.equals(reserved.id)).state, "reserved");
+      assert.equal((await request(mediaPath("client", "assets"), { headers: headersFor(c) })).body.assets.length, 0);
+    });
+    await t.test("the shared durable ceiling rejects a fresh owner's HTTP upload without reserving or writing again", async () => {
+      now += 61000;
+      const held = await capacityStore.status(), remaining = capacity.totalBytes - held.heldBytes - 128;
+      assert.ok(remaining < capacity.ownerBytes);
+      await fillReservedBytes(d, remaining);
+      const before = await capacityStore.status(), objectsBefore = (await capacityStore.listObjects()).objects.length;
+      const filesBefore = await filesUnder(storageRoot), putsBefore = uploadPutCalls;
+      assert.equal(before.heldBytes, capacity.totalBytes - 128);
+      const denied = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceB, headers: headersFor(e) });
+      assert.equal(denied.status, 507); assert.deepEqual(denied.body, { error: "storage_limit" });
+      assert.equal(uploadPutCalls, putsBefore); assert.deepEqual(await filesUnder(storageRoot), filesBefore);
+      assert.deepEqual(await capacityStore.status(), before); assert.equal((await capacityStore.listObjects()).objects.length, objectsBefore);
+      assert.equal((await request(mediaPath("client", "assets"), { headers: headersFor(e) })).body.assets.length, 0);
+      assert.equal(await count("messages"), 4, "capacity rejections introduce no chat delivery");
     });
   } finally {
     if (server) await new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); });

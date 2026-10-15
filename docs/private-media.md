@@ -1,14 +1,16 @@
-# Private photos and gallery — development 0.7
+# Private photos and gallery — development 0.15 (foundation 0.7)
 
 This lot adds one still image per message, an optional caption (up to 1,000 characters), conversation galleries and a reusable owner library. It extends the real private chat; the downloadable offline workbench remains fictional. No real photo or customer data is supplied in Git or CI.
 
 ## Private configuration
 
-Keep administrator/access/chat configuration and apply all 17 reviewed migrations separately. Set `JESSIEMESSAGE_ENABLE_MEDIA=1`, `JESSIEMESSAGE_MEDIA_KEY` and `JESSIEMESSAGE_MEDIA_ROOT` explicitly. The key is a new cryptographically random 32-byte canonical base64url value (43 characters), different from the MFA, mail and message keys. No key is generated on startup or included in source. Missing/invalid configuration refuses startup; absent/`0` leaves media routes unregistered.
+Keep administrator/access/chat configuration and apply all 27 reviewed migrations separately. Set `JESSIEMESSAGE_ENABLE_MEDIA=1`, `JESSIEMESSAGE_MEDIA_KEY` and `JESSIEMESSAGE_MEDIA_ROOT` explicitly. The key is a new cryptographically random 32-byte canonical base64url value (43 characters), different from the MFA, mail and message keys. No key is generated on startup or included in source. Missing/invalid configuration refuses startup; absent/`0` leaves media routes unregistered.
 
 The media root must already exist as an owner-controlled `0700` absolute directory outside the entire checkout and public web root, with safe ancestor permissions. It cannot be an ancestor of the checkout either. Symlinks, unsafe ownership/modes and a root replaced after startup are rejected. Files are `0600`; the server never serves arbitrary filesystem paths. Provision this directory through the host's private filesystem controls, not inside `public`, `artifacts`, `design` or a Git checkout.
 
 Both variants are encrypted with AES-256-GCM, a fresh nonce and authenticated asset/variant identifiers. Files are published exclusively and atomically from encrypted temporary content; there is no plaintext temporary image. Save this key separately with encrypted backups. Key rotation/re-encryption tooling is not yet provided. **The server decrypts authorized reads; this is not end-to-end encryption.**
+
+Version 0.15 additionally requires explicit offline capacity initialization before starting enabled media, even for an empty directory. Defaults are 1 GiB per owner, 10 GiB globally and 512 MiB free margin, with configuration bound to the private directory identity. See [capacity reservations, inventory and initialization](media-capacity-inventory.md) before enabling this version.
 
 ## Input and processing
 
@@ -51,7 +53,7 @@ Eight binary reads/responses at most are admitted globally across roles. The slo
 
 ## Persistence and operational limits
 
-Image files are written before the metadata transaction. A confirmed deduplication removes only that call's unused proposed files. If commit acknowledgement fails, encrypted files are preserved because metadata may already have committed. A reconciliation/orphan-cleanup tool is not yet implemented; do not delete files merely because an HTTP request failed. Likewise, do not delete metadata or media keys without a backup/retention procedure. Cancelling an unsent photo leaves the owned asset available for explicit library removal.
+Image files are written before the metadata transaction. A confirmed deduplication removes only that call's unused proposed files. If commit acknowledgement fails, encrypted files are preserved because metadata may already have committed. A bounded read-only inventory is implemented in 0.15; automatic orphan deletion and repair of uncertain reservations are not. Do not delete files merely because an HTTP request failed. Capacity is reserved before writing and retained through uncertain outcomes and failed erasure; only durable unlink followed by idempotent SQL release refunds it. Likewise, do not delete metadata or media keys without a backup/retention procedure. Cancelling an unsent photo leaves the owned asset available for explicit library removal.
 
 Schema drift checks cover required columns, indexes, FKs, CHECK clauses and active deduplication. Unit/HTTP tests use real synthetic codecs and encrypted temporary storage. Separate sequential MariaDB 10.11/11.4 tests cover actual HTTP uploads, atomic delivery, owner/recipient isolation, expiry/revocation, deletion, deduplication and large cursors. Consult the exact successful CI revision before reporting this lot as verified.
 

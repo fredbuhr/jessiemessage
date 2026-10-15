@@ -132,6 +132,7 @@ function mappedError(error) {
   if (error?.code === "CHAT_CONFLICT") return { status: 409, code: "message_conflict" };
   if (["CHAT_INPUT", "MEDIA_INPUT"].includes(error?.code)) return { status: 400, code: "invalid_request" };
   if (error?.code === "MEDIA_FORMAT") return { status: 415, code: "media_format" };
+  if (error?.code === "MEDIA_STORAGE_LIMIT") return { status: 507, code: "storage_limit" };
   if (["AUTH_RATE_LIMIT", "CHAT_RATE_LIMIT", "MEDIA_RATE_LIMIT", "AUTH_BUSY", "MEDIA_BUSY"].includes(error?.code)) {
     const retry = Number(error.retryAfter);
     return { status: 429, code: "try_again_later", retry: Number.isFinite(retry) ? Math.max(1, Math.min(3600, Math.ceil(retry))) : 60 };

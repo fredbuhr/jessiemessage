@@ -59,9 +59,11 @@ test("private root rejects checkout descendants, ancestors, relative paths and c
   assert.equal(mediaConfiguration({ ...env, JESSIEMESSAGE_MEDIA_ROOT: `${resolve(checkout)}-private` }).enabled, true);
 });
 
-test("successful media configuration exposes only the independent key, origin and private root", () => {
+test("successful media configuration exposes its private root and finite capacity defaults", () => {
   const env = environment(), original = { ...env }, result = mediaConfiguration(env);
-  assert.deepEqual(Object.keys(result).sort(), ["enabled", "key", "origin", "root"]);
+  assert.deepEqual(Object.keys(result).sort(), ["capacity", "enabled", "key", "minimumFreeBytes", "origin", "root"]);
+  assert.deepEqual(result.capacity, { ownerBytes: 1073741824, totalBytes: 10737418240 });
+  assert.equal(result.minimumFreeBytes, 536870912);
   assert.equal(result.enabled, true); assert.equal(result.origin, env.JESSIEMESSAGE_SITE_ORIGIN);
   assert.equal(result.root, privateRoot); assert.deepEqual(result.key, Buffer.from(env.JESSIEMESSAGE_MEDIA_KEY, "base64url"));
   assert.deepEqual(env, original);
@@ -69,4 +71,25 @@ test("successful media configuration exposes only the independent key, origin an
   assert.throws(() => mediaConfiguration({ ...env, JESSIEMESSAGE_MEDIA_KEY: secret }), (error) => {
     assert.ok(error instanceof MediaConfigError); assert.equal(error.message.includes(secret), false); assert.equal(error.cause, undefined); return true;
   });
+});
+
+test("media quotas accept explicit byte ceilings and a zero disk margin without changing the input", () => {
+  const env = { ...environment(), JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: "1024", JESSIEMESSAGE_MEDIA_TOTAL_BYTES: "2048", JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES: "0" };
+  const original = { ...env }, config = mediaConfiguration(env);
+  assert.deepEqual(config.capacity, { ownerBytes: 1024, totalBytes: 2048 });
+  assert.equal(config.minimumFreeBytes, 0); assert.deepEqual(env, original);
+  assert.ok(Object.isFrozen(config.capacity));
+});
+
+test("capacity configuration refuses ambiguous, unsafe and inconsistent limits before media startup", () => {
+  const env = environment();
+  for (const field of ["JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES", "JESSIEMESSAGE_MEDIA_TOTAL_BYTES", "JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES"]) {
+    for (const value of [null, 1000, "", "01", "1.0", "1e3", " 1024", "1024 ", "1024\n", "+1024", "-1", "1125899906842625", "9007199254740992"]) {
+      assert.throws(() => mediaConfiguration({ ...env, [field]: value }), { code: "MEDIA_CONFIG" });
+    }
+  }
+  for (const field of ["JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES", "JESSIEMESSAGE_MEDIA_TOTAL_BYTES"]) {
+    for (const value of ["0", "81"]) assert.throws(() => mediaConfiguration({ ...env, [field]: value }), { code: "MEDIA_CONFIG" });
+  }
+  assert.throws(() => mediaConfiguration({ ...env, JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: "2048", JESSIEMESSAGE_MEDIA_TOTAL_BYTES: "1024" }), { code: "MEDIA_CONFIG" });
 });

@@ -16,17 +16,35 @@ const sourceImage = sharp({ create: { width: 12, height: 8, channels: 4, backgro
 async function fixture() {
   const key = randomBytes(32), token = newToken(), calls = [], actorCalls = [], rateCalls = [];
   const state = { actorEnabled: true, actorError: null, roleOverride: null, idOverride: null, storeError: null,
-    storageError: null, storageRemoveError: null, rateResults: [], uploadDuplicate: false, registered: null, removed: false };
+    storageError: null, storageRemoveError: null, rateResults: [], uploadDuplicate: false, earlyDuplicate: false,
+    registered: null, removed: false, availableBytes: 100000000000n, chargedBytes: 0, objects: new Map() };
   const asset = () => ({ id: assetId, ownerId: adminId, storageKey: Buffer.alloc(32, 0x66), digest: Buffer.alloc(32, 0x77),
     width: 12, height: 8, thumbnailWidth: 12, thumbnailHeight: 8, fullBytes: 4, thumbnailBytes: 3,
     createdAt: now - 1000, deletedAt: state.removed ? now : null, sharedHere: true,
     filename: "private-original-name.jpg", email: "private-owner@example.invalid", bodyEncrypted: "private-ciphertext" });
   const record = (name, options) => { calls.push({ name, options }); if (state.storeError) throw state.storeError; };
   const store = {
+    reserveAsset: async (options) => {
+      record("reserveAsset", options);
+      if (state.reserveError) throw state.reserveError;
+      if (state.earlyDuplicate) return { duplicate: true, asset: { ...asset(), ownerId: options.role === "admin" ? adminId : clientId } };
+      const bytes = options.asset.fullBytes + options.asset.thumbnailBytes + 80;
+      state.objects.set(options.asset.id.toString("hex"), bytes); state.chargedBytes += bytes;
+      if (state.reserveAckError) throw state.reserveAckError;
+      return state.reservationResult ?? { duplicate: false, reservation: { id: options.asset.id, storageKey: options.asset.storageKey,
+        bytes, pendingBytes: state.pendingBytes ?? state.chargedBytes } };
+    },
     registerAsset: async (options) => {
       record("registerAsset", options); state.registered = options.asset;
-      return { asset: state.uploadDuplicate ? asset() : { ...options.asset, ownerId: adminId, createdAt: now, deletedAt: null, sharedHere: false,
+      if (state.registrationError) throw state.registrationError;
+      return { asset: state.uploadDuplicate ? { ...asset(), ownerId: options.role === "admin" ? adminId : clientId } : { ...options.asset, ownerId: options.role === "admin" ? adminId : clientId, createdAt: now, deletedAt: null, sharedHere: false,
         fullBytes: options.asset.fullBytes, thumbnailBytes: options.asset.thumbnailBytes }, duplicate: state.uploadDuplicate };
+    },
+    releaseStorageObject: async (options) => {
+      record("releaseStorageObject", options); if (state.releaseError) throw state.releaseError;
+      const hex = options.objectId.toString("hex");
+      if (state.objects.has(hex)) { state.chargedBytes -= state.objects.get(hex); state.objects.delete(hex); }
+      return state.releaseResult ?? { released: true };
     },
     listAssets: async (options) => { record("listAssets", options); return { assets: [asset()], nextCursor: assetId, hasMore: true, storageRoot: "/private/root" }; },
     getOwnedAsset: async (options) => { record("getOwnedAsset", options); return asset(); },
@@ -38,6 +56,10 @@ async function fixture() {
     ], nextBefore: "9007199254740993", hasMore: true }; },
   };
   const storage = {
+    availableSpace: async () => {
+      calls.push({ name: "storage.availableSpace" }); if (state.capacityError) throw state.capacityError;
+      return state.spaceResult ?? { availableBytes: state.availableBytes };
+    },
     put: async (options) => { calls.push({ name: "storage.put", options }); if (state.storageError) throw state.storageError; },
     get: async (options) => {
       calls.push({ name: "storage.get", options }); if (state.storageError) throw state.storageError;
@@ -73,6 +95,9 @@ test("media service requires explicit keys and every persistent/storage authoriz
   for (const method of Object.keys(f.storage)) await assert.rejects(createMediaService({ ...f.options, storage: { ...f.storage, [method]: undefined } }), hasCode("MEDIA_CONFIG"));
   for (const method of ["actor", "sendImage"]) await assert.rejects(createMediaService({ ...f.options, chatService: { ...f.chatService, [method]: undefined } }), hasCode("MEDIA_CONFIG"));
   await assert.rejects(createMediaService({ ...f.options, clock: null }), hasCode("MEDIA_CONFIG"));
+  for (const minimumFreeBytes of [-1, NaN, 1.5, "536870912", Number.MAX_SAFE_INTEGER + 1]) {
+    await assert.rejects(createMediaService({ ...f.options, minimumFreeBytes }), hasCode("MEDIA_CONFIG"));
+  }
   assert.ok(Object.isFrozen(f.service));
 });
 
@@ -174,8 +199,9 @@ test("synthetic uploads normalize bytes before encrypted storage and commit meta
   const f = await fixture(); const bytes = await sourceImage; const original = Buffer.from(bytes);
   const result = await f.service.upload("admin", f.token, bytes);
   assert.equal(result.duplicate, false); assert.deepEqual(bytes, original);
-  assert.deepEqual(f.calls.map((call) => call.name), ["storage.put", "registerAsset"]);
-  const stored = f.calls[0].options, registered = f.calls[1].options;
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "storage.put", "registerAsset"]);
+  const stored = f.calls[2].options, registered = f.calls[3].options;
+  assert.deepEqual(f.calls[0].options.asset, registered.asset);
   assert.equal(stored.assetId.length, 16); assert.equal(stored.storageKey.length, 32);
   assert.deepEqual(registered.asset.id, stored.assetId); assert.deepEqual(registered.asset.storageKey, stored.storageKey);
   assert.notDeepEqual(stored.full, bytes); assert.equal(stored.full[0], 0xff); assert.equal(stored.full[1], 0xd8);
@@ -189,25 +215,154 @@ test("synthetic uploads normalize bytes before encrypted storage and commit meta
   assert.equal(JSON.stringify(result).includes("storageKey"), false); assert.equal(JSON.stringify(result).includes("digest"), false);
   f.state.storageError = new Error("Private filesystem details"); f.calls.length = 0;
   await assert.rejects(f.service.upload("admin", f.token, bytes), hasCode("MEDIA_UNAVAILABLE"));
-  assert.deepEqual(f.calls.map((call) => call.name), ["storage.put"]);
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "storage.put"]);
 });
 
 test("ambiguous registration failure preserves proposed encrypted files instead of unlinking committed assets", async () => {
-  const f = await fixture(); f.state.storeError = Object.assign(new Error("Connection failed after private commit"), { code: "ER_CONNECTION_LOST" });
+  const f = await fixture(); f.state.registrationError = Object.assign(new Error("Connection failed after private commit"), { code: "ER_CONNECTION_LOST" });
   await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_UNAVAILABLE"));
-  assert.deepEqual(f.calls.map((call) => call.name), ["storage.put", "registerAsset"]);
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "storage.put", "registerAsset"]);
   assert.equal(f.calls.some((call) => call.name === "storage.remove"), false);
+  assert.ok(f.state.chargedBytes > 0);
+});
+
+test("storage quota refusals and lost reservation acknowledgements never begin filesystem writes", async () => {
+  const bytes = await sourceImage;
+  for (const code of ["MEDIA_STORAGE_LIMIT", "MEDIA_CAPACITY_UNAVAILABLE", "CHAT_UNAUTHORIZED"]) {
+    const f = await fixture(); f.state.reserveError = Object.assign(new Error("Private capacity account details"), { code });
+    await assert.rejects(f.service.upload("admin", f.token, bytes), hasCode(code));
+    assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset"]);
+    assert.equal(f.state.chargedBytes, 0);
+  }
+  const f = await fixture(); f.state.reserveAckError = Object.assign(new Error("Private reservation committed before connection loss"), { code: "ER_CONNECTION_LOST" });
+  await assert.rejects(f.service.upload("admin", f.token, bytes), hasCode("MEDIA_UNAVAILABLE"));
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset"]);
+  assert.ok(f.state.chargedBytes > 0); assert.equal(f.state.objects.size, 1);
+});
+
+test("an early acknowledged duplicate skips capacity checks, file writes and additional capacity charges", async () => {
+  const f = await fixture(); f.state.earlyDuplicate = true; f.state.availableBytes = 0n;
+  const result = await f.service.upload("admin", f.token, await sourceImage);
+  assert.equal(result.duplicate, true); assert.equal(result.asset.id, assetHex);
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset"]);
+  assert.equal(f.state.chargedBytes, 0); assert.equal(f.state.objects.size, 0);
+  assert.doesNotMatch(JSON.stringify(result), /storageKey|digest|ownerId|private-/);
+});
+
+test("the disk margin includes every pending reservation and uses an exact BigInt boundary", async () => {
+  const f = await fixture(), pendingBytes = 2000000; f.state.pendingBytes = pendingBytes;
+  f.state.availableBytes = BigInt(pendingBytes) + 536870912n - 1n;
+  await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_STORAGE_LIMIT"));
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace"]);
+  assert.ok(f.state.chargedBytes > 0, "margin refusal conservatively keeps the acknowledged reservation");
+  f.calls.length = 0; f.state.availableBytes += 1n;
+  assert.equal((await f.service.upload("admin", f.token, await sourceImage)).duplicate, false);
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "storage.put", "registerAsset"]);
+  const huge = await fixture(); huge.state.availableBytes = 10n ** 30n;
+  const service = await createMediaService({ ...huge.options, minimumFreeBytes: Number.MAX_SAFE_INTEGER });
+  const clientUpload = await service.upload("client", huge.token, await sourceImage);
+  assert.equal(clientUpload.duplicate, false); assert.match(clientUpload.asset.fullUrl, /^\/api\/media\/client\/assets\//);
+});
+
+test("unavailable or malformed disk capacity fails closed after reservation without unlink or release", async () => {
+  for (const space of [null, {}, { availableBytes: 1000000000 }, { availableBytes: "1000000000" }, { availableBytes: -1n }]) {
+    const f = await fixture(); f.storage.availableSpace = async () => { f.calls.push({ name: "storage.availableSpace" }); return space; };
+    await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_CAPACITY_UNAVAILABLE"));
+    assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace"]);
+    assert.ok(f.state.chargedBytes > 0);
+  }
+  const f = await fixture(); f.state.capacityError = new Error("Private statfs path and device error");
+  await assert.rejects(f.service.upload("admin", f.token, await sourceImage), (error) => hasCode("MEDIA_UNAVAILABLE")(error) && !error.message.includes("statfs"));
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace"]);
+});
+
+test("reservation acknowledgements must match the proposal and exact encrypted capacity before put", async () => {
+  const corruptions = [
+    () => null, () => ({}), (result) => ({ ...result, duplicate: "false" }),
+    (result) => ({ ...result, reservation: null }),
+    (result) => ({ ...result, reservation: { ...result.reservation, id: Buffer.alloc(16) } }),
+    (result) => ({ ...result, reservation: { ...result.reservation, storageKey: Buffer.alloc(32) } }),
+    (result) => ({ ...result, reservation: { ...result.reservation, bytes: result.reservation.bytes - 1 } }),
+    (result) => ({ ...result, reservation: { ...result.reservation, bytes: BigInt(result.reservation.bytes) } }),
+    (result) => ({ ...result, reservation: { ...result.reservation, pendingBytes: result.reservation.bytes - 1 } }),
+    (result) => ({ ...result, reservation: { ...result.reservation, pendingBytes: Number.MAX_SAFE_INTEGER + 1 } }),
+  ];
+  for (const corrupt of corruptions) {
+    const f = await fixture(), reserve = f.store.reserveAsset;
+    f.store.reserveAsset = async (request) => corrupt(await reserve(request));
+    await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_UNAVAILABLE"));
+    assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset"]);
+    assert.ok(f.state.chargedBytes > 0, "an invalid acknowledgement does not authorize compensating release");
+  }
+});
+
+test("partial file writes and unavailable registration retain their reservation without compensating cleanup", async () => {
+  for (const step of ["storageError", "registrationError"]) {
+    const f = await fixture(); f.state[step] = new Error("Private acknowledgement could be lost after the operation");
+    await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_UNAVAILABLE"));
+    assert.ok(f.state.chargedBytes > 0); assert.equal(f.state.objects.size, 1);
+    assert.equal(f.calls.some((call) => ["storage.remove", "releaseStorageObject"].includes(call.name)), false);
+    assert.equal(f.calls.filter((call) => call.name === "storage.put").length, 1);
+    assert.equal(f.calls.filter((call) => call.name === "registerAsset").length, step === "storageError" ? 0 : 1);
+  }
 });
 
 test("confirmed owner deduplication cleans only newly proposed files and tolerates cleanup interruption", async () => {
   const f = await fixture(); f.state.uploadDuplicate = true;
   const result = await f.service.upload("admin", f.token, await sourceImage);
   assert.equal(result.duplicate, true); assert.equal(result.asset.id, assetHex);
-  assert.deepEqual(f.calls.map((call) => call.name), ["storage.put", "registerAsset", "storage.remove"]);
-  assert.deepEqual(f.calls[2].options.storageKey, f.calls[0].options.storageKey);
-  assert.notDeepEqual(f.calls[2].options.storageKey, f.asset().storageKey);
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "storage.put", "registerAsset", "storage.remove", "releaseStorageObject"]);
+  assert.deepEqual(f.calls[4].options.storageKey, f.calls[2].options.storageKey);
+  assert.notDeepEqual(f.calls[4].options.storageKey, f.asset().storageKey);
+  assert.deepEqual(f.calls[5].options.objectId, f.calls[0].options.asset.id);
+  assert.equal(f.state.chargedBytes, 0);
   f.state.storageRemoveError = new Error("Private cleanup failed");
   assert.equal((await f.service.upload("admin", f.token, await sourceImage)).duplicate, true);
+  assert.ok(f.state.chargedBytes > 0, "failed unlink retains the proposed object's charge");
+});
+
+test("late duplicate cleanup keeps the canonical result and holds capacity until unlink and release acknowledge", async () => {
+  const f = await fixture(); f.state.uploadDuplicate = true;
+  f.state.releaseError = new Error("Private release transaction failed");
+  const result = await f.service.upload("admin", f.token, await sourceImage);
+  assert.equal(result.asset.id, assetHex); assert.equal(result.duplicate, true);
+  assert.ok(f.state.chargedBytes > 0); assert.equal(f.state.objects.size, 1);
+  assert.deepEqual(f.calls.slice(-2).map((call) => call.name), ["storage.remove", "releaseStorageObject"]);
+  const release = f.calls.at(-1).options, proposed = f.calls.find((call) => call.name === "reserveAsset").options.asset;
+  assert.deepEqual(release.objectId, proposed.id); assert.deepEqual(release.storageKey, proposed.storageKey);
+  assert.notDeepEqual(release.objectId, assetId); assert.notDeepEqual(release.storageKey, f.asset().storageKey);
+});
+
+test("malformed late duplicate acknowledgements cannot unlink a canonical key or release uncertain capacity", async () => {
+  for (const field of ["both", "id", "storageKey"]) {
+    const f = await fixture(), register = f.store.registerAsset;
+    f.store.registerAsset = async (request) => {
+      const result = await register(request);
+      return { duplicate: true, asset: { ...result.asset,
+        id: field === "storageKey" ? assetId : request.asset.id,
+        storageKey: field === "id" ? f.asset().storageKey : request.asset.storageKey } };
+    };
+    await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_UNAVAILABLE"), field);
+    assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "storage.put", "registerAsset"]);
+    assert.ok(f.state.chargedBytes > 0); assert.equal(f.state.objects.size, 1);
+    assert.equal(f.calls.some((call) => ["storage.remove", "releaseStorageObject"].includes(call.name)), false);
+  }
+});
+
+test("reserve, registration and post-unlink release use fresh clocks after asynchronous waits", async () => {
+  const f = await fixture(); let current = now;
+  const consume = f.options.authStore.consumeRateLimit, reserve = f.store.reserveAsset;
+  const availableSpace = f.storage.availableSpace, put = f.storage.put, remove = f.storage.remove;
+  f.options.authStore.consumeRateLimit = async (...args) => { const result = await consume(...args); current += 1000; return result; };
+  f.store.reserveAsset = async (request) => { assert.equal(request.now, now + 2000); const result = await reserve(request); current += 2000; return result; };
+  f.storage.availableSpace = async () => { const result = await availableSpace(); current += 3000; return result; };
+  f.storage.put = async (request) => { await put(request); current += 4000; };
+  f.storage.remove = async (request) => { await remove(request); current += 5000; };
+  f.state.uploadDuplicate = true;
+  const service = await createMediaService({ ...f.options, clock: () => current });
+  assert.equal((await service.upload("admin", f.token, await sourceImage)).duplicate, true);
+  assert.equal(f.calls.find((call) => call.name === "registerAsset").options.now, now + 11000);
+  assert.equal(f.calls.find((call) => call.name === "releaseStorageObject").options.now, now + 16000);
 });
 
 test("asset removal commits metadata before unlinking, denies in-use cleanup and can retry failed unlink", async () => {
@@ -220,8 +375,30 @@ test("asset removal commits metadata before unlinking, denies in-use cleanup and
   assert.equal(f.state.removed, true); assert.deepEqual(f.calls.map((call) => call.name), ["deleteAsset", "storage.remove"]);
   f.state.storageRemoveError = null; f.calls.length = 0;
   assert.deepEqual(await f.service.removeAsset("admin", f.token, assetHex), { deleted: true });
-  assert.deepEqual(f.calls.map((call) => call.name), ["deleteAsset", "storage.remove"]);
+  assert.deepEqual(f.calls.map((call) => call.name), ["deleteAsset", "storage.remove", "releaseStorageObject"]);
   assert.deepEqual(f.calls[1].options, { storageKey: f.asset().storageKey });
+});
+
+test("deletion retries a tombstone and releases capacity only after durable unlink with a fresh actor proof", async () => {
+  const f = await fixture(); let current = now;
+  f.state.objects.set(assetHex, 87); f.state.chargedBytes = 87;
+  const remove = f.storage.remove;
+  f.storage.remove = async (request) => { await remove(request); current += 5000; };
+  const service = await createMediaService({ ...f.options, clock: () => current });
+  f.state.storageRemoveError = new Error("Private unlink incomplete");
+  await assert.rejects(service.removeAsset("admin", f.token, assetHex), hasCode("MEDIA_UNAVAILABLE"));
+  assert.equal(f.state.removed, true); assert.equal(f.state.chargedBytes, 87);
+  assert.equal(f.calls.some((call) => call.name === "releaseStorageObject"), false);
+  f.state.storageRemoveError = null; f.state.releaseError = new Error("Private release unavailable"); f.calls.length = 0;
+  await assert.rejects(service.removeAsset("admin", f.token, assetHex), hasCode("MEDIA_UNAVAILABLE"));
+  assert.equal(f.state.chargedBytes, 87); assert.equal(f.calls.at(-1).options.now, now + 5000);
+  f.state.releaseError = null; f.calls.length = 0;
+  assert.deepEqual(await service.removeAsset("admin", f.token, assetHex), { deleted: true });
+  assert.equal(f.state.chargedBytes, 0);
+  const release = f.calls.at(-1).options;
+  assert.deepEqual(release, { role: "admin", tokenHash: tokenDigest(f.token), now: now + 10000, objectId: assetId, storageKey: f.asset().storageKey });
+  assert.deepEqual(await service.removeAsset("admin", f.token, assetHex), { deleted: true });
+  assert.equal(f.state.chargedBytes, 0, "idempotent release never subtracts the same object twice");
 });
 
 test("read and removal budgets are distinct and stop before metadata or storage reads", async () => {
@@ -420,7 +597,7 @@ test("metadata registration uses a fresh authorization time and retains its uplo
     await register(options); throw Object.assign(new Error("synthetic current SQL denial"), { code: "CHAT_UNAUTHORIZED" });
   };
   await assert.rejects(service.upload("admin", f.token, await sourceImage), hasCode("CHAT_UNAUTHORIZED"));
-  assert.deepEqual(f.calls.map((entry) => entry.name), ["storage.put", "registerAsset"]);
+  assert.deepEqual(f.calls.map((entry) => entry.name), ["reserveAsset", "storage.availableSpace", "storage.put", "registerAsset"]);
   assert.equal(f.calls.some((entry) => entry.name === "storage.remove"), false, "an ambiguous SQL outcome preserves the encrypted files");
   const next = await other.service.admitUpload("admin", other.token); other.service.releaseUpload(next);
 });

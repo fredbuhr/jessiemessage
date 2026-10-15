@@ -9,6 +9,14 @@ export class MediaConfigError extends Error {
 }
 const within = (parent, child) => { const path = relative(parent, child); return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path)); };
 const checkout = fileURLToPath(new URL("../../", import.meta.url));
+const MAX_CAPACITY_BYTES = 1125899906842624;
+function byteLimit(value, fallback, minimum) {
+  if (value === undefined) return fallback;
+  if (typeof value !== "string" || value.length > 16 || !/^(?:0|[1-9][0-9]*)$/.test(value)) throw new MediaConfigError();
+  const result = Number(value);
+  if (!Number.isSafeInteger(result) || result < minimum || result > MAX_CAPACITY_BYTES || String(result) !== value) throw new MediaConfigError();
+  return result;
+}
 
 export function mediaConfiguration(env = process.env) {
   const flag = env.JESSIEMESSAGE_ENABLE_MEDIA;
@@ -21,5 +29,9 @@ export function mediaConfiguration(env = process.env) {
   if (key.length !== 32 || key.toString("base64url") !== encoded || [chat.key, auth.totpKey, access.mail.key].some((other) => key.equals(other))) throw new MediaConfigError();
   if (typeof root !== "string" || root.length > 4096 || /[\x00-\x1f\x7f]/.test(root) || !isAbsolute(root) || root !== resolve(root)
     || within(checkout, root) || within(root, checkout)) throw new MediaConfigError();
-  return { enabled: true, origin: chat.origin, key, root };
+  const ownerBytes = byteLimit(env.JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES, 1073741824, 82);
+  const totalBytes = byteLimit(env.JESSIEMESSAGE_MEDIA_TOTAL_BYTES, 10737418240, 82);
+  const minimumFreeBytes = byteLimit(env.JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES, 536870912, 0);
+  if (ownerBytes > totalBytes) throw new MediaConfigError();
+  return { enabled: true, origin: chat.origin, key, root, capacity: Object.freeze({ ownerBytes, totalBytes }), minimumFreeBytes };
 }

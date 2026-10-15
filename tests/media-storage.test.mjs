@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, readFile, writeFile, readdir, chmod, stat, symlink, unlink, mkdir, rename, link, truncate } from "node:fs/promises";
 import { createMediaStorage, MediaStorageError } from "../server/media/storage.mjs";
 
@@ -19,6 +20,7 @@ async function fixture(t) {
   const key = randomBytes(32);
   return { root, key, storage: await createMediaStorage({ root, key }) };
 }
+async function collect(iterator) { const entries = []; for await (const entry of iterator) entries.push(entry); return entries; }
 
 test("private storage publishes only encrypted owner-private files and round-trips both variants", async (t) => {
   const { root, storage } = await fixture(t); const asset = input();
@@ -156,4 +158,158 @@ test("storage APIs accept only fixed-length opaque Buffer identifiers and bounde
   }
   await assert.rejects(storage.get({ ...asset, variant: "../../private" }), (error) => error.code === "MEDIA_INPUT");
   await assert.rejects(storage.remove({ storageKey: "../secret" }), (error) => error.code === "MEDIA_INPUT");
+});
+
+test("storage fingerprints bind the private root identity and key without exposing a path", async (t) => {
+  const { root, key, storage } = await fixture(t), first = await storage.fingerprint();
+  assert.ok(Buffer.isBuffer(first)); assert.equal(first.length, 32);
+  assert.deepEqual(await storage.fingerprint(), first);
+  assert.deepEqual(await (await createMediaStorage({ root, key })).fingerprint(), first);
+  assert.notDeepEqual(await (await createMediaStorage({ root, key: randomBytes(32) })).fingerprint(), first);
+  const other = await fixture(t);
+  assert.notDeepEqual(await (await createMediaStorage({ root: other.root, key })).fingerprint(), first);
+  first.fill(0); assert.notDeepEqual(await storage.fingerprint(), first);
+});
+
+test("available storage space is a nonnegative bigint and inventory APIs refuse private-root drift", async (t) => {
+  const { root, storage } = await fixture(t), free = await storage.availableSpace();
+  assert.deepEqual(Object.keys(free), ["availableBytes"]); assert.equal(typeof free.availableBytes, "bigint"); assert.ok(free.availableBytes >= 0n);
+  await chmod(root, 0o750);
+  await unavailable(storage.fingerprint()); await unavailable(storage.availableSpace()); await unavailable(collect(storage.scanEntries()));
+  await unavailable(storage.inspectEntry({ storageKey: randomBytes(32), variant: "full" }));
+  await chmod(root, 0o700);
+  const previous = `${root}-previous`; t.after(() => rm(previous, { recursive: true, force: true }));
+  await rename(root, previous); await mkdir(root, { mode: 0o700 });
+  await unavailable(storage.fingerprint()); await unavailable(storage.availableSpace()); await unavailable(collect(storage.scanEntries()));
+  await unavailable(storage.inspectEntry({ storageKey: randomBytes(32), variant: "thumb" }));
+});
+
+test("bounded inventory recognizes published and staging envelopes without changing files or exposing unknown names", async (t) => {
+  const { root, storage } = await fixture(t), asset = input(); await storage.put(asset);
+  const staging = `.${asset.storageKey.toString("hex")}.full.${randomBytes(16).toString("hex")}.tmp`;
+  await writeFile(path.join(root, staging), await readFile(filename(root, asset.storageKey, "full")), { mode: 0o600 });
+  const unknownName = "private-original-name-never-disclosed.jpg";
+  await writeFile(path.join(root, unknownName), "private-secret-unknown", { mode: 0o600 });
+  await mkdir(path.join(root, "private-subdirectory"), { mode: 0o700 });
+  await writeFile(path.join(root, "private-subdirectory", "not-traversed"), "private-secret-nested", { mode: 0o600 });
+  const before = (await readdir(root)).sort(), entries = await collect(storage.scanEntries());
+  assert.equal(entries.length, 5);
+  assert.equal(entries.filter((entry) => entry.kind === "published").length, 2);
+  assert.equal(entries.filter((entry) => entry.kind === "staging").length, 1);
+  assert.equal(entries.filter((entry) => entry.kind === "unknown").length, 2);
+  for (const entry of entries) {
+    assert.equal(typeof entry.encryptedBytes, "bigint"); assert.ok(Number.isSafeInteger(entry.mtimeMs));
+    assert.equal(Object.hasOwn(entry, "name"), false); assert.equal(Object.hasOwn(entry, "path"), false);
+    if (entry.kind === "unknown") {
+      assert.equal(entry.status, "unsafe"); assert.equal(Object.hasOwn(entry, "storageKey"), false); assert.equal(Object.hasOwn(entry, "variant"), false);
+    } else { assert.equal(entry.status, "structural_ok"); assert.deepEqual(entry.storageKey, asset.storageKey); }
+  }
+  assert.deepEqual((await readdir(root)).sort(), before);
+  assert.deepEqual(await storage.get({ ...asset, variant: "full" }), asset.full);
+});
+
+test("single-entry inspection reports absent files and exact encrypted sizes without decoding images", async (t) => {
+  const { storage } = await fixture(t), asset = input();
+  assert.deepEqual(await storage.inspectEntry({ storageKey: asset.storageKey, variant: "full" }), { exists: false });
+  await storage.put(asset);
+  for (const [variant, plaintext] of [["full", asset.full], ["thumb", asset.thumbnail]]) {
+    const result = await storage.inspectEntry({ storageKey: asset.storageKey, variant });
+    assert.equal(result.exists, true); assert.equal(result.kind, "published"); assert.deepEqual(result.storageKey, asset.storageKey);
+    assert.equal(result.variant, variant); assert.equal(result.status, "structural_ok"); assert.equal(result.encryptedBytes, BigInt(plaintext.length + 40));
+  }
+});
+
+test("structural inspection rejects malformed or oversized envelopes with only bounded header work", async (t) => {
+  const { root, storage } = await fixture(t);
+  const cases = [
+    ["full", (bytes) => { bytes[0] = 0; return bytes; }],
+    ["full", (bytes) => { bytes.writeUInt32BE(0, 20); return bytes; }],
+    ["full", (bytes) => { bytes.writeUInt32BE(bytes.readUInt32BE(20) + 1, 20); return bytes; }],
+    ["full", (bytes) => bytes.subarray(0, 23)],
+  ];
+  for (const [variant, change] of cases) {
+    const asset = input(); await storage.put(asset); const target = filename(root, asset.storageKey, variant);
+    await writeFile(target, change(await readFile(target)));
+    assert.equal((await storage.inspectEntry({ storageKey: asset.storageKey, variant })).status, "invalid_envelope");
+  }
+  for (const [variant, size] of [["full", 10 * 1024 * 1024 + 41], ["thumb", 512 * 1024 + 41]]) {
+    const asset = input(); await storage.put(asset); await truncate(filename(root, asset.storageKey, variant), size);
+    assert.equal((await storage.inspectEntry({ storageKey: asset.storageKey, variant })).status, "invalid_envelope");
+  }
+});
+
+test("a structurally plausible envelope does not claim GCM authentication of ciphertext or tag", async (t) => {
+  const { root, storage } = await fixture(t);
+  for (const offset of [24, -1]) {
+    const asset = input(); await storage.put(asset); const target = filename(root, asset.storageKey, "full"), bytes = await readFile(target);
+    bytes[offset < 0 ? bytes.length + offset : offset] ^= 1; await writeFile(target, bytes);
+    assert.equal((await storage.inspectEntry({ storageKey: asset.storageKey, variant: "full" })).status, "structural_ok");
+    await unavailable(storage.get({ ...asset, variant: "full" }));
+  }
+});
+
+test("inventory refuses symlinks, hard links, public modes and directories without following their targets", async (t) => {
+  const { root, storage } = await fixture(t);
+  const linked = input(); await storage.put(linked); const linkedPath = filename(root, linked.storageKey, "full");
+  await link(linkedPath, path.join(root, "unknown-hard-link"));
+  assert.equal((await storage.inspectEntry({ storageKey: linked.storageKey, variant: "full" })).status, "unsafe");
+  const publicAsset = input(); await storage.put(publicAsset); await chmod(filename(root, publicAsset.storageKey, "full"), 0o644);
+  assert.equal((await storage.inspectEntry({ storageKey: publicAsset.storageKey, variant: "full" })).status, "unsafe");
+  const alias = input(), target = path.join(root, "private-secret-sentinel");
+  await writeFile(target, "leave-private-secret-unchanged", { mode: 0o600 }); await symlink(target, filename(root, alias.storageKey, "full"));
+  assert.equal((await storage.inspectEntry({ storageKey: alias.storageKey, variant: "full" })).status, "unsafe");
+  const directoryKey = randomBytes(32); await mkdir(filename(root, directoryKey, "thumb"), { mode: 0o700 });
+  assert.equal((await storage.inspectEntry({ storageKey: directoryKey, variant: "thumb" })).status, "unsafe");
+  const entries = await collect(storage.scanEntries());
+  assert.equal(entries.filter((entry) => entry.kind === "published" && entry.status === "unsafe").length, 4);
+  assert.equal(await readFile(target, "utf8"), "leave-private-secret-unchanged");
+});
+
+test("a named pipe with a published-looking filename cannot block inspection", { skip: process.platform === "win32", timeout: 3000 }, async (t) => {
+  const { root, storage } = await fixture(t), storageKey = randomBytes(32);
+  execFileSync("mkfifo", ["-m", "600", filename(root, storageKey, "full")], { timeout: 1000 });
+  const entry = await storage.inspectEntry({ storageKey, variant: "full" });
+  assert.equal(entry.exists, true); assert.equal(entry.status, "unsafe");
+  assert.equal((await collect(storage.scanEntries()))[0].status, "unsafe");
+});
+
+test("inventory limits count every directory entry and never silently report a partial scan as complete", async (t) => {
+  const { root, storage } = await fixture(t); await storage.put(input()); await storage.put(input());
+  await writeFile(path.join(root, "unknown-private-entry"), "private", { mode: 0o600 });
+  const seen = [];
+  await assert.rejects(async () => { for await (const entry of storage.scanEntries({ maxEntries: 2 })) seen.push(entry); },
+    (error) => error instanceof MediaStorageError && error.code === "MEDIA_SCAN_LIMIT" && error.cause === undefined && !error.message.includes(root));
+  assert.equal(seen.length, 2);
+  assert.equal((await collect(storage.scanEntries({ maxEntries: 5 }))).length, 5);
+});
+
+test("aborted scans and an early iterator return finish without reading further entries", async (t) => {
+  const { storage } = await fixture(t); await storage.put(input()); await storage.put(input());
+  const before = new AbortController(); before.abort(); await unavailable(collect(storage.scanEntries({ signal: before.signal })));
+  const during = new AbortController(), seen = [];
+  await unavailable((async () => { for await (const entry of storage.scanEntries({ signal: during.signal })) { seen.push(entry); during.abort(); } })());
+  assert.equal(seen.length, 1);
+  const iterator = storage.scanEntries(); assert.equal((await iterator.next()).done, false);
+  assert.deepEqual(await iterator.return(), { value: undefined, done: true }); assert.equal((await iterator.next()).done, true);
+  assert.equal((await collect(storage.scanEntries())).length, 4);
+});
+
+test("a scan rejects root permission or identity changes between yielded entries", async (t) => {
+  const { root, storage } = await fixture(t); await storage.put(input());
+  const permissions = storage.scanEntries(); await permissions.next(); await chmod(root, 0o750);
+  await unavailable(permissions.next()); await chmod(root, 0o700);
+  const replaced = storage.scanEntries(); await replaced.next();
+  const previous = `${root}-previous`; t.after(() => rm(previous, { recursive: true, force: true }));
+  await rename(root, previous); await mkdir(root, { mode: 0o700 });
+  await unavailable(replaced.next()); assert.deepEqual(await readdir(root), []);
+});
+
+test("inventory and inspection reject malformed options without accepting arbitrary paths", async (t) => {
+  const { storage } = await fixture(t);
+  for (const options of [null, [], { maxEntries: 0 }, { maxEntries: 100001 }, { maxEntries: 1.5 }, { cursor: "private" }, { signal: true }]) {
+    await assert.rejects(collect(storage.scanEntries(options)), (error) => error.code === "MEDIA_INPUT");
+  }
+  for (const options of [null, [], { storageKey: "../private", variant: "full" }, { storageKey: randomBytes(32), variant: "thumbnail" }, { storageKey: randomBytes(32), variant: "full", path: "/private" }]) {
+    await assert.rejects(storage.inspectEntry(options), (error) => error.code === "MEDIA_INPUT");
+  }
 });
