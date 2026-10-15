@@ -108,6 +108,45 @@ test("database reports rebuild only validated fixed privilege observations and r
   assert.throws(() => makePreflightReport("database", blocked), { code: "PREFLIGHT_REPORT" });
 });
 
+test("pattern reports retain only fixed current-namespace evidence and the explicit future limitation", () => {
+  const observation = {
+    profile: "infomaniak-shared-pattern", source: "show_grants_and_visible_schemata",
+    ledgerWritable: true, tempTables: true, tableLocks: true, permanentDdl: false,
+    databaseNamePattern: true, visibleApplicationNamespace: "selected_only", futureMatchingDatabasesUnproven: true,
+  };
+  const result = success(DATABASE_CHECK_NAMES); result.privilegeObservation = { ...observation, private_value: secret };
+  let reads = 0;
+  Object.defineProperty(result.privilegeObservation, "ignoredPrivateGetter", { get() { reads += 1; return secret; } });
+  const report = makePreflightReport("database", result);
+  assert.deepEqual(report.privilegeObservation, observation);
+  assert.equal(report.launchApproved, false);
+  assert.doesNotMatch(JSON.stringify(report), new RegExp(secret));
+  for (const field of ["databaseNamePattern", "visibleApplicationNamespace", "futureMatchingDatabasesUnproven"]) {
+    for (const value of [secret, false, null]) {
+      const invalid = success(DATABASE_CHECK_NAMES); invalid.privilegeObservation = { ...observation, [field]: value };
+      assert.throws(() => makePreflightReport("database", invalid), { code: "PREFLIGHT_REPORT" });
+    }
+    const invalid = success(DATABASE_CHECK_NAMES); invalid.privilegeObservation = { ...observation };
+    Object.defineProperty(invalid.privilegeObservation, field, { get() { reads += 1; return secret; } });
+    assert.throws(() => makePreflightReport("database", invalid), { code: "PREFLIGHT_REPORT" });
+  }
+  for (const source of ["show_grants", "unverified", secret]) {
+    const invalid = success(DATABASE_CHECK_NAMES); invalid.privilegeObservation = { ...observation, source };
+    assert.throws(() => makePreflightReport("database", invalid), { code: "PREFLIGHT_REPORT" });
+  }
+  assert.equal(reads, 0);
+  const blocked = success(DATABASE_CHECK_NAMES); blocked.valid = false;
+  blocked.checks.find(({ name }) => name === "privileges").status = "fail";
+  blocked.privilegeObservation = { profile: "infomaniak-shared-pattern", source: "unverified",
+    ledgerWritable: null, tempTables: null, tableLocks: null, permanentDdl: null,
+    databaseNamePattern: null, visibleApplicationNamespace: null, futureMatchingDatabasesUnproven: null };
+  assert.deepEqual(makePreflightReport("database", blocked).privilegeObservation, blocked.privilegeObservation);
+  blocked.privilegeObservation.futureMatchingDatabasesUnproven = true;
+  assert.throws(() => makePreflightReport("database", blocked), { code: "PREFLIGHT_REPORT" });
+  const legacy = success(DATABASE_CHECK_NAMES); legacy.privilegeObservation.source = "show_grants_and_visible_schemata";
+  assert.throws(() => makePreflightReport("database", legacy), { code: "PREFLIGHT_REPORT" });
+});
+
 test("each command calls only its own inspector and keeps private configuration out of its public report", async () => {
   const env = { PRIVATE_SENTINEL: secret, JESSIEMESSAGE_MEDIA_ROOT: "/private/synthetic-media" };
   for (const [command, args, names, selected] of [

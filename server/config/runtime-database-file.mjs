@@ -58,7 +58,8 @@ export function validateRuntimeDatabaseConfiguration(value) {
       || typeof user !== "string" || !/^[a-zA-Z0-9_]{1,80}$/.test(user)
       || typeof password !== "string" || !password || !password.isWellFormed()
       || Buffer.byteLength(password, "utf8") > 4096 || /[\0\r\n]/.test(password)
-      || !["strict", "infomaniak-shared"].includes(privilegeProfile)
+      || !["strict", "infomaniak-shared", "infomaniak-shared-pattern"].includes(privilegeProfile)
+      || privilegeProfile === "infomaniak-shared-pattern" && !database.includes("_")
       || Buffer.byteLength(JSON.stringify(selected), "utf8") + 1 > MAX_BYTES) fail();
     return selected;
   } catch { fail(); }

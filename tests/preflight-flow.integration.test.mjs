@@ -185,6 +185,124 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
       finally { await pool.end(); }
       assert.equal(await digest(), before, "authentication schema verification leaves every application and ledger row unchanged");
     });
+    await t.test("the explicit underscore-pattern profile checks the current schema namespace against real wildcard grants", async (patternTest) => {
+      assert.equal(process.env.JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL, "1", "pattern fixtures require explicit disposable loopback configuration");
+      assert.match(options.database, /^jessiemessage_test_[a-z0-9_]+$/, "pattern fixtures require a confirmed disposable schema containing underscores");
+      const rootPassword = process.env.JESSIEMESSAGE_PATTERN_TEST_ROOT_PASSWORD;
+      assert.ok(typeof rootPassword === "string" && rootPassword.length > 0,
+        "real pattern fixtures require explicitly supplied disposable administrator credentials");
+      const administrator = await connectDatabase({ ...process.env,
+        JESSIEMESSAGE_DB_USER: "root", JESSIEMESSAGE_DB_PASSWORD: rootPassword });
+      const patternUser = `jessiemessage_pattern_test_${randomBytes(8).toString("hex")}`;
+      const patternPassword = `ci-pattern-only-${randomBytes(16).toString("hex")}`;
+      const rawEnv = { ...sharedEnv, JESSIEMESSAGE_RUNTIME_DB_USER: patternUser,
+        JESSIEMESSAGE_RUNTIME_DB_PASSWORD: patternPassword };
+      const patternEnv = { ...rawEnv, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "infomaniak-shared-pattern" };
+      // Replace one wildcard at a time, so the fixture proves that every raw
+      // underscore grants access to a distinct, same-length database name.
+      const shadows = [...options.database.matchAll(/_/g)].map(({ index }) =>
+        `${options.database.slice(0, index)}X${options.database.slice(index + 1)}`);
+      assert.ok(shadows.length > 0); assert.equal(new Set(shadows).size, shadows.length);
+      const createdSchemas = new Set(); let userCreated = false;
+      async function createShadow(database) {
+        assert.ok(shadows.includes(database), "only generated disposable shadows may be created");
+        assert.equal((await administrator.query("SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?", [database])).length,
+          0, "never overwrite or clean up a schema that predates this fixture");
+        await administrator.query(`CREATE DATABASE \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+        createdSchemas.add(database);
+      }
+      async function dropShadow(database) {
+        assert.ok(createdSchemas.has(database), "only this fixture's own schemas may be dropped");
+        await administrator.query(`DROP DATABASE \`${database}\``); createdSchemas.delete(database);
+      }
+      async function withRawRuntime(operation) {
+        // The previous profile deliberately has no pool namespace guard. It
+        // lets the test demonstrate the database server's actual wider access.
+        const pool = await createRuntimePool(rawEnv); let runtime;
+        try { runtime = await pool.getConnection(); return await operation(runtime); }
+        finally {
+          try { if (runtime) await runtime.release(); }
+          finally { await pool.end(); }
+        }
+      }
+      async function expectNamespaceRejected() {
+        const before = await digest();
+        const result = await inspectDatabase({ env: patternEnv, databaseName: options.database });
+        assert.equal(result.valid, false);
+        assert.ok(states(result).connection === "fail" || states(result).privileges === "fail",
+          "the pattern profile must reject wider current visibility before accepting credentials");
+        assert.equal(states(result).cleanup, "pass");
+        assert.equal(await digest(), before, "namespace verification never changes target application or ledger rows");
+      }
+      async function expectOnlyTargetAccepted() {
+        const before = await digest();
+        const result = await probe(patternEnv);
+        for (const check of result.checks) assert.equal(check.status, check.name === "transport" ? "fail" : "pass", check.name);
+        assert.equal(result.privilegeObservation.profile, "infomaniak-shared-pattern");
+        assert.equal(result.privilegeObservation.ledgerWritable, true);
+        await withRawRuntime(async (runtime) => {
+          const rows = await runtime.query("SHOW DATABASES");
+          assert.deepEqual(rows.map((row) => Object.values(row)[0]).sort(), [options.database, "information_schema"].sort());
+        });
+        assert.equal(await digest(), before);
+      }
+      try {
+        for (const database of shadows) assert.equal((await administrator.query(
+          "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?", [database])).length, 0,
+        "all shadow names must be absent before this disposable fixture starts");
+        await administrator.query(`CREATE USER '${patternUser}'@'%' IDENTIFIED BY ? WITH MAX_USER_CONNECTIONS 38`, [patternPassword]);
+        userCreated = true;
+        // Database-level GRANT interprets these deliberately unescaped
+        // underscores as wildcards, including inside backticks.
+        await administrator.query(`GRANT SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES ON \`${options.database}\`.* TO '${patternUser}'@'%'`);
+        await patternTest.test("raw underscore grants remain rejected by the unchanged strict and escaped-shared profiles", async () => {
+          for (const privilegeProfile of ["strict", "infomaniak-shared"]) {
+            const result = await probe({ ...rawEnv, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: privilegeProfile });
+            assert.equal(result.valid, false); assert.equal(states(result).privileges, "fail");
+            assert.equal(states(result).history, "pass"); assert.equal(states(result).schema_reads, "pass");
+          }
+        });
+        await patternTest.test("the new profile accepts only the target and information_schema in current visibility", expectOnlyTargetAccepted);
+        await patternTest.test("each underscore grants actual access to an empty and populated shadow, which the guard rejects", async () => {
+          for (const database of shadows) {
+            await createShadow(database);
+            try {
+              await withRawRuntime(async (runtime) => {
+                await runtime.query(`USE \`${database}\``);
+                assert.equal((await runtime.query("SELECT DATABASE() AS selected_database"))[0].selected_database, database);
+                assert.equal((await runtime.query(`SHOW TABLES FROM \`${database}\``)).length, 0);
+              });
+              await expectNamespaceRejected();
+              await administrator.query(`CREATE TABLE \`${database}\`.privilege_pattern_probe (id INT NOT NULL PRIMARY KEY, value INT NOT NULL) ENGINE=InnoDB`);
+              await administrator.query(`INSERT INTO \`${database}\`.privilege_pattern_probe VALUES (1, 7)`);
+              await withRawRuntime(async (runtime) => {
+                assert.equal(Number((await runtime.query(`SELECT value FROM \`${database}\`.privilege_pattern_probe WHERE id = 1`))[0].value), 7);
+              });
+              await expectNamespaceRejected();
+              assert.equal(Number((await administrator.query(`SELECT value FROM \`${database}\`.privilege_pattern_probe WHERE id = 1`))[0].value), 7);
+            } finally { await dropShadow(database); }
+            await expectOnlyTargetAccepted();
+          }
+        });
+        await patternTest.test("a schema created after an accepted check is rejected on the next check", async () => {
+          await expectOnlyTargetAccepted();
+          const database = shadows[0]; await createShadow(database);
+          try { await expectNamespaceRejected(); }
+          finally { await dropShadow(database); }
+          await expectOnlyTargetAccepted();
+        });
+      } finally {
+        const failures = [];
+        for (const database of createdSchemas) {
+          try { await dropShadow(database); } catch (error) { failures.push(error); }
+        }
+        if (userCreated) {
+          try { await administrator.query(`DROP USER '${patternUser}'@'%'`); } catch (error) { failures.push(error); }
+        }
+        try { await administrator.end(); } catch (error) { failures.push(error); }
+        assert.equal(failures.length, 0, "disposable pattern account and schema cleanup must finish successfully");
+      }
+    });
     await t.test("the shared-profile fixture can perform application DML and ledger writes, with all row changes rolled back", async () => {
       const before = await digest(), pool = await createRuntimePool(sharedEnv); let runtime;
       try {
