@@ -1,14 +1,27 @@
 import { createCrmState, setFilters, contactQuery, applyContactPage, updateContact, contactName, selectProfile, currentDetail, detailTicket, invalidateDetail, receiveProfile, changeDraft, saveBody, discardDraft, labelsOfKind, localDateTime, reminderTimestamp, clearCrmState } from "/crm-model.js";
 
+const ui = globalThis.JessieI18n ?? {
+  t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
+  text(element, source, params = {}) { element.textContent = this.t(source, params); },
+  attr(element, name, source, params = {}) { element.setAttribute(name, this.t(source, params)); },
+  rawText(element, value) { element.textContent = value; }, forget() {},
+  dateParam(value, options = {}) { return new Date(value).toLocaleString("fr-FR", options); },
+  numberParam(value, options = {}) { return value.toLocaleString("fr-FR", options); },
+  messageParam(source, params = {}) { return this.t(source, params); }
+};
+const replace = (element, ...children) => { ui.forget(element); element.replaceChildren(...children); };
+
 const BASE = "/api/admin/crm";
 const accessNames = { active: "Actif", pending: "En attente", expired: "Expiré", revoked: "Révoqué", suspended: "Suspendu", deleted: "Supprimé" };
-function node(tag, text = null, className = null) { const element = document.createElement(tag); if (text !== null) element.textContent = text; if (className) element.className = className; return element; }
+function node(tag, text = null, className = null) { const element = document.createElement(tag); if (text !== null) ui.text(element, text); if (className) element.className = className; return element; }
+function rawNode(tag, value, className = null) { const element = node(tag, null, className); ui.rawText(element, value); return element; }
+function textNode(tag, source, params = {}, className = null) { const element = node(tag, null, className); ui.text(element, source, params); return element; }
 function button(text, action, className = "button secondary") { const element = node("button", text, className); element.type = "button"; element.addEventListener("click", action); return element; }
-function field(label, input) { const wrapper = node("label", null, "crm-field"); wrapper.append(node("span", label), input); return wrapper; }
+function field(label, input, params = {}) { const wrapper = node("label", null, "crm-field"); wrapper.append(textNode("span", label, params), input); return wrapper; }
 function input(type, name, maximum = null) { const element = node("input"); element.type = type; element.name = name; if (maximum) element.maxLength = maximum; return element; }
 function select(options) { const element = node("select"); for (const [value, name] of options) { const option = node("option", name); option.value = value; element.append(option); } return element; }
-function dateName(value) { return value === null ? "Aucun" : new Date(value).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" }); }
-function status(node, text, error = false) { node.textContent = text; node.classList.toggle("is-error", error); }
+function dateName(value) { return value === null ? ui.messageParam("Aucun") : ui.dateParam(value, { dateStyle: "medium", timeStyle: "short" }); }
+function status(node, text, error = false) { ui.text(node, text); node.classList.toggle("is-error", error); }
 
 export function createCrmUI(adapter) {
   const state = createCrmState(); const owned = []; const renameDrafts = new Map(); const labelConflicts = new Set();
@@ -17,8 +30,8 @@ export function createCrmUI(adapter) {
   let profileReturnFocus = null; let labelsReturnFocus = null; let suspended = false; let deletedCandidate = null;
   let labelsRequest = 0;
   let inboxAbort = null;
-  const filters = node("form", null, "crm-filters"); filters.setAttribute("aria-label", "Filtrer les clients");
-  const search = input("search", "q", 80); search.placeholder = "Pseudo, surnom ou e-mail";
+  const filters = node("form", null, "crm-filters"); ui.attr(filters, "aria-label", "Filtrer les clients");
+  const search = input("search", "q", 80); ui.attr(search, "placeholder", "Pseudo, surnom ou e-mail");
   const tagFilter = select([["", "Tous les tags"]]); const groupFilter = select([["", "Tous les groupes"]]);
   const accessFilter = select([["all", "Tous les accès"], ...Object.entries(accessNames)]);
   const reminderFilter = select([["all", "Tous les rappels"], ["due", "Rappels à traiter"], ["upcoming", "À venir"], ["none", "Sans rappel"]]);
@@ -43,7 +56,7 @@ export function createCrmUI(adapter) {
   const reminderHelp = node("small", "Date de suivi privée, sans notification automatique.", "crm-help"); const notesCount = node("small", "0 / 8 000", "crm-note-count");
   const memberships = node("div", null, "crm-memberships"); const saveButton = node("button", "Enregistrer la fiche", "button primary"); saveButton.type = "submit";
   profileFields.append(field("Surnom privé", nickname), field("Notes privées", notes), notesCount, field("Rappel privé · heure locale", reminder), reminderHelp, memberships, saveButton); profileForm.append(profileFields);
-  const conflict = node("section", null, "crm-conflict"); conflict.hidden = true; conflict.setAttribute("aria-label", "Modification à comparer");
+  const conflict = node("section", null, "crm-conflict"); conflict.hidden = true; ui.attr(conflict, "aria-label", "Modification à comparer");
   profileDialog.append(profileHeader, profileHelp, clientInfo, profileStatus, profileForm, conflict); document.body.append(profileDialog); owned.push(profileDialog);
 
   const manager = node("dialog", null, "crm-dialog crm-label-dialog"); manager.setAttribute("aria-labelledby", "crm-label-title");
@@ -62,7 +75,7 @@ export function createCrmUI(adapter) {
   function publish() {
     adapter.onContacts([...state.contacts.values()], { cursor: state.cursor, hasMore: state.hasMore, loading });
     selectionStatus.hidden = !state.selected || state.contacts.has(state.selected);
-    selectionStatus.textContent = selectionStatus.hidden ? "" : "La conversation ouverte est hors des résultats actuels.";
+    ui.text(selectionStatus, selectionStatus.hidden ? "" : "La conversation ouverte est hors des résultats actuels.");
   }
   async function report(error, target) {
     if (error.stale || error.name === "AbortError") return;
@@ -113,9 +126,9 @@ export function createCrmUI(adapter) {
     } finally { if (inboxAbort === controller) inboxAbort = null; if (requestId === pageRequest && epoch === state.filterEpoch) { loading = false; publish(); } }
   }
   function replaceFilterOptions(element, kind, empty) {
-    const previous = element.value; element.replaceChildren();
+    const previous = element.value; replace(element);
     const first = node("option", empty); first.value = ""; element.append(first);
-    for (const label of labelsOfKind(state.labels.values(), kind)) { const option = node("option", label.name); option.value = label.id; element.append(option); }
+    for (const label of labelsOfKind(state.labels.values(), kind)) { const option = rawNode("option", label.name); option.value = label.id; element.append(option); }
     if (previous && !state.labels.has(previous)) { const missing = node("option", "Étiquette retirée"); missing.value = previous; element.append(missing); }
     element.value = previous;
   }
@@ -134,14 +147,14 @@ export function createCrmUI(adapter) {
     const draft = state.drafts.get(state.selected); if (profileOpen && draft) renderMemberships(draft);
   }
   function renderMemberships(draft) {
-    memberships.replaceChildren();
+    replace(memberships);
     for (const [kind, title] of [["tag", "Tags"], ["group", "Groupes"]]) {
       const group = node("fieldset", null, "crm-label-options"); group.append(node("legend", title));
       const available = labelsOfKind(state.labels.values(), kind);
       if (!available.length) group.append(node("p", "Aucun pour le moment.", "crm-help"));
       for (const label of available) {
         const checked = input("checkbox", "labelIds"); checked.value = label.id; checked.checked = draft.labelIds.includes(label.id);
-        const wrapper = node("label", null, "crm-check"); wrapper.append(checked, node("span", label.name)); group.append(wrapper);
+        const wrapper = node("label", null, "crm-check"); wrapper.append(checked, rawNode("span", label.name)); group.append(wrapper);
         checked.addEventListener("change", syncDraft);
       }
       memberships.append(group);
@@ -157,17 +170,17 @@ export function createCrmUI(adapter) {
     const draft = state.drafts.get(state.selected); if (!profileOpen || !draft || detailBusy) return;
     let timestamp; try { timestamp = reminder.value === localDateTime(draft.reminderAt) ? draft.reminderAt : reminderTimestamp(reminder.value); } catch { status(profileStatus, "Vérifie la date du rappel.", true); return; }
     changeDraft(draft, { nickname: nickname.value, notes: notes.value, reminderAt: timestamp, labelIds: [...memberships.querySelectorAll("input:checked")].map((checkbox) => checkbox.value) });
-    notesCount.textContent = `${notes.value.length.toLocaleString("fr-FR")} / 8 000`;
+    ui.text(notesCount, "{count} / 8 000", { count: ui.numberParam(notes.value.length) });
     if (!draft.conflict) status(profileStatus, "Modifications non enregistrées.");
   }
   for (const element of [nickname, notes, reminder]) element.addEventListener("input", syncDraft);
   function renderConflict(draft) {
-    conflict.replaceChildren(); conflict.hidden = !draft.conflict;
+    replace(conflict); conflict.hidden = !draft.conflict;
     if (!draft.conflict) { saveButton.disabled = detailBusy; return; }
     saveButton.disabled = true;
     const latest = draft.conflict;
     conflict.append(node("h3", "La fiche a été modifiée ailleurs"), node("p", "Ton brouillon est conservé ci-dessus. Compare la version enregistrée avant de choisir."));
-    const summary = node("p"); summary.textContent = `Surnom : ${latest.nickname || "aucun"} · Rappel : ${dateName(latest.reminderAt)} · Étiquettes : ${latest.labels.map((label) => label.name).join(", ") || "aucune"}`; conflict.append(summary);
+    const summary = textNode("p", "Surnom : {nickname} · Rappel : {reminder} · Étiquettes : {labels}", { nickname: latest.nickname || ui.messageParam("aucun"), reminder: dateName(latest.reminderAt), labels: latest.labels.length ? latest.labels.map((label) => label.name).join(", ") : ui.messageParam("aucune") }); conflict.append(summary);
     const savedNotes = node("textarea"); savedNotes.readOnly = true; savedNotes.rows = 5; savedNotes.value = latest.notes; conflict.append(field("Notes enregistrées", savedNotes));
     const actions = node("div", null, "crm-actions");
     actions.append(button("Recharger la fiche", () => { const current = state.drafts.get(state.selected); if (current?.conflict) { const next = discardDraft(state, state.selected, current.conflict); renderProfile(next); status(profileStatus, "Version enregistrée rechargée."); } }),
@@ -175,8 +188,8 @@ export function createCrmUI(adapter) {
   }
   function renderProfile(draft) {
     const profile = draft.profile; nickname.value = draft.nickname; notes.value = draft.notes; reminder.value = localDateTime(draft.reminderAt);
-    notesCount.textContent = `${draft.notes.length.toLocaleString("fr-FR")} / 8 000`; profileTitle.textContent = `Fiche · ${profile.client.pseudonym}`;
-    clientInfo.replaceChildren(node("p", profile.client.email), node("p", `${accessNames[profile.access.state] ?? "En attente"}${profile.access.expiresAt === null ? "" : ` · jusqu’au ${dateName(profile.access.expiresAt)}`}`));
+    ui.text(notesCount, "{count} / 8 000", { count: ui.numberParam(draft.notes.length) }); ui.text(profileTitle, "Fiche · {name}", { name: profile.client.pseudonym });
+    replace(clientInfo, rawNode("p", profile.client.email), textNode("p", "{status}{expiry}", { status: ui.messageParam(accessNames[profile.access.state] ?? "En attente"), expiry: ui.messageParam(profile.access.expiresAt === null ? "" : " · jusqu’au {date}", { date: profile.access.expiresAt === null ? "" : dateName(profile.access.expiresAt) }) }));
     profileFields.hidden = false; profileFields.disabled = detailBusy; renderMemberships(draft); renderConflict(draft);
     if (draft.dirty && !draft.conflict) status(profileStatus, "Modifications non enregistrées.");
   }
@@ -197,13 +210,13 @@ export function createCrmUI(adapter) {
   async function openProfile(opener) {
     if (!state.selected || suspended) return;
     invalidateDetail(state); const ticket = detailTicket(state);
-    profileReturnFocus = opener; profileOpen = true; profileFields.hidden = true; conflict.hidden = true; clientInfo.replaceChildren(); profileTitle.textContent = "Fiche client"; status(profileStatus, "Chargement…");
+    profileReturnFocus = opener; profileOpen = true; profileFields.hidden = true; conflict.hidden = true; replace(clientInfo); ui.text(profileTitle, "Fiche client"); status(profileStatus, "Chargement…");
     profileDialog.showModal(); const existing = state.drafts.get(state.selected); if (existing) renderProfile(existing);
     try { await loadLabels(); if (profileOpen && currentDetail(state, ticket)) await loadProfile(); } catch (error) { if (profileOpen && currentDetail(state, ticket)) await report(error, profileStatus); }
   }
   function closeProfile(restore = true) {
     profileOpen = false; invalidateDetail(state); detailRequest += 1; detailBusy = false; if (profileDialog.open) profileDialog.close();
-    profileFields.hidden = true; profileFields.disabled = false; nickname.value = ""; notes.value = ""; reminder.value = ""; memberships.replaceChildren(); clientInfo.replaceChildren(); conflict.replaceChildren(); conflict.hidden = true; status(profileStatus, "");
+    profileFields.hidden = true; profileFields.disabled = false; ui.text(profileTitle, "Fiche client"); nickname.value = ""; notes.value = ""; reminder.value = ""; replace(memberships); replace(clientInfo); replace(conflict); conflict.hidden = true; status(profileStatus, "");
     if (restore && profileReturnFocus?.isConnected) profileReturnFocus.focus(); profileReturnFocus = null;
   }
   profileDialog.addEventListener("close", () => { if (profileOpen) closeProfile(); });
@@ -245,22 +258,22 @@ export function createCrmUI(adapter) {
   }
   function closeManager(restore = true) { if (manager.open) manager.close(); deletedCandidate = null; if (restore && labelsReturnFocus?.isConnected) labelsReturnFocus.focus(); labelsReturnFocus = null; }
   function renderLabels() {
-    labelList.replaceChildren();
+    replace(labelList);
     for (const [kind, title] of [["tag", "Tags"], ["group", "Groupes"]]) {
-      const section = node("section"); const labels = labelsOfKind(state.labels.values(), kind); section.append(node("h3", `${title} · ${labels.length} / 100`));
+      const section = node("section"); const labels = labelsOfKind(state.labels.values(), kind); section.append(textNode("h3", "{kind} · {count} / 100", { kind: ui.messageParam(title), count: ui.numberParam(labels.length) }));
       if (!labels.length) section.append(node("p", "Aucun pour le moment.", "crm-help"));
       for (const label of labels) {
         const row = node("div", null, "crm-label-row"); const name = input("text", "name", 64); name.value = renameDrafts.get(label.id) ?? label.name;
-        name.setAttribute("aria-label", `Renommer ${label.name}`); name.addEventListener("input", () => { renameDrafts.set(label.id, name.value); });
-        row.append(field(`${label.memberCount} client${label.memberCount > 1 ? "s" : ""}`, name));
+        ui.attr(name, "aria-label", "Renommer {name}", { name: label.name }); name.addEventListener("input", () => { renameDrafts.set(label.id, name.value); });
+        row.append(field(label.memberCount > 1 ? "{count} clients" : "{count} client", name, { count: ui.numberParam(label.memberCount) }));
         const actions = node("div", null, "crm-actions");
         actions.append(button(labelConflicts.has(label.id) ? "Enregistrer mon nom" : "Renommer", () => { void mutateLabel("rename", label, { name: name.value, expectedVersion: label.version }); }),
           button("Supprimer", () => { deletedCandidate = label.id; renderLabels(); }, "text-button")); row.append(actions);
         if (labelConflicts.has(label.id)) {
-          row.append(node("p", `Modifié ailleurs : nom enregistré « ${label.name} ». Ton nom est conservé dans le champ.`, "crm-help"), button("Reprendre le nom enregistré", () => { renameDrafts.delete(label.id); labelConflicts.delete(label.id); renderLabels(); }, "text-button"));
+          row.append(textNode("p", "Modifié ailleurs : nom enregistré « {name} ». Ton nom est conservé dans le champ.", { name: label.name }, "crm-help"), button("Reprendre le nom enregistré", () => { renameDrafts.delete(label.id); labelConflicts.delete(label.id); renderLabels(); }, "text-button"));
         }
         if (deletedCandidate === label.id) {
-          const confirm = node("div", null, "crm-delete-confirm"); confirm.append(node("p", `Retirer « ${label.name} » de ${label.memberCount} fiche${label.memberCount > 1 ? "s" : ""} et le supprimer ? Les notes seront conservées.`),
+          const confirm = node("div", null, "crm-delete-confirm"); confirm.append(textNode("p", label.memberCount > 1 ? "Retirer « {name} » de {count} fiches et le supprimer ? Les notes seront conservées." : "Retirer « {name} » de {count} fiche et le supprimer ? Les notes seront conservées.", { name: label.name, count: ui.numberParam(label.memberCount) }),
             button("Confirmer la suppression", () => { void mutateLabel("delete", label, { expectedVersion: label.version }); }), button("Annuler", () => { deletedCandidate = null; renderLabels(); }, "text-button")); row.append(confirm);
         }
         section.append(row);
@@ -295,8 +308,8 @@ export function createCrmUI(adapter) {
   function clear() {
     life += 1; pageRequest += 1; inboxAbort?.abort(); inboxAbort = null; clearTimeout(debounce); loading = false; detailBusy = false; managerBusy = false; refreshAfter = null; refreshTarget = null;
     closeProfile(false); closeManager(false); clearCrmState(state); renameDrafts.clear(); labelConflicts.clear();
-    createName.value = ""; search.value = ""; tagFilter.replaceChildren(); groupFilter.replaceChildren(); labelList.replaceChildren(); status(managerStatus, ""); status(filterStatus, "");
-    for (const element of owned) element.remove();
+    createName.value = ""; search.value = ""; replace(tagFilter); replace(groupFilter); replace(labelList); status(managerStatus, ""); status(filterStatus, "");
+    for (const element of owned) { ui.forget(element); element.remove(); }
   }
   function removeConversation(id) { state.contacts.delete(id); state.drafts.delete(id); if (state.selected === id) { closeProfile(false); selectProfile(state, null); ficheButton.hidden = true; } publish(); }
   function forgetUnavailableProfile(id) { removeConversation(id); adapter.onUnavailable?.(id); status(filterStatus, "Cette fiche n’est plus accessible.", true); }

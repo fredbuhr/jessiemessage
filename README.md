@@ -2,9 +2,9 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-**Resume development:** the [15 October recovery audit](docs/AUDIT-REPRISE-2026-10-15.md) fixes the audit reference at 0.16 (`0ecb31e`). The [chat correction](docs/chat-stable-history.md) preserves unchanged controls/photos. [0.17a supervision](docs/operations-readiness.md) adds cached service availability, safe worker events and private capped queue observations. [0.17b private data tools](docs/private-data-export.md) add an offline operator inventory and client-content export. [0.17c deletion simulation](docs/data-deletion-rollback.md) adds scoped dependency observations and history compatibility regressions. [The application entry](docs/pwa-entry.md) now connects installed launches to the existing private routes. Retention decisions, destructive execution and real rollback acceptance remain open.
+**Resume development:** the [15 October recovery audit](docs/AUDIT-REPRISE-2026-10-15.md) fixes the audit reference at 0.16 (`0ecb31e`). The [chat correction](docs/chat-stable-history.md) preserves unchanged controls/photos. [0.17a supervision](docs/operations-readiness.md) adds cached service availability, safe worker events and private capped queue observations. [0.17b private data tools](docs/private-data-export.md) add an offline operator inventory and client-content export. [0.17c deletion simulation](docs/data-deletion-rollback.md) adds scoped dependency observations and history compatibility regressions. [The application entry](docs/pwa-entry.md) now connects installed launches to the existing private routes. [Private interface translations](docs/private-ui-languages.md) now cover the served client and administrator journeys. Retention decisions, destructive execution and real rollback acceptance remain open.
 
-> **Current development: application entry 0.20.0 (stage 0.18).** `/app` opens the invitation-only client or administrator journey with explicit role choices and no private content preview. Installed launches target `/app` while retaining the approved manifest identity and icons. Private features remain disabled by default. `contact@jessiemessage.com` is the official contact, sender and reply address. No deployment has occurred; real hosting, email delivery, age assurance, retention/deletion, restoration and device acceptance remain launch work. See [entry behavior](docs/pwa-entry.md) and the [preproduction acceptance procedure](docs/preproduction-acceptance.md).
+> **Current development: private interfaces FR/EN, application 0.21.0 (stage 0.19).** Access, recovery, administrator tools, chat, photos, CRM, broadcasts and site preparation share one language choice for the browser session. Interface labels update in place; messages, drafts and client data keep their original text. Installed launches continue through `/app`. Private features remain disabled by default. `contact@jessiemessage.com` is the official contact, sender and reply address. No deployment has occurred; hosting, actual email delivery, age assurance, retention/deletion, restoration and browser/device acceptance remain open. See [translation scope](docs/private-ui-languages.md) and [preproduction acceptance](docs/preproduction-acceptance.md).
 
 ## Try without a terminal
 
@@ -37,6 +37,7 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 - [Offline client inventory/export and undecided retention policy](docs/private-data-export.md)
 - [Read-only deletion simulation and rollback safeguards](docs/data-deletion-rollback.md)
 - [Application entry, installation and role choices](docs/pwa-entry.md)
+- [Private interfaces in French and English](docs/private-ui-languages.md)
 - [Isolated preproduction acceptance](docs/preproduction-acceptance.md)
 - [Audit findings, current state and launch plan](docs/NEXT-STEPS.md)
 

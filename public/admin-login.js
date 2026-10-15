@@ -1,5 +1,16 @@
 "use strict";
 
+const adminUI = globalThis.JessieI18n ?? {
+  t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
+  text(node, source, params = {}) { node.textContent = this.t(source, params); },
+  attr(node, name, source, params = {}) { node.setAttribute(name, this.t(source, params)); },
+  rawText(node, value) { node.textContent = value; },
+  forget() {},
+  dateParam(value, options = {}) { return new Date(value).toLocaleString("fr-FR", options); },
+  numberParam(value) { return String(value); },
+};
+const adminLine = (source, params = {}) => ({ source, params });
+
 const form = document.getElementById("login-form");
 const connected = document.getElementById("connected");
 const status = document.getElementById("auth-status");
@@ -43,19 +54,20 @@ function clearAccess() {
   document.body.classList.remove("has-access");
   document.getElementById("new-invitation").hidden = true;
   document.getElementById("invitation-link").value = "";
-  document.getElementById("invitations-list").replaceChildren();
-  document.getElementById("clients-list").replaceChildren();
+  for (const id of ["invitations-list", "clients-list"]) {
+    const list = document.getElementById(id); adminUI.forget(list); list.replaceChildren();
+  }
   for (const kind of ["invitations", "clients"]) {
     const page = accessPages[kind];
     page.cursor = null; page.nextCursor = null; page.hasMore = false; page.epoch += 1;
     document.getElementById(`${kind}-pagination`).hidden = true;
-    document.getElementById(`${kind}-page-note`).textContent = "";
+    adminUI.rawText(document.getElementById(`${kind}-page-note`), "");
     updatePagination(kind);
   }
 }
 
 function notice(message, error = false) {
-  status.textContent = message;
+  if (message) adminUI.text(status, message); else adminUI.rawText(status, "");
   status.classList.toggle("is-error", error);
 }
 
@@ -69,10 +81,10 @@ function signedOut(message = "") {
   expiryTimer = null;
   form.hidden = suspended;
   connected.hidden = true;
-  title.textContent = "Bienvenue, Jessie.";
+  adminUI.text(title, "Bienvenue, Jessie.");
   intro.hidden = false;
   clearCredentials();
-  document.getElementById("connected-name").textContent = "";
+  adminUI.rawText(document.getElementById("connected-name"), "");
   notice(message);
 }
 
@@ -91,8 +103,8 @@ function signedIn(session) {
   form.hidden = true;
   connected.hidden = false;
   intro.hidden = true;
-  title.textContent = "Ton accès est prêt.";
-  document.getElementById("connected-name").textContent = session.user.pseudonym;
+  adminUI.text(title, "Ton accès est prêt.");
+  adminUI.rawText(document.getElementById("connected-name"), session.user.pseudonym);
   notice("");
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(() => signedOut("Ta session a expiré. Reconnecte-toi pour continuer."), Math.max(0, session.expiresAt - Date.now()));
@@ -103,13 +115,13 @@ function signedIn(session) {
 
 async function loadChatAccess() {
   const ticket = generation;
-  document.getElementById("admin-session-note").textContent = "L’accès administrateur est prêt. La messagerie sera disponible dès son activation.";
+  adminUI.text(document.getElementById("admin-session-note"), "L’accès administrateur est prêt. La messagerie sera disponible dès son activation.");
   try {
     const capability = await request("/api/chat/admin/capabilities");
     if (ticket !== generation || capability.enabled !== true) return;
     await verifyIdentity(ticket);
     document.getElementById("admin-chat-link").hidden = false;
-    document.getElementById("admin-session-note").textContent = "Tes conversations privées sont accessibles.";
+    adminUI.text(document.getElementById("admin-session-note"), "Tes conversations privées sont accessibles.");
   } catch (error) {
     if (error.stale || error.status === 404) return;
     if (error.status === 401 || error.status === 403) signedOut(errorMessage(error));
@@ -275,10 +287,10 @@ function suspend() {
   clearCredentials();
   form.hidden = true;
   connected.hidden = true;
-  document.getElementById("connected-name").textContent = "";
-  document.getElementById("admin-session-note").textContent = "";
+  adminUI.rawText(document.getElementById("connected-name"), "");
+  adminUI.rawText(document.getElementById("admin-session-note"), "");
   document.getElementById("admin-chat-link").hidden = true;
-  title.textContent = "Bienvenue, Jessie.";
+  adminUI.text(title, "Bienvenue, Jessie.");
   intro.hidden = false;
   notice("");
   // Keep the existing absolute expiry timer. Hiding the page never extends it.
@@ -301,28 +313,38 @@ window.addEventListener("pageshow", () => resume());
 if (suspended) suspend();
 else resume();
 
-function dateText(value) { return new Date(value).toLocaleString("fr-FR"); }
-function item(titleText, lines) {
+function item(titleText, lines, { rawTitle = false } = {}) {
   const card = document.createElement("article"); card.className = "access-item";
-  const heading = document.createElement("h3"); heading.textContent = titleText; card.append(heading);
-  for (const line of lines) { const paragraph = document.createElement("p"); paragraph.textContent = line; card.append(paragraph); }
+  const heading = document.createElement("h3");
+  if (rawTitle) adminUI.rawText(heading, titleText); else adminUI.text(heading, titleText);
+  card.append(heading);
+  for (const line of lines) {
+    const paragraph = document.createElement("p");
+    if (line && typeof line === "object" && Object.hasOwn(line, "raw")) adminUI.rawText(paragraph, line.raw);
+    else if (line && typeof line === "object") adminUI.text(paragraph, line.source, line.params);
+    else adminUI.text(paragraph, line);
+    card.append(paragraph);
+  }
   return card;
 }
 function emptyList(container, message) {
-  const paragraph = document.createElement("p"); paragraph.className = "empty-list"; paragraph.textContent = message; container.append(paragraph);
+  const paragraph = document.createElement("p"); paragraph.className = "empty-list"; adminUI.text(paragraph, message); container.append(paragraph);
 }
 function actionButton(card, label, action, disabled = false) {
-  const button = document.createElement("button"); button.type = "button"; button.className = "button button-secondary"; button.textContent = label;
+  const button = document.createElement("button"); button.type = "button"; button.className = "button button-secondary"; adminUI.text(button, label);
   button.disabled = disabled || busy;
   button.dataset.unavailable = String(disabled);
   button.addEventListener("click", () => { void accessAction(action); }); card.append(button);
 }
 function paintInvitations(invitations) {
-  const container = document.getElementById("invitations-list"); container.replaceChildren();
+  const container = document.getElementById("invitations-list"); adminUI.forget(container); container.replaceChildren();
   if (!invitations.length) emptyList(container, "Aucune invitation sur cette page.");
   const states = { pending: "Disponible", used: "Utilisée", expired: "Expirée", revoked: "Révoquée" };
   for (const invitation of invitations) {
-    const card = item(`Invitation · ${states[invitation.state]}`, [`Créée le ${dateText(invitation.createdAt)} · valable jusqu’au ${dateText(invitation.expiresAt)}`, invitation.accessDays === null ? "Accès sans limite de durée après validation." : `Accès de ${invitation.accessDays} jours après validation.`]);
+    const card = item(`Invitation · ${states[invitation.state]}`, [
+      adminLine("Créée le {created} · valable jusqu’au {expires}", { created: adminUI.dateParam(invitation.createdAt), expires: adminUI.dateParam(invitation.expiresAt) }),
+      invitation.accessDays === null ? "Accès sans limite de durée après validation." : adminLine("Accès de {days} jours après validation.", { days: adminUI.numberParam(invitation.accessDays) }),
+    ]);
     if (invitation.state === "pending") actionButton(card, "Révoquer le lien", async () => {
       await request(`/api/admin/invitations/${invitation.id}/revoke`, { mutation: true });
       document.getElementById("new-invitation").hidden = true; document.getElementById("invitation-link").value = "";
@@ -332,24 +354,29 @@ function paintInvitations(invitations) {
   }
 }
 function paintClients(clients, renewalDraft = null) {
-  const container = document.getElementById("clients-list"); container.replaceChildren();
+  const container = document.getElementById("clients-list"); adminUI.forget(container); container.replaceChildren();
   if (!clients.length) emptyList(container, "Aucun compte client sur cette page.");
   const states = { pending: "En attente", active: "Actif", suspended: "Suspendu", revoked: "Révoqué", deleted: "Supprimé" };
   for (const client of clients) {
     const expired = client.status === "active" && client.accessExpiresAt !== null && client.accessExpiresAt <= Date.now();
-    const card = item(client.pseudonym, [client.email, `État : ${expired ? "Accès expiré" : states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"} · Majorité : ${client.ageAssured ? "vérifiée" : "en attente"}`, client.accessExpiresAt === null ? "Aucune date de fin d’accès." : `Fin d’accès : ${dateText(client.accessExpiresAt)}`]);
+    const card = item(client.pseudonym, [{ raw: client.email },
+      `État : ${expired ? "Accès expiré" : states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"} · Majorité : ${client.ageAssured ? "vérifiée" : "en attente"}`,
+      client.accessExpiresAt === null ? "Aucune date de fin d’accès." : adminLine("Fin d’accès : {date}", { date: adminUI.dateParam(client.accessExpiresAt) }),
+    ], { rawTitle: true });
     if (client.status === "pending") actionButton(card, "Approuver l’accès", async () => {
       await request(`/api/admin/clients/${client.id}/approve`, { mutation: true }); await refreshAccessLists({ afterMutation: true }); notice("L’accès client est approuvé.");
     }, !client.emailVerified || !client.ageAssured);
     if (client.status === "active" && client.emailVerified && client.ageAssured && client.approved && Number.isSafeInteger(client.accessExpiresAt)) {
       const renewal = document.createElement("form"); renewal.className = "renewal-form";
-      const label = document.createElement("label"); label.textContent = "Durée à ajouter (jours)";
+      const label = document.createElement("label");
+      const labelText = document.createElement("span"); adminUI.text(labelText, "Durée à ajouter (jours)"); label.append(labelText);
       const days = document.createElement("input"); days.type = "number"; days.min = "1"; days.max = "3650"; days.value = "30"; days.required = true;
       if (renewalDraft?.id === client.id && renewalDraft.expectedExpiresAt === client.accessExpiresAt) days.value = renewalDraft.value;
-      days.setAttribute("aria-label", `Durée à ajouter pour ${client.pseudonym}, en jours`);
+      adminUI.attr(days, "aria-label", "Durée à ajouter pour {name}, en jours", { name: client.pseudonym });
+      adminUI.attr(days, "title", "Entre une durée de 1 à 3 650 jours.");
       label.append(days); renewal.append(label);
       const button = document.createElement("button"); button.type = "submit"; button.className = "button button-secondary";
-      button.textContent = expired ? "Renouveler l’accès expiré" : "Prolonger l’accès"; button.disabled = busy;
+      adminUI.text(button, expired ? "Renouveler l’accès expiré" : "Prolonger l’accès"); button.disabled = busy;
       renewal.append(button);
       renewal.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -393,7 +420,7 @@ function paintAccessPage(result, { renewalDraft = null } = {}) {
   const label = result.kind === "clients"
     ? `Comptes clients ${result.cursor === null ? "les plus récents" : "plus anciens"}`
     : `Invitations ${result.cursor === null ? "les plus récentes" : "plus anciennes"}`;
-  document.getElementById(`${result.kind}-page-note`).textContent = `${label} · ${result.entries.length} sur cette page${result.hasMore ? "" : " · fin de la liste"}.`;
+  adminUI.text(document.getElementById(`${result.kind}-page-note`), `${label} · {count} sur cette page${result.hasMore ? "" : " · fin de la liste"}.`, { count: adminUI.numberParam(result.entries.length) });
   document.getElementById(`${result.kind}-pagination`).hidden = false;
   updatePagination(result.kind);
 }

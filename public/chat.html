@@ -12,46 +12,50 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="stylesheet" href="/chat.css" />
     <link rel="stylesheet" href="/brand/brand.css" />
-    <title>JessieMessage — Messages privés</title>
+    <link rel="stylesheet" href="/i18n.css" />
+    <title data-jm-i18n="JessieMessage — Messages privés">JessieMessage — Messages privés</title>
+    <script defer src="/i18n.js"></script>
+    <script defer src="/i18n-chat.js"></script>
+    <script defer src="/i18n-tools.js"></script>
     <script type="module" src="/chat.js"></script>
   </head>
   <body>
     <div class="page">
       <header class="topbar">
         <a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
-        <nav class="account-nav" aria-label="Mon compte"><a id="account-link" href="/access">Mon accès</a><button id="logout" type="button">Se déconnecter</button></nav>
+        <nav class="account-nav" aria-label="Mon compte" data-jm-i18n-aria-label="Mon compte"><a id="account-link" href="/access" data-jm-i18n="Mon accès">Mon accès</a><button type="button" data-jm-language aria-label="Switch to English">EN</button><button id="logout" type="button" data-jm-i18n="Se déconnecter">Se déconnecter</button></nav>
       </header>
-      <p id="session-status" class="session-status" role="status" aria-live="polite">Vérification de la connexion…</p>
+      <p id="session-status" class="session-status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p>
       <main id="workspace" class="workspace" hidden>
         <aside id="inbox" class="inbox" hidden aria-labelledby="inbox-title">
-          <div class="inbox-head"><span class="eyebrow">ESPACE PRIVÉ</span><h1 id="inbox-title">Messages</h1><p id="inbox-status" role="status"></p></div>
+          <div class="inbox-head"><span class="eyebrow" data-jm-i18n="ESPACE PRIVÉ">ESPACE PRIVÉ</span><h1 id="inbox-title" data-jm-i18n="Messages">Messages</h1><p id="inbox-status" role="status"></p></div>
           <div id="conversations" class="conversations"></div>
-          <button id="more-conversations" class="button secondary" type="button" hidden>Autres conversations</button>
+          <button id="more-conversations" class="button secondary" type="button" hidden data-jm-i18n="Autres conversations">Autres conversations</button>
         </aside>
-        <section id="client-aside" class="client-aside" hidden aria-label="Ton espace avec Jessie"><span class="eyebrow">JUSTE ENTRE NOUS</span><h1>Jessie.</h1><p>Retrouve ici notre conversation privée.</p><a class="text-link" href="/access">Consulter mon accès</a></section>
+        <section id="client-aside" class="client-aside" hidden aria-label="Ton espace avec Jessie" data-jm-i18n-aria-label="Ton espace avec Jessie"><span class="eyebrow" data-jm-i18n="JUSTE ENTRE NOUS">JUSTE ENTRE NOUS</span><h1>Jessie.</h1><p data-jm-i18n="Retrouve ici notre conversation privée.">Retrouve ici notre conversation privée.</p><a class="text-link" href="/access" data-jm-i18n="Consulter mon accès">Consulter mon accès</a></section>
         <section id="chat" class="chat" aria-labelledby="peer-name">
-          <header class="chat-head"><button id="back-to-inbox" class="back-button" type="button" hidden aria-label="Retour aux conversations">←</button><div class="person"><h2 id="peer-name">Messages privés</h2><p id="conversation-status">Chargement de ta conversation…</p></div><button id="open-gallery" class="button secondary gallery-button" type="button" hidden>Photos</button></header>
-          <div id="message-scroll" class="message-scroll" tabindex="0" aria-label="Historique de la conversation">
-            <button id="older-messages" class="button secondary older" type="button" hidden>Messages précédents</button>
-            <p id="empty-message" class="empty-message" hidden>Aucun message pour le moment.</p>
-            <div id="messages" class="messages" role="list" aria-label="Messages"></div>
+          <header class="chat-head"><button id="back-to-inbox" class="back-button" type="button" hidden aria-label="Retour aux conversations" data-jm-i18n-aria-label="Retour aux conversations">←</button><div class="person"><h2 id="peer-name" data-jm-i18n="Messages privés">Messages privés</h2><p id="conversation-status" data-jm-i18n="Chargement de ta conversation…">Chargement de ta conversation…</p></div><button id="open-gallery" class="button secondary gallery-button" type="button" hidden data-jm-i18n="Photos">Photos</button></header>
+          <div id="message-scroll" class="message-scroll" tabindex="0" aria-label="Historique de la conversation" data-jm-i18n-aria-label="Historique de la conversation">
+            <button id="older-messages" class="button secondary older" type="button" hidden data-jm-i18n="Messages précédents">Messages précédents</button>
+            <p id="empty-message" class="empty-message" hidden data-jm-i18n="Aucun message pour le moment.">Aucun message pour le moment.</p>
+            <div id="messages" class="messages" role="list" aria-label="Messages" data-jm-i18n-aria-label="Messages"></div>
           </div>
-          <button id="new-messages" class="new-messages" type="button" hidden>Nouveaux messages ↓</button>
+          <button id="new-messages" class="new-messages" type="button" hidden data-jm-i18n="Nouveaux messages ↓">Nouveaux messages ↓</button>
           <p id="chat-status" class="chat-status" role="status" aria-live="polite"></p>
           <form id="composer" class="composer">
-            <div id="image-draft" class="image-draft" hidden><div id="image-preview" class="image-preview"></div><div><p id="image-draft-status">Une photo à envoyer</p><button id="cancel-image" class="text-button" type="button">Retirer la photo</button></div></div>
-            <label class="sr-only" for="message-body">Ton message</label>
-            <div class="composer-row"><textarea id="message-body" rows="1" maxlength="4096" placeholder="Écris ton message…" required></textarea><button id="send" class="button primary" type="submit">Envoyer</button></div>
-            <div id="photo-tools" class="photo-tools" hidden><button id="pick-image" class="text-button" type="button">Ajouter une photo</button><button id="open-library" class="text-button" type="button">Mes photos</button><input id="image-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" tabindex="-1" aria-label="Choisir une photo JPEG, PNG ou WebP" /></div>
-            <p id="composer-help" class="composer-help">Message privé · 4 096 caractères maximum</p>
-            <div id="pending-controls" hidden><button id="retry-send" class="button secondary" type="button">Réessayer cet envoi</button><p>La confirmation n’a pas été reçue. Réessayer évite un second envoi du même message.</p></div>
+            <div id="image-draft" class="image-draft" hidden><div id="image-preview" class="image-preview"></div><div><p id="image-draft-status" data-jm-i18n="Une photo à envoyer">Une photo à envoyer</p><button id="cancel-image" class="text-button" type="button" data-jm-i18n="Retirer la photo">Retirer la photo</button></div></div>
+            <label class="sr-only" for="message-body" data-jm-i18n="Ton message">Ton message</label>
+            <div class="composer-row"><textarea id="message-body" rows="1" maxlength="4096" placeholder="Écris ton message…" data-jm-i18n-placeholder="Écris ton message…" required></textarea><button id="send" class="button primary" type="submit" data-jm-i18n="Envoyer">Envoyer</button></div>
+            <div id="photo-tools" class="photo-tools" hidden><button id="pick-image" class="text-button" type="button" data-jm-i18n="Ajouter une photo">Ajouter une photo</button><button id="open-library" class="text-button" type="button" data-jm-i18n="Mes photos">Mes photos</button><input id="image-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" tabindex="-1" aria-label="Choisir une photo JPEG, PNG ou WebP" data-jm-i18n-aria-label="Choisir une photo JPEG, PNG ou WebP" /></div>
+            <p id="composer-help" class="composer-help" data-jm-i18n="Message privé · 4 096 caractères maximum">Message privé · 4 096 caractères maximum</p>
+            <div id="pending-controls" hidden><button id="retry-send" class="button secondary" type="button" data-jm-i18n="Réessayer cet envoi">Réessayer cet envoi</button><p data-jm-i18n="La confirmation n’a pas été reçue. Réessayer évite un second envoi du même message.">La confirmation n’a pas été reçue. Réessayer évite un second envoi du même message.</p></div>
           </form>
         </section>
       </main>
-      <dialog id="media-dialog" class="media-dialog" aria-labelledby="media-title"><div class="dialog-head"><h2 id="media-title">Mes photos</h2><button id="close-media" class="text-button" type="button" aria-label="Fermer les photos">Fermer</button></div><p id="media-help" class="media-help"></p><p id="media-status" role="status" aria-live="polite"></p><div id="media-grid" class="media-grid"></div><button id="more-media" class="button secondary" type="button" hidden>Photos précédentes</button></dialog>
-      <dialog id="lightbox" class="lightbox" aria-label="Photo privée agrandie"><div class="dialog-head"><p id="lightbox-status" role="status" aria-live="polite">Chargement de la photo…</p><button id="close-lightbox" class="text-button" type="button" aria-label="Fermer la photo agrandie">Fermer</button></div><div id="lightbox-image" class="lightbox-image"></div></dialog>
-      <noscript><p class="session-status">Active JavaScript pour utiliser la messagerie privée.</p></noscript>
-      <footer class="session-status"><a href="mailto:contact@jessiemessage.com">Contact</a></footer>
+      <dialog id="media-dialog" class="media-dialog" aria-labelledby="media-title"><div class="dialog-head"><h2 id="media-title" data-jm-i18n="Mes photos">Mes photos</h2><button id="close-media" class="text-button" type="button" aria-label="Fermer les photos" data-jm-i18n-aria-label="Fermer les photos" data-jm-i18n="Fermer">Fermer</button></div><p id="media-help" class="media-help"></p><p id="media-status" role="status" aria-live="polite"></p><div id="media-grid" class="media-grid"></div><button id="more-media" class="button secondary" type="button" hidden data-jm-i18n="Photos précédentes">Photos précédentes</button></dialog>
+      <dialog id="lightbox" class="lightbox" aria-label="Photo privée agrandie" data-jm-i18n-aria-label="Photo privée agrandie"><div class="dialog-head"><p id="lightbox-status" role="status" aria-live="polite" data-jm-i18n="Chargement de la photo…">Chargement de la photo…</p><button id="close-lightbox" class="text-button" type="button" aria-label="Fermer la photo agrandie" data-jm-i18n-aria-label="Fermer la photo agrandie" data-jm-i18n="Fermer">Fermer</button></div><div id="lightbox-image" class="lightbox-image"></div></dialog>
+      <noscript><p class="session-status" data-jm-i18n="Active JavaScript pour utiliser la messagerie privée.">Active JavaScript pour utiliser la messagerie privée.</p></noscript>
+      <footer class="session-status"><a href="mailto:contact@jessiemessage.com" data-jm-i18n="Contact">Contact</a></footer>
     </div>
   </body>
 </html>

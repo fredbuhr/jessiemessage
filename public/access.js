@@ -1,5 +1,16 @@
 "use strict";
 
+// UI sources are French; private values never enter the translation catalog.
+const accessI18n = globalThis.JessieI18n ?? {
+  t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
+  text(node, source, params = {}) { node.textContent = this.t(source, params); },
+  attr(node, name, source, params = {}) { node.setAttribute(name, this.t(source, params)); },
+  rawText(node, value) { node.textContent = value; },
+  forget() {},
+  dateParam(value, options = {}) { return new Date(value).toLocaleString("fr-FR", options); },
+  numberParam(value, options = {}) { return value.toLocaleString("fr-FR", options); },
+};
+
 const element = (id) => document.getElementById(id);
 const status = element("access-status");
 const loginForm = element("client-login-form");
@@ -24,7 +35,7 @@ const controllers = new Set();
 const visible = () => document.visibilityState === "visible";
 const recoveryRetry = document.createElement("button"); recoveryRetry.id = "client-recovery-retry";
 recoveryRetry.type = "button"; recoveryRetry.className = "button button-secondary"; recoveryRetry.hidden = true;
-recoveryRetry.textContent = "Réessayer « Mot de passe oublié ? »";
+accessI18n.text(recoveryRetry, "Réessayer « Mot de passe oublié ? »");
 element("client-recovery-link").parentElement.append(recoveryRetry);
 
 // Tokens travel in URL fragments, never query strings, storage or page markup.
@@ -36,7 +47,7 @@ if (entries.length === 1 && /^[A-Za-z0-9_-]{43}$/.test(entries[0][1])) {
 }
 history.replaceState(null, "", "/access");
 
-function notice(message, error = false) { status.textContent = message; status.classList.toggle("is-error", error); }
+function notice(message, error = false) { accessI18n.text(status, message); status.classList.toggle("is-error", error); }
 function clearBroadcastPreference() { broadcastPreferenceEpoch += 1; broadcastPreference?.clear(); broadcastPreference = null; element("broadcast-preference-host")?.remove(); }
 function invalidate() {
   generation += 1; recoveryCapabilityEpoch += 1; recoveryCapabilityPending = false;
@@ -51,7 +62,7 @@ async function loadBroadcastPreference() {
     broadcastPreference = module.mountBroadcastPreference(host, { isCurrent: () => ticket === generation && epoch === broadcastPreferenceEpoch && !connected.hidden });
   } catch { /* An optional protected feature can be disabled without changing login. */ }
 }
-function setBusy(value) { busy = value; for (const button of document.querySelectorAll("button")) button.disabled = value; }
+function setBusy(value) { busy = value; for (const button of document.querySelectorAll("button")) if (button.getAttribute("data-jm-language") === null) button.disabled = value; }
 function validClientSession(session) {
   const user = session?.user; const access = session?.access;
   const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 253402300799999;
@@ -71,8 +82,8 @@ function signedOut(message = "") {
   verificationSection.hidden = !verificationToken;
   connected.hidden = true;
   element("resend-section").hidden = false;
-  element("access-title").textContent = invitationToken ? "Ton invitation." : "Bienvenue.";
-  loginForm.reset(); element("client-name").textContent = "";
+  accessI18n.text(element("access-title"), invitationToken ? "Ton invitation." : "Bienvenue.");
+  loginForm.reset(); accessI18n.rawText(element("client-name"), "");
   notice(message);
   updateRecoveryLink({ allowLoad: true });
 }
@@ -80,17 +91,17 @@ function signedIn(session) {
   if (!validClientSession(session)) throw new Error("invalid_client_session");
   invalidate(); csrf = session.csrf; loginForm.reset(); registrationForm.reset();
   element("client-chat-link").hidden = true;
-  element("client-chat-note").textContent = "La messagerie sera disponible quand ton accès sera validé et le service activé.";
+  accessI18n.text(element("client-chat-note"), "La messagerie sera disponible quand ton accès sera validé et le service activé.");
   loginForm.hidden = true; registrationForm.hidden = true; connected.hidden = false;
   updateRecoveryLink();
   verificationSection.hidden = !verificationToken;
-  element("access-title").textContent = "Ton espace privé.";
-  element("client-name").textContent = session.user.pseudonym;
+  accessI18n.text(element("access-title"), "Ton espace privé.");
+  accessI18n.rawText(element("client-name"), session.user.pseudonym);
   const access = session.access;
-  element("client-access-state").textContent = access.state === "active" ? "Ton accès est validé." : access.state === "expired" ? "Ton accès a expiré. Jessie pourra le renouveler." : "Ton compte est créé. Ton accès reste en attente de validation.";
+  accessI18n.text(element("client-access-state"), access.state === "active" ? "Ton accès est validé." : access.state === "expired" ? "Ton accès a expiré. Jessie pourra le renouveler." : "Ton compte est créé. Ton accès reste en attente de validation.");
   const list = element("client-checks"); list.replaceChildren();
   for (const [label, valid] of [["Adresse e-mail", access.emailVerified], ["Vérification de majorité", access.ageAssured], ["Accord de Jessie", access.approved]]) {
-    const item = document.createElement("li"); item.textContent = `${label} : ${valid ? "validé" : "en attente"}`; list.append(item);
+    const item = document.createElement("li"); accessI18n.text(item, `${label} : ${valid ? "validé" : "en attente"}`); list.append(item);
   }
   element("resend-section").hidden = access.emailVerified;
   clearTimeout(expiryTimer);
@@ -128,7 +139,7 @@ async function loadChatAccess() {
     const capability = await request("/api/chat/client/capabilities");
     if (ticket !== generation || capability.enabled !== true) return;
     element("client-chat-link").hidden = false;
-    element("client-chat-note").textContent = "Ton accès à la conversation privée est ouvert.";
+    accessI18n.text(element("client-chat-note"), "Ton accès à la conversation privée est ouvert.");
   } catch (error) {
     if (error.stale || error.status === 404) return;
     if (error.status === 401 || error.status === 403) signedOut("Ton accès doit être vérifié. Reconnecte-toi pour continuer.");
@@ -226,7 +237,10 @@ async function start() {
   if (invitationToken) {
     try {
       const invitation = await request("/api/access/invitation", { mutation: true, body: { token: invitationToken } });
-      element("invitation-summary").textContent = `Invitation valable jusqu’au ${new Date(invitation.expiresAt).toLocaleString("fr-FR")}. ${invitation.accessDays === null ? "Accès sans limite de durée après validation." : `Accès prévu pour ${invitation.accessDays} jours après validation.`}`;
+      accessI18n.text(element("invitation-summary"), invitation.accessDays === null
+        ? "Invitation valable jusqu’au {date}. Accès sans limite de durée après validation."
+        : "Invitation valable jusqu’au {date}. Accès prévu pour {days} jours après validation.",
+      { date: accessI18n.dateParam(invitation.expiresAt), ...(invitation.accessDays === null ? {} : { days: accessI18n.numberParam(invitation.accessDays) }) });
     } catch (error) {
       if (!error.stale) { invitationToken = null; signedOut(errorMessage(error)); }
     }
@@ -237,7 +251,7 @@ function hideAccess() {
   clearTimeout(expiryTimer); expiryTimer = null;
   loginForm.hidden = true; registrationForm.hidden = true; verificationSection.hidden = true; connected.hidden = true;
   element("resend-section").hidden = true; element("client-chat-link").hidden = true;
-  element("client-name").textContent = ""; element("client-checks").replaceChildren(); element("client-access-state").textContent = "";
+  accessI18n.rawText(element("client-name"), ""); element("client-checks").replaceChildren(); accessI18n.rawText(element("client-access-state"), "");
   for (const form of [loginForm, registrationForm, element("resend-form")]) form.reset();
   updateRecoveryLink(); notice("");
 }

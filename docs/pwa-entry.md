@@ -2,6 +2,8 @@
 
 Version applicative **0.20.0**, branche `feat/pwa-entry`, construite sur la simulation 0.17c. Ce lot remplace l’impasse de lancement par une entrée neutre `/app`, reliée aux parcours existants. L’identité et les PNG approuvés restent inchangés ; **contact@jessiemessage.com** reste l’adresse du site. Aucun déploiement n’est effectué.
 
+**Évolution 0.21.0, étape 0.19 :** la [traduction des interfaces privées](private-ui-languages.md) étend le FR/EN et partage désormais la préférence de langue via `sessionStorage` (`fr`/`en` uniquement). Les paragraphes ci-dessous décrivent le lot initial 0.20.0 ; cette préférence neutre remplace son choix volatil, sans stockage de contenu privé.
+
 ## Lancement et choix du rôle
 
 Le manifeste conserve `id: "/"`, `scope: "/"`, le nom, les couleurs et les icônes. Son `start_url` devient `/app`. Le manifeste est également référencé par les pages d’accès, connexion administrateur, conversation, récupération, préparation et diffusion. L’accueil `/` reste public et neutre, avec un lien « Ouvrir mon espace » ; il ne prétend plus que tous les comptes sont désactivés.

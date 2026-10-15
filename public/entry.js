@@ -37,7 +37,8 @@ const words = {
   }
 };
 const el = (id) => document.getElementById(id), state = createEntryState();
-let language = typeof navigator.language === "string" && !navigator.language.toLowerCase().startsWith("fr") ? "en" : "fr";
+const sharedLanguage = globalThis.JessieI18n;
+let language = sharedLanguage?.getLanguage() ?? (typeof navigator.language === "string" && !navigator.language.toLowerCase().startsWith("fr") ? "en" : "fr");
 let checkTask = null, installEvent = null, installBusy = false, installEpoch = 0, installMessage = "", installed = false;
 const displayMode = typeof window.matchMedia === "function" ? window.matchMedia("(display-mode: standalone)") : null;
 const visible = () => document.visibilityState === "visible";
@@ -127,7 +128,8 @@ async function install() {
   } catch { if (epoch === installEpoch && visible() && online() && !standalone()) installMessage = "installError"; }
   finally { if (epoch === installEpoch) { installBusy = false; renderInstall(); } }
 }
-el("language-switch").addEventListener("click", () => { language = language === "fr" ? "en" : "fr"; render(); });
+if (sharedLanguage) sharedLanguage.onChange((next) => { language = next; render(); });
+else el("language-switch").addEventListener("click", () => { language = language === "fr" ? "en" : "fr"; render(); });
 el("entry-retry").addEventListener("click", () => { if (!checkTask) void checkAccess(); });
 el("install-app").addEventListener("click", () => { void install(); });
 window.addEventListener("beforeinstallprompt", (event) => {

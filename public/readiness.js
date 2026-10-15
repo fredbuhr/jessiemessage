@@ -1,4 +1,12 @@
-import { createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, featureNames, operationNames, databaseStateNames, workerStateNames, queueCountText, queueDelayMinutes } from "/readiness-model.js";
+import { createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, featureNames, operationNames, databaseStateNames, workerStateNames, queueDelayMinutes } from "/readiness-model.js";
+
+const interpolate = (source, values = {}) => source.replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key) => String(values[key] ?? ""));
+const ui = globalThis.JessieI18n ?? { t: interpolate,
+  text: (element, source, values) => { element.textContent = interpolate(source, values); },
+  rawText: (element, value) => { element.textContent = String(value ?? ""); },
+  dateParam: (value, options = {}) => new Date(value).toLocaleString("fr-FR", options),
+  numberParam: (value, options = {}) => value.toLocaleString("fr-FR", options), messageParam: interpolate,
+};
 
 const el = (id) => document.getElementById(id);
 const state = createReadinessState();
@@ -6,7 +14,7 @@ const controllers = new Set();
 let expiryTimer = null; let logoutBusy = false;
 const visible = () => document.visibilityState === "visible";
 function notice(text, error = false, id = "session-status") {
-  const node = el(id); node.textContent = text; node.classList.toggle("is-error", error);
+  const node = el(id); ui.text(node, text); node.classList.toggle("is-error", error);
 }
 function clearDisplay() {
   el("readiness-content").hidden = true; el("logout").hidden = true; el("refresh").hidden = true;
@@ -15,24 +23,24 @@ function clearDisplay() {
   el("operations-details").hidden = true; el("operations-status").textContent = ""; el("operations-sample").textContent = "";
   for (const id of ["operations-database", "operations-workers", "operations-queues"]) el(id).replaceChildren();
   el("smtp-proof-date").textContent = ""; el("smtp-proof-date").hidden = true; el("verify-smtp").hidden = true;
-  el("verify-smtp").disabled = false; el("verify-smtp").textContent = "Vérifier la connexion e-mail";
+  el("verify-smtp").disabled = false; ui.text(el("verify-smtp"), "Vérifier la connexion e-mail");
   notice(""); notice("", false, "smtp-status");
 }
-const node = (tag, text, className = "") => { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; };
-const observedDate = (value) => value === null ? "aucune mesure disponible" : new Date(value).toLocaleString("fr-FR");
-function detail(label, value) { const row = node("div"); row.append(node("dt", label), node("dd", value)); return row; }
+const node = (tag, text, className = "", values = {}) => { const element = document.createElement(tag); if (text !== undefined) ui.text(element, text, values); if (className) element.className = className; return element; };
+const observedDate = (value) => value === null ? ui.messageParam("aucune mesure disponible") : ui.dateParam(value);
+function detail(label, source, values = {}) { const row = node("div"); row.append(node("dt", label), node("dd", source, "", values)); return row; }
 function renderOperations(operations) {
   el("operations-details").hidden = !operations;
-  el("operations-status").textContent = !operations ? "Mesure non disponible." : operations.status === "ready" ? "Signal de service : disponible." : "Signal de service : indisponible.";
+  ui.text(el("operations-status"), !operations ? "Mesure non disponible." : operations.status === "ready" ? "Signal de service : disponible." : "Signal de service : indisponible.");
   el("operations-status").classList.toggle("is-error", operations?.status === "unavailable");
   if (!operations) return;
-  el("operations-database").replaceChildren(detail("Base de données", databaseStateNames[operations.database.state]), detail("Dernier contrôle de la base", observedDate(operations.database.checkedAt)));
+  el("operations-database").replaceChildren(detail("Base de données", databaseStateNames[operations.database.state]), detail("Dernier contrôle de la base", "{date}", { date: observedDate(operations.database.checkedAt) }));
   const workers = operations.workers.map((worker) => {
     const item = node("li", undefined, "operation-item");
     const heading = node("div", undefined, "operation-heading"); heading.append(node("h4", operationNames[worker.name]), node("span", workerStateNames[worker.state], "feature-status"));
     const counts = node("dl", undefined, "operation-counts");
-    counts.append(detail("Traités", worker.processed.toLocaleString("fr-FR")), detail("Échecs", worker.failures.toLocaleString("fr-FR")), detail("Échecs consécutifs", worker.consecutiveFailures.toLocaleString("fr-FR")));
-    item.append(heading, counts, node("p", `Dernier cycle terminé : ${observedDate(worker.lastCompletedAt)}. Dernière erreur : ${observedDate(worker.lastErrorAt)}.`, "small-copy"));
+    counts.append(detail("Traités", "{count}", { count: ui.numberParam(worker.processed) }), detail("Échecs", "{count}", { count: ui.numberParam(worker.failures) }), detail("Échecs consécutifs", "{count}", { count: ui.numberParam(worker.consecutiveFailures) }));
+    item.append(heading, counts, node("p", "Dernier cycle terminé : {completed}. Dernière erreur : {error}.", "small-copy", { completed: observedDate(worker.lastCompletedAt), error: observedDate(worker.lastErrorAt) }));
     return item;
   });
   el("operations-workers").replaceChildren(...workers);
@@ -40,15 +48,18 @@ function renderOperations(operations) {
   const queues = operations.queues.map((queue) => {
     const item = node("li", undefined, "operation-item"); item.append(node("h4", operationNames[queue.name]));
     const counts = node("dl", undefined, "operation-counts");
-    for (const [key, name] of [["pending", "En attente"], ["sending", "En traitement"], ["failed", "En échec"]]) counts.append(detail(name, queueCountText(queue[key])));
+    for (const [key, name] of [["pending", "En attente"], ["sending", "En traitement"], ["failed", "En échec"]]) {
+      const value = queue[key]; counts.append(detail(name, value.truncated ? "au moins {count}" : "{count}", { count: ui.numberParam(value.count) }));
+    }
     item.append(counts);
     const delay = queueDelayMinutes(queue.oldestDueAt, operations.queuesCheckedAt);
-    item.append(node("p", queue.oldestDueAt === null ? "Plus ancienne échéance en attente : non disponible." : `Plus ancienne échéance en attente : ${observedDate(queue.oldestDueAt)}.${delay === null ? " Ancienneté non mesurée." : queue.oldestDueAt > operations.queuesCheckedAt ? " Échéance à venir au moment de la mesure." : ` Retard planifié à la mesure : ${delay.toLocaleString("fr-FR")} min.`}`, "small-copy"));
+    const suffix = delay === null ? ui.messageParam(" Ancienneté non mesurée.") : queue.oldestDueAt > operations.queuesCheckedAt ? ui.messageParam(" Échéance à venir au moment de la mesure.") : ui.messageParam(" Retard planifié à la mesure : {minutes} min.", { minutes: ui.numberParam(delay) });
+    item.append(queue.oldestDueAt === null ? node("p", "Plus ancienne échéance en attente : non disponible.", "small-copy") : node("p", "Plus ancienne échéance en attente : {date}.{delay}", "small-copy", { date: observedDate(queue.oldestDueAt), delay: suffix }));
     return item;
   });
   el("operations-queues").replaceChildren(...queues);
   if (!queues.length) el("operations-queues").append(node("li", "Aucune file suivie dans cette mesure.", "small-copy"));
-  el("operations-sample").textContent = `Mesure des files : ${observedDate(operations.queuesCheckedAt)}. Les mesures sont mises à jour périodiquement ; « Actualiser la page » recharge le dernier instantané disponible.`;
+  ui.text(el("operations-sample"), "Mesure des files : {date}. Les mesures sont mises à jour périodiquement ; « Actualiser la page » recharge le dernier instantané disponible.", { date: observedDate(operations.queuesCheckedAt) });
 }
 function clearPrivate(isVisible = false) {
   for (const controller of controllers) controller.abort(); controllers.clear();
@@ -76,24 +87,24 @@ function render() {
   if (!state.visible || !state.session || !summary || !visible()) return;
   el("readiness-content").hidden = false; el("logout").hidden = false;
   el("refresh").hidden = false; el("refresh").disabled = state.busy;
-  el("mail-sender").textContent = summary.mail.sender;
-  el("mail-status").textContent = summary.mail.configured
+  ui.rawText(el("mail-sender"), summary.mail.sender);
+  ui.text(el("mail-status"), summary.mail.configured
     ? "L’envoi d’e-mails est configuré. Tu peux vérifier sa connexion avant de tester la réception."
-    : "L’envoi d’e-mails reste à configurer dans les réglages privés du serveur. La vérification sera disponible ensuite.";
+    : "L’envoi d’e-mails reste à configurer dans les réglages privés du serveur. La vérification sera disponible ensuite.");
   el("verify-smtp").hidden = !summary.mail.configured;
   el("verify-smtp").disabled = state.busy;
-  el("verify-smtp").textContent = state.busy ? "Vérification en cours…" : "Vérifier la connexion e-mail";
+  ui.text(el("verify-smtp"), state.busy ? "Vérification en cours…" : "Vérifier la connexion e-mail");
   const rows = [];
   for (const [key, name] of Object.entries(featureNames)) {
     const row = document.createElement("li"); const label = document.createElement("span"); const status = document.createElement("span");
-    label.textContent = name; status.className = "feature-status"; status.classList.toggle("enabled", summary.features[key]);
-    status.textContent = summary.features[key] ? "Activée" : "Non activée"; row.append(label, status); rows.push(row);
+    ui.text(label, name); status.className = "feature-status"; status.classList.toggle("enabled", summary.features[key]);
+    ui.text(status, summary.features[key] ? "Activée" : "Non activée"); row.append(label, status); rows.push(row);
   }
   el("feature-list").replaceChildren(...rows);
   renderOperations(summary.operations);
   if (state.proof) {
     notice("Connexion chiffrée et authentification réussies. La réception d’un e-mail reste à tester.", false, "smtp-status");
-    el("smtp-proof-date").textContent = `Vérification de cette session : ${new Date(state.proof.checkedAt).toLocaleString("fr-FR")}.`;
+    ui.text(el("smtp-proof-date"), "Vérification de cette session : {date}.", { date: ui.dateParam(state.proof.checkedAt) });
     el("smtp-proof-date").hidden = false;
   } else { el("smtp-proof-date").textContent = ""; el("smtp-proof-date").hidden = true; }
 }

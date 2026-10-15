@@ -14,15 +14,17 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="stylesheet" href="/entry.css" />
+    <link rel="stylesheet" href="/i18n.css" />
     <link rel="stylesheet" href="/brand/brand.css" />
     <title>JessieMessage — Ouvrir mon espace</title>
+    <script src="/i18n.js" defer></script>
     <script type="module" src="/entry.js"></script>
   </head>
   <body>
     <div class="page">
       <header class="topbar">
         <a class="brand" href="/app" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
-        <button id="language-switch" class="language" type="button" aria-label="Switch to English">EN</button>
+        <button id="language-switch" class="language" type="button" data-jm-language aria-label="Switch to English">EN</button>
       </header>
       <main class="entry-main">
         <section class="intro" aria-labelledby="entry-title">

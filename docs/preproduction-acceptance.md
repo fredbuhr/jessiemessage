@@ -1,4 +1,4 @@
-# Recette de préproduction — étape 0.18, version 0.20.0
+# Recette de préproduction — étapes 0.18–0.19, version 0.21.0
 
 Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. Il ne constate aucun déploiement, changement DNS, compte réel, réception e-mail ou installation sur téléphone. Les essais locaux et CI utilisent des identités fictives, des données synthétiques et des services maîtrisés.
 
@@ -68,7 +68,8 @@ La réception externe est une recette séparée, avec une boîte maîtrisée et 
 
 Consigner pour chaque essai le navigateur, sa version, l'appareil, le SHA et le résultat. Utiliser au minimum Firefox/Chromium sur ordinateur, Safari sur iPhone et Chrome sur Android lorsque ces appareils sont disponibles. L'existence d'un manifeste ne garantit pas une installation ou un comportement identique dans tous les navigateurs.
 
-- [ ] Vérifier manuellement FR et EN : titres, boutons, états d'erreur, noms accessibles et cohérence des liens. Consigner les parcours encore disponibles uniquement en français.
+- [ ] Vérifier FR et EN sur accès, récupération, administration, chat/photos, CRM, diffusions et préparation : titres, boutons, erreurs, noms accessibles, dates/nombres et liens. Basculer pendant une saisie et une requête en cours : aucun champ, message, légende ou nom privé ne doit être traduit ou perdu, aucun envoi répété. Voir [private-ui-languages.md](private-ui-languages.md).
+- [ ] Vérifier la préférence de langue lors des navigations, puis avec `sessionStorage` bloqué : la bascule courante doit rester utilisable sans bloquer la connexion. Après masquage/déconnexion, changer de langue ne doit restaurer aucune ancienne donnée. Les e-mails de service demeurent en français.
 - [ ] Ouvrir l'entrée depuis un onglet puis depuis l'icône installée : déconnecté, client en attente, actif, expiré et administrateur. La destination doit rester interne au site ; aucune URL de retour arbitraire ne doit être suivie.
 - [ ] Si deux sessions de rôles différents existent sur le même navigateur, vérifier le choix explicite du rôle et l'absence de bascule silencieuse vers les données de l'autre compte.
 - [ ] Masquer puis réafficher la page, verrouiller l'écran, utiliser Précédent/Suivant et restaurer une page du cache de navigation. Les données privées doivent être retirées au masquage selon le parcours existant puis revérifiées au retour.
