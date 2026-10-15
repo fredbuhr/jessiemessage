@@ -158,9 +158,11 @@ async function request(path, { body, mutation = false, login = false } = {}) {
       body: mutation ? JSON.stringify(body ?? {}) : undefined,
       signal: controller.signal,
     });
-    const data = await response.json();
+    let data;
+    try { data = await response.json(); }
+    catch (error) { if (response.ok) throw error; }
     if (!current(ticket)) throw stale();
-    if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error });
+    if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data?.error });
     return data;
   } catch (error) {
     if (!current(ticket)) throw stale();
