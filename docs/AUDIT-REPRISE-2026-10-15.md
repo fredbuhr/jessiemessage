@@ -6,6 +6,8 @@
 
 **Suivi préproduction — étape 0.21 :** le [diagnostic opérateur](preproduction-preflight.md), version 0.23.0, branche `feat/preproduction-preflight` sur #23, sépare configuration d’authentification seule, Node/Sharp et sonde neuve, puis métadonnées SQL en lecture seule. Le rapport est fermé, sans secrets, et ne valide jamais la publication. Aucune migration ni service privé n’est démarré. Les tests ne remplacent pas l’éligibilité de l’abonnement Infomaniak, la vraie isolation, la persistance, l’arrêt du processus, la réception e-mail ou la recette complète. Aucun compte d’hébergement consulté ; aucune publication.
 
+**Suivi authentification — étape 0.22 :** la [recette intégrée isolée](authentication-rehearsal.md), version 0.24.0, branche `feat/authentication-rehearsal` sur #24, associe Chrome, HTTPS local, le vrai serveur configuré et MariaDB. Elle emploie un administrateur fictif, une base vide dédiée et des secrets de test générés pour cet exercice. Les parcours client et la livraison e-mail restent désactivés. L’état d’une préproduction Infomaniak demeure inconnu ; aucun compte d’hébergement consulté ni déploiement réalisé. La preuve automatique doit être lue dans la CI de la révision exacte, séparément de la recette hébergeur.
+
 ## Décision de reprise
 
 **Suivi après audit :** le [correctif 0.16.1](chat-stable-history.md) traite A15 dans le code et ajoute les régressions du contrôleur. La recette navigateur reste à réaliser. Le rapport ci-dessous conserve l’état observé sur 0.16 ; prochaine étape de développement : 0.17a supervision.

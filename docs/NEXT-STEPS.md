@@ -18,6 +18,8 @@ Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de cl
 
 **Avancement préproduction — étape 0.21 :** le [diagnostic opérateur](preproduction-preflight.md), version 0.23.0, branche `feat/preproduction-preflight` sur #23, sépare configuration d’authentification seule, Node/Sharp et sonde neuve, puis métadonnées SQL en lecture seule. Le rapport est fermé, sans secrets, et ne valide jamais la publication. Aucune migration ni service privé n’est démarré. Les tests ne remplacent pas l’éligibilité de l’abonnement Infomaniak, la vraie isolation, la persistance, l’arrêt du processus, la réception e-mail ou la recette complète. Aucun compte d’hébergement consulté ; aucune publication.
 
+**Avancement authentification — étape 0.22 :** la [recette intégrée isolée](authentication-rehearsal.md), version 0.24.0, branche `feat/authentication-rehearsal` sur #24, associe Chrome, HTTPS local, le vrai serveur configuré et MariaDB. Elle emploie un administrateur fictif, une base vide dédiée et des secrets de test générés pour cet exercice. Les parcours client et la livraison e-mail restent désactivés. L’état d’une préproduction Infomaniak demeure inconnu ; aucun compte d’hébergement consulté ni déploiement réalisé. La preuve automatique doit être lue dans la CI de la révision exacte, séparément de la recette hébergeur.
+
 ## État de référence
 
 Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Adresse officielle retenue pour l'expédition, les réponses, le contact et la préparation du compte administrateur initial : **contact@jessiemessage.com**. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
