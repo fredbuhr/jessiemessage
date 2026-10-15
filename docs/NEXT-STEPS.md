@@ -2,7 +2,7 @@
 
 Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de client, photographie personnelle ni configuration de production.
 
-**Reprise après interruption de la discussion :** voir l’[audit du 15 octobre](AUDIT-REPRISE-2026-10-15.md), réalisé sur le HEAD final 0.16 `0ecb31e`. Il confirme les tests/CI et la pile de 15 PR non fusionnées. Le chat reconstruit encore ses nœuds à chaque polling vide (A15) : correction ciblée préalable, puis 0.17a supervision et suite du lot données/exploitation. Cet audit ne livre pas une version 0.17 et ne modifie aucun déploiement.
+**Reprise après interruption de la discussion :** voir l’[audit du 15 octobre](AUDIT-REPRISE-2026-10-15.md), réalisé sur le HEAD final 0.16 `0ecb31e`. Il confirme les tests/CI et la pile de 15 PR non fusionnées, puis la PR documentaire #16. Le [correctif 0.16.1](chat-stable-history.md) traite le remplacement des nœuds à chaque polling (A15), avec conservation des contrôles/photos et rechargement après masquage. Prochain lot : **0.17a supervision**, puis suite des données/exploitation. La recette navigateur et les autres constats restent ouverts ; aucune publication n’est effectuée par ce lot.
 
 ## État de référence
 

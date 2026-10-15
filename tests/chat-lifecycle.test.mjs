@@ -17,26 +17,49 @@ const pause = () => { let resolve, reject; const promise = new Promise((yes, no)
 const flush = async () => { for (let index = 0; index < 12; index++) await new Promise((resolve) => setImmediate(resolve)); };
 class Element {
   constructor(tag = "div", registry = null) {
-    this.tagName = tag; this.registry = registry; this.children = []; this.parentElement = null; this.isConnected = true; this.events = new Map();
+    this.tagName = tag; this.registry = registry; this.children = []; this.parentElement = null; this._connected = false; this.events = new Map();
     this.attributes = new Map(); this.dataset = {}; this.style = {}; this.hidden = false; this.disabled = false; this.value = ""; this.files = [];
     this.open = false; this.scrollTop = 0; this.scrollHeight = 100; this.clientHeight = 100; this._text = "";
-    const classes = new Set(); this.classList = { add: (...values) => values.forEach((value) => classes.add(value)), remove: (...values) => values.forEach((value) => classes.delete(value)),
+    this._classes = new Set(); const classes = this._classes;
+    this.classList = { add: (...values) => values.forEach((value) => classes.add(value)), remove: (...values) => values.forEach((value) => classes.delete(value)),
       contains: (value) => classes.has(value), toggle: (value, include = !classes.has(value)) => { if (include) classes.add(value); else classes.delete(value); return include; } };
   }
   set id(value) { this._id = value; this.registry?.set(value, this); } get id() { return this._id; }
-  set textContent(value) { this._text = value; this.replaceChildren(); } get textContent() { return this._text; }
+  set className(value) { this._classes.clear(); for (const item of value.split(/\s+/).filter(Boolean)) this._classes.add(item); } get className() { return [...this._classes].join(" "); }
+  get isConnected() { return this.parentElement ? this.parentElement.isConnected : this._connected; }
+  get parentNode() { return this.parentElement; }
+  get childNodes() { return this.children; }
+  get firstChild() { return this.children[0] ?? null; }
+  get firstElementChild() { return this.firstChild; }
+  get nextSibling() { if (!this.parentElement) return null; return this.parentElement.children[this.parentElement.children.indexOf(this) + 1] ?? null; }
+  set textContent(value) { this.replaceChildren(); this._text = value; } get textContent() { return this._text; }
   addEventListener(name, handler) { if (!this.events.has(name)) this.events.set(name, []); this.events.get(name).push(handler); }
   setAttribute(name, value) { this.attributes.set(name, value); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
   removeAttribute(name) { this.attributes.delete(name); }
-  append(...children) { for (const child of children) { if (child.tagName === "fragment") { this.append(...child.children); continue; } child.parentElement = this; child.isConnected = this.isConnected; this.children.push(child); } }
-  after(...children) { this.parentElement?.append(...children); }
-  replaceChildren(...children) { for (const child of this.children) child.isConnected = false; this.children = []; this.append(...children); }
-  remove() { this.isConnected = false; if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((child) => child !== this); }
+  set src(value) { this.attributes.set("src", value); } get src() { return this.attributes.get("src") ?? ""; }
+  contains(element) { return element === this || this.children.some((child) => child.contains(element)); }
+  append(...children) { for (const child of children) this.insertBefore(child, null); }
+  insertBefore(child, before) {
+    if (child.tagName === "fragment") { for (const item of [...child.children]) this.insertBefore(item, before); return child; }
+    if (child === before) return child;
+    if (before !== null && !this.children.includes(before)) throw new Error("NotFoundError");
+    child.remove(); const index = before === null ? this.children.length : this.children.indexOf(before);
+    child.parentElement = this; this.children.splice(index, 0, child); return child;
+  }
+  after(...children) { const parent = this.parentElement, next = this.nextSibling; for (const child of children) parent?.insertBefore(child, next); }
+  replaceChildren(...children) { for (const child of [...this.children]) child.remove(); this._text = ""; this.append(...children); }
+  remove() {
+    const document = this.registry?.document;
+    if (this.isConnected && document && this.contains(document.activeElement)) document.activeElement = document.body;
+    if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((child) => child !== this);
+    this.parentElement = null; this._connected = false;
+  }
   querySelectorAll(selector) { const matches = (child) => selector.startsWith(".") ? child.className?.split(" ").includes(selector.slice(1)) : child.tagName === selector;
     return this.children.flatMap((child) => [...(matches(child) ? [child] : []), ...child.querySelectorAll(selector)]); }
   querySelector(selector) { return this.querySelectorAll(selector)[0] ?? null; }
   getBoundingClientRect() { return { top: 0, bottom: 100, height: 100 }; }
-  focus() { this.focused = true; }
+  focus() { if (this.isConnected && this.registry?.document) this.registry.document.activeElement = this; }
   showModal() { this.open = true; }
   close() { this.open = false; for (const handler of this.events.get("close") ?? []) handler({}); }
 }
@@ -44,6 +67,7 @@ function harness({ currentSession = session(), visible = true, intercept = null 
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const body = new Element("body", nodes);
+  body._connected = true;
   for (const match of html.matchAll(/\bid="([^"]+)"/g)) { const item = new Element("div", nodes); item.id = match[1]; body.append(item); }
   const element = (value) => nodes.get(value);
   element("workspace").hidden = true;
@@ -51,6 +75,7 @@ function harness({ currentSession = session(), visible = true, intercept = null 
     getElementById: (value) => { const item = nodes.get(value); return item?.isConnected ? item : null; },
     createElement: (tag) => new Element(tag, nodes), createDocumentFragment: () => new Element("fragment", nodes),
     querySelector: () => new Element("div", nodes), addEventListener: (name, handler) => documentEvents.set(name, handler) };
+  nodes.document = document; document.activeElement = body; document.head._connected = true;
   const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0 };
   const conversation = (owner = state.currentSession?.user.id) => {
     if (!state.conversations.has(owner)) state.conversations.set(owner, { id: id(100 + Number.parseInt(owner, 16)), clientId: owner, clientPseudonym: `Synthetic ${owner}`,
@@ -308,4 +333,158 @@ test("late unauthorized photo headers cannot sign out the new owner or a hidden 
     assert.equal(f.redirects.length, 0); assert.equal(f.createdUrls.length, 0);
     if (mode === "owner") assertOwner(f, 2, "B".repeat(43)); else assert.equal(f.element("workspace").hidden, true);
   }
+});
+
+test("empty event polls preserve a message and its focused delete control", async () => {
+  const f = harness(); await flush(); await f.send("Keep my keyboard position");
+  const messages = f.element("messages"), article = messages.children.at(-1), remove = article.querySelector(".delete-message");
+  remove.focus(); assert.equal(f.document.activeElement, remove);
+  await f.advance(3000);
+  assert.ok(f.calls.some((call) => call.path.includes("/events?")), "a real polling cycle completed");
+  assert.equal(f.document.activeElement, remove);
+  assert.equal(messages.children.at(-1), article);
+  assert.equal(article.querySelector(".delete-message"), remove);
+  assert.equal(remove.isConnected, true); assert.equal(f.document.activeElement, remove);
+  assert.match(contents(article), /Keep my keyboard position/);
+});
+
+function photoFixture(f, { sender = "me", messageId = id(800), sequence = "1" } = {}) {
+  const conv = f.conversation();
+  return { id: messageId, sequence, sender, body: "A private photo", createdAt: now, deletedAt: null, clientMessageId: null,
+    media: { id: id(801), width: 1000, height: 800, thumbnailWidth: 400, thumbnailHeight: 320,
+      fullUrl: `/api/media/client/conversations/${conv.id}/messages/${messageId}/full`, thumbnailUrl: `/api/media/client/conversations/${conv.id}/messages/${messageId}/thumb` } };
+}
+const photoResponse = () => ({ ok: true, status: 200, headers: { get: () => "image/jpeg" }, blob: async () => new Blob(["synthetic private photo"], { type: "image/jpeg" }) });
+
+test("a receipt-only poll updates the read receipt while preserving the photo and focused control", async () => {
+  let f;
+  f = harness({ intercept: (path) => {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (path.endsWith("/messages?limit=50")) return response(200, { conversation: f.conversation(), messages: [photoFixture(f)], eventCursor: "1", hasMoreBefore: false });
+    if (path.endsWith("/thumb")) return photoResponse();
+    return undefined;
+  } }); await flush();
+  const article = f.element("messages").children[0], photo = article.querySelector(".photo-open"), image = photo.querySelector("img"), remove = article.querySelector(".delete-message");
+  assert.ok(image); assert.match(contents(article), /Envoyé/); photo.focus();
+  f.conversation().peerReadSequence = "1";
+  await f.advance(3000);
+  assert.equal(f.element("messages").children[0], article);
+  assert.equal(article.querySelector(".photo-open"), photo); assert.equal(photo.querySelector("img"), image);
+  assert.equal(article.querySelector(".delete-message"), remove); assert.equal(f.document.activeElement, photo);
+  assert.match(contents(article), /Lu/); assert.doesNotMatch(contents(article), /Envoyé/);
+  assert.equal(f.calls.filter((call) => call.path.endsWith("/thumb")).length, 1);
+  assert.equal(f.createdUrls.length, 1); assert.equal(f.revoked.length, 0);
+});
+
+test("new messages and photo deletion update the history without replacing unaffected messages", async () => {
+  let f, events = [];
+  f = harness({ intercept: (path) => {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (path.endsWith("/messages?limit=50")) return response(200, { conversation: f.conversation(), messages: [photoFixture(f)], eventCursor: "1", hasMoreBefore: false });
+    if (path.endsWith("/thumb")) return photoResponse();
+    if (path.includes("/events?")) { const result = events; events = []; return response(200, { conversation: f.conversation(), events: result, nextCursor: f.conversation().latestEventSequence, hasMore: false }); }
+    return undefined;
+  } }); await flush();
+  const messages = f.element("messages"), first = messages.children[0], originalPhoto = first.querySelector(".photo-open");
+  const incoming = { id: id(802), sequence: "2", sender: "peer", body: "A genuinely new message", createdAt: now + 1000, deletedAt: null, clientMessageId: null };
+  Object.assign(f.conversation(), { latestSequence: "2", latestEventSequence: "2" }); events = [{ kind: "message", sequence: "2", message: incoming }];
+  await f.advance(3000);
+  assert.deepEqual(messages.children.map((item) => item.dataset.sequence), ["1", "2"]);
+  assert.equal(messages.children[0], first); assert.equal(first.querySelector(".photo-open"), originalPhoto);
+  const second = messages.children[1]; assert.match(contents(second), /A genuinely new message/);
+  f.conversation().latestEventSequence = "3";
+  events = [{ kind: "delete", sequence: "3", message: { ...photoFixture(f), body: null, media: undefined, deletedAt: now + 2000 } }];
+  await f.advance(3000);
+  assert.equal(messages.children[1], second); assert.match(contents(messages.children[0]), /Message supprimé/);
+  assert.equal(messages.children[0].querySelectorAll("img").length, 0); assert.equal(messages.children[0].querySelector(".photo-open"), null);
+  assert.deepEqual(f.revoked, f.createdUrls);
+});
+
+test("loading older messages prepends in sequence and preserves the existing focused control", async () => {
+  let f;
+  const newer = { id: id(804), sequence: "2", sender: "me", body: "Already on screen", createdAt: now + 1000, deletedAt: null, clientMessageId: null };
+  const older = { id: id(803), sequence: "1", sender: "peer", body: "Older history", createdAt: now, deletedAt: null, clientMessageId: null };
+  f = harness({ intercept: (path) => {
+    if (path.endsWith("/messages?limit=50")) { Object.assign(f.conversation(), { latestSequence: "2", latestEventSequence: "2" }); return response(200, { conversation: f.conversation(), messages: [newer], eventCursor: "2", hasMoreBefore: true, nextBefore: "2" }); }
+    if (path.includes("/messages?before=")) return response(200, { conversation: f.conversation(), messages: [older], hasMoreBefore: false, nextBefore: null });
+    return undefined;
+  } }); await flush();
+  const messages = f.element("messages"), article = messages.children[0], remove = article.querySelector(".delete-message"); remove.focus();
+  await f.click("older-messages");
+  assert.deepEqual(messages.children.map((item) => item.dataset.sequence), ["1", "2"]);
+  assert.match(contents(messages.children[0]), /Older history/); assert.equal(messages.children[1], article);
+  assert.equal(article.querySelector(".delete-message"), remove); assert.equal(f.document.activeElement, remove);
+});
+
+test("same-session visibility return reloads revoked photos and waits for their new load before read eligibility", async () => {
+  let f, hold = false; const replacement = pause();
+  f = harness({ intercept: (path) => {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (path.endsWith("/messages?limit=50")) return response(200, { conversation: f.conversation(), messages: [{ ...photoFixture(f, { sender: "peer" }), body: "" }], eventCursor: "1", hasMoreBefore: false });
+    if (path.endsWith("/thumb")) return hold ? replacement.promise : photoResponse();
+    return undefined;
+  } }); await flush();
+  const firstPhoto = f.element("messages").querySelector(".photo-open"), firstImage = firstPhoto.querySelector("img");
+  for (const handler of firstImage.events.get("load") ?? []) handler({});
+  assert.equal(firstPhoto.dataset.loaded, "true");
+  await f.hide(); assert.deepEqual(f.revoked, f.createdUrls); assert.equal(firstImage.src, "");
+  hold = true; await f.show();
+  const photo = f.element("messages").querySelector(".photo-open");
+  assert.notEqual(photo.dataset.loaded, "true");
+  assert.equal(f.calls.filter((call) => call.path.endsWith("/thumb")).length, 2);
+  for (const handler of firstImage.events.get("load") ?? []) handler({});
+  await f.advance(150);
+  assert.notEqual(photo.dataset.loaded, "true", "a late load from the revoked image cannot mark its replacement ready");
+  assert.equal(f.calls.filter((call) => call.options.method === "POST" && call.path.endsWith("/read")).length, 0);
+  replacement.resolve(photoResponse()); await flush();
+  const image = photo.querySelector("img"); assert.ok(image); assert.notEqual(image, firstImage);
+  assert.notEqual(photo.dataset.loaded, "true"); assert.equal(f.createdUrls.length, 2);
+  for (const handler of image.events.get("load") ?? []) handler({});
+  assert.equal(photo.dataset.loaded, "true");
+  await f.advance(150);
+  assert.equal(f.calls.filter((call) => call.options.method === "POST" && call.path.endsWith("/read")).length, 1);
+});
+
+test("failed photos retry on the next poll without replacing their message or photo control", async () => {
+  for (const failure of ["network", "decoding"]) {
+    let f, thumbnails = 0;
+    f = harness({ intercept: (path) => {
+      if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+      if (path.endsWith("/messages?limit=50")) return response(200, { conversation: f.conversation(), messages: [photoFixture(f)], eventCursor: "1", hasMoreBefore: false });
+      if (path.endsWith("/thumb")) { thumbnails += 1; return thumbnails === 1 && failure === "network" ? response(503, { error: "unavailable" }) : photoResponse(); }
+      return undefined;
+    } }); await flush();
+    const article = f.element("messages").children[0], photo = article.querySelector(".photo-open"), failedImage = photo.querySelector("img");
+    if (failure === "decoding") { assert.ok(failedImage); for (const handler of failedImage.events.get("error") ?? []) handler({}); }
+    assert.match(contents(photo), /Photo indisponible/); assert.equal(thumbnails, 1); photo.focus();
+    await f.advance(3000);
+    assert.equal(f.element("messages").children[0], article); assert.equal(article.querySelector(".photo-open"), photo);
+    assert.equal(f.document.activeElement, photo); assert.equal(thumbnails, 2); const replacement = photo.querySelector("img"); assert.ok(replacement);
+    assert.doesNotMatch(contents(photo), /Photo indisponible/);
+    if (failedImage) {
+      for (const handler of failedImage.events.get("load") ?? []) handler({});
+      for (const handler of failedImage.events.get("error") ?? []) handler({});
+      assert.notEqual(photo.dataset.loaded, "true", "callbacks from the failed image cannot mark its replacement loaded");
+      assert.equal(photo.querySelector("img"), replacement, "a late error cannot remove the replacement image");
+      assert.deepEqual(f.revoked, [f.createdUrls[0]], "a late error cannot revoke the replacement URL");
+      for (const handler of replacement.events.get("load") ?? []) handler({});
+      assert.equal(photo.dataset.loaded, "true");
+    }
+  }
+});
+
+test("a photo response arriving after its message deletion cannot restore the private image", async () => {
+  let f, events = []; const thumbnail = pause();
+  f = harness({ intercept: (path) => {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (path.endsWith("/messages?limit=50")) return response(200, { conversation: f.conversation(), messages: [photoFixture(f)], eventCursor: "1", hasMoreBefore: false });
+    if (path.endsWith("/thumb")) return thumbnail.promise;
+    if (path.includes("/events?")) { const current = events; events = []; return response(200, { conversation: f.conversation(), events: current, nextCursor: f.conversation().latestEventSequence, hasMore: false }); }
+    return undefined;
+  } }); await flush(); assert.equal(f.calls.filter((call) => call.path.endsWith("/thumb")).length, 1);
+  f.conversation().latestEventSequence = "2";
+  events = [{ kind: "delete", sequence: "2", message: { ...photoFixture(f), body: null, media: undefined, deletedAt: now + 2000 } }];
+  await f.advance(3000); thumbnail.resolve(photoResponse()); await flush();
+  assert.match(contents(f.element("messages")), /Message supprimé/);
+  assert.equal(f.element("messages").querySelectorAll("img").length, 0); assert.equal(f.createdUrls.length, 0);
 });
