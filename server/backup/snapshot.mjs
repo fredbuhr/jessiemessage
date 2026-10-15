@@ -86,7 +86,14 @@ export function createBackupSnapshotStore({ pool, inspectionPool }) {
       });
       definitions.push({ name: "schema_migrations", primary: ["version"] }); definitions.sort((a, b) => a.name.localeCompare(b.name, "en"));
       const tables = await inspection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine, TABLE_COLLATION AS collation FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME", [database]);
-      if (tables.length !== definitions.length || tables.some((row, i) => row.name !== definitions[i].name || row.kind !== "BASE TABLE" || row.engine !== "InnoDB")) fail();
+      // INFORMATION_SCHEMA uses its own collation, whose order need not equal
+      // JavaScript's locale order (notably around underscores). Compare the
+      // complete set first, then choose one canonical order for hashing.
+      const byTable = new Map(tables.map((row) => [row.name, row]));
+      if (tables.length !== definitions.length || byTable.size !== definitions.length) fail("BACKUP_SNAPSHOT_TABLE_COUNT");
+      if (definitions.some(({ name }) => !byTable.has(name))) fail("BACKUP_SNAPSHOT_TABLE_NAMES");
+      if (tables.some((row) => row.kind !== "BASE TABLE" || row.engine !== "InnoDB")) fail("BACKUP_SNAPSHOT_TABLE_KIND");
+      const orderedTables = definitions.map(({ name }) => byTable.get(name));
       const columns = await inspection.query(`SELECT TABLE_NAME AS table_name, COLUMN_NAME AS name, COLUMN_TYPE AS type,
         IS_NULLABLE AS nullable, COLUMN_DEFAULT AS default_value, EXTRA AS extra, COLLATION_NAME AS collation,
         ORDINAL_POSITION AS position FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME, ORDINAL_POSITION`, [database]);
@@ -104,7 +111,16 @@ export function createBackupSnapshotStore({ pool, inspectionPool }) {
       for (const row of foreignKeys) delete row.reference_schema;
       const checks = await inspection.query(`SELECT TABLE_NAME AS table_name, CONSTRAINT_NAME AS name, CHECK_CLAUSE AS clause
         FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ? ORDER BY TABLE_NAME, CONSTRAINT_NAME`, [database]);
-      const schemaDigest = createHash("sha256").update(json([tables.map((row) => [row.name, row.kind, row.engine, row.collation]),
+      const metadataOrder = (fields) => (left, right) => {
+        for (const field of fields) {
+          if (left[field] === right[field]) continue;
+          return left[field] < right[field] ? -1 : 1;
+        }
+        return 0;
+      };
+      columns.sort(metadataOrder(["table_name", "position"])); indexes.sort(metadataOrder(["table_name", "name", "position"]));
+      foreignKeys.sort(metadataOrder(["table_name", "name", "position"])); checks.sort(metadataOrder(["table_name", "name"]));
+      const schemaDigest = createHash("sha256").update(json([orderedTables.map((row) => [row.name, row.kind, row.engine, row.collation]),
         ...[columns, indexes, foreignKeys, checks].map((rows) => rows.map((row) => Object.values(row).map(cell)))])).digest("hex");
       const core = createHash("sha256").update("jessiemessage:backup-core:v1\0"), objects = [], assets = [];
       let rowsRead = 0, capacity = null;
