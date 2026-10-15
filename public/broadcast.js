@@ -1,4 +1,4 @@
-import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, acceptCampaign, campaignNames, recipientNames, reasonNames } from "/broadcast-model.js";
+import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, campaignNames, recipientNames, reasonNames } from "/broadcast-model.js";
 
 const el = (id) => document.getElementById(id);
 const state = createBroadcastState(); const controllers = new Set(); const campaigns = new Map(); const assets = new Map();
@@ -211,7 +211,7 @@ async function loadHistory(more = false) {
   const ticket = broadcastTicket(state); historyBusy = true; renderControls(); const afterId = more ? historyCursor : null;
   try {
     const page = await request(`/api/broadcast/admin/campaigns?limit=20${afterId ? `&afterId=${afterId}` : ""}`, { ticket });
-    for (const campaign of parseHistoryPage(page, afterId)) campaigns.set(campaign.id, campaign);
+    for (const campaign of parseHistoryPage(page, afterId)) campaigns.set(campaign.id, mergeCampaign(campaigns.get(campaign.id), campaign));
     if (more || !historyCursor || !historyMore) { historyCursor = page.nextCursor; historyMore = page.hasMore; }
     renderHistory(); notice(campaigns.size ? "" : "Aucune diffusion pour le moment.", false, "history-status");
   } catch (error) { report(error, "history-status"); }
@@ -233,15 +233,18 @@ async function showCampaign(id, refresh = false) {
   const epoch = detailEpoch;
   try {
     const result = parseCampaign(await request(`/api/broadcast/admin/campaigns/${id}`), { detail: true });
-    if (detailId !== id || detailEpoch !== epoch) return; campaigns.set(id, result); renderDetail(result); renderHistory();
+    if (detailId !== id || detailEpoch !== epoch) return;
+    const current = mergeCampaign(campaigns.get(id), result); campaigns.set(id, current);
+    if (current.recipients) renderDetail(current); else { el("campaign-detail").replaceChildren(node("p", "Les envois ont évolué. Actualise l’historique pour afficher le détail à jour.", "small-copy")); }
+    renderHistory();
   } catch (error) { if (detailId === id && detailEpoch === epoch) report(error, "history-status"); }
 }
 async function cancelCampaign(id) {
   if (state.csrfFailed || detailId !== id) return; const ticket = broadcastTicket(state); const epoch = detailEpoch;
   for (const button of el("campaign-detail").querySelectorAll("button")) button.disabled = true;
   try {
-    await verifySession(ticket); const campaign = parseCampaign(await request(`/api/broadcast/admin/campaigns/${id}/cancel`, { ticket, body: {} })); campaigns.set(id, campaign); renderHistory();
-    if (detailId === id && epoch === detailEpoch) await showCampaign(id, true); notice("Les envois encore en attente ont été annulés. Les messages déjà remis restent dans les conversations.", false, "history-status");
+    await verifySession(ticket); const campaign = parseCampaign(await request(`/api/broadcast/admin/campaigns/${id}/cancel`, { ticket, body: {} })); campaigns.set(id, mergeCampaign(campaigns.get(id), campaign)); renderHistory();
+    if (detailId === id && epoch === detailEpoch) { detailEpoch += 1; await showCampaign(id, true); } notice("Les envois encore en attente ont été annulés. Les messages déjà remis restent dans les conversations.", false, "history-status");
   } catch (error) { report(error, "history-status"); if (detailId === id && epoch === detailEpoch && !error.stale) void showCampaign(id, true); }
 }
 function scheduleHistory() {

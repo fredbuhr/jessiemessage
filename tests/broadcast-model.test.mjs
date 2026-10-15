@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, acceptCampaign } from "../public/broadcast-model.js";
+import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign } from "../public/broadcast-model.js";
 import { parseBroadcastPreference, createPreferenceState, clearPreference, preferenceTicket, currentPreference, acceptPreferenceSession, acceptPreference, preferenceSaveBody, mountBroadcastPreference } from "../public/broadcast-preference.js";
 
 const now = 1800000000000;
@@ -133,6 +133,14 @@ test("campaign detail discards private server fields and retains only individual
   const state = ready(); const payload = prepareCampaign(state, id(90), now); const row = campaign(payload, { recipients: payload.conversationIds.map((conversationId) => ({ conversationId, client: { id: id(400), pseudonym: "Client fictif", email: "private@example.invalid" }, state: "pending", reason: null, messageId: null, deliveredAt: null, notes: "Secret" })) });
   const result = parseCampaign(row, { detail: true }); assert.equal(result.recipients.length, 2); assert.equal(JSON.stringify(result).includes("private@example.invalid"), false); assert.equal(JSON.stringify(result).includes("Secret"), false);
   assert.throws(() => parseCampaign({ ...row, counts: { ...row.counts, total: 3 } }, { detail: true }));
+});
+test("older history responses cannot roll back delivery counts or repaint a cancelled campaign as queued", () => {
+  const payload = prepareCampaign(ready(), id(90), now); const queued = campaign(payload);
+  const running = campaign(payload, { status: "running", updatedAt: now + 1, counts: { ...queued.counts, delivered: 1, pending: 1 } });
+  assert.strictEqual(mergeCampaign(running, queued), running);
+  const cancelled = campaign(payload, { status: "cancelled", updatedAt: now + 1, counts: { ...queued.counts, delivered: 1, pending: 0, cancelled: 1 } });
+  assert.strictEqual(mergeCampaign(cancelled, running), cancelled); assert.strictEqual(mergeCampaign(cancelled, { ...queued, updatedAt: now + 2 }), cancelled);
+  assert.strictEqual(mergeCampaign(queued, running), running);
 });
 
 test("client diffusion preference defaults to opt-out and versions remain exact unsigned 64-bit strings", () => {

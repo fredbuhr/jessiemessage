@@ -121,6 +121,15 @@ export function parseCampaign(input, { detail = false } = {}) {
   }
   return result;
 }
+export function mergeCampaign(previous, incoming) {
+  if (!previous) return incoming;
+  if (previous.id !== incoming.id) throw new TypeError("wrong_campaign");
+  // Deliveries and final recipient states never roll back. A GET that began
+  // before cancellation cannot repaint a terminal campaign as still queued.
+  if (incoming.updatedAt < previous.updatedAt || ["completed", "cancelled", "paused"].includes(previous.status) && incoming.status !== previous.status
+    || ["delivered", "skipped", "cancelled", "failed"].some((key) => incoming.counts[key] < previous.counts[key])) return previous;
+  return incoming;
+}
 export function acceptCampaign(state, ticket, input) {
   if (!currentBroadcast(state, ticket) || !state.pending) return null;
   const campaign = parseCampaign(input.campaign); const expected = state.pending.payload;
