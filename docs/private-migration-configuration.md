@@ -2,7 +2,7 @@
 
 Application **0.24.0**, suite de la [préparation SQL hébergée](hosted-database-preparation.md). Le propriétaire a créé le compte de migration dans son navigateur. Le Manager a ensuite confirmé un utilisateur avec lecture, écriture et administration sur la seule base de recette. Le nom complet n’est pas publié. Le formulaire limite à **16 caractères le préfixe et le nom réunis**.
 
-La connexion SQL Node et l’application des migrations restent à effectuer sur l’hébergement. Le mot de passe est saisi par l’opérateur directement dans sa console privée. Les huit fonctions privées du serveur restent désactivées.
+Le propriétaire a exécuté la commande dans sa console privée le 15 octobre 2026. Le rapport enregistré à **17:05:47 UTC (19:05:47 à Paris)**, relu et validé par l’agent, confirme la connexion SQL Node et **27 migrations appliquées sur 27**, transport et moteur vérifiés, historique final conforme. Le checkout opérateur exécuté est `3a52a9e014e5f20a72be3e29521817dc822edb1f`. Le mot de passe réel n’a été ni reçu ni conservé par l’agent. Les huit fonctions privées du serveur restent désactivées ; l’application HTTP reste en 0.24.0 sur `55fb30aa`.
 
 ## Secret transmis uniquement en mémoire
 
@@ -39,7 +39,7 @@ Pour initialiser explicitement la recette, remplacer `status` par **`initialize`
 
 Un historique partiel, en échec, en cours ou à reprendre est refusé par `initialize` : l’opérateur doit l’examiner. Les migrations immuables, les verrous et le ledger restent ceux du migrateur existant. Une erreur ne déclenche ni suppression, ni rollback DDL automatique, ni nouvelle tentative aveugle. Une base déjà entièrement appliquée est seulement revérifiée.
 
-Exemple de résultat après les vingt-sept migrations actuelles :
+Résultat réellement enregistré sur l’hébergement après les vingt-sept migrations :
 
 ```json
 {"status":"prepared","engineVerified":true,"transportVerified":true,"migrations":27,"applied":27,"unchanged":0}
@@ -51,4 +51,4 @@ Ce résultat porte sur l’opération et l’historique. Il ne certifie pas tout
 
 Dix-sept tests synthétiques couvrent les entrées et leur confidentialité, les confirmations de cible, les décisions de statut/initialisation, les historiques partiels ou divergents, le refus d’une session sans chiffrement, les échecs de connexion/application/fermeture et l’absence de données privées dans les sorties. Les opérations SQL déléguées conservent les suites MariaDB existantes. La saisie masquée est également contrôlée dans un pseudo-terminal avec un secret synthétique ; aucun secret réel n’est utilisé en test.
 
-Le script Bash a passé sa vérification de syntaxe ; les deux modules Node sont inclus dans `npm run check`. La CI du SHA exact est consignée dans la PR. L’outil seul ne prouve aucune migration hébergée tant que l’opérateur n’a pas exécuté la commande et que son résultat n’a pas été vérifié. **contact@jessiemessage.com** reste l’adresse officielle.
+Le script Bash a passé sa vérification de syntaxe ; les deux modules Node sont inclus dans `npm run check`. La CI du SHA exact est consignée dans la PR. Les 17 tests ciblés passent également sur Node 24.15.0 hébergé, depuis la racine du checkout. La preuve de migration hébergée est le rapport vérifié ci-dessus ; elle ne vaut pas validation de publication. **contact@jessiemessage.com** reste l’adresse officielle.
