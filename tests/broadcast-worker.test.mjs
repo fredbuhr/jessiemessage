@@ -168,3 +168,69 @@ test("claim, failure storage and invalid clock exceptions are replaced by neutra
     });
   }
 });
+
+test("stop during claim cannot start a delivery or spend quotas and immediately returns the durable lease", async () => {
+  const f = fixture(); f.state.claimBarrier = deferred(); f.state.queue.push(f.job);
+  const active = f.worker.runOnce(); assert.equal(f.calls.filter((call) => call.name === "claim").length, 1);
+  let stopped = false; const stopping = f.worker.stop(); assert.equal(f.worker.stop(), stopping); stopping.then(() => { stopped = true; });
+  await new Promise((resolve) => setImmediate(resolve)); assert.equal(stopped, false);
+  f.state.claimBarrier.resolve(); assert.deepEqual(await active, { delivered: 0, deferred: 1, failed: 0 }); await stopping;
+  assert.equal(stopped, true); assert.equal(f.state.queue.length, 1); assert.equal(f.rates.length, 0);
+  assert.deepEqual(f.calls.map((call) => call.name), ["claim", "defer"]);
+  assert.equal(f.calls[1].job, f.job); assert.deepEqual(f.calls[1].options, { now, availableAt: now }); await assert.rejects(f.worker.runOnce(), invalid);
+});
+
+test("stop during job one's delivery drains that job without claiming the next queued recipient", async () => {
+  const f = fixture(); f.state.queue.push(f.job); f.state.deliverBarrier = deferred();
+  const active = f.worker.runOnce();
+  while (!f.calls.some((call) => call.name === "deliver")) await new Promise((resolve) => setImmediate(resolve));
+  const stopping = f.worker.stop(); assert.equal(f.worker.stop(), stopping); f.state.deliverBarrier.resolve(); await stopping;
+  assert.deepEqual(await active, { delivered: 1, deferred: 0, failed: 0 }); assert.equal(f.state.queue.length, 1);
+  assert.equal(f.calls.filter((call) => call.name === "claim").length, 1); assert.equal(f.calls.filter((call) => call.name === "deliver").length, 1);
+});
+
+test("stop while an asynchronous quota is pending cannot begin delivery or charge a processing failure", async () => {
+  for (const reject of [false, true]) {
+    const f = fixture(), gate = deferred(); let rejectQuota;
+    const pending = reject ? new Promise((resolve, no) => { rejectQuota = no; }) : gate.promise;
+    const worker = createBroadcastWorker({ ...f.options, authStore: { consumeRateLimit: async () => pending } });
+    const active = worker.runOnce(); await new Promise((resolve) => setImmediate(resolve)); const stopping = worker.stop();
+    if (reject) rejectQuota(new Error("private SQL details during stop")); else gate.resolve({ allowed: true });
+    assert.deepEqual(await active, { delivered: 0, deferred: 1, failed: 0 }); await stopping;
+    assert.deepEqual(f.calls.map((call) => call.name), ["claim", "defer"]);
+    assert.equal(f.calls[1].job, f.job); assert.deepEqual(f.calls[1].options, { now, availableAt: now });
+  }
+});
+
+
+test("stop after either quota result returns the unstarted lease once before any later quota or delivery", async () => {
+  for (const stopAfter of [1, 2]) {
+    const f = fixture(); let quotaCalls = 0, worker;
+    worker = createBroadcastWorker({ ...f.options, authStore: { async consumeRateLimit() {
+      quotaCalls += 1; if (quotaCalls === stopAfter) void worker.stop(); return { allowed: true };
+    } } });
+    assert.deepEqual(await worker.runOnce(), { delivered: 0, deferred: 1, failed: 0 }); await worker.stop();
+    assert.equal(quotaCalls, stopAfter); assert.deepEqual(f.calls.map((call) => call.name), ["claim", "defer"]);
+    assert.equal(f.calls[1].job, f.job); assert.deepEqual(f.calls[1].options, { now, availableAt: now });
+  }
+});
+
+test("an ambiguous started delivery is never deferred or refunded during stop", async () => {
+  const f = fixture(); let worker;
+  worker = createBroadcastWorker({ ...f.options, store: { ...f.store, async deliver(job, options) {
+    f.calls.push({ name: "deliver", job, options }); void worker.stop(); throw new Error("private SQL acknowledgement lost");
+  } } });
+  f.state.failResult = false;
+  assert.deepEqual(await worker.runOnce(), { delivered: 0, deferred: 0, failed: 0 }); await worker.stop();
+  assert.deepEqual(f.calls.map((call) => call.name), ["claim", "deliver", "fail"]);
+});
+
+test("an unstarted lease return failure is attempted once and cannot turn shutdown into a processing failure", async () => {
+  const f = fixture(); let worker, returnCalls = 0;
+  worker = createBroadcastWorker({ ...f.options,
+    authStore: { async consumeRateLimit() { void worker.stop(); return { allowed: true }; } },
+    store: { ...f.store, async defer() { returnCalls += 1; throw new Error("private SQL lease return result unknown"); } },
+  });
+  await assert.rejects(worker.runOnce(), invalid); await worker.stop();
+  assert.equal(returnCalls, 1); assert.deepEqual(f.calls.map((call) => call.name), ["claim"]);
+});

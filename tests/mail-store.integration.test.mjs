@@ -91,6 +91,38 @@ test("real MariaDB encrypted verification mail persistence (synthetic disposable
       assert.equal(await store.markSent(second.id, second.leaseToken, { now: now + 1001 }), true);
     });
 
+    await t.test("an unstarted eighth reservation is returned once and remains claimable for a real eighth SMTP attempt", async () => {
+      await clearFixtures(); const value = await fixture();
+      await connection.query("UPDATE mail_outbox SET attempts = 7 WHERE id = ?", [value.jobId]);
+      const first = await store.claim({ now }); assert.equal(first.attempts, 8);
+      assert.equal(await store.releaseClaim(first.id, id(), { now: now + 1 }), false);
+      const releases = await Promise.all([store.releaseClaim(first.id, first.leaseToken, { now: now + 1 }), store.releaseClaim(first.id, first.leaseToken, { now: now + 1 })]);
+      assert.equal(releases.filter(Boolean).length, 1);
+      const row = (await connection.query("SELECT status, attempts, lease_token, lease_until, sent_at, last_error FROM mail_outbox WHERE id = ?", [first.id]))[0];
+      assert.equal(row.status, "pending"); assert.equal(Number(row.attempts), 7); assert.equal(row.lease_token, null); assert.equal(row.lease_until, null);
+      assert.equal(row.sent_at, null); assert.equal(row.last_error, null);
+      assert.equal(await store.markSent(first.id, first.leaseToken, { now: now + 1 }), false);
+      const second = await store.claim({ now: now + 2 }); assert.deepEqual(second.id, first.id); assert.equal(second.attempts, 8); assert.notDeepEqual(second.leaseToken, first.leaseToken);
+      assert.equal(await store.releaseClaim(first.id, first.leaseToken, { now: now + 3 }), false);
+      assert.equal(await store.markSent(second.id, second.leaseToken, { now: now + 3 }), true);
+      assert.equal(await store.releaseClaim(second.id, second.leaseToken, { now: now + 4 }), false);
+      assert.equal(Number((await connection.query("SELECT attempts FROM mail_outbox WHERE id = ?", [second.id]))[0].attempts), 8);
+    });
+
+    await t.test("release cannot refund an expired or replaced lease, cancel a fresh owner or revive a terminal job", async () => {
+      await clearFixtures(); await fixture({ expiresAt: now + 1000 });
+      const expired = await store.claim({ now }); assert.equal(await store.releaseClaim(expired.id, expired.leaseToken, { now: now + 1000 }), false);
+      assert.equal(await store.claim({ now: now + 1000 }), null);
+      assert.equal(await store.releaseClaim(expired.id, expired.leaseToken, { now: now + 1001 }), false);
+      await clearFixtures(); await fixture();
+      const first = await store.claim({ now, leaseMilliseconds: 1000 }), second = await store.claim({ now: now + 1000 });
+      assert.equal(await store.releaseClaim(first.id, first.leaseToken, { now: now + 1001 }), false);
+      const row = (await connection.query("SELECT status, attempts, lease_token FROM mail_outbox WHERE id = ?", [second.id]))[0];
+      assert.equal(row.status, "sending"); assert.equal(Number(row.attempts), 2); assert.deepEqual(row.lease_token, second.leaseToken);
+      assert.equal(await store.releaseClaim(second.id, second.leaseToken, { now: now + 1001 }), true);
+      assert.equal((await store.claim({ now: now + 1002 })).attempts, 2);
+    });
+
     await t.test("expired, revoked, consumed, verified and inactive recipients are cancelled before any claim", async () => {
       for (const reason of ["expired", "revoked", "consumed", "verified", "inactive"]) {
         await clearFixtures();

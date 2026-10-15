@@ -12,7 +12,7 @@ L'adresse par défaut ne fournit aucun identifiant ni mot de passe et n'active p
 
 Une fois l'authentification administrateur activée, `/admin/readiness` affiche l'adresse du site, l'état de configuration des fonctionnalités et les essais encore nécessaires. La page reste disponible avant l'activation des inscriptions. Sa page, ses modules et ses API sont protégés par la session administrateur et des réponses sans mise en cache. Un client ne peut pas les consulter avec son cookie client.
 
-Si les mails sont configurés, le bouton **Vérifier la connexion e-mail** lance uniquement un contrôle de connexion/authentification. Il utilise un nouveau transport, distinct de celui des workers, avec une limite de réponse de vingt secondes et une demande de fermeture après chaque résultat. Aucun message, destinataire ou lien d'invitation n'est créé. Une session révoquée pendant le contrôle ne reçoit pas de preuve de réussite.
+Si les mails sont configurés, le bouton **Vérifier la connexion e-mail** lance uniquement un contrôle de connexion/authentification. Il utilise un nouveau transport, distinct de celui des workers, avec une limite de réponse de vingt secondes et une fermeture après chaque résultat. Aucun message, destinataire ou lien d'invitation n'est créé. Une session révoquée pendant le contrôle ne reçoit pas de preuve de réussite.
 
 L'API impose Origin, CSRF, un objet JSON vide, dix contrôles par minute au total et trois par quinze minutes par administrateur. Un seul contrôle logique peut être actif par processus. Les réponses ne contiennent ni serveur SMTP, identifiant, mot de passe, clé, chemin privé, configuration MariaDB ni transcription SMTP. Le navigateur conserve le résultat seulement en mémoire, le retire lorsqu'il est masqué ou déconnecté, recharge la session au retour et exige un nouveau clic après une erreur CSRF.
 
@@ -55,7 +55,7 @@ Cette liste décrit les essais restants, pas des résultats acquis. Les contrôl
 
 Les essais automatisés emploient des comptes fictifs et des transports injectés ; ils couvrent l'identité, l'absence d'envoi par la vérification, les erreurs neutres, les limites, la fermeture du transport et la révocation en cours de requête. Le nouveau groupe HTTP/MariaDB s'ajoute aux groupes exécutés séquentiellement ; les 22 migrations restent inchangées. La CI 0.10 détaillée ci-dessous réussit sur les deux versions MariaDB. La [CI 0.9 vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255), antérieure à ces modifications, a réussi avec 461 tests généraux et 190 tests sur chaque version MariaDB ; ce résultat ne valide pas le nouveau lot.
 
-Aucun SMTP réel, test de délivrabilité, changement DNS, déploiement, fusion ni recette visuelle/mobile n'est revendiqué.
+Aucun SMTP externe, test de délivrabilité, changement DNS, déploiement, fusion ni recette visuelle/mobile n'est revendiqué. Le [lot 0.13](server-availability.md) complète cette première version par la possession/fermeture des sockets et des tests Nodemailer/TLS réels exclusivement en boucle locale.
 
 ## Résultat CI
 

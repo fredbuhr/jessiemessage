@@ -159,7 +159,7 @@ test("upload quotas precede native processing and use scoped private HMAC bucket
   f.state.rateResults = [{ allowed: true }, { allowed: false, retryAfter: 17 }];
   await assert.rejects(f.service.upload("admin", f.token, bytes), (error) => hasCode("MEDIA_RATE_LIMIT")(error) && error.retryAfter === 17);
   assert.equal(f.calls.length, 0);
-  const [global, , personal] = f.rateCalls;
+  const [personal, , global] = f.rateCalls;
   assert.deepEqual(global.options, { now, windowSeconds: 60, limit: 30 });
   assert.deepEqual(personal.options, { now, windowSeconds: 60, limit: 10 });
   for (const [call, name, identity] of [[global, "global-upload", "all"], [personal, "user-upload", adminHex]]) {
@@ -293,4 +293,134 @@ test("backend and filesystem errors expose safe codes without raw SQL, image, cr
   await assert.rejects(f.service.asset("admin", f.token, assetHex, "full"), check("MEDIA_UNAVAILABLE"));
   f.state.storageError = null; f.state.actorError = Object.assign(new Error(privateDetails), { code: "AUTH_INVALID" });
   await assert.rejects(f.service.actor("client", f.token), check("CHAT_UNAUTHORIZED"));
+});
+
+test("upload admission is opaque, one-shot and bound to the current role and session without charging twice", async () => {
+  const f = await fixture(), bytes = await sourceImage; const ticket = await f.service.admitUpload("admin", f.token);
+  try {
+    assert.equal(Object.getPrototypeOf(ticket), null); assert.deepEqual(Object.keys(ticket), []); assert.ok(Object.isFrozen(ticket)); assert.equal(JSON.stringify(ticket), "{}");
+    await assert.rejects(f.service.upload("admin", f.token, bytes, {}), hasCode("MEDIA_INPUT")); assert.equal(f.calls.length, 0);
+    assert.equal(f.rateCalls.length, 2); const result = await f.service.upload("admin", f.token, bytes, ticket); assert.equal(result.duplicate, false);
+    assert.equal(f.rateCalls.length, 2, "consumption does not charge admission a second time");
+    const writes = f.calls.length; await assert.rejects(f.service.upload("admin", f.token, bytes, ticket), hasCode("MEDIA_INPUT")); assert.equal(f.calls.length, writes);
+    await f.service.upload("admin", f.token, bytes); assert.equal(f.rateCalls.length, 4, "direct upload still requires a new paid admission");
+  } finally { f.service.releaseUpload(ticket); }
+  for (const [role, raw] of [["client", f.token], ["admin", newToken()]]) {
+    const admission = await f.service.admitUpload("admin", f.token);
+    try { await assert.rejects(f.service.upload(role, raw, bytes, admission), hasCode("MEDIA_INPUT")); }
+    finally { f.service.releaseUpload(admission); }
+  }
+});
+
+test("one account keeps one upload place across sessions and service instances while three distinct accounts fit", async () => {
+  const accounts = await Promise.all(Array.from({ length: 4 }, () => fixture())); const held = [];
+  try {
+    held.push([accounts[0].service, await accounts[0].service.admitUpload("admin", accounts[0].token)]);
+    await assert.rejects(accounts[1].service.admitUpload("admin", accounts[1].token), hasCode("MEDIA_BUSY"));
+    await assert.rejects(accounts[0].service.upload("admin", accounts[0].token, await sourceImage), hasCode("MEDIA_BUSY"));
+    assert.equal(accounts[1].rateCalls.length, 0, "another session cannot reserve another place for the same account");
+    for (let index = 1; index <= 2; index += 1) {
+      accounts[index].state.idOverride = Buffer.alloc(16, 0x90 + index).toString("hex");
+      held.push([accounts[index].service, await accounts[index].service.admitUpload("admin", accounts[index].token)]);
+    }
+    accounts[3].state.idOverride = Buffer.alloc(16, 0x93).toString("hex");
+    await assert.rejects(accounts[3].service.admitUpload("admin", accounts[3].token), hasCode("MEDIA_BUSY"));
+    held[0][0].releaseUpload(held[0][1]);
+    held.push([accounts[3].service, await accounts[3].service.admitUpload("admin", accounts[3].token)]);
+  } finally { for (const [service, ticket] of held) service.releaseUpload(ticket); }
+});
+
+test("admission places remain occupied during quota SQL and are restored after a quota refusal", async () => {
+  const f = await fixture(), other = await fixture(); let completeQuota, quotaStarted;
+  const started = new Promise((resolve) => { quotaStarted = resolve; });
+  f.options.authStore.consumeRateLimit = async () => { quotaStarted(); return new Promise((resolve) => { completeQuota = resolve; }); };
+  const pending = f.service.admitUpload("admin", f.token); await started;
+  f.service.releaseUpload({}); await assert.rejects(other.service.admitUpload("admin", other.token), hasCode("MEDIA_BUSY"));
+  const rejected = assert.rejects(pending, hasCode("MEDIA_RATE_LIMIT")); completeQuota({ allowed: false, retryAfter: 7 }); await rejected;
+  const ticket = await other.service.admitUpload("admin", other.token); other.service.releaseUpload(ticket);
+});
+
+test("release or replay cannot free an upload while its filesystem or registration work is pending", async () => {
+  const f = await fixture(), other = await fixture(); let continuePut, startedPut;
+  const started = new Promise((resolve) => { startedPut = resolve; });
+  const put = f.storage.put;
+  f.storage.put = async (options) => { await put(options); startedPut(); await new Promise((resolve) => { continuePut = resolve; }); };
+  const ticket = await f.service.admitUpload("admin", f.token); const uploaded = f.service.upload("admin", f.token, await sourceImage, ticket);
+  try {
+    await started; f.service.releaseUpload(ticket);
+    await assert.rejects(other.service.admitUpload("admin", other.token), hasCode("MEDIA_BUSY"));
+    await assert.rejects(f.service.upload("admin", f.token, await sourceImage, ticket), hasCode("MEDIA_INPUT"));
+    await assert.rejects(other.service.admitUpload("admin", other.token), hasCode("MEDIA_BUSY"));
+    continuePut(); await uploaded;
+    const next = await other.service.admitUpload("admin", other.token); other.service.releaseUpload(next);
+  } finally { continuePut?.(); await uploaded.catch(() => {}); f.service.releaseUpload(ticket); }
+});
+
+test("abandoned, invalid, expired and revoked admissions release their place without metadata writes", async () => {
+  const f = await fixture(), bytes = await sourceImage;
+  let ticket = await f.service.admitUpload("admin", f.token); f.service.releaseUpload(ticket); f.service.releaseUpload(ticket);
+  await assert.rejects(f.service.upload("admin", f.token, bytes, ticket), hasCode("MEDIA_INPUT"));
+  ticket = await f.service.admitUpload("admin", f.token); await assert.rejects(f.service.upload("admin", f.token, Buffer.alloc(0), ticket), hasCode("MEDIA_INPUT"));
+  ticket = await f.service.admitUpload("admin", f.token); f.state.actorEnabled = false;
+  await assert.rejects(f.service.upload("admin", f.token, bytes, ticket), hasCode("CHAT_UNAUTHORIZED")); f.state.actorEnabled = true;
+  let current = now; const expiring = await createMediaService({ ...f.options, clock: () => current });
+  ticket = await expiring.admitUpload("admin", f.token); current += 15000;
+  await assert.rejects(expiring.upload("admin", f.token, bytes, ticket), hasCode("MEDIA_INPUT"));
+  ticket = await f.service.admitUpload("admin", f.token); f.service.releaseUpload(ticket);
+  assert.equal(f.calls.length, 0); assert.equal(f.rateCalls.length, 10, "each of the five abandoned attempts remains paid");
+});
+
+test("a ticket from another service cannot skip its upload budget or be substituted for a new admission", async () => {
+  const f = await fixture(), other = await fixture(); const ticket = await f.service.admitUpload("admin", f.token);
+  try {
+    await assert.rejects(other.service.upload("admin", f.token, await sourceImage, ticket), hasCode("MEDIA_INPUT"));
+    assert.equal(other.rateCalls.length, 0); assert.equal(other.calls.length, 0);
+    await assert.rejects(other.service.upload("admin", other.token, await sourceImage), hasCode("MEDIA_BUSY"));
+  } finally { f.service.releaseUpload(ticket); }
+});
+
+test("library and gallery reads pay persistent global and account budgets before querying metadata", async () => {
+  for (const [kind, operation] of [["library", (f) => f.service.listAssets("admin", f.token)], ["gallery", (f) => f.service.gallery("admin", f.token, conversationHex)]]) {
+    const f = await fixture();
+    f.state.rateResults = [{ allowed: false, retryAfter: 3 }]; await assert.rejects(operation(f), hasCode("MEDIA_RATE_LIMIT"));
+    f.state.rateResults = [{ allowed: true }, { allowed: false, retryAfter: 4 }]; await assert.rejects(operation(f), hasCode("MEDIA_RATE_LIMIT"));
+    assert.equal(f.calls.length, 0, "neither refusal may reach metadata or filesystem");
+    const personal = f.rateCalls[0], global = f.rateCalls[2];
+    assert.deepEqual(global.options, { now, windowSeconds: 60, limit: 300 }); assert.deepEqual(personal.options, { now, windowSeconds: 60, limit: 60 });
+    for (const [entry, name, identity] of [[global, "global-read", "all"], [personal, `user-${kind}`, adminHex]]) {
+      assert.deepEqual(entry.bucket, createHmac("sha256", f.key).update("jessiemessage:media-rate:v1:").update(name).update("\0").update(identity).digest());
+    }
+    f.state.rateResults = [{ allowed: true }, { allowed: true }]; await operation(f); assert.equal(f.calls.length, 1);
+  }
+});
+
+test("metadata read budgets are shared across sessions but distinguish library and gallery operations", async () => {
+  const f = await fixture(); await f.service.listAssets("admin", f.token); await f.service.listAssets("admin", newToken()); await f.service.gallery("admin", f.token, conversationHex);
+  assert.deepEqual(f.rateCalls[1].bucket, f.rateCalls[3].bucket); assert.deepEqual(f.rateCalls[1].bucket, f.rateCalls[5].bucket);
+  assert.deepEqual(f.rateCalls[0].bucket, f.rateCalls[2].bucket); assert.notDeepEqual(f.rateCalls[0].bucket, f.rateCalls[4].bucket);
+  assert.equal(f.rateCalls.length, 6);
+});
+
+test("an exhausted upload or metadata account cannot spend the shared allowance on refused work", async () => {
+  for (const operation of [(f) => f.service.admitUpload("admin", f.token), (f) => f.service.listAssets("admin", f.token), (f) => f.service.gallery("admin", f.token, conversationHex)]) {
+    const f = await fixture(); f.state.rateResults = [{ allowed: false, retryAfter: 8 }];
+    await assert.rejects(operation(f), hasCode("MEDIA_RATE_LIMIT")); assert.equal(f.rateCalls.length, 1); assert.equal(f.calls.length, 0);
+    const first = f.rateCalls[0]; assert.ok([10, 60].includes(first.options.limit));
+  }
+});
+
+test("metadata registration uses a fresh authorization time and retains its upload place through a SQL refusal", async () => {
+  const f = await fixture(), other = await fixture(); let current = now;
+  const service = await createMediaService({ ...f.options, clock: () => current });
+  const put = f.storage.put, register = f.store.registerAsset;
+  f.storage.put = async (options) => { await put(options); current += 20000; };
+  f.store.registerAsset = async (options) => {
+    assert.equal(options.now, current); assert.equal(options.now, now + 20000);
+    await assert.rejects(other.service.admitUpload("admin", other.token), hasCode("MEDIA_BUSY"));
+    await register(options); throw Object.assign(new Error("synthetic current SQL denial"), { code: "CHAT_UNAUTHORIZED" });
+  };
+  await assert.rejects(service.upload("admin", f.token, await sourceImage), hasCode("CHAT_UNAUTHORIZED"));
+  assert.deepEqual(f.calls.map((entry) => entry.name), ["storage.put", "registerAsset"]);
+  assert.equal(f.calls.some((entry) => entry.name === "storage.remove"), false, "an ambiguous SQL outcome preserves the encrypted files");
+  const next = await other.service.admitUpload("admin", other.token); other.service.releaseUpload(next);
 });

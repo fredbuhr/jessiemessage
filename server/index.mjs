@@ -2,6 +2,8 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
+import { createRequestAdmission } from "./http/admission.mjs";
+import { createShutdown } from "./lifecycle.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
 
@@ -39,52 +41,89 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler } = {}) {
-  const server = createServer(async (request, response) => {
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler,
+  admission = createRequestAdmission() } = {}) {
+  const handlers = [broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
+  const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness",
+    "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/broadcast-preference.js",
+    "/crm.js", "/crm-model.js", "/crm.css", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
+  let draining = false;
+  let pendingRequests = 0;
+  const requestWaiters = new Set();
+  async function handleRequest(request, response) {
     const method = request.method ?? "GET";
-    for (const handler of [broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler]) {
-      if (!handler) continue;
-      try { if (await handler(request, response)) return; }
-      catch {
-        if (response.headersSent) response.destroy();
-        else reply(response, method, 503, "application/json; charset=utf-8", '{"error":"service_unavailable"}');
+    if (draining) {
+      response.writeHead(503, { ...securityHeaders, "Content-Type": "application/json; charset=utf-8", Connection: "close" });
+      response.end(method === "HEAD" ? undefined : '{"error":"service_unavailable"}');
+      request.resume();
+      return;
+    }
+    let pathname;
+    try { pathname = new URL(request.url ?? "/", "http://localhost").pathname; }
+    catch { reply(response, method, 400, "application/json; charset=utf-8", '{"error":"bad_request"}'); return; }
+    let done;
+    try {
+      if (handlers.length && (pathname.startsWith("/api/") && pathname !== "/api/health" || protectedFiles.has(pathname))) {
+        done = admission.enter(request, response);
+      }
+    } catch (error) {
+      const limited = ["REQUEST_RATE_LIMIT", "REQUEST_BUSY"].includes(error?.code);
+      const retry = Number.isSafeInteger(error?.retryAfter) ? Math.max(1, Math.min(60, error.retryAfter)) : 5;
+      response.writeHead(limited ? 429 : 503, { ...securityHeaders, "Content-Type": "application/json; charset=utf-8", Connection: "close",
+        ...(limited ? { "Retry-After": String(retry) } : {}) });
+      response.end(method === "HEAD" ? undefined : JSON.stringify({ error: limited ? "try_again_later" : "service_unavailable" }));
+      request.resume();
+      return;
+    }
+    try {
+      for (const handler of handlers) {
+        try { if (await handler(request, response)) return; }
+        catch {
+          if (response.headersSent) response.destroy();
+          else reply(response, method, 503, "application/json; charset=utf-8", '{"error":"service_unavailable"}');
+          return;
+        }
+      }
+      if (method !== "GET" && method !== "HEAD") {
+        reply(response, method, 405, "application/json; charset=utf-8", '{"error":"method_not_allowed"}');
         return;
       }
-    }
-    if (method !== "GET" && method !== "HEAD") {
-      reply(response, method, 405, "application/json; charset=utf-8", '{"error":"method_not_allowed"}');
-      return;
-    }
 
-    let pathname;
-    try {
-      pathname = new URL(request.url ?? "/", "http://localhost").pathname;
-    } catch {
-      reply(response, method, 400, "application/json; charset=utf-8", '{"error":"bad_request"}');
-      return;
-    }
+      if (pathname === "/api/health") {
+        reply(response, method, 200, "application/json; charset=utf-8", '{"status":"ok"}');
+        return;
+      }
 
-    if (pathname === "/api/health") {
-      reply(response, method, 200, "application/json; charset=utf-8", '{"status":"ok"}');
-      return;
-    }
+      // Authentication is registered only by explicit private configuration.
+      // Private routes require their explicitly configured feature handlers.
+      // Never serve arbitrary file paths from the filesystem.
+      const file = publicFiles.get(pathname);
+      if (!file) {
+        reply(response, method, 404, "text/plain; charset=utf-8", "Not found");
+        return;
+      }
 
-    // Authentication is registered only by explicit private configuration.
-    // Private routes require their explicitly configured feature handlers.
-    // Never serve arbitrary file paths from the filesystem.
-    const file = publicFiles.get(pathname);
-    if (!file) {
-      reply(response, method, 404, "text/plain; charset=utf-8", "Not found");
-      return;
-    }
-
-    try {
-      const bytes = await readFile(join(publicRoot, file[0]));
-      reply(response, method, 200, file[1], bytes);
-    } catch {
-      reply(response, method, 500, "text/plain; charset=utf-8", "Internal server error");
+      try {
+        const bytes = await readFile(join(publicRoot, file[0]));
+        reply(response, method, 200, file[1], bytes);
+      } catch {
+        reply(response, method, 500, "text/plain; charset=utf-8", "Internal server error");
+      }
+    } finally { done?.(); }
+  }
+  const server = createServer(async (request, response) => {
+    pendingRequests += 1;
+    try { await handleRequest(request, response); }
+    finally {
+      pendingRequests -= 1;
+      if (pendingRequests === 0) {
+        for (const resolve of requestWaiters) resolve();
+        requestWaiters.clear();
+      }
     }
   });
+  server.beginDrain = () => { draining = true; };
+  server.waitForRequests = () => pendingRequests === 0 ? Promise.resolve() : new Promise((resolve) => { requestWaiters.add(resolve); });
   server.requestTimeout = 15000;
   server.headersTimeout = 10000;
   server.keepAliveTimeout = 5000;
@@ -127,7 +166,7 @@ export async function createConfiguredServer(env = process.env) {
       features: { clientAccess: accessConfig.enabled, chat: chatConfig.enabled, photos: mediaConfig.enabled,
         clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled } });
     const readinessHandler = createReadinessHandler(readinessService, { origin: config.origin });
-    if (!accessConfig.enabled) return { server: createAppServer({ authHandler, readinessHandler }), pool, mailWorker: null };
+    if (!accessConfig.enabled) return { server: createAppServer({ authHandler, readinessHandler }), pool, mailWorker: null, diagnostics: readinessService };
     const { createAccessStore } = await import("./access/store.mjs");
     const { createAccessService } = await import("./access/service.mjs");
     const { createAccessHandler } = await import("./access/http.mjs");
@@ -208,13 +247,26 @@ export async function createConfiguredServer(env = process.env) {
     transport = await createVerificationTransport(accessConfig.mail);
     const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler });
     const workers = [];
-    let closing;
+    let closing, stopping, aborting;
     const mailWorker = {
+      stop() {
+        if (!stopping) {
+          // Calling stop signals every producer before any drain is awaited.
+          const drains = [broadcastWorker?.stop(), ...workers.map((worker) => worker.stop())];
+          stopping = Promise.allSettled(drains).then((results) => {
+            if (results.some((result) => result.status === "rejected")) throw new Error("Private workers could not stop cleanly.");
+          });
+        }
+        return stopping;
+      },
+      abort() {
+        if (!aborting) aborting = transport.close();
+        return aborting;
+      },
       close() {
         if (!closing) closing = (async () => {
-          await broadcastWorker?.stop();
-          await Promise.allSettled(workers.map((worker) => worker.close()));
-          await transport.close();
+          try { await mailWorker.stop(); }
+          finally { await mailWorker.abort(); }
         })();
         return closing;
       },
@@ -222,14 +274,14 @@ export async function createConfiguredServer(env = process.env) {
     // Queue delivery starts only once the HTTP listener is available, and stops
     // before the application pool is closed during graceful shutdown.
     server.once("listening", () => {
-      if (closing) return;
+      if (stopping || closing) return;
       broadcastWorker?.start();
       workers.push(startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key, closeTransport: false,
         onError: () => console.error("JessieMessage verification mail worker unavailable.") }));
       if (resetMailStore) workers.push(startMailWorker({ store: resetMailStore, transport, key: resetConfig.key, purpose: "password-reset", closeTransport: false,
         onError: () => console.error("JessieMessage recovery mail worker unavailable.") }));
     });
-    return { server, pool, mailWorker };
+    return { server, pool, mailWorker, diagnostics: readinessService };
   } catch {
     await transport?.close().catch(() => {});
     await pool.end().catch(() => {});
@@ -240,23 +292,20 @@ export async function createConfiguredServer(env = process.env) {
 async function start() {
   const rawPort = Number(process.env.PORT ?? 3000);
   const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3000;
-  const { server, pool, mailWorker } = await createConfiguredServer();
+  const { server, pool, mailWorker, diagnostics } = await createConfiguredServer();
   server.listen(port, "0.0.0.0", () => {
     console.info(`JessieMessage listening on port ${port}`);
   });
-  let closing = false;
+  const drain = createShutdown({ server, pool, mailWorker, diagnostics });
   const shutdown = (exitCode = 0) => {
-    if (closing) return;
-    closing = true;
-    const closeResources = async () => {
-      await mailWorker?.close().catch(() => {});
-      await pool?.end().catch(() => {});
-      process.exitCode = exitCode;
-    };
-    if (server.listening) {
-      server.close(() => { void closeResources(); });
-      server.closeIdleConnections();
-    } else void closeResources();
+    if (exitCode) process.exitCode = exitCode;
+    void drain().then((result) => {
+      if (result.failed || result.timedOut) process.exitCode = 1;
+      if (result.timedOut) {
+        console.error("JessieMessage shutdown deadline reached; pending operations remain uncertain.");
+        process.exit(1);
+      }
+    });
   };
   server.once("error", () => {
     console.error("JessieMessage HTTP listener unavailable.");

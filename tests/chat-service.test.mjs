@@ -20,7 +20,7 @@ const conversation = () => ({
 
 async function fixture() {
   const key = randomBytes(32), token = newToken(), calls = [], authCalls = [], rateCalls = [];
-  const state = { admin: true, client: true, adminError: null, clientError: null, roleOverride: null, idOverride: null,
+  const state = { now, admin: true, client: true, adminError: null, clientError: null, roleOverride: null, idOverride: null,
     rateResults: [], rows: [], sendRow: null, rawError: null, internalMetadata: false };
   const row = (senderId, body, overrides = {}) => {
     const binding = { messageId: randomBytes(16), conversationId, senderId };
@@ -78,7 +78,7 @@ async function fixture() {
     if (state.clientError) throw state.clientError;
     return state.client ? { user: { role: state.roleOverride ?? "client", id: state.idOverride ?? clientHex, pseudonym: "Synthetic client" } } : null;
   } };
-  const options = { store, authStore, authService, accessService, key, clock: () => now };
+  const options = { store, authStore, authService, accessService, key, clock: () => state.now };
   const service = await createChatService(options);
   return { key, token, calls, authCalls, rateCalls, state, row, store, options, service };
 }
@@ -205,6 +205,139 @@ test("send quotas use scoped secret HMAC buckets without tokens or bodies and re
   }
   const serialized = JSON.stringify(f.rateCalls);
   assert.equal(serialized.includes(body), false); assert.equal(serialized.includes(f.token), false); assert.equal(serialized.includes(adminHex), false);
+});
+
+test("every chat data read shares persistent global and authenticated-user budgets before private SQL reads", async (t) => {
+  const reads = [
+    ["list", (f) => f.service.listConversations(f.token, { userId: clientHex }), adminHex],
+    ["client conversation", (f) => f.service.clientConversation(f.token), clientHex],
+    ["messages", (f) => f.service.messages("admin", f.token, conversationHex, { userId: clientHex }), adminHex],
+    ["events", (f) => f.service.events("client", f.token, conversationHex, { userId: adminHex }), clientHex],
+  ];
+  for (const [name, read, realUserId] of reads) await t.test(name, async () => {
+    const f = await fixture();
+    f.state.rateResults = [{ allowed: false, retryAfter: 42 }];
+    await assert.rejects(read(f), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === 42);
+    assert.equal(f.authCalls.length, 1, "a verified current principal precedes any personal quota");
+    assert.equal(f.calls.length, 0, "personal denial must precede the conversation/message query");
+    assert.equal(f.rateCalls.length, 1);
+    f.state.rateResults = [{ allowed: true }, { allowed: false, retryAfter: 17 }];
+    await assert.rejects(read(f), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === 17);
+    assert.equal(f.calls.length, 0, "global denial must also precede the private query");
+    const [personal, , global] = f.rateCalls;
+    assert.deepEqual(global.options, { now, windowSeconds: 60, limit: 1200 });
+    assert.deepEqual(personal.options, { now, windowSeconds: 60, limit: 120 });
+    for (const [entry, kind, identity] of [[global, "global-read", "all"], [personal, "user-read", realUserId]]) {
+      assert.deepEqual(entry.bucket, createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:").update(kind).update("\0").update(identity).digest());
+      assert.equal(entry.bucket.length, 32);
+    }
+    const serialized = JSON.stringify(f.rateCalls);
+    for (const secret of [f.token, adminHex, clientHex, conversationHex, "Synthetic admin text", "private-client@example.invalid"]) assert.equal(serialized.includes(secret), false);
+  });
+});
+
+test("session proofs and rejected principals do not consume chat read quotas", async () => {
+  const f = await fixture();
+  await f.service.actor("admin", f.token); await f.service.actor("client", f.token);
+  assert.equal(f.rateCalls.length, 0); assert.equal(f.calls.length, 0);
+  f.state.admin = false;
+  for (const operation of [() => f.service.listConversations(f.token), () => f.service.messages("admin", f.token, conversationHex), () => f.service.events("admin", f.token, conversationHex)]) {
+    await assert.rejects(operation(), hasCode("CHAT_UNAUTHORIZED"));
+  }
+  f.state.clientError = Object.assign(new Error("Private expired-access details"), { code: "ACCESS_EXPIRED" });
+  for (const operation of [() => f.service.clientConversation(f.token), () => f.service.messages("client", f.token, conversationHex), () => f.service.events("client", f.token, conversationHex)]) {
+    await assert.rejects(operation(), hasCode("ACCESS_EXPIRED"));
+  }
+  await assert.rejects(f.service.messages("client", "invalid-cookie", conversationHex), hasCode("CHAT_UNAUTHORIZED"));
+  assert.equal(f.rateCalls.length, 0); assert.equal(f.calls.length, 0);
+});
+
+test("chat read quotas follow the authenticated user across tokens, services and read kinds and reopen after their shared window", async () => {
+  const f = await fixture(), ledger = new Map(), rateCalls = [];
+  const authStore = { async consumeRateLimit(bucket, options) {
+    rateCalls.push({ bucket, options });
+    const name = bucket.toString("hex"); let current = ledger.get(name);
+    if (!current || options.now - current.since >= options.windowSeconds * 1000) { current = { since: options.now, count: 0 }; ledger.set(name, current); }
+    current.count += 1;
+    return { allowed: current.count <= options.limit, retryAfter: Math.max(1, Math.ceil((current.since + options.windowSeconds * 1000 - options.now) / 1000)) };
+  } };
+  const first = await createChatService({ ...f.options, authStore });
+  const restarted = await createChatService({ ...f.options, authStore });
+  for (let index = 0; index < 120; index += 1) {
+    if (index % 3 === 0) await first.listConversations(f.token);
+    else if (index % 3 === 1) await first.messages("admin", f.token, conversationHex);
+    else await restarted.events("admin", newToken(), conversationHex);
+  }
+  assert.equal(f.calls.length, 120);
+  const globalBucket = createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:").update("global-read").update("\0all").digest("hex");
+  assert.equal(ledger.get(globalBucket).count, 120);
+  await assert.rejects(restarted.messages("admin", newToken(), conversationHex), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === 60);
+  assert.equal(f.calls.length, 120);
+  assert.equal(ledger.get(globalBucket).count, 120, "a user already at its allowance must not spend the shared global budget");
+  f.state.now = now + 59999;
+  await assert.rejects(first.events("admin", f.token, conversationHex), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === 1);
+  assert.equal(f.calls.length, 120);
+  assert.equal(ledger.get(globalBucket).count, 120, "repeated personal refusals cannot exhaust capacity for other users");
+  f.state.now = now + 60000;
+  const readable = await restarted.messages("admin", f.token, conversationHex);
+  assert.equal(readable.messages[0].body, "Synthetic admin text"); assert.equal(f.calls.length, 121);
+  assert.equal(ledger.size, 2, "read kinds and fresh session tokens must not create new user buckets");
+  assert.ok(rateCalls.every((entry) => entry.options.windowSeconds === 60));
+  const lastReadCount = rateCalls.length;
+  await first.actor("admin", newToken()); assert.equal(rateCalls.length, lastReadCount);
+  f.state.admin = false;
+  await assert.rejects(first.messages("admin", f.token, conversationHex), hasCode("CHAT_UNAUTHORIZED"));
+  assert.equal(rateCalls.length, lastReadCount, "renewed allowance must not bypass current authorization");
+});
+
+test("different verified users have separate personal read buckets and share the same global budget", async () => {
+  const f = await fixture(); const otherAdmin = Buffer.alloc(16, 0x55).toString("hex");
+  await f.service.messages("admin", f.token, conversationHex);
+  f.state.idOverride = otherAdmin;
+  await f.service.messages("admin", newToken(), conversationHex);
+  f.state.idOverride = null;
+  await f.service.clientConversation(newToken());
+  const [userA, globalA, userB, globalB, userClient, globalClient] = f.rateCalls;
+  assert.deepEqual(globalA.bucket, globalB.bucket); assert.deepEqual(globalA.bucket, globalClient.bucket);
+  assert.notDeepEqual(userA.bucket, userB.bucket);
+  assert.notDeepEqual(userB.bucket, userClient.bucket);
+  assert.deepEqual(userClient.bucket, createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:").update("user-read").update("\0").update(clientHex).digest());
+  assert.equal(f.calls.length, 3);
+});
+
+test("read rate persistence failures and malformed decisions fail closed without exposing backend details", async () => {
+  for (const bad of [null, undefined, {}, { allowed: "true" }, { allowed: 1 }, { allowed: null }]) {
+    const f = await fixture();
+    const service = await createChatService({ ...f.options, authStore: { async consumeRateLimit() { return bad; } } });
+    await assert.rejects(service.messages("admin", f.token, conversationHex), hasCode("CHAT_UNAVAILABLE"));
+    assert.equal(f.calls.length, 0);
+  }
+  const f = await fixture();
+  const service = await createChatService({ ...f.options, authStore: { async consumeRateLimit() {
+    throw Object.assign(new Error("SQL password=private-rate-secret private-client@example.invalid"), { code: "ER_PRIVATE_RATE_FAILURE" });
+  } } });
+  await assert.rejects(service.events("admin", f.token, conversationHex), (error) => {
+    assert.ok(hasCode("CHAT_UNAVAILABLE")(error)); assert.equal(error.cause, undefined);
+    for (const secret of ["private-rate-secret", "private-client@example.invalid", f.token]) assert.equal(error.message.includes(secret), false);
+    return true;
+  });
+  assert.equal(f.calls.length, 0);
+  for (const [value, expected] of [[0, 1], [-1, 1], [0.1, 1], [19.2, 20], [10000, 60], [NaN, 60], ["private-sql-detail", 60]]) {
+    const bounded = await createChatService({ ...f.options, authStore: { async consumeRateLimit() { return { allowed: false, retryAfter: value }; } } });
+    await assert.rejects(bounded.events("admin", f.token, conversationHex), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === expected);
+  }
+});
+
+test("chat read quotas do not consume or rename the send budgets shared with the broadcasts worker", async () => {
+  const f = await fixture();
+  await f.service.messages("admin", f.token, conversationHex);
+  await f.service.send("admin", f.token, conversationHex, { clientMessageId: randomBytes(16).toString("hex"), body: "Synthetic independent send budget" });
+  assert.equal(f.rateCalls.length, 4);
+  for (const [index, name, identity, limit] of [[0, "user-read", adminHex, 120], [1, "global-read", "all", 1200], [2, "global-send", "all", 300], [3, "user-send", adminHex, 30]]) {
+    assert.deepEqual(f.rateCalls[index].bucket, createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:").update(name).update("\0").update(identity).digest());
+    assert.deepEqual(f.rateCalls[index].options, { now, windowSeconds: 60, limit });
+  }
+  assert.equal(f.calls.at(-1).name, "sendMessage");
 });
 
 test("deletion returns a tombstone without decryption and retrying the same client key never resurrects its body", async () => {

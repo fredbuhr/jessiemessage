@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { isIP, Socket } from "node:net";
 import { canonicalEmail } from "../auth/config.mjs";
 import { tokenDigest } from "../auth/crypto.mjs";
 import { SITE_CONTACT_EMAIL, isOfficialOrigin } from "../site.mjs";
@@ -20,12 +21,54 @@ function validateMessage({ email, token, jobId }) {
 
 export async function createVerificationTransport(config, {
   createTransport, verifyTimeoutMilliseconds = 20000,
+  connectSocket = (socket, options) => socket.connect(options),
 } = {}) {
   let transport, from, replyTo;
+  let closed = false, closing, verifying = false;
+  const sockets = new Set(), operations = new Set();
+  function getSocket(_options, callback) {
+    if (closed) { callback(new MailDeliveryError()); return; }
+    // getSocket is a public Nodemailer SMTP option. Own the raw TCP socket
+    // before DNS/connect starts; destroying it also closes a later TLS wrapper.
+    // Nodemailer still performs implicit TLS/STARTTLS with the original host,
+    // certificate verification, CA and TLS options. Never mark this socket TLS.
+    const socket = new Socket();
+    let delivered = false, timer, finishClosed;
+    const record = { socket, finished: new Promise((resolve) => { finishClosed = resolve; }) };
+    sockets.add(record);
+    const finish = (error) => {
+      if (delivered) return;
+      delivered = true;
+      clearTimeout(timer);
+      socket.off("connect", connected);
+      if (error) socket.destroy();
+      callback(error ?? null, error ? undefined : { connection: socket });
+    };
+    const connected = () => finish(closed ? new MailDeliveryError() : null);
+    // Retain this neutral listener after handing the socket over: close can
+    // happen before Nodemailer attaches listeners or during a TLS upgrade.
+    socket.on("error", () => finish(new MailDeliveryError()));
+    socket.once("close", () => {
+      clearTimeout(timer);
+      sockets.delete(record);
+      finishClosed();
+      finish(new MailDeliveryError());
+    });
+    socket.once("connect", connected);
+    timer = setTimeout(() => finish(new MailDeliveryError()), 15000);
+    timer.unref();
+    try { connectSocket(socket, { host: config.smtp.host, port: config.smtp.port }); }
+    catch { finish(new MailDeliveryError()); }
+  }
   try {
     if (config?.enabled !== true || ![465, 587].includes(config.smtp?.port)) throw new Error();
     if (!Number.isSafeInteger(verifyTimeoutMilliseconds) || verifyTimeoutMilliseconds < 1
-      || verifyTimeoutMilliseconds > 30000) throw new Error();
+      || verifyTimeoutMilliseconds > 30000 || typeof connectSocket !== "function") throw new Error();
+    if (typeof config.smtp.host !== "string" || config.smtp.host.length < 1 || config.smtp.host.length > 253
+      || (!isIP(config.smtp.host) && config.smtp.host.split(".").some((label) => !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label)))) throw new Error();
+    for (const [value, maximum] of [[config.smtp.user, 256], [config.smtp.password, 1024]]) {
+      if (typeof value !== "string" || value.length < 1 || value.length > maximum || !value.isWellFormed() || /[\x00-\x1f\x7f]/.test(value)) throw new Error();
+    }
     const origin = new URL(config.origin);
     if (origin.protocol !== "https:" || origin.origin !== config.origin || origin.username || origin.password) throw new Error();
     from = canonicalEmail(config.smtp.from);
@@ -43,6 +86,7 @@ export async function createVerificationTransport(config, {
       forceAuth: true,
       auth: { user: config.smtp.user, pass: config.smtp.password },
       tls,
+      getSocket,
       connectionTimeout: 15000,
       greetingTimeout: 15000,
       socketTimeout: 45000,
@@ -53,15 +97,33 @@ export async function createVerificationTransport(config, {
       disableUrlAccess: true,
     });
   } catch { throw new MailDeliveryError("MAIL_TRANSPORT_CONFIG"); }
-  let closed = false, closing, verifying = false;
   const close = () => {
     if (closing) return closing;
     closed = true;
+    for (const cancel of operations) cancel();
+    const waiting = [...sockets].map(({ socket, finished }) => { socket.destroy(); return finished; });
     closing = (async () => {
-      try { await transport.close(); } catch { throw new MailDeliveryError("MAIL_TRANSPORT_CLOSE"); }
+      let failed = false;
+      try { await transport.close(); } catch { failed = true; }
+      await Promise.all(waiting);
+      if (failed) throw new MailDeliveryError("MAIL_TRANSPORT_CLOSE");
     })();
     return closing;
   };
+  async function operation(work, code) {
+    if (closed) throw new MailDeliveryError(code);
+    let cancel;
+    const cancelled = new Promise((_, reject) => { cancel = () => reject(new MailDeliveryError(code)); operations.add(cancel); });
+    try {
+      const result = await Promise.race([Promise.resolve().then(() => {
+        if (closed) throw new MailDeliveryError(code);
+        return work();
+      }), cancelled]);
+      if (closed) throw new MailDeliveryError(code);
+      return result;
+    } catch { throw new MailDeliveryError(code); }
+    finally { operations.delete(cancel); }
+  }
   return Object.freeze({
     async verify() {
       if (closed || verifying) throw new MailDeliveryError("MAIL_VERIFY_FAILED");
@@ -77,7 +139,7 @@ export async function createVerificationTransport(config, {
           timer.unref();
         });
         const result = await Promise.race([
-          Promise.resolve().then(() => transport.verify()), deadline,
+          operation(() => transport.verify(), "MAIL_VERIFY_FAILED"), deadline,
         ]);
         if (result !== true || closed) throw new MailDeliveryError("MAIL_VERIFY_FAILED");
         return true;
@@ -90,7 +152,7 @@ export async function createVerificationTransport(config, {
       const { email, token, jobId } = input;
       const link = `${config.origin}/access#verification=${token}`;
       try {
-        const result = await transport.sendMail({
+        const result = await operation(() => transport.sendMail({
           from,
           replyTo,
           to: email,
@@ -98,7 +160,7 @@ export async function createVerificationTransport(config, {
           messageId: `<verification-${jobId.toString("hex")}@${new URL(config.origin).hostname}>`,
           subject: "Confirmez votre adresse e-mail — JessieMessage",
           text: `Bonjour,\n\nPour confirmer votre adresse e-mail sur JessieMessage, ouvrez ce lien :\n${link}\n\nCe lien est personnel, temporaire et utilisable une seule fois. Si vous n'avez pas demandé cette inscription, ignorez ce message.\n\nJessieMessage`,
-        });
+        }), "MAIL_DELIVERY_FAILED");
         const accepted = Array.isArray(result?.accepted) && result.accepted.some((address) => {
           try { return canonicalEmail(address) === email; } catch { return false; }
         });
@@ -112,7 +174,7 @@ export async function createVerificationTransport(config, {
       const { email, token, jobId } = input;
       const link = `${config.origin}/recover#reset=${token}`;
       try {
-        const result = await transport.sendMail({
+        const result = await operation(() => transport.sendMail({
           from,
           replyTo,
           to: email,
@@ -120,7 +182,7 @@ export async function createVerificationTransport(config, {
           messageId: `<password-reset-${jobId.toString("hex")}@${new URL(config.origin).hostname}>`,
           subject: "Réinitialisez votre mot de passe — JessieMessage",
           text: `Bonjour,\n\nPour choisir un nouveau mot de passe JessieMessage, ouvrez ce lien :\n${link}\n\nCe lien est personnel, valable 30 minutes et utilisable une seule fois. Si vous n'avez pas demandé cette réinitialisation, ignorez ce message. Votre mot de passe reste inchangé tant que vous n'en avez pas choisi un nouveau.\n\nJessieMessage`,
-        });
+        }), "MAIL_DELIVERY_FAILED");
         const accepted = Array.isArray(result?.accepted) && result.accepted.some((address) => {
           try { return canonicalEmail(address) === email; } catch { return false; }
         });

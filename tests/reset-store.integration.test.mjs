@@ -247,6 +247,38 @@ test("real MariaDB single-use client password recovery and private leased mail (
       assert.equal(await mail.markSent(second.id, second.leaseToken, { now: now + 1001 }), true);
     });
 
+    await t.test("unstarted reset-mail claims return their attempt once, including eight-to-seven and a fresh eighth lease", async () => {
+      await clear(); const value = await user(), input = request(value); await store.requestReset(input);
+      await connection.query("UPDATE password_reset_outbox SET attempts = 7 WHERE id = ?", [input.mail.id]);
+      const first = await mail.claim({ now }); assert.equal(first.attempts, 8);
+      assert.equal(await mail.releaseClaim(first.id, id(), { now: now + 1 }), false);
+      const releases = await Promise.all([mail.releaseClaim(first.id, first.leaseToken, { now: now + 1 }), mail.releaseClaim(first.id, first.leaseToken, { now: now + 1 })]);
+      assert.equal(releases.filter(Boolean).length, 1);
+      const row = (await connection.query("SELECT status, attempts, lease_token, lease_until, sent_at, last_error FROM password_reset_outbox WHERE id = ?", [first.id]))[0];
+      assert.equal(row.status, "pending"); assert.equal(Number(row.attempts), 7); assert.equal(row.lease_token, null); assert.equal(row.lease_until, null);
+      assert.equal(row.sent_at, null); assert.equal(row.last_error, null);
+      assert.equal(await mail.markSent(first.id, first.leaseToken, { now: now + 1 }), false);
+      const second = await mail.claim({ now: now + 2 }); assert.deepEqual(second.id, first.id); assert.equal(second.attempts, 8); assert.notDeepEqual(second.leaseToken, first.leaseToken);
+      assert.equal(await mail.releaseClaim(first.id, first.leaseToken, { now: now + 3 }), false);
+      assert.equal(await mail.markSent(second.id, second.leaseToken, { now: now + 3 }), true);
+      assert.equal(await mail.releaseClaim(second.id, second.leaseToken, { now: now + 4 }), false);
+      assert.equal(Number((await connection.query("SELECT attempts FROM password_reset_outbox WHERE id = ?", [second.id]))[0].attempts), 8);
+    });
+
+    await t.test("reset-mail release rejects expired, cancelled and superseded leases without changing the fresh reservation", async () => {
+      await clear(); const value = await user(); await store.requestReset(request(value, { expiresAt: now + 1000 }));
+      const expired = await mail.claim({ now }); assert.equal(await mail.releaseClaim(expired.id, expired.leaseToken, { now: now + 1000 }), false);
+      assert.equal(await mail.claim({ now: now + 1000 }), null);
+      assert.equal(await mail.releaseClaim(expired.id, expired.leaseToken, { now: now + 1001 }), false);
+      await clear(); const current = await user(); await store.requestReset(request(current));
+      const first = await mail.claim({ now, leaseMilliseconds: 1000 }), second = await mail.claim({ now: now + 1000 });
+      assert.equal(await mail.releaseClaim(first.id, first.leaseToken, { now: now + 1001 }), false);
+      const row = (await connection.query("SELECT status, attempts, lease_token FROM password_reset_outbox WHERE id = ?", [second.id]))[0];
+      assert.equal(row.status, "sending"); assert.equal(Number(row.attempts), 2); assert.deepEqual(row.lease_token, second.leaseToken);
+      assert.equal(await mail.releaseClaim(second.id, second.leaseToken, { now: now + 1001 }), true);
+      assert.equal((await mail.claim({ now: now + 1002 })).attempts, 2);
+    });
+
     await t.test("claim cancels every obsolete proof, account status, mailbox or credential snapshot before delivery", async () => {
       for (const reason of ["expired", "revoked-token", "consumed", "revoked-user", "suspended", "deleted", "email", "version", "unverified", "future-proof", "overflow"]) {
         await clear(); const value = await user(), input = request(value); await store.requestReset(input); let at = now + 1;

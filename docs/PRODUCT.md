@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.12; private interface reliability corrections verified in CI**. The official site email is `contact@jessiemessage.com`. Administrator MFA, invitations, restricted client sessions, private text/photo chat, CRM, client recovery and opted-in individual broadcasts are implemented behind explicit configuration. Version 0.12 binds private interface state to the current account/session, clears the access administration when hidden, makes temporary recovery failures retryable and refreshes recent/active broadcasts independently of archive pages. Hosting, real SMTP reception, external age assurance and browser/device acceptance remain pending. The default server stays neutral. Web Push and automatic saved segments remain planned.
+Status: **development 0.13; server availability corrections under verification**. The official site email is `contact@jessiemessage.com`. Administrator MFA, invitations, restricted client sessions, private text/photo chat, CRM, client recovery and opted-in individual broadcasts are implemented behind explicit configuration. Version 0.12 binds private interface state to the current account/session, clears the access administration when hidden, makes temporary recovery failures retryable and refreshes recent/active broadcasts independently of archive pages. Hosting, real SMTP reception, external age assurance and browser/device acceptance remain pending. The default server stays neutral. Web Push and automatic saved segments remain planned.
 
 ## Purpose
 

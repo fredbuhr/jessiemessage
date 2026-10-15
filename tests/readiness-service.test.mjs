@@ -306,3 +306,62 @@ test("a clock that becomes invalid while verification runs cannot stamp a succes
   f.state.verifyHook = async () => true;
   assert.equal((await f.service.verifySmtp(f.token)).checkedAt, now);
 });
+
+test("readiness close is idempotent and rejects new diagnostics before session, quota or transport work", async () => {
+  const f = await fixture(), first = f.service.close();
+  assert.equal(f.service.close(), first); await first;
+  await assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE"));
+  assert.equal(f.sessionCalls.length, 0); assert.equal(f.rateCalls.length, 0); assert.equal(f.transports.length, 0);
+});
+
+test("readiness close immediately closes the active diagnostic and never returns its result as proof", async () => {
+  const f = await fixture(), started = deferred(), verification = deferred();
+  f.state.verifyHook = async () => { started.resolve(); return verification.promise; };
+  f.state.closeHook = async () => { verification.reject(new Error("private-shutdown-smtp-details")); };
+  const pending = assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE")); await started.promise;
+  const closing = f.service.close(); assert.equal(f.transports[0].closed, 1);
+  await closing; await pending;
+  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 1);
+  await assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE"));
+  assert.equal(f.transports.length, 1);
+});
+
+test("closing during factory work waits for the late transport then closes it without verifying", async () => {
+  const f = await fixture(), started = deferred(), release = deferred();
+  f.state.factoryHook = async () => { started.resolve(); await release.promise; };
+  const pending = assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE")); await started.promise;
+  let drained = false; const closing = f.service.close(); void closing.then(() => { drained = true; });
+  await Promise.resolve(); assert.equal(drained, false);
+  await assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE"));
+  release.resolve(); await closing; await pending;
+  assert.equal(drained, true); assert.equal(f.transports.length, 1); assert.equal(f.transports[0].closed, 1); assert.equal(f.transports[0].verified, 0);
+});
+
+test("closing during quota acquisition stops subsequent budgets and cannot allocate SMTP", async () => {
+  const started = deferred(), release = deferred(); let budgets = 0;
+  const f = await fixture({ authStore: { consumeRateLimit: async () => { budgets += 1; started.resolve(); await release.promise; return { allowed: true }; } } });
+  const pending = assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE")); await started.promise;
+  const closing = f.service.close(); release.resolve(); await closing; await pending;
+  assert.equal(budgets, 1); assert.equal(f.transports.length, 0);
+});
+
+test("shutdown shares an already running cleanup and waits for it exactly once", async () => {
+  const f = await fixture(), started = deferred(), release = deferred();
+  f.state.closeHook = async () => { started.resolve(); await release.promise; };
+  const pending = assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE")); await started.promise;
+  let drained = false; const closing = f.service.close(); void closing.then(() => { drained = true; });
+  await Promise.resolve(); assert.equal(drained, false); assert.equal(f.transports[0].closed, 1);
+  release.resolve(); await closing; await pending;
+  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 1);
+});
+
+test("late transport cleanup failures during shutdown are sanitized and do not produce verification proof", async () => {
+  const f = await fixture(), started = deferred(), release = deferred();
+  f.state.factoryHook = async () => { started.resolve(); await release.promise; };
+  f.state.closeHook = async () => { throw new Error("private-smtp-password-and-transcript"); };
+  const pending = assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE")); await started.promise;
+  const closing = assert.rejects(f.service.close(), (error) => hasCode("READINESS_UNAVAILABLE")(error)
+    && error.cause === undefined && !error.message.includes("private-"));
+  release.resolve(); await closing; await pending;
+  assert.equal(f.transports[0].closed, 1); assert.equal(f.transports[0].verified, 0);
+});

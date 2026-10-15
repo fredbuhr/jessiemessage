@@ -5,6 +5,7 @@ import { PassThrough } from "node:stream";
 import { EventEmitter } from "node:events";
 import { AUTH_HEADERS } from "../server/auth/http.mjs";
 import { createMediaHandler, readUpload } from "../server/media/http.mjs";
+import { createMediaService } from "../server/media/service.mjs";
 
 const origin = "https://jessiemessage.example";
 const tokens = { admin: Buffer.alloc(32, 7).toString("base64url"), client: Buffer.alloc(32, 11).toString("base64url") };
@@ -31,7 +32,7 @@ function message(role, overrides = {}) {
     clientMessageId: ids.key, media: asset(role, true), encryptedBody: "private-ciphertext", ...overrides };
 }
 async function fixture(t, overrides = {}) {
-  const calls = [];
+  const calls = [], admissionRates = [];
   const service = {
     async actor(role, token) { calls.push(["actor", role, token]); return token === tokens[role] ? { user: { id: ids[role], role, pseudonym: role === "admin" ? "Jessie" : "Client test" }, csrf, expiresAt: now + 3600000 } : null; },
     async upload(role, token, bytes) { calls.push(["upload", role, token, bytes]); return { asset: asset(role), duplicate: false }; },
@@ -43,11 +44,22 @@ async function fixture(t, overrides = {}) {
     async send(role, token, conversationId, input) { calls.push(["send", role, token, conversationId, input]); return { message: message(role, { body: input.caption, clientMessageId: input.clientMessageId }), duplicate: false }; },
     ...overrides,
   };
+  // Exercise the real account/global admission and opaque-ticket lifecycle,
+  // while these protocol tests keep decoding and metadata as explicit fakes.
+  const unused = () => { throw new Error("No image or metadata operation belongs in admission"); };
+  const admissionService = await createMediaService({
+    store: Object.fromEntries(["registerAsset", "listAssets", "getOwnedAsset", "getMessageAsset", "deleteAsset", "gallery"].map((name) => [name, unused])),
+    storage: { put: unused, get: unused, remove: unused }, key: Buffer.alloc(32, 20), clock: () => now,
+    chatService: { actor: (...args) => service.actor(...args), sendImage: unused },
+    authStore: { async consumeRateLimit(bucket, options) { admissionRates.push({ bucket, options }); return { allowed: true }; } },
+  });
+  service.admitUpload ??= (...args) => admissionService.admitUpload(...args);
+  service.releaseUpload ??= (...args) => admissionService.releaseUpload(...args);
   const handler = createMediaHandler(service, { origin });
   const server = createServer(async (request, response) => { if (!await handler(request, response)) { response.writeHead(404); response.end("fallback"); } });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(async () => { server.closeAllConnections(); await new Promise((resolve) => server.close(resolve)); });
-  return { base: `http://127.0.0.1:${server.address().port}`, calls, service, handler, server };
+  return { base: `http://127.0.0.1:${server.address().port}`, calls, service, handler, server, admissionRates };
 }
 const post = (base, path, body, headers = mutation()) => fetch(`${base}${path}`, { method: "POST", headers, body: typeof body === "string" || Buffer.isBuffer(body) ? body : JSON.stringify(body) });
 function privateHeaders(response) {
@@ -57,7 +69,7 @@ function privateHeaders(response) {
 function noPrivateFields(value) { assert.doesNotMatch(JSON.stringify(value), /private-|storageKey|digest|ownerId|originalFilename|encryptedBody/); }
 
 test("media handler requires a complete service and a canonical HTTPS origin", () => {
-  const methods = ["actor", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "send"];
+  const methods = ["actor", "admitUpload", "releaseUpload", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "send"];
   const service = Object.fromEntries(methods.map((name) => [name, () => {}]));
   for (const candidate of ["http://example.invalid", `${origin}/`, `${origin}/messages`, `${origin}?x=1`, "https://user:pass@example.invalid"]) assert.throws(() => createMediaHandler(service, { origin: candidate }));
   assert.throws(() => createMediaHandler({}, { origin }));
@@ -160,43 +172,63 @@ test("declared and chunked uploads are bounded to 10 MiB without calling the nor
   assert.equal(chunked, 413); assert.equal(calls.some(([name]) => name === "upload"), false);
 });
 
-test("three whole upload requests bound buffering and normalization; abort and completion release slots", async (t) => {
-  const { base, calls, service, server } = await fixture(t);
-  const incoming = new Map();
+test("one slow account cannot occupy the three global upload places and abort/completion restore capacity", { timeout: 10000 }, async (t) => {
+  const rotatedA = Buffer.alloc(32, 21).toString("base64url"), tokenB = Buffer.alloc(32, 22).toString("base64url");
+  const tokenC = Buffer.alloc(32, 23).toString("base64url"), tokenD = Buffer.alloc(32, 24).toString("base64url");
+  const principals = new Map([[tokens.admin, ids.admin], [rotatedA, ids.admin], [tokenB, "1".repeat(32)], [tokenC, "2".repeat(32)], [tokenD, "3".repeat(32)]]);
+  const { base, calls, service, server, admissionRates } = await fixture(t, {
+    async actor(role, token) { return principals.has(token) ? { user: { id: principals.get(token), role, pseudonym: "Synthetic account" }, csrf, expiresAt: now + 3600000 } : null; },
+  });
+  const incoming = new Map(), admitted = new EventEmitter(); let admissionCount = 0;
   server.on("request", (request) => { if (request.headers["x-test-upload"]) incoming.set(request.headers["x-test-upload"], request); });
-  const actor = service.actor;
-  let actorCount = 0, actorsReady;
-  const authenticated = new Promise((resolve) => { actorsReady = resolve; });
-  service.actor = async (...args) => { const result = await actor(...args); if (++actorCount === 3) actorsReady(); return result; };
-  const stalled = Array.from({ length: 3 }, (_, index) => {
-    const request = httpRequest(`${base}${assetsPath()}`, { method: "POST", headers: uploadHeaders("admin", { "X-Test-Upload": String(index) }) }, (response) => response.resume());
-    request.on("error", () => {}); request.write(jpeg.subarray(0, 1)); return request;
+  const admit = service.admitUpload;
+  service.admitUpload = async (...args) => { const ticket = await admit(...args); admissionCount += 1; admitted.emit("change"); return ticket; };
+  const waitForAdmission = (target) => admissionCount >= target ? Promise.resolve() : new Promise((resolve) => {
+    const changed = () => { if (admissionCount >= target) { admitted.off("change", changed); resolve(); } }; admitted.on("change", changed);
   });
-  t.after(() => stalled.forEach((request) => request.destroy()));
-  await authenticated;
-  await new Promise((resolve) => setImmediate(resolve));
-  const denied = await post(base, assetsPath(), jpeg, uploadHeaders());
-  assert.equal(denied.status, 429); assert.deepEqual(await denied.json(), { error: "try_again_later" }); assert.equal(denied.headers.get("retry-after"), "5");
-  assert.equal(calls.some(([name]) => name === "upload"), false);
+  const headersFor = (token, extra = {}) => uploadHeaders("admin", { Cookie: `__Host-jessie_session=${token}`, ...extra });
+  const stalled = [];
+  const slow = (name, token) => {
+    const request = httpRequest(`${base}${assetsPath()}`, { method: "POST", headers: headersFor(token, { "X-Test-Upload": name }) }, (response) => response.resume());
+    request.on("error", () => {}); request.write(jpeg.subarray(0, 1)); stalled.push(request); return request;
+  };
+  let releaseProcessing;
+  t.after(() => { releaseProcessing?.(); stalled.forEach((request) => request.destroy()); });
+  const a = slow("a", tokens.admin); await waitForAdmission(1); await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(admissionRates.length, 2, "the unfinished A body already paid both persistent budgets");
+  const sameAccount = await post(base, assetsPath(), jpeg, headersFor(rotatedA));
+  assert.equal(sameAccount.status, 429); assert.equal(sameAccount.headers.get("retry-after"), "5"); assert.equal(admissionRates.length, 2, "rotating the session cannot reserve another place");
+  assert.equal((await post(base, assetsPath(), jpeg, headersFor(tokenB))).status, 201, "B is admitted while A keeps its body open");
+  const b = slow("b", tokenB), c = slow("c", tokenC); await waitForAdmission(4); await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(admissionRates.length, 8, "each admitted body pays once, including the unfinished bodies");
+  const full = await post(base, assetsPath(), jpeg, headersFor(tokenD)); assert.equal(full.status, 429); assert.equal(admissionRates.length, 8);
+  const abortA = new Promise((resolve) => incoming.get("a").once("aborted", resolve)); a.destroy(); await abortA; await new Promise((resolve) => setImmediate(resolve));
+  const upload = service.upload; let processingStarted;
+  const processing = new Promise((resolve) => { processingStarted = resolve; });
+  service.upload = async (...args) => { processingStarted(); await new Promise((resolve) => { releaseProcessing = resolve; }); return upload(...args); };
+  const d = post(base, assetsPath(), jpeg, headersFor(tokenD)); await processing;
+  assert.equal((await post(base, assetsPath(), jpeg, headersFor(tokens.admin))).status, 429, "the processing operation retains the third place");
+  releaseProcessing(); assert.equal((await d).status, 201); service.upload = upload;
+  const aborts = [[b, "b"], [c, "c"]].map(([request, name]) => { const observed = new Promise((resolve) => incoming.get(name).once("aborted", resolve)); request.destroy(); return observed; });
+  await Promise.all(aborts); await new Promise((resolve) => setImmediate(resolve));
+  assert.equal((await post(base, assetsPath(), jpeg, headersFor(tokens.admin))).status, 201);
+  assert.equal(calls.filter(([name]) => name === "upload").length, 3);
+});
 
-  const abortObserved = new Promise((resolve) => incoming.get("0").once("aborted", resolve));
-  stalled[0].destroy(); await abortObserved;
-  await new Promise((resolve) => setImmediate(resolve));
-  const upload = service.upload;
-  let normalizing, release;
-  const started = new Promise((resolve) => { normalizing = resolve; });
-  service.upload = async (...args) => { normalizing(); await new Promise((resolve) => { release = resolve; }); return upload(...args); };
-  const admitted = post(base, assetsPath(), jpeg, uploadHeaders());
-  await started;
-  const stillFull = await post(base, assetsPath(), jpeg, uploadHeaders());
-  assert.equal(stillFull.status, 429); assert.equal(stillFull.headers.get("retry-after"), "5");
-  release(); assert.equal((await admitted).status, 201);
-  const remainingAborts = stalled.slice(1).map((request, index) => {
-    const observed = new Promise((resolve) => incoming.get(String(index + 1)).once("aborted", resolve)); request.destroy(); return observed;
+test("upload quota refusal returns before an unfinished body and attaches no body reader", async (t) => {
+  const { base, handler, calls, service } = await fixture(t);
+  service.admitUpload = async () => { throw Object.assign(new Error("private rate detail"), { code: "MEDIA_RATE_LIMIT", retryAfter: 42 }); };
+  const request = new PassThrough(); request.method = "POST"; request.url = assetsPath();
+  request.headers = Object.fromEntries(Object.entries(uploadHeaders()).map(([name, value]) => [name.toLowerCase(), value]));
+  let status; const response = { headersSent: false, destroyed: false, writeHead(value) { status = value; }, end() {} };
+  await handler(request, response); assert.equal(status, 429); assert.equal(request.listenerCount("data"), 0); request.destroy();
+  const result = await new Promise((resolve, reject) => {
+    const slow = httpRequest(`${base}${assetsPath()}`, { method: "POST", headers: uploadHeaders("admin", { "Content-Length": "1024" }) }, (response) => {
+      response.resume(); response.on("end", () => { resolve({ status: response.statusCode, retry: response.headers["retry-after"] }); slow.destroy(); });
+    });
+    slow.on("error", reject); slow.flushHeaders();
   });
-  await Promise.all(remainingAborts); await new Promise((resolve) => setImmediate(resolve));
-  service.upload = upload;
-  assert.equal((await post(base, assetsPath(), jpeg, uploadHeaders())).status, 201);
+  assert.deepEqual(result, { status: 429, retry: "42" }); assert.equal(calls.some(([name]) => name === "upload"), false);
 });
 
 test("upload abort discards partial data and absorbs a later transport error", async () => {
