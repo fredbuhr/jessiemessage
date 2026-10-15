@@ -103,6 +103,73 @@ function privateCleared(f) {
   for (const id of ["email", "password", "factor"]) assert.equal(f.element(id).value, "", id);
 }
 
+const plainResponse = (status, body = "Not found") => new Response(body, { status, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+
+test("plain 404 optional features preserve an authentication-only administrator session without an error banner", async (t) => {
+  for (const initialSession of [true, false]) await t.test(initialSession ? "restored session" : "successful login", async () => {
+    let f;
+    f = harness({ currentSession: initialSession ? session() : null, intercept: (path) => {
+      if (["/api/admin/access", "/api/chat/admin/capabilities"].includes(path)) return plainResponse(404);
+      if (path === "/api/auth/login") { f.state.currentSession = session(); return response(200, f.state.currentSession); }
+      return undefined;
+    } });
+    await flush();
+    if (!initialSession) {
+      f.element("email").value = "admin@example.invalid"; f.element("password").value = "synthetic-password"; f.element("factor").value = "123456";
+      await f.submit("login-form");
+    }
+    assert.equal(f.element("connected").hidden, false); assert.equal(f.element("connected-name").textContent, "Jess");
+    assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("access-title").textContent, "Ton accès est prêt.");
+    assert.equal(f.element("auth-status").textContent, ""); assert.equal(f.element("auth-status").classList.contains("is-error"), false);
+    assert.equal(f.element("access-tools").hidden, true); assert.equal(f.element("admin-chat-link").hidden, true);
+    assert.equal(f.calls.some((call) => /^\/api\/admin\/(?:clients|invitations)/.test(call.path)), false);
+    for (const id of ["email", "password", "factor"]) assert.equal(f.element(id).value, "", id);
+  });
+});
+
+test("plain 401 from an optional authenticated request clears the revoked session", async () => {
+  const f = harness({ intercept: (path) => path === "/api/admin/access" ? plainResponse(401, "Unauthorized")
+    : path === "/api/chat/admin/capabilities" ? plainResponse(404) : undefined });
+  await flush();
+  privateCleared(f); assert.equal(f.element("login-form").hidden, false);
+  assert.equal(f.element("auth-status").textContent, "Ta session a expiré. Reconnecte-toi pour continuer.");
+  await f.click("logout-button"); assert.equal(posts(f).length, 0);
+});
+
+test("plain 503 remains a visible service error rather than a disabled optional feature", async () => {
+  const f = harness({ intercept: (path) => path === "/api/admin/access" ? plainResponse(503, "Unavailable")
+    : path === "/api/chat/admin/capabilities" ? plainResponse(404) : undefined });
+  await flush();
+  assert.equal(f.element("connected").hidden, false); assert.equal(f.element("access-tools").hidden, true);
+  assert.equal(f.element("auth-status").textContent, "La connexion est indisponible pour le moment. Réessaie dans quelques instants.");
+  assert.equal(f.element("auth-status").classList.contains("is-error"), true);
+});
+
+test("a successful HTTP session response containing malformed JSON is still refused", async () => {
+  const f = harness({ intercept: (path) => path === "/api/auth/session" ? plainResponse(200, "Not JSON") : undefined });
+  await flush();
+  privateCleared(f); assert.equal(f.element("login-form").hidden, false);
+  assert.equal(f.element("auth-status").classList.contains("is-error"), true);
+  assert.equal(f.calls.some((call) => call.path === "/api/admin/access" || call.path === "/api/chat/admin/capabilities"), false);
+});
+
+test("a late plain 404 body cannot clear a newer administrator's access after hide", async () => {
+  let body, accessCalls = 0;
+  const delayed = new Response(new ReadableStream({ start(controller) { body = controller; } }), {
+    status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+  const f = harness({ intercept: (path) => path === "/api/admin/access" && ++accessCalls === 1 ? delayed
+    : path === "/api/chat/admin/capabilities" ? plainResponse(404) : undefined });
+  await flush(); const oldAccess = f.calls.find((call) => call.path === "/api/admin/access");
+  await f.hide(); privateCleared(f); assert.equal(oldAccess.options.signal.aborted, true);
+  f.state.currentSession = session("Nouvelle administratrice", { csrf: "B".repeat(43) }); await f.show();
+  assert.equal(f.element("access-tools").hidden, false); const currentList = f.element("clients-list").children[0];
+  body.enqueue(new TextEncoder().encode("Not found")); body.close(); await flush();
+  assert.equal(f.element("connected-name").textContent, "Nouvelle administratrice");
+  assert.equal(f.element("access-tools").hidden, false); assert.equal(f.element("clients-list").children[0], currentList);
+  assert.equal(f.element("auth-status").textContent, ""); assert.equal(posts(f).length, 0);
+});
+
 test("initially hidden administrator page clears anonymous credentials and does no request until visible", async () => {
   const f = harness({ visible: false });
   privateCleared(f); assert.equal(f.calls.length, 0); assert.equal(f.element("login-form").hidden, true);
