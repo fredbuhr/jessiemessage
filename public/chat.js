@@ -8,6 +8,7 @@ const mediaBase = `/api/media/${role}`;
 const states = new Map(); const inbox = new Map(); const controllers = new Set();
 let generation = 0; let visibilityGeneration = 0; let selectionEpoch = 0;
 let selected = null; let csrf = null; let ready = false; let expiryTimer = null;
+let sessionOwner = null; let ownerCheck = null; let bootstrapTask = null; let pollEpoch = 0;
 let pollTimer = null; let cycleRunning = false; let retryDelay = 3000; let sessionCheckedAt = 0;
 let inboxCursor = null; let inboxMore = false; let inboxLoading = false;
 let inboxRefreshCursor = null; let lastInboxRefresh = 0;
@@ -57,6 +58,8 @@ function clearChat() {
 }
 function clearPrivate() {
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
+  sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
+  olderBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
   mediaEnabled = false;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   broadcastPreference?.clear(); broadcastPreference = null; document.getElementById("broadcast-preference-host")?.remove();
@@ -70,16 +73,20 @@ function clearPrivate() {
 function signOut() { clearPrivate(); location.replace(role === "admin" ? "/admin/login" : "/access"); }
 function snapshot(state = null) { return { generation, visibilityGeneration, selectionEpoch, id: state?.id, epoch: state?.epoch }; }
 function fresh(ticket, account = false) { return ticket.generation === generation && ticket.visibilityGeneration === visibilityGeneration && (account || (ticket.selectionEpoch === selectionEpoch && (!ticket.id || belongsTo(currentState(), ticket.id, ticket.epoch)))); }
-async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null } = {}) {
-  const ticket = snapshot(state); const controller = new AbortController(); controllers.add(controller);
+async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null, verifyOwner = true } = {}) {
+  const owner = sessionOwner; const ticket = snapshot(state); const controller = new AbortController(); controllers.add(controller);
   controller.accountScope = account;
   const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
   const timeout = setTimeout(() => controller.abort(), rawBody ? 30000 : 15000);
   const headers = mutation ? { "Content-Type": contentType ?? "application/json", "X-CSRF-Token": csrf ?? "" } : {};
   try {
+    if (mutation && verifyOwner && owner) await confirmOwner(ticket, owner, account);
+    if (!fresh(ticket, account)) throw staleResponse();
     const response = await fetch(path, { method: mutation ? "POST" : "GET", credentials: "same-origin", cache: "no-store", headers, body: mutation ? rawBody ?? JSON.stringify(body ?? {}) : undefined, signal: controller.signal });
     let data; try { data = await response.json(); } catch { data = {}; }
-    if (!fresh(ticket, account)) throw Object.assign(new Error("stale_response"), { stale: true });
+    if (!fresh(ticket, account)) throw staleResponse();
+    if (verifyOwner && owner && path !== `${sessionBase}/session`) await confirmOwner(ticket, owner, account);
+    if (!fresh(ticket, account)) throw staleResponse();
     if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error });
     return data;
   } catch (error) {
@@ -87,14 +94,59 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
     throw error;
   } finally { clearTimeout(timeout); signal?.removeEventListener("abort", abort); controllers.delete(controller); }
 }
-async function refreshSession() {
-  const session = await request(`${sessionBase}/session`);
-  if (session.user?.role !== role || (role === "client" && session.access?.state !== "active")) { signOut(); throw Object.assign(new Error("access_unavailable"), { stale: true }); }
-  csrf = session.csrf; sessionCheckedAt = Date.now();
-  clearTimeout(expiryTimer);
-  expiryTimer = setTimeout(signOut, Math.max(0, session.expiresAt - Date.now()));
-  return session;
+function staleResponse() { return Object.assign(new Error("stale_response"), { stale: true }); }
+function sameOwner(left, right) { return Boolean(left && right && left.id === right.id && left.role === right.role && left.csrf === right.csrf); }
+function sessionIdentity(session) {
+  const user = session?.user;
+  if (user?.role !== role || typeof user.id !== "string" || user.id.length !== 32 || !/^[0-9a-f]{32}$/.test(user.id)
+    || typeof session.csrf !== "string" || session.csrf.length !== 43 || !/^[A-Za-z0-9_-]{43}$/.test(session.csrf)
+    || !Number.isSafeInteger(session.expiresAt) || session.expiresAt <= Date.now()
+    || (role === "client" && session.access?.state !== "active")) return null;
+  return { id: user.id, role: user.role, csrf: session.csrf };
 }
+async function refreshSession({ allowLoggingOut = false } = {}) {
+  if (!visible() || (loggingOut && !allowLoggingOut)) throw staleResponse();
+  const session = await request(`${sessionBase}/session`, { account: true, verifyOwner: false });
+  if (!visible() || (loggingOut && !allowLoggingOut)) throw staleResponse();
+  const owner = sessionIdentity(session);
+  if (!owner) { signOut(); throw staleResponse(); }
+  const changed = Boolean(sessionOwner && !sameOwner(sessionOwner, owner));
+  if (changed) clearPrivate();
+  sessionOwner = owner; csrf = session.csrf; sessionCheckedAt = Date.now();
+  clearTimeout(expiryTimer);
+  expiryTimer = setTimeout(signOut, Math.max(0, Math.min(2147483647, session.expiresAt - Date.now())));
+  return { session, changed };
+}
+async function refreshAndContinue() {
+  const result = await refreshSession();
+  if (!result.changed) return true;
+  await start({ session: result.session }); return false;
+}
+async function confirmOwner(ticket, owner, account = false) {
+  if (!fresh(ticket, account) || !sameOwner(owner, sessionOwner) || !visible() || loggingOut) throw staleResponse();
+  // A response can belong to a new cookie even if this tab's own epoch did not
+  // change. Prove the current session before adopting it. Concurrent responses
+  // and cached thumbnails share a proof only before that GET is dispatched.
+  // A later response needs a later proof, even while the first is outstanding.
+  let check = ownerCheck;
+  if (!check || check.dispatched || !fresh(check.ticket, true) || !sameOwner(check.owner, owner)) {
+    check = { ticket: snapshot(), owner, dispatched: false, promise: null };
+    check.promise = Promise.resolve().then(() => { check.dispatched = true; return refreshSession(); })
+      .finally(() => { if (ownerCheck === check) ownerCheck = null; });
+    ownerCheck = check;
+  }
+  let result;
+  try { result = await check.promise; }
+  catch (error) {
+    if (error.stale || !fresh(ticket, account) || !sameOwner(owner, sessionOwner)) throw staleResponse();
+    // This may follow a committed POST. A failed proof is never a definitive
+    // rejection of that POST and must not release its original retry key.
+    throw Object.assign(new Error("session_proof_unavailable"), { status: error.status === 401 ? 401 : undefined });
+  }
+  if (result.changed) { await start({ session: result.session }); throw staleResponse(); }
+  if (!fresh(ticket, account) || !sameOwner(owner, sessionOwner) || !visible() || loggingOut) throw staleResponse();
+}
+
 async function refreshBroadcastAccess() {
   if (role === "client" && broadcastPreference) return;
   const ticket = snapshot();
@@ -124,7 +176,7 @@ async function handleError(error, state = null) {
   if (error.stale) return;
   if (state && !belongsTo(currentState(), state.id, state.epoch)) return;
   if (error.status === 403 && error.code === "csrf_failed") {
-    try { await refreshSession(); notice("Ta connexion a été actualisée. Réessaie ta demande.", true); }
+    try { if (await refreshAndContinue()) notice("Ta connexion a été actualisée. Réessaie ta demande.", true); }
     catch (refreshError) { if (refreshError.status === 401 || refreshError.status === 403) signOut(); else if (!refreshError.stale) notice(errorText(refreshError), true); }
     return;
   }
@@ -134,7 +186,7 @@ async function handleError(error, state = null) {
   }
   if (role === "admin" && error.status === 403) {
     try {
-      await refreshSession();
+      if (!await refreshAndContinue()) return;
       if (state && belongsTo(currentState(), state.id, state.epoch)) {
         const result = await request(`${conversationPath(state)}/messages?limit=1`, { state });
         mergeConversation(state, result.conversation); renderMeta(state);
@@ -171,6 +223,8 @@ function validMediaUrl(path, state) {
 }
 async function imageUrl(path, state) {
   if (!visible() || !validMediaUrl(path, state)) throw Object.assign(new Error("image_unavailable"), { stale: true });
+  const owner = sessionOwner; const ownerTicket = snapshot(state);
+  await confirmOwner(ownerTicket, owner);
   const cached = imageUrls.get(path); if (cached) return cached;
   const inFlight = imageRequests.get(path); if (inFlight) return inFlight.promise;
   const ticket = snapshot(state); const version = mediaVersion; const controller = new AbortController();
@@ -180,12 +234,16 @@ async function imageUrl(path, state) {
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
       const response = await fetch(path, { credentials: "same-origin", cache: "no-store", signal: controller.signal });
+      if (controller.signal.aborted || !fresh(ticket) || version !== mediaVersion || !sameOwner(owner, sessionOwner) || !visible() || loggingOut) throw staleResponse();
+      await confirmOwner(ticket, owner);
+      if (controller.signal.aborted || !fresh(ticket) || version !== mediaVersion || !sameOwner(owner, sessionOwner) || !visible() || loggingOut) throw staleResponse();
       if (!response.ok) {
         if (response.status === 401 || (role === "client" && response.status === 403)) signOut();
         throw Object.assign(new Error("image_unavailable"), { status: response.status });
       }
       if (response.headers.get("Content-Type")?.split(";")[0] !== "image/jpeg") throw new Error("invalid_image_response");
       const blob = await response.blob();
+      await confirmOwner(ticket, owner);
       if (blob.size > 10485760 || controller.signal.aborted || !fresh(ticket) || version !== mediaVersion || !visible()) throw Object.assign(new Error("stale_image"), { stale: true });
       const url = URL.createObjectURL(blob);
       if (!imageUrls.put(path, url, blob.size)) throw new Error("image_too_large");
@@ -239,7 +297,7 @@ function renderImageDraft(state) {
 }
 async function refreshMediaCapability() {
   try { const value = await request(`${mediaBase}/capabilities`); mediaEnabled = value.enabled === true; }
-  catch (error) { if (error.status === 404) mediaEnabled = false; else if (error.status === 401 || (role === "client" && error.status === 403)) { signOut(); throw error; } else mediaEnabled = false; }
+  catch (error) { if (error.stale) throw error; if (error.status === 404) mediaEnabled = false; else if (error.status === 401 || (role === "client" && error.status === 403)) { signOut(); throw error; } else mediaEnabled = false; }
 }
 async function refreshCrmCapability() {
   if (role !== "admin") return;
@@ -529,7 +587,7 @@ async function loadOlder() {
   finally { if (fresh(ticket)) { olderBusy = false; renderMeta(state); } }
 }
 async function fetchEvents(state) {
-  const requestKey = `${state.id}:${state.epoch}`;
+  const requestKey = `${state.id}:${state.epoch}:${visibilityGeneration}`;
   if (eventRequests.has(requestKey)) return false;
   eventRequests.add(requestKey);
   try {
@@ -555,14 +613,14 @@ async function poll() {
   if (!ready || !visible()) return;
   if (cycleRunning) { schedulePolling(300); return; }
   if (selectionLoading) { schedulePolling(); return; }
-  cycleRunning = true; const ticket = snapshot(); let catchup = false;
+  cycleRunning = true; const cycle = ++pollEpoch; const ticket = snapshot(); let catchup = false;
   try {
-    if (Date.now() - sessionCheckedAt > 60000) await refreshSession();
+    if (Date.now() - sessionCheckedAt > 60000 && !await refreshAndContinue()) return;
     if (role === "admin" && Date.now() - lastInboxRefresh >= 30000) await loadInbox(false, true);
     const state = currentState(); if (state) catchup = await fetchEvents(state);
     retryDelay = 3000; notice("");
   } catch (error) { if (!error.stale) { retryDelay = Math.min(30000, retryDelay * 2); await handleError(error, currentState()); } }
-  finally { cycleRunning = false; if (fresh(ticket)) schedulePolling(catchup ? 300 : retryDelay); }
+  finally { if (cycle === pollEpoch) { cycleRunning = false; if (fresh(ticket)) schedulePolling(catchup ? 300 : retryDelay); } }
 }
 function newClientId() { return [...crypto.getRandomValues(new Uint8Array(16))].map((byte) => byte.toString(16).padStart(2, "0")).join(""); }
 async function sendMessage(retry = false) {
@@ -638,11 +696,11 @@ async function logout() {
   if (logoutBusy) return; logoutBusy = true; loggingOut = true;
   const logoutCsrf = csrf; clearPrivate(); csrf = logoutCsrf;
   el("logout").disabled = true; notice("Déconnexion en cours…", false, "session-status");
-  try { await request(`${sessionBase}/logout`, { mutation: true }); signOut(); }
+  try { await request(`${sessionBase}/logout`, { mutation: true, verifyOwner: false }); signOut(); }
   catch (error) {
     if (error.status === 401) signOut();
     else {
-      if (error.status === 403) { try { await refreshSession(); } catch (refreshError) { if (refreshError.status === 401 || refreshError.status === 403) signOut(); } }
+      if (error.status === 403) { try { await refreshSession({ allowLoggingOut: true }); } catch (refreshError) { if (refreshError.status === 401 || refreshError.status === 403) signOut(); } }
       notice("La déconnexion n’a pas été confirmée. Réessaie avec le bouton Se déconnecter.", true, "session-status");
     }
   }
@@ -673,38 +731,72 @@ el("back-to-inbox").addEventListener("click", () => {
 el("logout").addEventListener("click", () => { void logout(); });
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
-    stopPolling(); visibilityGeneration += 1; abortRequests(); clearImages(); crm?.suspend();
+    stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
     sendBusy = false; olderBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
   } else if (ready) {
-    void refreshSession().then(async () => { if (crm) await crm.resume(); void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state); retryDelay = 3000; schedulePolling(0); }).catch((error) => handleError(error));
+    const ticket = snapshot(); notice("Vérification de la connexion…", false, "session-status");
+    void refreshAndContinue().then(async (continued) => {
+      if (!continued || !fresh(ticket, true) || !visible() || loggingOut) return;
+      if (crm) await crm.resume();
+      if (!fresh(ticket, true) || !visible() || loggingOut) return;
+      void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
+      el("workspace").hidden = false; notice("", false, "session-status"); retryDelay = 3000; schedulePolling(0);
+    }).catch((error) => {
+      if (error.stale || !fresh(ticket, true)) return;
+      if (error.status === 401 || error.status === 403) { signOut(); return; }
+      notice("La connexion n’a pas pu être vérifiée. Actualise la page pour réessayer.", true, "session-status");
+    });
   } else if (!loggingOut) void start();
 });
 window.addEventListener("pagehide", clearPrivate);
 window.addEventListener("pageshow", (event) => { if (event.persisted) location.reload(); });
-async function start() {
+async function start({ session = null } = {}) {
   if (!role) { clearPrivate(); notice("Cette page n’est pas disponible.", true, "session-status"); return; }
-  el("account-link").href = role === "admin" ? "/admin" : "/access"; el("account-link").textContent = role === "admin" ? "Gérer les accès" : "Mon accès";
-  try {
-    await refreshSession(); const capability = await request(`${chatBase}/capabilities`);
-    if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
-    if (role === "admin" && !document.getElementById("readiness-nav")) {
-      const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; nav.setAttribute("aria-label", "Administration");
-      const link = document.createElement("a"); link.href = "/admin/readiness"; link.textContent = "Préparer le site"; nav.append(link); el("inbox-title").parentElement.append(nav);
+  if (!visible() || loggingOut) return;
+  if (bootstrapTask && fresh(bootstrapTask.ticket, true)) return bootstrapTask.promise;
+  // Only an incomplete or replaced session bootstraps here. Healthy same-session
+  // visibility changes use refreshAndContinue and preserve uncertain send IDs.
+  clearPrivate();
+  const task = { ticket: snapshot(), promise: null }; bootstrapTask = task;
+  task.promise = (async () => {
+    el("account-link").href = role === "admin" ? "/admin" : "/access"; el("account-link").textContent = role === "admin" ? "Gérer les accès" : "Mon accès";
+    try {
+      if (session) {
+        const owner = sessionIdentity(session); if (!owner) { signOut(); return; }
+        sessionOwner = owner; csrf = session.csrf; sessionCheckedAt = Date.now();
+        expiryTimer = setTimeout(signOut, Math.max(0, Math.min(2147483647, session.expiresAt - Date.now())));
+      } else await refreshSession();
+      if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
+      const capability = await request(`${chatBase}/capabilities`, { account: true });
+      if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
+      if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
+      if (role === "admin" && !document.getElementById("readiness-nav")) {
+        const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; nav.setAttribute("aria-label", "Administration");
+        const link = document.createElement("a"); link.href = "/admin/readiness"; link.textContent = "Préparer le site"; nav.append(link); el("inbox-title").parentElement.append(nav);
+      }
+      await refreshMediaCapability();
+      if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
+      await refreshCrmCapability();
+      if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
+      el("workspace").classList.toggle("is-admin", role === "admin");
+      el("inbox").hidden = role !== "admin"; el("client-aside").hidden = role !== "client"; el("back-to-inbox").hidden = role !== "admin";
+      clearChat();
+      if (role === "admin") await loadInbox();
+      else {
+        const conversation = await request(`${chatBase}/conversation`, { account: true });
+        await selectConversation(conversation.id);
+      }
+      if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
+      ready = true; el("workspace").hidden = false; notice("", false, "session-status");
+      void refreshBroadcastAccess(); scheduleRead(); schedulePolling();
+    } catch (error) {
+      if (error.stale || !fresh(task.ticket, true)) return;
+      if (error.status === 401 || error.status === 403) { signOut(); return; }
+      clearPrivate(); notice(error.status === 404 ? "La messagerie n’est pas encore activée. Consulte ton accès pour revenir plus tard." : "La messagerie est indisponible. Recharge la page pour réessayer.", true, "session-status");
     }
-    ready = true; el("workspace").hidden = false; el("workspace").classList.toggle("is-admin", role === "admin");
-    void refreshBroadcastAccess();
-    await refreshMediaCapability();
-    await refreshCrmCapability();
-    el("inbox").hidden = role !== "admin"; el("client-aside").hidden = role !== "client"; el("back-to-inbox").hidden = role !== "admin";
-    notice("", false, "session-status"); clearChat();
-    if (role === "admin") { await loadInbox(); }
-    else { const conversation = await request(`${chatBase}/conversation`); await selectConversation(conversation.id); }
-    schedulePolling();
-  } catch (error) {
-    if (error.stale) return;
-    if (error.status === 401 || error.status === 403) { signOut(); return; }
-    clearPrivate(); notice(error.status === 404 ? "La messagerie n’est pas encore activée. Consulte ton accès pour revenir plus tard." : "La messagerie est indisponible. Recharge la page pour réessayer.", true, "session-status");
-  }
+  })();
+  try { return await task.promise; }
+  finally { if (bootstrapTask === task) bootstrapTask = null; }
 }
 clearChat(); void start();

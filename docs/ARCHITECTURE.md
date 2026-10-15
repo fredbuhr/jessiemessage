@@ -1,6 +1,8 @@
 # Technical architecture — draft
 
-## Current development: individual broadcasts and private preparation tools
+## Current development: private interface reliability
+
+Version 0.12 binds private browser state to the current user, role and session CSRF, checks identity before adopting private responses and prevents old operations from altering a newer page/session. It fixes recovery availability after transient errors and access administration cleanup when hidden. A bounded administrator activity feed contains the latest 20 campaigns plus all active campaigns (maximum 10), while the complete archive remains paginated. See [behavior, regression coverage and limits](private-ui-reliability.md). No migration, dependency, encryption key or approved identity asset changes in this lot.
 
 A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. Private flags enable administrator MFA and then invitations, registration, email verification and separate restricted client sessions. Verification and optional password-reset workers start with the listener. They share one SMTP transport; shutdown waits for both active batches, closes the transport once, then closes the pool. An age declaration never opens access; independently recorded assurance and administrator approval are required. A separate chat flag enables private text conversations, transactional authorization and encrypted message bodies. An additional media flag enables normalized JPEG photo storage, encrypted outside the checkout, with per-request owner/delivery authorization. CRM 0.8 adds administrator-only profiles, tags/groups and filtered contacts behind its own flag/key; it requires chat, while media remains optional. Recovery 0.9 requires enabled access/mail and adds no dependency on chat, media or CRM. External provider integrations remain pending.
 

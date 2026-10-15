@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.10; CI verified for this lot**. The official site email is `contact@jessiemessage.com`. This lot adds a private administrator preparation page and an SMTP connection/authentication check without sending mail. Registration, private text/photo chat, galleries, CRM and optional client recovery remain behind explicit configuration. Historical [recovery 0.9 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) passed 461 general tests and 190 real tests per MariaDB version. Actual mail delivery, browser/device acceptance and external access integrations remain pending. The default server stays neutral; diffusion and Web Push remain planned.
+Status: **development 0.12; private interface reliability corrections verified in CI**. The official site email is `contact@jessiemessage.com`. Administrator MFA, invitations, restricted client sessions, private text/photo chat, CRM, client recovery and opted-in individual broadcasts are implemented behind explicit configuration. Version 0.12 binds private interface state to the current account/session, clears the access administration when hidden, makes temporary recovery failures retryable and refreshes recent/active broadcasts independently of archive pages. Hosting, real SMTP reception, external age assurance and browser/device acceptance remain pending. The default server stays neutral. Web Push and automatic saved segments remain planned.
 
 ## Purpose
 
@@ -53,7 +53,7 @@ An invitation-only private messaging application between Jessie (creator/admin) 
 - Record delivery receipts at least by media ID + recipient ID; detect repeat sends.
 - Support limited-term access and admin tasks without displaying payment data.
 
-Queued bulk sends, automatic saved segments and promotional consent handling remain planned. CRM is available only to a currently authenticated administrator assigned to the conversation. The client receives no private nickname, label, reminder or note through their chat/access/media APIs. An expired or revoked client can retain an assigned administrator file without regaining chat access or permitting a new send. See [current CRM behavior and limits](private-crm.md).
+Individual broadcast queues and client opt-in are implemented in 0.11. The latest interface uses a bounded recent/active activity view plus paginated archives. Automatic saved segments remain planned. CRM is available only to a currently authenticated administrator assigned to the conversation. The client receives no private nickname, label, reminder or note through their chat/access/media APIs. An expired or revoked client can retain an assigned administrator file without regaining chat access or permitting a new send. See [current CRM behavior and limits](private-crm.md).
 
 ## Media deduplication
 

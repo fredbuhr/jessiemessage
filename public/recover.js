@@ -14,6 +14,7 @@ const password = element("recovery-password");
 const confirmation = element("recovery-confirmation");
 const status = element("recovery-status");
 const newRequest = element("recovery-new-request");
+const retryCapability = element("recovery-retry-capability");
 const controllers = new Set();
 let enabled = null;
 let capabilityEpoch = 0;
@@ -34,6 +35,8 @@ function render() {
   requestForm.hidden = enabled !== true || state.suspended || state.mode !== "request";
   resetForm.hidden = enabled !== true || state.suspended || state.mode !== "reset";
   newRequest.hidden = enabled !== true || state.suspended || !["reset", "accepted"].includes(state.mode);
+  retryCapability.hidden = enabled !== null || state.suspended || loadingCapability;
+  retryCapability.disabled = loadingCapability;
   for (const button of document.querySelectorAll('form button[type="submit"]')) button.disabled = Boolean(state.pending) || state.suspended;
   for (const input of document.querySelectorAll("form input")) input.readOnly = Boolean(state.pending);
   const resetting = state.mode === "reset";
@@ -132,6 +135,7 @@ newRequest.addEventListener("click", () => {
 async function loadCapability() {
   if (state.suspended || loadingCapability || enabled !== null) return;
   loadingCapability = true;
+  notice("Vérification de la disponibilité…"); render();
   const epoch = ++capabilityEpoch;
   const controller = new AbortController(); controllers.add(controller);
   const timeout = setTimeout(() => controller.abort(), 10000);
@@ -147,12 +151,13 @@ async function loadCapability() {
     notice(state.invalidLink ? "Ce lien est invalide. Demande un nouveau lien ci-dessous." : "", state.invalidLink);
   } catch {
     if (epoch !== capabilityEpoch || state.suspended) return;
-    enabled = false; notice("La récupération du mot de passe n’est pas disponible pour le moment. Réessaie dans quelques instants.", true); render();
+    enabled = null; notice("La disponibilité n’a pas pu être vérifiée. Réessaie dans quelques instants.", true); render();
   } finally {
     clearTimeout(timeout); controllers.delete(controller);
-    if (epoch === capabilityEpoch) loadingCapability = false;
+    if (epoch === capabilityEpoch) { loadingCapability = false; render(); }
   }
 }
+retryCapability.addEventListener("click", () => { void loadCapability(); });
 function hide() {
   interrupted = state.pending ?? interrupted;
   suspendRecovery(state); cancelRequests(); clearPasswords(); render();

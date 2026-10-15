@@ -382,6 +382,25 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
         return { campaign: await rawCampaign(connection, await campaignRow(connection, campaign.id, context.actor.id)), duplicate: false };
       });
     },
+    async activity({ tokenHash, now }) {
+      return withAdmin({ tokenHash, now }, async (connection, context) => {
+        // ID keysets remain useful for archives, while random IDs cannot
+        // discover recent work reliably. Keep this live view small and owned.
+        const recentIds = await connection.query(`SELECT id, created_at FROM broadcast_campaigns WHERE admin_id = ?
+          ORDER BY created_at DESC, id DESC LIMIT 20`, [context.actor.id]);
+        // Sort only IDs/dates, never the potentially large encrypted payload.
+        const recent = recentIds.length ? await connection.query(`SELECT * FROM broadcast_campaigns
+          WHERE admin_id = ? AND id IN (${placeholders(recentIds)})`, [context.actor.id, ...recentIds.map((row) => row.id)]) : [];
+        const active = await connection.query(`SELECT * FROM broadcast_campaigns WHERE admin_id = ?
+          AND status IN ('queued', 'running') ORDER BY created_at DESC, id DESC LIMIT 11`, [context.actor.id]);
+        if (active.length > 10) state();
+        const rows = new Map([...recent, ...active].map((row) => [row.id.toString("hex"), row]));
+        const ordered = [...rows.values()].sort((left, right) => timestamp(right.created_at) - timestamp(left.created_at) || Buffer.compare(right.id, left.id));
+        const campaigns = [];
+        for (const row of ordered) campaigns.push(await rawCampaign(connection, row));
+        return { campaigns };
+      });
+    },
     async list({ tokenHash, now, afterId = null, limit = 20 }) {
       if (afterId !== null) bytes(afterId); if (!Number.isInteger(limit) || limit < 1 || limit > 50) input();
       return withAdmin({ tokenHash, now }, async (connection, context) => {
