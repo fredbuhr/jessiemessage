@@ -446,13 +446,16 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
     });
 
     await t.test("offline initialization imports legacy active and deleted assets in bounded pages even above ceilings", async () => {
-      const fixture = await pair();
+      const fixture = await pair(); let microsecondAssetId;
       for (let index = 0; index < 105; index++) {
         const value = asset({ fullBytes: 1000, thumbnailBytes: 100 });
+        if (index === 0) microsecondAssetId = value.id;
+        const createdAt = index === 0 ? "2026-10-15 12:00:01.123456" : sqlDate(now);
+        const deletedAt = index === 0 ? "2026-10-15 12:00:01.124789" : index % 2 ? null : sqlDate(now);
         await connection.query(`INSERT INTO media_assets (id, owner_id, owner_role, storage_key, content_digest, active_digest,
           width, height, thumbnail_width, thumbnail_height, full_bytes, thumbnail_bytes, created_at, deleted_at)
           VALUES (?, ?, 'client', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [value.id, fixture.client.id, value.storageKey, value.digest,
-          index % 2 ? value.digest : null, value.width, value.height, value.thumbnailWidth, value.thumbnailHeight, value.fullBytes, value.thumbnailBytes, sqlDate(now), index % 2 ? null : sqlDate(now)]);
+          index % 2 ? value.digest : null, value.width, value.height, value.thumbnailWidth, value.thumbnailHeight, value.fullBytes, value.thumbnailBytes, createdAt, deletedAt]);
       }
       // Synthetic fixture reset recreates the pre-capacity upgrade condition.
       await connection.query("DELETE FROM media_storage_state");
@@ -462,7 +465,23 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       await connection.query("DELETE FROM media_storage_objects");
       const legacyCapacity = { ...capacity, ownerBytes: 82, totalBytes: 82 }, legacy = createMediaCapacityStore({ pool, capacity: legacyCapacity });
       const expected = (await connection.query("SELECT COUNT(*) AS count, SUM(full_bytes + thumbnail_bytes + 80) AS bytes FROM media_assets"))[0];
-      const initialized = await legacy.initialize({ now, offline: true });
+      // A prior fixture also created a photo at now + 1000. Future metadata
+      // must refuse initialization atomically rather than weaken lifetime checks.
+      await assert.rejects(legacy.initialize({ now, offline: true }), code("MEDIA_DATABASE_STATE"));
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM media_storage_state"))[0].count), 0);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM media_storage_objects"))[0].count), 0);
+      // Creation is already in the past here; a deletion 789 microseconds
+      // ahead must still refuse the bootstrap without leaving partial rows.
+      await assert.rejects(legacy.initialize({ now: now + 1124, offline: true }), code("MEDIA_DATABASE_STATE"));
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM media_storage_state"))[0].count), 0);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM media_storage_objects"))[0].count), 0);
+      const maximum = (await connection.query(`SELECT DATE_FORMAT(MAX(GREATEST(created_at, COALESCE(deleted_at, created_at))),
+        '%Y-%m-%d %H:%i:%s.%f') AS value FROM media_assets`))[0].value;
+      const initializedAt = Date.parse(maximum.slice(0, 23).replace(" ", "T") + "Z") + (maximum.slice(-3) === "000" ? 0 : 1);
+      assert.ok(initializedAt > now);
+      const initialized = await legacy.initialize({ now: initializedAt, offline: true });
+      const preserved = (await connection.query("SELECT created_at, updated_at FROM media_storage_objects WHERE id = ?", [microsecondAssetId]))[0];
+      assert.equal(preserved.created_at, "2026-10-15 12:00:01.123456"); assert.equal(preserved.updated_at, sqlDate(initializedAt));
       assert.equal(initialized.heldBytes, Number(expected.bytes)); assert.ok(initialized.heldBytes > legacyCapacity.totalBytes);
       const deleted = (await connection.query("SELECT COALESCE(SUM(full_bytes + thumbnail_bytes + 80), 0) AS bytes FROM media_assets WHERE deleted_at IS NOT NULL"))[0];
       assert.equal(initialized.pendingBytes, Number(deleted.bytes));

@@ -14,6 +14,12 @@ const sqlDate = (now) => {
   if (!Number.isSafeInteger(now) || now < 0 || now > 253402300799999) fail("MEDIA_INPUT");
   return new Date(now).toISOString().replace("T", " ").replace("Z", "000");
 };
+function historicalDate(value) {
+  if (typeof value !== "string" || value.length !== 26 || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}$/.test(value)) fail("MEDIA_DATABASE_STATE");
+  const milliseconds = value.slice(0, 23).replace(" ", "T") + "Z", instant = Date.parse(milliseconds);
+  if (!Number.isSafeInteger(instant) || instant < 0 || new Date(instant).toISOString() !== milliseconds) fail("MEDIA_DATABASE_STATE");
+  return value;
+}
 export function validateMediaCapacity(capacity) {
   if (!capacity || !Number.isSafeInteger(capacity.ownerBytes) || capacity.ownerBytes < 1
     || !Number.isSafeInteger(capacity.totalBytes) || capacity.totalBytes < capacity.ownerBytes
@@ -83,7 +89,7 @@ export function createMediaCapacityStore({ pool, capacity }) {
       });
     },
     async initialize({ now, offline } = {}) {
-      sqlDate(now); if (offline !== true) fail("MEDIA_INPUT");
+      const initializedAt = sqlDate(now); if (offline !== true) fail("MEDIA_INPUT");
       return run(async (connection) => {
         const existing = (await connection.query("SELECT id FROM media_storage_state WHERE id = 1 FOR UPDATE"))[0];
         if (existing) return snapshot(connection);
@@ -93,16 +99,21 @@ export function createMediaCapacityStore({ pool, capacity }) {
         let heldBytes = 0, imported = 0, afterId = null;
         while (true) {
           const assets = await connection.query(`SELECT id, owner_id, owner_role, storage_key, content_digest,
-            full_bytes, thumbnail_bytes, created_at, deleted_at FROM media_assets ${afterId === null ? "" : "WHERE id > ?"}
+            full_bytes, thumbnail_bytes, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s.%f') AS created_at,
+            DATE_FORMAT(deleted_at, '%Y-%m-%d %H:%i:%s.%f') AS deleted_at FROM media_assets ${afterId === null ? "" : "WHERE id > ?"}
             ORDER BY id LIMIT 100 FOR UPDATE`, afterId === null ? [] : [afterId]);
           if (imported + assets.length > 100000) fail("MEDIA_CAPACITY_UNAVAILABLE");
           for (const asset of assets) {
+            const createdAt = historicalDate(asset.created_at), deletedAt = asset.deleted_at === null ? null : historicalDate(asset.deleted_at);
+            // Compare all six SQL decimals. Truncating to milliseconds could
+            // accept future metadata or change its historical creation time.
+            if (createdAt > initializedAt || deletedAt !== null && (deletedAt < createdAt || deletedAt > initializedAt)) fail("MEDIA_DATABASE_STATE");
             const storedBytes = count(asset.full_bytes) + count(asset.thumbnail_bytes) + 80;
             heldBytes += storedBytes; if (!Number.isSafeInteger(heldBytes)) fail("MEDIA_DATABASE_STATE");
             await connection.query(`INSERT INTO media_storage_objects
               (id, owner_id, owner_role, storage_key, content_digest, full_bytes, thumbnail_bytes, stored_bytes, state, asset_id, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [asset.id, asset.owner_id, asset.owner_role, asset.storage_key, asset.content_digest,
-              asset.full_bytes, asset.thumbnail_bytes, storedBytes, asset.deleted_at === null ? "registered" : "cleanup_pending", asset.id, asset.created_at, sqlDate(now)]);
+              asset.full_bytes, asset.thumbnail_bytes, storedBytes, deletedAt === null ? "registered" : "cleanup_pending", asset.id, createdAt, initializedAt]);
           }
           imported += assets.length;
           if (assets.length < 100) break;
@@ -111,7 +122,7 @@ export function createMediaCapacityStore({ pool, capacity }) {
         // Legacy usage can already exceed the configured ceilings. Import it
         // faithfully; subsequent reservations remain blocked until it fits.
         await connection.query("INSERT INTO media_storage_state (id, owner_bytes, total_bytes, root_fingerprint, held_bytes, initialized_at) VALUES (1, ?, ?, ?, ?, ?)",
-          [capacity.ownerBytes, capacity.totalBytes, capacity.rootFingerprint, heldBytes, sqlDate(now)]);
+          [capacity.ownerBytes, capacity.totalBytes, capacity.rootFingerprint, heldBytes, initializedAt]);
         return snapshot(connection);
       });
     },
