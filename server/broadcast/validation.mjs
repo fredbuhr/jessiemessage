@@ -33,7 +33,7 @@ export function validateId(value) {
 
 export function validateVersion(value) {
   if (typeof value !== "string" || value.length < 1 || value.length > 20
-    || !/^(?:0|[1-9][0-9]*)$/u.test(value) || BigInt(value) > MAX_VERSION) invalid();
+    || !/^(?:0|[1-9][0-9]*)$/u.test(value) || BigInt(value) > MAX_VERSION || BigInt(value).toString() !== value) invalid();
   return value;
 }
 

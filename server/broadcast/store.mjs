@@ -89,315 +89,74 @@ function authoredChecks(sql) {
   return result;
 }
 const columns = {
-  "broadcast_preferences": {
-    "user_id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "enabled": [
-      "tinyint",
-      false
-    ],
-    "version": [
-      "bigint",
-      false
-    ],
-    "created_at": [
-      "datetime",
-      false
-    ],
-    "updated_at": [
-      "datetime",
-      false
-    ]
+  broadcast_preferences: {
+    user_id: ["varbinary", false, 16],
+    enabled: ["tinyint", false],
+    version: ["bigint", false],
+    created_at: ["datetime", false],
+    updated_at: ["datetime", false],
   },
-  "broadcast_campaigns": {
-    "id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "admin_id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "admin_role": [
-      "varchar",
-      false,
-      8,
-      "ascii_bin"
-    ],
-    "client_campaign_id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "mfa_version": [
-      "int",
-      false
-    ],
-    "payload_encrypted": [
-      "varchar",
-      false,
-      32000,
-      "ascii_bin"
-    ],
-    "request_fingerprint": [
-      "varbinary",
-      false,
-      32
-    ],
-    "media_id": [
-      "varbinary",
-      true,
-      16
-    ],
-    "allow_repeat_media": [
-      "tinyint",
-      false
-    ],
-    "status": [
-      "varchar",
-      false,
-      16,
-      "ascii_bin"
-    ],
-    "created_at": [
-      "datetime",
-      false
-    ],
-    "updated_at": [
-      "datetime",
-      false
-    ],
-    "expires_at": [
-      "datetime",
-      false
-    ]
+  broadcast_campaigns: {
+    id: ["varbinary", false, 16],
+    admin_id: ["varbinary", false, 16],
+    admin_role: ["varchar", false, 8, "ascii_bin"],
+    client_campaign_id: ["varbinary", false, 16],
+    mfa_version: ["int", false],
+    payload_encrypted: ["varchar", false, 32000, "ascii_bin"],
+    request_fingerprint: ["varbinary", false, 32],
+    media_id: ["varbinary", true, 16],
+    allow_repeat_media: ["tinyint", false],
+    status: ["varchar", false, 16, "ascii_bin"],
+    created_at: ["datetime", false],
+    updated_at: ["datetime", false],
+    expires_at: ["datetime", false],
   },
-  "broadcast_recipients": {
-    "campaign_id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "conversation_id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "client_id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "proposed_message_id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "client_message_id": [
-      "varbinary",
-      false,
-      16
-    ],
-    "delivered_message_id": [
-      "varbinary",
-      true,
-      16
-    ],
-    "state": [
-      "varchar",
-      false,
-      16,
-      "ascii_bin"
-    ],
-    "reason": [
-      "varchar",
-      true,
-      32,
-      "ascii_bin"
-    ],
-    "attempts": [
-      "smallint",
-      false
-    ],
-    "available_at": [
-      "datetime",
-      false
-    ],
-    "created_at": [
-      "datetime",
-      false
-    ],
-    "lease_token": [
-      "varbinary",
-      true,
-      16
-    ],
-    "lease_until": [
-      "datetime",
-      true
-    ],
-    "delivered_at": [
-      "datetime",
-      true
-    ]
-  }
+  broadcast_recipients: {
+    campaign_id: ["varbinary", false, 16],
+    conversation_id: ["varbinary", false, 16],
+    client_id: ["varbinary", false, 16],
+    proposed_message_id: ["varbinary", false, 16],
+    client_message_id: ["varbinary", false, 16],
+    delivered_message_id: ["varbinary", true, 16],
+    state: ["varchar", false, 16, "ascii_bin"],
+    reason: ["varchar", true, 32, "ascii_bin"],
+    attempts: ["smallint", false],
+    available_at: ["datetime", false],
+    created_at: ["datetime", false],
+    lease_token: ["varbinary", true, 16],
+    lease_until: ["datetime", true],
+    delivered_at: ["datetime", true],
+  },
 };
 const indexes = {
-  "broadcast_preferences": {
-    "PRIMARY": [
-      0,
-      "user_id"
-    ]
+  broadcast_preferences: {
+    PRIMARY: [0, "user_id"],
   },
-  "broadcast_campaigns": {
-    "PRIMARY": [
-      0,
-      "id"
-    ],
-    "broadcast_campaigns_idempotency": [
-      0,
-      "admin_id",
-      "client_campaign_id"
-    ],
-    "broadcast_campaigns_owner_page": [
-      1,
-      "admin_id",
-      "id"
-    ],
-    "broadcast_campaigns_ready": [
-      1,
-      "status",
-      "created_at",
-      "id"
-    ],
-    "broadcast_campaigns_media": [
-      1,
-      "media_id"
-    ]
+  broadcast_campaigns: {
+    PRIMARY: [0, "id"],
+    broadcast_campaigns_idempotency: [0, "admin_id", "client_campaign_id"],
+    broadcast_campaigns_owner_page: [1, "admin_id", "id"],
+    broadcast_campaigns_ready: [1, "status", "created_at", "id"],
+    broadcast_campaigns_media: [1, "media_id"],
   },
-  "broadcast_recipients": {
-    "PRIMARY": [
-      0,
-      "campaign_id",
-      "conversation_id"
-    ],
-    "broadcast_recipients_message": [
-      0,
-      "proposed_message_id"
-    ],
-    "broadcast_recipients_client_message": [
-      0,
-      "client_message_id"
-    ],
-    "broadcast_recipients_ready": [
-      1,
-      "state",
-      "available_at",
-      "campaign_id"
-    ],
-    "broadcast_recipients_lease": [
-      1,
-      "state",
-      "lease_until"
-    ],
-    "broadcast_recipients_client": [
-      1,
-      "client_id"
-    ],
-    "broadcast_recipients_delivered": [
-      1,
-      "conversation_id",
-      "delivered_message_id"
-    ]
-  }
+  broadcast_recipients: {
+    PRIMARY: [0, "campaign_id", "conversation_id"],
+    broadcast_recipients_message: [0, "proposed_message_id"],
+    broadcast_recipients_client_message: [0, "client_message_id"],
+    broadcast_recipients_ready: [1, "state", "available_at", "campaign_id"],
+    broadcast_recipients_lease: [1, "state", "lease_until"],
+    broadcast_recipients_client: [1, "client_id"],
+    broadcast_recipients_delivered: [1, "conversation_id", "delivered_message_id"],
+  },
 };
 const foreignKeys = [
-  [
-    "broadcast_preferences",
-    "broadcast_preferences_user_fk",
-    "client_auth_state",
-    [
-      "user_id"
-    ],
-    [
-      "user_id"
-    ]
-  ],
-  [
-    "broadcast_campaigns",
-    "broadcast_campaigns_owner_fk",
-    "users",
-    [
-      "admin_id",
-      "admin_role"
-    ],
-    [
-      "id",
-      "role"
-    ]
-  ],
-  [
-    "broadcast_campaigns",
-    "broadcast_campaigns_media_fk",
-    "media_assets",
-    [
-      "media_id"
-    ],
-    [
-      "id"
-    ]
-  ],
-  [
-    "broadcast_recipients",
-    "broadcast_recipients_campaign_fk",
-    "broadcast_campaigns",
-    [
-      "campaign_id"
-    ],
-    [
-      "id"
-    ]
-  ],
-  [
-    "broadcast_recipients",
-    "broadcast_recipients_conversation_fk",
-    "conversations",
-    [
-      "conversation_id"
-    ],
-    [
-      "id"
-    ]
-  ],
-  [
-    "broadcast_recipients",
-    "broadcast_recipients_client_fk",
-    "client_auth_state",
-    [
-      "client_id"
-    ],
-    [
-      "user_id"
-    ]
-  ],
-  [
-    "broadcast_recipients",
-    "broadcast_recipients_delivered_fk",
-    "messages",
-    [
-      "conversation_id",
-      "delivered_message_id"
-    ],
-    [
-      "conversation_id",
-      "id"
-    ]
-  ]
+  ["broadcast_preferences", "broadcast_preferences_user_fk", "client_auth_state", ["user_id"], ["user_id"]],
+  ["broadcast_campaigns", "broadcast_campaigns_owner_fk", "users", ["admin_id", "admin_role"], ["id", "role"]],
+  ["broadcast_campaigns", "broadcast_campaigns_media_fk", "media_assets", ["media_id"], ["id"]],
+  ["broadcast_recipients", "broadcast_recipients_campaign_fk", "broadcast_campaigns", ["campaign_id"], ["id"]],
+  ["broadcast_recipients", "broadcast_recipients_conversation_fk", "conversations", ["conversation_id"], ["id"]],
+  ["broadcast_recipients", "broadcast_recipients_client_fk", "client_auth_state", ["client_id"], ["user_id"]],
+  ["broadcast_recipients", "broadcast_recipients_delivered_fk", "messages", ["conversation_id", "delivered_message_id"], ["conversation_id", "id"]],
 ];
 
 export async function assertBroadcastSchema(pool) {

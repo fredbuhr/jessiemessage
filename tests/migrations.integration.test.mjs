@@ -64,7 +64,7 @@ test("real MariaDB migration and foundation constraints (synthetic disposable da
       changed[0].checksum = checksumSql(changed[0].sql);
       await assert.rejects(applyMigrations(connection, { database, migrations: changed }), errorCode("CHECKSUM_DRIFT"));
       await assert.rejects(applyMigrations(connection, { database, migrations: migrations.slice(0, -1) }), errorCode("HISTORY_DIVERGED"));
-      assert.equal((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count, 22n);
+      assert.equal((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count, 25n);
     });
     await t.test("client activation and access expiry require all recorded gate prerequisites", async () => {
       const { client } = await seed();
