@@ -1,0 +1,395 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createHash, randomBytes } from "node:crypto";
+import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, readdir, rm, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import sharp from "sharp";
+import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
+import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createRuntimePool } from "../server/db/runtime.mjs";
+import { createChatStore } from "../server/chat/store.mjs";
+import { createMediaStore } from "../server/media/store.mjs";
+import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
+import { createMediaStorage } from "../server/media/storage.mjs";
+import { normalizeImage } from "../server/media/image.mjs";
+import { makeTotpSecret, sealTotpSecret, tokenDigest } from "../server/auth/crypto.mjs";
+import { encryptMessageBody, messageFingerprint } from "../server/chat/crypto.mjs";
+import { sealNotes } from "../server/crm/crypto.mjs";
+import { sealVerificationPayload } from "../server/mail/crypto.mjs";
+import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
+import { sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
+
+const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
+const repositoryRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const sqlDate = (value) => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
+const id = () => randomBytes(16);
+const hash = (value) => createHash("sha256").update(value).digest("hex");
+const backupError = (error) => typeof error?.code === "string" && error.code.startsWith("BACKUP_");
+
+async function filesUnder(directory) {
+  const entries = [];
+  for (const item of await readdir(directory, { withFileTypes: true })) {
+    assert.equal(item.isSymbolicLink(), false, "synthetic backup fixtures never follow symlinks");
+    assert.equal(item.isFile(), true, "synthetic media fixtures contain regular files only");
+    const filename = path.join(directory, item.name), stat = await lstat(filename);
+    assert.equal(stat.mode & 0o777, 0o600); assert.equal(stat.nlink, 1);
+    entries.push([item.name, hash(await readFile(filename))]);
+  }
+  return entries.sort(([left], [right]) => left.localeCompare(right));
+}
+function cell(value) {
+  if (Buffer.isBuffer(value)) return { binary: value.toString("hex") };
+  if (typeof value === "bigint") return { bigint: String(value) };
+  if (value instanceof Date) return value.toISOString();
+  return value;
+}
+
+test("offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)", {
+  skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.", timeout: 300000,
+}, async (t) => {
+  const options = databaseOptions();
+  assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host), "backup integration tests require loopback");
+  assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "backup source must be an explicit disposable schema");
+  const restoreDatabase = process.env.JESSIEMESSAGE_RESTORE_TEST_DATABASE;
+  assert.equal(typeof restoreDatabase, "string", "a second disposable schema must be explicitly configured");
+  assert.match(restoreDatabase, /^jessiemessage_test(?:_[a-z0-9]+)*$/);
+  assert.notEqual(restoreDatabase, options.database, "the original schema must never become its own restore target");
+  assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
+  const targetEnv = { ...process.env, JESSIEMESSAGE_DB_NAME: restoreDatabase,
+    JESSIEMESSAGE_MIGRATION_DATABASE: restoreDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: restoreDatabase };
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
+  const tables = migrations.map((migration) => {
+    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
+    assert.ok(match, "cleanup accepts only the reviewed CREATE TABLE migrations"); return match[1];
+  });
+  const allowedTables = [...tables, "schema_migrations", "migration_probe"];
+  const qualified = (database, table) => {
+    assert.ok([options.database, restoreDatabase].includes(database)); assert.ok(allowedTables.includes(table));
+    return `\`${database}\`.\`${table}\``;
+  };
+  const sourceConnection = await connectDatabase(), targetConnection = await connectDatabase(targetEnv);
+  let sourcePool, targetPool, temporaryRoot;
+  let sourceRoot, targetRoot, manifestPath, originalDatabaseHash, originalFiles;
+  const now = Date.now() - 10000, clock = () => now + 5000;
+  const limits = { ownerBytes: 1048576, totalBytes: 2097152 };
+  const keys = Object.fromEntries(["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"].map((name) => [name, randomBytes(32)]));
+  async function reset(database) {
+    const actual = await sourceConnection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
+    assert.ok(actual.every((table) => allowedTables.includes(table.name)), "refuse cleanup when any unrelated table is present");
+    for (const table of [...tables].reverse().concat(["migration_probe", "schema_migrations"])) await sourceConnection.query(`DROP TABLE IF EXISTS ${qualified(database, table)}`);
+  }
+  async function databaseHash(database) {
+    const digest = createHash("sha256");
+    for (const table of [...tables, "schema_migrations"]) {
+      const rows = await sourceConnection.query(`SELECT * FROM ${qualified(database, table)}`);
+      const canonical = rows.map((row) => JSON.stringify(Object.fromEntries(Object.keys(row).sort().map((name) => [name, cell(row[name])])))).sort();
+      digest.update(table).update("\n").update(JSON.stringify(canonical)).update("\n");
+    }
+    return digest.digest("hex");
+  }
+  async function sourceUnchanged() {
+    assert.equal(await databaseHash(options.database), originalDatabaseHash, "backup source SQL remains byte-for-byte equivalent");
+    assert.deepEqual(await filesUnder(sourceRoot), originalFiles, "backup source ciphertext and filenames remain unchanged");
+  }
+  async function clone() {
+    await reset(restoreDatabase); await applyMigrations(targetConnection, { database: restoreDatabase, migrations });
+    await targetConnection.beginTransaction();
+    try {
+      await targetConnection.query(`DELETE FROM ${qualified(restoreDatabase, "schema_migrations")}`);
+      for (const table of [...tables, "schema_migrations"]) await targetConnection.query(`INSERT INTO ${qualified(restoreDatabase, table)} SELECT * FROM ${qualified(options.database, table)}`);
+      await targetConnection.commit();
+    } catch (error) { await targetConnection.rollback(); throw error; }
+    await rm(targetRoot, { recursive: true, force: true }); await mkdir(targetRoot, { mode: 0o700 });
+    for (const [name] of originalFiles) { await copyFile(path.join(sourceRoot, name), path.join(targetRoot, name)); await chmod(path.join(targetRoot, name), 0o600); }
+    assert.equal(await databaseHash(restoreDatabase), originalDatabaseHash, "the SQL clone includes the exact migration ledger timestamps");
+    assert.deepEqual(await filesUnder(targetRoot), originalFiles, "copied encrypted files are independent regular 0600 files");
+  }
+  try {
+    await reset(options.database); await reset(restoreDatabase);
+    await applyMigrations(sourceConnection, { database: options.database, migrations });
+    sourcePool = await createRuntimePool(process.env); targetPool = await createRuntimePool(targetEnv);
+    const parent = path.join(path.dirname(repositoryRoot), "audit"); await mkdir(parent, { recursive: true, mode: 0o700 });
+    temporaryRoot = await mkdtemp(path.join(parent, "backup-flow-")); await chmod(temporaryRoot, 0o700);
+    sourceRoot = path.join(temporaryRoot, "source"); targetRoot = path.join(temporaryRoot, "restore"); manifestPath = path.join(temporaryRoot, "checkpoint.json");
+    await mkdir(sourceRoot, { mode: 0o700 }); await mkdir(targetRoot, { mode: 0o700 });
+    const sourceStorage = await createMediaStorage({ root: sourceRoot, key: keys.mediaKey });
+    const sourceCapacity = { ...limits, rootFingerprint: await sourceStorage.fingerprint() };
+    const sourceCapacityStore = createMediaCapacityStore({ pool: sourcePool, capacity: sourceCapacity });
+    const chat = createChatStore(sourcePool), media = createMediaStore({ pool: sourcePool, chatStore: chat, capacity: sourceCapacity });
+    await sourceCapacityStore.initialize({ now, offline: true });
+    const admin = { id: id(), role: "admin", tokenHash: randomBytes(32), sessionId: id() };
+    const client = { id: id(), role: "client", tokenHash: randomBytes(32), sessionId: id(), email: "backup-client@example.invalid" };
+    const conversationId = id();
+    for (const user of [admin, client]) {
+      await sourceConnection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash, email_verified_at,
+        age_assured_at, access_approved_at, created_at, updated_at) VALUES (?, ?, 'active', ?, ?, 'synthetic-not-a-password', ?, ?, ?, ?, ?)`,
+      [user.id, user.role, `Synthetic backup ${user.role}`, user.email ?? "backup-admin@example.invalid",
+        user.role === "client" ? sqlDate(now) : null, user.role === "client" ? sqlDate(now) : null, user.role === "client" ? sqlDate(now) : null, sqlDate(now), sqlDate(now)]);
+      if (user.role === "admin") await sourceConnection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, ?, 1, -1, ?)",
+        [user.id, sealTotpSecret(makeTotpSecret(), keys.totpKey, user.id), sqlDate(now)]);
+      else await sourceConnection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [user.id, sqlDate(now)]);
+      await sourceConnection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [user.sessionId, user.id, user.tokenHash, sqlDate(now), sqlDate(now + 28800000)]);
+      if (user.role === "admin") await sourceConnection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [user.sessionId, sqlDate(now), sqlDate(now)]);
+      else await sourceConnection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)", [user.sessionId, sqlDate(now)]);
+    }
+    await sourceConnection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [conversationId, client.id, admin.id, sqlDate(now)]);
+    const actor = { role: "admin", tokenHash: admin.tokenHash, now };
+    async function addAsset(color, state, partial = false) {
+      const input = await sharp({ create: { width: 16, height: 12, channels: 3, background: color } }).png().toBuffer();
+      const normalized = await normalizeImage(input);
+      const asset = { id: id(), storageKey: randomBytes(32), digest: normalized.digest, width: normalized.width, height: normalized.height,
+        thumbnailWidth: normalized.thumbnailWidth, thumbnailHeight: normalized.thumbnailHeight, fullBytes: normalized.full.length, thumbnailBytes: normalized.thumbnail.length };
+      await media.reserveAsset({ ...actor, asset });
+      await sourceStorage.put({ assetId: asset.id, storageKey: asset.storageKey, full: normalized.full, thumbnail: normalized.thumbnail });
+      if (partial) await unlink(path.join(sourceRoot, `${asset.storageKey.toString("hex")}.thumb.enc`));
+      if (state !== "reserved") await media.registerAsset({ ...actor, now: state === "cleanup_pending" ? now + 1000 : now, asset });
+      if (state === "cleanup_pending") await media.deleteAsset({ ...actor, now: now + 2000, assetId: asset.id });
+      return asset;
+    }
+    const active = await addAsset("#804060", "registered"), reserved = await addAsset("#406080", "reserved"),
+      partial = await addAsset("#608040", "reserved", true), cleanup = await addAsset("#604080", "cleanup_pending");
+    const messageId = id(), body = JSON.stringify({ mediaId: active.id.toString("hex"), caption: "Synthetic restored encrypted message" });
+    await chat.sendMessage({ ...actor, conversationId, message: { id: messageId, clientMessageId: id(), mediaId: active.id,
+      bodyEncrypted: encryptMessageBody(body, keys.messageKey, { conversationId, messageId, senderId: admin.id }),
+      bodyFingerprint: messageFingerprint(body, keys.messageKey, { conversationId, senderId: admin.id }) } });
+    await sourceConnection.query(`INSERT INTO crm_profiles (admin_id, conversation_id, nickname, notes_encrypted, version, notes_revision, created_at, updated_at)
+      VALUES (?, ?, 'Synthetic restore record', ?, 1, 1, ?, ?)`, [admin.id, conversationId,
+      sealNotes("Synthetic restored private note", keys.crmKey, { adminId: admin.id, conversationId, version: "1" }), sqlDate(now), sqlDate(now)]);
+    const verificationId = id(), verificationJob = id(), verificationToken = randomBytes(32).toString("base64url");
+    await sourceConnection.query("INSERT INTO email_verifications (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)",
+      [verificationId, client.id, tokenDigest(verificationToken), sqlDate(now), sqlDate(now + 3600000)]);
+    await sourceConnection.query(`INSERT INTO mail_outbox (id, verification_id, recipient_user_id, payload_encrypted, available_at, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`, [verificationJob, verificationId, client.id,
+      sealVerificationPayload({ email: client.email, token: verificationToken }, keys.mailKey, verificationJob), sqlDate(now), sqlDate(now + 3600000), sqlDate(now)]);
+    const resetId = id(), resetJob = id(), resetToken = randomBytes(32).toString("base64url");
+    await sourceConnection.query(`INSERT INTO client_password_resets (id, user_id, token_hash, credential_version, email_hash, created_at, expires_at)
+      VALUES (?, ?, ?, 1, ?, ?, ?)`, [resetId, client.id, tokenDigest(resetToken), createHash("sha256").update(client.email, "utf8").digest(), sqlDate(now), sqlDate(now + 1800000)]);
+    await sourceConnection.query(`INSERT INTO password_reset_outbox (id, reset_id, recipient_user_id, payload_encrypted, available_at, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`, [resetJob, resetId, client.id,
+      sealResetPayload({ email: client.email, token: resetToken }, keys.mailKey, resetJob), sqlDate(now), sqlDate(now + 1800000), sqlDate(now)]);
+    const campaignId = id(), campaign = { title: "Synthetic restore campaign", body: "Synthetic future private delivery", mediaId: active.id.toString("hex"), allowRepeatMedia: false, conversationIds: [conversationId.toString("hex")] };
+    await sourceConnection.query(`INSERT INTO broadcast_campaigns (id, admin_id, client_campaign_id, mfa_version, payload_encrypted, request_fingerprint, media_id,
+      created_at, updated_at, expires_at) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?)`, [campaignId, admin.id, id(), sealPayload(campaign, keys.messageKey, { adminId: admin.id, campaignId }),
+      campaignFingerprint(campaign, keys.messageKey, { adminId: admin.id }), active.id, sqlDate(now), sqlDate(now), sqlDate(now + 86400000)]);
+    await sourceConnection.query(`INSERT INTO broadcast_recipients (campaign_id, conversation_id, client_id, proposed_message_id, client_message_id, available_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`, [campaignId, conversationId, client.id, id(), id(), sqlDate(now), sqlDate(now)]);
+    originalDatabaseHash = await databaseHash(options.database); originalFiles = await filesUnder(sourceRoot);
+    assert.equal(originalFiles.length, 7);
+    const { main } = await import("../scripts/backup.mjs");
+    const { createBackupRecoveryStore } = await import("../server/backup/recovery-store.mjs");
+    const output = [];
+    function dependencies(databaseName, root, extra = {}, changedKeys = {}) {
+      return { configure: () => {
+        const selected = Object.fromEntries(Object.entries({ ...keys, ...changedKeys }).map(([name, key]) => [name, Buffer.from(key)]));
+        return { databaseName, media: { enabled: true, key: selected.mediaKey, root, capacity: { ...limits }, minimumFreeBytes: 0 }, keys: selected };
+      }, createPool: createRuntimePool, outputStream: { write: (text) => output.push(text) }, clock, ...extra };
+    }
+    const run = (command, { env = targetEnv, root = targetRoot, databaseName = restoreDatabase, extra = {}, changedKeys = {}, file = manifestPath } = {}) =>
+      main([command, "--offline", "--manifest", file], env, dependencies(databaseName, root, extra, changedKeys));
+    async function targetStatus() {
+      const storage = await createMediaStorage({ root: targetRoot, key: keys.mediaKey });
+      return createMediaCapacityStore({ pool: targetPool, capacity: { ...limits, rootFingerprint: await storage.fingerprint() } }).status();
+    }
+    async function assertRestored() {
+      const status = await targetStatus(); assert.equal(status.pendingBytes, 0);
+      assert.equal(status.heldBytes, active.fullBytes + active.thumbnailBytes + 80);
+      const rows = await targetConnection.query("SELECT id, state FROM media_storage_objects ORDER BY id");
+      assert.equal(rows.find((row) => row.id.equals(active.id)).state, "registered");
+      for (const candidate of [reserved, partial, cleanup]) assert.equal(rows.find((row) => row.id.equals(candidate.id)).state, "released");
+      const filenames = await filesUnder(targetRoot); assert.equal(filenames.length, 2);
+      assert.ok(filenames.every(([name]) => name.startsWith(active.storageKey.toString("hex"))));
+      const targetStorage = await createMediaStorage({ root: targetRoot, key: keys.mediaKey });
+      assert.ok((await targetStorage.get({ assetId: active.id, storageKey: active.storageKey, variant: "full" })).length > 0);
+      assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS count FROM messages WHERE id = ?", [messageId]))[0].count), 1);
+      assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS count FROM message_media WHERE message_id = ?", [messageId]))[0].count), 1);
+      const campaignRow = (await targetConnection.query("SELECT status, media_id FROM broadcast_campaigns WHERE id = ?", [campaignId]))[0];
+      assert.equal(campaignRow.status, "queued"); assert.deepEqual(campaignRow.media_id, active.id);
+      assert.equal((await targetConnection.query("SELECT state FROM broadcast_recipients WHERE campaign_id = ?", [campaignId]))[0].state, "pending");
+      await sourceUnchanged();
+    }
+
+    await t.test("prepare binds real encrypted data and five keys without exporting secrets or changing the source", async () => {
+      const result = await run("prepare", { env: process.env, root: sourceRoot, databaseName: options.database });
+      assert.equal(result.command, "prepare"); assert.equal(result.verified, true); assert.equal(result.restored, false);
+      assert.match(result.manifestHash, /^[a-f0-9]{64}$/);
+      assert.equal((await lstat(manifestPath)).mode & 0o777, 0o600);
+      const text = await readFile(manifestPath, "utf8"); assert.ok(text.length > 0);
+      for (const key of Object.values(keys)) assert.equal(text.includes(key.toString("base64url")), false);
+      for (const secret of [client.email, body, "Synthetic restored private note", verificationToken, resetToken]) assert.equal(text.includes(secret), false);
+      await sourceUnchanged();
+    });
+
+    await t.test("verification requires a separate schema and private root and accepts an exact SQL/filesystem clone read-only", async () => {
+      await clone(); const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      await assert.rejects(targetStatus(), (error) => error.code === "MEDIA_CAPACITY_UNAVAILABLE");
+      await assert.rejects(run("verify", { env: process.env, root: sourceRoot, databaseName: options.database }), backupError);
+      await assert.rejects(run("restore", { env: process.env, root: targetRoot, databaseName: options.database }), backupError);
+      await assert.rejects(run("restore", { root: sourceRoot }), backupError);
+      const verified = await run("verify"); assert.equal(verified.verified, true); assert.equal(verified.restored, false);
+      assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore);
+      await sourceUnchanged();
+    });
+
+    await t.test("offline restore clears only known pending objects, rebinds the clone and preserves active messages and campaigns", async () => {
+      const restored = await run("restore"); assert.equal(restored.verified, true); assert.equal(restored.restored, true);
+      assert.equal(restored.releasedCandidates, 3); await assertRestored();
+      const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      assert.equal((await run("verify")).verified, true); assert.equal((await run("restore")).restored, true);
+      assert.equal(await databaseHash(restoreDatabase), before, "a completed restore replay changes no SQL timestamps or counters");
+      assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
+    });
+
+    await t.test("each wrong encryption key refuses verification before any clone or source mutation", async () => {
+      await clone(); const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      for (const key of Object.keys(keys)) await assert.rejects(run("verify", { changedKeys: { [key]: randomBytes(32) } }), backupError);
+      assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
+    });
+
+    await t.test("a correctly signed checkpoint with a mismatched key canary is refused before opening a database", async () => {
+      const { readManifest, createBackupManifest, writeManifest } = await import("../server/backup/manifest.mjs");
+      const original = await readManifest(manifestPath), canaryPath = path.join(temporaryRoot, "wrong-canary.json");
+      const manifest = createBackupManifest({ snapshot: original.payload.snapshot, identity: original.payload.identity,
+        keys: { ...keys, totpKey: randomBytes(32) }, now: clock() });
+      await writeManifest(canaryPath, manifest);
+      const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      let opened = false;
+      await assert.rejects(run("restore", { file: canaryPath, extra: { createPool: async (env) => {
+        opened = true; return createRuntimePool(env);
+      } } }), backupError);
+      assert.equal(opened, false, "the valid media-key signature cannot conceal a wrong TOTP canary");
+      assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
+    });
+
+    await t.test("unrelated user or exact migration-ledger drift blocks cleanup of an otherwise readable clone", async () => {
+      for (const changed of ["user", "ledger"]) {
+        await clone();
+        if (changed === "user") await targetConnection.query("UPDATE users SET pseudonym = 'Synthetic changed clone' WHERE id = ?", [client.id]);
+        else await targetConnection.query("UPDATE schema_migrations SET finished_at = DATE_ADD(finished_at, INTERVAL 1 MICROSECOND) WHERE version = 27");
+        const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+        await assert.rejects(run("restore"), backupError);
+        assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
+      }
+    });
+
+    await t.test("a lookalike foreign key pointing at the source schema is refused before any cleanup", async () => {
+      await clone();
+      await targetConnection.query("ALTER TABLE media_storage_objects DROP FOREIGN KEY media_storage_objects_owner_fk");
+      await targetConnection.query(`ALTER TABLE media_storage_objects ADD CONSTRAINT media_storage_objects_owner_fk
+        FOREIGN KEY (owner_id, owner_role) REFERENCES ${qualified(options.database, "users")} (id, role) ON UPDATE RESTRICT ON DELETE RESTRICT`);
+      try {
+        const parent = (await targetConnection.query(`SELECT REFERENCED_TABLE_SCHEMA AS parent_schema FROM information_schema.KEY_COLUMN_USAGE
+          WHERE CONSTRAINT_SCHEMA = ? AND TABLE_NAME = 'media_storage_objects' AND CONSTRAINT_NAME = 'media_storage_objects_owner_fk' LIMIT 1`, [restoreDatabase]))[0];
+        assert.equal(parent.parent_schema, options.database);
+        const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+        await assert.rejects(run("restore"), backupError);
+        assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
+      } finally {
+        await targetConnection.query("ALTER TABLE media_storage_objects DROP FOREIGN KEY media_storage_objects_owner_fk");
+        await targetConnection.query(`ALTER TABLE media_storage_objects ADD CONSTRAINT media_storage_objects_owner_fk
+          FOREIGN KEY (owner_id, owner_role) REFERENCES users (id, role) ON UPDATE RESTRICT ON DELETE RESTRICT`);
+      }
+    });
+
+    await t.test("an unexpected pre-existing SQL trigger blocks backup recovery before any candidate changes", async () => {
+      await clone();
+      await targetConnection.query(`CREATE TRIGGER synthetic_backup_preflight BEFORE UPDATE ON media_storage_state
+        FOR EACH ROW SET NEW.held_bytes = NEW.held_bytes`);
+      try {
+        const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot); let recoveryCreated = false;
+        await assert.rejects(run("restore", { extra: { makeRecoveryStore: ({ pool }) => {
+          recoveryCreated = true; return createBackupRecoveryStore({ pool });
+        } } }), backupError);
+        assert.equal(recoveryCreated, false);
+        assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
+      } finally { await targetConnection.query("DROP TRIGGER synthetic_backup_preflight"); }
+    });
+
+    await t.test("unknown files and encrypted staging copies block restoration without deleting them", async () => {
+      for (const kind of ["unknown", "staging"]) {
+        await clone();
+        const name = kind === "unknown" ? "synthetic-unknown.enc" : `.${active.storageKey.toString("hex")}.full.${id().toString("hex")}.tmp`;
+        const filename = path.join(targetRoot, name); await copyFile(path.join(targetRoot, `${active.storageKey.toString("hex")}.full.enc`), filename); await chmod(filename, 0o600);
+        const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+        await assert.rejects(run("restore"), backupError);
+        assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
+      }
+    });
+
+    await t.test("authenticated active-file corruption blocks verification before any pending cleanup", async () => {
+      await clone(); const filename = path.join(targetRoot, `${active.storageKey.toString("hex")}.full.enc`);
+      const corrupted = Buffer.from(await readFile(filename)); corrupted[corrupted.length - 1] ^= 1; await writeFile(filename, corrupted, { mode: 0o600 });
+      const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      await assert.rejects(run("restore"), backupError);
+      assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
+    });
+
+    await t.test("a lost committed candidate-release acknowledgement retries safely without double credit", async () => {
+      await clone(); let lost = false;
+      await assert.rejects(run("restore", { extra: { makeRecoveryStore: ({ pool }) => {
+        const store = createBackupRecoveryStore({ pool });
+        return { ...store, async releaseCandidate(input) {
+          const result = await store.releaseCandidate(input);
+          if (!lost) { lost = true; throw new Error("synthetic_lost_release_acknowledgement"); }
+          return result;
+        } };
+      } } }), backupError);
+      assert.equal(lost, true); await sourceUnchanged();
+      assert.equal((await run("restore")).restored, true); await assertRestored();
+    });
+
+    await t.test("a partial filesystem deletion retains its charge until a later offline retry completes cleanup", async () => {
+      await clone(); let interrupted = false, affected;
+      await assert.rejects(run("restore", { extra: { makeStorage: async (input) => {
+        const storage = await createMediaStorage(input);
+        return { ...storage, async remove({ storageKey }) {
+          if (!interrupted) {
+            interrupted = true; affected = storageKey;
+            await unlink(path.join(targetRoot, `${storageKey.toString("hex")}.full.enc`)).catch((error) => { if (error.code !== "ENOENT") throw error; });
+            throw new Error("synthetic_interrupted_physical_cleanup");
+          }
+          return storage.remove({ storageKey });
+        } };
+      } } }), backupError);
+      assert.equal(interrupted, true);
+      const held = (await targetConnection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0];
+      assert.ok(Number(held.held_bytes) > active.fullBytes + active.thumbnailBytes + 80);
+      assert.equal((await targetConnection.query("SELECT state FROM media_storage_objects WHERE storage_key = ?", [affected]))[0].state, "cleanup_pending");
+      await sourceUnchanged(); assert.equal((await run("restore")).restored, true); await assertRestored();
+    });
+
+    await t.test("a failed final root rebind rolls back atomically and a fresh retry preserves the already completed cleanup", async () => {
+      await clone();
+      let triggerInstalled = false;
+      try {
+        await assert.rejects(run("restore", { extra: { makeRecoveryStore: ({ pool }) => {
+          const store = createBackupRecoveryStore({ pool });
+          return { ...store, async rebind(input) {
+            // Install the fault only after the CLI's final clean-schema and
+            // snapshot checks; this tests the real rebind transaction rollback.
+            await targetConnection.query(`CREATE TRIGGER synthetic_backup_rebind BEFORE UPDATE ON media_storage_state FOR EACH ROW
+              BEGIN IF NEW.root_fingerprint <> OLD.root_fingerprint THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic rebind failure'; END IF; END`);
+            triggerInstalled = true; return store.rebind(input);
+          } };
+        } } }), backupError);
+      } finally { if (triggerInstalled) await targetConnection.query("DROP TRIGGER synthetic_backup_rebind"); }
+      assert.equal(triggerInstalled, true);
+      await assert.rejects(targetStatus(), (error) => error.code === "MEDIA_CAPACITY_UNAVAILABLE");
+      const binding = (await targetConnection.query("SELECT root_fingerprint, held_bytes FROM media_storage_state WHERE id = 1"))[0];
+      assert.deepEqual(binding.root_fingerprint, sourceCapacity.rootFingerprint);
+      assert.equal(Number(binding.held_bytes), active.fullBytes + active.thumbnailBytes + 80);
+      await sourceUnchanged(); assert.equal((await run("restore")).restored, true); await assertRestored();
+    });
+    assert.ok(output.length > 0);
+    for (const text of output) for (const key of Object.values(keys)) assert.equal(text.includes(key.toString("base64url")), false);
+  } finally {
+    try { if (sourcePool) await sourcePool.end(); if (targetPool) await targetPool.end(); }
+    finally {
+      try { await reset(restoreDatabase); await reset(options.database); }
+      finally {
+        try { await targetConnection.end(); await sourceConnection.end(); }
+        finally { if (temporaryRoot) await rm(temporaryRoot, { recursive: true, force: true }); }
+      }
+    }
+  }
+});

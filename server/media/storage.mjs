@@ -137,6 +137,17 @@ export async function createMediaStorage({ root, key } = {}) {
     } catch { throw new MediaStorageError(); }
   }
 
+  async function rootIdentity() {
+    try {
+      await assertReady();
+      // A bind-mounted alias has another path but the same physical directory.
+      const result = createHmac("sha256", secret).update("jessiemessage:media-root-physical:v1:\0", "ascii")
+        .update(identity.dev.toString()).update("\0").update(identity.ino.toString()).digest();
+      await assertReady();
+      return result;
+    } catch { throw new MediaStorageError(); }
+  }
+
   async function availableSpace() {
     try {
       await assertReady();
@@ -339,5 +350,5 @@ export async function createMediaStorage({ root, key } = {}) {
   }
 
   await assertReady();
-  return { assertReady, put, get, remove, fingerprint, availableSpace, scanEntries, inspectEntry };
+  return { assertReady, put, get, remove, fingerprint, rootIdentity, availableSpace, scanEntries, inspectEntry };
 }
