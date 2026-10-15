@@ -2,7 +2,9 @@
 
 Relevé du **15 octobre 2026**. Application **0.24.0**, révision exécutée **`55fb30aa191fb75f898e5818324c4ec35341ac74`**. Ce suivi prolonge le [premier démarrage neutre et sa contre-vérification](first-hosted-start.md). Le lot documentaire ne change pas le serveur exécuté.
 
-## État constaté
+**Suivi après intervention du propriétaire :** le compte de migration a été créé dans son navigateur, puis le Manager a confirmé lecture, écriture et administration sur cette seule base. La [saisie masquée du mot de passe et le migrateur en mémoire](private-migration-configuration.md) préparent la suite. Le mot de passe reste à saisir directement par l’opérateur et aucune migration n’a encore été appliquée. Un contrôle conservateur des permissions d’un ancêtre système a refusé le stockage privé persistant ; ce prérequis reste à résoudre séparément. Le relevé initial ci-dessous conserve l’état antérieur sans utilisateur.
+
+## État initial de la préparation SQL
 
 | Élément | Résultat |
 | --- | --- |
@@ -16,7 +18,7 @@ Relevé du **15 octobre 2026**. Application **0.24.0**, révision exécutée **`
 
 La base a été créée sans utilisateur associé, après vérification du récapitulatif des permissions vide. Le nom complet, le préfixe du compte, le hostname, les identifiants Manager et les chemins privés ne sont pas publiés. Les ressources ZTIKIX ne sont pas modifiées. Le dossier du modèle initial reste disponible pour repli du site neutre.
 
-Le formulaire d’un compte **de migration** est préparé avec un nom non secret ; son champ mot de passe reste vide et sa création n’est pas validée. Ce formulaire ne constitue pas un compte existant.
+Avant l’intervention du propriétaire, le formulaire du compte de migration était préparé sans mot de passe ni création validée. Le suivi ci-dessus consigne sa création ultérieure.
 
 ## Portée du test TLS
 

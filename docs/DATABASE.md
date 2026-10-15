@@ -10,6 +10,8 @@ The runner requires MariaDB 10.11 or later. CI exercises disposable MariaDB 10.1
 
 The pinned `mariadb` connector is used by the dedicated migration connection and, only when authentication is enabled, the bounded application pool. Pinned `otpauth` provides TOTP; pinned `nodemailer` provides SMTP with mandatory TLS. Passwords use Node's native scrypt. The default neutral HTTP server opens no database connection.
 
+The [masked migration helper](private-migration-configuration.md) accepts the password through a hidden Bash read and stdin, retaining credentials only in the operator process. It provides explicitly confirmed `status` and fresh `initialize` operations using the existing migration machinery; it neither stores the password nor configures the public HTTP server.
+
 ## Configuration
 
 Configure these values privately; never commit a populated environment file or copy production values into Actions, issues or screenshots. The command does not load `.env` files automatically.
