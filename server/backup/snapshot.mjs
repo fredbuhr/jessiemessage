@@ -178,7 +178,9 @@ function validateSnapshot(snapshot) {
     const object = byKey.get(asset.storage_key);
     if (!object || object.id !== asset.id || object.asset_id !== asset.id || object.owner_id !== asset.owner_id || object.content_digest !== asset.content_digest
       || object.full_bytes !== asset.full_bytes || object.thumbnail_bytes !== asset.thumbnail_bytes
-      || (asset.deleted_at === null ? object.state !== "registered" : !["cleanup_pending", "released"].includes(object.state))) fail();
+      || (asset.deleted_at === null ? object.state !== "registered" : !["cleanup_pending", "released"].includes(object.state)
+        || asset.deleted_at < object.created_at || asset.deleted_at > object.updated_at
+        || object.released_at !== null && object.released_at < asset.deleted_at)) fail();
   }
   for (const object of snapshot.objects) if (object.asset_id !== null && !assetIds.has(object.asset_id)) fail();
 }
@@ -200,7 +202,8 @@ export function assertBackupSnapshot({ expected, actual, mode, targetFingerprint
       const { state: originalState, updated_at: originalUpdated, released_at: originalReleased, ...immutableBefore } = before;
       const { state, updated_at, released_at, ...immutableAfter } = after;
       if (!same(immutableBefore, immutableAfter) || ![originalState, "cleanup_pending", "released"].includes(state)
-        || updated_at < originalUpdated || originalReleased !== null || state === originalState && (updated_at !== originalUpdated || released_at !== null)) fail("BACKUP_SNAPSHOT_DRIFT");
+        || updated_at < originalUpdated || originalReleased !== null || state === "released" && released_at < originalUpdated
+        || state === originalState && (updated_at !== originalUpdated || released_at !== null)) fail("BACKUP_SNAPSHOT_DRIFT");
     }
     if (actual.capacity.rootFingerprint !== expected.capacity.rootFingerprint && actual.objects.some((object) => ["reserved", "cleanup_pending"].includes(object.state))) fail("BACKUP_SNAPSHOT_DRIFT");
   }

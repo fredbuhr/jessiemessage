@@ -60,6 +60,15 @@ test("structural backup scan tolerates known pending absence, authentic active f
   const result = await verifyBackupStorage({ snapshot, storage: storageFor(snapshot, missing) });
   assert.equal(result.healthy, false); assert.deepEqual(result.issues, [{ code: "ACTIVE_FILE_MISSING" }]);
 });
+test("a resumed release cannot precede its signed cleanup or historical deletion", () => {
+  const expected = fixture(); expected.objects[2].updated_at = later;
+  const actual = clone(expected); actual.objects[2].state = "released"; actual.objects[2].released_at = d; actual.capacity.heldBytes -= 410;
+  assert.throws(() => assertBackupSnapshot({ expected, actual, mode: "recovery" }));
+  actual.objects[2].released_at = later;
+  assert.equal(assertBackupSnapshot({ expected, actual, mode: "recovery" }).heldBytes, 490);
+  actual.objects[2].released_at = d; actual.assets[1].deleted_at = later;
+  assert.throws(() => assertBackupSnapshot({ expected: actual, actual, mode: "exact" }));
+});
 test("unknown, staging, unsafe and released files block recovery without exposing identifiers", async () => {
   for (const entry of [{ kind: "unknown", rawName: "private@example.invalid" }, { kind: "staging", status: "structural_ok" }, { kind: "published", status: "unsafe" }]) {
     const snapshot = fixture(), report = await verifyBackupStorage({ snapshot, storage: storageFor(snapshot, new Set(), [entry]) });
