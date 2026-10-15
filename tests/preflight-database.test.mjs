@@ -29,7 +29,7 @@ const deferred = () => {
   return { promise, resolve, reject };
 };
 
-function fixture({ selected, cipher, grantRows, rows, query, release, end, rollback, getConnection, createPool, loadPlan, environment = env } = {}) {
+function fixture({ selected, cipher, grantRows, schemaRows, rows, query, release, end, rollback, getConnection, createPool, loadPlan, environment = env } = {}) {
   const calls = [];
   const connection = {
     async query(command) {
@@ -40,6 +40,7 @@ function fixture({ selected, cipher, grantRows, rows, query, release, end, rollb
       if (sql.startsWith("SELECT DATABASE()")) return selected ?? [{ database_name: env.JESSIEMESSAGE_DB_NAME, server_version: "10.11.14-MariaDB-private-build" }];
       if (sql.startsWith("SHOW SESSION")) return cipher ?? [{ Variable_name: "Ssl_cipher", Value: "TLS_AES_256_GCM_SHA384" }];
       if (sql === "SHOW GRANTS FOR CURRENT_USER") return grantRows ?? completeGrants();
+      if (sql.startsWith("SELECT SCHEMA_NAME")) return schemaRows ?? [{ schema_name: "information_schema" }, { schema_name: env.JESSIEMESSAGE_DB_NAME }];
       if (sql.startsWith("SELECT version")) return rows ?? history();
       return [];
     },
@@ -64,12 +65,14 @@ function safeDto(result) {
   assert.equal(typeof result.valid, "boolean");
   assert.deepEqual(result.checks.map(({ name }) => name), DATABASE_CHECK_NAMES);
   assert.ok(result.checks.every((check) => Object.keys(check).join() === "name,status" && ["pass", "fail", "not_checked"].includes(check.status)));
-  assert.deepEqual(Object.keys(result.privilegeObservation), ["profile", "source", "ledgerWritable", "tempTables", "tableLocks", "permanentDdl"]);
+  const pattern = result.privilegeObservation.profile === "infomaniak-shared-pattern";
+  assert.deepEqual(Object.keys(result.privilegeObservation), ["profile", "source", "ledgerWritable", "tempTables", "tableLocks", "permanentDdl",
+    ...(pattern ? ["databaseNamePattern", "visibleApplicationNamespace", "futureMatchingDatabasesUnproven"] : [])]);
   if (statuses(result).privileges !== "pass") {
     assert.equal(result.privilegeObservation.source, "unverified");
     for (const field of ["ledgerWritable", "tempTables", "tableLocks", "permanentDdl"]) assert.equal(result.privilegeObservation[field], null);
   }
-  assert.doesNotMatch(JSON.stringify(result), /private|password|MariaDB|SELECT|host|account|hash|error|cause|database\.example/i);
+  assert.doesNotMatch(JSON.stringify(result), /private|password|MariaDB|\bSELECT\b|host|account|hash|error|cause|database\.example/i);
 }
 
 test("SQL preflight drains one read-only snapshot and returns only fixed checks", async () => {
@@ -323,6 +326,58 @@ test("the shared profile rejects wildcards, other databases, table grants, missi
     const result = await inspectDatabase({ env: sharedEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
     assert.equal(statuses(result).privileges, "fail", JSON.stringify(grantRows));
     assert.equal(statuses(result).history, "pass"); safeDto(result);
+  }
+});
+
+const patternEnv = { ...env, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "infomaniak-shared-pattern" };
+const patternGrants = () => [usage, grants("`jessiemessage_test_ci`.*", "SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES")];
+
+test("the explicit pattern profile combines raw grant validation with a currently selected-only namespace", async () => {
+  const setup = fixture({ environment: patternEnv, grantRows: patternGrants() });
+  const result = await inspectDatabase({ env: patternEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+  assert.equal(result.valid, true); safeDto(result);
+  assert.deepEqual(result.privilegeObservation, {
+    profile: "infomaniak-shared-pattern", source: "show_grants_and_visible_schemata",
+    ledgerWritable: true, tempTables: true, tableLocks: true, permanentDdl: false,
+    databaseNamePattern: true, visibleApplicationNamespace: "selected_only", futureMatchingDatabasesUnproven: true,
+  });
+  const grantsIndex = setup.calls.findIndex(({ sql }) => sql === "SHOW GRANTS FOR CURRENT_USER");
+  assert.deepEqual(setup.calls.slice(grantsIndex, grantsIndex + 2), [
+    { sql: "SHOW GRANTS FOR CURRENT_USER", timeout: 2000 },
+    { sql: "SELECT SCHEMA_NAME AS schema_name FROM information_schema.SCHEMATA ORDER BY SCHEMA_NAME LIMIT 3", timeout: 2000 },
+  ]);
+});
+
+test("pattern namespace failures never claim current or future confinement and preserve diagnostic reads", async () => {
+  for (const schemaRows of [[], [{ schema_name: "information_schema" }], [{ schema_name: env.JESSIEMESSAGE_DB_NAME }, { schema_name: "another_private_database" }],
+    [{ schema_name: env.JESSIEMESSAGE_DB_NAME }, { schema_name: "jessiemessageXtest_ci" }],
+    [{ schema_name: "information_schema" }, { schema_name: env.JESSIEMESSAGE_DB_NAME }, { schema_name: "another_private_database" }]]) {
+    const setup = fixture({ environment: patternEnv, grantRows: patternGrants(), schemaRows });
+    const result = await inspectDatabase({ env: patternEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail"); safeDto(result);
+    assert.equal(statuses(result).history, "pass");
+    for (const field of ["databaseNamePattern", "visibleApplicationNamespace", "futureMatchingDatabasesUnproven"]) assert.equal(result.privilegeObservation[field], null);
+  }
+  const failedQuery = fixture({ environment: patternEnv, grantRows: patternGrants(), query(sql) { if (sql.startsWith("SELECT SCHEMA_NAME")) throw new Error("private schema enumeration failure"); } });
+  const result = await inspectDatabase({ env: patternEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, failedQuery.dependencies);
+  assert.equal(statuses(result).privileges, "fail"); assert.equal(statuses(result).cleanup, "pass"); safeDto(result);
+});
+
+test("the pattern profile does not accept escaped grants or silently alter the existing shared profile", async () => {
+  for (const [environment, grantRows] of [[patternEnv, sharedGrantRows()], [sharedEnv, patternGrants()]]) {
+    const setup = fixture({ environment, grantRows });
+    const result = await inspectDatabase({ env: environment, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail"); safeDto(result);
+    assert.equal(setup.calls.some(({ sql }) => sql?.startsWith("SELECT SCHEMA_NAME")), false);
+  }
+});
+
+test("pattern observations survive a later history or cleanup failure without approving launch", async () => {
+  for (const failure of [{ rows: [] }, { release() { throw new Error("private cleanup failure"); } }]) {
+    const setup = fixture({ ...failure, environment: patternEnv, grantRows: patternGrants() });
+    const result = await inspectDatabase({ env: patternEnv, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(result.valid, false); assert.equal(statuses(result).privileges, "pass");
+    assert.equal(result.privilegeObservation.visibleApplicationNamespace, "selected_only"); safeDto(result);
   }
 });
 

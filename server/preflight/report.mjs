@@ -27,15 +27,25 @@ function envelope(command, status, checks) {
 
 function privilegeObservation(result, checks) {
   const observation = data(result, "privilegeObservation"), profile = data(observation, "profile"), source = data(observation, "source");
-  if (![null, "strict", "infomaniak-shared"].includes(profile) || !["unverified", "show_grants"].includes(source)) invalid();
-  const observed = source === "show_grants";
+  if (![null, "strict", "infomaniak-shared", "infomaniak-shared-pattern"].includes(profile)
+    || !["unverified", "show_grants", "show_grants_and_visible_schemata"].includes(source)) invalid();
+  const pattern = profile === "infomaniak-shared-pattern";
+  const observed = source !== "unverified";
   if (observed !== (checks.find((check) => check.name === "privileges")?.status === "pass") || (observed && profile === null)) invalid();
+  if (observed && source !== (pattern ? "show_grants_and_visible_schemata" : "show_grants")) invalid();
   const rebuilt = { profile, source };
   for (const name of ["ledgerWritable", "tempTables", "tableLocks", "permanentDdl"]) {
     const value = data(observation, name);
-    const expected = observed ? name !== "permanentDdl" && profile === "infomaniak-shared" : null;
+    const expected = observed ? name !== "permanentDdl" && profile !== "strict" : null;
     if (value !== expected) invalid();
     rebuilt[name] = value;
+  }
+  if (pattern) {
+    for (const [name, passing] of [["databaseNamePattern", true], ["visibleApplicationNamespace", "selected_only"], ["futureMatchingDatabasesUnproven", true]]) {
+      const value = data(observation, name);
+      if (value !== (observed ? passing : null)) invalid();
+      rebuilt[name] = value;
+    }
   }
   return rebuilt;
 }

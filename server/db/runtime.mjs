@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { AuthStoreError } from "../auth/store.mjs";
+import { inspectSharedRuntimePatternPrivileges } from "./shared-runtime-privileges.mjs";
 
 const failConfig = () => { throw new AuthStoreError("AUTH_DATABASE_CONFIG", "Provide explicit runtime database credentials and exact application database confirmation."); };
 
@@ -37,6 +38,7 @@ export function runtimeDatabaseOptions(env = process.env) {
 
 export async function createRuntimePool(env = process.env, { createPool } = {}) {
   const options = runtimeDatabaseOptions(env);
+  const inspectPattern = env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE === "infomaniak-shared-pattern";
   let pool;
   try {
     if (env.JESSIEMESSAGE_DB_TLS_CA_PATH) options.ssl.ca = await readFile(env.JESSIEMESSAGE_DB_TLS_CA_PATH, "utf8");
@@ -76,6 +78,11 @@ export async function createRuntimePool(env = process.env, { createPool } = {}) 
       try {
         connection = await pool.getConnection();
         await connection.query("SET time_zone = '+00:00'");
+        // This explicitly selected shared-host profile accepts a real name
+        // pattern. Recheck its grants and currently visible namespace on every
+        // acquisition, before any caller can use the connection. This does not
+        // turn the grant into a literal or certify future matching databases.
+        if (inspectPattern && !await inspectSharedRuntimePatternPrivileges(connection, options.database)) throw connectionFailure();
       } catch {
         if (connection) { try { await releaseConnection(connection); } catch {} }
         outstanding -= 1;

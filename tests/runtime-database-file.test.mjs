@@ -29,7 +29,7 @@ test("runtime database files accept exact data fields and clone without changing
   result.password = ""; assert.notEqual(source.password, "");
   for (const host of ["127.0.0.1", "::1", "sql.example.invalid"])
     assert.equal(validateRuntimeDatabaseConfiguration({ ...source, host }).host, host);
-  for (const privilegeProfile of ["strict", "infomaniak-shared"])
+  for (const privilegeProfile of ["strict", "infomaniak-shared", "infomaniak-shared-pattern"])
     assert.equal(validateRuntimeDatabaseConfiguration({ ...source, privilegeProfile }).privilegeProfile, privilegeProfile);
   for (const password of [" ", "x".repeat(4096), "é".repeat(2048), "😀".repeat(1024)])
     assert.equal(validateRuntimeDatabaseConfiguration({ ...source, password }).password, password);
@@ -43,7 +43,7 @@ test("runtime database files reject ambiguous targets, accessors, extensions and
     ...["", "other.base", "x".repeat(65)].map((database) => ({ ...source, database })),
     ...["", "user@host", "x".repeat(81)].map((user) => ({ ...source, user })),
     ...["", "a\0b", "a\rb", "a\nb", "\ud800", "x".repeat(4097), "é".repeat(2049), "\x01".repeat(4096)].map((password) => ({ ...source, password })),
-    ...["", "unknown", undefined].map((privilegeProfile) => ({ ...source, privilegeProfile })),
+    ...["", "unknown", "infomaniak-shared-pattern ", "INFOMANIAK-SHARED-PATTERN", undefined].map((privilegeProfile) => ({ ...source, privilegeProfile })),
     { ...source, JESSIEMESSAGE_ENABLE_AUTH: "1" }, { ...source, insecure: true }, { ...source, mfaKey: "private-key" },
     { ...source, [Symbol("private")]: "secret" }, Object.assign(Object.create({ inherited: true }), source)];
   let getterCalled = false;
@@ -66,6 +66,17 @@ test("the derived environment keeps TLS defaults and disables all private featur
     "JESSIEMESSAGE_DB_PASSWORD", "JESSIEMESSAGE_MIGRATION_DATABASE", "JESSIEMESSAGE_MFA_KEY", "PORT", "PATH"])
     assert.equal(Object.hasOwn(env, name), false);
   env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD = ""; assert.notEqual(source.password, "");
+});
+
+test("the explicit current-namespace pattern profile requires underscores and preserves all disabled feature flags", () => {
+  const selected = { ...config(), privilegeProfile: "infomaniak-shared-pattern" }, env = runtimeDatabaseEnvironment(selected);
+  assert.deepEqual(validateRuntimeDatabaseConfiguration(selected), selected);
+  assert.equal(env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE, "infomaniak-shared-pattern");
+  assert.deepEqual(Object.entries(env).filter(([name]) => name.startsWith("JESSIEMESSAGE_ENABLE_")).map(([, value]) => value), Array(8).fill("0"));
+  assert.throws(() => validateRuntimeDatabaseConfiguration({ ...selected, database: "RECIPE" }), unavailable);
+  assert.throws(() => runtimeDatabaseEnvironment({ ...selected, privilegeProfile: "unrecognized-pattern" }), unavailable);
+  for (const privilegeProfile of ["strict", "infomaniak-shared"])
+    assert.equal(validateRuntimeDatabaseConfiguration({ ...selected, database: "RECIPE", privilegeProfile }).database, "RECIPE");
 });
 
 test("diagnostic records are separately typed, deeply cloned and cannot act as runtime configuration", () => {
@@ -337,6 +348,18 @@ test("normal and diagnostic readers refuse each other's on-disk formats even und
   await chmod(diagnosticFile, 0o600);
   await writeFile(diagnosticFile, Buffer.alloc(16385, 32));
   await assert.rejects(readRuntimeDiagnosticConfiguration(f.directory), unavailable);
+});
+
+test("pattern-profile credentials round-trip independently through both private file types", { skip: !supported }, async (t) => {
+  const f = await fixture(t), selected = { ...config(), privilegeProfile: "infomaniak-shared-pattern" },
+    record = { ...diagnostic(), credentials: selected };
+  await writeRuntimeDiagnosticConfiguration(f.directory, record);
+  await assert.rejects(readRuntimeDatabaseConfiguration(f.directory), unavailable);
+  assert.deepEqual(await readRuntimeDiagnosticConfiguration(f.directory), record);
+  await writeRuntimeDatabaseConfiguration(f.directory, selected);
+  const loaded = await readRuntimeDatabaseConfiguration(f.directory);
+  assert.deepEqual(loaded, selected);
+  assert.equal(runtimeDatabaseEnvironment(loaded).JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE, "infomaniak-shared-pattern");
 });
 
 test("failed diagnostic capture cleans only its owned temporary inode and closes all descriptors", { skip: !supported }, async (t) => {

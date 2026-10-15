@@ -178,3 +178,5 @@ jobs:
           JESSIEMESSAGE_PREFLIGHT_DB_PASSWORD: ci-preflight-only-not-a-secret
           JESSIEMESSAGE_SHARED_PREFLIGHT_DB_USER: jessiemessage_shared_test
           JESSIEMESSAGE_SHARED_PREFLIGHT_DB_PASSWORD: ci-shared-only-not-a-secret
+          # Disposable root fixture used only to demonstrate wildcard collisions.
+          JESSIEMESSAGE_PATTERN_TEST_ROOT_PASSWORD: ci-only-root-not-a-secret

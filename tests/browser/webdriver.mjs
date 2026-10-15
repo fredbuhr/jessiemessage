@@ -44,6 +44,60 @@ function localOrigin(value) {
   return url.origin;
 }
 
+// The driver can create Chrome before POST /session returns its session id.
+// Killing only the driver then leaves descendants holding its output pipes.
+// Keep ownership in this closure: callers cannot supply a PID or process group.
+export function spawnWebDriverProcess(command, args) {
+  const grouped = process.platform === "linux";
+  const child = spawn(command, args, { detached: grouped, stdio: ["ignore", "pipe", "pipe"] });
+  const pid = child.pid;
+  const owned = Number.isSafeInteger(pid) && pid > 1 && pid !== process.pid;
+  let exited = false, pipesClosed = false, closing;
+  child.once("error", () => { if (!owned) exited = true; });
+  child.once("exit", () => { exited = true; });
+  child.once("close", () => { pipesClosed = true; });
+  const present = () => {
+    if (!owned) return false;
+    if (!grouped) return !exited;
+    try { process.kill(-pid, 0); return true; }
+    catch (error) { if (error.code === "ESRCH") return false; throw error; }
+  };
+  const signal = (name) => {
+    if (!owned) return;
+    try { if (grouped) process.kill(-pid, name); else if (!exited) child.kill(name); }
+    catch (error) { if (error.code !== "ESRCH") throw error; }
+  };
+  const waitFor = async (condition, milliseconds) => {
+    const deadline = Date.now() + milliseconds;
+    while (!condition()) {
+      if (Date.now() >= deadline) return false;
+      await delay(Math.min(25, deadline - Date.now()));
+    }
+    return true;
+  };
+  const close = () => {
+    if (closing) return closing;
+    closing = (async () => {
+      try {
+        signal("SIGTERM");
+        if (!await waitFor(() => !present(), 3000)) signal("SIGKILL");
+        // A dead descendant may remain a zombie until its new parent reaps it;
+        // wait for our own child and inherited stdio closure, rather than
+        // treating kill(group, 0) as proof that a member is still executing.
+        if (!await waitFor(() => exited && pipesClosed, 1000)) throw new Error();
+      } catch {
+        throw new Error("WebDriver process cleanup could not be completed");
+      } finally {
+        // Escaped/crashed descendants must not keep the test runner alive by
+        // retaining inherited pipe handles after the bounded teardown.
+        child.stdout?.destroy(); child.stderr?.destroy(); child.unref();
+      }
+    })();
+    return closing;
+  };
+  return { child, close };
+}
+
 export async function startWebDriver() {
   let driverPath = process.env.CHROMEWEBDRIVER ?? "/usr/local/share/chromedriver-linux64";
   if ((await stat(driverPath).catch(() => null))?.isDirectory()) driverPath = join(driverPath, "chromedriver");
@@ -53,7 +107,8 @@ export async function startWebDriver() {
   const driverUrl = `http://127.0.0.1:${port}`;
   const sessions = new Set();
   let driverLog = "", driverExited = false, closed = false;
-  const child = spawn(driverPath, [`--port=${port}`, "--allowed-ips=127.0.0.1"], { stdio: ["ignore", "pipe", "pipe"] });
+  const processOwner = spawnWebDriverProcess(driverPath, [`--port=${port}`, "--allowed-ips=127.0.0.1"]);
+  const { child } = processOwner;
   const capture = (chunk) => { driverLog = (driverLog + chunk.toString()).slice(-8000); };
   child.stdout.on("data", capture); child.stderr.on("data", capture);
   child.on("error", (error) => { driverExited = true; capture(error.message); });
@@ -71,14 +126,7 @@ export async function startWebDriver() {
     if (closed) return; closed = true;
     for (const sessionId of sessions) { try { await request("DELETE", `/session/${sessionId}`); } catch {} }
     sessions.clear();
-    if (!driverExited) {
-      child.kill("SIGTERM");
-      await Promise.race([new Promise((resolveExit) => child.once("exit", resolveExit)), delay(3000)]);
-      if (!driverExited) {
-        child.kill("SIGKILL");
-        await Promise.race([new Promise((resolveExit) => child.once("exit", resolveExit)), delay(1000)]);
-      }
-    }
+    await processOwner.close();
   }
   try {
     await waitUntil(async () => {

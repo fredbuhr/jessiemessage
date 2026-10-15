@@ -1,6 +1,7 @@
 import { stat } from "node:fs/promises";
 import { createRuntimePool, runtimeDatabaseOptions } from "../db/runtime.mjs";
 import { inspectHistory, loadMigrations, validateMigrationPlan } from "../db/migrations.mjs";
+import { sharedRuntimePrivileges, inspectSharedRuntimePatternPrivileges } from "../db/shared-runtime-privileges.mjs";
 
 export const DATABASE_CHECK_NAMES = Object.freeze([
   "config", "connection", "identity", "engine", "transport", "privileges", "history", "schema_reads", "cleanup",
@@ -39,7 +40,6 @@ const projections = Object.freeze({
 });
 const tables = Object.keys(projections);
 const dml = ["SELECT", "INSERT", "UPDATE", "DELETE"];
-const sharedRights = [...dml, "CREATE TEMPORARY TABLES", "LOCK TABLES"];
 const maxGrants = 128;
 const maxGrantLength = 16384;
 
@@ -57,43 +57,8 @@ function identifier(value) {
   return /^[a-zA-Z0-9_]+$/.test(plain) ? plain : null;
 }
 
-// Database-level GRANT names are patterns even when backtick quoted. Accept
-// only literal alphanumerics and escaped underscores; no other escape, raw
-// underscore or percent may widen the confirmed database's scope.
-function exactDatabasePattern(value) {
-  const plain = value.startsWith("`") ? value.slice(1, -1) : value;
-  return /^(?:[a-zA-Z0-9]|\\_)+$/.test(plain) ? plain.replaceAll("\\_", "_") : null;
-}
-
-function sharedPrivileges(rows, database) {
-  if (!Array.isArray(rows) || !rows.length || rows.length > maxGrants) return false;
-  const rights = new Set(); let usage = false, totalLength = 0;
-  for (const row of rows) {
-    if (!row || typeof row !== "object" || Object.keys(row).length !== 1) return false;
-    const statement = Object.values(row)[0];
-    if (typeof statement !== "string" || statement.length > maxGrantLength
-      || (totalLength += statement.length) > 131072 || /[\r\n\0]/.test(statement)) return false;
-    // Native SHOW GRANTS account quoting and optional native-password evidence
-    // on global USAGE only. Unknown suffixes (including delegation) fail closed.
-    const grant = /^GRANT\s+([A-Z ,]+)\s+ON\s+(`[^`]+`|\*|[a-zA-Z0-9_\\]+)\.(\*)\s+TO\s+(?:'(?:[^'\\]|\\.|'')*'|`(?:[^`\\]|\\.|``)*`)@(?:'(?:[^'\\]|\\.|'')*'|`(?:[^`\\]|\\.|``)*`)(.*)$/i.exec(statement);
-    if (!grant) return false;
-    const privileges = grant[1].split(",").map((part) => part.trim().toUpperCase());
-    if (!privileges.length || new Set(privileges).size !== privileges.length) return false;
-    if (grant[2] === "*") {
-      const suffix = /^(?: IDENTIFIED BY PASSWORD '[*a-fA-F0-9]+')?(?: REQUIRE SSL)?(?: WITH MAX_USER_CONNECTIONS (0|[1-9][0-9]{0,9}))?$/.exec(grant[4]);
-      if (privileges.length !== 1 || privileges[0] !== "USAGE"
-        || !suffix || (suffix[1] !== undefined && Number(suffix[1]) > 2147483647)) return false;
-      usage = true; continue;
-    }
-    if (grant[4] !== "" || exactDatabasePattern(grant[2]) !== database
-      || privileges.some((privilege) => !sharedRights.includes(privilege))) return false;
-    for (const privilege of privileges) rights.add(privilege);
-  }
-  return usage && sharedRights.every((privilege) => rights.has(privilege));
-}
-
 function runtimePrivileges(rows, database, profile) {
-  if (profile === "infomaniak-shared") return sharedPrivileges(rows, database);
+  if (profile === "infomaniak-shared") return sharedRuntimePrivileges(rows, database);
   if (!Array.isArray(rows) || !rows.length || rows.length > maxGrants) return false;
   const rights = new Map([...tables, "schema_migrations"].map((table) => [table, new Set()]));
   let totalLength = 0;
@@ -147,17 +112,22 @@ export async function inspectDatabase({ env = process.env, databaseName } = {}, 
     valid: DATABASE_CHECK_NAMES.every((name) => states.get(name) === "pass"),
     checks: DATABASE_CHECK_NAMES.map((name) => ({ name, status: states.get(name) })),
     privilegeObservation: {
-      profile, source: privilegesObserved ? "show_grants" : "unverified",
-      ledgerWritable: privilegesObserved ? profile === "infomaniak-shared" : null,
-      tempTables: privilegesObserved ? profile === "infomaniak-shared" : null,
-      tableLocks: privilegesObserved ? profile === "infomaniak-shared" : null,
+      profile, source: privilegesObserved ? profile === "infomaniak-shared-pattern" ? "show_grants_and_visible_schemata" : "show_grants" : "unverified",
+      ledgerWritable: privilegesObserved ? profile !== "strict" : null,
+      tempTables: privilegesObserved ? profile !== "strict" : null,
+      tableLocks: privilegesObserved ? profile !== "strict" : null,
       permanentDdl: privilegesObserved ? false : null,
+      ...(profile === "infomaniak-shared-pattern" ? {
+        databaseNamePattern: privilegesObserved ? true : null,
+        visibleApplicationNamespace: privilegesObserved ? "selected_only" : null,
+        futureMatchingDatabasesUnproven: privilegesObserved ? true : null,
+      } : {}),
     },
   });
   let options;
   try {
     const requested = env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE === undefined ? "strict" : env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE;
-    if (!["strict", "infomaniak-shared"].includes(requested)) throw new Error();
+    if (!["strict", "infomaniak-shared", "infomaniak-shared-pattern"].includes(requested)) throw new Error();
     profile = requested;
     options = runtimeDatabaseOptions(env);
     if (typeof databaseName !== "string" || databaseName !== options.database) throw new Error();
@@ -202,7 +172,9 @@ export async function inspectDatabase({ env = process.env, databaseName } = {}, 
             && rows[0].Value.length > 0 && rows[0].Value.length <= 256;
         });
         await check("privileges", async () => {
-          privilegesObserved = runtimePrivileges(await query("SHOW GRANTS FOR CURRENT_USER"), options.database, profile);
+          privilegesObserved = profile === "infomaniak-shared-pattern"
+            ? await inspectSharedRuntimePatternPrivileges({ query }, options.database)
+            : runtimePrivileges(await query("SHOW GRANTS FOR CURRENT_USER"), options.database, profile);
           return privilegesObserved;
         });
         if (states.get("engine") === "pass") {
