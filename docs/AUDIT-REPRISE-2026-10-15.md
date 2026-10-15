@@ -8,6 +8,8 @@
 
 **Suivi authentification — étape 0.22 :** la [recette intégrée isolée](authentication-rehearsal.md), version 0.24.0, branche `feat/authentication-rehearsal` sur #24, associe Chrome, HTTPS local, le vrai serveur configuré et MariaDB. Elle emploie un administrateur fictif, une base vide dédiée et des secrets de test générés pour cet exercice. Les parcours client et la livraison e-mail restent désactivés. L’état d’une préproduction Infomaniak demeure inconnu ; aucun compte d’hébergement consulté ni déploiement réalisé. La preuve automatique doit être lue dans la CI de la révision exacte, séparément de la recette hébergeur.
 
+**Suivi hébergement — étape 0.23 :** le [relevé public et le parcours Manager](hosting-inventory-2026-10-15.md) confirment à 13:31–13:32 UTC la page Infomaniak par défaut et les 404 de `/app`, `/api/health`, `/api/ready` et du manifeste sur le domaine public. Aucun projet privé ou environnement de préproduction n’est encore identifié. Le lot est documentaire ; version applicative 0.24.0 inchangée, CI d’authentification #25 verte. La prochaine action est le relevé privé en consultation ; aucun déploiement ni changement de service.
+
 ## Décision de reprise
 
 **Suivi après audit :** le [correctif 0.16.1](chat-stable-history.md) traite A15 dans le code et ajoute les régressions du contrôleur. La recette navigateur reste à réaliser. Le rapport ci-dessous conserve l’état observé sur 0.16 ; prochaine étape de développement : 0.17a supervision.

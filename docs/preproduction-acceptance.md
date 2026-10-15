@@ -2,6 +2,8 @@
 
 Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. Il ne constate aucun déploiement, changement DNS, compte réel, réception e-mail ou installation sur téléphone. Les essais locaux et CI utilisent des identités fictives, des données synthétiques et des services maîtrisés.
 
+Le [relevé d’hébergement de l’étape 0.23](hosting-inventory-2026-10-15.md) constate seulement l’état public et prépare la consultation du Manager. Projet privé, sous-domaine isolé et paramètres réels restent à identifier.
+
 ## 1. Fixer l'environnement et la révision
 
 - [ ] Consigner le SHA exact et les cinq résultats CI de cette révision : tests généraux, MariaDB 10.11, MariaDB 11.4, Chrome chat et Chrome HTTPS/authentification. Relever également la version Node.js 24 installée.
