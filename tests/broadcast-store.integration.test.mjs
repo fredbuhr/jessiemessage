@@ -74,9 +74,9 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
 
     await subtest("read-only schema verification rejects dirty ledgers, unsigned, index, CHECK and FK drift", async () => {
       assert.equal(await assertBroadcastSchema(pool), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 25");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
       try { await assert.rejects(store.assertSchema(), code("BROADCAST_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 25"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
       await connection.query("ALTER TABLE broadcast_campaigns MODIFY mfa_version INT NOT NULL");
       try { await assert.rejects(store.assertSchema(), code("BROADCAST_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE broadcast_campaigns MODIFY mfa_version INT UNSIGNED NOT NULL"); }

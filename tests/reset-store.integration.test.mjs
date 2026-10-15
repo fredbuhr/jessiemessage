@@ -66,9 +66,9 @@ test("real MariaDB single-use client password recovery and private leased mail (
 
     await t.test("both stores verify all twenty-two migrations and reject dirty ledgers, column, CHECK, index and FK drift", async () => {
       assert.equal(await store.assertSchema(), true); assert.equal(await mail.assertSchema(), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 25");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
       try { await assert.rejects(store.assertSchema(), errorCode("RESET_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 25"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
       await connection.query("ALTER TABLE password_reset_outbox MODIFY payload_encrypted VARCHAR(1024) CHARACTER SET ascii COLLATE ascii_bin NULL");
       try { await assert.rejects(mail.assertSchema(), errorCode("RESET_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE password_reset_outbox MODIFY payload_encrypted VARCHAR(1024) CHARACTER SET ascii COLLATE ascii_bin NOT NULL"); }

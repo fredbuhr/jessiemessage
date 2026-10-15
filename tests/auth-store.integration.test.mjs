@@ -39,9 +39,9 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
     assert.equal(await store.assertSchema(), true);
 
     await t.test("read-only startup checks reject dirty history, nullable state drift and missing uniqueness", async () => {
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 25");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
       try { await assert.rejects(store.assertSchema(), (error) => error.code === "AUTH_DATABASE_STATE"); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 25"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
       await connection.query("ALTER TABLE auth_session_state MODIFY last_seen_at DATETIME(6) NULL");
       try { await assert.rejects(store.assertSchema(), (error) => error.code === "AUTH_DATABASE_STATE"); }
       finally { await connection.query("ALTER TABLE auth_session_state MODIFY last_seen_at DATETIME(6) NOT NULL"); }

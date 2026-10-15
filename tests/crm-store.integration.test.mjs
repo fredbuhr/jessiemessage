@@ -68,9 +68,9 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
 
     await t.test("all twenty migrations and read-only schema verification reject dirty ledgers and column, key, FK and CHECK drift", async () => {
       assert.equal(await crm.assertSchema(), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 25");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
       try { await assert.rejects(crm.assertSchema(), code("CHAT_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 25"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
       await connection.query("ALTER TABLE crm_profiles MODIFY notes_revision INT NOT NULL");
       try { await assert.rejects(crm.assertSchema(), code("CRM_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE crm_profiles MODIFY notes_revision INT UNSIGNED NOT NULL"); }
