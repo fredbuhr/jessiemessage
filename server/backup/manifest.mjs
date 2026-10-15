@@ -2,6 +2,7 @@ import { constants } from "node:fs";
 import { lstat, open, realpath } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import path from "node:path";
+import { openPrivateDirectory, privatePathMode } from "../files/private-directory.mjs";
 
 const MAX_BYTES = 64 * 1024 * 1024;
 const MAX_NODES = 2000000;
@@ -247,30 +248,45 @@ async function unchangedParent(filename, identity) {
   const current = await parentIdentity(filename);
   if (current.dev !== identity.dev || current.ino !== identity.ino) throw new Error();
 }
-export async function writeManifest(filename, manifest) {
+function selectedPathMode(mode) {
+  return mode === undefined ? privatePathMode() : privatePathMode({ JESSIEMESSAGE_PRIVATE_PATH_MODE: mode });
+}
+async function manifestDirectory(filename, mode) {
+  absolutePath(filename);
+  if (selectedPathMode(mode) === "linux-dirfd") {
+    const scope = await openPrivateDirectory(path.dirname(filename));
+    try {
+      return { filename: scope.file(path.basename(filename)), check: () => scope.assertReady(),
+        sync: () => scope.sync(), close: () => scope.close() };
+    } catch (error) { await scope.close(); throw error; }
+  }
+  const identity = await parentIdentity(filename), handle = await parentHandle(identity);
+  return { filename, check: () => unchangedParent(filename, identity), sync: () => handle.sync(), close: () => handle.close() };
+}
+export async function writeManifest(filename, manifest, { pathMode } = {}) {
   let handle, directory;
   try {
-    const bytes = Buffer.from(canonical(manifestValue(manifest)), "utf8"), parent = await parentIdentity(filename);
-    directory = await parentHandle(parent);
-    handle = await open(filename, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600);
+    const bytes = Buffer.from(canonical(manifestValue(manifest)), "utf8");
+    directory = await manifestDirectory(filename, pathMode);
+    handle = await open(directory.filename, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600);
     if (!privateFile(await handle.stat({ bigint: true }))) throw new Error();
     await handle.writeFile(bytes); await handle.sync();
     const final = await handle.stat({ bigint: true });
-    if (!privateFile(final) || final.size !== BigInt(bytes.length) || !sameFile(final, await lstat(filename, { bigint: true }))) throw new Error();
-    await unchangedParent(filename, parent); await directory.sync(); await unchangedParent(filename, parent);
+    if (!privateFile(final) || final.size !== BigInt(bytes.length) || !sameFile(final, await lstat(directory.filename, { bigint: true }))) throw new Error();
+    await directory.check(); await directory.sync(); await directory.check();
   } catch { fail("BACKUP_MANIFEST_UNAVAILABLE"); }
   finally {
     const closed = await Promise.allSettled([handle?.close(), directory?.close()]);
     if (closed.some((result) => result.status === "rejected")) fail("BACKUP_MANIFEST_UNAVAILABLE");
   }
 }
-export async function readManifest(filename) {
+export async function readManifest(filename, { pathMode } = {}) {
   let handle, directory, bytes;
   try {
-    const parent = await parentIdentity(filename); directory = await parentHandle(parent);
-    const initial = await lstat(filename, { bigint: true });
+    directory = await manifestDirectory(filename, pathMode);
+    const initial = await lstat(directory.filename, { bigint: true });
     if (!privateFile(initial) || initial.size < 1n || initial.size > BigInt(MAX_BYTES)) throw new Error();
-    handle = await open(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    handle = await open(directory.filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     const before = await handle.stat({ bigint: true });
     if (!privateFile(before) || !sameFile(initial, before)) throw new Error();
     bytes = Buffer.alloc(Number(before.size)); let offset = 0;
@@ -279,8 +295,8 @@ export async function readManifest(filename) {
       if (bytesRead === 0) throw new Error(); offset += bytesRead;
     }
     const after = await handle.stat({ bigint: true });
-    if (!privateFile(after) || !sameFile(before, after) || !sameFile(after, await lstat(filename, { bigint: true }))) throw new Error();
-    await unchangedParent(filename, parent);
+    if (!privateFile(after) || !sameFile(before, after) || !sameFile(after, await lstat(directory.filename, { bigint: true }))) throw new Error();
+    await directory.check();
     const manifest = manifestValue(JSON.parse(bytes.toString("utf8")));
     if (!Buffer.from(canonical(manifest), "utf8").equals(bytes)) throw new Error();
     return manifest;

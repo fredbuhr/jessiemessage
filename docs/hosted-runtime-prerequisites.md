@@ -21,19 +21,6 @@ Le [diagnostic de préproduction](preproduction-preflight.md) pouvait auparavant
 
 Ce correctif ne fournit aucun droit manquant sur l’hébergement et ne certifie pas l’ensemble des droits effectifs. La fixture SQL dédiée ne porte que sur des comptes et bases synthétiques de CI ; elle ne modifie pas l’hébergement.
 
-## Demande prête pour le support, non envoyée
+## Solution retenue sans support
 
-Objet : **JessieMessage — droits MariaDB fins et stockage privé Node.js**
-
-Bonjour,
-
-Je prépare JessieMessage sur mon hébergement Web Node.js existant. Le site reste neutre et la base de recette dédiée a reçu ses 27 migrations. Avant d’activer l’authentification, pourriez-vous préciser :
-
-1. Comment obtenir un utilisateur MariaDB distinct avec des droits par table : SELECT/INSERT/UPDATE/DELETE sur les tables applicatives nécessaires, SELECT seul sur `schema_migrations`, sans DDL, création de tables temporaires, `LOCK TABLES`, délégation ni accès à une autre base ? Le Manager ne présente que les trois profils par base.
-2. Quel emplacement persistant, hors répertoire HTTP et checkout, recommandez-vous pour les secrets et médias privés ? Notre contrôle exige un répertoire final 0700 et refuse les ancêtres modifiables par groupe/autres. L’ancêtre système de la racine client observée est en 2775. Merci de préciser les garanties d’isolation et de conservation lors des reconstructions/redémarrages.
-3. Existe-t-il un mécanisme de variables secrètes pour Node.js, hors des commandes build/start visibles et de leurs journaux ?
-4. Avec le quota Node actuel 1/1, quelle possibilité existe pour une recette isolée ? L’alias de prévisualisation semble pointer sur la même application. Merci de présenter les possibilités de l’offre actuelle avant toute proposition payante.
-
-Merci. Adresse de contact du projet : **contact@jessiemessage.com**.
-
-La demande ne contient ni mot de passe, ni clé, ni nom de base/compte complet. Elle doit être envoyée dans le contexte authentifié de l’hébergement concerné après accord du propriétaire. Aucun message de support n’a été envoyé par l’agent.
+Le propriétaire a refusé le contact support et demandé une recherche documentaire suivie d’une application. La demande préparée a été écartée et aucun message n’a été envoyé. Le [profil d’exécution adapté](infomaniak-runtime-profile.md) décrit le profil SQL mutualisé explicite, ses limites de droits et les accès privés Linux par descripteur. Le présent relevé conserve les observations initiales ; les résultats d’application sont consignés dans la PR de la révision exacte.

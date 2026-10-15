@@ -9,7 +9,10 @@ import { DATABASE_CHECK_NAMES } from "../server/preflight/database.mjs";
 
 const origin = "https://preprod.jessiemessage.com";
 const secret = "SYNTHETIC_PRIVATE_SENTINEL_DO_NOT_PRINT";
-const success = (names) => ({ valid: true, checks: names.map((name) => ({ name, status: "pass" })) });
+const success = (names) => ({ valid: true, checks: names.map((name) => ({ name, status: "pass" })),
+  ...(names === DATABASE_CHECK_NAMES ? { privilegeObservation: { profile: "strict", source: "show_grants",
+    ledgerWritable: false, tempTables: false, tableLocks: false, permanentDdl: false } } : {}),
+});
 
 test("preflight requires exact explicit command confirmations and refuses dangerous or ambiguous arguments", () => {
   assert.deepEqual(parsePreflightArguments(["config", "--offline", "--origin", origin]), { command: "config", expectedOrigin: origin });
@@ -70,6 +73,39 @@ test("hostile known fields, unknown statuses and duplicate checks are rejected w
     assert.throws(() => makePreflightReport("config", { valid: true, checks }), { code: "PREFLIGHT_REPORT" });
   }
   assert.equal(invoked, 0);
+});
+
+test("database reports rebuild only validated fixed privilege observations and reject invented evidence", () => {
+  const result = success(DATABASE_CHECK_NAMES);
+  result.privilegeObservation.profile = "infomaniak-shared";
+  for (const field of ["ledgerWritable", "tempTables", "tableLocks"]) result.privilegeObservation[field] = true;
+  result.privilegeObservation.secret = secret;
+  let invoked = 0;
+  result.privilegeObservation.toJSON = () => { invoked++; return secret; };
+  const report = makePreflightReport("database", result);
+  assert.deepEqual(report.privilegeObservation, { profile: "infomaniak-shared", source: "show_grants",
+    ledgerWritable: true, tempTables: true, tableLocks: true, permanentDdl: false });
+  assert.equal(invoked, 0); assert.doesNotMatch(JSON.stringify(report), new RegExp(secret));
+  const deceptive = success(DATABASE_CHECK_NAMES);
+  deceptive.privilegeObservation = { profile: "infomaniak-shared", source: "show_grants",
+    ledgerWritable: false, tempTables: true, tableLocks: true, permanentDdl: false };
+  assert.throws(() => makePreflightReport("database", deceptive), { code: "PREFLIGHT_REPORT" });
+  for (const field of ["profile", "source", "ledgerWritable", "tempTables", "tableLocks", "permanentDdl"]) {
+    const invalid = success(DATABASE_CHECK_NAMES);
+    invalid.privilegeObservation[field] = secret;
+    assert.throws(() => makePreflightReport("database", invalid), { code: "PREFLIGHT_REPORT" });
+    Object.defineProperty(invalid.privilegeObservation, field, { get() { invoked++; return secret; } });
+    assert.throws(() => makePreflightReport("database", invalid), { code: "PREFLIGHT_REPORT" });
+  }
+  assert.equal(invoked, 0);
+  const blocked = success(DATABASE_CHECK_NAMES); blocked.valid = false;
+  blocked.checks.find((check) => check.name === "privileges").status = "fail";
+  assert.throws(() => makePreflightReport("database", blocked), { code: "PREFLIGHT_REPORT" });
+  blocked.privilegeObservation = { profile: "infomaniak-shared", source: "unverified",
+    ledgerWritable: null, tempTables: null, tableLocks: null, permanentDdl: null };
+  assert.equal(makePreflightReport("database", blocked).privilegeObservation.permanentDdl, null);
+  blocked.privilegeObservation.permanentDdl = false;
+  assert.throws(() => makePreflightReport("database", blocked), { code: "PREFLIGHT_REPORT" });
 });
 
 test("each command calls only its own inspector and keeps private configuration out of its public report", async () => {

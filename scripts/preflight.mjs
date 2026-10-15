@@ -5,6 +5,7 @@ import { inspectPlatform } from "../server/preflight/platform.mjs";
 import { inspectDatabase } from "../server/preflight/database.mjs";
 import { isOfficialOrigin } from "../server/site.mjs";
 import { makePreflightReport, preflightFailure, preflightExitCode, PreflightReportError } from "../server/preflight/report.mjs";
+import { privatePathMode } from "../server/files/private-directory.mjs";
 
 export class PreflightCliError extends Error {
   constructor() { super("Invalid preflight command. Consult the preproduction procedure."); this.code = "PREFLIGHT_USAGE"; }
@@ -42,8 +43,12 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     let result;
     if (command === "config") result = await (dependencies.inspectConfiguration ?? inspectPreproductionConfiguration)(env,
       { target: "auth-only", expectedOrigin: options.expectedOrigin });
-    else if (command === "platform") result = await (dependencies.inspectPlatform ?? inspectPlatform)(
-      { scratch: options.scratch, mediaRoot: env.JESSIEMESSAGE_MEDIA_ROOT ?? null }, { signal });
+    else if (command === "platform") {
+      const pathMode = privatePathMode(env);
+      result = await (dependencies.inspectPlatform ?? inspectPlatform)(
+        { scratch: options.scratch, mediaRoot: env.JESSIEMESSAGE_MEDIA_ROOT ?? null,
+          ...(pathMode === "linux-dirfd" ? { pathMode } : {}) }, { signal });
+    }
     else result = await (dependencies.inspectDatabase ?? inspectDatabase)({ env, databaseName: options.databaseName }, { signal });
     if (signal?.aborted) return { report: preflightFailure(command, "PREFLIGHT_ABORTED"), exitCode: 1 };
     const report = makePreflightReport(command, result);
