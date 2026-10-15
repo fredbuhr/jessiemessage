@@ -25,3 +25,7 @@ test("disabled authentication creates no database pool; incomplete enabled confi
   assert.equal(configured.server.listening, false);
   await assert.rejects(createConfiguredServer({ JESSIEMESSAGE_ENABLE_AUTH: "1", JESSIEMESSAGE_SITE_ORIGIN: "https://example.invalid", JESSIEMESSAGE_MFA_KEY: randomBytes(32).toString("base64url") }), { code: "AUTH_DATABASE_CONFIG" });
 });
+
+test("invalid or dependency-free broadcast enablement fails before any database work", async () => {
+  for (const flag of ["1", "true", "", "2"]) await assert.rejects(createConfiguredServer({ JESSIEMESSAGE_ENABLE_BROADCAST: flag }), { code: "BROADCAST_CONFIG" });
+});

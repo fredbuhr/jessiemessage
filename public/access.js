@@ -14,6 +14,8 @@ let generation = 0;
 let expiryTimer = null;
 let recoveryEnabled = null;
 let recoveryCapabilityPending = false;
+let broadcastPreference = null;
+let broadcastPreferenceEpoch = 0;
 const controllers = new Set();
 
 // Tokens travel in URL fragments, never query strings, storage or page markup.
@@ -26,7 +28,17 @@ if (entries.length === 1 && /^[A-Za-z0-9_-]{43}$/.test(entries[0][1])) {
 history.replaceState(null, "", "/access");
 
 function notice(message, error = false) { status.textContent = message; status.classList.toggle("is-error", error); }
-function invalidate() { generation += 1; for (const controller of controllers) controller.abort(); controllers.clear(); }
+function clearBroadcastPreference() { broadcastPreferenceEpoch += 1; broadcastPreference?.clear(); broadcastPreference = null; element("broadcast-preference-host")?.remove(); }
+function invalidate() { generation += 1; for (const controller of controllers) controller.abort(); controllers.clear(); clearBroadcastPreference(); }
+async function loadBroadcastPreference() {
+  const ticket = generation; const epoch = broadcastPreferenceEpoch;
+  try {
+    const module = await import("/broadcast-preference.js");
+    if (ticket !== generation || epoch !== broadcastPreferenceEpoch || connected.hidden || document.visibilityState !== "visible") return;
+    const host = document.createElement("div"); host.id = "broadcast-preference-host"; connected.append(host);
+    broadcastPreference = module.mountBroadcastPreference(host, { isCurrent: () => ticket === generation && epoch === broadcastPreferenceEpoch && !connected.hidden });
+  } catch { /* An optional protected feature can be disabled without changing login. */ }
+}
 function setBusy(value) { busy = value; for (const button of document.querySelectorAll("button")) button.disabled = value; }
 function signedOut(message = "") {
   invalidate(); csrf = null; clearTimeout(expiryTimer); expiryTimer = null;
@@ -60,6 +72,7 @@ function signedIn(session) {
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(() => signedOut("Ta session a expiré. Reconnecte-toi pour continuer."), Math.max(0, session.expiresAt - Date.now()));
   if (session.user.role === "client" && access.state === "active") void loadChatAccess();
+  if (session.user.role === "client" && access.emailVerified) void loadBroadcastPreference();
 }
 function updateRecoveryLink() {
   element("client-recovery-link").hidden = recoveryEnabled !== true || loginForm.hidden;
@@ -148,6 +161,7 @@ element("resend-form").addEventListener("submit", (event) => {
   });
 });
 async function logout(all) { await submit(async () => {
+  clearBroadcastPreference();
   await request(all ? "/api/access/logout-all" : "/api/access/logout", { mutation: true, authenticated: true });
   signedOut(all ? "Toutes tes sessions sont déconnectées." : "Tu es déconnecté.");
 }); }
@@ -169,6 +183,7 @@ async function start() {
     }
   }
 }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") void refreshSession(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") void refreshSession(); else clearBroadcastPreference(); });
+window.addEventListener("pagehide", clearBroadcastPreference);
 window.addEventListener("pageshow", (event) => { if (event.persisted) void refreshSession(); });
 void start();

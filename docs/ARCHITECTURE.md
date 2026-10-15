@@ -94,3 +94,9 @@ Each verification creates a separate transport, calls Nodemailer's `verify()` wi
 10. Controlled production rollout.
 
 **Do not** deploy real user chat functionality ahead of the legal and security gates.
+
+## Individual broadcast queue (0.11)
+
+An additional explicit flag enables `/admin/broadcasts`, private campaign APIs and client-owned consent controls. Confirmation freezes at most100 explicitly selected CRM conversations, an encrypted payload and stable per-recipient message IDs. The queue contains no raw session token. Current administrator status/MFA, assignment, recipient access, consent and media are checked under SQL locks again before ordinary chat insertion. A durable approval survives logout; cancellation removes outstanding work and a changed MFA epoch terminally pauses it. No shared audience metadata enters client DTOs.
+
+The sequential worker shares normal chat quotas, defers rate-limited work without burning failures, reclaims expired leases and commits message/event/recipient together. Listener startup starts work; graceful shutdown awaits it before closing the pool. No email, Push or browser polling is required for server delivery. The preparation inventory includes the additional feature flag. See [contract and limitations](targeted-broadcasts.md).

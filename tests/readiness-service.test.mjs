@@ -13,7 +13,7 @@ const deferred = () => {
   const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
   return { promise, resolve, reject };
 };
-const features = () => ({ clientAccess: true, chat: true, photos: true, clientFiles: true, passwordRecovery: true });
+const features = () => ({ clientAccess: true, chat: true, photos: true, clientFiles: true, passwordRecovery: true, broadcasts: true });
 const mail = () => ({ enabled: true, origin: "https://jessiemessage.com", key: randomBytes(32), smtp: {
   host: "private-smtp.example.invalid", port: 587, user: "private-smtp-user", password: "private-smtp-password",
   from: SITE_CONTACT_EMAIL, replyTo: SITE_CONTACT_EMAIL, caPath: "/private/smtp-ca.pem",
@@ -53,7 +53,7 @@ async function fixture(overrides = {}) {
   return { token, key, state, sessionCalls, rateCalls, transports, events, options, service };
 }
 
-test("readiness service requires explicit dependencies, a 32-byte key and five boolean feature declarations", async () => {
+test("readiness service requires explicit dependencies, a 32-byte key and six boolean feature declarations", async () => {
   const f = await fixture();
   for (const key of [undefined, null, f.key.toString("hex"), Buffer.alloc(31), Buffer.alloc(33)]) {
     await assert.rejects(createReadinessService({ ...f.options, key }), hasCode("READINESS_CONFIG"));

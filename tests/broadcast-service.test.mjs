@@ -1,0 +1,199 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createHmac, randomBytes } from "node:crypto";
+import { createBroadcastService, BroadcastError } from "../server/broadcast/service.mjs";
+import { openPayload, sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
+import { csrfToken, newToken, tokenDigest } from "../server/auth/crypto.mjs";
+
+const now = 1750000000000, adminId = Buffer.alloc(16, 1), clientId = Buffer.alloc(16, 2), conversationId = Buffer.alloc(16, 3);
+const conversationHex = conversationId.toString("hex"), adminHex = adminId.toString("hex"), campaignId = Buffer.alloc(16, 4);
+const hasCode = (code) => (error) => error instanceof BroadcastError && error.code === code;
+const input = (changes = {}) => ({ clientCampaignId: "5".repeat(32), title: "Invitation privée", body: "Bonjour !", mediaId: null,
+  allowRepeatMedia: false, conversationIds: [conversationHex], ...changes });
+
+async function fixture({ mediaEnabled = false } = {}) {
+  const key = randomBytes(32), token = newToken(), calls = [], authCalls = [], rateCalls = [];
+  const { clientCampaignId, ...payload } = input();
+  const state = { actor: { user: { id: adminHex, role: "admin", pseudonym: "Jess", email: "private@example.invalid" }, csrf: newToken(), expiresAt: now + 10000 },
+    preferenceActor: { id: clientId, pseudonym: "Client", expiresAt: now + 10000, credentialVersion: "private-proof" },
+    preference: { enabled: false, version: "0", updatedAt: null, email: "private@example.invalid" },
+    rates: [], error: null, authError: null,
+    preview: { recipients: [{ conversationId, client: { id: clientId, pseudonym: "Client", email: "private@example.invalid" }, eligible: true, reason: null, repeatMedia: false, privateNotes: "private-notes" }], eligibleCount: 1, repeatCount: 0 },
+    campaign: { id: campaignId, clientCampaignId: Buffer.from(clientCampaignId, "hex"), payloadEncrypted: sealPayload(payload, key, { campaignId, adminId }), mediaId: null,
+      allowRepeatMedia: false, status: "queued", createdAt: now, updatedAt: now, expiresAt: now + 604800000,
+      counts: { total: 1, pending: 1, sending: 0, delivered: 0, skipped: 0, cancelled: 0, failed: 0 },
+      recipients: [{ conversationId, client: { id: clientId, pseudonym: "Client", email: "private@example.invalid" }, state: "pending", reason: null, messageId: null, deliveredAt: null }],
+      adminId, mfaVersion: 5, privateProof: "private-proof" } };
+  const record = (name, options) => { calls.push({ name, options }); if (state.error) throw state.error; };
+  const store = {
+    preferenceActor: async (options) => { record("preferenceActor", options); return state.preferenceActor; },
+    getPreference: async (options) => { record("getPreference", options); return state.preference; },
+    savePreference: async (options) => { record("savePreference", options); return state.preference; },
+    preview: async (options) => { record("preview", options); return state.preview; },
+    create: async (options) => { record("create", options); if (state.createResult) return state.createResult;
+      state.campaign = { ...state.campaign, ...options.campaign }; return { campaign: state.campaign, duplicate: false, privateProof: "private-proof" }; },
+    list: async (options) => { record("list", options); return state.page ?? { campaigns: [state.campaign], nextCursor: null, hasMore: false }; },
+    get: async (options) => { record("get", options); return state.campaign; },
+    cancel: async (options) => { record("cancel", options); return state.campaign; },
+  };
+  const authService = { session: async (raw) => { authCalls.push(raw); if (state.authError) throw state.authError; return state.actor; } };
+  const authStore = { consumeRateLimit: async (bucket, options) => { rateCalls.push({ bucket, options }); return state.rates.shift() ?? { allowed: true }; } };
+  const options = { store, authService, authStore, key, mediaEnabled, clock: () => now };
+  return { key, token, state, calls, authCalls, rateCalls, store, authStore, options, service: await createBroadcastService(options) };
+}
+
+test("broadcast service requires fixed key, complete dependencies and explicit valid options", async () => {
+  const f = await fixture();
+  for (const key of [undefined, null, f.key.toString("hex"), Buffer.alloc(31), Buffer.alloc(33)]) await assert.rejects(createBroadcastService({ ...f.options, key }), hasCode("BROADCAST_CONFIG"));
+  for (const dependency of ["store", "authStore", "authService"]) await assert.rejects(createBroadcastService({ ...f.options, [dependency]: null }), hasCode("BROADCAST_CONFIG"));
+  for (const method of Object.keys(f.store)) await assert.rejects(createBroadcastService({ ...f.options, store: { ...f.store, [method]: undefined } }), hasCode("BROADCAST_CONFIG"));
+  for (const changes of [{ mediaEnabled: "1" }, { clock: null }]) await assert.rejects(createBroadcastService({ ...f.options, ...changes }), hasCode("BROADCAST_CONFIG"));
+  assert.ok(Object.isFrozen(f.service));
+});
+
+test("client broadcast actor uses only the limited preference hook with current hashed proof", async () => {
+  const f = await fixture(), actor = await f.service.actor("client", f.token);
+  assert.deepEqual(actor, { user: { id: clientId.toString("hex"), role: "client", pseudonym: "Client" }, csrf: csrfToken(f.token), expiresAt: now + 10000 });
+  assert.equal(f.authCalls.length, 0);
+  assert.deepEqual(f.calls, [{ name: "preferenceActor", options: { tokenHash: tokenDigest(f.token), now } }]);
+  const preference = await f.service.preference(f.token);
+  assert.deepEqual(preference, { enabled: false, version: "0", updatedAt: null });
+  f.state.preference = { enabled: true, version: "18446744073709551615", updatedAt: now };
+  assert.deepEqual(await f.service.savePreference(f.token, { enabled: true, expectedVersion: "18446744073709551614" }), f.state.preference);
+  const command = f.calls.at(-1).options;
+  assert.deepEqual(command, { tokenHash: tokenDigest(f.token), now, enabled: true, expectedVersion: "18446744073709551614" });
+});
+
+test("admin session and client proof rejection precede campaign or preference access", async () => {
+  const f = await fixture();
+  f.state.actor = null; await assert.rejects(f.service.list(f.token), hasCode("BROADCAST_UNAUTHORIZED"));
+  f.state.actor = { user: { id: adminHex, role: "client", pseudonym: "Wrong role" }, csrf: newToken(), expiresAt: now + 10000 };
+  await assert.rejects(f.service.actor("admin", f.token), hasCode("BROADCAST_UNAUTHORIZED"));
+  f.state.preferenceActor = null; await assert.rejects(f.service.preference(f.token), hasCode("BROADCAST_UNAUTHORIZED"));
+  for (const token of [undefined, null, "", "a".repeat(42), `${f.token}=`, `${f.token}\n`]) await assert.rejects(f.service.actor("client", token), hasCode("BROADCAST_UNAUTHORIZED"));
+  assert.deepEqual(f.calls.map((call) => call.name), ["preferenceActor"]);
+  assert.equal(f.rateCalls.length, 0);
+});
+
+test("broadcast preview and history expose canonical DTOs without private audience metadata", async () => {
+  const f = await fixture(), actor = await f.service.actor("admin", f.token);
+  assert.deepEqual(Object.keys(actor.user).sort(), ["id", "pseudonym", "role"]);
+  const preview = await f.service.preview(f.token, { conversationIds: [conversationHex], mediaId: null });
+  assert.deepEqual(preview, { recipients: [{ conversationId: conversationHex, client: { id: clientId.toString("hex"), pseudonym: "Client" }, eligible: true, reason: null, repeatMedia: false }], eligibleCount: 1, repeatCount: 0 });
+  const page = await f.service.list(f.token), detail = await f.service.get(f.token, campaignId.toString("hex"));
+  assert.equal(page.campaigns[0].body, input().body); assert.equal(detail.recipients[0].client.pseudonym, "Client");
+  const json = JSON.stringify([actor, preview, page, detail]);
+  for (const forbidden of ["private@example.invalid", "private-notes", "private-proof", "payloadEncrypted", "mfaVersion", "adminId", "requestFingerprint"]) assert.equal(json.includes(forbidden), false);
+  for (const { options } of f.calls) { assert.deepEqual(options.tokenHash, tokenDigest(f.token)); assert.equal(options.now, now); assert.equal(options.token, undefined); }
+});
+
+test("broadcast creation encrypts and fingerprints a fixed sorted payload while regenerating safe retry proposals", async () => {
+  const f = await fixture(), first = await f.service.create(f.token, input()), firstCommand = f.calls.at(-1).options.campaign;
+  const payload = openPayload(firstCommand.payloadEncrypted, f.key, { campaignId: firstCommand.id, adminId });
+  const { clientCampaignId, ...expected } = input();
+  assert.deepEqual(payload, expected); assert.deepEqual(firstCommand.requestFingerprint, campaignFingerprint(expected, f.key, { adminId }));
+  assert.equal(first.campaign.clientCampaignId, clientCampaignId); assert.equal(first.duplicate, false);
+  assert.deepEqual(firstCommand.recipients[0].conversationId, conversationId);
+  for (const id of [firstCommand.id, firstCommand.recipients[0].messageId, firstCommand.recipients[0].clientMessageId]) assert.equal(id.length, 16);
+  assert.equal(JSON.stringify(firstCommand).includes(input().body), false);
+  f.state.createResult = { campaign: f.state.campaign, duplicate: true };
+  const retry = await f.service.create(f.token, input()), retryCommand = f.calls.at(-1).options.campaign;
+  assert.equal(retry.duplicate, true); assert.deepEqual(retry.campaign, first.campaign);
+  assert.notDeepEqual(retryCommand.id, firstCommand.id); assert.deepEqual(retryCommand.requestFingerprint, firstCommand.requestFingerprint);
+  assert.notDeepEqual(retryCommand.recipients[0].messageId, firstCommand.recipients[0].messageId);
+  assert.throws(() => openPayload(firstCommand.payloadEncrypted, f.key, { campaignId: retryCommand.id, adminId }));
+});
+
+test("broadcast service quotas are opaque scoped and reject before private data access", async () => {
+  const f = await fixture();
+  await f.service.list(f.token); await f.service.cancel(f.token, campaignId.toString("hex"));
+  const expected = [["global-read", "all", 300], ["user-read", adminHex, 120], ["user-write", adminHex, 30]];
+  for (const [index, [name, identity, limit]] of expected.entries()) {
+    assert.deepEqual(f.rateCalls[index].bucket, createHmac("sha256", f.key).update("jessiemessage:broadcast-rate:v1:").update(name).update("\0").update(identity).digest());
+    assert.deepEqual(f.rateCalls[index].options, { now, windowSeconds: 60, limit });
+  }
+  const count = f.calls.length;
+  f.state.rates = [{ allowed: false, retryAfter: 29 }];
+  await assert.rejects(f.service.list(f.token), (error) => hasCode("BROADCAST_RATE_LIMIT")(error) && error.retryAfter === 29);
+  assert.equal(f.calls.length, count);
+  f.state.rates = [{ allowed: "true" }];
+  await assert.rejects(f.service.list(f.token), hasCode("BROADCAST_UNAVAILABLE"));
+});
+
+test("creation rejects a cryptographically valid store response for a different confirmed immutable payload", async () => {
+  const f = await fixture();
+  for (const changes of [{ title: "Different title" }, { body: "Different body" }, { conversationIds: [clientId.toString("hex")] }, { allowRepeatMedia: true }]) {
+    const { clientCampaignId, ...payload } = input(changes);
+    f.state.createResult = { campaign: { ...f.state.campaign, allowRepeatMedia: payload.allowRepeatMedia,
+      payloadEncrypted: sealPayload(payload, f.key, { campaignId, adminId }) }, duplicate: true };
+    await assert.rejects(f.service.create(f.token, input()), hasCode("BROADCAST_UNAVAILABLE"));
+  }
+});
+
+test("malformed input and disabled media reject before any actor lookup or quota", async () => {
+  const f = await fixture();
+  for (const value of [null, [], {}, input({ conversationIds: [] }), input({ body: "" }), { ...input(), owner: adminHex }]) await assert.rejects(f.service.create(f.token, value), hasCode("BROADCAST_INPUT"));
+  for (const value of [null, [], {}, { enabled: "1", expectedVersion: "0" }, { enabled: true, expectedVersion: "00" }, { enabled: true, expectedVersion: "0", clientId }]) await assert.rejects(f.service.savePreference(f.token, value), hasCode("BROADCAST_INPUT"));
+  for (const value of [null, [], "options", { limit: 0 }, { limit: 51 }, { limit: "20" }, { afterId: "A".repeat(32) }, { owner: adminHex }]) await assert.rejects(f.service.list(f.token, value), hasCode("BROADCAST_INPUT"));
+  await assert.rejects(f.service.create(f.token, input({ mediaId: conversationHex, body: "" })), hasCode("BROADCAST_MEDIA"));
+  await assert.rejects(f.service.preview(f.token, { conversationIds: [conversationHex], mediaId: conversationHex }), hasCode("BROADCAST_MEDIA"));
+  assert.equal(f.calls.length, 0); assert.equal(f.authCalls.length, 0); assert.equal(f.rateCalls.length, 0);
+});
+
+test("stored preferences and preview mismatches fail closed instead of reporting inconsistent consent", async () => {
+  const f = await fixture();
+  for (const preference of [{ enabled: true, version: "0", updatedAt: null }, { enabled: false, version: "0", updatedAt: now }, { enabled: false, version: "1", updatedAt: null },
+    { enabled: 1, version: "1", updatedAt: now }, { enabled: false, version: "01", updatedAt: now }, { enabled: false, version: "1", updatedAt: -1 }]) {
+    f.state.preference = preference; await assert.rejects(f.service.preference(f.token), hasCode("BROADCAST_UNAVAILABLE"));
+  }
+  const original = f.state.preview;
+  for (const changes of [{ eligibleCount: 2 }, { repeatCount: 1 }, { recipients: [original.recipients[0], original.recipients[0]] }, { recipients: [{ ...original.recipients[0], conversationId: clientId }] },
+    { recipients: [{ ...original.recipients[0], eligible: true, reason: "opted_out" }] }, { recipients: [{ ...original.recipients[0], repeatMedia: true }] }]) {
+    f.state.preview = { ...original, ...changes }; await assert.rejects(f.service.preview(f.token, { conversationIds: [conversationHex], mediaId: null }), hasCode("BROADCAST_UNAVAILABLE"));
+  }
+});
+
+test("campaign ciphertext tampering, ownership rebinding, counts and malformed details fail closed", async () => {
+  const f = await fixture(), original = f.state.campaign;
+  const bad = [{ payloadEncrypted: "private-corrupted-envelope" }, { id: clientId }, { mediaId: clientId }, { allowRepeatMedia: true }, { status: "draft" }, { updatedAt: now - 1 },
+    { counts: { ...original.counts, total: 2 } }, { counts: { ...original.counts, pending: 0 } }, { counts: { ...original.counts, pending: "1" } }, { recipients: [] },
+    { recipients: [{ ...original.recipients[0], state: "delivered", messageId: null, deliveredAt: null }] },
+    { recipients: [{ ...original.recipients[0], state: "pending", messageId: Buffer.alloc(16), deliveredAt: now }] },
+    { recipients: [{ ...original.recipients[0], reason: "private-SQL-exception" }] }, { recipients: [{ ...original.recipients[0], conversationId: clientId }] },
+    { recipients: [{ ...original.recipients[0], state: "delivered", messageId: Buffer.alloc(16), deliveredAt: now }] }];
+  for (const changes of bad) {
+    f.state.campaign = { ...original, ...changes };
+    await assert.rejects(f.service.get(f.token, campaignId.toString("hex")), hasCode("BROADCAST_UNAVAILABLE"));
+  }
+});
+
+test("history pagination enforces sorted IDs and bound cursors", async () => {
+  const f = await fixture();
+  for (const page of [{ campaigns: [f.state.campaign, f.state.campaign], hasMore: false, nextCursor: null }, { campaigns: [f.state.campaign], hasMore: true, nextCursor: null },
+    { campaigns: [], hasMore: false, nextCursor: campaignId }, { campaigns: [f.state.campaign], hasMore: true, nextCursor: clientId }]) {
+    f.state.page = page; await assert.rejects(f.service.list(f.token), hasCode("BROADCAST_UNAVAILABLE"));
+  }
+  f.state.page = { campaigns: [f.state.campaign], hasMore: true, nextCursor: campaignId };
+  assert.equal((await f.service.list(f.token)).nextCursor, campaignId.toString("hex"));
+  await assert.rejects(f.service.list(f.token, { afterId: campaignId.toString("hex") }), hasCode("BROADCAST_UNAVAILABLE"));
+});
+
+test("known scope failures expose only approved codes and unexpected private backend details are sanitized", async () => {
+  const f = await fixture();
+  for (const code of ["BROADCAST_NOT_FOUND", "BROADCAST_CONFLICT", "BROADCAST_LIMIT", "BROADCAST_RECIPIENTS", "BROADCAST_REPEAT", "BROADCAST_MEDIA", "BROADCAST_RATE_LIMIT", "CHAT_UNAUTHORIZED", "AUTH_INVALID", "AUTH_BUSY", "ER_PRIVATE_DATABASE_ERROR"]) {
+    f.state.error = Object.assign(new Error("SQL private@example.invalid password=private-secret"), { code });
+    await assert.rejects(f.service.list(f.token), (error) => {
+      const expected = ["CHAT_UNAUTHORIZED", "AUTH_INVALID"].includes(code) ? "BROADCAST_UNAUTHORIZED" : code === "AUTH_BUSY" ? "BROADCAST_RATE_LIMIT" : code.startsWith("BROADCAST_") ? code : "BROADCAST_UNAVAILABLE";
+      assert.ok(hasCode(expected)(error)); assert.equal(error.cause, undefined); assert.equal(error.message.includes("private-secret"), false); return true;
+    });
+  }
+});
+
+test("service copies encryption key and rejects invalid clocks before store mutation", async () => {
+  const f = await fixture(); f.key.fill(0);
+  assert.equal((await f.service.list(f.token)).campaigns[0].body, input().body);
+  for (const clock of [() => -1, () => NaN, () => 1.5, () => 253402300800000]) {
+    const service = await createBroadcastService({ ...f.options, clock }), before = f.calls.length;
+    await assert.rejects(service.cancel(f.token, campaignId.toString("hex")), hasCode("BROADCAST_UNAVAILABLE")); assert.equal(f.calls.length, before);
+  }
+});

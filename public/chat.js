@@ -18,6 +18,7 @@ let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previ
 let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersion = 0; let lightboxItem = null;
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
+let broadcastPreference = null;
 
 function notice(message, error = false, id = "chat-status") { const node = el(id); node.textContent = message; node.classList.toggle("is-error", error); }
 function currentState() { return selected ? states.get(selected) : null; }
@@ -58,6 +59,7 @@ function clearPrivate() {
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
   mediaEnabled = false;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
+  broadcastPreference?.clear(); broadcastPreference = null; document.getElementById("broadcast-preference-host")?.remove();
   document.getElementById("readiness-nav")?.remove();
   stopPolling(); abortRequests(); clearTimeout(expiryTimer); expiryTimer = null;
   states.clear(); inbox.clear(); selected = null; el("conversations").replaceChildren(); clearChat();
@@ -92,6 +94,22 @@ async function refreshSession() {
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(signOut, Math.max(0, session.expiresAt - Date.now()));
   return session;
+}
+async function refreshBroadcastAccess() {
+  const ticket = snapshot();
+  try {
+    if (role === "admin") {
+      const capability = await request("/api/broadcast/admin/session", { account: true });
+      if (!fresh(ticket, true) || capability.user?.role !== "admin" || document.getElementById("broadcast-nav")) return;
+      const link = document.createElement("a"); link.id = "broadcast-nav"; link.href = "/admin/broadcasts"; link.textContent = "Diffusions";
+      document.getElementById("readiness-nav")?.append(link);
+    } else {
+      const module = await import("/broadcast-preference.js");
+      if (!fresh(ticket, true) || !ready || !visible()) return;
+      const host = document.createElement("div"); host.id = "broadcast-preference-host"; el("client-aside").append(host);
+      broadcastPreference = module.mountBroadcastPreference(host, { isCurrent: () => ticket.generation === generation && ready && !loggingOut });
+    }
+  } catch (error) { if (role === "admin" && !error.stale && error.status === 401) signOut(); }
 }
 function conversationPath(state) { return `${chatBase}/conversations/${state.id}`; }
 function errorText(error) {
@@ -674,6 +692,7 @@ async function start() {
       const link = document.createElement("a"); link.href = "/admin/readiness"; link.textContent = "Préparer le site"; nav.append(link); el("inbox-title").parentElement.append(nav);
     }
     ready = true; el("workspace").hidden = false; el("workspace").classList.toggle("is-admin", role === "admin");
+    void refreshBroadcastAccess();
     await refreshMediaCapability();
     await refreshCrmCapability();
     el("inbox").hidden = role !== "admin"; el("client-aside").hidden = role !== "client"; el("back-to-inbox").hidden = role !== "admin";

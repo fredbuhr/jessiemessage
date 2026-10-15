@@ -6,7 +6,7 @@ import { SITE_CONTACT_EMAIL } from "../site.mjs";
 const COOKIE = "__Host-jessie_session";
 const MAX_DATE = 253402300799999;
 const publicRoot = new URL("../../public/", import.meta.url);
-const FEATURE_KEYS = Object.freeze(["clientAccess", "chat", "photos", "clientFiles", "passwordRecovery"]);
+const FEATURE_KEYS = Object.freeze(["clientAccess", "chat", "photos", "clientFiles", "passwordRecovery", "broadcasts"]);
 const files = new Map([
   ["/admin/readiness", ["readiness.html", "text/html; charset=utf-8"]],
   ["/readiness.js", ["readiness.js", "text/javascript; charset=utf-8"]],

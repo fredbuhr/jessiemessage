@@ -39,10 +39,10 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler } = {}) {
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler } = {}) {
   const server = createServer(async (request, response) => {
     const method = request.method ?? "GET";
-    for (const handler of [readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler]) {
+    for (const handler of [broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler]) {
       if (!handler) continue;
       try { if (await handler(request, response)) return; }
       catch {
@@ -99,12 +99,14 @@ export async function createConfiguredServer(env = process.env) {
   const { mediaConfiguration } = await import("./media/config.mjs");
   const { crmConfiguration } = await import("./crm/config.mjs");
   const { clientRecoveryConfiguration } = await import("./reset/config.mjs");
+  const { broadcastConfiguration } = await import("./broadcast/config.mjs");
   const config = authConfiguration(env);
   const accessConfig = accessConfiguration(env);
   const chatConfig = chatConfiguration(env);
   const mediaConfig = mediaConfiguration(env);
   const crmConfig = crmConfiguration(env);
   const resetConfig = clientRecoveryConfiguration(env);
+  const broadcastConfig = broadcastConfiguration(env, { crmEnabled: crmConfig.enabled });
   if (!config.enabled) return { server: createAppServer(), pool: null };
   const { mailConfiguration } = await import("./mail/config.mjs");
   const mailConfig = mailConfiguration(env);
@@ -123,7 +125,7 @@ export async function createConfiguredServer(env = process.env) {
     const { createReadinessHandler } = await import("./readiness/http.mjs");
     const readinessService = await createReadinessService({ authService: service, authStore: store, mailConfig, key: config.totpKey,
       features: { clientAccess: accessConfig.enabled, chat: chatConfig.enabled, photos: mediaConfig.enabled,
-        clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled } });
+        clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled } });
     const readinessHandler = createReadinessHandler(readinessService, { origin: config.origin });
     if (!accessConfig.enabled) return { server: createAppServer({ authHandler, readinessHandler }), pool, mailWorker: null };
     const { createAccessStore } = await import("./access/store.mjs");
@@ -155,6 +157,8 @@ export async function createConfiguredServer(env = process.env) {
     let chatHandler;
     let mediaHandler;
     let crmHandler;
+    let broadcastHandler;
+    let broadcastWorker;
     if (chatConfig.enabled) {
       const { createChatStore } = await import("./chat/store.mjs");
       const { createChatService } = await import("./chat/service.mjs");
@@ -188,14 +192,27 @@ export async function createConfiguredServer(env = process.env) {
           storage: mediaStorage, key: mediaConfig.key });
         mediaHandler = createMediaHandler(mediaService, { origin: mediaConfig.origin });
       }
+      if (broadcastConfig.enabled) {
+        const { createBroadcastStore } = await import("./broadcast/store.mjs");
+        const { createBroadcastService } = await import("./broadcast/service.mjs");
+        const { createBroadcastHandler } = await import("./broadcast/http.mjs");
+        const { createBroadcastWorker } = await import("./broadcast/worker.mjs");
+        const broadcastStore = createBroadcastStore(pool, { chatStore, mediaEnabled: mediaConfig.enabled });
+        await broadcastStore.assertSchema();
+        const broadcastService = await createBroadcastService({ store: broadcastStore, authStore: store, authService: service,
+          key: chatConfig.key, mediaEnabled: mediaConfig.enabled });
+        broadcastHandler = createBroadcastHandler(broadcastService, { origin: chatConfig.origin, mediaEnabled: mediaConfig.enabled });
+        broadcastWorker = createBroadcastWorker({ store: broadcastStore, authStore: store, key: chatConfig.key });
+      }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler });
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler });
     const workers = [];
     let closing;
     const mailWorker = {
       close() {
         if (!closing) closing = (async () => {
+          await broadcastWorker?.stop();
           await Promise.allSettled(workers.map((worker) => worker.close()));
           await transport.close();
         })();
@@ -206,6 +223,7 @@ export async function createConfiguredServer(env = process.env) {
     // before the application pool is closed during graceful shutdown.
     server.once("listening", () => {
       if (closing) return;
+      broadcastWorker?.start();
       workers.push(startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key, closeTransport: false,
         onError: () => console.error("JessieMessage verification mail worker unavailable.") }));
       if (resetMailStore) workers.push(startMailWorker({ store: resetMailStore, transport, key: resetConfig.key, purpose: "password-reset", closeTransport: false,
