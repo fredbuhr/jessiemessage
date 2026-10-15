@@ -16,6 +16,8 @@ Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de cl
 
 **Avancement accessibilité du chat — étape 0.20 :** les [annonces et le focus clavier](chat-accessibility.md), version 0.22.0, branche `feat/chat-accessibility` sur #22, traitent A16 dans le code : réception comptée sans contenu privé, historique et reprises silencieux, conservation ou repli logique du focus après les actions. Un job Chrome séparé exerce les vrais fichiers avec des API synthétiques sur ordinateur et viewport étroit. Les lecteurs d’écran, les systèmes mobiles et les parcours réels de préproduction restent à vérifier. Aucune fusion ni publication.
 
+**Avancement préproduction — étape 0.21 :** le [diagnostic opérateur](preproduction-preflight.md), version 0.23.0, branche `feat/preproduction-preflight` sur #23, sépare configuration d’authentification seule, Node/Sharp et sonde neuve, puis métadonnées SQL en lecture seule. Le rapport est fermé, sans secrets, et ne valide jamais la publication. Aucune migration ni service privé n’est démarré. Les tests ne remplacent pas l’éligibilité de l’abonnement Infomaniak, la vraie isolation, la persistance, l’arrêt du processus, la réception e-mail ou la recette complète. Aucun compte d’hébergement consulté ; aucune publication.
+
 ## État de référence
 
 Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Adresse officielle retenue pour l'expédition, les réponses, le contact et la préparation du compte administrateur initial : **contact@jessiemessage.com**. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
