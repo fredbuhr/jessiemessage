@@ -10,7 +10,7 @@ Branche courante : `feat/backup-clone-recovery`, construite sur `feat/media-capa
 
 Le renouvellement et la pagination des accès sont disponibles dans la [PR brouillon #13](https://github.com/fredbuhr/jessiemessage/pull/13).
 
-La capacité et l'inventaire privés des médias sont disponibles dans la [PR brouillon #14](https://github.com/fredbuhr/jessiemessage/pull/14), empilée sur #13.
+La capacité et l'inventaire privés des médias sont disponibles dans la [PR brouillon #14](https://github.com/fredbuhr/jessiemessage/pull/14), empilée sur #13. La préparation de sauvegarde et restauration sur copie isolée est disponible dans la [PR brouillon #15](https://github.com/fredbuhr/jessiemessage/pull/15), empilée sur #14.
 
 L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée sur bleu nuit. Les portraits personnels restent hors Git et des artefacts publics. Le prototype autonome 0.3.1 contient des données fictives ; il ne démontre pas le fonctionnement des comptes réels.
 
@@ -30,7 +30,7 @@ L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée
 | Disponibilité serveur 0.13 | Admission avant SQL/corps d’import, budgets de lecture, SMTP annulable, arrêt de tous les producteurs et drainage borné | CI vérifiée ; charge, proxy et hébergement réels à mesurer |
 | Accès administrés 0.14 | Prolongation atomique des accès approuvés, conflits d’onglets, listes clients/invitations paginées au-delà de 500 entrées | CI MariaDB vérifiée ; recette navigateur et charge à réaliser |
 | Capacité médias 0.15 | Réservations persistantes, plafonds, suppression durable avant libération, inventaire privé et initialisation hors ligne | Réparation sur clone préparée en 0.16 ; exploitation réelle à éprouver |
-| Restauration 0.16 | Manifeste signé préalable, vérification des cinq clés et données, réparation des réservations connues et réassociation sur clone isolé | Validation synthétique en cours ; exercice hébergeur, sauvegardes externes et rétention à organiser |
+| Restauration 0.16 | Manifeste signé préalable, vérification des cinq clés et données, réparation des réservations connues et réassociation sur clone isolé | CI MariaDB vérifiée ; exercice hébergeur, sauvegardes externes et rétention à organiser |
 | Présentation | Identité Nuit, icônes approuvées, aperçu autonome fictif | Contrôles navigateur, accessibilité et responsive réels à terminer |
 
 Les outils clients restent réservés à l'administrateur affecté. Les notes sont chiffrées ; les listes CRM n'incluent ni notes ni adresse e-mail. Les dates de suivi ne déclenchent aucune notification. Les groupes sont des classements privés, pas des salons.
@@ -136,7 +136,7 @@ Le code mort identifié est limité : `constantTimeText` est utilisé seulement 
 | 0.13 — disponibilité et arrêt | Admission avant corps d'import, quotas, SMTP annulable, aucun nouvel appel de réservation après arrêt, drainage borné | Lot de code terminé et CI vérifiée |
 | 0.14 — renouvellement et listes | Accès déjà approuvés prolongés sans doublon, pagination complète, état privé borné | Lot de code terminé et CI vérifiée |
 | 0.15 — capacité et inventaire | Réservations avant écriture, limites liées au stockage, import historique hors ligne et inventaire sans purge | Lot de code terminé et CI vérifiée |
-| 0.16 — restauration sur clone | Manifeste préalable, contrôle des cinq clés et données, réparation connue avec reprise puis réassociation | Implémentation terminée ; validation en cours |
+| 0.16 — restauration sur clone | Manifeste préalable, contrôle des cinq clés et données, réparation connue avec reprise puis réassociation | Lot de code terminé et CI vérifiée |
 | Majorité externe | Choix du processus et du prestataire, intégration et validation des preuves avant ouverture des comptes réels | À chiffrer après choix du prestataire |
 | 0.17 — données et exploitation | Politique et outils de rétention/export/suppression ; supervision et procédure de retour arrière | 2–3 jours après choix de rétention |
 | Sauvegardes réelles | Copier DB/médias/clés, exécuter la procédure 0.16 sur l’hébergement retenu et mesurer la reprise | Environ 1 jour après accès |
@@ -154,7 +154,7 @@ Les valeurs finales des quotas, la politique de rétention et les sauvegardes se
 | --- | --- | --- |
 | 1 — Réserver la capacité | Journal persistant avant écriture, plafonds compte/global, déduplication atomique et import des anciens médias supprimés inclus | Implémenté et CI vérifiée |
 | 2 — Inventorier sans supprimer | Lectures SQL/fichiers bornées, enveloppes structurelles, inconnus et états incertains signalés sans suppression | Implémenté et CI vérifiée |
-| 3 — Réparer et restaurer sur copie | Manifeste signé avant copie, vérification des cinq clés et données, clôture durable des candidats connus, reprise puis réassociation | Implémenté en 0.16 ; validation en cours |
+| 3 — Réparer et restaurer sur copie | Manifeste signé avant copie, vérification des cinq clés et données, clôture durable des candidats connus, reprise puis réassociation | Implémenté en 0.16 et CI vérifiée |
 | 4 — Éprouver l’exploitation réelle | Sauvegarde externe et secrets séparés, restauration mesurée sur hébergeur, conservation et retour arrière | À organiser après accès |
 
 Un échec HTTP, un délai écoulé ou une absence SQL observée pendant un import ne prouvent pas qu’un fichier est orphelin : un commit peut avoir réussi sans accusé. Le lot conserve donc les réservations incertaines ; une suppression physique échouée reste entièrement comptée. Les campagnes et la médiathèque peuvent légitimement référencer une photo sans message vivant. L’inventaire ne certifie pas le tag GCM et ne remplace pas une restauration cryptographique. Les index des listes administratives seront mesurés et ajoutés avec une migration revue avant une forte volumétrie.
@@ -177,4 +177,8 @@ Implémentation `8a03e5f14625a6c36844be313344f0bb2773314e`, [PR brouillon #14](h
 
 ## Lot restauration 0.16
 
-La [procédure de sauvegarde et restauration](backup-clone-recovery.md) prépare un manifeste signé avant la copie, vérifie les cinq clés même dans les domaines encore vides et contrôle les données chiffrées existantes. La réparation reprend uniquement les réservations et suppressions déjà connues dans ce manifeste, sur une autre base et un autre répertoire physique. La source reste conservée. Le serveur de la copie reste bloqué par son association de stockage jusqu’aux contrôles finaux et à la réassociation atomique. Aucune nouvelle migration ou dépendance. Validation de la révision en cours ; aucune opération de production.
+La [procédure de sauvegarde et restauration](backup-clone-recovery.md) prépare un manifeste signé avant la copie, vérifie les cinq clés même dans les domaines encore vides et contrôle les données chiffrées existantes. La réparation reprend uniquement les réservations et suppressions déjà connues dans ce manifeste, sur une autre base et un autre répertoire physique. La source reste conservée. Le serveur de la copie reste bloqué par son association de stockage jusqu’aux contrôles finaux et à la réassociation atomique. Aucune nouvelle migration ou dépendance. Implémentation `6a4504a1d5c4d895227f4d258ff8cdfca69b016b`, [CI 38703160199](https://github.com/fredbuhr/jessiemessage/actions/runs/38703160199) réussie : **991 tests généraux**, 19 groupes SQL ignorés seulement sans base, et **287 tests réels sans saut sur chacune des deux versions MariaDB**. Les 19 groupes séquentiels comptent respectivement 12, 16, 8, 20, 13, 13, 19, 12, 24, 15, 19, 14, 21, 12, 10, 13, 18, 14 et 14 tests. Syntaxe et build réussis ; aucune opération de production.
+
+### Étape suivante après 0.16
+
+Le prochain lot 0.17 porte sur la politique et les outils de rétention/export/suppression, ainsi que la supervision et le retour arrière. Les durées de conservation et les obligations applicables doivent être fixées avant d’activer des purges réelles. La procédure 0.16 reste à éprouver sur l’hébergement choisi avec sauvegardes externes et secrets séparés. Le parcours d’entrée de l’app installée, le SMTP réel, la majorité externe, la recette HTTPS/appareils et la revue/fusion ordonnée restent des prérequis de publication.
