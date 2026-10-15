@@ -6,6 +6,8 @@ Invitation-only private messaging PWA. Public source, private user data.
 
 > **Current development: isolated authentication rehearsal, application 0.24.0 (stage 0.22).** A dedicated Chrome/HTTPS/MariaDB job exercises the configured authentication-only server with a synthetic administrator, native protected cookies and real SQL sessions. It uses an initially empty disposable loopback database and generates its own test TLS certificate. Client access, chat and email delivery stay disabled. The offline preflight remains available. `contact@jessiemessage.com` remains the official address. Hosting access and the existence of a separate preproduction environment remain unverified; no deployment has occurred. See [authentication rehearsal](docs/authentication-rehearsal.md) and [isolated acceptance](docs/preproduction-acceptance.md).
 
+**Hosting follow-up — stage 0.23:** the [public hosting inventory and Manager checklist](docs/hosting-inventory-2026-10-15.md) records the default Infomaniak page and HTTP 404 on the four expected application endpoints at 13:31–13:32 UTC on 15 October. Private project, preproduction URL, Node settings and database remain unverified. Application 0.24.0 and the green authentication rehearsal are unchanged; this is a documentation-only lot.
+
 ## Try without a terminal
 
 Open the latest successful **CI** run on the development branch in GitHub Actions. Download **JessieMessage-apercu-…**, extract it and open **JessieMessage.html** in a browser.
