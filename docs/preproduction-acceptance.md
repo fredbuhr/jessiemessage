@@ -1,10 +1,10 @@
-# Recette de préproduction — étapes 0.18–0.19, version 0.21.0
+# Recette de préproduction — étapes 0.18–0.20, version 0.22.0
 
 Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. Il ne constate aucun déploiement, changement DNS, compte réel, réception e-mail ou installation sur téléphone. Les essais locaux et CI utilisent des identités fictives, des données synthétiques et des services maîtrisés.
 
 ## 1. Fixer l'environnement et la révision
 
-- [ ] Consigner le SHA exact et les trois résultats CI de cette révision : tests généraux, MariaDB 10.11 et MariaDB 11.4. Relever également la version Node.js 24 installée.
+- [ ] Consigner le SHA exact et les quatre résultats CI de cette révision : tests généraux, MariaDB 10.11, MariaDB 11.4 et Chrome. Relever également la version Node.js 24 installée.
 - [ ] Réserver un sous-domaine HTTPS de `jessiemessage.com` à cette recette ; par exemple `preprod.jessiemessage.com`, uniquement après sa configuration effective. `JESSIEMESSAGE_SITE_ORIGIN` doit correspondre exactement à cette origine, sans chemin ni barre finale. L'expéditeur officiel reste `contact@jessiemessage.com`.
 - [ ] Utiliser une base MariaDB dédiée et jetable, un répertoire média privé persistant hors du checkout, et des clés propres à la préproduction. Ne copier aucun compte, clé, portrait, média ou message de production. Préserver les ressources ZTIKIX.
 - [ ] Confirmer MariaDB 10.11+, TLS avec vérification du certificat, `GET_LOCK`, compte DML d'exécution distinct du compte de migration et contraintes SQL actives. Les confirmations de base doivent désigner uniquement la base de recette. Voir [DATABASE.md](DATABASE.md) et [auth-admin.md](auth-admin.md).
@@ -12,6 +12,19 @@ Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. 
 - [ ] Prévoir une collecte privée des événements fixes de supervision. N'enregistrer ni URL contenant un secret, ni cookie, corps de message, adresse client, dump, clé ou transcription SMTP.
 
 La création du schéma, l'initialisation média hors ligne et l'initialisation du compte administrateur sont des opérations distinctes. Les exécuter seulement dans l'environnement isolé confirmé, en suivant leurs procédures existantes ; aucun de ces changements n'est déclenché par ce document ou par l'ouverture de `/app`.
+
+### Compatibilité Infomaniak : état documentaire au 15 octobre 2026
+
+Le [comparatif officiel](https://www.infomaniak.com/fr/hebergement/tarifs-et-caracteristiques) annonce un site Node.js et MariaDB 10.11 sur l’offre Hébergement Web. La [FAQ de création](https://www.infomaniak.com/fr/support/faq/2537/creer-un-site-nodejs-chez-infomaniak) explique l’ajout d’un projet Node à un plan Web. Un serveur Cloud n’est donc pas démontré nécessaire par principe. Le compte et les options de l’abonnement existant n’ont pas été consultés ; ces sources ne prouvent pas son éligibilité.
+
+| Contrat documenté | Vérification restant à faire dans la préproduction isolée |
+| --- | --- |
+| [Commande Node et port dynamique `PORT`](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak) ; le code utilise déjà `PORT` et `0.0.0.0` | Node 24 réellement sélectionnable, commande `npm start`, disponibilité durable des workers et configuration du proxy |
+| MariaDB 10.11 annoncé | Version attribuée, TLS/CA, comptes séparés, contraintes et verrou `GET_LOCK` |
+| [Sorties TCP 587/465 et 3306 pour Node](https://www.infomaniak.com/fr/support/faq/2516/decouvrir-les-ports-ouverts-pour-nodejs) | Connexion chiffrée puis réception contrôlée avec `contact@jessiemessage.com` ; aucune livraison attestée par les ports seuls |
+| Le stockage privé et l’arrêt du processus restent non attestés par ces guides | Sharp installé, médias hors racine Web conservés après rebuild/redémarrage, permissions, signal d’arrêt et délai de drainage |
+
+Aucune option, configuration, donnée ou commande de service n’a été modifiée chez l’hébergeur par cette revue documentaire. La compatibilité complète de JessieMessage doit être constatée sur le sous-domaine de recette.
 
 ## 2. Contrôles locaux sans services externes
 
@@ -22,6 +35,8 @@ npm ci --ignore-scripts
 npm run check
 npm test
 npm run build
+# Avec Chrome et ChromeDriver déjà installés :
+npm run test:browser
 ```
 
 Le build produit l'atelier HTML fictif. Il ne prouve pas le fonctionnement des comptes réels, du SMTP, du navigateur ou de l'installation PWA. `npm run test:db` doit être réservé à la configuration explicitement jetable attendue par les tests : ces groupes créent et suppriment leurs tables. Ne jamais le pointer vers une base à conserver.
@@ -75,6 +90,8 @@ Consigner pour chaque essai le navigateur, sa version, l'appareil, le SHA et le 
 - [ ] Masquer puis réafficher la page, verrouiller l'écran, utiliser Précédent/Suivant et restaurer une page du cache de navigation. Les données privées doivent être retirées au masquage selon le parcours existant puis revérifiées au retour.
 - [ ] Déconnecter le compte, puis confier le même appareil à un autre compte : aucun ancien texte, brouillon, note, miniature ou URL d'objet ne doit réapparaître. Tester aussi la déconnexion depuis un second onglet.
 - [ ] Contrôler les réponses privées `no-store`, le comportement hors réseau et la réouverture après redémarrage. N'ajouter aucun cache de messages/photos ni promesse de consultation hors ligne pour satisfaire un critère d'installation.
+- [ ] Au lecteur d’écran, vérifier qu’une vraie réception produit une annonce neutre comptée, sans nom ni contenu. Chargement initial, historique, reprise après masquage, accusés, suppression, doublons et propres envois restent silencieux pour cette région. Un polling vide ne doit pas réannoncer le dernier compteur. Changer de langue efface cette annonce transitoire ; la réception suivante utilise la langue choisie.
+- [ ] Au clavier, tester le lien d’évitement, sélection puis retour d’une conversation, contact focalisé pendant le polling, suppression de son message, dernière page d’historique et galerie : aucun focus perdu ou déplacé après une action effectuée ailleurs. Tester les dialogues natifs avec Tab/Maj+Tab/Échap, retour logique et masque de la page pendant une photo. Voir [chat-accessibility.md](chat-accessibility.md).
 - [ ] Vérifier clavier virtuel, hauteur visible, scroll, orientation, zoom, navigation au clavier, focus, annonces d'état et contraste. Contrôler les photos depuis les formats acceptés et l'absence de métadonnées dans les images normalisées.
 
 ## 6. Données, restauration et critères de sortie

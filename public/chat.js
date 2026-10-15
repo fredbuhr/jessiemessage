@@ -31,8 +31,68 @@ let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersi
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
 let broadcastPreference = null;
+// The live region contains only a cumulative count for this visible selection.
+// No message body, sender name, caption or persistent announcement log is kept.
+let messageAnnouncement = null;
 
 function notice(message, error = false, id = "chat-status") { const node = el(id); if (message) ui.text(node, message); else ui.rawText(node, ""); node.classList.toggle("is-error", error); }
+function clearMessageAnnouncement() {
+  messageAnnouncement = null;
+  const node = el("message-announcement"); if (node) ui.rawText(node, "");
+}
+function armMessageAnnouncement(state) {
+  if (!visible() || !belongsTo(currentState(), state.id, state.epoch) || !state.conversation) return;
+  messageAnnouncement = { id: state.id, epoch: state.epoch, throughSequence: state.conversation.latestSequence, count: 0 };
+}
+function incomingAnnouncements(state, events, previousCursor) {
+  const record = messageAnnouncement;
+  if (!record || !ready || !visible() || selectionLoading || !belongsTo(currentState(), record.id, record.epoch)
+    || !belongsTo(state, record.id, record.epoch)) return [];
+  return events.filter((event) => event.kind === "message" && compareSequence(event.sequence, previousCursor) > 0
+    && compareSequence(event.message.sequence, record.throughSequence) > 0 && !state.messages.has(event.message.sequence)
+    && event.message.sender === "peer" && event.message.deletedAt == null).map((event) => ({ id: event.message.id, sequence: event.message.sequence }));
+}
+function announceIncoming(state, events, candidates) {
+  const record = messageAnnouncement;
+  if (!record || !ready || !visible() || selectionLoading || !belongsTo(currentState(), record.id, record.epoch)
+    || !belongsTo(state, record.id, record.epoch)) return;
+  // Advance only across events actually consumed. Conversation metadata may
+  // already describe later pages that have not reached the browser yet.
+  for (const event of events) if (event.kind === "message") record.throughSequence = maxSequence(record.throughSequence, event.message.sequence);
+  const received = new Set(candidates.filter((candidate) => {
+    const message = state.messages.get(candidate.sequence);
+    return message?.id === candidate.id && message.sender === "peer" && message.deletedAt == null;
+  }).map((candidate) => candidate.id)).size;
+  if (!received) return;
+  record.count += received;
+  const node = el("message-announcement");
+  if (node) ui.rawText(node, ui.t(record.count === 1 ? "Nouveau message reçu." : "{count} nouveaux messages reçus.",
+    record.count === 1 ? {} : { count: ui.numberParam(record.count) }));
+}
+// A language change clears only the spoken text. Keeping the visible-session
+// count avoids replaying a prior announcement through a reactive translation.
+ui.onChange(() => { const node = el("message-announcement"); if (node) ui.rawText(node, ""); });
+function focusVisible(node) {
+  if (!visible() || !node?.isConnected || node.disabled || typeof node.focus !== "function") return false;
+  for (let current = node; current; current = current.parentElement) {
+    if (current.hidden || current.getAttribute?.("aria-hidden") === "true" || current.getAttribute?.("inert") != null) return false;
+    if (typeof globalThis.getComputedStyle === "function") {
+      const style = globalThis.getComputedStyle(current); if (style.display === "none" || ["hidden", "collapse"].includes(style.visibility)) return false;
+    }
+  }
+  const modal = [...document.querySelectorAll?.("dialog") ?? []].filter((dialog) => dialog.open).at(-1);
+  if (modal && !modal.contains(node)) return false;
+  if (document.activeElement !== node) node.focus({ preventScroll: true });
+  return document.activeElement === node;
+}
+function focusWasLost(node) { return document.activeElement === node || document.activeElement === document.body; }
+function inboxButton(id) { return [...el("conversations").children].find((button) => button.dataset.conversationId === id) ?? null; }
+function focusInbox(id) { if (!focusVisible(inboxButton(id))) focusVisible(el("inbox-title")); }
+function focusMessage(sequence) {
+  const article = messageRows.get(sequence)?.article;
+  if (article?.classList.contains("deleted")) { article.setAttribute("tabindex", "-1"); if (focusVisible(article)) return; }
+  focusVisible(el("message-scroll"));
+}
 function currentState() { return selected ? states.get(selected) : null; }
 function visible() { return document.visibilityState === "visible"; }
 function abortRequests(selectionOnly = false) { for (const controller of controllers) { if (selectionOnly && controller.accountScope) continue; controller.abort(); controllers.delete(controller); } }
@@ -40,17 +100,28 @@ function stopPolling() { clearTimeout(pollTimer); pollTimer = null; clearTimeout
 function revokePreview() { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; previewIdentity = null; ui.forget(el("image-preview")); el("image-preview").replaceChildren(); }
 function closeLightbox(restoreFocus = true) {
   lightboxVersion += 1;
+  const returnItem = lightboxItem;
   if (lightboxItem) { imageUrls.remove(lightboxItem.media.fullUrl); imageRequests.get(lightboxItem.media.fullUrl)?.controller.abort(); imageRequests.delete(lightboxItem.media.fullUrl); }
   lightboxItem = null; ui.forget(el("lightbox-image")); el("lightbox-image").replaceChildren();
   if (el("lightbox").open) el("lightbox").close();
-  if (restoreFocus && lightboxReturnFocus?.isConnected) lightboxReturnFocus.focus();
-  else if (restoreFocus && visible() && currentState()) (panel ? el("close-media") : el("open-gallery")).focus();
+  if (restoreFocus) {
+    const state = currentState();
+    // A deletion can close the lightbox before rendering its tombstone. Its
+    // still-connected old photo button must not receive transient focus.
+    const openerAllowed = !returnItem?.messageId || ![...state?.messages.values() ?? []].some((message) => message.id === returnItem.messageId && message.deletedAt != null);
+    if ((!openerAllowed || !focusVisible(lightboxReturnFocus)) && state) {
+      const key = panel?.kind === "gallery" ? returnItem?.messageId : returnItem?.media.id;
+      const card = openerAllowed && key ? [...el("media-grid").children].find((item) => item.dataset.mediaKey === key) : null;
+      if (!focusVisible(card?.querySelector(".photo-open")) && !focusVisible(panel ? el("close-media") : el("open-gallery"))) focusVisible(el("message-scroll"));
+    }
+  }
   lightboxReturnFocus = null;
 }
 function closeMedia(restoreFocus = true) {
   panelVersion += 1; panel = null; panelBusy = false; ui.forget(el("media-grid")); el("media-grid").replaceChildren();
   if (el("media-dialog").open) el("media-dialog").close();
-  if (restoreFocus && dialogReturnFocus?.isConnected) dialogReturnFocus.focus(); dialogReturnFocus = null;
+  if (restoreFocus && !focusVisible(dialogReturnFocus) && !focusVisible(el("open-gallery"))) focusVisible(el("message-scroll"));
+  dialogReturnFocus = null;
 }
 function clearImages() {
   mediaVersion += 1;
@@ -59,7 +130,7 @@ function clearImages() {
   for (const image of el("messages").querySelectorAll("img")) image.removeAttribute("src");
 }
 function clearChat() {
-  messageRows.clear();
+  clearMessageAnnouncement(); messageRows.clear();
   clearImages();
   ui.forget(el("messages")); el("messages").replaceChildren(); ui.text(el("peer-name"), "Messages privés");
   ui.text(el("conversation-status"), "Choisis une conversation.");
@@ -382,7 +453,9 @@ async function openMedia(kind, opener) {
 async function loadMediaPage(more = false) {
   const state = currentState(); const activePanel = panel; const version = panelVersion;
   if (!state || !activePanel || panelBusy || (more && !activePanel.hasMore)) return;
-  panelBusy = true; el("more-media").disabled = true;
+  const paginator = el("more-media"), restorePaginator = more && document.activeElement === paginator;
+  const oldKeys = new Set(activePanel.items.map((item) => activePanel.kind === "library" ? item.id : item.messageId));
+  panelBusy = true; paginator.disabled = true;
   try {
     const cursor = more ? activePanel.cursor : null;
     const path = activePanel.kind === "library" ? `${mediaBase}/assets?conversationId=${state.id}&limit=50${cursor ? `&afterId=${cursor}` : ""}`
@@ -399,14 +472,23 @@ async function loadMediaPage(more = false) {
     notice(activePanel.items.length ? "" : activePanel.kind === "library" ? "Aucune photo dans ta bibliothèque pour le moment." : "Aucune photo partagée dans cette conversation.", false, "media-status");
     renderMediaPanel();
   } catch (error) { if (panel === activePanel && version === panelVersion) await handleMediaError(error, state, "media-status"); }
-  finally { if (panel === activePanel && version === panelVersion) { panelBusy = false; el("more-media").disabled = false; } }
+  finally { if (panel === activePanel && version === panelVersion) {
+    panelBusy = false; paginator.disabled = false;
+    if (restorePaginator && focusWasLost(paginator) && !focusVisible(paginator)) {
+      const card = [...el("media-grid").children].find((item) => !oldKeys.has(item.dataset.mediaKey)) ?? [...el("media-grid").children].at(-1);
+      if (!focusVisible(card?.querySelector(".photo-open"))) focusVisible(el("close-media"));
+    }
+  } }
 }
 function renderMediaPanel() {
   const state = currentState(); const activePanel = panel; if (!state || !activePanel || !belongsTo(state, activePanel.conversationId, activePanel.epoch)) return;
-  const version = panelVersion; const fragment = document.createDocumentFragment();
+  const version = panelVersion; const grid = el("media-grid"), focused = document.activeElement;
+  const focusedCard = [...grid.children].find((card) => card.contains(focused));
+  const focusKey = focusedCard?.dataset.mediaKey, focusAction = focused?.dataset.mediaAction;
+  const fragment = document.createDocumentFragment();
   for (const item of activePanel.items) {
     const media = activePanel.kind === "library" ? item : item.media;
-    const card = document.createElement("article"); card.className = "media-card";
+    const card = document.createElement("article"); card.className = "media-card"; card.dataset.mediaKey = activePanel.kind === "library" ? item.id : item.messageId;
     const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; ui.attr(photo, "aria-label", "Agrandir cette photo privée");
     photo.addEventListener("click", () => { void openLightbox({ media, messageId: activePanel.kind === "gallery" ? item.messageId : null }, state, photo); });
     card.append(photo);
@@ -414,13 +496,13 @@ function renderMediaPanel() {
     if (activePanel.kind === "library") {
       if (media.sharedHere) { const warning = document.createElement("p"); warning.className = "shared-photo"; ui.text(warning, "Déjà envoyée ici. Renvoyer crée un nouveau message."); card.append(warning); }
       const actions = document.createElement("div"); actions.className = "media-actions";
-      const choose = document.createElement("button"); choose.type = "button"; choose.className = "text-button"; ui.text(choose, media.sharedHere ? "Renvoyer" : "Choisir"); choose.disabled = !state.conversation?.canSend || Boolean(state.pending);
+      const choose = document.createElement("button"); choose.type = "button"; choose.className = "text-button"; choose.dataset.mediaAction = "choose"; ui.text(choose, media.sharedHere ? "Renvoyer" : "Choisir"); choose.disabled = !state.conversation?.canSend || Boolean(state.pending);
       choose.addEventListener("click", () => {
         if (!belongsTo(currentState(), state.id, state.epoch) || state.pending || !state.conversation?.canSend) return;
         if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant de choisir une photo.", true, "media-status"); return; }
         state.imageDraft = { file: null, asset: media }; closeMedia(); renderMeta(state); notice(media.sharedHere ? "Cette photo a déjà été envoyée ici. Envoyer ajoutera un nouveau message." : "Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
       });
-      const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; ui.text(remove, "Supprimer la photo");
+      const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; remove.dataset.mediaAction = "remove"; ui.text(remove, "Supprimer la photo");
       remove.addEventListener("click", () => { void removeOwnAsset(media, state, remove); }); actions.append(choose, remove); card.append(actions);
     }
     fragment.append(card);
@@ -430,6 +512,11 @@ function renderMediaPanel() {
   }
   ui.forget(el("media-grid")); el("media-grid").replaceChildren(fragment); el("more-media").hidden = !activePanel.hasMore;
   ui.text(el("more-media"), activePanel.kind === "library" ? "Autres photos" : "Photos précédentes");
+  if (focusKey && focusWasLost(focused)) {
+    const card = [...grid.children].find((item) => item.dataset.mediaKey === focusKey);
+    const control = focusAction ? [...card?.querySelectorAll("button") ?? []].find((button) => button.dataset.mediaAction === focusAction) : card?.querySelector(".photo-open");
+    if (!focusVisible(control)) focusVisible(el("close-media"));
+  }
 }
 async function removeOwnAsset(media, state, button) {
   if (button.disabled) return; button.disabled = true; const activePanel = panel;
@@ -453,10 +540,13 @@ async function openLightbox(item, state, opener) {
 function dateParameter(value, long = false) {
   return ui.dateParam(value, long ? { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
 }
-function renderInbox() {
-  const container = el("conversations"); ui.forget(container); container.replaceChildren();
+function renderInbox({ restoreFocus = true } = {}) {
+  const container = el("conversations");
+  const focused = [...container.children].find((button) => button.contains(document.activeElement));
+  const focusedId = focused?.dataset.conversationId;
+  ui.forget(container); container.replaceChildren();
   for (const conversation of [...inbox.values()].sort((a, b) => (b.lastActivityAt ?? b.createdAt) - (a.lastActivityAt ?? a.createdAt) || a.id.localeCompare(b.id))) {
-    const button = document.createElement("button"); button.type = "button"; button.className = "contact";
+    const button = document.createElement("button"); button.type = "button"; button.className = "contact"; button.dataset.conversationId = conversation.id;
     button.classList.toggle("active", conversation.id === selected); button.setAttribute("aria-pressed", String(conversation.id === selected));
     const text = document.createElement("span"); const name = document.createElement("strong"); ui.rawText(name, crm?.displayName(conversation) ?? conversation.peerName);
     const time = document.createElement("time"); time.dateTime = new Date(conversation.lastActivityAt ?? conversation.createdAt).toISOString(); ui.text(time, "{date}", { date: dateParameter(conversation.lastActivityAt ?? conversation.createdAt, true) });
@@ -470,16 +560,27 @@ function renderInbox() {
     }
     button.append(text);
     if (conversation.unreadCount > 0) { const count = document.createElement("span"); count.className = "unread"; ui.text(count, "{count}", { count: ui.numberParam(conversation.unreadCount) }); ui.attr(count, "aria-label", conversation.unreadCount === 1 ? "{count} message non lu" : "{count} messages non lus", { count: ui.numberParam(conversation.unreadCount) }); button.append(count); }
-    button.addEventListener("click", () => { void selectConversation(conversation.id); }); container.append(button);
+    button.addEventListener("click", () => { void selectConversation(conversation.id, { focus: true }); }); container.append(button);
   }
   notice(inbox.size ? "" : "Aucune conversation pour le moment.", false, "inbox-status");
   el("more-conversations").hidden = !inboxMore; el("more-conversations").disabled = inboxLoading;
+  if (restoreFocus && focusedId && focusWasLost(focused)) focusInbox(focusedId);
+}
+function restoreInboxPaginator(paginator, previousIds) {
+  if (!focusWasLost(paginator) || focusVisible(paginator)) return;
+  const added = [...el("conversations").children].find((button) => !previousIds.has(button.dataset.conversationId));
+  if (!focusVisible(added ?? [...el("conversations").children].at(-1))) focusVisible(el("inbox-title"));
 }
 async function loadInbox(more = false, refresh = false) {
-  if (crm) { await crm.loadInbox(more, refresh); lastInboxRefresh = Date.now(); return; }
+  const ticket = snapshot(); const paginator = el("more-conversations"), restorePaginator = more && document.activeElement === paginator;
+  const previousIds = new Set(inbox.keys());
+  if (crm) {
+    try { await crm.loadInbox(more, refresh); lastInboxRefresh = Date.now(); }
+    finally { if (restorePaginator && fresh(ticket)) restoreInboxPaginator(paginator, previousIds); }
+    return;
+  }
   if (inboxLoading) return;
   if (more && (!inboxMore || !inboxCursor)) return;
-  const ticket = snapshot();
   inboxLoading = true;
   try {
     const boundary = more ? inboxCursor : refresh ? inboxRefreshCursor : null;
@@ -507,7 +608,10 @@ async function loadInbox(more = false, refresh = false) {
     }
     lastInboxRefresh = Date.now();
     renderInbox();
-  } finally { if (fresh(ticket)) { inboxLoading = false; el("more-conversations").disabled = false; } }
+  } finally { if (fresh(ticket)) {
+    inboxLoading = false; paginator.disabled = false;
+    if (restorePaginator) restoreInboxPaginator(paginator, previousIds);
+  } }
 }
 function renderMeta(state) {
   const conversation = state.conversation; if (!conversation) return;
@@ -566,6 +670,8 @@ function createMessageRow(state, message, contentKey) {
 }
 function renderMessages(state, { initial = false, ownSend = false, prepend = false } = {}) {
   if (!belongsTo(currentState(), state.id, state.epoch)) return;
+  const focused = document.activeElement;
+  const focusedRow = [...messageRows.values()].find((row) => row.article.contains(focused));
   const scroll = el("message-scroll"); const atBottom = nearBottom(scroll); const anchor = viewportAnchor(); const oldTop = scroll.scrollTop;
   pruneDeletedPhotos(state);
   const messages = orderedMessages(state); const container = el("messages"); const photos = [];
@@ -604,9 +710,10 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
     else scroll.scrollTop = oldTop;
   }
   renderMeta(state); scheduleRead();
+  if (focusedRow && !focused.isConnected && focusWasLost(focused)) focusMessage(focusedRow.article.dataset.sequence);
 }
-async function selectConversation(id) {
-  if (id === selected) return;
+async function selectConversation(id, { focus = false } = {}) {
+  if (id === selected) { if (focus) focusVisible(el("message-scroll")); return; }
   const previous = currentState(); if (previous) { previous.draft = el("message-body").value; if (previous.pending?.status === "sending") retrySend(previous); }
   selectionEpoch += 1; stopPolling(); abortRequests(true); inboxLoading = false; olderBusy = false; sendBusy = false; readBusy = false; selectionLoading = true;
   selected = id;
@@ -617,29 +724,34 @@ async function selectConversation(id) {
   states.set(id, state);
   clearChat(); el("workspace").classList.add("selected"); el("message-body").value = state.draft;
   ui.rawText(el("peer-name"), inbox.get(id)?.peerName ?? "Jessie"); ui.text(el("conversation-status"), "Chargement de la conversation…");
-  renderInbox();
+  renderInbox({ restoreFocus: !focus });
+  if (focus) focusVisible(el("message-scroll"));
+  let moreHistory = false;
   try {
-    if (state.messages.size || state.conversation) { renderMessages(state, { initial: true }); await fetchEvents(state); }
+    if (state.messages.size || state.conversation) { renderMessages(state, { initial: true }); moreHistory = await fetchEvents(state); }
     else {
       const result = await request(`${conversationPath(state)}/messages?limit=50`, { state });
       mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
       state.eventCursor = sequence(result.eventCursor); state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore;
       renderMessages(state, { initial: true });
     }
-    schedulePolling();
+    if (!moreHistory) armMessageAnnouncement(state); schedulePolling(moreHistory ? 300 : retryDelay);
   } catch (error) { await handleError(error, state); }
-  finally { if (belongsTo(currentState(), state.id, state.epoch)) { selectionLoading = false; schedulePolling(); } }
+  finally { if (belongsTo(currentState(), state.id, state.epoch)) { selectionLoading = false; schedulePolling(moreHistory ? 300 : retryDelay); } }
 }
 async function loadOlder() {
   const state = currentState(); if (!state || olderBusy || !state.hasMoreBefore || !state.nextBefore) return;
-  const ticket = snapshot(state);
+  const ticket = snapshot(state); const paginator = el("older-messages"), restorePaginator = document.activeElement === paginator;
   olderBusy = true; renderMeta(state);
   try {
     const result = await request(`${conversationPath(state)}/messages?before=${state.nextBefore}&limit=50`, { state });
     mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
     state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore; renderMessages(state, { prepend: true });
   } catch (error) { await handleError(error, state); }
-  finally { if (fresh(ticket)) { olderBusy = false; renderMeta(state); } }
+  finally { if (fresh(ticket)) {
+    olderBusy = false; renderMeta(state);
+    if (restorePaginator && focusWasLost(paginator) && !focusVisible(paginator)) focusVisible(el("message-scroll"));
+  } }
 }
 async function fetchEvents(state) {
   const requestKey = `${state.id}:${state.epoch}:${visibilityGeneration}`;
@@ -650,13 +762,19 @@ async function fetchEvents(state) {
   for (let page = 0; page < 3; page += 1) {
     const result = await request(`${conversationPath(state)}/events?after=${state.eventCursor}&limit=100`, { state });
     const atBottom = nearBottom(el("message-scroll")); const before = state.conversation?.latestSequence ?? "0"; const pending = state.pending?.clientMessageId;
+    const previousCursor = state.eventCursor;
+    const acceptedEvents = result.events.filter((event) => compareSequence(event.sequence, previousCursor) > 0);
+    const candidates = incomingAnnouncements(state, acceptedEvents, previousCursor);
     mergeConversation(state, result.conversation); mergeEvents(state, result.events, result.nextCursor);
     pruneDeletedPhotos(state, result.events.filter((event) => event.kind === "delete").map((event) => event.message));
     if (pending && !state.pending) { state.draft = ""; el("message-body").value = ""; notice("Message enregistré."); }
-    renderMessages(state);
+    renderMessages(state); announceIncoming(state, acceptedEvents, candidates);
     if (!atBottom && compareSequence(state.conversation.latestSequence, before) > 0) el("new-messages").hidden = false;
     more = result.hasMore; if (!more) break;
   }
+  // The first catch-up after hiding or re-entering a selection is history,
+  // not a fresh live announcement. It establishes the next visible baseline.
+  if (!messageAnnouncement && !selectionLoading && !more) armMessageAnnouncement(state);
   return more;
   } finally { eventRequests.delete(requestKey); }
 }
@@ -723,10 +841,12 @@ async function sendImage(retry = false) {
 }
 async function deleteMessage(state, message, button) {
   if (!belongsTo(currentState(), state.id, state.epoch) || button.disabled) return;
+  const restoreFocus = document.activeElement === button;
   button.disabled = true;
   try {
     const result = await request(`${conversationPath(state)}/messages/${message.id}/delete`, { state, mutation: true });
     mergeMessages(state, [result.message]); renderMessages(state); notice("Ton message est supprimé.");
+    if (restoreFocus && focusWasLost(button)) focusMessage(message.sequence);
   } catch (error) { await handleError(error, state); if (button.isConnected) button.disabled = false; }
 }
 function scheduleRead() { clearTimeout(readTimer); if (ready && visible()) readTimer = setTimeout(() => { void markRead(); }, 150); }
@@ -761,12 +881,26 @@ async function logout() {
   }
   finally { logoutBusy = false; el("logout").disabled = false; }
 }
-el("composer").addEventListener("submit", (event) => { event.preventDefault(); void sendMessage(); });
+async function sendWithFocus(retry, button) {
+  const state = currentState(), ticket = snapshot(state), restoreFocus = document.activeElement === button;
+  try { await sendMessage(retry); }
+  finally {
+    if (restoreFocus && state && fresh(ticket) && state === currentState() && !state.pending && state.draft === ""
+      && el("message-body").value === "" && focusWasLost(button)) focusVisible(el("message-body"));
+  }
+}
+el("composer").addEventListener("submit", (event) => { event.preventDefault(); void sendWithFocus(false, el("send")); });
 el("message-body").addEventListener("input", () => { const state = currentState(); if (state) { state.draft = el("message-body").value; renderMeta(state); } });
-el("retry-send").addEventListener("click", () => { void sendMessage(true); });
+el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
 el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) el("image-file").click(); });
 el("image-file").addEventListener("change", chooseFile);
-el("cancel-image").addEventListener("click", () => { const state = currentState(); if (state && !state.pending && !sendBusy) { state.imageDraft = null; renderMeta(state); notice("Photo retirée de cet envoi."); } });
+el("cancel-image").addEventListener("click", () => {
+  const state = currentState(), restoreFocus = document.activeElement === el("cancel-image");
+  if (state && !state.pending && !sendBusy) {
+    state.imageDraft = null; renderMeta(state); notice("Photo retirée de cet envoi.");
+    if (restoreFocus && !focusVisible(el("message-body"))) focusVisible(el("message-scroll"));
+  }
+});
 el("open-library").addEventListener("click", (event) => { void openMedia("library", event.currentTarget); });
 el("open-gallery").addEventListener("click", (event) => { void openMedia("gallery", event.currentTarget); });
 el("close-media").addEventListener("click", () => closeMedia());
@@ -776,17 +910,22 @@ el("lightbox").addEventListener("close", () => { if (lightboxItem) closeLightbox
 el("more-media").addEventListener("click", () => { void loadMediaPage(true); });
 el("older-messages").addEventListener("click", () => { void loadOlder(); });
 el("more-conversations").addEventListener("click", () => { void loadInbox(true).catch((error) => handleError(error)); });
-el("new-messages").addEventListener("click", () => { el("message-scroll").scrollTop = el("message-scroll").scrollHeight; el("new-messages").hidden = true; scheduleRead(); });
+el("new-messages").addEventListener("click", () => {
+  const restoreFocus = document.activeElement === el("new-messages");
+  el("message-scroll").scrollTop = el("message-scroll").scrollHeight; el("new-messages").hidden = true;
+  if (restoreFocus) focusVisible(el("message-scroll")); scheduleRead();
+});
 el("message-scroll").addEventListener("scroll", () => { if (nearBottom(el("message-scroll"))) el("new-messages").hidden = true; scheduleRead(); }, { passive: true });
 el("back-to-inbox").addEventListener("click", () => {
-  const state = currentState(); if (state) { state.draft = el("message-body").value; if (state.pending?.status === "sending") retrySend(state); }
+  const state = currentState(); const returnId = state?.id;
+  if (state) { state.draft = el("message-body").value; if (state.pending?.status === "sending") retrySend(state); }
   selectionEpoch += 1; abortRequests(true); inboxLoading = false; selected = null; crm?.selectConversation(null); clearChat(); renderInbox(); schedulePolling();
-  selectionLoading = false;
+  selectionLoading = false; focusInbox(returnId);
 });
 el("logout").addEventListener("click", () => { void logout(); });
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
-    stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend();
+    clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
     sendBusy = false; olderBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
   } else if (ready) {
