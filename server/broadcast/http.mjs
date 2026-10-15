@@ -59,6 +59,7 @@ function routeFor(pathname) {
   if (match) return { kind: "session", role: match[1], methods: ["GET"] };
   if (pathname === "/api/broadcast/client/preference") return { kind: "preference", role: "client", methods: ["GET", "POST"] };
   if (pathname === "/api/broadcast/admin/preview") return { kind: "preview", role: "admin", methods: ["POST"] };
+  if (pathname === "/api/broadcast/admin/activity") return { kind: "activity", role: "admin", methods: ["GET"] };
   if (pathname === "/api/broadcast/admin/campaigns") return { kind: "campaigns", role: "admin", methods: ["GET", "POST"] };
   match = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})(\/cancel)?$/.exec(pathname);
   return match ? { kind: match[2] ? "cancel" : "campaign", role: "admin", campaignId: match[1], methods: match[2] ? ["POST"] : ["GET"] } : null;
@@ -142,6 +143,20 @@ function safePage(value, options) {
   return { campaigns, nextCursor: value.nextCursor, hasMore: value.hasMore };
 }
 
+function safeActivity(value) {
+  if (!value || !Array.isArray(value.campaigns) || value.campaigns.length > 30) throw unavailable();
+  const seen = new Set(); let previous = null, active = 0;
+  const campaigns = value.campaigns.map((row) => {
+    const campaign = safeCampaign(row);
+    if (seen.has(campaign.id) || previous && (campaign.createdAt > previous.createdAt || campaign.createdAt === previous.createdAt && campaign.id >= previous.id)) throw unavailable();
+    seen.add(campaign.id); previous = campaign;
+    if (["queued", "running"].includes(campaign.status)) active += 1;
+    return campaign;
+  });
+  if (active > 10 || campaigns.length - active > 20) throw unavailable();
+  return { campaigns };
+}
+
 function mappedError(error) {
   const publicErrors = new Map([[400, "invalid_request"], [408, "request_timeout"], [413, "request_too_large"],
     [415, "json_required"], [503, "broadcast_unavailable"]]);
@@ -167,7 +182,7 @@ export function createBroadcastHandler(service, { origin, mediaEnabled = false }
   const configured = new URL(origin);
   if (configured.protocol !== "https:" || configured.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   if (typeof mediaEnabled !== "boolean") throw new TypeError("A boolean media capability is required");
-  for (const method of ["actor", "preference", "savePreference", "preview", "create", "list", "get", "cancel"]) {
+  for (const method of ["actor", "preference", "savePreference", "preview", "create", "activity", "list", "get", "cancel"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("A private broadcast service is required");
   }
   return async (request, response) => {
@@ -208,6 +223,8 @@ export function createBroadcastHandler(service, { origin, mediaEnabled = false }
         const body = await readJson(request, { maxBytes: 32768 }), requested = validatePreview(body);
         if (!mediaEnabled && requested.mediaId !== null) throw Object.assign(new Error("BROADCAST_MEDIA"), { code: "BROADCAST_MEDIA" });
         reply(response, method, 200, safePreview(await service.preview(token, body), requested));
+      } else if (route.kind === "activity") {
+        reply(response, method, 200, safeActivity(await service.activity(token)));
       } else if (route.kind === "campaigns" && method === "GET") {
         reply(response, method, 200, safePage(await service.list(token, options), options));
       } else if (route.kind === "campaigns") {

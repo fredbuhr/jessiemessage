@@ -29,7 +29,7 @@ function preferenceDTO(row) {
 export async function createBroadcastService({ store, authService, authStore, key, mediaEnabled = false, clock = Date.now }) {
   if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || typeof mediaEnabled !== "boolean"
     || typeof authService?.session !== "function" || typeof authStore?.consumeRateLimit !== "function"
-    || ["preferenceActor", "getPreference", "savePreference", "preview", "create", "list", "get", "cancel"].some((method) => typeof store?.[method] !== "function")) fail("BROADCAST_CONFIG");
+    || ["preferenceActor", "getPreference", "savePreference", "preview", "create", "activity", "list", "get", "cancel"].some((method) => typeof store?.[method] !== "function")) fail("BROADCAST_CONFIG");
   key = Buffer.from(key);
   async function guarded(operation) {
     try { return await operation(); }
@@ -150,6 +150,21 @@ export async function createBroadcastService({ store, authService, authStore, ke
       const campaign = campaignDTO(result.campaign, session, false, requestFingerprint);
       if (campaign.clientCampaignId !== input.clientCampaignId) fail("BROADCAST_UNAVAILABLE");
       return { campaign, duplicate: result.duplicate };
+    }),
+    activity: (token) => guarded(async () => {
+      const { session, request } = await context("admin", token);
+      const result = await store.activity(request);
+      if (!result || !Array.isArray(result.campaigns) || result.campaigns.length > 30) fail("BROADCAST_UNAVAILABLE");
+      const seen = new Set(); let previous = null, active = 0;
+      const campaigns = result.campaigns.map((row) => {
+        const dto = campaignDTO(row, session);
+        if (seen.has(dto.id) || previous && (dto.createdAt > previous.createdAt || dto.createdAt === previous.createdAt && dto.id >= previous.id)) fail("BROADCAST_UNAVAILABLE");
+        seen.add(dto.id); previous = dto;
+        if (["queued", "running"].includes(dto.status)) active += 1;
+        return dto;
+      });
+      if (active > 10 || campaigns.length - active > 20) fail("BROADCAST_UNAVAILABLE");
+      return { campaigns };
     }),
     list: (token, input = {}) => guarded(async () => {
       if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((name) => !["afterId", "limit"].includes(name))) fail("BROADCAST_INPUT");

@@ -275,6 +275,30 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
       const detail = await get(fixture, created.campaign.id); assert.equal(detail.status, "completed"); assert.equal(detail.counts.failed, 1); assert.equal(detail.recipients[0].reason, "processing_failed");
     });
 
+    await subtest("live activity includes older active work and the newest campaigns regardless of random ID keysets", async () => {
+      const fixture = await pair(); await consent(fixture);
+      const oldActive = (await create(fixture, campaign([fixture], { id: Buffer.alloc(16, 254) }))).campaign;
+      const recent = [];
+      for (let index = 1; index <= 25; index++) {
+        const campaignId = Buffer.alloc(16, 100 - index), workTime = now + index;
+        const result = await create(fixture, campaign([fixture], { id: campaignId }), { now: workTime });
+        await store.cancel({ ...actor(fixture), now: workTime, campaignId: result.campaign.id });
+        recent.unshift(campaignId.toString("hex"));
+      }
+      const foreign = await pair(); await consent(foreign);
+      const foreignCampaign = (await create(foreign, campaign([foreign]), { now: now + 100 })).campaign;
+      const activity = await store.activity({ ...actor(fixture), now: now + 100 });
+      assert.equal(activity.campaigns.length, 21);
+      assert.deepEqual(activity.campaigns.slice(0, 20).map((row) => row.id.toString("hex")), recent.slice(0, 20));
+      assert.equal(activity.campaigns.at(-1).id.equals(oldActive.id), true);
+      assert.equal(activity.campaigns.some((row) => row.id.equals(foreignCampaign.id)), false);
+      await store.cancel({ ...actor(fixture), now: now + 101, campaignId: oldActive.id });
+      const after = await store.activity({ ...actor(fixture), now: now + 101 });
+      assert.equal(after.campaigns.length, 20);
+      assert.equal(after.campaigns.some((row) => row.id.equals(oldActive.id)), false);
+      await assert.rejects(store.activity({ tokenHash: digest(), now: now + 101 }), code("CHAT_UNAUTHORIZED"));
+    });
+
     await subtest("failure after message/event insertion rolls back the entire recipient delivery transaction", async () => {
       const fixture = await pair(); await consent(fixture); const created = await create(fixture), job = await store.claim({ now }), payload = message(job);
       // Scope the fault to this synthetic campaign; earlier subtests retain

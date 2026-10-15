@@ -3,7 +3,7 @@ import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast
 const el = (id) => document.getElementById(id);
 const state = createBroadcastState(); const controllers = new Set(); const campaigns = new Map(); const assets = new Map();
 let expiryTimer = null; let pollTimer = null; let contactCursor = null; let contactMore = false; let contactsBusy = false;
-let historyCursor = null; let historyMore = false; let historyBusy = false; let detailId = null; let detailEpoch = 0;
+let historyCursor = null; let historyMore = false; let historyStarted = false; let historyBusy = false; let historyRetryAt = 0; let detailId = null; let detailEpoch = 0;
 let photoCursor = null; let photoMore = false; let photosBusy = false; let photoEpoch = 0; let photoUrl = null;
 let previewBusy = false; let sendBusy = false; let logoutBusy = false;
 const visible = () => document.visibilityState === "visible";
@@ -24,18 +24,30 @@ function clearDisplay() {
 function clearPrivate(isVisible = false) {
   for (const controller of controllers) controller.abort(); controllers.clear(); clearTimeout(expiryTimer); clearTimeout(pollTimer); expiryTimer = null; pollTimer = null;
   clearBroadcast(state, { visible: isVisible }); detailEpoch += 1; detailId = null; campaigns.clear(); assets.clear();
-  contactCursor = null; contactMore = false; contactsBusy = false; historyCursor = null; historyMore = false; historyBusy = false;
+  contactCursor = null; contactMore = false; contactsBusy = false; historyCursor = null; historyMore = false; historyStarted = false; historyBusy = false; historyRetryAt = 0;
   photoCursor = null; photoMore = false; photosBusy = false; previewBusy = false; sendBusy = false; clearDisplay();
 }
 function signOut() { clearPrivate(); location.replace("/admin/login"); }
 async function request(path, { ticket = broadcastTicket(state), body, timeout = 15000 } = {}) {
+  const privateData = path !== "/api/broadcast/admin/session";
+  // Cookies can change in another window without a local visibility event.
+  // Bind each private response to the account and CSRF proof that own this UI.
+  if (privateData) await verifySession(ticket);
+  if (!currentBroadcast(state, ticket) || !visible()) throw stale();
   const controller = new AbortController(); controllers.add(controller); const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const response = await fetch(path, { method: body === undefined ? "GET" : "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal,
       headers: body === undefined ? {} : { "Content-Type": "application/json", "X-CSRF-Token": state.session?.csrf ?? "" }, body: body === undefined ? undefined : JSON.stringify(body) });
     let data; try { data = await response.json(); } catch { data = {}; }
     if (!currentBroadcast(state, ticket) || !visible()) throw stale();
-    if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error }); return data;
+    if (privateData) await verifySession(ticket);
+    if (!currentBroadcast(state, ticket) || !visible()) throw stale();
+    if (!response.ok) {
+      const retry = Number(response.headers?.get("retry-after"));
+      throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error,
+        retryAfter: Number.isFinite(retry) && retry > 0 ? Math.max(1, Math.min(3600, Math.ceil(retry))) : 60 });
+    }
+    return data;
   } catch (error) { if (!currentBroadcast(state, ticket) || !visible()) throw stale(); throw error; }
   finally { clearTimeout(timer); controllers.delete(controller); }
 }
@@ -54,11 +66,14 @@ function report(error, target) {
   if (error.stale) return;
   if (error.status === 401) { signOut(); return; }
   if (error.status === 403) { state.csrfFailed = true; el("reload").hidden = false; }
+  if (error.status === 429 && target === "history-status") historyRetryAt = Date.now() + (error.retryAfter ?? 60) * 1000;
   notice(errorText(error), true, target); renderControls();
 }
 function armExpiry() { clearTimeout(expiryTimer); expiryTimer = setTimeout(signOut, Math.max(0, Math.min(2147483647, state.session.expiresAt - Date.now()))); }
 async function verifySession(ticket) {
-  const session = await request("/api/broadcast/admin/session", { ticket });
+  let session;
+  try { session = await request("/api/broadcast/admin/session", { ticket }); }
+  catch (error) { error.proofFailure = true; throw error; }
   if (!acceptBroadcastSession(state, ticket, session)) { await bootstrap("La session a changé. Consulte l’historique avant de préparer une nouvelle diffusion."); throw stale(); }
   armExpiry();
 }
@@ -128,9 +143,10 @@ async function loadContacts(more = false) {
   finally { if (epoch === state.filterEpoch) { contactsBusy = false; renderControls(); } }
 }
 async function loadLabels() {
-  const labels = []; let cursor = null;
+  const ticket = broadcastTicket(state); const labels = []; let cursor = null;
   for (let pageIndex = 0; pageIndex < 10; pageIndex += 1) {
-    const page = await request(`/api/admin/crm/labels?limit=100${cursor ? `&afterId=${cursor}` : ""}`);
+    const page = await request(`/api/admin/crm/labels?limit=100${cursor ? `&afterId=${cursor}` : ""}`, { ticket });
+    if (!currentBroadcast(state, ticket)) throw stale();
     if (!Array.isArray(page.labels) || typeof page.hasMore !== "boolean" || page.hasMore && !validId(page.nextCursor)) throw new TypeError("invalid_labels");
     for (const label of page.labels) { if (!validId(label?.id) || !["tag", "group"].includes(label.kind) || typeof label.name !== "string" || label.name.length > 64) throw new TypeError("invalid_labels"); labels.push({ id: label.id, name: label.name, kind: label.kind }); }
     if (!page.hasMore) { cursor = null; break; } if (cursor !== null && page.nextCursor <= cursor) throw new TypeError("invalid_labels"); cursor = page.nextCursor;
@@ -152,6 +168,7 @@ async function loadPhotos(more = false) {
   const ticket = broadcastTicket(state); photosBusy = true; renderControls(); notice("Chargement de tes photos…", false, "photo-status");
   try {
     const page = await request(`/api/media/admin/assets?limit=20${more && photoCursor ? `&afterId=${photoCursor}` : ""}`, { ticket });
+    if (!currentBroadcast(state, ticket)) return;
     if (!Array.isArray(page.assets) || page.assets.length > 20 || typeof page.hasMore !== "boolean" || page.nextCursor !== null && !validId(page.nextCursor)) throw new TypeError("invalid_assets");
     for (const asset of page.assets) {
       if (!validId(asset?.id) || !Number.isSafeInteger(asset.createdAt) || asset.thumbnailUrl !== `/api/media/admin/assets/${asset.id}/thumb` || !Number.isInteger(asset.width) || !Number.isInteger(asset.height)) throw new TypeError("invalid_asset");
@@ -166,9 +183,12 @@ async function showPhoto() {
   clearPhoto(); const asset = assets.get(state.draft.mediaId); if (!asset) return;
   const ticket = broadcastTicket(state); const epoch = photoEpoch; const controller = new AbortController(); controllers.add(controller); const timer = setTimeout(() => controller.abort(), 15000);
   try {
+    await verifySession(ticket);
     const response = await fetch(asset.thumbnailUrl, { credentials: "same-origin", cache: "no-store", signal: controller.signal });
     if (!response.ok || response.headers.get("content-type")?.split(";")[0] !== "image/jpeg") throw Object.assign(new Error("photo_unavailable"), { status: response.status });
     const blob = await response.blob(); if (!blob.size || blob.size > 5242880) throw new Error("photo_unavailable");
+    if (!currentBroadcast(state, ticket) || !visible() || epoch !== photoEpoch || asset.id !== state.draft.mediaId) return;
+    await verifySession(ticket);
     if (!currentBroadcast(state, ticket) || !visible() || epoch !== photoEpoch || asset.id !== state.draft.mediaId) return;
     photoUrl = URL.createObjectURL(blob); const image = node("img"); image.alt = "Photo choisie pour cette diffusion"; image.src = photoUrl; el("photo-preview").replaceChildren(image); notice("", false, "photo-status");
   } catch (error) { if (currentBroadcast(state, ticket) && epoch === photoEpoch) report(error, "photo-status"); }
@@ -180,15 +200,13 @@ async function send(retry = false) {
   const payload = retry ? retryCampaign(state) : prepareCampaign(state, newId()); if (!payload) return;
   const ticket = broadcastTicket(state); sendBusy = true; renderControls(); notice("Confirmation de cette diffusion…", false, "send-status");
   try {
-    await verifySession(ticket);
     const result = await request("/api/broadcast/admin/campaigns", { ticket, body: payload });
-    await verifySession(ticket);
     const campaign = acceptCampaign(state, ticket, result); if (!campaign) return;
     campaigns.set(campaign.id, campaign); el("campaign-form").reset(); el("photo-select").value = ""; clearPhoto(); compositionChanged();
     notice(`Diffusion enregistrée pour ${campaign.counts.total} client${campaign.counts.total > 1 ? "s" : ""}. Suis les remises et les éventuels destinataires ignorés dans l’historique.`, false, "send-status");
     renderHistory(); await showCampaign(campaign.id); void loadHistory();
   } catch (error) {
-    const definitiveRejected = [400, 413].includes(error.status) || error.status === 409 && ["recipients_unavailable", "media_unavailable", "repeat_confirmation_required", "limit_reached"].includes(error.code);
+    const definitiveRejected = !error.proofFailure && ([400, 413].includes(error.status) || error.status === 409 && ["recipients_unavailable", "media_unavailable", "repeat_confirmation_required", "limit_reached"].includes(error.code));
     if (rejectCampaign(state, ticket, { csrfFailed: error.status === 403, definitiveRejected })) { compositionChanged(); report(error, "send-status"); }
   }
   finally { if (currentBroadcast(state, ticket)) { sendBusy = false; renderControls(); } }
@@ -206,14 +224,34 @@ function parseHistoryPage(page, afterId) {
   let previous = afterId; const parsed = page.campaigns.map((value) => { const campaign = parseCampaign(value); if (previous !== null && campaign.id <= previous) throw new TypeError("invalid_history"); previous = campaign.id; return campaign; });
   if (page.hasMore && (!parsed.length || previous !== page.nextCursor)) throw new TypeError("invalid_history"); return parsed;
 }
-async function loadHistory(more = false) {
+async function loadHistory(more = false, { restartArchive = false } = {}) {
   if (historyBusy || more && !historyMore) return;
-  const ticket = broadcastTicket(state); historyBusy = true; renderControls(); const afterId = more ? historyCursor : null;
+  const ticket = broadcastTicket(state); historyBusy = true; renderControls();
   try {
-    const page = await request(`/api/broadcast/admin/campaigns?limit=20${afterId ? `&afterId=${afterId}` : ""}`, { ticket });
-    for (const campaign of parseHistoryPage(page, afterId)) campaigns.set(campaign.id, mergeCampaign(campaigns.get(campaign.id), campaign));
-    if (more || !historyCursor || !historyMore) { historyCursor = page.nextCursor; historyMore = page.hasMore; }
-    renderHistory(); notice(campaigns.size ? "" : "Aucune diffusion pour le moment.", false, "history-status");
+    const incoming = new Map(); let page = null;
+    if (!more) {
+      // Recent campaigns and every current live campaign are independent of
+      // the historical ID cursor. An insertion in another window can have any ID.
+      const previousLive = [...campaigns.values()].filter((campaign) => ["queued", "running"].includes(campaign.status));
+      const activity = await request("/api/broadcast/admin/activity", { ticket });
+      if (!Array.isArray(activity?.campaigns) || activity.campaigns.length > 30) throw new TypeError("invalid_activity");
+      for (const value of activity.campaigns) { const campaign = parseCampaign(value); if (incoming.has(campaign.id)) throw new TypeError("invalid_activity"); incoming.set(campaign.id, campaign); }
+      // A campaign which just completed may have fallen outside the recent
+      // window. Resolve the previously live rows before accepting the snapshot.
+      for (const campaign of previousLive.filter((campaign) => !incoming.has(campaign.id)).slice(0, 10)) {
+        const current = parseCampaign(await request(`/api/broadcast/admin/campaigns/${campaign.id}`, { ticket }), { detail: true });
+        if (current.id !== campaign.id) throw new TypeError("invalid_history"); incoming.set(current.id, current);
+      }
+    }
+    if (more || !historyStarted || restartArchive) {
+      const afterId = more ? historyCursor : null;
+      page = await request(`/api/broadcast/admin/campaigns?limit=20${afterId ? `&afterId=${afterId}` : ""}`, { ticket });
+      for (const campaign of parseHistoryPage(page, afterId)) incoming.set(campaign.id, mergeCampaign(incoming.get(campaign.id), campaign));
+    }
+    if (!currentBroadcast(state, ticket)) return;
+    for (const campaign of incoming.values()) campaigns.set(campaign.id, mergeCampaign(campaigns.get(campaign.id), campaign));
+    if (page) { historyCursor = page.nextCursor; historyMore = page.hasMore; historyStarted = true; }
+    renderHistory(); notice(campaigns.size ? `Les 20 diffusions les plus récentes et tous les envois en cours sont actualisés. « Autres diffusions » parcourt le reste de ton historique.${restartArchive ? " Le parcours reprend au début de l’historique." : ""}` : "Aucune diffusion pour le moment.", false, "history-status");
   } catch (error) { report(error, "history-status"); }
   finally { if (currentBroadcast(state, ticket)) { historyBusy = false; renderControls(); } }
 }
@@ -243,13 +281,19 @@ async function cancelCampaign(id) {
   if (state.csrfFailed || detailId !== id) return; const ticket = broadcastTicket(state); const epoch = detailEpoch;
   for (const button of el("campaign-detail").querySelectorAll("button")) button.disabled = true;
   try {
-    await verifySession(ticket); const campaign = parseCampaign(await request(`/api/broadcast/admin/campaigns/${id}/cancel`, { ticket, body: {} })); campaigns.set(id, mergeCampaign(campaigns.get(id), campaign)); renderHistory();
+    const campaign = parseCampaign(await request(`/api/broadcast/admin/campaigns/${id}/cancel`, { ticket, body: {} })); campaigns.set(id, mergeCampaign(campaigns.get(id), campaign)); renderHistory();
     if (detailId === id && epoch === detailEpoch) { detailEpoch += 1; await showCampaign(id, true); } notice("Les envois encore en attente ont été annulés. Les messages déjà remis restent dans les conversations.", false, "history-status");
   } catch (error) { report(error, "history-status"); if (detailId === id && epoch === detailEpoch && !error.stale) void showCampaign(id, true); }
 }
 function scheduleHistory() {
   clearTimeout(pollTimer); if (!state.session || !visible()) return;
-  pollTimer = setTimeout(async () => { try { await loadHistory(); if (detailId) await showCampaign(detailId, true); } finally { if (state.visible && visible()) scheduleHistory(); } }, 10000);
+  const ticket = broadcastTicket(state);
+  pollTimer = setTimeout(async () => {
+    if (!currentBroadcast(state, ticket) || !visible()) return;
+    if (Date.now() < historyRetryAt) { scheduleHistory(); return; }
+    try { await loadHistory(); if (currentBroadcast(state, ticket) && detailId && Date.now() >= historyRetryAt) await showCampaign(detailId, true); }
+    finally { if (currentBroadcast(state, ticket) && visible()) scheduleHistory(); }
+  }, Math.max(30000, historyRetryAt - Date.now()));
 }
 async function bootstrap(message = "") {
   if (!visible()) return; clearPrivate(true); const ticket = broadcastTicket(state); notice("Vérification de la connexion…");
@@ -283,7 +327,7 @@ el("allow-repeat").addEventListener("change", () => { updateComposition(state, {
 el("acknowledge").addEventListener("change", () => { state.acknowledged = el("acknowledge").checked; renderControls(); });
 el("load-photos").addEventListener("click", () => { void loadPhotos(); }); el("more-photos").addEventListener("click", () => { void loadPhotos(true); });
 el("preview").addEventListener("click", () => { void preview(); }); el("campaign-form").addEventListener("submit", (event) => { event.preventDefault(); void send(); });
-el("retry").addEventListener("click", () => { void send(true); }); el("refresh-history").addEventListener("click", () => { void loadHistory(); if (detailId) void showCampaign(detailId, true); });
+el("retry").addEventListener("click", () => { void send(true); }); el("refresh-history").addEventListener("click", () => { void loadHistory(false, { restartArchive: true }); if (detailId) void showCampaign(detailId, true); });
 el("more-history").addEventListener("click", () => { void loadHistory(true); }); el("reload").addEventListener("click", () => { void bootstrap(); }); el("logout").addEventListener("click", () => { void logout(); });
 document.addEventListener("visibilitychange", () => { if (visible()) void bootstrap(); else clearPrivate(); }); window.addEventListener("pagehide", () => clearPrivate()); window.addEventListener("pageshow", (event) => { if (event.persisted && visible()) void bootstrap(); });
 if (visible()) void bootstrap(); else clearPrivate();

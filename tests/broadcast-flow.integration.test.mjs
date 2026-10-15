@@ -232,6 +232,16 @@ test("real HTTP targeted broadcasts retain individual consent and durable ordina
       assert.deepEqual(inspected.recipients.map((recipient) => recipient.conversationId).sort(), firstInput.conversationIds.slice().sort());
     });
 
+    await t.test("live activity is a current administrator-only bounded view without approval or audience fields", async () => {
+      const result = await request(adminPath("activity"), { headers: headersFor(adminSession) });
+      assert.equal(result.status, 200);
+      assert.ok(result.body.campaigns.some((value) => value.id === firstCampaign.id));
+      assert.ok(result.body.campaigns.length <= 30);
+      assert.doesNotMatch(JSON.stringify(result.body), /payloadEncrypted|requestFingerprint|mfaVersion|tokenHash|leaseToken|recipients/);
+      assert.equal((await request(adminPath("activity"), { headers: headersFor(sessions.a) })).status, 401);
+      assert.equal((await request(`${adminPath("activity")}?limit=20`, { headers: headersFor(adminSession) })).status, 400);
+    });
+
     await t.test("the worker creates separate ordinary chat messages without exposing the audience or campaign metadata", async () => {
       await worker.runOnce();
       await worker.runOnce();

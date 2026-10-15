@@ -32,6 +32,7 @@ async function fixture({ mediaEnabled = false } = {}) {
     preview: async (options) => { record("preview", options); return state.preview; },
     create: async (options) => { record("create", options); if (state.createResult) return state.createResult;
       state.campaign = { ...state.campaign, ...options.campaign }; return { campaign: state.campaign, duplicate: false, privateProof: "private-proof" }; },
+    activity: async (options) => { record("activity", options); return state.activity ?? { campaigns: [state.campaign] }; },
     list: async (options) => { record("list", options); return state.page ?? { campaigns: [state.campaign], nextCursor: null, hasMore: false }; },
     get: async (options) => { record("get", options); return state.campaign; },
     cancel: async (options) => { record("cancel", options); return state.campaign; },
@@ -195,5 +196,38 @@ test("service copies encryption key and rejects invalid clocks before store muta
   for (const clock of [() => -1, () => NaN, () => 1.5, () => 253402300800000]) {
     const service = await createBroadcastService({ ...f.options, clock }), before = f.calls.length;
     await assert.rejects(service.cancel(f.token, campaignId.toString("hex")), hasCode("BROADCAST_UNAVAILABLE")); assert.equal(f.calls.length, before);
+  }
+});
+
+test("live activity authenticates, consumes one read budget and rebuilds a bounded recent/active feed", async () => {
+  const f = await fixture();
+  const result = await f.service.activity(f.token);
+  assert.equal(result.campaigns[0].id, campaignId.toString("hex"));
+  assert.deepEqual(f.calls.map((call) => call.name), ["activity"]);
+  assert.equal(f.authCalls.length, 1); assert.equal(f.rateCalls.length, 2);
+  assert.doesNotMatch(JSON.stringify(result), /private-proof|private@example|payloadEncrypted|recipients/);
+  f.state.actor = null;
+  await assert.rejects(f.service.activity(f.token), hasCode("BROADCAST_UNAUTHORIZED"));
+  assert.equal(f.calls.length, 1);
+});
+
+test("live activity refuses duplicate, wrongly ordered, oversized, foreign or inconsistent stored campaigns", async () => {
+  const f = await fixture(), { clientCampaignId: _retry, ...payload } = input();
+  function row(value, status = "cancelled", createdAt = now) {
+    const id = Buffer.alloc(16, value);
+    return { ...f.state.campaign, id, status, createdAt, updatedAt: createdAt,
+      payloadEncrypted: sealPayload(payload, f.key, { campaignId: id, adminId }),
+      counts: { total: 1, pending: status === "queued" ? 1 : 0, sending: 0, delivered: 0, skipped: 0, cancelled: status === "cancelled" ? 1 : 0, failed: 0 } };
+  }
+  const recent = Array.from({ length: 20 }, (_, index) => row(100 - index));
+  const active = Array.from({ length: 10 }, (_, index) => row(40 - index, "queued", now - 1));
+  f.state.activity = { campaigns: [...recent, ...active] };
+  assert.equal((await f.service.activity(f.token)).campaigns.length, 30);
+  for (const campaigns of [[row(2), row(2)], [row(1), row(2)], [row(2, "cancelled", now - 1), row(1)],
+    Array.from({ length: 11 }, (_, index) => row(80 - index, "queued")),
+    Array.from({ length: 21 }, (_, index) => row(80 - index)),
+    [...recent, ...active, row(1)], [{ ...row(2), id: Buffer.alloc(16, 3) }]]) {
+    f.state.activity = { campaigns };
+    await assert.rejects(f.service.activity(f.token), hasCode("BROADCAST_UNAVAILABLE"));
   }
 });

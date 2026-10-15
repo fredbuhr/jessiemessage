@@ -12,7 +12,7 @@ const cookie = `__Host-jessie_session=${token}`, clientCookie = `__Host-jessie_c
 const adminId = "a".repeat(32), clientId = "b".repeat(32), campaignId = "c".repeat(32), retryId = "d".repeat(32);
 const conversationId = "1".repeat(32), secondConversationId = "2".repeat(32), mediaId = "e".repeat(32), messageId = "f".repeat(32);
 const now = Date.now(), campaigns = `${root}/admin/campaigns`, detailPath = `${campaigns}/${campaignId}`;
-const methods = ["actor", "preference", "savePreference", "preview", "create", "list", "get", "cancel"];
+const methods = ["actor", "preference", "savePreference", "preview", "create", "activity", "list", "get", "cancel"];
 const actor = (role = "admin", changes = {}) => ({ user: { id: role === "admin" ? adminId : clientId, role, pseudonym: role === "admin" ? "Jessie" : "Client test", privateEmail: "private-email" },
   csrf: role === "admin" ? csrf : clientCsrf, expiresAt: now + 3600000, secret: "private-secret", ...changes });
 const preference = (changes = {}) => ({ enabled: true, version: "1", updatedAt: now, tokenHash: "private-hash", ...changes });
@@ -34,12 +34,36 @@ function fixtureService(calls, overrides = {}) {
     async savePreference(value, body) { calls.push(["savePreference", value, body]); return preference({ enabled: body.enabled, version: String(BigInt(body.expectedVersion) + 1n) }); },
     async preview(value, body) { calls.push(["preview", value, body]); return preview(); },
     async create(value, body) { calls.push(["create", value, body]); return { campaign: campaign({ title: body.title, body: body.body, mediaId: body.mediaId, allowRepeatMedia: body.allowRepeatMedia }), duplicate: false, secret: "private-secret" }; },
+    async activity(value) { calls.push(["activity", value]); return { campaigns: [campaign()], secret: "private-secret" }; },
     async list(value, options) { calls.push(["list", value, options]); return { campaigns: [campaign()], nextCursor: null, hasMore: false, secret: "private-secret" }; },
     async get(value, id) { calls.push(["get", value, id]); return campaign(); },
     async cancel(value, id) { calls.push(["cancel", value, id]); return campaign({ status: "cancelled", counts: { total: 1, pending: 0, sending: 0, delivered: 0, skipped: 0, cancelled: 1, failed: 0 } }); },
     ...overrides,
   };
 }
+
+test("live activity is administrator-only, read-only, query-free and strips private service fields", async (t) => {
+  const f = await fixture(t);
+  const response = await get(f.base, `${root}/admin/activity`);
+  assert.equal(response.status, 200); privateHeaders(response);
+  const result = await response.json(); assert.equal(result.campaigns.length, 1);
+  noInternals(result); assert.equal(Object.hasOwn(result.campaigns[0], "recipients"), false);
+  assert.equal((await get(f.base, `${root}/admin/activity`, { Cookie: clientCookie })).status, 401);
+  assert.equal((await get(f.base, `${root}/admin/activity`, {})).status, 401);
+  assert.equal((await get(f.base, `${root}/admin/activity?limit=20`)).status, 400);
+  assert.equal((await post(f.base, `${root}/admin/activity`, {})).status, 405);
+  assert.equal(f.calls.filter((call) => call[0] === "activity").length, 1);
+});
+
+test("live activity rejects malformed, duplicated, misordered or unbounded service feeds", async (t) => {
+  const rows = [null, { campaigns: null }, { campaigns: [campaign(), campaign()] },
+    { campaigns: [campaign({ id: "a".repeat(32) }), campaign()] },
+    { campaigns: Array.from({ length: 31 }, () => campaign()) }];
+  for (const value of rows) {
+    const f = await fixture(t, { activity: async () => value });
+    await errorBody(await get(f.base, `${root}/admin/activity`), 503, "broadcast_unavailable");
+  }
+});
 
 async function fixture(t, overrides = {}, options = {}) {
   const calls = [], service = fixtureService(calls, overrides), handler = createBroadcastHandler(service, { origin, mediaEnabled: true, ...options });

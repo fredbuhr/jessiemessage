@@ -2,7 +2,7 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-> **Current development: targeted individual broadcasts 0.11.0 + Nuit workbench 0.3.1.** Client opt-in, explicit CRM recipient selection, text or an existing private photo, durable individual delivery, cancellation and history are implemented behind an additional flag. Confirmed work continues after the page closes; live access and consent are rechecked before each transactional message. `contact@jessiemessage.com` remains the official contact, sender and reply address. The [verified 0.11 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38659783930) passes 624 general tests and 243 real tests per MariaDB version. Actual mail delivery, age assurance, HTTPS/mobile acceptance and operational recovery remain launch work; no deployment has occurred.
+> **Current development: private interface reliability 0.12.0 + Nuit workbench 0.3.1.** This lot fixes private state after account/session changes, access administration cleanup when hidden, retryable recovery availability and recent/active broadcast refresh beyond archive page one. The final 0.12 CI evidence is pending. The [verified 0.11 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38659977446) passed 624 general tests and 243 real tests per MariaDB version. `contact@jessiemessage.com` remains the official contact, sender and reply address. Hosting, actual mail delivery, age assurance, storage/restore readiness and HTTPS/mobile acceptance remain launch work; no deployment has occurred.
 
 ## Try without a terminal
 
@@ -28,6 +28,8 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 - [Private images, gallery and storage setup](docs/private-media.md)
 - [Private client files, labels and inbox filters](docs/private-crm.md)
 - [Individual broadcasts, consent and durable queue](docs/targeted-broadcasts.md)
+- [Private interface corrections and regression coverage](docs/private-ui-reliability.md)
+- [Audit findings, current state and launch plan](docs/NEXT-STEPS.md)
 
 ## Maintainer checks
 

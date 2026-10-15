@@ -1,6 +1,6 @@
 # JessieMessage — direction KISS et atelier d’interface
 
-Décisions du 14 octobre 2026. Ce document complète PRODUCT.md, ARCHITECTURE.md et SECURITY.md ; il ne remplace pas les garde-fous de lancement.
+Archive de la première direction du 14 octobre 2026. Les choix de palette et de monogramme ci-dessous ont été remplacés par [Nuit V2](NUIT-V2.md) et l’[identité approuvée](IDENTITE-VALIDEE.md). Les principes de simplicité restent utiles ; pour l’état fonctionnel, lire le [bilan actuel](NEXT-STEPS.md).
 
 ## Positionnement
 
