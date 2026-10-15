@@ -110,6 +110,20 @@ test("Apache export declares a closed public route set and internal neutral JSON
   assert.doesNotMatch(apache, /<IfModule/, "required host directives must fail visibly instead of silently omitting protections");
 });
 
+test("Apache root has an explicit index and both Allow tables are cleared before the 405 replacements", async (t) => {
+  const { root, build } = await sandbox(t), output = join(root, "site");
+  await build({ output });
+  const lines = (await readFile(join(output, ".htaccess"), "utf8")).split("\n");
+  assert.deepEqual(lines.filter((line) => line.startsWith("DirectoryIndex ")), ["DirectoryIndex disabled", "DirectoryIndex index.html"], "reset inherited index candidates, then retain only the explicit public index while listings stay disabled");
+  assert.ok(lines.includes("Options -Indexes -MultiViews"));
+  assert.deepEqual(lines.filter((line) => /^Header (onsuccess|always) (unset|set) Allow(?: |$)/.test(line)), [
+    "Header onsuccess unset Allow",
+    "Header always unset Allow",
+    'Header always set Allow "GET, HEAD" "expr=%{REQUEST_STATUS} == 405"',
+    'Header always set Allow "GET" "expr=%{REQUEST_STATUS} == 405 && %{REQUEST_URI} == \'/api/entry\'"',
+  ], "clear both response-header tables before setting the route-specific Allow value");
+});
+
 test("output is a new absolute leaf; existing directories / files, checkout paths and traversal are refused without overwrite", async (t) => {
   const { root, project, build } = await sandbox(t);
   const directory = join(root, "existing"); await mkdir(directory); await writeFile(join(directory, "keep.txt"), "untouched");

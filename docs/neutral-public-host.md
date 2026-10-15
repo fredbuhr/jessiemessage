@@ -2,7 +2,9 @@
 
 ## État et portée
 
-L’export est préparé et ses huit tests de construction passent. Le comportement HTTP sur un véritable serveur Apache n’a pas encore été vérifié. Ce document ne constitue donc pas une validation de l’hébergement, du certificat, des réécritures ou de l’installation PWA.
+L’export est préparé. Le premier probe HTTPS réel a exécuté 91 requêtes et 1 033 assertions sur le site Apache de préparation. Les fichiers publics, `/app`, les JSON neutres, le 503 de disponibilité et les refus privés/internes ont passé leurs contrôles. Deux écarts empêchaient encore la validation : GET/HEAD `/` renvoyaient 403 sans les en-têtes prévus ; trois réponses 405 ajoutaient une virgule finale à `Allow`.
+
+La correction préparée donne un index explicite à la racine et efface `Allow` dans les deux tables d’en-têtes avant de définir sa valeur. Elle doit encore être redéployée et le probe complet relancé. Les tests de construction ne remplacent pas cette seconde preuve Apache, ni une validation de l’installation PWA.
 
 Le but est de conserver l’accueil `/` et l’ouverture neutre `/app` sur un site Apache ordinaire, pendant que le projet Node sert à la recette. Le bundle ne contient ni PHP, ni proxy vers Node, ni authentification, ni connexion SQL, ni fichier de configuration privée. Les fichiers sources du projet restent hors du document root public.
 
@@ -59,13 +61,15 @@ Ces tests vérifient les copies, le manifeste, la surface déclarée, l’exclus
 
 Préparer un document root distinct ne contenant que les 25 fichiers de l’export réussi. Inclure `.htaccess` lors du transfert ; conserver exactement les octets et vérifier le manifeste avant exposition.
 
-La configuration générée requiert Apache 2.4, `mod_rewrite`, `mod_headers`, `mod_mime`, `mod_dir`, ainsi que les autorisations `AllowOverride` correspondant aux directives de réécriture, d’en-têtes, d’options et d’index. Elle désactive les listings et `MultiViews`. Les directives requises ne sont pas masquées par des blocs `IfModule` : une incompatibilité doit être constatée et corrigée sur le nouveau site avant tout déplacement de trafic.
+La configuration générée requiert Apache 2.4, `mod_rewrite`, `mod_headers`, `mod_mime`, `mod_dir`, ainsi que les autorisations `AllowOverride` correspondant aux directives de réécriture, d’en-têtes, d’options et d’index. Elle réinitialise les candidats d’index avec `DirectoryIndex disabled`, puis déclare sur une ligne distincte `DirectoryIndex index.html`. Les listings et `MultiViews` restent désactivés. Elle efface `Allow` dans les tables `onsuccess` et `always` avant les valeurs propres aux réponses 405. Les directives requises ne sont pas masquées par des blocs `IfModule` : une incompatibilité doit être constatée et corrigée sur le nouveau site avant tout déplacement de trafic.
+
+Références Apache : [recherche et réinitialisation de `DirectoryIndex`](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex), [tables d’en-têtes `onsuccess` et `always`](https://httpd.apache.org/docs/2.4/mod/mod_headers.html#header).
 
 Vérifier aussi le HTTPS et le certificat du domaine de préparation. Aucun achat, changement DNS, rattachement de domaine ou déplacement du projet Node n’est effectué par le bâtisseur.
 
 ## Matrice HTTP à prouver avant tout déplacement DNS ou de domaine
 
-Effectuer les contrôles sur le nouveau site de préparation, avec un client HTTP réel. Les statuts, les en-têtes et les corps ci-dessous sont les résultats attendus, pas encore une preuve obtenue sur Apache.
+Effectuer les contrôles sur le nouveau site de préparation, avec un client HTTP réel. Les statuts, les en-têtes et les corps ci-dessous sont les résultats attendus. La matrice complète doit être rejouée après la correction, notamment GET/HEAD `/` et la valeur exacte, sans doublon ni virgule finale, de `Allow` pour HEAD/POST/OPTIONS `/api/entry` et POST `/styles.css`.
 
 | Requête | Résultat attendu |
 |---|---|
@@ -73,7 +77,7 @@ Effectuer les contrôles sur le nouveau site de préparation, avec un client HTT
 | HEAD `/`, `/app`, fichier CSS ou PNG | Statut correspondant, sans corps de réponse |
 | GET des 20 fichiers directement autorisés | 200 ; MIME correct, octets et SHA-256 identiques au manifeste |
 | GET `/api/entry` | 200 JSON neutre exact, aucune identité ni destination privée |
-| HEAD ou POST `/api/entry` | 405, `Allow: GET` ; HEAD sans corps |
+| HEAD, POST ou OPTIONS `/api/entry` | 405, `Allow: GET` ; HEAD sans corps |
 | GET `/api/entry?x=1` et `/api/entry?` | 400 |
 | GET `/api/health` | 200 JSON `{"status":"ok"}` |
 | HEAD `/api/health` | 200, sans corps |

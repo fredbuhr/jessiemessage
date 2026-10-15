@@ -29,6 +29,7 @@ const apache = `# JessieMessage neutral public export. Apache 2.4; no PHP / Node
 # These fixed health/readiness responses do not measure Node, SQL or private services.
 Options -Indexes -MultiViews
 DirectoryIndex disabled
+DirectoryIndex index.html
 ErrorDocument 400 "Bad request"
 ErrorDocument 404 "Not found"
 ErrorDocument 405 "Method not allowed"
@@ -48,6 +49,8 @@ Header always set Cross-Origin-Resource-Policy "same-origin"
 Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 Header onsuccess unset Set-Cookie
 Header always unset Set-Cookie
+Header onsuccess unset Allow
+Header always unset Allow
 Header always set Allow "GET, HEAD" "expr=%{REQUEST_STATUS} == 405"
 Header always set Allow "GET" "expr=%{REQUEST_STATUS} == 405 && %{REQUEST_URI} == '/api/entry'"
 Header always set Retry-After "15" "expr=%{REQUEST_STATUS} == 503"
