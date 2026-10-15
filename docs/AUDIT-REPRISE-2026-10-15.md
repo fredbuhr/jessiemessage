@@ -4,7 +4,9 @@
 
 **Suivi après audit :** le [correctif 0.16.1](chat-stable-history.md) traite A15 dans le code et ajoute les régressions du contrôleur. La recette navigateur reste à réaliser. Le rapport ci-dessous conserve l’état observé sur 0.16 ; prochaine étape de développement : 0.17a supervision.
 
-**Suivi 0.17a :** le [lot de supervision](operations-readiness.md) traite A09/A10 dans le code : signal HTTP distinct en cache, observations des workers, métadonnées bornées privées et arrêt suivi. Les vérifications d’hébergement et la supervision externe restent ouvertes ; prochain développement : 0.17b données/export.
+**Suivi 0.17a :** le [lot de supervision](operations-readiness.md) traite A09/A10 dans le code : signal HTTP distinct en cache, observations des workers, métadonnées bornées privées et arrêt suivi. Les vérifications d’hébergement et la supervision externe restent ouvertes ; suivi par 0.17b données/export.
+
+**Suivi 0.17b :** l’[outil opérateur hors ligne](private-data-export.md), version 0.18.0, ajoute le catalogue de 27 catégories, leur inventaire plafonné et l’export du contenu visible conservé d’un client avec ses photos. Les durées restent à décider ; aucune purge ni route HTTP ajoutée. A03 reste ouvert. La suite technique est 0.17c : simulation de suppression et retour arrière.
 
 Le développement reprend **après le lot 0.16**, depuis `feat/backup-clone-recovery`, commit `0ecb31eafca03f85ba501cc6b632ca207c7ab94e`. Le prochain lot fonctionnel prévu est **0.17 — données et exploitation**. Cet audit ne constitue pas une version 0.17 ni une validation de mise en production.
 
