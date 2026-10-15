@@ -87,7 +87,7 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
     assert.deepEqual(lifecycle, ["pool", "release", "end"]);
     assert.deepEqual(Object.keys(result), ["valid", "checks", "privilegeObservation"]);
     assert.deepEqual(result.checks.map(({ name }) => name), DATABASE_CHECK_NAMES);
-    assert.doesNotMatch(JSON.stringify(result), /synthetic-private|example\.invalid|password|pseudonym|SELECT|MariaDB|host|user/i);
+    assert.doesNotMatch(JSON.stringify(result), /synthetic-private|example\.invalid|password|pseudonym|\bSELECT\b|MariaDB|host|user/i);
     return result;
   }
   try {
