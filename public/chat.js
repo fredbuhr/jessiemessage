@@ -1,5 +1,15 @@
 import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
 
+const ui = globalThis.JessieI18n ?? {
+  register() {}, t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
+  text(node, source, params = {}) { node.textContent = this.t(source, params); },
+  attr(node, name, source, params = {}) { node.setAttribute(name, this.t(source, params)); },
+  rawText(node, value) { node.textContent = value; }, forget() {},
+  dateParam(value, options = {}) { return new Date(value).toLocaleString("fr-FR", options); },
+  numberParam(value, options = {}) { return value.toLocaleString("fr-FR", options); },
+  getLanguage() { return "fr"; }, onChange() { return () => {}; }, apply() {},
+};
+
 const el = (id) => document.getElementById(id);
 const role = location.pathname === "/admin/messages" ? "admin" : location.pathname === "/messages" ? "client" : null;
 const sessionBase = role === "admin" ? "/api/auth" : "/api/access";
@@ -22,23 +32,23 @@ let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
 let broadcastPreference = null;
 
-function notice(message, error = false, id = "chat-status") { const node = el(id); node.textContent = message; node.classList.toggle("is-error", error); }
+function notice(message, error = false, id = "chat-status") { const node = el(id); if (message) ui.text(node, message); else ui.rawText(node, ""); node.classList.toggle("is-error", error); }
 function currentState() { return selected ? states.get(selected) : null; }
 function visible() { return document.visibilityState === "visible"; }
 function abortRequests(selectionOnly = false) { for (const controller of controllers) { if (selectionOnly && controller.accountScope) continue; controller.abort(); controllers.delete(controller); } }
 function stopPolling() { clearTimeout(pollTimer); pollTimer = null; clearTimeout(readTimer); readTimer = null; }
-function revokePreview() { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; previewIdentity = null; el("image-preview").replaceChildren(); }
+function revokePreview() { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; previewIdentity = null; ui.forget(el("image-preview")); el("image-preview").replaceChildren(); }
 function closeLightbox(restoreFocus = true) {
   lightboxVersion += 1;
   if (lightboxItem) { imageUrls.remove(lightboxItem.media.fullUrl); imageRequests.get(lightboxItem.media.fullUrl)?.controller.abort(); imageRequests.delete(lightboxItem.media.fullUrl); }
-  lightboxItem = null; el("lightbox-image").replaceChildren();
+  lightboxItem = null; ui.forget(el("lightbox-image")); el("lightbox-image").replaceChildren();
   if (el("lightbox").open) el("lightbox").close();
   if (restoreFocus && lightboxReturnFocus?.isConnected) lightboxReturnFocus.focus();
   else if (restoreFocus && visible() && currentState()) (panel ? el("close-media") : el("open-gallery")).focus();
   lightboxReturnFocus = null;
 }
 function closeMedia(restoreFocus = true) {
-  panelVersion += 1; panel = null; panelBusy = false; el("media-grid").replaceChildren();
+  panelVersion += 1; panel = null; panelBusy = false; ui.forget(el("media-grid")); el("media-grid").replaceChildren();
   if (el("media-dialog").open) el("media-dialog").close();
   if (restoreFocus && dialogReturnFocus?.isConnected) dialogReturnFocus.focus(); dialogReturnFocus = null;
 }
@@ -51,8 +61,8 @@ function clearImages() {
 function clearChat() {
   messageRows.clear();
   clearImages();
-  el("messages").replaceChildren(); el("peer-name").textContent = "Messages privés";
-  el("conversation-status").textContent = "Choisis une conversation.";
+  ui.forget(el("messages")); el("messages").replaceChildren(); ui.text(el("peer-name"), "Messages privés");
+  ui.text(el("conversation-status"), "Choisis une conversation.");
   el("message-body").value = ""; el("message-body").disabled = true; el("send").disabled = true;
   el("photo-tools").hidden = true; el("open-gallery").hidden = true; el("image-draft").hidden = true; el("image-file").value = "";
   for (const id of ["older-messages", "new-messages", "empty-message", "pending-controls"]) el(id).hidden = true;
@@ -67,9 +77,9 @@ function clearPrivate() {
   broadcastPreference?.clear(); broadcastPreference = null; document.getElementById("broadcast-preference-host")?.remove();
   document.getElementById("readiness-nav")?.remove();
   stopPolling(); abortRequests(); clearTimeout(expiryTimer); expiryTimer = null;
-  states.clear(); inbox.clear(); selected = null; el("conversations").replaceChildren(); clearChat();
+  states.clear(); inbox.clear(); selected = null; ui.forget(el("conversations")); el("conversations").replaceChildren(); clearChat();
   inboxCursor = null; inboxMore = false; inboxRefreshCursor = null; lastInboxRefresh = 0; inboxLoading = false;
-  el("workspace").hidden = true; el("session-status").textContent = ""; el("inbox-status").textContent = "";
+  el("workspace").hidden = true; ui.rawText(el("session-status"), ""); ui.rawText(el("inbox-status"), "");
   el("more-conversations").hidden = true;
 }
 function signOut() { clearPrivate(); location.replace(role === "admin" ? "/admin/login" : "/access"); }
@@ -156,7 +166,7 @@ async function refreshBroadcastAccess() {
     if (role === "admin") {
       const capability = await request("/api/broadcast/admin/session", { account: true });
       if (!fresh(ticket, true) || capability.user?.role !== "admin" || document.getElementById("broadcast-nav")) return;
-      const link = document.createElement("a"); link.id = "broadcast-nav"; link.href = "/admin/broadcasts"; link.textContent = "Diffusions";
+      const link = document.createElement("a"); link.id = "broadcast-nav"; link.href = "/admin/broadcasts"; ui.text(link, "Diffusions");
       document.getElementById("readiness-nav")?.append(link);
     } else {
       const module = await import("/broadcast-preference.js");
@@ -254,18 +264,25 @@ async function imageUrl(path, state) {
   })();
   imageRequests.set(path, record); return record.promise;
 }
+function replacePhotoContents(container, child) {
+  for (const old of container.childNodes) ui.forget(old);
+  container.replaceChildren(child);
+}
+function photoStatus(container, source) {
+  const status = document.createElement("span"); ui.text(status, source); replacePhotoContents(container, status);
+}
 function loadPhoto(container, media, state, { full = false, current = () => true } = {}) {
   const path = full ? media.fullUrl : media.thumbnailUrl;
   delete container.dataset.loaded; delete container.dataset.failed;
-  container.textContent = "Chargement de la photo…";
+  photoStatus(container, "Chargement de la photo…");
   void imageUrl(path, state).then((url) => {
     if (!container.isConnected || !current() || !visible()) return;
-    const image = document.createElement("img"); image.alt = full ? "Photo privée agrandie" : "Photo privée"; image.decoding = "async";
+    const image = document.createElement("img"); image.alt = ""; ui.attr(image, "aria-label", full ? "Photo privée agrandie" : "Photo privée"); image.decoding = "async";
     image.width = full ? media.width : media.thumbnailWidth; image.height = full ? media.height : media.thumbnailHeight;
     image.addEventListener("load", () => { if (current()) { container.dataset.loaded = "true"; scheduleRead(); } });
-    image.addEventListener("error", () => { if (current() && container.isConnected) { delete container.dataset.loaded; container.dataset.failed = "true"; container.textContent = "Photo indisponible"; imageUrls.remove(path); } });
-    image.src = url; container.replaceChildren(image);
-  }).catch((error) => { if (!error.stale && container.isConnected && current()) { container.dataset.failed = "true"; container.textContent = "Photo indisponible"; } });
+    image.addEventListener("error", () => { if (current() && container.isConnected) { delete container.dataset.loaded; container.dataset.failed = "true"; photoStatus(container, "Photo indisponible"); imageUrls.remove(path); } });
+    image.src = url; replacePhotoContents(container, image);
+  }).catch((error) => { if (!error.stale && container.isConnected && current()) { container.dataset.failed = "true"; photoStatus(container, "Photo indisponible"); } });
 }
 function pruneDeletedPhotos(state, deleted = []) {
   let galleryChanged = false;
@@ -283,20 +300,20 @@ function renderImageDraft(state) {
   const draft = state.imageDraft; const pending = state.pending?.kind === "image" ? state.pending : null; const hasImage = Boolean(draft || pending);
   el("image-draft").hidden = !hasImage;
   el("message-body").maxLength = hasImage ? 1000 : 4096; el("message-body").required = !hasImage;
-  el("message-body").placeholder = hasImage ? "Ajoute une légende (facultatif)…" : "Écris ton message…";
-  el("composer-help").textContent = hasImage ? "Photo privée · légende facultative de 1 000 caractères maximum" : "Message privé · 4 096 caractères maximum";
+  ui.attr(el("message-body"), "placeholder", hasImage ? "Ajoute une légende (facultatif)…" : "Écris ton message…");
+  ui.text(el("composer-help"), hasImage ? "Photo privée · légende facultative de 1 000 caractères maximum" : "Message privé · 4 096 caractères maximum");
   el("cancel-image").disabled = Boolean(state.pending) || sendBusy;
   if (!hasImage) { revokePreview(); return; }
-  el("image-draft-status").textContent = pending?.stage === "uploading" ? "Préparation de la photo…" : draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer";
+  ui.text(el("image-draft-status"), pending?.stage === "uploading" ? "Préparation de la photo…" : draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer");
   if (!visible()) return;
   const identity = draft?.file ?? draft?.asset?.id ?? pending?.mediaId;
   if (identity && identity === previewIdentity) return;
   revokePreview(); previewIdentity = identity;
   if (draft?.file) {
-    previewUrl = URL.createObjectURL(draft.file); const image = document.createElement("img"); image.alt = "Aperçu de la photo choisie"; image.src = previewUrl; el("image-preview").append(image);
+    previewUrl = URL.createObjectURL(draft.file); const image = document.createElement("img"); image.alt = ""; ui.attr(image, "aria-label", "Aperçu de la photo choisie"); image.src = previewUrl; el("image-preview").append(image);
   } else if (draft?.asset) {
     const id = draft.asset.id; loadPhoto(el("image-preview"), draft.asset, state, { current: () => belongsTo(currentState(), state.id, state.epoch) && state.imageDraft?.asset?.id === id });
-  } else el("image-preview").textContent = "Photo prête";
+  } else ui.text(el("image-preview"), "Photo prête");
 }
 async function refreshMediaCapability() {
   try { const value = await request(`${mediaBase}/capabilities`); mediaEnabled = value.enabled === true; }
@@ -323,7 +340,7 @@ async function refreshCrmCapability() {
         inbox.clear(); for (const contact of contacts) inbox.set(contact.id, contact);
         inboxCursor = page.cursor; inboxMore = page.hasMore; inboxLoading = page.loading;
         renderInbox();
-        const state = currentState(); if (state?.conversation) el("peer-name").textContent = crm?.displayName(inbox.get(state.id) ?? state.conversation) ?? state.conversation.peerName;
+        const state = currentState(); if (state?.conversation) ui.rawText(el("peer-name"), crm?.displayName(inbox.get(state.id) ?? state.conversation) ?? state.conversation.peerName);
       }
     });
     await crm.initialize();
@@ -357,9 +374,9 @@ async function openMedia(kind, opener) {
   const state = currentState(); if (!state || !mediaEnabled || !visible() || (kind === "library" && (state.pending || !state.conversation?.canSend))) return;
   closeMedia(false); dialogReturnFocus = opener;
   panel = { kind, conversationId: state.id, epoch: state.epoch, items: [], cursor: null, hasMore: false };
-  el("media-title").textContent = kind === "library" ? "Mes photos" : "Photos de la conversation";
-  el("media-help").textContent = kind === "library" ? "Tes photos personnelles peuvent être envoyées dans cette conversation. Une photo reçue ne fait pas partie de ta bibliothèque." : "Les photos partagées ici restent accessibles tant que le message et ton accès le permettent.";
-  el("media-status").textContent = "Chargement…"; el("more-media").hidden = true; el("media-dialog").showModal();
+  ui.text(el("media-title"), kind === "library" ? "Mes photos" : "Photos de la conversation");
+  ui.text(el("media-help"), kind === "library" ? "Tes photos personnelles peuvent être envoyées dans cette conversation. Une photo reçue ne fait pas partie de ta bibliothèque." : "Les photos partagées ici restent accessibles tant que le message et ton accès le permettent.");
+  ui.text(el("media-status"), "Chargement…"); el("more-media").hidden = true; el("media-dialog").showModal();
   await loadMediaPage();
 }
 async function loadMediaPage(more = false) {
@@ -379,7 +396,7 @@ async function loadMediaPage(more = false) {
       map.set(activePanel.kind === "library" ? item.id : item.messageId, item);
     }
     activePanel.items = [...map.values()].slice(-100); activePanel.cursor = activePanel.kind === "library" ? result.nextCursor : result.nextBefore; activePanel.hasMore = result.hasMore;
-    el("media-status").textContent = activePanel.items.length ? "" : activePanel.kind === "library" ? "Aucune photo dans ta bibliothèque pour le moment." : "Aucune photo partagée dans cette conversation.";
+    notice(activePanel.items.length ? "" : activePanel.kind === "library" ? "Aucune photo dans ta bibliothèque pour le moment." : "Aucune photo partagée dans cette conversation.", false, "media-status");
     renderMediaPanel();
   } catch (error) { if (panel === activePanel && version === panelVersion) await handleMediaError(error, state, "media-status"); }
   finally { if (panel === activePanel && version === panelVersion) { panelBusy = false; el("more-media").disabled = false; } }
@@ -390,20 +407,20 @@ function renderMediaPanel() {
   for (const item of activePanel.items) {
     const media = activePanel.kind === "library" ? item : item.media;
     const card = document.createElement("article"); card.className = "media-card";
-    const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; photo.setAttribute("aria-label", "Agrandir cette photo privée");
+    const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; ui.attr(photo, "aria-label", "Agrandir cette photo privée");
     photo.addEventListener("click", () => { void openLightbox({ media, messageId: activePanel.kind === "gallery" ? item.messageId : null }, state, photo); });
     card.append(photo);
-    const caption = document.createElement("p"); caption.textContent = `${media.width} × ${media.height} · ${dateText(activePanel.kind === "library" ? media.createdAt : item.createdAt, true)}`; card.append(caption);
+    const caption = document.createElement("p"); ui.text(caption, "{width} × {height} · {date}", { width: ui.numberParam(media.width), height: ui.numberParam(media.height), date: dateParameter(activePanel.kind === "library" ? media.createdAt : item.createdAt, true) }); card.append(caption);
     if (activePanel.kind === "library") {
-      if (media.sharedHere) { const warning = document.createElement("p"); warning.className = "shared-photo"; warning.textContent = "Déjà envoyée ici. Renvoyer crée un nouveau message."; card.append(warning); }
+      if (media.sharedHere) { const warning = document.createElement("p"); warning.className = "shared-photo"; ui.text(warning, "Déjà envoyée ici. Renvoyer crée un nouveau message."); card.append(warning); }
       const actions = document.createElement("div"); actions.className = "media-actions";
-      const choose = document.createElement("button"); choose.type = "button"; choose.className = "text-button"; choose.textContent = media.sharedHere ? "Renvoyer" : "Choisir"; choose.disabled = !state.conversation?.canSend || Boolean(state.pending);
+      const choose = document.createElement("button"); choose.type = "button"; choose.className = "text-button"; ui.text(choose, media.sharedHere ? "Renvoyer" : "Choisir"); choose.disabled = !state.conversation?.canSend || Boolean(state.pending);
       choose.addEventListener("click", () => {
         if (!belongsTo(currentState(), state.id, state.epoch) || state.pending || !state.conversation?.canSend) return;
         if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant de choisir une photo.", true, "media-status"); return; }
         state.imageDraft = { file: null, asset: media }; closeMedia(); renderMeta(state); notice(media.sharedHere ? "Cette photo a déjà été envoyée ici. Envoyer ajoutera un nouveau message." : "Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
       });
-      const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; remove.textContent = "Supprimer la photo";
+      const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; ui.text(remove, "Supprimer la photo");
       remove.addEventListener("click", () => { void removeOwnAsset(media, state, remove); }); actions.append(choose, remove); card.append(actions);
     }
     fragment.append(card);
@@ -411,8 +428,8 @@ function renderMediaPanel() {
     // a detached panel or an old conversation.
     queueMicrotask(() => { if (panel === activePanel && version === panelVersion && photo.isConnected) loadPhoto(photo, media, state, { current: () => panel === activePanel && version === panelVersion && activePanel.items.includes(item) }); });
   }
-  el("media-grid").replaceChildren(fragment); el("more-media").hidden = !activePanel.hasMore;
-  el("more-media").textContent = activePanel.kind === "library" ? "Autres photos" : "Photos précédentes";
+  ui.forget(el("media-grid")); el("media-grid").replaceChildren(fragment); el("more-media").hidden = !activePanel.hasMore;
+  ui.text(el("more-media"), activePanel.kind === "library" ? "Autres photos" : "Photos précédentes");
 }
 async function removeOwnAsset(media, state, button) {
   if (button.disabled) return; button.disabled = true; const activePanel = panel;
@@ -429,32 +446,33 @@ async function removeOwnAsset(media, state, button) {
 async function openLightbox(item, state, opener) {
   if (!visible()) return;
   closeLightbox(false); lightboxItem = item; lightboxReturnFocus = opener; const version = lightboxVersion;
-  el("lightbox-status").textContent = "Photo privée"; el("lightbox").showModal();
+  ui.text(el("lightbox-status"), "Photo privée"); el("lightbox").showModal();
   loadPhoto(el("lightbox-image"), item.media, state, { full: true, current: () => lightboxItem === item && lightboxVersion === version
     && belongsTo(currentState(), state.id, state.epoch) && (!item.messageId || ![...state.messages.values()].some((message) => message.id === item.messageId && message.deletedAt != null)) });
 }
-function dateText(value, long = false) {
-  return new Date(value).toLocaleString("fr-FR", long ? { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
+function dateParameter(value, long = false) {
+  return ui.dateParam(value, long ? { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
 }
 function renderInbox() {
-  const container = el("conversations"); container.replaceChildren();
+  const container = el("conversations"); ui.forget(container); container.replaceChildren();
   for (const conversation of [...inbox.values()].sort((a, b) => (b.lastActivityAt ?? b.createdAt) - (a.lastActivityAt ?? a.createdAt) || a.id.localeCompare(b.id))) {
     const button = document.createElement("button"); button.type = "button"; button.className = "contact";
     button.classList.toggle("active", conversation.id === selected); button.setAttribute("aria-pressed", String(conversation.id === selected));
-    const text = document.createElement("span"); const name = document.createElement("strong"); name.textContent = crm?.displayName(conversation) ?? conversation.peerName;
-    const time = document.createElement("time"); time.dateTime = new Date(conversation.lastActivityAt ?? conversation.createdAt).toISOString(); time.textContent = dateText(conversation.lastActivityAt ?? conversation.createdAt, true);
+    const text = document.createElement("span"); const name = document.createElement("strong"); ui.rawText(name, crm?.displayName(conversation) ?? conversation.peerName);
+    const time = document.createElement("time"); time.dateTime = new Date(conversation.lastActivityAt ?? conversation.createdAt).toISOString(); ui.text(time, "{date}", { date: dateParameter(conversation.lastActivityAt ?? conversation.createdAt, true) });
     text.append(name, time);
     if (crm && conversation.crm) {
       const details = document.createElement("span"); details.className = "crm-contact-meta";
-      details.textContent = conversation.crm.labels.map((label) => label.name).join(" · ");
-      if (conversation.crm.reminderAt !== null && conversation.crm.reminderAt <= Date.now()) details.textContent += `${details.textContent ? " · " : ""}Rappel à traiter`;
-      if (details.textContent) text.append(details);
+      const labels = conversation.crm.labels.map((label) => label.name).join(" · "); ui.rawText(details, labels);
+      const due = conversation.crm.reminderAt !== null && conversation.crm.reminderAt <= Date.now();
+      if (due) { const reminder = document.createElement("span"); ui.text(reminder, labels ? " · Rappel à traiter" : "Rappel à traiter"); details.append(reminder); }
+      if (labels || due) text.append(details);
     }
     button.append(text);
-    if (conversation.unreadCount > 0) { const count = document.createElement("span"); count.className = "unread"; count.textContent = String(conversation.unreadCount); count.setAttribute("aria-label", `${conversation.unreadCount} messages non lus`); button.append(count); }
+    if (conversation.unreadCount > 0) { const count = document.createElement("span"); count.className = "unread"; ui.text(count, "{count}", { count: ui.numberParam(conversation.unreadCount) }); ui.attr(count, "aria-label", conversation.unreadCount === 1 ? "{count} message non lu" : "{count} messages non lus", { count: ui.numberParam(conversation.unreadCount) }); button.append(count); }
     button.addEventListener("click", () => { void selectConversation(conversation.id); }); container.append(button);
   }
-  el("inbox-status").textContent = inbox.size ? "" : "Aucune conversation pour le moment.";
+  notice(inbox.size ? "" : "Aucune conversation pour le moment.", false, "inbox-status");
   el("more-conversations").hidden = !inboxMore; el("more-conversations").disabled = inboxLoading;
 }
 async function loadInbox(more = false, refresh = false) {
@@ -493,8 +511,8 @@ async function loadInbox(more = false, refresh = false) {
 }
 function renderMeta(state) {
   const conversation = state.conversation; if (!conversation) return;
-  el("peer-name").textContent = crm?.displayName(inbox.get(state.id) ?? conversation) ?? conversation.peerName;
-  el("conversation-status").textContent = conversation.closedAt != null ? "Conversation fermée · historique disponible" : !conversation.canSend ? "Accès à l’envoi suspendu · historique disponible" : "Conversation privée";
+  ui.rawText(el("peer-name"), crm?.displayName(inbox.get(state.id) ?? conversation) ?? conversation.peerName);
+  ui.text(el("conversation-status"), conversation.closedAt != null ? "Conversation fermée · historique disponible" : !conversation.canSend ? "Accès à l’envoi suspendu · historique disponible" : "Conversation privée");
   el("message-body").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image");
   el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage ? validCaption(el("message-body").value) : validBody(el("message-body").value));
@@ -525,22 +543,23 @@ function createMessageRow(state, message, contentKey) {
   const own = message.sender === "me"; const fromJessie = role === "admin" ? own : !own;
   const article = document.createElement("article"); article.className = `message ${own ? "own" : ""} ${fromJessie ? "from-jessie" : "from-client"}`; article.dataset.sequence = message.sequence; article.dataset.sender = message.sender; article.setAttribute("role", "listitem");
   const body = document.createElement(message.media && message.deletedAt == null ? "div" : "p"); body.className = "bubble"; article.classList.toggle("deleted", message.deletedAt != null);
-  const row = { article, contentKey, receipt: null, photo: null, mediaVersion: null };
+  const row = { article, contentKey, body, time: null, remove: null, photoButton: null, receipt: null, photo: null, mediaVersion: null };
   if (message.media && message.deletedAt == null) {
-    body.classList.add("photo-message"); const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; photo.style.aspectRatio = `${message.media.thumbnailWidth}/${message.media.thumbnailHeight}`; photo.setAttribute("aria-label", "Agrandir la photo de ce message");
+    body.classList.add("photo-message"); const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; photo.style.aspectRatio = `${message.media.thumbnailWidth}/${message.media.thumbnailHeight}`; ui.attr(photo, "aria-label", "Agrandir la photo de ce message");
+    row.photoButton = photo;
     if (mediaEnabled) {
       photo.addEventListener("click", () => { void openLightbox({ media: message.media, messageId: message.id }, state, photo); });
       row.photo = photo;
-    } else { photo.textContent = "Photos indisponibles pour le moment"; photo.disabled = true; }
-    body.append(photo); if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; caption.textContent = message.body; body.append(caption); }
-  } else body.textContent = message.deletedAt != null ? "Message supprimé" : message.body;
+    } else { ui.text(photo, "Photos indisponibles pour le moment"); photo.disabled = true; }
+    body.append(photo); if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; ui.rawText(caption, message.body); body.append(caption); }
+  } else if (message.deletedAt != null) ui.text(body, "Message supprimé"); else ui.rawText(body, message.body);
   article.append(body);
   const meta = document.createElement("div"); meta.className = "message-meta";
-  const time = document.createElement("time"); time.dateTime = new Date(message.createdAt).toISOString(); time.textContent = dateText(message.createdAt, true); meta.append(time);
+  const time = document.createElement("time"); time.dateTime = new Date(message.createdAt).toISOString(); ui.text(time, "{date}", { date: dateParameter(message.createdAt, true) }); row.time = time; meta.append(time);
   if (own && message.deletedAt == null) {
     row.receipt = document.createElement("span"); meta.append(row.receipt);
-    const remove = document.createElement("button"); remove.type = "button"; remove.className = "delete-message"; remove.textContent = "Supprimer"; remove.setAttribute("aria-label", `Supprimer mon message du ${dateText(message.createdAt, true)}`);
-    remove.addEventListener("click", () => { void deleteMessage(state, message, remove); }); meta.append(remove);
+    const remove = document.createElement("button"); remove.type = "button"; remove.className = "delete-message"; ui.text(remove, "Supprimer"); ui.attr(remove, "aria-label", "Supprimer mon message du {date}", { date: dateParameter(message.createdAt, true) });
+    remove.addEventListener("click", () => { void deleteMessage(state, message, remove); }); row.remove = remove; meta.append(remove);
   }
   article.append(meta);
   return row;
@@ -558,9 +577,13 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
       row?.article.remove();
       row = createMessageRow(state, message, contentKey); messageRows.set(message.sequence, row);
     }
+    ui.text(row.time, "{date}", { date: dateParameter(message.createdAt, true) });
+    if (message.deletedAt != null) ui.text(row.body, "Message supprimé");
+    if (row.remove) { ui.text(row.remove, "Supprimer"); ui.attr(row.remove, "aria-label", "Supprimer mon message du {date}", { date: dateParameter(message.createdAt, true) }); }
+    if (row.photoButton) { ui.attr(row.photoButton, "aria-label", "Agrandir la photo de ce message"); if (!mediaEnabled) ui.text(row.photoButton, "Photos indisponibles pour le moment"); }
     if (row.receipt) {
       const receipt = compareSequence(state.conversation.peerReadSequence, message.sequence) >= 0 ? "Lu" : "Envoyé";
-      if (row.receipt.textContent !== receipt) row.receipt.textContent = receipt;
+      ui.text(row.receipt, receipt);
     }
     // Moving a live node also loses focus in some browsers. Insert only a new
     // or genuinely misplaced row; unchanged rows never leave their parent.
@@ -593,7 +616,7 @@ async function selectConversation(id) {
   if (state.pending?.status === "sending") retrySend(state);
   states.set(id, state);
   clearChat(); el("workspace").classList.add("selected"); el("message-body").value = state.draft;
-  el("peer-name").textContent = inbox.get(id)?.peerName ?? "Jessie"; el("conversation-status").textContent = "Chargement de la conversation…";
+  ui.rawText(el("peer-name"), inbox.get(id)?.peerName ?? "Jessie"); ui.text(el("conversation-status"), "Chargement de la conversation…");
   renderInbox();
   try {
     if (state.messages.size || state.conversation) { renderMessages(state, { initial: true }); await fetchEvents(state); }
@@ -792,7 +815,7 @@ async function start({ session = null } = {}) {
   clearPrivate();
   const task = { ticket: snapshot(), promise: null }; bootstrapTask = task;
   task.promise = (async () => {
-    el("account-link").href = role === "admin" ? "/admin" : "/access"; el("account-link").textContent = role === "admin" ? "Gérer les accès" : "Mon accès";
+    el("account-link").href = role === "admin" ? "/admin" : "/access"; ui.text(el("account-link"), role === "admin" ? "Gérer les accès" : "Mon accès");
     try {
       if (session) {
         const owner = sessionIdentity(session); if (!owner) { signOut(); return; }
@@ -804,8 +827,8 @@ async function start({ session = null } = {}) {
       if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       if (role === "admin" && !document.getElementById("readiness-nav")) {
-        const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; nav.setAttribute("aria-label", "Administration");
-        const link = document.createElement("a"); link.href = "/admin/readiness"; link.textContent = "Préparer le site"; nav.append(link); el("inbox-title").parentElement.append(nav);
+        const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; ui.attr(nav, "aria-label", "Administration");
+        const link = document.createElement("a"); link.href = "/admin/readiness"; ui.text(link, "Préparer le site"); nav.append(link); el("inbox-title").parentElement.append(nav);
       }
       await refreshMediaCapability();
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();

@@ -12,7 +12,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="stylesheet" href="/admin-login.css" />
     <link rel="stylesheet" href="/brand/brand.css" />
-    <title>JessieMessage — Accès administrateur</title>
+    <link rel="stylesheet" href="/i18n.css" />
+    <title data-jm-i18n="JessieMessage — Accès administrateur">JessieMessage — Accès administrateur</title>
+    <script src="/i18n.js" defer></script>
+    <script src="/i18n-admin.js" defer></script>
     <script src="/admin-login.js" defer></script>
   </head>
   <body>
@@ -22,67 +25,68 @@
           <span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span>
           <span class="brand-name">Jessie</span>
         </a>
-        <span class="private-label">ESPACE PRIVÉ</span>
+        <span class="private-label" data-jm-i18n="ESPACE PRIVÉ">ESPACE PRIVÉ</span>
+        <button class="jm-language" type="button" data-jm-language aria-label="Passer en anglais">EN</button>
       </header>
       <main class="access-main">
         <section class="access-card" aria-labelledby="access-title">
-          <div class="eyebrow">ADMINISTRATION</div>
-          <h1 id="access-title">Bienvenue, Jessie.</h1>
-          <p id="access-intro" class="intro">Connecte-toi avec ton mot de passe et ton code de sécurité.</p>
-          <p id="auth-status" class="status" role="status" aria-live="polite">Vérification de la connexion…</p>
+          <div class="eyebrow" data-jm-i18n="ADMINISTRATION">ADMINISTRATION</div>
+          <h1 id="access-title" data-jm-i18n="Bienvenue, Jessie.">Bienvenue, Jessie.</h1>
+          <p id="access-intro" class="intro" data-jm-i18n="Connecte-toi avec ton mot de passe et ton code de sécurité.">Connecte-toi avec ton mot de passe et ton code de sécurité.</p>
+          <p id="auth-status" class="status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p>
           <form id="login-form" hidden>
             <div class="field">
-              <label for="email">Adresse e-mail</label>
-              <input id="email" name="email" type="email" autocomplete="username" maxlength="254" required />
+              <label for="email" data-jm-i18n="Adresse e-mail">Adresse e-mail</label>
+              <input id="email" name="email" type="email" autocomplete="username" maxlength="254" title="Saisis l’adresse e-mail de ton compte administrateur." data-jm-i18n-title="Saisis l’adresse e-mail de ton compte administrateur." required />
             </div>
             <div class="field">
-              <label for="password">Mot de passe</label>
-              <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required />
+              <label for="password" data-jm-i18n="Mot de passe">Mot de passe</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" title="Saisis ton mot de passe administrateur." data-jm-i18n-title="Saisis ton mot de passe administrateur." required />
             </div>
             <div class="field">
-              <label for="factor">Code de sécurité</label>
-              <input id="factor" name="factor" type="text" autocomplete="one-time-code" maxlength="64" aria-describedby="factor-help" required />
-              <p id="factor-help" class="field-help">Les 6 chiffres de ton application d’authentification, ou un code de récupération.</p>
+              <label for="factor" data-jm-i18n="Code de sécurité">Code de sécurité</label>
+              <input id="factor" name="factor" type="text" autocomplete="one-time-code" maxlength="64" aria-describedby="factor-help" title="Saisis ton code d’authentification ou un code de récupération." data-jm-i18n-title="Saisis ton code d’authentification ou un code de récupération." required />
+              <p id="factor-help" class="field-help" data-jm-i18n="Les 6 chiffres de ton application d’authentification, ou un code de récupération.">Les 6 chiffres de ton application d’authentification, ou un code de récupération.</p>
             </div>
-            <button id="login-button" class="button button-primary" type="submit">Se connecter</button>
+            <button id="login-button" class="button button-primary" type="submit" data-jm-i18n="Se connecter">Se connecter</button>
           </form>
-          <section id="connected" hidden aria-label="Session administrateur">
-            <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong>Connexion sécurisée</strong></div>
-            <p class="intro">Tu es connectée en tant que <strong id="connected-name"></strong>.</p>
-            <p id="admin-session-note" class="session-note">L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.</p>
-            <a id="admin-chat-link" class="button button-primary" href="/admin/messages" hidden>Ouvrir les conversations</a>
-            <p class="session-note"><a href="/admin/readiness">Préparer le site</a></p>
+          <section id="connected" hidden aria-label="Session administrateur" data-jm-i18n-aria-label="Session administrateur">
+            <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong data-jm-i18n="Connexion sécurisée">Connexion sécurisée</strong></div>
+            <p class="intro"><span data-jm-i18n="Tu es connectée en tant que">Tu es connectée en tant que</span> <strong id="connected-name"></strong>.</p>
+            <p id="admin-session-note" class="session-note" data-jm-i18n="L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.">L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.</p>
+            <a id="admin-chat-link" class="button button-primary" href="/admin/messages" hidden data-jm-i18n="Ouvrir les conversations">Ouvrir les conversations</a>
+            <p class="session-note"><a href="/admin/readiness" data-jm-i18n="Préparer le site">Préparer le site</a></p>
             <section id="access-tools" hidden aria-labelledby="invitation-title">
               <div class="access-section">
-                <h2 id="invitation-title">Inviter un client</h2>
+                <h2 id="invitation-title" data-jm-i18n="Inviter un client">Inviter un client</h2>
                 <form id="invitation-form">
                   <div class="form-pair">
-                    <div class="field"><label for="invitation-hours">Validité du lien (heures)</label><input id="invitation-hours" type="number" min="1" max="720" value="72" required /></div>
-                    <div class="field"><label for="invitation-days">Durée d’accès (jours)</label><input id="invitation-days" type="number" min="1" max="3650" value="30" required /></div>
+                    <div class="field"><label for="invitation-hours" data-jm-i18n="Validité du lien (heures)">Validité du lien (heures)</label><input id="invitation-hours" type="number" min="1" max="720" value="72" title="Entre une durée de 1 à 720 heures." data-jm-i18n-title="Entre une durée de 1 à 720 heures." required /></div>
+                    <div class="field"><label for="invitation-days" data-jm-i18n="Durée d’accès (jours)">Durée d’accès (jours)</label><input id="invitation-days" type="number" min="1" max="3650" value="30" title="Entre une durée de 1 à 3 650 jours." data-jm-i18n-title="Entre une durée de 1 à 3 650 jours." required /></div>
                   </div>
-                  <label class="checkbox-field" for="invitation-unlimited"><input id="invitation-unlimited" type="checkbox" /><span>Accès sans limite de durée</span></label>
-                  <button class="button button-primary" type="submit">Créer une invitation</button>
+                  <label class="checkbox-field" for="invitation-unlimited"><input id="invitation-unlimited" type="checkbox" /><span data-jm-i18n="Accès sans limite de durée">Accès sans limite de durée</span></label>
+                  <button class="button button-primary" type="submit" data-jm-i18n="Créer une invitation">Créer une invitation</button>
                 </form>
                 <div id="new-invitation" class="new-invitation" hidden>
-                  <label for="invitation-link">Lien à transmettre au client</label>
+                  <label for="invitation-link" data-jm-i18n="Lien à transmettre au client">Lien à transmettre au client</label>
                   <input id="invitation-link" type="text" readonly autocomplete="off" spellcheck="false" />
-                  <p class="field-help">Ce lien n’est affiché qu’à sa création.</p>
-                  <button id="copy-invitation" class="button button-secondary" type="button">Copier le lien</button>
+                  <p class="field-help" data-jm-i18n="Ce lien n’est affiché qu’à sa création.">Ce lien n’est affiché qu’à sa création.</p>
+                  <button id="copy-invitation" class="button button-secondary" type="button" data-jm-i18n="Copier le lien">Copier le lien</button>
                 </div>
               </div>
-              <div class="access-section"><h2>Invitations</h2><div id="invitations-list" class="access-list"></div><div id="invitations-pagination" class="access-pagination" hidden><p id="invitations-page-note" class="field-help" role="status"></p><div class="pagination-actions"><button id="invitations-first" class="button button-secondary" type="button" disabled>Revenir au début</button><button id="invitations-next" class="button button-secondary" type="button" disabled>Plus anciens</button></div></div></div>
-              <div class="access-section"><h2>Comptes clients</h2><p class="field-help">L’approbation nécessite un e-mail et une majorité vérifiés. La procédure de vérification de majorité reste à activer.</p><div id="clients-list" class="access-list"></div><div id="clients-pagination" class="access-pagination" hidden><p id="clients-page-note" class="field-help" role="status"></p><div class="pagination-actions"><button id="clients-first" class="button button-secondary" type="button" disabled>Revenir au début</button><button id="clients-next" class="button button-secondary" type="button" disabled>Plus anciens</button></div></div></div>
-              <button id="refresh-access" class="button button-secondary" type="button">Actualiser les accès</button>
+              <div class="access-section"><h2 data-jm-i18n="Invitations">Invitations</h2><div id="invitations-list" class="access-list"></div><div id="invitations-pagination" class="access-pagination" hidden><p id="invitations-page-note" class="field-help" role="status"></p><div class="pagination-actions"><button id="invitations-first" class="button button-secondary" type="button" disabled data-jm-i18n="Revenir au début">Revenir au début</button><button id="invitations-next" class="button button-secondary" type="button" disabled data-jm-i18n="Plus anciens">Plus anciens</button></div></div></div>
+              <div class="access-section"><h2 data-jm-i18n="Comptes clients">Comptes clients</h2><p class="field-help" data-jm-i18n="L’approbation nécessite un e-mail et une majorité vérifiés. La procédure de vérification de majorité reste à activer.">L’approbation nécessite un e-mail et une majorité vérifiés. La procédure de vérification de majorité reste à activer.</p><div id="clients-list" class="access-list"></div><div id="clients-pagination" class="access-pagination" hidden><p id="clients-page-note" class="field-help" role="status"></p><div class="pagination-actions"><button id="clients-first" class="button button-secondary" type="button" disabled data-jm-i18n="Revenir au début">Revenir au début</button><button id="clients-next" class="button button-secondary" type="button" disabled data-jm-i18n="Plus anciens">Plus anciens</button></div></div></div>
+              <button id="refresh-access" class="button button-secondary" type="button" data-jm-i18n="Actualiser les accès">Actualiser les accès</button>
             </section>
             <div class="actions">
-              <button id="logout-button" class="button button-primary" type="button">Se déconnecter</button>
-              <button id="logout-all-button" class="button button-secondary" type="button">Déconnecter toutes mes sessions</button>
+              <button id="logout-button" class="button button-primary" type="button" data-jm-i18n="Se déconnecter">Se déconnecter</button>
+              <button id="logout-all-button" class="button button-secondary" type="button" data-jm-i18n="Déconnecter toutes mes sessions">Déconnecter toutes mes sessions</button>
             </div>
           </section>
-          <noscript><p class="status">Active JavaScript pour utiliser la connexion sécurisée.</p></noscript>
+          <noscript><p class="status" data-jm-i18n="Active JavaScript pour utiliser la connexion sécurisée.">Active JavaScript pour utiliser la connexion sécurisée.</p></noscript>
         </section>
       </main>
-      <footer class="footer">JessieMessage · Accès privé sur invitation · <a href="mailto:contact@jessiemessage.com">Contact</a></footer>
+      <footer class="footer"><span data-jm-i18n="JessieMessage · Accès privé sur invitation ·">JessieMessage · Accès privé sur invitation ·</span> <a href="mailto:contact@jessiemessage.com" data-jm-i18n="Contact">Contact</a></footer>
     </div>
   </body>
 </html>

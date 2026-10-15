@@ -12,6 +12,8 @@ Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de cl
 
 **Avancement entrée PWA — étape 0.18 :** [entrée de l’application](pwa-entry.md), version 0.20.0, branche `feat/pwa-entry` sur #20. Le manifeste relance `/app` avec la même identité ; l’accueil rejoint les parcours client/administrateur via des choix vérifiés et sans contenu privé. L’entrée FR/EN gère les erreurs, les reprises et les demandes d’installation disponibles. La [recette de préproduction](preproduction-acceptance.md) distingue tests automatiques et vérifications réelles. L’hébergement, les appareils, la majorité, la traduction privée et les décisions de conservation restent ouverts ; aucune mise en production.
 
+**Avancement FR/EN — étape 0.19 :** les [interfaces privées](private-ui-languages.md), version 0.21.0, branche `feat/private-ui-languages` sur #21, partagent le choix de langue pour accès, récupération, administration, chat/photos, CRM, diffusions et préparation. A07 est traité dans le code des écrans servis, avec régressions sur les valeurs privées, le DOM stable et la purge au masquage. Les e-mails de service restent en français ; la recette navigateur/accessibilité et les appareils restent ouverts. La préférence `fr`/`en` seule est conservée dans la session du navigateur. Aucune publication ni activation privée.
+
 ## État de référence
 
 Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Adresse officielle retenue pour l'expédition, les réponses, le contact et la préparation du compte administrateur initial : **contact@jessiemessage.com**. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
@@ -41,6 +43,7 @@ L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée
 | Accès administrés 0.14 | Prolongation atomique des accès approuvés, conflits d’onglets, listes clients/invitations paginées au-delà de 500 entrées | CI MariaDB vérifiée ; recette navigateur et charge à réaliser |
 | Capacité médias 0.15 | Réservations persistantes, plafonds, suppression durable avant libération, inventaire privé et initialisation hors ligne | Réparation sur clone préparée en 0.16 ; exploitation réelle à éprouver |
 | Restauration 0.16 | Manifeste signé préalable, vérification des cinq clés et données, réparation des réservations connues et réassociation sur clone isolé | CI MariaDB vérifiée ; exercice hébergeur, sauvegardes externes et rétention à organiser |
+| Interfaces FR/EN 0.21 | Écrans privés traduits, préférence de session, bascule en place sans requête ni traduction des données | Régressions automatisées ; recette visuelle/appareils et e-mails de service à terminer |
 | Présentation | Identité Nuit, icônes approuvées, aperçu autonome fictif | Contrôles navigateur, accessibilité et responsive réels à terminer |
 
 Les outils clients restent réservés à l'administrateur affecté. Les notes sont chiffrées ; les listes CRM n'incluent ni notes ni adresse e-mail. Les dates de suivi ne déclenchent aucune notification. Les groupes sont des classements privés, pas des salons.

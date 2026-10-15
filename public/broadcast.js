@@ -1,5 +1,16 @@
 import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, campaignNames, recipientNames, reasonNames } from "/broadcast-model.js";
 
+const ui = globalThis.JessieI18n ?? {
+  t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
+  text(element, source, params = {}) { element.textContent = this.t(source, params); },
+  attr(element, name, source, params = {}) { element.setAttribute(name, this.t(source, params)); },
+  rawText(element, value) { element.textContent = value; }, forget() {},
+  dateParam(value, options = {}) { return new Date(value).toLocaleString("fr-FR", options); },
+  numberParam(value, options = {}) { return value.toLocaleString("fr-FR", options); },
+  messageParam(source, params = {}) { return this.t(source, params); }
+};
+const replace = (element, ...children) => { ui.forget(element); element.replaceChildren(...children); };
+
 const el = (id) => document.getElementById(id);
 const state = createBroadcastState(); const controllers = new Set(); const campaigns = new Map(); const assets = new Map();
 let expiryTimer = null; let pollTimer = null; let contactCursor = null; let contactMore = false; let contactsBusy = false;
@@ -8,16 +19,18 @@ let photoCursor = null; let photoMore = false; let photosBusy = false; let photo
 let previewBusy = false; let sendBusy = false; let logoutBusy = false;
 const visible = () => document.visibilityState === "visible";
 const validId = (value) => typeof value === "string" && value.length === 32 && /^[0-9a-f]{32}$/.test(value);
-const node = (tag, value, className) => { const element = document.createElement(tag); if (value !== undefined) element.textContent = value; if (className) element.className = className; return element; };
+const node = (tag, value, className) => { const element = document.createElement(tag); if (value !== undefined) ui.text(element, value); if (className) element.className = className; return element; };
+const rawNode = (tag, value, className) => { const element = node(tag, undefined, className); ui.rawText(element, value); return element; };
+const textNode = (tag, source, params = {}, className) => { const element = node(tag, undefined, className); ui.text(element, source, params); return element; };
 const stale = () => Object.assign(new Error("stale_response"), { stale: true });
-function notice(text, error = false, target = "session-status") { const element = el(target); element.textContent = text; element.classList.toggle("is-error", error); }
-function clearPhoto() { photoEpoch += 1; if (photoUrl) URL.revokeObjectURL(photoUrl); photoUrl = null; el("photo-preview").replaceChildren(); }
+function notice(text, error = false, target = "session-status", params = {}) { const element = el(target); ui.text(element, text, params); element.classList.toggle("is-error", error); }
+function clearPhoto() { photoEpoch += 1; if (photoUrl) URL.revokeObjectURL(photoUrl); photoUrl = null; replace(el("photo-preview")); }
 function clearDisplay() {
   el("broadcast-content").hidden = true; el("logout").hidden = true; el("reload").hidden = true;
-  for (const id of ["contacts", "selected", "preview-list", "history", "campaign-detail"]) el(id).replaceChildren();
+  for (const id of ["contacts", "selected", "preview-list", "history", "campaign-detail"]) replace(el(id));
   for (const id of ["session-status", "contacts-status", "preview-status", "send-status", "history-status", "photo-status"]) notice("", false, id);
-  el("campaign-form").reset(); el("filters").reset(); el("photo-select").replaceChildren(Object.assign(node("option", "Sans photo"), { value: "" }));
-  for (const id of ["tag-filter", "group-filter"]) el(id).replaceChildren(Object.assign(node("option", id === "tag-filter" ? "Tous les tags" : "Tous les groupes"), { value: "" }));
+  el("campaign-form").reset(); el("filters").reset(); replace(el("photo-select"), Object.assign(node("option", "Sans photo"), { value: "" }));
+  for (const id of ["tag-filter", "group-filter"]) replace(el(id), Object.assign(node("option", id === "tag-filter" ? "Tous les tags" : "Tous les groupes"), { value: "" }));
   for (const id of ["more-contacts", "more-history", "more-photos", "uncertain", "repeat-choice", "photo-field", "campaign-detail"]) el(id).hidden = true;
   el("composition").disabled = false; el("acknowledge").checked = false; el("allow-repeat").checked = false; clearPhoto();
 }
@@ -81,12 +94,12 @@ function renderControls() {
   const frozen = !!state.pending;
   el("composition").disabled = frozen || sendBusy || state.csrfFailed;
   el("preview").disabled = frozen || previewBusy || state.csrfFailed || state.selected.size === 0;
-  el("preview").textContent = previewBusy ? "Vérification…" : "Vérifier les destinataires";
+  ui.text(el("preview"), previewBusy ? "Vérification…" : "Vérifier les destinataires");
   el("confirm").disabled = sendBusy || !canConfirmBroadcast(state);
-  el("confirm").textContent = state.selected.size ? `Confirmer pour ${state.selected.size} client${state.selected.size > 1 ? "s" : ""}` : "Confirmer la diffusion";
-  el("acknowledge-label").textContent = `Je confirme le contenu et l’envoi individuel à ${state.selected.size} client${state.selected.size > 1 ? "s" : ""}.`;
+  ui.text(el("confirm"), state.selected.size ? state.selected.size > 1 ? "Confirmer pour {count} clients" : "Confirmer pour {count} client" : "Confirmer la diffusion", { count: ui.numberParam(state.selected.size) });
+  ui.text(el("acknowledge-label"), state.selected.size > 1 ? "Je confirme le contenu et l’envoi individuel à {count} clients." : "Je confirme le contenu et l’envoi individuel à {count} client.", { count: ui.numberParam(state.selected.size) });
   el("clear-selection").disabled = frozen || state.selected.size === 0;
-  el("selected-count").textContent = state.selected.size ? `${state.selected.size} / 100 destinataire${state.selected.size > 1 ? "s" : ""} choisi${state.selected.size > 1 ? "s" : ""}` : "Aucun destinataire choisi";
+  ui.text(el("selected-count"), state.selected.size ? state.selected.size > 1 ? "{count} / 100 destinataires choisis" : "{count} / 100 destinataire choisi" : "Aucun destinataire choisi", { count: ui.numberParam(state.selected.size) });
   el("uncertain").hidden = state.pending?.status !== "uncertain";
   el("retry").disabled = sendBusy || state.csrfFailed;
   el("more-contacts").hidden = !contactMore; el("more-contacts").disabled = contactsBusy;
@@ -98,31 +111,31 @@ function renderControls() {
 }
 function renderSelection() {
   const rows = [...state.selected.values()].map((recipient) => {
-    const row = node("li"); const remove = node("button", "Retirer", "text-button"); remove.type = "button"; remove.setAttribute("aria-label", `Retirer ${recipient.pseudonym}`);
-    remove.addEventListener("click", () => { if (selectRecipient(state, recipient.id, false)) compositionChanged(); }); row.append(node("span", recipient.pseudonym), remove); return row;
+    const row = node("li"); const remove = node("button", "Retirer", "text-button"); remove.type = "button"; ui.attr(remove, "aria-label", "Retirer {name}", { name: recipient.pseudonym });
+    remove.addEventListener("click", () => { if (selectRecipient(state, recipient.id, false)) compositionChanged(); }); row.append(rawNode("span", recipient.pseudonym), remove); return row;
   });
-  el("selected").replaceChildren(...rows); renderContacts(); renderControls();
+  replace(el("selected"), ...rows); renderContacts(); renderControls();
 }
 function renderContacts() {
   const rows = [...state.contacts.values()].map((contact) => {
     const row = node("label", undefined, "contact-row"); const checkbox = node("input"); checkbox.type = "checkbox"; checkbox.checked = state.selected.has(contact.id); checkbox.disabled = !!state.pending || state.csrfFailed;
-    const name = node("span", contact.nickname || contact.client.pseudonym); name.append(node("small", `${contact.nickname ? `${contact.client.pseudonym} · ` : ""}${contact.canSend ? "Accès actif · accord à vérifier" : "Accès ou conversation non disponible"}`));
+    const name = rawNode("span", contact.nickname || contact.client.pseudonym); name.append(textNode("small", "{prefix}{status}", { prefix: contact.nickname ? `${contact.client.pseudonym} · ` : "", status: ui.messageParam(contact.canSend ? "Accès actif · accord à vérifier" : "Accès ou conversation non disponible") }));
     checkbox.addEventListener("change", () => { if (!selectRecipient(state, contact.id, checkbox.checked)) notice("Choisis au maximum 100 destinataires.", true, "contacts-status"); compositionChanged(); });
     row.append(checkbox, name); return row;
-  }); el("contacts").replaceChildren(...rows);
+  }); replace(el("contacts"), ...rows);
 }
 function renderPreview() {
-  el("preview-list").replaceChildren(); el("repeat-choice").hidden = !state.preview?.repeatCount;
+  replace(el("preview-list")); el("repeat-choice").hidden = !state.preview?.repeatCount;
   el("allow-repeat").checked = state.draft.allowRepeatMedia;
   if (!state.preview) { notice("", false, "preview-status"); return; }
-  const rows = state.preview.recipients.map((recipient) => node("li", `${recipient.client.pseudonym} · ${recipient.eligible ? "Prêt à recevoir" : reasonNames[recipient.reason]}${recipient.repeatMedia ? " · photo déjà partagée" : ""}`));
-  el("preview-list").replaceChildren(...rows);
+  const rows = state.preview.recipients.map((recipient) => textNode("li", "{name} · {status}{repeat}", { name: recipient.client.pseudonym, status: ui.messageParam(recipient.eligible ? "Prêt à recevoir" : reasonNames[recipient.reason]), repeat: ui.messageParam(recipient.repeatMedia ? " · photo déjà partagée" : "") }));
+  replace(el("preview-list"), ...rows);
   const all = state.preview.eligibleCount === state.selected.size;
-  notice(`${state.preview.eligibleCount} / ${state.selected.size} destinataires éligibles.${state.preview.repeatCount ? ` Photo déjà partagée avec ${state.preview.repeatCount} client${state.preview.repeatCount > 1 ? "s" : ""}.` : ""}${all ? "" : " Retire les destinataires non éligibles avant de confirmer."}`, !all, "preview-status");
+  notice("{eligible} / {selected} destinataires éligibles.{repeat}{warning}", !all, "preview-status", { eligible: ui.numberParam(state.preview.eligibleCount), selected: ui.numberParam(state.selected.size), repeat: ui.messageParam(state.preview.repeatCount ? state.preview.repeatCount > 1 ? " Photo déjà partagée avec {count} clients." : " Photo déjà partagée avec {count} client." : "", { count: ui.numberParam(state.preview.repeatCount) }), warning: ui.messageParam(all ? "" : " Retire les destinataires non éligibles avant de confirmer.") });
 }
 function compositionChanged() {
   el("acknowledge").checked = false; el("campaign-body").maxLength = state.draft.mediaId ? 1000 : 4096;
-  el("body-help").textContent = state.draft.mediaId ? "Légende facultative · 1 000 caractères maximum." : "De 1 à 4 096 caractères.";
+  ui.text(el("body-help"), state.draft.mediaId ? "Légende facultative · 1 000 caractères maximum." : "De 1 à 4 096 caractères.");
   renderSelection(); renderPreview();
 }
 function contactQuery(afterId = null) {
@@ -152,7 +165,7 @@ async function loadLabels() {
     if (!page.hasMore) { cursor = null; break; } if (cursor !== null && page.nextCursor <= cursor) throw new TypeError("invalid_labels"); cursor = page.nextCursor;
   }
   if (cursor) throw new TypeError("too_many_labels");
-  for (const [element, kind] of [["tag-filter", "tag"], ["group-filter", "group"]]) for (const label of labels.filter((value) => value.kind === kind).sort((a, b) => a.name.localeCompare(b.name, "fr"))) { const option = node("option", label.name); option.value = label.id; el(element).append(option); }
+  for (const [element, kind] of [["tag-filter", "tag"], ["group-filter", "group"]]) for (const label of labels.filter((value) => value.kind === kind).sort((a, b) => a.name.localeCompare(b.name, "fr"))) { const option = rawNode("option", label.name); option.value = label.id; el(element).append(option); }
 }
 async function preview() {
   if (!state.selected.size || previewBusy || state.pending || state.csrfFailed) return;
@@ -172,7 +185,7 @@ async function loadPhotos(more = false) {
     if (!Array.isArray(page.assets) || page.assets.length > 20 || typeof page.hasMore !== "boolean" || page.nextCursor !== null && !validId(page.nextCursor)) throw new TypeError("invalid_assets");
     for (const asset of page.assets) {
       if (!validId(asset?.id) || !Number.isSafeInteger(asset.createdAt) || asset.thumbnailUrl !== `/api/media/admin/assets/${asset.id}/thumb` || !Number.isInteger(asset.width) || !Number.isInteger(asset.height)) throw new TypeError("invalid_asset");
-      if (!assets.has(asset.id)) { const option = node("option", `${new Date(asset.createdAt).toLocaleString("fr-FR")} · ${asset.width} × ${asset.height}`); option.value = asset.id; el("photo-select").append(option); }
+      if (!assets.has(asset.id)) { const option = textNode("option", "{date} · {width} × {height}", { date: ui.dateParam(asset.createdAt), width: ui.numberParam(asset.width), height: ui.numberParam(asset.height) }); option.value = asset.id; el("photo-select").append(option); }
       assets.set(asset.id, { id: asset.id, thumbnailUrl: asset.thumbnailUrl });
     }
     photoCursor = page.nextCursor; photoMore = page.hasMore; el("photo-field").hidden = false; notice(assets.size ? "Choisis une photo pour l’afficher avant de confirmer." : "Aucune photo dans ta bibliothèque. Ajoute d’abord une photo depuis Messages.", false, "photo-status");
@@ -190,7 +203,7 @@ async function showPhoto() {
     if (!currentBroadcast(state, ticket) || !visible() || epoch !== photoEpoch || asset.id !== state.draft.mediaId) return;
     await verifySession(ticket);
     if (!currentBroadcast(state, ticket) || !visible() || epoch !== photoEpoch || asset.id !== state.draft.mediaId) return;
-    photoUrl = URL.createObjectURL(blob); const image = node("img"); image.alt = "Photo choisie pour cette diffusion"; image.src = photoUrl; el("photo-preview").replaceChildren(image); notice("", false, "photo-status");
+    photoUrl = URL.createObjectURL(blob); const image = node("img"); image.alt = ""; ui.attr(image, "aria-label", "Photo choisie pour cette diffusion"); image.src = photoUrl; replace(el("photo-preview"), image); notice("", false, "photo-status");
   } catch (error) { if (currentBroadcast(state, ticket) && epoch === photoEpoch) report(error, "photo-status"); }
   finally { clearTimeout(timer); controllers.delete(controller); }
 }
@@ -203,7 +216,7 @@ async function send(retry = false) {
     const result = await request("/api/broadcast/admin/campaigns", { ticket, body: payload });
     const campaign = acceptCampaign(state, ticket, result); if (!campaign) return;
     campaigns.set(campaign.id, campaign); el("campaign-form").reset(); el("photo-select").value = ""; clearPhoto(); compositionChanged();
-    notice(`Diffusion enregistrée pour ${campaign.counts.total} client${campaign.counts.total > 1 ? "s" : ""}. Suis les remises et les éventuels destinataires ignorés dans l’historique.`, false, "send-status");
+    notice(campaign.counts.total > 1 ? "Diffusion enregistrée pour {count} clients. Suis les remises et les éventuels destinataires ignorés dans l’historique." : "Diffusion enregistrée pour {count} client. Suis les remises et les éventuels destinataires ignorés dans l’historique.", false, "send-status", { count: ui.numberParam(campaign.counts.total) });
     renderHistory(); await showCampaign(campaign.id); void loadHistory();
   } catch (error) {
     const definitiveRejected = !error.proofFailure && ([400, 413].includes(error.status) || error.status === 409 && ["recipients_unavailable", "media_unavailable", "repeat_confirmation_required", "limit_reached"].includes(error.code));
@@ -211,13 +224,13 @@ async function send(retry = false) {
   }
   finally { if (currentBroadcast(state, ticket)) { sendBusy = false; renderControls(); } }
 }
-const countSummary = (campaign) => `${campaign.counts.delivered} remis · ${campaign.counts.pending + campaign.counts.sending} en attente · ${campaign.counts.skipped} ignorés · ${campaign.counts.cancelled} annulés · ${campaign.counts.failed} en échec`;
+const countSummary = (campaign) => ui.messageParam("{delivered} remis · {pending} en attente · {skipped} ignorés · {cancelled} annulés · {failed} en échec", { delivered: ui.numberParam(campaign.counts.delivered), pending: ui.numberParam(campaign.counts.pending + campaign.counts.sending), skipped: ui.numberParam(campaign.counts.skipped), cancelled: ui.numberParam(campaign.counts.cancelled), failed: ui.numberParam(campaign.counts.failed) });
 function renderHistory() {
   const rows = [...campaigns.values()].sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id)).map((campaign) => {
     const button = node("button", undefined, "history-row"); button.type = "button"; button.setAttribute("aria-pressed", String(detailId === campaign.id));
-    button.append(node("strong", campaign.title), node("span", `${campaignNames[campaign.status]} · ${new Date(campaign.createdAt).toLocaleString("fr-FR")}`), node("span", countSummary(campaign)));
+    button.append(rawNode("strong", campaign.title), textNode("span", "{status} · {date}", { status: ui.messageParam(campaignNames[campaign.status]), date: ui.dateParam(campaign.createdAt) }), textNode("span", "{counts}", { counts: countSummary(campaign) }));
     button.addEventListener("click", () => { void showCampaign(campaign.id); }); return button;
-  }); el("history").replaceChildren(...rows);
+  }); replace(el("history"), ...rows);
 }
 function parseHistoryPage(page, afterId) {
   if (!Array.isArray(page?.campaigns) || page.campaigns.length > 20 || typeof page.hasMore !== "boolean" || page.nextCursor !== null && !validId(page.nextCursor)) throw new TypeError("invalid_history");
@@ -251,29 +264,29 @@ async function loadHistory(more = false, { restartArchive = false } = {}) {
     if (!currentBroadcast(state, ticket)) return;
     for (const campaign of incoming.values()) campaigns.set(campaign.id, mergeCampaign(campaigns.get(campaign.id), campaign));
     if (page) { historyCursor = page.nextCursor; historyMore = page.hasMore; historyStarted = true; }
-    renderHistory(); notice(campaigns.size ? `Les 20 diffusions les plus récentes et tous les envois en cours sont actualisés. « Autres diffusions » parcourt le reste de ton historique.${restartArchive ? " Le parcours reprend au début de l’historique." : ""}` : "Aucune diffusion pour le moment.", false, "history-status");
+    renderHistory(); notice(campaigns.size ? restartArchive ? "Les 20 diffusions les plus récentes et tous les envois en cours sont actualisés. « Autres diffusions » parcourt le reste de ton historique. Le parcours reprend au début de l’historique." : "Les 20 diffusions les plus récentes et tous les envois en cours sont actualisés. « Autres diffusions » parcourt le reste de ton historique." : "Aucune diffusion pour le moment.", false, "history-status");
   } catch (error) { report(error, "history-status"); }
   finally { if (currentBroadcast(state, ticket)) { historyBusy = false; renderControls(); } }
 }
 function renderDetail(campaign) {
-  const section = el("campaign-detail"); section.hidden = false; section.replaceChildren(node("h3", campaign.title), node("p", `${campaignNames[campaign.status]} · ${countSummary(campaign)}`, "small-copy"), node("p", campaign.body || "Photo sans légende", "campaign-body"));
+  const section = el("campaign-detail"); section.hidden = false; replace(section, rawNode("h3", campaign.title), textNode("p", "{status} · {counts}", { status: ui.messageParam(campaignNames[campaign.status]), counts: countSummary(campaign) }, "small-copy"), campaign.body ? rawNode("p", campaign.body, "campaign-body") : node("p", "Photo sans légende", "campaign-body"));
   if (campaign.mediaId) section.append(node("p", "Une photo jointe", "small-copy"));
   if (["queued", "running"].includes(campaign.status) && campaign.counts.pending + campaign.counts.sending > 0) {
-    const cancel = node("button", `Annuler les ${campaign.counts.pending + campaign.counts.sending} envois en attente`, "button secondary"); cancel.type = "button";
+    const cancel = textNode("button", "Annuler les {count} envois en attente", { count: ui.numberParam(campaign.counts.pending + campaign.counts.sending) }, "button secondary"); cancel.type = "button";
     cancel.addEventListener("click", () => { void cancelCampaign(campaign.id); }); section.append(cancel);
   }
   if (campaign.status === "paused") section.append(node("p", "L’autorisation de cette diffusion n’est plus valable. Les envois restants ont été interrompus. Prépare une nouvelle diffusion si tu souhaites les confirmer de nouveau.", "small-copy"));
   const list = node("ul", undefined, "recipient-list");
-  for (const recipient of campaign.recipients) list.append(node("li", `${recipient.client.pseudonym} · ${recipientNames[recipient.state]}${recipient.reason ? ` · ${reasonNames[recipient.reason]}` : ""}`)); section.append(list);
+  for (const recipient of campaign.recipients) list.append(textNode("li", "{name} · {status}{reason}", { name: recipient.client.pseudonym, status: ui.messageParam(recipientNames[recipient.state]), reason: ui.messageParam(recipient.reason ? " · {reason}" : "", { reason: ui.messageParam(recipient.reason ? reasonNames[recipient.reason] : "") }) })); section.append(list);
 }
 async function showCampaign(id, refresh = false) {
-  if (!validId(id)) return; if (!refresh) { detailId = id; detailEpoch += 1; el("campaign-detail").replaceChildren(node("p", "Chargement…", "status")); el("campaign-detail").hidden = false; renderHistory(); }
+  if (!validId(id)) return; if (!refresh) { detailId = id; detailEpoch += 1; replace(el("campaign-detail"), node("p", "Chargement…", "status")); el("campaign-detail").hidden = false; renderHistory(); }
   const epoch = detailEpoch;
   try {
     const result = parseCampaign(await request(`/api/broadcast/admin/campaigns/${id}`), { detail: true });
     if (detailId !== id || detailEpoch !== epoch) return;
     const current = mergeCampaign(campaigns.get(id), result); campaigns.set(id, current);
-    if (current.recipients) renderDetail(current); else { el("campaign-detail").replaceChildren(node("p", "Les envois ont évolué. Actualise l’historique pour afficher le détail à jour.", "small-copy")); }
+    if (current.recipients) renderDetail(current); else { replace(el("campaign-detail"), node("p", "Les envois ont évolué. Actualise l’historique pour afficher le détail à jour.", "small-copy")); }
     renderHistory();
   } catch (error) { if (detailId === id && detailEpoch === epoch) report(error, "history-status"); }
 }
@@ -322,7 +335,7 @@ el("filters").addEventListener("submit", (event) => { event.preventDefault(); vo
 el("more-contacts").addEventListener("click", () => { void loadContacts(true); });
 el("clear-selection").addEventListener("click", () => { if (clearSelection(state)) compositionChanged(); });
 for (const [element, key] of [["campaign-title", "title"], ["campaign-body", "body"]]) el(element).addEventListener("input", () => { updateComposition(state, { [key]: el(element).value }); el("acknowledge").checked = false; renderControls(); });
-el("photo-select").addEventListener("change", () => { updateComposition(state, { mediaId: el("photo-select").value || null }); el("campaign-body").maxLength = state.draft.mediaId ? 1000 : 4096; el("body-help").textContent = state.draft.mediaId ? "Légende facultative · 1 000 caractères maximum." : "De 1 à 4 096 caractères."; compositionChanged(); void showPhoto(); });
+el("photo-select").addEventListener("change", () => { updateComposition(state, { mediaId: el("photo-select").value || null }); el("campaign-body").maxLength = state.draft.mediaId ? 1000 : 4096; ui.text(el("body-help"), state.draft.mediaId ? "Légende facultative · 1 000 caractères maximum." : "De 1 à 4 096 caractères."); compositionChanged(); void showPhoto(); });
 el("allow-repeat").addEventListener("change", () => { updateComposition(state, { allowRepeatMedia: el("allow-repeat").checked }); el("acknowledge").checked = false; renderControls(); });
 el("acknowledge").addEventListener("change", () => { state.acknowledged = el("acknowledge").checked; renderControls(); });
 el("load-photos").addEventListener("click", () => { void loadPhotos(); }); el("more-photos").addEventListener("click", () => { void loadPhotos(true); });

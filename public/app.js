@@ -29,7 +29,8 @@ const translations = {
   }
 };
 
-let language = navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
+const sharedLanguage = globalThis.JessieI18n;
+let language = sharedLanguage?.getLanguage() ?? (navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en");
 const switcher = document.querySelector("#language-switch");
 
 function renderLanguage() {
@@ -43,8 +44,6 @@ function renderLanguage() {
   document.title = language === "fr" ? "JessieMessage — Espace privé" : "JessieMessage — Private space";
 }
 
-switcher.addEventListener("click", () => {
-  language = language === "fr" ? "en" : "fr";
-  renderLanguage();
-});
+if (sharedLanguage) sharedLanguage.onChange((next) => { language = next; renderLanguage(); });
+else switcher.addEventListener("click", () => { language = language === "fr" ? "en" : "fr"; renderLanguage(); });
 renderLanguage();

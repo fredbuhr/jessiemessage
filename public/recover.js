@@ -1,6 +1,17 @@
 import { passwordProblem, createRecoveryState, beginRecoveryOperation, currentRecoveryOperation, finishRecoveryOperation,
   showRecoveryRequest, suspendRecovery, resumeRecovery, clearRecoveryState } from "/recover-model.js";
 
+// UI sources are French; private values never enter the translation catalog.
+const recoveryI18n = globalThis.JessieI18n ?? {
+  t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
+  text(node, source, params = {}) { node.textContent = this.t(source, params); },
+  attr(node, name, source, params = {}) { node.setAttribute(name, this.t(source, params)); },
+  rawText(node, value) { node.textContent = value; },
+  forget() {},
+  dateParam(value, options = {}) { return new Date(value).toLocaleString("fr-FR", options); },
+  numberParam(value, options = {}) { return value.toLocaleString("fr-FR", options); },
+};
+
 // The fragment and any query disappear before the first application request.
 // No token is written into markup, browser storage or a subsequent URL.
 let fragment = location.hash;
@@ -22,13 +33,13 @@ let loadingCapability = false;
 let interrupted = null;
 
 function notice(message, error = false) {
-  status.textContent = message; status.classList.toggle("is-error", error);
+  recoveryI18n.text(status, message); status.classList.toggle("is-error", error);
 }
 function clearPasswords() {
   password.value = ""; confirmation.value = "";
-  element("recovery-password-help").textContent = "Entre 14 et 128 caractères. Les espaces et les accents sont conservés.";
+  recoveryI18n.text(element("recovery-password-help"), "Entre 14 et 128 caractères. Les espaces et les accents sont conservés.");
   password.removeAttribute("aria-invalid"); confirmation.removeAttribute("aria-invalid");
-  element("recovery-confirmation-help").textContent = "Saisis exactement le même mot de passe.";
+  recoveryI18n.text(element("recovery-confirmation-help"), "Saisis exactement le même mot de passe.");
   element("recovery-confirmation-help").classList.remove("is-error");
 }
 function render() {
@@ -40,11 +51,11 @@ function render() {
   for (const button of document.querySelectorAll('form button[type="submit"]')) button.disabled = Boolean(state.pending) || state.suspended;
   for (const input of document.querySelectorAll("form input")) input.readOnly = Boolean(state.pending);
   const resetting = state.mode === "reset";
-  element("recovery-title").textContent = state.mode === "complete" ? "Ton mot de passe est modifié." : resetting ? "Un nouveau mot de passe." : "Retrouver ton accès.";
-  element("recovery-intro").textContent = state.mode === "complete"
+  recoveryI18n.text(element("recovery-title"), state.mode === "complete" ? "Ton mot de passe est modifié." : resetting ? "Un nouveau mot de passe." : "Retrouver ton accès.");
+  recoveryI18n.text(element("recovery-intro"), state.mode === "complete"
     ? "Reconnecte-toi avec ton nouveau mot de passe pour retrouver ton espace."
     : resetting ? "Choisis un nouveau mot de passe. Le lien sera utilisé seulement lorsque tu valideras ce formulaire."
-      : "Demande un lien par e-mail pour choisir un nouveau mot de passe.";
+      : "Demande un lien par e-mail pour choisir un nouveau mot de passe.");
   if (resetForm.hidden) clearPasswords();
 }
 function cancelRequests() {
@@ -81,11 +92,13 @@ function operationFailure(error, ticket) {
 }
 function passwordFeedback() {
   const help = element("recovery-password-help");
-  help.textContent = password.value.length > 0 && password.value.length < 14
-    ? `${14 - password.value.length} caractère${14 - password.value.length > 1 ? "s" : ""} encore pour atteindre le minimum de 14.`
-    : "Entre 14 et 128 caractères. Les espaces et les accents sont conservés.";
+  const remaining = 14 - password.value.length;
+  recoveryI18n.text(help, password.value.length > 0 && password.value.length < 14
+    ? remaining > 1 ? "{count} caractères encore pour atteindre le minimum de 14." : "{count} caractère encore pour atteindre le minimum de 14."
+    : "Entre 14 et 128 caractères. Les espaces et les accents sont conservés.",
+  password.value.length > 0 && password.value.length < 14 ? { count: recoveryI18n.numberParam(remaining) } : {});
   const mismatch = confirmation.value.length > 0 && confirmation.value !== password.value;
-  element("recovery-confirmation-help").textContent = mismatch ? "Les deux mots de passe ne correspondent pas encore." : "Saisis exactement le même mot de passe.";
+  recoveryI18n.text(element("recovery-confirmation-help"), mismatch ? "Les deux mots de passe ne correspondent pas encore." : "Saisis exactement le même mot de passe.");
   element("recovery-confirmation-help").classList.toggle("is-error", mismatch);
   if (mismatch) confirmation.setAttribute("aria-invalid", "true"); else confirmation.removeAttribute("aria-invalid");
 }

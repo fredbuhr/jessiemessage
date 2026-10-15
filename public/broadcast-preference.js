@@ -1,3 +1,13 @@
+const ui = globalThis.JessieI18n ?? {
+  t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
+  text(element, source, params = {}) { element.textContent = this.t(source, params); },
+  attr(element, name, source, params = {}) { element.setAttribute(name, this.t(source, params)); },
+  rawText(element, value) { element.textContent = value; }, forget() {},
+  dateParam(value, options = {}) { return new Date(value).toLocaleString("fr-FR", options); },
+  numberParam(value, options = {}) { return value.toLocaleString("fr-FR", options); },
+  messageParam(source, params = {}) { return this.t(source, params); }
+};
+
 const ID = /^[0-9a-f]{32}$/;
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 253402300799999;
@@ -30,20 +40,20 @@ export function preferenceSaveBody(state, enabled, now = Date.now()) {
 // module is protected itself; anonymous login pages never request this asset.
 export function mountBroadcastPreference(container, { isCurrent = () => true } = {}) {
   const state = createPreferenceState(); const controllers = new Set(); let disposed = false; let expiryTimer = null;
-  const section = document.createElement("section"); section.className = "broadcast-preference"; section.setAttribute("aria-label", "Messages de diffusion");
-  const heading = document.createElement("h2"); heading.textContent = "Les nouvelles de Jessie";
-  const copy = document.createElement("p"); copy.className = "session-note"; copy.textContent = "Tu peux accepter les messages que Jessie propose à plusieurs clients. Chacun les reçoit dans sa conversation privée. Ce choix est facultatif et tu peux le retirer à tout moment ; tes échanges directs avec Jessie restent disponibles selon ton accès.";
+  const section = document.createElement("section"); section.className = "broadcast-preference"; ui.attr(section, "aria-label", "Messages de diffusion");
+  const heading = document.createElement("h2"); ui.text(heading, "Les nouvelles de Jessie");
+  const copy = document.createElement("p"); copy.className = "session-note"; ui.text(copy, "Tu peux accepter les messages que Jessie propose à plusieurs clients. Chacun les reçoit dans sa conversation privée. Ce choix est facultatif et tu peux le retirer à tout moment ; tes échanges directs avec Jessie restent disponibles selon ton accès.");
   const form = document.createElement("form"); const label = document.createElement("label"); label.className = "checkbox-field";
-  const checkbox = document.createElement("input"); checkbox.type = "checkbox"; const span = document.createElement("span"); span.textContent = "Je souhaite recevoir les messages de diffusion de Jessie."; label.append(checkbox, span);
-  const save = document.createElement("button"); save.type = "submit"; save.className = "button button-secondary secondary"; save.textContent = "Enregistrer mon choix";
-  const reload = document.createElement("button"); reload.type = "button"; reload.className = "button button-secondary secondary"; reload.textContent = "Recharger mon choix";
+  const checkbox = document.createElement("input"); checkbox.type = "checkbox"; const span = document.createElement("span"); ui.text(span, "Je souhaite recevoir les messages de diffusion de Jessie."); label.append(checkbox, span);
+  const save = document.createElement("button"); save.type = "submit"; save.className = "button button-secondary secondary"; ui.text(save, "Enregistrer mon choix");
+  const reload = document.createElement("button"); reload.type = "button"; reload.className = "button button-secondary secondary"; ui.text(reload, "Recharger mon choix");
   const status = document.createElement("p"); status.className = "status"; status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite");
   form.append(label, save); section.append(heading, copy, form, status, reload); container.append(section);
   const visible = () => document.visibilityState === "visible";
   const alive = () => !disposed && container.isConnected && isCurrent();
   const current = (ticket) => alive() && visible() && currentPreference(state, ticket);
   const stale = () => Object.assign(new Error("stale_response"), { stale: true });
-  function notice(text, error = false) { status.textContent = text; status.classList.toggle("is-error", error); }
+  function notice(text, error = false) { ui.text(status, text); status.classList.toggle("is-error", error); }
   function render() { form.hidden = !state.session || !state.preference; checkbox.disabled = state.busy || state.refreshRequired; save.disabled = state.busy || state.refreshRequired; reload.hidden = !state.refreshRequired; }
   function reset(isVisible = false) {
     for (const controller of controllers) controller.abort(); controllers.clear(); clearTimeout(expiryTimer); expiryTimer = null;
@@ -94,5 +104,5 @@ export function mountBroadcastPreference(container, { isCurrent = () => true } =
   form.addEventListener("submit", submit); reload.addEventListener("click", () => { void bootstrap(); });
   document.addEventListener("visibilitychange", onVisibility); window.addEventListener("pagehide", onPageHide);
   void bootstrap();
-  return { clear() { if (disposed) return; reset(); disposed = true; document.removeEventListener("visibilitychange", onVisibility); window.removeEventListener("pagehide", onPageHide); section.remove(); }, reload: bootstrap };
+  return { clear() { if (disposed) return; reset(); disposed = true; document.removeEventListener("visibilitychange", onVisibility); window.removeEventListener("pagehide", onPageHide); ui.forget(section); section.remove(); }, reload: bootstrap };
 }
