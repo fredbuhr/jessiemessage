@@ -2,7 +2,7 @@
 
 Relevé du 15 octobre 2026. Version applicative **0.24.0**, révision préparée **`55fb30aa191fb75f898e5818324c4ec35341ac74`**. L’inventaire privé complète le [relevé public initial](hosting-inventory-2026-10-15.md).
 
-**Le premier démarrage public neutre a été observé ; la disponibilité actuelle n’est pas confirmée après un 502 ultérieur.** La release reste distincte du dossier initial conservé. La bascule a été constatée dans le Manager, puis par des requêtes HTTPS anonymes sur le domaine public. L’authentification et toutes les fonctions client restent désactivées.
+**Le premier démarrage public neutre a été observé, puis un 502 est survenu. La contre-vérification du 15 octobre à 15:26:39 UTC a reçu les réponses neutres attendues sans relance. La cause du 502 reste inconnue.** La release reste distincte du dossier initial conservé. La bascule a été constatée dans le Manager, puis par des requêtes HTTPS anonymes sur le domaine public. L’authentification et toutes les fonctions client restent désactivées.
 
 ## 0.23 — Éléments constatés dans le Manager
 
@@ -70,14 +70,38 @@ Après les réponses HTTPS et le parcours FR/EN réussis ci-dessus, une nouvelle
 
 La session technique a ensuite été déconnectée : les outils du navigateur et du terminal signalent une perte de connexion à leur environnement. Il n’a donc pas été possible de consulter à nouveau le processus ou les journaux du Manager, de confirmer l’effet du dernier rechargement, ni d’exécuter un retour arrière. La déconnexion des outils ne démontre pas à elle seule une panne de l’hébergement.
 
-Les tentatives indépendantes du connecteur web public à **15:11:07–15:11:31 UTC** échouent sur `/`, `/app`, `/api/health`, `/api/ready` et `/styles.css` sans statut HTTP ni corps serveur exploitable ; `/` et `/api/health` ont été essayés une seconde fois. Ce résultat de proxy ne confirme ni le maintien du 502 ni un rétablissement. **La disponibilité publique actuelle reste non confirmée ; la stabilisation de l’étape 0.24 n’est pas validée.**
+Les tentatives indépendantes du connecteur web public à **15:11:07–15:11:31 UTC** échouent sur `/`, `/app`, `/api/health`, `/api/ready` et `/styles.css` sans statut HTTP ni corps serveur exploitable ; `/` et `/api/health` ont été essayés une seconde fois. Ce résultat de proxy ne confirme ni le maintien du 502 ni un rétablissement. **À la fin de cette première tentative, la disponibilité publique restait non confirmée. La reprise ci-dessous consigne la contre-vérification suivante sans effacer cet incident.**
 
-À la reprise de l’accès technique :
+Plan retenu pendant cette interruption, avant la contre-vérification suivante :
 
 1. Lire l’état du processus et les journaux du Manager avant toute relance ; relever l’erreur et son heure sans exposer de secrets.
 2. Recontrôler l’accueil, `/app`, la santé et les assets par HTTPS, en distinguant le 503 de disponibilité attendu.
 3. Si le 502 persiste et ne peut pas être corrigé avec les éléments disponibles, appliquer le retour arrière préparé ci-dessous, puis vérifier publiquement le modèle restauré.
 4. Consigner le résultat et la cause seulement si elle est établie avant de poursuivre vers la base et l’authentification. Les huit fonctions privées restent désactivées.
+
+## Contre-vérification après le retour de l’accès technique
+
+Le 15 octobre, l’accès au navigateur et à la console SSH est revenu. Le tableau de bord du Manager actualisé indique **Node actif**. La console d’exécution affiche une connexion au flux, sans historique d’erreur exploitable pour l’incident antérieur ; cela ne permet pas d’en établir la cause. Aucun changement de Start, build, version ou drapeau, aucun redémarrage ni repli n’a été effectué pendant cette reprise.
+
+À **15:26:39 UTC** (`Date` HTTP), sept GET ont été effectués **depuis la console SSH de l’hébergement**, par Node `fetch`, sans cookie ni redirection suivie, avec vérification TLS habituelle et délai de dix secondes par requête :
+
+| Route | Réponse |
+| --- | --- |
+| `/`, `/app`, `/styles.css` | HTTP 200 |
+| `/api/health` | HTTP 200, `status: ok` |
+| `/api/entry` | HTTP 200, `status: unavailable`, `client: null`, `administrator: null` |
+| `/api/ready` | HTTP 503 attendu, `status: unavailable` |
+| `/admin/login` | HTTP 404 attendu |
+
+Ces sept réponses portent `Cache-Control: no-store`, `X-Content-Type-Options: nosniff` et une CSP. Chrome a également rechargé l’accueil, suivi « Ouvrir mon espace » et reçu l’état français « accès en préparation » dans `/app`. Le 502 ne s’est pas reproduit dans ces essais bornés ; cela ne prouve ni sa cause ni une disponibilité durable.
+
+Un second lot identique de sept GET depuis l’hébergement, à **15:39:51 UTC**, après création de la base de recette, a reçu les mêmes statuts, corps JSON neutres et protections. Aucun 502 dans ces deux lots.
+
+Le contrôle curl indépendant depuis l’environnement de développement a échoué à **15:25:36–15:25:41 UTC** lors de la connexion au proxy (`Proxy CONNECT aborted due to timeout`), avant toute réponse HTTP cible. Il ne constitue ni une preuve de panne du site ni une contre-vérification HTTPS indépendante réussie.
+
+La revue du cycle de vie au SHA exécuté n’a trouvé aucun défaut reproductible expliquant le 502 sur l’accueil. Trente-trois tests ciblés ont réussi, ainsi que 125 requêtes loopback réutilisées et une reprise après expiration keep-alive. Ces essais locaux ne diagnostiquent pas le proxy Infomaniak. Aucun correctif applicatif spéculatif n’est livré.
+
+La [préparation SQL de l’étape 0.25](hosted-database-preparation.md) a ensuite créé une base vide sans utilisateur, constaté MariaDB 10.11.19 et vérifié une négociation TLS 1.3. Elle ne modifie pas les résultats historiques de la première bascule. Une capture de l’entrée publique après la contre-vérification est jointe à ce suivi.
 
 ## État des vérifications
 
@@ -88,8 +112,9 @@ Les tentatives indépendantes du connecteur web public à **15:11:07–15:11:31 
 - [x] Bascule du lancement vers la release et démarrage public de JessieMessage.
 - [x] Smoke HTTPS horodaté et routage public constatés ci-dessus.
 - [x] Dossier du modèle initial conservé ; retour arrière non exercé.
-- [ ] Disponibilité rétablie ou confirmée après le 502 ; diagnostic des logs et contrôle du processus à reprendre.
-- [ ] Retour arrière appliqué et vérifié si nécessaire.
+- [x] Réponses neutres constatées après le 502 par Chrome et HTTPS depuis l’hébergement ; Node actif dans le Manager.
+- [ ] Cause du 502 et disponibilité durable établies ; aucun historique d’erreur corrélé disponible.
+- [ ] Retour arrière exercé : non nécessaire lors de cette contre-vérification, reste à tester séparément.
 
 ## Retour arrière préparé, non exercé
 
