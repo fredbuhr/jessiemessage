@@ -7,6 +7,7 @@ import { loadMigrations } from "../server/db/migrations.mjs";
 import { DATABASE_CHECK_NAMES, inspectDatabase } from "../server/preflight/database.mjs";
 
 const plan = await loadMigrations();
+const appTables = plan.map(({ sql }) => /^CREATE TABLE ([a-z_]+)/.exec(sql)[1]);
 const env = {
   JESSIEMESSAGE_DB_NAME: "jessiemessage_test_ci", JESSIEMESSAGE_APPLICATION_DATABASE: "jessiemessage_test_ci",
   JESSIEMESSAGE_DB_HOST: "database.example.invalid", JESSIEMESSAGE_DB_USER: "migration_identity",
@@ -16,6 +17,10 @@ const grants = (scope = "`jessiemessage_test_ci`.*", privileges = "SELECT, INSER
   "Grants for private-account@private-host": `GRANT ${privileges} ON ${scope} TO 'private-account'@'private-host'`,
 });
 const usage = { grant: "GRANT USAGE ON *.* TO 'private-account'@'private-host' IDENTIFIED BY PASSWORD '*PRIVATEHASH'" };
+const completeGrants = () => [usage,
+  grants("`jessiemessage_test_ci`.`schema_migrations`", "SELECT"),
+  ...appTables.map((table) => grants(`\`jessiemessage_test_ci\`.\`${table}\``)),
+];
 const history = () => plan.map(({ version, name, checksum }) => ({ version, name, checksum, state: "applied", attempts: 1 }));
 const statuses = (result) => Object.fromEntries(result.checks.map(({ name, status }) => [name, status]));
 const deferred = () => {
@@ -34,7 +39,7 @@ function fixture({ selected, cipher, grantRows, rows, query, release, end, rollb
       if (overridden !== undefined) return overridden;
       if (sql.startsWith("SELECT DATABASE()")) return selected ?? [{ database_name: env.JESSIEMESSAGE_DB_NAME, server_version: "10.11.14-MariaDB-private-build" }];
       if (sql.startsWith("SHOW SESSION")) return cipher ?? [{ Variable_name: "Ssl_cipher", Value: "TLS_AES_256_GCM_SHA384" }];
-      if (sql === "SHOW GRANTS FOR CURRENT_USER") return grantRows ?? [usage, grants(), grants("`jessiemessage_test_restore_ci`.*")];
+      if (sql === "SHOW GRANTS FOR CURRENT_USER") return grantRows ?? completeGrants();
       if (sql.startsWith("SELECT version")) return rows ?? history();
       return [];
     },
@@ -155,14 +160,14 @@ test("a cipher is required and an explicit insecure loopback override remains a 
 test("privilege evidence rejects readonly, DDL, global rights, roles, grant options and unknown or excessive forms without stopping diagnostic reads", async () => {
   const invalid = [
     [usage, grants(undefined, "SELECT")],
-    [usage, grants(), grants(undefined, "CREATE")],
-    [usage, grants(), grants("*.*", "SELECT")],
-    [usage, grants(undefined, "ALL PRIVILEGES")],
-    [usage, { grant: `${Object.values(grants())[0]} WITH GRANT OPTION` }],
-    [usage, grants(), { grant: "GRANT `application_role` TO 'private-account'@'private-host'" }],
-    [usage, grants(), { grant: "GRANT PROXY ON 'another'@'%' TO 'private-account'@'private-host'" }],
-    [usage, grants("`%`.*")],
-    [usage, grants(), { grant: "GRANT SELECT (`id`) ON `jessiemessage_test_ci`.`users` TO 'private-account'@'private-host'" }],
+    ...["CREATE", "CREATE TEMPORARY TABLES", "LOCK TABLES", "ALL PRIVILEGES"].map((privilege) => [...completeGrants(), grants(undefined, privilege)]),
+    ...["SELECT", "INSERT", "UPDATE", "DELETE"].map((privilege) => [...completeGrants(), grants("*.*", privilege)]),
+    [...completeGrants(), { grant: `${Object.values(grants("`jessiemessage_test_ci`.`users`"))[0]} WITH GRANT OPTION` }],
+    [...completeGrants(), { grant: "GRANT USAGE ON *.* TO 'private-account'@'private-host' WITH GRANT OPTION" }],
+    [...completeGrants(), { grant: "GRANT `application_role` TO 'private-account'@'private-host' WITH ADMIN OPTION" }],
+    [...completeGrants(), { grant: "GRANT `application_role` TO 'private-account'@'private-host'" }],
+    [...completeGrants(), { grant: "GRANT PROXY ON 'another'@'%' TO 'private-account'@'private-host'" }],
+    [...completeGrants(), { grant: "GRANT SELECT (`id`) ON `jessiemessage_test_ci`.`users` TO 'private-account'@'private-host'" }],
     [{ grant: "x".repeat(16385) }], Array.from({ length: 129 }, () => usage), [{ first: "private", second: "private" }],
   ];
   for (const grantRows of invalid) {
@@ -173,15 +178,61 @@ test("privilege evidence rejects readonly, DDL, global rights, roles, grant opti
   }
 });
 
-test("complete table grants and escaped names are accepted without claiming account exclusivity", async () => {
-  const grantRows = [usage, grants("`jessiemessage\\_test\\_ci`.`schema_migrations`", "SELECT"), grants("`another_named_database`.*")];
-  for (const migration of plan) {
-    const table = /^CREATE TABLE ([a-z_]+)/.exec(migration.sql)[1];
-    grantRows.push(grants(`\`jessiemessage\\_test\\_ci\`.\`${table}\``, "SELECT, INSERT"));
-    grantRows.push(grants(`\`jessiemessage_test_ci\`.\`${table}\``, "UPDATE, DELETE"));
+test("exact table grants may split required DML while the migration ledger remains SELECT-only", async () => {
+  const grantRows = [usage, grants("`jessiemessage_test_ci`.`schema_migrations`", "SELECT")];
+  for (const table of appTables) {
+    grantRows.push(grants(`\`jessiemessage_test_ci\`.\`${table}\``, "SELECT, INSERT"));
+    grantRows.push(grants(`jessiemessage_test_ci.${table}`, "UPDATE, DELETE"));
   }
   const setup = fixture({ grantRows });
   assert.equal((await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies)).valid, true);
+});
+
+test("otherwise complete grants cannot hide any migration-ledger write privilege", async () => {
+  for (const privilege of ["INSERT", "UPDATE", "DELETE", "SELECT, INSERT, UPDATE, DELETE"]) {
+    const setup = fixture({ grantRows: [...completeGrants(), grants("`jessiemessage_test_ci`.`schema_migrations`", privilege)] });
+    const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail", privilege); safeDto(result);
+  }
+});
+
+test("database-wide grants are rejected even for escaped exact database names or SELECT-only rights", async () => {
+  for (const scope of ["`jessiemessage_test_ci`.*", "`jessiemessage\\_test\\_ci`.*", "`jessiemessage%`.*", "`%`.*"])
+    for (const privilege of ["SELECT", "INSERT, UPDATE, DELETE", "SELECT, INSERT, UPDATE, DELETE"]) {
+      const setup = fixture({ grantRows: [...completeGrants(), grants(scope, privilege)] });
+      const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+      assert.equal(statuses(result).privileges, "fail", `${scope}: ${privilege}`); safeDto(result);
+    }
+});
+
+test("other databases, unknown tables and ambiguous escaped names fail despite sufficient required grants", async () => {
+  for (const scope of [
+    "`another_named_database`.`users`", "`jessiemessage_test_restore_ci`.`schema_migrations`",
+    "`jessiemessage_test_ci`.`unexpected_table`", "`jessiemessage_test_ci`.`user_`",
+    "`jessiemessage_test_ci`.`users%`", "`jessiemessage%`.`users`",
+    "`jessiemessage\\_test\\_ci`.`users`", "`jessiemessage_test_ci`.`schema\\_migrations`",
+    "`jessiemessage_test_ci`.`users``other`", "*.users",
+  ]) for (const privilege of ["SELECT", "SELECT, INSERT, UPDATE, DELETE"]) {
+    const setup = fixture({ grantRows: [...completeGrants(), grants(scope, privilege)] });
+    const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail", `${scope}: ${privilege}`); safeDto(result);
+  }
+});
+
+test("every application table needs all four DML rights and the ledger needs explicit SELECT", async () => {
+  for (const table of [...appTables, "schema_migrations"]) {
+    const grantRows = completeGrants().filter((row) => !Object.values(row)[0].includes(`.\`${table}\``));
+    const setup = fixture({ grantRows });
+    const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail", table); safeDto(result);
+  }
+  for (const missing of ["SELECT", "INSERT", "UPDATE", "DELETE"]) {
+    const grantRows = completeGrants().filter((row) => !Object.values(row)[0].includes(".`users`"));
+    grantRows.push(grants("`jessiemessage_test_ci`.`users`", ["SELECT", "INSERT", "UPDATE", "DELETE"].filter((privilege) => privilege !== missing).join(", ")));
+    const setup = fixture({ grantRows });
+    const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
+    assert.equal(statuses(result).privileges, "fail", missing); safeDto(result);
+  }
 });
 
 test("ledger drift, missing migrations, invalid counters and unavailable sources fail history while projections still run", async () => {
