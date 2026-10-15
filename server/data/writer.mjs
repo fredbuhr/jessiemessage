@@ -5,10 +5,10 @@ import path from "node:path";
 
 const MAX_BYTES = 285212672;
 const MAX_FILES = 10010;
-const JSON_FILES = new Set(["account.json", "inventory.json", "policy.json"]);
+const JSON_FILES = new Set(["account.json", "inventory.json", "policy.json", "deletion-plan.json"]);
 const LINE_FILES = new Set(["messages.jsonl", "library.jsonl"]);
 const MEDIA_NAME = /^media\/[0-9a-f]{32}\.jpg$/;
-const COUNTS = ["messages", "mediaFiles", "libraryItems", "mediaBytes", "rows", "inventoryCategories"];
+const COUNTS = ["messages", "mediaFiles", "libraryItems", "mediaBytes", "rows", "inventoryCategories", "observations", "affectedCategories", "blockers"];
 const FLAGS = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW;
 
 export class DataWriterError extends Error {

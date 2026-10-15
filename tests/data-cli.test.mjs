@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { main, parseArguments, DataCliError } from "../scripts/data-export.mjs";
 import { DATA_POLICY } from "../server/data/policy.mjs";
+import { DELETION_FACT_NAMES } from "../server/data/deletion-store.mjs";
 
 const client = "11".repeat(16), now = 1800000000000;
 const args = (command = "inventory") => [command, "--offline", "--database", "jessiemessage_test_data", "--client", client, "--confirm-client", client, "--output", "/synthetic/private-exports/new-export"];
@@ -15,6 +16,9 @@ function fixture() {
   const reader = { account: { id: state.clientId, role: "client" }, async inventory() {
     return DATA_POLICY.map((entry) => ({ table: entry.table, scope: entry.scope, count: entry.scope === "subject" ? 1 : null,
       truncated: false, payload: "private-marker@example.invalid" }));
+  }, async deletionFacts() {
+    events.push("deletion-facts");
+    return DELETION_FACT_NAMES.map((name) => ({ name, count: 0, truncated: false, payload: "private-marker" }));
   } };
   const writer = Object.fromEntries(["empty", "json", "line", "media"].map((name) => [name, async (path, value) => {
     events.push([name, path]); if (state.writerError) throw new Error("private-marker payload and absolute path");
@@ -40,7 +44,7 @@ function fixture() {
 }
 
 test("data CLI requires exact offline, database, repeated canonical client and private output arguments", () => {
-  for (const command of ["inventory", "export"]) {
+  for (const command of ["inventory", "export", "plan"]) {
     const result = parseArguments(args(command)); assert.equal(result.clientId.toString("hex"), client); assert.equal(result.command, command);
   }
   const bad = [[], args("purge"), args().filter((value) => value !== "--offline"), [...args(), "--force"],
@@ -125,4 +129,37 @@ test("interruption prevents subsequent records and completion while still closin
   assert.equal(f.events.some((event) => Array.isArray(event) && event[0] === "line"), false);
   assert.equal(f.files.has("COMPLETE.json"), false); assert.equal(f.output.length, 0);
   assert.equal(f.events.includes("pool-end"), true); assert.equal(f.events.includes("writer-close"), true);
+});
+
+test("deletion plan is a keyless private diagnostic, completed after the same snapshot and pool close", async () => {
+  const f = fixture(); f.state.config.messageKey = null;
+  f.dependencies.makeStorage = () => assert.fail("simulation must never allocate media storage");
+  f.dependencies.exportContent = () => assert.fail("simulation must never decrypt client content");
+  const result = await main(args("plan"), {}, f.dependencies);
+  const report = f.files.get("deletion-plan.json");
+  assert.equal(report.simulationOnly, true); assert.equal(report.executable, false); assert.equal(report.retentionDecided, false);
+  assert.equal(report.categories.length, 27); assert.equal(report.observations.length, 19);
+  assert.equal(report.candidateOrder.every((entry) => entry.blocked && entry.proposedAction === "review"), true);
+  assert.deepEqual(result, { command: "plan", status: "complete", inventoryCategories: 27, observations: 19,
+    affectedCategories: report.affectedCategories, blockers: report.blockers.length });
+  assert.deepEqual(f.files.get("COMPLETE.json"), { inventoryCategories: 27, observations: 19,
+    affectedCategories: report.affectedCategories, blockers: report.blockers.length });
+  assert.equal(f.files.has("account.json"), false); assert.equal(f.files.has("messages.jsonl"), false);
+  assert.ok(f.events.indexOf("deletion-facts") < f.events.indexOf("snapshot-end"));
+  assert.ok(f.events.indexOf("snapshot-end") < f.events.indexOf("pool-end"));
+  assert.ok(f.events.indexOf("pool-end") < f.events.indexOf("finalize"));
+  assert.doesNotMatch(JSON.stringify(report) + f.output.join(""), /private-marker|payload|11111111111111111111111111111111|synthetic-private/);
+});
+
+test("failed or malformed deletion facts and migration input cannot publish a plan completion", async () => {
+  for (const problem of ["read", "missing", "history"]) {
+    const f = fixture();
+    if (problem === "read") f.reader.deletionFacts = async () => { throw new Error("private-marker SQL and path"); };
+    if (problem === "missing") f.reader.deletionFacts = async () => [];
+    if (problem === "history") f.dependencies.loadMigrations = async () => [];
+    await assert.rejects(main(args("plan"), {}, f.dependencies), rejected());
+    assert.equal(f.files.has("COMPLETE.json"), false); assert.equal(f.files.has("deletion-plan.json"), false);
+    assert.equal(f.output.length, 0); assert.equal(f.events.includes("writer-close"), true);
+    assert.equal(f.events.filter((entry) => entry === "pool-end").length, 1);
+  }
 });
