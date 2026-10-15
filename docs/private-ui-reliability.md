@@ -14,6 +14,8 @@ Une panne de vérification après un POST ne prouve pas le rejet de ce POST. Le 
 
 ## Administration et récupération
 
+La connexion client ne présente pas directement l'identité renvoyée par le POST. Un GET final valide la session courante, son identifiant, son rôle, son CSRF, son échéance et la forme de son accès ; seule cette réponse est affichée. Une session différente est signalée. Si cette preuve échoue après la connexion, le résultat reste incertain et aucun POST n'est répété automatiquement.
+
 Le masquage ou `pagehide` de l'administration invalide les opérations, annule les requêtes et efface identité, listes d'e-mails, lien d'invitation et champs sensibles. Le retour charge une seule session puis vérifie l'identité avant d'afficher les données privées. Les anciens `finally` ne peuvent pas réactiver une nouvelle action. L'échéance absolue de la session reste conservée ; masquer la page ne la prolonge pas.
 
 Une erreur réseau, 429, 503 ou réponse malformée lors de la vérification de disponibilité de la récupération reste réessayable. Seule une réponse 404 désactive la fonction pour la page courante. Un bouton permet de relancer explicitement cette vérification ; le retour de visibilité peut aussi refaire un GET. Il n'y a ni boucle de nouvelles tentatives immédiates, ni répétition automatique des demandes ou changements de mot de passe. Les réponses tardives ne peuvent pas masquer un formulaire ou vider des champs plus récents.
@@ -32,6 +34,6 @@ Les tris SQL des campagnes récentes ne portent que sur identifiants et dates, a
 
 Les nouveaux tests exécutent les contrôleurs réels dans une VM avec un DOM et des réponses synthétiques contrôlables, dont des réponses qui arrivent malgré `abort()`. Ils couvrent changements de compte/session, masquage/retour, anciens POST et `finally`, photos, indisponibilité temporaire de récupération, historique de plus de 20 campagnes et délais de nouvelle tentative. Ce sont des tests du code de contrôle, pas une recette visuelle ou une exécution dans un navigateur.
 
-Les tests HTTP et MariaDB vérifient aussi la nouvelle vue d'activité, sa propriété, ses bornes et l'inclusion d'une ancienne campagne active derrière plus de 20 campagnes récentes. La preuve CI est ajoutée au bilan après exécution.
+Les tests HTTP et MariaDB vérifient aussi la nouvelle vue d'activité, sa propriété, ses bornes et l'inclusion d'une ancienne campagne active derrière plus de 20 campagnes récentes. L'implémentation `0cf3b0faf9d95f49c6dc3ad963f05f08b0cb2fd9`, [PR brouillon #11](https://github.com/fredbuhr/jessiemessage/pull/11), passe la [CI 38663130943](https://github.com/fredbuhr/jessiemessage/actions/runs/38663130943) sous Node.js 24.21.0 : **711 tests généraux réussis**, 18 groupes DB ignorés uniquement sans base ; **245 tests SQL réussis sans saut sur chacune des versions MariaDB 10.11 et 11.4**. Syntaxe et build réussissent également.
 
 Les correctifs d'admission des uploads, quotas de lecture/session, annulation SMTP et arrêt gracieux appartiennent au lot suivant. Majorité externe, renouvellement d'accès, pagination administrative, quotas de stockage, purge, restauration complète, hébergement réel, recette HTTPS/appareils, FR/EN et Push restent dans le [plan de publication](NEXT-STEPS.md). Aucun compte, e-mail ou contenu client réel n'est utilisé dans ces tests.

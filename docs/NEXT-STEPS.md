@@ -6,7 +6,7 @@ Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de cl
 
 Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Adresse officielle retenue pour l'expédition, les réponses, le contact et la préparation du compte administrateur initial : **contact@jessiemessage.com**. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
 
-Branche courante : `feat/private-ui-reliability`, construite sur `feat/targeted-broadcasts`, puis `feat/mail-readiness`, puis `feat/client-recovery`, puis `feat/private-crm` et `feat/private-media`. Les modifications restent empilées, sans fusion ni déploiement automatique : [#1 identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 authentification](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 accès](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 messagerie](https://github.com/fredbuhr/jessiemessage/pull/5), [#6 médias](https://github.com/fredbuhr/jessiemessage/pull/6). Le lot CRM est disponible dans la [PR brouillon #7](https://github.com/fredbuhr/jessiemessage/pull/7). Le lot récupération client est disponible dans la [PR brouillon #8](https://github.com/fredbuhr/jessiemessage/pull/8). La préparation e-mail est disponible dans la [PR brouillon #9](https://github.com/fredbuhr/jessiemessage/pull/9). Les diffusions individuelles sont disponibles dans la [PR brouillon #10](https://github.com/fredbuhr/jessiemessage/pull/10).
+Branche courante : `feat/private-ui-reliability`, construite sur `feat/targeted-broadcasts`, puis `feat/mail-readiness`, puis `feat/client-recovery`, puis `feat/private-crm` et `feat/private-media`. Les modifications restent empilées, sans fusion ni déploiement automatique : [#1 identité](https://github.com/fredbuhr/jessiemessage/pull/1), [#2 MariaDB](https://github.com/fredbuhr/jessiemessage/pull/2), [#3 authentification](https://github.com/fredbuhr/jessiemessage/pull/3), [#4 accès](https://github.com/fredbuhr/jessiemessage/pull/4), [#5 messagerie](https://github.com/fredbuhr/jessiemessage/pull/5), [#6 médias](https://github.com/fredbuhr/jessiemessage/pull/6). Le lot CRM est disponible dans la [PR brouillon #7](https://github.com/fredbuhr/jessiemessage/pull/7). Le lot récupération client est disponible dans la [PR brouillon #8](https://github.com/fredbuhr/jessiemessage/pull/8). La préparation e-mail est disponible dans la [PR brouillon #9](https://github.com/fredbuhr/jessiemessage/pull/9). Les diffusions individuelles sont disponibles dans la [PR brouillon #10](https://github.com/fredbuhr/jessiemessage/pull/10). Les corrections des interfaces privées sont disponibles dans la [PR brouillon #11](https://github.com/fredbuhr/jessiemessage/pull/11).
 
 L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée sur bleu nuit. Les portraits personnels restent hors Git et des artefacts publics. Le prototype autonome 0.3.1 contient des données fictives ; il ne démontre pas le fonctionnement des comptes réels.
 
@@ -22,7 +22,7 @@ L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée
 | Récupération client 0.9 | Lien e-mail unique de 30 minutes, changement atomique, anciens liens et sessions révoqués | CI vérifiée ; SMTP et recette HTTPS à valider |
 | Identité e-mail et préparation 0.10 | Adresse contact unique, page administrateur et vérification SMTP sans envoi | CI vérifiée ; boîte, DNS et livraison réels non vérifiés |
 | Diffusions individuelles 0.11 | Consentement client, sélection explicite, texte/photo, file durable, annulation et historique | CI vérifiée ; recette navigateur à réaliser |
-| Fiabilité des interfaces 0.12 | Séparation compte/session, purge administration au masquage, récupération réessayable, activité récente et en cours des diffusions | Vérification finale du lot en cours ; recette navigateur nécessaire |
+| Fiabilité des interfaces 0.12 | Séparation compte/session, purge administration au masquage, récupération réessayable, activité récente et en cours des diffusions | CI vérifiée ; recette navigateur nécessaire |
 | Présentation | Identité Nuit, icônes approuvées, aperçu autonome fictif | Contrôles navigateur, accessibilité et responsive réels à terminer |
 
 Les outils clients restent réservés à l'administrateur affecté. Les notes sont chiffrées ; les listes n'incluent ni notes ni adresse e-mail. Les dates de suivi ne déclenchent aucune notification. Les groupes sont des classements privés, pas des salons.
@@ -41,18 +41,9 @@ Le prototype autonome de diffusion et de Push reste fictif. Le serveur 0.11 four
 
 Les exigences d'accès des majeurs et les conditions d'hébergement doivent être résolues avant ouverture de contenus concernés. Une déclaration « 18+ » ne constitue pas une preuve. Aucun chemin actuel ne transforme cette déclaration en vérification.
 
-## Plan de livraison réaliste
+## Périmètre du pilote
 
-Les durées ci-dessous sont des ordres de grandeur de travail, à recalibrer après chaque lot ; les accès externes peuvent allonger le calendrier. On peut avancer le code sans attendre ces accès.
-
-| Étape | Résultat concret et critère de sortie | Ordre de grandeur |
-| --- | --- | --- |
-| 1. Terminer le CRM | CI verte sur Node 24 et les deux MariaDB ; conflits et confidentialité vérifiés ; PR brouillon documentée | Terminé pour ce lot de code |
-| 2. Débloquer le parcours pilote | Récupération client implémentée en 0.9 ; CI vérifiée, contrôle SMTP sans envoi préparé en 0.10 ; tester la connexion et la réception réelles, puis intégrer la majorité | Délais des accès et du fournisseur, puis recette |
-| 3. Diffusion individuelle | Code et CI 0.11 vérifiés ; interface et appareils à valider sous HTTPS | Terminé pour ce lot de code |
-| 4. Recette privée sous HTTPS | Environnement de test isolé ; parcours invitation → accès → texte/photo → révocation sur iPhone/Android ; corrections de l'interface | 1 à 2 jours après accès à l'hébergement |
-| 5. Exploitation et publication | Sauvegarde/restauration éprouvée, rétention et nettoyage, limites de charge, pages légales ; revue puis fusion ordonnée des PR | 2 à 3 jours, avec validations externes |
-| 6. PWA et notifications | Installation vérifiée ; Push volontaire discret, désinscription et révocation ; compatibilité appareils | 1 à 2 jours, peut suivre le pilote si non indispensable |
+L'[ordre de livraison après l'audit](#ordre-de-livraison-après-laudit) ci-dessous constitue le plan courant. Ses charges sont des ordres de grandeur de travail à recalibrer après chaque lot ; les accès externes peuvent allonger le calendrier. On peut avancer le code sans attendre ces accès.
 
 Pour publier rapidement, le pilote peut viser d'abord les conversations privées texte/photo et les fiches clients, avec un nombre limité de comptes. La diffusion et le Push peuvent arriver ensuite si le périmètre du pilote le permet. Les prérequis d'accès et la restauration restent nécessaires dans tous les cas.
 
@@ -133,7 +124,7 @@ Le code mort identifié est limité : `constantTimeText` est utilisé seulement 
 
 | Lot | Résultat et critère de sortie | Charge indicative, hors attente externe |
 | --- | --- | --- |
-| 0.12 — parcours privés | Corrections ci-dessus, tests régressifs et CI exacte ; comportement navigateur encore à valider | Lot de code en vérification finale |
+| 0.12 — parcours privés | Corrections ci-dessus, tests régressifs et CI exacte ; comportement navigateur encore à valider | Lot de code terminé et CI vérifiée |
 | Disponibilité et arrêt | Admission avant corps d'import, quotas, SMTP annulable, plus aucun nouveau job après arrêt, drainage borné | 1–2 jours |
 | Accès complets | Renouvellement atomique, pagination administrative et intégration de la majorité retenue | 2–4 jours après choix du prestataire |
 | Exploitation | Plafonds de stockage, réconciliation prudente, rétention/export/suppression, restauration DB/médias/clés et retour arrière éprouvé | 2–3 jours |
@@ -142,3 +133,7 @@ Le code mort identifié est limité : `constantTimeText` est utilisé seulement 
 | Publication | Charge représentative, restauration, aucun P1 ouvert et revue/fusion ordonnée | Environ 1 jour |
 
 Ces charges ne sont pas des dates de publication. Corrections, exploitation et préparation des intégrations peuvent progresser en parallèle ; disponibilité des accès et choix du processus de majorité peuvent déterminer le calendrier. Push, GIF et segments automatiques restent des lots distincts. Voir [garanties et limites du correctif 0.12](private-ui-reliability.md).
+
+## Preuve du lot de fiabilité 0.12
+
+Implémentation `0cf3b0faf9d95f49c6dc3ad963f05f08b0cb2fd9`, [PR brouillon #11](https://github.com/fredbuhr/jessiemessage/pull/11) : [CI 38663130943](https://github.com/fredbuhr/jessiemessage/actions/runs/38663130943) réussie sous Node.js 24.21.0. **711 tests généraux réussis**, 18 groupes DB explicitement ignorés dans le job sans base ; **245 tests réels réussis sans saut sur chacune des versions MariaDB 10.11 et 11.4**. Les dix-huit groupes restent séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file e-mail 11, HTTP accès 9, persistance chat 19, HTTP chat 12, persistance médias 16, HTTP médias 10, persistance CRM 19, HTTP CRM 14, persistance récupération/file 19, HTTP récupération 12, HTTP préparation 10, autorisation des diffusions/chat 13, persistance des diffusions 18 et HTTP diffusion 14. Syntaxe et build réussis. Aucun changement de migration, dépendance, clé ou icône ; aucune fusion ou mise en production. Les tests VM des contrôleurs n'apportent pas de recette navigateur ou appareils.
