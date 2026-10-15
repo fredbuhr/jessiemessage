@@ -234,3 +234,68 @@ test("an unstarted lease return failure is attempted once and cannot turn shutdo
   await assert.rejects(worker.runOnce(), invalid); await worker.stop();
   assert.equal(returnCalls, 1); assert.deepEqual(f.calls.map((call) => call.name), ["claim"]);
 });
+
+test("worker observations report every completed loop, including empty queues, with fixed frozen aggregate counts", async () => {
+  const f = fixture(), events = [];
+  const worker = createBroadcastWorker({ ...f.options, onState: (event) => { events.push(event); } });
+  assert.deepEqual(await worker.runOnce(), { delivered: 1, deferred: 0, failed: 0 });
+  assert.deepEqual(await worker.runOnce(), { delivered: 0, deferred: 0, failed: 0 });
+  assert.deepEqual(events, [
+    { state: "running" }, { state: "idle", counts: { delivered: 1, deferred: 0, failed: 0, errors: 0 } },
+    { state: "running" }, { state: "idle", counts: { delivered: 0, deferred: 0, failed: 0, errors: 0 } },
+  ]);
+  for (const event of events) { assert.ok(Object.isFrozen(event)); if (event.counts) assert.ok(Object.isFrozen(event.counts)); }
+  const stop = worker.stop(); assert.equal(worker.stop(), stop); await stop;
+  assert.deepEqual(events.slice(-2), [{ state: "stopping" }, { state: "stopped" }]);
+  assert.equal(events.filter((event) => event.state === "stopped").length, 1);
+});
+
+test("caught processing failures degrade telemetry even when an ambiguous commit preserves delivery counters", async () => {
+  for (const failureRecorded of [true, false]) {
+    const f = fixture(), events = [], errors = [];
+    f.state.deliverError = new Error("private recipient and SQL acknowledgement details"); f.state.failResult = failureRecorded;
+    const worker = createBroadcastWorker({ ...f.options, onState: (event) => events.push(event), onError: (event) => errors.push(event) });
+    assert.deepEqual(await worker.runOnce(), { delivered: 0, deferred: 0, failed: failureRecorded ? 1 : 0 });
+    assert.deepEqual(events.at(-1), { state: "idle", counts: { delivered: 0, deferred: 0, failed: failureRecorded ? 1 : 0, errors: 1 } });
+    assert.deepEqual(errors, []); assert.equal(JSON.stringify(events).includes("private"), false);
+    await worker.runOnce();
+    assert.deepEqual(events.at(-1), { state: "idle", counts: { delivered: 0, deferred: 0, failed: 0, errors: 0 } });
+    await worker.stop();
+  }
+});
+
+test("fatal loop observations and legacy error callbacks contain only a fixed code and recover on the next batch", async () => {
+  const f = fixture(), events = [], errors = [];
+  f.state.claimError = new Error("private account SMTP SQL credential");
+  const worker = createBroadcastWorker({ ...f.options, onState: (event) => events.push(event), onError: (event) => errors.push(event) });
+  await assert.rejects(worker.runOnce(), invalid);
+  assert.deepEqual(events, [{ state: "running" }, { state: "error", code: "BROADCAST_WORKER_FAILED" }]);
+  assert.deepEqual(errors, [{ code: "BROADCAST_WORKER_FAILED" }]); assert.ok(Object.isFrozen(errors[0]));
+  delete f.state.claimError; await worker.runOnce();
+  assert.deepEqual(events.at(-1), { state: "idle", counts: { delivered: 1, deferred: 0, failed: 0, errors: 0 } });
+  await worker.stop();
+});
+
+test("observer exceptions, rejected promises and reentrant stop cannot disrupt delivery or leak unhandled rejection", async () => {
+  for (const mode of ["throw", "reject", "thenable"]) {
+    const f = fixture(); let observations = 0;
+    const callback = () => { observations += 1; if (mode === "throw") throw new Error("private observer");
+      if (mode === "reject") return Promise.reject(new Error("private observer")); return { then() { throw new Error("private observer"); } }; };
+    const worker = createBroadcastWorker({ ...f.options, onState: callback, onError: callback });
+    assert.deepEqual(await worker.runOnce(), { delivered: 1, deferred: 0, failed: 0 });
+    f.state.claimError = new Error("private SQL"); await assert.rejects(worker.runOnce(), invalid); await worker.stop();
+    await new Promise((resolve) => setImmediate(resolve)); assert.equal(observations, 7);
+  }
+  const f = fixture(), events = []; let worker;
+  worker = createBroadcastWorker({ ...f.options, onState(event) { events.push(event); if (event.state === "running" || event.state === "stopping") void worker.stop(); } });
+  assert.deepEqual(await worker.runOnce(), { delivered: 0, deferred: 1, failed: 0 }); await worker.stop();
+  assert.deepEqual(events.map((event) => event.state), ["running", "stopping", "idle", "stopped"]);
+  assert.equal(f.calls.some((call) => call.name === "deliver"), false);
+});
+
+test("observation callbacks must be functions when supplied", () => {
+  const f = fixture();
+  for (const name of ["onState", "onError"]) for (const value of [null, true, {}, "callback"]) {
+    assert.throws(() => createBroadcastWorker({ ...f.options, [name]: value }), invalid);
+  }
+});

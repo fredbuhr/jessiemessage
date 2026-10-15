@@ -120,3 +120,75 @@ test("owned transport close errors remain sanitized and the one close promise is
   await assert.rejects(closing, (error) => error.code === "MAIL_WORKER_FAILED" && error.cause === undefined && !error.message.includes("private SMTP"));
   assert.equal(named(f, "close").length, 1); assert.equal(named(f, "claim").length, 0);
 });
+
+for (const purpose of ["verification", "password-reset"]) {
+  test(`${purpose} observations cover empty queues and freeze only fixed aggregate loop state`, async () => {
+    const f = fixture(purpose), events = []; f.jobs.length = 0;
+    const worker = startMailWorker({ ...f.options, closeTransport: false, onState: (event) => events.push(event) });
+    try {
+      await waitFor(() => events.some((event) => event.state === "idle"));
+      assert.deepEqual(events, [{ state: "running" }, { state: "idle", counts: { sent: 0, failed: 0 } }]);
+      for (const event of events) { assert.ok(Object.isFrozen(event)); if (event.counts) assert.ok(Object.isFrozen(event.counts)); }
+      const stop = worker.stop(); assert.equal(worker.stop(), stop); await stop;
+      assert.deepEqual(events.slice(-2), [{ state: "stopping" }, { state: "stopped" }]);
+      assert.equal(events.filter((event) => event.state === "stopped").length, 1);
+    } finally { await worker.close(); }
+  });
+
+  test(`${purpose} partial failures complete with degraded counts without exposing email, token or error`, async () => {
+    const f = fixture(purpose), events = [], errors = []; let attempts = 0;
+    const method = purpose === "verification" ? "sendVerification" : "sendPasswordReset";
+    const transport = { ...f.transport, async [method]() { if (++attempts === 1) throw new Error("private mail@example.invalid token and password"); return true; } };
+    const worker = startMailWorker({ ...f.options, transport, closeTransport: false, onState: (event) => events.push(event), onError: (event) => errors.push(event) });
+    try {
+      await waitFor(() => events.some((event) => event.state === "idle"));
+      assert.deepEqual(events, [{ state: "running" }, { state: "idle", counts: { sent: 2, failed: 1 } }]);
+      assert.deepEqual(errors, []); assert.equal(JSON.stringify(events).includes("private"), false);
+    } finally { await worker.close(); }
+  });
+}
+
+test("mail loop failures retain the legacy fixed onError callback and next scheduled batch can become healthy", async () => {
+  const f = fixture(), events = [], errors = []; let first = true;
+  const store = { ...f.store, async claim() { if (first) { first = false; throw new Error("private SQL SMTP account"); } return null; } };
+  const worker = startMailWorker({ ...f.options, store, closeTransport: false, onState: (event) => events.push(event), onError: (event) => errors.push(event) });
+  try {
+    await waitFor(() => errors.length === 1);
+    assert.deepEqual(events, [{ state: "running" }, { state: "error", code: "MAIL_WORKER_FAILED" }]);
+    assert.deepEqual(errors, [{ code: "MAIL_WORKER_FAILED" }]); assert.ok(Object.isFrozen(errors[0]));
+    // A subsequent periodic loop proves freshness even though it claims no job.
+    await new Promise((resolve) => setTimeout(resolve, 1050));
+    assert.deepEqual(events.slice(-2), [{ state: "running" }, { state: "idle", counts: { sent: 0, failed: 0 } }]);
+  } finally { await worker.close(); }
+});
+
+test("mail observer failures are isolated for sync throws, rejected promises and rejected thenables", async () => {
+  for (const mode of ["throw", "reject", "thenable"]) {
+    const f = fixture(); let states = 0, errors = 0;
+    const broken = () => { if (mode === "throw") throw new Error("private observer"); if (mode === "reject") return Promise.reject(new Error("private observer"));
+      return { then() { throw new Error("private observer"); } }; };
+    const worker = startMailWorker({ ...f.options, closeTransport: false, onState() { states += 1; return broken(); }, onError() { errors += 1; return broken(); } });
+    try {
+      await waitFor(() => states >= 2); await worker.stop(); await flush();
+      assert.equal(named(f, "sent").length, 3); assert.equal(states, 4); assert.equal(errors, 0);
+    } finally { await worker.close(); }
+    const failed = startMailWorker({ ...f.options, store: { ...f.store, async claim() { throw new Error("private SQL"); } },
+      closeTransport: false, onState: broken, onError() { errors += 1; return broken(); } });
+    try { await waitFor(() => errors === 1); } finally { await failed.close(); } await flush();
+  }
+});
+
+test("reentrant stopping observers preserve one mail drain and callback configuration stays explicit", async () => {
+  const f = fixture(), events = []; let worker;
+  worker = startMailWorker({ ...f.options, closeTransport: false, onState(event) { events.push(event);
+    if (event.state === "running" || event.state === "stopping") void worker.stop(); } });
+  try {
+    await waitFor(() => events.some((event) => event.state === "stopped"));
+    assert.deepEqual(events.map((event) => event.state), ["running", "stopping", "idle", "stopped"]);
+    assert.deepEqual(events.find((event) => event.state === "idle").counts, { sent: 0, failed: 0 });
+    assert.equal(named(f, "send").length, 0); assert.equal(named(f, "release").length, 1);
+  } finally { await worker.close(); }
+  for (const name of ["onState", "onError"]) for (const value of [null, true, {}, "callback"]) {
+    assert.throws(() => startMailWorker({ ...f.options, [name]: value }), { code: "MAIL_WORKER_FAILED" });
+  }
+});

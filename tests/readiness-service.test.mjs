@@ -14,6 +14,7 @@ const deferred = () => {
   return { promise, resolve, reject };
 };
 const features = () => ({ clientAccess: true, chat: true, photos: true, clientFiles: true, passwordRecovery: true, broadcasts: true });
+const operationsView = () => ({ status: "unavailable", database: { state: "starting", checkedAt: null }, workers: [], queues: [], queuesCheckedAt: null });
 const mail = () => ({ enabled: true, origin: "https://jessiemessage.com", key: randomBytes(32), smtp: {
   host: "private-smtp.example.invalid", port: 587, user: "private-smtp-user", password: "private-smtp-password",
   from: SITE_CONTACT_EMAIL, replyTo: SITE_CONTACT_EMAIL, caPath: "/private/smtp-ca.pem",
@@ -418,4 +419,34 @@ test("late transport cleanup failures during shutdown are sanitized and do not p
     && error.cause === undefined && !error.message.includes("private-"));
   release.resolve(); await closing; await pending;
   assert.equal(f.transports[0].closed, 1); assert.equal(f.transports[0].verified, 0);
+});
+
+test("operations are cached metadata read only after current administrator proofs and quotas", async () => {
+  let reads = 0;
+  const f = await fixture({ operations: { snapshot() { reads++; return { ...operationsView(), secret: "private" }; } } });
+  const result = await f.service.summary(f.token);
+  assert.deepEqual(result.operations, operationsView()); assert.equal(reads, 1);
+  assert.equal(f.transports.length, 0); assert.equal(f.rateCalls.length, 2);
+  f.state.session = null;
+  await assert.rejects(f.service.summary(f.token), hasCode("READINESS_UNAUTHORIZED")); assert.equal(reads, 1);
+});
+
+test("a session revoked during quota storage cannot read cached operational details", async () => {
+  let reads = 0;
+  const f = await fixture({ operations: { snapshot() { reads++; return operationsView(); } } });
+  f.state.rateHook = async () => { f.state.session = null; };
+  await assert.rejects(f.service.summary(f.token), hasCode("READINESS_UNAUTHORIZED"));
+  assert.equal(reads, 0);
+});
+
+test("invalid or failing operational providers never expose their exception or raw snapshot", async () => {
+  for (const operations of [undefined, {}, { snapshot: 1 }]) {
+    if (operations === undefined) continue;
+    const f = await fixture();
+    await assert.rejects(createReadinessService({ ...f.options, operations }), hasCode("READINESS_CONFIG"));
+  }
+  for (const read of [() => { throw new Error("SQL private-secret"); }, () => ({ ...operationsView(), status: "ready" })]) {
+    const f = await fixture({ operations: { snapshot: read } });
+    await assert.rejects(f.service.summary(f.token), (error) => hasCode("READINESS_UNAVAILABLE")(error) && !error.message.includes("private-secret"));
+  }
 });

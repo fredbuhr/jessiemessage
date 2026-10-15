@@ -9,6 +9,13 @@ export class MailWorkerError extends Error {
   }
 }
 
+// Telemetry is best effort and cannot fail or delay SMTP/SQL lifecycle work.
+// Fixed caller-built objects prevent an exception or job from reaching it.
+function observe(callback, event) {
+  if (!callback) return;
+  try { void Promise.resolve(callback(Object.freeze(event))).catch(() => {}); } catch {}
+}
+
 export async function runMailBatch({ store, transport, key, clock = Date.now, batchSize = 5, purpose = "verification", signal = null }) {
   if (!Buffer.isBuffer(key) || key.length !== 32 || !Number.isInteger(batchSize) || batchSize < 1 || batchSize > 20
     || typeof clock !== "function" || !["verification", "password-reset"].includes(purpose)
@@ -59,7 +66,9 @@ export function startMailWorker(options = {}) {
   const closeTransport = options.closeTransport === undefined ? true : options.closeTransport;
   const purpose = options.purpose === undefined ? "verification" : options.purpose;
   if (!Number.isInteger(intervalMilliseconds) || intervalMilliseconds < 1000 || intervalMilliseconds > 300000
-    || typeof closeTransport !== "boolean" || !["verification", "password-reset"].includes(purpose)) throw new MailWorkerError();
+    || typeof closeTransport !== "boolean" || !["verification", "password-reset"].includes(purpose)
+    || options.onState !== undefined && typeof options.onState !== "function"
+    || options.onError !== undefined && typeof options.onError !== "function") throw new MailWorkerError();
   let closed = false;
   const controller = new AbortController();
   let stopping = null;
@@ -69,13 +78,17 @@ export function startMailWorker(options = {}) {
     if (closed) return;
     timer = setTimeout(() => {
       timer = null;
-      active = runMailBatch({ ...options, signal: controller.signal }).catch(() => {
+      active = runMailBatch({ ...options, signal: controller.signal }).then((counts) => {
+        observe(options.onState, { state: "idle", counts: Object.freeze({ ...counts }) });
+      }, () => {
         // Only a fixed code may be surfaced; never propagate SQL/SMTP details.
-        try { options.onError?.({ code: "MAIL_WORKER_FAILED" }); } catch {}
+        observe(options.onState, { state: "error", code: "MAIL_WORKER_FAILED" });
+        observe(options.onError, { code: "MAIL_WORKER_FAILED" });
       }).finally(() => {
         active = null;
         schedule(intervalMilliseconds);
       });
+      observe(options.onState, { state: "running" });
     }, delay);
     timer.unref();
   }
@@ -88,7 +101,9 @@ export function startMailWorker(options = {}) {
     closed = true; controller.abort();
     if (timer) clearTimeout(timer);
     timer = null;
-    stopping = active ? active.then(() => {}) : Promise.resolve();
+    const drained = active ? active.then(() => {}) : Promise.resolve();
+    stopping = drained.then(() => { observe(options.onState, { state: "stopped" }); });
+    observe(options.onState, { state: "stopping" });
     return stopping;
   }
   return Object.freeze({

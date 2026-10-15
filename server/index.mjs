@@ -36,13 +36,14 @@ const securityHeaders = Object.freeze({
   "Cache-Control": "no-store",
 });
 
-function reply(response, method, statusCode, contentType, body) {
-  response.writeHead(statusCode, { ...securityHeaders, "Content-Type": contentType });
+function reply(response, method, statusCode, contentType, body, headers = {}) {
+  response.writeHead(statusCode, { ...securityHeaders, "Content-Type": contentType, ...headers });
   response.end(method === "HEAD" ? undefined : body);
 }
 
 export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler,
-  admission = createRequestAdmission() } = {}) {
+  admission = createRequestAdmission(), operations = null } = {}) {
+  if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
   const handlers = [broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness",
     "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/broadcast-preference.js",
@@ -58,9 +59,23 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
       request.resume();
       return;
     }
-    let pathname;
-    try { pathname = new URL(request.url ?? "/", "http://localhost").pathname; }
+    let pathname, url;
+    try { url = new URL(request.url ?? "/", "http://localhost"); pathname = url.pathname; }
     catch { reply(response, method, 400, "application/json; charset=utf-8", '{"error":"bad_request"}'); return; }
+    // This endpoint reads only the monitor's cache. It bypasses private route
+    // handlers/admission, never authenticates and never allocates SQL work.
+    if (pathname === "/api/ready") {
+      if (!["GET", "HEAD"].includes(method)) {
+        reply(response, method, 405, "application/json; charset=utf-8", '{"error":"method_not_allowed"}', { Allow: "GET, HEAD", Connection: "close" });
+        request.resume(); return;
+      }
+      if ([...url.searchParams].length) { reply(response, method, 400, "application/json; charset=utf-8", '{"error":"bad_request"}'); return; }
+      let available = false;
+      try { available = operations?.publicStatus()?.status === "ready"; } catch {}
+      reply(response, method, available ? 200 : 503, "application/json; charset=utf-8",
+        JSON.stringify({ status: available ? "ready" : "unavailable" }), available ? {} : { "Retry-After": "15" });
+      return;
+    }
     let done;
     try {
       if (handlers.length && (pathname.startsWith("/api/") && pathname !== "/api/health" || protectedFiles.has(pathname))) {
@@ -153,20 +168,44 @@ export async function createConfiguredServer(env = process.env) {
   const { createAuthStore } = await import("./auth/store.mjs");
   const { createAuthService } = await import("./auth/service.mjs");
   const { createAuthHandler } = await import("./auth/http.mjs");
+  const { createOperationsStore } = await import("./operations/store.mjs");
+  const { createOperationsMonitor } = await import("./operations/monitor.mjs");
   const pool = await createRuntimePool(env);
-  let transport;
+  let transport, operations;
   try {
     const store = createAuthStore(pool);
     await store.assertSchema();
     const service = await createAuthService({ store, totpKey: config.totpKey });
     const authHandler = createAuthHandler(service, { origin: config.origin });
+    const workerNames = [accessConfig.enabled ? "verification" : null, resetConfig.enabled ? "recovery" : null,
+      broadcastConfig.enabled ? "broadcasts" : null].filter(Boolean);
+    operations = createOperationsMonitor({
+      store: createOperationsStore({ pool, verification: accessConfig.enabled, recovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled }),
+      messagingConfigured: accessConfig.enabled && chatConfig.enabled, workerNames,
+      report: (event) => {
+        const line = `JessieMessage operations ${JSON.stringify(event)}`;
+        if (event.event.endsWith("_recovered")) console.info(line); else console.error(line);
+      },
+    });
     const { createReadinessService } = await import("./readiness/service.mjs");
     const { createReadinessHandler } = await import("./readiness/http.mjs");
-    const readinessService = await createReadinessService({ authService: service, authStore: store, mailConfig, key: config.totpKey,
+    const readinessService = await createReadinessService({ authService: service, authStore: store, mailConfig, key: config.totpKey, operations,
       features: { clientAccess: accessConfig.enabled, chat: chatConfig.enabled, photos: mediaConfig.enabled,
         clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled } });
     const readinessHandler = createReadinessHandler(readinessService, { origin: config.origin });
-    if (!accessConfig.enabled) return { server: createAppServer({ authHandler, readinessHandler }), pool, mailWorker: null, diagnostics: readinessService };
+    let diagnosticClosing;
+    const diagnostics = { close() {
+      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close()]).then((results) => {
+        if (results.some((result) => result.status === "rejected")) throw new Error("Private diagnostics could not close cleanly.");
+      });
+      return diagnosticClosing;
+    } };
+    const observe = (name) => (event) => operations.observe(name, event);
+    if (!accessConfig.enabled) {
+      const server = createAppServer({ authHandler, readinessHandler, operations });
+      server.once("listening", () => operations.start());
+      return { server, pool, mailWorker: null, diagnostics };
+    }
     const { createAccessStore } = await import("./access/store.mjs");
     const { createAccessService } = await import("./access/service.mjs");
     const { createAccessHandler } = await import("./access/http.mjs");
@@ -250,11 +289,11 @@ export async function createConfiguredServer(env = process.env) {
         const broadcastService = await createBroadcastService({ store: broadcastStore, authStore: store, authService: service,
           key: chatConfig.key, mediaEnabled: mediaConfig.enabled });
         broadcastHandler = createBroadcastHandler(broadcastService, { origin: chatConfig.origin, mediaEnabled: mediaConfig.enabled });
-        broadcastWorker = createBroadcastWorker({ store: broadcastStore, authStore: store, key: chatConfig.key });
+        broadcastWorker = createBroadcastWorker({ store: broadcastStore, authStore: store, key: chatConfig.key, onState: observe("broadcasts") });
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler });
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, operations });
     const workers = [];
     let closing, stopping, aborting;
     const mailWorker = {
@@ -284,14 +323,16 @@ export async function createConfiguredServer(env = process.env) {
     // before the application pool is closed during graceful shutdown.
     server.once("listening", () => {
       if (stopping || closing) return;
+      operations.start();
       broadcastWorker?.start();
       workers.push(startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key, closeTransport: false,
-        onError: () => console.error("JessieMessage verification mail worker unavailable.") }));
+        onState: observe("verification") }));
       if (resetMailStore) workers.push(startMailWorker({ store: resetMailStore, transport, key: resetConfig.key, purpose: "password-reset", closeTransport: false,
-        onError: () => console.error("JessieMessage recovery mail worker unavailable.") }));
+        onState: observe("recovery") }));
     });
-    return { server, pool, mailWorker, diagnostics: readinessService };
+    return { server, pool, mailWorker, diagnostics };
   } catch {
+    await operations?.close().catch(() => {});
     await transport?.close().catch(() => {});
     await pool.end().catch(() => {});
     throw new Error("Authentication startup failed; check private configuration, database schema and runtime permissions.");

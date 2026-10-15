@@ -6,15 +6,23 @@ export class BroadcastWorkerError extends Error {
   constructor() { super("Private broadcasts worker could not complete its batch."); this.name = "BroadcastWorkerError"; this.code = "BROADCAST_WORKER_FAILED"; }
 }
 const bytes = (value) => Buffer.isBuffer(value) && value.length === 16;
-export function createBroadcastWorker({ store, authStore, key, clock = Date.now, pollMilliseconds = 2000, batchSize = 5 } = {}) {
+// Observers receive only fixed operational state. They never own the worker's
+// completion path, including when they return an asynchronously rejected value.
+function observe(callback, event) {
+  if (!callback) return;
+  try { void Promise.resolve(callback(Object.freeze(event))).catch(() => {}); } catch {}
+}
+export function createBroadcastWorker({ store, authStore, key, clock = Date.now, pollMilliseconds = 2000, batchSize = 5, onState, onError } = {}) {
   if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || !Number.isInteger(pollMilliseconds)
     || pollMilliseconds < 1000 || pollMilliseconds > 300000 || !Number.isInteger(batchSize) || batchSize < 1 || batchSize > 20
-    || typeof authStore?.consumeRateLimit !== "function" || ["claim", "deliver", "defer", "fail"].some((method) => typeof store?.[method] !== "function")) throw new BroadcastWorkerError();
+    || typeof authStore?.consumeRateLimit !== "function" || ["claim", "deliver", "defer", "fail"].some((method) => typeof store?.[method] !== "function")
+    || onState !== undefined && typeof onState !== "function" || onError !== undefined && typeof onError !== "function") throw new BroadcastWorkerError();
   key = Buffer.from(key);
   let active = null, timer = null, started = false, stopped = false, stopping = null;
   function now() { const value = clock(); if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) throw new BroadcastWorkerError(); return value; }
   async function batch() {
     const result = { delivered: 0, deferred: 0, failed: 0 };
+    let errors = 0;
     try {
       for (let index = 0; index < batchSize && !stopped; index += 1) {
         const job = await store.claim({ now: now() });
@@ -65,17 +73,31 @@ export function createBroadcastWorker({ store, authStore, key, clock = Date.now,
           // processing attempt. Once delivery began its commit result can be
           // uncertain, so keep the ordinary lease-CAS failure handling.
           if (stopped && !deliveryStarted) { await returnUnstartedClaim(); break; }
+          // A lost commit acknowledgement can make the failure CAS a no-op.
+          // Keep its existing delivery counters while exposing the degraded
+          // processing observation without a recipient, cause or job detail.
+          errors += 1;
           // A commit may have succeeded before a lost acknowledgement. The
           // lease CAS in fail then does nothing to that delivered recipient.
           if (await store.fail(job, { now: now() })) result.failed += 1;
         }
       }
-      return result;
+      return { result, errors };
     } catch { throw new BroadcastWorkerError(); }
   }
   function runOnce() {
     if (stopped) return Promise.reject(new BroadcastWorkerError());
-    if (!active) active = batch().finally(() => { active = null; });
+    if (!active) {
+      active = batch().then(({ result, errors }) => {
+        observe(onState, { state: "idle", counts: Object.freeze({ ...result, errors }) });
+        return result;
+      }, () => {
+        observe(onState, { state: "error", code: "BROADCAST_WORKER_FAILED" });
+        observe(onError, { code: "BROADCAST_WORKER_FAILED" });
+        throw new BroadcastWorkerError();
+      }).finally(() => { active = null; });
+      observe(onState, { state: "running" });
+    }
     return active;
   }
   function schedule(delay) {
@@ -89,7 +111,9 @@ export function createBroadcastWorker({ store, authStore, key, clock = Date.now,
     stop() {
       if (stopping) return stopping;
       stopped = true; if (timer) clearTimeout(timer); timer = null;
-      stopping = active ? active.then(() => {}, () => {}) : Promise.resolve();
+      const drained = active ? active.then(() => {}, () => {}) : Promise.resolve();
+      stopping = drained.then(() => { observe(onState, { state: "stopped" }); });
+      observe(onState, { state: "stopping" });
       return stopping;
     },
   });

@@ -4,6 +4,8 @@
 
 **Suivi après audit :** le [correctif 0.16.1](chat-stable-history.md) traite A15 dans le code et ajoute les régressions du contrôleur. La recette navigateur reste à réaliser. Le rapport ci-dessous conserve l’état observé sur 0.16 ; prochaine étape de développement : 0.17a supervision.
 
+**Suivi 0.17a :** le [lot de supervision](operations-readiness.md) traite A09/A10 dans le code : signal HTTP distinct en cache, observations des workers, métadonnées bornées privées et arrêt suivi. Les vérifications d’hébergement et la supervision externe restent ouvertes ; prochain développement : 0.17b données/export.
+
 Le développement reprend **après le lot 0.16**, depuis `feat/backup-clone-recovery`, commit `0ecb31eafca03f85ba501cc6b632ca207c7ab94e`. Le prochain lot fonctionnel prévu est **0.17 — données et exploitation**. Cet audit ne constitue pas une version 0.17 ni une validation de mise en production.
 
 Le dépôt contient un backend et des interfaces privées substantiels, testés automatiquement. Il reste à terminer les parcours produit et à valider leur exploitation réelle. Au contrôle public du 15 octobre à 10:00 UTC (12:00 à Paris), `https://jessiemessage.com/` répondait HTTP 200 avec **« Welcome to your new website »**, la page Node.js par défaut d’Infomaniak. Le contenu de la branche de développement n’était pas visible à cette adresse. Ce contrôle HTTP ne permet pas d’inventorier la configuration privée de l’hébergement.
