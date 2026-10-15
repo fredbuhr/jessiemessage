@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
+import { createAuthStore } from "../server/auth/store.mjs";
 import { DATABASE_CHECK_NAMES, inspectDatabase } from "../server/preflight/database.mjs";
 import { makePreflightReport } from "../server/preflight/report.mjs";
 
@@ -157,6 +158,13 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
       assert.equal(await digest(), before, "the shared-profile diagnostic is still read-only");
       const strict = await probe({ ...sharedEnv, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "strict" });
       assert.equal(states(strict).privileges, "fail"); assert.equal(strict.privilegeObservation.ledgerWritable, null);
+    });
+    await t.test("the shared-profile account verifies the physical authentication schema without changing rows", async () => {
+      const before = await digest();
+      const pool = await createRuntimePool(sharedEnv);
+      try { assert.equal(await createAuthStore(pool).assertSchema(), true); }
+      finally { await pool.end(); }
+      assert.equal(await digest(), before, "authentication schema verification leaves every application and ledger row unchanged");
     });
     await t.test("the shared-profile fixture can perform application DML and ledger writes, with all row changes rolled back", async () => {
       const before = await digest(), pool = await createRuntimePool(sharedEnv); let runtime;

@@ -35,18 +35,39 @@ export function runtimeDatabaseOptions(env = process.env) {
   };
 }
 
-export async function createRuntimePool(env = process.env) {
+export async function createRuntimePool(env = process.env, { createPool } = {}) {
   const options = runtimeDatabaseOptions(env);
   let pool;
   try {
     if (env.JESSIEMESSAGE_DB_TLS_CA_PATH) options.ssl.ca = await readFile(env.JESSIEMESSAGE_DB_TLS_CA_PATH, "utf8");
-    const { default: mariadb } = await import("mariadb");
-    pool = mariadb.createPool(options);
+    // The optional driver factory is a test seam; production uses the installed
+    // MariaDB driver with these same validated options.
+    const factory = createPool ?? (await import("mariadb")).default.createPool;
+    pool = factory(options);
   } catch {
     throw new AuthStoreError("AUTH_DATABASE_CONNECTION", "Unable to initialize the runtime database connection.");
   }
   let outstanding = 0;
   let closed = false;
+  let ending;
+  let releaseFailed = false;
+  const pendingReleases = new Set();
+  const connectionFailure = () => new AuthStoreError("AUTH_DATABASE_CONNECTION", "Unable to release the runtime database connection cleanly.");
+  function releaseConnection(connection) {
+    // MariaDB's Promise API performs asynchronous reset/rollback on release.
+    // Legacy stores may ignore the returned Promise after a committed write;
+    // observe its rejection here while retaining it for callers that await it.
+    const released = Promise.resolve().then(() => connection.release()).catch(() => {
+      releaseFailed = true;
+      throw connectionFailure();
+    });
+    pendingReleases.add(released);
+    released.then(() => pendingReleases.delete(released), () => pendingReleases.delete(released));
+    return released;
+  }
+  async function drainReleases() {
+    while (pendingReleases.size) await Promise.allSettled([...pendingReleases]);
+  }
   return {
     async getConnection() {
       if (closed || outstanding >= 8) throw new AuthStoreError("AUTH_DATABASE_BUSY", "The runtime database is unavailable or busy.");
@@ -56,28 +77,38 @@ export async function createRuntimePool(env = process.env) {
         connection = await pool.getConnection();
         await connection.query("SET time_zone = '+00:00'");
       } catch {
-        if (connection) { try { connection.release(); } catch {} }
+        if (connection) { try { await releaseConnection(connection); } catch {} }
         outstanding -= 1;
         throw new AuthStoreError("AUTH_DATABASE_CONNECTION", "Unable to acquire the runtime database connection.");
       }
-      let released = false;
+      let released;
       return {
         query: (...args) => connection.query(...args),
         beginTransaction: () => connection.beginTransaction(),
         commit: () => connection.commit(),
         rollback: () => connection.rollback(),
         release() {
-          if (released) return;
-          released = true;
+          if (released) return released;
           outstanding -= 1;
-          connection.release();
+          released = releaseConnection(connection);
+          return released;
         },
       };
     },
-    async end() {
+    end() {
+      if (ending) return ending;
       closed = true;
-      try { await pool.end(); }
-      catch { throw new AuthStoreError("AUTH_DATABASE_CONNECTION", "Unable to close the runtime database connection cleanly."); }
+      ending = (async () => {
+        await drainReleases();
+        let failed = releaseFailed;
+        try { await pool.end(); } catch { failed = true; }
+        await drainReleases();
+        if (failed || releaseFailed) throw new AuthStoreError("AUTH_DATABASE_CONNECTION", "Unable to close the runtime database connection cleanly.");
+      })();
+      // Retain rejection for explicit cleanup callers without an unhandled
+      // rejection if a legacy shutdown path does not await its result.
+      ending.catch(() => {});
+      return ending;
     },
   };
 }
