@@ -81,6 +81,16 @@ test("real HTTP private media uses normalized encrypted files and current delive
     const mediaKey = randomBytes(32);
     const storage = await createMediaStorage({ root: storageRoot, key: mediaKey });
     await storage.assertReady();
+    let uploadPutGate = null;
+    const uploadStorage = {
+      async put(options) {
+        const gate = uploadPutGate;
+        if (gate) { uploadPutGate = null; gate.entered(); await gate.wait; }
+        return storage.put(options);
+      },
+      get: (...args) => storage.get(...args),
+      remove: (...args) => storage.remove(...args),
+    };
     let now = Date.now();
     const clock = () => now;
     const totpKey = randomBytes(32);
@@ -115,7 +125,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
     const authService = await createAuthService({ store: authStore, totpKey, clock });
     const accessService = await createAccessService({ store: accessStore, authStore, authService, totpKey, mailKey, origin, clock });
     const chatService = await createChatService({ store: chatStore, authStore, authService, accessService, key: messageKey, clock });
-    const mediaService = await createMediaService({ store: mediaStore, chatService, authStore, storage, key: mediaKey, clock });
+    const mediaService = await createMediaService({ store: mediaStore, chatService, authStore, storage: uploadStorage, key: mediaKey, clock });
     server = createAppServer({ authHandler: createAuthHandler(authService, { origin }),
       accessHandler: createAccessHandler(accessService, { origin }), chatHandler: createChatHandler(chatService, { origin }),
       mediaHandler: createMediaHandler(mediaService, { origin }) });
@@ -227,16 +237,39 @@ test("real HTTP private media uses normalized encrypted files and current delive
       for (const secretValue of [row.storage_key.toString("hex"), row.content_digest.toString("hex"), privateMarker, storageRoot, clientA.email]) {
         assert.equal(publicJson.includes(secretValue), false);
       }
-      const duplicates = await Promise.all([1, 2].map(() => request(mediaPath("client", "assets"), {
-        method: "POST", binary: sourceA, headers: headersFor(a),
-      })));
-      for (const duplicate of duplicates) {
+      const persistedFiles = await Promise.all(firstFiles.map(async (filename) => [filename, await readFile(filename)]));
+      let entered, release;
+      const putStarted = new Promise((resolve) => { entered = resolve; });
+      const putReleased = new Promise((resolve) => { release = resolve; });
+      uploadPutGate = { entered, wait: putReleased };
+      const firstDuplicate = request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+      try {
+        // The first retry has completed normalization and owns its account's
+        // upload place. Keep storage blocked until the competing request ends.
+        await Promise.race([putStarted, firstDuplicate.then(() => { throw new Error("The duplicate upload completed before reaching the storage gate"); })]);
+        const busy = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+        assert.equal(busy.status, 429);
+        assert.deepEqual(busy.body, { error: "try_again_later" });
+        assert.equal(busy.headers.get("retry-after"), "5");
+        assert.equal(await count("media_assets"), 1);
+        assert.deepEqual(await filesUnder(storageRoot), firstFiles, "the rejected competing upload writes no proposed files");
+        release();
+        const duplicate = await firstDuplicate;
         assert.equal(duplicate.status, 200);
         assert.equal(duplicate.body.duplicate, true);
         assert.equal(duplicate.body.asset.id, assetA.id);
+        // This is a new explicit HTTP attempt after the occupied place clears.
+        const retried = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(a) });
+        assert.equal(retried.status, 200);
+        assert.equal(retried.body.duplicate, true);
+        assert.equal(retried.body.asset.id, assetA.id);
+      } finally {
+        uploadPutGate = null; release();
+        await firstDuplicate.catch(() => {});
       }
       assert.equal(await count("media_assets"), 1);
       assert.deepEqual(await filesUnder(storageRoot), firstFiles, "deduplicated proposed files are removed without unlinking the persisted asset");
+      for (const [filename, encrypted] of persistedFiles) assert.deepEqual(await readFile(filename), encrypted, "deduplicated retries leave both persisted encrypted files unchanged");
     });
 
     await t.test("image sends persist once, reconcile concurrent retries and keep media bound to the exact sender and content", async () => {
