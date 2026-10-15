@@ -21,7 +21,7 @@ L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée
 | Outils clients 0.8 | Surnoms et notes privées, tags/groupes, dates de suivi, recherche et filtres ; conflits entre onglets | CI MariaDB vérifiée ; recette de l'interface à réaliser |
 | Récupération client 0.9 | Lien e-mail unique de 30 minutes, changement atomique, anciens liens et sessions révoqués | CI vérifiée ; SMTP et recette HTTPS à valider |
 | Identité e-mail et préparation 0.10 | Adresse contact unique, page administrateur et vérification SMTP sans envoi | CI vérifiée ; boîte, DNS et livraison réels non vérifiés |
-| Diffusions individuelles 0.11 | Consentement client, sélection explicite, texte/photo, file durable, annulation et historique | Tests en cours ; recette navigateur à réaliser |
+| Diffusions individuelles 0.11 | Consentement client, sélection explicite, texte/photo, file durable, annulation et historique | CI vérifiée ; recette navigateur à réaliser |
 | Présentation | Identité Nuit, icônes approuvées, aperçu autonome fictif | Contrôles navigateur, accessibilité et responsive réels à terminer |
 
 Les outils clients restent réservés à l'administrateur affecté. Les notes sont chiffrées ; les listes n'incluent ni notes ni adresse e-mail. Les dates de suivi ne déclenchent aucune notification. Les groupes sont des classements privés, pas des salons.
@@ -48,7 +48,7 @@ Les durées ci-dessous sont des ordres de grandeur de travail, à recalibrer apr
 | --- | --- | --- |
 | 1. Terminer le CRM | CI verte sur Node 24 et les deux MariaDB ; conflits et confidentialité vérifiés ; PR brouillon documentée | Terminé pour ce lot de code |
 | 2. Débloquer le parcours pilote | Récupération client implémentée en 0.9 ; CI vérifiée, contrôle SMTP sans envoi préparé en 0.10 ; tester la connexion et la réception réelles, puis intégrer la majorité | Délais des accès et du fournisseur, puis recette |
-| 3. Diffusion individuelle | Code 0.11 implémenté ; vérifier CI MariaDB, puis interface et appareils sous HTTPS | Validation du lot en cours |
+| 3. Diffusion individuelle | Code et CI 0.11 vérifiés ; interface et appareils à valider sous HTTPS | Terminé pour ce lot de code |
 | 4. Recette privée sous HTTPS | Environnement de test isolé ; parcours invitation → accès → texte/photo → révocation sur iPhone/Android ; corrections de l'interface | 1 à 2 jours après accès à l'hébergement |
 | 5. Exploitation et publication | Sauvegarde/restauration éprouvée, rétention et nettoyage, limites de charge, pages légales ; revue puis fusion ordonnée des PR | 2 à 3 jours, avec validations externes |
 | 6. PWA et notifications | Installation vérifiée ; Push volontaire discret, désinscription et révocation ; compatibilité appareils | 1 à 2 jours, peut suivre le pilote si non indispensable |
@@ -101,4 +101,10 @@ Le client choisit explicitement de recevoir les diffusions ; le défaut est dés
 
 Une campagne validée continue après fermeture de la page et déconnexion. Son annulation conserve les messages déjà inscrits et empêche les suivants. Le worker recontrôle consentement, accès, affectation, MFA de l’administrateur et photo actuelle. Les identifiants sont durables ; message, événement et état du destinataire sont validés dans une même transaction pour la reprise sans doublon. La modification MFA ou révocation de Jess arrête le reste de l’approbation.
 
-Trois migrations portent le schéma à 25 ; dix-huit groupes SQL s’exécutent successivement. Aucun nouveau paquet ni changement de l’identité approuvée. Aucune migration réelle, diffusion à un client, livraison SMTP ou mise en production. Voir [configuration, garanties et limites](targeted-broadcasts.md). La preuve CI sera complétée après exécution.
+Trois migrations portent le schéma à 25 ; dix-huit groupes SQL s’exécutent successivement. Aucun nouveau paquet ni changement de l’identité approuvée. Aucune migration réelle, diffusion à un client, livraison SMTP ou mise en production. Voir [configuration, garanties et limites](targeted-broadcasts.md). La preuve CI est détaillée ci-dessous.
+
+## Preuve du lot diffusions individuelles
+
+Implémentation `7df07be6c6ffd100ab1a29e9114b8315b08ec8c8`, [PR brouillon #10](https://github.com/fredbuhr/jessiemessage/pull/10) : [CI 38659783930](https://github.com/fredbuhr/jessiemessage/actions/runs/38659783930) réussie sous Node.js 24.21.0. **624 tests généraux réussis**, 18 groupes DB explicitement ignorés dans le job sans base ; **243 tests réels réussis sans saut sur chacune des versions MariaDB 10.11 et 11.4**. Les dix-huit groupes sont séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 13, file e-mail 11, HTTP accès 9, persistance chat 19, HTTP chat 12, persistance médias 16, HTTP médias 10, persistance CRM 19, HTTP CRM 14, persistance récupération/file 19, HTTP récupération 12, HTTP préparation 10, autorisation des diffusions/chat 13, persistance des diffusions 17 et HTTP diffusion 13.
+
+Les essais vérifient notamment le retrait du consentement entre réservation et envoi, l'annulation partielle, les accès expirés/révoqués, le changement de MFA, la réservation concurrente, le rollback après insertion du message et de l'événement, les identifiants conservés après interruption et les photos déjà partagées avec message supprimé. Les 28 tests de modèle et de cycle de vie de l'interface couvrent aussi les filtres, les réponses tardives et les confirmations incertaines. Syntaxe et build réussis ; dépendances et icônes approuvées inchangées. Aucune recette visuelle, livraison SMTP réelle, migration de production ni mise en ligne.
