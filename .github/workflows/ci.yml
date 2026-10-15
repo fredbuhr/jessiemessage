@@ -149,6 +149,8 @@ jobs:
           CREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret';
           GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_ci.* TO 'jessiemessage_runtime_test'@'%';
           GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_restore_ci.* TO 'jessiemessage_runtime_test'@'%';
+          CREATE USER 'jessiemessage_preflight_test'@'%' IDENTIFIED BY 'ci-preflight-only-not-a-secret';
+          GRANT ALL PRIVILEGES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_test'@'%' WITH GRANT OPTION;
           CREATE USER 'jessiemessage_backup_test'@'%' IDENTIFIED BY 'ci-backup-only-not-a-secret';
           GRANT ALL PRIVILEGES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_backup_test'@'%';
           GRANT ALL PRIVILEGES ON `jessiemessage\_test\_restore\_ci`.* TO 'jessiemessage_backup_test'@'%';
@@ -170,3 +172,5 @@ jobs:
           JESSIEMESSAGE_RUNTIME_DB_USER: jessiemessage_runtime_test
           JESSIEMESSAGE_RUNTIME_DB_PASSWORD: ci-runtime-only-not-a-secret
           JESSIEMESSAGE_APPLICATION_DATABASE: jessiemessage_test_ci
+          JESSIEMESSAGE_PREFLIGHT_DB_USER: jessiemessage_preflight_test
+          JESSIEMESSAGE_PREFLIGHT_DB_PASSWORD: ci-preflight-only-not-a-secret

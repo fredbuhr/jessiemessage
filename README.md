@@ -8,6 +8,8 @@ Invitation-only private messaging PWA. Public source, private user data.
 
 **Hosting follow-up — stages 0.23–0.25:** the [initial inventory](docs/hosting-inventory-2026-10-15.md) and [first start](docs/first-hosted-start.md) preserve the earlier observations. The [SQL preparation](docs/hosted-database-preparation.md) records the later empty database, TLS proof and outstanding least-privilege requirements. The existing Node capacity is 1/1; the temporary alias serves the same process. No private client service is open. **Migration follow-up:** the owner has since created the dedicated migration user; the [masked credential input and migration wrapper](docs/private-migration-configuration.md) prepare explicit execution with credentials held only in memory. The owner has now completed execution; its saved non-secret report was independently read and validated. The migration sub-step is complete; stage 0.25 continues with runtime privileges and persistent private storage.
 
+**Runtime follow-up — stage 0.25:** the [remaining hosted prerequisites](docs/hosted-runtime-prerequisites.md) record the Manager limitations observed and a support request prepared but not sent. The SQL preflight now rejects ledger writes, other named scopes and database-wide grants; it still does not certify all effective privileges. Hosting credentials, private storage and administrator activation remain pending.
+
 ## Try without a terminal
 
 Open the latest successful **CI** run on the development branch in GitHub Actions. Download **JessieMessage-apercu-…**, extract it and open **JessieMessage.html** in a browser.

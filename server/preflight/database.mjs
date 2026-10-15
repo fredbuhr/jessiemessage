@@ -50,9 +50,10 @@ const supportedEngine = (value) => {
 
 function identifier(value) {
   const plain = value.startsWith("`") ? value.slice(1, -1).replaceAll("``", "`") : value;
-  // MariaDB may print escaped database underscores. Unescaped underscores are
-  // accepted for the existing deployment grants; this is not an exclusivity test.
-  return /^[a-zA-Z0-9_\\]+$/.test(plain) && !/\\(?!_)/.test(plain) ? plain.replaceAll("\\_", "_") : null;
+  // Only table-qualified grants are accepted below. At that level MariaDB
+  // treats database underscores literally; a backslash must not be normalized
+  // as if the database name were a database-level wildcard pattern.
+  return /^[a-zA-Z0-9_]+$/.test(plain) ? plain : null;
 }
 
 function runtimePrivileges(rows, database) {
@@ -72,13 +73,16 @@ function runtimePrivileges(rows, database) {
       if (grant[3] !== "*" || privileges.some((privilege) => privilege !== "USAGE")) return false;
       continue;
     }
+    // A database-wide grant includes the migration ledger and unknown/future
+    // tables. Reject even SELECT here rather than claim an exclusive table
+    // scope, and never expand MariaDB's database-level _/% patterns.
+    if (grant[3] === "*") return false;
     const grantedDatabase = identifier(grant[2]);
-    const grantedTable = grant[3] === "*" ? "*" : identifier(grant[3]);
-    if (!grantedDatabase || !grantedTable) return false;
-    if (grantedDatabase !== database) continue; // Other named DML scopes are permitted, never queried.
-    for (const [table, granted] of rights) {
-      if (grantedTable === "*" || grantedTable === table) for (const privilege of privileges) granted.add(privilege);
-    }
+    const grantedTable = identifier(grant[3]);
+    if (grantedDatabase !== database || !rights.has(grantedTable)
+      || privileges.some((privilege) => !dml.includes(privilege))
+      || (grantedTable === "schema_migrations" && privileges.some((privilege) => privilege !== "SELECT"))) return false;
+    for (const privilege of privileges) rights.get(grantedTable).add(privilege);
   }
   return tables.every((table) => dml.every((privilege) => rights.get(table).has(privilege)))
     && rights.get("schema_migrations").has("SELECT");
