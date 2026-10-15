@@ -2,7 +2,9 @@
 
 Relevé du **15 octobre 2026**. Application **0.24.0**, révision exécutée **`55fb30aa191fb75f898e5818324c4ec35341ac74`**. Ce suivi prolonge le [premier démarrage neutre et sa contre-vérification](first-hosted-start.md). Le lot documentaire ne change pas le serveur exécuté.
 
-## État constaté
+**Suivi après intervention du propriétaire :** le compte de migration a été créé dans son navigateur, puis le Manager a confirmé lecture, écriture et administration sur cette seule base. Le propriétaire a ensuite exécuté la [saisie masquée du mot de passe et le migrateur en mémoire](private-migration-configuration.md), révision `3a52a9e014e5f20a72be3e29521817dc822edb1f`. Le rapport enregistré à **17:05:47 UTC (19:05:47 à Paris)** a été relu et validé : `prepared`, transport et moteur vérifiés, `migrations:27`, `applied:27`, `unchanged:0`. La connexion SQL Node et la sous-étape migrations sont confirmées après les contrôles de verrou/historique et la relecture finale ; le mot de passe réel n’a été ni reçu ni conservé par l’agent. Le processus HTTP est inchangé et ses fonctions privées restent désactivées. Un contrôle conservateur des permissions d’un ancêtre système a refusé le stockage privé persistant ; ce prérequis reste à résoudre séparément. Le relevé initial ci-dessous conserve l’état antérieur sans utilisateur.
+
+## État initial de la préparation SQL
 
 | Élément | Résultat |
 | --- | --- |
@@ -16,7 +18,7 @@ Relevé du **15 octobre 2026**. Application **0.24.0**, révision exécutée **`
 
 La base a été créée sans utilisateur associé, après vérification du récapitulatif des permissions vide. Le nom complet, le préfixe du compte, le hostname, les identifiants Manager et les chemins privés ne sont pas publiés. Les ressources ZTIKIX ne sont pas modifiées. Le dossier du modèle initial reste disponible pour repli du site neutre.
 
-Le formulaire d’un compte **de migration** est préparé avec un nom non secret ; son champ mot de passe reste vide et sa création n’est pas validée. Ce formulaire ne constitue pas un compte existant.
+Avant l’intervention du propriétaire, le formulaire du compte de migration était préparé sans mot de passe ni création validée. Le suivi ci-dessus consigne sa création ultérieure.
 
 ## Portée du test TLS
 
@@ -36,7 +38,7 @@ timeout --signal=TERM --kill-after=2s 12s \
 
 La [documentation OpenSSL](https://docs.openssl.org/3.0/man1/openssl-s_client/) distingue la vérification bloquante du certificat, le contrôle du nom et le mode `mysql` de STARTTLS. Le magasin de confiance système est utilisé. Le test observé n’a ni désactivé la vérification ni ajouté de CA privée.
 
-Ce résultat établit une négociation TLS vérifiée sur cet endpoint à cet instant. Il ne prouve pas encore la connexion du connecteur Node `mariadb`, ses autorités de confiance, l’identité de la base sélectionnée, les droits SQL, `GET_LOCK`, les contraintes physiques ou les migrations. Les diagnostics applicatifs réels restent à exécuter avec des identifiants fournis par un canal privé.
+Ce résultat établit une négociation TLS vérifiée sur cet endpoint à cet instant. Ce premier test sans authentification ne prouvait pas la connexion Node ni les migrations. Le rapport ultérieur ci-dessus confirme désormais la connexion du connecteur Node `mariadb` avec TLS vérifié, la cible et le moteur contrôlés, le verrou et l’historique du migrateur, et les 27 migrations. Il ne certifie pas les droits runtime, toutes les contraintes physiques ni la recette applicative complète.
 
 ## Droits : écart à résoudre avant le runtime
 
@@ -44,14 +46,16 @@ La [FAQ officielle de gestion SQL](https://www.infomaniak.com/fr/support/faq/198
 
 Le diagnostic actuel de `server/preflight/database.mjs` n’accepte que `USAGE`, `SELECT`, `INSERT`, `UPDATE` et `DELETE`. Un grant contenant ces deux droits supplémentaires échouera donc au contrôle `privileges`. Le code applicatif relu n’a pas besoin de tables temporaires ni de verrous `LOCK TABLES` ; les transactions, verrous de lignes et `GET_LOCK` ne sont pas ce droit.
 
-Il s’agit d’une incompatibilité **prévisible du profil documenté**, pas d’un `SHOW GRANTS` obtenu sur cet hébergement : aucun compte n’existe encore. La possibilité de droits personnalisés ou par table n’est pas établie. Le compte runtime doit également conserver seulement `SELECT` sur `schema_migrations`, conformément à [la séparation des comptes](auth-admin.md). Un profil lecture/écriture appliqué à toute la base ne fournit pas à lui seul cette séparation. Aucun garde-fou n’est assoupli dans ce lot.
+Il s’agit d’une incompatibilité **prévisible du profil documenté**, pas d’un `SHOW GRANTS` obtenu sur cet hébergement : aucun compte runtime n’est encore vérifié ; le compte de migration existe désormais. La possibilité de droits personnalisés ou par table n’est pas établie. Le compte runtime doit également conserver seulement `SELECT` sur `schema_migrations`, conformément à [la séparation des comptes](auth-admin.md). Un profil lecture/écriture appliqué à toute la base ne fournit pas à lui seul cette séparation. Aucun garde-fou n’est assoupli dans ce lot.
 
-## Reprise concrète
+## Plan initial et état après exécution
+
+La création du compte, la connexion Node avec TLS et moteur contrôlés, le verrou/statut et l’application des migrations sont accomplis ; `initialize` contrôle le statut avant application. La revue des grants effectifs et de l’isolation d’exploitation demeure distincte et ouverte. Le point 3 reste ouvert avant toute activation runtime ; son ordre dans le plan initial n’a pas été suivi avant la seule initialisation du schéma vide. Les points 5 et 6 restent ouverts. Le plan ci-dessous conserve l’ordre initial de préparation.
 
 1. Créer le compte de migration, réservé à cette seule base de recette, avec les droits de lecture, écriture et DDL nécessaires au migrateur. Conserver le mot de passe dans un support privé ; ne pas le transmettre au chat, au dépôt, à l’historique shell ou à une capture. La base existe déjà : laisser désactivée l’option de création d’une autre base associée.
 2. Fournir sa configuration privée au processus opérateur, confirmer exactement la base puis établir la connexion avec le connecteur Node, son certificat et le moteur réel. Commencer par le `status` non destructif du [migrateur](DATABASE.md), et contrôler l’isolation, les droits et `GET_LOCK` avant toute application du schéma.
 3. Déterminer comment obtenir le compte runtime distinct avec les droits requis, dont le registre en lecture seule. Constater ses grants réels. Si les profils du Manager ne suffisent pas, obtenir une solution de droits fins de l’hébergeur ou revoir explicitement la stratégie ; ne pas accepter automatiquement des permissions supplémentaires.
-4. Appliquer les migrations immuables seulement après ces vérifications. Le Manager affiche 0 octet ; l’absence d’objets sera confirmée par le statut SQL. Aucun des vingt-sept fichiers de migration n’a été exécuté sur l’hébergement.
+4. Appliquer les migrations immuables seulement après ces vérifications. Le Manager affiche 0 octet ; l’absence d’objets sera confirmée par le statut SQL. À l’état initial, aucun des vingt-sept fichiers n’avait été exécuté ; les 27 sont désormais appliqués selon le rapport vérifié ci-dessus.
 5. Confirmer l’environnement de recette avant une activation d’authentification. Le quota Node est toujours **1/1** et l’alias temporaire dessert le même processus. Il ne constitue pas un environnement indépendant. Le préflight actuel reste limité à un sous-domaine officiel distinct de l’apex ; cette préparation SQL ne modifie pas cette règle.
 6. Préparer les clés, leur sauvegarde privée, le bootstrap administrateur et la recette HTTPS conformément aux [prérequis d’authentification](auth-admin.md) et à la [recette](preproduction-acceptance.md). Les services privés restent désactivés jusque-là.
 
