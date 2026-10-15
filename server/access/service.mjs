@@ -3,12 +3,69 @@ import { canonicalEmail } from "../auth/config.mjs";
 import { AuthError } from "../auth/service.mjs";
 import { csrfToken, hashPassword, newId, newToken, tokenDigest, verifyPassword } from "../auth/crypto.mjs";
 import { sealVerificationPayload } from "../mail/crypto.mjs";
+import { decodeAccessCursor, encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
 
 const SESSION_MILLISECONDS = 8 * 3600000;
 const VERIFICATION_MILLISECONDS = 24 * 3600000;
 const invalid = () => new AuthError("AUTH_INVALID");
 const unavailable = () => new AuthError("AUTH_UNAVAILABLE");
 const rejected = (code = "ACCESS_REGISTRATION_FAILED") => new AuthError(code);
+const DAY_MILLISECONDS = 86400000;
+const MAX_INSTANT = 253402300799999;
+const storedId = (value) => {
+  if (typeof value !== "string" || !/^[a-f0-9]{32}$/.test(value)) throw unavailable();
+  return value;
+};
+const storedInstant = (value) => {
+  if (!Number.isSafeInteger(value) || value < 0 || value > MAX_INSTANT) throw unavailable();
+  return value;
+};
+const nullableInstant = (value) => value === null ? null : storedInstant(value);
+function inputOptions(value, keys) {
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).some((key) => !keys.includes(key))) throw rejected("ACCESS_INPUT");
+}
+function pageInput(kind, input) {
+  inputOptions(input, ["cursor", "limit"]);
+  try { return validateAccessPage(kind, input); } catch { throw rejected("ACCESS_INPUT"); }
+}
+function invitationDTO(row) {
+  if (!row || !["used", "revoked", "expired", "pending"].includes(row.state)
+    || row.accessDays !== null && (!Number.isSafeInteger(row.accessDays) || row.accessDays < 1 || row.accessDays > 3650)) throw unavailable();
+  const id = storedId(row.id), createdAt = storedInstant(row.createdAt), expiresAt = storedInstant(row.expiresAt);
+  const consumedById = row.consumedById === null ? null : storedId(row.consumedById);
+  if (expiresAt <= createdAt || (row.state === "used") !== (consumedById !== null)) throw unavailable();
+  return { id, createdAt, expiresAt, accessDays: row.accessDays, state: row.state, consumedById };
+}
+function clientDTO(row) {
+  if (!row || !["pending", "active", "suspended", "revoked", "deleted"].includes(row.status)
+    || [row.emailVerified, row.ageAssured, row.approved].some((value) => typeof value !== "boolean")) throw unavailable();
+  try {
+    if (canonicalPseudonym(row.pseudonym) !== row.pseudonym || canonicalEmail(row.email) !== row.email) throw unavailable();
+  } catch { throw unavailable(); }
+  return { id: storedId(row.id), createdAt: storedInstant(row.createdAt), pseudonym: row.pseudonym, email: row.email,
+    status: row.status, emailVerified: row.emailVerified, ageAssured: row.ageAssured, approved: row.approved,
+    accessExpiresAt: nullableInstant(row.accessExpiresAt) };
+}
+function pageDTO(result, kind, { limit, position }, rebuild) {
+  if (!result || !Array.isArray(result[kind]) || result[kind].length > limit || typeof result.hasMore !== "boolean") throw unavailable();
+  const rows = result[kind].map(rebuild);
+  if (new Set(rows.map((row) => row.id)).size !== rows.length || position !== null && rows.some((row) => row.id === position.id)) throw unavailable();
+  // Public dates use milliseconds, while cursors retain all six SQL digits.
+  // IDs cannot break same-millisecond ties here: earlier microseconds may have a larger ID.
+  let previous = position === null ? Infinity : Date.parse(`${position.createdAt.replace(" ", "T")}Z`);
+  for (const row of rows) { if (row.createdAt > previous) throw unavailable(); previous = row.createdAt; }
+  if (!result.hasMore) {
+    if (result.nextCursor !== null) throw unavailable();
+  } else {
+    if (rows.length !== limit || typeof result.nextCursor !== "string") throw unavailable();
+    let next;
+    try { next = decodeAccessCursor(kind, result.nextCursor); } catch { throw unavailable(); }
+    const last = rows.at(-1);
+    if (next.id !== last.id || Date.parse(`${next.createdAt.replace(" ", "T")}Z`) !== last.createdAt
+      || position !== null && (next.createdAt > position.createdAt || next.createdAt === position.createdAt && next.id >= position.id)) throw unavailable();
+  }
+  return { [kind]: rows, nextCursor: result.nextCursor, hasMore: result.hasMore };
+}
 
 function identity(value) {
   if (typeof value !== "string" || !/^[a-fA-F0-9]{32}$/.test(value)) throw invalid();
@@ -35,7 +92,7 @@ export async function createAccessService({ store, authStore, authService, totpK
   async function database(operation) {
     try { return await operation(); }
     catch (error) {
-      if (["ACCESS_REGISTRATION_FAILED", "ACCESS_FORBIDDEN", "ACCESS_PREREQUISITES"].includes(error?.code)) throw rejected(error.code);
+      if (["ACCESS_REGISTRATION_FAILED", "ACCESS_FORBIDDEN", "ACCESS_PREREQUISITES", "ACCESS_CONFLICT", "ACCESS_INPUT"].includes(error?.code)) throw rejected(error.code);
       throw unavailable();
     }
   }
@@ -58,6 +115,24 @@ export async function createAccessService({ store, authStore, authService, totpK
     const connected = await authService.session(raw);
     if (!connected || connected.user.role !== "admin") throw rejected("ACCESS_FORBIDDEN");
     return hash;
+  }
+  async function administration(raw, mutation = false) {
+    let actorTokenHash;
+    try { actorTokenHash = tokenDigest(raw); } catch { throw rejected("ACCESS_FORBIDDEN"); }
+    const connected = await database(() => authService.session(raw));
+    if (!connected || connected.user?.role !== "admin") throw rejected("ACCESS_FORBIDDEN");
+    const userId = storedId(connected.user.id), now = storedInstant(clock());
+    const budgets = mutation ? [["user-write", userId, 30], ["global-write", "all", 120]]
+      : [["user-read", userId, 60], ["global-read", "all", 240]];
+    for (const [kind, value, maximum] of budgets) {
+      const hash = createHmac("sha256", rateKey).update("jessiemessage:access-admin-rate:v1:").update(kind).update("\0").update(value).digest();
+      const result = await database(() => authStore.consumeRateLimit(hash, { now, windowSeconds: 60, limit: maximum }));
+      if (!result || typeof result.allowed !== "boolean"
+        || !result.allowed && (!Number.isSafeInteger(result.retryAfter) || result.retryAfter < 1 || result.retryAfter > 60)) throw unavailable();
+      if (!result.allowed) throw new AuthError("AUTH_RATE_LIMIT", result.retryAfter);
+    }
+    // The persisted session and gates must be tested at the time the quota wait ends.
+    return { actorTokenHash, now: storedInstant(clock()) };
   }
   function verificationJob(email, now) {
     const token = newToken();
@@ -92,11 +167,12 @@ export async function createAccessService({ store, authStore, authService, totpK
     if (!result) throw rejected("ACCESS_FORBIDDEN");
     return { id: result.id.toString("hex"), expiresAt: result.expiresAt, accessDays: result.accessDays, url: `${origin}/access#invitation=${token}` };
   }
-  async function listInvitations(raw) {
-    const hash = await administratorToken(raw);
-    const rows = await database(() => store.listInvitations(hash, { now: clock() }));
-    if (!rows) throw rejected("ACCESS_FORBIDDEN");
-    return rows;
+  async function listInvitations(raw, input = {}) {
+    const page = pageInput("invitations", input), cursor = page.position === null ? null : encodeAccessCursor("invitations", page.position);
+    const { actorTokenHash, now } = await administration(raw);
+    const result = await database(() => store.listInvitations(actorTokenHash, { now, cursor, limit: page.limit }));
+    if (!result) throw rejected("ACCESS_FORBIDDEN");
+    return pageDTO(result, "invitations", page, invitationDTO);
   }
   async function revokeInvitation(raw, id) {
     const hash = await administratorToken(raw);
@@ -172,11 +248,30 @@ export async function createAccessService({ store, authStore, authService, totpK
     if (connected.access.state !== "active") throw rejected(connected.access.state === "expired" ? "ACCESS_EXPIRED" : "ACCESS_PREREQUISITES");
     return connected;
   }
-  async function listClients(raw) {
-    const hash = await administratorToken(raw);
-    const rows = await database(() => store.listClients(hash, { now: clock() }));
-    if (!rows) throw rejected("ACCESS_FORBIDDEN");
-    return rows;
+  async function listClients(raw, input = {}) {
+    const page = pageInput("clients", input), cursor = page.position === null ? null : encodeAccessCursor("clients", page.position);
+    const { actorTokenHash, now } = await administration(raw);
+    const result = await database(() => store.listClients(actorTokenHash, { now, cursor, limit: page.limit }));
+    if (!result) throw rejected("ACCESS_FORBIDDEN");
+    return pageDTO(result, "clients", page, clientDTO);
+  }
+  async function renewClient(raw, id, input) {
+    inputOptions(input, ["expectedExpiresAt", "accessDays"]);
+    const { expectedExpiresAt, accessDays } = input;
+    if (typeof id !== "string" || !/^[a-fA-F0-9]{32}$/.test(id)
+      || !Number.isSafeInteger(expectedExpiresAt) || expectedExpiresAt < 0 || expectedExpiresAt > MAX_INSTANT
+      || !Number.isSafeInteger(accessDays) || accessDays < 1 || accessDays > 3650) throw rejected("ACCESS_INPUT");
+    const targetAt = (now) => {
+      const target = Math.max(now, expectedExpiresAt) + accessDays * DAY_MILLISECONDS;
+      if (target > MAX_INSTANT || target > now + 3650 * DAY_MILLISECONDS) throw rejected("ACCESS_INPUT");
+      return target;
+    };
+    targetAt(storedInstant(clock()));
+    const { actorTokenHash, now } = await administration(raw, true), expectedTarget = targetAt(now);
+    const result = await database(() => store.renewClient(actorTokenHash, Buffer.from(id, "hex"), { now, expectedExpiresAt, accessDays }));
+    if (result === null) return null;
+    if (!result || storedId(result.id) !== id.toLowerCase() || storedInstant(result.accessExpiresAt) !== expectedTarget) throw unavailable();
+    return { id: result.id, accessExpiresAt: result.accessExpiresAt };
   }
   async function approveClient(raw, id) {
     const hash = await administratorToken(raw);
@@ -188,5 +283,5 @@ export async function createAccessService({ store, authStore, authService, totpK
     return database(() => store.revokeClient(hash, identity(id), { now: clock() }));
   }
   return Object.freeze({ adminSession: (raw) => authService.session(raw), inspectInvitation, createInvitation, listInvitations, revokeInvitation,
-    register, verifyEmail, resendVerification, login, session, logout, logoutAll, requireActiveClient, listClients, approveClient, revokeClient });
+    register, verifyEmail, resendVerification, login, session, logout, logoutAll, requireActiveClient, listClients, renewClient, approveClient, revokeClient });
 }

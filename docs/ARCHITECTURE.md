@@ -1,6 +1,8 @@
 # Technical architecture — draft
 
-## Current development: server availability
+## Current development: access renewal and administrator pagination
+
+Version 0.14 adds exact-expiry compare-and-set renewal for already-approved, finite client access. It preserves the first approval, conversation ownership, credentials and sessions. Administrator client/invitation lists use descending creation-time/id keyset pages with exact SQL microseconds and bounded browser state. Current session proofs and persistent user/global budgets apply. See [renewal rules, pagination and validation](access-renewal-pagination.md).
 
 Version 0.13 adds bounded in-memory admission before private SQL, persistent chat/library read budgets and upload admission before collecting a body. Owned SMTP sockets make verification and shutdown cancellation effective; all producers stop before draining HTTP and SQL, with a five-second grace and fifteen-second total process budget. See [limits, shutdown and validation](server-availability.md).
 

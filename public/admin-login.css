@@ -48,3 +48,10 @@ h2 { font-size: 19px; line-height: 1.4; margin: 0 0 18px; color: #f5eef2; }
 .footer { width: min(1120px, calc(100% - 40px)); margin: 0 auto; border-top: 1px solid #423343; padding: 20px 0 28px; color: #bcaebb; font-size: 12px; }
 @media (max-width: 480px) { .topbar { padding: 20px 0; } .private-label { font-size: 9px; letter-spacing: .1em; } .access-main { padding-top: 24px; padding-bottom: 40px; } .footer { text-align: center; } }
 @media (max-width: 560px) { .form-pair { grid-template-columns: 1fr; gap: 0; } }
+
+.access-pagination { display: grid; gap: 12px; margin: -8px 0 24px; }
+.pagination-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.pagination-actions .button { flex: 1 1 180px; width: auto; }
+.renewal-form { display: grid; gap: 8px; margin-top: 16px; max-width: 320px; }
+.renewal-form label { display: grid; gap: 8px; font-size: 13px; }
+.renewal-form .button { margin-top: 0; width: 100%; }

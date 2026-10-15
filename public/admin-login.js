@@ -19,6 +19,10 @@ let nextSessionNotice = "";
 let proofRecoveryAvailable = true;
 const controllers = new Set();
 const accessTools = document.getElementById("access-tools");
+const accessPages = {
+  invitations: { cursor: null, nextCursor: null, hasMore: false, epoch: 0 },
+  clients: { cursor: null, nextCursor: null, hasMore: false, epoch: 0 },
+};
 
 function invalidate() {
   generation += 1;
@@ -41,6 +45,13 @@ function clearAccess() {
   document.getElementById("invitation-link").value = "";
   document.getElementById("invitations-list").replaceChildren();
   document.getElementById("clients-list").replaceChildren();
+  for (const kind of ["invitations", "clients"]) {
+    const page = accessPages[kind];
+    page.cursor = null; page.nextCursor = null; page.hasMore = false; page.epoch += 1;
+    document.getElementById(`${kind}-pagination`).hidden = true;
+    document.getElementById(`${kind}-page-note`).textContent = "";
+    updatePagination(kind);
+  }
 }
 
 function notice(message, error = false) {
@@ -308,7 +319,7 @@ function actionButton(card, label, action, disabled = false) {
 }
 function paintInvitations(invitations) {
   const container = document.getElementById("invitations-list"); container.replaceChildren();
-  if (!invitations.length) emptyList(container, "Aucune invitation créée.");
+  if (!invitations.length) emptyList(container, "Aucune invitation sur cette page.");
   const states = { pending: "Disponible", used: "Utilisée", expired: "Expirée", revoked: "Révoquée" };
   for (const invitation of invitations) {
     const card = item(`Invitation · ${states[invitation.state]}`, [`Créée le ${dateText(invitation.createdAt)} · valable jusqu’au ${dateText(invitation.expiresAt)}`, invitation.accessDays === null ? "Accès sans limite de durée après validation." : `Accès de ${invitation.accessDays} jours après validation.`]);
@@ -320,27 +331,120 @@ function paintInvitations(invitations) {
     container.append(card);
   }
 }
-function paintClients(clients) {
+function paintClients(clients, renewalDraft = null) {
   const container = document.getElementById("clients-list"); container.replaceChildren();
-  if (!clients.length) emptyList(container, "Aucun compte client inscrit.");
+  if (!clients.length) emptyList(container, "Aucun compte client sur cette page.");
   const states = { pending: "En attente", active: "Actif", suspended: "Suspendu", revoked: "Révoqué", deleted: "Supprimé" };
   for (const client of clients) {
-    const card = item(client.pseudonym, [client.email, `État : ${states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"} · Majorité : ${client.ageAssured ? "vérifiée" : "en attente"}`, client.accessExpiresAt === null ? "Aucune date de fin d’accès." : `Fin d’accès : ${dateText(client.accessExpiresAt)}`]);
+    const expired = client.status === "active" && client.accessExpiresAt !== null && client.accessExpiresAt <= Date.now();
+    const card = item(client.pseudonym, [client.email, `État : ${expired ? "Accès expiré" : states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"} · Majorité : ${client.ageAssured ? "vérifiée" : "en attente"}`, client.accessExpiresAt === null ? "Aucune date de fin d’accès." : `Fin d’accès : ${dateText(client.accessExpiresAt)}`]);
     if (client.status === "pending") actionButton(card, "Approuver l’accès", async () => {
       await request(`/api/admin/clients/${client.id}/approve`, { mutation: true }); await refreshAccessLists({ afterMutation: true }); notice("L’accès client est approuvé.");
     }, !client.emailVerified || !client.ageAssured);
+    if (client.status === "active" && client.emailVerified && client.ageAssured && client.approved && Number.isSafeInteger(client.accessExpiresAt)) {
+      const renewal = document.createElement("form"); renewal.className = "renewal-form";
+      const label = document.createElement("label"); label.textContent = "Durée à ajouter (jours)";
+      const days = document.createElement("input"); days.type = "number"; days.min = "1"; days.max = "3650"; days.value = "30"; days.required = true;
+      if (renewalDraft?.id === client.id && renewalDraft.expectedExpiresAt === client.accessExpiresAt) days.value = renewalDraft.value;
+      days.setAttribute("aria-label", `Durée à ajouter pour ${client.pseudonym}, en jours`);
+      label.append(days); renewal.append(label);
+      const button = document.createElement("button"); button.type = "submit"; button.className = "button button-secondary";
+      button.textContent = expired ? "Renouveler l’accès expiré" : "Prolonger l’accès"; button.disabled = busy;
+      renewal.append(button);
+      renewal.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (busy || suspended || !csrf) return;
+        const accessDays = Number(days.value);
+        if (!Number.isSafeInteger(accessDays) || accessDays < 1 || accessDays > 3650) { notice("Choisis une durée de 1 à 3 650 jours.", true); return; }
+        void accessAction(() => renewClient(client, accessDays, days));
+      });
+      card.append(renewal);
+    }
     if (["pending", "active", "suspended"].includes(client.status)) actionButton(card, "Révoquer l’accès", async () => {
       await request(`/api/admin/clients/${client.id}/revoke`, { mutation: true }); await refreshAccessLists({ afterMutation: true }); notice("L’accès client est révoqué.");
     });
     container.append(card);
   }
 }
+function updatePagination(kind) {
+  const page = accessPages[kind];
+  for (const [suffix, unavailable] of [["next", !page.hasMore], ["first", page.cursor === null]]) {
+    const button = document.getElementById(`${kind}-${suffix}`);
+    button.dataset.unavailable = String(unavailable); button.disabled = busy || unavailable;
+  }
+}
+function pagePath(kind, cursor) {
+  return `/api/admin/${kind}?limit=50${cursor === null ? "" : `&cursor=${encodeURIComponent(cursor)}`}`;
+}
+async function readAccessPage(kind, cursor) {
+  const page = accessPages[kind], epoch = ++page.epoch;
+  const result = await request(pagePath(kind, cursor));
+  if (page.epoch !== epoch) throw stale();
+  const entries = result?.[kind];
+  if (!Array.isArray(entries) || entries.length > 50 || typeof result.hasMore !== "boolean"
+    || (result.hasMore ? entries.length !== 50 || typeof result.nextCursor !== "string" || !/^[A-Za-z0-9_-]{1,256}$/.test(result.nextCursor) || result.nextCursor === cursor : result.nextCursor !== null)) throw new Error("invalid_page");
+  return { kind, cursor, epoch, entries, nextCursor: result.nextCursor, hasMore: result.hasMore };
+}
+function paintAccessPage(result, { renewalDraft = null } = {}) {
+  const page = accessPages[result.kind];
+  if (page.epoch !== result.epoch) throw stale();
+  page.cursor = result.cursor; page.nextCursor = result.nextCursor; page.hasMore = result.hasMore;
+  if (result.kind === "clients") paintClients(result.entries, renewalDraft); else paintInvitations(result.entries);
+  const label = result.kind === "clients"
+    ? `Comptes clients ${result.cursor === null ? "les plus récents" : "plus anciens"}`
+    : `Invitations ${result.cursor === null ? "les plus récentes" : "plus anciennes"}`;
+  document.getElementById(`${result.kind}-page-note`).textContent = `${label} · ${result.entries.length} sur cette page${result.hasMore ? "" : " · fin de la liste"}.`;
+  document.getElementById(`${result.kind}-pagination`).hidden = false;
+  updatePagination(result.kind);
+}
+async function refreshAccessPage(kind, { cursor = accessPages[kind].cursor, afterMutation = false, renewalDraft = null } = {}) {
+  const ticket = generation;
+  const result = await readAccessPage(kind, cursor);
+  await verifyIdentity(ticket, { afterMutation });
+  if (!current(ticket)) throw stale();
+  paintAccessPage(result, { renewalDraft });
+}
 async function refreshAccessLists({ afterMutation = false } = {}) {
   const ticket = generation;
-  const [invitations, clients] = await Promise.all([request("/api/admin/invitations"), request("/api/admin/clients")]);
-  if (ticket !== generation) throw Object.assign(new Error("stale_response"), { stale: true });
+  const results = await Promise.all([readAccessPage("invitations", null), readAccessPage("clients", null)]);
   await verifyIdentity(ticket, { afterMutation });
-  paintInvitations(invitations.invitations); paintClients(clients.clients);
+  if (!current(ticket)) throw stale();
+  for (const result of results) paintAccessPage(result);
+}
+async function renewClient(client, accessDays, input) {
+  // Keep a draft only for this pending action and this exact expiry snapshot.
+  // Its DOM reference is discarded with the action; it is never a cross-page cache.
+  const renewalDraft = { id: client.id, expectedExpiresAt: client.accessExpiresAt, get value() { return input.value; } };
+  try {
+    const result = await request(`/api/admin/clients/${client.id}/renew`, { mutation: true, body: { accessDays, expectedExpiresAt: client.accessExpiresAt } });
+    if (result?.status !== "renewed" || result.client?.id !== client.id || !Number.isSafeInteger(result.client?.accessExpiresAt)
+      || result.client.accessExpiresAt <= client.accessExpiresAt) throw new Error("invalid_renewal");
+  } catch (error) {
+    if (error.stale) throw error;
+    if (error.status === 409 && error.code === "access_changed") {
+      await refreshAccessPage("clients", { afterMutation: true, renewalDraft });
+      notice("L’accès a été modifié entre-temps. Vérifie sa nouvelle date de fin avant de réessayer.", true);
+      return;
+    }
+    if (error.status === 400) {
+      notice("Cette durée ne peut pas être appliquée. Choisis une durée plus courte et vérifie la date de fin d’accès.", true);
+      return;
+    }
+    if (!error.status || error.status >= 500) {
+      try { await refreshAccessPage("clients", { afterMutation: true, renewalDraft }); }
+      catch (refreshError) { if (refreshError.stale) throw refreshError; }
+      notice(uncertainOperation, true);
+      return;
+    }
+    throw error;
+  }
+  try { await refreshAccessPage("clients", { afterMutation: true, renewalDraft }); }
+  catch (error) {
+    if (error.stale) throw error;
+    notice(uncertainOperation, true);
+    return;
+  }
+  notice("La durée d’accès du client est prolongée. Vérifie la nouvelle date affichée.");
 }
 async function loadAccess() {
   const ticket = generation;
@@ -361,7 +465,7 @@ async function accessAction(action) {
   proofRecoveryAvailable = true;
   const ticket = generation;
   setBusy(true);
-  try { await action(); }
+  try { await verifyIdentity(ticket); await action(); }
   catch (error) {
     if (error.stale) return;
     if (error.status === 401) signedOut(errorMessage(error));
@@ -389,3 +493,15 @@ document.getElementById("copy-invitation").addEventListener("click", () => { voi
   catch { if (ticket !== generation) return; input.focus(); input.select(); notice("Sélectionne puis copie le lien affiché."); }
 }); });
 document.getElementById("refresh-access").addEventListener("click", () => { void accessAction(async () => { await refreshAccessLists(); notice("Les accès sont actualisés."); }); });
+
+for (const kind of ["invitations", "clients"]) {
+  document.getElementById(`${kind}-next`).addEventListener("click", () => {
+    if (!accessPages[kind].hasMore) return;
+    const cursor = accessPages[kind].nextCursor;
+    void accessAction(() => refreshAccessPage(kind, { cursor }));
+  });
+  document.getElementById(`${kind}-first`).addEventListener("click", () => {
+    if (accessPages[kind].cursor === null) return;
+    void accessAction(() => refreshAccessPage(kind, { cursor: null }));
+  });
+}

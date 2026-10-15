@@ -2,7 +2,7 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-> **Current development: server availability 0.13.0 + Nuit workbench 0.3.1.** This lot adds bounded admission before private SQL, upload admission before body collection, persistent read budgets, cancellable SMTP sockets and a shared shutdown deadline. The [verified 0.13 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38666057828) passed 794 general tests and 249 real tests per MariaDB version. `contact@jessiemessage.com` remains the official contact, sender and reply address. Hosting, actual mail delivery, age assurance, storage/restore readiness and HTTPS/mobile acceptance remain launch work; no deployment has occurred.
+> **Current development: access renewal and administrator pagination 0.14.0 + Nuit workbench 0.3.1.** This lot extends already-approved finite access with an exact expiry snapshot and pages through all clients and invitations without accumulating private rows in the browser. The final 0.14 CI evidence is pending. The [verified 0.13 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38666057828) passed 794 general tests and 249 real tests per MariaDB version. `contact@jessiemessage.com` remains the official contact, sender and reply address. Hosting, actual mail delivery, age assurance, storage/restore readiness and HTTPS/mobile acceptance remain launch work; no deployment has occurred.
 
 ## Try without a terminal
 
@@ -30,6 +30,7 @@ The Nuit theme uses warm black, plum, burgundy and champagne. Mobile chat follow
 - [Individual broadcasts, consent and durable queue](docs/targeted-broadcasts.md)
 - [Private interface corrections and regression coverage](docs/private-ui-reliability.md)
 - [Request admission, read/upload budgets and bounded shutdown](docs/server-availability.md)
+- [Approved access renewal and complete administrator lists](docs/access-renewal-pagination.md)
 - [Audit findings, current state and launch plan](docs/NEXT-STEPS.md)
 
 ## Maintainer checks
