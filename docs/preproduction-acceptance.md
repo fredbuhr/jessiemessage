@@ -1,8 +1,10 @@
 # Recette de préproduction — étapes 0.18–0.22, version 0.24.0
 
-Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. Il ne constate aucun déploiement, changement DNS, compte réel, réception e-mail ou installation sur téléphone. Les essais locaux et CI utilisent des identités fictives, des données synthétiques et des services maîtrisés.
+Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. Cette procédure ne vaut pas compte rendu de déploiement ou d’acceptation ; les résultats réels sont consignés séparément. Les comptes réels, changements DNS, réception e-mail et installations sur téléphone ne sont pas validés par les essais automatiques. Les essais locaux et CI utilisent des identités fictives, des données synthétiques et des services maîtrisés.
 
 Le [relevé d’hébergement de l’étape 0.23](hosting-inventory-2026-10-15.md) constate seulement l’état public et prépare la consultation du Manager. Projet privé, sous-domaine isolé et paramètres réels restent à identifier.
+
+Le [premier démarrage neutre de l’étape 0.24](first-hosted-start.md) utilise le projet existant choisi par l’utilisateur. L’accueil public et l’entrée ont répondu lors des premiers contrôles, avec toutes les fonctions privées désactivées. Un 502 ultérieur reste à diagnostiquer après une déconnexion de l’environnement technique ; la stabilité hébergée n’est pas validée. Résoudre ce point ou vérifier le repli avant toute activation privée. Il ne constitue pas la préproduction isolée décrite ci-dessous ni la recette d’un pilote privé. Le diagnostic de configuration de préproduction reste limité à un sous-domaine officiel distinct de l’apex ; ce lot ne modifie pas cette règle.
 
 ## 1. Fixer l'environnement et la révision
 
