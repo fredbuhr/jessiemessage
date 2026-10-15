@@ -1,6 +1,6 @@
 # Préparation privée de l’authentification — étape 0.25
 
-Application **0.24.0**. La [configuration SQL runtime](observed-shared-database-scope.md) a été publiée et relue indépendamment le 15 octobre 2026 à **19:46:18 UTC** : neuf contrôles SQL réussis, schéma physique d’authentification validé, fichiers privés propriétaire 0600 dans un répertoire 0700, TLS strict et huit fonctions privées désactivées. L’initialisation administrateur et son activation HTTP restent des opérations distinctes.
+Application **0.24.0**. La [configuration SQL runtime](observed-shared-database-scope.md) a été publiée et relue indépendamment le 15 octobre 2026 à **19:46:18 UTC** : neuf contrôles SQL réussis, schéma physique d’authentification validé, fichiers privés propriétaire 0600 dans un répertoire 0700, TLS strict et huit fonctions privées désactivées. Le propriétaire a ensuite créé le compte administrateur ; la vérification du **15 octobre 2026 à 21:44:44.986 UTC** confirme cette création et l’enrôlement MFA encore en attente. Le serveur privé n’est pas activé.
 
 ## Configuration MFA durable avant le compte
 
@@ -47,7 +47,20 @@ L’identité initiale est **contact@jessiemessage.com**, pseudonyme **Jess**. L
 
 Le helper ne transmet pas le message prématuré du bootstrap : il confirme uniquement après sa fermeture effective du pool. Une issue potentiellement appliquée, y compris une erreur de chemin ou de fermeture après commit, est déclarée incertaine. La clé MFA et le fichier d’enrôlement sont conservés ; aucune relance aveugle ou régénération n’est proposée.
 
-Le secret TOTP, l’URI et les huit codes de secours restent dans `admin-setup.json`, propriétaire 0600, hors dépôt et fichiers HTTP. L’agent ne les affiche pas et ne consulte pas leur contenu réel. Le propriétaire les utilisera dans son propre terminal et son application d’authentification. Aucun service QR externe, capture envoyée dans le chat ou route publique d’enrôlement n’est nécessaire. La première connexion doit utiliser le mot de passe et un code TOTP frais avant l’usage des codes de secours. La sauvegarde privée indépendante de la clé et du matériel d’enrôlement reste à organiser.
+La création réelle a été effectuée par le propriétaire et vérifiée le **15 octobre 2026 à 21:44:44.986 UTC**. Le contrôle a répondu `status: pass`, avec un rapport observé et réussi (`reports: 1`, `successful: 1`). Ce rapport `prepared` confirme `administratorCreated: true`, `mfaEnrollmentPending: true` et huit codes de secours. Les neuf contrôles SQL ont réussi et le schéma physique d’authentification a été validé. Les agrégats contrôlés sont les suivants :
+
+| Élément | État vérifié |
+| --- | --- |
+| Administrateur | 1, actif, identité attendue `contact@jessiemessage.com` / `Jess` |
+| Clients | 0 |
+| MFA | 1 enrôlement en attente, version 1, `enabled_at: NULL`, dernier pas TOTP `-1` |
+| Codes de secours | 8, tous inutilisés |
+| Sessions | 0 |
+| États de session d’authentification | 0 |
+
+Les métadonnées de `admin-setup.json` ont été contrôlées : propriétaire attendu, mode `0600` et lien unique. Son contenu n’a pas été lu par l’agent. Le secret TOTP, l’URI et les huit codes de secours restent dans ce fichier, hors dépôt et fichiers HTTP. Le propriétaire doit le consulter uniquement dans son propre terminal privé, importer le secret TOTP dans sa propre application d’authentification et sauvegarder privément les huit codes ainsi que la clé MFA dans une sauvegarde indépendante avant tout nettoyage. Aucun service QR externe, capture envoyée dans le chat ou route publique d’enrôlement n’est nécessaire.
+
+L’enrôlement ne se confirme pas par une commande CLI. Après un démarrage géré du serveur privé, la première connexion HTTPS devra utiliser le mot de passe et un code TOTP frais avant l’usage des codes de secours. Le bootstrap ne doit pas être relancé : le compte existe déjà et le matériel d’enrôlement doit être conservé.
 
 ## Hébergement et preuve restante
 
@@ -59,10 +72,10 @@ La révision publique `1573b18` a ses dix jobs CI verts et neuf tests ciblés du
 
 La recette Node reste neutre : HTTPS `/api/health` répond 200, `/api/ready` répond 503 et `/admin/login` répond 404. À **21:21:29.782 UTC**, les douze cas HTTP du frontal ont réussi : GET `/`, `/admin/login`, `/api/auth/session` et POST vide `/api/auth/login`, chacun sans en-tête transféré, avec `X-Forwarded-Proto: https` forgé, puis avec `Forwarded: proto=https` forgé. Chaque cas a répondu 301/308 avec une destination `Location` exactement égale à l’URL HTTPS de recette et au même chemin, sans cookie. HTTP `/api/health` avait également répondu 301. Le port 3000 du backend n’était pas joignable depuis ce probe ; ce résultat ne constitue pas une preuve de confinement Internet global.
 
-Le code opérateur d’authentification reste à la révision `715bba`, tandis que le processus Node neutre reste à `55fb30a`. Aucun démarrage privé, aucune rotation de clé et aucune création d’administrateur n’ont été effectués ; les fonctions privées restent à `0`.
+Le code opérateur d’authentification reste à la révision `715bba`, tandis que le processus Node neutre reste à `55fb30a`. Aucun démarrage privé ni aucune rotation de clé n’ont été effectués ; les fonctions privées restent à `0`. La création du compte par le propriétaire n’a pas activé le serveur privé.
 
-Après le changement de domaines, les neuf contrôles SQL ont de nouveau réussi, avec schéma d’authentification validé et **zéro administrateur**. Le wrapper de saisie installé a été vérifié à l’identique de sa source, avec propriétaire contrôlé, mode `0700` et lien unique. La prochaine action exige maintenant la saisie personnelle d’un **nouveau mot de passe administrateur** par le propriétaire dans son terminal privé : 14 à 128 unités UTF-16 JavaScript, avec deux saisies masquées et confirmation exacte. Aucun mot de passe ne doit être transmis dans le chat. Le TOTP doit être enrôlé dans son application personnelle ; les secrets et codes de secours restent sous son contrôle.
+Après le changement de domaines et **avant la création du compte**, les neuf contrôles SQL avaient de nouveau réussi, avec schéma d’authentification validé et zéro administrateur. Le wrapper de saisie installé avait été vérifié à l’identique de sa source, avec propriétaire contrôlé, bits d’accès `0700` et lien unique. Le propriétaire a ensuite effectué les deux saisies masquées de son nouveau mot de passe ; cette étape est terminée. Aucun mot de passe ne doit être transmis dans le chat. Les prochaines étapes sont la conservation privée du matériel d’enrôlement et de sa sauvegarde indépendante, puis le démarrage géré et la première connexion HTTPS avec TOTP personnel.
 
 À **21:21 UTC**, Chrome a confirmé le rendu public neutre de `/app` sur l’apex en FR/EN. Le contrôle navigateur final a également confirmé la nouvelle vérification en anglais, puis le retour en français ; la navigation depuis `http://www.jessiemessage.com/app` aboutit exactement à `https://jessiemessage.com/app`, sans avertissement intermédiaire.
 
-La [documentation Node Infomaniak](https://www.infomaniak.com/fr/support/faq/2537/creer-un-site-nodejs-chez-infomaniak), la [procédure d’inversion](https://www.infomaniak.com/fr/support/faq/2070/modifier-le-nom-de-domaine-dun-site) et le [déliage](https://www.infomaniak.com/fr/support/faq/1997/delier-un-nom-de-domaine-lie-au-site) décrivent les opérations d’affectation utilisées. Les tests automatisés utilisent uniquement des identités et clés synthétiques. Aucun administrateur réel n’a été créé par l’agent. L’installation PWA réelle reste également à vérifier. L’étape **0.25 demeure en cours** jusqu’à l’initialisation du compte, l’enrôlement MFA par le propriétaire et la recette privée réelle.
+La [documentation Node Infomaniak](https://www.infomaniak.com/fr/support/faq/2537/creer-un-site-nodejs-chez-infomaniak), la [procédure d’inversion](https://www.infomaniak.com/fr/support/faq/2070/modifier-le-nom-de-domaine-dun-site) et le [déliage](https://www.infomaniak.com/fr/support/faq/1997/delier-un-nom-de-domaine-lie-au-site) décrivent les opérations d’affectation utilisées. Les tests automatisés utilisent uniquement des identités et clés synthétiques ; le compte réel a été créé par le propriétaire. L’installation PWA réelle reste également à vérifier. L’étape **0.25 demeure en cours** jusqu’à l’enrôlement MFA par le propriétaire et la recette privée réelle.
