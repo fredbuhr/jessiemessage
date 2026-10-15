@@ -1,5 +1,5 @@
 export const CONTACT_EMAIL = "contact@jessiemessage.com";
-export const featureNames = Object.freeze({ clientAccess: "Accès sur invitation", chat: "Messages privés", photos: "Photos privées", clientFiles: "Fiches clients", passwordRecovery: "Récupération du mot de passe" });
+export const featureNames = Object.freeze({ clientAccess: "Accès sur invitation", chat: "Messages privés", photos: "Photos privées", clientFiles: "Fiches clients", passwordRecovery: "Récupération du mot de passe", broadcasts: "Diffusions individuelles" });
 const ID = /^[0-9a-f]{32}$/;
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 253402300799999;

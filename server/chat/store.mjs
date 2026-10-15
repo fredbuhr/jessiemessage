@@ -268,6 +268,39 @@ export function createChatStore(pool) {
     if (previous === "18446744073709551615") state();
     return String(BigInt(previous) + 1n);
   }
+  function validateMessage(message) {
+    bytes(message?.id, 16); bytes(message?.clientMessageId, 16); bytes(message?.bodyFingerprint, 32);
+    const mediaId = message.mediaId ?? null; if (mediaId !== null) bytes(mediaId, 16);
+    if (typeof message.bodyEncrypted !== "string" || message.bodyEncrypted.length < 1 || message.bodyEncrypted.length > 22000 || !/^[\x20-\x7e]+$/.test(message.bodyEncrypted)) input();
+    return mediaId;
+  }
+  async function appendMessage(connection, context, message) {
+    const mediaId = validateMessage(message);
+    const { actor, conversation, now } = context;
+    const conversationId = conversation.id, role = actor.role;
+    const previous = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.sender_id = ? AND m.client_message_id = ? FOR UPDATE`, [conversationId, actor.id, message.clientMessageId]))[0];
+    if (previous) {
+      if (!timingSafeEqual(previous.body_fingerprint, message.bodyFingerprint)
+        || (mediaId === null ? previous.linked_media_id !== null : !previous.linked_media_id?.equals(mediaId))) fail("CHAT_CONFLICT");
+      return { message: rawMessage(previous, actor.id), duplicate: true };
+    }
+    if (mediaId !== null) {
+      const asset = (await connection.query("SELECT id, owner_id, owner_role, created_at, deleted_at FROM media_assets WHERE id = ? FOR UPDATE", [mediaId]))[0];
+      if (!asset || !asset.owner_id.equals(actor.id) || asset.owner_role !== role || asset.deleted_at !== null) fail("CHAT_NOT_FOUND");
+      if (timestamp(asset.created_at) > now) fail("CHAT_FORBIDDEN");
+    }
+    const lastSequence = storedSequence((await connection.query("SELECT COALESCE(MAX(sequence_no), 0) AS value FROM messages WHERE conversation_id = ?", [conversationId]))[0].value);
+    if (lastSequence === "18446744073709551615") state();
+    const nextSequence = String(BigInt(lastSequence) + 1n);
+    const eventSequence = await nextEvent(connection, conversationId);
+    await connection.query(`INSERT INTO messages (id, conversation_id, sequence_no, sender_id, sender_role,
+      client_message_id, body_encrypted, body_fingerprint, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [message.id, conversationId, nextSequence, actor.id, role, message.clientMessageId, message.bodyEncrypted, message.bodyFingerprint, sqlDate(now)]);
+    if (mediaId !== null) await connection.query("INSERT INTO message_media (message_id, conversation_id, media_id, created_at) VALUES (?, ?, ?, ?)", [message.id, conversationId, mediaId, sqlDate(now)]);
+    await connection.query("INSERT INTO chat_events (conversation_id, event_sequence, message_id, kind, occurred_at) VALUES (?, ?, ?, 'message', ?)", [conversationId, eventSequence, message.id, sqlDate(now)]);
+    const row = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.id = ?`, [conversationId, message.id]))[0];
+    return { message: rawMessage(row, actor.id), duplicate: false };
+  }
   function validateRequest(request) { roleValue(request.role); bytes(request.tokenHash, 32); bytes(request.conversationId, 16); instant(request.now); }
 
   return Object.freeze({
@@ -285,7 +318,54 @@ export function createChatStore(pool) {
         const admin = await lockUser(connection, actorId);
         const mfa = await lockMfa(connection, admin, now);
         await actorSession(connection, tokenHash, admin, role, mfa, now);
-        return operation(connection, { actor: admin, admin, now });
+        return operation(connection, { actor: admin, admin, now, mfaVersion: version(mfa.version) });
+      });
+    },
+
+    async withPreferenceActor({ tokenHash, now }, operation) {
+      bytes(tokenHash, 32); instant(now); if (typeof operation !== "function") input();
+      return run(async (connection) => {
+        const actorId = await candidateActor(connection, tokenHash);
+        const client = await lockUser(connection, actorId);
+        if (!client || client.role !== "client" || !["pending", "active"].includes(client.status)
+          || client.email_verified_at === null || timestamp(client.email_verified_at) > now) fail("CHAT_UNAUTHORIZED");
+        const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [client.id]))[0];
+        if (!auth) fail("CHAT_UNAUTHORIZED");
+        const session = await actorSession(connection, tokenHash, client, "client", auth, now);
+        return operation(connection, { actor: client, client, session, expiresAt: timestamp(session.expires_at), now });
+      });
+    },
+
+    async withBroadcastDelivery({ adminId, mfaVersion, conversationId, now }, operation) {
+      bytes(adminId, 16); bytes(conversationId, 16); instant(now);
+      if (!Number.isInteger(mfaVersion) || mfaVersion < 1 || mfaVersion > 4294967295 || typeof operation !== "function") input();
+      return run(async (connection) => {
+        // The durable approval contains no session. Its current account and MFA
+        // epoch are checked under the same lock order as an ordinary send.
+        const admin = await lockUser(connection, adminId);
+        const candidate = (await connection.query("SELECT id, admin_id, client_id FROM conversations WHERE id = ?", [conversationId]))[0];
+        const client = candidate ? await lockUser(connection, candidate.client_id) : null;
+        const mfa = (await connection.query("SELECT version, enabled_at FROM admin_mfa WHERE user_id = ? FOR UPDATE", [adminId]))[0];
+        const auth = client?.role === "client" ? (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [client.id]))[0] : null;
+        if (auth) version(auth.credential_version);
+        const conversation = (await connection.query("SELECT id, admin_id, client_id, created_at, closed_at FROM conversations WHERE id = ? FOR UPDATE", [conversationId]))[0] ?? null;
+        const administratorValid = activeAdmin(admin) && mfa && mfa.enabled_at !== null
+          && timestamp(mfa.enabled_at) <= now && version(mfa.version) === mfaVersion;
+        const recipientValid = Boolean(candidate && conversation && client && auth
+          && conversation.admin_id.equals(adminId) && candidate.admin_id.equals(adminId)
+          && conversation.client_id.equals(client.id) && candidate.client_id.equals(client.id)
+          && timestamp(conversation.created_at) <= now && conversation.closed_at === null && activeClient(client, now));
+        const canSend = Boolean(administratorValid && recipientValid);
+        const context = Object.freeze({ actor: admin ?? null, admin: admin ?? null, client: client ?? null, conversation, now,
+          canSend, reason: !administratorValid ? "administrator_invalid" : !recipientValid ? "recipient_unavailable" : null });
+        let open = true, used = false;
+        const append = async (message) => {
+          if (!open || used || !canSend) fail("CHAT_FORBIDDEN");
+          used = true;
+          return appendMessage(connection, context, message);
+        };
+        try { return await operation(connection, context, append); }
+        finally { open = false; }
       });
     },
 
@@ -423,33 +503,10 @@ export function createChatStore(pool) {
     },
 
     async sendMessage({ role, tokenHash, conversationId, now, message }) {
-      validateRequest({ role, tokenHash, conversationId, now }); bytes(message?.id, 16); bytes(message?.clientMessageId, 16); bytes(message?.bodyFingerprint, 32);
-      const mediaId = message.mediaId ?? null; if (mediaId !== null) bytes(mediaId, 16);
-      if (typeof message?.bodyEncrypted !== "string" || message.bodyEncrypted.length < 1 || message.bodyEncrypted.length > 22000 || !/^[\x20-\x7e]+$/.test(message.bodyEncrypted)) input();
+      validateRequest({ role, tokenHash, conversationId, now }); validateMessage(message);
       return run(async (connection) => {
         const context = await authorize(connection, { role, tokenHash, conversationId, now, send: true });
-        const previous = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.sender_id = ? AND m.client_message_id = ? FOR UPDATE`, [conversationId, context.actor.id, message.clientMessageId]))[0];
-        if (previous) {
-          if (!timingSafeEqual(previous.body_fingerprint, message.bodyFingerprint)
-            || (mediaId === null ? previous.linked_media_id !== null : !previous.linked_media_id?.equals(mediaId))) fail("CHAT_CONFLICT");
-          return { message: rawMessage(previous, context.actor.id), duplicate: true };
-        }
-        if (mediaId !== null) {
-          const asset = (await connection.query("SELECT id, owner_id, owner_role, created_at, deleted_at FROM media_assets WHERE id = ? FOR UPDATE", [mediaId]))[0];
-          if (!asset || !asset.owner_id.equals(context.actor.id) || asset.owner_role !== role || asset.deleted_at !== null) fail("CHAT_NOT_FOUND");
-          if (timestamp(asset.created_at) > now) fail("CHAT_FORBIDDEN");
-        }
-        const lastSequence = storedSequence((await connection.query("SELECT COALESCE(MAX(sequence_no), 0) AS value FROM messages WHERE conversation_id = ?", [conversationId]))[0].value);
-        if (lastSequence === "18446744073709551615") state();
-        const nextSequence = String(BigInt(lastSequence) + 1n);
-        const eventSequence = await nextEvent(connection, conversationId);
-        await connection.query(`INSERT INTO messages (id, conversation_id, sequence_no, sender_id, sender_role,
-          client_message_id, body_encrypted, body_fingerprint, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [message.id, conversationId, nextSequence, context.actor.id, role, message.clientMessageId, message.bodyEncrypted, message.bodyFingerprint, sqlDate(now)]);
-        if (mediaId !== null) await connection.query("INSERT INTO message_media (message_id, conversation_id, media_id, created_at) VALUES (?, ?, ?, ?)", [message.id, conversationId, mediaId, sqlDate(now)]);
-        await connection.query("INSERT INTO chat_events (conversation_id, event_sequence, message_id, kind, occurred_at) VALUES (?, ?, ?, 'message', ?)", [conversationId, eventSequence, message.id, sqlDate(now)]);
-        const row = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.id = ?`, [conversationId, message.id]))[0];
-        return { message: rawMessage(row, context.actor.id), duplicate: false };
+        return appendMessage(connection, context, message);
       });
     },
 

@@ -31,7 +31,7 @@ test("administrator readiness with real SQL MFA, private HTTP and fake verificat
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 22);
+  assert.equal(migrations.length, 25);
   const allowedTables = [...migrations.map((migration) => {
     const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
     assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
@@ -78,7 +78,7 @@ test("administrator readiness with real SQL MFA, private HTTP and fake verificat
       JESSIEMESSAGE_MAIL_KEY: randomBytes(32).toString("base64url"), JESSIEMESSAGE_SMTP_HOST: "smtp-readiness-secret.example.invalid",
       JESSIEMESSAGE_SMTP_PORT: "587", JESSIEMESSAGE_SMTP_USER: "synthetic-private-smtp-user",
       JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-private-smtp-password" });
-    const features = { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: true };
+    const features = { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: true, broadcasts: true };
     const transports = [];
     let plan = {};
     let sendCalls = 0;

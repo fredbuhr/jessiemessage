@@ -15,7 +15,7 @@ const actor = (changes = {}) => ({ user: { id: "a".repeat(32), role: "admin", ps
   expiresAt: now + 3600000, csrf, privateMfa: "private-mfa", ...changes });
 const summary = (changes = {}) => ({ contactEmail: "contact@jessiemessage.com",
   mail: { configured: true, sender: "contact@jessiemessage.com", replyTo: "contact@jessiemessage.com", host: "private-host", password: "private-password" },
-  features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, privateKey: "private-key" },
+  features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: false, privateKey: "private-key" },
   checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending", privateDatabase: "private-database" },
   username: "private-username", databaseName: "private-database", key: "private-key", ...changes });
 const proof = (changes = {}) => ({ status: "verified", checkedAt: now, scope: "smtp_authentication", delivery: "not_checked",
@@ -63,7 +63,7 @@ test("readiness summary whitelists public identity and feature inventory without
   const response = await get(base); assert.equal(response.status, 200); privateHeaders(response);
   assert.deepEqual(await response.json(), { contactEmail: "contact@jessiemessage.com",
     mail: { configured: true, sender: "contact@jessiemessage.com", replyTo: "contact@jessiemessage.com" },
-    features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false },
+    features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: false },
     checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
   assert.deepEqual(calls, [["actor", token], ["summary", token]]);
 });
