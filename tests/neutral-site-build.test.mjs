@@ -81,12 +81,31 @@ test("neutral export contains exactly the reviewed public surface, copied byte-f
   assert.deepEqual(JSON.parse(await readFile(join(output, "_neutral/unavailable.json"), "utf8")), { status: "unavailable" });
 });
 
-test("Apache export declares a closed public route set and internal neutral JSON, without arbitrary-file or proxy fallback", async (t) => {
+test("Apache export fixes the HTTPS canonical origin before its closed public routes, without proxy or arbitrary-file fallback", async (t) => {
   const { root, build } = await sandbox(t), output = join(root, "site");
   await build({ output });
   const apache = await readFile(join(output, ".htaccess"), "utf8");
   // This checks the generated policy, not Apache execution. The target host must
   // still verify its modules, AllowOverride, error documents and HEAD handling.
+  const lines = apache.split("\n");
+  const policy = lines.slice(lines.indexOf("RewriteEngine On") + 1).filter((line) => line && !line.startsWith("#"));
+  assert.match(policy[0], /^RewriteCond %\{HTTPS\} \^off\$ \[OR\]$/);
+  assert.match(policy[1], /^RewriteCond %\{HTTP_HOST\} \S+ \[NC\]$/);
+  assert.equal(policy[2], "RewriteRule ^(.*)$ https://jessiemessage.com/$1 [R=308,END]", "only the fixed destination, default escaping and query retention are permitted");
+  assert.equal(policy[3], "RewriteCond %{ENV:REDIRECT_STATUS} ^503$", "canonicalization precedes internal error documents and all route handlers");
+  // Exercise the emitted conditions against independent authorities. This does
+  // not simulate Apache's URL decoding or a hosting proxy's HTTPS variable.
+  const tls = new RegExp(policy[0].split(" ")[2]);
+  const www = new RegExp(policy[1].split(" ")[2], "i");
+  for (const [secure, host, redirect] of [
+    ["off", "jessiemessage.com", true], ["off", "accueil.jessiemessage.com", true], ["off", "untrusted.example", true],
+    ["on", "jessiemessage.com", false], ["on", "jessiemessage.com:443", false], ["on", "accueil.jessiemessage.com", false],
+    ["on", "www.jessiemessage.com", true], ["on", "WWW.JESSIEMESSAGE.COM", true], ["on", "www.jessiemessage.com:80", true], ["on", "www.jessiemessage.com:443", true],
+    ["on", "www.jessiemessage.com.evil", false], ["on", "evilwww.jessiemessage.com", false], ["on", "www.jessiemessage.com:8443", false],
+    ["on", "www.jessiemessage.com:443.evil", false], ["on", "www.jessiemessage.com@evil", false], ["on", "www.jessiemessage.com.", false],
+  ]) assert.equal(tls.test(secure) || www.test(host), redirect, `${secure} ${host}`);
+  assert.deepEqual(lines.filter((line) => /^RewriteRule[^\n]*https?:/.test(line)), [policy[2]], "there is exactly one external target and its authority never comes from a header");
+  assert.doesNotMatch(apache, /X-Forwarded|%\{HTTP:Forwarded\}|%\{HTTP_FORWARDED\}/i);
   const allow = apache.split("\n").find((line) => line.startsWith("RewriteRule ^(?:"));
   assert.ok(allow);
   const pattern = new RegExp(allow.split(" ")[1]);
@@ -104,7 +123,7 @@ test("Apache export declares a closed public route set and internal neutral JSON
   assert.match(apache, /ErrorDocument 503 \/_neutral\/unavailable\.json/);
   assert.match(apache, /RewriteCond %\{ENV:REDIRECT_STATUS\} \^503\$\nRewriteRule \^_neutral\/unavailable\\\.json\$ - \[END\]/);
   assert.equal(apache.trim().endsWith("RewriteRule ^ - [R=404,END]"), true);
-  assert.doesNotMatch(apache, /REQUEST_FILENAME|\s-f\b|\s-d\b|RewriteRule[^\n]*(?:https?:|\[P\]|\.php)/);
+  assert.doesNotMatch(lines.filter((line) => line !== policy[2]).join("\n"), /REQUEST_FILENAME|\s-f\b|\s-d\b|RewriteRule[^\n]*(?:https?:|\[P\]|\.php)/);
   assert.match(apache, /Header always set Cache-Control "no-store"/);
   assert.match(apache, /Header always set X-Content-Type-Options "nosniff"/);
   assert.doesNotMatch(apache, /<IfModule/, "required host directives must fail visibly instead of silently omitting protections");

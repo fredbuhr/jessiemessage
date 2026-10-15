@@ -56,6 +56,11 @@ Header always set Allow "GET" "expr=%{REQUEST_STATUS} == 405 && %{REQUEST_URI} =
 Header always set Retry-After "15" "expr=%{REQUEST_STATUS} == 503"
 
 RewriteEngine On
+# Fixed canonical origin; keep Apache's redirect escaping and query retention.
+RewriteCond %{HTTPS} ^off$ [OR]
+RewriteCond %{HTTP_HOST} ^www\\.jessiemessage\\.com(?::(?:80|443))?$ [NC]
+RewriteRule ^(.*)$ https://jessiemessage.com/$1 [R=308,END]
+
 # Only an internal 503 error document may expose this static JSON file.
 RewriteCond %{ENV:REDIRECT_STATUS} ^503$
 RewriteRule ^_neutral/unavailable\\.json$ - [END]
