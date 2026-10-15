@@ -10,6 +10,8 @@ Branche courante : `feat/media-capacity-inventory`, construite sur `feat/access-
 
 Le renouvellement et la pagination des accès sont disponibles dans la [PR brouillon #13](https://github.com/fredbuhr/jessiemessage/pull/13).
 
+La capacité et l'inventaire privés des médias sont disponibles dans la [PR brouillon #14](https://github.com/fredbuhr/jessiemessage/pull/14), empilée sur #13.
+
 L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée sur bleu nuit. Les portraits personnels restent hors Git et des artefacts publics. Le prototype autonome 0.3.1 contient des données fictives ; il ne démontre pas le fonctionnement des comptes réels.
 
 ## Ce qui est implémenté
@@ -27,7 +29,7 @@ L'identité Nuit approuvée conserve les fichiers exacts de la silhouette dorée
 | Fiabilité des interfaces 0.12 | Séparation compte/session, purge administration au masquage, récupération réessayable, activité récente et en cours des diffusions | CI vérifiée ; recette navigateur nécessaire |
 | Disponibilité serveur 0.13 | Admission avant SQL/corps d’import, budgets de lecture, SMTP annulable, arrêt de tous les producteurs et drainage borné | CI vérifiée ; charge, proxy et hébergement réels à mesurer |
 | Accès administrés 0.14 | Prolongation atomique des accès approuvés, conflits d’onglets, listes clients/invitations paginées au-delà de 500 entrées | CI MariaDB vérifiée ; recette navigateur et charge à réaliser |
-| Capacité médias 0.15 | Réservations persistantes, plafonds, suppression durable avant libération, inventaire privé et initialisation hors ligne | Code et tests locaux en validation ; CI MariaDB à vérifier |
+| Capacité médias 0.15 | Réservations persistantes, plafonds, suppression durable avant libération, inventaire privé et initialisation hors ligne | CI MariaDB vérifiée ; réparation des états incertains et restauration à terminer |
 | Présentation | Identité Nuit, icônes approuvées, aperçu autonome fictif | Contrôles navigateur, accessibilité et responsive réels à terminer |
 
 Les outils clients restent réservés à l'administrateur affecté. Les notes sont chiffrées ; les listes CRM n'incluent ni notes ni adresse e-mail. Les dates de suivi ne déclenchent aucune notification. Les groupes sont des classements privés, pas des salons.
@@ -132,7 +134,7 @@ Le code mort identifié est limité : `constantTimeText` est utilisé seulement 
 | 0.12 — parcours privés | Corrections ci-dessus, tests régressifs et CI exacte ; comportement navigateur encore à valider | Lot de code terminé et CI vérifiée |
 | 0.13 — disponibilité et arrêt | Admission avant corps d'import, quotas, SMTP annulable, aucun nouvel appel de réservation après arrêt, drainage borné | Lot de code terminé et CI vérifiée |
 | 0.14 — renouvellement et listes | Accès déjà approuvés prolongés sans doublon, pagination complète, état privé borné | Lot de code terminé et CI vérifiée |
-| 0.15 — capacité et inventaire | Réservations avant écriture, limites liées au stockage, import historique hors ligne et inventaire sans purge | Lot de code implémenté ; CI en préparation |
+| 0.15 — capacité et inventaire | Réservations avant écriture, limites liées au stockage, import historique hors ligne et inventaire sans purge | Lot de code terminé et CI vérifiée |
 | Majorité externe | Choix du processus et du prestataire, intégration et validation des preuves avant ouverture des comptes réels | À chiffrer après choix du prestataire |
 | Exploitation | Plafonds de stockage, réconciliation prudente, rétention/export/suppression, restauration DB/médias/clés et retour arrière éprouvé | 2–3 jours |
 | Préproduction HTTPS | Hébergement isolé, proxy validé, SMTP officiel et réception contrôlée | 1–2 jours après accès |
@@ -147,8 +149,8 @@ Les valeurs finales des quotas, la politique de rétention et les sauvegardes se
 
 | Étape | Résultat vérifiable | État |
 | --- | --- | --- |
-| 1 — Réserver la capacité | Journal persistant avant écriture, plafonds compte/global, déduplication atomique et import des anciens médias supprimés inclus | Implémenté ; CI à vérifier |
-| 2 — Inventorier sans supprimer | Lectures SQL/fichiers bornées, enveloppes structurelles, inconnus et états incertains signalés sans suppression | Implémenté ; CI à vérifier |
+| 1 — Réserver la capacité | Journal persistant avant écriture, plafonds compte/global, déduplication atomique et import des anciens médias supprimés inclus | Implémenté et CI vérifiée |
+| 2 — Inventorier sans supprimer | Lectures SQL/fichiers bornées, enveloppes structurelles, inconnus et états incertains signalés sans suppression | Implémenté et CI vérifiée |
 | 3 — Réparer et restaurer | Clôture durable des opérations incertaines après arrêt des producteurs, nettoyage avec preuve et reprise après interruption, restauration DB/médias/clés et réassociation contrôlée | À implémenter et éprouver |
 
 Un échec HTTP, un délai écoulé ou une absence SQL observée pendant un import ne prouvent pas qu’un fichier est orphelin : un commit peut avoir réussi sans accusé. Le lot conserve donc les réservations incertaines ; une suppression physique échouée reste entièrement comptée. Les campagnes et la médiathèque peuvent légitimement référencer une photo sans message vivant. L’inventaire ne certifie pas le tag GCM et ne remplace pas une restauration cryptographique. Les index des listes administratives seront mesurés et ajoutés avec une migration revue avant une forte volumétrie.
@@ -164,3 +166,7 @@ Implémentation `0c1707e66ea47c41d15dc74f29cc0278fecd50bd`, [PR brouillon #12](h
 ## Preuve du lot des accès administrés 0.14
 
 Implémentation `57e779b80492280d650971c9e2bf71042ee9f2bd`, [PR brouillon #13](https://github.com/fredbuhr/jessiemessage/pull/13) : [CI 38694142246](https://github.com/fredbuhr/jessiemessage/actions/runs/38694142246) réussie sous Node.js 24.21.0. **863 tests généraux réussis**, 18 groupes SQL explicitement ignorés dans le job sans base ; **260 tests réels réussis sans saut sur chacune des versions MariaDB 10.11 et 11.4**. Les dix-huit groupes restent séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 20, file e-mail 13, HTTP accès 13, persistance chat 19, HTTP chat 12, persistance médias 16, HTTP médias 10, persistance CRM 19, HTTP CRM 14, persistance récupération/file 21, HTTP récupération 12, HTTP préparation 10, autorisation des diffusions/chat 13, persistance des diffusions 18 et HTTP diffusion 14. Syntaxe et build réussis. Aucun changement de migration, dépendance, clé ou icône ; aucune fusion ou mise en production. Les contrôleurs VM ne constituent pas une recette navigateur, appareils ou charge. La majorité externe, le SMTP réel et l'exploitation restent à préparer.
+
+## Preuve du lot capacité et inventaire 0.15
+
+Implémentation `8a03e5f14625a6c36844be313344f0bb2773314e`, [PR brouillon #14](https://github.com/fredbuhr/jessiemessage/pull/14) : [CI 38697899510](https://github.com/fredbuhr/jessiemessage/actions/runs/38697899510) réussie sous Node.js 24.21.0. **912 tests généraux réussis**, 18 groupes SQL explicitement ignorés dans le job sans base ; **273 tests réels réussis sans saut sur chacune des versions MariaDB 10.11 et 11.4**. Les dix-huit groupes restent séquentiels : migrations 12, authentification 16, récupération administrateur 8, accès client 20, file e-mail 13, HTTP accès 13, persistance chat 19, HTTP chat 12, persistance médias 24, HTTP médias 15, persistance CRM 19, HTTP CRM 14, persistance récupération/file 21, HTTP récupération 12, HTTP préparation 10, autorisation des diffusions/chat 13, persistance des diffusions 18 et HTTP diffusion 14. Syntaxe et build réussis. Deux nouvelles migrations portent le schéma à 27 ; les 25 précédentes sont inchangées. Aucune dépendance, clé ou icône modifiée ; aucune migration réelle, fusion ou mise en production. L’inventaire est structurel et sans suppression, les réservations incertaines restent comptées. La réparation avec preuve de clôture, la réassociation contrôlée et la restauration cohérente restent à implémenter et éprouver.
