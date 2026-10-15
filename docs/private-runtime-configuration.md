@@ -37,6 +37,8 @@ Les buffers d’entrée et références de mot de passe maîtrisés sont nettoy�
 
 ## Ce que cette étape permet de constater
 
-Les résultats CI et la révision exacte de la commande installée figurent dans la PR correspondante. Les tests utilisent uniquement des secrets synthétiques ; les cas Linux réels s’exécutent en CI et les schémas MariaDB jetables restent isolés de l’hébergement. Le mot de passe réel doit encore être saisi par le propriétaire dans sa propre console avant de pouvoir confirmer la connexion SQL hébergée et la configuration persistante.
+Les résultats CI et la révision exacte de la commande installée figurent dans la PR correspondante. Les tests utilisent uniquement des secrets synthétiques ; les cas Linux réels s’exécutent en CI et les schémas MariaDB jetables restent isolés de l’hébergement.
+
+Le propriétaire a ensuite exécuté la commande : le rapport du 15 octobre à **18:49:08 UTC** confirme huit contrôles réussis, mais le contrôle des privilèges échoue. Aucun fichier runtime normal n’a été créé et le schéma physique d’authentification n’a pas été atteint. Le [diagnostic privé distinct](runtime-grant-diagnostics.md) prépare le relevé filtré de la cause ; les règles de validation normales ne sont pas assouplies.
 
 L’initialisation administrateur, les clés MFA, le chargement au démarrage, la restauration et la recette privée restent des étapes distinctes. Aucun message de support n’a été envoyé. **contact@jessiemessage.com** demeure l’adresse officielle.
