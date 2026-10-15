@@ -100,7 +100,7 @@ export async function createCrmService({ store, authService, authStore, key, clo
       if (!result || typeof result.allowed !== "boolean") fail("CRM_UNAVAILABLE");
       if (!result.allowed) throw new CrmError("CRM_RATE_LIMIT", result.retryAfter);
     }
-    return { session, request: { tokenHash: tokenDigest(token), now } };
+    return { session, request: { tokenHash: tokenDigest(token), now: dateValue(clock()) } };
   }
   function profileDTO(row, session, conversationId) {
     if (!row || storedId(row.conversationId) !== conversationId || !row.client

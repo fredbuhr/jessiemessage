@@ -13,7 +13,7 @@ const hasCode = (code) => (error) => error instanceof ResetError && error.code =
 async function fixture() {
   const mailKey = randomBytes(32), token = newToken(), calls = [], rates = [];
   const state = { now: initialNow, requested: true, record: { userId, credentialVersion: 7 }, consumed: true,
-    rawError: null, rateError: null, rateResults: [], inspect: null, consume: null };
+    rawError: null, rateError: null, rateResults: [], rateHook: null, inspect: null, consume: null };
   const record = (name, options) => { calls.push({ name, options }); if (state.rawError) throw state.rawError; };
   const store = {
     requestReset: async (options) => { record("requestReset", options); return state.requested; },
@@ -22,10 +22,17 @@ async function fixture() {
   };
   const authStore = { consumeRateLimit: async (bucket, options) => {
     rates.push({ bucket, options }); if (state.rateError) throw state.rateError;
+    if (state.rateHook) await state.rateHook(options, rates.length);
     return state.rateResults.length ? state.rateResults.shift() : { allowed: true, retryAfter: 0 };
   } };
   const options = { store, authStore, mailKey, clock: () => state.now };
   return { options, store, state, mailKey, token, calls, rates, service: await createResetService(options) };
+}
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((done) => { resolve = done; });
+  return { promise, resolve };
 }
 
 test("recovery service requires an explicit mail key, complete store and safe clock dependency", async () => {
@@ -58,6 +65,28 @@ test("reset requests return only acceptance and put only encrypted mail and toke
   assert.equal(JSON.stringify(command).includes(decoded.token), false);
   for (const secret of [decoded.token, email, email.toLowerCase(), "password", "session", "userId"]) assert.equal(JSON.stringify(result).includes(secret), false);
   assert.equal(f.calls.some((call) => call.name !== "requestReset"), false);
+});
+
+test("reset requests start the complete link lifetime after a suspended quota finishes", async () => {
+  const f = await fixture(), entered = deferred(), resume = deferred(), current = initialNow + 2 * 3600000;
+  f.state.rateHook = async (_options, count) => { if (count === 1) { entered.resolve(); await resume.promise; } };
+  const pending = f.service.requestReset({ email: "client@example.invalid" });
+  await entered.promise; f.state.now = current; resume.resolve();
+  assert.deepEqual(await pending, { status: "accepted" });
+  assert.deepEqual(f.rates.map(({ options }) => options.now), [initialNow, initialNow, initialNow]);
+  assert.equal(f.calls.length, 1); assert.equal(f.calls[0].name, "requestReset");
+  assert.equal(f.calls[0].options.now, current); assert.equal(f.calls[0].options.reset.expiresAt, current + 30 * 60000);
+});
+
+test("a clock that becomes invalid or overflows link lifetime during quotas cannot enqueue reset mail", async () => {
+  for (const current of [NaN, -1, 1.5, 253402300800000, 253402300799999]) {
+    const f = await fixture(), entered = deferred(), resume = deferred();
+    f.state.rateHook = async (_options, count) => { if (count === 1) { entered.resolve(); await resume.promise; } };
+    const pending = f.service.requestReset({ email: "client@example.invalid" });
+    await entered.promise; f.state.now = current; resume.resolve();
+    await assert.rejects(pending, hasCode("RESET_UNAVAILABLE"));
+    assert.equal(f.rates.length, 3); assert.equal(f.calls.length, 0);
+  }
 });
 
 test("unknown and ineligible accounts receive the same acceptance while malformed canonical email never queues a mail", async () => {

@@ -15,6 +15,7 @@ const invalid = () => new AuthError("AUTH_INVALID");
 const unavailable = () => new AuthError("AUTH_UNAVAILABLE");
 const SESSION_SECONDS = 8 * 60 * 60;
 const IDLE_SECONDS = 30 * 60;
+const MAX_INSTANT = 253402300799999;
 
 // One private, random dummy hash per process keeps nonexistent accounts on the
 // same bounded password-work path as existing administrators.
@@ -23,6 +24,12 @@ export async function createAuthService({ store, totpKey, clock = Date.now }) {
   const dummyHash = await hashPassword(newToken());
   const rateKey = createHmac("sha256", totpKey).update("jessiemessage:rate-key:v1").digest();
   const bucket = (kind, value) => createHmac("sha256", rateKey).update(`${kind}:`).update(value).digest();
+  function nowValue() {
+    let now;
+    try { now = clock(); } catch { throw unavailable(); }
+    if (!Number.isSafeInteger(now) || now < 0 || now > MAX_INSTANT) throw unavailable();
+    return now;
+  }
 
   async function database(work) {
     try { return await work(); } catch { throw unavailable(); }
@@ -42,9 +49,9 @@ export async function createAuthService({ store, totpKey, clock = Date.now }) {
     try { canonical = canonicalEmail(email); } catch { canonical = null; }
     const accountKey = canonical ?? "invalid-email";
     const network = typeof peerAddress === "string" && peerAddress.length <= 128 ? peerAddress : "unknown-peer";
-    const now = clock();
+    const quotaTime = nowValue();
     for (const [kind, value, windowSeconds, limit] of [["global", "login", 60, 120], ["network", network, 900, 20], ["account", accountKey, 900, 8]]) {
-      const result = await database(() => store.consumeRateLimit(bucket(kind, value), { now, windowSeconds, limit }));
+      const result = await database(() => store.consumeRateLimit(bucket(kind, value), { now: quotaTime, windowSeconds, limit }));
       if (!result.allowed) throw new AuthError("AUTH_RATE_LIMIT", result.retryAfter);
     }
     const record = canonical ? await database(() => store.getLoginRecord(canonical)) : null;
@@ -53,6 +60,10 @@ export async function createAuthService({ store, totpKey, clock = Date.now }) {
     try { matched = await verifyPassword(password, candidate); }
     catch (error) { if (error.code === "AUTH_BUSY") throw new AuthError("AUTH_BUSY", 5); throw unavailable(); }
     if (!matched || !record || candidate === dummyHash || typeof factor !== "string" || factor.length > 128) throw invalid();
+    // Persistent quotas and bounded password work can both wait. Their start
+    // time must not keep an expired TOTP step live or shorten a new session.
+    const now = nowValue();
+    if (now > MAX_INSTANT - SESSION_SECONDS * 1000) throw unavailable();
     const rawToken = newToken();
     const accepted = await database(() => store.completeAdminLogin({
       userId: record.id, expectedPasswordHash: record.passwordHash, now,

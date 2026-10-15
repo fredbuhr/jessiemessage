@@ -24,16 +24,18 @@ async function fixture(overrides = {}) {
   const state = {
     now, session: { user: { id: adminId, role: "admin", pseudonym: "Jessie", email: "private-admin@example.invalid", mfaVersion: "private-mfa-version" },
       csrf: newToken(), expiresAt: now + 60000, tokenHash: "private-token-proof" },
-    authError: null, rateError: null, rateResults: [], factoryError: null, factoryHook: null,
+    authError: null, sessionHook: null, rateError: null, rateHook: null, rateResults: [], factoryError: null, factoryHook: null,
     verifyHook: async () => true, closeHook: null,
   };
   const authService = { session: async (raw) => {
     sessionCalls.push(raw); events.push("session");
+    if (state.sessionHook) await state.sessionHook();
     if (state.authError) throw state.authError;
     return state.session === null ? null : structuredClone(state.session);
   } };
   const authStore = { consumeRateLimit: async (bucket, options) => {
     rateCalls.push({ bucket: Buffer.from(bucket), options: { ...options } }); events.push("rate");
+    if (state.rateHook) await state.rateHook();
     if (state.rateError) throw state.rateError;
     return state.rateResults.length ? state.rateResults.shift() : { allowed: true, retryAfter: 0 };
   } };
@@ -127,7 +129,7 @@ test("readiness summary is a strict progress inventory without SMTP secrets or a
   assert.equal(f.transports.length, 0);
   f.state.session = null;
   await assert.rejects(f.service.summary(f.token), hasCode("READINESS_UNAUTHORIZED"));
-  assert.equal(f.sessionCalls.length, 2);
+  assert.equal(f.sessionCalls.length, 3);
 });
 
 test("disabled mail and disabled features remain explicit metadata without creating an SMTP transport", async () => {
@@ -189,12 +191,64 @@ test("SMTP quotas differ from summary quotas and stop verification before transp
   await assert.rejects(f.service.summary(f.token), (error) => hasCode("READINESS_RATE_LIMIT")(error) && error.retryAfter === 11);
 });
 
+for (const operation of ["summary", "verifySmtp"]) for (const loss of ["revoked", "expired"]) {
+  test(`${operation} rejects a session ${loss} while its final quota waits before returning inventory or allocating SMTP`, async () => {
+    const f = await fixture(), started = deferred(), release = deferred();
+    f.state.rateHook = async () => {
+      if (f.rateCalls.length === 2) { started.resolve(); await release.promise; }
+    };
+    // The real authentication service checks its current clock on every read;
+    // this hook models expiry without returning an already invalid proof.
+    f.state.sessionHook = async () => {
+      if (f.state.session && f.state.session.expiresAt <= f.state.now) throw Object.assign(new Error("Expired session."), { code: "AUTH_INVALID" });
+    };
+    const pending = assert.rejects(f.service[operation](f.token), hasCode("READINESS_UNAUTHORIZED"));
+    await started.promise;
+    assert.equal(f.sessionCalls.length, 1); assert.equal(f.rateCalls.length, 2); assert.equal(f.transports.length, 0);
+    if (loss === "revoked") f.state.session = null;
+    else f.state.now = f.state.session.expiresAt;
+    release.resolve(); await pending;
+    assert.equal(f.transports.length, 0); assert.equal(f.events.includes("factory"), false); assert.equal(f.events.includes("verify"), false);
+    assert.ok(f.sessionCalls.length >= 2);
+    // A rejected diagnostic must release its reserved slot for a later, valid intent.
+    f.state.now = now; f.state.session = { user: { id: adminId, role: "admin", pseudonym: "Jessie" }, csrf: newToken(), expiresAt: now + 60000 };
+    assert.equal((await f.service.verifySmtp(f.token)).status, "verified");
+    assert.equal(f.transports.length, 1); assert.equal(f.transports[0].closed, 1);
+  });
+}
+
+test("the diagnostic slot stays reserved while its post-quota session proof waits", async () => {
+  const f = await fixture(), started = deferred(), release = deferred();
+  f.state.sessionHook = async () => {
+    if (f.sessionCalls.length === 2) { started.resolve(); await release.promise; }
+  };
+  const first = f.service.verifySmtp(f.token); await started.promise;
+  await assert.rejects(f.service.verifySmtp(f.token), (error) => hasCode("READINESS_BUSY")(error) && error.retryAfter === 5);
+  assert.equal(f.transports.length, 0); assert.equal(f.rateCalls.length, 2);
+  release.resolve(); assert.equal((await first).status, "verified");
+  assert.equal(f.transports.length, 1); assert.equal(f.transports[0].verified, 1); assert.equal(f.transports[0].closed, 1);
+});
+
+for (const operation of ["summary", "verifySmtp"]) {
+  test(`closing during ${operation}'s post-quota session proof withholds inventory and cannot allocate SMTP`, async () => {
+    const f = await fixture(), started = deferred(), release = deferred();
+    f.state.sessionHook = async () => {
+      if (f.sessionCalls.length === 2) { started.resolve(); await release.promise; }
+    };
+    const pending = assert.rejects(f.service[operation](f.token), hasCode("READINESS_UNAVAILABLE")); await started.promise;
+    const closing = f.service.close(); release.resolve(); await closing; await pending;
+    assert.equal(f.transports.length, 0); assert.equal(f.events.includes("factory"), false);
+    await assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE"));
+  });
+}
+
 test("SMTP success uses a fresh verification-only transport, closes it and rechecks the session before issuing proof", async () => {
   const f = await fixture();
   const proof = await f.service.verifySmtp(f.token);
   assert.deepEqual(proof, { status: "verified", checkedAt: now, scope: "smtp_authentication", delivery: "not_checked" });
   assert.equal(f.transports.length, 1); assert.equal(f.transports[0].verified, 1); assert.equal(f.transports[0].closed, 1); assert.equal(f.transports[0].sent, 0);
-  assert.equal(f.sessionCalls.length, 2); assert.ok(f.sessionCalls.every((raw) => raw === f.token));
+  assert.equal(f.sessionCalls.length, 3); assert.ok(f.sessionCalls.every((raw) => raw === f.token));
+  assert.deepEqual(f.events.slice(0, 5), ["session", "rate", "rate", "session", "factory"]);
   assert.ok(f.events.lastIndexOf("session") > f.events.lastIndexOf("close"));
   await f.service.verifySmtp(f.token);
   assert.equal(f.transports.length, 2); assert.notEqual(f.transports[0], f.transports[1]);
@@ -262,7 +316,7 @@ test("administrator revocation during SMTP verification discards the network res
   const pending = f.service.verifySmtp(f.token); await started.promise;
   f.state.session = null; release.resolve();
   await assert.rejects(pending, hasCode("READINESS_UNAUTHORIZED"));
-  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 2);
+  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 3);
   assert.ok(f.events.lastIndexOf("session") > f.events.lastIndexOf("close"));
 });
 
@@ -270,7 +324,7 @@ test("revocation during failed transport cleanup takes precedence over a success
   const f = await fixture();
   f.state.closeHook = async () => { f.state.session = null; throw new Error("private-close-password"); };
   await assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAUTHORIZED"));
-  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 2);
+  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 3);
 });
 
 test("session backend errors and malformed persistent rate results remain sanitized and cannot reach SMTP", async () => {
@@ -301,7 +355,7 @@ test("a clock that becomes invalid while verification runs cannot stamp a succes
   const f = await fixture();
   f.state.verifyHook = async () => { f.state.now = NaN; return true; };
   await assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE"));
-  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 2);
+  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 3);
   f.state.now = now;
   f.state.verifyHook = async () => true;
   assert.equal((await f.service.verifySmtp(f.token)).checkedAt, now);
@@ -321,7 +375,7 @@ test("readiness close immediately closes the active diagnostic and never returns
   const pending = assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE")); await started.promise;
   const closing = f.service.close(); assert.equal(f.transports[0].closed, 1);
   await closing; await pending;
-  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 1);
+  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 2);
   await assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_UNAVAILABLE"));
   assert.equal(f.transports.length, 1);
 });
@@ -352,7 +406,7 @@ test("shutdown shares an already running cleanup and waits for it exactly once",
   let drained = false; const closing = f.service.close(); void closing.then(() => { drained = true; });
   await Promise.resolve(); assert.equal(drained, false); assert.equal(f.transports[0].closed, 1);
   release.resolve(); await closing; await pending;
-  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 1);
+  assert.equal(f.transports[0].closed, 1); assert.equal(f.sessionCalls.length, 2);
 });
 
 test("late transport cleanup failures during shutdown are sanitized and do not produce verification proof", async () => {

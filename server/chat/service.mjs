@@ -143,7 +143,7 @@ export async function createChatService({ store, authStore, authService, accessS
       await mutationLimit(session.user.id, "send", request.now);
       const id = randomBytes(16), senderId = idBytes(session.user.id);
       const binding = { messageId: id, conversationId: request.conversationId, senderId };
-      const result = await store.sendMessage({ ...request, message: { id, clientMessageId: clientId,
+      const result = await store.sendMessage({ ...request, now: nowValue(), message: { id, clientMessageId: clientId,
         bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: messageFingerprint(body, key, binding) } });
       return { message: messageDTO(result.message, session), duplicate: result.duplicate };
     }),
@@ -158,7 +158,7 @@ export async function createChatService({ store, authStore, authService, accessS
       const messageId = randomBytes(16), senderId = idBytes(session.user.id);
       const body = JSON.stringify({ mediaId, caption });
       const binding = { messageId, conversationId: request.conversationId, senderId };
-      const result = await store.sendMessage({ ...request, message: { id: messageId, clientMessageId: clientId, mediaId: assetId,
+      const result = await store.sendMessage({ ...request, now: nowValue(), message: { id: messageId, clientMessageId: clientId, mediaId: assetId,
         bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: messageFingerprint(body, key, binding) } });
       return { message: messageDTO(result.message, session), duplicate: result.duplicate };
     }),
@@ -168,13 +168,13 @@ export async function createChatService({ store, authStore, authService, accessS
       sequence(throughSequence);
       const { session, request } = await context(role, token, conversationId);
       await mutationLimit(session.user.id, "update", request.now);
-      return store.markRead({ ...request, through: throughSequence });
+      return store.markRead({ ...request, now: nowValue(), through: throughSequence });
     }),
     delete: (role, token, conversationId, messageId) => guarded(async () => {
       const message = idBytes(messageId);
       const { session, request } = await context(role, token, conversationId);
       await mutationLimit(session.user.id, "update", request.now);
-      return messageDTO(await store.deleteMessage({ ...request, messageId: message }), session);
+      return messageDTO(await store.deleteMessage({ ...request, now: nowValue(), messageId: message }), session);
     }),
   });
 }

@@ -140,13 +140,13 @@ export async function createMediaService({ store, chatService, authStore, storag
     asset: (role, raw, assetId, variant) => guarded(async () => {
       variantValue(variant); const target = id(assetId); const { actor, request } = await context(role, raw);
       await consumeBudget(actor.user.id, variant, request.now);
-      return content(await store.getOwnedAsset({ ...request, assetId: target }), variant);
+      return content(await store.getOwnedAsset({ ...request, now: currentTime(), assetId: target }), variant);
     }),
     messageAsset: (role, raw, conversationId, messageId, variant) => guarded(async () => {
       variantValue(variant); const conversation = id(conversationId), message = id(messageId);
       const { actor, request } = await context(role, raw);
       await consumeBudget(actor.user.id, variant, request.now);
-      return content(await store.getMessageAsset({ ...request, conversationId: conversation, messageId: message }), variant);
+      return content(await store.getMessageAsset({ ...request, now: currentTime(), conversationId: conversation, messageId: message }), variant);
     }),
     gallery: (role, raw, conversationId, { before = null, limit = 50 } = {}) => guarded(async () => {
       if (before !== null) cursor(before); pageSize(limit);
@@ -160,7 +160,7 @@ export async function createMediaService({ store, chatService, authStore, storag
     removeAsset: (role, raw, assetId) => guarded(async () => {
       const target = id(assetId); const { actor, request } = await context(role, raw);
       await consumeBudget(actor.user.id, "delete", request.now);
-      const row = await store.deleteAsset({ ...request, assetId: target });
+      const row = await store.deleteAsset({ ...request, now: currentTime(), assetId: target });
       // The metadata deletion prevents new sends/reads before unlinking. A
       // retry can finish cleanup if filesystem availability interrupted it.
       await storage.remove({ storageKey: row.storageKey });

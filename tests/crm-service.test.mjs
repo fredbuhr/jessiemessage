@@ -193,6 +193,46 @@ test("persistent CRM quotas use opaque distinct scoped buckets and reject before
   assert.equal(f.calls.length, before);
 });
 
+const timedOperations = [
+  ["listLabels", false, (service, token) => service.listLabels(token)],
+  ["createLabel", true, (service, token) => service.createLabel(token, { kind: "tag", name: "Synthetic boundary tag" })],
+  ["renameLabel", true, (service, token) => service.renameLabel(token, labelHex, { name: "Synthetic rename", expectedVersion: "1" })],
+  ["deleteLabel", true, (service, token) => service.deleteLabel(token, labelHex, { expectedVersion: "1" })],
+  ["getProfile", false, (service, token) => service.profile(token, conversationHex)],
+  ["saveProfile", true, (service, token) => service.saveProfile(token, conversationHex, saveInput())],
+  ["listContacts", false, (service, token) => service.contacts(token)],
+];
+
+test("each CRM operation reauthorizes at the session deadline reached while awaiting quotas", async () => {
+  for (const [method, mutation, operation] of timedOperations) for (const offset of [0, 1]) {
+    const f = await fixture(), expiresAt = now + 10000, checked = [];
+    let current = now, decisions = 0, privateOperations = 0;
+    const store = { ...f.store, async [method](request) {
+      checked.push(request.now);
+      if (request.now >= expiresAt) throw Object.assign(new Error("Private expired administrator session"), { code: "CHAT_UNAUTHORIZED" });
+      privateOperations += 1; return f.store[method](request);
+    } };
+    const service = await createCrmService({ ...f.options, store, clock: () => current, authStore: { async consumeRateLimit() {
+      current = expiresAt + offset; decisions += 1; return { allowed: true };
+    } } });
+    await assert.rejects(operation(service, f.token), hasCode("CRM_UNAUTHORIZED"), `${method}/${offset}`);
+    assert.deepEqual(checked, [expiresAt + offset], method);
+    assert.equal(decisions, mutation ? 1 : 2);
+    assert.equal(privateOperations, 0); assert.equal(f.calls.length, 0, "an expired request cannot expose or modify CRM data");
+  }
+});
+
+test("each CRM operation fails closed before persistence if the post-quota clock becomes invalid", async () => {
+  for (const [method, mutation, operation] of timedOperations) for (const invalidTime of [-1, NaN, 1.5, 253402300800000]) {
+    const f = await fixture(); let current = now, decisions = 0;
+    const service = await createCrmService({ ...f.options, clock: () => current, authStore: { async consumeRateLimit() {
+      current = invalidTime; decisions += 1; return { allowed: true };
+    } } });
+    await assert.rejects(operation(service, f.token), hasCode("CRM_UNAVAILABLE"), `${method}/${invalidTime}`);
+    assert.equal(decisions, mutation ? 1 : 2); assert.equal(f.calls.length, 0);
+  }
+});
+
 test("malformed mutation shapes, versions, labels and filters fail before SQL or rate consumption", async () => {
   const f = await fixture();
   for (const input of [undefined, null, [], {}, { kind: "room", name: "x" }, { kind: "tag", name: "x", adminId: adminHex }]) {

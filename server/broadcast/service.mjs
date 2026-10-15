@@ -64,7 +64,7 @@ export async function createBroadcastService({ store, authService, authStore, ke
       if (!result || typeof result.allowed !== "boolean") fail("BROADCAST_UNAVAILABLE");
       if (!result.allowed) throw new BroadcastError("BROADCAST_RATE_LIMIT", result.retryAfter);
     }
-    return { session, request: { tokenHash: tokenDigest(token), now } };
+    return { session, request: { tokenHash: tokenDigest(token), now: date(clock()) } };
   }
   function imageEnabled(mediaId) { if (mediaId !== null && !mediaEnabled) fail("BROADCAST_MEDIA"); }
   function campaignDTO(row, session, detail = false, expectedFingerprint = null) {
