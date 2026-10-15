@@ -75,15 +75,25 @@ jobs:
           node-version: "24"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
-      - name: Create disposable runtime account with DML privileges only
-        run: >-
-          docker exec -e MYSQL_PWD=ci-only-root-not-a-secret
-          ${{ job.services.mariadb.id }} mariadb --user=root
-          --execute="CREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret'; GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_ci.* TO 'jessiemessage_runtime_test'@'%';"
+      - name: Create disposable runtime and offline schema inspection accounts
+        run: |
+          docker exec -i -e MYSQL_PWD=ci-only-root-not-a-secret ${{ job.services.mariadb.id }} mariadb --user=root <<'SQL'
+          CREATE DATABASE jessiemessage_test_restore_ci CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          GRANT ALL PRIVILEGES ON jessiemessage_test_restore_ci.* TO 'jessiemessage_test'@'%';
+          CREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret';
+          GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_ci.* TO 'jessiemessage_runtime_test'@'%';
+          GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_restore_ci.* TO 'jessiemessage_runtime_test'@'%';
+          CREATE USER 'jessiemessage_backup_test'@'%' IDENTIFIED BY 'ci-backup-only-not-a-secret';
+          GRANT ALL PRIVILEGES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_backup_test'@'%';
+          GRANT ALL PRIVILEGES ON `jessiemessage\_test\_restore\_ci`.* TO 'jessiemessage_backup_test'@'%';
+          SQL
       - name: Exercise migrations and constraints on disposable database
         run: npm run test:db
         env:
           JESSIEMESSAGE_DB_TEST: "1"
+          JESSIEMESSAGE_RESTORE_TEST_DATABASE: jessiemessage_test_restore_ci
+          JESSIEMESSAGE_BACKUP_SCHEMA_USER: jessiemessage_backup_test
+          JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD: ci-backup-only-not-a-secret
           JESSIEMESSAGE_DB_HOST: "127.0.0.1"
           JESSIEMESSAGE_DB_PORT: "3306"
           JESSIEMESSAGE_DB_NAME: jessiemessage_test_ci
