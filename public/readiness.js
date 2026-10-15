@@ -1,0 +1,143 @@
+import { createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, featureNames } from "/readiness-model.js";
+
+const el = (id) => document.getElementById(id);
+const state = createReadinessState();
+const controllers = new Set();
+let expiryTimer = null; let logoutBusy = false;
+const visible = () => document.visibilityState === "visible";
+function notice(text, error = false, id = "session-status") {
+  const node = el(id); node.textContent = text; node.classList.toggle("is-error", error);
+}
+function clearDisplay() {
+  el("readiness-content").hidden = true; el("logout").hidden = true; el("refresh").hidden = true;
+  el("refresh").disabled = false;
+  el("mail-sender").textContent = ""; el("mail-status").textContent = ""; el("feature-list").replaceChildren();
+  el("smtp-proof-date").textContent = ""; el("smtp-proof-date").hidden = true; el("verify-smtp").hidden = true;
+  el("verify-smtp").disabled = false; el("verify-smtp").textContent = "Vérifier la connexion e-mail";
+  notice(""); notice("", false, "smtp-status");
+}
+function clearPrivate(isVisible = false) {
+  for (const controller of controllers) controller.abort(); controllers.clear();
+  clearTimeout(expiryTimer); expiryTimer = null; clearReadiness(state, { visible: isVisible }); clearDisplay();
+}
+function signOut() { clearPrivate(); location.replace("/admin/login"); }
+function stale() { return Object.assign(new Error("stale_response"), { stale: true }); }
+async function request(path, { ticket = readinessTicket(state), csrf = null, timeout = 15000 } = {}) {
+  const controller = new AbortController(); controllers.add(controller);
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(path, { method: csrf === null ? "GET" : "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal,
+      headers: csrf === null ? {} : { "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: csrf === null ? undefined : "{}" });
+    let data; try { data = await response.json(); } catch { data = {}; }
+    if (!currentReadiness(state, ticket) || !visible()) throw stale();
+    if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error });
+    return data;
+  } catch (error) {
+    if (!currentReadiness(state, ticket) || !visible()) throw stale();
+    throw error;
+  } finally { clearTimeout(timer); controllers.delete(controller); }
+}
+function render() {
+  const summary = state.summary;
+  if (!state.visible || !state.session || !summary || !visible()) return;
+  el("readiness-content").hidden = false; el("logout").hidden = false;
+  el("refresh").hidden = false; el("refresh").disabled = state.busy;
+  el("mail-sender").textContent = summary.mail.sender;
+  el("mail-status").textContent = summary.mail.configured
+    ? "L’envoi d’e-mails est configuré. Tu peux vérifier sa connexion avant de tester la réception."
+    : "L’envoi d’e-mails reste à configurer dans les réglages privés du serveur. La vérification sera disponible ensuite.";
+  el("verify-smtp").hidden = !summary.mail.configured;
+  el("verify-smtp").disabled = state.busy;
+  el("verify-smtp").textContent = state.busy ? "Vérification en cours…" : "Vérifier la connexion e-mail";
+  const rows = [];
+  for (const [key, name] of Object.entries(featureNames)) {
+    const row = document.createElement("li"); const label = document.createElement("span"); const status = document.createElement("span");
+    label.textContent = name; status.className = "feature-status"; status.classList.toggle("enabled", summary.features[key]);
+    status.textContent = summary.features[key] ? "Activée" : "Non activée"; row.append(label, status); rows.push(row);
+  }
+  el("feature-list").replaceChildren(...rows);
+  if (state.proof) {
+    notice("Connexion chiffrée et authentification réussies. La réception d’un e-mail reste à tester.", false, "smtp-status");
+    el("smtp-proof-date").textContent = `Vérification de cette session : ${new Date(state.proof.checkedAt).toLocaleString("fr-FR")}.`;
+    el("smtp-proof-date").hidden = false;
+  } else { el("smtp-proof-date").textContent = ""; el("smtp-proof-date").hidden = true; }
+}
+function armExpiry() {
+  clearTimeout(expiryTimer); expiryTimer = setTimeout(signOut, Math.max(0, Math.min(2147483647, state.session.expiresAt - Date.now())));
+}
+async function bootstrap(message = "") {
+  if (!visible()) return;
+  clearPrivate(true); notice("Vérification de la connexion…"); const ticket = readinessTicket(state);
+  try {
+    const session = await request("/api/auth/session", { ticket });
+    if (!acceptAdminSession(state, ticket, session)) { signOut(); return; }
+    armExpiry();
+    const summaryTicket = readinessTicket(state);
+    const summary = await request("/api/admin/readiness", { ticket: summaryTicket });
+    if (!acceptReadinessSummary(state, summaryTicket, summary)) return;
+    notice(message); render();
+  } catch (error) {
+    if (error.stale) return;
+    if (error.status === 401) { signOut(); return; }
+    clearDisplay(); notice(error.status === 429 ? "Trop de demandes. Patiente un moment avant d’actualiser." : "La préparation du site est momentanément indisponible. Actualise la page pour réessayer.", true);
+    el("refresh").hidden = false;
+  }
+}
+async function verify() {
+  const ticket = beginSmtpCheck(state); if (!ticket) return;
+  notice("Connexion sécurisée en cours de vérification… Aucun e-mail n’est envoyé.", false, "smtp-status"); render();
+  try {
+    // The explicit click authorizes one check. Refreshing a CSRF token never
+    // repeats the SMTP action, and a different session requires a new click.
+    const session = await request("/api/auth/session", { ticket });
+    if (!acceptAdminSession(state, ticket, session)) {
+      if (state.visible) await bootstrap("La session a changé. Clique de nouveau pour vérifier la connexion e-mail.");
+      else signOut();
+      return;
+    }
+    armExpiry();
+    const proof = await request("/api/admin/readiness/smtp", { ticket, csrf: state.session.csrf, timeout: 30000 });
+    // Another tab may have replaced the browser's cookie while the server was
+    // checking the original session. Attach proof only to the current login.
+    const finalSession = await request("/api/auth/session", { ticket });
+    if (!acceptAdminSession(state, ticket, finalSession)) {
+      if (state.visible) await bootstrap("La session a changé. Clique de nouveau pour vérifier la connexion e-mail.");
+      else signOut();
+      return;
+    }
+    armExpiry();
+    if (acceptSmtpProof(state, ticket, proof)) render();
+  } catch (error) {
+    if (error.stale) return;
+    if (error.status === 401) { signOut(); return; }
+    const csrfFailed = error.status === 403 && error.code === "csrf_failed";
+    if (!rejectSmtpCheck(state, ticket, { csrfFailed })) return;
+    if (csrfFailed) { await bootstrap("Ta connexion a été actualisée. Clique de nouveau pour vérifier la connexion e-mail."); return; }
+    let text = "La connexion e-mail n’a pas pu être vérifiée. Réessaie dans un moment.";
+    if (error.status === 429) text = "Une vérification est déjà en cours ou la limite de demandes est atteinte. Patiente avant de réessayer.";
+    else if (error.status === 409) text = "L’envoi d’e-mails n’est pas activé pour le moment. Actualise la page après sa configuration.";
+    else if (error.status === 403) text = "Cette vérification n’est pas autorisée pour le moment. Actualise la page avant de réessayer.";
+    notice(text, true, "smtp-status"); render();
+  }
+}
+async function logout() {
+  if (logoutBusy || !state.session || !visible()) return;
+  logoutBusy = true; const csrf = state.session.csrf; clearPrivate(); const epoch = state.epoch;
+  notice("Déconnexion en cours…"); const controller = new AbortController(); controllers.add(controller); const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal,
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: "{}" });
+    if (epoch !== state.epoch || !visible()) return;
+    if (response.ok || response.status === 401) { signOut(); return; }
+    await bootstrap("La déconnexion n’a pas été confirmée. Réessaie de te déconnecter.");
+  } catch {
+    if (epoch === state.epoch && visible()) await bootstrap("La déconnexion n’a pas été confirmée. Réessaie de te déconnecter.");
+  } finally { clearTimeout(timer); controllers.delete(controller); logoutBusy = false; }
+}
+el("verify-smtp").addEventListener("click", () => { void verify(); });
+el("refresh").addEventListener("click", () => { void bootstrap(); });
+el("logout").addEventListener("click", () => { void logout(); });
+document.addEventListener("visibilitychange", () => { if (visible()) void bootstrap(); else clearPrivate(); });
+window.addEventListener("pagehide", () => clearPrivate());
+window.addEventListener("pageshow", (event) => { if (event.persisted && visible()) void bootstrap(); });
+if (visible()) void bootstrap(); else clearPrivate();

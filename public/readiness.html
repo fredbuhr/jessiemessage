@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#100d12" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" />
+    <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="/readiness.css" />
+    <link rel="stylesheet" href="/brand/brand.css" />
+    <title>JessieMessage — Préparer le site</title>
+    <script type="module" src="/readiness.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
+        <nav class="account-nav" aria-label="Administration"><a href="/admin">Gérer les accès</a><button id="logout" type="button" hidden>Se déconnecter</button></nav>
+      </header>
+      <main class="readiness-main">
+        <div class="page-heading"><div class="eyebrow">ADMINISTRATION</div><h1>Préparer le site</h1><p class="intro">Retrouve les fonctions configurées et les vérifications qui restent à faire avant l’ouverture.</p></div>
+        <p id="session-status" class="status" role="status" aria-live="polite">Vérification de la connexion…</p>
+        <button id="refresh" class="button secondary" type="button" hidden>Actualiser la page</button>
+        <div id="readiness-content" class="readiness-grid" hidden>
+          <section class="card mail-card" aria-labelledby="mail-title">
+            <div class="card-heading"><span class="eyebrow">GARDER LE CONTACT</span><h2 id="mail-title">Les e-mails du site</h2></div>
+            <dl class="mail-identity"><div><dt>Adresse de contact</dt><dd><a href="mailto:contact@jessiemessage.com">contact@jessiemessage.com</a></dd></div><div><dt>Adresse d’envoi et de réponse</dt><dd id="mail-sender"></dd></div></dl>
+            <p id="mail-status" class="body-copy"></p>
+            <button id="verify-smtp" class="button primary" type="button" hidden>Vérifier la connexion e-mail</button>
+            <p id="smtp-status" class="status smtp-status" role="status" aria-live="polite"></p>
+            <p id="smtp-proof-date" class="small-copy" hidden></p>
+            <p class="small-copy">Cette vérification contrôle la connexion chiffrée et l’authentification. Elle n’envoie aucun e-mail et ne confirme pas la réception des invitations ou des liens de récupération.</p>
+          </section>
+          <section class="card" aria-labelledby="features-title"><div class="card-heading"><span class="eyebrow">DANS TON ESPACE</span><h2 id="features-title">Fonctions configurées</h2></div><ul id="feature-list" class="feature-list"></ul><p class="small-copy">« Activée » indique la configuration du site. Cela ne remplace pas une vérification en conditions réelles.</p></section>
+          <section class="card remaining-card" aria-labelledby="remaining-title"><div class="card-heading"><span class="eyebrow">AVANT L’OUVERTURE</span><h2 id="remaining-title">Les prochaines vérifications</h2></div><ul class="remaining-list"><li><strong>Réception des e-mails</strong><span>Recevoir et utiliser une invitation et un lien de récupération sur de vraies boîtes e-mail.</span></li><li><strong>Contrôle de majorité</strong><span>Activer et vérifier le parcours de contrôle avant d’approuver l’accès des clients.</span></li><li><strong>Essai sur les appareils</strong><span>Vérifier les parcours sur téléphone et ordinateur avec le site en HTTPS.</span></li></ul></section>
+        </div>
+        <noscript><p class="status">Active JavaScript pour consulter la préparation du site.</p></noscript>
+      </main>
+      <footer class="footer">JessieMessage · Accès privé sur invitation · <a href="mailto:contact@jessiemessage.com">Contact</a></footer>
+    </div>
+  </body>
+</html>

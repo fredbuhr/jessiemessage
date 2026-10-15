@@ -4,7 +4,7 @@ La livraison d'e-mails est désactivée par défaut. Ce lot prépare une file du
 
 ## Activation en environnement privé
 
-L'authentification et les inscriptions doivent être activées explicitement avant la livraison. Appliquer les migrations avec le compte de migration, puis démarrer l'application avec son compte MariaDB distinct, limité aux lectures et aux opérations DML. Le serveur ne crée pas de table au démarrage. Sa vérification de schéma doit réussir avant de lancer le worker.
+L'authentification et les inscriptions doivent être activées explicitement avant la livraison par les workers. Appliquer les migrations avec le compte de migration, puis démarrer l'application avec son compte MariaDB distinct, limité aux lectures et aux opérations DML. Le serveur ne crée pas de table au démarrage. Sa vérification de schéma doit réussir avant de lancer le worker. L'outil privé de préparation décrit plus bas est accessible avec l'authentification administrateur, même si les inscriptions sont encore désactivées ; il n'envoie aucun message.
 
 | Variable | Valeur attendue |
 | --- | --- |
@@ -15,12 +15,22 @@ L'authentification et les inscriptions doivent être activées explicitement ava
 | `JESSIEMESSAGE_SMTP_PORT` | `465` pour SMTPS, ou `587` pour STARTTLS obligatoire |
 | `JESSIEMESSAGE_SMTP_USER` | Identifiant SMTP privé explicite |
 | `JESSIEMESSAGE_SMTP_PASSWORD` | Mot de passe SMTP privé explicite |
-| `JESSIEMESSAGE_SMTP_FROM` | Adresse d'expédition validée chez le fournisseur |
+| `JESSIEMESSAGE_SMTP_FROM` | `contact@jessiemessage.com` par défaut si absente ; une valeur vide est refusée. Seule cette adresse est acceptée sur le domaine officiel et ses sous-domaines |
 | `JESSIEMESSAGE_SMTP_TLS_CA_PATH` | Facultatif : chemin privé d'une autorité de certification adaptée |
 
-Ces valeurs restent dans la configuration privée du serveur. Elles ne doivent figurer ni dans Git, ni dans un artefact CI, ni dans les journaux. La clé de mail est distincte de la clé MFA. Une sauvegarde chiffrée de cette clé doit accompagner la sauvegarde MariaDB ; perdre la clé rend les mails encore en file indéchiffrables. Sa rotation exige d'arrêter les deux workers s'ils sont activés, de traiter ou annuler les files de vérification et de récupération existantes, puis de changer la clé. Aucun mode SMTP en clair ni exception aux certificats n'est proposé.
+L'adresse publique du site est **contact@jessiemessage.com**. Les messages de vérification et de récupération l'utilisent comme expéditeur, adresse de réponse (`Reply-To`) et expéditeur d'enveloppe SMTP sur le domaine officiel. Aucune adresse de réponse distincte n'est configurable. Hors des origines officielles, les tests peuvent utiliser un expéditeur fictif explicite, avec la même identité pour ces trois champs. Le transport revérifie cette cohérence même si sa configuration est construite sans passer par les variables d'environnement.
+
+Les secrets et chemins restent dans la configuration privée du serveur, sans Git, artefact CI ni journal. L'adresse publique et le serveur SMTP ne sont pas des secrets. L'adresse par défaut n'active aucun envoi et ne remplit jamais l'identifiant ni le mot de passe SMTP. La clé de mail est distincte de la clé MFA. Une sauvegarde chiffrée de cette clé doit accompagner la sauvegarde MariaDB ; perdre la clé rend les mails encore en file indéchiffrables. Sa rotation exige d'arrêter les deux workers s'ils sont activés, de traiter ou annuler les files de vérification et de récupération existantes, puis de changer la clé. Aucun mode SMTP en clair ni exception aux certificats n'est proposé.
 
 Les conditions du fournisseur SMTP, le droit d'utiliser l'expéditeur, les quotas et la délivrabilité restent à vérifier dans le compte choisi avant activation. Cette implémentation ne vaut pas validation des conditions Infomaniak ni d'un autre fournisseur.
+
+Pour Infomaniak, la documentation officielle indique `mail.infomaniak.com`, le port `587` avec STARTTLS recommandé, ou `465` en TLS implicite. L'authentification utilise l'adresse complète et son mot de passe IMAP/SMTP. Utiliser `contact@jessiemessage.com` comme identifiant seulement après avoir vérifié la boîte et son authentification ; ne pas déduire ces droits d'un simple alias. Le mot de passe du compte Manager ne convient pas. Voir les [paramètres officiels Infomaniak](https://www.infomaniak.com/fr/support/faq/2427/synchroniser-les-e-mails-sur-tous-vos-equipements) et le [guide de préparation](mail-readiness.md).
+
+## Vérifier la connexion sans envoyer
+
+La page administrateur **Préparer le site**, à `/admin/readiness`, affiche les fonctionnalités configurées et les vérifications restantes. Son bouton **Vérifier la connexion e-mail** est disponible seulement si la configuration de mail est activée. Un clic explicite crée un transport distinct de celui des workers et appelle uniquement `verify()`, avec une limite de vingt secondes puis fermeture du transport. L'API exige une session administrateur courante, Origin/CSRF valides, un objet JSON vide et des limites persistantes ; elle revérifie la session après le contrôle réseau.
+
+Ce contrôle ne prend aucun destinataire et n'envoie aucun e-mail. Une réussite concerne la résolution DNS, la connexion, TLS et l'authentification SMTP ; elle ne démontre ni l'acceptation de l'expéditeur ni la réception dans une boîte. Voir la [portée officielle de Nodemailer](https://nodemailer.com/smtp#verifying-the-configuration). Les identifiants et échanges SMTP ne sont pas affichés ni journalisés. Le résultat reste temporaire dans le navigateur et disparaît à la mise en arrière-plan ou à la déconnexion. Aucune connexion SMTP réelle n'a été lancée pendant le développement de ce lot ; sa [CI 0.10](https://github.com/fredbuhr/jessiemessage/actions/runs/38657493833) réussit avec des transports injectés.
 
 ## Inscription et consommation
 

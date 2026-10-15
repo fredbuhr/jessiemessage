@@ -58,6 +58,7 @@ function clearPrivate() {
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
   mediaEnabled = false;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
+  document.getElementById("readiness-nav")?.remove();
   stopPolling(); abortRequests(); clearTimeout(expiryTimer); expiryTimer = null;
   states.clear(); inbox.clear(); selected = null; el("conversations").replaceChildren(); clearChat();
   inboxCursor = null; inboxMore = false; inboxRefreshCursor = null; lastInboxRefresh = 0; inboxLoading = false;
@@ -668,6 +669,10 @@ async function start() {
   try {
     await refreshSession(); const capability = await request(`${chatBase}/capabilities`);
     if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
+    if (role === "admin" && !document.getElementById("readiness-nav")) {
+      const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; nav.setAttribute("aria-label", "Administration");
+      const link = document.createElement("a"); link.href = "/admin/readiness"; link.textContent = "Préparer le site"; nav.append(link); el("inbox-title").parentElement.append(nav);
+    }
     ready = true; el("workspace").hidden = false; el("workspace").classList.toggle("is-admin", role === "admin");
     await refreshMediaCapability();
     await refreshCrmCapability();

@@ -1,8 +1,10 @@
 # Technical architecture — draft
 
-## Current development: opt-in access, messaging, CRM and client recovery
+## Current development: site identity and private preparation tools
 
 A Node.js 24 HTTP server serves a neutral bilingual landing page and liveness endpoint by default. Private flags enable administrator MFA and then invitations, registration, email verification and separate restricted client sessions. Verification and optional password-reset workers start with the listener. They share one SMTP transport; shutdown waits for both active batches, closes the transport once, then closes the pool. An age declaration never opens access; independently recorded assurance and administrator approval are required. A separate chat flag enables private text conversations, transactional authorization and encrypted message bodies. An additional media flag enables normalized JPEG photo storage, encrypted outside the checkout, with per-request owner/delivery authorization. CRM 0.8 adds administrator-only profiles, tags/groups and filtered contacts behind its own flag/key; it requires chat, while media remains optional. Recovery 0.9 requires enabled access/mail and adds no dependency on chat, media or CRM. External provider integrations remain pending.
+
+Version 0.10 centralizes `contact@jessiemessage.com` as the public site contact and official-domain From, Reply-To and SMTP-envelope identity. It also adds administrator preparation routes whenever private administrator authentication is enabled, including before client access is configured. The default server exposes neither these routes nor their assets. Mail configuration is parsed for an enabled administrator server; an enabled but invalid mail configuration fails startup. No new dependency or migration is added; the schema remains at 22 migrations. The [verified 0.10 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38657493833) passes, including a fifteenth sequential database group for its authenticated HTTP flow.
 
 The initial code is **not** a production chat service.
 
@@ -60,6 +62,14 @@ A recovery request returns a generic accepted response for eligible and ineligib
 
 The public enabled-only `/recover` page reads the canonical token from a fragment, removes the fragment/query before API calls, and keeps the token only in memory. Page loads never inspect or consume the challenge. Only explicit same-origin JSON submission completes a reset. APIs refuse query parameters and return fixed DTOs with no email, token or account ID. Persistent HMAC rate buckets and the existing bounded scrypt queue constrain abuse. See [client-recovery.md](client-recovery.md) for precise scope and remaining operational work.
 
+## Site mail identity and preparation boundary
+
+`server/site.mjs` defines the public contact address and recognizes only canonical HTTPS origins at `jessiemessage.com` or its subdomains. Mail remains opt-in. An omitted SMTP From defaults to the contact address; an explicitly empty or invalid value fails. An official origin rejects a different sender, including on manually constructed transport configuration. Nonofficial origins may use explicit synthetic senders for isolated tests. Reply-To and SMTP-envelope From always follow the validated sender. SMTP host, port, username, password and the private mail key remain explicit; no address is converted into a credential automatically.
+
+`/admin/readiness` and its assets require the current administrator host cookie. Its summary exposes only the contact identity, fixed feature booleans and remaining acceptance checks. It contains no SMTP hostname, credentials, filesystem paths, database configuration or keys. The SMTP POST accepts only an empty JSON object, checks exact Origin and current CSRF before reading its bounded body, and uses persistent keyed rate limits. Verification is limited to one active call per service process, ten calls per minute globally and three per fifteen minutes per administrator.
+
+Each verification creates a separate transport, calls Nodemailer's `verify()` with a 20-second wall deadline, and closes that instance on success, error or timeout. It never sends mail and never closes the workers' shared delivery transport. The administrator session is checked again after network work and cleanup, so a session revoked during the request receives no success proof. A successful DTO reports `smtp_authentication` and `delivery: not_checked`; it is not stored as a delivery or publication approval. The UI clears its temporary result when hidden or signed out, reloads the session on return, and does not automatically repeat this network action after a CSRF refresh. See [mail-readiness.md](mail-readiness.md).
+
 ## Hosting and deployment
 
 - Source: public GitHub repository; **no** production secrets or user data.
@@ -75,7 +85,7 @@ The public enabled-only `/recover` page reads the canonical token from a fragmen
 1. Freeze key architecture and privacy assumptions.
 2. Schema migrations + test database (all synthetic data).
 3. Administrator authentication/recovery, invitations, client onboarding and opt-in client password recovery implemented; master-key rotation remains separate launch work.
-4. Configure/test real SMTP, connect independently verified age assurance, and complete HTTPS acceptance; client password recovery passes the [verified recovery CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255).
+4. Private email preparation tools in development 0.10 pass the [verified 0.10 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38657493833). Verify the actual mailbox/DNS, SMTP and reception separately, connect independently verified age assurance, and complete HTTPS acceptance. Client recovery passed the historical [verified 0.9 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255).
 5. One-to-one text chat implemented; browser/HTTPS acceptance, retention/export and key-rotation tooling remain release work.
 6. Private photo upload/gallery and per-delivery audit implemented; retention/orphan cleanup, restore and storage load acceptance remain release work.
 7. Private tags/groups, notes and reminders implemented; current CRM CI verified. Next: queued individual bulk sends and operational tasks.

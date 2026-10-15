@@ -27,7 +27,7 @@ test("verification delivery is explicitly opt-in and configuration errors contai
   assert.deepEqual(mailConfiguration({}), { enabled: false });
   assert.deepEqual(mailConfiguration({ JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "0" }), { enabled: false });
   for (const flag of ["", "true", "2"]) assert.throws(() => mailConfiguration({ JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: flag }), MailConfigError);
-  for (const field of ["JESSIEMESSAGE_MAIL_KEY", "JESSIEMESSAGE_SMTP_USER", "JESSIEMESSAGE_SMTP_PASSWORD", "JESSIEMESSAGE_SMTP_FROM", "JESSIEMESSAGE_SMTP_HOST", "JESSIEMESSAGE_SMTP_PORT"]) {
+  for (const field of ["JESSIEMESSAGE_MAIL_KEY", "JESSIEMESSAGE_SMTP_USER", "JESSIEMESSAGE_SMTP_PASSWORD", "JESSIEMESSAGE_SMTP_HOST", "JESSIEMESSAGE_SMTP_PORT"]) {
     assert.throws(() => mailConfiguration({ ...configured(), [field]: undefined }), { code: "MAIL_CONFIG" });
   }
 });
@@ -38,6 +38,7 @@ test("mail configuration requires a canonical HTTPS origin, key, sender and encr
   assert.equal(result.key.length, 32);
   assert.equal(result.smtp.port, 587);
   assert.equal(result.smtp.from, "access@example.invalid");
+  assert.equal(result.smtp.replyTo, result.smtp.from);
   assert.equal(mailConfiguration({ ...env, JESSIEMESSAGE_SMTP_FROM: "ACCESS@EXAMPLE.INVALID" }).smtp.from, "access@example.invalid");
   for (const invalid of ["http://example.invalid", `${origin}/`, `${origin}/private`, "https://user:pass@example.invalid", `${origin}?x=1`]) {
     assert.throws(() => mailConfiguration({ ...env, JESSIEMESSAGE_SITE_ORIGIN: invalid }), { code: "MAIL_CONFIG" });
@@ -48,6 +49,33 @@ test("mail configuration requires a canonical HTTPS origin, key, sender and encr
   assert.throws(() => mailConfiguration({ ...env, JESSIEMESSAGE_SMTP_USER: "private-user\r\n" }), { code: "MAIL_CONFIG" });
   assert.throws(() => mailConfiguration({ ...env, JESSIEMESSAGE_SMTP_PASSWORD: "private-password\0" }), { code: "MAIL_CONFIG" });
   assert.throws(() => mailConfiguration({ ...env, JESSIEMESSAGE_SMTP_TLS_CA_PATH: "" }), { code: "MAIL_CONFIG" });
+});
+
+test("the official contact identity defaults the sender without enabling mail or inventing credentials", () => {
+  const env = configured();
+  const defaults = mailConfiguration({ ...env, JESSIEMESSAGE_SMTP_FROM: undefined });
+  assert.equal(defaults.smtp.from, "contact@jessiemessage.com");
+  assert.equal(defaults.smtp.replyTo, "contact@jessiemessage.com");
+  assert.equal(defaults.smtp.user, env.JESSIEMESSAGE_SMTP_USER);
+  assert.deepEqual(mailConfiguration({ JESSIEMESSAGE_SMTP_FROM: "contact@jessiemessage.com" }), { enabled: false });
+  assert.throws(() => mailConfiguration({ JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "1",
+    JESSIEMESSAGE_SMTP_FROM: "contact@jessiemessage.com" }), { code: "MAIL_CONFIG" });
+  for (const value of ["", null, "Contact <contact@jessiemessage.com>", "contact@jessiemessage.com\n"]) {
+    assert.throws(() => mailConfiguration({ ...env, JESSIEMESSAGE_SMTP_FROM: value }), { code: "MAIL_CONFIG" });
+  }
+});
+
+test("official site origins cannot select another sender while isolated synthetic origins keep theirs", () => {
+  const env = configured();
+  for (const siteOrigin of ["https://jessiemessage.com", "https://www.jessiemessage.com", "https://pilot.jessiemessage.com:8443"]) {
+    const settings = { ...env, JESSIEMESSAGE_SITE_ORIGIN: siteOrigin };
+    assert.throws(() => mailConfiguration(settings), { code: "MAIL_CONFIG" });
+    assert.equal(mailConfiguration({ ...settings, JESSIEMESSAGE_SMTP_FROM: undefined }).smtp.from, "contact@jessiemessage.com");
+    assert.equal(mailConfiguration({ ...settings, JESSIEMESSAGE_SMTP_FROM: "CONTACT@JESSIEMESSAGE.COM" }).smtp.replyTo, "contact@jessiemessage.com");
+  }
+  for (const siteOrigin of [origin, "https://eviljessiemessage.com", "https://jessiemessage.com.example.invalid"]) {
+    assert.equal(mailConfiguration({ ...env, JESSIEMESSAGE_SITE_ORIGIN: siteOrigin }).smtp.from, "access@example.invalid");
+  }
 });
 
 test("mail payload encryption is randomized, authenticated and bound to the exact job id and key", () => {
@@ -81,6 +109,7 @@ test("SMTP transport enforces TLS verification, bounded timeouts and disabled ex
     });
     assert.equal(options.secure, port === "465");
     assert.equal(options.requireTLS, true);
+    assert.equal(options.forceAuth, true);
     assert.deepEqual(options.tls, { rejectUnauthorized: true, minVersion: "TLSv1.2" });
     assert.equal(options.logger, false); assert.equal(options.debug, false); assert.equal(options.pool, false);
     assert.equal(options.disableFileAccess, true); assert.equal(options.disableUrlAccess, true);
@@ -100,12 +129,118 @@ test("verification message is neutral, addresses only its intended recipient and
   assert.equal(captured[0].messageId, captured[1].messageId);
   assert.equal(captured[0].messageId, `<verification-${jobId.toString("hex")}@example.invalid>`);
   assert.equal(captured[0].to, email);
+  assert.equal(captured[0].from, config.smtp.from);
+  assert.equal(captured[0].replyTo, config.smtp.from);
   assert.deepEqual(captured[0].envelope, { from: config.smtp.from, to: [email] });
   assert.ok(captured[0].text.includes(`${origin}/access#verification=${token}`));
   assert.ok(!captured[0].text.includes(`?verification=${token}`));
   assert.ok(!/stripchat|porn|sexe|adulte|photo|conversation|mot de passe/i.test(captured[0].text + captured[0].subject));
   assert.equal(captured[0].html, undefined);
   await transport.close();
+});
+
+test("both mail purposes use one official sender, reply address and SMTP envelope", async () => {
+  const config = mailConfiguration({ ...configured(), JESSIEMESSAGE_SITE_ORIGIN: "https://jessiemessage.com",
+    JESSIEMESSAGE_SMTP_FROM: undefined });
+  const captured = [];
+  const transport = await createVerificationTransport(config, { createTransport: () => ({
+    async sendMail(message) { captured.push(message); return { accepted: [email] }; }, close() {},
+  }) });
+  try {
+    const input = { email, token: newToken(), jobId: randomBytes(16) };
+    await transport.sendVerification(input);
+    await transport.sendPasswordReset(input);
+    for (const message of captured) {
+      assert.equal(message.from, "contact@jessiemessage.com");
+      assert.equal(message.replyTo, message.from);
+      assert.deepEqual(message.envelope, { from: message.from, to: [email] });
+    }
+  } finally { await transport.close(); }
+});
+
+test("manual transport configuration cannot bypass the official sender or split its reply address", async () => {
+  const config = mailConfiguration(configured());
+  for (const settings of [
+    { ...config, origin: "https://jessiemessage.com" },
+    { ...config, origin: "https://www.jessiemessage.com", smtp: { ...config.smtp, from: "other@jessiemessage.com", replyTo: "other@jessiemessage.com" } },
+    { ...config, smtp: { ...config.smtp, replyTo: "different@example.invalid" } },
+    { ...config, smtp: { ...config.smtp, replyTo: "ACCESS@EXAMPLE.INVALID" } },
+    { ...config, smtp: { ...config.smtp, from: "ACCESS@EXAMPLE.INVALID" } },
+  ]) {
+    await assert.rejects(createVerificationTransport(settings, { createTransport() {
+      assert.fail("invalid identity cannot create an SMTP connection");
+    } }), { code: "MAIL_TRANSPORT_CONFIG" });
+  }
+  const captured = [];
+  const { replyTo: _, ...smtp } = config.smtp;
+  const transport = await createVerificationTransport({ ...config, smtp }, { createTransport: () => ({
+    async sendMail(message) { captured.push(message); return { accepted: [email] }; }, close() {},
+  }) });
+  try {
+    await transport.sendPasswordReset({ email, token: newToken(), jobId: randomBytes(16) });
+    assert.equal(captured[0].replyTo, "access@example.invalid");
+  } finally { await transport.close(); }
+});
+
+test("SMTP verification calls authentication checking without sending a message and requires exact true", async () => {
+  for (const result of [true, false, undefined, "true", { accepted: [email] }]) {
+    let checks = 0, closes = 0;
+    const transport = await createVerificationTransport(mailConfiguration(configured()), { createTransport: () => ({
+      async verify() { checks += 1; return result; },
+      async sendMail() { assert.fail("connection verification must never send mail"); },
+      close() { closes += 1; },
+    }) });
+    try {
+      if (result === true) assert.equal(await transport.verify(), true);
+      else await assert.rejects(transport.verify(), { code: "MAIL_VERIFY_FAILED" });
+      assert.equal(checks, 1);
+    } finally { await transport.close(); await transport.close(); }
+    assert.equal(closes, 1);
+    await assert.rejects(transport.verify(), { code: "MAIL_VERIFY_FAILED" });
+    assert.equal(checks, 1);
+  }
+});
+
+test("SMTP verification sanitizes transport errors and rejects concurrent checks on one instance", async () => {
+  const secret = "private-smtp-user-password-host";
+  let release, checks = 0;
+  const operation = new Promise((_, reject) => { release = reject; });
+  const transport = await createVerificationTransport(mailConfiguration(configured()), { createTransport: () => ({
+    verify() { checks += 1; return operation; }, close() {},
+  }) });
+  const first = transport.verify();
+  await assert.rejects(transport.verify(), { code: "MAIL_VERIFY_FAILED" });
+  release(new Error(secret));
+  await assert.rejects(first, (error) => error instanceof MailDeliveryError && error.code === "MAIL_VERIFY_FAILED"
+    && error.cause === undefined && !JSON.stringify(error).includes(secret) && !error.message.includes(secret));
+  assert.equal(checks, 1);
+  await transport.close();
+});
+
+test("a stalled SMTP check has a wall deadline, closes once and absorbs a late verification rejection", async () => {
+  let rejectLate, closes = 0;
+  const operation = new Promise((_, reject) => { rejectLate = reject; });
+  const keepAlive = setTimeout(() => {}, 1000);
+  const transport = await createVerificationTransport(mailConfiguration(configured()), {
+    verifyTimeoutMilliseconds: 5,
+    createTransport: () => ({ verify() { return operation; }, close() { closes += 1; } }),
+  });
+  try {
+    await assert.rejects(transport.verify(), { code: "MAIL_VERIFY_FAILED" });
+    await transport.close(); await transport.close();
+    assert.equal(closes, 1);
+    rejectLate(new Error("private late SMTP failure"));
+    await new Promise((resolve) => setImmediate(resolve));
+    await assert.rejects(transport.verify(), { code: "MAIL_VERIFY_FAILED" });
+  } finally { clearTimeout(keepAlive); await transport.close(); }
+});
+
+test("SMTP verification deadline inputs are bounded before creating the transport", async () => {
+  for (const verifyTimeoutMilliseconds of [0, -1, 1.5, 30001, NaN, null, "20"]) {
+    await assert.rejects(createVerificationTransport(mailConfiguration(configured()), {
+      verifyTimeoutMilliseconds, createTransport() { assert.fail("invalid deadline cannot create an SMTP transport"); },
+    }), { code: "MAIL_TRANSPORT_CONFIG" });
+  }
 });
 
 test("SMTP success requires acceptance of the exact recipient and failure details never escape", async () => {

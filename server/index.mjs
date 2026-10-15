@@ -39,10 +39,10 @@ function reply(response, method, statusCode, contentType, body) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler } = {}) {
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler } = {}) {
   const server = createServer(async (request, response) => {
     const method = request.method ?? "GET";
-    for (const handler of [resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler]) {
+    for (const handler of [readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler]) {
       if (!handler) continue;
       try { if (await handler(request, response)) return; }
       catch {
@@ -106,6 +106,8 @@ export async function createConfiguredServer(env = process.env) {
   const crmConfig = crmConfiguration(env);
   const resetConfig = clientRecoveryConfiguration(env);
   if (!config.enabled) return { server: createAppServer(), pool: null };
+  const { mailConfiguration } = await import("./mail/config.mjs");
+  const mailConfig = mailConfiguration(env);
   const { createRuntimePool } = await import("./db/runtime.mjs");
   const { createAuthStore } = await import("./auth/store.mjs");
   const { createAuthService } = await import("./auth/service.mjs");
@@ -117,7 +119,13 @@ export async function createConfiguredServer(env = process.env) {
     await store.assertSchema();
     const service = await createAuthService({ store, totpKey: config.totpKey });
     const authHandler = createAuthHandler(service, { origin: config.origin });
-    if (!accessConfig.enabled) return { server: createAppServer({ authHandler }), pool, mailWorker: null };
+    const { createReadinessService } = await import("./readiness/service.mjs");
+    const { createReadinessHandler } = await import("./readiness/http.mjs");
+    const readinessService = await createReadinessService({ authService: service, authStore: store, mailConfig, key: config.totpKey,
+      features: { clientAccess: accessConfig.enabled, chat: chatConfig.enabled, photos: mediaConfig.enabled,
+        clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled } });
+    const readinessHandler = createReadinessHandler(readinessService, { origin: config.origin });
+    if (!accessConfig.enabled) return { server: createAppServer({ authHandler, readinessHandler }), pool, mailWorker: null };
     const { createAccessStore } = await import("./access/store.mjs");
     const { createAccessService } = await import("./access/service.mjs");
     const { createAccessHandler } = await import("./access/http.mjs");
@@ -182,7 +190,7 @@ export async function createConfiguredServer(env = process.env) {
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler });
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler });
     const workers = [];
     let closing;
     const mailWorker = {
