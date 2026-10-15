@@ -1,4 +1,4 @@
-# Recette de préproduction — étapes 0.18–0.20, version 0.22.0
+# Recette de préproduction — étapes 0.18–0.21, version 0.23.0
 
 Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. Il ne constate aucun déploiement, changement DNS, compte réel, réception e-mail ou installation sur téléphone. Les essais locaux et CI utilisent des identités fictives, des données synthétiques et des services maîtrisés.
 
@@ -45,6 +45,8 @@ Le build produit l'atelier HTML fictif. Il ne prouve pas le fonctionnement des c
 - [ ] Le serveur réel configuré en authentification seule utilise une base de test et une clé MFA synthétique ; accès client, chat, médias, CRM, récupération, diffusions et livraison e-mail sont explicitement désactivés. L'entrée propose uniquement la connexion administrateur et le service de messagerie reste indisponible.
 - [ ] Les tests d'assemblage vérifient l'arrêt propre, le drainage de la supervision et une fermeture unique du pool. Ils n'initialisent aucun SMTP.
 - [ ] Les contrôleurs synthétiques vérifient les réponses tardives, changements de session et masquage de page. Cette preuve ne remplace pas une recette visuelle dans de vrais navigateurs.
+
+Avant le premier démarrage, suivre les [diagnostics opérateur](preproduction-preflight.md) : configuration de la seule authentification, Node/Sharp et répertoire de sonde neuf, puis SQL en lecture seule avec confirmation explicite. Le résultat ne certifie pas l’arrêt des autres producteurs, la bonne clé des données existantes, la persistance du média ou l’isolation de l’abonnement.
 
 ## 3. Premier démarrage HTTPS, authentification seule
 

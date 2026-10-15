@@ -4,6 +4,8 @@
 
 **Suivi accessibilité du chat — étape 0.20 :** les [annonces et le focus clavier](chat-accessibility.md), version 0.22.0, branche `feat/chat-accessibility` sur #22, traitent A16 dans le code : réception comptée sans contenu privé, historique et reprises silencieux, conservation ou repli logique du focus après les actions. Un job Chrome séparé exerce les vrais fichiers avec des API synthétiques sur ordinateur et viewport étroit. Les lecteurs d’écran, les systèmes mobiles et les parcours réels de préproduction restent à vérifier. Aucune fusion ni publication.
 
+**Suivi préproduction — étape 0.21 :** le [diagnostic opérateur](preproduction-preflight.md), version 0.23.0, branche `feat/preproduction-preflight` sur #23, sépare configuration d’authentification seule, Node/Sharp et sonde neuve, puis métadonnées SQL en lecture seule. Le rapport est fermé, sans secrets, et ne valide jamais la publication. Aucune migration ni service privé n’est démarré. Les tests ne remplacent pas l’éligibilité de l’abonnement Infomaniak, la vraie isolation, la persistance, l’arrêt du processus, la réception e-mail ou la recette complète. Aucun compte d’hébergement consulté ; aucune publication.
+
 ## Décision de reprise
 
 **Suivi après audit :** le [correctif 0.16.1](chat-stable-history.md) traite A15 dans le code et ajoute les régressions du contrôleur. La recette navigateur reste à réaliser. Le rapport ci-dessous conserve l’état observé sur 0.16 ; prochaine étape de développement : 0.17a supervision.
