@@ -5,13 +5,16 @@ import { isIP } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { inspectDirectoryIdentities, withPrivateDirectory } from "../files/private-directory.mjs";
+import { isOfficialOrigin, SITE_DOMAIN } from "../site.mjs";
 
 const BASENAME = "runtime-database.json";
 const DIAGNOSTIC_BASENAME = "runtime-diagnostic.json";
+const AUTHENTICATION_BASENAME = "runtime-auth.json";
 const MAX_BYTES = 16384;
 const REPOSITORY = fileURLToPath(new URL("../../", import.meta.url));
 const FIELDS = ["format", "version", "host", "port", "database", "user", "password", "privilegeProfile"];
 const DIAGNOSTIC_FIELDS = ["format", "version", "createdAt", "credentials"];
+const AUTHENTICATION_FIELDS = ["format", "version", "origin", "mfaKey"];
 const FLAGS = ["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY"];
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 
@@ -22,7 +25,15 @@ export class RuntimeDatabaseConfigurationError extends Error {
     this.code = "RUNTIME_DATABASE_CONFIGURATION";
   }
 }
+export class RuntimeAuthenticationConfigurationError extends Error {
+  constructor() {
+    super("Private authentication configuration is unavailable.");
+    this.name = "RuntimeAuthenticationConfigurationError";
+    this.code = "RUNTIME_AUTH_CONFIGURATION";
+  }
+}
 const fail = () => { throw new RuntimeDatabaseConfigurationError(); };
+const authenticationFailure = () => { throw new RuntimeAuthenticationConfigurationError(); };
 const inside = (filename, root) => {
   const suffix = path.relative(root, filename);
   return suffix === "" || suffix !== ".." && !suffix.startsWith(`..${path.sep}`) && !path.isAbsolute(suffix);
@@ -30,11 +41,13 @@ const inside = (filename, root) => {
 
 function clearSecrets(value) {
   if (!value || typeof value !== "object") return;
-  const nested = Object.getOwnPropertyDescriptor(value, "credentials")?.value;
-  for (const record of [value, nested]) {
+  const nested = ["credentials", "database", "authentication"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
+  for (const record of [value, ...nested]) {
     if (record && typeof record === "object") {
-      const descriptor = Object.getOwnPropertyDescriptor(record, "password");
-      if (descriptor && Object.hasOwn(descriptor, "value") && descriptor.writable) record.password = "";
+      for (const name of ["password", "mfaKey"]) {
+        const descriptor = Object.getOwnPropertyDescriptor(record, name);
+        if (descriptor && Object.hasOwn(descriptor, "value") && descriptor.writable) record[name] = "";
+      }
     }
   }
 }
@@ -86,6 +99,32 @@ export function validateRuntimeDiagnosticConfiguration(value) {
   } catch { clearSecrets(selected); fail(); }
 }
 
+export function validateRuntimeAuthenticationConfiguration(value) {
+  let selected, decoded;
+  try {
+    if (!value || Object.getPrototypeOf(value) !== Object.prototype
+      || Object.getOwnPropertySymbols(value).length
+      || Object.getOwnPropertyNames(value).sort().join(",") !== [...AUTHENTICATION_FIELDS].sort().join(",")) authenticationFailure();
+    selected = {};
+    for (const name of AUTHENTICATION_FIELDS) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, name);
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) authenticationFailure();
+      selected[name] = descriptor.value;
+    }
+    if (selected.format !== "jessiemessage-runtime-auth" || selected.version !== 1
+      || typeof selected.origin !== "string" || selected.origin.length > 512 || !isOfficialOrigin(selected.origin)
+      || typeof selected.mfaKey !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(selected.mfaKey)) authenticationFailure();
+    const origin = new URL(selected.origin);
+    if (origin.hostname === SITE_DOMAIN || origin.hostname === `www.${SITE_DOMAIN}` || origin.port !== ""
+      || origin.hostname.length > 253 || !origin.hostname.split(".").every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))) authenticationFailure();
+    decoded = Buffer.from(selected.mfaKey, "base64url");
+    if (decoded.length !== 32 || decoded.toString("base64url") !== selected.mfaKey
+      || Buffer.byteLength(JSON.stringify(selected), "utf8") + 1 > MAX_BYTES) authenticationFailure();
+    return selected;
+  } catch { clearSecrets(selected); authenticationFailure(); }
+  finally { decoded?.fill(0); }
+}
+
 export function runtimeDatabaseEnvironment(value) {
   const config = validateRuntimeDatabaseConfiguration(value);
   return {
@@ -133,8 +172,8 @@ async function removeOwned(filename, identity) {
 async function writeConfiguration(directory, config, basename) {
   let contents;
   try {
-    // Only the two typed entry points select these internal, fixed filenames.
-    if (basename !== BASENAME && basename !== DIAGNOSTIC_BASENAME) fail();
+    // Only typed entry points select these internal, fixed filenames.
+    if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME].includes(basename)) fail();
     contents = Buffer.from(`${JSON.stringify(config)}\n`, "utf8");
     if (contents.length > MAX_BYTES) fail();
     return await privateScope(directory, async (scope) => {
@@ -183,34 +222,48 @@ export async function writeRuntimeDiagnosticConfiguration(directory, value) {
   finally { clearSecrets(record); }
 }
 
+export async function writeRuntimeAuthenticationConfiguration(directory, value) {
+  const record = validateRuntimeAuthenticationConfiguration(value);
+  try { return await writeConfiguration(directory, record, AUTHENTICATION_BASENAME); }
+  catch { authenticationFailure(); }
+  finally { clearSecrets(record); }
+}
+
+async function readAnchoredConfiguration(scope, basename, validate) {
+  let result, file, parsed;
+  const bytes = Buffer.alloc(MAX_BYTES + 1);
+  try {
+    try {
+      if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME].includes(basename)) fail();
+      const filename = scope.file(basename);
+      await scope.assertReady();
+      file = await open(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+      const before = await file.stat({ bigint: true }); regular(before);
+      if (before.size < 1n || before.size > BigInt(MAX_BYTES)) fail();
+      let length = 0;
+      while (length < bytes.length) {
+        const read = await file.read(bytes, length, bytes.length - length, length);
+        if (!read.bytesRead) break;
+        length += read.bytesRead;
+      }
+      if (length > MAX_BYTES || BigInt(length) !== before.size) fail();
+      const after = await file.stat({ bigint: true }); regular(after); sameSnapshot(before, after);
+      const visible = await lstat(filename, { bigint: true }); regular(visible); sameSnapshot(after, visible);
+      await scope.assertReady();
+      const decoded = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes.subarray(0, length));
+      parsed = JSON.parse(decoded);
+      result = validate(parsed);
+      return result;
+    } finally { bytes.fill(0); clearSecrets(parsed); await file?.close(); }
+  } catch { clearSecrets(result); fail(); }
+}
+
 async function readConfiguration(directory, basename, validate) {
   let result;
   try {
-    if (basename !== BASENAME && basename !== DIAGNOSTIC_BASENAME) fail();
     return await privateScope(directory, async (scope) => {
-      const filename = scope.file(basename);
-      let file, parsed;
-      const bytes = Buffer.alloc(MAX_BYTES + 1);
-      try {
-        await scope.assertReady();
-        file = await open(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
-        const before = await file.stat({ bigint: true }); regular(before);
-        if (before.size < 1n || before.size > BigInt(MAX_BYTES)) fail();
-        let length = 0;
-        while (length < bytes.length) {
-          const read = await file.read(bytes, length, bytes.length - length, length);
-          if (!read.bytesRead) break;
-          length += read.bytesRead;
-        }
-        if (length > MAX_BYTES || BigInt(length) !== before.size) fail();
-        const after = await file.stat({ bigint: true }); regular(after); sameSnapshot(before, after);
-        const visible = await lstat(filename, { bigint: true }); regular(visible); sameSnapshot(after, visible);
-        await scope.assertReady();
-        const decoded = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes.subarray(0, length));
-        parsed = JSON.parse(decoded);
-        result = validate(parsed);
-        return result;
-      } finally { bytes.fill(0); clearSecrets(parsed); await file?.close(); }
+      result = await readAnchoredConfiguration(scope, basename, validate);
+      return result;
     });
   } catch { clearSecrets(result); fail(); }
 }
@@ -221,4 +274,33 @@ export async function readRuntimeDatabaseConfiguration(directory) {
 
 export async function readRuntimeDiagnosticConfiguration(directory) {
   return readConfiguration(directory, DIAGNOSTIC_BASENAME, validateRuntimeDiagnosticConfiguration);
+}
+
+export async function readRuntimeAuthenticationConfiguration(directory) {
+  try { return await readConfiguration(directory, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration); }
+  catch { authenticationFailure(); }
+}
+
+export async function runtimeAuthenticationConfigurationExists(directory) {
+  try {
+    return await privateScope(directory, async (scope) => {
+      await scope.assertReady();
+      try { await lstat(scope.file(AUTHENTICATION_BASENAME), { bigint: true }); return true; }
+      catch (error) { if (error.code === "ENOENT") return false; throw error; }
+    });
+  } catch { authenticationFailure(); }
+}
+
+export async function readRuntimeAuthenticationBundle(directory) {
+  let database, authentication;
+  try {
+    return await privateScope(directory, async (scope) => {
+      database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
+      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration);
+      return { database, authentication };
+    });
+  } catch {
+    clearSecrets(database); clearSecrets(authentication);
+    authenticationFailure();
+  }
 }
