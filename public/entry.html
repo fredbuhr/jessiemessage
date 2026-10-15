@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#100d12" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="apple-mobile-web-app-title" content="Jessie" />
+    <meta name="application-name" content="JessieMessage" />
+    <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" />
+    <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/entry.css" />
+    <link rel="stylesheet" href="/brand/brand.css" />
+    <title>JessieMessage — Ouvrir mon espace</title>
+    <script type="module" src="/entry.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a class="brand" href="/app" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
+        <button id="language-switch" class="language" type="button" aria-label="Switch to English">EN</button>
+      </header>
+      <main class="entry-main">
+        <section class="intro" aria-labelledby="entry-title">
+          <span class="eyebrow" data-i18n="badge">UN ESPACE À PART</span>
+          <h1 id="entry-title" data-i18n="title">Retrouver notre conversation.</h1>
+          <p class="subtitle" data-i18n="subtitle">Ton espace privé avec Jessie, accessible sur invitation.</p>
+          <p class="invitation-note" data-i18n="invitation">Une nouvelle invitation ? Ouvre directement le lien transmis par Jessie.</p>
+        </section>
+        <section class="entry-panel" aria-labelledby="options-title">
+          <h2 id="options-title" data-i18n="openSpace">Ouvrir mon espace</h2>
+          <p id="entry-status" class="status" role="status" aria-live="polite">Vérification de l’accès…</p>
+          <div id="entry-options" class="entry-options" hidden>
+            <article id="client-card" class="role-card client-card" hidden>
+              <h3 data-i18n="clientRole">Mon accès client</h3>
+              <p id="client-description" class="role-description"></p>
+              <a id="client-link" class="button primary" hidden></a>
+            </article>
+            <article id="administrator-card" class="role-card administrator-card" hidden>
+              <h3 data-i18n="administratorRole">Administration</h3>
+              <p id="administrator-description" class="role-description"></p>
+              <a id="administrator-link" class="button secondary" hidden></a>
+            </article>
+          </div>
+          <button id="entry-retry" class="button secondary retry" type="button" hidden>Vérifier à nouveau</button>
+          <noscript><p class="status">Active JavaScript pour vérifier les accès disponibles. Si tu as une invitation, ouvre le lien transmis par Jessie. Pour toute aide : <a href="mailto:contact@jessiemessage.com">contact@jessiemessage.com</a>.</p></noscript>
+        </section>
+        <section class="install-section" aria-labelledby="install-title">
+          <h2 id="install-title" data-i18n="keepClose">Garder cet espace à portée de main</h2>
+          <button id="install-app" class="button secondary" type="button" hidden>Installer Jessie</button>
+          <p id="install-status" class="small-copy" role="status" aria-live="polite"></p>
+          <details id="install-help"><summary data-i18n="installHelp">Ajouter à l’écran d’accueil</summary><p data-i18n="installIntro">Si ton navigateur propose cette option :</p><ul><li data-i18n="installApple">Sur iPhone ou iPad, ouvre le menu Partager, puis « Sur l’écran d’accueil ».</li><li data-i18n="installAndroid">Sur Android, ouvre le menu du navigateur, puis « Installer l’application » ou « Ajouter à l’écran d’accueil ».</li></ul><p class="small-copy" data-i18n="installLimits">Les intitulés varient selon le navigateur. Tu peux aussi continuer dans le navigateur ; une connexion internet reste nécessaire.</p></details>
+        </section>
+      </main>
+      <footer class="footer"><span data-i18n="footer">JessieMessage · Accès privé sur invitation</span><a href="mailto:contact@jessiemessage.com" data-i18n="contact">Contact</a></footer>
+    </div>
+  </body>
+</html>
