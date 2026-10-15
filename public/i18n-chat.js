@@ -1,5 +1,8 @@
 /* Explicit UI catalogue only. User messages, captions and names are never keys. */
 globalThis.JessieI18n?.register({
+  "Aller à la conversation": "Skip to the conversation",
+  "Nouveau message reçu.": "New message received.",
+  "{count} nouveaux messages reçus.": "{count} new messages received.",
   "Messages privés": "Private messages",
   "Choisis une conversation.": "Choose a conversation.",
   "Diffusions": "Broadcasts",

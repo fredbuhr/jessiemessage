@@ -14,6 +14,8 @@ Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de cl
 
 **Avancement FR/EN — étape 0.19 :** les [interfaces privées](private-ui-languages.md), version 0.21.0, branche `feat/private-ui-languages` sur #21, partagent le choix de langue pour accès, récupération, administration, chat/photos, CRM, diffusions et préparation. A07 est traité dans le code des écrans servis, avec régressions sur les valeurs privées, le DOM stable et la purge au masquage. Les e-mails de service restent en français ; la recette navigateur/accessibilité et les appareils restent ouverts. La préférence `fr`/`en` seule est conservée dans la session du navigateur. Aucune publication ni activation privée.
 
+**Avancement accessibilité du chat — étape 0.20 :** les [annonces et le focus clavier](chat-accessibility.md), version 0.22.0, branche `feat/chat-accessibility` sur #22, traitent A16 dans le code : réception comptée sans contenu privé, historique et reprises silencieux, conservation ou repli logique du focus après les actions. Un job Chrome séparé exerce les vrais fichiers avec des API synthétiques sur ordinateur et viewport étroit. Les lecteurs d’écran, les systèmes mobiles et les parcours réels de préproduction restent à vérifier. Aucune fusion ni publication.
+
 ## État de référence
 
 Dépôt : [fredbuhr/jessiemessage](https://github.com/fredbuhr/jessiemessage). Domaine cible : `jessiemessage.com`. Adresse officielle retenue pour l'expédition, les réponses, le contact et la préparation du compte administrateur initial : **contact@jessiemessage.com**. Hébergement envisagé : site Node.js 24 et MariaDB dédiée chez Infomaniak ; capacités et configuration réelles à confirmer.
@@ -54,7 +56,7 @@ Les outils clients restent réservés à l'administrateur affecté. Les notes so
 - CRM 0.8 : 402 tests généraux réussis et 159 tests réels sans saut sur chacune des deux versions MariaDB ; détail et révision ci-dessous. Les 12 groupes DB sont explicitement ignorés uniquement dans le job général sans base.
 - Les intégrations HTTP/SQL emploient exclusivement des fixtures synthétiques et des bases jetables, avec un compte d'exécution limité aux opérations DML.
 - Aucune livraison SMTP réelle, preuve de majorité externe, migration de base Infomaniak, création de compte réel ou mise en production n'a été effectuée.
-- Aucune nouvelle recette navigateur n'a été exécutée : aucun moteur installé ; un téléchargement antérieur a été refusé par le contrôle automatique d'autorisation. Les tests de modèle et de protocole ne remplacent pas les essais sur iPhone/Android.
+- Les lots antérieurs ne disposaient pas de moteur navigateur local. L’étape 0.20 ajoute Chrome en CI sur des fixtures HTTP synthétiques ; ses résultats exacts sont consignés dans la PR. Aucune recette VoiceOver/NVDA, iPhone/Android réel ou préproduction n’est attestée par ces tests.
 
 ## Risques et travail manquant
 
