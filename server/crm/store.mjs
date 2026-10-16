@@ -1,3 +1,4 @@
+import { hasConsumedInvitation, invitationConsumptionProjection } from "../access/admission.mjs";
 import { ChatStoreError } from "../chat/store.mjs";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
 
@@ -30,7 +31,8 @@ const placeholders = (values) => values.map(() => "?").join(", ");
 const accessState = (client, now) => {
   if (!["pending", "active", "revoked", "suspended", "deleted"].includes(client.status)) state();
   if (client.status !== "active") return client.status;
-  if ([client.email_verified_at, client.age_assured_at, client.access_approved_at].some((value) => value === null || timestamp(value) > now)) return "pending";
+  if (!hasConsumedInvitation(client, now, timestamp) || [client.email_verified_at, client.access_approved_at].some((value) => value === null || timestamp(value) > now)
+    || timestamp(client.access_approved_at) < timestamp(client.invitation_consumed_at)) return "pending";
   return client.access_expires_at !== null && timestamp(client.access_expires_at) <= now ? "expired" : "active";
 };
 const accessDto = (client, now) => ({ state: accessState(client, now), expiresAt: nullableDate(client.access_expires_at) });
@@ -43,7 +45,7 @@ const labelProjection = "l.id, l.kind, l.name, l.normalized_name, l.version, l.c
 const memberCountSql = `(SELECT COUNT(*) FROM crm_memberships mc JOIN conversations cc ON cc.id = mc.conversation_id
   WHERE mc.admin_id = l.owner_admin_id AND mc.label_id = l.id AND cc.admin_id = l.owner_admin_id)`;
 const contactProjection = `c.id, c.client_id, c.created_at, c.closed_at, u.pseudonym, u.status,
-  u.email_verified_at, u.age_assured_at, u.access_approved_at, u.access_expires_at,
+  u.email_verified_at, u.age_assured_at, u.access_approved_at, u.access_expires_at, ${invitationConsumptionProjection("u")},
   p.nickname, p.reminder_at, p.version,
   COALESCE((SELECT MAX(sequence_no) FROM messages WHERE conversation_id = c.id), 0) AS latest_sequence,
   COALESCE((SELECT MAX(event_sequence) FROM chat_events WHERE conversation_id = c.id), 0) AS latest_event_sequence,
@@ -55,7 +57,10 @@ const contactProjection = `c.id, c.client_id, c.created_at, c.closed_at, u.pseud
 const contactFrom = `FROM conversations c JOIN users u ON u.id = c.client_id AND u.role = 'client'
   JOIN client_auth_state ca ON ca.user_id = u.id LEFT JOIN crm_profiles p ON p.admin_id = c.admin_id AND p.conversation_id = c.id`;
 const accessStateSql = `CASE WHEN u.status <> 'active' THEN u.status
-  WHEN u.email_verified_at IS NULL OR u.email_verified_at > ? OR u.age_assured_at IS NULL OR u.age_assured_at > ?
+  WHEN u.email_verified_at IS NULL OR u.email_verified_at > ? OR NOT EXISTS
+    (SELECT 1 FROM invitations admission_invitation WHERE admission_invitation.consumed_by_id = u.id
+      AND admission_invitation.consumed_at IS NOT NULL AND admission_invitation.consumed_at <= ?
+      AND admission_invitation.consumed_at <= u.access_approved_at)
     OR u.access_approved_at IS NULL OR u.access_approved_at > ? THEN 'pending'
   WHEN u.access_expires_at IS NOT NULL AND u.access_expires_at <= ? THEN 'expired' ELSE 'active' END`;
 

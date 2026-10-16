@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAccessStore, AuthAccessStoreError } from "../server/access/store.mjs";
@@ -26,7 +26,7 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
   // Derived only from validated application CREATE TABLE statements, with the
   // same unrelated-table refusal as the migration tests. Reverse order respects
   // foreign keys without temporarily disabling their enforcement.
-  const ownedTables = migrations.map((migration) => /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim())[1]).reverse();
+  const ownedTables = createdMigrationTables(migrations).reverse();
   const allowedTables = [...ownedTables, "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;
@@ -84,6 +84,17 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       await connection.query("ALTER TABLE email_verifications DROP INDEX email_verifications_token_hash");
       try { await assert.rejects(store.assertSchema(), (error) => error.code === "ACCESS_DATABASE_STATE"); }
       finally { await connection.query("ALTER TABLE email_verifications ADD UNIQUE KEY email_verifications_token_hash (token_hash)"); }
+      assert.equal(await store.assertSchema(), true);
+    });
+
+    await t.test("read-only schema checks require the physical manual admission CHECK even with a clean ledger", async () => {
+      for (const clause of ["1", "role <> 'client' OR status <> 'active' OR access_approved_at IS NOT NULL",
+        "role <> 'client' OR status <> 'active' OR (email_verified_at IS NOT NULL AND age_assured_at IS NOT NULL AND access_approved_at IS NOT NULL)"]) {
+        await connection.query(`ALTER TABLE users DROP CONSTRAINT users_active_client_gates,
+          ADD CONSTRAINT users_active_client_gates CHECK (${clause})`);
+        try { await assert.rejects(store.assertSchema(), (error) => error.code === "ACCESS_DATABASE_STATE"); }
+        finally { await connection.query(migrations.at(-1).sql); }
+      }
       assert.equal(await store.assertSchema(), true);
     });
 
@@ -171,7 +182,6 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now }), false);
       const record = await store.getClientLoginRecord(fixture.user.email);
       assert.deepEqual(record, { id: fixture.user.id, role: "client", status: "pending", passwordHash, emailVerified: true, credentialVersion: 1 });
-      assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), false);
       const { accepted, session } = await login(fixture);
       assert.equal(accepted, true);
       const connected = await lookup(session);
@@ -185,16 +195,15 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal(row.status, "pending"); assert.equal(row.age_assured_at, null); assert.equal(row.access_approved_at, null);
     });
 
-    await t.test("approval starts the independent access duration and creates one conversation atomically, with both gates required", async () => {
+    await t.test("manual approval requires verified email and the consumed invitation, preserves absent age evidence and creates one conversation atomically", async () => {
       const fixture = await registered({}, { expiresAt: now + 1000, accessDays: 2 });
-      await connection.query("UPDATE users SET age_assured_at = ? WHERE id = ?", [sqlDate(now), fixture.user.id]);
-      assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), false, "age alone is insufficient");
+      assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), false, "the invitation alone does not verify email");
       await verify(fixture);
       const approvedAt = now + 300000;
       const results = await Promise.all([store.approveClient(admin.tokenHash, fixture.user.id, { now: approvedAt }), store.approveClient(admin.tokenHash, fixture.user.id, { now: approvedAt })]);
       assert.equal(results.filter(Boolean).length, 1);
-      const user = (await connection.query("SELECT status, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0];
-      assert.equal(user.status, "active");
+      const user = (await connection.query("SELECT status, age_assured_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+      assert.equal(user.status, "active"); assert.equal(user.age_assured_at, null);
       assert.equal(user.access_approved_at, sqlDate(approvedAt));
       assert.equal(user.access_expires_at, sqlDate(approvedAt + 2 * 86400000));
       const conversations = await connection.query("SELECT admin_id FROM conversations WHERE client_id = ?", [fixture.user.id]);
@@ -206,23 +215,41 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal((await lookup(session, approvedAt + 2 * 86400000)).access.state, "expired");
 
       const atomic = await registered(); await verify(atomic);
-      await connection.query("UPDATE users SET age_assured_at = ? WHERE id = ?", [sqlDate(now), atomic.user.id]);
-      await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [id(), atomic.user.id, admin.id, sqlDate(now)]);
+            await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [id(), atomic.user.id, admin.id, sqlDate(now)]);
       await assert.rejects(store.approveClient(admin.tokenHash, atomic.user.id, { now }), (error) => error.code === "ACCESS_DATABASE_OPERATION");
       const unchanged = (await connection.query("SELECT status, access_approved_at, access_expires_at FROM users WHERE id = ?", [atomic.user.id]))[0];
       assert.equal(unchanged.status, "pending"); assert.equal(unchanged.access_approved_at, null); assert.equal(unchanged.access_expires_at, null);
     });
 
+    await t.test("approval refuses a future invitation consumption without changing the pending account", async () => {
+      const fixture = await registered(); await verify(fixture);
+      await connection.query("UPDATE invitations SET consumed_at = ? WHERE id = ?", [sqlDate(now + 1000), fixture.invite.id]);
+      assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), false);
+      const row = (await connection.query("SELECT status, access_approved_at, age_assured_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+      assert.equal(row.status, "pending"); assert.equal(row.access_approved_at, null); assert.equal(row.age_assured_at, null);
+      assert.equal((await connection.query("SELECT id FROM conversations WHERE client_id = ?", [fixture.user.id])).length, 0);
+    });
+
+    await t.test("a manually altered active account without its consumed invitation cannot keep a session, renew or be approved", async () => {
+      const fixture = await registered(); await verify(fixture);
+      const { session } = await login(fixture);
+      await connection.query("UPDATE invitations SET consumed_at = NULL, consumed_by_id = NULL WHERE id = ?", [fixture.invite.id]);
+      assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), false);
+      await connection.query("UPDATE users SET status = 'active', access_approved_at = ?, access_expires_at = ? WHERE id = ?", [sqlDate(now), sqlDate(now + 86400000), fixture.user.id]);
+      assert.equal(await lookup(session), null);
+      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { now, expectedExpiresAt: now + 86400000, accessDays: 1 }), (error) => error.code === "ACCESS_PREREQUISITES");
+      assert.equal((await connection.query("SELECT age_assured_at FROM users WHERE id = ?", [fixture.user.id]))[0].age_assured_at, null);
+    });
+
     await t.test("unlimited access stays explicit; administrator lists expose only bounded review metadata", async () => {
       const fixture = await registered({}, { accessDays: null }); await verify(fixture);
-      await connection.query("UPDATE users SET age_assured_at = ? WHERE id = ?", [sqlDate(now), fixture.user.id]);
       assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), true);
       const session = (await login(fixture)).session;
       assert.equal((await lookup(session)).access.expiresAt, null);
       const { clients } = await store.listClients(admin.tokenHash, { now });
       const metadata = clients.find((item) => item.id === fixture.user.id.toString("hex"));
       assert.deepEqual(metadata, { id: fixture.user.id.toString("hex"), createdAt: now, pseudonym: fixture.user.pseudonym, email: fixture.user.email,
-        status: "active", emailVerified: true, ageAssured: true, approved: true, accessExpiresAt: null });
+        status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, accessExpiresAt: null });
       assert.ok(clients.every((item) => !Object.hasOwn(item, "passwordHash") && !Object.hasOwn(item, "tokenHash")));
       assert.equal(await store.listClients(session.tokenHash, { now }), null);
     });
@@ -295,7 +322,8 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       const fixture = await registered(); await verify(fixture);
       const approvedAt = now - 3 * 86400000;
       await connection.query(`UPDATE users SET status = 'active', created_at = ?, email_verified_at = ?, age_assured_at = ?, access_approved_at = ?, access_expires_at = ?
-        WHERE id = ?`, [sqlDate(approvedAt - 1000), sqlDate(approvedAt), sqlDate(approvedAt), sqlDate(approvedAt), sqlDate(expiresAt), fixture.user.id]);
+        WHERE id = ?`, [sqlDate(approvedAt - 1000), sqlDate(approvedAt), null, sqlDate(approvedAt), sqlDate(expiresAt), fixture.user.id]);
+      await connection.query("UPDATE invitations SET created_at = ?, consumed_at = ? WHERE id = ?", [sqlDate(approvedAt - 1000), sqlDate(approvedAt), fixture.invite.id]);
       const conversationId = id();
       await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [conversationId, fixture.user.id, admin.id, sqlDate(approvedAt)]);
       const { accepted, session } = await login(fixture); assert.equal(accepted, true);
@@ -344,7 +372,7 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
         await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_PREREQUISITES");
       }
       await connection.query("UPDATE users SET status = 'active' WHERE id = ?", [fixture.user.id]);
-      for (const column of ["email_verified_at", "age_assured_at", "access_approved_at"]) {
+      for (const column of ["email_verified_at", "access_approved_at"]) {
         const original = (await connection.query(`SELECT ${column} AS value FROM users WHERE id = ?`, [fixture.user.id]))[0].value;
         await connection.query(`UPDATE users SET ${column} = ? WHERE id = ?`, [sqlDate(now + 1000), fixture.user.id]);
         try { await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_PREREQUISITES"); }

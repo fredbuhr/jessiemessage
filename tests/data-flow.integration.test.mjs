@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { withClientData, DataStoreError } from "../server/data/store.mjs";
 import { DATA_POLICY } from "../server/data/policy.mjs";
@@ -27,11 +27,8 @@ test("offline client content reader isolates two real MariaDB clients in one rea
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup accepts only explicit unqualified CREATE TABLE migrations"); return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   assert.deepEqual([...DATA_POLICY.map((entry) => entry.table)].sort(), allowedTables.filter((table) => !["schema_migrations", "migration_probe"].includes(table)).sort());
   const connection = await connectDatabase(); let pool;
   async function cleanup() {

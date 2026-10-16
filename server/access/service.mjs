@@ -1,3 +1,4 @@
+import { CLIENT_ADMISSION_POLICY } from "./admission.mjs";
 import { createHmac } from "node:crypto";
 import { canonicalEmail } from "../auth/config.mjs";
 import { AuthError } from "../auth/service.mjs";
@@ -38,12 +39,14 @@ function invitationDTO(row) {
 }
 function clientDTO(row) {
   if (!row || !["pending", "active", "suspended", "revoked", "deleted"].includes(row.status)
-    || [row.emailVerified, row.ageAssured, row.approved].some((value) => typeof value !== "boolean")) throw unavailable();
+    || row.admissionPolicy !== CLIENT_ADMISSION_POLICY
+    || [row.emailVerified, row.ageAssured, row.approved, row.invitationConsumed].some((value) => typeof value !== "boolean")) throw unavailable();
   try {
     if (canonicalPseudonym(row.pseudonym) !== row.pseudonym || canonicalEmail(row.email) !== row.email) throw unavailable();
   } catch { throw unavailable(); }
   return { id: storedId(row.id), createdAt: storedInstant(row.createdAt), pseudonym: row.pseudonym, email: row.email,
-    status: row.status, emailVerified: row.emailVerified, ageAssured: row.ageAssured, approved: row.approved,
+    status: row.status, admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed: row.invitationConsumed,
+    emailVerified: row.emailVerified, ageAssured: row.ageAssured, approved: row.approved,
     accessExpiresAt: nullableInstant(row.accessExpiresAt) };
 }
 function pageDTO(result, kind, { limit, position }, rebuild) {

@@ -1,12 +1,15 @@
 # Coffre privé des secrets — étape 0.25
 
+**Lot 0.26 extension:** the default AUTH coffre still has three files. Once `runtime-messaging.json` is prepared, use `--profile messaging` to create a four-file v2 coffre, covering the durable mail/chat keys and SMTP configuration as well. New code refuses a three-file AUTH creation when the messaging file already exists. Existing v1 coffres remain intact and readable. See the [current operator order](manual-invitation-runtime.md); neither profile dumps SQL.
+
+
 La connexion personnelle de **Jess** avec TOTP a été confirmée le 15 octobre 2026 à 22:33:37 UTC. La correction d’affichage de la [PR #37](https://github.com/fredbuhr/jessiemessage/pull/37) est déployée sur la recette : son JavaScript HTTPS correspond à `d4c1b95`, et les contrôles de 22:46 ont confirmé 41 requêtes / 163 assertions ainsi que le maintien du MFA, d’une session active et des huit codes de secours inutilisés. La validation visuelle dans le navigateur personnel du propriétaire reste distincte.
 
 Ce lot prépare un **coffre des secrets** pour permettre leur conservation hors hébergement. Il ne change pas le service actif, les identifiants, les clés, les comptes ou les fonctions activées. Version applicative **0.24.0**, étape **0.25**, PR empilée sans fusion.
 
 ## Contenu et limites
 
-Le coffre contient exclusivement les trois fichiers ci-dessous, leur nom, leur contenu UTF-8 et leur empreinte SHA-256, avec le format, la version et la date du coffre. Ces informations sont toutes à l’intérieur du chiffrement.
+Le coffre AUTH contient les trois fichiers ci-dessous, leur nom, leur contenu UTF-8 et leur empreinte SHA-256, avec le format, la version et la date du coffre. Ces informations sont toutes à l’intérieur du chiffrement.
 
 | Fichier | Rôle |
 | --- | --- |
@@ -38,7 +41,7 @@ L’outil tient un même descripteur de répertoire privé pendant la lecture, l
 
 ## Conservation et vérification hors hébergement
 
-La [documentation Infomaniak](https://www.infomaniak.com/fr/support/faq/446/comprendre-les-protocoles-de-transfert-web) réserve SSH/SFTP à l’environnement Node.js. Dans le Manager observé, Web FTP et les deux utilisateurs existants concernent Apache/PHP ; aucun utilisateur Node.js n’existe encore. Le formulaire Node.js propose un nom et un nouveau mot de passe, sans restriction de dossier visible. Un nouvel accès donnerait donc accès à l’environnement Node.js : sa création et le choix personnel du mot de passe restent à effectuer explicitement par le propriétaire, avant tout transfert. Aucun compte n’est créé par ce lot.
+La [documentation Infomaniak](https://www.infomaniak.com/fr/support/faq/446/comprendre-les-protocoles-de-transfert-web) réserve SSH/SFTP à l’environnement Node.js. Le compte Node.js SSH/SFTP a depuis été créé personnellement et son activation confirmée dans le Manager. Sa connexion depuis le PC reste à vérifier ; le propriétaire signale un refus du mot de passe. Ne pas recréer ce compte ni modifier les autres comptes. Les mots de passe restent saisis personnellement.
 
 1. Télécharger uniquement le fichier `.json.gpg` par SFTP privé vers le PC du propriétaire. Ne pas créer de route HTTP publique, ni envoyer les configurations ou le coffre dans le chat.
 2. Sur Windows, comparer son SHA-256 avec le résultat du serveur :
@@ -54,4 +57,4 @@ Une copie de ce coffre ne doit pas servir à démarrer automatiquement un clone 
 
 ## État de recette
 
-La création du coffre réel, son téléchargement et son déchiffrement personnel restent en attente de la saisie du propriétaire. Les essais automatisés et hébergés doivent utiliser exclusivement des fichiers et phrases synthétiques ; leurs résultats exacts sont consignés dans la demande de fusion de ce lot. L’installation d’une commande ne constitue pas une preuve de sauvegarde. L’étape 0.25 reste ouverte jusqu’à cette vérification indépendante, la recette du correctif dans le navigateur personnel et les contrôles d’installation PWA.
+Le coffre AUTH réel a été créé et son empreinte contrôlée côté serveur le 15 octobre. Son téléchargement et son déchiffrement local personnel restent à vérifier. La future préparation messaging exige un nouveau coffre à quatre fichiers. Les essais automatisés et hébergés doivent utiliser exclusivement des fichiers et phrases synthétiques ; leurs résultats exacts sont consignés dans la demande de fusion de ce lot. L’installation d’une commande ne constitue pas une preuve de sauvegarde. L’étape 0.25 reste ouverte jusqu’à cette vérification indépendante, la recette du correctif dans le navigateur personnel et les contrôles d’installation PWA.

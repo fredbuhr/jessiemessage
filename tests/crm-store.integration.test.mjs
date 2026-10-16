@@ -1,8 +1,9 @@
+import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 import { createCrmStore, CrmStoreError } from "../server/crm/store.mjs";
@@ -20,11 +21,8 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host), "integration tests require loopback");
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "runtime DML credentials must be separately provisioned");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
-  const ownedTables = migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup only accepts reviewed single-table migrations"); return match[1];
-  }).reverse();
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const ownedTables = createdMigrationTables(migrations).reverse();
   const allowedTables = [...ownedTables, "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool, fixtureNumber = 0;
   async function reset() {
@@ -42,9 +40,10 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash, email_verified_at,
         age_assured_at, access_approved_at, created_at, updated_at) VALUES (?, ?, 'active', ?, ?, 'synthetic-not-a-password', ?, ?, ?, ?, ?)`,
       [result.id, role, result.pseudonym, result.email, role === "client" ? sqlDate(now) : null,
-        role === "client" ? sqlDate(now) : null, role === "client" ? sqlDate(now) : null, sqlDate(now), sqlDate(now)]);
+        null, role === "client" ? sqlDate(now) : null, sqlDate(now), sqlDate(now)]);
       if (role === "admin") await connection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, 'synthetic-encrypted-secret', 1, 1, ?)", [result.id, sqlDate(now)]);
       else await connection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [result.id, sqlDate(now)]);
+      if (role === "client") await consumeSyntheticInvitation(connection, result.id, now);
       await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [result.sessionId, result.id, result.tokenHash, sqlDate(now), sqlDate(now + 8 * 3600000)]);
       if (role === "admin") await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [result.sessionId, sqlDate(now), sqlDate(now)]);
       else await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)", [result.sessionId, sqlDate(now)]);

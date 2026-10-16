@@ -17,6 +17,9 @@ const sourceNames = ["runtime-auth.json", "admin-setup.json", "runtime-database.
 const unavailable = (error) => /^PRIVATE_SECRETS_[A-Z]+$/.test(error.code) && error.message === error.code;
 const authentication = () => ({ format: "jessiemessage-runtime-auth", version: 1, origin: "https://recette.jessiemessage.com", mfaKey: Buffer.alloc(32, 31).toString("base64url") });
 const database = () => ({ format: "jessiemessage-runtime-database", version: 1, host: "sql.example.invalid", port: "3306", database: "synthetic_database", user: "synthetic_runtime", password: marker, privilegeProfile: "strict" });
+const messaging = () => ({ format: "jessiemessage-runtime-messaging", version: 1, origin: authentication().origin,
+  mailKey: Buffer.alloc(32, 51).toString("base64url"), messageKey: Buffer.alloc(32, 52).toString("base64url"),
+  smtpHost: "smtp.example.invalid", smtpPort: "465", smtpUser: "contact@jessiemessage.com", smtpPassword: `${marker}_smtp` });
 const setup = () => ({ schema: "jessiemessage-admin-setup-v1", createdAt: "2026-10-15T22:00:00.000Z", email: "contact@jessiemessage.com", pseudonym: "Jess", totp: { issuer: "JessieMessage", algorithm: "SHA1", digits: 6, period: 30, secret: "A".repeat(32), uri: "otpauth://totp/synthetic" }, recoveryCodes: Array.from({ length: 8 }, (_, index) => Array(8).fill(index.toString(16).repeat(4)).join("-")), instructions: ["Synthetic fixture only"] });
 const supported = process.platform === "linux" && fs.existsSync("/proc/self/fd") && fs.existsSync("/usr/bin/gpg");
 
@@ -47,6 +50,63 @@ test("private secrets options only allow a canonical external directory and a sa
 });
 
 test("Linux CI requires the real GPG and anchored path tests", { skip: !process.env.CI || process.platform !== "linux" }, () => assert.equal(supported, true));
+
+test("coffre scope is explicit and rejects unknown or accessor profiles", async () => {
+  const args = ["--private-directory", path.resolve(repository, "../private-example"), "--output", "messaging.json.gpg"];
+  for (const profile of ["auth", "messaging"]) assert.deepEqual(parseArguments([...args, "--profile", profile]),
+    { privateDirectory: args[1], output: args[3], profile });
+  for (const profile of ["all", "", "0", "messaging\n"]) assert.throws(() => parseArguments([...args, "--profile", profile]), unavailable);
+  assert.throws(() => parseArguments(["--profile", "messaging", "--output", "file.json.gpg"]), unavailable);
+  let read = false;
+  const selected = { privateDirectory: args[1], output: args[3] };
+  Object.defineProperty(selected, "profile", { enumerable: true, get() { read = true; throw new Error(marker); } });
+  await assert.rejects(check(selected), unavailable); assert.equal(read, false);
+});
+
+test("messaging coffre requires its fourth private source and metadata check cannot silently omit prepared keys", { skip: !supported }, async (t) => {
+  const f = await fixture(t), selected = { ...f.selected, profile: "messaging" };
+  await assert.rejects(check(selected), unavailable);
+  await writeFile(path.join(f.directory, "runtime-messaging.json"), JSON.stringify(messaging()) + "\n", { mode: 0o600 });
+  await assert.rejects(check(f.selected), unavailable);
+  await assert.rejects(run(f.selected, password), unavailable);
+  let reads = 0;
+  const report = await hookOpen(async (original, args) => {
+    const handle = await original(...args);
+    if ([...sourceNames, "runtime-messaging.json"].includes(path.basename(String(args[0])))) handle.read = async () => { reads += 1; throw new Error(marker); };
+    return handle;
+  }, () => check(selected));
+  assert.equal(reads, 0); assert.equal(report.files, 4); assert.equal(report.sourceContentsRead, false);
+  await chmod(path.join(f.directory, "runtime-messaging.json"), 0o640);
+  await assert.rejects(check(selected), unavailable);
+  await assert.rejects(lstat(path.join(f.directory, f.selected.output)), { code: "ENOENT" });
+});
+
+test("messaging coffre includes recoverable SMTP and chat secrets while old AUTH archives remain readable", { skip: !supported }, async (t) => {
+  const f = await fixture(t);
+  await run(f.selected, password);
+  const previous = await readFile(path.join(f.directory, f.selected.output));
+  const content = JSON.stringify(messaging()) + "\n";
+  await writeFile(path.join(f.directory, "runtime-messaging.json"), content, { mode: 0o600 });
+  const selected = { ...f.selected, output: "synthetic-messaging.json.gpg", profile: "messaging" };
+  const result = await run(selected, password), ciphertext = await readFile(path.join(f.directory, selected.output));
+  assert.equal(result.files, 4); assert.equal(result.verified, true);
+  for (const secret of [messaging().smtpPassword, messaging().mailKey, messaging().messageKey]) {
+    assert.equal(ciphertext.includes(Buffer.from(secret)), false); assert.equal(JSON.stringify(result).includes(secret), false);
+  }
+  const verification = { ...selected, output: "verification-never-written.json.gpg" };
+  assert.deepEqual(await verifyCiphertext(verification, ciphertext, password), { verified: true, files: 4, secretsOnly: true, databaseBackup: false });
+  await assert.rejects(verifyCiphertext({ ...verification, profile: "auth" }, ciphertext, password), unavailable);
+  assert.deepEqual(await verifyCiphertext({ ...verification, profile: "auth" }, previous, password), { verified: true, files: 3, secretsOnly: true, databaseBackup: false });
+  assert.deepEqual(await readFile(path.join(f.directory, f.selected.output)), previous);
+  assert.equal(await readFile(path.join(f.directory, "runtime-messaging.json"), "utf8"), content);
+});
+
+test("messaging coffre refuses malformed SMTP configuration without publishing or exposing it", { skip: !supported }, async (t) => {
+  const f = await fixture(t), selected = { ...f.selected, profile: "messaging" };
+  await writeFile(path.join(f.directory, "runtime-messaging.json"), JSON.stringify({ ...messaging(), smtpPort: "25", mailKey: "invalid" }), { mode: 0o600 });
+  await assert.rejects(run(selected, password), (error) => unavailable(error) && !String(error).includes(marker));
+  await assert.rejects(lstat(path.join(f.directory, selected.output)), { code: "ENOENT" });
+});
 
 test("check reads only source metadata, creates nothing and exposes no content", { skip: !supported }, async (t) => {
   const f = await fixture(t); let sourceReads = 0, opened = 0, closed = 0;

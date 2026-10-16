@@ -6,7 +6,7 @@ const now = 1800000000000;
 const admin = (extra = {}) => ({ user: { id: "a".repeat(32), role: "admin", pseudonym: "Jessie" }, csrf: "x".repeat(43), expiresAt: now + 3600000, ...extra });
 const summary = (extra = {}) => ({ contactEmail: CONTACT_EMAIL, mail: { configured: true, sender: CONTACT_EMAIL, replyTo: CONTACT_EMAIL },
   features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: true, broadcasts: true },
-  checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" }, ...extra });
+  checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" }, ...extra });
 const proof = (extra = {}) => ({ status: "verified", checkedAt: now, scope: "smtp_authentication", delivery: "not_checked", ...extra });
 function connected() {
   const state = createReadinessState(); const ticket = clearReadiness(state, { visible: true });
@@ -80,7 +80,7 @@ test("SMTP authentication success never becomes a delivery or publication result
   const state = connected(); const ticket = beginSmtpCheck(state, now);
   assert.equal(acceptSmtpProof(state, ticket, proof({ hostname: "private", delivered: true, readyForProduction: true })), true);
   assert.deepEqual(state.proof, proof()); assert.equal(state.summary.checks.smtpDelivery, "not_checked");
-  assert.equal(state.summary.checks.ageAssurance, "pending"); assert.equal(state.summary.checks.deviceAcceptance, "pending");
+  assert.equal(state.summary.checks.ageAssurance, "not_integrated"); assert.equal(state.summary.checks.deviceAcceptance, "pending");
 });
 test("incorrect or expanded SMTP proof scopes cannot render a success", () => {
   for (const input of [proof({ scope: "smtp_delivery" }), proof({ delivery: "delivered" }), proof({ status: "ready" }), proof({ checkedAt: NaN }), proof({ checkedAt: -1 }), proof({ checkedAt: "1800000000000" })]) {
@@ -121,6 +121,15 @@ test("summary rejects a changed contact identity, guessed readiness or malformed
     summary({ checks: { ageAssurance: "verified", smtpDelivery: "delivered", deviceAcceptance: "passed" } }), summary({ features: { clientAccess: "true" } })];
   for (const input of inputs) assert.throws(() => parseReadinessSummary(input), /invalid_readiness_summary/);
   const parsed = parseReadinessSummary(summary()); assert.equal(parsed.features.photos, false); assert.equal(Object.hasOwn(parsed, "ready"), false);
+});
+
+test("readiness requires the explicit manual admission policy without inventing an integrated age provider", () => {
+  const parsed = parseReadinessSummary(summary());
+  assert.equal(parsed.checks.admissionPolicy, "manual_invitation"); assert.equal(parsed.checks.ageAssurance, "not_integrated");
+  for (const changes of [{ admissionPolicy: undefined }, { admissionPolicy: "unknown" }, { ageAssurance: "pending" }, { ageAssurance: "verified" }]) {
+    const input = summary(); Object.assign(input.checks, changes);
+    assert.throws(() => parseReadinessSummary(input), /invalid_readiness_summary/);
+  }
 });
 
 const operations = () => ({ status: "ready", database: { state: "ok", checkedAt: now },

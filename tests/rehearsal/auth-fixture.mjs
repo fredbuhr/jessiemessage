@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { connectDatabase, databaseOptions } from "../../server/db/connection.mjs";
 import { runtimeDatabaseOptions } from "../../server/db/runtime.mjs";
-import { applyMigrations, loadMigrations, validateMigrationPlan } from "../../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations, validateMigrationPlan } from "../../server/db/migrations.mjs";
 import { createConfiguredServer } from "../../server/index.mjs";
 import { createShutdown } from "../../server/lifecycle.mjs";
 import { createAuthStore } from "../../server/auth/store.mjs";
@@ -144,12 +144,8 @@ export async function createAuthenticationFixture() {
   try {
     const migrations = await loadMigrations();
     validateMigrationPlan(migrations);
-    if (migrations.length !== 27) fail();
-    const tables = migrations.map((migration) => {
-      const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-      if (!match) fail();
-      return match[1];
-    });
+    if (migrations.length !== 28) fail();
+    const tables = createdMigrationTables(migrations);
     if (new Set(tables).size !== tables.length) fail();
     allowedTables = [...tables.reverse(), "schema_migrations"];
     connection = await connectDatabase(env);

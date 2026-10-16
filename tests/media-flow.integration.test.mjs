@@ -1,3 +1,4 @@
+import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
@@ -7,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
@@ -53,12 +54,8 @@ test("real HTTP private media uses normalized encrypted files and current delive
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 27);
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
-    return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  assert.equal(migrations.length, 28);
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;
   let server;
@@ -134,14 +131,15 @@ test("real HTTP private media uses normalized encrypted files and current delive
     const clientHash = await hashPassword(clientPassword);
     const clients = ["a", "b", "c", "d", "e"].map((suffix) => ({ id: randomBytes(16), conversationId: randomBytes(16),
       email: `media-flow-client-${suffix}@example.invalid`, pseudonym: `Synthetic media client ${suffix.toUpperCase()}` }));
-    // Synthetic independently assured fixtures exercise authorization; this is not an age-proof API.
-    // No invitation, mail delivery, private portrait or real account is created.
+    // Synthetic manually admitted clients exercise authorization with no age stamp.
+    // No mail delivery, private portrait or real account is created.
     for (const client of clients) {
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash,
         email_verified_at, age_assured_at, access_approved_at, created_at, updated_at)
         VALUES (?, 'client', 'active', ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [client.id, client.pseudonym, client.email, clientHash, ...Array(5).fill(sqlDate(now))]);
+      [client.id, client.pseudonym, client.email, clientHash, sqlDate(now), null, sqlDate(now), sqlDate(now), sqlDate(now)]);
       await connection.query("INSERT INTO client_auth_state (user_id, age_declared_at) VALUES (?, ?)", [client.id, sqlDate(now)]);
+      await consumeSyntheticInvitation(connection, client.id, now);
       await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)",
         [client.conversationId, client.id, adminId, sqlDate(now)]);
     }

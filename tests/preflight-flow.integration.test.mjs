@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { DATABASE_CHECK_NAMES, inspectDatabase } from "../server/preflight/database.mjs";
@@ -42,11 +42,8 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
   assert.ok(![options.user, preflightUser, process.env.JESSIEMESSAGE_RUNTIME_DB_USER].includes(sharedUser), "all fixture identities must be distinct");
   const sharedEnv = { ...process.env, JESSIEMESSAGE_RUNTIME_DB_USER: sharedUser,
     JESSIEMESSAGE_RUNTIME_DB_PASSWORD: sharedPassword, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "infomaniak-shared" };
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
-  const appTables = migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup accepts only explicit unqualified CREATE TABLE migrations"); return match[1];
-  });
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const appTables = createdMigrationTables(migrations);
   const allowedTables = [...appTables].reverse().concat("migration_probe", "preflight_ddl_probe", "schema_migrations");
   const connection = await connectDatabase();
   async function cleanup() {
@@ -124,7 +121,7 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
       let runtime;
       try {
         runtime = await pool.getConnection(); await runtime.beginTransaction();
-        assert.equal(Number((await runtime.query("SELECT COUNT(*) AS total FROM schema_migrations"))[0].total), 27);
+        assert.equal(Number((await runtime.query("SELECT COUNT(*) AS total FROM schema_migrations"))[0].total), 28);
         for (const sql of [
           "UPDATE schema_migrations SET attempts = attempts WHERE version = 1",
           "DELETE FROM schema_migrations WHERE version = 0",
@@ -313,10 +310,10 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
         assert.equal(Number((await runtime.query("SELECT attempts FROM auth_rate_limits WHERE bucket_hash = ?", [bucket]))[0].attempts), 2);
         assert.equal((await runtime.query("DELETE FROM auth_rate_limits WHERE bucket_hash = ?", [bucket])).affectedRows, 1);
         assert.equal((await runtime.query(`INSERT INTO schema_migrations (version, name, checksum, state, attempts, finished_at)
-          VALUES (28, 'synthetic_shared_probe', ?, 'applied', 1, '2026-10-15 00:00:00')`, ["0".repeat(64)])).affectedRows, 1);
-        assert.equal((await runtime.query("UPDATE schema_migrations SET attempts = 2 WHERE version = 28")).affectedRows, 1);
-        assert.equal(Number((await runtime.query("SELECT attempts FROM schema_migrations WHERE version = 28"))[0].attempts), 2);
-        assert.equal((await runtime.query("DELETE FROM schema_migrations WHERE version = 28")).affectedRows, 1);
+          VALUES (29, 'synthetic_shared_probe', ?, 'applied', 1, '2026-10-15 00:00:00')`, ["0".repeat(64)])).affectedRows, 1);
+        assert.equal((await runtime.query("UPDATE schema_migrations SET attempts = 2 WHERE version = 29")).affectedRows, 1);
+        assert.equal(Number((await runtime.query("SELECT attempts FROM schema_migrations WHERE version = 29"))[0].attempts), 2);
+        assert.equal((await runtime.query("DELETE FROM schema_migrations WHERE version = 29")).affectedRows, 1);
       } finally {
         try { if (runtime) await runtime.rollback(); }
         finally { if (runtime) runtime.release(); await pool.end(); }

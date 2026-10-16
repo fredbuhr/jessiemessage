@@ -67,7 +67,7 @@ const operations = () => ({ status: "unavailable", database: { state: "stale", c
   ] });
 const summary = () => ({ contactEmail: "contact@jessiemessage.com", mail: { configured: true, sender: "private-sender@example.invalid", replyTo: "private-sender@example.invalid" },
   features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: true },
-  checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" }, operations: operations() });
+  checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" }, operations: operations() });
 async function harness({ input = summary(), language = "fr", smtp = () => response({ status: "verified", scope: "smtp_authentication", delivery: "not_checked", checkedAt: now + 5000 }) } = {}) {
   const { container, nodes } = parse(), documentEvents = new Map(), windowEvents = new Map(), calls = [], storage = new Map([["jessiemessage.language", language]]), writes = [], timers = new Map(), redirects = [];
   const add = (map, name, callback) => { if (!map.has(name)) map.set(name, []); map.get(name).push(callback); };
@@ -111,6 +111,9 @@ test("readiness static sources cover the whole page and preserve the scope of it
   assert.ok(sources.length > 30); for (const source of sources) assert.equal(typeof dictionaries[source], "string", source);
   assert.match(dictionaries["Cette vérification contrôle la connexion chiffrée et l’authentification. Elle n’envoie aucun e-mail et ne confirme pas la réception des invitations ou des liens de récupération."], /sends no email and does not confirm receipt/);
   assert.match(dictionaries["Instantané global de ce processus serveur. Les compteurs de traitement repartent à zéro à son redémarrage. Ces mesures ne certifient pas la mise en production ni la réception des messages."], /do not certify production readiness or message receipt/);
+  assert.equal(dictionaries["Admission manuelle"], "Manual admission");
+  assert.match(dictionaries["Vérifier une inscription sur invitation, l’e-mail puis l’approbation manuelle par Jess."], /Jess’s manual approval/);
+  assert.doesNotMatch(html, /Contrôle de majorité|Activer et vérifier le parcours de contrôle/);
   assert.ok(html.indexOf('src="/i18n.js"') < html.indexOf('src="/i18n-readiness.js"'));
   assert.ok(html.indexOf('src="/i18n-readiness.js"') < html.indexOf('src="/readiness.js"'));
   assert.match(html, /button[^>]+data-jm-language/); assert.match(html, /href="\/i18n.css"/);

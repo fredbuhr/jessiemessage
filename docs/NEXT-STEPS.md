@@ -1,5 +1,8 @@
 # JessieMessage — bilan et chemin vers le pilote
 
+**Current source of truth — 16 October 2026:** [manual admission and minimal private runtime, lot 0.26](manual-invitation-runtime.md). The entries below are historical observations of their revisions. The new candidate is not yet activated on hosting; stage 0.25 remains open. Do not infer current deployment or a new KYC-provider requirement from an older entry.
+
+
 Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de client, photographie personnelle ni configuration de production.
 
 **Reprise après interruption de la discussion :** voir l’[audit du 15 octobre](AUDIT-REPRISE-2026-10-15.md), réalisé sur le HEAD final 0.16 `0ecb31e`. Il confirme les tests/CI et la pile de 15 PR non fusionnées, puis la PR documentaire #16. Le [correctif 0.16.1](chat-stable-history.md) traite le remplacement des nœuds à chaque polling (A15), avec conservation des contrôles/photos et rechargement après masquage. Ce correctif est suivi du lot **0.17a supervision**, décrit ci-dessous. La recette navigateur et les autres constats restent ouverts ; aucune publication n’est effectuée par ce lot.

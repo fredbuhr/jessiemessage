@@ -1,11 +1,14 @@
 # Security and privacy launch gates
 
+**Current admission policy:** see [lot 0.26](manual-invitation-runtime.md). Client access is restricted to a consumed invitation, verified email and explicit approval by Jess, with current session, expiration and ownership checks. Manual admission does not populate an independent age proof. Historical version sections below describe their original scope, not a new identity-provider implementation requirement.
+
+
 Public source code is compatible with a secure product only if every release handles secrets and data correctly. Treat all externally submitted data as untrusted.
 
 ## Must be true before invite links are activated
 
 - Strong, hashed, one-time invitation tokens with expiry and revocation.
-- Separate verification of invitation eligibility, email ownership and lawful adulthood.
+- Consumed personal invitation, verified email and explicit administrator admission; no fabricated independent age proof.
 - No real image exchange until the applicable age verification and hosting conditions are satisfied.
 - Administrator two-factor authentication.
 - Secure, HttpOnly, SameSite session cookies; CSRF defenses for state-changing requests.

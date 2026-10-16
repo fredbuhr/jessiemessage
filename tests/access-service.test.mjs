@@ -19,7 +19,7 @@ before(async () => {
     reissueVerification: async (options) => { captured.push(options); return true; },
     completeClientLogin: async (options) => { captured.push(options); state.tokenHash = options.session.tokenHash; return state.loginAllowed; },
     getClientSession: async (hash) => state.tokenHash?.equals(hash) ? { userId, role: "client", pseudonym: "Synthetic client",
-      expiresAt: now + 100000, access: { state: state.access, emailVerified: true, ageAssured: state.access === "active",
+      expiresAt: now + 100000, access: { state: state.access, admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: state.access === "active",
         approved: state.access === "active", expiresAt: null } } : null,
     revokeClientSession: async () => { state.tokenHash = null; },
     revokeAllClientSessions: async (id) => { assert.deepEqual(id, userId); state.tokenHash = null; },
@@ -119,7 +119,7 @@ test("only a current administrator can obtain invitation links and stored lists 
 });
 
 const syntheticClient = (overrides = {}) => ({ id: "a".repeat(32), createdAt: now - 1000, pseudonym: "Synthetic client",
-  email: "client@example.invalid", status: "active", emailVerified: true, ageAssured: true, approved: true,
+  email: "client@example.invalid", status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: true, approved: true,
   accessExpiresAt: now + 86400000, ...overrides });
 const syntheticInvitation = (overrides = {}) => ({ id: "b".repeat(32), createdAt: now - 1000, expiresAt: now + 100000,
   accessDays: 30, state: "pending", consumedById: null, ...overrides });

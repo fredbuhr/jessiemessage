@@ -214,7 +214,7 @@ function errorMessage(error, login = false) {
   if (error.status === 429) return "Trop de tentatives. Patiente un moment avant de réessayer.";
   if (error.status === 403) return "La demande a été refusée. Recharge la page puis réessaie.";
   if (error.status === 400) return "Vérifie l’adresse e-mail, le mot de passe et le code de sécurité.";
-  if (error.status === 409) return "La vérification de l’e-mail et de la majorité est nécessaire avant l’approbation.";
+  if (error.status === 409) return "Une invitation utilisée et un e-mail vérifié sont nécessaires avant l’approbation.";
   return "La connexion est indisponible pour le moment. Réessaie dans quelques instants.";
 }
 
@@ -362,13 +362,16 @@ function paintClients(clients, renewalDraft = null) {
   for (const client of clients) {
     const expired = client.status === "active" && client.accessExpiresAt !== null && client.accessExpiresAt <= Date.now();
     const card = item(client.pseudonym, [{ raw: client.email },
-      `État : ${expired ? "Accès expiré" : states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"} · Majorité : ${client.ageAssured ? "vérifiée" : "en attente"}`,
+      `État : ${expired ? "Accès expiré" : states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"}`,
+      "Admission manuelle",
+      client.invitationConsumed ? "Invitation utilisée" : "Invitation : en attente",
+      client.approved ? "Accès approuvé par Jess" : "Approbation de Jess : en attente",
       client.accessExpiresAt === null ? "Aucune date de fin d’accès." : adminLine("Fin d’accès : {date}", { date: adminUI.dateParam(client.accessExpiresAt) }),
     ], { rawTitle: true });
     if (client.status === "pending") actionButton(card, "Approuver l’accès", async () => {
       await request(`/api/admin/clients/${client.id}/approve`, { mutation: true }); await refreshAccessLists({ afterMutation: true }); notice("L’accès client est approuvé.");
-    }, !client.emailVerified || !client.ageAssured);
-    if (client.status === "active" && client.emailVerified && client.ageAssured && client.approved && Number.isSafeInteger(client.accessExpiresAt)) {
+    }, client.admissionPolicy !== "manual_invitation" || !client.emailVerified || !client.invitationConsumed);
+    if (client.status === "active" && client.admissionPolicy === "manual_invitation" && client.emailVerified && client.invitationConsumed && client.approved && Number.isSafeInteger(client.accessExpiresAt)) {
       const renewal = document.createElement("form"); renewal.className = "renewal-form";
       const label = document.createElement("label");
       const labelText = document.createElement("span"); adminUI.text(labelText, "Durée à ajouter (jours)"); label.append(labelText);
@@ -412,6 +415,8 @@ async function readAccessPage(kind, cursor) {
   const entries = result?.[kind];
   if (!Array.isArray(entries) || entries.length > 50 || typeof result.hasMore !== "boolean"
     || (result.hasMore ? entries.length !== 50 || typeof result.nextCursor !== "string" || !/^[A-Za-z0-9_-]{1,256}$/.test(result.nextCursor) || result.nextCursor === cursor : result.nextCursor !== null)) throw new Error("invalid_page");
+  if (kind === "clients" && entries.some((client) => client?.admissionPolicy !== "manual_invitation"
+    || ["emailVerified", "invitationConsumed", "ageAssured", "approved"].some((key) => typeof client[key] !== "boolean"))) throw new Error("invalid_page");
   return { kind, cursor, epoch, entries, nextCursor: result.nextCursor, hasMore: result.hasMore };
 }
 function paintAccessPage(result, { renewalDraft = null } = {}) {

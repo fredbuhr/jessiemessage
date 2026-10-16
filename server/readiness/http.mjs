@@ -1,3 +1,4 @@
+import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { readFile } from "node:fs/promises";
 import { canonicalEmail } from "../auth/config.mjs";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
@@ -38,7 +39,7 @@ function safeEmail(value) {
 
 function safeSummary(value) {
   if (!value || value.contactEmail !== SITE_CONTACT_EMAIL || !value.mail || typeof value.mail.configured !== "boolean"
-    || !value.features || !value.checks || value.checks.ageAssurance !== "pending"
+    || !value.features || !value.checks || value.checks.ageAssurance !== "not_integrated" || value.checks.admissionPolicy !== CLIENT_ADMISSION_POLICY
     || value.checks.smtpDelivery !== "not_checked" || value.checks.deviceAcceptance !== "pending") throw unavailable();
   const sender = safeEmail(value.mail.sender), replyTo = safeEmail(value.mail.replyTo);
   if (sender !== replyTo || !value.mail.configured && sender !== SITE_CONTACT_EMAIL) throw unavailable();
@@ -49,7 +50,7 @@ function safeSummary(value) {
   }
   return { contactEmail: SITE_CONTACT_EMAIL, mail: { configured: value.mail.configured, sender, replyTo }, features,
     ...(value.operations === undefined ? {} : { operations: safeOperationsSnapshot(value.operations) }),
-    checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
+    checks: { admissionPolicy: CLIENT_ADMISSION_POLICY, ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
 }
 
 function safeProof(value) {

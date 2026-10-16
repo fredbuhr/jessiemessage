@@ -38,7 +38,7 @@
     "Comptes clients": "Client accounts",
     "Revenir au début": "Back to the beginning",
     "Plus anciens": "Older entries",
-    "L’approbation nécessite un e-mail et une majorité vérifiés. La procédure de vérification de majorité reste à activer.": "Approval requires verified email and age assurance. The age-assurance process still needs to be enabled.",
+    "L’accès nécessite une invitation utilisée, un e-mail vérifié et ton approbation manuelle.": "Access requires a used invitation, a verified email and your manual approval.",
     "Actualiser les accès": "Refresh access",
     "Se déconnecter": "Sign out",
     "Déconnecter toutes mes sessions": "Sign out all my sessions",
@@ -52,7 +52,7 @@
     "Trop de tentatives. Patiente un moment avant de réessayer.": "Too many attempts. Wait a little before trying again.",
     "La demande a été refusée. Recharge la page puis réessaie.": "The request was refused. Reload the page and try again.",
     "Vérifie l’adresse e-mail, le mot de passe et le code de sécurité.": "Check the email address, password and security code.",
-    "La vérification de l’e-mail et de la majorité est nécessaire avant l’approbation.": "Verified email and age assurance are required before approval.",
+    "Une invitation utilisée et un e-mail vérifié sont nécessaires avant l’approbation.": "A used invitation and verified email are required before approval.",
     "La connexion est indisponible pour le moment. Réessaie dans quelques instants.": "The connection is currently unavailable. Try again shortly.",
     "Connexion en cours…": "Signing in…",
     "Toutes tes sessions sont déconnectées.": "All your sessions have been signed out.",
@@ -68,6 +68,11 @@
     "Fin d’accès : {date}": "Access ends: {date}",
     "Approuver l’accès": "Approve access",
     "L’accès client est approuvé.": "Client access has been approved.",
+    "Admission manuelle": "Manual admission",
+    "Invitation utilisée": "Invitation used",
+    "Invitation : en attente": "Invitation: pending",
+    "Accès approuvé par Jess": "Access approved by Jess",
+    "Approbation de Jess : en attente": "Jess’s approval: pending",
     "Durée à ajouter (jours)": "Duration to add (days)",
     "Durée à ajouter pour {name}, en jours": "Duration to add for {name}, in days",
     "Renouveler l’accès expiré": "Renew expired access",
@@ -91,9 +96,9 @@
     dictionary[`Invitation · ${source}`] = `Invitation · ${translated}`;
   }
   for (const [state, translated] of [["En attente", "Pending"], ["Actif", "Active"], ["Suspendu", "Suspended"], ["Révoqué", "Revoked"], ["Supprimé", "Deleted"], ["Accès expiré", "Access expired"]]) {
-    for (const verifiedEmail of [false, true]) for (const assuredAge of [false, true]) {
-      dictionary[`État : ${state} · E-mail : ${verifiedEmail ? "vérifié" : "en attente"} · Majorité : ${assuredAge ? "vérifiée" : "en attente"}`]
-        = `Status: ${translated} · Email: ${verifiedEmail ? "verified" : "pending"} · Age assurance: ${assuredAge ? "verified" : "pending"}`;
+    for (const verifiedEmail of [false, true]) {
+      dictionary[`État : ${state} · E-mail : ${verifiedEmail ? "vérifié" : "en attente"}`]
+        = `Status: ${translated} · Email: ${verifiedEmail ? "verified" : "pending"}`;
     }
   }
   for (const [source, translated] of [["Comptes clients les plus récents", "Most recent client accounts"], ["Comptes clients plus anciens", "Older client accounts"],

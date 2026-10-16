@@ -19,12 +19,15 @@ const fail = (code, message, details) => { throw new MigrationError(code, messag
 export const checksumSql = (source) => createHash("sha256").update(source).digest("hex");
 export const migrationLockName = (database) => `jessiemessage:migrate:${checksumSql(database).slice(0, 32)}`;
 
-// A deliberately small SQL format: one InnoDB CREATE TABLE in the selected schema.
+// A deliberately small SQL format: one InnoDB CREATE TABLE in the selected schema,
+// or the single reviewed atomic users admission CHECK replacement below.
 // This is a validator, not a general SQL splitter or stored-program parser.
-export function validateSql(source) {
+function migrationStatement(source) {
   let plain = "";
   let quote = null;
   let comment = null;
+  let literalStart = 0;
+  const literals = [];
   for (let index = 0; index < source.length; index += 1) {
     const char = source[index];
     const next = source[index + 1];
@@ -40,11 +43,12 @@ export function validateSql(source) {
       if (char === "\\") { index += 1; continue; }
       if (char === quote) {
         if (next === quote) { index += 1; continue; }
+        literals.push(source.slice(literalStart, index + 1));
         quote = null;
       }
       continue;
     }
-    if (char === "'" || char === '"') { quote = char; plain += "?"; continue; }
+    if (char === "'" || char === '"') { quote = char; literalStart = index; plain += "?"; continue; }
     if (char === "`") fail("SQL_FORMAT", "Quoted SQL identifiers are outside the migration format.");
     if (char === "#" || (char === "-" && next === "-" && /\s/.test(source[index + 2] ?? ""))) {
       comment = "line";
@@ -65,6 +69,20 @@ export function validateSql(source) {
   const statement = plain.trim().replace(/;$/, "").trim();
   if (statement.includes(";") || statement.includes(".")) {
     fail("SQL_FORMAT", "Migrations must contain one statement and no qualified identifiers.");
+  }
+  return { statement, literals };
+}
+
+export function validateSql(source) {
+  const { statement, literals } = migrationStatement(source);
+  if (/^ALTER\b/i.test(statement)) {
+    // Both operations belong to one atomic MariaDB 10.11+ ALTER. No standalone
+    // DROP, other table/constraint, data mutation or generic ALTER is accepted.
+    const admissionCheck = /^ALTER\s+TABLE\s+users\s+DROP\s+CONSTRAINT\s+users_active_client_gates\s*,\s*ADD\s+CONSTRAINT\s+users_active_client_gates\s+CHECK\s*\(\s*role\s*<>\s*\?\s+OR\s+status\s*<>\s*\?\s+OR\s*\(\s*email_verified_at\s+IS\s+NOT\s+NULL\s+AND\s+access_approved_at\s+IS\s+NOT\s+NULL\s*\)\s*\)$/i;
+    if (!admissionCheck.test(statement) || literals.length !== 2 || literals[0] !== "'client'" || literals[1] !== "'active'") {
+      fail("SQL_FORMAT", "Only the reviewed atomic users admission CHECK replacement is supported as ALTER TABLE.");
+    }
+    return source;
   }
   const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(statement);
   if (!match || /\bschema_migrations\b/i.test(statement)
@@ -105,6 +123,17 @@ export async function loadMigrations(directory = defaultMigrationDirectory) {
     return { version: Number(name.slice(0, 4)), name, sql, checksum: checksumSql(sql) };
   }));
   return validateMigrationPlan(migrations);
+}
+
+// DDL migrations and application tables are separate inventories: an ALTER adds
+// a ledger entry without creating a new table or changing cleanup/grant scope.
+export function createdMigrationTables(migrations) {
+  validateMigrationPlan(migrations);
+  return migrations.flatMap(({ sql }) => {
+    const { statement } = migrationStatement(sql);
+    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(statement);
+    return match ? [match[1]] : [];
+  });
 }
 
 export function inspectHistory(migrations, rows) {

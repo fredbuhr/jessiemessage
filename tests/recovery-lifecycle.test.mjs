@@ -82,7 +82,7 @@ function controller(name, fetchHandler, { hash = "", visibility = "visible" } = 
 }
 const signedOut = () => response({ error: "authentication_required" }, 401);
 const user = (pseudonym = "Client fictif", { id = "a".repeat(32), csrf = "A".repeat(43) } = {}) => ({ user: { id, role: "client", pseudonym }, csrf, expiresAt: Date.now() + 3600000,
-  access: { state: "pending", emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
+  access: { state: "pending", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
 
 for (const [label, failure] of [["503", () => response({}, 503)], ["429", () => response({}, 429)], ["network failure", () => Promise.reject(new Error("synthetic network failure"))],
   ["malformed JSON", () => malformed()], ["malformed capability", () => response({ enabled: true, password: { minLength: 1, maxLength: 128 } })]]) {

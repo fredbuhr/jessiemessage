@@ -36,7 +36,7 @@ async function fixture(t, overrides = {}) {
   const service = {
     async actor(role, value) {
       calls.push(["actor", role, value]);
-      return value === tokens[role] ? { user: { id: role === "admin" ? adminId : clientId, role, pseudonym: role === "admin" ? "Jessie" : "Client test" }, csrf, expiresAt: now + 3600000, email: "secret@example.invalid", mfaSecret: "private-mfa" } : null;
+      return value === tokens[role] ? { user: { id: role === "admin" ? adminId : clientId, role, pseudonym: role === "admin" ? "Jessie" : "Client test" }, csrf, expiresAt: now + 3600000, access: { state: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true }, email: "secret@example.invalid", mfaSecret: "private-mfa" } : null;
     },
     async listConversations(value, options) { calls.push(["list", value, options]); return { conversations: [conversation("admin")], hasMore: false, nextCursor: null }; },
     async clientConversation(value) { calls.push(["conversation", value]); return conversation("client"); },
@@ -169,6 +169,19 @@ test("current actor authentication, role and client prerequisites fail closed", 
   assert.equal(response.status, 403);
   assert.deepEqual(await response.json(), { error: "request_rejected" });
   assert.equal(calls.some(([name]) => name === "messages"), false);
+});
+
+test("manual client admission requires the consumed invitation and exact policy even when an age observation exists", async (t) => {
+  const { base, service } = await fixture(t);
+  const access = { state: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true };
+  let current = access;
+  service.actor = async () => ({ user: { id: clientId, role: "client", pseudonym: "Client" }, csrf, expiresAt: now + 3600000, access: current });
+  const get = () => fetch(`${base}${path("client")}`, { headers: { Cookie: cookie("client") } });
+  assert.equal((await get()).status, 200);
+  for (const patch of [{ invitationConsumed: false }, { admissionPolicy: "external_verified" }, { emailVerified: false }, { approved: false }]) {
+    current = { ...access, ageAssured: true, ...patch };
+    assert.equal((await get()).status, 403);
+  }
 });
 
 test("message reads and event streams preserve full integer precision without private fields", async (t) => {

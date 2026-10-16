@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
 import { encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
+import { CLIENT_ADMISSION_POLICY, hasConsumedInvitation, invitationConsumptionProjection } from "./admission.mjs";
 
 export class AuthAccessStoreError extends Error {
   constructor(code, message = "Client access persistence operation failed.") {
@@ -175,6 +176,26 @@ export function createAccessStore(pool) {
             if (!constraints.some((item) => item.tableName === table && item.constraintName === name && item.type === "CHECK")) stateError();
           }
         }
+        const admissionChecks = await connection.query(`SELECT CHECK_CLAUSE AS clause FROM information_schema.CHECK_CONSTRAINTS
+          WHERE CONSTRAINT_SCHEMA = ? AND TABLE_NAME = 'users' AND CONSTRAINT_NAME = 'users_active_client_gates'`, [database]);
+        // Match only the four admission predicates, including their AND/OR
+        // structure. MariaDB may remove redundant parentheses and quote names.
+        const admission = admissionChecks[0]?.clause?.toLowerCase().replace(/[`\s]/g, "");
+        const expectedAdmission = "role<>'client'orstatus<>'active'oremail_verified_atisnotnullandaccess_approved_atisnotnull";
+        if (admissionChecks.length !== 1 || typeof admission !== "string") stateError();
+        const atoms = ["role<>'client'", "status<>'active'", "email_verified_atisnotnull", "access_approved_atisnotnull"];
+        let normalizedAdmission = admission;
+        let previous;
+        do {
+          previous = normalizedAdmission;
+          // These removals preserve the authored boolean structure; unlike
+          // deleting every parenthesis, they cannot hide a changed grouping.
+          for (const atom of [...atoms, `${atoms[2]}and${atoms[3]}`, `${atoms[0]}or${atoms[1]}`]) {
+            normalizedAdmission = normalizedAdmission.replaceAll(`(${atom})`, atom);
+          }
+          if (normalizedAdmission === `(${expectedAdmission})`) normalizedAdmission = expectedAdmission;
+        } while (normalizedAdmission !== previous);
+        if (normalizedAdmission !== expectedAdmission) stateError();
         const references = await connection.query(`SELECT TABLE_NAME AS tableName, CONSTRAINT_NAME AS constraintName,
           UPDATE_RULE AS updateRule, DELETE_RULE AS deleteRule FROM information_schema.REFERENTIAL_CONSTRAINTS
           WHERE CONSTRAINT_SCHEMA = ?`, [database]);
@@ -304,7 +325,7 @@ export function createAccessStore(pool) {
         const candidate = (await connection.query("SELECT user_id FROM sessions WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
         if (!candidate) return null;
         const user = (await connection.query(`SELECT id, role, status, pseudonym, email_verified_at,
-          age_assured_at, access_approved_at, access_expires_at FROM users WHERE id = ? FOR UPDATE`, [candidate.user_id]))[0];
+          age_assured_at, access_approved_at, access_expires_at, ${invitationConsumptionProjection()} FROM users WHERE id = ? FOR UPDATE`, [candidate.user_id]))[0];
         if (!user || user.role !== "client" || !["pending", "active"].includes(user.status)) return null;
         const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [user.id]))[0];
         if (!auth) return null;
@@ -319,12 +340,14 @@ export function createAccessStore(pool) {
         const emailVerified = user.email_verified_at !== null && fromSqlDate(user.email_verified_at) <= now;
         const ageAssured = user.age_assured_at !== null && fromSqlDate(user.age_assured_at) <= now;
         const approved = user.access_approved_at !== null && fromSqlDate(user.access_approved_at) <= now;
-        if (!emailVerified || (user.status === "active" && (!ageAssured || !approved))) return null;
+        const invitationConsumed = hasConsumedInvitation(user, now, fromSqlDate);
+        if (!emailVerified || !invitationConsumed || (user.status === "active" && (!approved
+          || fromSqlDate(user.access_approved_at) < fromSqlDate(user.invitation_consumed_at)))) return null;
         const accessExpiresAt = optionalDate(user.access_expires_at);
         const accessState = user.status === "pending" ? "pending" : accessExpiresAt !== null && now >= accessExpiresAt ? "expired" : "active";
         if (now - lastSeen >= 60000) await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now), row.id]);
         return { id: row.id, userId: user.id, role: "client", pseudonym: user.pseudonym, expiresAt,
-          access: { state: accessState, emailVerified, ageAssured, approved, expiresAt: accessExpiresAt } };
+          access: { state: accessState, admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed, emailVerified, ageAssured, approved, expiresAt: accessExpiresAt } };
       }, true);
     },
 
@@ -385,7 +408,7 @@ export function createAccessStore(pool) {
       return withConnection(async (connection) => {
         if (!await administrator(connection, actorTokenHash, now)) return null;
         const rows = await connection.query(`SELECT id, pseudonym, email, status, email_verified_at, age_assured_at, created_at,
-          access_approved_at, access_expires_at, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s.%f') AS cursor_created_at
+          access_approved_at, access_expires_at, ${invitationConsumptionProjection()}, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s.%f') AS cursor_created_at
           FROM users WHERE role = 'client' ${page.position ? "AND (created_at < ? OR (created_at = ? AND id < ?))" : ""}
           ORDER BY created_at DESC, id DESC LIMIT ?`, page.position
           ? [page.position.createdAt, page.position.createdAt, Buffer.from(page.position.id, "hex"), page.limit + 1] : [page.limit + 1]);
@@ -393,6 +416,7 @@ export function createAccessStore(pool) {
         const clients = selected.map((row) => ({ id: row.id.toString("hex"), createdAt: fromSqlDate(row.created_at), pseudonym: row.pseudonym, email: row.email, status: row.status,
           emailVerified: row.email_verified_at !== null && fromSqlDate(row.email_verified_at) <= now,
           ageAssured: row.age_assured_at !== null && fromSqlDate(row.age_assured_at) <= now,
+          admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed: hasConsumedInvitation(row, now, fromSqlDate),
           approved: row.access_approved_at !== null && fromSqlDate(row.access_approved_at) <= now,
           accessExpiresAt: optionalDate(row.access_expires_at) }));
         const last = selected.at(-1);
@@ -409,11 +433,12 @@ export function createAccessStore(pool) {
         // approval and revocation. The locked expiry is the mutation's CAS.
         if (!await administrator(connection, actorTokenHash, now)) throw new AuthAccessStoreError("ACCESS_FORBIDDEN");
         const user = (await connection.query(`SELECT role, status, email_verified_at, age_assured_at,
-          access_approved_at, access_expires_at, DATE_FORMAT(access_expires_at, '%Y-%m-%d %H:%i:%s.%f') AS exact_expiry
+          access_approved_at, access_expires_at, ${invitationConsumptionProjection()}, DATE_FORMAT(access_expires_at, '%Y-%m-%d %H:%i:%s.%f') AS exact_expiry
           FROM users WHERE id = ? FOR UPDATE`, [userId]))[0];
         if (!user || user.role !== "client") return null;
-        if (user.status !== "active" || user.email_verified_at === null || user.age_assured_at === null || user.access_approved_at === null
-          || fromSqlDate(user.email_verified_at) > now || fromSqlDate(user.age_assured_at) > now || fromSqlDate(user.access_approved_at) > now
+        if (user.status !== "active" || user.email_verified_at === null || !hasConsumedInvitation(user, now, fromSqlDate) || user.access_approved_at === null
+          || fromSqlDate(user.email_verified_at) > now || fromSqlDate(user.access_approved_at) > now
+          || fromSqlDate(user.access_approved_at) < fromSqlDate(user.invitation_consumed_at)
           || user.access_expires_at === null) throw new AuthAccessStoreError("ACCESS_PREREQUISITES");
         const currentExpiry = fromSqlDate(user.access_expires_at);
         if (currentExpiry !== expectedExpiresAt || user.exact_expiry !== sqlDate(expectedExpiresAt)) throw new AuthAccessStoreError("ACCESS_CONFLICT");
@@ -432,11 +457,11 @@ export function createAccessStore(pool) {
       return withConnection(async (connection) => {
         const actor = await administrator(connection, actorTokenHash, now);
         if (!actor) return false;
-        const user = (await connection.query("SELECT role, status, email_verified_at, age_assured_at FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
-        if (!user || user.role !== "client" || user.status !== "pending" || user.email_verified_at === null || user.age_assured_at === null
-          || fromSqlDate(user.email_verified_at) > now || fromSqlDate(user.age_assured_at) > now) return false;
-        const invitations = await connection.query("SELECT access_days FROM invitations WHERE consumed_by_id = ? AND consumed_at IS NOT NULL LIMIT 2 FOR UPDATE", [userId]);
-        if (invitations.length !== 1) return false;
+        const user = (await connection.query("SELECT role, status, email_verified_at FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
+        if (!user || user.role !== "client" || user.status !== "pending" || user.email_verified_at === null
+          || fromSqlDate(user.email_verified_at) > now) return false;
+        const invitations = await connection.query("SELECT access_days, consumed_at FROM invitations WHERE consumed_by_id = ? AND consumed_at IS NOT NULL LIMIT 2 FOR UPDATE", [userId]);
+        if (invitations.length !== 1 || fromSqlDate(invitations[0].consumed_at) > now) return false;
         const accessDays = invitations[0].access_days === null ? null : Number(invitations[0].access_days);
         const expiresAt = accessDays === null ? null : instant(now + accessDaysValue(accessDays) * 86400000);
         await connection.query("UPDATE users SET status = 'active', access_approved_at = ?, access_expires_at = ?, updated_at = ? WHERE id = ?", [sqlDate(now), expiresAt === null ? null : sqlDate(expiresAt), sqlDate(now), userId]);

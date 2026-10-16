@@ -6,7 +6,7 @@ const catalogue = Object.freeze({ config: CONFIG_CHECK_NAMES, platform: PLATFORM
 const statuses = new Set(["pass", "fail", "disabled", "not_checked"]);
 const errors = new Set(["PREFLIGHT_USAGE", "PREFLIGHT_OPERATION", "PREFLIGHT_REPORT", "PREFLIGHT_ABORTED", "PREFLIGHT_TIMEOUT"]);
 const remaining = Object.freeze(["hosting_account", "database_isolation", "physical_schema_and_constraints", "secret_provenance", "runtime_write_acceptance",
-  "media_persistence", "proxy_limits", "shutdown_signals", "mail_receipt", "age_assurance", "retention_restoration", "device_screen_reader"]);
+  "media_persistence", "proxy_limits", "shutdown_signals", "mail_receipt", "manual_admission_policy", "retention_restoration", "device_screen_reader"]);
 
 export class PreflightReportError extends Error {
   constructor() { super("The preflight result could not be validated."); this.code = "PREFLIGHT_REPORT"; }

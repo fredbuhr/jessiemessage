@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createResetStore, ResetStoreError } from "../server/reset/store.mjs";
 import { createResetMailStore } from "../server/reset/mail-store.mjs";
@@ -22,11 +22,8 @@ test("real MariaDB single-use client password recovery and private leased mail (
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "runtime DML credentials must be separately provisioned");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
-  const ownedTables = migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup only accepts reviewed single-table migrations"); return match[1];
-  }).reverse();
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const ownedTables = createdMigrationTables(migrations).reverse();
   const allowedTables = [...ownedTables, "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool;
   async function reset() {

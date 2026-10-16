@@ -75,9 +75,10 @@ export function parseReadinessSummary(input) {
     if (typeof input.features?.[key] !== "boolean") throw new TypeError("invalid_readiness_summary");
     features[key] = input.features[key];
   }
-  if (input.checks?.ageAssurance !== "pending" || input.checks?.smtpDelivery !== "not_checked" || input.checks?.deviceAcceptance !== "pending") throw new TypeError("invalid_readiness_summary");
+  if (input.checks?.admissionPolicy !== "manual_invitation" || input.checks?.ageAssurance !== "not_integrated"
+    || input.checks?.smtpDelivery !== "not_checked" || input.checks?.deviceAcceptance !== "pending") throw new TypeError("invalid_readiness_summary");
   const summary = { contactEmail: CONTACT_EMAIL, mail: { configured: input.mail.configured, sender: input.mail.sender, replyTo: input.mail.sender }, features,
-    checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
+    checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
   if (Object.hasOwn(input, "operations")) summary.operations = parseOperations(input.operations);
   return summary;
 }

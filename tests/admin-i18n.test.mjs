@@ -63,7 +63,7 @@ function parse() {
   return { container, nodes };
 }
 const client = (index = 3, changes = {}) => ({ id: index.toString(16).padStart(32, "0"), pseudonym: "Bienvenue, Jessie.", email: "private-client@example.invalid",
-  status: "active", emailVerified: true, ageAssured: true, approved: true, createdAt: now - 1000, accessExpiresAt: now - 100, ...changes });
+  status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, createdAt: now - 1000, accessExpiresAt: now - 100, ...changes });
 async function harness({ clients = [client(), client(4, { status: "pending", emailVerified: false, ageAssured: false, approved: false, accessExpiresAt: null })] } = {}) {
   const runtime = await readFile(new URL("../public/i18n.js", import.meta.url), "utf8");
   const { container, nodes } = parse(), documentEvents = new Map(), windowEvents = new Map(), calls = [], storage = new Map(), timers = new Map();
@@ -124,7 +124,9 @@ test("administrator language switches update static and loaded private UI in pla
   assert.equal(f.nodes.get("connected-name").textContent, "Se connecter");
   assert.equal(originalHeading.textContent, "Bienvenue, Jessie."); assert.equal(email.textContent, "private-client@example.invalid");
   assert.equal(clientList.children[0], originalCard); assert.equal(privateInput.value, "75");
-  assert.match(originalCard.textContent, /Status: Access expired · Email: verified · Age assurance: verified/);
+  assert.match(originalCard.textContent, /Status: Access expired · Email: verified/);
+  assert.match(originalCard.textContent, /Manual admission/); assert.match(originalCard.textContent, /Access approved by Jess/);
+  assert.doesNotMatch(originalCard.textContent, /Age assurance/);
   assert.match(originalCard.textContent, /Renew expired access/);
   assert.equal(privateInput.getAttribute("aria-label"), "Duration to add for Bienvenue, Jessie., in days");
   assert.match(invitationList.textContent, /Invitation · Available/); assert.match(invitationList.textContent, /Invitation · Revoked/);

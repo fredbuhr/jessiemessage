@@ -6,15 +6,18 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { inspectDirectoryIdentities, withPrivateDirectory } from "../files/private-directory.mjs";
 import { isOfficialOrigin, SITE_DOMAIN } from "../site.mjs";
+import { mailConfiguration } from "../mail/config.mjs";
 
 const BASENAME = "runtime-database.json";
 const DIAGNOSTIC_BASENAME = "runtime-diagnostic.json";
 const AUTHENTICATION_BASENAME = "runtime-auth.json";
+const MESSAGING_BASENAME = "runtime-messaging.json";
 const MAX_BYTES = 16384;
 const REPOSITORY = fileURLToPath(new URL("../../", import.meta.url));
 const FIELDS = ["format", "version", "host", "port", "database", "user", "password", "privilegeProfile"];
 const DIAGNOSTIC_FIELDS = ["format", "version", "createdAt", "credentials"];
 const AUTHENTICATION_FIELDS = ["format", "version", "origin", "mfaKey"];
+const MESSAGING_FIELDS = ["format", "version", "origin", "mailKey", "messageKey", "smtpHost", "smtpPort", "smtpUser", "smtpPassword"];
 const FLAGS = ["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY"];
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 
@@ -32,8 +35,16 @@ export class RuntimeAuthenticationConfigurationError extends Error {
     this.code = "RUNTIME_AUTH_CONFIGURATION";
   }
 }
+export class RuntimeMessagingConfigurationError extends Error {
+  constructor() {
+    super("Private messaging configuration is unavailable.");
+    this.name = "RuntimeMessagingConfigurationError";
+    this.code = "RUNTIME_MESSAGING_CONFIGURATION";
+  }
+}
 const fail = () => { throw new RuntimeDatabaseConfigurationError(); };
 const authenticationFailure = () => { throw new RuntimeAuthenticationConfigurationError(); };
+const messagingFailure = () => { throw new RuntimeMessagingConfigurationError(); };
 const inside = (filename, root) => {
   const suffix = path.relative(root, filename);
   return suffix === "" || suffix !== ".." && !suffix.startsWith(`..${path.sep}`) && !path.isAbsolute(suffix);
@@ -41,10 +52,10 @@ const inside = (filename, root) => {
 
 function clearSecrets(value) {
   if (!value || typeof value !== "object") return;
-  const nested = ["credentials", "database", "authentication"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
+  const nested = ["credentials", "database", "authentication", "messaging"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
   for (const record of [value, ...nested]) {
     if (record && typeof record === "object") {
-      for (const name of ["password", "mfaKey"]) {
+      for (const name of ["password", "mfaKey", "mailKey", "messageKey", "smtpUser", "smtpPassword"]) {
         const descriptor = Object.getOwnPropertyDescriptor(record, name);
         if (descriptor && Object.hasOwn(descriptor, "value") && descriptor.writable) record[name] = "";
       }
@@ -125,6 +136,35 @@ export function validateRuntimeAuthenticationConfiguration(value) {
   finally { decoded?.fill(0); }
 }
 
+export function validateRuntimeMessagingConfiguration(value) {
+  let selected, authentication, mail, messageKey;
+  try {
+    if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
+      || Object.getOwnPropertyNames(value).sort().join(",") !== [...MESSAGING_FIELDS].sort().join(",")) messagingFailure();
+    selected = {};
+    for (const name of MESSAGING_FIELDS) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, name);
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) messagingFailure();
+      selected[name] = descriptor.value;
+    }
+    if (selected.format !== "jessiemessage-runtime-messaging" || selected.version !== 1) messagingFailure();
+    // Reuse the persisted auth origin/key syntax without inventing another URL
+    // policy. This temporary metadata record is never saved or used as MFA.
+    authentication = validateRuntimeAuthenticationConfiguration({ format: "jessiemessage-runtime-auth", version: 1,
+      origin: selected.origin, mfaKey: selected.mailKey });
+    mail = mailConfiguration({ JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "1", JESSIEMESSAGE_SITE_ORIGIN: selected.origin,
+      JESSIEMESSAGE_MAIL_KEY: selected.mailKey, JESSIEMESSAGE_SMTP_HOST: selected.smtpHost,
+      JESSIEMESSAGE_SMTP_PORT: selected.smtpPort, JESSIEMESSAGE_SMTP_USER: selected.smtpUser,
+      JESSIEMESSAGE_SMTP_PASSWORD: selected.smtpPassword });
+    if (typeof selected.messageKey !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(selected.messageKey)) messagingFailure();
+    messageKey = Buffer.from(selected.messageKey, "base64url");
+    if (messageKey.length !== 32 || messageKey.toString("base64url") !== selected.messageKey
+      || messageKey.equals(mail.key) || Buffer.byteLength(JSON.stringify(selected), "utf8") + 1 > MAX_BYTES) messagingFailure();
+    return selected;
+  } catch { clearSecrets(selected); messagingFailure(); }
+  finally { clearSecrets(authentication); mail?.key.fill(0); messageKey?.fill(0); }
+}
+
 export function runtimeDatabaseEnvironment(value) {
   const config = validateRuntimeDatabaseConfiguration(value);
   return {
@@ -173,7 +213,7 @@ async function writeConfiguration(directory, config, basename) {
   let contents;
   try {
     // Only typed entry points select these internal, fixed filenames.
-    if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME].includes(basename)) fail();
+    if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME].includes(basename)) fail();
     contents = Buffer.from(`${JSON.stringify(config)}\n`, "utf8");
     if (contents.length > MAX_BYTES) fail();
     return await privateScope(directory, async (scope) => {
@@ -229,12 +269,19 @@ export async function writeRuntimeAuthenticationConfiguration(directory, value) 
   finally { clearSecrets(record); }
 }
 
+export async function writeRuntimeMessagingConfiguration(directory, value) {
+  const record = validateRuntimeMessagingConfiguration(value);
+  try { return await writeConfiguration(directory, record, MESSAGING_BASENAME); }
+  catch { messagingFailure(); }
+  finally { clearSecrets(record); }
+}
+
 async function readAnchoredConfiguration(scope, basename, validate) {
   let result, file, parsed;
   const bytes = Buffer.alloc(MAX_BYTES + 1);
   try {
     try {
-      if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME].includes(basename)) fail();
+      if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME].includes(basename)) fail();
       const filename = scope.file(basename);
       await scope.assertReady();
       file = await open(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
@@ -281,6 +328,21 @@ export async function readRuntimeAuthenticationConfiguration(directory) {
   catch { authenticationFailure(); }
 }
 
+export async function readRuntimeMessagingConfiguration(directory) {
+  try { return await readConfiguration(directory, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration); }
+  catch { messagingFailure(); }
+}
+
+export async function runtimeMessagingConfigurationExists(directory) {
+  try {
+    return await privateScope(directory, async (scope) => {
+      await scope.assertReady();
+      try { await lstat(scope.file(MESSAGING_BASENAME), { bigint: true }); return true; }
+      catch (error) { if (error.code === "ENOENT") return false; throw error; }
+    });
+  } catch { messagingFailure(); }
+}
+
 export async function runtimeAuthenticationConfigurationExists(directory) {
   try {
     return await privateScope(directory, async (scope) => {
@@ -302,5 +364,21 @@ export async function readRuntimeAuthenticationBundle(directory) {
   } catch {
     clearSecrets(database); clearSecrets(authentication);
     authenticationFailure();
+  }
+}
+
+export async function readRuntimeMessagingBundle(directory) {
+  let database, authentication, messaging;
+  try {
+    return await privateScope(directory, async (scope) => {
+      database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
+      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration);
+      messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration);
+      if (messaging.origin !== authentication.origin || [messaging.mailKey, messaging.messageKey].includes(authentication.mfaKey)) messagingFailure();
+      return { database, authentication, messaging };
+    });
+  } catch {
+    clearSecrets(database); clearSecrets(authentication); clearSecrets(messaging);
+    messagingFailure();
   }
 }

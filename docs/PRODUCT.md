@@ -1,6 +1,8 @@
 # JessieMessage — Product scope (draft)
 
-Status: **development 0.24.0; neutral HTTPS rechecked, hosted SQL preparation pending**. The official site email is `contact@jessiemessage.com`. Administrator MFA, invitations, restricted client sessions, private text/photo chat, CRM, recovery and opted-in individual broadcasts remain behind explicit configuration. Access renewal, complete administrator lists, private interface lifecycle checks, media capacity, clone backup recovery and cached operations monitoring are implemented. Offline operator tools provide scoped inventory/content export and a non-executable deletion simulation; retention decisions and destructive execution remain open. The [application entry](pwa-entry.md) connects installed launches to existing client/admin routes with explicit role choices and FR/EN entry text. The [private UI language layer](private-ui-languages.md) translates interface text in place while preserving user content, requests and session lifecycles. Only a `fr`/`en` preference is retained in session storage. The [chat accessibility layer](chat-accessibility.md) adds neutral received-message counts, guarded keyboard focus and real Chrome CI with synthetic API fixtures. Screen-reader and actual-device acceptance remain separate. An [operator preflight](preproduction-preflight.md) checks the initial authentication-only configuration, local platform capabilities and read-only database metadata without starting private services. Its reports never approve publication. A dedicated [authentication rehearsal](authentication-rehearsal.md) combines real Chrome, loopback HTTPS and the configured authentication-only server with disposable MariaDB and a synthetic administrator. It does not attest hosting configuration. The [preproduction procedure](preproduction-acceptance.md) distinguishes automated checks from real acceptance. The [first neutral hosted start](first-hosted-start.md) initially served the public homepage and application entry on Infomaniak, with all private features disabled. A later Chrome navigation returned 502, followed by a tool disconnection. Technical access subsequently resumed: the Manager reported Node active, and Chrome plus seven hosted HTTPS GETs succeeded without a restart. The earlier 502 remains unexplained; sustained availability is not proven. The [SQL preparation](hosted-database-preparation.md) records a dedicated empty MariaDB 10.11.19 database without users and a verified TLS 1.3 handshake. Node SQL credentials, exact grants, schema and administrator setup remain pending. Host Node/Sharp, neutral HTTPS responses and a Chrome FR/EN journey were checked; hosted SQL, administrator/client acceptance, actual email reception, external age assurance, devices and translated service emails remain pending. Private features stay disabled by default. Web Push, GIF/sticker integrations and automatic saved segments remain planned.
+Status: **application 0.24.0; stage 0.26 candidate, hosting still AUTH-only**. The [current implementation note](manual-invitation-runtime.md) distinguishes code, tests and deployed state. The first usable perimeter is personal invitations, verified email, manual admission by Jess, one private text/photo conversation and revocation. CRM and individual broadcasts remain planned after that core acceptance; Push is not implemented. Existing modules are reused.
+
+The owner describes invitees whose age was checked upstream on Stripchat. JessieMessage records an administrator's manual admission, not an independent age verification or an automatically imported Stripchat proof. This product decision is not a legal certification of the upstream check. No new identity-verification provider is included in this implementation lot.
 
 ## Purpose
 
@@ -17,11 +19,11 @@ An invitation-only private messaging application between Jessie (creator/admin) 
 
 ## Invitations and onboarding
 
-- An admin manually verifies eligibility before issuing an invite.
+- Jess selects each invitee before issuing a personal invitation, then confirms the registered account belongs to that invitee before approval.
 - Invite link: unique, random, single-use, revocable and short-lived.
 - Invite does not count as age verification.
-- Client selects a pseudonym, verifies their email address and completes whatever legal age-assurance process is required.
-- Only after all checks may an admin grant access.
+- Client selects a pseudonym and verifies their email address.
+- Only a consumed invitation, verified email and explicit administrator approval grant access under the `manual_invitation` policy. No `age_assured_at` value is fabricated.
 - Admin can revoke a session or access at any time.
 
 ## Client experience
@@ -74,7 +76,7 @@ Individual broadcast queues and client opt-in are implemented in 0.11. The lates
 
 - Written clarification of third-party platform rules for how invitations are distributed.
 - Hosting terms for the actual use case.
-- French/EU legal classification and suitable age-assurance solution.
+- Legal classification and the scope of upstream eligibility checks remain outside this code acceptance; do not present manual admission as independently verified adulthood.
 - Privacy notice, legal notices, terms, complaint/reporting process and retention policy.
 - Security review, backups and successful restoration test.
 - Do not use real accounts/media in development or automated tests.

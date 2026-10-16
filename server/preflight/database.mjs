@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 import { createRuntimePool, runtimeDatabaseOptions } from "../db/runtime.mjs";
-import { inspectHistory, loadMigrations, validateMigrationPlan } from "../db/migrations.mjs";
+import { createdMigrationTables, inspectHistory, loadMigrations, validateMigrationPlan } from "../db/migrations.mjs";
 import { sharedRuntimePrivileges, inspectSharedRuntimePatternPrivileges } from "../db/shared-runtime-privileges.mjs";
 
 export const DATABASE_CHECK_NAMES = Object.freeze([
@@ -92,8 +92,9 @@ function runtimePrivileges(rows, database, profile) {
 
 function matchingHistory(plan, rows) {
   validateMigrationPlan(plan);
-  if (plan.length !== tables.length || !Array.isArray(rows) || rows.length !== plan.length) return false;
-  if (!plan.every((migration, index) => /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim())?.[1] === tables[index])) return false;
+  const createdTables = createdMigrationTables(plan);
+  if (createdTables.length !== tables.length || !Array.isArray(rows) || rows.length !== plan.length) return false;
+  if (!createdTables.every((table, index) => table === tables[index])) return false;
   if (!rows.every((row) => row && Number.isSafeInteger(Number(row.version)) && Number(row.version) > 0
     && typeof row.name === "string" && row.name.length <= 128
     && typeof row.checksum === "string" && /^[0-9a-f]{64}$/.test(row.checksum)
@@ -182,9 +183,13 @@ export async function inspectDatabase({ env = process.env, databaseName } = {}, 
             await query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
             transactionAttempted = true;
             await query("START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT");
-            await check("history", async () => matchingHistory(await loadPlan(), await query({
-              sql: "SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 28", timeout: 2000,
-            })));
+            await check("history", async () => {
+              const plan = await loadPlan();
+              validateMigrationPlan(plan);
+              return matchingHistory(plan, await query({
+                sql: `SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT ${plan.length + 1}`, timeout: 2000,
+              }));
+            });
             await check("schema_reads", async () => {
               for (const [table, columns] of Object.entries(projections)) {
                 const rows = await query({ sql: `SELECT ${columns} FROM ${table} WHERE 1 = 0`, timeout: 2000 });

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createOperationsStore } from "../server/operations/store.mjs";
 import { createConfiguredServer } from "../server/index.mjs";
@@ -45,12 +45,8 @@ test("operational metadata samples real MariaDB queues with runtime DML rights a
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 27);
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup accepts only explicit unqualified CREATE TABLE migrations");
-    return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  assert.equal(migrations.length, 28);
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;
   async function cleanup() {

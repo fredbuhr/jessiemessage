@@ -1,8 +1,9 @@
+import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
@@ -35,12 +36,8 @@ test("real HTTP targeted broadcasts retain individual consent and durable ordina
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 27);
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
-    return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  assert.equal(migrations.length, 28);
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;
   let server;
@@ -80,16 +77,17 @@ test("real HTTP targeted broadcasts retain individual consent and durable ordina
       pseudonym: `Synthetic broadcast ${kind}`,
     }]));
     const clientHash = await hashPassword(clientPassword);
-    // Independent synthetic email/majority/approval stamps exercise current gates.
-    // No invitation, real client, email, age-proof endpoint, or production message is involved.
+    // Synthetic consumed invitations, email and approval exercise current gates with no age stamp.
+    // No real client, email, age-proof endpoint, or production message is involved.
     for (const client of Object.values(clients)) {
       const active = client.kind !== "pending";
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash,
         email_verified_at, age_assured_at, access_approved_at, access_expires_at, created_at, updated_at)
         VALUES (?, 'client', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [client.id, active ? "active" : "pending", client.pseudonym,
-        client.email, clientHash, sqlDate(now - 60000), active ? sqlDate(now - 60000) : null,
+        client.email, clientHash, sqlDate(now - 60000), null,
         active ? sqlDate(now - 60000) : null, client.kind === "expired" ? sqlDate(now - 1) : null, sqlDate(now - 60000), sqlDate(now - 60000)]);
       await connection.query("INSERT INTO client_auth_state (user_id, age_declared_at) VALUES (?, ?)", [client.id, sqlDate(now - 60000)]);
+      await consumeSyntheticInvitation(connection, client.id, now - 60000);
       await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)",
         [client.conversationId, client.id, client.kind === "foreign" ? otherAdminId : admin.id, sqlDate(now - 60000)]);
     }

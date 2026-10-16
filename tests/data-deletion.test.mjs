@@ -40,18 +40,18 @@ test("deletion plan covers all 27 policy categories and remains blocked even whe
     cloneRestoreRequiredForSchemaChange: true, noWorkersDuringCloneChecks: true, historyExamples: {
       basis: "synthetic_applied_ledgers_from_migrations", cases: [
         { codeMigrationCount: 25, recordedMigrationCount: 25, canStart: true, reason: "matching_history" },
-        { codeMigrationCount: 25, recordedMigrationCount: 27, canStart: false, reason: "database_ahead" },
-        { codeMigrationCount: 27, recordedMigrationCount: 25, canStart: false, reason: "migrations_pending" },
-        { codeMigrationCount: 27, recordedMigrationCount: 27, canStart: true, reason: "matching_history" },
+        { codeMigrationCount: 25, recordedMigrationCount: 28, canStart: false, reason: "database_ahead" },
+        { codeMigrationCount: 28, recordedMigrationCount: 25, canStart: false, reason: "migrations_pending" },
+        { codeMigrationCount: 28, recordedMigrationCount: 28, canStart: true, reason: "matching_history" },
       ],
     } });
 });
 
-test("rollback examples use real migration checksums in synthetic 25/27 ledgers without certifying a live database", () => {
+test("rollback examples use real migration checksums in synthetic 25/28 ledgers without certifying a live database", () => {
   const input = fixture(), plan = buildDeletionPlan(input), examples = plan.rollback.historyExamples;
   assert.equal(examples.basis, "synthetic_applied_ledgers_from_migrations");
   assert.deepEqual(examples.cases.map((entry) => [entry.codeMigrationCount, entry.recordedMigrationCount, entry.canStart]),
-    [[25, 25, true], [25, 27, false], [27, 25, false], [27, 27, true]]);
+    [[25, 25, true], [25, 28, false], [28, 25, false], [28, 28, true]]);
   for (const entry of examples.cases) assert.deepEqual(Object.keys(entry), ["codeMigrationCount", "recordedMigrationCount", "canStart", "reason"]);
   assert.equal(plan.rollback.codeOnlyRollbackCertified, false); assert.equal(plan.executable, false);
   assert.doesNotMatch(JSON.stringify(examples), /checksum|\.sql|CREATE TABLE|password|email|observedDatabase|currentDatabase/);
@@ -67,7 +67,8 @@ test("candidate review order derives the actual FK graph, includes every subject
   for (const entry of plan.candidateOrder) assert.deepEqual(entry, { table: entry.table, proposedAction: "review", blocked: true });
   const actual = new Set(); let foreignKeys = 0;
   for (const migration of migrations) {
-    const table = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)/i.exec(migration.sql.trim())[1];
+    const table = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)/i.exec(migration.sql.trim())?.[1];
+    if (!table) continue; // The reviewed admission CHECK ALTER adds no FK edge.
     for (const match of migration.sql.matchAll(/FOREIGN\s+KEY\s*\([^)]+\)\s+REFERENCES\s+([a-z][a-z0-9_]*)\s*\([^)]+\)\s+ON UPDATE RESTRICT ON DELETE RESTRICT/gi)) {
       foreignKeys += 1; actual.add(`${table}:${match[1]}`);
     }
