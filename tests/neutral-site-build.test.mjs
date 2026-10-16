@@ -143,6 +143,28 @@ test("Apache root has an explicit index and both Allow tables are cleared before
   ], "clear both response-header tables before setting the route-specific Allow value");
 });
 
+test("optional recipe entry uses a temporary fixed destination, drops query parameters and retains the closed method/route policy", async (t) => {
+  const { root, project, build } = await sandbox(t), output = join(root, "bridge");
+  const command = join(project, "scripts/build-neutral-site.mjs");
+  const result = spawnSync(process.execPath, [command, "--output", output, "--connect-recipe"], { encoding: "utf8", timeout: 30000 });
+  assert.equal(result.status, 0, result.stderr);
+  const apache = await readFile(join(output, ".htaccess"), "utf8");
+  const entry = "RewriteRule ^app/?$ https://recette.jessiemessage.com/app [R=302,QSD,END]";
+  assert.equal(apache.split("\n").filter((line) => line.includes("https://recette.")).length, 1);
+  assert.ok(apache.includes(entry), "an explicit temporary destination never inherits caller query parameters");
+  assert.ok(apache.indexOf("RewriteCond %{REQUEST_METHOD} !^(GET|HEAD)$") < apache.indexOf(entry), "POST and other methods are rejected before the redirect");
+  assert.ok(apache.indexOf("https://jessiemessage.com/$1 [R=308,END]") < apache.indexOf(entry));
+  assert.doesNotMatch(apache, /RewriteRule[^\n]*(?:\[P\]|%\{HTTP_HOST\}|%\{HTTP:|recipe.*\$[0-9])/);
+  assert.equal(apache.trim().endsWith("RewriteRule ^ - [R=404,END]"), true);
+  assert.deepEqual(await fileNames(output), outputNames, "the bridge adds no private endpoint or file");
+  assert.deepEqual(await readFile(join(output, "index.html")), await readFile(join(project, "public/index.html")));
+  const neutral = join(root, "still-neutral");
+  await build({ output: neutral });
+  assert.doesNotMatch(await readFile(join(neutral, ".htaccess"), "utf8"), /https:\/\/recette\./, "the option cannot leak into subsequent builds");
+  await rejected(() => build({ output: join(root, "bad-option"), connectRecipe: "https://untrusted.example" }));
+  assert.equal(await missing(join(root, "bad-option")), true);
+});
+
 test("output is a new absolute leaf; existing directories / files, checkout paths and traversal are refused without overwrite", async (t) => {
   const { root, project, build } = await sandbox(t);
   const directory = join(root, "existing"); await mkdir(directory); await writeFile(join(directory, "keep.txt"), "untouched");
