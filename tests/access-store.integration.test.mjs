@@ -97,12 +97,14 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
     });
 
     await t.test("read-only schema checks require the physical manual admission CHECK even with a clean ledger", async () => {
+      const admissionMigration = migrations.find((migration) => migration.name === "0028_manual_client_admission.sql");
+      assert.equal(admissionMigration?.version, 28, "restore the specific admission CHECK, independently of later migrations");
       for (const clause of ["1", "role <> 'client' OR status <> 'active' OR access_approved_at IS NOT NULL",
         "role <> 'client' OR status <> 'active' OR (email_verified_at IS NOT NULL AND age_assured_at IS NOT NULL AND access_approved_at IS NOT NULL)"]) {
         await connection.query(`ALTER TABLE users DROP CONSTRAINT users_active_client_gates,
           ADD CONSTRAINT users_active_client_gates CHECK (${clause})`);
         try { await assert.rejects(store.assertSchema(), (error) => error.code === "ACCESS_DATABASE_STATE"); }
-        finally { await connection.query(migrations.at(-1).sql); }
+        finally { await connection.query(admissionMigration.sql); }
       }
       assert.equal(await store.assertSchema(), true);
     });

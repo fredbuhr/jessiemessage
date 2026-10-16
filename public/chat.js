@@ -1011,7 +1011,11 @@ el("close-notifications").addEventListener("click", () => el("notifications-dial
 el("notifications-dialog").addEventListener("close", () => { focusVisible(el("open-notifications")); });
 el("retry-connection").addEventListener("click", () => { void resumeConnection({ reset: true }); });
 el("cancel-delete").addEventListener("click", cancelConfirmation);
-el("confirm-delete").addEventListener("close", cancelConfirmation);
+el("confirm-delete").addEventListener("close", () => {
+  // Native close events are queued. A previous close must not cancel a new
+  // confirmation that has already reopened this same dialog.
+  if (!el("confirm-delete").open) cancelConfirmation();
+});
 el("accept-delete").addEventListener("click", () => {
   const pending = pendingConfirmation; if (!pending) return;
   pendingConfirmation = null; el("confirm-delete").close(); focusVisible(pending.opener); pending.resolve(true);

@@ -246,7 +246,10 @@ test("Chrome mobile: deleting a message has a keyboard-accessible confirmation w
     await waitUntil(() => page.execute("return !document.getElementById('confirm-delete').open"), "Escape cancels deletion");
     assert.equal(await page.execute("return document.activeElement === window.__deleteOpener"), true);
     assert.equal(fixture.deleteRequests, 0);
-    await page.key("\uE007"); await page.click("#accept-delete");
+    await page.key("\uE007");
+    await waitUntil(() => page.execute("return document.getElementById('confirm-delete').matches(':modal') && document.activeElement.id==='cancel-delete'"), "second native confirmation is open with cancellation focused");
+    assert.equal(fixture.deleteRequests, 0);
+    await page.click("#accept-delete");
     await waitUntil(() => page.execute("return document.querySelector('#messages [data-sequence=\"2\"]').classList.contains('deleted')"), "confirmed deletion replaces the message");
     assert.equal(fixture.deleteRequests, 1);
     assert.equal(await page.execute("return document.activeElement.dataset.sequence"), "2", "focus moves to the tombstone");
