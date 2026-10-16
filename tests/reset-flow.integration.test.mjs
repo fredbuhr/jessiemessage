@@ -214,7 +214,7 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
       const before = await unchangedFields(clients.active);
       const token = tokenFor(clients.active);
       assert.equal((await complete(token, newPassword, { Origin: "https://other.invalid" })).status, 403);
-      assert.equal((await complete(token, "too short")).status, 400);
+      assert.equal((await complete(token, "x".repeat(7))).status, 400);
       assert.equal((await request(resetPath, { method: "POST", body: { token, password: newPassword, status: "active" } })).status, 400);
       assert.equal((await request(`${resetPath}?token=forbidden-query`, { method: "POST", body: { token, password: newPassword } })).status, 400);
       const verificationToken = newToken();
