@@ -8,12 +8,13 @@ conservation après actualisation des deux vues à **15:22 Europe/Paris**. Le
 [parcours d'admission et son runtime](manual-invitation-runtime.md) restent la
 référence pour cette acceptation.
 
-**L'étape 0.27 est en cours.** Le contenu texte de la source est vérifié et un
+**L'étape 0.27 est validée en recette.** Le contenu texte de la source est vérifié et un
 nouvel export SQL a été créé. Le propriétaire a confirmé **« SQL importé,
 téléphone OK » à 16:40 Europe/Paris** après le lot de transfert privé, import
 isolé et parcours mobile. Le Manager présente une copie non vide de **1,57 Mo**.
-La comparaison de cette copie avec l'export figé et son contrôle cryptographique
-restent à effectuer. Le pilote et la mise en production ne sont pas encore
+À **17:08 Europe/Paris**, le propriétaire a fourni le reçu **`status: verified`**
+du contrôle épinglé : la copie correspond à l'export figé et les données
+chiffrées sont lisibles. Le pilote élargi et la mise en production ne sont pas
 déclarés ouverts.
 
 Le runtime de recette conserve la révision épinglée `14a43104` et le minimum
@@ -74,11 +75,12 @@ servis conservent le minimum client attendu de huit caractères. Ce contrôle ne
 crée ni session utilisateur ni nouvel échange et ne valide pas l'installation
 PWA sur un téléphone.
 
-## Restauration isolée : état et prochaine action
+## Restauration isolée validée
 
 Une nouvelle base de restauration, initialement vérifiée vide, a reçu l'import
-du propriétaire. Elle ne possède toujours aucun utilisateur SQL autorisé.
-Le compte de l'application reste limité à sa base source.
+du propriétaire. Le Manager relu après son intervention confirme uniquement le
+droit de lecture du compte opérateur sur la copie, sans écriture ni
+administration. Le compte de l'application n'a aucun droit sur cette copie.
 
 Le sélecteur de fichiers d'import du Manager ne présente pas le volume privé
 Node contenant l'export. Le parcours demandé au propriétaire était le
@@ -86,12 +88,23 @@ transfert privé SFTP vers son PC puis l'importeur. Son import est confirmé ;
 le détail du transfert n'a pas été redécrit. Aucun déplacement du fichier
 dans un répertoire HTTP n'a été effectué par l'agent.
 
-La restauration doit conserver le code et les clés correspondants, les
-28 tables, les 28 entrées du registre et leurs empreintes. Les contrôles de la
-copie doivent comparer la structure physique et le contenu SQL à l'instantané
-exporté, puis exécuter le vérificateur texte avec les mêmes clés. Le traitement
-de la copie reste hors serveur HTTP et hors SMTP pour éviter l'émission de jobs
-e-mail restaurés.
+Le reçu fourni par le propriétaire provient du vérificateur **`db02bdfe`**,
+arbre **`7820a8d567f78a37624cc0c92bf59110965bf33d`**. Il confirme :
+
+| Contrôle de la copie | Résultat |
+| --- | --- |
+| Archive Gzip de référence | 11 425 octets, empreinte attendue conforme |
+| SQL décompressé comparé au dump de la copie | 62 344 octets, même SHA-256 |
+| Tables InnoDB et registre | 28 tables, 28 migrations conformes |
+| Données chiffrées authentifiées | 1 MFA, 1 payload e-mail, 2 messages |
+| Domaines désactivés | Compteurs à zéro |
+| Démarrage HTTP / SMTP | `false` / `false` |
+
+Le contrôle authentifie les données avec les trois clés existantes. La
+comparaison porte sur l'instantané exporté, indépendamment des messages qui
+ont pu être ajoutés à la source pendant la recette mobile. Le reçu est une
+preuve fournie par le propriétaire dans sa console ; l'agent n'a pas saisi son
+mot de passe SQL. Seuls les résultats neutres sont retranscrits ici.
 
 Le contrôle opérateur `scripts/capture-text-clone-verification.sh` demande le
 mot de passe existant par saisie masquée. Il réutilise la configuration privée,
@@ -116,6 +129,26 @@ ne publie que des empreintes, compteurs et états neutres. Une comparaison
 octet pour octet peut refuser une copie dont l'ordre physique diffère ; elle
 ne justifie ni une réimportation automatique, ni l'abandon d'un écart.
 
+## Repli, observation et périmètre de recette
+
+Le runtime texte demeure épinglé à **`14a43104`**. Le repli AUTH seul de la
+même révision est présent en fichier privé propriétaire `0700`. Sa
+configuration et son accès SQL ont déjà été validés avec un listener inactif ;
+ce constat ne constitue pas un basculement réel vers ce repli. L'ancienne
+version texte antérieure au minimum de huit caractères n'est pas un repli
+compatible avec les nouveaux identifiants de 8 à 13 caractères.
+
+Après le reçu, un contrôle ponctuel sur l'hébergement confirme **zéro fichier
+client SQL temporaire**, l'archive SQL et le coffre GPG inchangés, ainsi que
+**200** sur `/api/health` et `/api/ready`. Les douze contrôles HTTPS après le
+redémarrage précédent et le parcours téléphone du propriétaire complètent
+cette observation ; cela ne mesure pas une disponibilité continue.
+
+Le périmètre maintenu est la recette actuelle avec Jess et les comptes déjà
+créés pour l'exercice. Ce lot n'élargit pas le public invité et ne vaut pas
+ouverture de production. Les conditions générales d'ouverture ci-dessous
+restent distinctes de la validation technique du présent lot.
+
 ## Preuves automatisées et critères restants
 
 La CI de la révision **`25670d54`** confirme :
@@ -138,15 +171,22 @@ connexion cryptographique, vraies clés et liaisons altérées, fin de transacti
 et nettoyage, schéma et historique divergents. Ces 11 tests et les 26 tests
 cryptographiques existants passent localement, sans échec ni test ignoré ; les
 contrôles de syntaxe Node et Bash passent aussi. Cela ne remplace pas le reçu
-de vérification de la copie réelle.
+de vérification de la copie réelle, désormais fourni par le propriétaire.
+
+La CI exacte de **`db02bdfe451b46ea1739c9719a8fd975fc1708db`** passe aussi
+ses cinq jobs : **1 709 tests généraux, 1 684 réussis, 25 ignorés**, MariaDB
+10.11 et 11.4, Chrome chat et Chrome HTTPS/administrateur. Le premier job Chrome
+HTTPS de la PR avait expiré lors de la création de session WebDriver, avant le
+scénario applicatif ; sa relance ciblée réussit à la deuxième tentative.
+Preuves : [push](https://github.com/fredbuhr/jessiemessage/actions/runs/38919754414)
+et [PR](https://github.com/fredbuhr/jessiemessage/actions/runs/38919761110).
 
 - [x] Import isolé déclaré par le propriétaire après le lot demandé, qui
   comprenait le transfert privé sur PC. Sa confirmation ne contient pas de
-  nouveau reçu SHA-256 ;
-  la concordance des données restaurées doit encore être établie.
-- [ ] Comparer structure et contenu de la copie à l'export figé, puis obtenir
-  une vérification cryptographique texte complète et saine. Les nouveaux
-  messages du parcours mobile peuvent avoir modifié la source depuis l'export.
+  nouveau reçu de hachage sur PC ; le contrôle suivant établit la concordance
+  intégrale du SQL restauré avec l'archive attendue.
+- [x] Structure et contenu de la copie conformes à l'export figé ; contrôle
+  cryptographique texte sain, reçu propriétaire `status: verified` à 17:08.
 - [x] Parcours groupé sur téléphone confirmé par le propriétaire. Le lot
   demandé associait le client mobile à l'administrateur sur ordinateur :
   lancement depuis l'icône si
@@ -156,13 +196,20 @@ de vérification de la copie réelle.
   résultat déclaré « téléphone OK » ; appareil et navigateur non précisés.
   Cette confirmation ne constitue pas une certification de toutes les
   plateformes. L'invitation et l'e-mail déjà validés ne sont pas à refaire.
-- [ ] Consigner le point de repli, l'observation du service et le périmètre des
-  premiers invités avant d'ouvrir le pilote limité.
+- [x] Point de repli, observation ponctuelle du service et périmètre actuel de
+  recette consignés ci-dessus. Le pilote élargi n'est pas ouvert.
 
 Les points d'ouverture déjà consignés dans la [recette générale](preproduction-acceptance.md)
 restent ouverts, notamment les choix de conservation, le parcours de suppression
 et les informations du service. Les fonctions hors du profil texte restent
 dans le périmètre de la version complète.
 
-**Étape finale : 0.27 en cours — import isolé et téléphone confirmés ; contrôle
-de la copie restaurée et conditions du pilote encore à terminer.**
+La prochaine étape **0.28 — photos privées** réemploiera les modules médias,
+Sharp, les autorisations, la galerie et les quotas déjà présents. Elle doit
+étendre le profil privé et sa sauvegarde avec une vraie clé média et un
+stockage persistant privé, puis valider ensemble échange, galerie et
+restauration des fichiers. Récupération client, CRM et diffusions restent au
+périmètre de la version complète.
+
+**Étape finale : 0.27 validée en recette — texte, restauration isolée et
+téléphone acceptés ; prochain lot 0.28, photos privées. Production non ouverte.**

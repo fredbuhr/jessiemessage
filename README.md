@@ -2,9 +2,9 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-**Current work — stage 0.27, application 0.24.0:** see [text-pilot preparation and remaining checks](docs/pilot-preparation.md). The [accepted stage 0.26 runtime](docs/manual-invitation-runtime.md) uses the existing MariaDB, Nodemailer, OTPAuth and Sharp components. Invitations, verified email and explicit approval by Jess gate client access. No independent age-assurance claim or new KYC provider is introduced.
+**Current status — stage 0.27 accepted in recipe, application 0.24.0:** see [text-pilot acceptance and remaining opening conditions](docs/pilot-preparation.md). The [accepted stage 0.26 runtime](docs/manual-invitation-runtime.md) uses the existing MariaDB, Nodemailer, OTPAuth and Sharp components. Invitations, verified email and explicit approval by Jess gate client access. No independent age-assurance claim or new KYC provider is introduced.
 
-The owner confirmed the new isolated SQL import and phone journey on 16 October at 16:40 Europe/Paris. The restored-copy comparison and cryptographic check remain pending; the operator checker reuses the existing native MariaDB client and text verifier without changing the running application.
+Stage 0.27 is accepted in recipe: the owner confirmed the isolated SQL import and phone journey at 16:40 Europe/Paris, then provided the successful restored-copy receipt at 17:08. The copy matches the frozen SQL export and its encrypted text data authenticates. The running application stays pinned to `14a43104`; the next lot is private photos using the existing media modules. Production remains unopened.
 
 **Stages 0.25 and 0.26 are accepted in recipe.** The pinned `14a43104` text runtime is active, with an eight-character client password minimum. The real administrator and TOTP are preserved. The owner verified the independent coffre download/hash/decryption; an isolated SQL restore was checked. Migration 0028, actual verification-email reception and the invited registration → approval → two-way text journey are accepted, including persistence after reloading both views. Photos, CRM, broadcasts and client recovery remain disabled in this profile. Production publication remains pending. `contact@jessiemessage.com` remains the official address.
 
