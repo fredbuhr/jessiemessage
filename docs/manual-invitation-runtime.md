@@ -2,10 +2,20 @@
 
 ## État courant
 
-Application 0.24.0. **Étape 0.25 encore ouverte ; lot 0.26 en préparation.**
+Application 0.24.0. **Étape 0.25 validée ; lot 0.26 en préparation.**
 Le service hébergé reste à `d4c1b95`, AUTH seule, tant qu'une activation explicite
 et sa recette ne sont pas consignées. Ce document décrit le candidat de travail,
 pas une preuve de déploiement ou d'envoi d'e-mail.
+
+Le 16 octobre 2026, le propriétaire a confirmé la copie PC du coffre AUTH,
+son SHA-256 conforme et son déchiffrement local. L'export SQL Gzip de 9 575 octets
+a été importé dans une base distincte. Les contrôles en lecture ont confirmé
+28 tables InnoDB, les empreintes exactes des 27 migrations appliquées, un
+administrateur avec MFA et huit codes de secours inutilisés, aucun client et
+aucune référence de clé étrangère hors de la copie. Les checksums natifs des
+28 tables et les empreintes canoniques de structure correspondent entre source
+et copie : 225 colonnes, 156 entrées d'index, 167 CHECK et 55 entrées de clés
+étrangères. Aucun démarrage applicatif contre la copie n'a été effectué.
 
 Le périmètre demandé est une messagerie privée pour des invités sélectionnés par
 Jess. Le propriétaire indique que leur majorité est vérifiée en amont sur
@@ -61,14 +71,18 @@ identifiants ; ne rien inventer et ne pas entrer les secrets dans le chat.
 
 ## Ordre opérateur avant activation réelle
 
-1. Terminer la copie indépendante du coffre AUTH et préparer un export SQL
-   cohérent avant la migration. Conserver code, fichiers et réglages actuels.
+1. Conserver la copie indépendante du coffre AUTH et l'export SQL dont la
+   restauration isolée est vérifiée. Conserver code, fichiers et réglages actuels.
 2. Retenir une révision dont la CI exacte a réussi, l'installer dans un nouveau
    checkout épinglé et contrôler l'arbre. Préserver la release neutre qui fournit
    encore les dépendances partagées ; ne pas la réinstaller.
 3. Appliquer uniquement la migration manquante avec le compte de migration
-   existant et la procédure privée déjà utilisée, après vérification de la base
-   cible. Aucun compte runtime ne reçoit de nouveaux droits de migration.
+   existant : exécuter `scripts/capture-migration.sh status`, puis la même
+   commande avec `upgrade`, après vérification de la base cible répétée dans
+   `--database` et `--confirm-database`. Le reçu attendu annonce 28 migrations,
+   une appliquée et 27 inchangées. `initialize` reste réservé à une base neuve ;
+   `upgrade` exige un préfixe appliqué conforme suivi uniquement de migrations
+   en attente. Aucun compte runtime ne reçoit de nouveaux droits de migration.
 4. Exécuter personnellement la préparation ci-dessous, puis créer et vérifier un
    nouveau coffre incluant le fichier messaging.
 5. Exécuter le contrôle passif du profil et des schémas. Il ne lance ni listener,
@@ -153,7 +167,7 @@ hébergée à conserver.
 ## Ce lot ne livre pas encore
 
 Photos, CRM, diffusions, récupération client et notifications restent hors du
-profil texte. Leur code est conservé pour les lots suivants. Le transfert PC du
-coffre, les essais réels SMTP et mobiles, la restauration SQL/médias et la
-production limitée restent à confirmer. Aucun nouveau framework ou service
+profil texte. Leur code est conservé pour les lots suivants. Les essais réels
+SMTP et mobiles, la restauration des futurs médias et la production limitée
+restent à confirmer. Aucun nouveau framework ou service
 externe n'est ajouté.

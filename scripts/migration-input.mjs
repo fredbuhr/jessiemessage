@@ -8,7 +8,7 @@ const MAX_PASSWORD_BYTES = 4096;
 
 export function parseArguments(args) {
   const [command, ...flags] = Array.isArray(args) ? args : [];
-  if (!["status", "initialize"].includes(command) || flags.length % 2) fail("MIGRATION_INPUT_USAGE");
+  if (!["status", "initialize", "upgrade"].includes(command) || flags.length % 2) fail("MIGRATION_INPUT_USAGE");
   const options = { command };
   const names = new Map([["--host", "host"], ["--port", "port"], ["--database", "database"],
     ["--confirm-database", "confirmation"], ["--user", "user"]]);

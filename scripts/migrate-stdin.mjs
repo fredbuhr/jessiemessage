@@ -49,16 +49,25 @@ export async function run(options, password, {
     }
     const empty = before.every((row) => row.state === "pending");
     const alreadyApplied = before.every((row) => row.state === "applied");
-    if (!empty && !alreadyApplied) fail("MIGRATION_INPUT_NOT_FRESH");
+    const pendingIndex = before.findIndex((row) => row.state === "pending");
+    if (selected.command === "upgrade") {
+      // An upgrade starts from an existing, clean prefix. Never initialize an
+      // empty schema or silently recover an interrupted migration here.
+      const cleanPrefix = pendingIndex > 0
+        && before.slice(0, pendingIndex).every((row) => row.state === "applied")
+        && before.slice(pendingIndex).every((row) => row.state === "pending");
+      if (!alreadyApplied && !cleanPrefix) fail("MIGRATION_INPUT_NOT_UPGRADABLE");
+    } else if (!empty && !alreadyApplied) fail("MIGRATION_INPUT_NOT_FRESH");
     let applied = 0;
-    if (empty) {
+    if (!alreadyApplied) {
+      // applyMigrations reacquires the lock and revalidates history before DDL.
       const result = await apply(connection, context);
       if (!Array.isArray(result?.applied) || result.applied.length > migrations.length) fail("MIGRATION_INPUT_HISTORY");
       applied = result.applied.length;
     }
     const after = await status(connection, context);
     if (!valid(after) || !after.every((row) => row.state === "applied")) fail("MIGRATION_INPUT_HISTORY");
-    return { status: "prepared", engineVerified: true, transportVerified: true, migrations: migrations.length,
+    return { status: selected.command === "upgrade" ? "upgraded" : "prepared", engineVerified: true, transportVerified: true, migrations: migrations.length,
       applied, unchanged: migrations.length - applied };
   } finally {
     try { if (connection) await connection.end(); }
