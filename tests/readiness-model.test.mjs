@@ -5,7 +5,7 @@ import { CONTACT_EMAIL, createReadinessState, clearReadiness, readinessTicket, c
 const now = 1800000000000;
 const admin = (extra = {}) => ({ user: { id: "a".repeat(32), role: "admin", pseudonym: "Jessie" }, csrf: "x".repeat(43), expiresAt: now + 3600000, ...extra });
 const summary = (extra = {}) => ({ contactEmail: CONTACT_EMAIL, mail: { configured: true, sender: CONTACT_EMAIL, replyTo: CONTACT_EMAIL },
-  features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: true, broadcasts: true },
+  features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: true, broadcasts: true, notifications: false },
   checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" }, ...extra });
 const proof = (extra = {}) => ({ status: "verified", checkedAt: now, scope: "smtp_authentication", delivery: "not_checked", ...extra });
 function connected() {

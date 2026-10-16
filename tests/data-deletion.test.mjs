@@ -22,14 +22,14 @@ function changeMigration(input, index, change) {
   const value = input.migrations[index]; value.sql = change(value.sql); value.checksum = checksumSql(value.sql);
 }
 
-test("deletion plan covers all 27 policy categories and remains blocked even when the selected inventory is empty", () => {
+test("deletion plan covers all 29 policy categories and remains blocked even when the selected inventory is empty", () => {
   const input = fixture(), before = structuredClone(input), plan = buildDeletionPlan(input);
   assert.deepEqual(input, before, "the pure builder leaves every input and migration unchanged");
   assert.deepEqual(Object.keys(plan), ["format", "version", "generatedAt", "simulationOnly", "executable", "retentionDecided", "affectedCategories",
     "categories", "candidateOrder", "dependencies", "observations", "blockers", "rollback"]);
   assert.equal(plan.format, "jessiemessage-deletion-simulation"); assert.equal(plan.version, 1); assert.equal(plan.generatedAt, "2026-10-15T14:00:00.123Z");
   assert.equal(plan.simulationOnly, true); assert.equal(plan.executable, false); assert.equal(plan.retentionDecided, false); assert.equal(plan.affectedCategories, 0);
-  assert.equal(plan.categories.length, 27); assert.deepEqual(plan.categories.map((entry) => entry.table), DATA_POLICY.map((entry) => entry.table));
+  assert.equal(plan.categories.length, 29); assert.deepEqual(plan.categories.map((entry) => entry.table), DATA_POLICY.map((entry) => entry.table));
   for (const entry of plan.categories) {
     assert.deepEqual(Object.keys(entry), ["table", "scope", "count", "truncated", "handling"]);
     assert.equal(entry.handling, entry.scope === "subject" ? "review_subject_rows" : "preserve_shared");
@@ -40,18 +40,18 @@ test("deletion plan covers all 27 policy categories and remains blocked even whe
     cloneRestoreRequiredForSchemaChange: true, noWorkersDuringCloneChecks: true, historyExamples: {
       basis: "synthetic_applied_ledgers_from_migrations", cases: [
         { codeMigrationCount: 25, recordedMigrationCount: 25, canStart: true, reason: "matching_history" },
-        { codeMigrationCount: 25, recordedMigrationCount: 28, canStart: false, reason: "database_ahead" },
-        { codeMigrationCount: 28, recordedMigrationCount: 25, canStart: false, reason: "migrations_pending" },
-        { codeMigrationCount: 28, recordedMigrationCount: 28, canStart: true, reason: "matching_history" },
+        { codeMigrationCount: 25, recordedMigrationCount: 30, canStart: false, reason: "database_ahead" },
+        { codeMigrationCount: 30, recordedMigrationCount: 25, canStart: false, reason: "migrations_pending" },
+        { codeMigrationCount: 30, recordedMigrationCount: 30, canStart: true, reason: "matching_history" },
       ],
     } });
 });
 
-test("rollback examples use real migration checksums in synthetic 25/28 ledgers without certifying a live database", () => {
+test("rollback examples use real migration checksums in synthetic 25/30 ledgers without certifying a live database", () => {
   const input = fixture(), plan = buildDeletionPlan(input), examples = plan.rollback.historyExamples;
   assert.equal(examples.basis, "synthetic_applied_ledgers_from_migrations");
   assert.deepEqual(examples.cases.map((entry) => [entry.codeMigrationCount, entry.recordedMigrationCount, entry.canStart]),
-    [[25, 25, true], [25, 28, false], [28, 25, false], [28, 28, true]]);
+    [[25, 25, true], [25, 30, false], [30, 25, false], [30, 30, true]]);
   for (const entry of examples.cases) assert.deepEqual(Object.keys(entry), ["codeMigrationCount", "recordedMigrationCount", "canStart", "reason"]);
   assert.equal(plan.rollback.codeOnlyRollbackCertified, false); assert.equal(plan.executable, false);
   assert.doesNotMatch(JSON.stringify(examples), /checksum|\.sql|CREATE TABLE|password|email|observedDatabase|currentDatabase/);
@@ -61,7 +61,7 @@ test("rollback examples use real migration checksums in synthetic 25/28 ledgers 
 
 test("candidate review order derives the actual FK graph, includes every subject table once and puts children before parents", () => {
   const plan = buildDeletionPlan(fixture());
-  assert.equal(subjectNames.length, 20); assert.equal(plan.candidateOrder.length, 20);
+  assert.equal(subjectNames.length, 22); assert.equal(plan.candidateOrder.length, 22);
   assert.deepEqual([...plan.candidateOrder.map((entry) => entry.table)].sort(), [...subjectNames].sort());
   const positions = new Map(plan.candidateOrder.map((entry, index) => [entry.table, index]));
   for (const entry of plan.candidateOrder) assert.deepEqual(entry, { table: entry.table, proposedAction: "review", blocked: true });
@@ -73,7 +73,7 @@ test("candidate review order derives the actual FK graph, includes every subject
       foreignKeys += 1; actual.add(`${table}:${match[1]}`);
     }
   }
-  assert.equal(foreignKeys, 36); assert.equal(actual.size, 34); assert.equal(plan.dependencies.length, 34);
+  assert.equal(foreignKeys, 40); assert.equal(actual.size, 38); assert.equal(plan.dependencies.length, 38);
   assert.deepEqual(new Set(plan.dependencies.map(({ child, parent }) => `${child}:${parent}`)), actual);
   for (const relation of plan.dependencies) {
     assert.deepEqual(Object.keys(relation), ["child", "parent"]);
@@ -84,6 +84,9 @@ test("candidate review order derives the actual FK graph, includes every subject
   assert.ok(positions.get("broadcast_recipients") < positions.get("messages"));
   assert.ok(positions.get("media_storage_objects") < positions.get("media_assets"));
   assert.ok(positions.get("crm_memberships") < positions.get("crm_profiles"));
+  assert.ok(positions.get("push_outbox") < positions.get("push_subscriptions"));
+  assert.ok(positions.get("push_outbox") < positions.get("messages"));
+  assert.ok(positions.get("push_subscriptions") < positions.get("sessions"));
 });
 
 test("category counts are review observations rather than deletion totals, with input order normalized and no identifiers echoed", () => {
@@ -96,7 +99,7 @@ test("category counts are review observations rather than deletion totals, with 
   for (const entry of input.migrations) entry.path = "/private/secret.sql";
   input.inventory.reverse(); input.facts.reverse(); input.clientId = "private-client-identifier"; input.password = "secret";
   const plan = buildDeletionPlan(input);
-  assert.equal(plan.affectedCategories, 20);
+  assert.equal(plan.affectedCategories, 22);
   assert.deepEqual(plan.observations.map((entry) => entry.name), [...DELETION_FACT_NAMES]);
   for (const entry of plan.observations) assert.deepEqual(Object.keys(entry), ["name", "count", "truncated"]);
   assert.doesNotMatch(JSON.stringify(plan), /private|secret|example\.invalid|ciphertext|storageKey|clientId|\/private\/|DELETE|SELECT|INSERT|UPDATE|DROP/);
@@ -105,19 +108,19 @@ test("category counts are review observations rather than deletion totals, with 
   assert.notEqual(buildDeletionPlan(input).dependencies[0].child, "changed");
 });
 
-test("all 19 fact names project exact bounded counts without attributing active sessions to full authentication proof", () => {
+test("all 23 fact names project exact bounded counts without attributing active sessions to full authentication proof", () => {
   const input = fixture(); fact(input, "activeSessions").count = 10;
   const plan = buildDeletionPlan(input);
-  assert.equal(plan.observations.length, 19); assert.deepEqual(plan.observations[0], { name: "activeSessions", count: 10, truncated: false });
+  assert.equal(plan.observations.length, 23); assert.deepEqual(plan.observations[0], { name: "activeSessions", count: 10, truncated: false });
   assert.deepEqual(plan.blockers, [...always, "active_sessions_require_revocation"]);
 });
 
 test("pending and sending work each raises its fixed review blocker without disclosing jobs or treating completed recipients as pending", () => {
-  for (const name of ["verificationSending", "recoverySending", "broadcastSending"]) {
+  for (const name of ["verificationSending", "recoverySending", "broadcastSending", "pushSending"]) {
     const input = fixture(); fact(input, name).count = 1;
     assert.deepEqual(buildDeletionPlan(input).blockers, [...always, "jobs_in_flight"]);
   }
-  for (const name of ["verificationPending", "recoveryPending", "broadcastPending"]) {
+  for (const name of ["verificationPending", "recoveryPending", "broadcastPending", "pushPending"]) {
     const input = fixture(); fact(input, name).count = 1;
     assert.deepEqual(buildDeletionPlan(input).blockers, [...always, "pending_deliveries_review"]);
   }
@@ -134,6 +137,12 @@ test("every owned media journal state requires its protocol, including already r
   assert.deepEqual(buildDeletionPlan(observed).blockers, [...always, "media_protocol_required"]);
 });
 
+test("enabled notification subscriptions require explicit revocation before any future deletion executor", () => {
+  const input = fixture(); fact(input, "notificationSubscriptionsEnabled").count = 2;
+  assert.deepEqual(buildDeletionPlan(input).blockers, [...always, "notification_subscriptions_require_revocation"]);
+  assert.equal(buildDeletionPlan(input).executable, false);
+});
+
 test("foreign media links, shared peer media and each inconsistent binding receive independent fixed blockers", () => {
   for (const name of ["ownedMediaOutsideConversationLinks", "ownedMediaCampaignLinks"]) {
     const input = fixture(); fact(input, name).count = 1;
@@ -141,7 +150,7 @@ test("foreign media links, shared peer media and each inconsistent binding recei
   }
   const shared = fixture(); fact(shared, "sharedPeerMediaLinks").count = 2;
   assert.deepEqual(buildDeletionPlan(shared).blockers, [...always, "shared_peer_media_preserved"]);
-  for (const name of ["foreignMessageBindings", "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings"]) {
+  for (const name of ["foreignMessageBindings", "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings", "foreignPushBindings"]) {
     const input = fixture(); fact(input, name).count = 1;
     assert.deepEqual(buildDeletionPlan(input).blockers, [...always, "inconsistent_bindings"]);
   }
@@ -161,7 +170,7 @@ test("capped observations explicitly remain lower bounds while an exact count at
   const input = fixture();
   for (const entry of input.facts) { entry.count = 10000; entry.truncated = true; }
   category(input, "broadcast_recipients").count = 1;
-  assert.deepEqual(buildDeletionPlan(input).blockers, [...always, "capped_observations", "active_sessions_require_revocation", "jobs_in_flight", "pending_deliveries_review", "media_protocol_required",
+  assert.deepEqual(buildDeletionPlan(input).blockers, [...always, "capped_observations", "active_sessions_require_revocation", "jobs_in_flight", "pending_deliveries_review", "notification_subscriptions_require_revocation", "media_protocol_required",
     "external_media_references", "shared_peer_media_preserved", "inconsistent_bindings", "campaign_audience_review"]);
 });
 

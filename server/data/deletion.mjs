@@ -54,7 +54,7 @@ function columnList(value) {
 }
 function schema(migrations) {
   validateMigrationPlan(migrations);
-  if (migrations.length !== 28 || createdMigrationTables(migrations).length !== TABLES.size || TABLES.size !== 27) fail();
+  if (migrations.length !== 30 || createdMigrationTables(migrations).length !== TABLES.size || TABLES.size !== 29) fail();
   const tables = new Map(), foreignKeys = [], constraintNames = new Set();
   for (const migration of migrations) {
     const sql = structuralSql(migration.sql), create = /^\s*CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(sql);
@@ -148,12 +148,13 @@ export function buildDeletionPlan(input = {}) {
     const blockers = [...ALWAYS_BLOCKED];
     if ([...categories, ...facts].some((item) => item.truncated)) blockers.push("capped_observations");
     if (present("activeSessions")) blockers.push("active_sessions_require_revocation");
-    if (present("verificationSending", "recoverySending", "broadcastSending")) blockers.push("jobs_in_flight");
-    if (present("verificationPending", "recoveryPending", "broadcastPending")) blockers.push("pending_deliveries_review");
+    if (present("verificationSending", "recoverySending", "broadcastSending", "pushSending")) blockers.push("jobs_in_flight");
+    if (present("verificationPending", "recoveryPending", "broadcastPending", "pushPending")) blockers.push("pending_deliveries_review");
+    if (present("notificationSubscriptionsEnabled")) blockers.push("notification_subscriptions_require_revocation");
     if (categoryCount("media_storage_objects") > 0 || present("mediaReserved", "mediaRegistered", "mediaCleanupPending", "mediaReleased")) blockers.push("media_protocol_required");
     if (present("ownedMediaOutsideConversationLinks", "ownedMediaCampaignLinks")) blockers.push("external_media_references");
     if (present("sharedPeerMediaLinks")) blockers.push("shared_peer_media_preserved");
-    if (present("foreignMessageBindings", "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings")) blockers.push("inconsistent_bindings");
+    if (present("foreignMessageBindings", "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings", "foreignPushBindings")) blockers.push("inconsistent_bindings");
     if (categoryCount("broadcast_recipients") > 0) blockers.push("campaign_audience_review");
     return { format: "jessiemessage-deletion-simulation", version: 1, generatedAt: new Date(now).toISOString(),
       simulationOnly: true, executable: false, retentionDecided: false,

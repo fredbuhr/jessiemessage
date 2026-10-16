@@ -4,6 +4,7 @@ const SOURCES = Object.freeze([
   { name: "verification", table: "mail_outbox", state: "status" },
   { name: "recovery", table: "password_reset_outbox", state: "status" },
   { name: "broadcasts", table: "broadcast_recipients", state: "state" },
+  { name: "notifications", table: "push_outbox", state: "status" },
 ]);
 
 export class OperationsStoreError extends Error {
@@ -35,10 +36,10 @@ function timestamp(value) {
 const count = (value) => ({ count: Math.min(value.length, SAMPLE_LIMIT), truncated: value.length > SAMPLE_LIMIT });
 
 /** Capped scheduling metadata only. It never claims work or verifies delivery eligibility. */
-export function createOperationsStore({ pool, verification = true, recovery = false, broadcasts = false } = {}) {
+export function createOperationsStore({ pool, verification = true, recovery = false, broadcasts = false, notifications = false } = {}) {
   if (typeof pool?.getConnection !== "function"
-    || [verification, recovery, broadcasts].some((value) => typeof value !== "boolean")) fail();
-  const enabled = { verification, recovery, broadcasts };
+    || [verification, recovery, broadcasts, notifications].some((value) => typeof value !== "boolean")) fail();
+  const enabled = { verification, recovery, broadcasts, notifications };
   const sources = SOURCES.filter(({ name }) => enabled[name]);
   return Object.freeze({
     async sample({ now } = {}) {

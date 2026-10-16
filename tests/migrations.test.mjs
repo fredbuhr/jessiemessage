@@ -18,8 +18,8 @@ const errorCode = (code) => (error) => error.code === code;
 
 test("all committed migrations have consecutive names, exact SHA-256 checksums and a supported SQL format", async () => {
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 28);
-  assert.deepEqual(migrations.map((item) => item.version), Array.from({ length: 28 }, (_, index) => index + 1));
+  assert.equal(migrations.length, 30);
+  assert.deepEqual(migrations.map((item) => item.version), Array.from({ length: 30 }, (_, index) => index + 1));
   assert.ok(migrations.every((item) => /^[0-9a-f]{64}$/.test(item.checksum)));
 });
 
@@ -39,11 +39,12 @@ test("the admission migration replaces only its reviewed CHECK in one atomic ALT
   ]) assert.throws(() => validateSql(changed), errorCode("SQL_FORMAT"), changed);
 });
 
-test("table inventory contains 27 CREATE tables independently from 28 ledger migrations", async () => {
+test("table inventory contains 29 CREATE tables independently from 30 ledger migrations", async () => {
   const plan = await loadMigrations(), tables = createdMigrationTables(plan);
-  assert.equal(tables.length, 27); assert.equal(new Set(tables).size, 27);
-  assert.deepEqual(tables, createdMigrationTables(plan.slice(0, 27)));
-  assert.equal(tables[0], "users"); assert.equal(tables.at(-1), "media_storage_objects");
+  assert.equal(tables.length, 29); assert.equal(new Set(tables).size, 29);
+  assert.deepEqual(tables.slice(0, 27), createdMigrationTables(plan.slice(0, 27)));
+  assert.deepEqual(tables.slice(-2), ["push_subscriptions", "push_outbox"]);
+  assert.equal(tables[0], "users"); assert.equal(tables.at(-1), "push_outbox");
   const commented = [{ ...migration(), sql: `/* reviewed */ ${sql}`, checksum: checksumSql(`/* reviewed */ ${sql}`) }];
   assert.deepEqual(createdMigrationTables(commented), ["example"]);
   assert.throws(() => createdMigrationTables([{ ...migration(), checksum: "0".repeat(64) }]), errorCode("MIGRATION_PLAN"));

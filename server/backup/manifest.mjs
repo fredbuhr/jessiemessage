@@ -68,6 +68,8 @@ const instant = (value) => { if (!Number.isSafeInteger(value) || value < 0 || va
 const profileKeyNames = (profile) => {
   if (profile === "messaging-photos") return KEY_NAMES.slice(0, 4);
   if (profile === "full") return KEY_NAMES;
+  if (profile === "messaging-photos-notify") return [...KEY_NAMES.slice(0, 4), "notificationKey"];
+  if (profile === "full-notify") return [...KEY_NAMES, "notificationKey"];
   fail();
 };
 function keySet(keys, names = KEY_NAMES) {
@@ -110,20 +112,22 @@ function canaryFields(value, name) {
 }
 function manifestValue(manifest) {
   const result = safeJson(manifest);
-  const photos = result.version === 2;
-  exact(result, ["version", "payload", "signature", ...(photos ? ["profile"] : [])]);
-  if ((!photos && result.version !== 1) || photos && result.profile !== "messaging-photos"
+  const profiled = result.version === 2 || result.version === 3;
+  exact(result, ["version", "payload", "signature", ...(profiled ? ["profile"] : [])]);
+  if (![1, 2, 3].includes(result.version) || result.version === 2 && result.profile !== "messaging-photos"
+    || result.version === 3 && !["messaging-photos-notify", "full-notify"].includes(result.profile)
     || typeof result.signature !== "string" || !HEX.test(result.signature)) fail();
   exact(result.payload, ["createdAt", "identity", "snapshot", "canaries"]);
   instant(result.payload.createdAt); identityValue(result.payload.identity);
   // The coordinator owns the snapshot's schema and ciphertext-only contents.
   plain(result.payload.snapshot);
-  const names = profileKeyNames(photos ? result.profile : "full");
+  const names = profileKeyNames(profiled ? result.profile : "full");
   exact(result.payload.canaries, names);
   for (const name of names) canaryFields(result.payload.canaries[name], name);
   return result;
 }
-const envelope = (profile) => profile === "messaging-photos" ? { version: 2, profile } : { version: 1 };
+const envelope = (profile) => profile === "messaging-photos" ? { version: 2, profile }
+  : ["messaging-photos-notify", "full-notify"].includes(profile) ? { version: 3, profile } : { version: 1 };
 function binding(payload, profile = "full") {
   return createHash("sha256").update(canonical({ ...envelope(profile), createdAt: payload.createdAt, identity: payload.identity,
     snapshotHash: createHash("sha256").update(canonical(payload.snapshot)).digest("hex") })).digest();
@@ -171,7 +175,7 @@ export function createBackupManifest({ snapshot, identity, keys, now, profile = 
 export function verifyBackupManifest({ manifest, keys } = {}) {
   let secrets;
   try {
-    const result = manifestValue(manifest), profile = result.version === 2 ? result.profile : "full", names = profileKeyNames(profile);
+    const result = manifestValue(manifest), profile = result.version === 1 ? "full" : result.profile, names = profileKeyNames(profile);
     secrets = keySet(keys, names);
     const expected = Buffer.from(signature(result.payload, secrets.mediaKey, profile), "hex");
     if (!timingSafeEqual(Buffer.from(result.signature, "hex"), expected)) fail();

@@ -2,7 +2,7 @@ export class BackupCryptoStoreError extends Error {
   constructor() { super("Private backup data could not be read."); this.name = "BackupCryptoStoreError"; this.code = "BACKUP_DATABASE"; }
 }
 const fail = () => { throw new BackupCryptoStoreError(); };
-const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "media"];
+const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "media", "notifications", "notificationJobs"];
 function bytes(value, length) { if (!Buffer.isBuffer(value) || value.length !== length) fail(); return Buffer.from(value); }
 function nullableBytes(value, length) { return value === null ? null : bytes(value, length); }
 function text(value, maximum) { if (typeof value !== "string" || value.length < 1 || value.length > maximum) fail(); return value; }
@@ -32,6 +32,17 @@ const statements = {
     LEFT JOIN media_storage_objects o ON o.storage_key = a.storage_key`,
   columns: `a.id, a.owner_id, a.storage_key, a.content_digest, a.full_bytes, a.thumbnail_bytes,
     o.state AS journal_state, o.asset_id AS journal_asset_id, o.owner_id AS journal_owner_id`, where: "a.deleted_at IS NULL" },
+  notifications: { id: "p.id", from: `push_subscriptions p
+    LEFT JOIN users u ON u.id = p.user_id
+    LEFT JOIN sessions s ON s.id = p.session_id`,
+  columns: `p.id, p.user_id, p.role, p.session_id, p.credential_version, p.generation, p.endpoint_digest,
+    p.subscription_encrypted AS encrypted, u.role AS user_role, s.user_id AS session_user_id` },
+  notificationJobs: { id: "o.id", from: `push_outbox o
+    LEFT JOIN push_subscriptions p ON p.id = o.subscription_id
+    LEFT JOIN messages m ON m.id = o.message_id
+    LEFT JOIN conversations c ON c.id = m.conversation_id`,
+  columns: `o.id, o.subscription_generation, p.generation, p.user_id, p.role, m.sender_id, m.sender_role,
+    c.admin_id, c.client_id` },
 };
 
 function normalize(purpose, row) {
@@ -61,6 +72,13 @@ function normalize(purpose, row) {
     return { ...result, adminId: bytes(row.admin_id, 16), encrypted: text(row.encrypted, 32000),
       fingerprint: bytes(row.request_fingerprint, 32), mediaId: nullableBytes(row.media_id, 16), allowRepeatMedia: Number(row.allow_repeat_media) === 1 };
   }
+  if (purpose === "notifications") return { ...result, userId: bytes(row.user_id, 16), role: row.role, userRole: row.user_role,
+    sessionId: bytes(row.session_id, 16), sessionUserId: bytes(row.session_user_id, 16),
+    credentialVersion: integer(row.credential_version, 4294967295), generation: integer(row.generation, 4294967295),
+    endpointDigest: bytes(row.endpoint_digest, 32), encrypted: text(row.encrypted, 4096) };
+  if (purpose === "notificationJobs") return { ...result, userId: bytes(row.user_id, 16), role: row.role,
+    subscriptionGeneration: integer(row.subscription_generation, 4294967295), generation: integer(row.generation, 4294967295),
+    senderId: bytes(row.sender_id, 16), senderRole: row.sender_role, adminId: bytes(row.admin_id, 16), clientId: bytes(row.client_id, 16) };
   return { ...result, ownerId: bytes(row.owner_id, 16), storageKey: bytes(row.storage_key, 32), digest: bytes(row.content_digest, 32),
     fullBytes: integer(row.full_bytes, 10485760), thumbnailBytes: integer(row.thumbnail_bytes, 524288),
     journalState: row.journal_state, journalAssetId: nullableBytes(row.journal_asset_id, 16), journalOwnerId: nullableBytes(row.journal_owner_id, 16) };

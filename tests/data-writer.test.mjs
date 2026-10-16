@@ -146,8 +146,8 @@ test("final summary ignores private extras but rejects malformed whitelisted cou
   for (const value of [-1, 1.5, "2", NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
     const f = await fixture(t), writer = await f.writer(); await assert.rejects(writer.finalize({ rows: value, clientId: "secret" }), error); await absent(path.join(f.options.output, "COMPLETE.json"));
   }
-  const f = await fixture(t), writer = await f.writer(); await writer.json("inventory.json", {}); await writer.finalize({ inventoryCategories: 27 });
-  assert.deepEqual(JSON.parse(await readFile(path.join(f.options.output, "COMPLETE.json"), "utf8")).counts, { inventoryCategories: 27 });
+  const f = await fixture(t), writer = await f.writer(); await writer.json("inventory.json", {}); await writer.finalize({ inventoryCategories: 29 });
+  assert.deepEqual(JSON.parse(await readFile(path.join(f.options.output, "COMPLETE.json"), "utf8")).counts, { inventoryCategories: 29 });
 });
 
 test("closing an incomplete writer is idempotent and blocks queued or future completion", async (t) => {

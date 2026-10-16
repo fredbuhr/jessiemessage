@@ -235,7 +235,7 @@ test("readiness service shutdown closes its real isolated SMTP diagnostic before
   const service = await createReadinessService({ key: randomBytes(32),
     authService: { session: async () => ({ user: { id: "1".repeat(32), role: "admin", pseudonym: "Jess synthétique" },
       csrf: "A".repeat(43), expiresAt: Date.now() + 60000 }) }, authStore: { consumeRateLimit: async () => ({ allowed: true }) },
-    features: { clientAccess: false, chat: false, photos: false, clientFiles: false, passwordRecovery: false, broadcasts: false },
+    features: { clientAccess: false, chat: false, photos: false, clientFiles: false, passwordRecovery: false, broadcasts: false, notifications: false },
     mailConfig: { ...f.settings, smtp: { ...f.settings.smtp, replyTo: f.settings.smtp.from } },
     createTransport: (settings) => createVerificationTransport(settings, { connectSocket: f.connectSocket }),
   });

@@ -15,7 +15,7 @@ const keys = () => Object.fromEntries(names.map((name) => [name, randomBytes(32)
 const identity = () => ({ databaseTag: "1".repeat(64), rootPathTag: "2".repeat(64), rootPhysicalTag: "3".repeat(64),
   rootFingerprint: "4".repeat(64), rootAncestors: ["5".repeat(64), "6".repeat(64)] });
 const snapshot = () => ({ version: 1, schemaDigest: "7".repeat(64), coreDigest: "8".repeat(64),
-  counts: { rows: 0, tables: 28 }, objects: [], assets: [] });
+  counts: { rows: 0, tables: 30 }, objects: [], assets: [] });
 const valid = (changes = {}) => ({ snapshot: snapshot(), identity: identity(), keys: keys(), now, ...changes });
 const hasCode = (code = "BACKUP_MANIFEST_INVALID") => (error) => error instanceof BackupManifestError && error.code === code
   && error.message === "Private backup manifest operation failed." && error.cause === undefined;

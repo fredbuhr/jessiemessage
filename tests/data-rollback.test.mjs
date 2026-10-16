@@ -24,17 +24,17 @@ test("schema-25 fixture uses the unchanged real migration bytes from version 0.1
   const projection = older.map(({ version, name, checksum }) => ({ version, name, checksum }));
   assert.equal(createHash("sha256").update(JSON.stringify(projection)).digest("hex"),
     "36e6334d6e30f1498821ec5f1277a20ebd2621d6fb892ea2293e9a13088cbfa3");
-  assert.equal(migrations.length, 28);
+  assert.equal(migrations.length, 30);
 });
 
-test("the actual history validator permits only the diagonal of the 25/28 rollback matrix", () => {
+test("the actual history validator permits only the diagonal of the 25/30 rollback matrix", () => {
   reason(ledger(older), "matching_history", older);
   reason(ledger(migrations), "database_ahead", older);
   reason(ledger(older), "migrations_pending", migrations);
   reason(ledger(migrations), "matching_history", migrations);
 });
 
-test("matching schema-28 candidate packages retain their independent migration objects", () => {
+test("matching schema-30 candidate packages retain their independent migration objects", () => {
   const candidate = migrations.map((item) => ({ ...item }));
   const rows = ledger(migrations), before = structuredClone(rows);
   reason(rows, "matching_history", candidate);
@@ -73,7 +73,7 @@ test("gaps, duplicate rows, reordered rows and future versions fail closed", () 
   reason([full[0], ...full.slice(2)], "incomplete_history");
   reason([full[0], full[0]], "invalid_history");
   reason([full[1], full[0]], "incomplete_history");
-  reason([...full, { ...full.at(-1), version: 29, name: "0029_future.sql" }], "database_ahead");
+  reason([...full, { ...full.at(-1), version: 31, name: "0031_future.sql" }], "database_ahead");
   reason([...full, { ...full.at(-1), version: 99, name: "0099_future.sql" }], "incomplete_history");
 });
 

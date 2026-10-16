@@ -33,6 +33,7 @@ let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
 let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
 let broadcastPreference = null;
+let notificationsPanel = null;
 // The live region contains only a cumulative count for this visible selection.
 // No message body, sender name, caption or persistent announcement log is kept.
 let messageAnnouncement = null;
@@ -141,7 +142,21 @@ function clearChat() {
   for (const id of ["older-messages", "new-messages", "empty-message", "pending-controls"]) el(id).hidden = true;
   el("workspace").classList.remove("selected"); notice("");
 }
+function clearNotificationSettings() {
+  notificationsPanel?.clear(); notificationsPanel = null;
+  el("open-notifications").hidden = true;
+  if (el("notifications-dialog").open) el("notifications-dialog").close();
+}
+function mountNotificationSettings() {
+  if (notificationsPanel || !ready || !sessionOwner || !visible() || !globalThis.JessieNotifications) return;
+  const ticket = snapshot(), owner = { id: sessionOwner.id, csrf: sessionOwner.csrf };
+  notificationsPanel = globalThis.JessieNotifications.mount(el("notifications-chat-host"), {
+    role, owner, isCurrent: () => fresh(ticket, true) && ready && visible() && !loggingOut && sessionOwner?.id === owner.id && csrf === owner.csrf,
+    onAvailability: (available) => { if (fresh(ticket, true) && ready && visible()) el("open-notifications").hidden = !available; },
+  });
+}
 function clearPrivate() {
+  clearNotificationSettings();
   cancelConfirmation(); stopReconnect(); resumeTask = null; retryConnection(false);
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
   sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
@@ -190,7 +205,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; notice("", false, "session-status"); retryConnection(false);
+      el("workspace").hidden = false; notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
     } catch (error) {
       if (error.stale || !fresh(ticket, true)) return;
@@ -991,6 +1006,9 @@ el("back-to-inbox").addEventListener("click", () => {
   selectionLoading = false; focusInbox(returnId);
 });
 el("logout").addEventListener("click", () => { void logout(); });
+el("open-notifications").addEventListener("click", () => { if (!ready || !visible() || !notificationsPanel) return; el("notifications-dialog").showModal(); focusVisible(el("close-notifications")); });
+el("close-notifications").addEventListener("click", () => el("notifications-dialog").close());
+el("notifications-dialog").addEventListener("close", () => { focusVisible(el("open-notifications")); });
 el("retry-connection").addEventListener("click", () => { void resumeConnection({ reset: true }); });
 el("cancel-delete").addEventListener("click", cancelConfirmation);
 el("confirm-delete").addEventListener("close", cancelConfirmation);
@@ -1002,6 +1020,7 @@ window.addEventListener("beforeunload", (event) => { if (hasUnsavedWork()) { eve
 window.addEventListener("online", () => { void resumeConnection({ reset: true }); });
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
+    clearNotificationSettings();
     cancelConfirmation(); stopReconnect(); resumeTask = null; clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
     sendBusy = false; olderBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
@@ -1047,7 +1066,7 @@ async function start({ session = null } = {}) {
       }
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false; notice("", false, "session-status");
-      void refreshBroadcastAccess(); scheduleRead(); schedulePolling();
+      mountNotificationSettings(); void refreshBroadcastAccess(); scheduleRead(); schedulePolling();
     } catch (error) {
       if (error.stale || !fresh(task.ticket, true)) return;
       if (error.status === 401 || error.status === 403) { signOut(); return; }

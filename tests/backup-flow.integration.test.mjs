@@ -1,7 +1,7 @@
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash, randomBytes } from "node:crypto";
+import { createECDH, createHash, randomBytes } from "node:crypto";
 import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, readdir, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +20,7 @@ import { sealNotes } from "../server/crm/crypto.mjs";
 import { sealVerificationPayload } from "../server/mail/crypto.mjs";
 import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 import { sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
+import { sealSubscription, endpointDigest } from "../server/notifications/crypto.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const repositoryRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -59,9 +60,9 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
   const targetEnv = { ...process.env, JESSIEMESSAGE_DB_NAME: restoreDatabase,
     JESSIEMESSAGE_MIGRATION_DATABASE: restoreDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: restoreDatabase };
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
   const tables = createdMigrationTables(migrations);
-  assert.equal(tables.length, 27, "the admission ALTER adds a ledger entry, not a copied table");
+  assert.equal(tables.length, 29, "the admission ALTER adds a ledger entry, not a copied table");
   const allowedTables = [...tables, "schema_migrations", "migration_probe"];
   const qualified = (database, table) => {
     assert.ok([options.database, restoreDatabase].includes(database)); assert.ok(allowedTables.includes(table));
@@ -224,8 +225,8 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         } finally { inspector.release(); }
         t.diagnostic("inspection guards passed");
         const snapshot = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool }) });
-        assert.equal(snapshot.counts.tables, 28, "snapshot covers every application table and schema_migrations");
-        assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 28);
+        assert.equal(snapshot.counts.tables, 30, "snapshot covers every application table and schema_migrations");
+        assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 30);
         t.diagnostic("source snapshot passed");
       } finally { await inspectionPool.end(); }
       const result = await run("prepare", { env: process.env, root: sourceRoot, databaseName: options.database });
@@ -428,6 +429,45 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       const completed = await databaseHash(restoreDatabase);
       assert.equal((await main(args("restore"), targetEnv, deps)).restored, true);
       assert.equal(await databaseHash(restoreDatabase), completed); await sourceUnchanged();
+    });
+
+    await t.test("notification photo checkpoint restores encrypted subscriptions and pending jobs offline without changing delivery state", async () => {
+      const notificationKey = randomBytes(32), subscriptionId = id(), jobId = id();
+      const curve = createECDH("prime256v1"); curve.generateKeys();
+      const subscription = { endpoint: "https://fcm.googleapis.com/fcm/send/synthetic-offline-backup-only", expirationTime: null,
+        keys: { p256dh: curve.getPublicKey().toString("base64url"), auth: randomBytes(16).toString("base64url") } };
+      await sourceConnection.query(`INSERT INTO push_subscriptions (id, user_id, role, session_id, credential_version, generation,
+        endpoint_digest, subscription_encrypted, locale, created_at, updated_at) VALUES (?, ?, 'client', ?, 1, 1, ?, ?, 'fr', ?, ?)`,
+      [subscriptionId, client.id, client.sessionId, endpointDigest(subscription.endpoint, notificationKey),
+        sealSubscription(subscription, notificationKey, { subscriptionId, userId: client.id, generation: 1 }), sqlDate(now), sqlDate(now)]);
+      await sourceConnection.query(`INSERT INTO push_outbox (id, message_id, subscription_id, subscription_generation,
+        available_at, created_at, expires_at) VALUES (?, ?, ?, 1, ?, ?, ?)`, [jobId, messageId, subscriptionId, sqlDate(now), sqlDate(now), sqlDate(now + 86400000)]);
+      originalDatabaseHash = await databaseHash(options.database); originalFiles = await filesUnder(sourceRoot);
+      const notificationDependencies = (database, root, key = notificationKey) => {
+        const deps = dependencies(database, root), configure = deps.configure;
+        deps.configure = () => { const config = configure(); delete config.keys.crmKey; config.keys.notificationKey = key; return config; };
+        return deps;
+      };
+      const file = path.join(temporaryRoot, "photos-notify-checkpoint.json"), args = command => [command, "--offline", "--manifest", file, "--profile", "photos-notify"];
+      assert.equal((await main(args("prepare"), process.env, notificationDependencies(options.database, sourceRoot))).prepared, true);
+      const manifest = JSON.parse(await readFile(file, "utf8")); assert.equal(manifest.version, 3); assert.equal(manifest.profile, "messaging-photos-notify");
+      assert.deepEqual(Object.keys(manifest.payload.canaries).sort(), ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"].sort());
+      const legacy = dependencies(options.database, sourceRoot), configureLegacy = legacy.configure;
+      legacy.configure = () => { const config = configureLegacy(); delete config.keys.crmKey; return config; };
+      await assert.rejects(main(["prepare", "--offline", "--manifest", path.join(temporaryRoot, "must-not-omit-notifications.json"), "--profile", "photos"], process.env, legacy), backupError);
+      await clone();
+      const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      await assert.rejects(main(args("verify"), targetEnv, notificationDependencies(restoreDatabase, targetRoot, randomBytes(32))), backupError);
+      assert.equal((await main(args("verify"), targetEnv, notificationDependencies(restoreDatabase, targetRoot))).verified, true);
+      assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore);
+      assert.equal((await main(args("restore"), targetEnv, notificationDependencies(restoreDatabase, targetRoot))).restored, true);
+      const job = (await targetConnection.query("SELECT status, attempts, lease_token, lease_until, finished_at FROM push_outbox WHERE id = ?", [jobId]))[0];
+      assert.deepEqual({ ...job }, { status: "pending", attempts: 0, lease_token: null, lease_until: null, finished_at: null });
+      assert.equal((await targetConnection.query("SELECT enabled FROM push_subscriptions WHERE id = ?", [subscriptionId]))[0].enabled, 1);
+      const completed = await databaseHash(restoreDatabase);
+      assert.equal((await main(args("restore"), targetEnv, notificationDependencies(restoreDatabase, targetRoot))).restored, true);
+      assert.equal(await databaseHash(restoreDatabase), completed); await sourceUnchanged();
+      for (const text of output) assert.equal(text.includes(notificationKey.toString("base64url")) || text.includes(subscription.endpoint), false);
     });
 
     assert.ok(output.length > 0);

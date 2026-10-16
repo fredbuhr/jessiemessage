@@ -2,6 +2,8 @@
 
 // Only fixed interface sources belong in this catalog. Account fields stay raw.
 globalThis.JessieI18n?.register({
+    "Notifications": "Notifications",
+
   "Espace réservé aux adultes. Après ton inscription, confirme ton e-mail ; Jessie validera ensuite ton accès. Cette déclaration ne vérifie pas ta majorité.": "This space is for adults. After signing up, confirm your email; Jessie will then approve your access. This declaration does not verify your age.",
   "Confirme ton e-mail pour retrouver Jessie ici.": "Confirm your email to join Jessie here.",
   "Vérifier mon accès": "Check my access",

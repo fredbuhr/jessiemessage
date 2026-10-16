@@ -2,8 +2,8 @@
 
 ## État et périmètre
 
-- Ce document décrit une préparation ; les notifications ne sont pas installées ni activées.
-- Aucune migration, clé ou modification de configuration de recette n’est créée par ce plan.
+- Le code du lot est implémenté sur `feat/message-notifications` ; la validation complète est en cours.
+- La recette reste en 0.30, notifications désactivées. Aucune clé réelle ni migration de recette n’a encore été créée.
 - Le lot vise les messages privés texte et photo, y compris lorsque la page est fermée.
 - Il réutilise Node, MariaDB et un service worker ; aucune autre infrastructure de file n’est prévue.
 - Les envois groupés restent désactivés ; leur activation ne fait pas partie de ce lot.
@@ -46,7 +46,7 @@
 
 - L’activation résulte d’un choix explicite sur chaque appareil ; aucun prompt au premier affichage public.
 - Désactiver les notifications ici ne désactive pas les autres ordinateurs ou téléphones du compte.
-- Prévoir un plafond de seize abonnements actifs par compte, avec une marge pour les six à huit appareils attendus.
+- Le plafond est de seize abonnements actifs par compte, avec une marge pour les six à huit appareils attendus.
 - Les routes distinguent les rôles, réutilisent leur cookie et contrôlent origine et CSRF sur les mutations.
 - Les listes de réglages n’exposent ni endpoint, ni clés navigateur, ni ciphertext.
 - Texte proposé : « Jessie — Un nouveau message t’attend. » ; prévoir son équivalent anglais.
@@ -54,7 +54,9 @@
 - Le clic ouvre `/app`, qui applique les règles normales d’accès et choisit le bon espace.
 - Le service worker ne met aucun contenu privé en cache et ne récupère pas l’historique en arrière-plan.
 - Chaque push reçu affiche une notification visible ; aucun push silencieux ne maintient une session.
-- Sur iPhone/iPad, expliquer l’ajout à l’écran d’accueil et préparer le service worker avant le clic de permission.
+- Sur iPhone/iPad, expliquer l’ajout à l’écran d’accueil et préparer le service worker avant le clic.
+- Appeler directement `PushManager.subscribe()` dans ce clic ; cet appel demande la permission du navigateur.
+- Une réinitialisation d’abonnement appartenant à un autre compte exige une action distincte sur cet appareil.
 - Un tag/topic stable et `renotify: false` limitent les alertes répétées après un résultat réseau incertain.
 - Un refus de permission reste respecté, avec une explication courte et une action de réglage adaptée.
 - Inclure le défaut mineur constaté du CTA administrateur : après un échec temporaire de capabilities,
@@ -64,6 +66,7 @@
 
 - Ajouter des modules notifications dédiés pour configuration, validation, crypto, store, service, HTTP et worker.
 - Démarrer le worker après l’écoute HTTP ; arrêter les claims puis drainer avant de fermer le pool.
+- Les claims non envoyés sont libérés sans consommer d’essai ; un envoi interrompu garde un délai de reprise.
 - Utiliser de petits lots de cinq, un polling borné et un bail récupérable de quatre-vingt-dix secondes.
 - Relire l’éligibilité avant transport, puis libérer les verrous SQL avant toute requête externe.
 - Borner durée totale, délai DNS, taille de réponse et temps d’arrêt ; prévoir une annulation du transport.
@@ -74,11 +77,12 @@
 - Reprendre réseau, 429 et 5xx avec attente croissante, Retry-After borné, nombre maximal d’essais et expiration.
 - Une réponse 404 ou 410 invalide l’abonnement ; les autres 4xx demandent une qualification de l’échec.
 - Un 2xx signifie « accepté par le service push », sans prouver réception, affichage ou lecture.
+- Conserver les jobs terminés trente jours ; nettoyage par lots de cent toutes les cinq minutes.
 - L’envoi externe ne permet pas l’exactement-une-fois : une réponse perdue peut conduire à un nouvel essai.
 
 ## Secrets, sauvegarde et repli
 
-- Créer plus tard un sixième fichier privé, `runtime-notifications.json`, validé et protégé comme les autres.
+- Avant activation, créer un sixième fichier privé, `runtime-notifications.json`, validé et protégé comme les autres.
 - Il contiendra une paire VAPID P-256 et une clé AES indépendante des autres domaines de chiffrement.
 - Utiliser `mailto:contact@jessiemessage.com` comme sujet VAPID ; conserver la paire entre redémarrages.
 - L’AAD du chiffrement lie identifiant d’abonnement, propriétaire et génération.
@@ -107,6 +111,7 @@
 
 ## Sources primaires
 
+- [Apple WWDC22 — abonnement directement depuis le clic](https://developer.apple.com/videos/play/wwdc2022/10098/)
 - [Bibliothèque Web Push pour Node](https://github.com/web-push-libs/web-push)
 - [RFC 8030 — protocole Web Push, durée de vie et expiration](https://www.rfc-editor.org/rfc/rfc8030.html)
 - [RFC 8292 — identification VAPID](https://www.rfc-editor.org/rfc/rfc8292.html)

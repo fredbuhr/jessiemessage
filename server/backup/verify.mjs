@@ -6,9 +6,11 @@ import { openResetPayload } from "../reset/mail-crypto.mjs";
 import { decryptMessageBody, messageFingerprint, validateMessageBody } from "../chat/crypto.mjs";
 import { openNotes } from "../crm/crypto.mjs";
 import { openPayload, campaignFingerprint } from "../broadcast/crypto.mjs";
+import { openSubscription, endpointDigest } from "../notifications/crypto.mjs";
 import { createBackupCryptoStore } from "./crypto-store.mjs";
 
 const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "media"];
+const NOTIFICATION_PURPOSES = ["notifications", "notificationJobs"];
 const KEY_NAMES = ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"];
 const TEXT_PURPOSES = ["mfa", "mail", "messages"];
 const TEXT_INACTIVE_TABLES = [
@@ -16,6 +18,7 @@ const TEXT_INACTIVE_TABLES = [
   ["crm", ["crm_profiles", "crm_labels", "crm_memberships"]],
   ["broadcast", ["broadcast_preferences", "broadcast_campaigns", "broadcast_recipients"]],
   ["media", ["media_assets", "message_media", "media_storage_state", "media_storage_objects"]],
+  ["notifications", ["push_subscriptions", "push_outbox"]],
 ];
 class VerificationStop extends Error { constructor(code) { super("Private backup verification stopped."); this.code = code; } }
 class RowFailure extends Error { constructor(code = "verification_failed") { super("Private backup data failed verification."); this.code = code; } }
@@ -51,10 +54,20 @@ export async function verifyPhotoBackupData({ pool, storage, keys, signal, limit
   return verifyData({ pool, storage, keys, signal, limits }, "photos");
 }
 
+/** Offline notification profiles authenticate every subscription and delivery
+ * binding. They never create a transport, claim a job or refresh a session. */
+export async function verifyPhotoNotificationBackupData({ pool, storage, keys, signal, limits = {} } = {}) {
+  return verifyData({ pool, storage, keys, signal, limits }, "photos-notify");
+}
+export async function verifyFullNotificationBackupData({ store, storage, keys, signal, limits = {} } = {}) {
+  return verifyData({ store, storage, keys, signal, limits }, "full-notify");
+}
+
 async function verifyData({ store, storage, keys, signal, limits = {}, pool } = {}, profile = "full") {
-  const textOnly = profile === "text", limited = profile !== "full";
+  const textOnly = profile === "text", limited = ["text", "photos", "photos-notify"].includes(profile);
+  const notifications = ["photos-notify", "full-notify"].includes(profile);
   const report = { complete: true, healthy: false,
-    counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, broadcast: 0, broadcastRecipients: 0, media: 0, mediaFiles: 0 }, issues: [] };
+    counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, broadcast: 0, broadcastRecipients: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0 }, issues: [] };
   let secrets, currentPurpose = "verification", maxIssues = 100;
   function issue(purpose, code) {
     if (report.issues.length >= maxIssues) stop("issue_limit");
@@ -62,7 +75,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
   }
   const checkSignal = () => { if (signal?.aborted) stop("aborted"); };
   try {
-    const keyNames = textOnly ? KEY_NAMES.slice(0, 3) : limited ? KEY_NAMES.slice(0, 4) : KEY_NAMES;
+    const keyNames = [...(textOnly ? KEY_NAMES.slice(0, 3) : limited ? KEY_NAMES.slice(0, 4) : KEY_NAMES), ...(notifications ? ["notificationKey"] : [])];
     if ((limited ? typeof pool?.getConnection !== "function" || !textOnly && typeof storage?.get !== "function"
       : typeof store?.page !== "function" || typeof storage?.get !== "function")
       || !keys || typeof keys !== "object" || Array.isArray(keys)
@@ -81,7 +94,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
       let connection;
       try {
         checkSignal(); connection = await pool.getConnection(); checkSignal();
-        for (const [purpose, tables] of TEXT_INACTIVE_TABLES.filter(([purpose]) => textOnly || purpose !== "media")) for (const table of tables) {
+        for (const [purpose, tables] of TEXT_INACTIVE_TABLES.filter(([purpose]) => (textOnly || purpose !== "media") && (!notifications || purpose !== "notifications"))) for (const table of tables) {
           currentPurpose = purpose; checkSignal();
           // Fixed table allowlist, EXISTS stops at the first row. Checking the
           // underlying tables also catches deleted assets and empty CRM notes.
@@ -157,6 +170,23 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
         if (payload.conversationIds.length !== row.conversationIds.length) throw new RowFailure("binding_mismatch");
         return;
       }
+      if (NOTIFICATION_PURPOSES.includes(purpose)) {
+        if (!notifications) throw new RowFailure("inactive_domain_populated");
+        if (!["admin", "client"].includes(row.role)) invalid();
+        bytes(row.userId, 16); integer(row.generation, 4294967295);
+        if (purpose === "notifications") {
+          if (row.userRole !== row.role || !row.userId.equals(bytes(row.sessionUserId, 16))) throw new RowFailure("binding_mismatch");
+          bytes(row.sessionId, 16); integer(row.credentialVersion, 4294967295); text(row.encrypted, 4096);
+          const subscription = openSubscription(row.encrypted, secrets.notificationKey, { subscriptionId: row.id, userId: row.userId, generation: row.generation });
+          if (!equal(endpointDigest(subscription.endpoint, secrets.notificationKey), row.endpointDigest)) throw new RowFailure("binding_mismatch");
+        } else {
+          integer(row.subscriptionGeneration, 4294967295);
+          if (row.subscriptionGeneration > row.generation || !["admin", "client"].includes(row.senderRole) || row.senderRole === row.role
+            || !bytes(row.senderId, 16).equals(bytes(row.senderRole === "admin" ? row.adminId : row.clientId, 16))
+            || !row.userId.equals(bytes(row.role === "admin" ? row.adminId : row.clientId, 16))) throw new RowFailure("binding_mismatch");
+        }
+        return;
+      }
       const assetId = row.id, storageKey = bytes(row.storageKey, 32);
       bytes(row.ownerId, 16); bytes(row.digest, 32);
       if (row.journalState !== "registered" || !bytes(row.journalAssetId, 16).equals(assetId) || !bytes(row.journalOwnerId, 16).equals(row.ownerId)) invalid();
@@ -173,7 +203,8 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
         } finally { if (Buffer.isBuffer(plaintext)) plaintext.fill(0); }
       }
     }
-    for (const purpose of textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, "media"] : PURPOSES) {
+    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, "media", ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
+    for (const purpose of purposes) {
       currentPurpose = purpose;
       let afterId = null;
       while (true) {

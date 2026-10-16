@@ -21,7 +21,7 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host), "integration tests require loopback");
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "runtime DML credentials must be separately provisioned");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
   const ownedTables = createdMigrationTables(migrations).reverse();
   const allowedTables = [...ownedTables, "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool, fixtureNumber = 0;

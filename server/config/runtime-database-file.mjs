@@ -7,12 +7,14 @@ import { fileURLToPath } from "node:url";
 import { inspectDirectoryIdentities, withPrivateDirectory } from "../files/private-directory.mjs";
 import { isOfficialOrigin, SITE_DOMAIN } from "../site.mjs";
 import { mailConfiguration } from "../mail/config.mjs";
+import { validateNotificationVapid } from "../notifications/config.mjs";
 
 const BASENAME = "runtime-database.json";
 const DIAGNOSTIC_BASENAME = "runtime-diagnostic.json";
 const AUTHENTICATION_BASENAME = "runtime-auth.json";
 const MESSAGING_BASENAME = "runtime-messaging.json";
 const MEDIA_BASENAME = "runtime-media.json";
+const NOTIFICATIONS_BASENAME = "runtime-notifications.json";
 const MAX_BYTES = 16384;
 const REPOSITORY = fileURLToPath(new URL("../../", import.meta.url));
 const FIELDS = ["format", "version", "host", "port", "database", "user", "password", "privilegeProfile"];
@@ -20,7 +22,8 @@ const DIAGNOSTIC_FIELDS = ["format", "version", "createdAt", "credentials"];
 const AUTHENTICATION_FIELDS = ["format", "version", "origin", "mfaKey"];
 const MESSAGING_FIELDS = ["format", "version", "origin", "mailKey", "messageKey", "smtpHost", "smtpPort", "smtpUser", "smtpPassword"];
 const MEDIA_FIELDS = ["format", "version", "origin", "mediaKey", "mediaRoot", "ownerBytes", "totalBytes", "minimumFreeBytes"];
-const FLAGS = ["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY"];
+const NOTIFICATIONS_FIELDS = ["version", "origin", "notificationKey", "vapidPublicKey", "vapidPrivateKey", "vapidSubject"];
+const FLAGS = ["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY", "NOTIFICATIONS"];
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 
 export class RuntimeDatabaseConfigurationError extends Error {
@@ -46,6 +49,14 @@ export class RuntimeMessagingConfigurationError extends Error {
 }
 const fail = () => { throw new RuntimeDatabaseConfigurationError(); };
 const authenticationFailure = () => { throw new RuntimeAuthenticationConfigurationError(); };
+export class RuntimeNotificationsConfigurationError extends Error {
+  constructor() {
+    super("Private notification configuration is unavailable.");
+    this.name = "RuntimeNotificationsConfigurationError";
+    this.code = "RUNTIME_NOTIFICATIONS_CONFIGURATION";
+  }
+}
+const notificationsFailure = () => { throw new RuntimeNotificationsConfigurationError(); };
 const messagingFailure = () => { throw new RuntimeMessagingConfigurationError(); };
 const inside = (filename, root) => {
   const suffix = path.relative(root, filename);
@@ -54,10 +65,10 @@ const inside = (filename, root) => {
 
 function clearSecrets(value) {
   if (!value || typeof value !== "object") return;
-  const nested = ["credentials", "database", "authentication", "messaging", "media"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
+  const nested = ["credentials", "database", "authentication", "messaging", "media", "notifications"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
   for (const record of [value, ...nested]) {
     if (record && typeof record === "object") {
-      for (const name of ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "smtpUser", "smtpPassword"]) {
+      for (const name of ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "notificationKey", "vapidPrivateKey", "smtpUser", "smtpPassword"]) {
         const descriptor = Object.getOwnPropertyDescriptor(record, name);
         if (descriptor && Object.hasOwn(descriptor, "value") && descriptor.writable) record[name] = "";
       }
@@ -208,6 +219,27 @@ export function validateRuntimeMediaConfiguration(value) {
   finally { clearSecrets(syntax); }
 }
 
+export function validateRuntimeNotificationsConfiguration(value) {
+  let selected, syntax;
+  try {
+    if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
+      || Object.getOwnPropertyNames(value).sort().join(",") !== [...NOTIFICATIONS_FIELDS].sort().join(",")) notificationsFailure();
+    selected = {};
+    for (const name of NOTIFICATIONS_FIELDS) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, name);
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) notificationsFailure();
+      selected[name] = descriptor.value;
+    }
+    if (selected.version !== 1 || selected.vapidSubject !== "mailto:contact@jessiemessage.com") notificationsFailure();
+    syntax = validateRuntimeAuthenticationConfiguration({ format: "jessiemessage-runtime-auth", version: 1,
+      origin: selected.origin, mfaKey: selected.notificationKey });
+    validateNotificationVapid({ publicKey: selected.vapidPublicKey, privateKey: selected.vapidPrivateKey, subject: selected.vapidSubject });
+    if (selected.notificationKey === selected.vapidPrivateKey || Buffer.byteLength(JSON.stringify(selected), "utf8") + 1 > MAX_BYTES) notificationsFailure();
+    return selected;
+  } catch { clearSecrets(selected); notificationsFailure(); }
+  finally { clearSecrets(syntax); }
+}
+
 async function privateScope(directory, callback) {
   try {
     if (typeof directory !== "string" || !path.isAbsolute(directory) || path.normalize(directory) !== directory
@@ -244,7 +276,7 @@ async function writeConfiguration(directory, config, basename) {
   let contents;
   try {
     // Only typed entry points select these internal, fixed filenames.
-    if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME, MEDIA_BASENAME].includes(basename)) fail();
+    if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME].includes(basename)) fail();
     contents = Buffer.from(`${JSON.stringify(config)}\n`, "utf8");
     if (contents.length > MAX_BYTES) fail();
     return await privateScope(directory, async (scope) => {
@@ -314,6 +346,13 @@ export async function writeRuntimeMediaConfiguration(directory, value) {
   finally { clearSecrets(record); }
 }
 
+export async function writeRuntimeNotificationsConfiguration(directory, value) {
+  const record = validateRuntimeNotificationsConfiguration(value);
+  try { return await writeConfiguration(directory, record, NOTIFICATIONS_BASENAME); }
+  catch { notificationsFailure(); }
+  finally { clearSecrets(record); }
+}
+
 // Password rotation is separate from exclusive first publication. It may
 // replace only the SMTP password, using the exact previously read record.
 export async function replaceRuntimeMessagingSmtpPassword(directory, expected, smtpPassword) {
@@ -372,7 +411,7 @@ async function readAnchoredConfiguration(scope, basename, validate) {
   const bytes = Buffer.alloc(MAX_BYTES + 1);
   try {
     try {
-      if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME, MEDIA_BASENAME].includes(basename)) fail();
+      if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME].includes(basename)) fail();
       const filename = scope.file(basename);
       await scope.assertReady();
       file = await open(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
@@ -427,6 +466,21 @@ export async function readRuntimeMessagingConfiguration(directory) {
 export async function readRuntimeMediaConfiguration(directory) {
   try { return await readConfiguration(directory, MEDIA_BASENAME, validateRuntimeMediaConfiguration); }
   catch { messagingFailure(); }
+}
+
+export async function readRuntimeNotificationsConfiguration(directory) {
+  try { return await readConfiguration(directory, NOTIFICATIONS_BASENAME, validateRuntimeNotificationsConfiguration); }
+  catch { notificationsFailure(); }
+}
+
+export async function runtimeNotificationsConfigurationExists(directory) {
+  try {
+    return await privateScope(directory, async (scope) => {
+      await scope.assertReady();
+      try { await lstat(scope.file(NOTIFICATIONS_BASENAME), { bigint: true }); return true; }
+      catch (error) { if (error.code === "ENOENT") return false; throw error; }
+    });
+  } catch { notificationsFailure(); }
 }
 
 export async function runtimeMediaConfigurationExists(directory) {
@@ -505,5 +559,25 @@ export async function readRuntimeMediaBundle(directory) {
   } catch {
     for (const record of [database, authentication, messaging, media]) clearSecrets(record);
     messagingFailure();
+  }
+}
+
+export async function readRuntimeNotificationsBundle(directory) {
+  let database, authentication, messaging, media, notifications;
+  try {
+    return await privateScope(directory, async (scope) => {
+      database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
+      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration);
+      messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration);
+      media = await readAnchoredConfiguration(scope, MEDIA_BASENAME, validateRuntimeMediaConfiguration);
+      notifications = await readAnchoredConfiguration(scope, NOTIFICATIONS_BASENAME, validateRuntimeNotificationsConfiguration);
+      const records = [authentication, messaging, media, notifications];
+      const keys = [authentication.mfaKey, messaging.mailKey, messaging.messageKey, media.mediaKey, notifications.notificationKey, notifications.vapidPrivateKey];
+      if (records.some(record => record.origin !== authentication.origin) || new Set(keys).size !== keys.length) notificationsFailure();
+      return { database, authentication, messaging, media, notifications };
+    });
+  } catch {
+    for (const record of [database, authentication, messaging, media, notifications]) clearSecrets(record);
+    notificationsFailure();
   }
 }

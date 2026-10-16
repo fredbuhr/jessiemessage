@@ -3,6 +3,7 @@ export const DELETION_FACT_NAMES = Object.freeze([
   "broadcastPending", "broadcastSending", "mediaReserved", "mediaRegistered", "mediaCleanupPending", "mediaReleased",
   "ownedMediaOutsideConversationLinks", "ownedMediaCampaignLinks", "sharedPeerMediaLinks", "foreignMessageBindings",
   "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings",
+  "notificationSubscriptionsEnabled", "pushPending", "pushSending", "foreignPushBindings",
 ]);
 const CAP = 10000;
 const MAX_DATE = 253402300799999;
@@ -34,6 +35,9 @@ export async function readDeletionFacts(input = {}) {
     const broadcast = (state) => context === null ? none
       : [`FROM broadcast_recipients WHERE client_id = ? AND conversation_id = ? AND state = '${state}'`, [target, context.id]];
     const allocation = (state) => [`FROM media_storage_objects WHERE owner_id = ? AND owner_role = 'client' AND state = '${state}'`, [target]];
+    const push = (state) => [`FROM push_outbox o JOIN push_subscriptions p ON p.id = o.subscription_id
+      JOIN messages m ON m.id = o.message_id WHERE o.status = '${state}' AND ((p.user_id = ? AND p.role = 'client')
+      ${context === null ? "" : "OR m.conversation_id = ?"})`, [target, ...(context === null ? [] : [context.id])]];
     const statements = {
       activeSessions: ["FROM sessions WHERE user_id = ? AND revoked_at IS NULL AND expires_at > ?", [target, nowSql]],
       verificationPending: outbox("mail_outbox", "pending"), verificationSending: outbox("mail_outbox", "sending"),
@@ -41,6 +45,19 @@ export async function readDeletionFacts(input = {}) {
       broadcastPending: broadcast("pending"), broadcastSending: broadcast("sending"),
       mediaReserved: allocation("reserved"), mediaRegistered: allocation("registered"),
       mediaCleanupPending: allocation("cleanup_pending"), mediaReleased: allocation("released"),
+      notificationSubscriptionsEnabled: ["FROM push_subscriptions WHERE user_id = ? AND role = 'client' AND enabled = 1", [target]],
+      pushPending: push("pending"), pushSending: push("sending"),
+      foreignPushBindings: [`FROM (
+        (SELECT 1 AS anomaly FROM push_subscriptions p LEFT JOIN sessions s ON s.id = p.session_id
+          WHERE (p.user_id = ? OR s.user_id = ?) AND (s.id IS NULL OR p.user_id <> s.user_id OR p.role <> 'client') LIMIT 10001)
+        UNION ALL
+        (SELECT 1 AS anomaly FROM push_outbox o LEFT JOIN push_subscriptions p ON p.id = o.subscription_id
+          LEFT JOIN messages m ON m.id = o.message_id LEFT JOIN conversations c ON c.id = m.conversation_id
+          WHERE (p.user_id = ?${context === null ? "" : " OR m.conversation_id = ?"}) AND
+            (p.id IS NULL OR m.id IS NULL OR c.id IS NULL OR o.subscription_generation > p.generation
+              OR NOT ((p.role = 'admin' AND p.user_id = c.admin_id AND m.sender_role = 'client' AND m.sender_id = c.client_id)
+                OR (p.role = 'client' AND p.user_id = c.client_id AND m.sender_role = 'admin' AND m.sender_id = c.admin_id))) LIMIT 10001)
+        ) anomalies`, [target, target, target, ...(context === null ? [] : [context.id])]],
       ownedMediaOutsideConversationLinks: [`FROM message_media mm JOIN media_assets a ON a.id = mm.media_id
         WHERE a.owner_id = ? AND a.owner_role = 'client' ${context === null ? "" : "AND mm.conversation_id <> ?"}`, [target, ...(context === null ? [] : [context.id])]],
       ownedMediaCampaignLinks: [`FROM broadcast_campaigns b JOIN media_assets a ON a.id = b.media_id

@@ -66,7 +66,7 @@ const operations = () => ({ status: "unavailable", database: { state: "stale", c
     { name: "broadcasts", pending: count(2), sending: count(0), failed: count(0), oldestDueAt: now + 60000 },
   ] });
 const summary = () => ({ contactEmail: "contact@jessiemessage.com", mail: { configured: true, sender: "private-sender@example.invalid", replyTo: "private-sender@example.invalid" },
-  features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: true },
+  features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: true, notifications: false },
   checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" }, operations: operations() });
 async function harness({ input = summary(), language = "fr", expiresAt = now + 28800000, auth = (session) => response(session), snapshot = (input) => response(input), smtp = () => response({ status: "verified", scope: "smtp_authentication", delivery: "not_checked", checkedAt: now + 5000 }) } = {}) {
   const { container, nodes } = parse(), documentEvents = new Map(), windowEvents = new Map(), calls = [], storage = new Map([["jessiemessage.language", language]]), writes = [], timers = new Map(), redirects = [];

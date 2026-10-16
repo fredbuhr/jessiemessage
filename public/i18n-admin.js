@@ -1,6 +1,10 @@
 "use strict";
 (() => {
   const dictionary = {
+    "Notifications": "Notifications",
+    "Réessayer les conversations": "Retry conversations",
+    "Les conversations n’ont pas pu être ouvertes. Réessaie quand la connexion revient.": "Conversations could not be opened. Try again when the connection is back.",
+
     "Voir d’autres appareils": "More devices",
     "Ton espace Jessie.": "Your Jessie space.",
     "Compte connecté :": "Signed-in account:",

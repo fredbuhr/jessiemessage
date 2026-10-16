@@ -158,8 +158,11 @@ function authoredCheck(sql, name) {
   }
   state();
 }
+// New private stores reuse the same restricted migration-CHECK comparison.
+export { checkTree as normalizedCheckTree, authoredCheck as authoredMigrationCheck };
 
-export function createChatStore(pool, { clock } = {}) {
+export function createChatStore(pool, { clock, enqueueNotification } = {}) {
+  if (enqueueNotification !== undefined && typeof enqueueNotification !== "function") input();
   const sessionNow = createSessionClock(clock);
   async function run(operation, transaction = true) {
     let connection;
@@ -304,6 +307,7 @@ export function createChatStore(pool, { clock } = {}) {
     [message.id, conversationId, nextSequence, actor.id, role, message.clientMessageId, message.bodyEncrypted, message.bodyFingerprint, sqlDate(now)]);
     if (mediaId !== null) await connection.query("INSERT INTO message_media (message_id, conversation_id, media_id, created_at) VALUES (?, ?, ?, ?)", [message.id, conversationId, mediaId, sqlDate(now)]);
     await connection.query("INSERT INTO chat_events (conversation_id, event_sequence, message_id, kind, occurred_at) VALUES (?, ?, ?, 'message', ?)", [conversationId, eventSequence, message.id, sqlDate(now)]);
+    if (enqueueNotification) await enqueueNotification(connection, context, message);
     const row = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.id = ?`, [conversationId, message.id]))[0];
     return { message: rawMessage(row, actor.id), duplicate: false };
   }

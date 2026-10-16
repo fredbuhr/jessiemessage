@@ -6,7 +6,7 @@ import { createVerificationTransport } from "../mail/transport.mjs";
 import { SITE_CONTACT_EMAIL } from "../site.mjs";
 import { safeOperationsSnapshot } from "../operations/dto.mjs";
 
-const FEATURE_NAMES = ["clientAccess", "chat", "photos", "clientFiles", "passwordRecovery", "broadcasts"];
+const FEATURE_NAMES = ["clientAccess", "chat", "photos", "clientFiles", "passwordRecovery", "broadcasts", "notifications"];
 const MAX_DATE = 253402300799999;
 export class ReadinessError extends Error {
   constructor(code, retryAfter) {

@@ -1,6 +1,6 @@
 export const CONTACT_EMAIL = "contact@jessiemessage.com";
-export const featureNames = Object.freeze({ clientAccess: "Accès sur invitation", chat: "Messages privés", photos: "Photos privées", clientFiles: "Fiches clients", passwordRecovery: "Récupération du mot de passe", broadcasts: "Diffusions individuelles" });
-export const operationNames = Object.freeze({ verification: "Vérification des e-mails", recovery: "Récupération des accès", broadcasts: "Diffusions individuelles" });
+export const featureNames = Object.freeze({ clientAccess: "Accès sur invitation", chat: "Messages privés", photos: "Photos privées", clientFiles: "Fiches clients", passwordRecovery: "Récupération du mot de passe", broadcasts: "Diffusions individuelles", notifications: "Notifications sur les appareils" });
+export const operationNames = Object.freeze({ verification: "Vérification des e-mails", recovery: "Récupération des accès", broadcasts: "Diffusions individuelles", notifications: "Notifications sur les appareils" });
 export const databaseStateNames = Object.freeze({ starting: "Démarrage", ok: "Connexion disponible", unavailable: "Indisponible", stale: "Mesure ancienne" });
 export const workerStateNames = Object.freeze({ starting: "Démarrage", running: "En cours", idle: "En attente", error: "Erreur", stopping: "Arrêt en cours", stopped: "Arrêté", stale: "Mesure ancienne" });
 const ID = /^[0-9a-f]{32}$/;

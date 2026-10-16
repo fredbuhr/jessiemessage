@@ -1,5 +1,7 @@
 /* Explicit UI catalogue only. User messages, captions and names are never keys. */
 globalThis.JessieI18n?.register({
+    "Notifications": "Notifications",
+
   "Réessayer la connexion": "Retry the connection",
   "Retrouvons ta conversation…": "Getting your conversation back…",
   "La connexion est momentanément indisponible. Tes brouillons restent dans cet onglet.": "The connection is temporarily unavailable. Your drafts stay in this tab.",

@@ -5,6 +5,7 @@ import { authConfiguration } from "../server/auth/config.mjs";
 import { accessConfiguration } from "../server/access/config.mjs";
 import { chatConfiguration } from "../server/chat/config.mjs";
 import { crmConfiguration } from "../server/crm/config.mjs";
+import { loadNotificationsConfig } from "../server/notifications/config.mjs";
 import { runtimeDatabaseOptions } from "../server/db/runtime.mjs";
 
 export class BackupCliError extends Error {
@@ -19,8 +20,8 @@ const candidateKeys = ["id", "owner_id", "owner_role", "storage_key", "content_d
 const candidateDTO = (value) => Object.fromEntries(candidateKeys.map((key) => [key, value[key]]));
 
 export function parseArguments(args) {
-  if (Array.isArray(args) && args.length === 6 && args[4] === "--profile" && args[5] === "photos") {
-    return { ...parseArguments(args.slice(0, 4)), profile: "photos" };
+  if (Array.isArray(args) && args.length === 6 && args[4] === "--profile" && ["photos", "photos-notify"].includes(args[5])) {
+    return { ...parseArguments(args.slice(0, 4)), profile: args[5] };
   }
   if (!Array.isArray(args) || args.length !== 4 || !["prepare", "verify", "restore"].includes(args[0])
     || args[1] !== "--offline" || args[2] !== "--manifest" || typeof args[3] !== "string" || !isAbsolute(args[3])
@@ -30,11 +31,13 @@ export function parseArguments(args) {
 
 function configuration(env, profile) {
   const media = mediaConfiguration(env), auth = authConfiguration(env), access = accessConfiguration(env), chat = chatConfiguration(env), crm = crmConfiguration(env);
-  if ([media, auth, access, chat].some((value) => value.enabled !== true) || profile !== "photos" && crm.enabled !== true
-    || profile === "photos" && (["CRM", "CLIENT_RECOVERY", "BROADCAST"].some(name => ![undefined, "0"].includes(env[`JESSIEMESSAGE_ENABLE_${name}`])))) fail("BACKUP_CONFIG");
+  const photos = ["photos", "photos-notify"].includes(profile), notifications = loadNotificationsConfig(env);
+  if ([media, auth, access, chat].some((value) => value.enabled !== true) || !photos && crm.enabled !== true
+    || photos && (["CRM", "CLIENT_RECOVERY", "BROADCAST"].some(name => ![undefined, "0"].includes(env[`JESSIEMESSAGE_ENABLE_${name}`])))
+    || (profile === "photos-notify") !== notifications.enabled) fail("BACKUP_CONFIG");
   return { media, databaseName: runtimeDatabaseOptions(env).database,
     keys: { totpKey: auth.totpKey, mailKey: access.mail.key, messageKey: chat.key, mediaKey: media.key,
-      ...(profile === "photos" ? {} : { crmKey: crm.key }) } };
+      ...(photos ? {} : { crmKey: crm.key }), ...(profile === "photos-notify" ? { notificationKey: notifications.key } : {}) } };
 }
 
 /** All commands require an operator-confirmed offline source or isolated clone. */
@@ -43,24 +46,26 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
   let pool, inspectionPool, result;
   try {
     checkSignal(dependencies.signal);
-    const photos = options.profile === "photos";
+    const photos = ["photos", "photos-notify"].includes(options.profile), notifications = options.profile === "photos-notify";
+    const keyNames = [...["totpKey", "mailKey", "messageKey", "mediaKey"], ...(!photos ? ["crmKey"] : []), ...(notifications ? ["notificationKey"] : [])];
     const config = (dependencies.configure ?? configuration)(env, options.profile), { media, keys } = config ?? {};
     if (media?.enabled !== true || !media.capacity || typeof config.databaseName !== "string" || !/^[A-Za-z0-9_]{1,64}$/.test(config.databaseName)
-      || !keys || (photos ? ["totpKey", "mailKey", "messageKey", "mediaKey"] : ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"]).some((key) => !Buffer.isBuffer(keys[key]) || keys[key].length !== 32)
+      || !keys || keyNames.some((key) => !Buffer.isBuffer(keys[key]) || keys[key].length !== 32)
       || !Buffer.isBuffer(media.key) || !media.key.equals(keys.mediaKey)) fail("BACKUP_CONFIG");
     const keyValues = Object.values(keys);
-    if (keyValues.length !== (photos ? 4 : 5) || keyValues.some((key, index) => keyValues.slice(index + 1).some((other) => key.equals(other)))) fail("BACKUP_CONFIG");
+    if (keyValues.length !== keyNames.length || keyValues.some((key, index) => keyValues.slice(index + 1).some((other) => key.equals(other)))) fail("BACKUP_CONFIG");
     const manifestRelative = relative(media.root, options.manifestPath);
     if (manifestRelative === "" || !manifestRelative.startsWith(`..${sep}`) && manifestRelative !== ".." && !isAbsolute(manifestRelative)) fail("BACKUP_CONFIG");
     const manifests = dependencies.manifests ?? await import("../server/backup/manifest.mjs");
     const snapshots = dependencies.snapshots ?? await import("../server/backup/snapshot.mjs");
     const verification = await import("../server/backup/verify.mjs");
-    const verifyCrypto = dependencies.verifyBackupData ?? (photos ? verification.verifyPhotoBackupData : verification.verifyBackupData);
+    const verifyCrypto = dependencies.verifyBackupData ?? (notifications ? verification.verifyPhotoNotificationBackupData : photos ? verification.verifyPhotoBackupData : verification.verifyBackupData);
     const makeCryptoStore = dependencies.makeCryptoStore ?? (await import("../server/backup/crypto-store.mjs")).createBackupCryptoStore;
     let manifest, payload;
     if (options.command !== "prepare") {
       manifest = await manifests.readManifest(options.manifestPath);
-      if (photos && (manifest?.version !== 2 || manifest.profile !== "messaging-photos")) fail("BACKUP_VERIFY");
+      if (photos && (manifest?.version !== (notifications ? 3 : 2) || manifest.profile !== (notifications ? "messaging-photos-notify" : "messaging-photos"))
+        || !photos && manifest?.version !== 1) fail("BACKUP_VERIFY");
       payload = await manifests.verifyBackupManifest({ manifest, keys });
       if (!payload?.snapshot || payload.snapshot.capacity?.rootFingerprint !== payload.identity?.rootFingerprint) fail("BACKUP_VERIFY");
     }
@@ -109,7 +114,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       await verifyData(before, "exact");
       const after = await capture(); compare(before, after, "exact"); await sameIdentity();
       manifest = await manifests.createBackupManifest({ snapshot: after, identity, keys, now: instant(clock),
-        ...(photos ? { profile: "messaging-photos" } : {}) });
+        ...(photos ? { profile: notifications ? "messaging-photos-notify" : "messaging-photos" } : {}) });
       checkSignal(dependencies.signal);
       await manifests.writeManifest(options.manifestPath, manifest);
       result = { command: options.command, verified: true, prepared: true, restored: false, releasedCandidates: 0, manifestHash: manifests.manifestHash(manifest) };
