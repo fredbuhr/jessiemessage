@@ -24,7 +24,9 @@ self.addEventListener("notificationclick", (event) => {
     const path = typeof hint === "string" && /^\/(?:admin\/)?messages#notification=[a-f0-9]{32}$/.test(hint) ? hint : "/app";
     const target = new URL(path, self.location.origin).href;
     const existing = windows.find((client) => client.url === target && typeof client.focus === "function");
-    if (existing) return existing.focus();
+    // WindowClient.url may retain its initial fragment after in-page navigation.
+    // A targeted alert must be delivered again even when that old URL matches.
+    if (existing && path === "/app") return existing.focus();
     if (path !== "/app" && typeof MessageChannel === "function") {
       const route = path.split("#")[0];
       const candidates = windows.filter((client) => { try { const url = new URL(client.url); return url.origin === self.location.origin && url.pathname === route; } catch { return false; } });

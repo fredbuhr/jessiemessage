@@ -1087,6 +1087,12 @@ el("accept-delete").addEventListener("click", () => {
 });
 window.addEventListener("beforeunload", (event) => { if (hasUnsavedWork()) { event.preventDefault(); event.returnValue = ""; } });
 window.addEventListener("online", () => { void resumeConnection({ reset: true }); });
+window.addEventListener("hashchange", () => {
+  const reference = globalThis.JessieNotificationLink?.read();
+  if (!reference) return;
+  pendingNotification = reference;
+  if (ready && visible()) void openNotification();
+});
 globalThis.navigator?.serviceWorker?.addEventListener("message", (event) => {
   const data = event.data, link = globalThis.JessieNotificationLink;
   if (event.source !== navigator.serviceWorker.controller || event.origin !== location.origin

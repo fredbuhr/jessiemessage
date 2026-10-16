@@ -19,7 +19,7 @@ La référence est retirée de l’URL après ouverture. Aucun cache de messages
 
 ## Vérifications
 
-Les tests locaux généraux passent : 1 888 cas, 1 758 réussis et 130 intégrations ignorées sans leurs moteurs. La syntaxe passe. Les régressions ciblées vérifient notamment : session client après inactivité et refus d’une session expirée/révoquée ; CSRF et corps fermé ; référence de notification limitée à son destinataire ; message ciblé, séquence supérieure à la précision Number, conversation hors première page, brouillon conservé, reprise après masquage et notification indisponible.
+Les tests locaux généraux passent : 1 889 cas, 1 759 réussis et 130 intégrations ignorées sans leurs moteurs. La syntaxe passe. Les régressions ciblées vérifient notamment : session client après inactivité et refus d’une session expirée/révoquée ; CSRF et corps fermé ; référence de notification limitée à son destinataire ; message ciblé, séquence supérieure à la précision Number, conversation hors première page, brouillon conservé, reprise après masquage et notification indisponible.
 
 Les scénarios Chrome ajoutés utilisent les vrais contrôleurs et HTML avec des API synthétiques : deux rôles, chacun avec connexion existante puis reconnexion requise, conservation du fragment lors du 303 et focus du message. Les intégrations MariaDB ajoutées contrôlent l’isolation du destinataire, la reprise après une nouvelle session et le message supprimé. Leur résultat CI doit être consigné sur la révision exacte avant activation.
 

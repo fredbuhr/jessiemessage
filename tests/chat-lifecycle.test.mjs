@@ -199,6 +199,14 @@ test("an unavailable notification leaves the signed-in client in their conversat
   await flush(); assert.equal(f.inspect().ready, true); assert.equal(f.inspect().pendingNotification, null);
   assert.match(f.element("chat-status").textContent, /notification n’est plus disponible/); assert.equal(f.redirects.length, 0);
 });
+
+test("a PWA that reuses the existing window can deliver the next notification through a fragment change", async () => {
+  const reference = id(915), f = harness({ intercept: (path) => path.endsWith("/open")
+    ? response(200, { conversationId: id(101), messageId: id(501), sequence: "1" }) : undefined });
+  await flush(); f.context.location.hash = `#notification=${reference}`; await f.event("hashchange");
+  assert.equal(f.inspect().pendingNotification, null); assert.equal(f.context.location.hash, "");
+  assert.equal(f.document.activeElement.dataset.sequence, "1"); assert.equal(f.redirects.length, 0);
+});
 function assertOwner(f, value, csrf = "A".repeat(43)) {
   assert.equal(f.inspect().sessionOwner.id, id(value)); assert.equal(f.inspect().sessionOwner.csrf, csrf);
   assert.equal(f.inspect().ready, true); assert.equal(f.element("workspace").hidden, false);

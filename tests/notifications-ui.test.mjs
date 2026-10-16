@@ -187,7 +187,7 @@ test("a malformed enabled status cannot claim notifications are active without a
 test("a supported open chat acknowledges the click and keeps its browsing context instead of being navigated", async () => {
   const listeners = new Map(), opened = [], received = []; let focused = 0;
   const reference = "ef".repeat(16), origin = "https://example.invalid";
-  const live = { url: `${origin}/messages`, focused: false, async focus() { focused++; return this; },
+  const live = { url: `${origin}/messages#notification=${reference}`, focused: false, async focus() { focused++; return this; },
     postMessage(value, ports) { received.push(value); ports[0].postMessage({ accepted: true }); } };
   vm.runInNewContext(swSource, { URL, MessageChannel, setTimeout, clearTimeout, self: { location: { origin },
     addEventListener: (name, callback) => listeners.set(name, callback), clients: {
