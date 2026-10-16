@@ -61,6 +61,7 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
     JESSIEMESSAGE_MIGRATION_DATABASE: restoreDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: restoreDatabase };
   const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
   const tables = createdMigrationTables(migrations);
+  assert.equal(tables.length, 27, "the admission ALTER adds a ledger entry, not a copied table");
   const allowedTables = [...tables, "schema_migrations", "migration_probe"];
   const qualified = (database, table) => {
     assert.ok([options.database, restoreDatabase].includes(database)); assert.ok(allowedTables.includes(table));
@@ -222,7 +223,9 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
           await assertBackupInspection(inspector, options.database);
         } finally { inspector.release(); }
         t.diagnostic("inspection guards passed");
-        await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool }) });
+        const snapshot = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool }) });
+        assert.equal(snapshot.counts.tables, 28, "snapshot covers every application table and schema_migrations");
+        assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 28);
         t.diagnostic("source snapshot passed");
       } finally { await inspectionPool.end(); }
       const result = await run("prepare", { env: process.env, root: sourceRoot, databaseName: options.database });

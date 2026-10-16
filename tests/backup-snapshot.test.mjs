@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { assertBackupSnapshot, captureBackupSnapshot, createBackupSnapshotStore, verifyBackupStorage } from "../server/backup/snapshot.mjs";
+import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
 
 const d = "2026-10-15 08:00:00.000000", later = "2026-10-15 08:01:00.000000";
 const h = (byte, size = 32) => byte.repeat(size * 2);
@@ -96,4 +97,78 @@ test("snapshot reader queries actual database and sanitizes database errors whil
   const bad = createBackupSnapshotStore({ pool: { getConnection: async () => ({ query: async () => { throw new Error("SELECT password /private/path"); }, release: () => { released++; } }) } });
   await assert.rejects(bad.databaseName(), (error) => { assert.equal(error.code, "BACKUP_SNAPSHOT_DATABASE"); assert.doesNotMatch(error.message, /password|path|SELECT/); return true; });
   assert.equal(released, 2);
+});
+
+async function captureFixture({ changedCheck = false, changedLedger = false, extraTable = false, renamedTable = false } = {}) {
+  const migrations = await loadMigrations(), names = [...createdMigrationTables(migrations), "schema_migrations"];
+  const definitions = migrations.filter(({ sql }) => /^CREATE\s+TABLE\s/i.test(sql.trim())).map(({ sql }) => ({
+    name: /^CREATE\s+TABLE\s+([a-z_]+)/i.exec(sql.trim())[1],
+    primary: /PRIMARY KEY\s*\(([a-z_, ]+)\)/i.exec(sql)[1].split(",").map((key) => key.trim()),
+  })).concat({ name: "schema_migrations", primary: ["version"] });
+  const columns = definitions.flatMap(({ name, primary }) => primary.map((column, index) => ({ table_name: name, name: column,
+    type: name === "schema_migrations" ? "int unsigned" : "varbinary(16)", nullable: "NO", default_value: null, extra: "", collation: null, position: index + 1 })));
+  for (const [name, type] of [["owner_bytes", "bigint unsigned"], ["total_bytes", "bigint unsigned"], ["held_bytes", "bigint unsigned"],
+    ["root_fingerprint", "varbinary(32)"], ["initialized_at", "datetime(6)"]]) {
+    columns.push({ table_name: "media_storage_state", name, type, nullable: "NO", default_value: null, extra: "", collation: null,
+      position: columns.filter((column) => column.table_name === "media_storage_state").length + 1 });
+  }
+  columns.push({ table_name: "schema_migrations", name: "checksum", type: "char(64)", nullable: "NO", default_value: null,
+    extra: "", collation: "ascii_bin", position: 2 });
+  const tables = names.map((name) => ({ name, kind: "BASE TABLE", engine: "InnoDB", collation: "utf8mb4_unicode_ci" }));
+  if (extraTable) tables.push({ name: "unrelated", kind: "BASE TABLE", engine: "InnoDB", collation: "utf8mb4_unicode_ci" });
+  if (renamedTable) tables.find((table) => table.name === "users").name = "unrelated";
+  const observations = { selectedTables: [], releases: 0, committed: 0, rolledBack: 0 };
+  const database = "jessiemessage_test_snapshot";
+  const connection = { query: async (sql) => {
+    if (sql === "SELECT DATABASE() AS name") return [{ name: database }];
+    if (sql === "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ") return [];
+    const table = / FROM ([a-z_]+)\s/.exec(sql)?.[1];
+    assert.ok(names.includes(table), "capture may read only inventoried application/ledger tables"); observations.selectedTables.push(table);
+    if (table === "media_storage_state") return [{ id: 1, owner_bytes: 1000, total_bytes: 10000, held_bytes: 0,
+      root_fingerprint: Buffer.alloc(32, 17), initialized_at: d }];
+    if (table === "schema_migrations") return migrations.map((migration) => ({ version: migration.version,
+      checksum: changedLedger && migration.version === migrations.at(-1).version ? "f".repeat(64) : migration.checksum }));
+    return [];
+  }, beginTransaction: async () => {}, commit: async () => { observations.committed++; }, rollback: async () => { observations.rolledBack++; },
+  release: () => { observations.releases++; } };
+  const inspection = { query: async (sql) => {
+    if (sql === "SELECT DATABASE() AS name") return [{ name: database }];
+    if (sql === "SHOW GRANTS") return [{ grant: `GRANT ALL PRIVILEGES ON \`${database.replaceAll("_", "\\_")}\`.* TO 'synthetic'@'%'` }];
+    if (sql.startsWith("SELECT COUNT(*)")) return [{ value: 0 }];
+    if (sql.includes("information_schema.TABLES")) return tables;
+    if (sql.includes("information_schema.COLUMNS")) return columns;
+    if (sql.includes("information_schema.STATISTICS")) return [];
+    if (sql.includes("information_schema.KEY_COLUMN_USAGE")) return [];
+    if (sql.includes("information_schema.CHECK_CONSTRAINTS")) return [{ table_name: "users", name: "users_active_client_gates",
+      clause: changedCheck ? "role <> 'client' OR status <> 'active'" : "role <> 'client' OR status <> 'active' OR (email_verified_at IS NOT NULL AND access_approved_at IS NOT NULL)" }];
+    assert.fail("Unexpected snapshot metadata query");
+  }, release: () => { observations.releases++; } };
+  return { migrations, names, observations, store: createBackupSnapshotStore({ pool: { getConnection: async () => connection },
+    inspectionPool: { getConnection: async () => inspection } }) };
+}
+
+test("snapshot capture separates 28 migration entries from 27 CREATE tables and includes the full ledger", async () => {
+  const f = await captureFixture(), snapshot = await captureBackupSnapshot({ store: f.store });
+  assert.equal(f.migrations.length, 28); assert.equal(f.names.length, 28);
+  assert.deepEqual(snapshot.counts, { tables: 28, rows: 29 }, "27 application tables + ledger, 28 ledger rows + capacity state");
+  assert.deepEqual([...f.observations.selectedTables].sort(), [...f.names].sort());
+  assert.equal(f.observations.committed, 1); assert.equal(f.observations.releases, 2);
+});
+
+test("an ALTER's physical CHECK and its ledger checksum remain independently bound into backup hashes", async () => {
+  const original = await captureFixture(), changedSchema = await captureFixture({ changedCheck: true }), changedLedger = await captureFixture({ changedLedger: true });
+  const before = await captureBackupSnapshot({ store: original.store });
+  const schema = await captureBackupSnapshot({ store: changedSchema.store }), ledger = await captureBackupSnapshot({ store: changedLedger.store });
+  assert.notEqual(schema.schemaDigest, before.schemaDigest); assert.equal(schema.coreDigest, before.coreDigest);
+  assert.equal(ledger.schemaDigest, before.schemaDigest); assert.notEqual(ledger.coreDigest, before.coreDigest);
+  for (const actual of [schema, ledger]) assert.throws(() => assertBackupSnapshot({ expected: before, actual, mode: "recovery" }), (error) => error.code === "BACKUP_SNAPSHOT_DRIFT");
+});
+
+test("ALTER support does not permit unknown tables or a renamed application table", async () => {
+  for (const change of [{ extraTable: true }, { renamedTable: true }]) {
+    const f = await captureFixture(change);
+    await assert.rejects(captureBackupSnapshot({ store: f.store }), (error) => ["BACKUP_SNAPSHOT_TABLE_COUNT", "BACKUP_SNAPSHOT_TABLE_NAMES"].includes(error.code));
+    assert.deepEqual(f.observations.selectedTables, []); assert.equal(f.observations.committed, 0);
+    assert.equal(f.observations.rolledBack, 1); assert.equal(f.observations.releases, 2);
+  }
 });
