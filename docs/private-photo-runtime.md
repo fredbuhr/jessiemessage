@@ -2,8 +2,8 @@
 
 L'étape 0.27 (texte, restauration SQL isolée et téléphone) est validée en
 recette. Le runtime photos actif est **`37c8fcd0`**, application **0.24.0**.
-**0.28 est activée en recette ; le parcours photos réel et la restauration
-SQL + fichiers restent à accepter.**
+**0.28 est activée en recette ; le parcours photos réel est accepté par le
+propriétaire. La sauvegarde/restauration SQL + fichiers reste à valider.**
 
 Ce lot réutilise les modules médias, Sharp, le chiffrement, les autorisations,
 la galerie, la déduplication et les quotas existants. Il n'ajoute aucune
@@ -84,13 +84,51 @@ remplacent pas un envoi authentifié ou une restauration réelle avec photos.
 Le repli AUTH compatible `14a43104` reste disponible. Aucun changement de
 schéma, élargissement de droits SQL ou lancement de production n'est effectué.
 
-## Acceptation restante
+## Parcours réel accepté et contrôle de la source
 
-1. Effectuer un seul parcours groupé : photo JPEG/PNG dans chaque sens,
-   légende, galerie, reprise d'envoi, suppression autorisée et conservation
-   après réouverture. Les comptes et l'invitation déjà acceptés sont réutilisés.
-2. Vérifier une sauvegarde SQL + fichiers sur une copie isolée avec les quatre
-   vraies clés et les contrôles de reprise existants.
+À **18:44 Europe/Paris**, le propriétaire confirme **« photos OK »** après
+le lot demandé : image JPEG ou PNG avec légende dans chaque sens, ouverture
+et agrandissement depuis la galerie, conservation après fermeture/réouverture,
+puis suppression d'un message photo de test et contrôle depuis l'autre compte.
+Les comptes déjà validés sont réutilisés. L'appareil, le navigateur et le
+format exact ne sont pas précisés ; cette confirmation ne certifie pas toutes
+les plateformes. Le réessai après coupure réseau n'était pas inclus dans ce
+lot et reste à contrôler avec les photos.
+
+Le lecteur `verifyPhotoBackupData` de la révision active contrôle ensuite les
+données réelles avec les quatre clés existantes, sans démarrer HTTP ni SMTP.
+Le résultat est complet et sain : **1 MFA, 1 payload e-mail, 5 messages et
+1 média**, soit **8 lignes contrôlées**, **2 fichiers photo authentifiés**.
+Le stockage contient deux fichiers chiffrés, **166 839 octets**. Les domaines
+récupération client, CRM et diffusions restent vides. Ces compteurs décrivent
+l'instant du contrôle, pas nécessairement tous les envois du parcours.
+
+## Sauvegarde/restauration restante
+
+La commande opérateur privée `photo-snapshot-37c8fcd0.sh --offline` est
+préparée, avec contrôle de révision/arbre et du SHA-256 de son adaptateur.
+Les syntaxes Node et Bash passent. Elle réutilise le client MariaDB natif et
+son gestionnaire de configuration temporaire, les lecteurs privés existants
+et le vérificateur photo. Elle doit créer un nouvel ensemble SQL + fichiers,
+comparer deux dumps SQL, copier les seuls fichiers chiffrés attendus, puis
+extraire l'archive dans un autre répertoire et comparer ses octets. Elle ne
+crée pas de clé, ne démarre pas de serveur et n'importe pas de base SQL.
+Les noms horodatés évitent d'écraser les archives précédentes.
+
+**Cette commande n'a pas été exécutée.** Le Manager Node.js de cette session
+renvoie « Erreur — Une erreur s'est produite » sur le tableau de bord ; la
+console présente un bouton Run sans état fiable. Le retour depuis la liste
+des sites reproduit l'erreur. La vue d'ensemble de l'hébergement et SSH
+restent accessibles. Santé et disponibilité de la recette répondent **200**,
+et la capacité média anonyme **401**. Aucun arrêt n'est tenté avec cet état
+incertain ; la recette demeure en ligne.
+
+La reprise demande d'abord un arrêt confirmé depuis un Manager fonctionnel,
+puis cette capture et le redémarrage du même profil photos. L'import SQL
+isolé et sa vérification cryptographique restent ensuite nécessaires. La
+capture prévue ne constitue ni une exécution du manifeste signé de la CLI
+complète, ni une validation du réassociateur de capacité sur l'hébergeur.
+Ces distinctions restent explicites jusqu'aux reçus correspondants.
 
 ## Validation du code
 
@@ -115,5 +153,5 @@ historiques ne remplacent pas cette note. Les informations du service,
 conservation/suppression et autres conditions d'ouverture restent dans le
 plan global. Le pilote élargi et la production ne sont pas ouverts par ce lot.
 
-**Étape finale : 0.28 en cours — photos actives en recette, parcours réel et
-restauration SQL + fichiers à confirmer.**
+**Étape finale : 0.28 en cours — parcours photos accepté ; capture hors ligne
+et restauration SQL + fichiers en attente d'un contrôle Node.js fonctionnel.**
