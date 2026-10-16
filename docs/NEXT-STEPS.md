@@ -1,6 +1,6 @@
 # JessieMessage — bilan et chemin vers le pilote
 
-**Étape courante 0.28 :** [photos privées, profil et sauvegarde](private-photo-runtime.md).
+**Étape 0.28 validée en recette :** [photos privées, profil et sauvegarde](private-photo-runtime.md).
 Les photos sont actives en recette sur `37c8fcd0` après confirmation du coffre
 à cinq fichiers sur le PC, initialisation hors ligne et contrôle du lanceur.
 Santé/disponibilité : 200 ; médias anonymes : 401 ; configuration privée non
@@ -8,9 +8,11 @@ servie : 404. Le propriétaire accepte le parcours photos à 18:44 Europe/Paris.
 La source et ses fichiers photo passent le contrôle cryptographique. La
 capture hors ligne `20261016T172009Z`, son extraction séparée et le
 redémarrage sont confirmés par les captures du propriétaire à 19:21. Archive
-et SQL sont vérifiés côté serveur ; une nouvelle base vide et le contrôleur
-sont prêts. Restent l'import SQL isolé, sa vérification cryptographique et
-le réessai photo après coupure. Aucune migration supplémentaire ni nouvelle pile.
+et SQL sont vérifiés côté serveur. À 21:06, le propriétaire fournit le reçu
+`status: verified` de la copie SQL isolée : 28 tables, 28 migrations, huit
+enregistrements chiffrés et deux fichiers photo conformes. À 21:27, il confirme
+que tout fonctionne après le dernier essai de reprise photo hors réseau : le
+lot est validé en recette. Aucune migration supplémentaire ni nouvelle pile.
 
 **Étape 0.27 validée en recette :** [texte, sauvegarde restaurée et téléphone](pilot-preparation.md).
 Après sa confirmation de l'import SQL et du téléphone à 16:40 Europe/Paris,
@@ -20,7 +22,7 @@ Cette validation portait sur `14a43104`. Le lot courant **0.28 : photos
 privées** réutilise les modules médias, galerie et stockage déjà présents ;
 son activation en recette est décrite ci-dessus. La production reste fermée.
 
-**Current source of truth — 16 October 2026:** [private photo runtime, lot 0.28](private-photo-runtime.md), following [manual admission and minimal private runtime, lot 0.26](manual-invitation-runtime.md). Stages 0.25–0.27 are accepted in recipe: backups checked, SMTP reception, administrator MFA sign-in, invited registration/email/approval, two-way text persistence and isolated SQL restore. The active photo runtime is pinned to `37c8fcd0`, retaining the eight-character client minimum. CRM, broadcasts, client recovery and notifications remain outside that profile; they are not removed from the product scope. The owner accepted the real photo journey; SQL/files restore and photo retry after disconnection remain pending. The entries below are historical observations of their revisions. Do not infer current deployment or a new KYC-provider requirement from an older entry. Production publication remains pending.
+**Current source of truth — 16 October 2026:** [private photo runtime, lot 0.28](private-photo-runtime.md), following [manual admission and minimal private runtime, lot 0.26](manual-invitation-runtime.md). Stages 0.25–0.27 are accepted in recipe: backups checked, SMTP reception, administrator MFA sign-in, invited registration/email/approval, two-way text persistence and isolated SQL restore. The active photo runtime is pinned to `37c8fcd0`, retaining the eight-character client minimum. CRM, broadcasts, client recovery and notifications remain outside that profile; they are not removed from the product scope. The owner accepted the real photo journey and supplied the successful isolated SQL/files restore receipt at 21:06; at 21:27 the owner accepted the requested photo retry after disconnection, closing lot 0.28 in recipe. The entries below are historical observations of their revisions. Do not infer current deployment or a new KYC-provider requirement from an older entry. Production publication remains pending.
 
 
 Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de client, photographie personnelle ni configuration de production.

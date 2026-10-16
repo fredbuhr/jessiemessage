@@ -2,9 +2,9 @@
 
 L'étape 0.27 (texte, restauration SQL isolée et téléphone) est validée en
 recette. Le runtime photos actif est **`37c8fcd0`**, application **0.24.0**.
-**0.28 est activée en recette ; le parcours photos réel est accepté par le
-propriétaire. La capture SQL + fichiers et son extraction sont réussies ;
-l'import SQL isolé et son contrôle cryptographique restent à valider.**
+**0.28 est validée en recette : parcours photos réel, capture SQL + fichiers,
+extraction, restauration SQL isolée et reprise après coupure réseau acceptés
+par le propriétaire.**
 
 Ce lot réutilise les modules médias, Sharp, le chiffrement, les autorisations,
 la galerie, la déduplication et les quotas existants. Il n'ajoute aucune
@@ -94,7 +94,7 @@ puis suppression d'un message photo de test et contrôle depuis l'autre compte.
 Les comptes déjà validés sont réutilisés. L'appareil, le navigateur et le
 format exact ne sont pas précisés ; cette confirmation ne certifie pas toutes
 les plateformes. Le réessai après coupure réseau n'était pas inclus dans ce
-lot et reste à contrôler avec les photos.
+premier lot ; son acceptation ultérieure est consignée ci-dessous.
 
 Le lecteur `verifyPhotoBackupData` de la révision active contrôle ensuite les
 données réelles avec les quatre clés existantes, sans démarrer HTTP ni SMTP.
@@ -160,7 +160,8 @@ l'identité physique du répertoire copié doit différer de celle de la source.
 Les syntaxes Node/Bash passent. Le contrôle préalable réel retourne
 **`ready_for_input`**, **`databaseConnected: false`**,
 **`archiveFilesMatched: true`**, **`independentMediaDirectory: true`**.
-L'import SQL et le résultat final `verified` ne sont pas encore obtenus.
+À ce stade préparatoire, l'import SQL et le résultat final `verified`
+n'étaient pas encore obtenus ; le reçu ultérieur est consigné ci-dessous.
 Aucun serveur ou worker ne doit être démarré sur la copie. La capacité n'est
 pas réassociée : **`capacityRebound: false`**. Cet exercice en lecture seule
 ne constitue ni une exécution du manifeste signé de la CLI complète, ni une
@@ -177,6 +178,47 @@ Les treize tests ciblés passent, notamment les erreurs découpées en plusieurs
 blocs, leur masquage, la limite de taille, l'annulation et le nettoyage du
 fichier client. Le contrôle de syntaxe complet passe aussi. Le runtime
 applicatif reste épinglé à `37c8fcd0`, sans nouvelle clé ni modification SQL.
+
+## Restauration photos vérifiée — 21:06 Europe/Paris
+
+Le propriétaire fournit une nouvelle capture du contrôle épinglé après les
+refus d'authentification SQL. Le résultat final est **`status: verified`** :
+la connexion à la copie a réussi et le contrôle a atteint sa fin. Aucun mot
+de passe ni extrait de la console privée n'est reproduit dans le dépôt.
+
+| Contrôle de la copie restaurée | Résultat |
+| --- | --- |
+| Tables / migrations | 28 / 28 |
+| Archive SQL / SQL décompressé | 12 790 / 66 676 octets, empreintes conformes à l'instantané ci-dessus |
+| Enregistrements chiffrés authentifiés | 8 : 1 MFA, 1 payload e-mail, 5 messages, 1 média |
+| Fichiers photo authentifiés | 2 |
+| Récupération, CRM et diffusions | Compteurs à zéro |
+| Fichiers extraits / stockage distinct | `archiveFilesMatched: true`, `independentMediaDirectory: true` |
+| Démarrage HTTP / SMTP sur la copie | `false` / `false` |
+| Réassociation de capacité | `capacityRebound: false` |
+
+Le reçu établit la concordance du dump de la copie avec l'export figé et
+l'authentification de son contenu avec les quatre clés existantes. Il ne
+compare pas la copie aux échanges ajoutés à la recette après l'instantané.
+Les limites de l'exercice en lecture seule et de la réassociation de capacité
+décrites plus haut restent applicables.
+
+Après ce reçu, le précontrôle relancé par l'agent confirme les mêmes tailles
+et empreintes SQL, les fichiers extraits conformes et le stockage distinct.
+Le contrôle ponctuel d'exploitation compte **zéro fichier client SQL
+temporaire** ; `/api/health` et `/api/ready` répondent tous deux **200**.
+Ces lectures ne démarrent aucun service sur la copie et ne répètent pas
+la connexion SQL personnelle du propriétaire.
+
+À **21:27 Europe/Paris**, le propriétaire répond **« je t'autorise la mise à
+jour, tout fonctionne »** après le dernier essai demandé : interruption réseau
+avant l'envoi photo, reprise du même envoi, réception une seule fois et
+conservation après actualisation. Cette confirmation clôt le lot **0.28 en
+recette**. Elle est déclarative ; appareil et navigateur ne sont pas précisés.
+Elle ne constitue pas une certification de toutes les plateformes.
+
+La révision applicative hébergée demeure `37c8fcd0` ; l'acceptation ne vaut
+pas ouverture de production.
 
 ## Validation du code
 
@@ -201,5 +243,5 @@ historiques ne remplacent pas cette note. Les informations du service,
 conservation/suppression et autres conditions d'ouverture restent dans le
 plan global. Le pilote élargi et la production ne sont pas ouverts par ce lot.
 
-**Étape finale : 0.28 en cours — parcours photos, capture et extraction acceptés ;
-import SQL isolé et vérification cryptographique encore attendus.**
+**Étape finale : 0.28 validée en recette — parcours photos, restauration
+SQL/fichiers et reprise après coupure réseau acceptés. Production non ouverte.**
