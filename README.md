@@ -2,7 +2,7 @@
 
 Invitation-only private messaging PWA. Public source, private user data.
 
-**Current status — stage 0.27 accepted in recipe, application 0.24.0:** see [text-pilot acceptance and remaining opening conditions](docs/pilot-preparation.md). The [accepted stage 0.26 runtime](docs/manual-invitation-runtime.md) uses the existing MariaDB, Nodemailer, OTPAuth and Sharp components. Invitations, verified email and explicit approval by Jess gate client access. No independent age-assurance claim or new KYC provider is introduced.
+**Current work — stage 0.28 private photos, application 0.24.0:** see [private photo runtime and grouped activation](docs/private-photo-runtime.md). [Stage 0.27 is accepted in recipe](docs/pilot-preparation.md). The runtime uses the existing MariaDB, Nodemailer, OTPAuth and Sharp components. Invitations, verified email and explicit approval by Jess gate client access. No independent age-assurance claim or new KYC provider is introduced.
 
 Stage 0.27 is accepted in recipe: the owner confirmed the isolated SQL import and phone journey at 16:40 Europe/Paris, then provided the successful restored-copy receipt at 17:08. The copy matches the frozen SQL export and its encrypted text data authenticates. The running application stays pinned to `14a43104`; the next lot is private photos using the existing media modules. Production remains unopened.
 

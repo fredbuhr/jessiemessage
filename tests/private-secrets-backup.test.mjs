@@ -53,7 +53,7 @@ test("Linux CI requires the real GPG and anchored path tests", { skip: !process.
 
 test("coffre scope is explicit and rejects unknown or accessor profiles", async () => {
   const args = ["--private-directory", path.resolve(repository, "../private-example"), "--output", "messaging.json.gpg"];
-  for (const profile of ["auth", "messaging"]) assert.deepEqual(parseArguments([...args, "--profile", profile]),
+  for (const profile of ["auth", "messaging", "messaging-photos"]) assert.deepEqual(parseArguments([...args, "--profile", profile]),
     { privateDirectory: args[1], output: args[3], profile });
   for (const profile of ["all", "", "0", "messaging\n"]) assert.throws(() => parseArguments([...args, "--profile", profile]), unavailable);
   assert.throws(() => parseArguments(["--profile", "messaging", "--output", "file.json.gpg"]), unavailable);
@@ -99,6 +99,38 @@ test("messaging coffre includes recoverable SMTP and chat secrets while old AUTH
   assert.deepEqual(await verifyCiphertext({ ...verification, profile: "auth" }, previous, password), { verified: true, files: 3, secretsOnly: true, databaseBackup: false });
   assert.deepEqual(await readFile(path.join(f.directory, f.selected.output)), previous);
   assert.equal(await readFile(path.join(f.directory, "runtime-messaging.json"), "utf8"), content);
+});
+
+test("photo coffre includes five private files, prevents omission of the media key and retains old v2 readability", { skip: !supported }, async (t) => {
+  const f = await fixture(t), oldSelected = { ...f.selected, profile: "messaging" };
+  await writeFile(path.join(f.directory, "runtime-messaging.json"), JSON.stringify(messaging()), { mode: 0o600 });
+  await run(oldSelected, password); const old = await readFile(path.join(f.directory, oldSelected.output));
+  const media = { format: "jessiemessage-runtime-media", version: 1, origin: authentication().origin,
+    mediaKey: Buffer.alloc(32, 53).toString("base64url"), mediaRoot: path.join(f.root, "media"), ownerBytes: "1073741824",
+    totalBytes: "10737418240", minimumFreeBytes: "536870912" };
+  await writeFile(path.join(f.directory, "runtime-media.json"), JSON.stringify(media), { mode: 0o600 });
+  await assert.rejects(check({ ...oldSelected, output: "old-incomplete.json.gpg" }), unavailable);
+  const selected = { ...f.selected, output: "photos.json.gpg", profile: "messaging-photos" };
+  assert.equal((await check(selected)).files, 5);
+  const result = await run(selected, password), ciphertext = await readFile(path.join(f.directory, selected.output));
+  assert.equal(result.files, 5); assert.equal(result.verified, true); assert.equal(ciphertext.includes(Buffer.from(media.mediaKey)), false);
+  const verify = { ...selected, output: "verify-never-written.json.gpg" };
+  assert.equal((await verifyCiphertext(verify, ciphertext, password)).files, 5);
+  await assert.rejects(verifyCiphertext({ ...verify, profile: "messaging" }, ciphertext, password), unavailable);
+  assert.equal((await verifyCiphertext({ ...verify, profile: "messaging" }, old, password)).files, 4);
+  assert.deepEqual(await readFile(path.join(f.directory, oldSelected.output)), old);
+});
+
+test("photo coffre refuses a individually valid but mismatched media key or origin before publication", { skip: !supported }, async (t) => {
+  for (const change of [{ mediaKey: authentication().mfaKey }, { origin: "https://other.jessiemessage.com" }]) {
+    const f = await fixture(t); await writeFile(path.join(f.directory, "runtime-messaging.json"), JSON.stringify(messaging()), { mode: 0o600 });
+    await writeFile(path.join(f.directory, "runtime-media.json"), JSON.stringify({ format: "jessiemessage-runtime-media", version: 1,
+      origin: authentication().origin, mediaKey: Buffer.alloc(32, 53).toString("base64url"), mediaRoot: path.join(f.root, "media"),
+      ownerBytes: "1073741824", totalBytes: "10737418240", minimumFreeBytes: "536870912", ...change }), { mode: 0o600 });
+    const selected = { ...f.selected, profile: "messaging-photos" };
+    await assert.rejects(run(selected, password), unavailable);
+    await assert.rejects(lstat(path.join(f.directory, selected.output)), { code: "ENOENT" });
+  }
 });
 
 test("messaging coffre refuses malformed SMTP configuration without publishing or exposing it", { skip: !supported }, async (t) => {

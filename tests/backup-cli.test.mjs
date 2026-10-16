@@ -64,6 +64,39 @@ test("backup commands require exact offline arguments and a canonical absolute m
     [...args("restore"), "--cleanup-all"], ["prepare", "--offline", "--manifest", "/private/secret\nname"]]) assert.throws(() => parseArguments(values), errorCode("BACKUP_USAGE"));
 });
 
+test("photo CLI prepares and restores with four keys while retaining the shared clone and recovery guards", async () => {
+  const source = fixture({ source: true }); delete source.config.keys.crmKey;
+  const create = source.manifests.createBackupManifest;
+  source.manifests.createBackupManifest = value => { assert.equal(value.profile, "messaging-photos"); return { ...create(value), version: 2, profile: value.profile }; };
+  assert.equal((await main([...args("prepare"), "--profile", "photos"], {}, source.dependencies)).prepared, true);
+  assert.equal(source.events.find(event => Array.isArray(event) && event[0] === "crypto")[1].pool, source.pool);
+  const target = fixture(); delete target.config.keys.crmKey;
+  Object.assign(target.state.manifest, { version: 2, profile: "messaging-photos" });
+  assert.equal((await main([...args("restore"), "--profile", "photos"], {}, target.dependencies)).restored, true);
+  assert.equal(mutations(target).filter(event => event[0] === "rebind").length, 1);
+  const wrong = fixture();
+  await assert.rejects(main([...args("verify"), "--profile", "photos"], {}, wrong.dependencies), errorCode("BACKUP_CONFIG"));
+  assert.equal(wrong.events.length, 0);
+});
+
+test("photo CLI real configuration accepts disabled CRM/recovery/broadcast without a CRM key", async () => {
+  const f = fixture({ source: true }); delete f.config.keys.crmKey;
+  const env = { PORT: "3000", JESSIEMESSAGE_SITE_ORIGIN: "https://recette.jessiemessage.com",
+    JESSIEMESSAGE_ENABLE_AUTH: "1", JESSIEMESSAGE_ENABLE_ACCESS: "1", JESSIEMESSAGE_ENABLE_CHAT: "1", JESSIEMESSAGE_ENABLE_MEDIA: "1",
+    JESSIEMESSAGE_ENABLE_CRM: "0", JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "0", JESSIEMESSAGE_ENABLE_BROADCAST: "0",
+    JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "1", JESSIEMESSAGE_SMTP_HOST: "smtp.example.invalid", JESSIEMESSAGE_SMTP_PORT: "587",
+    JESSIEMESSAGE_SMTP_USER: "synthetic-user", JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-password",
+    JESSIEMESSAGE_DB_HOST: "sql.example.invalid", JESSIEMESSAGE_DB_NAME: f.config.databaseName,
+    JESSIEMESSAGE_APPLICATION_DATABASE: f.config.databaseName, JESSIEMESSAGE_RUNTIME_DB_USER: "synthetic_runtime", JESSIEMESSAGE_RUNTIME_DB_PASSWORD: "synthetic-password",
+    JESSIEMESSAGE_MFA_KEY: f.config.keys.totpKey.toString("base64url"), JESSIEMESSAGE_MAIL_KEY: f.config.keys.mailKey.toString("base64url"),
+    JESSIEMESSAGE_MESSAGE_KEY: f.config.keys.messageKey.toString("base64url"), JESSIEMESSAGE_MEDIA_KEY: f.config.keys.mediaKey.toString("base64url"),
+    JESSIEMESSAGE_MEDIA_ROOT: f.config.media.root, JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: String(f.config.media.capacity.ownerBytes),
+    JESSIEMESSAGE_MEDIA_TOTAL_BYTES: String(f.config.media.capacity.totalBytes), JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES: "0" };
+  const deps = { ...f.dependencies }; delete deps.configure;
+  assert.equal((await main([...args("prepare"), "--profile", "photos"], env, deps)).prepared, true);
+  await assert.rejects(main([...args("prepare"), "--profile", "photos"], { ...env, JESSIEMESSAGE_ENABLE_CRM: "1" }, deps), errorCode("BACKUP_OPERATION"));
+});
+
 test("prepare authenticates and verifies the stable source before writing the exclusive manifest, without recovery mutations", async () => {
   const f = fixture({ source: true }), result = await main(args("prepare"), {}, f.dependencies);
   assert.equal(result.prepared, true); assert.equal(result.verified, true); assert.equal(result.restored, false);

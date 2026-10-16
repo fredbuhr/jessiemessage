@@ -42,10 +42,17 @@ export async function verifyBackupData({ store, storage, keys, signal, limits = 
  * full verifier, this profile refuses even inactive/deleted media metadata and
  * non-content rows in disabled domains. Empty domains cannot certify a key. */
 export async function verifyTextBackupData({ pool, keys, signal, limits = {} } = {}) {
-  return verifyData({ pool, keys, signal, limits }, true);
+  return verifyData({ pool, keys, signal, limits }, "text");
 }
 
-async function verifyData({ store, storage, keys, signal, limits = {}, pool } = {}, textOnly = false) {
+/** The private photo profile uses four real keys and the existing media reader;
+ * populated reset, CRM and broadcast tables remain incompatible. */
+export async function verifyPhotoBackupData({ pool, storage, keys, signal, limits = {} } = {}) {
+  return verifyData({ pool, storage, keys, signal, limits }, "photos");
+}
+
+async function verifyData({ store, storage, keys, signal, limits = {}, pool } = {}, profile = "full") {
+  const textOnly = profile === "text", limited = profile !== "full";
   const report = { complete: true, healthy: false,
     counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, broadcast: 0, broadcastRecipients: 0, media: 0, mediaFiles: 0 }, issues: [] };
   let secrets, currentPurpose = "verification", maxIssues = 100;
@@ -55,8 +62,9 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
   }
   const checkSignal = () => { if (signal?.aborted) stop("aborted"); };
   try {
-    const keyNames = textOnly ? KEY_NAMES.slice(0, 3) : KEY_NAMES;
-    if ((textOnly ? typeof pool?.getConnection !== "function" : typeof store?.page !== "function" || typeof storage?.get !== "function")
+    const keyNames = textOnly ? KEY_NAMES.slice(0, 3) : limited ? KEY_NAMES.slice(0, 4) : KEY_NAMES;
+    if ((limited ? typeof pool?.getConnection !== "function" || !textOnly && typeof storage?.get !== "function"
+      : typeof store?.page !== "function" || typeof storage?.get !== "function")
       || !keys || typeof keys !== "object" || Array.isArray(keys)
       || Object.keys(keys).length !== keyNames.length || keyNames.some((name) => !Buffer.isBuffer(keys[name]) || keys[name].length !== 32)
       || !limits || typeof limits !== "object" || Array.isArray(limits) || Object.keys(limits).some((name) => !["maxRows", "maxIssues"].includes(name))) stop("invalid_configuration");
@@ -69,11 +77,11 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
     for (let first = 0; first < keyNames.length; first++) for (let second = first + 1; second < keyNames.length; second++) {
       if (secrets[keyNames[first]].equals(secrets[keyNames[second]])) stop("invalid_configuration");
     }
-    if (textOnly) {
+    if (limited) {
       let connection;
       try {
         checkSignal(); connection = await pool.getConnection(); checkSignal();
-        for (const [purpose, tables] of TEXT_INACTIVE_TABLES) for (const table of tables) {
+        for (const [purpose, tables] of TEXT_INACTIVE_TABLES.filter(([purpose]) => textOnly || purpose !== "media")) for (const table of tables) {
           currentPurpose = purpose; checkSignal();
           // Fixed table allowlist, EXISTS stops at the first row. Checking the
           // underlying tables also catches deleted assets and empty CRM notes.
@@ -165,7 +173,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
         } finally { if (Buffer.isBuffer(plaintext)) plaintext.fill(0); }
       }
     }
-    for (const purpose of textOnly ? TEXT_PURPOSES : PURPOSES) {
+    for (const purpose of textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, "media"] : PURPOSES) {
       currentPurpose = purpose;
       let afterId = null;
       while (true) {

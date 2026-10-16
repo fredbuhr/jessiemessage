@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status: **application 0.24.0; stage 0.26 candidate, hosting still AUTH-only**. The [current implementation note](manual-invitation-runtime.md) distinguishes code, tests and deployed state. The first usable perimeter is personal invitations, verified email, manual admission by Jess, one private text/photo conversation and revocation. CRM and individual broadcasts remain planned after that core acceptance; Push is not implemented. Existing modules are reused.
+Status: **application 0.24.0; stages 0.26/0.27 accepted in recipe; stage 0.28 photos in preparation**. The [photo runtime note](private-photo-runtime.md) distinguishes code, tests and deployed state. Text remains active at `14a43104`; photos are not activated yet. The first usable perimeter is personal invitations, verified email, manual admission by Jess, one private text/photo conversation and revocation. CRM and individual broadcasts remain planned after that core acceptance; Push is not implemented. Existing modules are reused.
 
 The owner describes invitees whose age was checked upstream on Stripchat. JessieMessage records an administrator's manual admission, not an independent age verification or an automatically imported Stripchat proof. This product decision is not a legal certification of the upstream check. No new identity-verification provider is included in this implementation lot.
 

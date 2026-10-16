@@ -5,12 +5,16 @@ import { execFile, spawn } from "node:child_process";
 import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
-import { validateRuntimeAuthenticationConfiguration, validateRuntimeDatabaseConfiguration, validateRuntimeMessagingConfiguration } from "../server/config/runtime-database-file.mjs";
+import { validateRuntimeAuthenticationConfiguration, validateRuntimeDatabaseConfiguration, validateRuntimeMessagingConfiguration,
+  validateRuntimeMediaConfiguration } from "../server/config/runtime-database-file.mjs";
 import { readPassword } from "./migration-input.mjs";
+import { loadRuntimeMediaEnvironment } from "../server/config/runtime-media.mjs";
+import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const FILES = ["runtime-auth.json", "admin-setup.json", "runtime-database.json"];
 const MESSAGING_FILE = "runtime-messaging.json";
+const MEDIA_FILE = "runtime-media.json";
 const FILE_LIMIT = 16384, PAYLOAD_LIMIT = 65536, CIPHER_LIMIT = 131072;
 const STATS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 const FORMAT = "jessiemessage-private-secrets-backup";
@@ -37,7 +41,7 @@ export function parseArguments(args) {
   }
   const { privateDirectory, output } = selected;
   if (typeof privateDirectory !== "string" || typeof output !== "string"
-    || selected.profile !== undefined && !["auth", "messaging"].includes(selected.profile)
+    || selected.profile !== undefined && !["auth", "messaging", "messaging-photos"].includes(selected.profile)
     || !privateDirectory.startsWith("/") || privateDirectory === "/" || privateDirectory.length > 4096
     || resolve(privateDirectory) !== privateDirectory || /[\\\x00-\x1f\x7f]/.test(privateDirectory)
     || inside(privateDirectory, REPOSITORY) || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}\.json\.gpg$/.test(output)) fail("PRIVATE_SECRETS_USAGE");
@@ -54,11 +58,17 @@ function options(value) {
     ...(profile ? ["--profile", profile.value] : [])]);
 }
 
-const sourceNames = (selected) => selected.profile === "messaging" ? [...FILES, MESSAGING_FILE] : FILES;
+const sourceNames = (selected) => selected.profile === "messaging-photos" ? [...FILES, MESSAGING_FILE, MEDIA_FILE]
+  : selected.profile === "messaging" ? [...FILES, MESSAGING_FILE] : FILES;
+const payloadVersion = (selected) => selected.profile === "messaging-photos" ? 3 : selected.profile === "messaging" ? 2 : 1;
 
 // Refuse a new AUTH-only receipt that would omit already-prepared mail/chat
 // secrets. Old three-file coffres remain valid and are never replaced.
 async function assertProfile(scope, selected) {
+  if (selected.profile === "messaging-photos") return;
+  await scope.assertReady();
+  try { await lstat(scope.file(MEDIA_FILE)); fail("PRIVATE_SECRETS_SOURCE"); }
+  catch (error) { if (error.code !== "ENOENT") throw error; }
   if (selected.profile === "messaging") return;
   await scope.assertReady();
   try { await lstat(scope.file(MESSAGING_FILE)); }
@@ -131,6 +141,7 @@ function validateSource(name, content) {
     if (name === "runtime-auth.json") validated = validateRuntimeAuthenticationConfiguration(value);
     else if (name === "runtime-database.json") validated = validateRuntimeDatabaseConfiguration(value);
     else if (name === MESSAGING_FILE) validated = validateRuntimeMessagingConfiguration(value);
+    else if (name === MEDIA_FILE) validated = validateRuntimeMediaConfiguration(value);
     else if (!plain(value) || value.schema !== "jessiemessage-admin-setup-v1" || !plain(value.totp)
       || typeof value.totp.secret !== "string" || !/^[A-Z2-7]{26,103}$/.test(value.totp.secret)
       || !Array.isArray(value.recoveryCodes) || value.recoveryCodes.length !== 8
@@ -138,7 +149,7 @@ function validateSource(name, content) {
   } catch { fail("PRIVATE_SECRETS_SOURCE"); }
   finally {
     for (const record of [value, validated]) if (record && typeof record === "object") {
-      for (const name of ["password", "mfaKey", "smtpUser", "smtpPassword", "mailKey", "messageKey"]) if (Object.hasOwn(record, name)) record[name] = "";
+      for (const name of ["password", "mfaKey", "smtpUser", "smtpPassword", "mailKey", "messageKey", "mediaKey"]) if (Object.hasOwn(record, name)) record[name] = "";
       if (record.totp) { record.totp.secret = ""; record.totp.uri = ""; }
       if (record.recoveryCodes) record.recoveryCodes.fill("");
     }
@@ -158,13 +169,26 @@ async function capture(scope, now, snapshots, selected) {
         files.push({ name, encoding: "utf-8", content, sha256: digest(bytes) });
       } finally { bytes?.fill(0); }
     }
-    payload = Buffer.from(JSON.stringify({ format: FORMAT, version: selected.profile === "messaging" ? 2 : 1,
-      ...(selected.profile === "messaging" ? { profile: "messaging" } : {}),
+    await validatePhotoBundle(files, selected);
+    payload = Buffer.from(JSON.stringify({ format: FORMAT, version: payloadVersion(selected),
+      ...(selected.profile === "messaging" || selected.profile === "messaging-photos" ? { profile: selected.profile } : {}),
       createdAt: new Date(now).toISOString(), applicationVersion: "0.24.0", files }) + "\n", "utf8");
     if (payload.length > PAYLOAD_LIMIT) fail("PRIVATE_SECRETS_SOURCE");
     return payload;
   } catch (error) { payload?.fill(0); throw error; }
   finally { for (const file of files) file.content = ""; }
+}
+
+async function validatePhotoBundle(files, selected) {
+  if (selected.profile !== "messaging-photos") return;
+  let records, env;
+  try {
+    records = Object.fromEntries(files.filter(file => file.name !== "admin-setup.json").map(file => [file.name, JSON.parse(file.content)]));
+    env = await loadRuntimeMediaEnvironment(selected.privateDirectory, {}, { readBundle: async () => ({
+      database: records["runtime-database.json"], authentication: records["runtime-auth.json"],
+      messaging: records[MESSAGING_FILE], media: records[MEDIA_FILE] }) });
+  } catch { fail("PRIVATE_SECRETS_SOURCE"); }
+  finally { clearRuntimeMessagingSecrets(env); for (const value of Object.values(records ?? {})) clearRuntimeMessagingSecrets(value); }
 }
 
 async function absent(scope, name) {
@@ -324,26 +348,27 @@ export async function run(value, password) {
 
 /** Verification seam for synthetic fixtures; no decrypted data is returned. */
 export async function verifyCiphertext(value, ciphertext, password) {
-  let pass, decrypted;
+  let pass, decrypted, parsed;
   try {
     const selected = options(value); pass = passwordBytes(password); password = "";
     if (!Buffer.isBuffer(ciphertext) || ciphertext.length < 1 || ciphertext.length > CIPHER_LIMIT) fail("PRIVATE_SECRETS_VERIFY");
     return await privateScope(selected, async (scope) => isolatedGpg(scope, async (homeFd) => {
       decrypted = await gpg(scope, homeFd, "decrypt", ciphertext, pass);
-      const parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(decrypted));
-      const names = sourceNames(selected), messaging = selected.profile === "messaging";
-      if (!plain(parsed) || parsed.format !== FORMAT || parsed.version !== (messaging ? 2 : 1)
-        || messaging && parsed.profile !== "messaging" || !Array.isArray(parsed.files) || parsed.files.length !== names.length) fail("PRIVATE_SECRETS_VERIFY");
+      parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(decrypted));
+      const names = sourceNames(selected), messaging = selected.profile === "messaging" || selected.profile === "messaging-photos";
+      if (!plain(parsed) || parsed.format !== FORMAT || parsed.version !== payloadVersion(selected)
+        || messaging && parsed.profile !== selected.profile || !Array.isArray(parsed.files) || parsed.files.length !== names.length) fail("PRIVATE_SECRETS_VERIFY");
       for (let index = 0; index < names.length; index += 1) {
         const file = parsed.files[index];
         if (!plain(file) || file.name !== names[index] || file.encoding !== "utf-8" || typeof file.content !== "string"
           || digest(Buffer.from(file.content, "utf8")) !== file.sha256) fail("PRIVATE_SECRETS_VERIFY");
-        validateSource(file.name, file.content); file.content = "";
+        validateSource(file.name, file.content);
       }
+      await validatePhotoBundle(parsed.files, selected);
       return { verified: true, files: names.length, secretsOnly: true, databaseBackup: false };
     }));
   } catch (error) { if (error instanceof PrivateSecretsBackupError) throw error; fail("PRIVATE_SECRETS_VERIFY"); }
-  finally { password = ""; pass?.fill(0); decrypted?.fill(0); }
+  finally { password = ""; pass?.fill(0); decrypted?.fill(0); for (const file of Array.isArray(parsed?.files) ? parsed.files : []) if (file && typeof file === "object") file.content = ""; }
 }
 
 export async function main(args = process.argv.slice(2), { inputStream = process.stdin, outputStream = process.stdout } = {}) {

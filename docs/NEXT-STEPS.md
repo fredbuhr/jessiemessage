@@ -1,5 +1,10 @@
 # JessieMessage — bilan et chemin vers le pilote
 
+**Étape courante 0.28 :** [photos privées, profil et sauvegarde](private-photo-runtime.md).
+Les briques médias existantes sont raccordées au profil privé ; leur
+activation attend le coffre renouvelé puis la recette groupée. Le texte
+`14a43104` demeure actif. Aucune migration supplémentaire ni nouvelle pile.
+
 **Étape 0.27 validée en recette :** [texte, sauvegarde restaurée et téléphone](pilot-preparation.md).
 Après sa confirmation de l'import SQL et du téléphone à 16:40 Europe/Paris,
 le propriétaire a fourni à 17:08 le reçu `status: verified` : 28 tables,

@@ -65,17 +65,22 @@ function safeJson(value, budget = { nodes: MAX_NODES, bytes: MAX_BYTES }, depth 
 }
 const canonical = (value) => JSON.stringify(safeJson(value));
 const instant = (value) => { if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail(); return value; };
-function keySet(keys) {
-  exact(keys, KEY_NAMES);
+const profileKeyNames = (profile) => {
+  if (profile === "messaging-photos") return KEY_NAMES.slice(0, 4);
+  if (profile === "full") return KEY_NAMES;
+  fail();
+};
+function keySet(keys, names = KEY_NAMES) {
+  exact(keys, names);
   const result = Object.create(null);
   try {
-    for (const name of KEY_NAMES) {
+    for (const name of names) {
       if (!Buffer.isBuffer(keys[name]) || keys[name].length !== 32) fail();
       result[name] = Buffer.from(keys[name]);
     }
-    for (let index = 0; index < KEY_NAMES.length; index += 1) {
-      for (let other = index + 1; other < KEY_NAMES.length; other += 1) {
-        if (timingSafeEqual(result[KEY_NAMES[index]], result[KEY_NAMES[other]])) fail();
+    for (let index = 0; index < names.length; index += 1) {
+      for (let other = index + 1; other < names.length; other += 1) {
+        if (timingSafeEqual(result[names[index]], result[names[other]])) fail();
       }
     }
     return result;
@@ -105,18 +110,22 @@ function canaryFields(value, name) {
 }
 function manifestValue(manifest) {
   const result = safeJson(manifest);
-  exact(result, ["version", "payload", "signature"]);
-  if (result.version !== 1 || typeof result.signature !== "string" || !HEX.test(result.signature)) fail();
+  const photos = result.version === 2;
+  exact(result, ["version", "payload", "signature", ...(photos ? ["profile"] : [])]);
+  if ((!photos && result.version !== 1) || photos && result.profile !== "messaging-photos"
+    || typeof result.signature !== "string" || !HEX.test(result.signature)) fail();
   exact(result.payload, ["createdAt", "identity", "snapshot", "canaries"]);
   instant(result.payload.createdAt); identityValue(result.payload.identity);
   // The coordinator owns the snapshot's schema and ciphertext-only contents.
   plain(result.payload.snapshot);
-  exact(result.payload.canaries, KEY_NAMES);
-  for (const name of KEY_NAMES) canaryFields(result.payload.canaries[name], name);
+  const names = profileKeyNames(photos ? result.profile : "full");
+  exact(result.payload.canaries, names);
+  for (const name of names) canaryFields(result.payload.canaries[name], name);
   return result;
 }
-function binding(payload) {
-  return createHash("sha256").update(canonical({ version: 1, createdAt: payload.createdAt, identity: payload.identity,
+const envelope = (profile) => profile === "messaging-photos" ? { version: 2, profile } : { version: 1 };
+function binding(payload, profile = "full") {
+  return createHash("sha256").update(canonical({ ...envelope(profile), createdAt: payload.createdAt, identity: payload.identity,
     snapshotHash: createHash("sha256").update(canonical(payload.snapshot)).digest("hex") })).digest();
 }
 function canaryKey(key, name) {
@@ -143,30 +152,31 @@ function verifyCanary(value, key, name, bound) {
     if (tail.length !== 0 || plaintext.length !== expected.length || !timingSafeEqual(plaintext, expected)) fail();
   } finally { secret.fill(0); expected.fill(0); plaintext?.fill(0); tail?.fill(0); }
 }
-function signature(payload, mediaKey) {
+function signature(payload, mediaKey, profile = "full") {
   return createHmac("sha256", mediaKey).update("jessiemessage:backup-manifest-signature:v1:\0", "ascii")
-    .update(canonical({ version: 1, payload })).digest("hex");
+    .update(canonical({ ...envelope(profile), payload })).digest("hex");
 }
-export function createBackupManifest({ snapshot, identity, keys, now } = {}) {
+export function createBackupManifest({ snapshot, identity, keys, now, profile = "full" } = {}) {
   let secrets;
   try {
-    secrets = keySet(keys);
+    const names = profileKeyNames(profile); secrets = keySet(keys, names);
     const payload = { createdAt: instant(now), identity: identityValue(identity), snapshot: safeJson(snapshot), canaries: Object.create(null) };
     plain(payload.snapshot);
-    const bound = binding(payload);
-    for (const name of KEY_NAMES) payload.canaries[name] = sealCanary(secrets[name], name, bound);
-    return manifestValue({ version: 1, payload, signature: signature(payload, secrets.mediaKey) });
+    const bound = binding(payload, profile);
+    for (const name of names) payload.canaries[name] = sealCanary(secrets[name], name, bound);
+    return manifestValue({ ...envelope(profile), payload, signature: signature(payload, secrets.mediaKey, profile) });
   } catch { fail(); }
   finally { if (secrets) for (const key of Object.values(secrets)) key.fill(0); }
 }
 export function verifyBackupManifest({ manifest, keys } = {}) {
   let secrets;
   try {
-    secrets = keySet(keys);
-    const result = manifestValue(manifest), expected = Buffer.from(signature(result.payload, secrets.mediaKey), "hex");
+    const result = manifestValue(manifest), profile = result.version === 2 ? result.profile : "full", names = profileKeyNames(profile);
+    secrets = keySet(keys, names);
+    const expected = Buffer.from(signature(result.payload, secrets.mediaKey, profile), "hex");
     if (!timingSafeEqual(Buffer.from(result.signature, "hex"), expected)) fail();
-    const bound = binding(result.payload);
-    for (const name of KEY_NAMES) verifyCanary(result.payload.canaries[name], secrets[name], name, bound);
+    const bound = binding(result.payload, profile);
+    for (const name of names) verifyCanary(result.payload.canaries[name], secrets[name], name, bound);
     return result.payload;
   } catch { fail(); }
   finally { if (secrets) for (const key of Object.values(secrets)) key.fill(0); }
