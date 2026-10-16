@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { link, lstat, open, realpath, unlink } from "node:fs/promises";
+import { link, lstat, open, realpath, rename, unlink } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import { isIP } from "node:net";
 import path from "node:path";
@@ -274,6 +274,59 @@ export async function writeRuntimeMessagingConfiguration(directory, value) {
   try { return await writeConfiguration(directory, record, MESSAGING_BASENAME); }
   catch { messagingFailure(); }
   finally { clearSecrets(record); }
+}
+
+// Password rotation is separate from exclusive first publication. It may
+// replace only the SMTP password, using the exact previously read record.
+export async function replaceRuntimeMessagingSmtpPassword(directory, expected, smtpPassword) {
+  let previous, replacement, contents;
+  try {
+    previous = validateRuntimeMessagingConfiguration(expected);
+    replacement = validateRuntimeMessagingConfiguration({ ...previous, smtpPassword });
+    contents = Buffer.from(`${JSON.stringify(replacement)}\n`, "utf8");
+    return await privateScope(directory, async (scope) => {
+      const published = scope.file(MESSAGING_BASENAME), lockName = scope.file(".runtime-messaging-smtp.lock");
+      const temporary = scope.file(`.${MESSAGING_BASENAME}.${randomBytes(16).toString("hex")}.tmp`);
+      let lock, lockIdentity, file, identity, current, readBack;
+      try {
+        lock = await open(lockName, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600);
+        lockIdentity = await lock.stat({ bigint: true }); regular(lockIdentity);
+        const before = await lstat(published, { bigint: true }); regular(before);
+        current = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration);
+        if (MESSAGING_FIELDS.some((name) => current[name] !== previous[name])) fail();
+        sameSnapshot(before, await lstat(published, { bigint: true }));
+        file = await open(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600);
+        identity = await file.stat({ bigint: true }); regular(identity);
+        await file.writeFile(contents); await file.sync();
+        const written = await file.stat({ bigint: true }); regular(written);
+        if (!sameFile(identity, written) || written.size !== BigInt(contents.length)) fail();
+        await file.close(); file = null;
+        await scope.assertReady();
+        regular(await lstat(lockName, { bigint: true }));
+        if (!sameFile(lockIdentity, await lstat(lockName, { bigint: true }))) fail();
+        sameSnapshot(written, await lstat(temporary, { bigint: true }));
+        sameSnapshot(before, await lstat(published, { bigint: true }));
+        await rename(temporary, published);
+        const final = await lstat(published, { bigint: true }); regular(final);
+        if (!sameFile(identity, final) || final.size !== BigInt(contents.length)) fail();
+        await scope.sync();
+        readBack = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration);
+        if (MESSAGING_FIELDS.some((name) => readBack[name] !== replacement[name])) fail();
+        return { saved: true, keysPreserved: true };
+      } finally {
+        clearSecrets(current); clearSecrets(readBack);
+        try { await file?.close(); }
+        finally {
+          try { if (identity) await removeOwned(temporary, identity); }
+          finally {
+            try { await lock?.close(); }
+            finally { if (lockIdentity) { await removeOwned(lockName, lockIdentity); await scope.sync(); } }
+          }
+        }
+      }
+    });
+  } catch { messagingFailure(); }
+  finally { contents?.fill(0); clearSecrets(previous); clearSecrets(replacement); }
 }
 
 async function readAnchoredConfiguration(scope, basename, validate) {

@@ -83,8 +83,9 @@ identifiants ; ne rien inventer et ne pas entrer les secrets dans le chat.
    une appliquée et 27 inchangées. `initialize` reste réservé à une base neuve ;
    `upgrade` exige un préfixe appliqué conforme suivi uniquement de migrations
    en attente. Aucun compte runtime ne reçoit de nouveaux droits de migration.
-4. Exécuter personnellement la préparation ci-dessous, puis créer et vérifier un
-   nouveau coffre incluant le fichier messaging.
+4. Exécuter personnellement la préparation ci-dessous, vérifier l'accès SMTP
+   avec la commande de mise à jour, puis créer et vérifier un nouveau coffre
+   incluant le fichier messaging.
 5. Exécuter le contrôle passif du profil et des schémas. Il ne lance ni listener,
    ni worker, ni connexion SMTP et n'envoie aucun message.
 6. Préparer la commande épinglée de démarrage et le repli AUTH seule. Une
@@ -113,7 +114,44 @@ saisies masquées du mot de passe SMTP. Les valeurs passent uniquement sur stdin
 sans argument, historique ni variable exportée. La préparation refuse de
 remplacer un fichier messaging existant. Elle ne teste pas la réception.
 
-### Coffre couvrant les nouvelles clés
+### Vérifier SMTP avant de renouveler le coffre
+
+Avant de renouveler le coffre après une correction SMTP, vérifier le mot de
+passe d'appareil avec la procédure ci-dessous. Le reçu `prepared` de préparation
+initiale confirme la syntaxe et l'enregistrement, sans authentification SMTP.
+
+### Corriger le seul mot de passe SMTP
+
+Infomaniak utilise un mot de passe dédié à l'appareil ou l'application. Dans le
+Manager, sélectionner la boîte puis **Appareil connecté → Ajouter un appareil**,
+nommé JessieMessage. Le bouton historique « Modifier » explique désormais ce
+parcours. La création du mot de passe et sa conservation sont personnelles.
+
+Depuis la révision vérifiée :
+
+```bash
+JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd bash scripts/capture-smtp-update.sh \
+  --private-directory /srv/customer/jessiemessage-private \
+  --private-path-mode linux-dirfd
+```
+
+Cette commande demande le nouveau mot de passe deux fois, sans demander à nouveau
+l'identifiant. Elle utilise le serveur, le port et le compte déjà enregistrés.
+Elle vérifie l'authentification SMTP avec TLS, **sans envoyer d'e-mail**, et ferme
+le transport avant tout enregistrement. Un refus ou une fermeture incertaine
+laisse la configuration existante intacte. Aucune tentative automatique n'a lieu.
+
+Seul `smtpPassword` peut changer. Les clés mail/chat, l'origine, les identifiants
+SQL, le MFA et les comptes sont conservés. La publication utilise un verrou
+exclusif, vérifie l'ancien fichier attendu et remplace atomiquement le fichier
+par un propriétaire `0600` sous le même ancrage privé. Un ancien état ou un verrou
+existant bloque l'opération. Un échec après publication peut être ambigu :
+inspecter sans réessayer aveuglément. Le reçu attendu annonce `updated`,
+`keysPreserved: true`, `smtpAuthenticated: true` et `launchApproved: false`.
+Il ne prouve pas encore la réception réelle d'un message. Renouveler ensuite le
+coffre à quatre fichiers pour couvrir le nouveau mot de passe ; garder l'ancien.
+
+### Créer le coffre à quatre fichiers
 
 ```bash
 bash scripts/capture-private-secrets.sh \

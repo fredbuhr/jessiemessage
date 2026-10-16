@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeRuntimeDatabaseConfiguration, writeRuntimeAuthenticationConfiguration,
   writeRuntimeMessagingConfiguration, readRuntimeMessagingConfiguration, readRuntimeMessagingBundle,
-  runtimeMessagingConfigurationExists } from "../server/config/runtime-database-file.mjs";
+  runtimeMessagingConfigurationExists, replaceRuntimeMessagingSmtpPassword } from "../server/config/runtime-database-file.mjs";
 
 const repository = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 const supported = process.platform === "linux" && await statfs("/proc/self/fd", { bigint: true }).then((value) => value.type === 0x9fa0n, () => false);
@@ -32,6 +32,7 @@ test("messaging file operations exclude checkout and unclean paths before source
     await assert.rejects(readRuntimeMessagingConfiguration(directory), blocked);
     await assert.rejects(readRuntimeMessagingBundle(directory), blocked);
     await assert.rejects(runtimeMessagingConfigurationExists(directory), blocked);
+    await assert.rejects(replaceRuntimeMessagingSmtpPassword(directory, messaging(), "synthetic-new-password"), blocked);
   }
 });
 
@@ -78,4 +79,58 @@ test("bundles refuse origin drift and key collision with the existing durable MF
     await writeRuntimeMessagingConfiguration(f.directory, { ...messaging(), ...change });
     await assert.rejects(readRuntimeMessagingBundle(f.directory), blocked);
   }
+});
+
+test("SMTP password replacement is atomic, owner0600 and preserves every other field and private file", { skip: !supported }, async (t) => {
+  const f = await fixture(t); const original = messaging();
+  await writeRuntimeDatabaseConfiguration(f.directory, database());
+  await writeRuntimeAuthenticationConfiguration(f.directory, authentication());
+  await writeRuntimeMessagingConfiguration(f.directory, original);
+  const otherNames = ["runtime-database.json", "runtime-auth.json", "old-coffre.json.gpg"];
+  await writeFile(path.join(f.directory, otherNames[2]), "synthetic encrypted archive", { mode: 0o600 });
+  const otherBefore = await Promise.all(otherNames.map((name) => readFile(path.join(f.directory, name))));
+  const oldReader = await (await import("node:fs/promises")).open(f.file, "r");
+  const newPassword = "synthetic replacement 'quoted' $() é";
+  try {
+    assert.deepEqual(await replaceRuntimeMessagingSmtpPassword(f.directory, Object.freeze(original), newPassword), { saved: true, keysPreserved: true });
+    assert.deepEqual(await readRuntimeMessagingConfiguration(f.directory), { ...messaging(), smtpPassword: newPassword });
+    assert.deepEqual(JSON.parse(await oldReader.readFile("utf8")), messaging(), "an already open reader retains the complete old file");
+  } finally { await oldReader.close(); }
+  const metadata = await lstat(f.file); assert.equal(metadata.mode & 0o7777, 0o600); assert.equal(metadata.nlink, 1);
+  assert.equal(metadata.uid, process.getuid());
+  assert.deepEqual(await Promise.all(otherNames.map((name) => readFile(path.join(f.directory, name)))), otherBefore);
+  assert.equal(original.smtpPassword, messaging().smtpPassword, "the caller's expected record is not cleared");
+  assert.deepEqual((await readdir(f.directory)).sort(), [...otherNames, "runtime-messaging.json"].sort());
+});
+
+test("SMTP replacement refuses stale records, existing locks and unsafe files without changing credentials", { skip: !supported }, async (t) => {
+  const f = await fixture(t); await writeRuntimeMessagingConfiguration(f.directory, messaging());
+  const originalBytes = await readFile(f.file);
+  for (const change of [{ smtpPassword: "stale" }, { smtpUser: "other-user" }, { mailKey: key(9) }]) {
+    await assert.rejects(replaceRuntimeMessagingSmtpPassword(f.directory, { ...messaging(), ...change }, "new-password"), blocked);
+    assert.deepEqual(await readFile(f.file), originalBytes);
+  }
+  const lock = path.join(f.directory, ".runtime-messaging-smtp.lock");
+  await writeFile(lock, "synthetic existing lock", { mode: 0o600 });
+  await assert.rejects(replaceRuntimeMessagingSmtpPassword(f.directory, messaging(), "new-password"), blocked);
+  assert.equal(await readFile(lock, "utf8"), "synthetic existing lock"); await unlink(lock);
+  await chmod(f.file, 0o640);
+  await assert.rejects(replaceRuntimeMessagingSmtpPassword(f.directory, messaging(), "new-password"), blocked); await chmod(f.file, 0o600);
+  const other = path.join(f.directory, "other"); await link(f.file, other);
+  await assert.rejects(replaceRuntimeMessagingSmtpPassword(f.directory, messaging(), "new-password"), blocked); await unlink(other);
+  await unlink(f.file); await writeFile(other, originalBytes, { mode: 0o600 }); await symlink(other, f.file);
+  await assert.rejects(replaceRuntimeMessagingSmtpPassword(f.directory, messaging(), "new-password"), blocked);
+  assert.deepEqual(await readFile(other), originalBytes);
+});
+
+test("concurrent SMTP password updates cannot overwrite each other using the same old record", { skip: !supported }, async (t) => {
+  const f = await fixture(t); await writeRuntimeMessagingConfiguration(f.directory, messaging());
+  const results = await Promise.allSettled(["first-password", "second-password"].map((password) =>
+    replaceRuntimeMessagingSmtpPassword(f.directory, messaging(), password)));
+  assert.equal(results.filter((row) => row.status === "fulfilled").length, 1);
+  assert.ok(results.filter((row) => row.status === "rejected").every((row) => blocked(row.reason)));
+  const updated = await readRuntimeMessagingConfiguration(f.directory);
+  assert.ok(["first-password", "second-password"].includes(updated.smtpPassword));
+  assert.deepEqual({ ...updated, smtpPassword: messaging().smtpPassword }, messaging());
+  assert.deepEqual(await readdir(f.directory), ["runtime-messaging.json"]);
 });
