@@ -11,7 +11,7 @@ import { chmod, lstat, mkdtemp, readFile, readdir, rmdir, unlink } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { connectDatabase, databaseOptions } from "../../server/db/connection.mjs";
+import { databaseOptions } from "../../server/db/connection.mjs";
 import { runtimeDatabaseOptions } from "../../server/db/runtime.mjs";
 import { createdMigrationTables, applyMigrations, loadMigrations, validateMigrationPlan } from "../../server/db/migrations.mjs";
 import { createConfiguredServer } from "../../server/index.mjs";
@@ -79,6 +79,23 @@ async function removeCertificateDirectory(directory) {
   await rmdir(directory);
 }
 
+/** Never reconnect for cleanup: only the original lock owner may drop its tables. */
+export async function cleanupAuthenticationSchema(connection, { database, lockName, allowedTables }) {
+  try {
+    const held = await connection.query("SELECT IS_USED_LOCK(?) = CONNECTION_ID() AS held", [lockName]);
+    if (!Array.isArray(held) || held.length !== 1 || Number(held[0]?.held) !== 1) fail("AUTH_REHEARSAL_CLEANUP");
+    const tables = await connection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
+    if (!Array.isArray(tables) || tables.some((table) => !allowedTables.includes(table.name))) fail("AUTH_REHEARSAL_CLEANUP");
+    for (const table of allowedTables) await connection.query(`DROP TABLE IF EXISTS ${table}`);
+  } catch {
+    // Queries have settled before destroy; there is no replacement connection.
+    // An uncertain lock/inventory prevents all DROPs; a later DDL failure stops
+    // the remaining cleanup without claiming that earlier DROPs were undone.
+    try { connection.destroy(); } catch {}
+    fail("AUTH_REHEARSAL_CLEANUP");
+  }
+}
+
 /**
  * Real configured application + runtime DML account, fronted by test-only TLS.
  * Browser callers must set acceptInsecureCerts on their disposable WebDriver
@@ -100,11 +117,6 @@ export async function createAuthenticationFixture() {
   let secret = makeTotpSecret();
   const recoveryCodes = createRecoveryCodes();
 
-  async function cleanupSchema() {
-    const tables = await connection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [confirmed.database]);
-    if (tables.some((table) => !allowedTables.includes(table.name))) fail("AUTH_REHEARSAL_CLEANUP");
-    for (const table of allowedTables) await connection.query(`DROP TABLE IF EXISTS ${table}`);
-  }
   function stop() {
     if (stopping) return stopping;
     accepting = false;
@@ -128,7 +140,7 @@ export async function createAuthenticationFixture() {
       // On an uncertain drain, leave the disposable schema intact rather than
       // dropping tables beneath a query or commit that may still be running.
       if (connection && ownsSchema && applicationClosed) {
-        try { await cleanupSchema(); } catch { failed = true; }
+        try { await cleanupAuthenticationSchema(connection, { database: confirmed.database, lockName, allowedTables }); } catch { failed = true; }
       }
       if (connection) {
         if (lockHeld) { try { await connection.query("SELECT RELEASE_LOCK(?)", [lockName]); } catch { failed = true; } lockHeld = false; }
@@ -148,7 +160,12 @@ export async function createAuthenticationFixture() {
     const tables = createdMigrationTables(migrations);
     if (new Set(tables).size !== tables.length) fail();
     allowedTables = [...tables.reverse(), "schema_migrations"];
-    connection = await connectDatabase(env);
+    // Fixture owner only: browser work can leave this connection idle for over
+    // 30 seconds. Preserve it beyond the unchanged 150-second scenario budget,
+    // while MariaDB's native queryTimeout keeps statements bounded at 30 s.
+    // Runtime/production connection settings remain unchanged at socket 30 s.
+    const { default: mariadb } = await import("mariadb");
+    connection = await mariadb.createConnection({ ...databaseOptions(env), socketTimeout: 180000, queryTimeout: 30000 });
     const locked = await connection.query("SELECT GET_LOCK(?, 0) AS acquired", [lockName]);
     if (Number(locked[0]?.acquired) !== 1) fail("AUTH_REHEARSAL_BUSY");
     lockHeld = true;
