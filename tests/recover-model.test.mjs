@@ -33,13 +33,13 @@ test("password validation preserves exact whitespace, accents and composition", 
   assert.equal(passwordProblem(exact, exact), null);
   assert.equal(passwordProblem(exact, exact.trim()), "mismatch");
   assert.equal(passwordProblem(exact, exact.normalize("NFC")), "mismatch");
-  assert.equal(passwordProblem(" ".repeat(14), " ".repeat(14)), null);
+  assert.equal(passwordProblem(" ".repeat(8), " ".repeat(8)), null);
 });
 test("password limits match server UTF-16 length, accept valid emoji and reject malformed Unicode", () => {
-  for (const length of [14, 128]) assert.equal(passwordProblem("é".repeat(length), "é".repeat(length)), null);
-  assert.equal(passwordProblem("a".repeat(13), "a".repeat(13)), "short");
+  for (const length of [8, 13, 14, 128]) assert.equal(passwordProblem("é".repeat(length), "é".repeat(length)), null);
+  assert.equal(passwordProblem("a".repeat(7), "a".repeat(7)), "short");
   assert.equal(passwordProblem("a".repeat(129), "a".repeat(129)), "long");
-  assert.equal(passwordProblem("🔒".repeat(7), "🔒".repeat(7)), null);
+  assert.equal(passwordProblem("🔒".repeat(4), "🔒".repeat(4)), null);
   assert.equal(passwordProblem("🔒".repeat(64), "🔒".repeat(64)), null);
   for (const value of ["a".repeat(13) + "\ud800", "\udc00" + "a".repeat(13), "a".repeat(12) + "\ud800a"])
     assert.equal(passwordProblem(value, value), "invalid");

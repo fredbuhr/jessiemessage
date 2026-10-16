@@ -38,7 +38,7 @@ function requestBody(body) {
 function resetBody(body) {
   shape(body, ["token", "password"]);
   if (typeof body.token !== "string" || body.token.length !== 43 || !isToken(body.token)) throw httpError(400, "invalid_request");
-  if (typeof body.password !== "string" || body.password.length < 14 || body.password.length > 128
+  if (typeof body.password !== "string" || body.password.length < 8 || body.password.length > 128
     || !body.password.isWellFormed() || Buffer.byteLength(body.password) > 512) throw httpError(400, "invalid_password");
   return { token: body.token, password: body.password };
 }
@@ -86,7 +86,7 @@ export function createResetHandler(service, { origin }) {
         const [name, contentType] = files.get(pathname);
         reply(response, method, 200, await readFile(new URL(name, publicRoot)), { "Content-Type": contentType });
       } else if (pathname === "/api/access/recovery/capabilities") {
-        reply(response, method, 200, { enabled: true, password: { minLength: 14, maxLength: 128 } });
+        reply(response, method, 200, { enabled: true, password: { minLength: 8, maxLength: 128 } });
       } else {
         const peerAddress = request.socket.remoteAddress ?? "unknown";
         const body = await readJson(request, { maxBytes: 4096 });

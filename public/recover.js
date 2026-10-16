@@ -37,7 +37,7 @@ function notice(message, error = false) {
 }
 function clearPasswords() {
   password.value = ""; confirmation.value = "";
-  recoveryI18n.text(element("recovery-password-help"), "Entre 14 et 128 caractères. Les espaces et les accents sont conservés.");
+  recoveryI18n.text(element("recovery-password-help"), "Entre 8 et 128 caractères. Les espaces et les accents sont conservés.");
   password.removeAttribute("aria-invalid"); confirmation.removeAttribute("aria-invalid");
   recoveryI18n.text(element("recovery-confirmation-help"), "Saisis exactement le même mot de passe.");
   element("recovery-confirmation-help").classList.remove("is-error");
@@ -83,7 +83,7 @@ function operationFailure(error, ticket) {
   finishRecoveryOperation(state, ticket, invalid ? "invalid" : "retry");
   if (invalid) notice("Ce lien est invalide, expiré ou a déjà été utilisé. Tu peux demander un nouveau lien ci-dessous.", true);
   else if (error.status === 429) notice("Trop de tentatives. Patiente quelques instants avant de réessayer.", true);
-  else if (error.status === 400) notice(error.code === "invalid_password" ? "Choisis un mot de passe entre 14 et 128 caractères, puis confirme-le." : "Vérifie les informations saisies, puis réessaie.", true);
+  else if (error.status === 400) notice(error.code === "invalid_password" ? "Choisis un mot de passe entre 8 et 128 caractères, puis confirme-le." : "Vérifie les informations saisies, puis réessaie.", true);
   else if (error.status === 403) notice("La demande a été refusée. Réessaie depuis cette page.", true);
   else notice(ticket.operation === "reset"
     ? "Le résultat n’a pas pu être confirmé. Saisis à nouveau ton mot de passe pour réessayer avec ce lien. Tu peux aussi essayer de te connecter si la modification a abouti."
@@ -92,11 +92,11 @@ function operationFailure(error, ticket) {
 }
 function passwordFeedback() {
   const help = element("recovery-password-help");
-  const remaining = 14 - password.value.length;
-  recoveryI18n.text(help, password.value.length > 0 && password.value.length < 14
-    ? remaining > 1 ? "{count} caractères encore pour atteindre le minimum de 14." : "{count} caractère encore pour atteindre le minimum de 14."
-    : "Entre 14 et 128 caractères. Les espaces et les accents sont conservés.",
-  password.value.length > 0 && password.value.length < 14 ? { count: recoveryI18n.numberParam(remaining) } : {});
+  const remaining = 8 - password.value.length;
+  recoveryI18n.text(help, password.value.length > 0 && password.value.length < 8
+    ? remaining > 1 ? "{count} caractères encore pour atteindre le minimum de 8." : "{count} caractère encore pour atteindre le minimum de 8."
+    : "Entre 8 et 128 caractères. Les espaces et les accents sont conservés.",
+  password.value.length > 0 && password.value.length < 8 ? { count: recoveryI18n.numberParam(remaining) } : {});
   const mismatch = confirmation.value.length > 0 && confirmation.value !== password.value;
   recoveryI18n.text(element("recovery-confirmation-help"), mismatch ? "Les deux mots de passe ne correspondent pas encore." : "Saisis exactement le même mot de passe.");
   element("recovery-confirmation-help").classList.toggle("is-error", mismatch);
@@ -124,7 +124,7 @@ resetForm.addEventListener("submit", (event) => {
   if (enabled !== true || state.suspended || state.pending) return;
   const problem = passwordProblem(password.value, confirmation.value);
   if (problem) {
-    notice(problem === "mismatch" ? "Les deux mots de passe doivent être identiques." : "Choisis un mot de passe entre 14 et 128 caractères.", true);
+    notice(problem === "mismatch" ? "Les deux mots de passe doivent être identiques." : "Choisis un mot de passe entre 8 et 128 caractères.", true);
     const field = problem === "mismatch" ? confirmation : password;
     field.setAttribute("aria-invalid", "true"); field.focus(); return;
   }
@@ -159,7 +159,7 @@ async function loadCapability() {
     if (!response.ok) throw new Error("unavailable");
     const capability = await response.json();
     if (epoch !== capabilityEpoch || state.suspended) return;
-    if (capability?.enabled !== true || capability.password?.minLength !== 14 || capability.password?.maxLength !== 128) throw new Error("unavailable");
+    if (capability?.enabled !== true || capability.password?.minLength !== 8 || capability.password?.maxLength !== 128) throw new Error("unavailable");
     enabled = true; render();
     notice(state.invalidLink ? "Ce lien est invalide. Demande un nouveau lien ci-dessous." : "", state.invalidLink);
   } catch {

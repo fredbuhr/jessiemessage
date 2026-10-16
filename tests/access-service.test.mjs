@@ -2,12 +2,12 @@ import test, { before, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { createAccessService } from "../server/access/service.mjs";
-import { hashPassword, newToken, tokenDigest } from "../server/auth/crypto.mjs";
+import { hashPassword, newToken, tokenDigest, verifyPassword } from "../server/auth/crypto.mjs";
 import { openVerificationPayload } from "../server/mail/crypto.mjs";
 import { encodeAccessCursor } from "../server/access/pagination.mjs";
 
 const key = randomBytes(32); const mailKey = randomBytes(32); const userId = randomBytes(16);
-const password = "Synthetic client password 2026!"; const token = newToken();
+const password = " Testé8 "; const token = newToken();
 let now, service, passwordHash, captured, state;
 before(async () => {
   passwordHash = await hashPassword(password);
@@ -65,6 +65,9 @@ test("registration returns no email challenge, encrypts the atomic job and never
   assert.deepEqual(Object.keys(command.user).sort(), ["email", "id", "passwordHash", "pseudonym"]);
   assert.equal(command.user.email, "client@example.invalid");
   assert.notEqual(command.user.passwordHash, password);
+  assert.equal(password.length, 8);
+  assert.equal(await verifyPassword(password, command.user.passwordHash), true);
+  assert.equal(await verifyPassword(password.trim(), command.user.passwordHash), false);
   const decrypted = openVerificationPayload(command.mail.payloadEncrypted, mailKey, command.mail.id);
   assert.equal(decrypted.email, "client@example.invalid");
   assert.deepEqual(tokenDigest(decrypted.token), command.verification.tokenHash);

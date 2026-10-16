@@ -5,7 +5,7 @@ import { createContext, Script } from "node:vm";
 import * as recoveryModel from "../public/recover-model.js";
 
 const capabilityPath = "/api/access/recovery/capabilities";
-const capability = () => ({ enabled: true, password: { minLength: 14, maxLength: 128 } });
+const capability = () => ({ enabled: true, password: { minLength: 8, maxLength: 128 } });
 const response = (body, status = 200) => ({ status, ok: status >= 200 && status < 300, json: async () => body });
 const malformed = (status = 200) => ({ status, ok: status >= 200 && status < 300, json: async () => { throw new SyntaxError("synthetic malformed JSON"); } });
 const deferred = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };

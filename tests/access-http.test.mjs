@@ -90,6 +90,17 @@ test("registration sends only declaration and credentials, never exposes a verif
   assert.deepEqual(calls[0], ["register", { ...registration, peerAddress: "127.0.0.1" }]);
 });
 
+test("registration accepts eight-character passwords and rejects seven before account creation", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const length of [7, 8, 13, 14, 128]) {
+    const password = "x".repeat(length);
+    const response = await post(base, "/api/access/register", { ...registration, password });
+    assert.equal(response.status, length < 8 ? 400 : 202);
+    if (length >= 8) assert.equal(calls.at(-1)[1].password, password);
+  }
+  assert.equal(calls.length, 4);
+});
+
 test("registration rejects forged roles, approval, verified majority and an unchecked declaration", async (t) => {
   const { base, calls } = await fixture(t);
   for (const body of [{ ...registration, role: "admin" }, { ...registration, ageAssured: true }, { ...registration, approved: true }, { ...registration, status: "active" }, { ...registration, ageDeclared: false }, { ...registration, ageDeclared: "true" }, { ...registration, password: "short" }, { ...registration, pseudonym: " " }, { ...registration, invitationToken: "bad" }]) {

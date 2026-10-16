@@ -123,7 +123,7 @@ async function loadRecoveryCapability() {
   try {
     const capability = await request("/api/access/recovery/capabilities");
     if (epoch !== recoveryCapabilityEpoch || !visible()) return;
-    if (capability?.enabled !== true || capability.password?.minLength !== 14 || capability.password?.maxLength !== 128) throw new Error("invalid_recovery_capability");
+    if (capability?.enabled !== true || capability.password?.minLength !== 8 || capability.password?.maxLength !== 128) throw new Error("invalid_recovery_capability");
     recoveryEnabled = true;
   } catch (error) {
     if (error.stale || epoch !== recoveryCapabilityEpoch || !visible()) return;

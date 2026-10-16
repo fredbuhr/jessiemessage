@@ -51,10 +51,10 @@ test("password hashes retain fixed memory-hard parameters, random salt and exact
 });
 
 test("password policy bounds input and never normalizes Unicode", async () => {
-  for (const password of [undefined, 123, "a".repeat(13), "a".repeat(129), `${PASSWORD}\ud800`]) {
+  for (const password of [undefined, 123, "a".repeat(7), "a".repeat(129), `${PASSWORD}\ud800`]) {
     await assert.rejects(hashPassword(password), errorCode("AUTH_PASSWORD_INVALID"));
   }
-  const minimum = "a".repeat(14);
+  const minimum = "a".repeat(8);
   assert.equal(await verifyPassword(minimum, await hashPassword(minimum)), true);
   const maximum = "a".repeat(128);
   assert.equal(await verifyPassword(maximum, await hashPassword(maximum)), true);

@@ -8,7 +8,7 @@ export function recoveryToken(fragment) {
 
 export function passwordProblem(password, confirmation) {
   if (typeof password !== "string" || typeof confirmation !== "string") return "invalid";
-  if (password.length < 14) return "short";
+  if (password.length < 8) return "short";
   if (password.length > 128) return "long";
   for (let index = 0; index < password.length; index += 1) {
     const unit = password.charCodeAt(index);

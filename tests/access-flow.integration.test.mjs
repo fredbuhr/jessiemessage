@@ -86,7 +86,8 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
     let clientCsrf;
     let renewedExpiry;
     const clientEmail = "first-flow-client@example.invalid";
-    const clientPassword = "Synthetic first invited client password 2026!";
+    const clientPassword = " Testé8 ";
+    assert.equal(clientPassword.length, 8);
     const adminHeaders = () => ({ Cookie: adminCookie, "X-CSRF-Token": adminCsrf });
     const clientHeaders = () => ({ Cookie: clientCookie, "X-CSRF-Token": clientCsrf });
 

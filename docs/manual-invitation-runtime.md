@@ -2,10 +2,12 @@
 
 ## État courant
 
-Application 0.24.0. **Étape 0.25 validée ; lot 0.26 en préparation.**
-Le service hébergé reste à `d4c1b95`, AUTH seule, tant qu'une activation explicite
-et sa recette ne sont pas consignées. Ce document décrit le candidat de travail,
-pas une preuve de déploiement ou d'envoi d'e-mail.
+Application 0.24.0. **Étape 0.25 validée ; lot 0.26 activé en recette.**
+Le profil texte a été activé le 16 octobre 2026 après accord explicite du
+propriétaire. Sa connexion administrateur avec MFA a été vérifiée ; il confirme
+également la réception et la validation du premier e-mail invité. L'échange réel
+de messages reste à valider. Les révisions déployées, contrôles et limites sont
+consignés dans la PR #39 ; aucune mise en production n'est annoncée ici.
 
 Le 16 octobre 2026, le propriétaire a confirmé la copie PC du coffre AUTH,
 son SHA-256 conforme et son déchiffrement local. L'export SQL Gzip de 9 575 octets
@@ -36,6 +38,13 @@ La politique publique est `manual_invitation`. Un compte doit avoir consommé
 exactement une invitation avant l'approbation. Un lien transféré ne donne donc pas
 automatiquement accès à la messagerie. Aucun champ `age_assured_at` n'est rempli
 par cette décision : une date d'approbation n'est pas une preuve d'âge.
+
+À la demande du propriétaire, les mots de passe clients ont un minimum de
+**8 caractères**, jusqu'à 128 unités UTF-16 et 512 octets UTF-8. Inscription,
+connexion et récupération utilisent la même borne ; les mots de passe existants
+et leur hachage scrypt sont conservés sans normalisation. Après la création de
+mots de passe de 8 à 13 caractères, un repli doit conserver cette politique :
+le code antérieur à ce changement refuse ces identifiants à la connexion.
 
 La migration **0028** adapte la contrainte `users_active_client_gates` en une
 seule instruction ALTER revue. Les migrations 0001–0027 et leurs empreintes sont

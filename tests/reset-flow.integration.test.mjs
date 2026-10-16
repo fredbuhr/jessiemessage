@@ -66,7 +66,8 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
     const admin = { id: randomBytes(16), email: "reset-flow-admin@example.invalid", secret: makeTotpSecret() };
     const adminPassword = "Synthetic recovery administrator password 2026!";
     const originalPassword = "  Synthetic original client password 2026!  ";
-    const newPassword = "  Synthetic changed client password 2026!  ";
+    const newPassword = " Testé8 ";
+    assert.equal(newPassword.length, 8);
     const alternatePassword = "Synthetic racing client password 2026!";
     await authStore.initializeAdmin({ id: admin.id, email: admin.email, pseudonym: "Synthetic recovery administrator",
       passwordHash: await hashPassword(adminPassword), secretEncrypted: sealTotpSecret(admin.secret, totpKey, admin.id),
@@ -160,7 +161,7 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
       for (const asset of ["/recover.js", "/recover-model.js", "/recover.css"]) assert.equal((await request(asset)).status, 200);
       const capability = await request("/api/access/recovery/capabilities");
       assert.equal(capability.status, 200);
-      assert.deepEqual(capability.body, { enabled: true, password: { minLength: 14, maxLength: 128 } });
+      assert.deepEqual(capability.body, { enabled: true, password: { minLength: 8, maxLength: 128 } });
       assert.equal(await count("client_password_resets"), before);
       assert.equal((await userRow(clients.active)).password_hash, originalHash);
     });

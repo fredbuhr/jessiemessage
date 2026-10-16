@@ -190,7 +190,7 @@ export function createAccessHandler(service, { origin }) {
       } else if (pathname === "/api/access/register") {
         const body = shape(await readJson(request), ["invitationToken", "email", "pseudonym", "password", "ageDeclared"]);
         const login = credentials(body);
-        if (!isToken(body.invitationToken) || typeof body.pseudonym !== "string" || !body.pseudonym.trim() || body.pseudonym.length > 64 || body.password.length < 14 || body.ageDeclared !== true) throw httpError(400, "invalid_request");
+        if (!isToken(body.invitationToken) || typeof body.pseudonym !== "string" || !body.pseudonym.trim() || body.pseudonym.length > 64 || body.password.length < 8 || body.ageDeclared !== true) throw httpError(400, "invalid_request");
         const result = await service.register({ ...login, pseudonym: body.pseudonym, invitationToken: body.invitationToken, ageDeclared: true, peerAddress });
         if (result?.status !== "verification_pending") throw httpError(503, "authentication_unavailable");
         reply(response, method, 202, { status: "verification_pending" });

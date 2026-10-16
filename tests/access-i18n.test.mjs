@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 const decode = (value) => value.replace(/&(?:quot|apos|amp|lt|gt|#(\d+)|#x([a-f\d]+));/gi, (whole, decimal, hex) => decimal ? String.fromCodePoint(Number(decimal)) : hex ? String.fromCodePoint(parseInt(hex, 16)) : ({ "&quot;": '"', "&apos;": "'", "&amp;": "&", "&lt;": "<", "&gt;": ">" })[whole] ?? whole);
 const response = (body, status = 200) => ({ status, ok: status >= 200 && status < 300, json: async () => body });
 const malformed = () => ({ status: 200, ok: true, json: async () => { throw new SyntaxError("synthetic malformed JSON"); } });
-const capability = () => response({ enabled: true, password: { minLength: 14, maxLength: 128 } });
+const capability = () => response({ enabled: true, password: { minLength: 8, maxLength: 128 } });
 const flush = async () => { for (let index = 0; index < 8; index += 1) await new Promise((resolve) => setImmediate(resolve)); };
 const deferred = () => { let resolve; const promise = new Promise((yes) => { resolve = yes; }); return { promise, resolve }; };
 
@@ -187,14 +187,14 @@ test("recovery malformed capability switches its retry error without another HTT
 test("recovery password counters and validation translate in place while password bytes remain unchanged", async () => {
   const f = controller("recover", () => capability(), { language: "en", hash: `#reset=${"A".repeat(43)}` });
   try {
-    await flush(); f.input("recovery-password", " Mot de passe"); f.input("recovery-confirmation", "different"); const count = f.calls.length;
-    assert.equal(f.get("recovery-password-help").textContent, "1 more character to reach the minimum of 14.");
+    await flush(); f.input("recovery-password", " Secret"); f.input("recovery-confirmation", "different"); const count = f.calls.length;
+    assert.equal(f.get("recovery-password-help").textContent, "1 more character to reach the minimum of 8.");
     assert.equal(f.get("recovery-confirmation-help").textContent, "The two passwords do not match yet.");
-    f.language("fr"); assert.equal(f.get("recovery-password-help").textContent, "1 caractère encore pour atteindre le minimum de 14.");
-    assert.equal(f.get("recovery-password").value, " Mot de passe"); assert.equal(f.get("recovery-confirmation").value, "different");
-    f.input("recovery-password", "ab"); f.language("en"); assert.equal(f.get("recovery-password-help").textContent, "12 more characters to reach the minimum of 14.");
+    f.language("fr"); assert.equal(f.get("recovery-password-help").textContent, "1 caractère encore pour atteindre le minimum de 8.");
+    assert.equal(f.get("recovery-password").value, " Secret"); assert.equal(f.get("recovery-confirmation").value, "different");
+    f.input("recovery-password", "ab"); f.language("en"); assert.equal(f.get("recovery-password-help").textContent, "6 more characters to reach the minimum of 8.");
     assert.equal(f.calls.length, count); f.hide(); f.language("fr"); assert.equal(f.get("recovery-password").value, ""); assert.equal(f.get("recovery-confirmation").value, "");
-    assert.equal(f.get("recovery-password-help").textContent, "Entre 14 et 128 caractères. Les espaces et les accents sont conservés.");
+    assert.equal(f.get("recovery-password-help").textContent, "Entre 8 et 128 caractères. Les espaces et les accents sont conservés.");
   } finally { f.dispose(); }
 });
 
