@@ -2,14 +2,16 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
 import { invitationConsumptionProjection, manuallyAdmittedClient } from "../access/admission.mjs";
 import { createSessionClock } from "../auth/session-policy.mjs";
-import { normalizedCheckTree, authoredMigrationCheck } from "../chat/store.mjs";
-import { endpointDigest, openSubscription, sealSubscription } from "./crypto.mjs";
-import { validateLocale, validateSubscription } from "./validation.mjs";
+import { ChatStoreError, normalizedCheckTree, authoredMigrationCheck } from "../chat/store.mjs";
+import { NotificationCryptoError, endpointDigest, openSubscription, sealSubscription } from "./crypto.mjs";
+import { NotificationValidationError, validateLocale, validateSubscription } from "./validation.mjs";
 
 export class NotificationStoreError extends Error {
   constructor(code = "NOTIFICATIONS_UNAVAILABLE") { super("Notification settings are unavailable."); this.name = "NotificationStoreError"; this.code = code; }
 }
 const fail = (code) => { throw new NotificationStoreError(code); };
+const notificationFailure = (error) => error instanceof NotificationStoreError
+  || error instanceof NotificationCryptoError || error instanceof NotificationValidationError;
 const bytes = (value, size = 16) => { if (!Buffer.isBuffer(value) || value.length !== size) fail("NOTIFICATIONS_STORE_INPUT"); return value; };
 const instant = (value) => { if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail("NOTIFICATIONS_STORE_INPUT"); return value; };
 const sqlDate = (value) => new Date(instant(value)).toISOString().replace("T", " ").replace("Z", "000");
@@ -86,23 +88,33 @@ export function createNotificationsStore({ pool, chatStore, key, clock } = {}) {
       await connection.commit(); return result;
     } catch (error) {
       if (begun) { try { await connection.rollback(); } catch {} }
-      if (error instanceof NotificationStoreError || ["NOTIFICATIONS_INPUT", "NOTIFICATIONS_CRYPTO"].includes(error?.code)) throw error;
+      if (notificationFailure(error)) throw error;
       fail();
     } finally { if (connection) { try { await connection.release(); } catch { fail(); } } }
   }
   async function withActor(request, operation) {
     roleValue(request.role); bytes(request.tokenHash, 32); instant(request.now);
+    let callbackFailure;
     try {
       return await chatStore.withActor(request, async (connection, context) => {
-        const table = request.role === "admin" ? "auth_session_state" : "client_session_state";
-        const column = request.role === "admin" ? "mfa_version" : "credential_version";
-        const session = (await connection.query(`SELECT s.id, a.${column} AS credential_version FROM sessions s
-          JOIN ${table} a ON a.session_id = s.id WHERE s.token_hash = ? AND s.user_id = ? FOR UPDATE`, [request.tokenHash, context.actor.id]))[0];
-        if (!session) fail();
-        return operation(connection, { ...context, sessionId: bytes(session.id), credentialVersion: version(session.credential_version) });
+        try {
+          const table = request.role === "admin" ? "auth_session_state" : "client_session_state";
+          const column = request.role === "admin" ? "mfa_version" : "credential_version";
+          const session = (await connection.query(`SELECT s.id, a.${column} AS credential_version FROM sessions s
+            JOIN ${table} a ON a.session_id = s.id WHERE s.token_hash = ? AND s.user_id = ? FOR UPDATE`, [request.tokenHash, context.actor.id]))[0];
+          if (!session) fail();
+          return await operation(connection, { ...context, sessionId: bytes(session.id), credentialVersion: version(session.credential_version) });
+        } catch (error) {
+          // Chat owns rollback and sanitizes foreign callback exceptions. Retain
+          // only our own typed domain failure, then rethrow it after that owner
+          // has completed its failure path. Driver/code lookalikes stay opaque.
+          if (notificationFailure(error)) callbackFailure = error;
+          throw error;
+        }
       });
     } catch (error) {
-      if (error instanceof NotificationStoreError || error?.name === "ChatStoreError" || ["NOTIFICATIONS_INPUT", "NOTIFICATIONS_CRYPTO"].includes(error?.code)) throw error;
+      if (callbackFailure) throw callbackFailure;
+      if (notificationFailure(error) || error instanceof ChatStoreError) throw error;
       fail();
     }
   }

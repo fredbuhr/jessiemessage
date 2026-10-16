@@ -8,6 +8,8 @@ import { createChatStore } from "../server/chat/store.mjs";
 import { createNotificationsStore, enqueueNotification } from "../server/notifications/store.mjs";
 import { endpointDigest, openSubscription } from "../server/notifications/crypto.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
+import { createConfiguredServer } from "../server/index.mjs";
+import { newToken, tokenDigest, csrfToken } from "../server/auth/crypto.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1", now = Date.UTC(2026, 9, 17, 12);
 const id = () => randomBytes(16), digest = () => randomBytes(32), key = digest();
@@ -258,6 +260,92 @@ test("real MariaDB private notification transactions (synthetic disposable datab
       const rows = await connection.query("SELECT enabled FROM push_subscriptions WHERE user_id = ?", [fixture.client.id]);
       assert.equal(rows.filter((row) => Number(row.enabled) === 1).length, 1);
       assert.equal(rows.length, 17);
+    });
+
+    await t.test("the configured HTTP runtime uses schema thirty with notifications enabled or disabled and no external delivery", { timeout: 15000 }, async () => {
+      assert.equal(migrations.length, 30);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations WHERE state = 'applied'"))[0].count), 30);
+      const fixture = await pair(), raw = { admin: newToken(), client: newToken() };
+      for (const role of ["admin", "client"]) {
+        fixture[role].tokenHash = tokenDigest(raw[role]);
+        await connection.query("UPDATE sessions SET token_hash = ? WHERE id = ?", [fixture[role].tokenHash, fixture[role].sessionId]);
+      }
+      const vapid = createECDH("prime256v1"); vapid.setPrivateKey(Buffer.alloc(32, 7));
+      const origin = "https://synthetic-notifications.jessiemessage.com";
+      const environment = {
+        ...process.env,
+        ...Object.fromEntries(["AUTH", "ACCESS", "CHAT", "MAIL_DELIVERY"].map(name => [`JESSIEMESSAGE_ENABLE_${name}`, "1"])),
+        ...Object.fromEntries(["MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST"].map(name => [`JESSIEMESSAGE_ENABLE_${name}`, "0"])),
+        JESSIEMESSAGE_SITE_ORIGIN: origin,
+        ...Object.fromEntries(["MFA", "MAIL", "MESSAGE", "NOTIFICATIONS"].map((name, index) => [`JESSIEMESSAGE_${name}_KEY`, Buffer.alloc(32, index + 20).toString("base64url")])),
+        JESSIEMESSAGE_SMTP_HOST: "smtp.synthetic.invalid", JESSIEMESSAGE_SMTP_PORT: "587",
+        JESSIEMESSAGE_SMTP_USER: "synthetic-notifications-user", JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-notifications-password",
+        JESSIEMESSAGE_VAPID_PUBLIC_KEY: vapid.getPublicKey().toString("base64url"),
+        JESSIEMESSAGE_VAPID_PRIVATE_KEY: vapid.getPrivateKey().toString("base64url"),
+        JESSIEMESSAGE_VAPID_SUBJECT: "mailto:contact@jessiemessage.com",
+      };
+      const ownHeaders = (role = "client") => ({ Cookie: `${role === "admin" ? "__Host-jessie_session" : "__Host-jessie_client"}=${raw[role]}` });
+      const mutationHeaders = (role = "client") => ({ ...ownHeaders(role), Origin: origin,
+        "Content-Type": "application/json", "X-CSRF-Token": csrfToken(raw[role]) });
+      const privateFields = body => assert.doesNotMatch(JSON.stringify(body), /endpoint|p256dh|ciphertext|privateKey|smtp|tokenHash/);
+      for (const enabled of [false, true]) {
+        const configured = await createConfiguredServer({ ...environment, JESSIEMESSAGE_ENABLE_NOTIFICATIONS: enabled ? "1" : "0" }, { clock: () => now });
+        try {
+          // The real index skips its listening callback after stop(). Therefore
+          // neither SMTP nor push delivery can start, even with pending rows.
+          await configured.mailWorker.stop();
+          await new Promise((resolve) => configured.server.listen(0, "127.0.0.1", resolve));
+          const base = `http://127.0.0.1:${configured.server.address().port}`;
+          const api = "/api/notifications/client";
+          const post = (path, body, role = "client", extra = {}) => fetch(`${base}${path}`, { method: "POST",
+            headers: { ...mutationHeaders(role), ...extra }, body: JSON.stringify(body) });
+          const anonymous = await fetch(`${base}${api}/capabilities`);
+          assert.equal(anonymous.status, enabled ? 401 : 404); await anonymous.arrayBuffer();
+          const worker = await fetch(`${base}/sw.js`);
+          assert.equal(worker.status, enabled ? 200 : 404); assert.equal(worker.headers.get("cache-control"), "no-store");
+          if (enabled) assert.equal(worker.headers.get("service-worker-allowed"), "/");
+          await worker.arrayBuffer();
+          const capabilities = await fetch(`${base}${api}/capabilities`, { headers: ownHeaders() });
+          assert.equal(capabilities.status, enabled ? 200 : 404);
+          if (enabled) {
+            const body = await capabilities.json(); assert.equal(body.enabled, true);
+            assert.equal(body.vapidPublicKey, environment.JESSIEMESSAGE_VAPID_PUBLIC_KEY); assert.deepEqual(body.subscriptions, []); privateFields(body);
+          } else await capabilities.arrayBuffer();
+          const value = subscription();
+          const body = { subscription: value, language: "fr" };
+          if (enabled) {
+            const badCsrf = await post(`${api}/subscription`, body, "client", { "X-CSRF-Token": "A".repeat(43) });
+            assert.equal(badCsrf.status, 403); assert.deepEqual(await badCsrf.json(), { error: "csrf_failed" });
+          }
+          const registered = await post(`${api}/subscription`, body);
+          assert.equal(registered.status, enabled ? 200 : 405);
+          let saved;
+          if (enabled) {
+            saved = await registered.json(); assert.equal(saved.enabled, true); assert.match(saved.subscriptionId, /^[a-f0-9]{32}$/); privateFields(saved);
+            const status = await post(`${api}/status`, { endpoint: value.endpoint });
+            assert.equal(status.status, 200); assert.deepEqual(await status.json(), saved);
+            const conflict = await post("/api/notifications/admin/subscription", body, "admin");
+            assert.equal(conflict.status, 409); assert.deepEqual(await conflict.json(), { error: "subscription_conflict" });
+          } else await registered.arrayBuffer();
+          const message = await post(`/api/chat/admin/conversations/${fixture.conversationId.toString("hex")}/messages`,
+            { clientMessageId: id().toString("hex"), body: "Fictional configured runtime message" }, "admin");
+          assert.equal(message.status, 201); assert.equal((await message.json()).duplicate, false);
+          const jobs = await outbox(); assert.equal(jobs.length, enabled ? 1 : 0);
+          if (enabled) {
+            assert.equal(jobs[0].status, "pending"); assert.equal(Number(jobs[0].attempts), 0);
+            const disabled = await post(`${api}/disable`, { id: saved.subscriptionId });
+            assert.equal(disabled.status, 200); assert.deepEqual(await disabled.json(), { enabled: false });
+            const status = await post(`${api}/status`, { endpoint: value.endpoint });
+            assert.deepEqual(await status.json(), { enabled: false, subscriptionId: null });
+          }
+        } finally {
+          configured.server.closeAllConnections();
+          await new Promise((resolve, reject) => configured.server.close(error => error && error.code !== "ERR_SERVER_NOT_RUNNING" ? reject(error) : resolve()));
+          await configured.mailWorker.close();
+          await configured.diagnostics.close();
+          await configured.pool.end();
+        }
+      }
     });
   } finally { await pool?.end(); await reset(); await connection.end(); }
 });
