@@ -1,6 +1,6 @@
 # Notifications 0.31 — essais sur les appareils du foyer
 
-La recette est démarrée avec notifications sur `017cafaf`, schéma 30. Les contrôles CI et HTTPS sont consignés dans le [bilan](message-notifications-release.md). La réception réelle reste à confirmer : un serveur prêt et une acceptation par le fournisseur ne prouvent pas qu’une alerte est affichée.
+La recette est démarrée avec notifications sur `017cafaf`, schéma 30. Les contrôles CI et HTTPS sont consignés dans le [bilan](message-notifications-release.md). Le 17 octobre 2026, le propriétaire confirme que les notifications fonctionnent très bien : le fonctionnement réel est accepté. Les plateformes et les scénarios ci-dessous ne sont pas détaillés dans ce retour ; leurs lignes restent un relevé complémentaire, sans imposer de refaire les essais déjà satisfaisants.
 
 ## Préparer chaque appareil
 

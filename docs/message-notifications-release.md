@@ -1,5 +1,7 @@
 # Notifications privées — état de livraison 0.31
 
+**Acceptation réelle du propriétaire — 17 octobre 2026 :** le système de notifications fonctionne très bien. La livraison réelle est confirmée par ce retour ; le détail des plateformes et les essais simultanés de tous les appareils ne sont pas précisés. Les limites des contrôles automatisés ci-dessous restent distinctes de cette acceptation.
+
 ## Révision validée
 
 - Runtime actif en recette : `017cafaf839be37db2973f102766f30cc9373e36`.
@@ -48,7 +50,7 @@ La revue a aussi corrigé la reprise du bouton Conversations après une panne te
 
 ## Validation restante
 
-1. Suivre le [parcours sur appareils réels](notifications-device-acceptance.md) : activer les notifications explicitement, envoyer depuis le compte opposé déjà utilisé en recette, fermer la page destinataire et vérifier alerte puis ouverture du bon espace. Ordinateur, Android et iPhone/iPad restent à accepter.
+1. Compléter si nécessaire le [relevé par appareil](notifications-device-acceptance.md). Le propriétaire confirme déjà le bon fonctionnement réel ; ce retour ne détaille pas ordinateur, Android, iPhone/iPad ni les différents sens d’envoi.
 2. Valider les usages simultanés des six à huit appareils ou profils du foyer et la désactivation sur un seul appareil.
 3. Confirmer la copie personnelle de la dernière archive SQL/photos et préparer l’exercice de sauvegarde/restauration après migrations avec le profil notifications et ses limites documentées. Ne plus utiliser le script de capture épinglé sur le schéma à 28 migrations pour sauvegarder le schéma à 30.
 

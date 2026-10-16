@@ -3,7 +3,7 @@
 ## État et périmètre
 
 - Le code du lot est implémenté sur `feat/message-notifications` ; les cinq jobs de la CI #237 sont réussis. Voir le [bilan de validation](message-notifications-release.md).
-- La recette est active en 0.31 sur `017cafaf`, profil `messaging-photos-notify`, après coffre v4 copié/déchiffré personnellement, checkpoint SQL/photos hors ligne, deux migrations et précontrôle réussi. Le build/redémarrage Manager à 00:44 puis treize fichiers et vingt réponses HTTPS à 00:46:49 Europe/Paris le 17 octobre sont conformes. Les [essais sur appareils réels](notifications-device-acceptance.md) et l’acceptation simultanée du foyer restent à effectuer.
+- La recette est active en 0.31 sur `017cafaf`, profil `messaging-photos-notify`, après coffre v4 copié/déchiffré personnellement, checkpoint SQL/photos hors ligne, deux migrations et précontrôle réussi. Le build/redémarrage Manager à 00:44 puis treize fichiers et vingt réponses HTTPS à 00:46:49 Europe/Paris le 17 octobre sont conformes. Le propriétaire accepte le bon fonctionnement réel des notifications le 17 octobre ; le [relevé par plateforme](notifications-device-acceptance.md) et l’acceptation simultanée du foyer restent à préciser.
 - Le lot vise les messages privés texte et photo, y compris lorsque la page est fermée.
 - Il réutilise Node, MariaDB et un service worker ; aucune autre infrastructure de file n’est prévue.
 - Les envois groupés restent désactivés ; leur activation ne fait pas partie de ce lot.

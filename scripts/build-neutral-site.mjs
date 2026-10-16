@@ -23,7 +23,7 @@ const generated = new Map([
 ]);
 const escapePattern = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const staticRoutes = NEUTRAL_SOURCE_FILES.filter((name) => name !== "entry.html");
-const apache = `# JessieMessage neutral public export. Apache 2.4; no PHP / Node proxy.
+const apache = (connectRecipe) => `# JessieMessage neutral public export. Apache 2.4; no PHP / Node proxy.
 # Requires mod_rewrite, mod_headers, mod_mime, mod_dir and the corresponding AllowOverride.
 # Unsupported directives must fail visibly. Verify the actual host before moving traffic.
 # These fixed health/readiness responses do not measure Node, SQL or private services.
@@ -79,12 +79,11 @@ RewriteRule ^ - [R=405,END]
 RewriteRule ^api/health$ _neutral/health.json [END]
 RewriteRule ^api/ready$ - [R=503,END]
 RewriteRule ^$ index.html [END]
-RewriteRule ^app$ entry.html [END]
+${connectRecipe ? "# Temporary entry only: keep accounts, sessions and notifications on their current origin.\n# Never forward caller-supplied query parameters or construct a destination from headers.\nRewriteRule ^app/?$ https://recette.jessiemessage.com/app [R=302,QSD,END]" : "RewriteRule ^app$ entry.html [END]"}
 RewriteRule ^(?:${staticRoutes.map(escapePattern).join("|")})$ - [END]
 # No arbitrary existing-file/directory bypass and no SPA / proxy fallback.
 RewriteRule ^ - [R=404,END]
 `;
-generated.set(".htaccess", Buffer.from(apache));
 
 export class NeutralSiteBuildError extends Error {
   constructor() { super("Unable to build the neutral site. Use a new absolute directory outside the checkout, with no symbolic-link ancestors."); this.name = "NeutralSiteBuildError"; this.code = "NEUTRAL_SITE_BUILD_FAILED"; }
@@ -130,10 +129,10 @@ async function readPublicFile(name) {
  * timestamps. Failures preserve an incomplete new directory; no broad cleanup.
  * Pre/post identity checks are portable, not an openat / bind-mount guarantee:
  * run with a quiescent operator-owned destination and no concurrent FS changes. */
-export async function buildNeutralSite({ output } = {}) {
+export async function buildNeutralSite({ output, connectRecipe = false } = {}) {
   let rootHandle;
   try {
-    if (typeof output !== "string" || !isAbsolute(output) || output.includes("\0")
+    if (typeof connectRecipe !== "boolean" || typeof output !== "string" || !isAbsolute(output) || output.includes("\0")
       || output.split(sep).some((part) => part === "." || part === "..")) fail();
     const target = resolve(output), project = await realpath(checkout);
     if (contains(project, target) || contains(target, project)) fail();
@@ -157,7 +156,7 @@ export async function buildNeutralSite({ output } = {}) {
       directories.push({ name: path, stat });
     }
     const entries = [];
-    for (const [name, bytes] of [...sourceBytes, ...generated].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
+    for (const [name, bytes] of [...sourceBytes, ...generated, [".htaccess", Buffer.from(apache(connectRecipe))]].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
       await unchanged(directories);
       const path = join(target, name);
       const handle = await open(path, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o644);
@@ -173,9 +172,9 @@ export async function buildNeutralSite({ output } = {}) {
 }
 
 async function main(args) {
-  if (args.length === 1 && args[0] === "--help") { process.stdout.write("Usage: node scripts/build-neutral-site.mjs --output /absolute/new-directory\n"); return; }
-  if (args.length !== 2 || args[0] !== "--output") fail();
-  process.stdout.write(`${JSON.stringify(await buildNeutralSite({ output: args[1] }))}\n`);
+  if (args.length === 1 && args[0] === "--help") { process.stdout.write("Usage: node scripts/build-neutral-site.mjs --output /absolute/new-directory [--connect-recipe]\n"); return; }
+  if (![2, 3].includes(args.length) || args[0] !== "--output" || args.length === 3 && args[2] !== "--connect-recipe") fail();
+  process.stdout.write(`${JSON.stringify(await buildNeutralSite({ output: args[1], connectRecipe: args.length === 3 }))}\n`);
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   main(process.argv.slice(2)).catch(() => { process.stderr.write("Neutral site build failed. Provide a new absolute directory outside the checkout with no symbolic links.\n"); process.exitCode = 1; });

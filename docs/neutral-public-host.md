@@ -1,5 +1,7 @@
 # Accueil public neutre sur Apache
 
+**Suite 0.32 — 17 octobre 2026 :** l’application privée est désormais active sur la recette et le propriétaire accepte ses notifications. L’ancienne entrée neutre de l’apex créait une impasse. Le [lien temporaire vers l’entrée active](public-entry-transition.md) est en ligne sur l’export `1f669e45`, après vérification de 25 fichiers, cinq jobs CI et 56 réponses HTTP réelles. Sans cette option d’export explicite, le contrat neutre décrit ci-dessous reste inchangé. Les observations du 15 octobre restent historiques.
+
 ## État et portée
 
 Le **15 octobre 2026 à 21:17:54.585 UTC**, le probe HTTPS réel sur l’apex a réussi ses **91 requêtes et 1 033 assertions**, sans assertion en échec. Le client vérifiait le certificat et utilisait TLS 1.2 au minimum, avec un User-Agent explicite identifiant fidèlement l’outil. Les SHA-256 des 22 routes publiques, les méthodes et requêtes invalides, les JSON neutres, les HEAD sans corps, les en-têtes de sécurité, l’absence de cookie, le 503 avec `Retry-After` et les refus privés/internes ont passé leurs contrôles. La première preuve équivalente avait été obtenue sur le site de préparation à 20:48:01.679 UTC.
