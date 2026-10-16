@@ -127,6 +127,33 @@ test("failed native dump redacts stderr and removes only its own temporary clien
   assert.deepEqual(await readdir(f.directory), [f.selected.backup]);
 });
 
+test("native authentication, access and missing-database failures expose only a neutral code across split stderr chunks", async (t) => {
+  for (const [number, expected] of [[1045, "AUTHENTICATION"], [1044, "ACCESS"], [1142, "ACCESS"], [1049, "DATABASE"], [9999, "DUMP"]]) {
+    const f = await fixture(t), chunks = [Buffer.from("mariadb-dump: Got er"),
+      Buffer.from(`ror: ${number}: synthetic-password synthetic@example.invalid only_clone`)];
+    const spawnClient = () => {
+      const child = new EventEmitter(); child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.kill = () => {};
+      setImmediate(() => { for (const bytes of chunks) child.stderr.write(bytes); child.stderr.end(); child.emit("close", 2, null); });
+      return child;
+    };
+    await assert.rejects(dumpCloneSql(f.scope, f.selected, f.bundle.database, "synthetic-password", { spawnClient }), neutral(`TEXT_CLONE_${expected}`));
+    assert.ok(chunks.every((bytes) => bytes.every((byte) => byte === 0)));
+    assert.deepEqual(await readdir(f.directory), [f.selected.backup]);
+  }
+});
+
+test("oversized native stderr stays generic, wipes input and cleans the private configuration", async (t) => {
+  const f = await fixture(t), bytes = Buffer.concat([Buffer.from("Got error: 1045: synthetic-private"), Buffer.alloc(9000, 65)]);
+  let killed = false;
+  const spawnClient = () => {
+    const child = new EventEmitter(); child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.kill = () => { killed = true; };
+    setImmediate(() => { child.stderr.end(bytes); child.emit("close", 2, null); }); return child;
+  };
+  await assert.rejects(dumpCloneSql(f.scope, f.selected, f.bundle.database, "synthetic-password", { spawnClient }), neutral("TEXT_CLONE_DUMP"));
+  assert.equal(killed, true); assert.ok(bytes.every((byte) => byte === 0));
+  assert.deepEqual(await readdir(f.directory), [f.selected.backup]);
+});
+
 test("cancellation waits for native child closure then removes the secret client file", async (t) => {
   const f = await fixture(t), cancellation = new AbortController(), events = [];
   const spawnClient = (_command, args) => {

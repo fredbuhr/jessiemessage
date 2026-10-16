@@ -142,6 +142,12 @@ SFTP, comme au lot texte. Le SQL Gzip attendu est aussi disponible à la racine
 privée pour ce téléchargement ; sa copie supplémentaire conserve exactement
 les octets et l'empreinte ci-dessus.
 
+À **20:18 Europe/Paris**, le propriétaire signale un écran « Opération en
+cours » persistant. La relecture du Manager présente la copie à **1,57 Mo**,
+la seule lecture accordée à l'opérateur et aucun droit au runtime. Cela
+confirme que l'import a écrit dans la copie, pas que tout son contenu est
+conforme. Aucun nouvel import n'est lancé.
+
 `verify-photo-restore-37c8fcd0.sh` est préparé en mode propriétaire `0700`.
 Il contrôle révision, arbre et empreinte de son adaptateur, puis demande le
 mot de passe SQL existant par saisie masquée, sans argument ni export. Son
@@ -159,6 +165,18 @@ Aucun serveur ou worker ne doit être démarré sur la copie. La capacité n'est
 pas réassociée : **`capacityRebound: false`**. Cet exercice en lecture seule
 ne constitue ni une exécution du manifeste signé de la CLI complète, ni une
 validation du réassociateur de capacité sur l'hébergeur.
+
+À **20:25 Europe/Paris**, la capture du propriétaire montre le précontrôle
+réussi puis **`TEXT_CLONE_DUMP`** après la saisie SQL. Le résultat `verified`
+n'est donc pas acquis. Le lecteur natif masquait toute cause d'échec sous
+ce code générique. Un correctif opérateur distingue maintenant les codes
+MariaDB connus : **`TEXT_CLONE_AUTHENTICATION`**, **`TEXT_CLONE_ACCESS`** et
+**`TEXT_CLONE_DATABASE`**. Le texte natif reste borné en mémoire, n'est jamais
+publié et son buffer est effacé ; les erreurs inconnues restent génériques.
+Les treize tests ciblés passent, notamment les erreurs découpées en plusieurs
+blocs, leur masquage, la limite de taille, l'annulation et le nettoyage du
+fichier client. Le contrôle de syntaxe complet passe aussi. Le runtime
+applicatif reste épinglé à `37c8fcd0`, sans nouvelle clé ni modification SQL.
 
 ## Validation du code
 
