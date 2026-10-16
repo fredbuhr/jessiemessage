@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import vm from "node:vm";
 
-const files = Object.fromEntries(await Promise.all(["i18n.js", "i18n-tools.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "crm.js", "crm-model.js", "broadcast-preference.js"].map(async (name) => [name, await readFile(new URL(`../public/${name}`, import.meta.url), "utf8")])));
+const files = Object.fromEntries(await Promise.all(["i18n.js", "i18n-tools.js", "session-clock.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "crm.js", "crm-model.js", "broadcast-preference.js"].map(async (name) => [name, await readFile(new URL(`../public/${name}`, import.meta.url), "utf8")])));
 const flush = async () => { for (let index = 0; index < 10; index++) await new Promise((resolve) => setImmediate(resolve)); };
 const id = (value) => value.toString(16).padStart(32, "0");
 class Element {
@@ -43,7 +43,7 @@ function parse(html) {
   }
   return { root, ids };
 }
-function harness() {
+function harness({ respond } = {}) {
   const { root, ids } = parse(files["broadcast.html"]), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(); let timer = 0;
   const add = (events, name, callback) => { if (!events.has(name)) events.set(name, []); events.get(name).push(callback); };
   const document = { visibilityState: "hidden", documentElement: root.querySelectorAll("html")[0], body: root.querySelectorAll("body")[0],
@@ -52,16 +52,18 @@ function harness() {
   const context = vm.createContext({ document, window: { addEventListener: (name, callback) => add(windowEvents, name, callback), removeEventListener() {} }, navigator: { language: "fr-FR" },
     sessionStorage: { getItem() { return null; }, setItem() {} }, AbortController, URL, URLSearchParams, TextEncoder, console, location: { replace() {} },
     setTimeout(callback, delay) { timers.set(++timer, { callback, delay }); return timer; }, clearTimeout(value) { timers.delete(value); },
-    fetch: async (path, options = {}) => { calls.push({ path, options }); return { ok: true, status: 200, json: async () => path.endsWith("/session")
+    fetch: async (path, options = {}) => { calls.push({ path, options }); if (respond) return respond(path, options); return { ok: true, status: 200, json: async () => path.endsWith("/session")
       ? { user: { id: id(1), role: "client" }, csrf: "a".repeat(43), expiresAt: Date.now() + 3600000 }
       : { enabled: options.method === "POST", version: options.method === "POST" ? "2" : "1", updatedAt: Date.now() } }; } });
   const run = (code) => vm.runInContext(code, context);
-  run(files["i18n.js"]); run(files["i18n-tools.js"]);
+  run(files["i18n.js"]); run(files["i18n-tools.js"]); run(files["session-clock.js"]);
   const model = (name) => {
     const source = files[name], exports = [...source.matchAll(/export (?:function|const) ([A-Za-z][A-Za-z0-9_]*)/g)].map((match) => match[1]);
     run(`globalThis.model = (() => {${source.replaceAll("export function ", "function ").replaceAll("export const ", "const ")}\nreturn {${exports.join(",")}};})();`);
   };
-  return { root, ids, document, context, calls, run, model, visible() { document.visibilityState = "visible"; },
+  return { root, ids, document, context, calls, run, model, timers, visible() { document.visibilityState = "visible"; },
+    async tick(delay) { const next = [...timers].find(([, value]) => value.delay === delay); assert.ok(next, `Expected ${delay}ms timer`); timers.delete(next[0]); next[1].callback(); await flush(); },
+    async online() { for (const callback of windowEvents.get("online") ?? []) callback(); await flush(); },
     switch(language) { run(`JessieI18n.setLanguage(${JSON.stringify(language)})`); }, dispatchDocument(name) { for (const callback of documentEvents.get(name) ?? []) callback(); } };
 }
 
@@ -69,6 +71,7 @@ test("broadcast HTML marks interface leaves and loads the shared runtime/catalog
   const html = files["broadcast.html"];
   assert.ok(html.indexOf('src="/i18n.js"') < html.indexOf('src="/i18n-tools.js"'));
   assert.ok(html.indexOf('src="/i18n-tools.js"') < html.indexOf('src="/broadcast.js"'));
+  assert.ok(html.indexOf('src="/session-clock.js"') < html.indexOf('src="/broadcast.js"'));
   assert.match(html, /data-jm-language/); assert.match(html, /data-jm-i18n-placeholder="Écris ton message…"/);
   const h = harness(); h.visible(); h.switch("en");
   assert.equal(h.ids.get("campaign-body").getAttribute("placeholder"), "Write your message…");
@@ -142,6 +145,51 @@ test("preference switching cannot save or reload consent, alter a checkbox draft
   h.document.visibilityState = "hidden"; h.dispatchDocument("visibilitychange"); h.switch("en");
   assert.equal(section.hidden, true); assert.equal(checkbox.checked, false); assert.equal(section.querySelectorAll("form")[0].hidden, true); assert.equal(h.calls.length, before);
   h.context.preference.clear();
+});
+
+test("preference session checks preserve an unsaved choice through offline recovery and never save it", async () => {
+  let offline = false;
+  const h = harness({ respond: (path) => {
+    if (offline) throw new TypeError("offline");
+    return { ok: true, status: 200, json: async () => path.endsWith("/session")
+      ? { user: { id: id(1), role: "client" }, csrf: "a".repeat(43), expiresAt: Date.now() + 3600000 }
+      : { enabled: false, version: "1", updatedAt: Date.now() } };
+  } }); h.visible();
+  h.run(`(() => {${files["broadcast-preference.js"].replaceAll("export function ", "function ")}\nglobalThis.preference = mountBroadcastPreference(document.body);})();`); await flush();
+  const section = h.document.body.children.at(-1), checkbox = section.querySelectorAll("input")[0], form = section.querySelectorAll("form")[0]; checkbox.checked = true;
+  offline = true; await h.tick(300000);
+  assert.equal(form.hidden, true); assert.equal(checkbox.checked, true); assert.ok([...h.timers.values()].some((timer) => timer.delay === 30000));
+  offline = false; await h.online();
+  assert.equal(form.hidden, false); assert.equal(checkbox.checked, true);
+  assert.equal(h.calls.filter((call) => call.path.endsWith("/preference")).length, 1);
+  assert.equal(h.calls.filter((call) => call.options.method === "POST").length, 0);
+  h.context.preference.clear(); assert.equal(h.timers.size, 0);
+});
+
+test("broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft", async () => {
+  let offline = false;
+  const admin = { user: { id: id(1), role: "admin", pseudonym: "Jessie" }, csrf: "a".repeat(43), expiresAt: Date.now() + 180 * 86400000 };
+  const h = harness({ respond: () => {
+    if (offline) throw new TypeError("offline");
+    return { ok: true, status: 200, json: async () => ({ ...admin, mediaEnabled: true }) };
+  } }); h.model("broadcast-model.js");
+  const executable = files["broadcast.js"].replace(/^import \{([^\n]+)\} from "\/broadcast-model\.js";/, "const {$1} = model;");
+  h.run(`(() => {${executable}\nglobalThis.tools = {state,armExpiry,verifySession};})();`); h.visible();
+  h.context.admin = admin;
+  h.run(`tools.state.visible=true;tools.state.session={id:admin.user.id,csrf:admin.csrf,expiresAt:admin.expiresAt,mediaEnabled:true};tools.state.draft.body="Brouillon privé";tools.armExpiry();`);
+  // Repeated feature proofs re-arm the timer but keep the earlier cookie due
+  // date. Even a server-side sliding expiry must not restart that five minutes.
+  const firstDelay = [...h.timers.values()][0].delay;
+  await h.run("tools.verifySession(model.broadcastTicket(tools.state))");
+  assert.ok([...h.timers.values()].some((timer) => timer.delay <= firstDelay));
+  offline = true;
+  const sessionTimer = [...h.timers].find(([, timer]) => timer.delay <= 300000); h.timers.delete(sessionTimer[0]); sessionTimer[1].callback(); await flush();
+  assert.equal(h.ids.get("broadcast-content").hidden, true); assert.equal(h.run("tools.state.draft.body"), "Brouillon privé");
+  assert.ok([...h.timers.values()].some((timer) => timer.delay === 30000));
+  offline = false; await h.online();
+  assert.equal(h.ids.get("broadcast-content").hidden, false); assert.equal(h.run("tools.state.draft.body"), "Brouillon privé");
+  assert.ok(h.calls.filter((call) => call.path === "/api/auth/session").length >= 2);
+  assert.equal(h.calls.filter((call) => call.options.method === "POST").length, 0);
 });
 
 // Page catalogs share the runtime on access/chat as optional tools are mounted.

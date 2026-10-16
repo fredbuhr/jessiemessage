@@ -5,6 +5,7 @@ import vm from "node:vm";
 import { webcrypto } from "node:crypto";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
+const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const modelSource = await readFile(new URL("../public/chat-model.js", import.meta.url), "utf8");
 const modelExports = [...modelSource.matchAll(/export function ([a-zA-Z0-9_]+)\(/g)].map((match) => match[1]);
 const html = await readFile(new URL("../public/chat.html", import.meta.url), "utf8");
@@ -63,7 +64,7 @@ class Element {
   showModal() { this.open = true; }
   close() { this.open = false; for (const handler of this.events.get("close") ?? []) handler({}); }
 }
-function harness({ currentSession = session(), visible = true, intercept = null } = {}) {
+function harness({ currentSession = session(), visible = true, intercept = null, prepare = async (file) => file } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const body = new Element("body", nodes);
@@ -83,7 +84,7 @@ function harness({ currentSession = session(), visible = true, intercept = null 
     return state.conversations.get(owner);
   };
   const storedMessages = (conv) => { if (!state.messages.has(conv.id)) state.messages.set(conv.id, [{ id: id(500 + Number.parseInt(conv.clientId, 16)), sequence: "1", sender: "peer", body: `Private ${conv.clientId}`, createdAt: now, deletedAt: null, clientMessageId: null }]); return state.messages.get(conv.id); };
-  const context = vm.createContext({ document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
+  const context = vm.createContext({ __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
     location: { pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
@@ -115,8 +116,9 @@ function harness({ currentSession = session(), visible = true, intercept = null 
       }
       throw new Error(`Unexpected request ${path}`);
     } });
+  vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -487,4 +489,117 @@ test("a photo response arriving after its message deletion cannot restore the pr
   await f.advance(3000); thumbnail.resolve(photoResponse()); await flush();
   assert.match(contents(f.element("messages")), /Message supprimé/);
   assert.equal(f.element("messages").querySelectorAll("img").length, 0); assert.equal(f.createdUrls.length, 0);
+});
+
+test("returning offline keeps private work masked, bounds retries, then resumes on online without replaying a send", async () => {
+  let unavailable = false;
+  const f = harness({ intercept: (path, options) => {
+    if (unavailable && path.endsWith("/session")) return response(503, { error: "unavailable" });
+    if (options.method === "POST" && path.endsWith("/messages")) throw new Error("synthetic interrupted response");
+    return undefined;
+  } }); await flush(); await f.send("Keep this uncertain draft");
+  const pending = f.inspect().states.get(f.inspect().selected).pending, key = pending.clientMessageId;
+  assert.equal(pending.status, "retry"); await f.hide(); unavailable = true; await f.show();
+  assert.equal(f.element("workspace").hidden, true); assert.equal(f.redirects.length, 0);
+  assert.equal(f.element("retry-connection").hidden, false);
+  const beforeRetries = f.calls.filter((call) => call.path.endsWith("/session")).length;
+  await f.advance(22000);
+  const afterRetries = f.calls.filter((call) => call.path.endsWith("/session")).length;
+  assert.equal(afterRetries - beforeRetries, 3);
+  await f.advance(30000); assert.equal(f.calls.filter((call) => call.path.endsWith("/session")).length, afterRetries);
+  assert.equal(posts(f).length, 1); assert.equal(f.inspect().states.get(f.inspect().selected).pending.clientMessageId, key);
+  unavailable = false; await f.event("online"); assertOwner(f, 1);
+  assert.equal(f.element("message-body").value, "Keep this uncertain draft");
+  assert.equal(f.inspect().states.get(f.inspect().selected).pending.clientMessageId, key);
+  assert.equal(posts(f).length, 1, "resuming never retries a mutation automatically");
+  assert.equal(f.element("retry-connection").hidden, true);
+});
+
+test("a genuine unauthorized resume purges drafts while temporary proof failures do not redirect", async () => {
+  for (const failure of ["network", 503, 403, 401]) {
+    let fail = false;
+    const f = harness({ intercept: (path) => {
+      if (!fail || !path.endsWith("/session")) return undefined;
+      if (failure === "network") throw new Error("synthetic offline");
+      return response(failure, { error: failure === 401 ? "authentication_required" : "request_rejected" });
+    } }); await flush();
+    f.element("message-body").value = "Private draft"; for (const handler of f.element("message-body").events.get("input")) handler({});
+    await f.hide(); fail = true; await f.show();
+    if (failure === 401) { assert.equal(f.inspect().states.size, 0); assert.deepEqual(f.redirects, ["/access"]); }
+    else { assert.equal(f.inspect().states.size, 1); assert.equal(f.redirects.length, 0); assert.equal(f.element("workspace").hidden, true); }
+  }
+});
+
+test("initial temporary outage can recover from the visible retry button without reloading", async () => {
+  let unavailable = true;
+  const f = harness({ intercept: (path) => unavailable && path.endsWith("/session") ? response(503, {}) : undefined }); await flush();
+  assert.equal(f.inspect().ready, false); assert.equal(f.element("retry-connection").hidden, false); assert.equal(f.redirects.length, 0);
+  unavailable = false; await f.click("retry-connection"); assertOwner(f, 1);
+  assert.equal(f.redirects.length, 0); assert.equal(f.element("retry-connection").hidden, true);
+});
+
+test("long administrator sessions use bounded server checks and survive a hidden timer wakeup", async () => {
+  const persistent = { ...session(1, "A".repeat(43), "admin"), expiresAt: now + 180 * 86400000 };
+  const f = harness({ currentSession: persistent }); await flush(); assertOwner(f, 1);
+  assert.ok([...f.timers.values()].every((timer) => timer.at - now <= 300000), "no browser timeout receives the 180-day duration");
+  const before = f.calls.length; await f.hide(); await f.advance(300000);
+  assert.equal(f.redirects.length, 0); assert.equal(f.calls.length, before, "hidden session checks do not poll or renew");
+  await f.show(); assertOwner(f, 1); assert.equal(f.redirects.length, 0);
+});
+
+test("drafts warn before leaving and remain per conversation without browser persistence", async () => {
+  const f = harness(); await flush(); let prevented = false;
+  const event = { preventDefault() { prevented = true; } };
+  await f.event("beforeunload", event); assert.equal(prevented, false);
+  f.element("message-body").value = "Do not lose this draft"; for (const handler of f.element("message-body").events.get("input")) handler({});
+  await f.hide(); await f.event("beforeunload", event); assert.equal(prevented, true); assert.equal(event.returnValue, "");
+  await f.show(); assert.equal(f.element("message-body").value, "Do not lose this draft");
+  assert.equal(f.context.localStorage, undefined); assert.equal(f.context.sessionStorage, undefined);
+  await f.click("logout"); prevented = false; await f.event("beforeunload", event); assert.equal(prevented, false);
+});
+
+test("message deletion requires explicit confirmation and cancellation returns focus without a request", async () => {
+  let f;
+  f = harness({ intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
+    conversation: f.conversation(), messages: [{ id: id(880), sequence: "1", sender: "me", body: "Keep until confirmed", createdAt: now, deletedAt: null }], eventCursor: "1", hasMoreBefore: false,
+  }) : path.endsWith("/delete") ? response(200, { message: { id: id(880), sequence: "1", sender: "me", body: null, createdAt: now, deletedAt: now } }) : undefined }); await flush();
+  const button = f.element("messages").children[0].querySelector(".delete-message"); button.focus();
+  for (const handler of button.events.get("click")) handler({}); await flush();
+  assert.equal(f.element("confirm-delete").open, true); assert.equal(f.document.activeElement, f.element("cancel-delete"));
+  assert.equal(f.calls.filter((call) => call.path.endsWith("/delete")).length, 0);
+  await f.click("cancel-delete"); assert.equal(f.document.activeElement, button); assert.equal(f.element("confirm-delete").open, false);
+  for (const handler of button.events.get("click")) handler({}); await flush(); await f.click("accept-delete");
+  assert.equal(f.calls.filter((call) => call.path.endsWith("/delete")).length, 1); assert.match(contents(f.element("messages")), /Message supprimé/);
+});
+
+
+test("a local image preparation failure releases the untouched send for correction without a private POST", async () => {
+  const f = harness({ prepare: async () => { throw Object.assign(new Error("synthetic oversized dimensions"), { code: "media_dimensions" }); },
+    intercept: (path) => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+  const file = new Blob(["synthetic photo"], { type: "image/jpeg" });
+  f.element("image-file").files = [file]; for (const handler of f.element("image-file").events.get("change")) handler({});
+  await f.send("Keep the caption");
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(state.pending, null); assert.equal(state.imageDraft.file, file); assert.equal(state.draft, "Keep the caption");
+  assert.equal(f.element("pick-image").disabled, false); assert.equal(f.element("message-body").disabled, false);
+  assert.match(f.element("chat-status").textContent, /Cette photo est trop grande/);
+  assert.equal(f.calls.filter((call) => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
+});
+
+test("administrator conversation changes preserve each memory-only draft", async () => {
+  let f; const secondId = id(999);
+  const secondConversation = () => ({ ...f.conversation(), id: secondId, peerName: "Other synthetic peer" });
+  f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path) => {
+    if (path.startsWith("/api/chat/admin/conversations?")) return response(200, { conversations: [f.conversation(), secondConversation()], nextCursor: null, hasMore: false });
+    if (path.startsWith(`/api/chat/admin/conversations/${secondId}/messages?`)) return response(200, { conversation: secondConversation(), messages: [], eventCursor: "0", hasMoreBefore: false });
+    if (path.startsWith(`/api/chat/admin/conversations/${secondId}/events?`)) return response(200, { conversation: secondConversation(), events: [], nextCursor: "0", hasMore: false });
+    return undefined;
+  } }); await flush();
+  const choose = async (id) => { const button = f.element("conversations").children.find((item) => item.dataset.conversationId === id); for (const handler of button.events.get("click")) handler({}); await flush(); };
+  const draft = (text) => { f.element("message-body").value = text; for (const handler of f.element("message-body").events.get("input")) handler({}); };
+  const firstId = f.conversation().id; await choose(firstId); draft("First private draft");
+  await choose(secondId); assert.equal(f.element("message-body").value, ""); draft("Second private draft");
+  await choose(firstId); assert.equal(f.element("message-body").value, "First private draft");
+  await choose(secondId); assert.equal(f.element("message-body").value, "Second private draft");
+  assert.equal(posts(f).length, 0); assert.equal(f.context.localStorage, undefined);
 });

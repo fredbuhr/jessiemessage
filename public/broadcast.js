@@ -13,7 +13,7 @@ const replace = (element, ...children) => { ui.forget(element); element.replaceC
 
 const el = (id) => document.getElementById(id);
 const state = createBroadcastState(); const controllers = new Set(); const campaigns = new Map(); const assets = new Map();
-let expiryTimer = null; let pollTimer = null; let contactCursor = null; let contactMore = false; let contactsBusy = false;
+let cancelSessionCheck = null; let sessionPaused = false; let cookieRefreshAt = Date.now() + 300000; let pollTimer = null; let contactCursor = null; let contactMore = false; let contactsBusy = false;
 let historyCursor = null; let historyMore = false; let historyStarted = false; let historyBusy = false; let historyRetryAt = 0; let detailId = null; let detailEpoch = 0;
 let photoCursor = null; let photoMore = false; let photosBusy = false; let photoEpoch = 0; let photoUrl = null;
 let previewBusy = false; let sendBusy = false; let logoutBusy = false;
@@ -35,16 +35,17 @@ function clearDisplay() {
   el("composition").disabled = false; el("acknowledge").checked = false; el("allow-repeat").checked = false; clearPhoto();
 }
 function clearPrivate(isVisible = false) {
-  for (const controller of controllers) controller.abort(); controllers.clear(); clearTimeout(expiryTimer); clearTimeout(pollTimer); expiryTimer = null; pollTimer = null;
+  for (const controller of controllers) controller.abort(); controllers.clear(); cancelSessionCheck?.(); clearTimeout(pollTimer); cancelSessionCheck = null; pollTimer = null; sessionPaused = false;
   clearBroadcast(state, { visible: isVisible }); detailEpoch += 1; detailId = null; campaigns.clear(); assets.clear();
   contactCursor = null; contactMore = false; contactsBusy = false; historyCursor = null; historyMore = false; historyStarted = false; historyBusy = false; historyRetryAt = 0;
   photoCursor = null; photoMore = false; photosBusy = false; previewBusy = false; sendBusy = false; clearDisplay();
 }
 function signOut() { clearPrivate(); location.replace("/admin/login"); }
 async function request(path, { ticket = broadcastTicket(state), body, timeout = 15000 } = {}) {
-  const privateData = path !== "/api/broadcast/admin/session";
+  const privateData = path !== "/api/broadcast/admin/session" && path !== "/api/auth/session";
   // Cookies can change in another window without a local visibility event.
   // Bind each private response to the account and CSRF proof that own this UI.
+  if (privateData && sessionPaused) throw new Error("session_check_pending");
   if (privateData) await verifySession(ticket);
   if (!currentBroadcast(state, ticket) || !visible()) throw stale();
   const controller = new AbortController(); controllers.add(controller); const timer = setTimeout(() => controller.abort(), timeout);
@@ -82,7 +83,33 @@ function report(error, target) {
   if (error.status === 429 && target === "history-status") historyRetryAt = Date.now() + (error.retryAfter ?? 60) * 1000;
   notice(errorText(error), true, target); renderControls();
 }
-function armExpiry() { clearTimeout(expiryTimer); expiryTimer = setTimeout(signOut, Math.max(0, Math.min(2147483647, state.session.expiresAt - Date.now()))); }
+function armExpiry(retry = false) {
+  cancelSessionCheck?.();
+  if (!state.session || !visible()) { cancelSessionCheck = null; return; }
+  const ticket = broadcastTicket(state);
+  cancelSessionCheck = globalThis.JessieSessionClock.scheduleSessionCheck(retry ? Date.now() + 30000 : Math.min(state.session.expiresAt, cookieRefreshAt), () => { void checkSession(ticket); }, { maxDelayMs: retry ? 30000 : 300000 });
+}
+async function checkSession(ticket) {
+  if (!currentBroadcast(state, ticket) || !visible()) return;
+  try {
+    // Feature checks renew the SQL session, while this endpoint also renews the
+    // browser cookie. Keep both proofs bound to the account owning this draft.
+    const session = await request("/api/auth/session", { ticket });
+    if (!acceptBroadcastSession(state, ticket, { ...session, mediaEnabled: state.session.mediaEnabled })) {
+      if (state.visible) await bootstrap("La session a changé. Consulte l’historique avant de préparer une nouvelle diffusion."); else signOut();
+      return;
+    }
+    cookieRefreshAt = Date.now() + 300000;
+    await verifySession(ticket);
+    const wasPaused = sessionPaused; sessionPaused = false;
+    if (wasPaused) { el("broadcast-content").hidden = false; notice(""); renderControls(); scheduleHistory(); }
+  } catch (error) {
+    if (error.stale) return;
+    if (error.status === 401) { signOut(); return; }
+    sessionPaused = true; clearTimeout(pollTimer); pollTimer = null; el("broadcast-content").hidden = true; el("reload").hidden = false;
+    notice("Les diffusions sont momentanément indisponibles. Actualise la page pour réessayer.", true); armExpiry(true);
+  }
+}
 async function verifySession(ticket) {
   let session;
   try { session = await request("/api/broadcast/admin/session", { ticket }); }
@@ -299,7 +326,7 @@ async function cancelCampaign(id) {
   } catch (error) { report(error, "history-status"); if (detailId === id && epoch === detailEpoch && !error.stale) void showCampaign(id, true); }
 }
 function scheduleHistory() {
-  clearTimeout(pollTimer); if (!state.session || !visible()) return;
+  clearTimeout(pollTimer); if (!state.session || !visible() || sessionPaused) return;
   const ticket = broadcastTicket(state);
   pollTimer = setTimeout(async () => {
     if (!currentBroadcast(state, ticket) || !visible()) return;
@@ -343,4 +370,5 @@ el("preview").addEventListener("click", () => { void preview(); }); el("campaign
 el("retry").addEventListener("click", () => { void send(true); }); el("refresh-history").addEventListener("click", () => { void loadHistory(false, { restartArchive: true }); if (detailId) void showCampaign(detailId, true); });
 el("more-history").addEventListener("click", () => { void loadHistory(true); }); el("reload").addEventListener("click", () => { void bootstrap(); }); el("logout").addEventListener("click", () => { void logout(); });
 document.addEventListener("visibilitychange", () => { if (visible()) void bootstrap(); else clearPrivate(); }); window.addEventListener("pagehide", () => clearPrivate()); window.addEventListener("pageshow", (event) => { if (event.persisted && visible()) void bootstrap(); });
+window.addEventListener("online", () => { if (visible() && sessionPaused) void checkSession(broadcastTicket(state)); });
 if (visible()) void bootstrap(); else clearPrivate();

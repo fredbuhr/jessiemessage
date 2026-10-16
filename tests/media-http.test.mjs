@@ -239,11 +239,15 @@ test("upload abort discards partial data and absorbs a later transport error", a
   assert.equal(request.listenerCount("data"), 0); request.destroy();
 });
 
-test("slow binary uploads time out after eight seconds and remove the body listeners", async () => {
+test("slow binary uploads get a bounded thirty-second body budget and remove the body listeners", async (t) => {
   const request = new PassThrough(); request.headers = {};
-  const keepAlive = setTimeout(() => {}, 10000);
-  try { await assert.rejects(readUpload(request), (error) => error.httpStatus === 408 && error.publicCode === "request_timeout"); }
-  finally { clearTimeout(keepAlive); request.destroy(); }
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const result = readUpload(request);
+  t.mock.timers.tick(29_999);
+  assert.equal(request.listenerCount("data"), 1);
+  t.mock.timers.tick(1);
+  try { await assert.rejects(result, (error) => error.httpStatus === 408 && error.publicCode === "request_timeout"); }
+  finally { request.destroy(); }
   assert.equal(request.listenerCount("data"), 0);
 });
 
@@ -403,7 +407,7 @@ test("invalid or cross-role service metadata, URLs and byte buffers fail closed"
 
 test("media service errors are bounded and clear only the unauthorized role cookie", async (t) => {
   const { base, service } = await fixture(t);
-  for (const [code, status, publicCode] of [["CHAT_UNAUTHORIZED", 401, "authentication_required"], ["AUTH_INVALID", 401, "authentication_required"], ["ACCESS_EXPIRED", 403, "request_rejected"], ["ACCESS_PREREQUISITES", 403, "request_rejected"], ["CHAT_FORBIDDEN", 403, "request_rejected"], ["MEDIA_NOT_FOUND", 404, "not_found"], ["MEDIA_INPUT", 400, "invalid_request"], ["MEDIA_FORMAT", 415, "media_format"], ["MEDIA_BUSY", 429, "try_again_later"], ["MEDIA_RATE_LIMIT", 429, "try_again_later"], ["MEDIA_STORAGE_LIMIT", 507, "storage_limit"], ["MEDIA_CAPACITY_UNAVAILABLE", 503, "media_unavailable"], ["MEDIA_UNAVAILABLE", 503, "media_unavailable"], ["ER_PRIVATE_SQL", 503, "media_unavailable"]]) {
+  for (const [code, status, publicCode] of [["CHAT_UNAUTHORIZED", 401, "authentication_required"], ["AUTH_INVALID", 401, "authentication_required"], ["ACCESS_EXPIRED", 403, "request_rejected"], ["ACCESS_PREREQUISITES", 403, "request_rejected"], ["CHAT_FORBIDDEN", 403, "request_rejected"], ["MEDIA_NOT_FOUND", 404, "not_found"], ["MEDIA_INPUT", 400, "invalid_request"], ["MEDIA_FORMAT", 415, "media_format"], ["MEDIA_DIMENSIONS", 422, "media_dimensions"], ["MEDIA_BUSY", 429, "try_again_later"], ["MEDIA_RATE_LIMIT", 429, "try_again_later"], ["MEDIA_STORAGE_LIMIT", 507, "storage_limit"], ["MEDIA_CAPACITY_UNAVAILABLE", 503, "media_unavailable"], ["MEDIA_UNAVAILABLE", 503, "media_unavailable"], ["ER_PRIVATE_SQL", 503, "media_unavailable"]]) {
     service.listAssets = async () => { throw Object.assign(new Error("private SQL, original name and filesystem path"), { code, retryAfter: 5, privateKey: "secret" }); };
     const response = await fetch(`${base}${assetsPath("client")}`, { headers: { Cookie: cookie("client") } }); assert.equal(response.status, status, code); assert.deepEqual(await response.json(), { error: publicCode });
     assert.equal(response.headers.get("set-cookie") !== null, status === 401); if (status === 429) assert.equal(response.headers.get("retry-after"), "5");

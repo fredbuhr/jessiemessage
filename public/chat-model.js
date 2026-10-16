@@ -122,6 +122,7 @@ export function rejectPendingSend(state, status) {
 export function rejectPendingImageSend(state, status) {
   if (state.pending?.kind !== "image") return false;
   if (status === 404) { state.pending = null; state.imageDraft = null; return true; }
+  if (status === 422) { state.pending = null; return true; }
   return rejectPendingSend(state, status);
 }
 export function nearBottom({ scrollHeight, scrollTop, clientHeight }, threshold = 90) { return scrollHeight - scrollTop - clientHeight <= threshold; }

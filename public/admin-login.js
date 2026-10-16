@@ -21,7 +21,11 @@ const logoutButton = document.getElementById("logout-button");
 const logoutAllButton = document.getElementById("logout-all-button");
 let csrf = null;
 let principalId = null;
-let expiryTimer = null;
+let cancelSessionCheck = null;
+let checkingSession = false;
+let sessionCheckEpoch = 0;
+let devicesCursor = null;
+let devicesEpoch = 0;
 let busy = false;
 let generation = 0;
 let suspended = document.visibilityState !== "visible";
@@ -36,7 +40,9 @@ const accessPages = {
 };
 
 function invalidate() {
-  generation += 1;
+  generation += 1; sessionCheckEpoch += 1; checkingSession = false;
+  cancelSessionCheck?.(); cancelSessionCheck = null;
+  clearDevices();
   for (const controller of controllers) controller.abort();
   controllers.clear();
   setBusy(false);
@@ -46,6 +52,7 @@ function current(ticket) { return ticket === generation && !suspended && documen
 function stale() { return Object.assign(new Error("stale_response"), { stale: true }); }
 function clearCredentials() {
   form.reset();
+  resetPasswordVisibility();
   for (const id of ["email", "password", "factor"]) document.getElementById(id).value = "";
 }
 
@@ -77,20 +84,20 @@ function signedOut(message = "") {
   document.getElementById("admin-chat-link").hidden = true;
   csrf = null;
   principalId = null;
-  clearTimeout(expiryTimer);
-  expiryTimer = null;
+  cancelSessionCheck?.(); cancelSessionCheck = null;
   form.hidden = suspended;
   connected.hidden = true;
-  adminUI.text(title, "Bienvenue, Jessie.");
+  adminUI.text(title, "Ton espace Jessie.");
   intro.hidden = false;
   clearCredentials();
   adminUI.rawText(document.getElementById("connected-name"), "");
+  document.getElementById("session-retry").hidden = true;
   notice(message);
 }
 
 function signedIn(session) {
   if (suspended || document.visibilityState !== "visible") return;
-  if (!Number.isFinite(session?.expiresAt) || session.expiresAt <= Date.now()) {
+  if (!Number.isSafeInteger(session?.expiresAt) || session.expiresAt <= Date.now()) {
     signedOut("Ta session a expiré. Reconnecte-toi pour continuer.");
     return;
   }
@@ -103,11 +110,11 @@ function signedIn(session) {
   form.hidden = true;
   connected.hidden = false;
   intro.hidden = true;
-  adminUI.text(title, "Ton accès est prêt.");
+  adminUI.text(title, "Ton espace Jessie.");
   adminUI.rawText(document.getElementById("connected-name"), session.user.pseudonym);
   notice("");
-  clearTimeout(expiryTimer);
-  expiryTimer = setTimeout(() => signedOut("Ta session a expiré. Reconnecte-toi pour continuer."), Math.max(0, session.expiresAt - Date.now()));
+  document.getElementById("session-retry").hidden = true;
+  planSessionCheck(session.expiresAt);
   if (location.pathname === "/admin/login") history.replaceState(null, "", "/admin");
   void loadAccess();
   if (session.user.role === "admin") void loadChatAccess();
@@ -115,7 +122,7 @@ function signedIn(session) {
 
 async function loadChatAccess() {
   const ticket = generation;
-  adminUI.text(document.getElementById("admin-session-note"), "L’accès administrateur est prêt. La messagerie sera disponible dès son activation.");
+  adminUI.text(document.getElementById("admin-session-note"), "Les conversations ne sont pas encore disponibles.");
   try {
     const capability = await request("/api/chat/admin/capabilities");
     if (ticket !== generation || capability.enabled !== true) return;
@@ -134,7 +141,7 @@ function setBusy(value) {
   logoutButton.disabled = value;
   logoutAllButton.disabled = value;
   form.setAttribute("aria-busy", String(value));
-  for (const button of accessTools.querySelectorAll("button")) button.disabled = value || button.dataset.unavailable === "true";
+  for (const root of [accessTools, document.getElementById("devices-panel")]) for (const button of root.querySelectorAll("button")) button.disabled = value || button.dataset.unavailable === "true";
 }
 
 async function request(path, { body, mutation = false, login = false } = {}) {
@@ -174,7 +181,7 @@ const uncertainOperation = "Le résultat de l’opération n’a pas pu être co
 function sessionIdentity(session) {
   if (!session?.user || typeof session.user.id !== "string" || !/^[a-f0-9]{32}$/.test(session.user.id) || session.user.role !== "admin"
     || typeof session.user.pseudonym !== "string" || session.user.pseudonym.length > 64 || !session.user.pseudonym.isWellFormed() || typeof session.csrf !== "string"
-    || !/^[A-Za-z0-9_-]{43}$/.test(session.csrf) || !Number.isFinite(session.expiresAt)) throw new Error("invalid_session");
+    || !/^[A-Za-z0-9_-]{43}$/.test(session.csrf) || !Number.isSafeInteger(session.expiresAt) || session.expiresAt < 0 || session.expiresAt > 253402300799999) throw new Error("invalid_session");
   return { id: session.user.id, role: session.user.role, csrf: session.csrf };
 }
 async function verifyIdentity(ticket, { afterMutation = false, expected = { id: principalId, role: "admin", csrf } } = {}) {
@@ -183,14 +190,15 @@ async function verifyIdentity(ticket, { afterMutation = false, expected = { id: 
   try {
     proof = await request("/api/auth/session");
     const actual = sessionIdentity(proof);
-    if (actual.id === expected.id && actual.role === expected.role && actual.csrf === expected.csrf && proof.expiresAt > Date.now()) return proof;
+    if (actual.id === expected.id && actual.role === expected.role && actual.csrf === expected.csrf && proof.expiresAt > Date.now()) { planSessionCheck(proof.expiresAt); return proof; }
   } catch (error) {
     if (error.stale || !current(ticket)) throw stale();
     // A failed proof is a failed GET, even if an earlier POST may have committed.
     // Clear the view and revalidate once; never retry that mutation.
     const recover = proofRecoveryAvailable;
     proofRecoveryAvailable = false;
-    signedOut(recover ? message : `${message} Recharge la page pour vérifier les accès.`);
+    if (error.status === 401) signedOut(message);
+    else sessionUnavailable(recover ? message : `${message} Réessaie la connexion.`);
     if (recover) {
       form.hidden = true;
       needsSession = true;
@@ -251,7 +259,7 @@ async function logout(all) {
   setBusy(true);
   try {
     await request(all ? "/api/auth/logout-all" : "/api/auth/logout", { mutation: true });
-    signedOut(all ? "Toutes tes sessions sont déconnectées." : "Tu es déconnectée.");
+    signedOut(all ? "Tous tes appareils sont déconnectés." : "Cet appareil est déconnecté.");
     history.replaceState(null, "", "/admin/login");
   } catch (error) {
     if (error.stale) return;
@@ -260,25 +268,49 @@ async function logout(all) {
   } finally { if (current(ticket)) setBusy(false); }
 }
 logoutButton.addEventListener("click", () => logout(false));
-logoutAllButton.addEventListener("click", () => logout(true));
+logoutAllButton.addEventListener("click", () => { if (busy || suspended || !csrf) return; if (window.confirm(adminUI.t("Déconnecter tous tes appareils ? Vous devrez vous reconnecter sur chacun d’eux."))) void logout(true); });
 
+function planSessionCheck(expiresAt = Date.now() + 30000) {
+  cancelSessionCheck?.();
+  cancelSessionCheck = globalThis.JessieSessionClock.scheduleSessionCheck(expiresAt, () => {
+    cancelSessionCheck = null;
+    if (suspended || document.visibilityState !== "visible") return;
+    if (busy) { planSessionCheck(Date.now() + 30000); return; }
+    needsSession = true; void refreshSession();
+  });
+}
+function sessionUnavailable(message = "La connexion est interrompue. Réessaie dès que le réseau revient.") {
+  invalidate(); clearAccess(); csrf = null; principalId = null;
+  form.hidden = true; connected.hidden = true; clearCredentials();
+  adminUI.rawText(document.getElementById("connected-name"), "");
+  document.getElementById("admin-chat-link").hidden = true;
+  document.getElementById("session-retry").hidden = false;
+  needsSession = true; notice(message, true);
+  if (!suspended) planSessionCheck(Date.now() + 30000);
+}
 async function refreshSession() {
-  if (suspended || !needsSession) return;
-  needsSession = false;
-  const message = nextSessionNotice;
-  nextSessionNotice = "";
+  if (suspended || !needsSession || checkingSession) return;
+  needsSession = false; checkingSession = true;
+  const epoch = ++sessionCheckEpoch;
+  const ticket = generation, message = nextSessionNotice; nextSessionNotice = "";
   try {
     const session = await request("/api/auth/session");
-    sessionIdentity(session);
-    signedIn(session);
+    const actual = sessionIdentity(session);
+    if (session.expiresAt <= Date.now()) { signedOut("Ta session a expiré. Reconnecte-toi pour continuer."); return; }
+    if (!connected.hidden && actual.id === principalId && actual.csrf === csrf) planSessionCheck(session.expiresAt);
+    else signedIn(session);
     if (message) notice(message, true);
-  }
-  catch (error) {
+  } catch (error) {
     if (error.stale) return;
     if (error.status === 401) signedOut(message);
-    else { signedOut(); notice(message || errorMessage(error), true); }
+    else sessionUnavailable(message || "La connexion est interrompue. Réessaie dès que le réseau revient.");
+  } finally {
+    if (epoch === sessionCheckEpoch) checkingSession = false;
+    if (current(ticket) && needsSession && !cancelSessionCheck) planSessionCheck(Date.now() + 30000);
   }
 }
+document.getElementById("session-retry").addEventListener("click", () => { if (!checkingSession) { needsSession = true; void refreshSession(); } });
+window.addEventListener("online", () => { if (!suspended) { needsSession = true; void refreshSession(); } });
 function suspend() {
   suspended = true;
   needsSession = true;
@@ -292,10 +324,11 @@ function suspend() {
   adminUI.rawText(document.getElementById("connected-name"), "");
   adminUI.rawText(document.getElementById("admin-session-note"), "");
   document.getElementById("admin-chat-link").hidden = true;
-  adminUI.text(title, "Bienvenue, Jessie.");
+  adminUI.text(title, "Ton espace Jessie.");
   intro.hidden = false;
   notice("");
-  // Keep the existing absolute expiry timer. Hiding the page never extends it.
+  document.getElementById("session-retry").hidden = true;
+  // The next visible page proves its session before private data is shown.
 }
 function resume() {
   if (document.visibilityState !== "visible") return;
@@ -363,9 +396,8 @@ function paintClients(clients, renewalDraft = null) {
     const expired = client.status === "active" && client.accessExpiresAt !== null && client.accessExpiresAt <= Date.now();
     const card = item(client.pseudonym, [{ raw: client.email },
       `État : ${expired ? "Accès expiré" : states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"}`,
-      "Admission manuelle",
       client.invitationConsumed ? "Invitation utilisée" : "Invitation : en attente",
-      client.approved ? "Accès approuvé par Jess" : "Approbation de Jess : en attente",
+      client.approved ? "Accès approuvé par Jessie" : "Approbation de Jessie : en attente",
       client.accessExpiresAt === null ? "Aucune date de fin d’accès." : adminLine("Fin d’accès : {date}", { date: adminUI.dateParam(client.accessExpiresAt) }),
     ], { rawTitle: true });
     if (client.status === "pending") actionButton(card, "Approuver l’accès", async () => {
@@ -393,6 +425,7 @@ function paintClients(clients, renewalDraft = null) {
       card.append(renewal);
     }
     if (["pending", "active", "suspended"].includes(client.status)) actionButton(card, "Révoquer l’accès", async () => {
+      if (!window.confirm(adminUI.t("Révoquer l’accès de {name} ? Ses appareils seront déconnectés.", { name: client.pseudonym }))) return;
       await request(`/api/admin/clients/${client.id}/revoke`, { mutation: true }); await refreshAccessLists({ afterMutation: true }); notice("L’accès client est révoqué.");
     });
     container.append(card);
@@ -539,3 +572,74 @@ for (const kind of ["invitations", "clients"]) {
     void accessAction(() => refreshAccessPage(kind, { cursor: null }));
   });
 }
+
+function resetPasswordVisibility() {
+  document.getElementById("password").type = "password";
+  document.getElementById("toggle-password").setAttribute("aria-pressed", "false");
+  adminUI.text(document.getElementById("toggle-password"), "Afficher le mot de passe");
+}
+document.getElementById("toggle-password").addEventListener("click", () => {
+  const password = document.getElementById("password"), show = password.type === "password";
+  password.type = show ? "text" : "password";
+  document.getElementById("toggle-password").setAttribute("aria-pressed", String(show));
+  adminUI.text(document.getElementById("toggle-password"), show ? "Masquer le mot de passe" : "Afficher le mot de passe");
+});
+document.getElementById("toggle-recovery-code").addEventListener("click", () => {
+  const button = document.getElementById("toggle-recovery-code"), recovery = button.getAttribute("aria-pressed") !== "true";
+  button.setAttribute("aria-pressed", String(recovery));
+  document.getElementById("factor").setAttribute("inputmode", recovery ? "text" : "numeric");
+  document.getElementById("factor").value = "";
+  adminUI.text(button, recovery ? "Utiliser les 6 chiffres" : "Utiliser un code de récupération");
+  adminUI.text(document.getElementById("factor-help"), recovery ? "Saisis un de tes codes de récupération." : "Les 6 chiffres de ton application d’authentification.");
+});
+function clearDevices() {
+  devicesEpoch += 1; devicesCursor = null;
+  const list = document.getElementById("devices-list"); adminUI.forget(list); list.replaceChildren();
+  adminUI.rawText(document.getElementById("devices-status"), "");
+  document.getElementById("devices-next").hidden = true;
+  document.getElementById("devices-panel").open = false;
+}
+async function loadDevices(cursor = null) {
+  if (busy || suspended || !csrf) return;
+  const epoch = ++devicesEpoch, ticket = generation;
+  setBusy(true); adminUI.text(document.getElementById("devices-status"), "Vérification des appareils…");
+  try {
+    const result = await request(`/api/auth/devices${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`);
+    const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 253402300799999;
+    if (!Array.isArray(result?.devices) || result.devices.length > 50 || typeof result.hasMore !== "boolean"
+      || (result.hasMore ? !/^[a-f0-9]{32}$/.test(result.nextCursor) || result.nextCursor === cursor : result.nextCursor !== null)
+      || result.devices.some((row) => !/^[a-f0-9]{32}$/.test(row?.id) || !date(row.createdAt) || !date(row.lastSeenAt) || typeof row.current !== "boolean")) throw new Error("invalid_devices");
+    await verifyIdentity(ticket);
+    if (epoch !== devicesEpoch || !current(ticket)) throw stale();
+    const container = document.getElementById("devices-list"); adminUI.forget(container); container.replaceChildren();
+    for (const device of result.devices) {
+      const card = item(device.current ? "Cet appareil" : "Autre appareil", [
+        adminLine("Connexion créée le {date}", { date: adminUI.dateParam(device.createdAt) }),
+        adminLine("Dernière activité : {date}", { date: adminUI.dateParam(device.lastSeenAt) }),
+      ]);
+      const button = document.createElement("button"); button.type = "button"; button.className = "button button-secondary";
+      adminUI.text(button, device.current ? "Déconnecter cet appareil" : "Déconnecter cet autre appareil");
+      button.addEventListener("click", () => { void accessAction(async () => {
+        if (!window.confirm(adminUI.t(device.current ? "Déconnecter cet appareil ?" : "Déconnecter cet autre appareil ? Les autres restent connectés."))) return;
+        const result = await request(`/api/auth/devices/${device.id}/revoke`, { mutation: true });
+        if (result?.status !== "device_revoked" || typeof result.current !== "boolean") throw new Error("invalid_revocation");
+        if (result.current) { signedOut("Cet appareil est déconnecté."); return; }
+        await verifyIdentity(generation, { afterMutation: true });
+        // Refresh by a separate read after accessAction releases its busy state.
+        clearDevices(); document.getElementById("devices-panel").open = true;
+        adminUI.text(document.getElementById("devices-status"), "L’appareil est déconnecté. Actualise la liste pour revoir les connexions.");
+      }); });
+      card.append(button); container.append(card);
+    }
+    devicesCursor = result.nextCursor;
+    document.getElementById("devices-next").hidden = !result.hasMore;
+    adminUI.text(document.getElementById("devices-status"), result.devices.length ? "Connexions actuellement ouvertes." : "Aucun appareil sur cette page.");
+  } catch (error) {
+    if (error.stale || epoch !== devicesEpoch) return;
+    if (error.status === 401) signedOut(errorMessage(error));
+    else adminUI.text(document.getElementById("devices-status"), "Les appareils n’ont pas pu être vérifiés. Réessaie.");
+  } finally { if (current(ticket)) setBusy(false); }
+}
+document.getElementById("devices-panel").addEventListener("toggle", () => { if (document.getElementById("devices-panel").open && !document.getElementById("devices-list").children.length) void loadDevices(); });
+document.getElementById("devices-refresh").addEventListener("click", () => { void loadDevices(); });
+document.getElementById("devices-next").addEventListener("click", () => { if (devicesCursor) void loadDevices(devicesCursor); });

@@ -90,11 +90,11 @@ function controller(name, fetchHandler, { language = "fr", hash = "" } = {}) {
     sessionStorage: { getItem(key) { return storage.get(key) ?? null; }, setItem(key, value) { writes.push([key, value]); storage.set(key, String(value)); } },
     setTimeout(callback, milliseconds) { const id = ++timer; timers.set(id, { callback, milliseconds }); return id; }, clearTimeout(id) { timers.delete(id); },
     fetch(path, options = {}) { calls.push({ path, options }); return Promise.resolve().then(() => fetchHandler(path, options, calls)); } });
-  for (const script of ["i18n.js", "i18n-access.js"]) new Script(read(script), { filename: `public/${script}` }).runInContext(context);
+  for (const script of ["i18n.js", "i18n-access.js", "session-clock.js"]) new Script(read(script), { filename: `public/${script}` }).runInContext(context);
   let source = read(`${name}.js`);
   if (name === "recover") source = source.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*"\/recover-model\.js";/, "const {$1} = __recoveryModel;");
   new Script(source, { filename: `public/${name}.js`, importModuleDynamically: async () => { throw new Error("optional feature unavailable in fixture"); } }).runInContext(context);
-  return { document, context, calls, writes, location, get: (id) => document.getElementById(id), language: (value) => context.JessieI18n.setLanguage(value),
+  return { document, context, calls, writes, location, timers, async tick(milliseconds) { const timer = [...timers].find(([, value]) => value.milliseconds === milliseconds); assert.ok(timer, `timer ${milliseconds}`); timers.delete(timer[0]); timer[1].callback(); await flush(); }, async online() { window.dispatchEvent(new Event("online")); await flush(); }, get: (id) => document.getElementById(id), language: (value) => context.JessieI18n.setLanguage(value),
     input(id, value) { const node = document.getElementById(id); node.value = value; node.dispatchEvent(new Event("input")); },
     submit(id) { document.getElementById(id).dispatchEvent(new Event("submit", { cancelable: true })); },
     hide() { document.visibilityState = "hidden"; document.dispatchEvent(new Event("visibilitychange")); },
@@ -120,25 +120,25 @@ for (const state of ["pending", "expired"]) test(`access ${state} switches live 
   const f = controller("access", (path) => path === "/api/access/session" ? response(user(state)) : capability(), { language: "en" });
   try {
     await flush(); const count = f.calls.length; assert.equal(f.get("client-name").textContent, "Bienvenue.");
-    assert.match(f.get("client-access-state").textContent, state === "pending" ? /awaiting approval/ : /has expired/);
-    assert.equal(f.get("client-checks").children[1].textContent, "Email address: pending");
-    f.language("fr"); assert.match(f.get("client-access-state").textContent, state === "pending" ? /en attente/ : /a expiré/);
-    assert.equal(f.get("client-checks").children[0].textContent, "Admission manuelle"); assert.equal(f.get("client-name").textContent, "Bienvenue.");
+    assert.match(f.get("client-access-state").textContent, state === "pending" ? /Confirm your email/ : /has ended/);
+    assert.equal(f.get("client-checks").children.length, 0);
+    f.language("fr"); assert.match(f.get("client-access-state").textContent, state === "pending" ? /Confirme ton e-mail/ : /arrivé à son terme/);
+    assert.equal(f.get("client-checks").children.length, 0); assert.equal(f.get("client-name").textContent, "Bienvenue.");
     f.hide(); f.language("en"); f.language("fr"); assert.equal(f.get("client-name").textContent, ""); assert.equal(f.get("client-access-state").textContent, "");
     assert.equal(f.get("client-checks").children.length, 0); assert.equal(f.calls.length, count);
     assert.ok(f.writes.every(([key, value]) => key === "jessiemessage.language" && ["fr", "en"].includes(value)));
   } finally { f.dispose(); }
 });
 
-for (const ageAssured of [false, true]) test(`manual admission displays Jess approval without an age-verification badge (observation ${ageAssured})`, async () => {
+for (const ageAssured of [false, true]) test(`active access shows its conversation without admission jargon or an age-verification badge (observation ${ageAssured})`, async () => {
   const input = user("active"); Object.assign(input.access, { emailVerified: true, approved: true, ageAssured });
   const f = controller("access", (path) => path === "/api/access/session" ? response(input) : capability(), { language: "en" });
   try {
     await flush();
-    assert.match(f.get("client-checks").textContent, /Manual admission/); assert.match(f.get("client-checks").textContent, /Invitation used/);
-    assert.match(f.get("client-checks").textContent, /Access approved by Jess/); assert.doesNotMatch(f.get("client-checks").textContent, /age|Adult status/i);
+    assert.equal(f.get("client-checks").children.length, 0); assert.equal(f.get("client-checks").hidden, true);
+    assert.match(f.get("client-access-state").textContent, /conversation/);
     assert.equal(f.get("client-chat-link").hidden, false);
-    f.language("fr"); assert.match(f.get("client-checks").textContent, /Accès approuvé par Jess/);
+    f.language("fr"); assert.match(f.get("client-access-state").textContent, /conversation/);
     assert.doesNotMatch(f.get("client-checks").textContent, /majorité/i);
   } finally { f.dispose(); }
 });
@@ -149,7 +149,7 @@ test("client access rejects missing or unknown admission fields before rendering
     const f = controller("access", (path) => path === "/api/access/session" ? response(input) : capability());
     try {
       await flush(); assert.equal(f.get("client-name").textContent, ""); assert.equal(f.get("client-checks").children.length, 0);
-      assert.equal(f.get("client-chat-link").hidden, true); assert.match(f.get("access-status").textContent, /indisponible/);
+      assert.equal(f.get("client-chat-link").hidden, true); assert.match(f.get("access-status").textContent, /interrompue/);
     } finally { f.dispose(); }
   }
 });
@@ -157,9 +157,9 @@ test("client access rejects missing or unknown admission fields before rendering
 test("access malformed session error switches live and preserves untouched credentials", async () => {
   const f = controller("access", (path) => path === "/api/access/session" ? malformed() : capability(), { language: "en" });
   try {
-    await flush(); assert.equal(f.get("access-status").textContent, "Access is currently unavailable. Try again in a few moments.");
+    await flush(); assert.equal(f.get("access-status").textContent, "The connection was interrupted. Try again when the network is back.");
     f.input("login-email", "Bienvenue."); f.input("login-password", " Mot de passe "); const count = f.calls.length;
-    f.language("fr"); assert.equal(f.get("access-status").textContent, "L’accès est indisponible pour le moment. Réessaie dans quelques instants.");
+    f.language("fr"); assert.equal(f.get("access-status").textContent, "La connexion est interrompue. Réessaie dès que le réseau revient.");
     assert.equal(f.get("login-email").value, "Bienvenue."); assert.equal(f.get("login-password").value, " Mot de passe "); assert.equal(f.calls.length, count);
   } finally { f.dispose(); }
 });
@@ -218,5 +218,39 @@ test("an expired recovery link translates its error while preserving the submitt
     assert.match(f.get("recovery-status").textContent, /This link is invalid, has expired/); const count = f.calls.length;
     f.language("fr"); assert.match(f.get("recovery-status").textContent, /Ce lien est invalide, expiré/); assert.equal(f.calls.length, count);
     assert.ok(!f.document.root.textContent.includes(token)); assert.ok(!f.document.root.textContent.includes(password));
+  } finally { f.dispose(); }
+});
+
+
+test("pending access checks are visible, bounded and reveal approval without a manual refresh", async () => {
+  let current = user(); current.access.emailVerified = true;
+  const f = controller("access", (path) => path === "/api/access/session" ? response(current) : capability());
+  try {
+    await flush(); assert.match(f.get("client-access-state").textContent, /Jessie doit encore valider/);
+    const originalStateNode = f.get("client-access-state");
+    await f.tick(15000); assert.equal(f.get("client-access-state"), originalStateNode);
+    current = user("active"); Object.assign(current.access, { emailVerified: true, approved: true });
+    await f.tick(15000); assert.equal(f.get("client-chat-link").hidden, false); assert.equal(f.get("check-client-access").hidden, true);
+    f.hide(); assert.equal(f.timers.size, 0); assert.equal(f.get("client-name").textContent, "");
+  } finally { f.dispose(); }
+  const pending = controller("access", (path) => path === "/api/access/session" ? response(user()) : capability());
+  try {
+    await flush(); for (let index = 0; index < 60; index++) await pending.tick(15000);
+    assert.ok([...pending.timers.values()].some((timer) => timer.milliseconds === 300000));
+    assert.equal([...pending.timers.values()].some((timer) => timer.milliseconds === 15000), false);
+    assert.equal(pending.get("check-client-access").hidden, false);
+  } finally { pending.dispose(); }
+});
+
+test("an interrupted session proof hides private access and reconnects online without logging in again", async () => {
+  let failed = true; const current = user("active"); Object.assign(current.access, { emailVerified: true, approved: true, expiresAt: Date.now() + 86400000 });
+  const f = controller("access", (path) => path === "/api/access/session" ? failed ? Promise.reject(new TypeError("offline")) : response(current) : capability());
+  try {
+    await flush(); assert.equal(f.get("client-login-form").hidden, true); assert.equal(f.get("access-retry").hidden, false);
+    assert.equal(f.get("client-connected").hidden, true); assert.equal(f.get("client-name").textContent, "");
+    failed = false; await f.online(); assert.equal(f.get("client-connected").hidden, false); assert.equal(f.get("client-chat-link").hidden, false);
+    assert.equal(f.get("client-validity").hidden, false); assert.match(f.get("client-validity").textContent, /jusqu’au/);
+    f.language("en"); assert.match(f.get("client-validity").textContent, /open until/);
+    assert.equal(f.calls.filter((call) => call.options.method === "POST").length, 0);
   } finally { f.dispose(); }
 });

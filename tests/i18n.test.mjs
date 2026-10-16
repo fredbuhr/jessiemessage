@@ -28,15 +28,16 @@ class Node {
 function harness({ stored, preferred = "fr-FR", blocked = false, storageMap = new Map(), visible = true } = {}) {
   if (stored !== undefined) storageMap.set("jessiemessage.language", stored);
   const html = new Node("html"); html._connected = true; const body = new Node("body"); html.append(body);
-  const documentEvents = new Map(), windowEvents = new Map(), storageCalls = [], requests = [];
+  const documentEvents = new Map(), windowEvents = new Map(), storageCalls = [], requests = [], navigation = [];
   const register = (events, name, callback) => { if (!events.has(name)) events.set(name, []); events.get(name).push(callback); };
   const document = { documentElement: html, body, visibilityState: visible ? "visible" : "hidden", title: "", querySelectorAll: (selector) => html.querySelectorAll(selector), querySelector: (selector) => html.querySelectorAll(selector)[0] ?? null,
     getElementById: (id) => html.querySelectorAll(`#${id}`)[0] ?? null, addEventListener: (name, callback) => register(documentEvents, name, callback) };
   const context = vm.createContext({ document, navigator: { language: preferred, onLine: true }, AbortController, setTimeout, clearTimeout,
     sessionStorage: { getItem(key) { storageCalls.push(["get", key]); if (blocked) throw new Error("storage blocked"); return storageMap.get(key) ?? null; }, setItem(key, value) { storageCalls.push(["set", key, value]); if (blocked) throw new Error("storage blocked"); storageMap.set(key, value); } },
+    location: { replace(path) { navigation.push(path); } },
     history: { replaceState() {} }, window: { addEventListener: (name, callback) => register(windowEvents, name, callback), matchMedia: () => ({ matches: false, addEventListener() {} }) },
     fetch: async (path, options) => { requests.push({ path, options }); return { status: 200, ok: true, json: async () => vm.runInContext('({status:"available",client:{state:"active",href:"/messages"},administrator:null})', context) }; } });
-  const f = { context, document, body, storageMap, storageCalls, requests, run: (code) => vm.runInContext(code, context),
+  const f = { context, document, body, storageMap, storageCalls, requests, navigation, run: (code) => vm.runInContext(code, context),
     node(source = null, parent = body, tag = "span") { const node = new Node(tag); if (source !== null) { node.textContent = source; node.setAttribute("data-jm-i18n", source); } parent?.append(node); return node; },
     expose(name, value) { context[name] = value; },
     event(name, value = {}) { for (const callback of documentEvents.get(name) ?? windowEvents.get(name) ?? []) callback(value); },
@@ -149,7 +150,7 @@ test("homepage and entry share the language choice without double toggles or new
   entry.load(); const modelExports = [...entryModel.matchAll(/export function (\w+)\(/g)].map((match) => match[1]);
   entry.run(`globalThis.__entry = (()=>{${entryModel.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}}})()`);
   entry.run(entryController.replace(/^import \{([^\n]+)\} from "\/entry-model\.js";/, "const {$1}=__entry;")); await flush();
-  assert.equal(entry.document.getElementById("client-link").textContent, "Return to my conversation"); assert.equal(entry.requests.length, 1);
+  assert.equal(entry.document.getElementById("client-link").textContent, "Return to my conversation"); assert.equal(entry.requests.length, 1); assert.deepEqual(entry.navigation, ["/messages"]);
   entry.click(entry.document.getElementById("language-switch")); assert.equal(entry.api.getLanguage(), "fr"); assert.equal(entry.document.getElementById("client-link").textContent, "Reprendre ma conversation"); assert.equal(entry.requests.length, 1);
 });
 

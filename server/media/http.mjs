@@ -114,7 +114,9 @@ export function readUpload(request) {
     };
     const onError = () => finish(invalid());
     const onAborted = () => finish(invalid());
-    const timer = setTimeout(() => finish(httpError(408, "request_timeout")), 8000);
+    // Keep a hard overall body budget, with enough time for a phone upload.
+    // The account/global upload admission still bounds concurrent readers.
+    const timer = setTimeout(() => finish(httpError(408, "request_timeout")), 30_000);
     timer.unref();
     request.on("data", onData);
     request.once("end", onEnd);
@@ -133,6 +135,7 @@ function mappedError(error) {
   if (error?.code === "CHAT_CONFLICT") return { status: 409, code: "message_conflict" };
   if (["CHAT_INPUT", "MEDIA_INPUT"].includes(error?.code)) return { status: 400, code: "invalid_request" };
   if (error?.code === "MEDIA_FORMAT") return { status: 415, code: "media_format" };
+  if (error?.code === "MEDIA_DIMENSIONS") return { status: 422, code: "media_dimensions" };
   if (error?.code === "MEDIA_STORAGE_LIMIT") return { status: 507, code: "storage_limit" };
   if (["AUTH_RATE_LIMIT", "CHAT_RATE_LIMIT", "MEDIA_RATE_LIMIT", "AUTH_BUSY", "MEDIA_BUSY"].includes(error?.code)) {
     const retry = Number(error.retryAfter);

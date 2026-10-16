@@ -291,3 +291,42 @@ test("bad service session output fails closed instead of setting a malformed coo
   assert.equal(response.headers.get("set-cookie"), null);
   assert.deepEqual(await response.json(), { error: "authentication_unavailable" });
 });
+
+test("administrator session reads renew the same secure opaque cookie up to 180 days", async (t) => {
+  const { base, session } = await fixture(t);
+  session.expiresAt = Date.now() + 180 * 86400000;
+  const response = await fetch(`${base}/api/auth/session`, { headers: { Cookie: cookie } });
+  assert.equal(response.status, 200);
+  const renewed = response.headers.get("set-cookie");
+  assert.match(renewed, new RegExp(`^__Host-jessie_session=${token};`));
+  const seconds = Number(/Max-Age=(\d+)/.exec(renewed)[1]);
+  assert.ok(seconds >= 180 * 86400 - 2 && seconds <= 180 * 86400);
+  assert.deepEqual(Object.keys(await response.json()).sort(), ["csrf", "expiresAt", "user"]);
+});
+
+test("device routes require authentication, exact origin, an empty JSON body and the current CSRF proof", async (t) => {
+  const devices = [{ id: user.id, createdAt: 1800000000000, lastSeenAt: 1800000000000, current: true }];
+  const { base, calls } = await fixture(t, {
+    async devices(raw, page) { calls.push(["devices", raw, page]); return { devices, nextCursor: null, hasMore: false }; },
+    async revokeDevice(raw, id) { calls.push(["revokeDevice", raw, id]); return { status: "device_revoked", current: id === user.id }; },
+  });
+  assert.equal((await fetch(`${base}/api/auth/devices`)).status, 401);
+  const list = await fetch(`${base}/api/auth/devices`, { headers: { Cookie: cookie } });
+  assert.equal(list.status, 200);
+  assert.deepEqual(await list.json(), { devices, nextCursor: null, hasMore: false });
+  for (const query of ["?cursor=a&cursor=b", "?secret=value"]) {
+    assert.equal((await fetch(`${base}/api/auth/devices${query}`, { headers: { Cookie: cookie } })).status, 400);
+  }
+  const path = `/api/auth/devices/${user.id}/revoke`;
+  for (const headers of [mutationHeaders({ Cookie: cookie }), mutationHeaders({ Cookie: cookie, "X-CSRF-Token": csrf, Origin: "https://foreign.example" })]) {
+    assert.equal((await post(base, path, {}, headers)).status, 403);
+  }
+  assert.equal(calls.some(([name]) => name === "revokeDevice"), false);
+  assert.equal((await post(base, path, { user: user.id }, mutationHeaders({ Cookie: cookie, "X-CSRF-Token": csrf }))).status, 400);
+  const removed = await post(base, path, {}, mutationHeaders({ Cookie: cookie, "X-CSRF-Token": csrf }));
+  assert.equal(removed.status, 200);
+  assert.deepEqual(await removed.json(), { status: "device_revoked", current: true });
+  assert.match(removed.headers.get("set-cookie"), /Max-Age=0/);
+  assert.deepEqual(calls.find(([name]) => name === "revokeDevice"), ["revokeDevice", token, user.id]);
+  assert.equal((await fetch(`${base}${path}`, { headers: { Cookie: cookie } })).status, 405);
+});

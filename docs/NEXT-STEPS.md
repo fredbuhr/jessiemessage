@@ -1,7 +1,9 @@
 # JessieMessage — bilan et chemin vers le pilote
 
+**Étape 0.30 activée en recette :** [sessions administrateur durables et confort quotidien](durable-admin-sessions.md). Le build et le redémarrage Manager ont réussi le 16 octobre 2026 à 22:49 Europe/Paris sur `8f38f66f5c0ca5201ef96a6cbf56f45fd96e1a19`, arbre `6b9a26eb22cb8e7e675735f03bab92fcfff1efde`, profil `messaging-photos`. Les cinq jobs CI de cette révision passent ; à 22:50:45.888 Europe/Paris, les huit fichiers attendus et les quatorze réponses HTTPS sont conformes. Les sessions administrateur durent 180 jours glissants ; les écrans d'accès, la reprise réseau et la préparation des photos sont améliorés. L'acceptation réelle sur six à huit appareils ou profils reste à effectuer. Le repli `37c8fcd0` est conservé inchangé ; production fermée. **Prochaine étape : 0.31, notifications**, encore à installer ; le [plan technique et le parcours utilisateur](message-notifications-plan.md) sont préparés.
+
 **Étape 0.28 validée en recette :** [photos privées, profil et sauvegarde](private-photo-runtime.md).
-Les photos sont actives en recette sur `37c8fcd0` après confirmation du coffre
+Les photos ont été activées en recette sur `37c8fcd0` après confirmation du coffre
 à cinq fichiers sur le PC, initialisation hors ligne et contrôle du lanceur.
 Santé/disponibilité : 200 ; médias anonymes : 401 ; configuration privée non
 servie : 404. Le propriétaire accepte le parcours photos à 18:44 Europe/Paris.
@@ -18,14 +20,14 @@ lot est validé en recette. Aucune migration supplémentaire ni nouvelle pile.
 Après sa confirmation de l'import SQL et du téléphone à 16:40 Europe/Paris,
 le propriétaire a fourni à 17:08 le reçu `status: verified` : 28 tables,
 28 migrations et quatre enregistrements chiffrés conformes à l'export figé.
-Cette validation portait sur `14a43104`. Le lot courant **0.28 : photos
-privées** réutilise les modules médias, galerie et stockage déjà présents ;
-son activation en recette est décrite ci-dessus. La production reste fermée.
+Cette validation portait sur `14a43104`. Le lot **0.28 : photos
+privées** a réutilisé les modules médias, galerie et stockage déjà présents ;
+son acceptation en recette est décrite ci-dessus. La production reste fermée.
 
-**Current source of truth — 16 October 2026:** [private photo runtime, lot 0.28](private-photo-runtime.md), following [manual admission and minimal private runtime, lot 0.26](manual-invitation-runtime.md). Stages 0.25–0.27 are accepted in recipe: backups checked, SMTP reception, administrator MFA sign-in, invited registration/email/approval, two-way text persistence and isolated SQL restore. The active photo runtime is pinned to `37c8fcd0`, retaining the eight-character client minimum. CRM, broadcasts, client recovery and notifications remain outside that profile; they are not removed from the product scope. The owner accepted the real photo journey and supplied the successful isolated SQL/files restore receipt at 21:06; at 21:27 the owner accepted the requested photo retry after disconnection, closing lot 0.28 in recipe. The entries below are historical observations of their revisions. Do not infer current deployment or a new KYC-provider requirement from an older entry. Production publication remains pending.
+**Current source of truth — 16 October 2026:** [durable administrator sessions and everyday usability, lot 0.30](durable-admin-sessions.md), active in recipe at `8f38f66f5c0ca5201ef96a6cbf56f45fd96e1a19` following [the accepted photo runtime, lot 0.28](private-photo-runtime.md). The exact-runtime CI and post-restart HTTPS checks pass; six-to-eight-device real acceptance is still pending. The former photo runtime `37c8fcd0` remains the unchanged fallback. Stages 0.25–0.28 established accepted backups/restores, SMTP reception, administrator MFA, invited registration/email/approval, two-way text/photo persistence and phone/network-retry journeys. CRM, broadcasts and client recovery remain outside the active profile. Notifications are the next lot 0.31 and have not been installed. These features remain in product scope. Entries below are historical observations of their revisions; do not infer current deployment or a new KYC-provider requirement from them. Production publication remains pending.
 
 
-Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de client, photographie personnelle ni configuration de production.
+Document de travail public, mis à jour le 16 octobre 2026. Aucune donnée de client, photographie personnelle ni configuration de production.
 
 **Reprise après interruption de la discussion :** voir l’[audit du 15 octobre](AUDIT-REPRISE-2026-10-15.md), réalisé sur le HEAD final 0.16 `0ecb31e`. Il confirme les tests/CI et la pile de 15 PR non fusionnées, puis la PR documentaire #16. Le [correctif 0.16.1](chat-stable-history.md) traite le remplacement des nœuds à chaque polling (A15), avec conservation des contrôles/photos et rechargement après masquage. Ce correctif est suivi du lot **0.17a supervision**, décrit ci-dessous. La recette navigateur et les autres constats restent ouverts ; aucune publication n’est effectuée par ce lot.
 

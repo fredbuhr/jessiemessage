@@ -22,7 +22,11 @@ let verificationToken = null;
 let csrf = null;
 let busy = false;
 let generation = 0;
-let expiryTimer = null;
+let cancelSessionCheck = null;
+let checkingSession = false;
+let sessionOwner = null;
+let displayedSession = null;
+let pendingPolls = 0;
 let recoveryEnabled = null;
 let recoveryCapabilityPending = false;
 let recoveryCapabilityFailed = false;
@@ -51,6 +55,7 @@ function notice(message, error = false) { accessI18n.text(status, message); stat
 function clearBroadcastPreference() { broadcastPreferenceEpoch += 1; broadcastPreference?.clear(); broadcastPreference = null; element("broadcast-preference-host")?.remove(); }
 function invalidate() {
   generation += 1; recoveryCapabilityEpoch += 1; recoveryCapabilityPending = false;
+  cancelSessionCheck?.(); cancelSessionCheck = null;
   for (const controller of controllers) controller.abort(); controllers.clear(); clearBroadcastPreference();
 }
 async function loadBroadcastPreference() {
@@ -58,7 +63,7 @@ async function loadBroadcastPreference() {
   try {
     const module = await import("/broadcast-preference.js");
     if (ticket !== generation || epoch !== broadcastPreferenceEpoch || connected.hidden || document.visibilityState !== "visible") return;
-    const host = document.createElement("div"); host.id = "broadcast-preference-host"; connected.append(host);
+    const host = document.createElement("div"); host.id = "broadcast-preference-host"; element("client-account-preferences").append(host);
     broadcastPreference = module.mountBroadcastPreference(host, { isCurrent: () => ticket === generation && epoch === broadcastPreferenceEpoch && !connected.hidden });
   } catch { /* An optional protected feature can be disabled without changing login. */ }
 }
@@ -75,38 +80,57 @@ function validClientSession(session) {
 }
 function sameClientOwner(first, second) { return first.user.id === second.user.id && first.user.role === second.user.role && first.csrf === second.csrf; }
 function signedOut(message = "") {
-  invalidate(); csrf = null; clearTimeout(expiryTimer); expiryTimer = null;
+  invalidate(); csrf = null; displayedSession = null; sessionOwner = null; pendingPolls = 0;
   element("client-chat-link").hidden = true;
+  element("access-retry").hidden = true;
+  element("access-intro").hidden = false;
   loginForm.hidden = Boolean(invitationToken || verificationToken);
   registrationForm.hidden = !invitationToken;
   verificationSection.hidden = !verificationToken;
   connected.hidden = true;
   element("resend-section").hidden = false;
-  accessI18n.text(element("access-title"), invitationToken ? "Ton invitation." : "Bienvenue.");
-  loginForm.reset(); accessI18n.rawText(element("client-name"), "");
+  accessI18n.text(element("access-title"), invitationToken ? "Bienvenue chez Jessie." : "Bienvenue.");
+  loginForm.reset(); clearPrivateAccessSummary();
   notice(message);
   updateRecoveryLink({ allowLoad: true });
 }
 function signedIn(session) {
   if (!validClientSession(session)) throw new Error("invalid_client_session");
+  if (displayedSession && !connected.hidden && sameClientOwner(displayedSession, session)
+    && displayedSession.user.pseudonym === session.user.pseudonym
+    && Object.keys(session.access).every((key) => session.access[key] === displayedSession.access[key])) {
+    displayedSession = session;
+    planSessionCheck(session.expiresAt, session.access.state === "pending" && pendingPolls < 60 ? 15000 : 300000);
+    return;
+  }
+  displayedSession = session;
   invalidate(); csrf = session.csrf; loginForm.reset(); registrationForm.reset();
   element("client-chat-link").hidden = true;
-  accessI18n.text(element("client-chat-note"), "La messagerie sera disponible quand ton accès sera validé et le service activé.");
+  element("client-chat-note").hidden = true;
+  accessI18n.rawText(element("client-chat-note"), "");
+  element("access-intro").hidden = true;
+  element("access-retry").hidden = true;
   loginForm.hidden = true; registrationForm.hidden = true; connected.hidden = false;
   updateRecoveryLink();
   verificationSection.hidden = !verificationToken;
   accessI18n.text(element("access-title"), "Ton espace privé.");
   accessI18n.rawText(element("client-name"), session.user.pseudonym);
   const access = session.access;
-  accessI18n.text(element("client-access-state"), access.state === "active" ? "Ton accès est validé." : access.state === "expired" ? "Ton accès a expiré. Jessie pourra le renouveler." : "Ton compte est créé. Ton accès reste en attente de validation.");
-  const list = element("client-checks"); list.replaceChildren();
-  for (const text of ["Admission manuelle", `Adresse e-mail : ${access.emailVerified ? "validé" : "en attente"}`,
-    access.invitationConsumed ? "Invitation utilisée" : "Invitation : en attente", access.approved ? "Accès approuvé par Jess" : "Approbation de Jess : en attente"]) {
-    const item = document.createElement("li"); accessI18n.text(item, text); list.append(item);
-  }
+  const stateMessage = access.state === "active" ? "On reprend notre conversation ?"
+    : access.state === "expired" ? "Ton accès est arrivé à son terme. Contacte Jessie pour le renouveler."
+    : !access.emailVerified ? "Confirme ton e-mail pour continuer."
+    : "Tout est prêt. Jessie doit encore valider ton accès.";
+  accessI18n.text(element("client-access-state"), stateMessage);
+  const list = element("client-checks"); accessI18n.forget(list); list.replaceChildren(); list.hidden = true;
+  element("client-validity").hidden = access.state !== "active" || access.expiresAt === null;
+  if (!element("client-validity").hidden) accessI18n.text(element("client-validity"), "Ton accès est ouvert jusqu’au {date}.", { date: accessI18n.dateParam(access.expiresAt) });
+  else accessI18n.rawText(element("client-validity"), "");
+  element("renewal-contact").hidden = access.state !== "expired";
+  element("check-client-access").hidden = access.state !== "pending";
   element("resend-section").hidden = access.emailVerified;
-  clearTimeout(expiryTimer);
-  expiryTimer = setTimeout(() => signedOut("Ta session a expiré. Reconnecte-toi pour continuer."), Math.max(0, session.expiresAt - Date.now()));
+  if (sessionOwner !== session.user.id || access.state !== "pending") pendingPolls = 0;
+  sessionOwner = session.user.id;
+  planSessionCheck(session.expiresAt, access.state === "pending" && pendingPolls < 60 ? 15000 : 300000);
   if (session.user.role === "client" && access.state === "active") void loadChatAccess();
   if (session.user.role === "client" && access.emailVerified) void loadBroadcastPreference();
 }
@@ -138,12 +162,16 @@ async function loadChatAccess() {
   const ticket = generation;
   try {
     const capability = await request("/api/chat/client/capabilities");
-    if (ticket !== generation || capability.enabled !== true) return;
+    if (ticket !== generation) return;
+    if (capability.enabled !== true) { element("client-chat-note").hidden = false; accessI18n.text(element("client-chat-note"), "La conversation sera bientôt disponible. Tu peux revenir ici pour la retrouver."); return; }
     element("client-chat-link").hidden = false;
-    accessI18n.text(element("client-chat-note"), "Ton accès à la conversation privée est ouvert.");
+    element("client-chat-note").hidden = true;
+    accessI18n.rawText(element("client-chat-note"), "");
   } catch (error) {
-    if (error.stale || error.status === 404) return;
+    if (error.stale) return;
+    if (error.status === 404) { element("client-chat-note").hidden = false; accessI18n.text(element("client-chat-note"), "La conversation sera bientôt disponible. Tu peux revenir ici pour la retrouver."); return; }
     if (error.status === 401 || error.status === 403) signedOut("Ton accès doit être vérifié. Reconnecte-toi pour continuer.");
+    else sessionUnavailable();
   }
 }
 async function request(path, { body, mutation = false, authenticated = false } = {}) {
@@ -201,7 +229,7 @@ registrationForm.addEventListener("submit", (event) => {
     if (!invitationToken || !element("age-declared").checked) { notice("L’invitation et la déclaration de majorité sont nécessaires.", true); return; }
     notice("Création du compte…");
     await request("/api/access/register", { mutation: true, body: { invitationToken, email: element("registration-email").value, pseudonym: element("registration-name").value, password: element("registration-password").value, ageDeclared: true } });
-    invitationToken = null; registrationForm.reset(); signedOut("Ton compte est créé. Consulte tes e-mails pour vérifier ton adresse, puis connecte-toi pour suivre la validation de ton accès.");
+    invitationToken = null; registrationForm.reset(); signedOut("C’est créé ! Ouvre l’e-mail reçu pour confirmer ton adresse, puis connecte-toi ici.");
   });
 });
 element("show-login").addEventListener("click", () => { invitationToken = null; registrationForm.reset(); signedOut(); });
@@ -224,13 +252,39 @@ async function logout(all) { await submit(async () => {
   signedOut(all ? "Toutes tes sessions sont déconnectées." : "Tu es déconnecté.");
 }); }
 element("client-logout").addEventListener("click", () => { void logout(false); });
-element("client-logout-all").addEventListener("click", () => { void logout(true); });
-async function refreshSession() {
-  if (busy || !visible()) return;
-  const epoch = ++sessionRefreshEpoch;
-  try { const session = await request("/api/access/session"); if (epoch === sessionRefreshEpoch && visible()) signedIn(session); }
-  catch (error) { if (!error.stale && epoch === sessionRefreshEpoch && visible()) signedOut(error.status === 401 ? "" : errorMessage(error)); }
+element("client-logout-all").addEventListener("click", () => { if (busy || !visible() || !csrf) return; if (window.confirm(accessI18n.t("Déconnecter tous tes appareils ? Tu devras te reconnecter sur chacun d’eux."))) void logout(true); });
+function planSessionCheck(expiresAt, maxDelayMs = 300000) {
+  cancelSessionCheck?.();
+  cancelSessionCheck = globalThis.JessieSessionClock.scheduleSessionCheck(expiresAt, () => {
+    cancelSessionCheck = null;
+    if (!visible()) return;
+    if (busy || checkingSession) { planSessionCheck(Date.now() + 15000, 15000); return; }
+    pendingPolls += 1; void refreshSession();
+  }, { maxDelayMs });
 }
+function sessionUnavailable() {
+  hideAccess();
+  accessI18n.text(element("access-title"), "Ton espace privé.");
+  notice("La connexion est interrompue. Réessaie dès que le réseau revient.", true);
+  element("access-retry").hidden = false;
+  planSessionCheck(Date.now() + 30000, 30000);
+}
+async function refreshSession() {
+  if (busy || checkingSession || !visible()) return;
+  checkingSession = true;
+  const epoch = ++sessionRefreshEpoch;
+  try {
+    const session = await request("/api/access/session");
+    if (epoch === sessionRefreshEpoch && visible()) signedIn(session);
+  } catch (error) {
+    if (error.stale || epoch !== sessionRefreshEpoch || !visible()) return;
+    if (error.status === 401) signedOut();
+    else sessionUnavailable();
+  } finally { if (epoch === sessionRefreshEpoch) checkingSession = false; }
+}
+element("check-client-access").addEventListener("click", () => { if (!busy && !checkingSession) { pendingPolls = 0; void refreshSession(); } });
+element("access-retry").addEventListener("click", () => { void refreshSession(); });
+window.addEventListener("online", () => { if (visible()) void refreshSession(); });
 async function start() {
   if (!visible()) return;
   await refreshSession();
@@ -247,12 +301,18 @@ async function start() {
     }
   }
 }
+function clearPrivateAccessSummary() {
+  for (const id of ["client-name", "client-access-state", "client-validity", "client-chat-note"]) accessI18n.rawText(element(id), "");
+  const checks = element("client-checks"); accessI18n.forget(checks); checks.replaceChildren();
+  for (const id of ["client-validity", "renewal-contact", "check-client-access"]) element(id).hidden = true;
+}
 function hideAccess() {
-  submitEpoch += 1; sessionRefreshEpoch += 1; invalidate(); csrf = null; setBusy(false);
-  clearTimeout(expiryTimer); expiryTimer = null;
+  submitEpoch += 1; sessionRefreshEpoch += 1; checkingSession = false; invalidate(); csrf = null; displayedSession = null; setBusy(false);
+  cancelSessionCheck?.(); cancelSessionCheck = null;
+  element("access-retry").hidden = true;
   loginForm.hidden = true; registrationForm.hidden = true; verificationSection.hidden = true; connected.hidden = true;
   element("resend-section").hidden = true; element("client-chat-link").hidden = true;
-  accessI18n.rawText(element("client-name"), ""); element("client-checks").replaceChildren(); accessI18n.rawText(element("client-access-state"), "");
+  clearPrivateAccessSummary();
   for (const form of [loginForm, registrationForm, element("resend-form")]) form.reset();
   updateRecoveryLink(); notice("");
 }

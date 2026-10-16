@@ -5,6 +5,7 @@ import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
+import { ADMIN_SESSION_SECONDS } from "../server/auth/session-policy.mjs";
 import { createAccessStore, AuthAccessStoreError } from "../server/access/store.mjs";
 import { decodeAccessCursor, encodeAccessCursor } from "../server/access/pagination.mjs";
 
@@ -47,6 +48,14 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
     await connection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, 'synthetic-encrypted-secret', 1, 1, ?)", [admin.id, sqlDate(now)]);
     await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [admin.sessionId, admin.id, admin.tokenHash, sqlDate(now), sqlDate(now + 8 * 3600000)]);
     await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [admin.sessionId, sqlDate(now), sqlDate(now)]);
+    // Each subtest starts at its own synthetic instant. Administrator mutations
+    // now update real activity, so a preceding future-dated scenario must not
+    // make the shared fixture look corrupt when the next scenario rewinds.
+    async function resetAdministratorClock() {
+      await connection.query("UPDATE auth_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now), admin.sessionId]);
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + 8 * 3600000), admin.sessionId]);
+    }
+    t.beforeEach(resetAdministratorClock);
 
     async function invitation(extra = {}) {
       const fixture = { actorTokenHash: admin.tokenHash, now, id: id(), tokenHash: digest(), expiresAt: now + 3600000, accessDays: 2, ...extra };
@@ -98,11 +107,14 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal(await store.assertSchema(), true);
     });
 
-    await t.test("administrator mutations recheck persisted session, status, MFA generation and idle deadline", async () => {
+    await t.test("administrator mutations recheck persisted session, status, MFA generation and absolute deadline", async () => {
       const payload = { actorTokenHash: digest(), now, id: id(), tokenHash: digest(), expiresAt: now + 3600000, accessDays: null };
       assert.equal(await store.createInvitation(payload), null);
       assert.equal(await store.listClients(digest(), { now }), null);
-      assert.equal(await store.createInvitation({ ...payload, actorTokenHash: admin.tokenHash, now: now + 1800000 }), null);
+      const boundary = now + 1;
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(boundary), admin.sessionId]);
+      assert.equal(await store.createInvitation({ ...payload, actorTokenHash: admin.tokenHash, now: boundary }), null);
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + 8 * 3600000), admin.sessionId]);
       await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [sqlDate(now), admin.sessionId]);
       assert.equal(await store.createInvitation({ ...payload, actorTokenHash: admin.tokenHash }), null);
       await connection.query("UPDATE sessions SET revoked_at = NULL WHERE id = ?", [admin.sessionId]);
@@ -116,6 +128,52 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       const listed = await store.listInvitations(admin.tokenHash, { now });
       assert.ok(listed.invitations.length);
       assert.ok(listed.invitations.every((item) => !Object.hasOwn(item, "tokenHash") && !Object.hasOwn(item, "token")));
+    });
+
+    await t.test("administrator access ignores idle and slides only the acting device while an expired grant stays expired", async () => {
+      const device = { id: id(), tokenHash: digest() };
+      const originalExpiry = now + 8 * 3600000;
+      await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [device.id, admin.id, device.tokenHash, sqlDate(now), sqlDate(originalExpiry)]);
+      await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [device.id, sqlDate(now), sqlDate(now)]);
+      const at = now + 31 * 60000;
+      const invite = { actorTokenHash: device.tokenHash, id: id(), tokenHash: digest(), now: at, expiresAt: at + 3600000, accessDays: 2 };
+      assert.ok(await store.createInvitation(invite));
+      const expiry = at + ADMIN_SESSION_SECONDS * 1000;
+      const acting = (await connection.query("SELECT s.expires_at, a.last_seen_at FROM sessions s JOIN auth_session_state a ON a.session_id = s.id WHERE s.id = ?", [device.id]))[0];
+      assert.equal(acting.expires_at, sqlDate(expiry));
+      assert.equal(acting.last_seen_at, sqlDate(at));
+      const other = (await connection.query("SELECT s.expires_at, a.last_seen_at FROM sessions s JOIN auth_session_state a ON a.session_id = s.id WHERE s.id = ?", [admin.sessionId]))[0];
+      assert.deepEqual({ ...other }, { expires_at: sqlDate(originalExpiry), last_seen_at: sqlDate(now) });
+      assert.equal(await store.listClients(device.tokenHash, { now: expiry }), null);
+      assert.equal((await connection.query("SELECT expires_at FROM sessions WHERE id = ?", [device.id]))[0].expires_at, sqlDate(expiry));
+    });
+
+    await t.test("administrator mutation refreshes authority after waiting for another device request", async () => {
+      let at = now, observed;
+      const candidateRead = new Promise((resolve) => { observed = resolve; });
+      const observedStore = createAccessStore({ getConnection: async () => {
+        const runtimeConnection = await pool.getConnection();
+        return { ...runtimeConnection, query: async (...arguments_) => {
+          const result = await runtimeConnection.query(...arguments_);
+          if (arguments_[0] === "SELECT user_id FROM sessions WHERE token_hash = ? LIMIT 1") observed();
+          return result;
+        } };
+      } }, { clock: () => at });
+      const invite = { actorTokenHash: admin.tokenHash, id: id(), tokenHash: digest(), now, expiresAt: now + 3600000, accessDays: 2 };
+      await connection.beginTransaction();
+      let pending;
+      try {
+        await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [admin.id]);
+        pending = observedStore.createInvitation(invite);
+        await candidateRead;
+        at = now + 120000;
+        await connection.query("UPDATE auth_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(at), admin.sessionId]);
+        await connection.commit();
+        const created = await pending;
+        assert.ok(created, "a stale pre-lock request instant must not reject newer persisted activity");
+        assert.equal(created.expiresAt, at + 3600000);
+        assert.equal((await connection.query("SELECT created_at FROM invitations WHERE id = ?", [invite.id]))[0].created_at, sqlDate(at));
+      } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
     });
 
     await t.test("concurrent invitation use creates exactly one pending client and atomically enqueues its encrypted verification", async () => {
@@ -214,6 +272,7 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(approvedAt + 2 * 86400000), session.id]);
       assert.equal((await lookup(session, approvedAt + 2 * 86400000)).access.state, "expired");
 
+      await resetAdministratorClock();
       const atomic = await registered(); await verify(atomic);
             await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [id(), atomic.user.id, admin.id, sqlDate(now)]);
       await assert.rejects(store.approveClient(admin.tokenHash, atomic.user.id, { now }), (error) => error.code === "ACCESS_DATABASE_OPERATION");
@@ -386,8 +445,10 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
     await t.test("renewal rechecks current administrator status, session expiry, revocation and MFA generation in its transaction", async () => {
       const fixture = await renewable(), request = { now, expectedExpiresAt: fixture.expiresAt, accessDays: 1 };
       for (const token of [digest(), fixture.session.tokenHash]) await assert.rejects(store.renewClient(token, fixture.user.id, request), (error) => error.code === "ACCESS_FORBIDDEN");
-      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, now: now + 1800000 }), (error) => error.code === "ACCESS_FORBIDDEN");
-      await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, now: now + 8 * 3600000 }), (error) => error.code === "ACCESS_FORBIDDEN");
+      const boundary = now + 1;
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(boundary), admin.sessionId]);
+      try { await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, now: boundary }), (error) => error.code === "ACCESS_FORBIDDEN"); }
+      finally { await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + 8 * 3600000), admin.sessionId]); }
       for (const [alter, restore, parameters] of [
         ["UPDATE sessions SET revoked_at = ? WHERE id = ?", "UPDATE sessions SET revoked_at = NULL WHERE id = ?", [sqlDate(now), admin.sessionId]],
         ["UPDATE admin_mfa SET version = 2 WHERE user_id = ?", "UPDATE admin_mfa SET version = 1 WHERE user_id = ?", [admin.id]],
@@ -399,6 +460,33 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
         finally { await connection.query(restore, restore.includes("enabled_at") ? [sqlDate(now), admin.id] : [parameters.at(-1)]); }
       }
       assert.equal((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0].access_expires_at, sqlDate(fixture.expiresAt));
+    });
+
+    await t.test("renewal refuses an administrator grant that expires while the target account is locked", async () => {
+      const fixture = await renewable();
+      const boundary = now + 1000;
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(boundary), admin.sessionId]);
+      let at = now, observed;
+      const targetRequested = new Promise((resolve) => { observed = resolve; });
+      const observedStore = createAccessStore({ getConnection: async () => {
+        const runtimeConnection = await pool.getConnection();
+        return { ...runtimeConnection, query: async (...arguments_) => {
+          if (arguments_[0].startsWith("SELECT role, status, email_verified_at, age_assured_at,")) observed();
+          return runtimeConnection.query(...arguments_);
+        } };
+      } }, { clock: () => at });
+      await connection.beginTransaction();
+      let pending;
+      try {
+        await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [fixture.user.id]);
+        pending = observedStore.renewClient(admin.tokenHash, fixture.user.id, { now, expectedExpiresAt: fixture.expiresAt, accessDays: 1 });
+        const rejected = assert.rejects(pending, (error) => error.code === "ACCESS_FORBIDDEN");
+        await targetRequested;
+        at = boundary;
+        await connection.commit();
+        await rejected;
+        assert.equal((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0].access_expires_at, sqlDate(fixture.expiresAt));
+      } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
     });
 
     await t.test("renewal input, exact expiry snapshot and ten-year horizon fail without shortening access", async () => {

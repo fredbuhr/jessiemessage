@@ -541,7 +541,7 @@ test("abandoned, invalid, expired and revoked admissions release their place wit
   ticket = await f.service.admitUpload("admin", f.token); f.state.actorEnabled = false;
   await assert.rejects(f.service.upload("admin", f.token, bytes, ticket), hasCode("CHAT_UNAUTHORIZED")); f.state.actorEnabled = true;
   let current = now; const expiring = await createMediaService({ ...f.options, clock: () => current });
-  ticket = await expiring.admitUpload("admin", f.token); current += 15000;
+  ticket = await expiring.admitUpload("admin", f.token); current += 35000;
   await assert.rejects(expiring.upload("admin", f.token, bytes, ticket), hasCode("MEDIA_INPUT"));
   ticket = await f.service.admitUpload("admin", f.token); f.service.releaseUpload(ticket);
   assert.equal(f.calls.length, 0); assert.equal(f.rateCalls.length, 10, "each of the five abandoned attempts remains paid");
@@ -554,6 +554,16 @@ test("a ticket from another service cannot skip its upload budget or be substitu
     assert.equal(other.rateCalls.length, 0); assert.equal(other.calls.length, 0);
     await assert.rejects(other.service.upload("admin", other.token, await sourceImage), hasCode("MEDIA_BUSY"));
   } finally { f.service.releaseUpload(ticket); }
+});
+
+test("an admitted phone upload is still usable after thirty seconds of body transfer", async () => {
+  const f = await fixture(); let current = now;
+  const service = await createMediaService({ ...f.options, clock: () => current });
+  const ticket = await service.admitUpload("admin", f.token);
+  current += 30_000;
+  const result = await service.upload("admin", f.token, await sourceImage, ticket);
+  assert.equal(result.duplicate, false);
+  assert.ok(f.calls.some((call) => call.name === "registerAsset"));
 });
 
 test("library and gallery reads pay persistent global and account budgets before querying metadata", async () => {

@@ -19,9 +19,9 @@ const cursor = (value) => {
   return value;
 };
 const pageSize = (value) => { if (!Number.isInteger(value) || value < 1 || value > 100) fail("MEDIA_INPUT"); return value; };
-const allowed = new Set(["MEDIA_INPUT", "MEDIA_FORMAT", "MEDIA_BUSY", "MEDIA_NOT_FOUND", "MEDIA_IN_USE", "MEDIA_RATE_LIMIT", "MEDIA_STORAGE_LIMIT", "MEDIA_CAPACITY_UNAVAILABLE", "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT", "AUTH_RATE_LIMIT", "AUTH_BUSY", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES"]);
+const allowed = new Set(["MEDIA_INPUT", "MEDIA_FORMAT", "MEDIA_DIMENSIONS", "MEDIA_BUSY", "MEDIA_NOT_FOUND", "MEDIA_IN_USE", "MEDIA_RATE_LIMIT", "MEDIA_STORAGE_LIMIT", "MEDIA_CAPACITY_UNAVAILABLE", "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT", "AUTH_RATE_LIMIT", "AUTH_BUSY", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES"]);
 const MAX_ACTIVE_UPLOADS = 3;
-const ADMISSION_MILLISECONDS = 15000;
+const ADMISSION_MILLISECONDS = 35_000;
 // Process-wide fairness follows the authenticated account, never its cookie.
 let activeUploads = 0;
 const uploadingAccounts = new Set();

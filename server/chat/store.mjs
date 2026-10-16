@@ -1,3 +1,4 @@
+import { createSessionClock, sessionIsValid, adminSessionExpiry, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { manuallyAdmittedClient, invitationConsumptionProjection } from "../access/admission.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
@@ -158,7 +159,8 @@ function authoredCheck(sql, name) {
   state();
 }
 
-export function createChatStore(pool) {
+export function createChatStore(pool, { clock } = {}) {
+  const sessionNow = createSessionClock(clock);
   async function run(operation, transaction = true) {
     let connection;
     let begun = false;
@@ -188,7 +190,7 @@ export function createChatStore(pool) {
   async function lockMfa(connection, admin, now) {
     if (!activeAdmin(admin)) fail("CHAT_FORBIDDEN");
     const mfa = (await connection.query("SELECT version, enabled_at FROM admin_mfa WHERE user_id = ? FOR UPDATE", [admin.id]))[0];
-    if (!mfa || mfa.enabled_at === null || timestamp(mfa.enabled_at) > now) fail("CHAT_FORBIDDEN");
+    if (!mfa || mfa.enabled_at === null || timestamp(mfa.enabled_at) > sessionNow(now)) fail("CHAT_FORBIDDEN");
     return mfa;
   }
   async function lockClientAuth(connection, client) {
@@ -204,15 +206,22 @@ export function createChatStore(pool) {
       a.last_seen_at, ${projection} FROM sessions s JOIN ${table} a ON a.session_id = s.id
       WHERE s.token_hash = ? AND s.user_id = ? FOR UPDATE`, [tokenHash, actor.id]))[0];
     if (!row || row.revoked_at !== null || actor.role !== role) fail("CHAT_UNAUTHORIZED");
+    now = sessionNow(now);
     const createdAt = timestamp(row.created_at), lastSeenAt = timestamp(row.last_seen_at);
-    if (createdAt > now || lastSeenAt < createdAt || lastSeenAt > now || now >= timestamp(row.expires_at)
-      || now >= lastSeenAt + 1800000) fail("CHAT_UNAUTHORIZED");
+    if (!sessionIsValid({ role, createdAt, lastSeenAt, expiresAt: timestamp(row.expires_at), now })) fail("CHAT_UNAUTHORIZED");
     if (role === "admin") {
       const verified = timestamp(row.mfa_verified_at), enrolled = timestamp(proof.enabled_at);
       if (version(row.mfa_version) !== version(proof.version) || verified < createdAt || verified < enrolled || verified > lastSeenAt) fail("CHAT_UNAUTHORIZED");
     } else if (version(row.credential_version) !== version(proof.credential_version)) fail("CHAT_UNAUTHORIZED");
-    if (now - lastSeenAt >= 60000) await connection.query(`UPDATE ${table} SET last_seen_at = ? WHERE session_id = ?`, [sqlDate(now), row.id]);
-    return row;
+    let expiresAt = timestamp(row.expires_at);
+    if (now - lastSeenAt >= SESSION_TOUCH_MILLISECONDS) {
+      await connection.query(`UPDATE ${table} SET last_seen_at = ? WHERE session_id = ?`, [sqlDate(now), row.id]);
+      if (role === "admin") {
+        expiresAt = Math.max(expiresAt, adminSessionExpiry(now));
+        await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(expiresAt), row.id]);
+      }
+    }
+    return { ...row, expires_at: new Date(expiresAt), now };
   }
   async function candidateActor(connection, tokenHash) {
     const row = (await connection.query("SELECT user_id FROM sessions WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
@@ -231,11 +240,11 @@ export function createChatStore(pool) {
     const mfa = await lockMfa(connection, admin, now);
     const auth = await lockClientAuth(connection, client);
     const actor = role === "admin" ? admin : client;
-    await actorSession(connection, tokenHash, actor, role, role === "admin" ? mfa : auth, now);
-    if (role === "client" && !activeClient(client, now)) fail("CHAT_FORBIDDEN");
     const conversation = (await connection.query("SELECT id, admin_id, client_id, created_at, closed_at FROM conversations WHERE id = ? FOR UPDATE", [conversationId]))[0];
     if (!conversation || !conversation.admin_id.equals(admin.id) || !conversation.client_id.equals(client.id)
       || !conversation[role === "admin" ? "admin_id" : "client_id"].equals(actor.id)) fail("CHAT_NOT_FOUND");
+    now = (await actorSession(connection, tokenHash, actor, role, role === "admin" ? mfa : auth, now)).now;
+    if (role === "client" && !activeClient(client, now)) fail("CHAT_FORBIDDEN");
     if (timestamp(conversation.created_at) > now) fail("CHAT_FORBIDDEN");
     if (send && (!activeClient(client, now) || conversation.closed_at !== null)) fail("CHAT_FORBIDDEN");
     return { actor, admin, client, conversation, now };
@@ -314,7 +323,7 @@ export function createChatStore(pool) {
         }
         const admin = await lockUser(connection, actorId);
         const mfa = await lockMfa(connection, admin, now);
-        await actorSession(connection, tokenHash, admin, role, mfa, now);
+        now = (await actorSession(connection, tokenHash, admin, role, mfa, now)).now;
         return operation(connection, { actor: admin, admin, now, mfaVersion: version(mfa.version) });
       });
     },
@@ -324,11 +333,13 @@ export function createChatStore(pool) {
       return run(async (connection) => {
         const actorId = await candidateActor(connection, tokenHash);
         const client = await lockUser(connection, actorId);
+        now = sessionNow(now);
         if (!client || client.role !== "client" || !["pending", "active"].includes(client.status)
           || client.email_verified_at === null || timestamp(client.email_verified_at) > now) fail("CHAT_UNAUTHORIZED");
         const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [client.id]))[0];
         if (!auth) fail("CHAT_UNAUTHORIZED");
         const session = await actorSession(connection, tokenHash, client, "client", auth, now);
+        now = session.now;
         return operation(connection, { actor: client, client, session, expiresAt: timestamp(session.expires_at), now });
       });
     },
@@ -346,6 +357,7 @@ export function createChatStore(pool) {
         const auth = client?.role === "client" ? (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [client.id]))[0] : null;
         if (auth) version(auth.credential_version);
         const conversation = (await connection.query("SELECT id, admin_id, client_id, created_at, closed_at FROM conversations WHERE id = ? FOR UPDATE", [conversationId]))[0] ?? null;
+        now = sessionNow(now);
         const administratorValid = activeAdmin(admin) && mfa && mfa.enabled_at !== null
           && timestamp(mfa.enabled_at) <= now && version(mfa.version) === mfaVersion;
         const recipientValid = Boolean(candidate && conversation && client && auth
@@ -428,7 +440,8 @@ export function createChatStore(pool) {
         const actorId = await candidateActor(connection, tokenHash);
         const admin = await lockUser(connection, actorId);
         const mfa = await lockMfa(connection, admin, now);
-        await actorSession(connection, tokenHash, admin, "admin", mfa, now);
+        const actorProof = await actorSession(connection, tokenHash, admin, "admin", mfa, now);
+        now = actorProof.now;
         const rows = await connection.query(`SELECT id, client_id FROM conversations WHERE admin_id = ? ${afterId === null ? "" : "AND id > ?"} ORDER BY id ASC LIMIT ?`, afterId === null ? [admin.id, limit + 1] : [admin.id, afterId, limit + 1]);
         const hasMore = rows.length > limit;
         const selected = rows.slice(0, limit);
@@ -442,6 +455,8 @@ export function createChatStore(pool) {
           await lockClientAuth(connection, client);
           const conversation = (await connection.query("SELECT id, admin_id, client_id, created_at, closed_at FROM conversations WHERE id = ? FOR UPDATE", [row.id]))[0];
           if (!conversation || !conversation.admin_id.equals(admin.id) || !conversation.client_id.equals(client.id)) fail("CHAT_NOT_FOUND");
+          now = sessionNow(now);
+          if (now >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
           if (timestamp(conversation.created_at) > now) fail("CHAT_FORBIDDEN");
           conversations.push(await summary(connection, { actor: admin, admin, client, conversation, now }));
         }
@@ -457,7 +472,7 @@ export function createChatStore(pool) {
         if (candidate) return summary(connection, await authorize(connection, { role: "client", tokenHash, conversationId: candidate.id, now }));
         const client = await lockUser(connection, actorId);
         const auth = await lockClientAuth(connection, client);
-        await actorSession(connection, tokenHash, client, "client", auth, now);
+        now = (await actorSession(connection, tokenHash, client, "client", auth, now)).now;
         if (!activeClient(client, now)) fail("CHAT_FORBIDDEN");
         return null;
       });
@@ -513,7 +528,7 @@ export function createChatStore(pool) {
         const context = await authorize(connection, { role, tokenHash, conversationId, now });
         if (through !== "0" && !(await connection.query("SELECT id FROM messages WHERE conversation_id = ? AND sequence_no = ? FOR UPDATE", [conversationId, through])).length) fail("CHAT_NOT_FOUND");
         await connection.query(`INSERT INTO chat_receipts (conversation_id, user_id, last_read_sequence, updated_at) VALUES (?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE last_read_sequence = GREATEST(last_read_sequence, VALUES(last_read_sequence)), updated_at = VALUES(updated_at)`, [conversationId, context.actor.id, through, sqlDate(now)]);
+          ON DUPLICATE KEY UPDATE last_read_sequence = GREATEST(last_read_sequence, VALUES(last_read_sequence)), updated_at = VALUES(updated_at)`, [conversationId, context.actor.id, through, sqlDate(context.now)]);
         const row = (await connection.query("SELECT last_read_sequence FROM chat_receipts WHERE conversation_id = ? AND user_id = ?", [conversationId, context.actor.id]))[0];
         return { lastReadSequence: storedSequence(row.last_read_sequence) };
       });
@@ -523,6 +538,7 @@ export function createChatStore(pool) {
       validateRequest({ role, tokenHash, conversationId, now }); bytes(messageId, 16);
       return run(async (connection) => {
         const context = await authorize(connection, { role, tokenHash, conversationId, now });
+        now = context.now;
         const row = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.id = ? FOR UPDATE`, [conversationId, messageId]))[0];
         if (!row || !row.sender_id.equals(context.actor.id)) fail("CHAT_NOT_FOUND");
         if (row.deleted_at !== null) return rawMessage(row, context.actor.id);

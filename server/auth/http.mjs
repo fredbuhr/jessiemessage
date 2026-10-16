@@ -1,3 +1,4 @@
+import { ADMIN_SESSION_SECONDS, CLIENT_SESSION_SECONDS } from "./session-policy.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
@@ -13,11 +14,12 @@ export const AUTH_HEADERS = Object.freeze({
 
 const COOKIE_NAME = "__Host-jessie_session";
 const MAX_BODY_BYTES = 4096;
-const MAX_SESSION_SECONDS = 8 * 60 * 60;
+
 const publicRoot = new URL("../../public/", import.meta.url);
 const routeMethods = new Map([
   ["/api/auth/login", ["POST"]],
   ["/api/auth/session", ["GET"]],
+  ["/api/auth/devices", ["GET"]],
   ["/api/auth/logout", ["POST"]],
   ["/api/auth/logout-all", ["POST"]],
   ["/admin/login", ["GET", "HEAD"]],
@@ -66,9 +68,9 @@ export function sameText(left, right) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-export function sessionCookie(token, expiresAt, cookieName = COOKIE_NAME) {
+export function sessionCookie(token, expiresAt, cookieName = COOKIE_NAME, { role = cookieName === COOKIE_NAME ? "admin" : "client", now = Date.now() } = {}) {
   if (!isToken(token) || !Number.isFinite(expiresAt)) throw httpError(503, "authentication_unavailable");
-  const seconds = Math.min(MAX_SESSION_SECONDS, Math.floor((expiresAt - Date.now()) / 1000));
+  const seconds = Math.min(role === "admin" ? ADMIN_SESSION_SECONDS : CLIENT_SESSION_SECONDS, Math.floor((expiresAt - now) / 1000));
   if (seconds < 1) throw httpError(503, "authentication_unavailable");
   return `${cookieName}=${token}; Path=/; Max-Age=${seconds}; Secure; HttpOnly; SameSite=Strict`;
 }
@@ -163,6 +165,8 @@ function loginPayload(body) {
 
 function mappedError(error) {
   if (Number.isInteger(error?.httpStatus)) return { status: error.httpStatus, code: error.publicCode };
+  if (error?.code === "AUTH_INPUT") return { status: 400, code: "invalid_request" };
+  if (error?.code === "AUTH_DEVICE_NOT_FOUND") return { status: 404, code: "device_not_found" };
   if (error?.code === "AUTH_INVALID") return { status: 401, code: "invalid_credentials" };
   if (error?.code === "AUTH_RATE_LIMIT" || error?.code === "AUTH_BUSY") {
     const retry = Number(error.retryAfter);
@@ -172,7 +176,7 @@ function mappedError(error) {
 }
 
 /** The parent server enables this handler explicitly after validating runtime configuration. */
-export function createAuthHandler(service, { origin }) {
+export function createAuthHandler(service, { origin, clock = Date.now }) {
   const url = new URL(origin);
   if (url.protocol !== "https:" || url.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   for (const method of ["login", "session", "logout", "logoutAll"]) {
@@ -182,7 +186,8 @@ export function createAuthHandler(service, { origin }) {
     let pathname;
     try { pathname = new URL(request.url ?? "/", "http://localhost").pathname; }
     catch { return false; }
-    const allowed = routeMethods.get(pathname);
+    const deviceId = /^\/api\/auth\/devices\/([a-f0-9]{32})\/revoke$/.exec(pathname)?.[1];
+    const allowed = deviceId ? ["POST"] : routeMethods.get(pathname);
     if (!allowed) return false;
     const method = request.method ?? "GET";
     if (!allowed.includes(method)) {
@@ -195,8 +200,8 @@ export function createAuthHandler(service, { origin }) {
         const body = loginPayload(await readJson(request));
         const session = await service.login({ ...body, peerAddress: request.socket.remoteAddress ?? "unknown" });
         const data = safeSession(session);
-        reply(response, method, 200, data, { "Set-Cookie": sessionCookie(session.token, data.expiresAt) });
-      } else if (pathname === "/api/auth/session" || pathname === "/api/auth/logout" || pathname === "/api/auth/logout-all" || pathname === "/admin") {
+        reply(response, method, 200, data, { "Set-Cookie": sessionCookie(session.token, data.expiresAt, COOKIE_NAME, { role: "admin", now: clock() }) });
+      } else if (pathname === "/api/auth/session" || pathname === "/api/auth/logout" || pathname === "/api/auth/logout-all" || pathname === "/api/auth/devices" || deviceId || pathname === "/admin") {
         const token = sessionToken(request);
         const session = token ? await service.session(token) : null;
         if (!session) {
@@ -205,7 +210,13 @@ export function createAuthHandler(service, { origin }) {
           return true;
         }
         const data = safeSession(session);
-        if (pathname === "/api/auth/session") reply(response, method, 200, data);
+        if (pathname === "/api/auth/session") reply(response, method, 200, data, { "Set-Cookie": sessionCookie(token, data.expiresAt, COOKIE_NAME, { role: "admin", now: clock() }) });
+        else if (pathname === "/api/auth/devices") {
+          const query = new URL(request.url, origin).searchParams;
+          if ([...query.keys()].some((key) => key !== "cursor") || query.getAll("cursor").length > 1) throw httpError(400, "invalid_request");
+          const page = await service.devices(token, { cursor: query.get("cursor") });
+          reply(response, method, 200, page);
+        }
         else if (pathname === "/admin") {
           const [file, type] = publicFiles.get(pathname);
           reply(response, method, 200, await readFile(new URL(file, publicRoot)), { "Content-Type": type });
@@ -213,6 +224,11 @@ export function createAuthHandler(service, { origin }) {
           if (!sameText(request.headers["x-csrf-token"], data.csrf)) throw httpError(403, "request_rejected");
           const body = await readJson(request);
           if (Object.keys(body).length) throw httpError(400, "invalid_request");
+          if (deviceId) {
+            const result = await service.revokeDevice(token, deviceId);
+            reply(response, method, 200, result, result.current ? { "Set-Cookie": clearCookie() } : {});
+            return true;
+          }
           if (pathname === "/api/auth/logout-all") await service.logoutAll(token);
           else await service.logout(token);
           reply(response, method, 200, { status: "signed_out" }, { "Set-Cookie": clearCookie() });

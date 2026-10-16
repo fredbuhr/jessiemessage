@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 
 const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), "utf8");
-const [html, runtime, catalogue, model, controller] = await Promise.all([read("readiness.html"), read("i18n.js"), read("i18n-readiness.js"), read("readiness-model.js"), read("readiness.js")]);
+const [html, runtime, catalogue, model, controller, sessionClock] = await Promise.all([read("readiness.html"), read("i18n.js"), read("i18n-readiness.js"), read("readiness-model.js"), read("readiness.js"), read("session-clock.js")]);
 const now = 1750000000000;
 const flush = async () => { for (let index = 0; index < 8; index += 1) await new Promise((resolve) => setImmediate(resolve)); };
 const deferred = () => { let resolve; const promise = new Promise((yes) => { resolve = yes; }); return { promise, resolve }; };
@@ -68,13 +68,13 @@ const operations = () => ({ status: "unavailable", database: { state: "stale", c
 const summary = () => ({ contactEmail: "contact@jessiemessage.com", mail: { configured: true, sender: "private-sender@example.invalid", replyTo: "private-sender@example.invalid" },
   features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: true },
   checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" }, operations: operations() });
-async function harness({ input = summary(), language = "fr", smtp = () => response({ status: "verified", scope: "smtp_authentication", delivery: "not_checked", checkedAt: now + 5000 }) } = {}) {
+async function harness({ input = summary(), language = "fr", expiresAt = now + 28800000, auth = (session) => response(session), snapshot = (input) => response(input), smtp = () => response({ status: "verified", scope: "smtp_authentication", delivery: "not_checked", checkedAt: now + 5000 }) } = {}) {
   const { container, nodes } = parse(), documentEvents = new Map(), windowEvents = new Map(), calls = [], storage = new Map([["jessiemessage.language", language]]), writes = [], timers = new Map(), redirects = [];
   const add = (map, name, callback) => { if (!map.has(name)) map.set(name, []); map.get(name).push(callback); };
   const document = { visibilityState: "visible", readyState: "complete", documentElement: container.querySelectorAll("html")[0], body: container.querySelectorAll("body")[0],
     getElementById: (id) => nodes.get(id), querySelectorAll: (selector) => container.querySelectorAll(selector),
     createElement: (tag) => new Element(tag), addEventListener: (name, callback) => add(documentEvents, name, callback) };
-  const session = { user: { id: "1".repeat(32), role: "admin", pseudonym: "Vérification en cours…" }, csrf: "A".repeat(43), expiresAt: now + 28800000 };
+  const session = { user: { id: "1".repeat(32), role: "admin", pseudonym: "Vérification en cours…" }, csrf: "A".repeat(43), expiresAt };
   let timerId = 0;
   const context = vm.createContext({ document, window: { addEventListener: (name, callback) => add(windowEvents, name, callback) },
     sessionStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => { writes.push([key, value]); storage.set(key, value); } },
@@ -83,23 +83,26 @@ async function harness({ input = summary(), language = "fr", smtp = () => respon
     setTimeout: (callback, duration) => { const key = ++timerId; timers.set(key, { callback, duration }); return key; }, clearTimeout: (key) => timers.delete(key),
     fetch: async (path, options) => {
       calls.push({ path, options });
-      if (path === "/api/auth/session") return response(session);
-      if (path === "/api/admin/readiness") return response(input);
+      if (path === "/api/auth/session") return auth(session);
+      if (path === "/api/admin/readiness") return snapshot(input);
       if (path === "/api/admin/readiness/smtp") return smtp(path, options);
       throw new Error("Unexpected synthetic request");
     } });
   vm.runInContext(runtime, context, { filename: "public/i18n.js" });
+  vm.runInContext(sessionClock, context, { filename: "public/session-clock.js" });
   vm.runInContext(catalogue, context, { filename: "public/i18n-readiness.js" });
   // An account value that happens to match a catalog key must still remain raw.
   vm.runInContext('JessieI18n.register({"private-sender@example.invalid":"THIS ACCOUNT VALUE MUST STAY RAW"})', context);
   vm.runInContext(model.replace(/^export\s+/gm, ""), context, { filename: "public/readiness-model.js" });
   vm.runInContext(controller.replace(/^import\s*\{[\s\S]*?\}\s*from\s*"\/readiness-model\.js";\s*/, ""), context, { filename: "public/readiness.js" });
   await flush();
-  return { context, nodes, calls, storage, writes, document, container, redirects,
+  return { context, nodes, calls, storage, writes, document, container, redirects, timers,
     language(value) { context.JessieI18n.setLanguage(value); },
     async click(id) { for (const callback of nodes.get(id).events.get("click") ?? []) callback({}); await flush(); },
     async hide() { document.visibilityState = "hidden"; for (const callback of documentEvents.get("visibilitychange") ?? []) callback({}); await flush(); },
     async pagehide() { for (const callback of windowEvents.get("pagehide") ?? []) callback({}); await flush(); },
+    async online() { for (const callback of windowEvents.get("online") ?? []) callback({}); await flush(); },
+    async tick(duration) { const next = [...timers].find(([, timer]) => timer.duration === duration); assert.ok(next, `Expected ${duration}ms timer`); timers.delete(next[0]); next[1].callback(); await flush(); },
   };
 }
 const formatNumber = (value, language) => value.toLocaleString(language === "en" ? "en-US" : "fr-FR");
@@ -116,6 +119,7 @@ test("readiness static sources cover the whole page and preserve the scope of it
   assert.doesNotMatch(html, /Contrôle de majorité|Activer et vérifier le parcours de contrôle/);
   assert.ok(html.indexOf('src="/i18n.js"') < html.indexOf('src="/i18n-readiness.js"'));
   assert.ok(html.indexOf('src="/i18n-readiness.js"') < html.indexOf('src="/readiness.js"'));
+  assert.ok(html.indexOf('src="/session-clock.js"') < html.indexOf('src="/readiness.js"'));
   assert.match(html, /button[^>]+data-jm-language/); assert.match(html, /href="\/i18n.css"/);
   assert.match(html, /href="mailto:contact@jessiemessage\.com"/); assert.doesNotMatch(html, /data-jm-i18n-(?:value|href)/);
 });
@@ -202,4 +206,71 @@ test("an SMTP result arriving after hide cannot restore proof or measurements ac
   assert.equal(f.nodes.get("readiness-content").hidden, true); assert.equal(f.nodes.get("smtp-proof-date").textContent, ""); assert.equal(f.nodes.get("smtp-proof-date").hidden, true);
   assert.equal(f.nodes.get("mail-sender").textContent, ""); assert.equal(f.nodes.get("operations-workers").children.length, 0); assert.equal(f.nodes.get("smtp-status").textContent, "");
   assert.equal(f.calls.length, calls); assert.equal(smtpCalls(f).length, 1);
+});
+
+test("a 180-day administrator session is rechecked after five minutes without logout or SMTP work", async () => {
+  const f = await harness({ expiresAt: now + 180 * 86400000 });
+  await f.tick(300000);
+  assert.equal(f.calls.filter((call) => call.path === "/api/auth/session").length, 3);
+  assert.equal(f.nodes.get("readiness-content").hidden, false); assert.equal(f.redirects.length, 0);
+  assert.equal(smtpCalls(f).length, 0); assert.ok([...f.timers.values()].some((timer) => timer.duration === 300000));
+  await f.hide(); assert.equal(f.timers.size, 0);
+});
+
+test("an offline session check pauses private measurements and resumes online without repeating SMTP", async () => {
+  let offline = false;
+  const f = await harness({ auth: (session) => { if (offline) throw new TypeError("offline"); return response(session); } });
+  offline = true; await f.tick(300000);
+  assert.equal(f.redirects.length, 0); assert.equal(f.nodes.get("readiness-content").hidden, true);
+  assert.equal(f.nodes.get("refresh").hidden, false); assert.ok([...f.timers.values()].some((timer) => timer.duration === 30000));
+  offline = false; await f.online();
+  assert.equal(f.nodes.get("readiness-content").hidden, false); assert.equal(f.nodes.get("session-status").textContent, "");
+  assert.equal(f.redirects.length, 0); assert.equal(smtpCalls(f).length, 0);
+});
+
+test("only an authenticated session rejection redirects the periodic readiness check to login", async () => {
+  let revoked = false;
+  const f = await harness({ auth: (session) => revoked ? response({ error: "unauthorized" }, 401) : response(session) });
+  revoked = true; await f.tick(300000);
+  assert.deepEqual(f.redirects, ["/admin/login"]); assert.equal(f.nodes.get("mail-sender").textContent, ""); assert.equal(f.timers.size, 0);
+});
+
+test("periodic cookie renewal during a pending explicit SMTP check cannot resend it", async () => {
+  const pending = deferred(), f = await harness({ smtp: () => pending.promise });
+  await f.click("verify-smtp"); await f.tick(300000);
+  assert.equal(smtpCalls(f).length, 1); assert.equal(f.nodes.get("verify-smtp").disabled, true);
+  pending.resolve(response({ status: "verified", scope: "smtp_authentication", delivery: "not_checked", checkedAt: now + 5000 })); await flush();
+  assert.equal(smtpCalls(f).length, 1); assert.equal(f.nodes.get("smtp-proof-date").hidden, false);
+});
+
+for (const change of ["account", "login"]) test(`readiness rejects a snapshot read under a changed ${change} until final proof is checked`, async () => {
+  const proof = deferred(); let authCalls = 0; let snapshots = 0; let replacement;
+  const f = await harness({
+    auth: (session) => {
+      authCalls += 1;
+      replacement = { ...session, user: { ...session.user, id: change === "account" ? "2".repeat(32) : session.user.id }, csrf: "B".repeat(43) };
+      return authCalls === 1 ? response(session) : authCalls === 2 ? proof.promise : response(replacement);
+    },
+    snapshot: (input) => {
+      const sender = ++snapshots === 1 ? "unproved-owner@example.invalid" : "current-owner@example.invalid";
+      return response({ ...input, mail: { ...input.mail, sender, replyTo: sender } });
+    },
+  });
+  assert.equal(f.nodes.get("readiness-content").hidden, true); assert.equal(f.nodes.get("mail-sender").textContent, "");
+  proof.resolve(response(replacement)); await flush();
+  assert.equal(f.nodes.get("mail-sender").textContent, "current-owner@example.invalid");
+  assert.equal(vm.runInContext("state.session.csrf", f.context), "B".repeat(43));
+  assert.equal(vm.runInContext("state.session.id", f.context), replacement.user.id);
+  assert.equal(f.container.textContent.includes("unproved-owner@example.invalid"), false);
+  assert.equal(snapshots, 2); assert.equal(smtpCalls(f).length, 0); assert.equal(f.redirects.length, 0);
+});
+
+test("a readiness final proof arriving after hide cannot attach the earlier private snapshot", async () => {
+  const proof = deferred(); let authCalls = 0; let original;
+  const f = await harness({ auth: (session) => { original = session; return ++authCalls === 1 ? response(session) : proof.promise; } });
+  assert.equal(authCalls, 2); assert.equal(f.nodes.get("readiness-content").hidden, true);
+  await f.hide(); const count = f.calls.length;
+  proof.resolve(response(original)); await flush();
+  assert.equal(f.calls.length, count); assert.equal(f.nodes.get("mail-sender").textContent, "");
+  assert.equal(f.nodes.get("readiness-content").hidden, true); assert.equal(f.timers.size, 0);
 });

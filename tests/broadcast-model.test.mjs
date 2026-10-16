@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign } from "../public/broadcast-model.js";
 import { parseBroadcastPreference, createPreferenceState, clearPreference, preferenceTicket, currentPreference, acceptPreferenceSession, acceptPreference, preferenceSaveBody, mountBroadcastPreference } from "../public/broadcast-preference.js";
+import "../public/session-clock.js";
 
 const now = 1800000000000;
 const id = (value) => value.toString(16).padStart(32, "0");
@@ -219,5 +220,41 @@ test("clearing a preference mount aborts current work and cannot reattach its pr
   try {
     ui = mountBroadcastPreference(fixture.container); assert.equal(fixture.calls.length, 1); ui.clear(); assert.equal(fixture.calls[0].options.signal.aborted, true); release(); await flush();
     assert.equal(fixture.container.children.length, 0); fixture.document.dispatchEvent(new Event("visibilitychange")); await flush(); assert.equal(fixture.calls.length, 1);
+  } finally { ui?.clear(); fixture.restore(); }
+});
+
+for (const change of ["account", "login"]) test(`preference bootstrap rejects a private read under a changed ${change} before showing a choice`, async () => {
+  let resolveProof; const proof = new Promise((resolve) => { resolveProof = resolve; });
+  let fixture; let ui; let authCalls = 0; let reads = 0;
+  const original = liveClient(), replacement = { ...original, user: { ...original.user, id: change === "account" ? id(777) : original.user.id }, csrf: "z".repeat(43) };
+  fixture = browserFixture(async (path) => {
+    if (path.endsWith("/session")) {
+      authCalls += 1;
+      return authCalls === 1 ? fixture.response(original) : authCalls === 2 ? proof : fixture.response(replacement);
+    }
+    return fixture.response({ enabled: ++reads === 1, version: String(reads), updatedAt: now });
+  });
+  try {
+    ui = mountBroadcastPreference(fixture.container); await flush();
+    assert.equal(authCalls, 2); assert.equal(fixture.find("form")[0].hidden, true); assert.equal(fixture.find("input")[0].checked, false);
+    resolveProof(fixture.response(replacement)); await flush();
+    assert.equal(reads, 2); assert.equal(fixture.find("form")[0].hidden, false); assert.equal(fixture.find("input")[0].checked, false);
+    assert.equal(fixture.calls.filter((call) => call.options.method === "POST").length, 0);
+  } finally { ui?.clear(); fixture.restore(); }
+});
+
+test("a preference final session proof arriving after hide cannot restore the private choice", async () => {
+  let resolveProof; const proof = new Promise((resolve) => { resolveProof = resolve; });
+  let fixture; let ui; let authCalls = 0; const session = liveClient();
+  fixture = browserFixture(async (path) => path.endsWith("/session")
+    ? ++authCalls === 1 ? fixture.response(session) : proof
+    : fixture.response({ enabled: true, version: "1", updatedAt: now }));
+  try {
+    ui = mountBroadcastPreference(fixture.container); await flush(); assert.equal(authCalls, 2);
+    fixture.document.visibilityState = "hidden"; fixture.document.dispatchEvent(new Event("visibilitychange"));
+    const count = fixture.calls.length; resolveProof(fixture.response(session)); await flush();
+    assert.equal(fixture.calls.length, count); assert.equal(fixture.container.children[0].hidden, true);
+    assert.equal(fixture.find("form")[0].hidden, true); assert.equal(fixture.find("input")[0].checked, false);
+    assert.equal(fixture.calls.some((call) => call.options.method === "POST"), false);
   } finally { ui?.clear(); fixture.restore(); }
 });

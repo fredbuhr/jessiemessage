@@ -18,13 +18,13 @@ h1 { margin: 0 0 16px; font-size: clamp(30px, 6vw, 39px); font-weight: 730; line
 .status.is-error { color: #ffb8cb; }
 .field { display: grid; gap: 9px; margin-bottom: 20px; }
 label { font-size: 14px; font-weight: 650; }
-input { width: 100%; padding: 13px 14px; color: #f5eef2; background: #100d12; border: 1px solid #554353; border-radius: 11px; min-height: 46px; }
+input { width: 100%; padding: 13px 14px; color: #f5eef2; background: #100d12; border: 1px solid #897287; border-radius: 11px; min-height: 46px; }
 input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid #d8b999; outline-offset: 4px; }
 .field-help { margin: 0; color: #bcaebb; font-size: 12px; line-height: 1.6; }
-.button { display: block; width: 100%; min-height: 46px; padding: 13px 16px; border-radius: 11px; cursor: pointer; font-weight: 650; font-size: 14px; line-height: 1.4; }
-.button-primary { color: #f5eef2; background: #71354f; border: 1px solid #8a4664; }
+.button { display: block; width: 100%; min-height: 46px; padding: 13px 16px; border-radius: 11px; cursor: pointer; font-weight: 650; font-size: 14px; line-height: 1.4; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
+.button-primary { color: #f5eef2; background: #71354f; border: 1px solid #b37894; }
 .button-primary:hover { background: #85415e; }
-.button-secondary { color: #d8b999; background: transparent; border: 1px solid #554353; }
+.button-secondary { color: #d8b999; background: transparent; border: 1px solid #897287; }
 .button-secondary:hover { background: #2b202d; }
 .button:disabled { opacity: .65; cursor: wait; }
 .connection { display: flex; align-items: center; gap: 9px; margin: 0 0 18px; color: #d8b999; font-size: 14px; }
@@ -38,7 +38,7 @@ h2 { font-size: 19px; line-height: 1.4; margin: 0 0 18px; color: #f5eef2; }
 .form-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .checkbox-field { display: flex; align-items: flex-start; gap: 12px; line-height: 1.6; margin-bottom: 20px; }
 .checkbox-field input { width: 20px; min-height: 20px; margin: 1px 0 0; accent-color: #71354f; flex-shrink: 0; }
-.new-invitation { display: grid; gap: 12px; padding: 20px; margin-top: 20px; background: #100d12; border: 1px solid #554353; border-radius: 12px; }
+.new-invitation { display: grid; gap: 12px; padding: 20px; margin-top: 20px; background: #100d12; border: 1px solid #897287; border-radius: 12px; }
 .access-list { display: grid; gap: 12px; margin: 16px 0 24px; }
 .access-item { padding: 18px; border: 1px solid #423343; border-radius: 12px; background: #100d12; overflow-wrap: anywhere; }
 .access-item h3 { font-size: 15px; margin: 0 0 8px; color: #f5eef2; }
@@ -55,3 +55,13 @@ h2 { font-size: 19px; line-height: 1.4; margin: 0 0 18px; color: #f5eef2; }
 .renewal-form { display: grid; gap: 8px; margin-top: 16px; max-width: 320px; }
 .renewal-form label { display: grid; gap: 8px; font-size: 13px; }
 .renewal-form .button { margin-top: 0; width: 100%; }
+
+#admin-chat-link, #client-chat-link { margin-bottom: 20px; }
+.account-settings { margin-top: 28px; padding-top: 22px; border-top: 1px solid #554353; }
+.account-settings summary, #devices-panel summary { color: #d8b999; cursor: pointer; min-height: 44px; padding: 10px 0; line-height: 1.6; }
+.account-settings summary:focus-visible { outline: 2px solid #d8b999; outline-offset: 4px; }
+.account-settings > .field-help, #devices-panel > .field-help { margin-bottom: 16px; }
+.account-settings .actions { margin-top: 20px; }
+#devices-panel { margin: 18px 0; }
+.text-button { background: transparent; color: #d8b999; border: 0; padding: 10px 0; text-align: left; cursor: pointer; min-height: 44px; font-size: 13px; }
+#session-retry, #access-retry { margin-bottom: 20px; }

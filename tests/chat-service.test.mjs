@@ -225,8 +225,8 @@ test("every chat data read shares persistent global and authenticated-user budge
     await assert.rejects(read(f), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === 17);
     assert.equal(f.calls.length, 0, "global denial must also precede the private query");
     const [personal, , global] = f.rateCalls;
-    assert.deepEqual(global.options, { now, windowSeconds: 60, limit: 1200 });
-    assert.deepEqual(personal.options, { now, windowSeconds: 60, limit: 120 });
+    assert.deepEqual(global.options, { now, windowSeconds: 60, limit: 2400 });
+    assert.deepEqual(personal.options, { now, windowSeconds: 60, limit: realUserId === adminHex ? 480 : 120 });
     for (const [entry, kind, identity] of [[global, "global-read", "all"], [personal, "user-read", realUserId]]) {
       assert.deepEqual(entry.bucket, createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:").update(kind).update("\0").update(identity).digest());
       assert.equal(entry.bucket.length, 32);
@@ -328,24 +328,24 @@ test("chat read quotas follow the authenticated user across tokens, services and
   } };
   const first = await createChatService({ ...f.options, authStore });
   const restarted = await createChatService({ ...f.options, authStore });
-  for (let index = 0; index < 120; index += 1) {
+  for (let index = 0; index < 480; index += 1) {
     if (index % 3 === 0) await first.listConversations(f.token);
     else if (index % 3 === 1) await first.messages("admin", f.token, conversationHex);
     else await restarted.events("admin", newToken(), conversationHex);
   }
-  assert.equal(f.calls.length, 120);
+  assert.equal(f.calls.length, 480);
   const globalBucket = createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:").update("global-read").update("\0all").digest("hex");
-  assert.equal(ledger.get(globalBucket).count, 120);
+  assert.equal(ledger.get(globalBucket).count, 480);
   await assert.rejects(restarted.messages("admin", newToken(), conversationHex), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === 60);
-  assert.equal(f.calls.length, 120);
-  assert.equal(ledger.get(globalBucket).count, 120, "a user already at its allowance must not spend the shared global budget");
+  assert.equal(f.calls.length, 480);
+  assert.equal(ledger.get(globalBucket).count, 480, "a user already at its allowance must not spend the shared global budget");
   f.state.now = now + 59999;
   await assert.rejects(first.events("admin", f.token, conversationHex), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === 1);
-  assert.equal(f.calls.length, 120);
-  assert.equal(ledger.get(globalBucket).count, 120, "repeated personal refusals cannot exhaust capacity for other users");
+  assert.equal(f.calls.length, 480);
+  assert.equal(ledger.get(globalBucket).count, 480, "repeated personal refusals cannot exhaust capacity for other users");
   f.state.now = now + 60000;
   const readable = await restarted.messages("admin", f.token, conversationHex);
-  assert.equal(readable.messages[0].body, "Synthetic admin text"); assert.equal(f.calls.length, 121);
+  assert.equal(readable.messages[0].body, "Synthetic admin text"); assert.equal(f.calls.length, 481);
   assert.equal(ledger.size, 2, "read kinds and fresh session tokens must not create new user buckets");
   assert.ok(rateCalls.every((entry) => entry.options.windowSeconds === 60));
   const lastReadCount = rateCalls.length;
@@ -398,7 +398,7 @@ test("chat read quotas do not consume or rename the send budgets shared with the
   await f.service.messages("admin", f.token, conversationHex);
   await f.service.send("admin", f.token, conversationHex, { clientMessageId: randomBytes(16).toString("hex"), body: "Synthetic independent send budget" });
   assert.equal(f.rateCalls.length, 4);
-  for (const [index, name, identity, limit] of [[0, "user-read", adminHex, 120], [1, "global-read", "all", 1200], [2, "global-send", "all", 300], [3, "user-send", adminHex, 30]]) {
+  for (const [index, name, identity, limit] of [[0, "user-read", adminHex, 480], [1, "global-read", "all", 2400], [2, "global-send", "all", 300], [3, "user-send", adminHex, 30]]) {
     assert.deepEqual(f.rateCalls[index].bucket, createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:").update(name).update("\0").update(identity).digest());
     assert.deepEqual(f.rateCalls[index].options, { now, windowSeconds: 60, limit });
   }
@@ -493,5 +493,30 @@ test("invalid clocks and missing conversations cannot report successful private 
     const before = f.calls.length;
     await assert.rejects(service.messages("admin", f.token, conversationHex), hasCode("CHAT_UNAVAILABLE"));
     assert.equal(f.calls.length, before);
+  }
+});
+
+test("six to eight administrator devices retain polling and history headroom in one persistent account budget", async () => {
+  for (const devices of [6, 8]) {
+    const f = await fixture(), ledger = new Map();
+    const authStore = { async consumeRateLimit(bucket, options) {
+      const name = bucket.toString("hex"), count = (ledger.get(name) ?? 0) + 1; ledger.set(name, count);
+      return { allowed: count <= options.limit, retryAfter: 60 };
+    } };
+    const app = await createChatService({ ...f.options, authStore });
+    const tokens = Array.from({ length: devices }, () => newToken());
+    // One minute: 20 event polls, four inbox/tail reads, and 14 initial/history
+    // reads on every device. They all identify the same administrator.
+    for (const token of tokens) {
+      for (let poll = 0; poll < 20; poll += 1) await app.events("admin", token, conversationHex);
+      for (let page = 0; page < 4; page += 1) await app.listConversations(token);
+      for (let page = 0; page < 14; page += 1) await app.messages("admin", token, conversationHex);
+    }
+    assert.equal(f.calls.length, devices * 38);
+    const remaining = 480 - f.calls.length;
+    for (let read = 0; read < remaining; read += 1) await app.events("admin", newToken(), conversationHex);
+    await assert.rejects(app.events("admin", newToken(), conversationHex), hasCode("CHAT_RATE_LIMIT"));
+    assert.equal(f.calls.length, 480, "new device tokens cannot bypass the account ceiling");
+    assert.equal(ledger.size, 2, "only one personal and one global bucket are used");
   }
 });

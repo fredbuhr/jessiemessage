@@ -6,6 +6,7 @@ import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
+import { ADMIN_SESSION_SECONDS } from "../server/auth/session-policy.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16);
@@ -176,6 +177,53 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
         assert.equal((await connection.query(`SELECT last_seen_at FROM ${table} WHERE session_id = ?`, [fixture[role].sessionId]))[0].last_seen_at, sqlDate(now));
         await read(fixture, role, { now: now + 60000 });
         assert.equal((await connection.query(`SELECT last_seen_at FROM ${table} WHERE session_id = ?`, [fixture[role].sessionId]))[0].last_seen_at, sqlDate(now + 60000));
+      }
+    });
+
+    await t.test("administrator chat survives idle and renews its own grant without extending the client session", async () => {
+      const fixture = await pair(), at = now + 31 * 60000;
+      assert.equal((await read(fixture, "admin", { now: at })).messages.length, 0);
+      const adminSession = (await connection.query("SELECT s.expires_at, a.last_seen_at FROM sessions s JOIN auth_session_state a ON a.session_id = s.id WHERE s.id = ?", [fixture.admin.sessionId]))[0];
+      assert.deepEqual({ ...adminSession }, { expires_at: sqlDate(at + ADMIN_SESSION_SECONDS * 1000), last_seen_at: sqlDate(at) });
+      const clientSession = (await connection.query("SELECT s.expires_at, a.last_seen_at FROM sessions s JOIN client_session_state a ON a.session_id = s.id WHERE s.id = ?", [fixture.client.sessionId]))[0];
+      assert.deepEqual({ ...clientSession }, { expires_at: sqlDate(now + 8 * 3600000), last_seen_at: sqlDate(now) });
+      await assert.rejects(read(fixture, "client", { now: at }), errorCode("CHAT_UNAUTHORIZED"));
+      const expiry = at + ADMIN_SESSION_SECONDS * 1000;
+      await assert.rejects(read(fixture, "admin", { now: expiry }), errorCode("CHAT_UNAUTHORIZED"));
+      assert.equal((await connection.query("SELECT expires_at FROM sessions WHERE id = ?", [fixture.admin.sessionId]))[0].expires_at, sqlDate(expiry));
+    });
+
+    await t.test("chat authority uses the clock after real SQL lock waits while preserving expiry boundaries", async () => {
+      for (const role of ["client", "admin"]) {
+        const fixture = await pair();
+        let at = now, observed;
+        const candidateRead = new Promise((resolve) => { observed = resolve; });
+        const observedStore = createChatStore({ getConnection: async () => {
+          const runtimeConnection = await pool.getConnection();
+          return { ...runtimeConnection, query: async (...arguments_) => {
+            const result = await runtimeConnection.query(...arguments_);
+            if (arguments_[0] === "SELECT id, admin_id, client_id FROM conversations WHERE id = ?") observed();
+            return result;
+          } };
+        } }, { clock: () => at });
+        await connection.beginTransaction();
+        let pending;
+        try {
+          await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [fixture.admin.id]);
+          pending = observedStore.readMessages(request(fixture, role));
+          await candidateRead;
+          at = now + 120000;
+          const table = role === "client" ? "client_session_state" : "auth_session_state";
+          await connection.query(`UPDATE ${table} SET last_seen_at = ? WHERE session_id = ?`, [sqlDate(at), fixture[role].sessionId]);
+          await connection.commit();
+          assert.equal((await pending).messages.length, 0, "a queued request must not mistake newer committed activity for a future row");
+        } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
+
+        // A fresh clock is also authoritative in the other direction: waiting
+        // cannot keep a grant valid beyond its actual absolute deadline.
+        const expired = await pair();
+        await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(at), expired[role].sessionId]);
+        await assert.rejects(observedStore.readMessages(request(expired, role)), errorCode("CHAT_UNAUTHORIZED"));
       }
     });
 

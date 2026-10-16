@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
+import { ADMIN_SESSION_SECONDS } from "../server/auth/session-policy.mjs";
 import { createAuthStore, AuthStoreError } from "../server/auth/store.mjs";
 import { createAccessStore } from "../server/access/store.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
@@ -73,7 +74,7 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
 
     let step = 1000;
     async function login(factor = { step: step++ }, extra = {}) {
-      const session = { id: id(), tokenHash: digest(), expiresAt: now + 8 * 3600000, ...extra };
+      const session = { id: id(), tokenHash: digest(), expiresAt: now + ADMIN_SESSION_SECONDS * 1000, ...extra };
       const accepted = await store.completeAdminLogin({ userId: admin.id, expectedPasswordHash: passwordHash, now, factorCheck: () => factor, session });
       return { accepted, session };
     }
@@ -100,7 +101,7 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
       assert.equal((await login({ recoveryDigest: admin.recoveryDigests[0] })).accepted, false);
     });
 
-    await t.test("session lookup enforces idle and absolute expiry and limits last-seen writes", async () => {
+    await t.test("administrator lookup ignores idle, extends its lifetime and limits last-seen writes", async () => {
       const { session } = await login();
       const lookup = (at, idleSeconds = 1800) => store.getSession(session.tokenHash, { now: at, idleSeconds });
       const initial = await lookup(now);
@@ -111,8 +112,10 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
       assert.ok(await lookup(now + 60000));
       state = (await connection.query("SELECT last_seen_at FROM auth_session_state WHERE session_id = ?", [session.id]))[0];
       assert.match(state.last_seen_at, /^2026-10-14 12:01:00/);
-      assert.equal(await lookup(now + 1860000), null);
-      assert.equal(await lookup(session.expiresAt, 86400), null);
+      assert.ok(await lookup(now + 1860000));
+      const renewed = await lookup(now + 8 * 3600000, 86400);
+      assert.equal(renewed.expiresAt, now + 8 * 3600000 + ADMIN_SESSION_SECONDS * 1000);
+      assert.equal(await lookup(renewed.expiresAt), null);
       assert.equal(await store.getSession(digest(), { now, idleSeconds: 1800 }), null);
     });
 
@@ -150,6 +153,61 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
       try { assert.equal(await lookup(), null); }
       finally { await connection.query("UPDATE sessions SET created_at = '2026-10-14 12:00:00' WHERE id = ?", [session.id]); }
       assert.ok(await lookup());
+    });
+
+    await t.test("device management is paginated, owner scoped and revokes one device without disturbing its siblings", async () => {
+      const a = (await login()).session, b = (await login()).session;
+      const otherAdmin = id(), otherSession = id(), otherHash = digest();
+      await connection.query("INSERT INTO users (id, role, status, pseudonym, email, password_hash, created_at, updated_at) VALUES (?, 'admin', 'active', 'Other synthetic admin', 'other-device-admin@example.invalid', ?, ?, ?)", [otherAdmin, passwordHash, new Date(now), new Date(now)]);
+      try {
+        await connection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, 'synthetic', 1, 1, ?)", [otherAdmin, new Date(now)]);
+        await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [otherSession, otherAdmin, otherHash, new Date(now), new Date(now + ADMIN_SESSION_SECONDS * 1000)]);
+        await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [otherSession, new Date(now), new Date(now)]);
+        const seen = new Set(); let afterId = null;
+        do {
+          const page = await store.listDevices(a.tokenHash, { now, afterId, limit: 2 });
+          assert.ok(page.devices.length <= 2);
+          for (const device of page.devices) {
+            assert.equal(device.id.equals(otherSession), false);
+            assert.equal(seen.has(device.id.toString("hex")), false);
+            seen.add(device.id.toString("hex"));
+            assert.deepEqual(Object.keys(device).sort(), ["createdAt", "current", "id", "lastSeenAt"]);
+            assert.equal(device.current, device.id.equals(a.id));
+          }
+          afterId = page.nextCursor;
+          assert.equal(page.hasMore, afterId !== null);
+        } while (afterId !== null);
+        assert.ok(seen.has(a.id.toString("hex"))); assert.ok(seen.has(b.id.toString("hex")));
+        assert.deepEqual(await store.revokeDevice(a.tokenHash, otherSession, { now }), { found: false, current: false });
+        assert.ok(await store.getSession(otherHash, { now, idleSeconds: 1800 }));
+        assert.deepEqual(await store.revokeDevice(a.tokenHash, b.id, { now }), { found: true, current: false });
+        assert.equal(await store.getSession(b.tokenHash, { now, idleSeconds: 1800 }), null);
+        assert.ok(await store.getSession(a.tokenHash, { now, idleSeconds: 1800 }));
+        assert.deepEqual(await store.revokeDevice(a.tokenHash, a.id, { now }), { found: true, current: true });
+        assert.equal(await store.listDevices(a.tokenHash, { now }), null);
+      } finally {
+        await connection.query("DELETE FROM auth_session_state WHERE session_id = ?", [otherSession]);
+        await connection.query("DELETE FROM sessions WHERE user_id = ?", [otherAdmin]);
+        await connection.query("DELETE FROM admin_mfa WHERE user_id = ?", [otherAdmin]);
+        await connection.query("DELETE FROM users WHERE id = ?", [otherAdmin]);
+      }
+    });
+
+    await t.test("global sign-out waits for the account lock shared with simultaneous device operations", async () => {
+      const a = (await login()).session, b = (await login()).session;
+      let revoke, listing, removed, outcome;
+      await connection.beginTransaction();
+      try {
+        await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [admin.id]);
+        revoke = store.revokeAllSessions(admin.id, { now });
+        listing = store.listDevices(b.tokenHash, { now });
+        removed = store.revokeDevice(b.tokenHash, a.id, { now });
+        outcome = await Promise.race([revoke.then(() => "finished"), new Promise((resolve) => setTimeout(() => resolve("waiting"), 100))]);
+      } finally { await connection.rollback(); }
+      await Promise.all([revoke, listing, removed]);
+      assert.equal(outcome, "waiting", "global revocation must not take any session lock while the account lock is unavailable");
+      assert.equal(await store.getSession(a.tokenHash, { now, idleSeconds: 1800 }), null);
+      assert.equal(await store.getSession(b.tokenHash, { now, idleSeconds: 1800 }), null);
     });
 
     await t.test("revocation, account suspension and MFA version changes immediately deny existing sessions", async () => {

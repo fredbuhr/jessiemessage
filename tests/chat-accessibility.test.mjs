@@ -5,6 +5,7 @@ import vm from "node:vm";
 import { webcrypto } from "node:crypto";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
+const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const modelSource = await readFile(new URL("../public/chat-model.js", import.meta.url), "utf8");
 const modelExports = [...modelSource.matchAll(/export function ([a-zA-Z0-9_]+)\(/g)].map((match) => match[1]);
 const html = await readFile(new URL("../public/chat.html", import.meta.url), "utf8");
@@ -144,8 +145,9 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     } });
   vm.runInContext(i18nSource, context, { filename: "public/i18n.js" });
   vm.runInContext(catalogueSource, context, { filename: "public/i18n-chat.js" });
+  vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -312,7 +314,7 @@ test("deleting a focused message selects its tombstone, while another active con
       conversation: f.conversation(), messages: [message(1, "me")], eventCursor: "1", hasMoreBefore: false,
     }) : undefined }); await flush();
     const button = f.element("messages").children[0].querySelector(".delete-message"); button.focus();
-    for (const handler of button.events.get("click")) handler({}); await flush(); if (move) f.element("message-body").focus();
+    for (const handler of button.events.get("click")) handler({}); await flush(); await f.click("accept-delete"); if (move) f.element("message-body").focus();
     gate.resolve(response(200, { message: message(1, "me", { body: null, deletedAt: now }) })); await flush();
     if (move) assert.equal(f.document.activeElement, f.element("message-body"));
     else { assert.equal(f.document.activeElement, f.element("messages").children[0]); assert.equal(f.document.activeElement.getAttribute("tabindex"), "-1"); }

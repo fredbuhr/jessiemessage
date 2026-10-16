@@ -151,6 +151,21 @@ test("entry includes approved branding and accessible offline guidance without p
   assert.match(html, /src="\/brand\/icon-128\.png"/); assert.match(html, /href="\/brand\/brand\.css"/);
   assert.match(html, /<noscript>[\s\S]*contact@jessiemessage\.com[\s\S]*<\/noscript>/); assert.match(html, /role="status" aria-live="polite"/);
   assert.doesNotMatch(html, /<script(?![^>]*src=)[^>]*>/); assert.doesNotMatch(html, /style="|<style>/);
-  assert.doesNotMatch(controller, /localStorage|sessionStorage|indexedDB|serviceWorker|CacheStorage|caches\.|userAgent|innerHTML|location\.(?:replace|assign)/);
+  assert.doesNotMatch(controller, /localStorage|sessionStorage|indexedDB|serviceWorker|CacheStorage|caches\.|userAgent|innerHTML|location\.assign/);
   assert.match(css, /safe-area-inset-bottom/); assert.match(css, /max-width:380px/); assert.match(css, /focus-visible/); assert.match(css, /min-height:44px/);
+});
+
+
+test("entry opens a single connected role directly and preserves a choice when both are connected", async () => {
+  for (const [entry, expected] of [
+    [dto({ state: "active", href: "/messages" }, { state: "signed_out", href: "/admin/login" }), "/messages"],
+    [dto({ state: "signed_out", href: "/access" }, { state: "connected", href: "/admin/messages" }), "/admin/messages"],
+    [dto({ state: "pending", href: "/access" }, { state: "connected", href: "/admin/messages" }), null],
+    [dto({ state: "active", href: "/messages" }, { state: "connected", href: "/admin/messages" }), null],
+    [dto({ state: "pending", href: "/access" }, null), null],
+  ]) {
+    const f = harness({ handler: () => response(200, entry) }); await flush();
+    assert.deepEqual(f.navigation, expected ? [expected] : []);
+    assert.deepEqual(f.calls.map((call) => call.path), ["/api/entry"]);
+  }
 });

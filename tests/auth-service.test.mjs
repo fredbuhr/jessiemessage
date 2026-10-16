@@ -1,6 +1,7 @@
 import test, { before } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
+import { ADMIN_SESSION_SECONDS } from "../server/auth/session-policy.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
 import { csrfToken, hashPassword, newToken, sealTotpSecret, tokenDigest, totpCode } from "../server/auth/crypto.mjs";
 
@@ -82,7 +83,7 @@ test("revocation, suspension and absolute expiry remove access without exposing 
   f.state.active = true; await f.service.logout(connected.token); assert.equal(await f.service.session(connected.token), null);
   f.advance(30000); const second = await f.login(); await f.service.logoutAll(second.token);
   assert.equal(await f.service.session(second.token), null);
-  f.advance(30000); const third = await f.login(); f.advance(8 * 60 * 60 * 1000);
+  f.advance(30000); const third = await f.login(); f.advance(ADMIN_SESSION_SECONDS * 1000);
   assert.equal(await f.service.session(third.token), null);
 });
 test("malformed cookies are anonymous and database failure yields only a sanitized unavailable error", async () => {
@@ -111,8 +112,8 @@ test("administrator factors and the full session lifetime use the time after quo
   const connected = await pending;
   assert.equal(f.loginAttempts.length, 1); assert.equal(f.loginAttempts[0].now, current);
   assert.equal(f.state.lastStep, Math.floor(current / 30000));
-  assert.equal(f.loginAttempts[0].session.expiresAt, current + 8 * 3600000);
-  assert.equal(connected.expiresAt, current + 8 * 3600000);
+  assert.equal(f.loginAttempts[0].session.expiresAt, current + ADMIN_SESSION_SECONDS * 1000);
+  assert.equal(connected.expiresAt, current + ADMIN_SESSION_SECONDS * 1000);
   assert.deepEqual(f.calls.map(({ options }) => options.now), [initialNow, initialNow, initialNow]);
 });
 
