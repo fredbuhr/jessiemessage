@@ -1,6 +1,6 @@
 # Accueil public neutre sur Apache
 
-**Suite 0.32 — 17 octobre 2026 :** l’application privée est désormais active sur la recette et le propriétaire accepte ses notifications. L’ancienne entrée neutre de l’apex crée une impasse. Une option d’export explicite prépare désormais un [lien temporaire vers l’entrée active](public-entry-transition.md). Sans cette option, le contrat neutre décrit ci-dessous reste inchangé. Les observations du 15 octobre restent historiques.
+**Suite 0.32 — 17 octobre 2026 :** l’application privée est désormais active sur la recette et le propriétaire accepte ses notifications. L’ancienne entrée neutre de l’apex créait une impasse. Le [lien temporaire vers l’entrée active](public-entry-transition.md) est en ligne sur l’export `1f669e45`, après vérification de 25 fichiers, cinq jobs CI et 56 réponses HTTP réelles. Sans cette option d’export explicite, le contrat neutre décrit ci-dessous reste inchangé. Les observations du 15 octobre restent historiques.
 
 ## État et portée
 
