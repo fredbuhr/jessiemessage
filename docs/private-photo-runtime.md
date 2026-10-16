@@ -1,8 +1,9 @@
 # Photos privées — étape 0.28
 
 L'étape 0.27 (texte, restauration SQL isolée et téléphone) est validée en
-recette. Le runtime actif demeure **`14a43104`**, application **0.24.0**.
-**0.28 est en préparation ; les photos ne sont pas encore activées.**
+recette. Le runtime photos actif est **`37c8fcd0`**, application **0.24.0**.
+**0.28 est activée en recette ; le parcours photos réel et la restauration
+SQL + fichiers restent à accepter.**
 
 Ce lot réutilise les modules médias, Sharp, le chiffrement, les autorisations,
 la galerie, la déduplication et les quotas existants. Il n'ajoute aucune
@@ -54,18 +55,41 @@ copie restent en place. Le coffre des secrets ne remplace pas SQL et les
 fichiers chiffrés. Le compte applicatif ne reçoit aucun accès à une copie de
 restauration.
 
-## Lot d'activation restant
+## Activation en recette — 16 octobre 2026
 
-1. Préparer la configuration et un coffre renouvelé, puis faire confirmer sa
-   copie indépendante, son empreinte et son déchiffrement par le propriétaire.
-2. Arrêter les producteurs, initialiser la capacité avec la commande existante
-   `media-storage.mjs initialize --offline` alimentée par le profil privé,
-   contrôler puis démarrer la révision photos épinglée en recette. Le repli
-   AUTH seul compatible reste disponible.
-3. Effectuer un seul parcours groupé : photo JPEG/PNG dans chaque sens,
+Le propriétaire confirme `COFFRE_PHOTOS_OK` à **18:23 Europe/Paris** après
+sélection du coffre chiffré sur son PC, comparaison SHA-256 et déchiffrement
+du profil v3 à cinq fichiers. Le coffre existant et les archives précédentes
+sont conservés ; aucune clé n'est régénérée.
+
+Le processus Node.js est arrêté depuis le Manager avant l'initialisation ;
+l'URL de santé sert alors la maintenance HTML, sans réponse JSON de
+l'application. La commande privée épinglée appelle l'initialiseur existant
+avec `--offline`. Elle confirme `initialized: true` après inventaire complet,
+sain, vide et sans élément inconnu. Le contrôle du lanceur confirme ensuite
+`checks_passed`, profil `messaging-photos`, avant démarrage HTTP.
+
+Les commandes de build et d'exécution du Manager pointent sur la révision
+**`37c8fcd0b96b9c712a6a1c3ddab2e1c5ef04b228`**, arbre
+**`0f411f32070bdf3946e0034b9ae6073d91c8333b`**. La construction du
+16 octobre à **18:27 Europe/Paris** est suivie du démarrage confirmé du
+profil `messaging-photos`. Le contrôle public après redémarrage obtient :
+
+- santé, disponibilité et entrée `/app` : **200** ;
+- capacités et bibliothèques médias client/administrateur anonymes : **401** ;
+- chemins publics testés de `runtime-media.json` : **404**.
+
+Ces contrôles confirment le démarrage et le refus d'accès anonyme. Ils ne
+remplacent pas un envoi authentifié ou une restauration réelle avec photos.
+Le repli AUTH compatible `14a43104` reste disponible. Aucun changement de
+schéma, élargissement de droits SQL ou lancement de production n'est effectué.
+
+## Acceptation restante
+
+1. Effectuer un seul parcours groupé : photo JPEG/PNG dans chaque sens,
    légende, galerie, reprise d'envoi, suppression autorisée et conservation
    après réouverture. Les comptes et l'invitation déjà acceptés sont réutilisés.
-4. Vérifier une sauvegarde SQL + fichiers sur une copie isolée avec les quatre
+2. Vérifier une sauvegarde SQL + fichiers sur une copie isolée avec les quatre
    vraies clés et les contrôles de reprise existants.
 
 ## Validation du code
@@ -77,8 +101,13 @@ et leurs collisions, la conservation des secrets existants, les écritures
 exclusives, le refus d'un répertoire non vide, les tags GCM et liaisons altérés,
 les domaines désactivés et les manifestes des deux profils. Deux scénarios
 SQL supplémentaires exercent préparation et restauration du profil photos sur
-les bases jetables de la CI. Les fichiers privés ancrés et GPG doivent y être
-exécutés ; leur absence locale n'est pas présentée comme une validation réelle.
+les bases jetables de la CI. La [CI de la révision
+déployée](https://github.com/fredbuhr/jessiemessage/actions/runs/38926103151)
+et celle de la PR passent les cinq jobs : **1 728 tests généraux, 1 703 réussis,
+25 ignorés explicitement**, GPG v3/cinq fichiers et lectures ancrées exécutés,
+**335 tests réussis sans omission sur chacune des bases MariaDB 10.11 et
+11.4**, Chrome chat et authentification administrateur HTTPS. Ces essais
+isolés ne remplacent pas l'acceptation des photos de la recette hébergée.
 
 Les anciennes notes [médias](private-media.md) et [capacité](media-capacity-inventory.md)
 décrivent les briques existantes et leurs limites ; leurs états d'hébergement
@@ -86,4 +115,5 @@ historiques ne remplacent pas cette note. Les informations du service,
 conservation/suppression et autres conditions d'ouverture restent dans le
 plan global. Le pilote élargi et la production ne sont pas ouverts par ce lot.
 
-**Étape finale : 0.28 en cours — préparation du profil photos et de sa sauvegarde.**
+**Étape finale : 0.28 en cours — photos actives en recette, parcours réel et
+restauration SQL + fichiers à confirmer.**
