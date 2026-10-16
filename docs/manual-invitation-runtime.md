@@ -2,11 +2,16 @@
 
 ## État courant
 
-Application 0.24.0. **Étape 0.25 validée ; lot 0.26 activé en recette.**
+Application 0.24.0. **Étapes 0.25 et 0.26 validées en recette.**
 Le profil texte a été activé le 16 octobre 2026 après accord explicite du
 propriétaire. Sa connexion administrateur avec MFA a été vérifiée ; il confirme
-également la réception et la validation du premier e-mail invité. L'échange réel
-de messages reste à valider. Les révisions déployées, contrôles et limites sont
+également la réception et la validation du premier e-mail invité. Le 16 octobre
+2026 à 15:22 Europe/Paris, il a confirmé « échange OK après actualisation » après
+le parcours groupé : approbation, message client, réponse administrateur et
+conservation des deux messages après rechargement des deux vues. Cette preuve
+provient du navigateur du propriétaire ; l'agent n'a récupéré ni session ni
+contenu privé. Le minimum client de 8 caractères est actif sur la révision
+épinglée `14a43104`. Les révisions déployées, contrôles et limites sont
 consignés dans la PR #39 ; aucune mise en production n'est annoncée ici.
 
 Le 16 octobre 2026, le propriétaire a confirmé la copie PC du coffre AUTH,
@@ -214,7 +219,8 @@ hébergée à conserver.
 ## Ce lot ne livre pas encore
 
 Photos, CRM, diffusions, récupération client et notifications restent hors du
-profil texte. Leur code est conservé pour les lots suivants. Les essais réels
-SMTP et mobiles, la restauration des futurs médias et la production limitée
-restent à confirmer. Aucun nouveau framework ou service
+profil texte. Leur code est conservé pour les lots suivants. La réception SMTP
+et le parcours texte réel sont validés. Les essais sur appareils, la restauration
+des futurs médias et la production limitée restent à confirmer. Aucun nouveau
+framework ou service
 externe n'est ajouté.
