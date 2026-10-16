@@ -34,7 +34,7 @@ function canonicalBase64url(value, expectedBytes) {
 }
 
 function validatePassword(password) {
-  if (typeof password !== "string" || password.length < 14 || password.length > 128 || Buffer.byteLength(password, "utf8") > 512) {
+  if (typeof password !== "string" || password.length < 8 || password.length > 128 || Buffer.byteLength(password, "utf8") > 512) {
     throw invalid("AUTH_PASSWORD_INVALID");
   }
   // Reject unpaired UTF-16 surrogates: UTF-8 otherwise silently maps different

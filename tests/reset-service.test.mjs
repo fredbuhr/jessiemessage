@@ -112,7 +112,7 @@ test("reset service rejects untrusted request shapes and malformed tokens or pas
   for (const token of [undefined, null, "", "A".repeat(42), `${f.token}=`, `${f.token}\n`, alias]) {
     await assert.rejects(f.service.resetPassword({ token, password }), hasCode("RESET_INPUT"));
   }
-  for (const value of [undefined, null, 1, "x".repeat(13), "x".repeat(129), `long-password-\ud800`, `long-password-\udc00`]) {
+  for (const value of [undefined, null, 1, "x".repeat(7), "x".repeat(129), `long-password-\ud800`, `long-password-\udc00`]) {
     await assert.rejects(f.service.resetPassword({ token: f.token, password: value }), hasCode("RESET_INPUT"));
   }
   for (const input of [undefined, null, [], {}, { token: f.token, password, userId }, { token: f.token, password, expectedVersion: 7 }]) {
@@ -178,7 +178,7 @@ test("invalid or consumed links stop at fresh inspection without creating a pass
 
 test("password length boundaries preserve the shared policy while corrupt current proof fails before hashing", async () => {
   const f = await fixture(); f.state.record = null;
-  for (const value of ["x".repeat(14), "é".repeat(128), "😀".repeat(64), " ".repeat(14)]) {
+  for (const value of ["x".repeat(8), "x".repeat(13), "é".repeat(128), "😀".repeat(64), " ".repeat(8)]) {
     await assert.rejects(f.service.resetPassword({ token: f.token, password: value }), hasCode("RESET_INVALID"));
   }
   for (const proof of [undefined, false, {}, { userId: Buffer.alloc(15), credentialVersion: 7 },

@@ -1,8 +1,9 @@
+import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
@@ -30,11 +31,7 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
-    return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;
   let server;
@@ -70,14 +67,15 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
     const clientHash = await hashPassword(clientPassword);
     const clients = ["a", "b"].map((suffix) => ({ id: randomBytes(16), conversationId: randomBytes(16),
       email: `chat-flow-client-${suffix}@example.invalid`, pseudonym: `Synthetic chat client ${suffix.toUpperCase()}` }));
-    // These independently assured synthetic fixtures are not an age-proof API.
-    // No invitation, mail delivery or real account is created by this suite.
+    // Synthetic manually admitted clients exercise the invitation policy with no age stamp.
+    // No real account or mail delivery is created by this suite.
     for (const client of clients) {
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash,
         email_verified_at, age_assured_at, access_approved_at, created_at, updated_at)
         VALUES (?, 'client', 'active', ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [client.id, client.pseudonym, client.email, clientHash, ...Array(5).fill(sqlDate(now))]);
+      [client.id, client.pseudonym, client.email, clientHash, sqlDate(now), null, sqlDate(now), sqlDate(now), sqlDate(now)]);
       await connection.query("INSERT INTO client_auth_state (user_id, age_declared_at) VALUES (?, ?)", [client.id, sqlDate(now)]);
+      await consumeSyntheticInvitation(connection, client.id, now);
       await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)",
         [client.conversationId, client.id, adminId, sqlDate(now)]);
     }
@@ -302,14 +300,14 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       assert.equal((await request(pathFor("client"), { headers: headersFor(a) })).status, 200);
     });
 
-    await t.test("current future-dated age gates and closed conversations prevent sends while authorized history survives", async () => {
-      await connection.query("UPDATE users SET age_assured_at = ? WHERE id = ?", [sqlDate(now + 60000), clientA.id]);
+    await t.test("missing consumed invitations and closed conversations prevent sends while assigned history survives", async () => {
+      await connection.query("UPDATE invitations SET consumed_at = NULL, consumed_by_id = NULL WHERE consumed_by_id = ?", [clientA.id]);
       try {
         assert.equal((await request(pathFor("client"), { headers: headersFor(a) })).status, 401);
         assert.equal((await request(pathFor("admin"), { headers: headersFor(admin) })).body.conversation.canSend, false);
         assert.equal((await request(pathFor("admin"), { method: "POST", headers: headersFor(admin), body: { clientMessageId: key(), body: "Synthetic future-gated attempted send" } })).status, 403);
       } finally {
-        await connection.query("UPDATE users SET age_assured_at = ? WHERE id = ?", [sqlDate(now), clientA.id]);
+        await consumeSyntheticInvitation(connection, clientA.id, now);
       }
       await connection.query("UPDATE conversations SET closed_at = ? WHERE id = ?", [sqlDate(now), clientA.conversationId]);
       try {

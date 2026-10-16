@@ -14,14 +14,14 @@ const plan = [1, 2].map((version) => ({ version, name: `000${version}_fixture.sq
 const rows = (state) => plan.map((migration) => ({ ...migration, state }));
 const codeIs = (code) => (error) => error.code === code;
 
-function fixture({ before = rows("pending"), after = rows("applied"), cipher = "TLS_AES_256_GCM_SHA384" } = {}) {
+function fixture({ before = rows("pending"), after = rows("applied"), cipher = "TLS_AES_256_GCM_SHA384", migrations = plan } = {}) {
   const observed = { status: 0, apply: 0, ended: false, env: null };
   const connection = { query: async (sql) => {
     assert.equal(sql, "SHOW SESSION STATUS LIKE 'Ssl_cipher'");
     return [{ Variable_name: "Ssl_cipher", Value: cipher }];
   }, end: async () => { observed.ended = true; } };
   const dependencies = {
-    connect: async (env) => { observed.env = env; return connection; }, loadPlan: async () => plan,
+    connect: async (env) => { observed.env = env; return connection; }, loadPlan: async () => migrations,
     status: async (_connection, context) => {
       assert.equal(_connection, connection);
       assert.equal(context.database, options.database);
@@ -30,7 +30,8 @@ function fixture({ before = rows("pending"), after = rows("applied"), cipher = "
     apply: async (_connection, context) => {
       assert.equal(_connection, connection); assert.equal(context.database, options.database);
       observed.apply += 1;
-      return { applied: [1, 2], unchanged: 0 };
+      const applied = before.filter((row) => row.state === "pending").map((row) => row.version);
+      return { applied, unchanged: migrations.length - applied.length };
     },
   };
   return { dependencies, observed, connection };
@@ -110,6 +111,64 @@ test("partial or interrupted histories refuse initialize before application", as
     assert.equal(observed.apply, 0);
     assert.equal(observed.ended, true);
   }
+});
+
+test("upgrade delegates only the pending suffix of an immutable 27-migration history", async () => {
+  const migrations = Array.from({ length: 28 }, (_, index) => ({ version: index + 1,
+    name: `${String(index + 1).padStart(4, "0")}_fixture.sql`, checksum: String(index + 1).padStart(64, "0") }));
+  const before = migrations.map((row) => ({ ...row, state: row.version <= 27 ? "applied" : "pending" }));
+  const { dependencies, observed } = fixture({ migrations, before,
+    after: migrations.map((row) => ({ ...row, state: "applied" })) });
+  assert.deepEqual(parseArguments(args("upgrade")), { ...options, command: "upgrade" });
+  assert.deepEqual(await run({ ...options, command: "upgrade" }, password, dependencies), {
+    status: "upgraded", engineVerified: true, transportVerified: true, migrations: 28, applied: 1, unchanged: 27,
+  });
+  assert.equal(observed.apply, 1);
+  assert.equal(observed.status, 2);
+  assert.equal(observed.ended, true);
+  assert.equal(observed.env.JESSIEMESSAGE_DB_PASSWORD, "");
+  assert.deepEqual(before.map((row) => row.state), [...Array(27).fill("applied"), "pending"]);
+});
+
+test("upgrade is idempotent when every migration is already applied", async () => {
+  const { dependencies, observed } = fixture({ before: rows("applied") });
+  const result = await run({ ...options, command: "upgrade" }, password, dependencies);
+  assert.deepEqual(result, { status: "upgraded", engineVerified: true, transportVerified: true,
+    migrations: 2, applied: 0, unchanged: 2 });
+  assert.equal(observed.apply, 0);
+  assert.equal(observed.status, 2);
+});
+
+test("upgrade refuses empty, interrupted and non-prefix histories without applying DDL", async () => {
+  for (const before of [rows("pending"), [rows("pending")[0], rows("applied")[1]],
+    ...["running", "failed", "retry"].flatMap((state) => [rows(state),
+      [rows("applied")[0], rows(state)[1]], [rows(state)[0], rows("pending")[1]]])]) {
+    const { dependencies, observed } = fixture({ before });
+    await assert.rejects(run({ ...options, command: "upgrade" }, password, dependencies),
+      codeIs("MIGRATION_INPUT_NOT_UPGRADABLE"));
+    assert.equal(observed.apply, 0);
+    assert.equal(observed.ended, true);
+  }
+});
+
+test("upgrade refuses drift, failed post-checks and migration errors without retrying", async () => {
+  for (const change of [{ checksum: "wrong" }, { version: 9 }, { name: "other.sql" }, { state: "unknown" }]) {
+    const before = [rows("applied")[0], { ...rows("pending")[1], ...change }];
+    const { dependencies, observed } = fixture({ before });
+    await assert.rejects(run({ ...options, command: "upgrade" }, password, dependencies), codeIs("MIGRATION_INPUT_HISTORY"));
+    assert.equal(observed.apply, 0);
+  }
+  const before = [rows("applied")[0], rows("pending")[1]];
+  const failedCheck = fixture({ before, after: before });
+  await assert.rejects(run({ ...options, command: "upgrade" }, password, failedCheck.dependencies), codeIs("MIGRATION_INPUT_HISTORY"));
+  assert.equal(failedCheck.observed.apply, 1);
+  const failedApply = fixture({ before });
+  failedApply.dependencies.apply = async () => { failedApply.observed.apply += 1; throw new Error("synthetic interruption"); };
+  await assert.rejects(run({ ...options, command: "upgrade" }, password, failedApply.dependencies), /synthetic interruption/);
+  assert.equal(failedApply.observed.apply, 1);
+  assert.equal(failedApply.observed.status, 1);
+  assert.equal(failedApply.observed.ended, true);
+  assert.equal(failedApply.observed.env.JESSIEMESSAGE_DB_PASSWORD, "");
 });
 
 test("an absent TLS cipher refuses history inspection and migrations", async () => {

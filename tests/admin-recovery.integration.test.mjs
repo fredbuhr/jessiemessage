@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAdminRecoveryStore } from "../server/auth/recovery-store.mjs";
@@ -22,11 +22,7 @@ test("real MariaDB controlled administrator recovery (synthetic disposable datab
   const migrations = await loadMigrations();
   // Only tables explicitly owned by the checked-in CREATE TABLE migrations are
   // eligible for cleanup. Reverse order respects their parent dependencies.
-  const ownedTables = migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
-    return match[1];
-  }).reverse();
+  const ownedTables = createdMigrationTables(migrations).reverse();
   const allowedTables = [...ownedTables, "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;

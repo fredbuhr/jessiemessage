@@ -1,3 +1,4 @@
+import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { readFile } from "node:fs/promises";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { validateMessageBody } from "./crypto.mjs";
@@ -30,8 +31,8 @@ function safeActor(value, role) {
     || !date(value.expiresAt) || !isToken(value.csrf)) throw unavailable();
   // The service enforces current access prerequisites. An explicit inactive
   // access state from any alternate service implementation also fails closed.
-  if (role === "client" && value.access && (value.access.state !== "active"
-    || ["emailVerified", "ageAssured", "approved"].some((key) => value.access[key] !== true))) {
+  if (role === "client" && (!value.access || value.access.state !== "active" || value.access.admissionPolicy !== CLIENT_ADMISSION_POLICY
+    || ["emailVerified", "invitationConsumed", "approved"].some((key) => value.access[key] !== true))) {
     throw httpError(403, "request_rejected");
   }
   return { user: { id: user.id, role, pseudonym: user.pseudonym }, csrf: value.csrf, expiresAt: value.expiresAt };

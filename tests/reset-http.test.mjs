@@ -65,7 +65,7 @@ test("public capabilities disclose fixed password bounds without reading cookies
   const { base, calls } = await fixture(t);
   const response = await fetch(`${base}${capabilitiesPath}`, { headers: { Cookie: "__Host-jessie_session=forged; __Host-jessie_client=forged" } });
   assert.equal(response.status, 200); assertHeaders(response);
-  assert.deepEqual(await response.json(), { enabled: true, password: { minLength: 14, maxLength: 128 } });
+  assert.deepEqual(await response.json(), { enabled: true, password: { minLength: 8, maxLength: 128 } });
   assert.equal(response.headers.get("set-cookie"), null);
   assert.deepEqual(calls, []);
 });
@@ -160,12 +160,12 @@ test("reset requires exactly one canonical body token and a well-formed exact pa
     assert.equal(response.status, 400); assert.deepEqual(await response.json(), { error: "invalid_request" });
     assert.equal(response.headers.get("set-cookie"), null);
   }
-  for (const value of ["short", "a".repeat(129), "a".repeat(14) + "\ud800", null, 17]) {
+  for (const value of ["a".repeat(7), "a".repeat(129), "a".repeat(8) + "\ud800", null, 17]) {
     const response = await post(base, resetPath, { token, password: value });
     assert.equal(response.status, 400); assert.deepEqual(await response.json(), { error: "invalid_password" });
   }
   assert.deepEqual(calls, []);
-  for (const value of ["a".repeat(14), "a".repeat(128), "e\u0301".repeat(7), " ".repeat(14)]) {
+  for (const value of ["a".repeat(8), "a".repeat(13), "a".repeat(128), "e\u0301".repeat(4), " ".repeat(8)]) {
     const response = await post(base, resetPath, { token, password: value });
     assert.equal(response.status, 200);
     assert.equal(calls.at(-1)[1].password, value);

@@ -44,6 +44,40 @@ function localOrigin(value) {
   return url.origin;
 }
 
+function commandRoute(path) {
+  if (path === "/status" || path === "/session") return path;
+  const match = typeof path === "string" && /^\/session\/[^/?#]+(\/.*)?$/.exec(path);
+  const suffix = match?.[1] ?? "";
+  if (match && ["", "/timeouts", "/element", "/url", "/cookie", "/actions", "/execute/sync", "/execute/async"].includes(suffix)) return `/session/:session${suffix}`;
+  const element = /^\/element\/[^/?#]+\/(click|clear|value)$/.exec(suffix);
+  if (match && element) return `/session/:session/element/:element/${element[1]}`;
+  throw new Error("Unsupported WebDriver command");
+}
+
+// Export only the local transport seam so failures can be exercised without
+// starting Chrome or connecting to the authentication fixture's database.
+export function createWebDriverRequester(driverUrl, fetchRequest = globalThis.fetch) {
+  const origin = localOrigin(driverUrl);
+  if (!origin.startsWith("http:") || typeof fetchRequest !== "function") throw new Error("WebDriver requires an HTTP loopback transport");
+  return async (method, path, body) => {
+    if (!["GET", "POST", "DELETE"].includes(method)) throw new Error("Unsupported WebDriver method");
+    const label = `WebDriver ${method} ${commandRoute(path)}`;
+    let response, data;
+    try {
+      response = await fetchRequest(`${origin}${path}`, { method, ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }), signal: AbortSignal.timeout(25000) });
+      data = await response.json();
+    } catch (error) {
+      // Transport errors can contain URLs or request details. Preserve only a
+      // fixed failure category and the route template, never their raw cause.
+      throw new Error(`${label}: ${error?.name === "TimeoutError" ? "request timed out" : "request unavailable"}`);
+    }
+    // Driver messages can echo typed credentials / cookie values. Keep failure
+    // diagnostics to protocol metadata; never print requests or response bodies.
+    if (!response.ok || data?.value?.error) throw new Error(`${label}: command failed (HTTP ${response.status})`);
+    return data?.value;
+  };
+}
+
 // The driver can create Chrome before POST /session returns its session id.
 // Killing only the driver then leaves descendants holding its output pipes.
 // Keep ownership in this closure: callers cannot supply a PID or process group.
@@ -114,14 +148,7 @@ export async function startWebDriver() {
   child.on("error", (error) => { driverExited = true; capture(error.message); });
   child.on("exit", () => { driverExited = true; });
 
-  async function request(method, path, body) {
-    const response = await fetch(`${driverUrl}${path}`, { method, ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }), signal: AbortSignal.timeout(25000) });
-    const data = await response.json();
-    // Driver messages can echo typed credentials / cookie values. Keep failure
-    // diagnostics to protocol metadata; never print requests or response bodies.
-    if (!response.ok || data.value?.error) throw new Error(`WebDriver ${method} ${path}: ${data.value?.error ?? response.status}`);
-    return data.value;
-  }
+  const request = createWebDriverRequester(driverUrl);
   async function close() {
     if (closed) return; closed = true;
     for (const sessionId of sessions) { try { await request("DELETE", `/session/${sessionId}`); } catch {} }

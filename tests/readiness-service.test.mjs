@@ -124,7 +124,7 @@ test("readiness summary is a strict progress inventory without SMTP secrets or a
   const f = await fixture(), summary = await f.service.summary(f.token);
   assert.deepEqual(summary, { contactEmail: SITE_CONTACT_EMAIL,
     mail: { configured: true, sender: SITE_CONTACT_EMAIL, replyTo: SITE_CONTACT_EMAIL }, features: features(),
-    checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
+    checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
   const json = JSON.stringify(summary);
   for (const secret of [f.token, adminId, "private-", "smtp.host", '"password":', "caPath", f.options.mailConfig.key.toString("base64url")]) assert.equal(json.includes(secret), false);
   assert.equal(f.transports.length, 0);
@@ -139,7 +139,7 @@ test("disabled mail and disabled features remain explicit metadata without creat
   const summary = await f.service.summary(f.token);
   assert.deepEqual(summary.mail, { configured: false, sender: SITE_CONTACT_EMAIL, replyTo: SITE_CONTACT_EMAIL });
   assert.deepEqual(summary.features, disabled);
-  assert.deepEqual(summary.checks, { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" });
+  assert.deepEqual(summary.checks, { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" });
   await assert.rejects(f.service.verifySmtp(f.token), hasCode("READINESS_MAIL_DISABLED"));
   assert.equal(f.transports.length, 0);
 });

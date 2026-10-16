@@ -1,3 +1,4 @@
+import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { safeMedia, safeMessage } from "../chat/http.mjs";
 import { validateMessageBody } from "../chat/crypto.mjs";
@@ -19,8 +20,8 @@ function safeActor(value, role) {
   if (!value?.user || !id(value.user.id) || value.user.role !== role
     || typeof value.user.pseudonym !== "string" || value.user.pseudonym.length > 64 || !value.user.pseudonym.isWellFormed()
     || !date(value.expiresAt) || !isToken(value.csrf)) throw unavailable();
-  if (role === "client" && value.access && (value.access.state !== "active"
-    || ["emailVerified", "ageAssured", "approved"].some((key) => value.access[key] !== true))) throw httpError(403, "request_rejected");
+  if (role === "client" && (!value.access || value.access.state !== "active" || value.access.admissionPolicy !== CLIENT_ADMISSION_POLICY
+    || ["emailVerified", "invitationConsumed", "approved"].some((key) => value.access[key] !== true))) throw httpError(403, "request_rejected");
   return { csrf: value.csrf };
 }
 

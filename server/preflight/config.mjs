@@ -13,6 +13,7 @@ export const CONFIG_CHECK_NAMES = Object.freeze([
   "feature_flags", "authentication", "mail", "client_access", "chat", "media", "crm", "client_recovery", "broadcasts",
   "key_separation", "runtime_database", "database_tls", "official_subdomain", "auth_only", "port",
 ]);
+export const MESSAGING_CONFIG_CHECK_NAMES = Object.freeze(CONFIG_CHECK_NAMES.map((name) => name === "auth_only" ? "messaging_text" : name));
 
 const TARGET = "auth-only";
 const FLAGS = Object.freeze([
@@ -37,11 +38,12 @@ function dataRecord(value) {
   return copy;
 }
 
-function report(statuses) {
+function report(statuses, target = TARGET) {
+  const names = target === "messaging-text" ? MESSAGING_CONFIG_CHECK_NAMES : CONFIG_CHECK_NAMES;
   return Object.freeze({
-    target: TARGET,
-    valid: CONFIG_CHECK_NAMES.every((name) => statuses[name] !== "fail"),
-    checks: Object.freeze(CONFIG_CHECK_NAMES.map((name) => Object.freeze({ name, status: statuses[name] }))),
+    target: target === "messaging-text" ? target : TARGET,
+    valid: names.every((name) => statuses[name] !== "fail"),
+    checks: Object.freeze(names.map((name) => Object.freeze({ name, status: statuses[name] }))),
   });
 }
 
@@ -108,7 +110,10 @@ export function inspectPreproductionConfiguration(env = {}, options = {}) {
   } catch { statuses.official_subdomain = "fail"; }
   statuses.auth_only = target === TARGET && validFlags && source.JESSIEMESSAGE_ENABLE_AUTH === "1"
     && FLAGS.slice(1).every((name) => source[name] === undefined || source[name] === "0") ? "pass" : "fail";
+  statuses.messaging_text = target === "messaging-text" && validFlags
+    && FLAGS.slice(0, 4).every((name) => source[name] === "1")
+    && FLAGS.slice(4).every((name) => source[name] === "0") ? "pass" : "fail";
   const port = source.PORT;
   if (port !== undefined) statuses.port = typeof port === "string" && /^[1-9][0-9]{0,4}$/.test(port) && Number(port) <= 65535 ? "pass" : "fail";
-  return report(statuses);
+  return report(statuses, target);
 }

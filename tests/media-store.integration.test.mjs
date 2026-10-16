@@ -1,8 +1,9 @@
+import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 import { createMediaStore, MediaStoreError } from "../server/media/store.mjs";
@@ -23,10 +24,7 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "integration tests require separately provisioned runtime DML credentials");
   const migrations = await loadMigrations();
-  const ownedTables = migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup only accepts reviewed single-table migrations"); return match[1];
-  }).reverse();
+  const ownedTables = createdMigrationTables(migrations).reverse();
   const allowedTables = [...ownedTables, "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool, fixtureNumber = 0;
   async function reset() {
@@ -45,9 +43,10 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash, email_verified_at,
         age_assured_at, access_approved_at, created_at, updated_at) VALUES (?, ?, 'active', ?, ?, 'synthetic-not-a-password', ?, ?, ?, ?, ?)`,
       [result.id, role, result.pseudonym, `media-${fixtureNumber}@example.invalid`, role === "client" ? sqlDate(now) : null,
-        role === "client" ? sqlDate(now) : null, role === "client" ? sqlDate(now) : null, sqlDate(now), sqlDate(now)]);
+        null, role === "client" ? sqlDate(now) : null, sqlDate(now), sqlDate(now)]);
       if (role === "admin") await connection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, 'synthetic-encrypted-secret', 1, 1, ?)", [result.id, sqlDate(now)]);
       else await connection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [result.id, sqlDate(now)]);
+      if (role === "client") await consumeSyntheticInvitation(connection, result.id, now);
       await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [result.sessionId, result.id, result.tokenHash, sqlDate(now), sqlDate(now + 8 * 3600000)]);
       if (role === "admin") await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [result.sessionId, sqlDate(now), sqlDate(now)]);
       else await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)", [result.sessionId, sqlDate(now)]);
@@ -79,9 +78,9 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
 
     await t.test("read-only schema checks reject dirty history, dimension type drift, lost ownership uniqueness and weaker CHECKs", async () => {
       assert.equal(await media.assertSchema(), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = ?", [migrations.at(-1).version]);
       try { await assert.rejects(media.assertSchema(), code("CHAT_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = ?", [migrations.at(-1).version]); }
       await connection.query("ALTER TABLE media_assets MODIFY width SMALLINT NOT NULL");
       try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE media_assets MODIFY width SMALLINT UNSIGNED NOT NULL"); }
@@ -319,6 +318,16 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       assert.equal(latest.items[0].sequence, "9007199254740994"); assert.equal(latest.nextBefore, "9007199254740994");
       const older = await media.gallery({ ...request(fixture), before: latest.nextBefore, limit: 1 });
       assert.equal(older.items[0].sequence, "9007199254740993"); assert.equal(older.hasMore, false);
+    });
+
+    await t.test("removing a consumed invitation blocks client media without fabricating an age proof", async () => {
+      const fixture = await pair(), image = (await register(fixture)).asset, sent = await send(fixture, "client", image.id);
+      assert.equal((await connection.query("SELECT age_assured_at FROM users WHERE id = ?", [fixture.client.id]))[0].age_assured_at, null);
+      await connection.query("UPDATE invitations SET consumed_at = NULL, consumed_by_id = NULL WHERE consumed_by_id = ?", [fixture.client.id]);
+      await assert.rejects(media.listAssets(actor(fixture)), code("CHAT_FORBIDDEN"));
+      await assert.rejects(delivered(fixture, "client", sent.message.id), code("CHAT_FORBIDDEN"));
+      assert.ok((await delivered(fixture, "admin", sent.message.id)).id.equals(image.id));
+      await assert.rejects(send(fixture, "admin", image.id), code("CHAT_FORBIDDEN"));
     });
 
     await t.test("expiry/revocation revoke every client media operation while the assigned administrator retains history only", async () => {

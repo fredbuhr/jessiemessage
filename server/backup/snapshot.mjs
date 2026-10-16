@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { loadMigrations } from "../db/migrations.mjs";
+import { createdMigrationTables, loadMigrations } from "../db/migrations.mjs";
 import { assertBackupInspection } from "./inspection.mjs";
 
 export class BackupSnapshotError extends Error {
@@ -78,10 +78,16 @@ export function createBackupSnapshotStore({ pool, inspectionPool }) {
       if (typeof database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(database)) fail();
       await assertBackupInspection(inspection, database);
       const migrations = await loadMigrations();
-      const definitions = migrations.map(({ sql }) => {
-        const name = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(sql.trim())?.[1];
+      // A reviewed ALTER adds a migration-ledger row, not another table. The
+      // shared inventory validates every statement before selecting CREATEs.
+      // Physical CHECK clauses are still included in schemaDigest below, and
+      // every ledger row remains part of coreDigest.
+      const applicationTables = createdMigrationTables(migrations);
+      const definitions = applicationTables.map((name) => {
+        const sql = migrations.find((migration) => /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim())?.[1] === name)?.sql;
+        if (!sql) fail();
         const primary = /PRIMARY KEY\s*\(([a-z_, ]+)\)/i.exec(sql)?.[1].split(",").map((key) => key.trim());
-        if (!name || !primary?.length || primary.some((key) => !/^[a-z_]+$/.test(key))) fail();
+        if (!primary?.length || primary.some((key) => !/^[a-z_]+$/.test(key))) fail();
         return { name, primary };
       });
       definitions.push({ name: "schema_migrations", primary: ["version"] }); definitions.sort((a, b) => a.name.localeCompare(b.name, "en"));

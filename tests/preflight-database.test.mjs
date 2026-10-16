@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
 import { DATABASE_CHECK_NAMES, inspectDatabase } from "../server/preflight/database.mjs";
 
 const plan = await loadMigrations();
-const appTables = plan.map(({ sql }) => /^CREATE TABLE ([a-z_]+)/.exec(sql)[1]);
+const appTables = createdMigrationTables(plan);
 const env = {
   JESSIEMESSAGE_DB_NAME: "jessiemessage_test_ci", JESSIEMESSAGE_APPLICATION_DATABASE: "jessiemessage_test_ci",
   JESSIEMESSAGE_DB_HOST: "database.example.invalid", JESSIEMESSAGE_DB_USER: "migration_identity",
@@ -85,7 +85,7 @@ test("SQL preflight drains one read-only snapshot and returns only fixed checks"
   assert.equal(statements.filter(({ sql }) => /WHERE 1 = 0$/.test(sql)).length, 27);
   assert.ok(statements.filter(({ sql }) => /^SELECT version|WHERE 1 = 0$/.test(sql)).every(({ timeout }) => timeout === 2000));
   assert.ok(statements.some(({ sql }) => sql === "START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT"));
-  assert.ok(statements.some(({ sql }) => sql.endsWith("ORDER BY version LIMIT 28")));
+  assert.ok(statements.some(({ sql }) => sql.endsWith("ORDER BY version LIMIT 29")));
   assert.doesNotMatch(statements.map(({ sql }) => sql).join("\n"), /GET_LOCK|RELEASE_LOCK|autocommit|foreign_key_checks|(?:^|\n)(?:INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|GRANT|REVOKE)\b/);
   assert.deepEqual(setup.calls.slice(-3), [{ action: "rollback" }, { action: "release" }, { action: "end" }]);
 });
@@ -385,7 +385,7 @@ test("ledger drift, missing migrations, invalid counters and unavailable sources
   const drift = history(); drift[3].checksum = "f".repeat(64);
   const dirty = history(); dirty[26].state = "running";
   const badAttempts = history(); badAttempts[2].attempts = "NaN";
-  for (const rows of [[], history().slice(0, -1), [...history(), { ...history()[26], version: 28 }], drift, dirty, badAttempts]) {
+  for (const rows of [[], history().slice(0, -1), [...history(), { ...history().at(-1), version: 29 }], drift, dirty, badAttempts]) {
     const setup = fixture({ rows });
     const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
     assert.equal(statuses(result).history, "fail"); assert.equal(statuses(result).schema_reads, "pass"); safeDto(result);
@@ -393,6 +393,17 @@ test("ledger drift, missing migrations, invalid counters and unavailable sources
   const setup = fixture({ loadPlan() { throw new Error("private migration path"); } });
   const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
   assert.equal(statuses(result).history, "fail"); assert.equal(statuses(result).schema_reads, "pass"); safeDto(result);
+});
+
+test("28 applied migrations pass with 27 application tables while a missing admission ALTER fails", async () => {
+  assert.equal(plan.length, 28); assert.equal(appTables.length, 27);
+  const complete = fixture();
+  const completeResult = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, complete.dependencies);
+  assert.equal(completeResult.valid, true);
+  const old = fixture({ rows: history().slice(0, 27) });
+  const oldResult = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, old.dependencies);
+  assert.equal(statuses(oldResult).history, "fail"); assert.equal(statuses(oldResult).schema_reads, "pass");
+  assert.equal(old.calls.filter(({ sql }) => sql?.endsWith("WHERE 1 = 0")).length, 27);
 });
 
 test("a projection failure stops the bounded loop and still rolls back, releases and closes", async () => {

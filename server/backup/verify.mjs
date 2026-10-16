@@ -6,9 +6,17 @@ import { openResetPayload } from "../reset/mail-crypto.mjs";
 import { decryptMessageBody, messageFingerprint, validateMessageBody } from "../chat/crypto.mjs";
 import { openNotes } from "../crm/crypto.mjs";
 import { openPayload, campaignFingerprint } from "../broadcast/crypto.mjs";
+import { createBackupCryptoStore } from "./crypto-store.mjs";
 
 const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "media"];
 const KEY_NAMES = ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"];
+const TEXT_PURPOSES = ["mfa", "mail", "messages"];
+const TEXT_INACTIVE_TABLES = [
+  ["reset", ["client_password_resets", "password_reset_outbox"]],
+  ["crm", ["crm_profiles", "crm_labels", "crm_memberships"]],
+  ["broadcast", ["broadcast_preferences", "broadcast_campaigns", "broadcast_recipients"]],
+  ["media", ["media_assets", "message_media", "media_storage_state", "media_storage_objects"]],
+];
 class VerificationStop extends Error { constructor(code) { super("Private backup verification stopped."); this.code = code; } }
 class RowFailure extends Error { constructor(code = "verification_failed") { super("Private backup data failed verification."); this.code = code; } }
 const stop = (code) => { throw new VerificationStop(code); };
@@ -25,6 +33,19 @@ function integer(value, maximum) { if (!Number.isSafeInteger(value) || value < 1
  * changing rows. The caller supplies storage created with keys.mediaKey and
  * separately verifies the pre-backup key canaries, schema and SQL snapshot. */
 export async function verifyBackupData({ store, storage, keys, signal, limits = {} } = {}) {
+  return verifyData({ store, storage, keys, signal, limits });
+}
+
+/** Verify an offline text-profile SQL copy using only the real MFA/mail/message
+ * keys. The caller owns the pool and separately proves schema/copy consistency.
+ * No HTTP, transport, worker, file or SQL mutation is created here. Unlike the
+ * full verifier, this profile refuses even inactive/deleted media metadata and
+ * non-content rows in disabled domains. Empty domains cannot certify a key. */
+export async function verifyTextBackupData({ pool, keys, signal, limits = {} } = {}) {
+  return verifyData({ pool, keys, signal, limits }, true);
+}
+
+async function verifyData({ store, storage, keys, signal, limits = {}, pool } = {}, textOnly = false) {
   const report = { complete: true, healthy: false,
     counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, broadcast: 0, broadcastRecipients: 0, media: 0, mediaFiles: 0 }, issues: [] };
   let secrets, currentPurpose = "verification", maxIssues = 100;
@@ -34,17 +55,35 @@ export async function verifyBackupData({ store, storage, keys, signal, limits = 
   }
   const checkSignal = () => { if (signal?.aborted) stop("aborted"); };
   try {
-    if (typeof store?.page !== "function" || typeof storage?.get !== "function" || !keys || typeof keys !== "object" || Array.isArray(keys)
-      || Object.keys(keys).length !== KEY_NAMES.length || KEY_NAMES.some((name) => !Buffer.isBuffer(keys[name]) || keys[name].length !== 32)
+    const keyNames = textOnly ? KEY_NAMES.slice(0, 3) : KEY_NAMES;
+    if ((textOnly ? typeof pool?.getConnection !== "function" : typeof store?.page !== "function" || typeof storage?.get !== "function")
+      || !keys || typeof keys !== "object" || Array.isArray(keys)
+      || Object.keys(keys).length !== keyNames.length || keyNames.some((name) => !Buffer.isBuffer(keys[name]) || keys[name].length !== 32)
       || !limits || typeof limits !== "object" || Array.isArray(limits) || Object.keys(limits).some((name) => !["maxRows", "maxIssues"].includes(name))) stop("invalid_configuration");
     const maxRows = limits.maxRows ?? 100000;
     maxIssues = limits.maxIssues ?? 100;
     if (!Number.isSafeInteger(maxRows) || maxRows < 1 || maxRows > 100000 || !Number.isSafeInteger(maxIssues) || maxIssues < 1 || maxIssues > 100) {
       maxIssues = 100; stop("invalid_configuration");
     }
-    secrets = Object.fromEntries(KEY_NAMES.map((name) => [name, Buffer.from(keys[name])]));
-    for (let first = 0; first < KEY_NAMES.length; first++) for (let second = first + 1; second < KEY_NAMES.length; second++) {
-      if (secrets[KEY_NAMES[first]].equals(secrets[KEY_NAMES[second]])) stop("invalid_configuration");
+    secrets = Object.fromEntries(keyNames.map((name) => [name, Buffer.from(keys[name])]));
+    for (let first = 0; first < keyNames.length; first++) for (let second = first + 1; second < keyNames.length; second++) {
+      if (secrets[keyNames[first]].equals(secrets[keyNames[second]])) stop("invalid_configuration");
+    }
+    if (textOnly) {
+      let connection;
+      try {
+        checkSignal(); connection = await pool.getConnection(); checkSignal();
+        for (const [purpose, tables] of TEXT_INACTIVE_TABLES) for (const table of tables) {
+          currentPurpose = purpose; checkSignal();
+          // Fixed table allowlist, EXISTS stops at the first row. Checking the
+          // underlying tables also catches deleted assets and empty CRM notes.
+          const rows = await connection.query(`SELECT EXISTS (SELECT 1 FROM ${table} LIMIT 1) AS present`);
+          checkSignal();
+          if (!Array.isArray(rows) || rows.length !== 1 || ![0, 1, 0n, 1n].includes(rows[0]?.present)) stop("invalid_page");
+          if (Number(rows[0].present) === 1) stop("inactive_domain_populated");
+        }
+      } finally { await connection?.release(); }
+      store = createBackupCryptoStore({ pool });
     }
     const countRow = () => { if (++report.counts.rows > maxRows) { report.counts.rows--; stop("row_limit"); } };
     async function verifyRow(purpose, row) {
@@ -67,6 +106,7 @@ export async function verifyBackupData({ store, storage, keys, signal, limits = 
         if (!["admin", "client"].includes(row.senderRole) || typeof row.deleted !== "boolean"
           || !binding.senderId.equals(bytes(row.senderRole === "admin" ? row.adminId : row.clientId, 16))) invalid();
         bytes(row.fingerprint, 32);
+        if (textOnly && (row.mediaId !== null || row.mediaOwnerId !== null)) throw new RowFailure("inactive_domain_populated");
         if (row.deleted) { if (row.encrypted !== null) invalid(); return; }
         text(row.encrypted, 22000);
         const body = decryptMessageBody(row.encrypted, secrets.messageKey, binding);
@@ -125,7 +165,7 @@ export async function verifyBackupData({ store, storage, keys, signal, limits = 
         } finally { if (Buffer.isBuffer(plaintext)) plaintext.fill(0); }
       }
     }
-    for (const purpose of PURPOSES) {
+    for (const purpose of textOnly ? TEXT_PURPOSES : PURPOSES) {
       currentPurpose = purpose;
       let afterId = null;
       while (true) {

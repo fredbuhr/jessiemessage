@@ -1,3 +1,4 @@
+import { CLIENT_ADMISSION_POLICY } from "./admission.mjs";
 import { readFile } from "node:fs/promises";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
 import { decodeAccessCursor, validateAccessPage } from "./pagination.mjs";
@@ -53,10 +54,11 @@ export function safeClientSession(session) {
   const { user, access } = session ?? {};
   if (!user || typeof user.id !== "string" || !idPattern.test(user.id) || user.role !== "client" || typeof user.pseudonym !== "string" || user.pseudonym.length > 64
     || !Number.isFinite(session.expiresAt) || !isToken(session.csrf) || !access || !["pending", "active", "expired"].includes(access.state)
-    || ["emailVerified", "ageAssured", "approved"].some((key) => typeof access[key] !== "boolean") || !nullableDate(access.expiresAt)
-    || access.state === "active" && (!access.emailVerified || !access.ageAssured || !access.approved)) throw httpError(503, "authentication_unavailable");
+    || ["emailVerified", "ageAssured", "approved", "invitationConsumed"].some((key) => typeof access[key] !== "boolean") || !nullableDate(access.expiresAt)
+    || access.admissionPolicy !== CLIENT_ADMISSION_POLICY
+    || access.state === "active" && (!access.emailVerified || !access.invitationConsumed || !access.approved)) throw httpError(503, "authentication_unavailable");
   return { user: { id: user.id, role: "client", pseudonym: user.pseudonym }, csrf: session.csrf, expiresAt: session.expiresAt,
-    access: { state: access.state, emailVerified: access.emailVerified, ageAssured: access.ageAssured, approved: access.approved, expiresAt: access.expiresAt } };
+    access: { state: access.state, admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed: access.invitationConsumed, emailVerified: access.emailVerified, ageAssured: access.ageAssured, approved: access.approved, expiresAt: access.expiresAt } };
 }
 function safeInvitation(value, created = false, origin) {
   if (!value || typeof value.id !== "string" || !idPattern.test(value.id) || !date(value.expiresAt) || !accessDays(value.accessDays)) throw httpError(503, "authentication_unavailable");
@@ -75,9 +77,9 @@ function safeInvitation(value, created = false, origin) {
 function safeClient(value) {
   if (!value || typeof value.id !== "string" || !idPattern.test(value.id) || typeof value.pseudonym !== "string" || value.pseudonym.length > 64
     || typeof value.email !== "string" || value.email.length > 254 || !["pending", "active", "suspended", "revoked", "deleted"].includes(value.status)
-    || ["emailVerified", "ageAssured", "approved"].some((key) => typeof value[key] !== "boolean") || !nullableDate(value.accessExpiresAt)
-    || !millisecondDate(value.createdAt)) throw httpError(503, "authentication_unavailable");
-  return { id: value.id, pseudonym: value.pseudonym, email: value.email, status: value.status, emailVerified: value.emailVerified, ageAssured: value.ageAssured, approved: value.approved, accessExpiresAt: value.accessExpiresAt, createdAt: value.createdAt };
+    || ["emailVerified", "ageAssured", "approved", "invitationConsumed"].some((key) => typeof value[key] !== "boolean") || !nullableDate(value.accessExpiresAt)
+    || value.admissionPolicy !== CLIENT_ADMISSION_POLICY || !millisecondDate(value.createdAt)) throw httpError(503, "authentication_unavailable");
+  return { id: value.id, pseudonym: value.pseudonym, email: value.email, status: value.status, admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed: value.invitationConsumed, emailVerified: value.emailVerified, ageAssured: value.ageAssured, approved: value.approved, accessExpiresAt: value.accessExpiresAt, createdAt: value.createdAt };
 }
 function safePage(value, kind, options, origin) {
   if (!value || !Array.isArray(value[kind]) || value[kind].length > options.limit || typeof value.hasMore !== "boolean"
@@ -153,7 +155,7 @@ export function createAccessHandler(service, { origin }) {
         if (method === "POST" && !sameText(request.headers["x-csrf-token"], data.csrf)) throw httpError(403, "request_rejected");
       }
       const peerAddress = request.socket.remoteAddress ?? "unknown";
-      if (pathname === "/api/admin/access") reply(response, method, 200, { capabilities: { emailDelivery: "configured", ageAssurance: "pending" } });
+      if (pathname === "/api/admin/access") reply(response, method, 200, { capabilities: { emailDelivery: "configured", admissionPolicy: CLIENT_ADMISSION_POLICY, ageAssurance: "not_integrated" } });
       else if (pathname === "/api/admin/invitations" && method === "GET") {
         reply(response, method, 200, safePage(await service.listInvitations(adminToken, page), "invitations", page, origin));
       } else if (pathname === "/api/admin/invitations") {
@@ -188,7 +190,7 @@ export function createAccessHandler(service, { origin }) {
       } else if (pathname === "/api/access/register") {
         const body = shape(await readJson(request), ["invitationToken", "email", "pseudonym", "password", "ageDeclared"]);
         const login = credentials(body);
-        if (!isToken(body.invitationToken) || typeof body.pseudonym !== "string" || !body.pseudonym.trim() || body.pseudonym.length > 64 || body.password.length < 14 || body.ageDeclared !== true) throw httpError(400, "invalid_request");
+        if (!isToken(body.invitationToken) || typeof body.pseudonym !== "string" || !body.pseudonym.trim() || body.pseudonym.length > 64 || body.password.length < 8 || body.ageDeclared !== true) throw httpError(400, "invalid_request");
         const result = await service.register({ ...login, pseudonym: body.pseudonym, invitationToken: body.invitationToken, ageDeclared: true, peerAddress });
         if (result?.status !== "verification_pending") throw httpError(503, "authentication_unavailable");
         reply(response, method, 202, { status: "verification_pending" });

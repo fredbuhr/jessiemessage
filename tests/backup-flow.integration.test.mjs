@@ -1,3 +1,4 @@
+import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
@@ -6,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore } from "../server/chat/store.mjs";
 import { createMediaStore } from "../server/media/store.mjs";
@@ -58,11 +59,9 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
   const targetEnv = { ...process.env, JESSIEMESSAGE_DB_NAME: restoreDatabase,
     JESSIEMESSAGE_MIGRATION_DATABASE: restoreDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: restoreDatabase };
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
-  const tables = migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup accepts only the reviewed CREATE TABLE migrations"); return match[1];
-  });
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const tables = createdMigrationTables(migrations);
+  assert.equal(tables.length, 27, "the admission ALTER adds a ledger entry, not a copied table");
   const allowedTables = [...tables, "schema_migrations", "migration_probe"];
   const qualified = (database, table) => {
     assert.ok([options.database, restoreDatabase].includes(database)); assert.ok(allowedTables.includes(table));
@@ -129,6 +128,7 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       if (user.role === "admin") await sourceConnection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, ?, 1, ?, ?)",
         [user.id, sealTotpSecret(makeTotpSecret(), keys.totpKey, user.id), Math.floor(now / 30000), sqlDate(now)]);
       else await sourceConnection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [user.id, sqlDate(now)]);
+      if (user.role === "client") await consumeSyntheticInvitation(sourceConnection, user.id, now);
       await sourceConnection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [user.sessionId, user.id, user.tokenHash, sqlDate(now), sqlDate(now + 28800000)]);
       if (user.role === "admin") await sourceConnection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [user.sessionId, sqlDate(now), sqlDate(now)]);
       else await sourceConnection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)", [user.sessionId, sqlDate(now)]);
@@ -223,7 +223,9 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
           await assertBackupInspection(inspector, options.database);
         } finally { inspector.release(); }
         t.diagnostic("inspection guards passed");
-        await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool }) });
+        const snapshot = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool }) });
+        assert.equal(snapshot.counts.tables, 28, "snapshot covers every application table and schema_migrations");
+        assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 28);
         t.diagnostic("source snapshot passed");
       } finally { await inspectionPool.end(); }
       const result = await run("prepare", { env: process.env, root: sourceRoot, databaseName: options.database });
@@ -281,7 +283,7 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       for (const changed of ["user", "ledger"]) {
         await clone();
         if (changed === "user") await targetConnection.query("UPDATE users SET pseudonym = 'Synthetic changed clone' WHERE id = ?", [client.id]);
-        else await targetConnection.query("UPDATE schema_migrations SET finished_at = DATE_ADD(finished_at, INTERVAL 1 MICROSECOND) WHERE version = 27");
+        else await targetConnection.query("UPDATE schema_migrations SET finished_at = DATE_ADD(finished_at, INTERVAL 1 MICROSECOND) WHERE version = ?", [migrations.at(-1).version]);
         const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
         await assert.rejects(run("restore"), backupError);
         assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();

@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, readdir, lstat, rm, writeFile } from "node:fs
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { withClientData } from "../server/data/store.mjs";
 import { DELETION_FACT_NAMES } from "../server/data/deletion-store.mjs";
@@ -23,11 +23,8 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 27);
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup accepts only explicit unqualified CREATE TABLE migrations"); return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool;
   async function cleanup() {
     const tables = await connection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [options.database]);

@@ -2,12 +2,12 @@ import test, { before, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { createAccessService } from "../server/access/service.mjs";
-import { hashPassword, newToken, tokenDigest } from "../server/auth/crypto.mjs";
+import { hashPassword, newToken, tokenDigest, verifyPassword } from "../server/auth/crypto.mjs";
 import { openVerificationPayload } from "../server/mail/crypto.mjs";
 import { encodeAccessCursor } from "../server/access/pagination.mjs";
 
 const key = randomBytes(32); const mailKey = randomBytes(32); const userId = randomBytes(16);
-const password = "Synthetic client password 2026!"; const token = newToken();
+const password = " Testé8 "; const token = newToken();
 let now, service, passwordHash, captured, state;
 before(async () => {
   passwordHash = await hashPassword(password);
@@ -19,7 +19,7 @@ before(async () => {
     reissueVerification: async (options) => { captured.push(options); return true; },
     completeClientLogin: async (options) => { captured.push(options); state.tokenHash = options.session.tokenHash; return state.loginAllowed; },
     getClientSession: async (hash) => state.tokenHash?.equals(hash) ? { userId, role: "client", pseudonym: "Synthetic client",
-      expiresAt: now + 100000, access: { state: state.access, emailVerified: true, ageAssured: state.access === "active",
+      expiresAt: now + 100000, access: { state: state.access, admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: state.access === "active",
         approved: state.access === "active", expiresAt: null } } : null,
     revokeClientSession: async () => { state.tokenHash = null; },
     revokeAllClientSessions: async (id) => { assert.deepEqual(id, userId); state.tokenHash = null; },
@@ -65,6 +65,9 @@ test("registration returns no email challenge, encrypts the atomic job and never
   assert.deepEqual(Object.keys(command.user).sort(), ["email", "id", "passwordHash", "pseudonym"]);
   assert.equal(command.user.email, "client@example.invalid");
   assert.notEqual(command.user.passwordHash, password);
+  assert.equal(password.length, 8);
+  assert.equal(await verifyPassword(password, command.user.passwordHash), true);
+  assert.equal(await verifyPassword(password.trim(), command.user.passwordHash), false);
   const decrypted = openVerificationPayload(command.mail.payloadEncrypted, mailKey, command.mail.id);
   assert.equal(decrypted.email, "client@example.invalid");
   assert.deepEqual(tokenDigest(decrypted.token), command.verification.tokenHash);
@@ -119,7 +122,7 @@ test("only a current administrator can obtain invitation links and stored lists 
 });
 
 const syntheticClient = (overrides = {}) => ({ id: "a".repeat(32), createdAt: now - 1000, pseudonym: "Synthetic client",
-  email: "client@example.invalid", status: "active", emailVerified: true, ageAssured: true, approved: true,
+  email: "client@example.invalid", status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: true, approved: true,
   accessExpiresAt: now + 86400000, ...overrides });
 const syntheticInvitation = (overrides = {}) => ({ id: "b".repeat(32), createdAt: now - 1000, expiresAt: now + 100000,
   accessDays: 30, state: "pending", consumedById: null, ...overrides });

@@ -1,5 +1,16 @@
 # JessieMessage — bilan et chemin vers le pilote
 
+**Étape 0.27 validée en recette :** [texte, sauvegarde restaurée et téléphone](pilot-preparation.md).
+Après sa confirmation de l'import SQL et du téléphone à 16:40 Europe/Paris,
+le propriétaire a fourni à 17:08 le reçu `status: verified` : 28 tables,
+28 migrations et quatre enregistrements chiffrés conformes à l'export figé.
+Le runtime demeure `14a43104`. Prochain lot **0.28 : photos privées**,
+avec les modules médias, galerie et stockage déjà présents ; pas de
+production ouverte par cette validation.
+
+**Current source of truth — 16 October 2026:** [manual admission and minimal private runtime, lot 0.26](manual-invitation-runtime.md). Stages 0.25 and 0.26 are accepted in recipe: backups checked, SMTP reception, administrator MFA sign-in, invited registration/email/approval and two-way text persistence after reloading both views. The active text runtime is pinned to `14a43104`, with an eight-character client minimum. Photos, CRM, broadcasts, client recovery and notifications remain outside that profile; they are not removed from the product scope. The entries below are historical observations of their revisions. Do not infer current deployment or a new KYC-provider requirement from an older entry. Production publication remains pending.
+
+
 Document de travail public, mis à jour le 15 octobre 2026. Aucune donnée de client, photographie personnelle ni configuration de production.
 
 **Reprise après interruption de la discussion :** voir l’[audit du 15 octobre](AUDIT-REPRISE-2026-10-15.md), réalisé sur le HEAD final 0.16 `0ecb31e`. Il confirme les tests/CI et la pile de 15 PR non fusionnées, puis la PR documentaire #16. Le [correctif 0.16.1](chat-stable-history.md) traite le remplacement des nœuds à chaque polling (A15), avec conservation des contrôles/photos et rechargement après masquage. Ce correctif est suivi du lot **0.17a supervision**, décrit ci-dessous. La recette navigateur et les autres constats restent ouverts ; aucune publication n’est effectuée par ce lot.

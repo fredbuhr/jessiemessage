@@ -1,3 +1,4 @@
+import { manuallyAdmittedClient, invitationConsumptionProjection } from "../access/admission.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
 
@@ -32,11 +33,7 @@ const limitValue = (value, max = 100) => { if (!Number.isInteger(value) || value
 const version = (value) => { const result = Number(value); if (!Number.isInteger(result) || result < 1 || result > 4294967295) state(); return result; };
 const roleValue = (role) => { if (!["admin", "client"].includes(role)) input(); return role; };
 const activeAdmin = (user) => Boolean(user && user.role === "admin" && user.status === "active");
-const activeClient = (user, now) => Boolean(user && user.role === "client" && user.status === "active"
-  && user.email_verified_at !== null && timestamp(user.email_verified_at) <= now
-  && user.age_assured_at !== null && timestamp(user.age_assured_at) <= now
-  && user.access_approved_at !== null && timestamp(user.access_approved_at) <= now
-  && (user.access_expires_at === null || timestamp(user.access_expires_at) > now));
+const activeClient = (user, now) => manuallyAdmittedClient(user, now, timestamp);
 const messageProjection = `m.id, m.conversation_id, m.sequence_no, m.sender_id, m.sender_role, m.client_message_id,
   m.body_encrypted, m.body_fingerprint, m.created_at, m.deleted_at, mm.media_id AS linked_media_id,
   ma.deleted_at AS media_deleted_at, ma.owner_id AS media_owner_id, ma.width AS media_width, ma.height AS media_height,
@@ -186,7 +183,7 @@ export function createChatStore(pool) {
 
   async function lockUser(connection, userId) {
     return (await connection.query(`SELECT id, role, status, pseudonym, email_verified_at, age_assured_at,
-      access_approved_at, access_expires_at FROM users WHERE id = ? FOR UPDATE`, [userId]))[0];
+      access_approved_at, access_expires_at, ${invitationConsumptionProjection()} FROM users WHERE id = ? FOR UPDATE`, [userId]))[0];
   }
   async function lockMfa(connection, admin, now) {
     if (!activeAdmin(admin)) fail("CHAT_FORBIDDEN");

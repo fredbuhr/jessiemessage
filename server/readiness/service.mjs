@@ -1,3 +1,4 @@
+import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { createHmac } from "node:crypto";
 import { canonicalEmail } from "../auth/config.mjs";
 import { tokenDigest } from "../auth/crypto.mjs";
@@ -140,7 +141,7 @@ export async function createReadinessService({ authService, authStore, mailConfi
       if (closed) fail("READINESS_UNAVAILABLE");
       return { contactEmail: SITE_CONTACT_EMAIL, mail: { configured, sender, replyTo: sender }, features: { ...featureSnapshot },
         ...(operations === null ? {} : { operations: safeOperationsSnapshot(operations.snapshot()) }),
-        checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
+        checks: { admissionPolicy: CLIENT_ADMISSION_POLICY, ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
     }),
     verifySmtp,
     close,

@@ -16,7 +16,7 @@ const actor = (changes = {}) => ({ user: { id: "a".repeat(32), role: "admin", ps
 const summary = (changes = {}) => ({ contactEmail: "contact@jessiemessage.com",
   mail: { configured: true, sender: "contact@jessiemessage.com", replyTo: "contact@jessiemessage.com", host: "private-host", password: "private-password" },
   features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: false, privateKey: "private-key" },
-  checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending", privateDatabase: "private-database" },
+  checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending", privateDatabase: "private-database" },
   username: "private-username", databaseName: "private-database", key: "private-key", ...changes });
 const proof = (changes = {}) => ({ status: "verified", checkedAt: now, scope: "smtp_authentication", delivery: "not_checked",
   host: "private-host", password: "private-password", transcript: "private-transcript", ...changes });
@@ -64,7 +64,7 @@ test("readiness summary whitelists public identity and feature inventory without
   assert.deepEqual(await response.json(), { contactEmail: "contact@jessiemessage.com",
     mail: { configured: true, sender: "contact@jessiemessage.com", replyTo: "contact@jessiemessage.com" },
     features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: false },
-    checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
+    checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
   assert.deepEqual(calls, [["actor", token], ["summary", token]]);
 });
 

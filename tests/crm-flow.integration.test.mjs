@@ -1,8 +1,9 @@
+import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
@@ -33,12 +34,8 @@ test("real HTTP private CRM, encrypted notes, scoped labels and current authoriz
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 27);
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
-    return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  assert.equal(migrations.length, 28);
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;
   let server;
@@ -81,14 +78,15 @@ test("real HTTP private CRM, encrypted notes, scoped labels and current authoriz
     const clients = ["a", "b", "unassigned"].map((suffix) => ({ id: randomBytes(16), conversationId: randomBytes(16),
       email: `crm-flow-client-${suffix}@example.invalid`, pseudonym: `Synthetic CRM client ${suffix.toUpperCase()}` }));
     const [clientA, clientB, otherClient] = clients;
-    // Email and majority stamps are independently assured synthetic SQL fixtures.
+    // Synthetic invitation, e-mail and administrator approval exercise manual admission.
     // This suite does not create real accounts, send mail, or provide an age-proof API.
     for (const client of clients) {
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash,
         email_verified_at, age_assured_at, access_approved_at, created_at, updated_at)
         VALUES (?, 'client', 'active', ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [client.id, client.pseudonym, client.email, clientHash, ...Array(5).fill(sqlDate(now))]);
+      [client.id, client.pseudonym, client.email, clientHash, sqlDate(now), null, sqlDate(now), sqlDate(now), sqlDate(now)]);
       await connection.query("INSERT INTO client_auth_state (user_id, age_declared_at) VALUES (?, ?)", [client.id, sqlDate(now)]);
+      await consumeSyntheticInvitation(connection, client.id, now);
       await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)",
         [client.conversationId, client.id, client === otherClient ? otherOwner.id : owner.id, sqlDate(now)]);
     }

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
@@ -31,12 +31,8 @@ test("administrator readiness with real SQL MFA, private HTTP and fake verificat
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 27);
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
-    return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  assert.equal(migrations.length, 28);
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;
   let server;
@@ -170,7 +166,7 @@ test("administrator readiness with real SQL MFA, private HTTP and fake verificat
       assert.equal(response.status, 200);
       assert.deepEqual(response.body, { contactEmail: "contact@jessiemessage.com", mail: { configured: true,
         sender: "contact@jessiemessage.com", replyTo: "contact@jessiemessage.com" }, features,
-      checks: { ageAssurance: "pending", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
+      checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
       const wire = JSON.stringify(response.body);
       for (const secret of [mailConfig.smtp.host, mailConfig.smtp.user, mailConfig.smtp.password, admin.email, key.toString("base64url"), options.database]) {
         assert.equal(wire.includes(secret), false);

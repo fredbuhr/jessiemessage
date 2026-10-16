@@ -14,7 +14,7 @@ Seules six variables sont construites dans le processus opérateur : host, port,
 
 La tentative préalable de préparer un emplacement pour des secrets persistants a été refusée par le contrôle existant des ancêtres : un répertoire système appartient à root et a le mode **775**. Cette observation ne démontre pas à elle seule une vulnérabilité du fournisseur. Aucune permission de l’hébergeur ni règle de stockage privé n’a été modifiée. La persistance privée des futurs secrets MFA, médias et autres configurations reste à résoudre séparément ; la saisie en mémoire suffit à cette opération de migration.
 
-## Deux opérations explicites
+## Trois opérations explicites
 
 Exemple depuis un checkout opérateur relu, avec des métadonnées fictives :
 
@@ -39,6 +39,18 @@ Pour initialiser explicitement la recette, remplacer `status` par **`initialize`
 
 Un historique partiel, en échec, en cours ou à reprendre est refusé par `initialize` : l’opérateur doit l’examiner. Les migrations immuables, les verrous et le ledger restent ceux du migrateur existant. Une erreur ne déclenche ni suppression, ni rollback DDL automatique, ni nouvelle tentative aveugle. Une base déjà entièrement appliquée est seulement revérifiée.
 
+Pour mettre à jour une base existante après sauvegarde et restauration vérifiées,
+remplacer `status` par **`upgrade`**. Cette opération exige un préfixe non vide de
+migrations appliquées et conformes, suivi uniquement de migrations en attente.
+Elle refuse une base vide, les trous dans l'historique et les états en cours,
+en échec ou à reprendre. Le runner existant reprend son verrou et revérifie
+l'historique avant toute DDL ; le helper n'écrit pas directement dans le ledger.
+Un second contrôle doit confirmer toutes les migrations appliquées avant le
+reçu `upgraded`. Une base entièrement à jour est seulement revérifiée, sans DDL.
+Pour le lot 0.26, le résultat attendu est 28 migrations, `applied: 1` et
+`unchanged: 27`. Le reçu ne prouve pas encore une migration hébergée : celle-ci
+reste une opération distincte, avec saisie personnelle du mot de passe SQL.
+
 Résultat réellement enregistré sur l’hébergement après les vingt-sept migrations :
 
 ```json
@@ -49,6 +61,6 @@ Ce résultat porte sur l’opération et l’historique. Il ne certifie pas tout
 
 ## Vérification
 
-Dix-sept tests synthétiques couvrent les entrées et leur confidentialité, les confirmations de cible, les décisions de statut/initialisation, les historiques partiels ou divergents, le refus d’une session sans chiffrement, les échecs de connexion/application/fermeture et l’absence de données privées dans les sorties. Les opérations SQL déléguées conservent les suites MariaDB existantes. La saisie masquée est également contrôlée dans un pseudo-terminal avec un secret synthétique ; aucun secret réel n’est utilisé en test.
+Les tests synthétiques couvrent les entrées et leur confidentialité, les confirmations de cible, les décisions de statut/initialisation/mise à jour, le passage 27→28, les historiques partiels ou divergents, le refus d’une session sans chiffrement, les échecs de connexion/application/fermeture et l’absence de données privées dans les sorties. Les opérations SQL déléguées conservent les suites MariaDB existantes. La saisie masquée est également contrôlée dans un pseudo-terminal avec un secret synthétique ; aucun secret réel n’est utilisé en test.
 
 Le script Bash a passé sa vérification de syntaxe ; les deux modules Node sont inclus dans `npm run check`. La CI du SHA exact est consignée dans la PR. Les 17 tests ciblés passent également sur Node 24.15.0 hébergé, depuis la racine du checkout. La preuve de migration hébergée est le rapport vérifié ci-dessus ; elle ne vaut pas validation de publication. **contact@jessiemessage.com** reste l’adresse officielle.

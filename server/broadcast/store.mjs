@@ -1,3 +1,4 @@
+import { manuallyAdmittedClient, invitationConsumptionProjection } from "../access/admission.mjs";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { ChatStoreError } from "../chat/store.mjs";
 import { loadMigrations, migrationStatus, MigrationError } from "../db/migrations.mjs";
@@ -26,11 +27,7 @@ const version = (value, allowZero = true) => {
 const storedVersion = (value) => { try { return version(String(value), false); } catch { state(); } };
 const count = (value) => { const result = Number(value); if (!Number.isSafeInteger(result) || result < 0) state(); return result; };
 const uint32 = (value) => { if (!Number.isSafeInteger(value) || value < 1 || value > 4294967295) input(); return value; };
-const activeClient = (client, now) => Boolean(client && client.role === "client" && client.status === "active"
-  && client.email_verified_at !== null && timestamp(client.email_verified_at) <= now
-  && client.age_assured_at !== null && timestamp(client.age_assured_at) <= now
-  && client.access_approved_at !== null && timestamp(client.access_approved_at) <= now
-  && (client.access_expires_at === null || timestamp(client.access_expires_at) > now));
+const activeClient = (user, now) => manuallyAdmittedClient(user, now, timestamp);
 const live = (campaign) => ["queued", "running"].includes(campaign.status);
 const placeholders = (values) => values.map(() => "?").join(", ");
 const ids = (values) => {
@@ -251,7 +248,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
     if (candidates.length !== conversationIds.length) fail("BROADCAST_NOT_FOUND");
     const clientIds = candidates.map((row) => row.client_id).sort(Buffer.compare);
     const clients = await connection.query(`SELECT id, role, status, pseudonym, email_verified_at, age_assured_at,
-      access_approved_at, access_expires_at FROM users WHERE id IN (${placeholders(clientIds)}) ORDER BY id ASC FOR UPDATE`, clientIds);
+      access_approved_at, access_expires_at, ${invitationConsumptionProjection()} FROM users WHERE id IN (${placeholders(clientIds)}) ORDER BY id ASC FOR UPDATE`, clientIds);
     const byClient = new Map(clients.map((row) => [row.id.toString("hex"), row]));
     const auth = await connection.query(`SELECT user_id FROM client_auth_state WHERE user_id IN (${placeholders(clientIds)}) ORDER BY user_id ASC FOR UPDATE`, clientIds);
     const authIds = new Set(auth.map((row) => row.user_id.toString("hex")));

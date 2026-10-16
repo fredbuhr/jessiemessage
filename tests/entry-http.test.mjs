@@ -10,7 +10,7 @@ const CLIENT_TOKEN = token(1), ADMIN_TOKEN = token(2), CSRF = token(3);
 const cookies = (client = CLIENT_TOKEN, admin = ADMIN_TOKEN) => [client ? `__Host-jessie_client=${client}` : "", admin ? `__Host-jessie_session=${admin}` : ""].filter(Boolean).join("; ");
 const client = (state = "active") => ({ user: { id: "1".repeat(32), role: "client", pseudonym: "Private client", email: "secret-client@example.invalid" },
   csrf: CSRF, expiresAt: NOW + 60000,
-  access: { state, emailVerified: true, ageAssured: state !== "pending", approved: state !== "pending", expiresAt: state === "expired" ? NOW - 1 : NOW + 30000 },
+  access: { state, admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: state !== "pending", expiresAt: state === "expired" ? NOW - 1 : NOW + 30000 },
   token: "private-token", passwordHash: "secret-password" });
 const administrator = () => ({ user: { id: "2".repeat(32), role: "admin", pseudonym: "Private administrator", email: "secret-admin@example.invalid" },
   csrf: CSRF, expiresAt: NOW + 60000, token: "private-admin-token", mfa: "secret-factor" });
@@ -160,9 +160,10 @@ test("service exceptions and malformed role DTOs return neutral 503 without anon
 });
 
 test("active client gates and access expiry metadata are validated before allowing messages", async (t) => {
-  for (const mutation of ["emailVerified", "ageAssured", "approved", "fraction", "string", "infinity", "negative", "expired-null"]) {
+  for (const mutation of ["emailVerified", "invitationConsumed", "admissionPolicy", "approved", "fraction", "string", "infinity", "negative", "expired-null"]) {
     const value = client();
-    if (["emailVerified", "ageAssured", "approved"].includes(mutation)) value.access[mutation] = false;
+    if (["emailVerified", "invitationConsumed", "approved"].includes(mutation)) value.access[mutation] = false;
+    if (mutation === "admissionPolicy") value.access.admissionPolicy = "external_verified";
     if (mutation === "fraction") value.access.expiresAt = NOW + 0.5;
     if (mutation === "string") value.access.expiresAt = new Date(NOW + 30000).toISOString();
     if (mutation === "infinity") value.access.expiresAt = Infinity;
@@ -175,7 +176,7 @@ test("active client gates and access expiry metadata are validated before allowi
   const value = client(); value.access.expiresAt = null;
   const base = await listen(t, { clientSession: async () => value, chatEnabled: true });
   const response = await fetch(`${base}/api/entry`, { headers: { Cookie: cookies(CLIENT_TOKEN, null) } });
-  assert.equal((await response.json()).client.href, "/messages", "approved unlimited access remains supported");
+  assert.equal((await response.json()).client.href, "/messages", "manually approved unlimited access without an age observation remains supported");
 });
 
 test("both independent lookups drain after one rejects and no error response abandons the remaining query", async (t) => {

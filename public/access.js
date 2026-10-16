@@ -70,7 +70,7 @@ function validClientSession(session) {
     && typeof user.pseudonym === "string" && user.pseudonym.length <= 64 && user.pseudonym.isWellFormed()
     && typeof session.csrf === "string" && session.csrf.length === 43 && /^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/.test(session.csrf)
     && date(session.expiresAt) && session.expiresAt > Date.now() && ["pending", "active", "expired"].includes(access?.state)
-    && ["emailVerified", "ageAssured", "approved"].every((key) => typeof access[key] === "boolean")
+    && access.admissionPolicy === "manual_invitation" && ["emailVerified", "invitationConsumed", "ageAssured", "approved"].every((key) => typeof access[key] === "boolean")
     && (access.expiresAt === null || date(access.expiresAt));
 }
 function sameClientOwner(first, second) { return first.user.id === second.user.id && first.user.role === second.user.role && first.csrf === second.csrf; }
@@ -100,8 +100,9 @@ function signedIn(session) {
   const access = session.access;
   accessI18n.text(element("client-access-state"), access.state === "active" ? "Ton accès est validé." : access.state === "expired" ? "Ton accès a expiré. Jessie pourra le renouveler." : "Ton compte est créé. Ton accès reste en attente de validation.");
   const list = element("client-checks"); list.replaceChildren();
-  for (const [label, valid] of [["Adresse e-mail", access.emailVerified], ["Vérification de majorité", access.ageAssured], ["Accord de Jessie", access.approved]]) {
-    const item = document.createElement("li"); accessI18n.text(item, `${label} : ${valid ? "validé" : "en attente"}`); list.append(item);
+  for (const text of ["Admission manuelle", `Adresse e-mail : ${access.emailVerified ? "validé" : "en attente"}`,
+    access.invitationConsumed ? "Invitation utilisée" : "Invitation : en attente", access.approved ? "Accès approuvé par Jess" : "Approbation de Jess : en attente"]) {
+    const item = document.createElement("li"); accessI18n.text(item, text); list.append(item);
   }
   element("resend-section").hidden = access.emailVerified;
   clearTimeout(expiryTimer);
@@ -122,7 +123,7 @@ async function loadRecoveryCapability() {
   try {
     const capability = await request("/api/access/recovery/capabilities");
     if (epoch !== recoveryCapabilityEpoch || !visible()) return;
-    if (capability?.enabled !== true || capability.password?.minLength !== 14 || capability.password?.maxLength !== 128) throw new Error("invalid_recovery_capability");
+    if (capability?.enabled !== true || capability.password?.minLength !== 8 || capability.password?.maxLength !== 128) throw new Error("invalid_recovery_capability");
     recoveryEnabled = true;
   } catch (error) {
     if (error.stale || epoch !== recoveryCapabilityEpoch || !visible()) return;

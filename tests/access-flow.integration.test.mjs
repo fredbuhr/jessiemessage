@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
 import { createAuthService } from "../server/auth/service.mjs";
@@ -29,11 +29,7 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  const allowedTables = [...migrations.map((migration) => {
-    const match = /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim());
-    assert.ok(match, "cleanup supports only explicit unqualified CREATE TABLE migrations");
-    return match[1];
-  }).reverse(), "migration_probe", "schema_migrations"];
+  const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;
   let server;
@@ -90,7 +86,8 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
     let clientCsrf;
     let renewedExpiry;
     const clientEmail = "first-flow-client@example.invalid";
-    const clientPassword = "Synthetic first invited client password 2026!";
+    const clientPassword = " Testé8 ";
+    assert.equal(clientPassword.length, 8);
     const adminHeaders = () => ({ Cookie: adminCookie, "X-CSRF-Token": adminCsrf });
     const clientHeaders = () => ({ Cookie: clientCookie, "X-CSRF-Token": clientCsrf });
 
@@ -159,7 +156,7 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       clientCookie = login.headers.get("set-cookie").split(";")[0];
       clientCsrf = login.body.csrf;
       assert.deepEqual(login.body.user, { id: firstClientId, role: "client", pseudonym: "Synthetic first client" });
-      assert.deepEqual(login.body.access, { state: "pending", emailVerified: true, ageAssured: false, approved: false, expiresAt: null });
+      assert.deepEqual(login.body.access, { state: "pending", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: false, expiresAt: null });
       assert.equal(Object.hasOwn(login.body, "token"), false);
       assert.equal(Object.hasOwn(login.body.user, "email"), false);
       assert.equal((await request("/api/admin/clients", { headers: { Cookie: clientCookie } })).status, 401);
@@ -169,19 +166,16 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       assert.equal((await request("/api/access/session", { headers: { Cookie: `__Host-jessie_client=${tokenFromCookie(adminCookie)}` } })).status, 401);
       await assert.rejects(accessService.requireActiveClient(tokenFromCookie(clientCookie)));
       assert.equal((await request(`/api/admin/clients/${firstClientId}/approve`, { method: "POST", headers: { ...adminHeaders(), "X-CSRF-Token": clientCsrf }, body: {} })).status, 403);
-      assert.equal((await request(`/api/admin/clients/${firstClientId}/approve`, { method: "POST", headers: adminHeaders(), body: {} })).status, 409);
       assert.equal((await connection.query("SELECT status FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0].status, "pending");
       assert.equal(await count("conversations"), 0);
     });
 
-    await t.test("an independently obtained age proof and administrator approval open exactly one conversation and start access duration at approval", async () => {
+    await t.test("manual approval of the invited email-verified client opens exactly one conversation without inventing age evidence", async () => {
       now += 300000;
-      // Synthetic fixture only: the UI and API cannot supply an age-proof stamp.
-      await connection.query("UPDATE users SET age_assured_at = ?, updated_at = ? WHERE id = ?", [sqlDate(now), sqlDate(now), Buffer.from(firstClientId, "hex")]);
       const approved = await request(`/api/admin/clients/${firstClientId}/approve`, { method: "POST", headers: adminHeaders(), body: {} });
       assert.equal(approved.status, 200);
-      const user = (await connection.query("SELECT status, access_approved_at, access_expires_at FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0];
-      assert.equal(user.status, "active");
+      const user = (await connection.query("SELECT status, age_assured_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0];
+      assert.equal(user.status, "active"); assert.equal(user.age_assured_at, null);
       assert.equal(instant(user.access_approved_at), now);
       assert.equal(instant(user.access_expires_at), now + 2 * 86400000);
       assert.ok(instant(user.access_expires_at) > Number(firstInvitation.expiresAt));
@@ -194,7 +188,9 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       const active = await request("/api/access/session", { headers: clientHeaders() });
       assert.equal(active.status, 200);
       assert.equal(active.body.access.state, "active");
-      assert.equal(active.body.access.ageAssured, true);
+      assert.equal(active.body.access.ageAssured, false);
+      assert.equal(active.body.access.admissionPolicy, "manual_invitation");
+      assert.equal(active.body.access.invitationConsumed, true);
       assert.equal(active.body.access.approved, true);
       const principal = await accessService.requireActiveClient(tokenFromCookie(clientCookie));
       assert.equal(principal.user.id, firstClientId);

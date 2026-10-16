@@ -5,11 +5,12 @@ import { execFile, spawn } from "node:child_process";
 import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
-import { validateRuntimeAuthenticationConfiguration, validateRuntimeDatabaseConfiguration } from "../server/config/runtime-database-file.mjs";
+import { validateRuntimeAuthenticationConfiguration, validateRuntimeDatabaseConfiguration, validateRuntimeMessagingConfiguration } from "../server/config/runtime-database-file.mjs";
 import { readPassword } from "./migration-input.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const FILES = ["runtime-auth.json", "admin-setup.json", "runtime-database.json"];
+const MESSAGING_FILE = "runtime-messaging.json";
 const FILE_LIMIT = 16384, PAYLOAD_LIMIT = 65536, CIPHER_LIMIT = 131072;
 const STATS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 const FORMAT = "jessiemessage-private-secrets-backup";
@@ -27,25 +28,42 @@ const plain = (value) => value && Object.getPrototypeOf(value) === Object.protot
 const inside = (filename, root) => { const suffix = relative(root, filename); return suffix === "" || suffix !== ".." && !suffix.startsWith(`..${sep}`) && !suffix.startsWith(sep); };
 
 export function parseArguments(args) {
-  if (!Array.isArray(args) || args.length !== 4) fail("PRIVATE_SECRETS_USAGE");
-  const selected = {}, names = new Map([["--private-directory", "privateDirectory"], ["--output", "output"]]);
+  if (!Array.isArray(args) || ![4, 6].includes(args.length)) fail("PRIVATE_SECRETS_USAGE");
+  const selected = {}, names = new Map([["--private-directory", "privateDirectory"], ["--output", "output"], ["--profile", "profile"]]);
   for (let index = 0; index < args.length; index += 2) {
     const name = names.get(args[index]), value = args[index + 1];
     if (!name || Object.hasOwn(selected, name) || typeof value !== "string" || !value) fail("PRIVATE_SECRETS_USAGE");
     selected[name] = value;
   }
   const { privateDirectory, output } = selected;
-  if (!privateDirectory.startsWith("/") || privateDirectory === "/" || privateDirectory.length > 4096
+  if (typeof privateDirectory !== "string" || typeof output !== "string"
+    || selected.profile !== undefined && !["auth", "messaging"].includes(selected.profile)
+    || !privateDirectory.startsWith("/") || privateDirectory === "/" || privateDirectory.length > 4096
     || resolve(privateDirectory) !== privateDirectory || /[\\\x00-\x1f\x7f]/.test(privateDirectory)
     || inside(privateDirectory, REPOSITORY) || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}\.json\.gpg$/.test(output)) fail("PRIVATE_SECRETS_USAGE");
-  return { privateDirectory, output };
+  return { privateDirectory, output, ...(selected.profile === undefined ? {} : { profile: selected.profile }) };
 }
 
 function options(value) {
   if (!plain(value) || Object.getOwnPropertySymbols(value).length
-    || Object.getOwnPropertyNames(value).sort().join(",") !== "output,privateDirectory"
+    || !["output,privateDirectory", "output,privateDirectory,profile"].includes(Object.getOwnPropertyNames(value).sort().join(","))
     || ["privateDirectory", "output"].some((name) => !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name) ?? {}, "value"))) fail("PRIVATE_SECRETS_USAGE");
-  return parseArguments(["--private-directory", value.privateDirectory, "--output", value.output]);
+  const profile = Object.getOwnPropertyDescriptor(value, "profile");
+  if (profile && !Object.hasOwn(profile, "value")) fail("PRIVATE_SECRETS_USAGE");
+  return parseArguments(["--private-directory", value.privateDirectory, "--output", value.output,
+    ...(profile ? ["--profile", profile.value] : [])]);
+}
+
+const sourceNames = (selected) => selected.profile === "messaging" ? [...FILES, MESSAGING_FILE] : FILES;
+
+// Refuse a new AUTH-only receipt that would omit already-prepared mail/chat
+// secrets. Old three-file coffres remain valid and are never replaced.
+async function assertProfile(scope, selected) {
+  if (selected.profile === "messaging") return;
+  await scope.assertReady();
+  try { await lstat(scope.file(MESSAGING_FILE)); }
+  catch (error) { if (error.code === "ENOENT") return; throw error; }
+  fail("PRIVATE_SECRETS_SOURCE");
 }
 
 function passwordBytes(password) {
@@ -112,6 +130,7 @@ function validateSource(name, content) {
     value = JSON.parse(content);
     if (name === "runtime-auth.json") validated = validateRuntimeAuthenticationConfiguration(value);
     else if (name === "runtime-database.json") validated = validateRuntimeDatabaseConfiguration(value);
+    else if (name === MESSAGING_FILE) validated = validateRuntimeMessagingConfiguration(value);
     else if (!plain(value) || value.schema !== "jessiemessage-admin-setup-v1" || !plain(value.totp)
       || typeof value.totp.secret !== "string" || !/^[A-Z2-7]{26,103}$/.test(value.totp.secret)
       || !Array.isArray(value.recoveryCodes) || value.recoveryCodes.length !== 8
@@ -119,18 +138,18 @@ function validateSource(name, content) {
   } catch { fail("PRIVATE_SECRETS_SOURCE"); }
   finally {
     for (const record of [value, validated]) if (record && typeof record === "object") {
-      for (const name of ["password", "mfaKey"]) if (Object.hasOwn(record, name)) record[name] = "";
+      for (const name of ["password", "mfaKey", "smtpUser", "smtpPassword", "mailKey", "messageKey"]) if (Object.hasOwn(record, name)) record[name] = "";
       if (record.totp) { record.totp.secret = ""; record.totp.uri = ""; }
       if (record.recoveryCodes) record.recoveryCodes.fill("");
     }
   }
 }
 
-async function capture(scope, now, snapshots) {
+async function capture(scope, now, snapshots, selected) {
   const files = []; let payload;
   try {
     if (!Number.isSafeInteger(now) || now < 0 || now > 253402300799999) fail("PRIVATE_SECRETS_USAGE");
-    for (const name of FILES) {
+    for (const name of sourceNames(selected)) {
       let bytes;
       try {
         bytes = await readPrivateFile(scope, name, FILE_LIMIT, snapshots);
@@ -139,7 +158,9 @@ async function capture(scope, now, snapshots) {
         files.push({ name, encoding: "utf-8", content, sha256: digest(bytes) });
       } finally { bytes?.fill(0); }
     }
-    payload = Buffer.from(JSON.stringify({ format: FORMAT, version: 1, createdAt: new Date(now).toISOString(), applicationVersion: "0.24.0", files }) + "\n", "utf8");
+    payload = Buffer.from(JSON.stringify({ format: FORMAT, version: selected.profile === "messaging" ? 2 : 1,
+      ...(selected.profile === "messaging" ? { profile: "messaging" } : {}),
+      createdAt: new Date(now).toISOString(), applicationVersion: "0.24.0", files }) + "\n", "utf8");
     if (payload.length > PAYLOAD_LIMIT) fail("PRIVATE_SECRETS_SOURCE");
     return payload;
   } catch (error) { payload?.fill(0); throw error; }
@@ -260,10 +281,13 @@ async function publish(scope, name, ciphertext) {
 /** No database access or server change. Existing files are never overwritten. */
 export async function check(value) {
   try {
-    return await privateScope(options(value), async (scope) => {
-      for (const name of FILES) await inspectPrivateFile(scope, name);
+    const selected = options(value);
+    return await privateScope(selected, async (scope) => {
+      await assertProfile(scope, selected);
+      for (const name of sourceNames(selected)) await inspectPrivateFile(scope, name);
       await inspectGpg();
-      return { status: "checked", files: 3, sourceContentsRead: false, gpgAvailable: true, secretsOnly: true, databaseBackup: false };
+      await assertProfile(scope, selected);
+      return { status: "checked", files: sourceNames(selected).length, sourceContentsRead: false, gpgAvailable: true, secretsOnly: true, databaseBackup: false };
     });
   } catch (error) { if (error instanceof PrivateSecretsBackupError) throw error; fail("PRIVATE_SECRETS_SOURCE"); }
 }
@@ -273,8 +297,9 @@ export async function run(value, password) {
   try {
     const selected = options(value); pass = passwordBytes(password); password = "";
     return await privateScope(selected, async (scope) => {
+      await assertProfile(scope, selected);
       const snapshots = [];
-      payload = await capture(scope, Date.now(), snapshots);
+      payload = await capture(scope, Date.now(), snapshots, selected);
       for (const record of snapshots) await inspectPrivateFile(scope, record.name, record.stats);
       ciphertext = await isolatedGpg(scope, async (homeFd) => {
         const encrypted = await gpg(scope, homeFd, "encrypt", payload, pass);
@@ -285,10 +310,12 @@ export async function run(value, password) {
         } catch (error) { encrypted.fill(0); throw error; }
         finally { decrypted?.fill(0); decrypted = undefined; }
       });
+      await assertProfile(scope, selected);
       for (const record of snapshots) await inspectPrivateFile(scope, record.name, record.stats);
       await publish(scope, selected.output, ciphertext);
+      await assertProfile(scope, selected);
       for (const record of snapshots) await inspectPrivateFile(scope, record.name, record.stats);
-      return { status: "saved", output: selected.output, files: 3, bytes: ciphertext.length, sha256: digest(ciphertext),
+      return { status: "saved", output: selected.output, files: sourceNames(selected).length, bytes: ciphertext.length, sha256: digest(ciphertext),
         encrypted: true, verified: true, secretsOnly: true, databaseBackup: false };
     });
   } catch (error) { if (error instanceof PrivateSecretsBackupError) throw error; fail("PRIVATE_SECRETS_OPERATION"); }
@@ -304,14 +331,16 @@ export async function verifyCiphertext(value, ciphertext, password) {
     return await privateScope(selected, async (scope) => isolatedGpg(scope, async (homeFd) => {
       decrypted = await gpg(scope, homeFd, "decrypt", ciphertext, pass);
       const parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(decrypted));
-      if (!plain(parsed) || parsed.format !== FORMAT || parsed.version !== 1 || !Array.isArray(parsed.files) || parsed.files.length !== 3) fail("PRIVATE_SECRETS_VERIFY");
-      for (let index = 0; index < FILES.length; index += 1) {
+      const names = sourceNames(selected), messaging = selected.profile === "messaging";
+      if (!plain(parsed) || parsed.format !== FORMAT || parsed.version !== (messaging ? 2 : 1)
+        || messaging && parsed.profile !== "messaging" || !Array.isArray(parsed.files) || parsed.files.length !== names.length) fail("PRIVATE_SECRETS_VERIFY");
+      for (let index = 0; index < names.length; index += 1) {
         const file = parsed.files[index];
-        if (!plain(file) || file.name !== FILES[index] || file.encoding !== "utf-8" || typeof file.content !== "string"
+        if (!plain(file) || file.name !== names[index] || file.encoding !== "utf-8" || typeof file.content !== "string"
           || digest(Buffer.from(file.content, "utf8")) !== file.sha256) fail("PRIVATE_SECRETS_VERIFY");
         validateSource(file.name, file.content); file.content = "";
       }
-      return { verified: true, files: 3, secretsOnly: true, databaseBackup: false };
+      return { verified: true, files: names.length, secretsOnly: true, databaseBackup: false };
     }));
   } catch (error) { if (error instanceof PrivateSecretsBackupError) throw error; fail("PRIVATE_SECRETS_VERIFY"); }
   finally { password = ""; pass?.fill(0); decrypted?.fill(0); }

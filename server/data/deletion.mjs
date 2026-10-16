@@ -1,4 +1,4 @@
-import { validateMigrationPlan } from "../db/migrations.mjs";
+import { validateMigrationPlan, createdMigrationTables } from "../db/migrations.mjs";
 import { DATA_POLICY } from "./policy.mjs";
 import { DELETION_FACT_NAMES } from "./deletion-store.mjs";
 import { inspectRollbackHistory } from "./rollback.mjs";
@@ -54,11 +54,12 @@ function columnList(value) {
 }
 function schema(migrations) {
   validateMigrationPlan(migrations);
-  if (migrations.length !== 27 || TABLES.size !== 27) fail();
+  if (migrations.length !== 28 || createdMigrationTables(migrations).length !== TABLES.size || TABLES.size !== 27) fail();
   const tables = new Map(), foreignKeys = [], constraintNames = new Set();
   for (const migration of migrations) {
     const sql = structuralSql(migration.sql), create = /^\s*CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(sql);
-    if (!create || [...sql.matchAll(/\bCREATE\s+TABLE\b/gi)].length !== 1) fail();
+    if (!create) continue; // The validated CHECK-only ALTER changes no deletion graph.
+    if ([...sql.matchAll(/\bCREATE\s+TABLE\b/gi)].length !== 1) fail();
     const table = create[1].toLowerCase();
     if (!TABLES.has(table) || tables.has(table)) fail();
     const columns = new Set([...sql.matchAll(/^\s*([a-z][a-z0-9_]*)\s+(?:VARBINARY|VARCHAR|TINYINT|SMALLINT|INT|BIGINT|DATETIME)\b/gmi)]

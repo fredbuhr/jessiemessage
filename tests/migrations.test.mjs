@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { checksumSql, inspectHistory, loadMigrations, migrationLockName, migrationStatus, validateMigrationPlan, validateSql } from "../server/db/migrations.mjs";
+import { checksumSql, createdMigrationTables, inspectHistory, loadMigrations, migrationLockName, migrationStatus, validateMigrationPlan, validateSql } from "../server/db/migrations.mjs";
 import { parseArguments } from "../scripts/migrate.mjs";
 
 const sql = "CREATE TABLE example (id INT NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
@@ -18,9 +18,35 @@ const errorCode = (code) => (error) => error.code === code;
 
 test("all committed migrations have consecutive names, exact SHA-256 checksums and a supported SQL format", async () => {
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 27);
-  assert.deepEqual(migrations.map((item) => item.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]);
+  assert.equal(migrations.length, 28);
+  assert.deepEqual(migrations.map((item) => item.version), Array.from({ length: 28 }, (_, index) => index + 1));
   assert.ok(migrations.every((item) => /^[0-9a-f]{64}$/.test(item.checksum)));
+});
+
+test("the admission migration replaces only its reviewed CHECK in one atomic ALTER", async () => {
+  const plan = await loadMigrations(), source = plan[27].sql;
+  assert.equal(plan[27].name, "0028_manual_client_admission.sql");
+  assert.equal(validateSql(source), source);
+  assert.equal(validateSql(`-- reviewed migration\n${source}\n/* one ALTER */`), `-- reviewed migration\n${source}\n/* one ALTER */`);
+  for (const changed of [
+    source.replace("users\n", "invitations\n"), source.replace("DROP CONSTRAINT", "DROP CONSTRAINT IF EXISTS"),
+    source.replace("users_active_client_gates,", "users_role,"), source.replace("ADD CONSTRAINT users_active_client_gates", "ADD CONSTRAINT different_gate"),
+    source.replace("'client'", "'admin'"), source.replace("'active'", "'pending'"), source.replace("'active'", '"active"'),
+    source.replace("email_verified_at IS NOT NULL AND ", ""), source.replace("access_approved_at IS NOT NULL", "1 = 1"),
+    source.replace("IS NOT NULL", "IS NULL"), source.replace(" AND ", " OR "),
+    source.replace(/,\s*ADD[\s\S]+/, ";"), `${source}\nDROP TABLE users;`,
+    source.trim().replace(/;$/, ", ADD COLUMN unexpected INT;"), source.replace("users\n", "other.users\n"),
+  ]) assert.throws(() => validateSql(changed), errorCode("SQL_FORMAT"), changed);
+});
+
+test("table inventory contains 27 CREATE tables independently from 28 ledger migrations", async () => {
+  const plan = await loadMigrations(), tables = createdMigrationTables(plan);
+  assert.equal(tables.length, 27); assert.equal(new Set(tables).size, 27);
+  assert.deepEqual(tables, createdMigrationTables(plan.slice(0, 27)));
+  assert.equal(tables[0], "users"); assert.equal(tables.at(-1), "media_storage_objects");
+  const commented = [{ ...migration(), sql: `/* reviewed */ ${sql}`, checksum: checksumSql(`/* reviewed */ ${sql}`) }];
+  assert.deepEqual(createdMigrationTables(commented), ["example"]);
+  assert.throws(() => createdMigrationTables([{ ...migration(), checksum: "0".repeat(64) }]), errorCode("MIGRATION_PLAN"));
 });
 
 test("SQL format accepts strings/comments without treating their semicolons as statements", () => {

@@ -31,7 +31,7 @@ class Element {
 }
 
 const clientRow = (index = 3, changes = {}) => ({ id: index.toString(16).padStart(32, "0"), pseudonym: `Client ${index}`, email: `client-${index}@example.invalid`,
-  status: "active", emailVerified: true, ageAssured: true, approved: true, createdAt: initialTime - index, accessExpiresAt: initialTime + 86400000, ...changes });
+  status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, createdAt: initialTime - index, accessExpiresAt: initialTime + 86400000, ...changes });
 const invitationRow = (index = 2) => ({ id: index.toString(16).padStart(32, "0"), createdAt: initialTime - index, expiresAt: initialTime + 3600000, accessDays: 30, state: "pending" });
 function harness({ visible = true, currentSession = session(), intercept, clipboard,
   clients = [clientRow(3, { pseudonym: "Client synthétique", email: "private-client@example.invalid", accessExpiresAt: null })],
@@ -295,7 +295,7 @@ test("cookie actor changes during private reads discard the old audience before 
       ? { user: { id: "9".repeat(32), role: "admin", pseudonym: "Session actuelle" } }
       : { csrf: "F".repeat(43) });
     oldClients.resolve(response(200, { clients: [{ id: "8".repeat(32), pseudonym: "Ancien public", email: "old-audience@example.invalid",
-      status: "active", emailVerified: true, ageAssured: true, accessExpiresAt: null }] }));
+      status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, accessExpiresAt: null }] }));
     await flush();
     assert.equal(f.element("connected-name").textContent, "Session actuelle");
     assert.equal(contents(f.element("clients-list")).includes("old-audience@example.invalid"), false);
@@ -452,16 +452,46 @@ test("invalid pagination metadata never advances or replaces an already verified
   }
 });
 
-test("only verified approved finite active access offers renewal and expired access is identified", async () => {
+test("only invited email-verified approved finite active access offers renewal and expired access is identified", async () => {
   const clients = [clientRow(1), clientRow(2, { accessExpiresAt: initialTime - 1 }), clientRow(3, { accessExpiresAt: null }),
     ...["pending", "suspended", "revoked", "deleted"].map((status, index) => clientRow(index + 4, { status })),
-    clientRow(8, { emailVerified: false }), clientRow(9, { ageAssured: false }), clientRow(10, { approved: false })];
+    clientRow(8, { emailVerified: false }), clientRow(9, { invitationConsumed: false }), clientRow(10, { approved: false })];
   const f = harness({ clients }); await flush();
   assert.equal(renewForms(f).length, 2);
   assert.match(contents(f.element("clients-list").children[0]), /État : Actif/);
   assert.match(contents(f.element("clients-list").children[1]), /État : Accès expiré/);
   assert.match(contents(renewForms(f)[0]), /Prolonger l’accès/); assert.match(contents(renewForms(f)[1]), /Renouveler l’accès expiré/);
   for (const form of renewForms(f)) assert.equal(form.querySelectorAll("input")[0].value, "30");
+});
+
+test("manual admission allows approval without age assurance only after invitation consumption and email verification", async () => {
+  const clients = [clientRow(1, { status: "pending", approved: false }), clientRow(2, { status: "pending", approved: false, emailVerified: false }),
+    clientRow(3, { status: "pending", approved: false, invitationConsumed: false })];
+  let f;
+  f = harness({ clients, intercept: (path) => {
+    if (!path.endsWith("/approve")) return undefined;
+    f.state.clients[0] = clientRow(1);
+    return response(200, { status: "approved" });
+  } });
+  await flush();
+  const cards = f.element("clients-list").children;
+  const buttons = cards.map((card) => card.querySelectorAll("button")[0]);
+  assert.equal(buttons[0].disabled, false); assert.equal(buttons[1].disabled, true); assert.equal(buttons[2].disabled, true);
+  assert.match(contents(cards[0]), /Admission manuelle/); assert.match(contents(cards[0]), /Approbation de Jess : en attente/);
+  assert.doesNotMatch(contents(f.element("clients-list")), /Majorité|majorité vérifiée/);
+  buttons[0].events.get("click")(); await flush();
+  const approval = posts(f); assert.equal(approval.length, 1); assert.equal(approval[0].path, `/api/admin/clients/${clients[0].id}/approve`);
+  assert.equal(approval[0].options.headers["X-CSRF-Token"], session().csrf);
+  assert.match(contents(f.element("clients-list").children[0]), /Accès approuvé par Jess/);
+  assert.equal(f.element("auth-status").textContent, "L’accès client est approuvé.");
+});
+
+test("a client list with missing or unknown admission fields is rejected before private rows are rendered", async () => {
+  for (const changes of [{ admissionPolicy: undefined }, { admissionPolicy: "unknown" }, { invitationConsumed: undefined }, { invitationConsumed: "true" }]) {
+    const f = harness({ clients: [clientRow(1, changes)] }); await flush();
+    assert.equal(f.element("clients-list").children.length, 0); assert.equal(f.element("access-tools").hidden, true);
+    assert.doesNotMatch(contents(f.element("clients-list")), /client-1@example/); assert.equal(posts(f).length, 0);
+  }
 });
 
 test("renewal snapshots the chosen duration and expiry, preserves the busy draft and refreshes only the current client page", async () => {

@@ -19,10 +19,10 @@ const clientCookie = `__Host-jessie_client=${clientToken}`;
 const credentials = { email: "client@example.invalid", password: "un mot de passe assez long" };
 const registration = { ...credentials, pseudonym: "Client", invitationToken, ageDeclared: true };
 const invitation = () => ({ id: invitationId, createdAt, expiresAt: Date.now() + 3600000, accessDays: 30, state: "pending", consumedById: null });
-const client = () => ({ id: clientId, createdAt, pseudonym: "Client", email: credentials.email, status: "pending", emailVerified: false, ageAssured: false, approved: false, accessExpiresAt: null });
+const client = () => ({ id: clientId, createdAt, pseudonym: "Client", email: credentials.email, status: "pending", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: false, ageAssured: false, approved: false, accessExpiresAt: null });
 const page = (kind, rows, nextCursor = null) => ({ [kind]: rows, nextCursor, hasMore: nextCursor !== null });
 const adminSession = () => ({ user: { id: adminId, role: "admin", pseudonym: "Jessie" }, csrf, expiresAt: Date.now() + 3600000 });
-const clientSession = () => ({ user: { id: clientId, role: "client", pseudonym: "Client" }, token: clientToken, csrf, expiresAt: Date.now() + 3600000, access: { state: "pending", emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
+const clientSession = () => ({ user: { id: clientId, role: "client", pseudonym: "Client" }, token: clientToken, csrf, expiresAt: Date.now() + 3600000, access: { state: "pending", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
 
 async function fixture(t, overrides = {}) {
   const calls = [];
@@ -88,6 +88,17 @@ test("registration sends only declaration and credentials, never exposes a verif
   assert.deepEqual(await response.json(), { status: "verification_pending" });
   assert.equal(response.headers.get("set-cookie"), null);
   assert.deepEqual(calls[0], ["register", { ...registration, peerAddress: "127.0.0.1" }]);
+});
+
+test("registration accepts eight-character passwords and rejects seven before account creation", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const length of [7, 8, 13, 14, 128]) {
+    const password = "x".repeat(length);
+    const response = await post(base, "/api/access/register", { ...registration, password });
+    assert.equal(response.status, length < 8 ? 400 : 202);
+    if (length >= 8) assert.equal(calls.at(-1)[1].password, password);
+  }
+  assert.equal(calls.length, 4);
 });
 
 test("registration rejects forged roles, approval, verified majority and an unchecked declaration", async (t) => {
@@ -360,7 +371,7 @@ test("admin actions pass only target IDs and expose prerequisite failures safely
 test("capabilities report email configuration and pending age assurance", async (t) => {
   const { base } = await fixture(t);
   const response = await fetch(`${base}/api/admin/access`, { headers: { Cookie: adminCookie } }); assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { capabilities: { emailDelivery: "configured", ageAssurance: "pending" } });
+  assert.deepEqual(await response.json(), { capabilities: { emailDelivery: "configured", admissionPolicy: "manual_invitation", ageAssurance: "not_integrated" } });
 });
 
 test("admin action paths use exact action names and do not reinterpret mixed-case approval as revocation", async (t) => {

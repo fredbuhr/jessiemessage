@@ -41,7 +41,7 @@ La soumission du nouveau mot de passe inspecte d'abord le lien et ses conditions
 
 Un rejeu ou une course perdante ne modifie rien. Une connexion commencée avec l'ancien hash/version ne peut créer une session client actuelle après le changement. L'e-mail, sa preuve, la déclaration d'âge, l'assurance de majorité, l'approbation, le statut, l'échéance d'accès, les conversations, les photos et les fiches CRM restent inchangés. Une récupération ne remplace jamais la vérification d'e-mail et ne permet pas de modifier l'adresse.
 
-Le mot de passe suit la même politique que l'inscription : entre 14 et 128 unités JavaScript, chaîne Unicode bien formée, au plus 512 octets UTF-8. Il est traité exactement, sans suppression des espaces ni normalisation Unicode, avec le scrypt et sa file bornée existants. Aucun mot de passe n'est inclus dans un e-mail.
+Le mot de passe suit la même politique que l'inscription : entre 8 et 128 unités JavaScript, chaîne Unicode bien formée, au plus 512 octets UTF-8. Il est traité exactement, sans suppression des espaces ni normalisation Unicode, avec le scrypt et sa file bornée existants. Aucun mot de passe n'est inclus dans un e-mail.
 
 ## Parcours et limites HTTP
 

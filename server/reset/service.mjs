@@ -18,7 +18,7 @@ function shape(input, required) {
     || required.some((name) => !Object.hasOwn(input, name))) fail("RESET_INPUT");
 }
 function validatePassword(value) {
-  if (typeof value !== "string" || value.length < 14 || value.length > 128 || !value.isWellFormed()
+  if (typeof value !== "string" || value.length < 8 || value.length > 128 || !value.isWellFormed()
     || Buffer.byteLength(value, "utf8") > 512) fail("RESET_INPUT");
 }
 function digest(value) { try { return tokenDigest(value); } catch { fail("RESET_INPUT"); } }

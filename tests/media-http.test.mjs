@@ -34,7 +34,7 @@ function message(role, overrides = {}) {
 async function fixture(t, overrides = {}) {
   const calls = [], admissionRates = [];
   const service = {
-    async actor(role, token) { calls.push(["actor", role, token]); return token === tokens[role] ? { user: { id: ids[role], role, pseudonym: role === "admin" ? "Jessie" : "Client test" }, csrf, expiresAt: now + 3600000 } : null; },
+    async actor(role, token) { calls.push(["actor", role, token]); return token === tokens[role] ? { user: { id: ids[role], role, pseudonym: role === "admin" ? "Jessie" : "Client test" }, csrf, expiresAt: now + 3600000, access: { state: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true } } : null; },
     async upload(role, token, bytes) { calls.push(["upload", role, token, bytes]); return { asset: asset(role), duplicate: false }; },
     async listAssets(role, token, options) { calls.push(["list", role, token, options]); return { assets: [asset(role)], nextCursor: null, hasMore: false }; },
     async asset(role, token, id, variant) { calls.push(["asset", role, token, id, variant]); return { bytes: jpeg, mime: "image/jpeg", storageKey: "private-storage-key" }; },

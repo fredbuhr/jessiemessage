@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 const decode = (value) => value.replace(/&(?:quot|apos|amp|lt|gt|#(\d+)|#x([a-f\d]+));/gi, (whole, decimal, hex) => decimal ? String.fromCodePoint(Number(decimal)) : hex ? String.fromCodePoint(parseInt(hex, 16)) : ({ "&quot;": '"', "&apos;": "'", "&amp;": "&", "&lt;": "<", "&gt;": ">" })[whole] ?? whole);
 const response = (body, status = 200) => ({ status, ok: status >= 200 && status < 300, json: async () => body });
 const malformed = () => ({ status: 200, ok: true, json: async () => { throw new SyntaxError("synthetic malformed JSON"); } });
-const capability = () => response({ enabled: true, password: { minLength: 14, maxLength: 128 } });
+const capability = () => response({ enabled: true, password: { minLength: 8, maxLength: 128 } });
 const flush = async () => { for (let index = 0; index < 8; index += 1) await new Promise((resolve) => setImmediate(resolve)); };
 const deferred = () => { let resolve; const promise = new Promise((yes) => { resolve = yes; }); return { promise, resolve }; };
 
@@ -101,7 +101,7 @@ function controller(name, fetchHandler, { language = "fr", hash = "" } = {}) {
     dispose() { window.dispatchEvent(new Event("pagehide")); } };
 }
 const user = (state = "pending", pseudonym = "Bienvenue.") => ({ user: { id: "a".repeat(32), role: "client", pseudonym }, csrf: "A".repeat(43), expiresAt: Date.now() + 3600000,
-  access: { state, emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
+  access: { state, admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
 
 test("access and recovery catalogs cover every declared UI leaf and load before their controllers", () => {
   let catalog; new Script(read("i18n-access.js")).runInNewContext({ JessieI18n: { register(value) { catalog = value; } } });
@@ -113,7 +113,7 @@ test("access and recovery catalogs cover every declared UI leaf and load before 
     for (const node of document.root.descendants()) for (const [name, source] of node.attributes) if (name.startsWith("data-jm-i18n")) assert.equal(typeof catalog[source], "string", source);
     for (const node of document.querySelectorAll("input")) assert.equal(node.hasAttribute("data-jm-i18n"), false, "credentials are not UI text sources");
   }
-  assert.match(catalog["Cette déclaration ne vérifie pas ta majorité. L’accès restera en attente de vérification de ton e-mail, de ta majorité et de l’accord de Jessie."], /does not verify your age/);
+  assert.match(catalog["Cette déclaration ne vérifie pas ta majorité. Ton accès nécessite la vérification de ton e-mail et l’approbation manuelle de Jess."], /does not verify your age/);
 });
 
 for (const state of ["pending", "expired"]) test(`access ${state} switches live without another HTTP request or translating a UI-like pseudonym`, async () => {
@@ -121,13 +121,37 @@ for (const state of ["pending", "expired"]) test(`access ${state} switches live 
   try {
     await flush(); const count = f.calls.length; assert.equal(f.get("client-name").textContent, "Bienvenue.");
     assert.match(f.get("client-access-state").textContent, state === "pending" ? /awaiting approval/ : /has expired/);
-    assert.equal(f.get("client-checks").children[0].textContent, "Email address: pending");
+    assert.equal(f.get("client-checks").children[1].textContent, "Email address: pending");
     f.language("fr"); assert.match(f.get("client-access-state").textContent, state === "pending" ? /en attente/ : /a expiré/);
-    assert.equal(f.get("client-checks").children[1].textContent, "Vérification de majorité : en attente"); assert.equal(f.get("client-name").textContent, "Bienvenue.");
+    assert.equal(f.get("client-checks").children[0].textContent, "Admission manuelle"); assert.equal(f.get("client-name").textContent, "Bienvenue.");
     f.hide(); f.language("en"); f.language("fr"); assert.equal(f.get("client-name").textContent, ""); assert.equal(f.get("client-access-state").textContent, "");
     assert.equal(f.get("client-checks").children.length, 0); assert.equal(f.calls.length, count);
     assert.ok(f.writes.every(([key, value]) => key === "jessiemessage.language" && ["fr", "en"].includes(value)));
   } finally { f.dispose(); }
+});
+
+for (const ageAssured of [false, true]) test(`manual admission displays Jess approval without an age-verification badge (observation ${ageAssured})`, async () => {
+  const input = user("active"); Object.assign(input.access, { emailVerified: true, approved: true, ageAssured });
+  const f = controller("access", (path) => path === "/api/access/session" ? response(input) : capability(), { language: "en" });
+  try {
+    await flush();
+    assert.match(f.get("client-checks").textContent, /Manual admission/); assert.match(f.get("client-checks").textContent, /Invitation used/);
+    assert.match(f.get("client-checks").textContent, /Access approved by Jess/); assert.doesNotMatch(f.get("client-checks").textContent, /age|Adult status/i);
+    assert.equal(f.get("client-chat-link").hidden, false);
+    f.language("fr"); assert.match(f.get("client-checks").textContent, /Accès approuvé par Jess/);
+    assert.doesNotMatch(f.get("client-checks").textContent, /majorité/i);
+  } finally { f.dispose(); }
+});
+
+test("client access rejects missing or unknown admission fields before rendering account data", async () => {
+  for (const changes of [{ admissionPolicy: undefined }, { admissionPolicy: "unknown" }, { invitationConsumed: undefined }, { invitationConsumed: "true" }]) {
+    const input = user(); Object.assign(input.access, changes);
+    const f = controller("access", (path) => path === "/api/access/session" ? response(input) : capability());
+    try {
+      await flush(); assert.equal(f.get("client-name").textContent, ""); assert.equal(f.get("client-checks").children.length, 0);
+      assert.equal(f.get("client-chat-link").hidden, true); assert.match(f.get("access-status").textContent, /indisponible/);
+    } finally { f.dispose(); }
+  }
 });
 
 test("access malformed session error switches live and preserves untouched credentials", async () => {
@@ -163,14 +187,14 @@ test("recovery malformed capability switches its retry error without another HTT
 test("recovery password counters and validation translate in place while password bytes remain unchanged", async () => {
   const f = controller("recover", () => capability(), { language: "en", hash: `#reset=${"A".repeat(43)}` });
   try {
-    await flush(); f.input("recovery-password", " Mot de passe"); f.input("recovery-confirmation", "different"); const count = f.calls.length;
-    assert.equal(f.get("recovery-password-help").textContent, "1 more character to reach the minimum of 14.");
+    await flush(); f.input("recovery-password", " Secret"); f.input("recovery-confirmation", "different"); const count = f.calls.length;
+    assert.equal(f.get("recovery-password-help").textContent, "1 more character to reach the minimum of 8.");
     assert.equal(f.get("recovery-confirmation-help").textContent, "The two passwords do not match yet.");
-    f.language("fr"); assert.equal(f.get("recovery-password-help").textContent, "1 caractère encore pour atteindre le minimum de 14.");
-    assert.equal(f.get("recovery-password").value, " Mot de passe"); assert.equal(f.get("recovery-confirmation").value, "different");
-    f.input("recovery-password", "ab"); f.language("en"); assert.equal(f.get("recovery-password-help").textContent, "12 more characters to reach the minimum of 14.");
+    f.language("fr"); assert.equal(f.get("recovery-password-help").textContent, "1 caractère encore pour atteindre le minimum de 8.");
+    assert.equal(f.get("recovery-password").value, " Secret"); assert.equal(f.get("recovery-confirmation").value, "different");
+    f.input("recovery-password", "ab"); f.language("en"); assert.equal(f.get("recovery-password-help").textContent, "6 more characters to reach the minimum of 8.");
     assert.equal(f.calls.length, count); f.hide(); f.language("fr"); assert.equal(f.get("recovery-password").value, ""); assert.equal(f.get("recovery-confirmation").value, "");
-    assert.equal(f.get("recovery-password-help").textContent, "Entre 14 et 128 caractères. Les espaces et les accents sont conservés.");
+    assert.equal(f.get("recovery-password-help").textContent, "Entre 8 et 128 caractères. Les espaces et les accents sont conservés.");
   } finally { f.dispose(); }
 });
 

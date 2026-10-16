@@ -1,8 +1,9 @@
+import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
+import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 
@@ -22,7 +23,7 @@ test("real MariaDB trusted broadcast/chat transactions (synthetic disposable dat
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "integration tests require separately provisioned runtime DML credentials");
   const migrations = await loadMigrations();
-  const ownedTables = migrations.map((migration) => /^CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(migration.sql.trim())[1]).reverse();
+  const ownedTables = createdMigrationTables(migrations).reverse();
   const allowedTables = [...ownedTables, "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool, fixtureSequence = 0;
@@ -41,9 +42,10 @@ test("real MariaDB trusted broadcast/chat transactions (synthetic disposable dat
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash, email_verified_at,
         age_assured_at, access_approved_at, created_at, updated_at) VALUES (?, ?, 'active', ?, ?, 'synthetic-not-a-password', ?, ?, ?, ?, ?)`,
       [item.id, role, item.pseudonym, `broadcast-chat-${fixtureSequence}@example.invalid`, role === "client" ? sqlDate(now) : null,
-        role === "client" ? sqlDate(now) : null, role === "client" ? sqlDate(now) : null, sqlDate(now), sqlDate(now)]);
+        null, role === "client" ? sqlDate(now) : null, sqlDate(now), sqlDate(now)]);
       if (role === "admin") await connection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, 'synthetic-encrypted-secret', 1, 1, ?)", [item.id, sqlDate(now)]);
       else await connection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [item.id, sqlDate(now)]);
+      if (role === "client") await consumeSyntheticInvitation(connection, item.id, now);
       await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [item.sessionId, item.id, item.tokenHash, sqlDate(now), sqlDate(now + 8 * 3600000)]);
       if (role === "admin") await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [item.sessionId, sqlDate(now), sqlDate(now)]);
       else await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)", [item.sessionId, sqlDate(now)]);
@@ -192,13 +194,13 @@ test("real MariaDB trusted broadcast/chat transactions (synthetic disposable dat
         await connection.query("UPDATE users SET status = ? WHERE id = ?", [status, fixture.client.id]); await denied();
       }
       await connection.query("UPDATE users SET status = 'active' WHERE id = ?", [fixture.client.id]);
-      for (const field of ["email_verified_at", "age_assured_at", "access_approved_at"]) {
+      for (const field of ["email_verified_at", "access_approved_at"]) {
         await connection.query(`UPDATE users SET status = 'pending', ${field} = NULL WHERE id = ?`, [fixture.client.id]); await denied();
         await connection.query(`UPDATE users SET status = 'active', ${field} = ? WHERE id = ?`, [sqlDate(now + 1), fixture.client.id]); await denied();
         await connection.query(`UPDATE users SET ${field} = ? WHERE id = ?`, [sqlDate(now), fixture.client.id]);
       }
       await connection.query("UPDATE users SET access_approved_at = ?, access_expires_at = ? WHERE id = ?", [sqlDate(now - 1), sqlDate(now), fixture.client.id]); await denied();
-      await connection.query("UPDATE users SET access_expires_at = NULL WHERE id = ?", [fixture.client.id]);
+      await connection.query("UPDATE users SET access_approved_at = ?, access_expires_at = NULL WHERE id = ?", [sqlDate(now), fixture.client.id]);
       await connection.query("UPDATE conversations SET closed_at = ? WHERE id = ?", [sqlDate(now), fixture.conversationId]); await denied();
       await connection.query("UPDATE conversations SET closed_at = NULL WHERE id = ?", [fixture.conversationId]);
       const otherAdmin = await user("admin");
