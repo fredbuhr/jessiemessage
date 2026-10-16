@@ -2,8 +2,8 @@
 
 ## État et périmètre
 
-- Le code du lot est implémenté sur `feat/message-notifications` ; la validation complète est en cours.
-- La recette reste en 0.30, notifications désactivées. Aucune clé réelle ni migration de recette n’a encore été créée.
+- Le code du lot est implémenté sur `feat/message-notifications` ; les cinq jobs de la CI #237 sont réussis. Voir le [bilan de validation](message-notifications-release.md).
+- La recette reste en 0.30, notifications désactivées. Le fichier privé des nouvelles clés est préparé ; le coffre personnel v4 et la migration de recette restent à effectuer.
 - Le lot vise les messages privés texte et photo, y compris lorsque la page est fermée.
 - Il réutilise Node, MariaDB et un service worker ; aucune autre infrastructure de file n’est prévue.
 - Les envois groupés restent désactivés ; leur activation ne fait pas partie de ce lot.
