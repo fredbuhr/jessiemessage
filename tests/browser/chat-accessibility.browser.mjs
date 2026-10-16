@@ -21,7 +21,7 @@ let server, driver, baseUrl;
 let fixture;
 
 function resetFixture() {
-  fixture = { now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" } };
+  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" } };
 }
 function media(role) {
   const prefix = `/api/media/${role}/conversations/${conversationId}/messages/${photoMessageId}`;
@@ -52,7 +52,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["chat.html", "chat.js", "chat-model.js", "chat.css", "i18n.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "broadcast-preference.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -99,6 +99,10 @@ async function startFixtureServer() {
             sendJson(200, { conversation: conversation(role), events: fixture.events.filter((n) => n > after).map((n) => ({ sequence: String(n), kind: "message", message: message(n, role) })),
               nextCursor: String(fixture.latest), hasMore: false }); return;
           }
+        }
+        if (feature === "chat" && request.method === "POST" && suffix === `/conversations/${conversationId}/messages/${id(202)}/delete`) {
+          fixture.deleteRequests += 1;
+          sendJson(200, { message: { ...message(2, role), body: null, deletedAt: Date.now() } }); return;
         }
         if (feature === "chat" && request.method === "POST" && suffix === `/conversations/${conversationId}/read`) {
           let body = "";
@@ -224,6 +228,28 @@ test("Chrome mobile: native modal Escape restores photo / gallery focus; private
       }).catch(error => done({ error: String(error) }));`);
     assert.deepEqual(persistence, { cacheKeys: [], registrations: 0, localKeys: [], sessionKeys: [] }, "private chat creates no persistent cache, worker or stored private state");
     assert.equal(await page.execute("return document.documentElement.scrollWidth <= window.innerWidth"), true);
+    await noJavascriptErrors(page);
+  } finally { await page.close(); }
+});
+
+
+test("Chrome mobile: deleting a message has a keyboard-accessible confirmation with safe cancellation", { timeout: 30000 }, async () => {
+  resetFixture(); const page = await browser(390);
+  try {
+    await loaded(page, "/messages");
+    await tabUntil(page, "#messages .delete-message");
+    await page.execute("window.__deleteOpener = document.activeElement"); await page.key("\uE007");
+    await waitUntil(() => page.execute("return document.getElementById('confirm-delete').matches(':modal')"), "native delete confirmation");
+    assert.equal(await page.execute("return document.activeElement.id"), "cancel-delete");
+    assert.equal(fixture.deleteRequests, 0);
+    await page.key("\uE00C");
+    await waitUntil(() => page.execute("return !document.getElementById('confirm-delete').open"), "Escape cancels deletion");
+    assert.equal(await page.execute("return document.activeElement === window.__deleteOpener"), true);
+    assert.equal(fixture.deleteRequests, 0);
+    await page.key("\uE007"); await page.click("#accept-delete");
+    await waitUntil(() => page.execute("return document.querySelector('#messages [data-sequence=\"2\"]').classList.contains('deleted')"), "confirmed deletion replaces the message");
+    assert.equal(fixture.deleteRequests, 1);
+    assert.equal(await page.execute("return document.activeElement.dataset.sequence"), "2", "focus moves to the tombstone");
     await noJavascriptErrors(page);
   } finally { await page.close(); }
 });

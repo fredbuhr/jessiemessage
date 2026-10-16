@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 
 const html = await readFile(new URL("../public/admin-login.html", import.meta.url), "utf8");
+const clockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const controller = await readFile(new URL("../public/admin-login.js", import.meta.url), "utf8");
 const catalogue = await readFile(new URL("../public/i18n-admin.js", import.meta.url), "utf8");
 const now = 1750000000000;
@@ -92,6 +93,7 @@ async function harness({ clients = [client(), client(4, { status: "pending", ema
     } });
   vm.runInContext(runtime, context, { filename: "public/i18n.js" });
   vm.runInContext(catalogue, context, { filename: "public/i18n-admin.js" });
+  vm.runInContext(clockSource, context);
   vm.runInContext(controller, context, { filename: "public/admin-login.js" });
   await flush();
   return { context, nodes, calls, storage, document,
@@ -120,12 +122,12 @@ test("administrator language switches update static and loaded private UI in pla
   const beforeCalls = f.calls.length;
   f.language("en");
   assert.equal(f.nodes.get("login-button").textContent, "Sign in");
-  assert.equal(f.nodes.get("factor-help").textContent, "The 6 digits from your authenticator app, or a recovery code.");
+  assert.equal(f.nodes.get("factor-help").textContent, "The 6 digits from your authenticator app.");
   assert.equal(f.nodes.get("connected-name").textContent, "Se connecter");
   assert.equal(originalHeading.textContent, "Bienvenue, Jessie."); assert.equal(email.textContent, "private-client@example.invalid");
   assert.equal(clientList.children[0], originalCard); assert.equal(privateInput.value, "75");
   assert.match(originalCard.textContent, /Status: Access expired · Email: verified/);
-  assert.match(originalCard.textContent, /Manual admission/); assert.match(originalCard.textContent, /Access approved by Jess/);
+  assert.doesNotMatch(originalCard.textContent, /Manual admission/); assert.match(originalCard.textContent, /Access approved by Jessie/);
   assert.doesNotMatch(originalCard.textContent, /Age assurance/);
   assert.match(originalCard.textContent, /Renew expired access/);
   assert.equal(privateInput.getAttribute("aria-label"), "Duration to add for Bienvenue, Jessie., in days");

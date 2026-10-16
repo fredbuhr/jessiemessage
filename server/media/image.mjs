@@ -4,7 +4,7 @@ import { fork } from "node:child_process";
 export const MAX_IMAGE_INPUT_BYTES = 10 * 1024 * 1024;
 const MAX_THUMBNAIL_BYTES = 512 * 1024;
 const WORKER_URL = new URL("./image-worker.mjs", import.meta.url);
-const ERROR_CODES = new Set(["MEDIA_INPUT", "MEDIA_FORMAT", "MEDIA_UNAVAILABLE"]);
+const ERROR_CODES = new Set(["MEDIA_INPUT", "MEDIA_FORMAT", "MEDIA_DIMENSIONS", "MEDIA_UNAVAILABLE"]);
 
 export class MediaImageError extends Error {
   constructor(code) {

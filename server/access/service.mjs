@@ -1,3 +1,4 @@
+import { CLIENT_SESSION_SECONDS, CLIENT_IDLE_SECONDS } from "../auth/session-policy.mjs";
 import { CLIENT_ADMISSION_POLICY } from "./admission.mjs";
 import { createHmac } from "node:crypto";
 import { canonicalEmail } from "../auth/config.mjs";
@@ -6,7 +7,7 @@ import { csrfToken, hashPassword, newId, newToken, tokenDigest, verifyPassword }
 import { sealVerificationPayload } from "../mail/crypto.mjs";
 import { decodeAccessCursor, encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
 
-const SESSION_MILLISECONDS = 8 * 3600000;
+const SESSION_MILLISECONDS = CLIENT_SESSION_SECONDS * 1000;
 const VERIFICATION_MILLISECONDS = 24 * 3600000;
 const invalid = () => new AuthError("AUTH_INVALID");
 const unavailable = () => new AuthError("AUTH_UNAVAILABLE");
@@ -152,7 +153,7 @@ export async function createAccessService({ store, authStore, authService, totpK
   async function session(token) {
     let hash;
     try { hash = tokenDigest(token); } catch { return null; }
-    const record = await database(() => store.getClientSession(hash, { now: clock(), idleSeconds: 1800 }));
+    const record = await database(() => store.getClientSession(hash, { now: clock(), idleSeconds: CLIENT_IDLE_SECONDS }));
     return record ? publicSession(record, token) : null;
   }
 

@@ -1,5 +1,7 @@
 # JessieMessage — bilan et chemin vers le pilote
 
+**Étape 0.30 en préparation :** [sessions administrateur durables et confort quotidien](durable-admin-sessions.md), après l'audit complet 0.29. Sessions sur plusieurs appareils, reprise réseau, accès simplifié et préparation des photos constituent ce lot. Les notifications suivent en 0.31. La recette reste sur `37c8fcd0` jusqu'à consignation d'une nouvelle activation ; production fermée.
+
 **Étape 0.28 validée en recette :** [photos privées, profil et sauvegarde](private-photo-runtime.md).
 Les photos sont actives en recette sur `37c8fcd0` après confirmation du coffre
 à cinq fichiers sur le PC, initialisation hors ligne et contrôle du lanceur.

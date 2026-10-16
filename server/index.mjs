@@ -15,6 +15,8 @@ const publicFiles = new Map([
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
   ["/app.js", ["app.js", "text/javascript; charset=utf-8"]],
   ["/app", ["entry.html", "text/html; charset=utf-8"]],
+  ["/session-clock.js", ["session-clock.js", "text/javascript; charset=utf-8"]],
+  ["/image-preparation.js", ["image-preparation.js", "text/javascript; charset=utf-8"]],
   ["/entry.js", ["entry.js", "text/javascript; charset=utf-8"]],
   ["/entry-model.js", ["entry-model.js", "text/javascript; charset=utf-8"]],
   ["/entry.css", ["entry.css", "text/css; charset=utf-8"]],
@@ -171,14 +173,14 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   });
   server.beginDrain = () => { draining = true; };
   server.waitForRequests = () => pendingRequests === 0 ? Promise.resolve() : new Promise((resolve) => { requestWaiters.add(resolve); });
-  server.requestTimeout = 15000;
+  server.requestTimeout = mediaHandler ? 35000 : 15000;
   server.headersTimeout = 10000;
   server.keepAliveTimeout = 5000;
   server.maxRequestsPerSocket = 100;
   return server;
 }
 
-export async function createConfiguredServer(env = process.env, { requestOrigin = null } = {}) {
+export async function createConfiguredServer(env = process.env, { requestOrigin = null, clock = Date.now } = {}) {
   if (requestOrigin !== null) createRequestOriginGuard(requestOrigin);
   const { authConfiguration } = await import("./auth/config.mjs");
   const { accessConfiguration } = await import("./access/config.mjs");
@@ -207,10 +209,10 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
   const pool = await createRuntimePool(env);
   let transport, operations;
   try {
-    const store = createAuthStore(pool);
+    const store = createAuthStore(pool, { clock });
     await store.assertSchema();
-    const service = await createAuthService({ store, totpKey: config.totpKey });
-    const authHandler = createAuthHandler(service, { origin: config.origin });
+    const service = await createAuthService({ store, totpKey: config.totpKey, clock });
+    const authHandler = createAuthHandler(service, { origin: config.origin, clock });
     const workerNames = [accessConfig.enabled ? "verification" : null, resetConfig.enabled ? "recovery" : null,
       broadcastConfig.enabled ? "broadcasts" : null].filter(Boolean);
     operations = createOperationsMonitor({
@@ -247,12 +249,12 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
     const { createMailStore } = await import("./mail/store.mjs");
     const { createVerificationTransport } = await import("./mail/transport.mjs");
     const { startMailWorker } = await import("./mail/worker.mjs");
-    const accessStore = createAccessStore(pool);
+    const accessStore = createAccessStore(pool, { clock });
     const mailStore = createMailStore(pool);
     await accessStore.assertSchema();
     await mailStore.assertSchema();
     const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
-      totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin });
+      totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin, clock });
     let resetHandler;
     let resetMailStore;
     if (resetConfig.enabled) {
@@ -276,10 +278,10 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
       const { createChatStore } = await import("./chat/store.mjs");
       const { createChatService } = await import("./chat/service.mjs");
       const { createChatHandler } = await import("./chat/http.mjs");
-      const chatStore = createChatStore(pool);
+      const chatStore = createChatStore(pool, { clock });
       await chatStore.assertSchema();
       const chatService = await createChatService({ store: chatStore, authStore: store, authService: service,
-        accessService, key: chatConfig.key });
+        accessService, key: chatConfig.key, clock });
       chatHandler = createChatHandler(chatService, { origin: chatConfig.origin });
       // Chat history joins attachment metadata even when image transfer is off.
       // Verify those tables before accepting any private history requests.

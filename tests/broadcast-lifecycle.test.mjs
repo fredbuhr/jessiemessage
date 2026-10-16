@@ -6,6 +6,7 @@ import { webcrypto } from "node:crypto";
 import * as model from "../public/broadcast-model.js";
 
 const source = (await readFile(new URL("../public/broadcast.js", import.meta.url), "utf8")).replace(/^import .*;\n/, "");
+const sessionClock = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const id = (value) => value.toString(16).padStart(32, "0");
 const now = Date.now();
 const actor = (value = 1) => ({ user: { id: id(value), role: "admin", pseudonym: `Synthetic owner ${value}` },
@@ -48,13 +49,14 @@ function fixture(handler = () => null) {
       calls.push({ path, options });
       const customized = await handler(path, options, { owner, setOwner: (next) => { owner = next; } });
       if (customized) return customized;
-      if (path === "/api/broadcast/admin/session") return response(owner);
+      if (path === "/api/broadcast/admin/session" || path === "/api/auth/session") return response(owner);
       if (path === "/api/broadcast/admin/activity") return response({ campaigns: [] });
       if (path.startsWith("/api/broadcast/admin/campaigns?")) return response({ campaigns: [], nextCursor: null, hasMore: false });
       if (path.startsWith("/api/admin/crm/contacts?")) return response({ contacts: [], nextCursor: null, hasMore: false });
       if (path.startsWith("/api/admin/crm/labels?")) return response({ labels: [], nextCursor: null, hasMore: false });
       return response({ error: "not_found" }, 404);
     } });
+  new Script(sessionClock).runInContext(context);
   new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, scheduleHistory, busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
   const ui = context.controller;
   document.visibilityState = "visible";

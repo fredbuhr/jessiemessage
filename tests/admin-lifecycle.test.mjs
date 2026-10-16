@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 
+const clockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const source = await readFile(new URL("../public/admin-login.js", import.meta.url), "utf8");
 const initialTime = 1750000000000;
 const pause = () => { let resolve; const promise = new Promise((done) => { resolve = done; }); return { promise, resolve }; };
@@ -22,6 +23,7 @@ class Element {
   }
   addEventListener(name, handler) { this.events.set(name, handler); }
   setAttribute(name, value) { this.attributes.set(name, value); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this.children = [...children]; }
   querySelectorAll(selector) { return this.children.flatMap((child) => [selector === child.tagName ? child : null, ...child.querySelectorAll(selector)]).filter(Boolean); }
@@ -33,7 +35,7 @@ class Element {
 const clientRow = (index = 3, changes = {}) => ({ id: index.toString(16).padStart(32, "0"), pseudonym: `Client ${index}`, email: `client-${index}@example.invalid`,
   status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, createdAt: initialTime - index, accessExpiresAt: initialTime + 86400000, ...changes });
 const invitationRow = (index = 2) => ({ id: index.toString(16).padStart(32, "0"), createdAt: initialTime - index, expiresAt: initialTime + 3600000, accessDays: 30, state: "pending" });
-function harness({ visible = true, currentSession = session(), intercept, clipboard,
+function harness({ visible = true, currentSession = session(), intercept, clipboard, confirm = () => true,
   clients = [clientRow(3, { pseudonym: "Client synthétique", email: "private-client@example.invalid", accessExpiresAt: null })],
   invitations = [invitationRow(2)] } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), history = [];
@@ -56,7 +58,7 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
   const document = { visibilityState: visible ? "visible" : "hidden", body: new Element("body"), getElementById: element,
     createElement: (tagName) => new Element(tagName), addEventListener: (name, handler) => documentEvents.set(name, handler) };
   const state = { currentSession, clipboardCalls: [], clients, invitations };
-  const context = vm.createContext({ document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
+  const context = vm.createContext({ document, window: { confirm, addEventListener: (name, handler) => windowEvents.set(name, handler) },
     location: { pathname: "/admin" }, history: { replaceState: (...args) => history.push(args) }, AbortController,
     navigator: { clipboard: { writeText: async (value) => { state.clipboardCalls.push(value); if (clipboard) return clipboard(value); } } },
     Date: class extends Date { static now() { return now; } },
@@ -81,6 +83,7 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
       if (path.startsWith("/api/auth/logout")) return response(200, { status: "signed_out" });
       throw new Error(`Unexpected request: ${path}`);
     } });
+  vm.runInContext(clockSource, context);
   vm.runInContext(source, context, { filename: "public/admin-login.js" });
   return { element, document, calls, state, timers, createButton, history,
     async event(name, value = {}) { const handler = documentEvents.get(name) ?? windowEvents.get(name); assert.equal(typeof handler, "function", name); handler(value); await flush(); },
@@ -119,7 +122,7 @@ test("plain 404 optional features preserve an authentication-only administrator 
       await f.submit("login-form");
     }
     assert.equal(f.element("connected").hidden, false); assert.equal(f.element("connected-name").textContent, "Jess");
-    assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("access-title").textContent, "Ton accès est prêt.");
+    assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("access-title").textContent, "Ton espace Jessie.");
     assert.equal(f.element("auth-status").textContent, ""); assert.equal(f.element("auth-status").classList.contains("is-error"), false);
     assert.equal(f.element("access-tools").hidden, true); assert.equal(f.element("admin-chat-link").hidden, true);
     assert.equal(f.calls.some((call) => /^\/api\/admin\/(?:clients|invitations)/.test(call.path)), false);
@@ -148,7 +151,8 @@ test("plain 503 remains a visible service error rather than a disabled optional 
 test("a successful HTTP session response containing malformed JSON is still refused", async () => {
   const f = harness({ intercept: (path) => path === "/api/auth/session" ? plainResponse(200, "Not JSON") : undefined });
   await flush();
-  privateCleared(f); assert.equal(f.element("login-form").hidden, false);
+  privateCleared(f); assert.equal(f.element("login-form").hidden, true);
+  assert.equal(f.element("session-retry").hidden, false);
   assert.equal(f.element("auth-status").classList.contains("is-error"), true);
   assert.equal(f.calls.some((call) => call.path === "/api/admin/access" || call.path === "/api/chat/admin/capabilities"), false);
 });
@@ -261,10 +265,10 @@ test("late invitation creation stays hidden and resuming performs GET validation
   assert.equal(f.element("connected-name").textContent, "Jess");
 });
 
-test("session expiry retains its original deadline while hidden and expired responses reveal no identity", async () => {
+test("hidden sessions stop their timers and expired server proof reveals no identity on return", async () => {
   const f = harness({ currentSession: session("Jess courte", { expiresAt: initialTime + 1000 }) }); await flush();
-  await f.advance(400); await f.hide(); assert.ok([...f.timers.values()].some((timer) => timer.at === initialTime + 1000));
-  await f.advance(600); privateCleared(f); assert.match(f.element("auth-status").textContent, /expiré/);
+  await f.advance(400); await f.hide(); assert.equal(f.timers.size, 0);
+  await f.advance(600); privateCleared(f); assert.equal(f.element("auth-status").textContent, "");
   await f.show(); privateCleared(f); assert.equal(f.element("login-form").hidden, false);
   assert.equal(posts(f).length, 0);
 });
@@ -361,7 +365,7 @@ test("repeated final proof failures permit only one GET recovery per visible int
   } });
   await flush();
   assert.equal(sessions, 4); assert.equal(f.calls.filter((call) => call.path === "/api/admin/clients?limit=50").length, 2);
-  privateCleared(f); assert.equal(f.element("login-form").hidden, false); assert.match(f.element("auth-status").textContent, /Recharge la page/);
+  privateCleared(f); assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("session-retry").hidden, false); assert.match(f.element("auth-status").textContent, /Réessaie la connexion/);
   assert.equal(posts(f).length, 0);
 });
 
@@ -477,7 +481,7 @@ test("manual admission allows approval without age assurance only after invitati
   const cards = f.element("clients-list").children;
   const buttons = cards.map((card) => card.querySelectorAll("button")[0]);
   assert.equal(buttons[0].disabled, false); assert.equal(buttons[1].disabled, true); assert.equal(buttons[2].disabled, true);
-  assert.match(contents(cards[0]), /Admission manuelle/); assert.match(contents(cards[0]), /Approbation de Jess : en attente/);
+  assert.doesNotMatch(contents(cards[0]), /Admission manuelle/); assert.match(contents(cards[0]), /Approbation de Jessie : en attente/);
   assert.doesNotMatch(contents(f.element("clients-list")), /Majorité|majorité vérifiée/);
   buttons[0].events.get("click")(); await flush();
   const approval = posts(f); assert.equal(approval.length, 1); assert.equal(approval[0].path, `/api/admin/clients/${clients[0].id}/approve`);
@@ -619,4 +623,55 @@ test("an unconfirmed renewal preserves an edited duration when GET finds the exa
     assert.equal(renewForms(f)[0].querySelectorAll("input")[0].value, "99");
     assert.match(f.element("auth-status").textContent, /résultat.*pas pu être confirmé/);
   }
+});
+
+
+test("long administrator sessions use bounded server checks and survive a network interruption without a new login", async () => {
+  let unavailable = false;
+  const f = harness({ currentSession: session("Durable", { expiresAt: initialTime + 180 * 86400000 }), intercept: (path) => path === "/api/auth/session" && unavailable ? Promise.reject(new TypeError("offline")) : undefined });
+  await flush(); assert.equal(f.element("connected").hidden, false);
+  assert.ok([...f.timers.values()].every((timer) => timer.at - initialTime <= 300000));
+  await f.advance(300000); assert.equal(f.element("connected").hidden, false);
+  unavailable = true; await f.advance(300000);
+  privateCleared(f); assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("session-retry").hidden, false);
+  unavailable = false; await f.event("online");
+  assert.equal(f.element("connected-name").textContent, "Durable"); assert.equal(posts(f).length, 0);
+});
+
+test("device reads are lazy, validated and private; targeted revocation uses CSRF and leaves the current device connected", async () => {
+  let f;
+  const device = { id: "2".repeat(32), createdAt: initialTime - 86400000, lastSeenAt: initialTime - 1000, current: false };
+  f = harness({ intercept: (path) => path === "/api/auth/devices" ? response(200, { devices: [device], hasMore: false, nextCursor: null })
+    : path === `/api/auth/devices/${device.id}/revoke` ? response(200, { status: "device_revoked", current: false }) : undefined });
+  await flush(); assert.equal(f.calls.some((call) => call.path === "/api/auth/devices"), false);
+  await f.click("devices-refresh"); const list = f.element("devices-list"); assert.equal(list.children.length, 1);
+  assert.match(contents(list), /Autre appareil/); assert.doesNotMatch(contents(list), new RegExp(device.id));
+  list.children[0].querySelectorAll("button")[0].events.get("click")(); await flush();
+  const revoke = posts(f).find((call) => call.path.endsWith("/revoke"));
+  assert.equal(revoke.options.headers["X-CSRF-Token"], session().csrf); assert.equal(revoke.options.body, "{}");
+  assert.equal(f.element("connected").hidden, false); assert.equal(f.element("connected-name").textContent, "Jess");
+  await f.hide(); assert.equal(list.children.length, 0); assert.equal(f.element("devices-status").textContent, "");
+});
+
+test("device revocation and global logout require confirmation; current-device revocation clears the view", async () => {
+  const device = { id: "1".repeat(32), createdAt: initialTime - 1000, lastSeenAt: initialTime, current: true };
+  for (const approved of [false, true]) {
+    const f = harness({ confirm: () => approved, intercept: (path) => path === "/api/auth/devices" ? response(200, { devices: [device], hasMore: false, nextCursor: null })
+      : path === `/api/auth/devices/${device.id}/revoke` ? response(200, { status: "device_revoked", current: true }) : undefined });
+    await flush(); await f.click("devices-refresh"); f.element("devices-list").children[0].querySelectorAll("button")[0].events.get("click")(); await flush();
+    assert.equal(posts(f).length, Number(approved));
+    if (approved) privateCleared(f); else assert.equal(f.element("connected").hidden, false);
+    const global = harness({ confirm: () => approved }); await flush(); await global.click("logout-all-button");
+    assert.equal(posts(global).length, Number(approved));
+  }
+});
+
+test("late device data after hide cannot repopulate a new account and malformed pages remain hidden", async () => {
+  const pending = pause(); const f = harness({ intercept: (path) => path === "/api/auth/devices" ? pending.promise : undefined });
+  await flush(); await f.click("devices-refresh"); await f.hide(); await f.show();
+  pending.resolve(response(200, { devices: [{ id: "3".repeat(32), createdAt: initialTime, lastSeenAt: initialTime, current: false }], hasMore: false, nextCursor: null }));
+  await flush(); assert.equal(f.element("devices-list").children.length, 0);
+  const malformed = harness({ intercept: (path) => path === "/api/auth/devices" ? response(200, { devices: [{ id: "<script>", current: true }], hasMore: false, nextCursor: null }) : undefined });
+  await flush(); await malformed.click("devices-refresh"); assert.equal(malformed.element("devices-list").children.length, 0);
+  assert.match(malformed.element("devices-status").textContent, /pas pu être vérifiés/);
 });

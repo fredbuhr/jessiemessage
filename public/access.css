@@ -11,3 +11,9 @@ details .field-help { margin-bottom: 16px; }
 .broadcast-preference { margin-top: 24px; padding-top: 20px; border-top: 1px solid #554353; }
 .broadcast-preference h2 { font-size: 18px; }
 .broadcast-preference .button { margin-top: 14px; }
+
+#client-connected > .actions { margin-top: 24px; }
+#client-validity { margin-bottom: 20px; }
+#check-client-access { margin: 20px 0; }
+#client-connected > .account-settings { margin-top: 28px; }
+#client-connected .account-settings summary { font-size: 14px; }

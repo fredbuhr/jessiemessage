@@ -16,6 +16,7 @@
     <title data-jm-i18n="JessieMessage — Accès administrateur">JessieMessage — Accès administrateur</title>
     <script src="/i18n.js" defer></script>
     <script src="/i18n-admin.js" defer></script>
+    <script src="/session-clock.js" defer></script>
     <script src="/admin-login.js" defer></script>
   </head>
   <body>
@@ -31,9 +32,10 @@
       <main class="access-main">
         <section class="access-card" aria-labelledby="access-title">
           <div class="eyebrow" data-jm-i18n="ADMINISTRATION">ADMINISTRATION</div>
-          <h1 id="access-title" data-jm-i18n="Bienvenue, Jessie.">Bienvenue, Jessie.</h1>
+          <h1 id="access-title" data-jm-i18n="Ton espace Jessie.">Ton espace Jessie.</h1>
           <p id="access-intro" class="intro" data-jm-i18n="Connecte-toi avec ton mot de passe et ton code de sécurité.">Connecte-toi avec ton mot de passe et ton code de sécurité.</p>
           <p id="auth-status" class="status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p>
+          <button id="session-retry" class="button button-secondary" type="button" hidden data-jm-i18n="Réessayer la connexion">Réessayer la connexion</button>
           <form id="login-form" hidden>
             <div class="field">
               <label for="email" data-jm-i18n="Adresse e-mail">Adresse e-mail</label>
@@ -42,20 +44,22 @@
             <div class="field">
               <label for="password" data-jm-i18n="Mot de passe">Mot de passe</label>
               <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" title="Saisis ton mot de passe administrateur." data-jm-i18n-title="Saisis ton mot de passe administrateur." required />
+              <button id="toggle-password" class="text-button" type="button" aria-controls="password" aria-pressed="false" data-jm-i18n="Afficher le mot de passe">Afficher le mot de passe</button>
             </div>
             <div class="field">
               <label for="factor" data-jm-i18n="Code de sécurité">Code de sécurité</label>
-              <input id="factor" name="factor" type="text" autocomplete="one-time-code" maxlength="64" aria-describedby="factor-help" title="Saisis ton code d’authentification ou un code de récupération." data-jm-i18n-title="Saisis ton code d’authentification ou un code de récupération." required />
-              <p id="factor-help" class="field-help" data-jm-i18n="Les 6 chiffres de ton application d’authentification, ou un code de récupération.">Les 6 chiffres de ton application d’authentification, ou un code de récupération.</p>
+              <input id="factor" name="factor" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="64" aria-describedby="factor-help" title="Saisis ton code d’authentification ou un code de récupération." data-jm-i18n-title="Saisis ton code d’authentification ou un code de récupération." required />
+              <p id="factor-help" class="field-help" data-jm-i18n="Les 6 chiffres de ton application d’authentification.">Les 6 chiffres de ton application d’authentification.</p>
+              <button id="toggle-recovery-code" class="text-button" type="button" aria-controls="factor" aria-pressed="false" data-jm-i18n="Utiliser un code de récupération">Utiliser un code de récupération</button>
             </div>
             <button id="login-button" class="button button-primary" type="submit" data-jm-i18n="Se connecter">Se connecter</button>
           </form>
           <section id="connected" hidden aria-label="Session administrateur" data-jm-i18n-aria-label="Session administrateur">
             <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong data-jm-i18n="Connexion sécurisée">Connexion sécurisée</strong></div>
-            <p class="intro"><span data-jm-i18n="Tu es connectée en tant que">Tu es connectée en tant que</span> <strong id="connected-name"></strong>.</p>
+            <p class="intro"><span data-jm-i18n="Compte connecté :">Compte connecté :</span> <strong id="connected-name"></strong>.</p>
             <p id="admin-session-note" class="session-note" data-jm-i18n="L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.">L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.</p>
             <a id="admin-chat-link" class="button button-primary" href="/admin/messages" hidden data-jm-i18n="Ouvrir les conversations">Ouvrir les conversations</a>
-            <p class="session-note"><a href="/admin/readiness" data-jm-i18n="Préparer le site">Préparer le site</a></p>
+
             <section id="access-tools" hidden aria-labelledby="invitation-title">
               <div class="access-section">
                 <h2 id="invitation-title" data-jm-i18n="Inviter un client">Inviter un client</h2>
@@ -78,10 +82,22 @@
               <div class="access-section"><h2 data-jm-i18n="Comptes clients">Comptes clients</h2><p class="field-help" data-jm-i18n="L’accès nécessite une invitation utilisée, un e-mail vérifié et ton approbation manuelle.">L’accès nécessite une invitation utilisée, un e-mail vérifié et ton approbation manuelle.</p><div id="clients-list" class="access-list"></div><div id="clients-pagination" class="access-pagination" hidden><p id="clients-page-note" class="field-help" role="status"></p><div class="pagination-actions"><button id="clients-first" class="button button-secondary" type="button" disabled data-jm-i18n="Revenir au début">Revenir au début</button><button id="clients-next" class="button button-secondary" type="button" disabled data-jm-i18n="Plus anciens">Plus anciens</button></div></div></div>
               <button id="refresh-access" class="button button-secondary" type="button" data-jm-i18n="Actualiser les accès">Actualiser les accès</button>
             </section>
-            <div class="actions">
-              <button id="logout-button" class="button button-primary" type="button" data-jm-i18n="Se déconnecter">Se déconnecter</button>
-              <button id="logout-all-button" class="button button-secondary" type="button" data-jm-i18n="Déconnecter toutes mes sessions">Déconnecter toutes mes sessions</button>
-            </div>
+            <details id="account-settings" class="account-settings">
+              <summary data-jm-i18n="Compte et appareils">Compte et appareils</summary>
+              <p class="field-help" data-jm-i18n="Cet appareil reste connecté jusqu’à six mois sans utilisation. Une utilisation régulière prolonge cette durée.">Cet appareil reste connecté jusqu’à six mois sans utilisation. Une utilisation régulière prolonge cette durée.</p>
+              <details id="devices-panel">
+                <summary data-jm-i18n="Appareils connectés">Appareils connectés</summary>
+                <p class="field-help" data-jm-i18n="Chaque connexion est repérée par sa date. Déconnecter un appareil laisse les autres ouverts.">Chaque connexion est repérée par sa date. Déconnecter un appareil laisse les autres ouverts.</p>
+                <p id="devices-status" class="field-help" role="status" aria-live="polite"></p>
+                <div id="devices-list" class="access-list"></div>
+                <div class="actions"><button id="devices-refresh" class="button button-secondary" type="button" data-jm-i18n="Actualiser les appareils">Actualiser les appareils</button><button id="devices-next" class="button button-secondary" type="button" hidden data-jm-i18n="Voir d’autres appareils">Voir d’autres appareils</button></div>
+              </details>
+              <p class="session-note"><a href="/admin/readiness" data-jm-i18n="État du service">État du service</a></p>
+              <div class="actions">
+                <button id="logout-button" class="button button-secondary" type="button" data-jm-i18n="Déconnecter cet appareil">Déconnecter cet appareil</button>
+                <button id="logout-all-button" class="button button-secondary" type="button" data-jm-i18n="Déconnecter tous mes appareils">Déconnecter tous mes appareils</button>
+              </div>
+            </details>
           </section>
           <noscript><p class="status" data-jm-i18n="Active JavaScript pour utiliser la connexion sécurisée.">Active JavaScript pour utiliser la connexion sécurisée.</p></noscript>
         </section>

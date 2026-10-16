@@ -1,5 +1,18 @@
 /* Explicit UI catalogue only. User messages, captions and names are never keys. */
 globalThis.JessieI18n?.register({
+  "Réessayer la connexion": "Retry the connection",
+  "Retrouvons ta conversation…": "Getting your conversation back…",
+  "La connexion est momentanément indisponible. Tes brouillons restent dans cet onglet.": "The connection is temporarily unavailable. Your drafts stay in this tab.",
+  "La connexion est momentanément indisponible. Réessaie dans un instant.": "The connection is temporarily unavailable. Try again in a moment.",
+  "Supprimer cette photo ?": "Delete this photo?",
+  "Supprimer ce message ?": "Delete this message?",
+  "Elle sera retirée de ta bibliothèque. Cette action est définitive.": "It will be removed from your library. This cannot be undone.",
+  "Il disparaîtra de cette conversation pour vous deux. Cette action est définitive.": "It will disappear from this conversation for both of you. This cannot be undone.",
+  "Annuler": "Cancel",
+  "Ce format n’est pas pris en charge. Choisis une photo JPEG, PNG ou WebP.": "This format is not supported. Choose a JPEG, PNG or WebP photo.",
+  "Cette photo est trop grande. Choisis une version plus petite.": "This photo is too large. Choose a smaller version.",
+  "Cette photo dépasse 10 Mo. Choisis une version plus légère.": "This photo is over 10 MB. Choose a smaller file.",
+  "La photo n’a pas pu être préparée. Essaie une autre photo.": "Your photo could not be prepared. Try another photo.",
   "Aller à la conversation": "Skip to the conversation",
   "Nouveau message reçu.": "New message received.",
   "{count} nouveaux messages reçus.": "{count} new messages received.",

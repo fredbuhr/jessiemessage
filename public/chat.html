@@ -17,6 +17,7 @@
     <script defer src="/i18n.js"></script>
     <script defer src="/i18n-chat.js"></script>
     <script defer src="/i18n-tools.js"></script>
+    <script defer src="/session-clock.js"></script>
     <script type="module" src="/chat.js"></script>
   </head>
   <body>
@@ -26,6 +27,7 @@
         <nav class="account-nav" aria-label="Mon compte" data-jm-i18n-aria-label="Mon compte"><a id="account-link" href="/access" data-jm-i18n="Mon accès">Mon accès</a><button type="button" data-jm-language aria-label="Switch to English">EN</button><button id="logout" type="button" data-jm-i18n="Se déconnecter">Se déconnecter</button></nav>
       </header>
       <p id="session-status" class="session-status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p>
+      <div class="connection-actions"><button id="retry-connection" class="button secondary" type="button" hidden data-jm-i18n="Réessayer la connexion">Réessayer la connexion</button></div>
       <main id="workspace" class="workspace" hidden>
         <a class="conversation-skip" href="#message-scroll" data-jm-i18n="Aller à la conversation">Aller à la conversation</a>
         <aside id="inbox" class="inbox" hidden aria-labelledby="inbox-title">
@@ -56,6 +58,7 @@
       </main>
       <dialog id="media-dialog" class="media-dialog" aria-labelledby="media-title"><div class="dialog-head"><h2 id="media-title" data-jm-i18n="Mes photos">Mes photos</h2><button id="close-media" class="text-button" type="button" aria-label="Fermer les photos" data-jm-i18n-aria-label="Fermer les photos" data-jm-i18n="Fermer">Fermer</button></div><p id="media-help" class="media-help"></p><p id="media-status" role="status" aria-live="polite"></p><div id="media-grid" class="media-grid"></div><button id="more-media" class="button secondary" type="button" hidden data-jm-i18n="Photos précédentes">Photos précédentes</button></dialog>
       <dialog id="lightbox" class="lightbox" aria-label="Photo privée agrandie" data-jm-i18n-aria-label="Photo privée agrandie"><div class="dialog-head"><p id="lightbox-status" role="status" aria-live="polite" data-jm-i18n="Chargement de la photo…">Chargement de la photo…</p><button id="close-lightbox" class="text-button" type="button" aria-label="Fermer la photo agrandie" data-jm-i18n-aria-label="Fermer la photo agrandie" data-jm-i18n="Fermer">Fermer</button></div><div id="lightbox-image" class="lightbox-image"></div></dialog>
+      <dialog id="confirm-delete" class="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-description"><h2 id="confirm-title"></h2><p id="confirm-description"></p><div class="confirm-actions"><button id="cancel-delete" class="button secondary" type="button" data-jm-i18n="Annuler">Annuler</button><button id="accept-delete" class="button primary" type="button" data-jm-i18n="Supprimer">Supprimer</button></div></dialog>
       <noscript><p class="session-status" data-jm-i18n="Active JavaScript pour utiliser la messagerie privée.">Active JavaScript pour utiliser la messagerie privée.</p></noscript>
       <footer class="session-status"><a href="mailto:contact@jessiemessage.com" data-jm-i18n="Contact">Contact</a></footer>
     </div>

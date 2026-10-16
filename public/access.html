@@ -17,6 +17,7 @@
     <script src="/i18n.js" defer></script>
     <script src="/i18n-access.js" defer></script>
     <script src="/i18n-tools.js" defer></script>
+    <script src="/session-clock.js" defer></script>
     <script src="/access.js" defer></script>
   </head>
   <body>
@@ -32,6 +33,7 @@
           <h1 id="access-title" data-jm-i18n="Bienvenue.">Bienvenue.</h1>
           <p id="access-intro" class="intro" data-jm-i18n="Un espace privé, accessible sur invitation de Jessie.">Un espace privé, accessible sur invitation de Jessie.</p>
           <p id="access-status" class="status" role="status" aria-live="polite" data-jm-i18n="Vérification de ton accès…">Vérification de ton accès…</p>
+          <button id="access-retry" class="button button-secondary" type="button" hidden data-jm-i18n="Vérifier mon accès">Vérifier mon accès</button>
           <form id="client-login-form" hidden>
             <div class="field"><label for="login-email" data-jm-i18n="Adresse e-mail">Adresse e-mail</label><input id="login-email" type="email" autocomplete="username" maxlength="254" required /></div>
             <div class="field"><label for="login-password" data-jm-i18n="Mot de passe">Mot de passe</label><input id="login-password" type="password" autocomplete="current-password" maxlength="128" required /></div>
@@ -43,21 +45,24 @@
             <div class="field"><label for="registration-email" data-jm-i18n="Adresse e-mail">Adresse e-mail</label><input id="registration-email" type="email" autocomplete="email" maxlength="254" required /></div>
             <div class="field"><label for="registration-name" data-jm-i18n="Pseudonyme">Pseudonyme</label><input id="registration-name" type="text" autocomplete="nickname" maxlength="64" required /></div>
             <div class="field"><label for="registration-password" data-jm-i18n="Mot de passe">Mot de passe</label><input id="registration-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="password-help" required /><p id="password-help" class="field-help" data-jm-i18n="Choisis au moins 8 caractères.">Choisis au moins 8 caractères.</p></div>
-            <div class="field"><label class="checkbox-field" for="age-declared"><input id="age-declared" type="checkbox" required /><span data-jm-i18n="Je déclare avoir au moins 18 ans.">Je déclare avoir au moins 18 ans.</span></label><p class="field-help" data-jm-i18n="Cette déclaration ne vérifie pas ta majorité. Ton accès nécessite la vérification de ton e-mail et l’approbation manuelle de Jess.">Cette déclaration ne vérifie pas ta majorité. Ton accès nécessite la vérification de ton e-mail et l’approbation manuelle de Jess.</p></div>
+            <div class="field"><label class="checkbox-field" for="age-declared"><input id="age-declared" type="checkbox" required /><span data-jm-i18n="Je déclare avoir au moins 18 ans.">Je déclare avoir au moins 18 ans.</span></label><p class="field-help" data-jm-i18n="Espace réservé aux adultes. Après ton inscription, confirme ton e-mail ; Jessie validera ensuite ton accès. Cette déclaration ne vérifie pas ta majorité.">Espace réservé aux adultes. Après ton inscription, confirme ton e-mail ; Jessie validera ensuite ton accès. Cette déclaration ne vérifie pas ta majorité.</p></div>
             <button class="button button-primary" type="submit" data-jm-i18n="Créer mon compte">Créer mon compte</button>
             <button id="show-login" class="button button-secondary" type="button" data-jm-i18n="J’ai déjà un compte">J’ai déjà un compte</button>
           </form>
           <section id="email-verification" hidden aria-label="Vérification de l’e-mail" data-jm-i18n-aria-label="Vérification de l’e-mail">
-            <p class="intro" data-jm-i18n="Confirme cette adresse e-mail pour poursuivre la préparation de ton accès.">Confirme cette adresse e-mail pour poursuivre la préparation de ton accès.</p>
+            <p class="intro" data-jm-i18n="Confirme ton e-mail pour retrouver Jessie ici.">Confirme ton e-mail pour retrouver Jessie ici.</p>
             <button id="verify-email-button" class="button button-primary" type="button" data-jm-i18n="Vérifier mon e-mail">Vérifier mon e-mail</button>
           </section>
           <section id="client-connected" hidden aria-label="État de ton accès" data-jm-i18n-aria-label="État de ton accès">
             <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong id="client-name"></strong></div>
             <p id="client-access-state" class="intro"></p>
-            <ul id="client-checks" class="check-list"></ul>
+            <ul id="client-checks" class="check-list" hidden></ul>
+            <p id="client-validity" class="field-help" hidden></p>
+            <p id="renewal-contact" class="session-note" hidden><a href="mailto:contact@jessiemessage.com" data-jm-i18n="Contacter Jessie">Contacter Jessie</a></p>
+            <button id="check-client-access" class="button button-secondary" type="button" hidden data-jm-i18n="Vérifier mon accès">Vérifier mon accès</button>
             <p id="client-chat-note" class="session-note" data-jm-i18n="La messagerie sera disponible quand ton accès sera validé et le service activé.">La messagerie sera disponible quand ton accès sera validé et le service activé.</p>
-            <a id="client-chat-link" class="button button-primary" href="/messages" hidden data-jm-i18n="Ouvrir ma conversation avec Jessie">Ouvrir ma conversation avec Jessie</a>
-            <div class="actions"><button id="client-logout" class="button button-primary" type="button" data-jm-i18n="Se déconnecter">Se déconnecter</button><button id="client-logout-all" class="button button-secondary" type="button" data-jm-i18n="Déconnecter toutes mes sessions">Déconnecter toutes mes sessions</button></div>
+            <a id="client-chat-link" class="button button-primary" href="/messages" hidden data-jm-i18n="Ouvrir ma conversation">Ouvrir ma conversation</a>
+            <details class="account-settings"><summary data-jm-i18n="Mon compte">Mon compte</summary><div id="client-account-preferences"></div><div class="actions"><button id="client-logout" class="button button-secondary" type="button" data-jm-i18n="Déconnecter cet appareil">Déconnecter cet appareil</button><button id="client-logout-all" class="button button-secondary" type="button" data-jm-i18n="Déconnecter tous mes appareils">Déconnecter tous mes appareils</button></div></details>
           </section>
           <details id="resend-section" hidden>
             <summary data-jm-i18n="Je n’ai pas reçu l’e-mail de vérification">Je n’ai pas reçu l’e-mail de vérification</summary>

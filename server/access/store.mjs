@@ -1,3 +1,4 @@
+import { createSessionClock, sessionIsValid, adminSessionExpiry, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { randomBytes } from "node:crypto";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
 import { encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
@@ -59,7 +60,8 @@ const schemaChecks = {
   client_session_state: ["client_session_id_size", "client_session_version"],
 };
 
-export function createAccessStore(pool) {
+export function createAccessStore(pool, { clock } = {}) {
+  const sessionNow = createSessionClock(clock);
   async function withConnection(operation, transaction = false) {
     let connection;
     let begun = false;
@@ -87,25 +89,32 @@ export function createAccessStore(pool) {
     const user = (await connection.query("SELECT id, role, status FROM users WHERE id = ? FOR UPDATE", [candidate.user_id]))[0];
     if (!user || user.role !== "admin" || user.status !== "active") return null;
     const mfa = (await connection.query("SELECT version, enabled_at FROM admin_mfa WHERE user_id = ? FOR UPDATE", [user.id]))[0];
-    if (!mfa || mfa.enabled_at === null || fromSqlDate(mfa.enabled_at) > now) return null;
+    if (!mfa || mfa.enabled_at === null) return null;
     const session = (await connection.query(`SELECT s.id, s.created_at, s.expires_at, s.revoked_at,
       a.last_seen_at, a.mfa_verified_at, a.mfa_version FROM sessions s
       JOIN auth_session_state a ON a.session_id = s.id
       WHERE s.token_hash = ? AND s.user_id = ? FOR UPDATE`, [tokenHash, user.id]))[0];
     if (!session || session.revoked_at !== null || storedVersion(session.mfa_version) !== storedVersion(mfa.version)) return null;
+    now = sessionNow(now);
     const created = fromSqlDate(session.created_at);
     const seen = fromSqlDate(session.last_seen_at);
     const verified = fromSqlDate(session.mfa_verified_at);
-    if (created > now || verified < created || verified > seen || seen > now
-      || now >= fromSqlDate(session.expires_at) || now >= seen + 1800000) return null;
-    return user;
+    let expiresAt = fromSqlDate(session.expires_at);
+    if (verified < created || verified < fromSqlDate(mfa.enabled_at) || verified > seen
+      || !sessionIsValid({ role: "admin", createdAt: created, lastSeenAt: seen, expiresAt, now })) return null;
+    if (now - seen >= SESSION_TOUCH_MILLISECONDS) {
+      await connection.query("UPDATE auth_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now), session.id]);
+      expiresAt = Math.max(expiresAt, adminSessionExpiry(now));
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(expiresAt), session.id]);
+    }
+    return { ...user, now, expiresAt };
   }
 
   async function issuer(connection, userId, now) {
     const user = (await connection.query("SELECT role, status FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
     if (!user || user.role !== "admin" || user.status !== "active") return false;
     const mfa = (await connection.query("SELECT enabled_at FROM admin_mfa WHERE user_id = ? FOR UPDATE", [userId]))[0];
-    return Boolean(mfa && mfa.enabled_at !== null && fromSqlDate(mfa.enabled_at) <= now);
+    return Boolean(mfa && mfa.enabled_at !== null && fromSqlDate(mfa.enabled_at) <= sessionNow(now));
   }
 
   async function enqueue(connection, userId, verification, mail, now) {
@@ -230,6 +239,9 @@ export function createAccessStore(pool) {
       return withConnection(async (connection) => {
         const actor = await administrator(connection, actorTokenHash, now);
         if (!actor) return null;
+        const lifetime = expiresAt - now;
+        now = actor.now;
+        expiresAt = instant(now + lifetime);
         await connection.query(`INSERT INTO invitations (id, token_hash, created_by_id, created_at, expires_at, access_days)
           VALUES (?, ?, ?, ?, ?, ?)`, [id, tokenHash, actor.id, sqlDate(now), sqlDate(expiresAt), accessDays]);
         return { id, expiresAt, accessDays };
@@ -240,7 +252,9 @@ export function createAccessStore(pool) {
       bytes(actorTokenHash, 32); instant(now);
       const page = validateAccessPage("invitations", { cursor, limit });
       return withConnection(async (connection) => {
-        if (!await administrator(connection, actorTokenHash, now)) return null;
+        const actor = await administrator(connection, actorTokenHash, now);
+        if (!actor) return null;
+        now = actor.now;
         const rows = await connection.query(`SELECT id, created_at, expires_at, access_days, consumed_at,
           consumed_by_id, revoked_at, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s.%f') AS cursor_created_at
           FROM invitations ${page.position ? "WHERE created_at < ? OR (created_at = ? AND id < ?)" : ""}
@@ -259,7 +273,9 @@ export function createAccessStore(pool) {
     async revokeInvitation(actorTokenHash, id, { now }) {
       bytes(actorTokenHash, 32); bytes(id, 16); instant(now);
       return withConnection(async (connection) => {
-        if (!await administrator(connection, actorTokenHash, now)) return false;
+        const actor = await administrator(connection, actorTokenHash, now);
+        if (!actor) return false;
+        now = actor.now;
         const result = await connection.query(`UPDATE invitations SET revoked_at = ? WHERE id = ?
           AND consumed_at IS NULL AND revoked_at IS NULL AND created_at <= ?`, [sqlDate(now), id, sqlDate(now)]);
         return Number(result.affectedRows) === 1;
@@ -306,13 +322,16 @@ export function createAccessStore(pool) {
       bytes(userId, 16); text(expectedPasswordHash, 255); versionNumber(expectedVersion); instant(now);
       bytes(session?.id, 16); bytes(session?.tokenHash, 32); instant(session?.expiresAt);
       if (session.expiresAt <= now) invalid();
+      const lifetime = session.expiresAt - now;
       return withConnection(async (connection) => {
         const user = (await connection.query("SELECT role, status, password_hash, email_verified_at FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
+        now = sessionNow(now);
         if (!user || user.role !== "client" || !["pending", "active"].includes(user.status)
           || user.email_verified_at === null || fromSqlDate(user.email_verified_at) > now || user.password_hash !== expectedPasswordHash) return false;
         const state = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [userId]))[0];
         if (!state || storedVersion(state.credential_version) !== expectedVersion) return false;
-        await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [session.id, userId, session.tokenHash, sqlDate(now), sqlDate(session.expiresAt)]);
+        now = sessionNow(now);
+        await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [session.id, userId, session.tokenHash, sqlDate(now), sqlDate(instant(now + lifetime))]);
         await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, ?)", [session.id, sqlDate(now), expectedVersion]);
         return true;
       }, true);
@@ -334,9 +353,10 @@ export function createAccessStore(pool) {
           WHERE s.token_hash = ? AND s.user_id = ? FOR UPDATE`, [tokenHash, user.id]))[0];
         if (!row || row.revoked_at !== null || storedVersion(row.credential_version) !== storedVersion(auth.credential_version)) return null;
         const createdAt = fromSqlDate(row.created_at);
+        now = sessionNow(now);
         const lastSeen = fromSqlDate(row.last_seen_at);
         const expiresAt = fromSqlDate(row.expires_at);
-        if (now < createdAt || lastSeen < createdAt || now < lastSeen || now >= expiresAt || now >= lastSeen + idleSeconds * 1000) return null;
+        if (!sessionIsValid({ role: "client", createdAt, lastSeenAt: lastSeen, expiresAt, now, idleSeconds })) return null;
         const emailVerified = user.email_verified_at !== null && fromSqlDate(user.email_verified_at) <= now;
         const ageAssured = user.age_assured_at !== null && fromSqlDate(user.age_assured_at) <= now;
         const approved = user.access_approved_at !== null && fromSqlDate(user.access_approved_at) <= now;
@@ -362,9 +382,12 @@ export function createAccessStore(pool) {
     async revokeAllClientSessions(userId, { now }) {
       bytes(userId, 16); instant(now);
       return withConnection(async (connection) => {
+        const user = (await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
+        if (!user) return;
+        now = sessionNow(now);
         await connection.query(`UPDATE sessions s JOIN client_session_state c ON c.session_id = s.id
           SET s.revoked_at = ? WHERE s.user_id = ? AND s.revoked_at IS NULL AND s.created_at <= ?`, [sqlDate(now), userId, sqlDate(now)]);
-      });
+      }, true);
     },
 
     async verifyEmail(tokenHash, { now }) {
@@ -406,7 +429,9 @@ export function createAccessStore(pool) {
       bytes(actorTokenHash, 32); instant(now);
       const page = validateAccessPage("clients", { cursor, limit });
       return withConnection(async (connection) => {
-        if (!await administrator(connection, actorTokenHash, now)) return null;
+        const actor = await administrator(connection, actorTokenHash, now);
+        if (!actor) return null;
+        now = actor.now;
         const rows = await connection.query(`SELECT id, pseudonym, email, status, email_verified_at, age_assured_at, created_at,
           access_approved_at, access_expires_at, ${invitationConsumptionProjection()}, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s.%f') AS cursor_created_at
           FROM users WHERE role = 'client' ${page.position ? "AND (created_at < ? OR (created_at = ? AND id < ?))" : ""}
@@ -431,10 +456,14 @@ export function createAccessStore(pool) {
       return withConnection(async (connection) => {
         // Keep administrator -> MFA -> session -> client ordering shared with
         // approval and revocation. The locked expiry is the mutation's CAS.
-        if (!await administrator(connection, actorTokenHash, now)) throw new AuthAccessStoreError("ACCESS_FORBIDDEN");
+        const actor = await administrator(connection, actorTokenHash, now);
+        if (!actor) throw new AuthAccessStoreError("ACCESS_FORBIDDEN");
+        now = actor.now;
         const user = (await connection.query(`SELECT role, status, email_verified_at, age_assured_at,
           access_approved_at, access_expires_at, ${invitationConsumptionProjection()}, DATE_FORMAT(access_expires_at, '%Y-%m-%d %H:%i:%s.%f') AS exact_expiry
           FROM users WHERE id = ? FOR UPDATE`, [userId]))[0];
+        now = sessionNow(now);
+        if (now >= actor.expiresAt) throw new AuthAccessStoreError("ACCESS_FORBIDDEN");
         if (!user || user.role !== "client") return null;
         if (user.status !== "active" || user.email_verified_at === null || !hasConsumedInvitation(user, now, fromSqlDate) || user.access_approved_at === null
           || fromSqlDate(user.email_verified_at) > now || fromSqlDate(user.access_approved_at) > now
@@ -457,10 +486,14 @@ export function createAccessStore(pool) {
       return withConnection(async (connection) => {
         const actor = await administrator(connection, actorTokenHash, now);
         if (!actor) return false;
+        now = actor.now;
         const user = (await connection.query("SELECT role, status, email_verified_at FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
+        now = sessionNow(now);
         if (!user || user.role !== "client" || user.status !== "pending" || user.email_verified_at === null
           || fromSqlDate(user.email_verified_at) > now) return false;
         const invitations = await connection.query("SELECT access_days, consumed_at FROM invitations WHERE consumed_by_id = ? AND consumed_at IS NOT NULL LIMIT 2 FOR UPDATE", [userId]);
+        now = sessionNow(now);
+        if (now >= actor.expiresAt) return false;
         if (invitations.length !== 1 || fromSqlDate(invitations[0].consumed_at) > now) return false;
         const accessDays = invitations[0].access_days === null ? null : Number(invitations[0].access_days);
         const expiresAt = accessDays === null ? null : instant(now + accessDaysValue(accessDays) * 86400000);
@@ -473,8 +506,12 @@ export function createAccessStore(pool) {
     async revokeClient(actorTokenHash, userId, { now }) {
       bytes(actorTokenHash, 32); bytes(userId, 16); instant(now);
       return withConnection(async (connection) => {
-        if (!await administrator(connection, actorTokenHash, now)) return false;
+        const actor = await administrator(connection, actorTokenHash, now);
+        if (!actor) return false;
+        now = actor.now;
         const user = (await connection.query("SELECT role, status FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
+        now = sessionNow(now);
+        if (now >= actor.expiresAt) return false;
         if (!user || user.role !== "client" || !["pending", "active", "suspended"].includes(user.status)) return false;
         await connection.query("UPDATE users SET status = 'revoked', updated_at = ? WHERE id = ?", [sqlDate(now), userId]);
         await connection.query("UPDATE sessions SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL AND created_at <= ?", [sqlDate(now), userId, sqlDate(now)]);

@@ -39,7 +39,7 @@ export function preferenceSaveBody(state, enabled, now = Date.now()) {
 // Loaded only after the account page or chat has authenticated a client. The
 // module is protected itself; anonymous login pages never request this asset.
 export function mountBroadcastPreference(container, { isCurrent = () => true } = {}) {
-  const state = createPreferenceState(); const controllers = new Set(); let disposed = false; let expiryTimer = null;
+  const state = createPreferenceState(); const controllers = new Set(); let disposed = false; let cancelSessionCheck = null; let sessionPaused = false;
   const section = document.createElement("section"); section.className = "broadcast-preference"; ui.attr(section, "aria-label", "Messages de diffusion");
   const heading = document.createElement("h2"); ui.text(heading, "Les nouvelles de Jessie");
   const copy = document.createElement("p"); copy.className = "session-note"; ui.text(copy, "Tu peux accepter les messages que Jessie propose à plusieurs clients. Chacun les reçoit dans sa conversation privée. Ce choix est facultatif et tu peux le retirer à tout moment ; tes échanges directs avec Jessie restent disponibles selon ton accès.");
@@ -54,12 +54,30 @@ export function mountBroadcastPreference(container, { isCurrent = () => true } =
   const current = (ticket) => alive() && visible() && currentPreference(state, ticket);
   const stale = () => Object.assign(new Error("stale_response"), { stale: true });
   function notice(text, error = false) { ui.text(status, text); status.classList.toggle("is-error", error); }
-  function render() { form.hidden = !state.session || !state.preference; checkbox.disabled = state.busy || state.refreshRequired; save.disabled = state.busy || state.refreshRequired; reload.hidden = !state.refreshRequired; }
+  function render() { form.hidden = !state.session || !state.preference || sessionPaused; checkbox.disabled = state.busy || state.refreshRequired || sessionPaused; save.disabled = state.busy || state.refreshRequired || sessionPaused; reload.hidden = !state.refreshRequired && !sessionPaused; }
   function reset(isVisible = false) {
-    for (const controller of controllers) controller.abort(); controllers.clear(); clearTimeout(expiryTimer); expiryTimer = null;
+    for (const controller of controllers) controller.abort(); controllers.clear(); cancelSessionCheck?.(); cancelSessionCheck = null; sessionPaused = false;
     clearPreference(state, { visible: isVisible }); checkbox.checked = false; notice(""); render(); section.hidden = !isVisible;
   }
-  function armExpiry() { clearTimeout(expiryTimer); expiryTimer = setTimeout(() => { reset(); }, Math.max(0, Math.min(2147483647, state.session.expiresAt - Date.now()))); }
+  function armExpiry(retry = false) {
+    cancelSessionCheck?.();
+    if (!state.session || !alive() || !visible()) { cancelSessionCheck = null; return; }
+    const ticket = preferenceTicket(state);
+    cancelSessionCheck = globalThis.JessieSessionClock.scheduleSessionCheck(retry ? Date.now() + 30000 : state.session.expiresAt, () => { void checkSession(ticket); }, { maxDelayMs: retry ? 30000 : 300000 });
+  }
+  async function checkSession(ticket) {
+    if (!current(ticket)) return;
+    try {
+      const session = await request("/api/broadcast/client/session", { ticket });
+      if (!acceptPreferenceSession(state, ticket, session)) { if (state.visible) await bootstrap(); else reset(); return; }
+      const wasPaused = sessionPaused; sessionPaused = false; armExpiry();
+      if (wasPaused) { notice(""); render(); }
+    } catch (error) {
+      if (error.stale) return;
+      if (error.status === 404 || error.status === 401) { reset(); return; }
+      sessionPaused = true; notice("Ton choix est indisponible pour le moment. Recharge-le pour réessayer.", true); render(); armExpiry(true);
+    }
+  }
   async function request(path, { ticket = preferenceTicket(state), body } = {}) {
     const controller = new AbortController(); controllers.add(controller); const timer = setTimeout(() => controller.abort(), 15000);
     try {
@@ -75,15 +93,19 @@ export function mountBroadcastPreference(container, { isCurrent = () => true } =
     try {
       const session = await request("/api/broadcast/client/session", { ticket });
       if (!acceptPreferenceSession(state, ticket, session)) { reset(); return; } armExpiry();
-      const result = await request("/api/broadcast/client/preference", { ticket: preferenceTicket(state) });
-      if (acceptPreference(state, preferenceTicket(state), result)) { checkbox.checked = state.preference.enabled; notice(""); render(); }
+      const readTicket = preferenceTicket(state);
+      const result = await request("/api/broadcast/client/preference", { ticket: readTicket });
+      const finalSession = await request("/api/broadcast/client/session", { ticket: readTicket });
+      if (!acceptPreferenceSession(state, readTicket, finalSession)) { if (state.visible) await bootstrap(); else reset(); return; }
+      armExpiry();
+      if (acceptPreference(state, readTicket, result)) { checkbox.checked = state.preference.enabled; notice(""); render(); }
     } catch (error) {
       if (error.stale) return; if (error.status === 404 || error.status === 401) { reset(); return; }
       state.refreshRequired = true; notice("Ton choix est indisponible pour le moment. Recharge-le pour réessayer.", true); render();
     }
   }
   async function submit(event) {
-    event.preventDefault(); const body = preferenceSaveBody(state, checkbox.checked); if (!body) return; const ticket = preferenceTicket(state); render(); notice("Enregistrement de ton choix…");
+    event.preventDefault(); if (sessionPaused) return; const body = preferenceSaveBody(state, checkbox.checked); if (!body) return; const ticket = preferenceTicket(state); render(); notice("Enregistrement de ton choix…");
     try {
       // Never repeat this POST after a conflict or a CSRF failure. A fresh GET
       // requires another explicit save and uses the newly loaded version.
@@ -101,8 +123,9 @@ export function mountBroadcastPreference(container, { isCurrent = () => true } =
   }
   function onVisibility() { if (visible()) void bootstrap(); else reset(); }
   function onPageHide() { reset(); }
+  function onOnline() { if (sessionPaused && alive() && visible()) void checkSession(preferenceTicket(state)); }
   form.addEventListener("submit", submit); reload.addEventListener("click", () => { void bootstrap(); });
-  document.addEventListener("visibilitychange", onVisibility); window.addEventListener("pagehide", onPageHide);
+  document.addEventListener("visibilitychange", onVisibility); window.addEventListener("pagehide", onPageHide); window.addEventListener("online", onOnline);
   void bootstrap();
-  return { clear() { if (disposed) return; reset(); disposed = true; document.removeEventListener("visibilitychange", onVisibility); window.removeEventListener("pagehide", onPageHide); ui.forget(section); section.remove(); }, reload: bootstrap };
+  return { clear() { if (disposed) return; reset(); disposed = true; document.removeEventListener("visibilitychange", onVisibility); window.removeEventListener("pagehide", onPageHide); window.removeEventListener("online", onOnline); ui.forget(section); section.remove(); }, reload: bootstrap };
 }

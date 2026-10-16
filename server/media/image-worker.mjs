@@ -48,11 +48,15 @@ process.once("message", async (request) => {
     const format = imageFormat(bytes);
     if ((format === "png" && pngAnimated(bytes)) || (format === "webp" && webpAnimated(bytes))) throw new Error();
     const settings = { failOn: "warning", limitInputPixels: 16_000_000, sequentialRead: true, animated: false };
-    const metadata = await sharp(bytes, settings).metadata();
+    // metadata() reads headers only. Inspect dimensions before the separately
+    // pixel-bounded decode so a large photo gets a useful, sanitized error.
+    const metadata = await sharp(bytes, { ...settings, limitInputPixels: false }).metadata();
     if (metadata.format !== format || !Number.isInteger(metadata.width) || !Number.isInteger(metadata.height)
-      || metadata.width < 1 || metadata.height < 1 || metadata.width > 8192 || metadata.height > 8192
-      || metadata.width * metadata.height > 16_000_000 || (metadata.pages ?? 1) !== 1
+      || metadata.width < 1 || metadata.height < 1 || (metadata.pages ?? 1) !== 1
       || (metadata.pageHeight !== undefined && metadata.pageHeight !== metadata.height)) throw new Error();
+    if (metadata.width > 8192 || metadata.height > 8192 || metadata.width * metadata.height > 16_000_000) {
+      failure = "MEDIA_DIMENSIONS"; throw new Error();
+    }
     failure = "MEDIA_UNAVAILABLE";
     const normalized = await sharp(bytes, settings).rotate()
       .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })

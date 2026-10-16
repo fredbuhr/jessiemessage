@@ -4,14 +4,14 @@ const words = {
   fr: {
     pageTitle: "JessieMessage — Ouvrir mon espace", badge: "UN ESPACE À PART", title: "Retrouver notre conversation.",
     subtitle: "Ton espace privé avec Jessie, accessible sur invitation.", invitation: "Une nouvelle invitation ? Ouvre directement le lien transmis par Jessie.",
-    openSpace: "Ouvrir mon espace", clientRole: "Mon accès client", administratorRole: "Administration", footer: "JessieMessage · Accès privé sur invitation", contact: "Contact",
+    openSpace: "Ouvrir mon espace", clientRole: "Ma conversation", administratorRole: "Administration", footer: "JessieMessage · Accès privé sur invitation", contact: "Contact",
     checking: "Vérification de l’accès…", available: "Choisis l’espace que tu souhaites ouvrir.", unavailable: "L’ouverture des accès est en préparation. Reviens plus tard ou contacte Jessie.",
     offline: "La connexion internet est indisponible. Reconnecte-toi, puis vérifie à nouveau les accès.", error: "L’accès n’a pas pu être vérifié. Réessaie dans un moment.", retry: "Vérifier à nouveau", retryChecking: "Vérification en cours…",
-    clientSignIn: "Me connecter", clientSignedOut: "Connecte-toi avec les identifiants de ton compte invité.",
+    clientSignIn: "Me connecter", clientSignedOut: "Connecte-toi pour retrouver notre conversation.",
     clientPending: "Ton compte attend encore la validation de son accès.", clientExpired: "Consulte ton accès pour connaître les possibilités de renouvellement.",
     clientAccess: "Consulter mon accès", clientActive: "Ta conversation privée est accessible.", clientMessages: "Reprendre ma conversation", clientChatUnavailable: "Retrouve l’état de ton accès et les fonctions disponibles.",
     administratorSignedOut: "Accès réservé à l’administration de Jessie.", administratorSignIn: "Connexion administrateur", administratorConnected: "Ouvre les outils de ton espace administrateur.", administratorOpen: "Ouvrir l’administration", administratorMessages: "Ouvrir les conversations",
-    keepClose: "Garder cet espace à portée de main", install: "Installer Jessie", installHelp: "Ajouter à l’écran d’accueil", installIntro: "Si ton navigateur propose cette option :",
+    keepClose: "Retrouve Jessie en un geste", install: "Installer Jessie", installHelp: "Ajouter à l’écran d’accueil", installIntro: "Si ton navigateur propose cette option :",
     installApple: "Sur iPhone ou iPad, ouvre le menu Partager, puis « Sur l’écran d’accueil ».",
     installAndroid: "Sur Android, ouvre le menu du navigateur, puis « Installer l’application » ou « Ajouter à l’écran d’accueil ».",
     installLimits: "Les intitulés varient selon le navigateur. Tu peux aussi continuer dans le navigateur ; une connexion internet reste nécessaire.",
@@ -21,14 +21,14 @@ const words = {
   en: {
     pageTitle: "JessieMessage — Open my space", badge: "A SPACE APART", title: "Return to our conversation.",
     subtitle: "Your private space with Jessie, available by invitation.", invitation: "A new invitation? Open the link Jessie shared with you directly.",
-    openSpace: "Open my space", clientRole: "My client access", administratorRole: "Administration", footer: "JessieMessage · Invitation-only access", contact: "Contact",
+    openSpace: "Open my space", clientRole: "My conversation", administratorRole: "Administration", footer: "JessieMessage · Invitation-only access", contact: "Contact",
     checking: "Checking access…", available: "Choose the space you would like to open.", unavailable: "Access is being prepared. Come back later or contact Jessie.",
     offline: "An internet connection is unavailable. Reconnect, then check access again.", error: "Access could not be checked. Please try again in a moment.", retry: "Check again", retryChecking: "Checking access…",
-    clientSignIn: "Sign in", clientSignedOut: "Sign in with the credentials for your invited account.",
+    clientSignIn: "Sign in", clientSignedOut: "Sign in to return to our conversation.",
     clientPending: "Your account is still waiting for access approval.", clientExpired: "Check your access for renewal options.",
     clientAccess: "View my access", clientActive: "Your private conversation is available.", clientMessages: "Return to my conversation", clientChatUnavailable: "View your access status and available features.",
     administratorSignedOut: "Reserved for Jessie’s administration.", administratorSignIn: "Administrator sign-in", administratorConnected: "Open the tools in your administrator space.", administratorOpen: "Open administration", administratorMessages: "Open conversations",
-    keepClose: "Keep this space close at hand", install: "Install Jessie", installHelp: "Add to your Home Screen", installIntro: "If your browser offers the option:",
+    keepClose: "Keep Jessie one tap away", install: "Install Jessie", installHelp: "Add to your Home Screen", installIntro: "If your browser offers the option:",
     installApple: "On iPhone or iPad, open the Share menu, then choose “Add to Home Screen”.",
     installAndroid: "On Android, open the browser menu, then choose “Install app” or “Add to Home Screen”.",
     installLimits: "Labels vary by browser. You can also continue in your browser; an internet connection is still required.",
@@ -110,7 +110,16 @@ async function checkAccess() {
     try {
       const result = await Promise.race([reading, deadline, cancelled]);
       if (!visible() || !currentEntry(state, ticket)) return;
-      acceptEntry(state, ticket, result); render();
+      acceptEntry(state, ticket, result);
+      const { client, administrator } = state.entry;
+      const destinations = [];
+      if (client?.state === "active" && client.href === "/messages") destinations.push(client.href);
+      if (administrator?.state === "connected" && administrator.href === "/admin/messages") destinations.push(administrator.href);
+      // A single authenticated role opens its conversation. If both roles are
+      // connected, keep the explicit choice instead of guessing an identity.
+      const connectedRoles = Number(Boolean(client && client.state !== "signed_out")) + Number(administrator?.state === "connected");
+      render();
+      if (destinations.length === 1 && connectedRoles === 1 && visible() && currentEntry(state, ticket)) location.replace(destinations[0]);
     } catch {
       if (!visible() || !currentEntry(state, ticket)) return;
       rejectEntry(state, ticket, { offline: !online() }); render();

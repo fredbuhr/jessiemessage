@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { ADMIN_SESSION_SECONDS, CLIENT_IDLE_SECONDS } from "./session-policy.mjs";
 import { canonicalEmail } from "./config.mjs";
 import { csrfToken, hashPassword, newId, newToken, openTotpSecret, recoveryCodeDigest, tokenDigest, verifyPassword, verifyTotp } from "./crypto.mjs";
 
@@ -13,8 +14,8 @@ export class AuthError extends Error {
 
 const invalid = () => new AuthError("AUTH_INVALID");
 const unavailable = () => new AuthError("AUTH_UNAVAILABLE");
-const SESSION_SECONDS = 8 * 60 * 60;
-const IDLE_SECONDS = 30 * 60;
+const SESSION_SECONDS = ADMIN_SESSION_SECONDS;
+const IDLE_SECONDS = CLIENT_IDLE_SECONDS;
 const MAX_INSTANT = 253402300799999;
 
 // One private, random dummy hash per process keeps nonexistent accounts on the
@@ -40,7 +41,7 @@ export async function createAuthService({ store, totpKey, clock = Date.now }) {
   async function session(rawToken) {
     let digest;
     try { digest = tokenDigest(rawToken); } catch { return null; }
-    const record = await database(() => store.getSession(digest, { now: clock(), idleSeconds: IDLE_SECONDS }));
+    const record = await database(() => store.getSession(digest, { now: nowValue(), idleSeconds: IDLE_SECONDS }));
     return record ? publicSession(record, rawToken) : null;
   }
 
@@ -68,10 +69,10 @@ export async function createAuthService({ store, totpKey, clock = Date.now }) {
     const accepted = await database(() => store.completeAdminLogin({
       userId: record.id, expectedPasswordHash: record.passwordHash, now,
       session: { id: newId(), tokenHash: tokenDigest(rawToken), expiresAt: now + SESSION_SECONDS * 1000 },
-      factorCheck: (mfa) => {
+      factorCheck: (mfa, checkedAt = now) => {
         if (/^[0-9]{6}$/.test(factor)) {
           const secret = openTotpSecret(mfa.secretEncrypted, totpKey, record.id);
-          const step = verifyTotp(secret, factor, { now, lastStep: mfa.lastStep });
+          const step = verifyTotp(secret, factor, { now: checkedAt, lastStep: mfa.lastStep });
           return step === null ? null : { step };
         }
         if (!mfa.enabled) return null;
@@ -87,12 +88,30 @@ export async function createAuthService({ store, totpKey, clock = Date.now }) {
   async function logout(rawToken) {
     let digest;
     try { digest = tokenDigest(rawToken); } catch { return; }
-    await database(() => store.revokeSession(digest, { now: clock() }));
+    await database(() => store.revokeSession(digest, { now: nowValue() }));
   }
   async function logoutAll(rawToken) {
     const connected = await session(rawToken);
     if (!connected) throw invalid();
-    await database(() => store.revokeAllSessions(Buffer.from(connected.user.id, "hex"), { now: clock() }));
+    await database(() => store.revokeAllSessions(Buffer.from(connected.user.id, "hex"), { now: nowValue() }));
   }
-  return Object.freeze({ login, session, logout, logoutAll });
+  async function devices(rawToken, { cursor = null } = {}) {
+    let hash;
+    try { hash = tokenDigest(rawToken); } catch { throw invalid(); }
+    if (cursor !== null && (typeof cursor !== "string" || !/^[a-f0-9]{32}$/.test(cursor))) throw new AuthError("AUTH_INPUT");
+    const page = await database(() => store.listDevices(hash, { now: nowValue(), afterId: cursor === null ? null : Buffer.from(cursor, "hex"), limit: 50 }));
+    if (!page) throw invalid();
+    return { devices: page.devices.map((item) => ({ id: item.id.toString("hex"), createdAt: item.createdAt, lastSeenAt: item.lastSeenAt, current: item.current })),
+      nextCursor: page.nextCursor?.toString("hex") ?? null, hasMore: page.hasMore };
+  }
+  async function revokeDevice(rawToken, id) {
+    let hash;
+    try { hash = tokenDigest(rawToken); } catch { throw invalid(); }
+    if (typeof id !== "string" || !/^[a-f0-9]{32}$/.test(id)) throw new AuthError("AUTH_INPUT");
+    const result = await database(() => store.revokeDevice(hash, Buffer.from(id, "hex"), { now: nowValue() }));
+    if (!result) throw invalid();
+    if (!result.found) throw new AuthError("AUTH_DEVICE_NOT_FOUND");
+    return { status: "device_revoked", current: result.current };
+  }
+  return Object.freeze({ login, session, logout, logoutAll, devices, revokeDevice });
 }

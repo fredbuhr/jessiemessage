@@ -69,6 +69,7 @@ function controller(name, fetchHandler, { hash = "", visibility = "visible" } = 
     __recoveryModel: recoveryModel,
     setTimeout(callback, milliseconds) { const id = ++timerId; timers.set(id, { callback, milliseconds }); return id; }, clearTimeout(id) { timers.delete(id); },
     fetch(path, options = {}) { calls.push({ path, options }); return Promise.resolve().then(() => fetchHandler(path, options, calls)); } });
+  new Script(readFileSync(new URL("../public/session-clock.js", import.meta.url), "utf8"), { filename: "public/session-clock.js" }).runInContext(context);
   let source = readFileSync(new URL(`../public/${name}.js`, import.meta.url), "utf8");
   if (name === "recover") source = source.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*"\/recover-model\.js";/, "const {$1} = __recoveryModel;");
   new Script(source, { filename: `public/${name}.js`, importModuleDynamically: async () => { throw new Error("optional feature unavailable in fixture"); } }).runInContext(context);
@@ -223,7 +224,7 @@ test("access login adopts a fresh CSRF proof for a newer login of the same accou
   const f = controller("access", (path) => path === "/api/access/session" ? ++sessions === 1 ? signedOut() : response(current()) : path === capabilityPath ? response(capability()) : path === "/api/access/login" ? response(user("Ancienne session")) : response({ status: "logged_out" }));
   try {
     await flush(); f.get("login-password").value = "Synthetic login password"; f.submit("client-login-form"); await flush();
-    assert.equal(f.get("client-name").textContent, "Session actuelle"); assert.match(f.get("client-access-state").textContent, /expiré/); assert.match(f.get("access-status").textContent, /connexion a changé/);
+    assert.equal(f.get("client-name").textContent, "Session actuelle"); assert.match(f.get("client-access-state").textContent, /arrivé à son terme/); assert.match(f.get("access-status").textContent, /connexion a changé/);
     f.click("client-logout"); await flush(); const logout = f.calls.find((call) => call.path === "/api/access/logout");
     assert.equal(logout.options.headers["X-CSRF-Token"], "E".repeat(43)); assert.equal(f.calls.filter((call) => call.path === "/api/access/login").length, 1);
   } finally { f.dispose(); }

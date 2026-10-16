@@ -1,4 +1,5 @@
 import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
+import { prepareImageUpload } from "/image-preparation.js";
 
 const ui = globalThis.JessieI18n ?? {
   register() {}, t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -30,6 +31,7 @@ let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previ
 let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersion = 0; let lightboxItem = null;
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
+let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
 let broadcastPreference = null;
 // The live region contains only a cumulative count for this visible selection.
 // No message body, sender name, caption or persistent announcement log is kept.
@@ -140,6 +142,7 @@ function clearChat() {
   el("workspace").classList.remove("selected"); notice("");
 }
 function clearPrivate() {
+  cancelConfirmation(); stopReconnect(); resumeTask = null; retryConnection(false);
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
   sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
   olderBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
@@ -147,11 +150,59 @@ function clearPrivate() {
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   broadcastPreference?.clear(); broadcastPreference = null; document.getElementById("broadcast-preference-host")?.remove();
   document.getElementById("readiness-nav")?.remove();
-  stopPolling(); abortRequests(); clearTimeout(expiryTimer); expiryTimer = null;
+  stopPolling(); abortRequests(); expiryTimer?.(); expiryTimer = null;
   states.clear(); inbox.clear(); selected = null; ui.forget(el("conversations")); el("conversations").replaceChildren(); clearChat();
   inboxCursor = null; inboxMore = false; inboxRefreshCursor = null; lastInboxRefresh = 0; inboxLoading = false;
   el("workspace").hidden = true; ui.rawText(el("session-status"), ""); ui.rawText(el("inbox-status"), "");
   el("more-conversations").hidden = true;
+}
+function cancelConfirmation() {
+  if (!pendingConfirmation) return;
+  const pending = pendingConfirmation; pendingConfirmation = null;
+  if (el("confirm-delete").open) el("confirm-delete").close();
+  pending.resolve(false); focusVisible(pending.opener);
+}
+function confirmDeletion(kind, opener) {
+  cancelConfirmation();
+  ui.text(el("confirm-title"), kind === "photo" ? "Supprimer cette photo ?" : "Supprimer ce message ?");
+  ui.text(el("confirm-description"), kind === "photo" ? "Elle sera retirée de ta bibliothèque. Cette action est définitive." : "Il disparaîtra de cette conversation pour vous deux. Cette action est définitive.");
+  return new Promise((resolve) => { pendingConfirmation = { resolve, opener }; el("confirm-delete").showModal(); focusVisible(el("cancel-delete")); });
+}
+function retryConnection(show = true) { el("retry-connection").hidden = !show; }
+function stopReconnect() { clearTimeout(reconnectTimer); reconnectTimer = null; }
+function scheduleReconnect() {
+  stopReconnect();
+  if (!visible() || loggingOut || reconnectAttempt >= 3) return;
+  const delay = [2000, 5000, 15000][reconnectAttempt++];
+  reconnectTimer = setTimeout(() => { reconnectTimer = null; void resumeConnection(); }, delay);
+}
+async function resumeConnection({ reset = false } = {}) {
+  if (!visible() || loggingOut) return;
+  if (reset) { reconnectAttempt = 0; stopReconnect(); }
+  if (!ready) { await start(); return; }
+  if (resumeTask) return resumeTask.promise;
+  const ticket = snapshot(); notice("Retrouvons ta conversation…", false, "session-status");
+  const task = { promise: null }; resumeTask = task;
+  task.promise = (async () => {
+    try {
+      const continued = await refreshAndContinue();
+      if (!continued || !fresh(ticket, true) || !visible() || loggingOut) return;
+      if (crm) await crm.resume();
+      if (!fresh(ticket, true) || !visible() || loggingOut) return;
+      void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
+      el("workspace").hidden = false; notice("", false, "session-status"); retryConnection(false);
+      reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
+    } catch (error) {
+      if (error.stale || !fresh(ticket, true)) return;
+      if (error.status === 401) { signOut(); return; }
+      notice("La connexion est momentanément indisponible. Tes brouillons restent dans cet onglet.", true, "session-status");
+      retryConnection(); scheduleReconnect();
+    }
+  })();
+  try { return await task.promise; } finally { if (resumeTask === task) resumeTask = null; }
+}
+function hasUnsavedWork() {
+  return !loggingOut && [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft);
 }
 function signOut() { clearPrivate(); location.replace(role === "admin" ? "/admin/login" : "/access"); }
 function snapshot(state = null) { return { generation, visibilityGeneration, selectionEpoch, id: state?.id, epoch: state?.epoch }; }
@@ -160,7 +211,7 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
   const owner = sessionOwner; const ticket = snapshot(state); const controller = new AbortController(); controllers.add(controller);
   controller.accountScope = account;
   const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
-  const timeout = setTimeout(() => controller.abort(), rawBody ? 30000 : 15000);
+  const timeout = setTimeout(() => controller.abort(), rawBody ? 65000 : 15000);
   const headers = mutation ? { "Content-Type": contentType ?? "application/json", "X-CSRF-Token": csrf ?? "" } : {};
   try {
     if (mutation && verifyOwner && owner) await confirmOwner(ticket, owner, account);
@@ -196,8 +247,8 @@ async function refreshSession({ allowLoggingOut = false } = {}) {
   const changed = Boolean(sessionOwner && !sameOwner(sessionOwner, owner));
   if (changed) clearPrivate();
   sessionOwner = owner; csrf = session.csrf; sessionCheckedAt = Date.now();
-  clearTimeout(expiryTimer);
-  expiryTimer = setTimeout(signOut, Math.max(0, Math.min(2147483647, session.expiresAt - Date.now())));
+  expiryTimer?.();
+  expiryTimer = globalThis.JessieSessionClock.scheduleSessionCheck(session.expiresAt, () => { void resumeConnection(); });
   return { session, changed };
 }
 async function refreshAndContinue() {
@@ -429,6 +480,10 @@ function chooseFile() {
   state.imageDraft = { file, asset: null }; renderMeta(state); notice("Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
 }
 function mediaErrorText(error) {
+  if (error.code === "media_format") return "Ce format n’est pas pris en charge. Choisis une photo JPEG, PNG ou WebP.";
+  if (error.code === "media_dimensions") return "Cette photo est trop grande. Choisis une version plus petite.";
+  if (error.code === "request_too_large") return "Cette photo dépasse 10 Mo. Choisis une version plus légère.";
+  if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée. Essaie une autre photo.";
   if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite. Contacte Jessie.";
   if (error.status === 409 && error.code === "media_in_use") return "Cette photo est encore présente dans une conversation. Supprime d’abord tous tes messages qui la contiennent.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
@@ -519,7 +574,8 @@ function renderMediaPanel() {
   }
 }
 async function removeOwnAsset(media, state, button) {
-  if (button.disabled) return; button.disabled = true; const activePanel = panel;
+  if (button.disabled || !await confirmDeletion("photo", button) || !belongsTo(currentState(), state.id, state.epoch) || !visible()) return;
+  button.disabled = true; const activePanel = panel;
   try {
     await request(`${mediaBase}/assets/${media.id}/delete`, { state, mutation: true });
     imageUrls.remove(media.fullUrl); imageUrls.remove(media.thumbnailUrl);
@@ -821,10 +877,17 @@ async function sendImage(retry = false) {
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   const draft = state.imageDraft;
   const pending = prepareImageSend(state, { caption, mediaId: retry ? state.pending?.mediaId : draft?.asset?.id ?? null, file: retry ? state.pending?.file : draft?.file ?? null }, state.pending?.clientMessageId ?? newClientId());
-  state.draft = caption; sendBusy = true; renderMeta(state); notice(pending.mediaId ? "Envoi de la photo…" : "Préparation de la photo…");
+  state.draft = caption; sendBusy = true; let preparing = false; renderMeta(state); notice(pending.mediaId ? "Envoi de la photo…" : "Préparation de la photo…");
   try {
     if (!pending.mediaId) {
-      const result = await request(`${mediaBase}/assets`, { state, mutation: true, rawBody: pending.file, contentType: pending.file.type });
+      const preparation = new AbortController(); controllers.add(preparation); let prepared;
+      preparing = true;
+      try { prepared = await prepareImageUpload(pending.file, { signal: preparation.signal }); }
+      finally { controllers.delete(preparation); }
+      preparing = false;
+      if (!fresh(ticket) || !visible() || state.pending !== pending) return;
+      pending.file = prepared;
+      const result = await request(`${mediaBase}/assets`, { state, mutation: true, rawBody: prepared, contentType: prepared.type });
       if (!completeImageUpload(state, pending.clientMessageId, result.asset.id)) return;
       state.imageDraft = { file: null, asset: result.asset }; renderMeta(state);
     }
@@ -835,12 +898,17 @@ async function sendImage(retry = false) {
     // The server resolves an existing idempotency key before checking an
     // asset's existence. A 404 here proves no image send was recorded and
     // permits choosing a replacement, including after deletion in another tab.
-    if (!error.stale && state.pending && !rejectPendingImageSend(state, error.status)) retrySend(state);
+    if (preparing && fresh(ticket) && state.pending === pending) {
+      // Local preparation failed before any upload/message request. The photo
+      // can be changed safely; uncertain network sends keep their retry key.
+      state.pending = null;
+    } else if (!error.stale && state.pending && !rejectPendingImageSend(state, error.status)) retrySend(state);
     await handleMediaError(error, state);
   } finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
 }
 async function deleteMessage(state, message, button) {
   if (!belongsTo(currentState(), state.id, state.epoch) || button.disabled) return;
+  if (!await confirmDeletion("message", button) || !belongsTo(currentState(), state.id, state.epoch) || !visible()) return;
   const restoreFocus = document.activeElement === button;
   button.disabled = true;
   try {
@@ -923,25 +991,21 @@ el("back-to-inbox").addEventListener("click", () => {
   selectionLoading = false; focusInbox(returnId);
 });
 el("logout").addEventListener("click", () => { void logout(); });
+el("retry-connection").addEventListener("click", () => { void resumeConnection({ reset: true }); });
+el("cancel-delete").addEventListener("click", cancelConfirmation);
+el("confirm-delete").addEventListener("close", cancelConfirmation);
+el("accept-delete").addEventListener("click", () => {
+  const pending = pendingConfirmation; if (!pending) return;
+  pendingConfirmation = null; el("confirm-delete").close(); focusVisible(pending.opener); pending.resolve(true);
+});
+window.addEventListener("beforeunload", (event) => { if (hasUnsavedWork()) { event.preventDefault(); event.returnValue = ""; } });
+window.addEventListener("online", () => { void resumeConnection({ reset: true }); });
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
-    clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend();
+    cancelConfirmation(); stopReconnect(); resumeTask = null; clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
     sendBusy = false; olderBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
-  } else if (ready) {
-    const ticket = snapshot(); notice("Vérification de la connexion…", false, "session-status");
-    void refreshAndContinue().then(async (continued) => {
-      if (!continued || !fresh(ticket, true) || !visible() || loggingOut) return;
-      if (crm) await crm.resume();
-      if (!fresh(ticket, true) || !visible() || loggingOut) return;
-      void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; notice("", false, "session-status"); retryDelay = 3000; schedulePolling(0);
-    }).catch((error) => {
-      if (error.stale || !fresh(ticket, true)) return;
-      if (error.status === 401 || error.status === 403) { signOut(); return; }
-      notice("La connexion n’a pas pu être vérifiée. Actualise la page pour réessayer.", true, "session-status");
-    });
-  } else if (!loggingOut) void start();
+  } else if (!loggingOut) void resumeConnection({ reset: true });
 });
 window.addEventListener("pagehide", clearPrivate);
 window.addEventListener("pageshow", (event) => { if (event.persisted) location.reload(); });
@@ -959,7 +1023,7 @@ async function start({ session = null } = {}) {
       if (session) {
         const owner = sessionIdentity(session); if (!owner) { signOut(); return; }
         sessionOwner = owner; csrf = session.csrf; sessionCheckedAt = Date.now();
-        expiryTimer = setTimeout(signOut, Math.max(0, Math.min(2147483647, session.expiresAt - Date.now())));
+        expiryTimer = globalThis.JessieSessionClock.scheduleSessionCheck(session.expiresAt, () => { void resumeConnection(); });
       } else await refreshSession();
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       const capability = await request(`${chatBase}/capabilities`, { account: true });
@@ -982,12 +1046,13 @@ async function start({ session = null } = {}) {
         await selectConversation(conversation.id);
       }
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
-      ready = true; el("workspace").hidden = false; notice("", false, "session-status");
+      ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false; notice("", false, "session-status");
       void refreshBroadcastAccess(); scheduleRead(); schedulePolling();
     } catch (error) {
       if (error.stale || !fresh(task.ticket, true)) return;
       if (error.status === 401 || error.status === 403) { signOut(); return; }
-      clearPrivate(); notice(error.status === 404 ? "La messagerie n’est pas encore activée. Consulte ton accès pour revenir plus tard." : "La messagerie est indisponible. Recharge la page pour réessayer.", true, "session-status");
+      clearPrivate(); notice(error.status === 404 ? "La messagerie n’est pas encore activée. Consulte ton accès pour revenir plus tard." : "La connexion est momentanément indisponible. Réessaie dans un instant.", true, "session-status");
+      retryConnection(); if (error.status !== 404) scheduleReconnect();
     }
   })();
   try { return await task.promise; }

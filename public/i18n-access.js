@@ -2,6 +2,25 @@
 
 // Only fixed interface sources belong in this catalog. Account fields stay raw.
 globalThis.JessieI18n?.register({
+  "Espace réservé aux adultes. Après ton inscription, confirme ton e-mail ; Jessie validera ensuite ton accès. Cette déclaration ne vérifie pas ta majorité.": "This space is for adults. After signing up, confirm your email; Jessie will then approve your access. This declaration does not verify your age.",
+  "Confirme ton e-mail pour retrouver Jessie ici.": "Confirm your email to join Jessie here.",
+  "Vérifier mon accès": "Check my access",
+  "Contacter Jessie": "Contact Jessie",
+  "Ouvrir ma conversation": "Open my conversation",
+  "Mon compte": "My account",
+  "Déconnecter cet appareil": "Sign out this device",
+  "Déconnecter tous mes appareils": "Sign out all my devices",
+  "Bienvenue chez Jessie.": "Welcome to Jessie’s.",
+  "On reprend notre conversation ?": "Shall we pick up our conversation?",
+  "Ton accès est arrivé à son terme. Contacte Jessie pour le renouveler.": "Your access has ended. Contact Jessie to renew it.",
+  "Confirme ton e-mail pour continuer.": "Confirm your email to continue.",
+  "Tout est prêt. Jessie doit encore valider ton accès.": "Everything is ready. Jessie still needs to approve your access.",
+  "Ton accès est ouvert jusqu’au {date}.": "Your access is open until {date}.",
+  "La conversation sera bientôt disponible. Tu peux revenir ici pour la retrouver.": "The conversation will be available soon. Come back here to find it.",
+  "C’est créé ! Ouvre l’e-mail reçu pour confirmer ton adresse, puis connecte-toi ici.": "Your account is ready! Open the email to confirm your address, then sign in here.",
+  "Déconnecter tous tes appareils ? Tu devras te reconnecter sur chacun d’eux.": "Sign out all your devices? You will need to sign in again on each one.",
+  "La connexion est interrompue. Réessaie dès que le réseau revient.": "The connection was interrupted. Try again when the network is back.",
+
   "JessieMessage — Ton accès privé": "JessieMessage — Your private access",
   "JessieMessage — Retrouver ton accès": "JessieMessage — Recover your access",
   "ESPACE PRIVÉ": "PRIVATE SPACE",

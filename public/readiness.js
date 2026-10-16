@@ -11,7 +11,7 @@ const ui = globalThis.JessieI18n ?? { t: interpolate,
 const el = (id) => document.getElementById(id);
 const state = createReadinessState();
 const controllers = new Set();
-let expiryTimer = null; let logoutBusy = false;
+let cancelSessionCheck = null; let logoutBusy = false; let sessionPaused = false;
 const visible = () => document.visibilityState === "visible";
 function notice(text, error = false, id = "session-status") {
   const node = el(id); ui.text(node, text); node.classList.toggle("is-error", error);
@@ -63,7 +63,7 @@ function renderOperations(operations) {
 }
 function clearPrivate(isVisible = false) {
   for (const controller of controllers) controller.abort(); controllers.clear();
-  clearTimeout(expiryTimer); expiryTimer = null; clearReadiness(state, { visible: isVisible }); clearDisplay();
+  cancelSessionCheck?.(); cancelSessionCheck = null; sessionPaused = false; clearReadiness(state, { visible: isVisible }); clearDisplay();
 }
 function signOut() { clearPrivate(); location.replace("/admin/login"); }
 function stale() { return Object.assign(new Error("stale_response"), { stale: true }); }
@@ -84,7 +84,7 @@ async function request(path, { ticket = readinessTicket(state), csrf = null, tim
 }
 function render() {
   const summary = state.summary;
-  if (!state.visible || !state.session || !summary || !visible()) return;
+  if (!state.visible || !state.session || !summary || !visible() || sessionPaused) return;
   el("readiness-content").hidden = false; el("logout").hidden = false;
   el("refresh").hidden = false; el("refresh").disabled = state.busy;
   ui.rawText(el("mail-sender"), summary.mail.sender);
@@ -108,8 +108,29 @@ function render() {
     el("smtp-proof-date").hidden = false;
   } else { el("smtp-proof-date").textContent = ""; el("smtp-proof-date").hidden = true; }
 }
-function armExpiry() {
-  clearTimeout(expiryTimer); expiryTimer = setTimeout(signOut, Math.max(0, Math.min(2147483647, state.session.expiresAt - Date.now())));
+function armExpiry(retry = false) {
+  cancelSessionCheck?.();
+  if (!state.session || !visible()) { cancelSessionCheck = null; return; }
+  const ticket = readinessTicket(state);
+  cancelSessionCheck = globalThis.JessieSessionClock.scheduleSessionCheck(retry ? Date.now() + 30000 : state.session.expiresAt, () => { void checkSession(ticket); }, { maxDelayMs: retry ? 30000 : 300000 });
+}
+async function checkSession(ticket) {
+  if (!currentReadiness(state, ticket) || !visible()) return;
+  try {
+    const session = await request("/api/auth/session", { ticket });
+    if (!acceptAdminSession(state, ticket, session)) {
+      if (state.visible) await bootstrap(); else signOut();
+      return;
+    }
+    const wasPaused = sessionPaused; sessionPaused = false; armExpiry();
+    if (wasPaused) { notice(""); render(); }
+  } catch (error) {
+    if (error.stale) return;
+    if (error.status === 401) { signOut(); return; }
+    sessionPaused = true; el("readiness-content").hidden = true; el("refresh").hidden = false;
+    notice("La préparation du site est momentanément indisponible. Actualise la page pour réessayer.", true);
+    armExpiry(true);
+  }
 }
 async function bootstrap(message = "") {
   if (!visible()) return;
@@ -120,6 +141,14 @@ async function bootstrap(message = "") {
     armExpiry();
     const summaryTicket = readinessTicket(state);
     const summary = await request("/api/admin/readiness", { ticket: summaryTicket });
+    // A cookie can change between the proof and this private read. Adopt the
+    // snapshot only after the same account and login have been proved again.
+    const finalSession = await request("/api/auth/session", { ticket: summaryTicket });
+    if (!acceptAdminSession(state, summaryTicket, finalSession)) {
+      if (state.visible) await bootstrap(); else signOut();
+      return;
+    }
+    armExpiry();
     if (!acceptReadinessSummary(state, summaryTicket, summary)) return;
     notice(message); render();
   } catch (error) {
@@ -186,4 +215,5 @@ el("logout").addEventListener("click", () => { void logout(); });
 document.addEventListener("visibilitychange", () => { if (visible()) void bootstrap(); else clearPrivate(); });
 window.addEventListener("pagehide", () => clearPrivate());
 window.addEventListener("pageshow", (event) => { if (event.persisted && visible()) void bootstrap(); });
+window.addEventListener("online", () => { if (visible() && sessionPaused) void checkSession(readinessTicket(state)); });
 if (visible()) void bootstrap(); else clearPrivate();

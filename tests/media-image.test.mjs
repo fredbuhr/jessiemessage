@@ -80,8 +80,8 @@ test("magic alone cannot make corrupt or truncated bytes a supported image", asy
 });
 
 test("source dimension and decoded-pixel bounds reject otherwise valid raster files", async () => {
-  await rejectsCode(normalizeImage(await solid(8193, 1)), "MEDIA_FORMAT");
-  await rejectsCode(normalizeImage(await solid(4001, 4000)), "MEDIA_FORMAT");
+  await rejectsCode(normalizeImage(await solid(8193, 1)), "MEDIA_DIMENSIONS");
+  await rejectsCode(normalizeImage(await solid(4001, 4000)), "MEDIA_DIMENSIONS");
   const allowed = await normalizeImage(await solid(8192, 1));
   assert.equal(allowed.width, 2048); assert.equal(allowed.height, 1);
 });

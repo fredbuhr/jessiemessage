@@ -164,3 +164,11 @@ test("an image removed in another tab releases its rejected send while uncertain
   assert.equal(rejectPendingImageSend(state, 404), true); assert.equal(state.pending, null); assert.equal(state.imageDraft, null); assert.equal(state.draft, "Légende conservée");
   assert.doesNotThrow(() => prepareImageSend(state, { caption: state.draft, mediaId: "d".repeat(32) }, "e".repeat(32)));
 });
+
+
+test("a definitive photo-dimension rejection allows replacing the file while preserving its caption", () => {
+  const state = makeConversationState(conversationId); state.draft = "Caption to keep"; state.imageDraft = { file: { synthetic: true }, asset: null };
+  prepareImageSend(state, { caption: state.draft, file: state.imageDraft.file }, "b".repeat(32));
+  assert.equal(rejectPendingImageSend(state, 422), true); assert.equal(state.pending, null);
+  assert.equal(state.draft, "Caption to keep"); assert.ok(state.imageDraft.file);
+});
