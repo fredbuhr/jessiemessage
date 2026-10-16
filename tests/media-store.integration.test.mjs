@@ -78,9 +78,9 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
 
     await t.test("read-only schema checks reject dirty history, dimension type drift, lost ownership uniqueness and weaker CHECKs", async () => {
       assert.equal(await media.assertSchema(), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = ?", [migrations.at(-1).version]);
       try { await assert.rejects(media.assertSchema(), code("CHAT_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = ?", [migrations.at(-1).version]); }
       await connection.query("ALTER TABLE media_assets MODIFY width SMALLINT NOT NULL");
       try { await assert.rejects(media.assertSchema(), code("MEDIA_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE media_assets MODIFY width SMALLINT UNSIGNED NOT NULL"); }

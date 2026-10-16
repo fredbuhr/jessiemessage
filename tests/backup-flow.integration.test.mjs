@@ -280,7 +280,7 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       for (const changed of ["user", "ledger"]) {
         await clone();
         if (changed === "user") await targetConnection.query("UPDATE users SET pseudonym = 'Synthetic changed clone' WHERE id = ?", [client.id]);
-        else await targetConnection.query("UPDATE schema_migrations SET finished_at = DATE_ADD(finished_at, INTERVAL 1 MICROSECOND) WHERE version = 27");
+        else await targetConnection.query("UPDATE schema_migrations SET finished_at = DATE_ADD(finished_at, INTERVAL 1 MICROSECOND) WHERE version = ?", [migrations.at(-1).version]);
         const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
         await assert.rejects(run("restore"), backupError);
         assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();

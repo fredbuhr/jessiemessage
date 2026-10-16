@@ -71,9 +71,9 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
 
     await t.test("read-only schema checks reject dirty history, unsigned/type drift, lost uniqueness and missing CHECK/FK enforcement", async () => {
       assert.equal(await store.assertSchema(), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = ?", [migrations.at(-1).version]);
       try { await assert.rejects(store.assertSchema(), errorCode("CHAT_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = ?", [migrations.at(-1).version]); }
       await connection.query("ALTER TABLE chat_receipts MODIFY last_read_sequence BIGINT NOT NULL DEFAULT 0");
       try { await assert.rejects(store.assertSchema(), errorCode("CHAT_DATABASE_STATE")); }
       finally { await connection.query("ALTER TABLE chat_receipts MODIFY last_read_sequence BIGINT UNSIGNED NOT NULL DEFAULT 0"); }

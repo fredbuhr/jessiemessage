@@ -23,6 +23,7 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host), "integration tests require loopback");
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "integration tests require separately provisioned runtime DML credentials");
+  const migrations = await loadMigrations();
   const connection = await connectDatabase();
   let pool;
   async function reset() {
@@ -35,13 +36,13 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
     pool = await createRuntimePool(process.env);
     const store = createAuthStore(pool);
     await assert.rejects(store.assertSchema(), (error) => error.code === "AUTH_DATABASE_OPERATION" && error.cause === undefined);
-    await applyMigrations(connection, { database: options.database, migrations: await loadMigrations() });
+    await applyMigrations(connection, { database: options.database, migrations });
     assert.equal(await store.assertSchema(), true);
 
     await t.test("read-only startup checks reject dirty history, nullable state drift and missing uniqueness", async () => {
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 27");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = ?", [migrations.at(-1).version]);
       try { await assert.rejects(store.assertSchema(), (error) => error.code === "AUTH_DATABASE_STATE"); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 27"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = ?", [migrations.at(-1).version]); }
       await connection.query("ALTER TABLE auth_session_state MODIFY last_seen_at DATETIME(6) NULL");
       try { await assert.rejects(store.assertSchema(), (error) => error.code === "AUTH_DATABASE_STATE"); }
       finally { await connection.query("ALTER TABLE auth_session_state MODIFY last_seen_at DATETIME(6) NOT NULL"); }

@@ -372,8 +372,8 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
       } finally { await connection.query("UPDATE schema_migrations SET checksum = ? WHERE version = 5", [migrations[4].checksum]); }
     });
     await t.test("a missing recorded migration is not inferred from existing physical tables or repaired", async () => {
-      const [record] = await connection.query("SELECT * FROM schema_migrations WHERE version = 27");
-      await connection.query("DELETE FROM schema_migrations WHERE version = 27");
+      const [record] = await connection.query("SELECT * FROM schema_migrations WHERE version = ?", [migrations.at(-1).version]);
+      await connection.query("DELETE FROM schema_migrations WHERE version = ?", [migrations.at(-1).version]);
       try {
         const before = await digest(); const result = await probe();
         assert.equal(states(result).history, "fail"); assert.equal(states(result).schema_reads, "pass");
