@@ -1,5 +1,11 @@
 # JessieMessage — bilan et chemin vers le pilote
 
+**Étape courante 0.27 :** [préparation du pilote texte](pilot-preparation.md).
+La source chiffrée est vérifiée et une nouvelle sauvegarde SQL est créée.
+La copie indépendante sur PC, la restauration isolée et la recette sur téléphone
+restent ouvertes. Le runtime de recette conserve `14a43104` ; la nouvelle
+révision opérateur `25670d54` n'active aucune fonction supplémentaire.
+
 **Current source of truth — 16 October 2026:** [manual admission and minimal private runtime, lot 0.26](manual-invitation-runtime.md). Stages 0.25 and 0.26 are accepted in recipe: backups checked, SMTP reception, administrator MFA sign-in, invited registration/email/approval and two-way text persistence after reloading both views. The active text runtime is pinned to `14a43104`, with an eight-character client minimum. Photos, CRM, broadcasts, client recovery and notifications remain outside that profile; they are not removed from the product scope. The entries below are historical observations of their revisions. Do not infer current deployment or a new KYC-provider requirement from an older entry. Production publication remains pending.
 
 
