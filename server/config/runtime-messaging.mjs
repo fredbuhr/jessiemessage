@@ -14,9 +14,9 @@ export class RuntimeMessagingEnvironmentError extends Error {
   constructor() { super("Private messaging environment is unavailable."); this.code = "RUNTIME_MESSAGING_ENVIRONMENT"; }
 }
 const fail = () => { throw new RuntimeMessagingEnvironmentError(); };
-const SECRET_FIELDS = ["password", "mfaKey", "mailKey", "messageKey", "smtpUser", "smtpPassword",
+const SECRET_FIELDS = ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "smtpUser", "smtpPassword",
   "JESSIEMESSAGE_RUNTIME_DB_PASSWORD", "JESSIEMESSAGE_MFA_KEY", "JESSIEMESSAGE_MAIL_KEY", "JESSIEMESSAGE_MESSAGE_KEY",
-  "JESSIEMESSAGE_SMTP_USER", "JESSIEMESSAGE_SMTP_PASSWORD"];
+  "JESSIEMESSAGE_MEDIA_KEY", "JESSIEMESSAGE_SMTP_USER", "JESSIEMESSAGE_SMTP_PASSWORD"];
 
 export function clearRuntimeMessagingSecrets(value) {
   if (!value || typeof value !== "object") return;

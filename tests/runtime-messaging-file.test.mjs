@@ -5,7 +5,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeRuntimeDatabaseConfiguration, writeRuntimeAuthenticationConfiguration,
   writeRuntimeMessagingConfiguration, readRuntimeMessagingConfiguration, readRuntimeMessagingBundle,
-  runtimeMessagingConfigurationExists, replaceRuntimeMessagingSmtpPassword } from "../server/config/runtime-database-file.mjs";
+  runtimeMessagingConfigurationExists, replaceRuntimeMessagingSmtpPassword, writeRuntimeMediaConfiguration,
+  readRuntimeMediaConfiguration, readRuntimeMediaBundle, runtimeMediaConfigurationExists } from "../server/config/runtime-database-file.mjs";
 
 const repository = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 const supported = process.platform === "linux" && await statfs("/proc/self/fd", { bigint: true }).then((value) => value.type === 0x9fa0n, () => false);
@@ -17,6 +18,38 @@ const authentication = () => ({ format: "jessiemessage-runtime-auth", version: 1
 const messaging = () => ({ format: "jessiemessage-runtime-messaging", version: 1, origin, mailKey: key(2), messageKey: key(3),
   smtpHost: "smtp.example.invalid", smtpPort: "587", smtpUser: "synthetic-user", smtpPassword: "synthetic-smtp-password" });
 const blocked = (error) => error.code === "RUNTIME_MESSAGING_CONFIGURATION" && !JSON.stringify(error).includes("synthetic-");
+
+test("exclusive media configuration is owner0600, preserves all three existing files and refuses replacement", { skip: !supported }, async (t) => {
+  const f = await fixture(t), media = { format: "jessiemessage-runtime-media", version: 1, origin, mediaKey: key(4),
+    mediaRoot: path.join(f.root, "media"), ownerBytes: "1073741824", totalBytes: "10737418240", minimumFreeBytes: "536870912" };
+  await writeRuntimeDatabaseConfiguration(f.directory, database()); await writeRuntimeAuthenticationConfiguration(f.directory, authentication());
+  await writeRuntimeMessagingConfiguration(f.directory, messaging());
+  const oldNames = ["runtime-database.json", "runtime-auth.json", "runtime-messaging.json"];
+  const before = await Promise.all(oldNames.map(name => readFile(path.join(f.directory, name))));
+  assert.equal(await runtimeMediaConfigurationExists(f.directory), false);
+  await writeRuntimeMediaConfiguration(f.directory, media);
+  assert.equal(await runtimeMediaConfigurationExists(f.directory), true);
+  const filename = path.join(f.directory, "runtime-media.json"), stat = await lstat(filename);
+  assert.equal(stat.mode & 0o7777, 0o600); assert.equal(stat.uid, process.getuid()); assert.equal(stat.nlink, 1);
+  assert.deepEqual(await readRuntimeMediaBundle(f.directory), { database: database(), authentication: authentication(), messaging: messaging(), media });
+  await assert.rejects(writeRuntimeMediaConfiguration(f.directory, { ...media, mediaKey: key(9) }), blocked);
+  assert.deepEqual(await readRuntimeMediaConfiguration(f.directory), media);
+  assert.deepEqual(await Promise.all(oldNames.map(name => readFile(path.join(f.directory, name)))), before);
+  await chmod(filename, 0o640); await assert.rejects(readRuntimeMediaBundle(f.directory), blocked);
+});
+
+test("anchored photo bundles refuse key reuse, origin drift and symlinked media files", { skip: !supported }, async (t) => {
+  for (const change of [{ mediaKey: key(1) }, { mediaKey: key(2) }, { mediaKey: key(3) }, { origin: "https://other.jessiemessage.com" }]) {
+    const f = await fixture(t); await writeRuntimeDatabaseConfiguration(f.directory, database());
+    await writeRuntimeAuthenticationConfiguration(f.directory, authentication()); await writeRuntimeMessagingConfiguration(f.directory, messaging());
+    await writeRuntimeMediaConfiguration(f.directory, { format: "jessiemessage-runtime-media", version: 1, origin, mediaKey: key(4),
+      mediaRoot: path.join(f.root, "media"), ownerBytes: "1073741824", totalBytes: "10737418240", minimumFreeBytes: "536870912", ...change });
+    await assert.rejects(readRuntimeMediaBundle(f.directory), blocked);
+    const filename = path.join(f.directory, "runtime-media.json"), other = path.join(f.directory, "other");
+    await (await import("node:fs/promises")).rename(filename, other); await symlink(other, filename);
+    await assert.rejects(readRuntimeMediaConfiguration(f.directory), blocked);
+  }
+});
 
 async function fixture(t) {
   const base = path.resolve(repository, "../audit"); await mkdir(base, { recursive: true, mode: 0o700 });

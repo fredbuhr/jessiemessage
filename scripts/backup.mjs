@@ -19,17 +19,22 @@ const candidateKeys = ["id", "owner_id", "owner_role", "storage_key", "content_d
 const candidateDTO = (value) => Object.fromEntries(candidateKeys.map((key) => [key, value[key]]));
 
 export function parseArguments(args) {
+  if (Array.isArray(args) && args.length === 6 && args[4] === "--profile" && args[5] === "photos") {
+    return { ...parseArguments(args.slice(0, 4)), profile: "photos" };
+  }
   if (!Array.isArray(args) || args.length !== 4 || !["prepare", "verify", "restore"].includes(args[0])
     || args[1] !== "--offline" || args[2] !== "--manifest" || typeof args[3] !== "string" || !isAbsolute(args[3])
     || args[3] !== resolve(args[3]) || args[3].length > 4096 || /[\x00-\x1f\x7f]/.test(args[3])) fail("BACKUP_USAGE");
   return { command: args[0], offline: true, manifestPath: args[3] };
 }
 
-function configuration(env) {
+function configuration(env, profile) {
   const media = mediaConfiguration(env), auth = authConfiguration(env), access = accessConfiguration(env), chat = chatConfiguration(env), crm = crmConfiguration(env);
-  if ([media, auth, access, chat, crm].some((value) => value.enabled !== true)) fail("BACKUP_CONFIG");
+  if ([media, auth, access, chat].some((value) => value.enabled !== true) || profile !== "photos" && crm.enabled !== true
+    || profile === "photos" && (["CRM", "CLIENT_RECOVERY", "BROADCAST"].some(name => ![undefined, "0"].includes(env[`JESSIEMESSAGE_ENABLE_${name}`])))) fail("BACKUP_CONFIG");
   return { media, databaseName: runtimeDatabaseOptions(env).database,
-    keys: { totpKey: auth.totpKey, mailKey: access.mail.key, messageKey: chat.key, mediaKey: media.key, crmKey: crm.key } };
+    keys: { totpKey: auth.totpKey, mailKey: access.mail.key, messageKey: chat.key, mediaKey: media.key,
+      ...(profile === "photos" ? {} : { crmKey: crm.key }) } };
 }
 
 /** All commands require an operator-confirmed offline source or isolated clone. */
@@ -38,21 +43,24 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
   let pool, inspectionPool, result;
   try {
     checkSignal(dependencies.signal);
-    const config = (dependencies.configure ?? configuration)(env), { media, keys } = config ?? {};
+    const photos = options.profile === "photos";
+    const config = (dependencies.configure ?? configuration)(env, options.profile), { media, keys } = config ?? {};
     if (media?.enabled !== true || !media.capacity || typeof config.databaseName !== "string" || !/^[A-Za-z0-9_]{1,64}$/.test(config.databaseName)
-      || !keys || ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"].some((key) => !Buffer.isBuffer(keys[key]) || keys[key].length !== 32)
+      || !keys || (photos ? ["totpKey", "mailKey", "messageKey", "mediaKey"] : ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"]).some((key) => !Buffer.isBuffer(keys[key]) || keys[key].length !== 32)
       || !Buffer.isBuffer(media.key) || !media.key.equals(keys.mediaKey)) fail("BACKUP_CONFIG");
     const keyValues = Object.values(keys);
-    if (keyValues.length !== 5 || keyValues.some((key, index) => keyValues.slice(index + 1).some((other) => key.equals(other)))) fail("BACKUP_CONFIG");
+    if (keyValues.length !== (photos ? 4 : 5) || keyValues.some((key, index) => keyValues.slice(index + 1).some((other) => key.equals(other)))) fail("BACKUP_CONFIG");
     const manifestRelative = relative(media.root, options.manifestPath);
     if (manifestRelative === "" || !manifestRelative.startsWith(`..${sep}`) && manifestRelative !== ".." && !isAbsolute(manifestRelative)) fail("BACKUP_CONFIG");
     const manifests = dependencies.manifests ?? await import("../server/backup/manifest.mjs");
     const snapshots = dependencies.snapshots ?? await import("../server/backup/snapshot.mjs");
-    const verifyCrypto = dependencies.verifyBackupData ?? (await import("../server/backup/verify.mjs")).verifyBackupData;
+    const verification = await import("../server/backup/verify.mjs");
+    const verifyCrypto = dependencies.verifyBackupData ?? (photos ? verification.verifyPhotoBackupData : verification.verifyBackupData);
     const makeCryptoStore = dependencies.makeCryptoStore ?? (await import("../server/backup/crypto-store.mjs")).createBackupCryptoStore;
     let manifest, payload;
     if (options.command !== "prepare") {
       manifest = await manifests.readManifest(options.manifestPath);
+      if (photos && (manifest?.version !== 2 || manifest.profile !== "messaging-photos")) fail("BACKUP_VERIFY");
       payload = await manifests.verifyBackupManifest({ manifest, keys });
       if (!payload?.snapshot || payload.snapshot.capacity?.rootFingerprint !== payload.identity?.rootFingerprint) fail("BACKUP_VERIFY");
     }
@@ -73,7 +81,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     if (!fingerprint(identity.rootFingerprint).equals(rootFingerprint)) fail("BACKUP_VERIFY");
     const sourceIdentity = payload?.identity;
     if (sourceIdentity) await manifests.assertCloneIdentity(sourceIdentity, identity);
-    const cryptoStore = makeCryptoStore({ pool });
+    const cryptoStore = photos ? undefined : makeCryptoStore({ pool });
     const capture = () => {
       checkSignal(dependencies.signal);
       return snapshots.captureBackupSnapshot({ store, signal: dependencies.signal, limits: dependencies.limits });
@@ -84,7 +92,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       checkSignal(dependencies.signal);
       assertReport(await snapshots.verifyBackupStorage({ snapshot, storage, mode, signal: dependencies.signal, limits: dependencies.limits }));
       const cryptoLimits = Object.fromEntries(Object.entries(dependencies.limits ?? {}).filter(([key]) => ["maxRows", "maxIssues"].includes(key)));
-      assertReport(await verifyCrypto({ store: cryptoStore, storage, keys, signal: dependencies.signal, limits: cryptoLimits }));
+      assertReport(await verifyCrypto({ ...(photos ? { pool } : { store: cryptoStore }), storage, keys, signal: dependencies.signal, limits: cryptoLimits }));
     }
     async function sameIdentity() {
       const current = await manifests.backupIdentity({ databaseName: await store.databaseName(), rootPath: media.root, storage, mediaKey: keys.mediaKey });
@@ -100,7 +108,8 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
         || before.capacity?.rootFingerprint !== identity.rootFingerprint) fail("BACKUP_VERIFY");
       await verifyData(before, "exact");
       const after = await capture(); compare(before, after, "exact"); await sameIdentity();
-      manifest = await manifests.createBackupManifest({ snapshot: after, identity, keys, now: instant(clock) });
+      manifest = await manifests.createBackupManifest({ snapshot: after, identity, keys, now: instant(clock),
+        ...(photos ? { profile: "messaging-photos" } : {}) });
       checkSignal(dependencies.signal);
       await manifests.writeManifest(options.manifestPath, manifest);
       result = { command: options.command, verified: true, prepared: true, restored: false, releasedCandidates: 0, manifestHash: manifests.manifestHash(manifest) };

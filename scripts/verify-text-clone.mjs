@@ -24,7 +24,7 @@ const FIELDS = ["command", "privateDirectory", "privatePathMode", "database", "c
 const STATS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 const DUMP_FLAGS = ["--single-transaction", "--quick", "--skip-lock-tables", "--skip-add-locks", "--skip-add-drop-table",
   "--skip-comments", "--skip-triggers", "--hex-blob", "--no-tablespaces"];
-const CODES = new Set(["USAGE", "ENVIRONMENT", "CONFIGURATION", "BACKUP", "PASSWORD", "CLIENT", "DUMP", "DUMP_MISMATCH",
+const CODES = new Set(["USAGE", "ENVIRONMENT", "CONFIGURATION", "BACKUP", "PASSWORD", "CLIENT", "DUMP", "DUMP_MISMATCH", "AUTHENTICATION", "ACCESS",
   "DATABASE", "SCHEMA", "CRYPTO", "CLEANUP", "CANCELLED", "OPERATION"].map((name) => `TEXT_CLONE_${name}`));
 
 export class TextCloneVerificationError extends Error {
@@ -105,6 +105,9 @@ async function visibleConfig(scope, canonical, name, expected) {
 
 export async function dumpCloneSql(scope, selected, configuration, password, { spawnClient = spawn, signal } = {}) {
   const name = `.text-clone-${randomBytes(16).toString("hex")}.cnf`;
+  // Retain only a bounded diagnostic in memory. The native text can contain
+  // private identities and is never attached to the public error or report.
+  const diagnostic = Buffer.alloc(8192);
   let handle, identity, written, content, result, failure;
   try {
     if (signal?.aborted) fail("TEXT_CLONE_CANCELLED");
@@ -129,11 +132,24 @@ export async function dumpCloneSql(scope, selected, configuration, password, { s
         signal?.addEventListener("abort", reject, { once: true });
         if (signal?.aborted) reject();
         child.stdout.on("data", (chunk) => { sqlBytes += chunk.length; if (sqlBytes > MAX_SQL) reject(); else if (!failed) hash.update(chunk); chunk.fill(0); });
-        child.stderr.on("data", (chunk) => { errors += chunk.length; chunk.fill(0); if (errors > 8192) reject(); });
+        child.stderr.on("data", (chunk) => {
+          if (errors < diagnostic.length) chunk.copy(diagnostic, errors, 0, Math.min(chunk.length, diagnostic.length - errors));
+          errors += chunk.length; chunk.fill(0); if (errors > diagnostic.length) reject();
+        });
         child.stdout.on("error", reject); child.stderr.on("error", reject); child.once("error", reject);
         child.once("close", (code, signal) => {
           clearTimeout(timer);
-          if (failed || code !== 0 || signal || sqlBytes < 1) no(new TextCloneVerificationError("TEXT_CLONE_DUMP"));
+          if (failed || code !== 0 || signal || sqlBytes < 1) {
+            let failureCode = "TEXT_CLONE_DUMP";
+            if (!failed && code !== 0 && !signal) {
+              const native = /\b(?:Got error|ERROR)\s*:?\s*([0-9]{4})\b/i.exec(diagnostic.toString("ascii", 0, errors));
+              const number = Number(native?.[1]);
+              if (number === 1045) failureCode = "TEXT_CLONE_AUTHENTICATION";
+              else if ([1044, 1142].includes(number)) failureCode = "TEXT_CLONE_ACCESS";
+              else if (number === 1049) failureCode = "TEXT_CLONE_DATABASE";
+            }
+            no(new TextCloneVerificationError(failureCode));
+          }
           else yes({ sqlBytes, sqlSha256: hash.digest("hex") });
         });
         child.once("close", () => signal?.removeEventListener("abort", reject));
@@ -142,6 +158,7 @@ export async function dumpCloneSql(scope, selected, configuration, password, { s
     await visibleConfig(scope, canonical, name, written);
   } catch (error) { failure = error instanceof TextCloneVerificationError ? error : new TextCloneVerificationError("TEXT_CLONE_DUMP"); }
   finally {
+    diagnostic.fill(0);
     content?.fill(0);
     try { await handle?.close(); } catch { failure = new TextCloneVerificationError("TEXT_CLONE_CLEANUP"); }
     try {

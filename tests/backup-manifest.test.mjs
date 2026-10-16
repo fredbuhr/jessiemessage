@@ -27,6 +27,22 @@ const resign = (manifest, mediaKey) => {
     .update(JSON.stringify(sorted({ version: 1, payload: manifest.payload }))).digest("hex");
   return manifest;
 };
+
+test("photo manifests authenticate exactly four real keys, bind their profile and preserve v1 full manifests", () => {
+  const input = valid(), four = Object.fromEntries(Object.entries(input.keys).filter(([name]) => name !== "crmKey"));
+  const manifest = createBackupManifest({ ...input, keys: four, profile: "messaging-photos" });
+  assert.equal(manifest.version, 2); assert.equal(manifest.profile, "messaging-photos");
+  assert.deepEqual(Object.keys(verifyBackupManifest({ manifest, keys: four }).canaries).sort(), Object.keys(four).sort());
+  for (const name of Object.keys(four)) assert.throws(() => verifyBackupManifest({ manifest, keys: { ...four, [name]: randomBytes(32) } }), hasCode());
+  assert.throws(() => createBackupManifest({ ...input, keys: four }), hasCode());
+  assert.throws(() => createBackupManifest({ ...input, profile: "messaging-photos" }), hasCode());
+  for (const change of [{ profile: "full" }, { version: 1 }, { profile: "messaging-text" }]) {
+    assert.throws(() => verifyBackupManifest({ manifest: { ...manifest, ...change }, keys: four }), hasCode());
+  }
+  assert.throws(() => verifyBackupManifest({ manifest, keys: input.keys }), hasCode());
+  const previous = createBackupManifest(input); assert.equal(previous.version, 1);
+  assert.deepEqual(verifyBackupManifest({ manifest: previous, keys: input.keys }).snapshot, input.snapshot);
+});
 async function fixture(t) {
   await mkdir(base, { recursive: true, mode: 0o700 });
   const root = await mkdtemp(path.join(base, "backup-manifest-test-"));

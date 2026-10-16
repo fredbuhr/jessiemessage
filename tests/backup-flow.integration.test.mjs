@@ -398,6 +398,38 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       assert.equal(Number(binding.held_bytes), active.fullBytes + active.thumbnailBytes + 80);
       await sourceUnchanged(); assert.equal((await run("restore")).restored, true); await assertRestored();
     });
+    await t.test("photo-only profile prepares a four-key manifest on real SQL without a fictitious CRM key", async () => {
+      for (const table of ["broadcast_recipients", "broadcast_campaigns", "broadcast_preferences", "crm_memberships", "crm_labels",
+        "crm_profiles", "password_reset_outbox", "client_password_resets"]) await sourceConnection.query(`DELETE FROM ${qualified(options.database, table)}`);
+      originalDatabaseHash = await databaseHash(options.database); originalFiles = await filesUnder(sourceRoot);
+      const deps = dependencies(options.database, sourceRoot), configure = deps.configure;
+      deps.configure = () => { const config = configure(); delete config.keys.crmKey; return config; };
+      const file = path.join(temporaryRoot, "photos-checkpoint.json");
+      const result = await main(["prepare", "--offline", "--manifest", file, "--profile", "photos"], process.env, deps);
+      assert.equal(result.verified, true);
+      const manifest = JSON.parse(await readFile(file, "utf8")); assert.equal(manifest.version, 2);
+      assert.equal(manifest.profile, "messaging-photos");
+      assert.deepEqual(Object.keys(manifest.payload.canaries).sort(), ["totpKey", "mailKey", "messageKey", "mediaKey"].sort());
+      await sourceUnchanged();
+    });
+
+    await t.test("photo-only restore verifies copied images, rebinds only its clone and replays without extra credit", async () => {
+      await clone();
+      const deps = dependencies(restoreDatabase, targetRoot), configure = deps.configure;
+      deps.configure = () => { const config = configure(); delete config.keys.crmKey; return config; };
+      const args = command => [command, "--offline", "--manifest", path.join(temporaryRoot, "photos-checkpoint.json"), "--profile", "photos"];
+      const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      assert.equal((await main(args("verify"), targetEnv, deps)).verified, true);
+      assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore);
+      const restored = await main(args("restore"), targetEnv, deps); assert.equal(restored.restored, true); assert.equal(restored.releasedCandidates, 3);
+      const capacity = await targetStatus(); assert.equal(capacity.pendingBytes, 0);
+      assert.equal(capacity.heldBytes, active.fullBytes + active.thumbnailBytes + 80);
+      assert.equal((await filesUnder(targetRoot)).length, 2);
+      const completed = await databaseHash(restoreDatabase);
+      assert.equal((await main(args("restore"), targetEnv, deps)).restored, true);
+      assert.equal(await databaseHash(restoreDatabase), completed); await sourceUnchanged();
+    });
+
     assert.ok(output.length > 0);
     for (const text of output) for (const key of Object.values(keys)) assert.equal(text.includes(key.toString("base64url")), false);
   } finally {
