@@ -6,7 +6,7 @@ import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
-import { ADMIN_SESSION_SECONDS } from "../server/auth/session-policy.mjs";
+import { ADMIN_SESSION_SECONDS, CLIENT_SESSION_SECONDS } from "../server/auth/session-policy.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16);
@@ -142,10 +142,9 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       assert.equal((await read(fixture)).messages.length, 1);
     });
 
-    await t.test("revocation, absolute/idle expiry, clock reversal, credential generation and MFA proof are enforced inside the transaction", async () => {
+    await t.test("revocation, persisted expiry, clock reversal, credential generation and MFA proof are enforced inside the transaction", async () => {
       const fixture = await pair();
       await assert.rejects(read(fixture, "client", { tokenHash: digest() }), errorCode("CHAT_UNAUTHORIZED"));
-      await assert.rejects(read(fixture, "client", { now: now + 1800000 }), errorCode("CHAT_UNAUTHORIZED"));
       // Keep the creator's enrollment valid at this earlier instant so this
       // assertion reaches the actor session's future-created/last-seen check.
       await connection.query("UPDATE admin_mfa SET enabled_at = ? WHERE user_id = ?", [sqlDate(now - 1000), fixture.admin.id]);
@@ -173,6 +172,7 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       const fixture = await pair();
       for (const role of ["client", "admin"]) {
         const table = role === "client" ? "client_session_state" : "auth_session_state";
+        if (role === "client") await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + CLIENT_SESSION_SECONDS * 1000), fixture.client.sessionId]);
         await read(fixture, role, { now: now + 59000 });
         assert.equal((await connection.query(`SELECT last_seen_at FROM ${table} WHERE session_id = ?`, [fixture[role].sessionId]))[0].last_seen_at, sqlDate(now));
         await read(fixture, role, { now: now + 60000 });
@@ -180,14 +180,16 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       }
     });
 
-    await t.test("administrator chat survives idle and renews its own grant without extending the client session", async () => {
+    await t.test("each role survives inactivity and renews only its own device session", async () => {
       const fixture = await pair(), at = now + 31 * 60000;
       assert.equal((await read(fixture, "admin", { now: at })).messages.length, 0);
       const adminSession = (await connection.query("SELECT s.expires_at, a.last_seen_at FROM sessions s JOIN auth_session_state a ON a.session_id = s.id WHERE s.id = ?", [fixture.admin.sessionId]))[0];
       assert.deepEqual({ ...adminSession }, { expires_at: sqlDate(at + ADMIN_SESSION_SECONDS * 1000), last_seen_at: sqlDate(at) });
       const clientSession = (await connection.query("SELECT s.expires_at, a.last_seen_at FROM sessions s JOIN client_session_state a ON a.session_id = s.id WHERE s.id = ?", [fixture.client.sessionId]))[0];
       assert.deepEqual({ ...clientSession }, { expires_at: sqlDate(now + 8 * 3600000), last_seen_at: sqlDate(now) });
-      await assert.rejects(read(fixture, "client", { now: at }), errorCode("CHAT_UNAUTHORIZED"));
+      assert.equal((await read(fixture, "client", { now: at })).messages.length, 0);
+      const renewedClient = (await connection.query("SELECT s.expires_at, a.last_seen_at FROM sessions s JOIN client_session_state a ON a.session_id = s.id WHERE s.id = ?", [fixture.client.sessionId]))[0];
+      assert.deepEqual({ ...renewedClient }, { expires_at: sqlDate(at + CLIENT_SESSION_SECONDS * 1000), last_seen_at: sqlDate(at) });
       const expiry = at + ADMIN_SESSION_SECONDS * 1000;
       await assert.rejects(read(fixture, "admin", { now: expiry }), errorCode("CHAT_UNAUTHORIZED"));
       assert.equal((await connection.query("SELECT expires_at FROM sessions WHERE id = ?", [fixture.admin.sessionId]))[0].expires_at, sqlDate(expiry));
