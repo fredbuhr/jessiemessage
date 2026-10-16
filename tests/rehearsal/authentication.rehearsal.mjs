@@ -56,6 +56,13 @@ async function rejectedLogin(page) {
 async function connected(page) {
   await waitUntil(() => page.execute("return !!document.getElementById('connected') && !document.getElementById('connected').hidden && location.pathname === '/admin'"), "real administrator session confirmed in the DOM");
 }
+async function signOutThisDevice(page) {
+  await waitUntil(() => page.execute("return !!document.querySelector('#account-settings > summary') && !document.getElementById('connected').hidden"), "administrator account settings available");
+  if (!await page.execute("return document.getElementById('account-settings').open")) await page.click("#account-settings > summary");
+  await waitUntil(() => page.execute("const button = document.getElementById('logout-button'); return document.getElementById('account-settings').open && !button.disabled && button.getClientRects().length > 0"), "this-device logout visible and ready inside account settings");
+  await page.click("#logout-button");
+  await loginForm(page);
+}
 async function sessionCookie(page) {
   const cookies = (await page.cookies()).filter((cookie) => cookie.name === cookieName);
   assert.equal(cookies.length, 1, "the browser accepts one __Host- administrator cookie");
@@ -130,7 +137,7 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     await entry(page, "connected"); await page.click("#administrator-link"); await connected(page);
     t.diagnostic("CSRF / Origin refusals preserve the session; /api/entry, /app and /admin recognize the real cookie.");
 
-    await page.click("#logout-button"); await loginForm(page);
+    await signOutThisDevice(page);
     await waitUntil(() => page.execute("return location.pathname === '/admin/login'"), "logout returns to the login URL");
     assert.equal((await page.cookies()).some((cookie) => cookie.name === cookieName), false);
     assert.equal((await fixtureRequest(fixture.origin, "/api/auth/session", { cookie: initialCookie })).status, 401, "the old cookie is revoked in SQL, not merely removed from the browser");
@@ -147,7 +154,7 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     await submitLogin(page, fixture, fixture.recoveryCodes[0]); await rejectedLogin(page);
     await submitLogin(page, fixture, fixture.recoveryCodes[1]); await connected(page);
     const finalCookie = await sessionCookie(page);
-    await page.click("#logout-button"); await loginForm(page);
+    await signOutThisDevice(page);
     assert.equal((await fixtureRequest(fixture.origin, "/api/auth/session", { cookie: finalCookie })).status, 401);
     t.diagnostic("Recovery code works once, SQL session expiry returns to login, consumed code replay fails and a different unused code still works.");
   } finally {

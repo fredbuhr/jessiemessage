@@ -111,8 +111,9 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       const payload = { actorTokenHash: digest(), now, id: id(), tokenHash: digest(), expiresAt: now + 3600000, accessDays: null };
       assert.equal(await store.createInvitation(payload), null);
       assert.equal(await store.listClients(digest(), { now }), null);
-      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now), admin.sessionId]);
-      assert.equal(await store.createInvitation({ ...payload, actorTokenHash: admin.tokenHash }), null);
+      const boundary = now + 1;
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(boundary), admin.sessionId]);
+      assert.equal(await store.createInvitation({ ...payload, actorTokenHash: admin.tokenHash, now: boundary }), null);
       await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + 8 * 3600000), admin.sessionId]);
       await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [sqlDate(now), admin.sessionId]);
       assert.equal(await store.createInvitation({ ...payload, actorTokenHash: admin.tokenHash }), null);
@@ -444,8 +445,9 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
     await t.test("renewal rechecks current administrator status, session expiry, revocation and MFA generation in its transaction", async () => {
       const fixture = await renewable(), request = { now, expectedExpiresAt: fixture.expiresAt, accessDays: 1 };
       for (const token of [digest(), fixture.session.tokenHash]) await assert.rejects(store.renewClient(token, fixture.user.id, request), (error) => error.code === "ACCESS_FORBIDDEN");
-      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now), admin.sessionId]);
-      try { await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, request), (error) => error.code === "ACCESS_FORBIDDEN"); }
+      const boundary = now + 1;
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(boundary), admin.sessionId]);
+      try { await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { ...request, now: boundary }), (error) => error.code === "ACCESS_FORBIDDEN"); }
       finally { await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + 8 * 3600000), admin.sessionId]); }
       for (const [alter, restore, parameters] of [
         ["UPDATE sessions SET revoked_at = ? WHERE id = ?", "UPDATE sessions SET revoked_at = NULL WHERE id = ?", [sqlDate(now), admin.sessionId]],

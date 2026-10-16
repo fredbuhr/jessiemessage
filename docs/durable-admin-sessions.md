@@ -55,7 +55,8 @@ français et en anglais.
 
 Le navigateur prépare les JPEG, PNG et WebP avant l'envoi : contrôle des
 dimensions avant décodage, réduction à 2048 pixels sur le grand côté et
-réencodage local sans métadonnées. Le serveur conserve ses validations et
+réencodage local sans les métadonnées EXIF/XMP de la source ; le navigateur
+peut ajouter un profil de couleur standard. Le serveur conserve ses validations et
 son propre traitement. La limite de fichier reste dix mébioctets ; les
 sources sont bornées à 64 millions de pixels et 16384 pixels par côté.
 Les formats HEIC et les images animées ne sont pas pris en charge.
