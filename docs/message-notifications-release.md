@@ -2,22 +2,23 @@
 
 ## Révision validée
 
-- Runtime candidat : `017cafaf839be37db2973f102766f30cc9373e36`.
+- Runtime actif en recette : `017cafaf839be37db2973f102766f30cc9373e36`.
 - Arbre : `d0a91285a3fba5aa689e65f4f0c5172ed3674255`.
 - [PR de revue #42](https://github.com/fredbuhr/jessiemessage/pull/42).
 - [CI #237](https://github.com/fredbuhr/jessiemessage/actions/runs/38971623828), cinq jobs réussis le 16 octobre 2026.
-- La recette reste en 0.30, sur le schéma à 28 migrations. Aucune activation de notifications ni migration de recette n’est revendiquée ici.
+- La recette est active en **0.31**, profil `messaging-photos-notify`, sur trente tables et trente migrations. Le build et le redémarrage Manager ont réussi le 17 octobre 2026 à **00:44 Europe/Paris** ; le flux annonce l’écoute sur le port 3000 et ce profil démarré.
 - Le candidat exact est installé dans un dossier séparé de l’hébergement ; `npm ci --ignore-scripts` et les contrôles de syntaxe y réussissent.
 - `runtime-notifications.json` a été préparé par le candidat validé, sans modifier les anciennes clés ni démarrer de serveur. Le coffre v4 a été créé avec six fichiers ; le propriétaire a confirmé l’empreinte de sa copie locale puis son déchiffrement le 17 octobre 2026.
-- Un nouvel instantané SQL/photos a été créé avec la recette arrêtée le 17 octobre 2026 à 00:30:24 Europe/Paris. L’archive a été extraite dans un répertoire distinct et ses octets comparés. La recette 0.30 a ensuite redémarré ; santé et disponibilité HTTPS répondent 200. Ce nouvel instantané n’a pas encore fait l’objet d’un nouvel import SQL isolé.
-- Les lanceurs notifications et repli photos de la révision validée sont préparés. La commande de migration épinglée passe sa syntaxe Bash et son contrôle préalable sans connexion SQL. Le mot de passe du compte de migration reste à saisir personnellement ; aucun changement du schéma n’a été effectué.
+- Un instantané SQL/photos a été créé hors ligne à 00:30:24 Europe/Paris, puis la commande opérateur a répété la capture à **00:41:47**, immédiatement avant migration. Les archives sont extraites dans des répertoires distincts et leurs octets comparés. Le SQL des deux captures est identique. Ces nouveaux instantanés n’ont pas encore fait l’objet d’un nouvel import SQL isolé.
+- Le reçu personnel confirme `upgraded`, `migrations: 30`, `applied: 2`, `unchanged: 28`, moteur et transport vérifiés. Le contrôle `photos-notify` réussit dans le même parcours, puis à nouveau depuis la console de l’agent. Aucun mot de passe SQL n’est reçu ni conservé par l’agent.
+- À **00:46:49.106 Europe/Paris**, treize fichiers HTTPS correspondent exactement à cette révision et vingt réponses sont conformes. Santé et disponibilité répondent 200 ; le service worker est servi en `no-store`, portée `/` ; les capacités notifications/médias anonymes sont refusées et les fichiers de configuration privés restent 404. Ce contrôle ne prouve pas une livraison sur appareil réel.
 
 ## Point de restauration avant migration
 
 | Élément | SHA-256 |
 | --- | --- |
 | Coffre v4 `private-secrets-031-notifications-20261017.json.gpg`, copie locale et déchiffrement confirmés par le propriétaire | `8804e9e5542e96c5bc19927c87ce37ee43a7159a1b0142922c148ff3df51eadb` |
-| Archive SQL/photos `jessiemessage-photos-data-20261016T223024Z.tar.gz`, extraite et comparée sur l’hébergement | `6437eff44482d851f775723fd2ac47b1d1edf4cd12ac5b71af97b05f4295dd64` |
+| Dernière archive SQL/photos `jessiemessage-photos-data-20261016T224147Z.tar.gz`, extraite et comparée sur l’hébergement | `d64464de78cc7af183e4ababcfc8478935aac36d9bebe16b916f62511271b94f` |
 | SQL gzip contenu dans cette archive | `a14f93df17adac2c29468ab40a6ed437e36acf51f26b815d792ef46c7b408dbd` |
 
 La copie personnelle du nouvel instantané SQL/photos n’est pas encore confirmée. L’exercice SQL/photos isolé accepté à l’étape 0.28 reste une preuve distincte ; il ne porte pas sur les données ajoutées depuis son ancien instantané. Les scripts existants de capture et de comparaison sont réutilisés, avec leurs limites documentées ; il ne s’agit pas d’une exécution du manifeste signé de la CLI complète.
@@ -45,12 +46,10 @@ Le coffre v4 couvre six fichiers privés ; le manifeste v3 couvre cinq domaines 
 
 La revue a aussi corrigé la reprise du bouton Conversations après une panne temporaire, une course entre fermeture et réouverture de la confirmation de suppression, l’affichage d’un abonnement lié à une session révoquée, la validation des dates après attente SQL et la propagation des conflits d’abonnement après rollback.
 
-## Passage en recette restant
+## Validation restante
 
-1. Conserver le checkpoint SQL/photos créé hors ligne et le coffre v4 vérifié. La commande opérateur répète la capture hors ligne juste avant la migration pour couvrir les éventuels changements depuis le redémarrage.
-2. Arrêter la recette depuis le Manager, puis exécuter la commande opérateur préparée avec `--offline`. Le propriétaire saisit le mot de passe SQL existant dans le flux masqué ; il n’est placé ni dans les arguments ni dans un fichier.
-3. Le runner existant applique 0029/0030 avec l’identité de migration et ses contrôles de verrou/historique/checksums. Le contrôle du profil `photos-notify` doit ensuite réussir : trente tables et trente migrations attendues. Un échec arrête la commande ; aucune reprise DDL aveugle ni suppression n’est lancée.
-4. Épingler et démarrer la révision validée, contrôler HTTPS et la disponibilité, puis activer les notifications par choix explicite sur chaque appareil.
-5. Valider la réception réelle sur ordinateur, Android et iPhone/iPad, puis les usages simultanés des appareils du foyer.
+1. Suivre le [parcours sur appareils réels](notifications-device-acceptance.md) : activer les notifications explicitement, envoyer depuis le compte opposé déjà utilisé en recette, fermer la page destinataire et vérifier alerte puis ouverture du bon espace. Ordinateur, Android et iPhone/iPad restent à accepter.
+2. Valider les usages simultanés des six à huit appareils ou profils du foyer et la désactivation sur un seul appareil.
+3. Confirmer la copie personnelle de la dernière archive SQL/photos et préparer l’exercice de sauvegarde/restauration après migrations avec le profil notifications et ses limites documentées. Ne plus utiliser le script de capture épinglé sur le schéma à 28 migrations pour sauvegarder le schéma à 30.
 
 Après migration, le repli courant utilise ce code compatible avec trente migrations, profil `photos` et notifications désactivées. Le runtime 0.30 exige la restauration coordonnée du checkpoint à 28 migrations ; ne pas supprimer les nouvelles tables pour forcer son démarrage. La production reste fermée.
