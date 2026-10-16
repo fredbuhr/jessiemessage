@@ -6,10 +6,11 @@ Les photos sont actives en recette sur `37c8fcd0` après confirmation du coffre
 Santé/disponibilité : 200 ; médias anonymes : 401 ; configuration privée non
 servie : 404. Le propriétaire accepte le parcours photos à 18:44 Europe/Paris.
 La source et ses fichiers photo passent le contrôle cryptographique. La
-capture hors ligne est préparée mais attend un contrôle Node.js fonctionnel :
-le Manager de cette session renvoie une erreur, tandis que la recette reste
-en ligne. La restauration SQL + fichiers et le réessai photo après coupure
-restent à valider. Aucune migration supplémentaire ni nouvelle pile.
+capture hors ligne `20261016T172009Z`, son extraction séparée et le
+redémarrage sont confirmés par les captures du propriétaire à 19:21. Archive
+et SQL sont vérifiés côté serveur ; une nouvelle base vide et le contrôleur
+sont prêts. Restent l'import SQL isolé, sa vérification cryptographique et
+le réessai photo après coupure. Aucune migration supplémentaire ni nouvelle pile.
 
 **Étape 0.27 validée en recette :** [texte, sauvegarde restaurée et téléphone](pilot-preparation.md).
 Après sa confirmation de l'import SQL et du téléphone à 16:40 Europe/Paris,

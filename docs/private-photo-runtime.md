@@ -3,7 +3,8 @@
 L'étape 0.27 (texte, restauration SQL isolée et téléphone) est validée en
 recette. Le runtime photos actif est **`37c8fcd0`**, application **0.24.0**.
 **0.28 est activée en recette ; le parcours photos réel est accepté par le
-propriétaire. La sauvegarde/restauration SQL + fichiers reste à valider.**
+propriétaire. La capture SQL + fichiers et son extraction sont réussies ;
+l'import SQL isolé et son contrôle cryptographique restent à valider.**
 
 Ce lot réutilise les modules médias, Sharp, le chiffrement, les autorisations,
 la galerie, la déduplication et les quotas existants. Il n'ajoute aucune
@@ -103,32 +104,61 @@ Le stockage contient deux fichiers chiffrés, **166 839 octets**. Les domaines
 récupération client, CRM et diffusions restent vides. Ces compteurs décrivent
 l'instant du contrôle, pas nécessairement tous les envois du parcours.
 
-## Sauvegarde/restauration restante
+## Capture créée et recette reprise
 
-La commande opérateur privée `photo-snapshot-37c8fcd0.sh --offline` est
-préparée, avec contrôle de révision/arbre et du SHA-256 de son adaptateur.
-Les syntaxes Node et Bash passent. Elle réutilise le client MariaDB natif et
-son gestionnaire de configuration temporaire, les lecteurs privés existants
-et le vérificateur photo. Elle doit créer un nouvel ensemble SQL + fichiers,
-comparer deux dumps SQL, copier les seuls fichiers chiffrés attendus, puis
-extraire l'archive dans un autre répertoire et comparer ses octets. Elle ne
-crée pas de clé, ne démarre pas de serveur et n'importe pas de base SQL.
-Les noms horodatés évitent d'écraser les archives précédentes.
+L'erreur du Manager Node.js dans la session de l'agent a empêché la pause
+directe. Le propriétaire a reçu un seul lot : arrêter depuis son Manager,
+exécuter `photo-snapshot-37c8fcd0.sh --offline`, puis relancer avec Run.
+À **19:21 Europe/Paris**, ses deux captures présentent le reçu
+**`photo_snapshot_saved`** pour l'instantané **`20261016T172009Z`**, puis
+Node.js actif et le démarrage du profil **`messaging-photos`**.
 
-**Cette commande n'a pas été exécutée.** Le Manager Node.js de cette session
-renvoie « Erreur — Une erreur s'est produite » sur le tableau de bord ; la
-console présente un bouton Run sans état fiable. Le retour depuis la liste
-des sites reproduit l'erreur. La vue d'ensemble de l'hébergement et SSH
-restent accessibles. Santé et disponibilité de la recette répondent **200**,
-et la capacité média anonyme **401**. Aucun arrêt n'est tenté avec cet état
-incertain ; la recette demeure en ligne.
+La commande épinglée réutilise le client MariaDB natif, son gestionnaire de
+configuration temporaire, les lecteurs privés et le vérificateur photo.
+Elle compare deux dumps SQL, copie les fichiers chiffrés attendus, crée une
+archive et l'extrait dans un autre répertoire privé. Les octets du SQL, du
+reçu et des fichiers extraits sont comparés. Elle ne crée pas de clé,
+ne démarre pas de serveur et n'importe pas de base SQL. Le reçu conserve
+explicitement **`sqlRestorePending: true`**.
 
-La reprise demande d'abord un arrêt confirmé depuis un Manager fonctionnel,
-puis cette capture et le redémarrage du même profil photos. L'import SQL
-isolé et sa vérification cryptographique restent ensuite nécessaires. La
-capture prévue ne constitue ni une exécution du manifeste signé de la CLI
-complète, ni une validation du réassociateur de capacité sur l'hébergeur.
-Ces distinctions restent explicites jusqu'aux reçus correspondants.
+| Élément figé | Octets | SHA-256 |
+| --- | ---: | --- |
+| `jessiemessage-photos-data-20261016T172009Z.tar.gz` | 180 953 | `b9c207ec30ea16798c2bb42b868732787eb4d7e105dc36ecfdd90bb4725757c2` |
+| `jessiemessage-photos-20261016T172009Z.sql.gz` | 12 790 | `82ef80957c3f820d27ee8256a2f4e24460391a1d20aa2dee3684ea7d445d7d9e` |
+| SQL décompressé | 66 676 | `15dfed3e8ed22ce99271a80e1955cf6e647a20d0592ebf561fdcc318a9156bad` |
+
+Le reçu conserve les huit lignes contrôlées et les deux fichiers chiffrés
+(166 839 octets). La relecture serveur confirme l'empreinte et la taille de
+l'archive. Après reprise, santé/disponibilité répondent **200** et capacité
+média anonyme **401**. Les archives précédentes sont conservées.
+
+## Import SQL isolé et vérification préparés
+
+La nouvelle base **`fb4hmr_jm_photos_20261016`** est créée et présentée à
+**0 octet** par le Manager. Aucun droit applicatif ou opérateur n'est accordé
+automatiquement. Le propriétaire doit donner seulement la lecture au compte
+opérateur existant sur cette copie, puis y importer le SQL téléchargé par
+SFTP, comme au lot texte. Le SQL Gzip attendu est aussi disponible à la racine
+privée pour ce téléchargement ; sa copie supplémentaire conserve exactement
+les octets et l'empreinte ci-dessus.
+
+`verify-photo-restore-37c8fcd0.sh` est préparé en mode propriétaire `0700`.
+Il contrôle révision, arbre et empreinte de son adaptateur, puis demande le
+mot de passe SQL existant par saisie masquée, sans argument ni export. Son
+adaptateur réutilise `verify-text-clone.mjs` pour la comparaison intégrale
+du dump, le schéma, les migrations et la transaction en lecture seule ; il
+branche le lecteur photo existant avec les quatre vraies clés et le stockage
+extrait. Les octets de chaque fichier sont contrôlés avant et après, et
+l'identité physique du répertoire copié doit différer de celle de la source.
+
+Les syntaxes Node/Bash passent. Le contrôle préalable réel retourne
+**`ready_for_input`**, **`databaseConnected: false`**,
+**`archiveFilesMatched: true`**, **`independentMediaDirectory: true`**.
+L'import SQL et le résultat final `verified` ne sont pas encore obtenus.
+Aucun serveur ou worker ne doit être démarré sur la copie. La capacité n'est
+pas réassociée : **`capacityRebound: false`**. Cet exercice en lecture seule
+ne constitue ni une exécution du manifeste signé de la CLI complète, ni une
+validation du réassociateur de capacité sur l'hébergeur.
 
 ## Validation du code
 
@@ -153,5 +183,5 @@ historiques ne remplacent pas cette note. Les informations du service,
 conservation/suppression et autres conditions d'ouverture restent dans le
 plan global. Le pilote élargi et la production ne sont pas ouverts par ce lot.
 
-**Étape finale : 0.28 en cours — parcours photos accepté ; capture hors ligne
-et restauration SQL + fichiers en attente d'un contrôle Node.js fonctionnel.**
+**Étape finale : 0.28 en cours — parcours photos, capture et extraction acceptés ;
+import SQL isolé et vérification cryptographique encore attendus.**
