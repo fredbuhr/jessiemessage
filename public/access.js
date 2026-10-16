@@ -26,6 +26,7 @@ let cancelSessionCheck = null;
 let checkingSession = false;
 let sessionOwner = null;
 let displayedSession = null;
+let notificationsPanel = null;
 let pendingPolls = 0;
 let recoveryEnabled = null;
 let recoveryCapabilityPending = false;
@@ -55,6 +56,7 @@ function notice(message, error = false) { accessI18n.text(status, message); stat
 function clearBroadcastPreference() { broadcastPreferenceEpoch += 1; broadcastPreference?.clear(); broadcastPreference = null; element("broadcast-preference-host")?.remove(); }
 function invalidate() {
   generation += 1; recoveryCapabilityEpoch += 1; recoveryCapabilityPending = false;
+  notificationsPanel?.clear(); notificationsPanel = null;
   cancelSessionCheck?.(); cancelSessionCheck = null;
   for (const controller of controllers) controller.abort(); controllers.clear(); clearBroadcastPreference();
 }
@@ -131,7 +133,15 @@ function signedIn(session) {
   if (sessionOwner !== session.user.id || access.state !== "pending") pendingPolls = 0;
   sessionOwner = session.user.id;
   planSessionCheck(session.expiresAt, access.state === "pending" && pendingPolls < 60 ? 15000 : 300000);
-  if (session.user.role === "client" && access.state === "active") void loadChatAccess();
+  if (session.user.role === "client" && access.state === "active") {
+    void loadChatAccess();
+    if (globalThis.JessieNotifications) {
+      const ticket = generation, owner = { id: session.user.id, csrf };
+      notificationsPanel = globalThis.JessieNotifications.mount(element("notifications-client-host"), {
+        role: "client", owner, isCurrent: () => ticket === generation && visible() && !connected.hidden && csrf === owner.csrf,
+      });
+    }
+  }
   if (session.user.role === "client" && access.emailVerified) void loadBroadcastPreference();
 }
 function updateRecoveryLink({ allowLoad = false } = {}) {

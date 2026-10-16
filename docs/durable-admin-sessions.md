@@ -115,6 +115,8 @@ préserver le contenu privé sur l'écran verrouillé. La restauration en mode
 exploitation, la maintenance du stockage et les décisions de conservation
 restent au plan avant l'ouverture de la production.
 
+**État ultérieur — 17 octobre 2026 :** [0.31 est activée en recette](message-notifications-release.md), après les migrations 0029/0030. Les références de repli ci-dessus décrivent le schéma historique à 28 migrations. Le repli courant utilise désormais `017cafaf` avec le profil `photos`, compatible avec les trente migrations ; les anciennes révisions demandent la restauration cohérente de leur checkpoint.
+
 
 ## Points à reprendre au lot 0.31
 

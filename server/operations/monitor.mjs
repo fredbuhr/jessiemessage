@@ -1,6 +1,6 @@
 import { performance } from "node:perf_hooks";
 
-const NAMES = Object.freeze(["verification", "recovery", "broadcasts"]);
+const NAMES = Object.freeze(["verification", "recovery", "broadcasts", "notifications"]);
 const MAX_DATE = 253402300799999;
 const instant = (value) => Number.isSafeInteger(value) && value >= 0 && value <= MAX_DATE;
 const counter = (value) => Number.isSafeInteger(value) && value >= 0;

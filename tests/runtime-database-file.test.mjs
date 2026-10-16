@@ -61,7 +61,7 @@ test("the derived environment keeps TLS defaults and disables all private featur
   assert.equal(env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, source.password);
   assert.equal(env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE, "infomaniak-shared");
   assert.equal(env.JESSIEMESSAGE_PRIVATE_PATH_MODE, "linux-dirfd");
-  assert.deepEqual(Object.entries(env).filter(([name]) => name.startsWith("JESSIEMESSAGE_ENABLE_")).map(([, value]) => value), Array(8).fill("0"));
+  assert.deepEqual(Object.entries(env).filter(([name]) => name.startsWith("JESSIEMESSAGE_ENABLE_")).map(([, value]) => value), Array(9).fill("0"));
   for (const name of ["JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL", "JESSIEMESSAGE_DB_TLS_CA_PATH", "JESSIEMESSAGE_DB_USER",
     "JESSIEMESSAGE_DB_PASSWORD", "JESSIEMESSAGE_MIGRATION_DATABASE", "JESSIEMESSAGE_MFA_KEY", "PORT", "PATH"])
     assert.equal(Object.hasOwn(env, name), false);
@@ -72,7 +72,7 @@ test("the explicit current-namespace pattern profile requires underscores and pr
   const selected = { ...config(), privilegeProfile: "infomaniak-shared-pattern" }, env = runtimeDatabaseEnvironment(selected);
   assert.deepEqual(validateRuntimeDatabaseConfiguration(selected), selected);
   assert.equal(env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE, "infomaniak-shared-pattern");
-  assert.deepEqual(Object.entries(env).filter(([name]) => name.startsWith("JESSIEMESSAGE_ENABLE_")).map(([, value]) => value), Array(8).fill("0"));
+  assert.deepEqual(Object.entries(env).filter(([name]) => name.startsWith("JESSIEMESSAGE_ENABLE_")).map(([, value]) => value), Array(9).fill("0"));
   assert.throws(() => validateRuntimeDatabaseConfiguration({ ...selected, database: "RECIPE" }), unavailable);
   assert.throws(() => runtimeDatabaseEnvironment({ ...selected, privilegeProfile: "unrecognized-pattern" }), unavailable);
   for (const privilegeProfile of ["strict", "infomaniak-shared"])

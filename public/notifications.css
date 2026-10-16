@@ -1,0 +1,13 @@
+.notification-card { color: #f5eef2; padding: 18px 0; text-align: left; }
+.notification-card h2 { margin: 0 0 12px; font-size: 18px; line-height: 1.4; }
+.notification-note { margin: 0 0 10px; color: #bcaebb; font-size: 13px; line-height: 1.65; }
+.notification-status { margin: 16px 0; color: #d8b999; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.notification-status.is-error { color: #ffb8cb; }
+.notification-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.notification-button { color: #f5eef2; background: #30212e; border: 1px solid #a9879f; border-radius: 11px; min-height: 44px; padding: 11px 15px; font: inherit; font-size: 14px; line-height: 1.5; cursor: pointer; text-align: center; }
+.notification-button:focus-visible { outline: 2px solid #d8b999; outline-offset: 4px; }
+.notification-button:disabled { opacity: .65; cursor: wait; }
+.notification-dialog { color: #f5eef2; background: #1b161e; border: 1px solid #897287; border-radius: 18px; width: min(520px, calc(100% - 32px)); max-height: calc(100dvh - 40px); overflow: auto; padding: 22px; }
+.notification-dialog::backdrop { background: #100d12cc; }
+.notification-dialog > button { display: block; margin-left: auto; }
+.notification-dialog .notification-card { padding-top: 6px; }

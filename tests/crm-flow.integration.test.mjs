@@ -34,7 +34,7 @@ test("real HTTP private CRM, encrypted notes, scoped labels and current authoriz
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 28);
+  assert.equal(migrations.length, 30);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;

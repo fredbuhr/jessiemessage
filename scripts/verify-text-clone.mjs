@@ -179,10 +179,10 @@ export async function inspectClone(connection, database) {
   const cipher = await connection.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'");
   if (cipher.length !== 1 || !cipher[0]?.Value || cipher[0]?.Variable_name !== "Ssl_cipher") fail("TEXT_CLONE_DATABASE");
   const migrations = await loadMigrations(), names = [...createdMigrationTables(migrations), "schema_migrations"];
-  const tables = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 29", [database]);
-  if (migrations.length !== 28 || names.length !== 28 || tables.length !== 28 || new Set(tables.map((row) => row.name)).size !== 28
+  const tables = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 31", [database]);
+  if (migrations.length !== 30 || names.length !== 30 || tables.length !== 30 || new Set(tables.map((row) => row.name)).size !== 30
     || tables.some((row) => !names.includes(row.name) || row.kind !== "BASE TABLE" || row.engine !== "InnoDB")) fail("TEXT_CLONE_SCHEMA");
-  const ledger = await connection.query("SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 29");
+  const ledger = await connection.query("SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 31");
   try {
     if (ledger.length !== migrations.length || inspectHistory(migrations, ledger).some((row) => row.state !== "applied")) fail("TEXT_CLONE_SCHEMA");
   } catch { fail("TEXT_CLONE_SCHEMA"); }

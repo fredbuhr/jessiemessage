@@ -17,7 +17,7 @@ function fixture() {
   ];
   const assets = objects.filter((row) => row.asset_id !== null).map((row) => ({ id: row.id, owner_id: row.owner_id, storage_key: row.storage_key,
     content_digest: row.content_digest, full_bytes: row.full_bytes, thumbnail_bytes: row.thumbnail_bytes, deleted_at: row.state === "registered" ? null : d }));
-  return { version: 1, schemaDigest: h("b"), coreDigest: h("c"), counts: { tables: 28, rows: 6 },
+  return { version: 1, schemaDigest: h("b"), coreDigest: h("c"), counts: { tables: 30, rows: 6 },
     capacity: { ownerBytes: 1000, totalBytes: 10000, heldBytes: 900, rootFingerprint: h("d"), initializedAt: d }, objects, assets };
 }
 function storageFor(snapshot, missing = new Set(), extra = []) {
@@ -147,10 +147,10 @@ async function captureFixture({ changedCheck = false, changedLedger = false, ext
     inspectionPool: { getConnection: async () => inspection } }) };
 }
 
-test("snapshot capture separates 28 migration entries from 27 CREATE tables and includes the full ledger", async () => {
+test("snapshot capture separates 30 migration entries from 29 CREATE tables and includes the full ledger", async () => {
   const f = await captureFixture(), snapshot = await captureBackupSnapshot({ store: f.store });
-  assert.equal(f.migrations.length, 28); assert.equal(f.names.length, 28);
-  assert.deepEqual(snapshot.counts, { tables: 28, rows: 29 }, "27 application tables + ledger, 28 ledger rows + capacity state");
+  assert.equal(f.migrations.length, 30); assert.equal(f.names.length, 30);
+  assert.deepEqual(snapshot.counts, { tables: 30, rows: 31 }, "29 application tables + ledger, 30 ledger rows + capacity state");
   assert.deepEqual([...f.observations.selectedTables].sort(), [...f.names].sort());
   assert.equal(f.observations.committed, 1); assert.equal(f.observations.releases, 2);
 });

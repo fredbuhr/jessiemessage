@@ -46,7 +46,7 @@ function assertShape(result) {
   assert.equal(result.target, "auth-only");
   assert.equal(typeof result.valid, "boolean");
   assert.deepEqual(result.checks.map((check) => check.name), [...CONFIG_CHECK_NAMES]);
-  assert.equal(result.checks.length, 15);
+  assert.equal(result.checks.length, 16);
   for (const check of result.checks) {
     assert.deepEqual(Object.keys(check).sort(), ["name", "status"]);
     assert.ok(["pass", "fail", "disabled", "not_checked"].includes(check.status));

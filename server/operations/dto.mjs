@@ -1,11 +1,11 @@
-const NAMES = new Set(["verification", "recovery", "broadcasts"]);
+const NAMES = new Set(["verification", "recovery", "broadcasts", "notifications"]);
 const MAX_DATE = 253402300799999;
 const fail = () => { throw new TypeError("Invalid operations snapshot."); };
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const date = (value) => value === null || Number.isSafeInteger(value) && value >= 0 && value <= MAX_DATE;
 const count = (value) => Number.isSafeInteger(value) && value >= 0;
 function names(values) {
-  if (!Array.isArray(values) || values.length > 3 || values.some((item) => !object(item) || !NAMES.has(item.name))
+  if (!Array.isArray(values) || values.length > NAMES.size || values.some((item) => !object(item) || !NAMES.has(item.name))
     || new Set(values.map((item) => item.name)).size !== values.length) fail();
 }
 function depth(value) {

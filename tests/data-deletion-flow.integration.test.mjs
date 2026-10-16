@@ -23,7 +23,7 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool;
   async function cleanup() {
@@ -120,7 +120,8 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
       assert.deepEqual(counts(result), { activeSessions: 1, verificationPending: 1, verificationSending: 1, recoveryPending: 1, recoverySending: 1,
         broadcastPending: 1, broadcastSending: 1, mediaReserved: 1, mediaRegistered: 1, mediaCleanupPending: 1, mediaReleased: 1,
         ownedMediaOutsideConversationLinks: 0, ownedMediaCampaignLinks: 0, sharedPeerMediaLinks: 2,
-        foreignMessageBindings: 0, foreignReceiptBindings: 0, foreignBroadcastBindings: 0, foreignAdministratorSessionState: 0, foreignMediaJournalBindings: 0 });
+        foreignMessageBindings: 0, foreignReceiptBindings: 0, foreignBroadcastBindings: 0, foreignAdministratorSessionState: 0, foreignMediaJournalBindings: 0,
+        notificationSubscriptionsEnabled: 0, pushPending: 0, pushSending: 0, foreignPushBindings: 0 });
       assert.doesNotMatch(JSON.stringify(result), /example\.invalid|private-|ciphertext|payload|token|storage_key/);
       assert.equal(await databaseHash(), before);
     });
@@ -203,7 +204,7 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
             makeStorage() { assert.fail("deletion planning never opens media storage"); }, exportContent() { assert.fail("deletion planning never decrypts or exports content"); },
             outputStream: { write(value) { stdout.push(value); } } });
         assert.deepEqual(Object.keys(result).sort(), ["command", "status", "inventoryCategories", "observations", "affectedCategories", "blockers"].sort());
-        assert.equal(result.command, "plan"); assert.equal(result.status, "complete"); assert.equal(result.inventoryCategories, 27); assert.equal(result.observations, 19);
+        assert.equal(result.command, "plan"); assert.equal(result.status, "complete"); assert.equal(result.inventoryCategories, 29); assert.equal(result.observations, 23);
         assert.ok(result.blockers > 0); assert.equal(poolClosures, 1); assert.deepEqual(stdout, [JSON.stringify(result) + "\n"]);
         assert.doesNotMatch(stdout.join(""), /example\.invalid|private-|ciphertext|payload|password|token|\/workspace|[a-f0-9]{32}/);
         const manifest = JSON.parse(await readFile(path.join(output, "COMPLETE.json"), "utf8"));

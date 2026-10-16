@@ -15,6 +15,8 @@ const publicFiles = new Map([
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
   ["/app.js", ["app.js", "text/javascript; charset=utf-8"]],
   ["/app", ["entry.html", "text/html; charset=utf-8"]],
+  ["/notifications.js", ["notifications.js", "text/javascript; charset=utf-8"]],
+  ["/notifications.css", ["notifications.css", "text/css; charset=utf-8"]],
   ["/session-clock.js", ["session-clock.js", "text/javascript; charset=utf-8"]],
   ["/image-preparation.js", ["image-preparation.js", "text/javascript; charset=utf-8"]],
   ["/entry.js", ["entry.js", "text/javascript; charset=utf-8"]],
@@ -42,7 +44,7 @@ const publicFiles = new Map([
 ]);
 
 const securityHeaders = Object.freeze({
-  "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+  "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "no-referrer",
   "X-Frame-Options": "DENY",
@@ -56,12 +58,12 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler,
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler,
   entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null } = {}) {
   const requestOriginAllowed = requestOrigin === null ? null : createRequestOriginGuard(requestOrigin);
   if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
-  const privateHandlers = [broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
+  const privateHandlers = [notificationsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [entryHandler, ...privateHandlers];
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness",
     "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/broadcast-preference.js",
@@ -146,7 +148,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
       // Authentication is registered only by explicit private configuration.
       // Private routes require their explicitly configured feature handlers.
       // Never serve arbitrary file paths from the filesystem.
-      const file = publicFiles.get(pathname);
+      const file = pathname === "/sw.js" && notificationsHandler ? ["sw.js", "text/javascript; charset=utf-8"] : publicFiles.get(pathname);
       if (!file) {
         reply(response, method, 404, "text/plain; charset=utf-8", "Not found");
         return;
@@ -154,7 +156,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
 
       try {
         const bytes = await readFile(join(publicRoot, file[0]));
-        reply(response, method, 200, file[1], bytes);
+        reply(response, method, 200, file[1], bytes, pathname === "/sw.js" ? { "Service-Worker-Allowed": "/" } : {});
       } catch {
         reply(response, method, 500, "text/plain; charset=utf-8", "Internal server error");
       }
@@ -189,6 +191,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
   const { crmConfiguration } = await import("./crm/config.mjs");
   const { clientRecoveryConfiguration } = await import("./reset/config.mjs");
   const { broadcastConfiguration } = await import("./broadcast/config.mjs");
+  const { loadNotificationsConfig } = await import("./notifications/config.mjs");
   const config = authConfiguration(env);
   if (requestOrigin !== null && (!config.enabled || config.origin !== requestOrigin)) throw new RequestOriginError();
   const accessConfig = accessConfiguration(env);
@@ -197,6 +200,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
   const crmConfig = crmConfiguration(env);
   const resetConfig = clientRecoveryConfiguration(env);
   const broadcastConfig = broadcastConfiguration(env, { crmEnabled: crmConfig.enabled });
+  const notificationsConfig = loadNotificationsConfig(env);
   if (!config.enabled) return { server: createAppServer({ requestOrigin }), pool: null };
   const { mailConfiguration } = await import("./mail/config.mjs");
   const mailConfig = mailConfiguration(env);
@@ -207,16 +211,16 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
   const { createOperationsStore } = await import("./operations/store.mjs");
   const { createOperationsMonitor } = await import("./operations/monitor.mjs");
   const pool = await createRuntimePool(env);
-  let transport, operations;
+  let transport, operations, notificationTransport, notificationWorker;
   try {
     const store = createAuthStore(pool, { clock });
     await store.assertSchema();
     const service = await createAuthService({ store, totpKey: config.totpKey, clock });
     const authHandler = createAuthHandler(service, { origin: config.origin, clock });
     const workerNames = [accessConfig.enabled ? "verification" : null, resetConfig.enabled ? "recovery" : null,
-      broadcastConfig.enabled ? "broadcasts" : null].filter(Boolean);
+      broadcastConfig.enabled ? "broadcasts" : null, notificationsConfig.enabled ? "notifications" : null].filter(Boolean);
     operations = createOperationsMonitor({
-      store: createOperationsStore({ pool, verification: accessConfig.enabled, recovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled }),
+      store: createOperationsStore({ pool, verification: accessConfig.enabled, recovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled, notifications: notificationsConfig.enabled }),
       messagingConfigured: accessConfig.enabled && chatConfig.enabled, workerNames,
       report: (event) => {
         const line = `JessieMessage operations ${JSON.stringify(event)}`;
@@ -227,7 +231,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
     const { createReadinessHandler } = await import("./readiness/http.mjs");
     const readinessService = await createReadinessService({ authService: service, authStore: store, mailConfig, key: config.totpKey, operations,
       features: { clientAccess: accessConfig.enabled, chat: chatConfig.enabled, photos: mediaConfig.enabled,
-        clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled } });
+        clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled, notifications: notificationsConfig.enabled } });
     const readinessHandler = createReadinessHandler(readinessService, { origin: config.origin });
     let diagnosticClosing;
     const diagnostics = { close() {
@@ -273,16 +277,33 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
     let mediaHandler;
     let crmHandler;
     let broadcastHandler;
+    let notificationsHandler;
     let broadcastWorker;
     if (chatConfig.enabled) {
       const { createChatStore } = await import("./chat/store.mjs");
       const { createChatService } = await import("./chat/service.mjs");
       const { createChatHandler } = await import("./chat/http.mjs");
-      const chatStore = createChatStore(pool, { clock });
+      const notificationsModule = notificationsConfig.enabled ? await import("./notifications/store.mjs") : null;
+      const chatStore = createChatStore(pool, { clock, ...(notificationsModule ? { enqueueNotification: notificationsModule.enqueueNotification } : {}) });
       await chatStore.assertSchema();
       const chatService = await createChatService({ store: chatStore, authStore: store, authService: service,
         accessService, key: chatConfig.key, clock });
       chatHandler = createChatHandler(chatService, { origin: chatConfig.origin });
+      if (notificationsConfig.enabled) {
+        const { createNotificationsService } = await import("./notifications/service.mjs");
+        const { createNotificationsHttpHandler } = await import("./notifications/http.mjs");
+        const { createNotificationTransport } = await import("./notifications/transport.mjs");
+        const { createNotificationWorker } = await import("./notifications/worker.mjs");
+        const notificationsStore = notificationsModule.createNotificationsStore({ pool, chatStore, key: notificationsConfig.key, clock });
+        await notificationsStore.assertSchema();
+        const notificationsService = await createNotificationsService({ store: notificationsStore, config: notificationsConfig,
+          chatService, authStore: store, clock });
+        notificationsHandler = createNotificationsHttpHandler(notificationsService, { origin: notificationsConfig.origin });
+        notificationTransport = createNotificationTransport(notificationsConfig);
+        notificationWorker = createNotificationWorker({ store: notificationsStore, transport: notificationTransport,
+          config: notificationsConfig, clock, onState: observe("notifications"),
+          onError: () => console.error("JessieMessage notifications delivery unavailable.") });
+      }
       // Chat history joins attachment metadata even when image transfer is off.
       // Verify those tables before accepting any private history requests.
       const { createMediaStore } = await import("./media/store.mjs");
@@ -330,7 +351,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, operations, requestOrigin,
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, operations, requestOrigin,
       entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled }) });
     const workers = [];
     let closing, stopping, aborting;
@@ -338,7 +359,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
       stop() {
         if (!stopping) {
           // Calling stop signals every producer before any drain is awaited.
-          const drains = [broadcastWorker?.stop(), ...workers.map((worker) => worker.stop())];
+          const drains = [notificationWorker?.stop(), broadcastWorker?.stop(), ...workers.map((worker) => worker.stop())];
           stopping = Promise.allSettled(drains).then((results) => {
             if (results.some((result) => result.status === "rejected")) throw new Error("Private workers could not stop cleanly.");
           });
@@ -346,7 +367,9 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
         return stopping;
       },
       abort() {
-        if (!aborting) aborting = transport.close();
+        if (!aborting) aborting = Promise.allSettled([transport.close(), notificationTransport?.close()]).then((results) => {
+          if (results.some((result) => result.status === "rejected")) throw new Error("Private transports could not close cleanly.");
+        });
         return aborting;
       },
       close() {
@@ -363,6 +386,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
       if (stopping || closing) return;
       operations.start();
       broadcastWorker?.start();
+      notificationWorker?.start();
       workers.push(startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key, closeTransport: false,
         onState: observe("verification") }));
       if (resetMailStore) workers.push(startMailWorker({ store: resetMailStore, transport, key: resetConfig.key, purpose: "password-reset", closeTransport: false,
@@ -370,6 +394,8 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
     });
     return { server, pool, mailWorker, diagnostics };
   } catch {
+    await notificationTransport?.close().catch(() => {});
+    await notificationWorker?.stop().catch(() => {});
     await operations?.close().catch(() => {});
     await transport?.close().catch(() => {});
     await pool.end().catch(() => {});

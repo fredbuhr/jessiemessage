@@ -2,11 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { chmod, link, lstat, mkdir, mkdtemp, readFile, readdir, rm, statfs, symlink, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { createECDH } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { writeRuntimeDatabaseConfiguration, writeRuntimeAuthenticationConfiguration,
   writeRuntimeMessagingConfiguration, readRuntimeMessagingConfiguration, readRuntimeMessagingBundle,
   runtimeMessagingConfigurationExists, replaceRuntimeMessagingSmtpPassword, writeRuntimeMediaConfiguration,
-  readRuntimeMediaConfiguration, readRuntimeMediaBundle, runtimeMediaConfigurationExists } from "../server/config/runtime-database-file.mjs";
+  readRuntimeMediaConfiguration, readRuntimeMediaBundle, runtimeMediaConfigurationExists, writeRuntimeNotificationsConfiguration,
+  readRuntimeNotificationsConfiguration, readRuntimeNotificationsBundle, runtimeNotificationsConfigurationExists } from "../server/config/runtime-database-file.mjs";
 
 const repository = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 const supported = process.platform === "linux" && await statfs("/proc/self/fd", { bigint: true }).then((value) => value.type === 0x9fa0n, () => false);
@@ -166,4 +168,57 @@ test("concurrent SMTP password updates cannot overwrite each other using the sam
   assert.ok(["first-password", "second-password"].includes(updated.smtpPassword));
   assert.deepEqual({ ...updated, smtpPassword: messaging().smtpPassword }, messaging());
   assert.deepEqual(await readdir(f.directory), ["runtime-messaging.json"]);
+});
+
+function notificationRecord(privateByte = 7) {
+  const curve = createECDH("prime256v1"); curve.setPrivateKey(Buffer.alloc(32, privateByte));
+  return { version: 1, origin, notificationKey: key(5), vapidPublicKey: curve.getPublicKey(undefined, "uncompressed").toString("base64url"),
+    vapidPrivateKey: curve.getPrivateKey().toString("base64url"), vapidSubject: "mailto:contact@jessiemessage.com" };
+}
+async function photoFixture(t) {
+  const f = await fixture(t), media = { format: "jessiemessage-runtime-media", version: 1, origin, mediaKey: key(4),
+    mediaRoot: path.join(f.root, "media"), ownerBytes: "1073741824", totalBytes: "10737418240", minimumFreeBytes: "536870912" };
+  await writeRuntimeDatabaseConfiguration(f.directory, database()); await writeRuntimeAuthenticationConfiguration(f.directory, authentication());
+  await writeRuntimeMessagingConfiguration(f.directory, messaging()); await writeRuntimeMediaConfiguration(f.directory, media);
+  return { ...f, media };
+}
+const notificationsBlocked = error => error.code === "RUNTIME_NOTIFICATIONS_CONFIGURATION" && error.cause === undefined && !JSON.stringify(error).includes("synthetic-");
+
+test("notification publication is exclusive owner0600 and preserves the four existing runtime records byte-for-byte", { skip: !supported }, async (t) => {
+  const f = await photoFixture(t), record = notificationRecord();
+  const oldNames = ["runtime-database.json", "runtime-auth.json", "runtime-messaging.json", "runtime-media.json"];
+  const before = await Promise.all(oldNames.map(name => readFile(path.join(f.directory, name))));
+  assert.equal(await runtimeNotificationsConfigurationExists(f.directory), false);
+  assert.deepEqual(await writeRuntimeNotificationsConfiguration(f.directory, Object.freeze(record)), { saved: true });
+  assert.equal(await runtimeNotificationsConfigurationExists(f.directory), true);
+  const filename = path.join(f.directory, "runtime-notifications.json"), stats = await lstat(filename);
+  assert.equal(stats.mode & 0o7777, 0o600); assert.equal(stats.uid, process.getuid()); assert.equal(stats.nlink, 1);
+  assert.deepEqual(await readRuntimeNotificationsConfiguration(f.directory), record);
+  assert.deepEqual(await readRuntimeNotificationsBundle(f.directory), { database: database(), authentication: authentication(), messaging: messaging(), media: f.media, notifications: record });
+  await assert.rejects(writeRuntimeNotificationsConfiguration(f.directory, { ...record, notificationKey: key(9) }), notificationsBlocked);
+  assert.deepEqual(await readRuntimeNotificationsConfiguration(f.directory), record);
+  assert.deepEqual(await Promise.all(oldNames.map(name => readFile(path.join(f.directory, name)))), before);
+  assert.deepEqual((await readdir(f.directory)).sort(), [...oldNames, "runtime-notifications.json"].sort());
+  assert.deepEqual(await readRuntimeMediaBundle(f.directory), { database: database(), authentication: authentication(), messaging: messaging(), media: f.media }, "the schema-compatible photo fallback can still read its unchanged runtime inputs");
+});
+
+test("notification private bundles reject origin/domain reuse and unsafe new files without exposing keys", { skip: !supported }, async (t) => {
+  for (const change of [{ notificationKey: key(1) }, { notificationKey: key(2) }, { notificationKey: key(3) }, { notificationKey: key(4) },
+    { origin: "https://other.jessiemessage.com" }, { ...notificationRecord(1) }]) {
+    const f = await photoFixture(t);
+    await writeRuntimeNotificationsConfiguration(f.directory, { ...notificationRecord(), ...change });
+    await assert.rejects(readRuntimeNotificationsBundle(f.directory), notificationsBlocked);
+  }
+  const f = await photoFixture(t), filename = path.join(f.directory, "runtime-notifications.json"), other = path.join(f.directory, "notification-real");
+  await writeRuntimeNotificationsConfiguration(f.directory, notificationRecord());
+  await chmod(filename, 0o640); await assert.rejects(readRuntimeNotificationsConfiguration(f.directory), notificationsBlocked); await chmod(filename, 0o600);
+  await link(filename, other); await assert.rejects(readRuntimeNotificationsBundle(f.directory), notificationsBlocked); await unlink(other);
+  await (await import("node:fs/promises")).rename(filename, other); await symlink(other, filename);
+  assert.equal(await runtimeNotificationsConfigurationExists(f.directory), true);
+  await assert.rejects(readRuntimeNotificationsConfiguration(f.directory), notificationsBlocked);
+  await assert.rejects(writeRuntimeNotificationsConfiguration(f.directory, notificationRecord()), notificationsBlocked);
+  for (const directory of [repository, path.join(repository, "public"), "relative", "/private/../other"]) {
+    await assert.rejects(writeRuntimeNotificationsConfiguration(directory, notificationRecord()), notificationsBlocked);
+    await assert.rejects(readRuntimeNotificationsConfiguration(directory), notificationsBlocked);
+  }
 });

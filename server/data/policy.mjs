@@ -26,6 +26,8 @@ const catalogue = [
   ["broadcast_recipients", "subject", "Count scoped to both selected client and conversation; no campaign details."],
   ["media_storage_state", "global", "Shared storage accounting cannot be attributed to one client."],
   ["media_storage_objects", "subject", "Owned allocation count only; storage handles and unregistered files excluded."],
+  ["push_subscriptions", "subject", "Owned device subscription count only; endpoints, browser keys, ciphertext and session identifiers excluded."],
+  ["push_outbox", "subject", "Delivery count for owned device subscriptions or the selected conversation; no endpoint or provider response."],
 ];
 
 function freeze(value) {
@@ -42,7 +44,8 @@ export const DATA_POLICY_METADATA = freeze({
   existingCleanup: [
     { table: "mail_outbox", days: 7, meaning: "Existing worker removes jobs whose expiry or sent date is older than seven days, in bounded passes. This is code behavior, not a general retention decision." },
     { table: "password_reset_outbox", days: 7, meaning: "Existing worker removes jobs whose expiry or sent date is older than seven days, in bounded passes. Reset challenge rows are not removed by this cleanup." },
+    { table: "push_outbox", days: 30, meaning: "Notification worker removes only terminal accepted, skipped or failed jobs whose finished date is older than thirty days, at most one hundred rows per pass. Subscriptions and conversation messages are not purged by this cleanup." },
   ],
-  exclusions: ["Credentials, tokens and hashes", "Administrator CRM content and labels", "Other client data and campaign audiences", "Shared counters and the migration ledger", "Deleted message bodies and revoked media deliveries"],
+  exclusions: ["Credentials, tokens and hashes", "Notification endpoints, browser keys and encrypted subscriptions", "Administrator CRM content and labels", "Other client data and campaign audiences", "Shared counters and the migration ledger", "Deleted message bodies and revoked media deliveries"],
   limitations: ["Content export is not a declaration that every category of personal data has been exported.", "Offline mode is an operator declaration; SQL snapshots do not freeze external filesystem producers.", "Retention periods and backup handling require an explicit decision before any future purge."],
 });

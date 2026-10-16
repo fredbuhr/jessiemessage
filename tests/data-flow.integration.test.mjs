@@ -27,7 +27,7 @@ test("offline client content reader isolates two real MariaDB clients in one rea
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 28);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   assert.deepEqual([...DATA_POLICY.map((entry) => entry.table)].sort(), allowedTables.filter((table) => !["schema_migrations", "migration_probe"].includes(table)).sort());
   const connection = await connectDatabase(); let pool;
@@ -113,7 +113,7 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         assert.equal(library.rows.some((row) => row.id.equals(shared) || row.id.equals(otherLibrary)), false);
         const inventory = await reader.inventory();
         const category = (name) => inventory.find((row) => row.table === name);
-        assert.equal(inventory.length, 27); assert.equal(category("messages").count, 4); assert.equal(category("media_assets").count, 2);
+        assert.equal(inventory.length, 29); assert.equal(category("messages").count, 4); assert.equal(category("media_assets").count, 2);
         assert.equal(category("crm_profiles").count, 1); assert.equal(category("crm_memberships").count, 1);
         assert.equal(category("crm_labels").count, null); assert.equal(category("admin_mfa").count, null);
         assert.doesNotMatch(JSON.stringify({ account: reader.account, conversation: reader.conversation, preference: reader.preference, inventory }), /second-secret|admin-secret|password-hash|administrator-only|other-client-private|private-label/);
@@ -270,10 +270,10 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         assert.doesNotMatch(JSON.stringify({ accountOutput, messagesOutput, libraryOutput }), /second-secret|admin-secret|password|fingerprint|encrypted|storageKey|digest|administrator-only|other-client-private|private-label/);
         const inventoryOutput = path.join(exportParent, "client-inventory"); stdout.length = 0;
         const inventoryResult = await exportMain(argumentsFor("inventory", inventoryOutput), environment, dependencies);
-        assert.deepEqual(inventoryResult, { command: "inventory", status: "complete", inventoryCategories: 27 });
+        assert.deepEqual(inventoryResult, { command: "inventory", status: "complete", inventoryCategories: 29 });
         assert.deepEqual(stdout, [JSON.stringify(inventoryResult) + "\n"]); assert.equal(poolClosures, 2);
         const inventory = JSON.parse(await readFile(path.join(inventoryOutput, "inventory.json"), "utf8"));
-        assert.equal(inventory.categories.length, 27);
+        assert.equal(inventory.categories.length, 29);
         assert.deepEqual(inventory.categories.find((value) => value.table === "sessions"), { table: "sessions", scope: "subject", count: 10000, truncated: true });
         assert.equal(JSON.parse(await readFile(path.join(inventoryOutput, "COMPLETE.json"), "utf8")).status, "complete");
         assert.equal(await databaseHash(), beforeDatabase, "CLI changes no application or migration row");
@@ -282,6 +282,51 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         messageKey.fill(0); mediaKey.fill(0); for (const full of plaintexts.values()) full.fill(0);
         await rm(temporary, { recursive: true, force: true });
       }
+    });
+    await t.test("notification inventories isolate devices and count incoming and outgoing delivery jobs without opening endpoints", async () => {
+      const sessionFor = async owner => {
+        const existing = (await connection.query("SELECT id FROM sessions WHERE user_id = ? LIMIT 1", [owner]))[0];
+        if (existing) return existing.id;
+        const sessionId = id(); await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [sessionId, owner, randomBytes(32), created, sqlDate(now + 3600000)]);
+        return sessionId;
+      };
+      const firstSession = await sessionFor(first), secondSession = await sessionFor(second), adminSession = await sessionFor(admin);
+      async function subscription(owner, role, sessionId) {
+        const subscriptionId = id();
+        await connection.query(`INSERT INTO push_subscriptions (id, user_id, role, session_id, credential_version, generation,
+          endpoint_digest, subscription_encrypted, locale, created_at, updated_at) VALUES (?, ?, ?, ?, 1, 1, ?, 'private-endpoint-ciphertext-never-exported', 'fr', ?, ?)`,
+        [subscriptionId, owner, role, sessionId, randomBytes(32), created, created]);
+        return subscriptionId;
+      }
+      const firstDevice = await subscription(first, "client", firstSession), secondDevice = await subscription(second, "client", secondSession), adminDevice = await subscription(admin, "admin", adminSession);
+      const outgoing = (await connection.query("SELECT id FROM messages WHERE conversation_id = ? AND sender_id = ? LIMIT 1", [firstConv, first]))[0].id;
+      async function job(messageId, subscriptionId, status = "pending") {
+        const jobId = id();
+        await connection.query(`INSERT INTO push_outbox (id, message_id, subscription_id, subscription_generation, status, attempts,
+          available_at, created_at, expires_at, lease_token, lease_until) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)`,
+        [jobId, messageId, subscriptionId, status, status === "sending" ? 1 : 0, created, created, sqlDate(now + 3600000),
+          status === "sending" ? id() : null, status === "sending" ? sqlDate(now + 120000) : null]);
+        return jobId;
+      }
+      await job(visibleSharedMessage, firstDevice); await job(otherMessage, secondDevice); await job(outgoing, adminDevice, "sending");
+      for (const [clientId, expectedJobs] of [[first, 2], [second, 1]]) {
+        await withClientData({ pool, clientId, now }, async reader => {
+          const inventory = await reader.inventory(), facts = await reader.deletionFacts(), count = name => facts.find(item => item.name === name).count;
+          assert.equal(inventory.find(item => item.table === "push_subscriptions").count, 1);
+          assert.equal(inventory.find(item => item.table === "push_outbox").count, expectedJobs);
+          assert.equal(count("notificationSubscriptionsEnabled"), 1); assert.equal(count("pushPending"), 1);
+          assert.equal(count("pushSending"), clientId === first ? 1 : 0); assert.equal(count("foreignPushBindings"), 0);
+          assert.doesNotMatch(JSON.stringify({ inventory, facts }), /endpoint|ciphertext|subscriptionId|lease_token|p256dh|private-/);
+        });
+      }
+      // A session FK alone does not bind the subscription to its owner. The
+      // offline review must flag this schema-valid cross-account association.
+      await connection.query("UPDATE push_subscriptions SET session_id = ? WHERE id = ?", [secondSession, firstDevice]);
+      try {
+        await withClientData({ pool, clientId: first, now }, async reader => {
+          assert.equal((await reader.deletionFacts()).find(item => item.name === "foreignPushBindings").count, 1);
+        });
+      } finally { await connection.query("UPDATE push_subscriptions SET session_id = ? WHERE id = ?", [firstSession, firstDevice]); }
     });
   } finally {
     try { await pool?.end(); }

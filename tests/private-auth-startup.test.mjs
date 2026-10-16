@@ -60,7 +60,7 @@ test("private startup never falls back to ambient credentials or a neutral liste
   assert.equal(loaded, 0);
   await assert.rejects(run(options, dependencies), code("PRIVATE_AUTH_CONFIGURATION"));
   for (const transform of [(env) => { env.JESSIEMESSAGE_ENABLE_AUTH = "0"; }, (env) => { env.JESSIEMESSAGE_ENABLE_CHAT = "1"; },
-    (env) => { env.JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL = "1"; }, (env) => { env.JESSIEMESSAGE_SITE_ORIGIN = "https://jessiemessage.com"; }]) {
+    (env) => { env.JESSIEMESSAGE_ENABLE_NOTIFICATIONS = "1"; }, (env) => { env.JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL = "1"; }, (env) => { env.JESSIEMESSAGE_SITE_ORIGIN = "https://jessiemessage.com"; }]) {
     const env = environment(); transform(env);
     await assert.rejects(run(options, { ...dependencies, loadEnvironment: async () => env }), code("PRIVATE_AUTH_CONFIGURATION"));
   }

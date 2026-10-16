@@ -34,6 +34,7 @@ async function fixture(t) {
   const payload = { title: "Private synthetic campaign", body: "Private synthetic broadcast body", mediaId: null, allowRepeatMedia: false, conversationIds: [conversationId.toString("hex")] };
   const campaignBinding = { campaignId: id(7), adminId };
   const rows = {
+    notifications: [], notificationJobs: [],
     mfa: [{ id: adminId, encrypted: sealTotpSecret(secret, keys.totpKey, adminId) }],
     mail: [{ id: id(4), encrypted: sealVerificationPayload({ email, token }, keys.mailKey, id(4)), recipientUserId: clientId, challengeUserId: clientId, tokenHash: tokenDigest(token), recipientEmail: email }],
     reset: [{ id: id(5), encrypted: sealResetPayload({ email, token }, keys.mailKey, id(5)), recipientUserId: clientId, challengeUserId: clientId,
@@ -62,7 +63,7 @@ test("backup verification authenticates existing ciphertext in all domains witho
   const f = await fixture(t), originalKeys = KEY_NAMES.map((name) => Buffer.from(f.keys[name])), report = await verifyBackupData(f.options);
   assert.deepEqual(Object.keys(report), ["complete", "healthy", "counts", "issues"]);
   assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.deepEqual(report.issues, []);
-  assert.deepEqual(report.counts, { rows: 8, mfa: 1, mail: 1, reset: 1, messages: 1, crm: 1, broadcast: 1, broadcastRecipients: 1, media: 1, mediaFiles: 2 });
+  assert.deepEqual(report.counts, { rows: 8, mfa: 1, mail: 1, reset: 1, messages: 1, crm: 1, broadcast: 1, broadcastRecipients: 1, media: 1, mediaFiles: 2, notifications: 0, notificationJobs: 0 });
   assert.ok(f.calls.every(({ limit }) => limit === 50));
   assert.equal(f.plaintexts.length, 2); assert.ok(f.plaintexts.every((bytes) => bytes.every((byte) => byte === 0)));
   KEY_NAMES.forEach((name, index) => assert.deepEqual(f.keys[name], originalKeys[index]));
@@ -210,6 +211,7 @@ test("invalid configuration is neutral and cannot read data", async (t) => {
 
 function sqlFixture(f) {
   const raw = {
+    notifications: [], notificationJobs: [],
     mfa: f.rows.mfa.map((row) => ({ id: row.id, encrypted: row.encrypted })),
     mail: f.rows.mail.map((row) => ({ id: row.id, encrypted: row.encrypted, recipient_user_id: row.recipientUserId, challenge_user_id: row.challengeUserId, token_hash: row.tokenHash, recipient_email: row.recipientEmail })),
     reset: f.rows.reset.map((row) => ({ id: row.id, encrypted: row.encrypted, recipient_user_id: row.recipientUserId, challenge_user_id: row.challengeUserId, token_hash: row.tokenHash, recipient_email: row.recipientEmail, email_hash: row.emailHash })),
@@ -225,8 +227,8 @@ function sqlFixture(f) {
     queries.push({ sql, parameters });
     assert.match(sql, /^SELECT\s/u); assert.doesNotMatch(sql, /\b(?:INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE)\b/u);
     if (sql.includes("FROM broadcast_recipients")) return f.rows.broadcast[0].conversationIds.map((conversation_id) => ({ conversation_id }));
-    const tables = { mfa: "admin_mfa", mail: "mail_outbox", reset: "password_reset_outbox", messages: "messages", crm: "crm_profiles", broadcast: "broadcast_campaigns", media: "media_assets" };
-    const purpose = PURPOSES.find((value) => sql.includes(`FROM ${tables[value]} `)); assert.ok(purpose);
+    const tables = { mfa: "admin_mfa", mail: "mail_outbox", reset: "password_reset_outbox", messages: "messages", crm: "crm_profiles", broadcast: "broadcast_campaigns", media: "media_assets", notifications: "push_subscriptions", notificationJobs: "push_outbox" };
+    const purpose = Object.keys(tables).find((value) => sql.includes(`FROM ${tables[value]} `)); assert.ok(purpose);
     return raw[purpose];
   }, release() { releases.push(true); } }) };
   return { raw, queries, releases, pool };
@@ -235,7 +237,7 @@ function sqlFixture(f) {
 test("the SQL crypto adapter projects all domains with SELECT-only bounded reads and composes with real cryptography", async (t) => {
   const f = await fixture(t), sql = sqlFixture(f), store = createBackupCryptoStore({ pool: sql.pool });
   assert.ok(Object.isFrozen(store));
-  const report = await verifyBackupData({ ...f.options, store }); assert.equal(report.healthy, true); assert.equal(sql.releases.length, 7);
+  const report = await verifyBackupData({ ...f.options, store }); assert.equal(report.healthy, true); assert.equal(sql.releases.length, 9);
   assert.ok(sql.queries.filter((query) => !query.sql.includes("broadcast_recipients")).every((query) => query.parameters.at(-1) === 51));
   assert.equal(sql.queries.filter((query) => query.sql.includes("broadcast_recipients")).length, 1);
   assert.match(sql.queries.find((query) => query.sql.includes("FROM media_assets ")).sql, /a\.deleted_at IS NULL/u);

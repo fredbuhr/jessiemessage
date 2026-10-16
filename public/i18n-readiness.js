@@ -82,6 +82,7 @@ globalThis.JessieI18n?.register({
   "Fiches clients": "Client files",
   "Récupération du mot de passe": "Password recovery",
   "Diffusions individuelles": "Individual broadcasts",
+  "Notifications sur les appareils": "Device notifications",
   "Vérification des e-mails": "Email verification",
   "Récupération des accès": "Access recovery",
   "Démarrage": "Starting",

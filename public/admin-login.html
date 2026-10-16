@@ -13,10 +13,12 @@
     <link rel="stylesheet" href="/admin-login.css" />
     <link rel="stylesheet" href="/brand/brand.css" />
     <link rel="stylesheet" href="/i18n.css" />
+    <link rel="stylesheet" href="/notifications.css" />
     <title data-jm-i18n="JessieMessage — Accès administrateur">JessieMessage — Accès administrateur</title>
     <script src="/i18n.js" defer></script>
     <script src="/i18n-admin.js" defer></script>
     <script src="/session-clock.js" defer></script>
+    <script src="/notifications.js" defer></script>
     <script src="/admin-login.js" defer></script>
   </head>
   <body>
@@ -58,6 +60,7 @@
             <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong data-jm-i18n="Connexion sécurisée">Connexion sécurisée</strong></div>
             <p class="intro"><span data-jm-i18n="Compte connecté :">Compte connecté :</span> <strong id="connected-name"></strong>.</p>
             <p id="admin-session-note" class="session-note" data-jm-i18n="L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.">L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.</p>
+            <button id="admin-chat-retry" class="button button-secondary" type="button" hidden data-jm-i18n="Réessayer les conversations">Réessayer les conversations</button>
             <a id="admin-chat-link" class="button button-primary" href="/admin/messages" hidden data-jm-i18n="Ouvrir les conversations">Ouvrir les conversations</a>
 
             <section id="access-tools" hidden aria-labelledby="invitation-title">
@@ -85,6 +88,7 @@
             <details id="account-settings" class="account-settings">
               <summary data-jm-i18n="Compte et appareils">Compte et appareils</summary>
               <p class="field-help" data-jm-i18n="Cet appareil reste connecté jusqu’à six mois sans utilisation. Une utilisation régulière prolonge cette durée.">Cet appareil reste connecté jusqu’à six mois sans utilisation. Une utilisation régulière prolonge cette durée.</p>
+              <div id="notifications-admin-host" hidden></div>
               <details id="devices-panel">
                 <summary data-jm-i18n="Appareils connectés">Appareils connectés</summary>
                 <p class="field-help" data-jm-i18n="Chaque connexion est repérée par sa date. Déconnecter un appareil laisse les autres ouverts.">Chaque connexion est repérée par sa date. Déconnecter un appareil laisse les autres ouverts.</p>

@@ -98,3 +98,19 @@ test("operations refuses bad liveness proof and sanitizes acquisition/query/rele
   const badRelease = fixture(); badRelease.connection.release = () => { throw new Error("password secret"); };
   await assert.rejects(createOperationsStore({ pool: badRelease.pool }).sample({ now }), unavailable);
 });
+
+test("notification supervision samples only capped scheduling metadata and remains opt-in", async () => {
+  const f = fixture([[{ available_at: date }], present(1), []]);
+  const value = await createOperationsStore({ pool: f.pool, verification: false, notifications: true }).sample({ now });
+  assert.deepEqual(value, { database: true, queues: [
+    { name: "notifications", pending: {count: 1, truncated: false}, sending: {count: 1, truncated: false},
+      failed: {count: 0, truncated: false}, oldestDueAt: now - 1 },
+  ] });
+  assert.equal(f.calls.length, 4);
+  for (const query of f.calls.slice(1)) {
+    assert.match(query, /FROM push_outbox\s+WHERE status = '(?:pending|sending|failed)'/);
+    assert.match(query, /LIMIT 1001$/);
+    assert.doesNotMatch(query, /subscription|endpoint|message_id|recipient|payload|lease_token|FOR UPDATE/);
+  }
+  assert.throws(() => createOperationsStore({pool: f.pool, notifications: "1"}), unavailable);
+});

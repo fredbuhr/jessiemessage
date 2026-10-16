@@ -26,6 +26,8 @@ let checkingSession = false;
 let sessionCheckEpoch = 0;
 let devicesCursor = null;
 let devicesEpoch = 0;
+let notificationsPanel = null;
+let chatCapabilityBusy = false;
 let busy = false;
 let generation = 0;
 let suspended = document.visibilityState !== "visible";
@@ -41,6 +43,8 @@ const accessPages = {
 
 function invalidate() {
   generation += 1; sessionCheckEpoch += 1; checkingSession = false;
+  notificationsPanel?.clear(); notificationsPanel = null;
+  chatCapabilityBusy = false; document.getElementById("admin-chat-retry").hidden = true;
   cancelSessionCheck?.(); cancelSessionCheck = null;
   clearDevices();
   for (const controller of controllers) controller.abort();
@@ -117,11 +121,22 @@ function signedIn(session) {
   planSessionCheck(session.expiresAt);
   if (location.pathname === "/admin/login") history.replaceState(null, "", "/admin");
   void loadAccess();
-  if (session.user.role === "admin") void loadChatAccess();
+  if (session.user.role === "admin") {
+    void loadChatAccess();
+    if (globalThis.JessieNotifications) {
+      const ticket = generation, owner = { id: principalId, csrf };
+      notificationsPanel = globalThis.JessieNotifications.mount(document.getElementById("notifications-admin-host"), {
+        role: "admin", owner, isCurrent: () => current(ticket) && !connected.hidden && principalId === owner.id && csrf === owner.csrf,
+      });
+    }
+  }
 }
 
 async function loadChatAccess() {
-  const ticket = generation;
+  if (chatCapabilityBusy || suspended || !csrf) return;
+  const ticket = generation; chatCapabilityBusy = true;
+  document.getElementById("admin-chat-retry").disabled = true;
+  document.getElementById("admin-chat-retry").hidden = true;
   adminUI.text(document.getElementById("admin-session-note"), "Les conversations ne sont pas encore disponibles.");
   try {
     const capability = await request("/api/chat/admin/capabilities");
@@ -132,8 +147,13 @@ async function loadChatAccess() {
   } catch (error) {
     if (error.stale || error.status === 404) return;
     if (error.status === 401 || error.status === 403) signedOut(errorMessage(error));
-  }
+    else {
+      adminUI.text(document.getElementById("admin-session-note"), "Les conversations n’ont pas pu être ouvertes. Réessaie quand la connexion revient.");
+      document.getElementById("admin-chat-retry").hidden = false;
+    }
+  } finally { if (current(ticket)) { chatCapabilityBusy = false; document.getElementById("admin-chat-retry").disabled = false; } }
 }
+document.getElementById("admin-chat-retry").addEventListener("click", () => { void loadChatAccess(); });
 
 function setBusy(value) {
   busy = value;

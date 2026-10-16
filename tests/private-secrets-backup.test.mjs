@@ -4,7 +4,7 @@ import fs from "node:fs";
 import childProcess, { spawnSync } from "node:child_process";
 import { syncBuiltinESMExports } from "node:module";
 import { chmod, link, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, unlink, writeFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
+import { createHash, createECDH } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Readable } from "node:stream";
@@ -53,7 +53,7 @@ test("Linux CI requires the real GPG and anchored path tests", { skip: !process.
 
 test("coffre scope is explicit and rejects unknown or accessor profiles", async () => {
   const args = ["--private-directory", path.resolve(repository, "../private-example"), "--output", "messaging.json.gpg"];
-  for (const profile of ["auth", "messaging", "messaging-photos"]) assert.deepEqual(parseArguments([...args, "--profile", profile]),
+  for (const profile of ["auth", "messaging", "messaging-photos", "messaging-photos-notify"]) assert.deepEqual(parseArguments([...args, "--profile", profile]),
     { privateDirectory: args[1], output: args[3], profile });
   for (const profile of ["all", "", "0", "messaging\n"]) assert.throws(() => parseArguments([...args, "--profile", profile]), unavailable);
   assert.throws(() => parseArguments(["--profile", "messaging", "--output", "file.json.gpg"]), unavailable);
@@ -354,4 +354,62 @@ test("CLI success prints only ciphertext receipt and failures do not echo input 
   const result = spawnSync(process.execPath, ["scripts/private-secrets-backup.mjs", "--private-directory", f.directory, "--output", f.selected.output], { cwd: repository, input: password, encoding: "utf8", timeout: 10000 });
   assert.equal(result.status, 1); assert.equal(JSON.parse(result.stdout).status, "blocked");
   assert.equal((result.stdout + result.stderr).includes(password), false); assert.equal((result.stdout + result.stderr).includes(marker), false);
+});
+
+function notifications() {
+  const curve = createECDH("prime256v1"); curve.setPrivateKey(Buffer.alloc(32, 7));
+  return { version: 1, origin: authentication().origin, notificationKey: Buffer.alloc(32, 54).toString("base64url"),
+    vapidPublicKey: curve.getPublicKey(undefined, "uncompressed").toString("base64url"), vapidPrivateKey: curve.getPrivateKey().toString("base64url"),
+    vapidSubject: "mailto:contact@jessiemessage.com" };
+}
+async function notificationFixture(t) {
+  const f = await fixture(t);
+  const media = { format: "jessiemessage-runtime-media", version: 1, origin: authentication().origin,
+    mediaKey: Buffer.alloc(32, 53).toString("base64url"), mediaRoot: path.join(f.root, "media"), ownerBytes: "1073741824",
+    totalBytes: "10737418240", minimumFreeBytes: "536870912" };
+  await writeFile(path.join(f.directory, "runtime-messaging.json"), JSON.stringify(messaging()), { mode: 0o600 });
+  await writeFile(path.join(f.directory, "runtime-media.json"), JSON.stringify(media), { mode: 0o600 });
+  return f;
+}
+
+test("v4 notify coffre contains six files and prevents omission while preserving readable archived v3 data", { skip: !supported }, async (t) => {
+  const f = await notificationFixture(t), oldSelected = { ...f.selected, profile: "messaging-photos" };
+  await run(oldSelected, password); const old = await readFile(path.join(f.directory, oldSelected.output));
+  const names = [...sourceNames, "runtime-messaging.json", "runtime-media.json", "runtime-notifications.json"];
+  const oldBefore = await Promise.all(names.slice(0, -1).map(name => readFile(path.join(f.directory, name))));
+  const filename = path.join(f.directory, "runtime-notifications.json");
+  await writeFile(filename, JSON.stringify(notifications()), { mode: 0o600 });
+  for (const profile of ["auth", "messaging", "messaging-photos"]) {
+    await assert.rejects(check({ ...f.selected, output: "old-incomplete.json.gpg", profile }), unavailable);
+    await assert.rejects(run({ ...f.selected, output: "old-incomplete.json.gpg", profile }, password), unavailable);
+  }
+  const selected = { ...f.selected, output: "notify.json.gpg", profile: "messaging-photos-notify" };
+  assert.equal((await check(selected)).files, 6);
+  const result = await run(selected, password), ciphertext = await readFile(path.join(f.directory, selected.output));
+  assert.equal(result.files, 6); assert.equal(result.verified, true);
+  for (const secret of [notifications().notificationKey, notifications().vapidPrivateKey]) {
+    assert.equal(ciphertext.includes(Buffer.from(secret)), false); assert.equal(JSON.stringify(result).includes(secret), false);
+  }
+  const verification = { ...selected, output: "verify-not-written.json.gpg" };
+  assert.deepEqual(await verifyCiphertext(verification, ciphertext, password), { verified: true, files: 6, secretsOnly: true, databaseBackup: false });
+  await assert.rejects(verifyCiphertext({ ...verification, profile: "messaging-photos" }, old, password), unavailable);
+  assert.deepEqual(await Promise.all(names.slice(0, -1).map(name => readFile(path.join(f.directory, name)))), oldBefore);
+  // An offline restore may still read the old schema/profile checkpoint when
+  // it has no prepared notification file, without deleting or replacing it.
+  await rename(filename, path.join(f.directory, "new-notifications-preserved.json"));
+  assert.equal((await verifyCiphertext({ ...verification, profile: "messaging-photos" }, old, password)).files, 5);
+  assert.deepEqual(await readFile(path.join(f.directory, oldSelected.output)), old);
+});
+
+test("v4 notify coffre refuses a mismatched VAPID pair, another origin and any domain key collision before publication", { skip: !supported }, async (t) => {
+  const other = createECDH("prime256v1"); other.setPrivateKey(Buffer.alloc(32, 8));
+  for (const change of [{ notificationKey: authentication().mfaKey }, { notificationKey: messaging().mailKey }, { notificationKey: messaging().messageKey },
+    { notificationKey: Buffer.alloc(32, 53).toString("base64url") }, { vapidPublicKey: other.getPublicKey().toString("base64url") },
+    { origin: "https://other.jessiemessage.com" }]) {
+    const f = await notificationFixture(t);
+    await writeFile(path.join(f.directory, "runtime-notifications.json"), JSON.stringify({ ...notifications(), ...change }), { mode: 0o600 });
+    const selected = { ...f.selected, profile: "messaging-photos-notify" };
+    await assert.rejects(run(selected, password), unavailable);
+    await assert.rejects(lstat(path.join(f.directory, selected.output)), { code: "ENOENT" });
+  }
 });

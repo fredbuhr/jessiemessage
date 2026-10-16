@@ -603,3 +603,26 @@ test("administrator conversation changes preserve each memory-only draft", async
   await choose(secondId); assert.equal(f.element("message-body").value, "Second private draft");
   assert.equal(posts(f).length, 0); assert.equal(f.context.localStorage, undefined);
 });
+
+test("a delayed close event from a cancelled dialog cannot cancel its next confirmation", async () => {
+  let f;
+  f = harness({ intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
+    conversation: f.conversation(), messages: [{ id: id(881), sequence: "1", sender: "me", body: "Keep the current confirmation", createdAt: now, deletedAt: null }], eventCursor: "1", hasMoreBefore: false,
+  }) : path.endsWith("/delete") ? response(200, { message: { id: id(881), sequence: "1", sender: "me", body: null, createdAt: now, deletedAt: now } }) : undefined });
+  await flush();
+  const dialog = f.element("confirm-delete"), queuedCloseEvents = [];
+  // Native dialog.close() queues its close event; it need not be delivered
+  // before the next keyboard activation reopens the same dialog.
+  dialog.close = () => { dialog.open = false; queuedCloseEvents.push(...dialog.events.get("close")); };
+  const opener = f.element("messages").children[0].querySelector(".delete-message"); opener.focus();
+  for (const handler of opener.events.get("click")) handler({}); await flush(); await f.click("cancel-delete");
+  assert.equal(dialog.open, false); assert.equal(f.document.activeElement, opener);
+  for (const handler of opener.events.get("click")) handler({}); await flush();
+  assert.equal(dialog.open, true); assert.equal(f.document.activeElement, f.element("cancel-delete"));
+  for (const handler of queuedCloseEvents.splice(0)) handler({}); await flush();
+  assert.equal(dialog.open, true, "an old close event must not dismiss a currently open confirmation");
+  assert.equal(f.calls.filter((call) => call.path.endsWith("/delete")).length, 0);
+  await f.click("accept-delete");
+  assert.equal(f.calls.filter((call) => call.path.endsWith("/delete")).length, 1);
+  assert.match(contents(f.element("messages")), /Message supprimé/);
+});

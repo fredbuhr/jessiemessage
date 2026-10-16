@@ -42,12 +42,13 @@ function fixture(plan = {}) {
 }
 
 test("data policy covers each application table once and defers every retention decision", () => {
-  assert.equal(DATA_POLICY.length, 27);
-  assert.equal(new Set(DATA_POLICY.map((entry) => entry.table)).size, 27);
+  assert.equal(DATA_POLICY.length, 29);
+  assert.equal(new Set(DATA_POLICY.map((entry) => entry.table)).size, 29);
   assert.equal(DATA_POLICY_METADATA.retentionDecided, false);
   for (const entry of DATA_POLICY) { assert.equal(entry.retentionDays, null); assert.equal(entry.decisionRequired, true); assert.ok(Object.isFrozen(entry)); }
   assert.ok(Object.isFrozen(DATA_POLICY));
-  assert.deepEqual(DATA_POLICY_METADATA.existingCleanup.map((entry) => entry.days), [7, 7]);
+  assert.deepEqual(DATA_POLICY_METADATA.existingCleanup.map((entry) => entry.days), [7, 7, 30]);
+  assert.equal(DATA_POLICY_METADATA.existingCleanup.at(-1).table, "push_outbox");
 });
 test("data reader uses a single read-only snapshot, whitelists account data and retains revoked clients", async () => {
   const f = fixture(); let held;
@@ -72,9 +73,16 @@ test("data reader uses a single read-only snapshot, whitelists account data and 
 test("data inventory uses capped scoped metadata queries and never reads administrator/global material", async () => {
   const f = fixture({ inventory: (sql) => /FROM sessions /.test(sql) ? Array.from({ length: 10001 }, () => ({ present: 1 })) : [{ present: 1 }] });
   const inventory = await withClientData({ pool: f.pool, clientId: target, now }, (reader) => reader.inventory());
-  assert.equal(inventory.length, 27);
+  assert.equal(inventory.length, 29);
   assert.deepEqual(inventory.find((entry) => entry.table === "sessions"), { table: "sessions", scope: "subject", count: 10000, truncated: true });
   assert.deepEqual(inventory.find((entry) => entry.table === "crm_labels"), { table: "crm_labels", scope: "administrator", count: null, truncated: false });
+  assert.equal(inventory.find((entry) => entry.table === "push_subscriptions").count, 1);
+  assert.equal(inventory.find((entry) => entry.table === "push_outbox").count, 1);
+  const subscriptions = f.calls.find(({ sql }) => /FROM push_subscriptions WHERE/.test(sql));
+  assert.deepEqual(subscriptions.parameters, [target]); assert.match(subscriptions.sql, /role = 'client'/);
+  const push = f.calls.find(({ sql }) => /FROM push_outbox o/.test(sql));
+  assert.deepEqual(push.parameters, [target, conv]);
+  assert.doesNotMatch(push.sql, /endpoint|subscription_encrypted|p256dh|auth|lease_token/);
   for (const query of f.calls.filter(({ sql }) => /^SELECT 1 AS present/.test(sql))) {
     assert.match(query.sql, /LIMIT 10001$/); assert.ok(query.parameters[0].equals(target) || query.parameters[0].equals(conv));
     assert.doesNotMatch(query.sql, /payload|notes|password_hash|token_hash|COUNT|SELECT \*/);

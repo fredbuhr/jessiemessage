@@ -52,7 +52,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["notifications.js", "notifications.css", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "broadcast-preference.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -246,7 +246,10 @@ test("Chrome mobile: deleting a message has a keyboard-accessible confirmation w
     await waitUntil(() => page.execute("return !document.getElementById('confirm-delete').open"), "Escape cancels deletion");
     assert.equal(await page.execute("return document.activeElement === window.__deleteOpener"), true);
     assert.equal(fixture.deleteRequests, 0);
-    await page.key("\uE007"); await page.click("#accept-delete");
+    await page.key("\uE007");
+    await waitUntil(() => page.execute("return document.getElementById('confirm-delete').matches(':modal') && document.activeElement.id==='cancel-delete'"), "second native confirmation is open with cancellation focused");
+    assert.equal(fixture.deleteRequests, 0);
+    await page.click("#accept-delete");
     await waitUntil(() => page.execute("return document.querySelector('#messages [data-sequence=\"2\"]').classList.contains('deleted')"), "confirmed deletion replaces the message");
     assert.equal(fixture.deleteRequests, 1);
     assert.equal(await page.execute("return document.activeElement.dataset.sequence"), "2", "focus moves to the tombstone");

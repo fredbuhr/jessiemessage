@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { randomBytes } from "node:crypto";
+import { createECDH, randomBytes } from "node:crypto";
 import { main, parseArguments, BackupCliError } from "../scripts/backup.mjs";
 
 const manifestPath = "/private-backup/manifest.json";
@@ -13,11 +13,11 @@ function fixture({ source = false } = {}) {
   const targetIdentity = { databaseTag: "7".repeat(64), rootPathTag: "8".repeat(64), rootPhysicalTag: "9".repeat(64), rootFingerprint: targetFingerprint, rootAncestors: ["6".repeat(64)] };
   const candidate = { id: "a".repeat(32), owner_id: "b".repeat(32), owner_role: "admin", storage_key: "c".repeat(64), content_digest: "d".repeat(64),
     full_bytes: 8, thumbnail_bytes: 4, stored_bytes: 92, asset_id: null, state: "reserved", created_at: "2026-10-15 00:00:00.000000", updated_at: "2026-10-15 00:00:00.000000", released_at: null };
-  const original = { version: 1, schemaDigest: "e".repeat(64), coreDigest: "f".repeat(64), counts: { tables: 27, rows: 1 },
+  const original = { version: 1, schemaDigest: "e".repeat(64), coreDigest: "f".repeat(64), counts: { tables: 30, rows: 1 },
     capacity: { ownerBytes: 1000, totalBytes: 10000, heldBytes: 200, rootFingerprint: sourceFingerprint, initializedAt: "2026-10-15 00:00:00.000000" }, objects: [candidate], assets: [] };
   const keys = Object.fromEntries(["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"].map((name) => [name, randomBytes(32)]));
   const state = { snapshot: clone(original), identity: source ? sourceIdentity : targetIdentity, cryptoHealthy: true, structuralHealthy: true,
-    manifest: { payload: { identity: sourceIdentity, snapshot: clone(original) }, signature: "signed-fixture" }, files: new Set([candidate.storage_key]), captures: 0, now: 1750000000000 };
+    manifest: { version: 1, payload: { identity: sourceIdentity, snapshot: clone(original) }, signature: "signed-fixture" }, files: new Set([candidate.storage_key]), captures: 0, now: 1750000000000 };
   const config = { media: { enabled: true, root: "/synthetic/private-media", key: keys.mediaKey, capacity: { ownerBytes: 1000, totalBytes: 10000 }, minimumFreeBytes: 0 }, keys, databaseName: source ? "synthetic_source" : "synthetic_clone" };
   const pool = { end: async () => { events.push("pool-end"); } };
   const inspectionPool = { end: async () => { events.push("inspection-end"); } };
@@ -37,7 +37,7 @@ function fixture({ source = false } = {}) {
     verifyBackupManifest: ({ manifest }) => { events.push("manifest-verify"); return manifest.payload; },
     backupIdentity: async () => { events.push("identity"); return clone(state.identity); },
     assertCloneIdentity: (first, second) => { events.push("clone-check"); if (first.databaseTag === second.databaseTag || first.rootPathTag === second.rootPathTag || first.rootPhysicalTag === second.rootPhysicalTag) throw new Error("isolated clone required"); },
-    createBackupManifest: ({ snapshot, identity, now }) => { events.push(["manifest-create", now]); return { payload: { snapshot, identity }, signature: "signed-fixture" }; },
+    createBackupManifest: ({ snapshot, identity, now }) => { events.push(["manifest-create", now]); return { version: 1, payload: { snapshot, identity }, signature: "signed-fixture" }; },
     writeManifest: async (file, manifest) => { events.push(["manifest-write", file]); state.manifest = manifest; },
     manifestHash: () => "0".repeat(64),
   };
@@ -95,6 +95,44 @@ test("photo CLI real configuration accepts disabled CRM/recovery/broadcast witho
   const deps = { ...f.dependencies }; delete deps.configure;
   assert.equal((await main([...args("prepare"), "--profile", "photos"], env, deps)).prepared, true);
   await assert.rejects(main([...args("prepare"), "--profile", "photos"], { ...env, JESSIEMESSAGE_ENABLE_CRM: "1" }, deps), errorCode("BACKUP_OPERATION"));
+});
+
+test("notification CLI uses an explicit v3 profile, five keys and the same offline clone guards", async () => {
+  assert.deepEqual(parseArguments([...args("prepare"), "--profile", "photos-notify"]), { command: "prepare", offline: true, manifestPath, profile: "photos-notify" });
+  const source = fixture({ source: true }); delete source.config.keys.crmKey; source.config.keys.notificationKey = randomBytes(32);
+  const create = source.manifests.createBackupManifest;
+  source.manifests.createBackupManifest = value => { assert.equal(value.profile, "messaging-photos-notify"); return { ...create(value), version: 3, profile: value.profile }; };
+  assert.equal((await main([...args("prepare"), "--profile", "photos-notify"], {}, source.dependencies)).prepared, true);
+  assert.equal(Object.keys(source.state.manifest).includes("profile"), true);
+  assert.equal(source.events.find(event => Array.isArray(event) && event[0] === "crypto")[1].pool, source.pool);
+  const target = fixture(); delete target.config.keys.crmKey; target.config.keys.notificationKey = randomBytes(32);
+  Object.assign(target.state.manifest, { version: 3, profile: "messaging-photos-notify" });
+  assert.equal((await main([...args("restore"), "--profile", "photos-notify"], {}, target.dependencies)).restored, true);
+  assert.equal(mutations(target).filter(event => event[0] === "rebind").length, 1);
+  for (const old of [{ version: 1 }, { version: 2, profile: "messaging-photos" }, { version: 3, profile: "full-notify" }]) {
+    const f = fixture(); delete f.config.keys.crmKey; f.config.keys.notificationKey = randomBytes(32); Object.assign(f.state.manifest, old);
+    await assert.rejects(main([...args("verify"), "--profile", "photos-notify"], {}, f.dependencies), errorCode("BACKUP_VERIFY"));
+    assert.equal(f.events.includes("pool"), false);
+  }
+});
+
+test("notification CLI real configuration requires VAPID and rejects choosing an older profile when notifications are enabled", async () => {
+  const f = fixture({ source: true }); delete f.config.keys.crmKey;
+  const curve = createECDH("prime256v1"); curve.generateKeys();
+  const env = { JESSIEMESSAGE_SITE_ORIGIN: "https://recette.jessiemessage.com", JESSIEMESSAGE_ENABLE_AUTH: "1", JESSIEMESSAGE_ENABLE_ACCESS: "1",
+    JESSIEMESSAGE_ENABLE_CHAT: "1", JESSIEMESSAGE_ENABLE_MEDIA: "1", JESSIEMESSAGE_ENABLE_NOTIFICATIONS: "1", JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "1",
+    JESSIEMESSAGE_SMTP_HOST: "smtp.example.invalid", JESSIEMESSAGE_SMTP_PORT: "587", JESSIEMESSAGE_SMTP_USER: "synthetic-user", JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-password",
+    JESSIEMESSAGE_DB_HOST: "sql.example.invalid", JESSIEMESSAGE_DB_NAME: f.config.databaseName, JESSIEMESSAGE_APPLICATION_DATABASE: f.config.databaseName,
+    JESSIEMESSAGE_RUNTIME_DB_USER: "synthetic_runtime", JESSIEMESSAGE_RUNTIME_DB_PASSWORD: "synthetic-password",
+    JESSIEMESSAGE_MFA_KEY: f.config.keys.totpKey.toString("base64url"), JESSIEMESSAGE_MAIL_KEY: f.config.keys.mailKey.toString("base64url"),
+    JESSIEMESSAGE_MESSAGE_KEY: f.config.keys.messageKey.toString("base64url"), JESSIEMESSAGE_MEDIA_KEY: f.config.keys.mediaKey.toString("base64url"),
+    JESSIEMESSAGE_MEDIA_ROOT: f.config.media.root, JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: "1000", JESSIEMESSAGE_MEDIA_TOTAL_BYTES: "10000", JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES: "0",
+    JESSIEMESSAGE_NOTIFICATIONS_KEY: randomBytes(32).toString("base64url"), JESSIEMESSAGE_VAPID_PUBLIC_KEY: curve.getPublicKey().toString("base64url"),
+    JESSIEMESSAGE_VAPID_PRIVATE_KEY: Buffer.concat([Buffer.alloc(32), curve.getPrivateKey()]).subarray(-32).toString("base64url"), JESSIEMESSAGE_VAPID_SUBJECT: "mailto:contact@jessiemessage.com" };
+  const dependencies = { ...f.dependencies }; delete dependencies.configure;
+  assert.equal((await main([...args("prepare"), "--profile", "photos-notify"], env, dependencies)).prepared, true);
+  await assert.rejects(main([...args("prepare"), "--profile", "photos"], env, dependencies), errorCode("BACKUP_CONFIG"));
+  await assert.rejects(main([...args("prepare"), "--profile", "photos-notify"], { ...env, JESSIEMESSAGE_VAPID_PRIVATE_KEY: undefined }, dependencies), errorCode("BACKUP_OPERATION"));
 });
 
 test("prepare authenticates and verifies the stable source before writing the exclusive manifest, without recovery mutations", async () => {

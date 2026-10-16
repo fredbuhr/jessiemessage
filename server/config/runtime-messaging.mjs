@@ -8,15 +8,15 @@ export const MESSAGING_ENV_FIELDS = Object.freeze(["PORT", "JESSIEMESSAGE_DB_HOS
   "JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE", "JESSIEMESSAGE_PRIVATE_PATH_MODE", "JESSIEMESSAGE_SITE_ORIGIN", "JESSIEMESSAGE_MFA_KEY",
   "JESSIEMESSAGE_MAIL_KEY", "JESSIEMESSAGE_MESSAGE_KEY", "JESSIEMESSAGE_SMTP_HOST", "JESSIEMESSAGE_SMTP_PORT",
   "JESSIEMESSAGE_SMTP_USER", "JESSIEMESSAGE_SMTP_PASSWORD",
-  ...["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY"].map((name) => `JESSIEMESSAGE_ENABLE_${name}`)]);
+  ...["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY", "NOTIFICATIONS"].map((name) => `JESSIEMESSAGE_ENABLE_${name}`)]);
 
 export class RuntimeMessagingEnvironmentError extends Error {
   constructor() { super("Private messaging environment is unavailable."); this.code = "RUNTIME_MESSAGING_ENVIRONMENT"; }
 }
 const fail = () => { throw new RuntimeMessagingEnvironmentError(); };
-const SECRET_FIELDS = ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "smtpUser", "smtpPassword",
+const SECRET_FIELDS = ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "notificationKey", "vapidPrivateKey", "smtpUser", "smtpPassword",
   "JESSIEMESSAGE_RUNTIME_DB_PASSWORD", "JESSIEMESSAGE_MFA_KEY", "JESSIEMESSAGE_MAIL_KEY", "JESSIEMESSAGE_MESSAGE_KEY",
-  "JESSIEMESSAGE_MEDIA_KEY", "JESSIEMESSAGE_SMTP_USER", "JESSIEMESSAGE_SMTP_PASSWORD"];
+  "JESSIEMESSAGE_MEDIA_KEY", "JESSIEMESSAGE_NOTIFICATIONS_KEY", "JESSIEMESSAGE_VAPID_PRIVATE_KEY", "JESSIEMESSAGE_SMTP_USER", "JESSIEMESSAGE_SMTP_PASSWORD"];
 
 export function clearRuntimeMessagingSecrets(value) {
   if (!value || typeof value !== "object") return;

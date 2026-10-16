@@ -37,6 +37,8 @@ const projections = Object.freeze({
   broadcast_recipients: "campaign_id, conversation_id, client_id, proposed_message_id, client_message_id, delivered_message_id, state, reason, attempts, available_at, created_at, lease_token, lease_until, delivered_at",
   media_storage_state: "id, owner_bytes, total_bytes, root_fingerprint, held_bytes, initialized_at",
   media_storage_objects: "id, owner_id, owner_role, storage_key, content_digest, full_bytes, thumbnail_bytes, stored_bytes, state, asset_id, created_at, updated_at, released_at",
+  push_subscriptions: "id, user_id, role, session_id, credential_version, generation, endpoint_digest, subscription_encrypted, locale, enabled, created_at, updated_at",
+  push_outbox: "id, message_id, subscription_id, subscription_generation, status, attempts, available_at, created_at, expires_at, lease_token, lease_until, finished_at",
 });
 const tables = Object.keys(projections);
 const dml = ["SELECT", "INSERT", "UPDATE", "DELETE"];

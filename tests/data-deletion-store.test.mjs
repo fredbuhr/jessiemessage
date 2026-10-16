@@ -15,11 +15,11 @@ test("deletion facts have a fixed order, capped reference counts and metadata-on
     const index = queries.length; queries.push({ sql, parameters }); return present(index === 0 ? 10001 : index === 1 ? 10000 : 1);
   } };
   const result = await readDeletionFacts({ connection, clientId, conversation: context, nowSql });
-  assert.ok(Object.isFrozen(DELETION_FACT_NAMES)); assert.equal(DELETION_FACT_NAMES.length, 19);
+  assert.ok(Object.isFrozen(DELETION_FACT_NAMES)); assert.equal(DELETION_FACT_NAMES.length, 23);
   assert.deepEqual(result.map((item) => item.name), DELETION_FACT_NAMES);
   assert.deepEqual(result[0], { name: "activeSessions", count: 10000, truncated: true });
   assert.deepEqual(result[1], { name: "verificationPending", count: 10000, truncated: false });
-  assert.equal(queries.length, 19);
+  assert.equal(queries.length, 23);
   for (const { sql, parameters } of queries) {
     assert.match(sql, /^SELECT 1 AS present /); assert.match(sql, /LIMIT 10001$/);
     assert.doesNotMatch(sql, /COUNT\s*\(|SELECT \*|payload|notes_encrypted|password_hash|token_hash|lease_token|FOR UPDATE|DELETE|INSERT|UPDATE/);
@@ -29,6 +29,14 @@ test("deletion facts have a fixed order, capped reference counts and metadata-on
   assert.match(queries[13].sql, /other\.conversation_id <> \?/);
   assert.match(queries[18].sql, /UNION ALL/);
   assert.equal((queries[18].sql.match(/LIMIT 10001/g) ?? []).length, 3);
+  assert.match(queries[19].sql, /FROM push_subscriptions WHERE user_id = \? AND role = 'client' AND enabled = 1/);
+  for (const [index, state] of [[20, "pending"], [21, "sending"]]) {
+    assert.match(queries[index].sql, new RegExp(`o.status = '${state}'`));
+    assert.deepEqual(queries[index].parameters, [clientId, conversationId]);
+    assert.match(queries[index].sql, /OR m.conversation_id = \?/);
+  }
+  assert.match(queries[22].sql, /o.subscription_generation > p.generation/);
+  assert.match(queries[22].sql, /p.user_id <> s.user_id/);
 });
 test("without a conversation all client-sender, receipt and recipient links are foreign", async () => {
   const queries = [];
@@ -38,6 +46,8 @@ test("without a conversation all client-sender, receipt and recipient links are 
   assert.match(queries[15].sql, /FROM chat_receipts WHERE user_id = \?/);
   assert.match(queries[16].sql, /FROM broadcast_recipients WHERE client_id = \?/);
   assert.equal(queries[11].parameters.length, 1);
+  assert.deepEqual(queries[20].parameters, [clientId]); assert.deepEqual(queries[21].parameters, [clientId]);
+  assert.doesNotMatch(queries[20].sql, /OR m.conversation_id/);
 });
 test("deletion facts reject malformed identities, timestamps, row shapes and private database errors", async () => {
   const connection = { async query() { return []; } };
@@ -68,10 +78,10 @@ test("deletion facts share the client reader's one read-only snapshot and reject
   const pool = { async getConnection() { acquisitions++; return connection; } };
   await withClientData({ pool, clientId, now }, async (reader) => {
     retained = reader; reader.account.id.fill(7); reader.conversation.id.fill(8);
-    const facts = await reader.deletionFacts(); assert.equal(facts.length, 19);
+    const facts = await reader.deletionFacts(); assert.equal(facts.length, 23);
   });
   assert.equal(acquisitions, 1); assert.equal(commits, 1); assert.equal(releases, 1);
-  assert.equal(queries.filter(({ sql }) => /^SELECT 1 AS present/.test(sql)).length, 19);
+  assert.equal(queries.filter(({ sql }) => /^SELECT 1 AS present/.test(sql)).length, 23);
   assert.equal(queries[1].sql, "START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT");
   const previous = queries.length; await assert.rejects(retained.deletionFacts(), unavailable); assert.equal(queries.length, previous);
   const bindings = queries.find(({ sql }) => /FROM broadcast_recipients WHERE client_id = \? AND conversation_id/.test(sql)).parameters;

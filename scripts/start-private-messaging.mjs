@@ -4,6 +4,7 @@ import { parseArguments as authenticationArguments } from "./start-private-auth.
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { clearRuntimeMessagingSecrets, copyRuntimeMessagingEnvironment, loadRuntimeMessagingEnvironment } from "../server/config/runtime-messaging.mjs";
 import { copyRuntimeMediaEnvironment, loadRuntimeMediaEnvironment } from "../server/config/runtime-media.mjs";
+import { copyRuntimeNotificationsEnvironment, loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { checkRuntimeMediaStorage } from "../server/config/runtime-media-storage.mjs";
 import { inspectDatabase } from "../server/preflight/database.mjs";
 import { makePreflightReport } from "../server/preflight/report.mjs";
@@ -19,8 +20,8 @@ export function parseArguments(args) {
   try {
     if (!Array.isArray(args) || !["check", "start"].includes(args[0])) fail("PRIVATE_MESSAGING_USAGE");
     if (args[1] === "--profile") {
-      if (args[2] !== "photos") fail("PRIVATE_MESSAGING_USAGE");
-      return { command: args[0], profile: "photos", ...authenticationArguments(args.slice(3)) };
+      if (!["photos", "photos-notify"].includes(args[2])) fail("PRIVATE_MESSAGING_USAGE");
+      return { command: args[0], profile: args[2], ...authenticationArguments(args.slice(3)) };
     }
     return { command: args[0], ...authenticationArguments(args.slice(1)) };
   } catch { fail("PRIVATE_MESSAGING_USAGE"); }
@@ -41,6 +42,13 @@ export async function checkMessagingSchema(env) {
     const chatStore = createChatStore(pool);
     for (const store of [createAuthStore(pool), createAccessStore(pool), createMailStore(pool), chatStore,
       createMediaStore({ pool, chatStore })]) await store.assertSchema();
+    if (env.JESSIEMESSAGE_ENABLE_NOTIFICATIONS === "1") {
+      const { createNotificationsStore } = await import("../server/notifications/store.mjs");
+      const { loadNotificationsConfig } = await import("../server/notifications/config.mjs");
+      const notifications = loadNotificationsConfig(env);
+      try { await createNotificationsStore({ pool, chatStore, key: notifications.key }).assertSchema(); }
+      finally { notifications.key.fill(0); }
+    }
   } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
   finally { try { await pool?.end(); } catch { fail("PRIVATE_MESSAGING_SCHEMA"); } }
 }
@@ -56,14 +64,14 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       || names.some((name) => !Object.hasOwn(Object.getOwnPropertyDescriptor(options, name) ?? {}, "value"))) fail("PRIVATE_MESSAGING_USAGE");
     const selected = parseArguments([options.command, ...(Object.hasOwn(options, "profile") ? ["--profile", options.profile] : []),
       "--private-directory", options.privateDirectory, "--private-path-mode", options.privatePathMode]);
-    const photos = selected.profile === "photos";
-    loadEnvironment ??= photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
+    const notifications = selected.profile === "photos-notify", photos = notifications || selected.profile === "photos";
+    loadEnvironment ??= notifications ? loadRuntimeNotificationsEnvironment : photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); }
     catch { fail("PRIVATE_MESSAGING_ENVIRONMENT"); }
     try {
       source = await loadEnvironment(selected.privateDirectory, processOptions);
-      env = (photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source);
+      env = (notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source);
       if (env.PORT !== processOptions.port || env.JESSIEMESSAGE_PRIVATE_PATH_MODE !== selected.privatePathMode) fail("PRIVATE_MESSAGING_CONFIGURATION");
     } catch { fail("PRIVATE_MESSAGING_CONFIGURATION"); }
     try {
@@ -79,14 +87,14 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN }); }
       catch { fail("PRIVATE_MESSAGING_STARTUP"); }
     }
-    return { status: selected.command === "start" ? "started" : "checks_passed", profile: photos ? "messaging-photos" : "messaging-text",
+    return { status: selected.command === "start" ? "started" : "checks_passed", profile: notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
       started: selected.command === "start", smtpDeliveryTested: false, launchApproved: false };
   } catch (error) {
     if (error instanceof PrivateMessagingStartupError) throw error;
     fail("PRIVATE_MESSAGING_STARTUP");
   } finally {
     clearRuntimeMessagingSecrets(env);
-    if ([loadRuntimeMessagingEnvironment, loadRuntimeMediaEnvironment].includes(loadEnvironment)) clearRuntimeMessagingSecrets(source);
+    if ([loadRuntimeMessagingEnvironment, loadRuntimeMediaEnvironment, loadRuntimeNotificationsEnvironment].includes(loadEnvironment)) clearRuntimeMessagingSecrets(source);
   }
 }
 
