@@ -114,6 +114,25 @@ test("real MariaDB private notification transactions (synthetic disposable datab
       assert.ok(own.subscriptions.every((item) => Object.keys(item).join(",") === "id,enabled,createdAt,updatedAt"));
     });
 
+    await t.test("opaque notification references require their recipient and current conversation access, including after a fresh login", async () => {
+      for (const role of ["admin", "client"]) {
+        const outsider = await pair(), fixture = await pair();
+        await subscribe(fixture, role);
+        const sent = await send(fixture, role === "admin" ? "client" : "admin");
+        const notificationId = (await outbox())[0].id;
+        const expected = { conversationId: fixture.conversationId.toString("hex"), messageId: sent.message.id.toString("hex"), sequence: "1" };
+        assert.deepEqual(await store.open({ ...actor(fixture, role), notificationId }), expected);
+        await assert.rejects(store.open({ ...actor(outsider, role), notificationId }), errorCode("NOTIFICATIONS_NOT_FOUND"));
+        await assert.rejects(store.open({ ...actor(fixture, role), notificationId: id() }), errorCode("NOTIFICATIONS_NOT_FOUND"));
+        const renewed = await session(fixture[role]);
+        await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [date(now), fixture[role].sessionId]);
+        assert.deepEqual(await store.open({ role, tokenHash: renewed.tokenHash, now, notificationId }), expected);
+        await assert.rejects(store.open({ ...actor(fixture, role), notificationId }), errorCode("CHAT_UNAUTHORIZED"));
+        await connection.query("UPDATE messages SET deleted_at = ?, body_encrypted = NULL WHERE id = ?", [date(now), sent.message.id]);
+        assert.deepEqual(await store.open({ role, tokenHash: renewed.tokenHash, now, notificationId }), expected, "a deleted message opens its authorized tombstone without content");
+      }
+    });
+
     await t.test("one job per recipient device and no new job on duplicate text or photo send", async () => {
       const fixture = await pair(); await subscribe(fixture); await subscribe(fixture); await subscribe(fixture, "admin");
       const message = payload(); await send(fixture, "admin", message);
@@ -141,6 +160,7 @@ test("real MariaDB private notification transactions (synthetic disposable datab
 
     await t.test("normal client session expiry does not stop push or renew the session", async () => {
       const fixture = await pair(); await subscribe(fixture); await send(fixture);
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [date(now + 8 * 3600000), fixture.client.sessionId]);
       const job = await claim(now + 9 * 3600000);
       assert.ok(job);
       assert.ok(await store.prepareDelivery({ ...job, now: now + 9 * 3600000 }));

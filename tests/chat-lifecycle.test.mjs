@@ -6,6 +6,7 @@ import { webcrypto } from "node:crypto";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
+const notificationLinkSource = await readFile(new URL("../public/notification-link.js", import.meta.url), "utf8");
 const modelSource = await readFile(new URL("../public/chat-model.js", import.meta.url), "utf8");
 const modelExports = [...modelSource.matchAll(/export function ([a-zA-Z0-9_]+)\(/g)].map((match) => match[1]);
 const html = await readFile(new URL("../public/chat.html", import.meta.url), "utf8");
@@ -64,7 +65,7 @@ class Element {
   showModal() { this.open = true; }
   close() { this.open = false; for (const handler of this.events.get("close") ?? []) handler({}); }
 }
-function harness({ currentSession = session(), visible = true, intercept = null, prepare = async (file) => file } = {}) {
+function harness({ currentSession = session(), visible = true, intercept = null, prepare = async (file) => file, notification = null } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const body = new Element("body", nodes);
@@ -84,8 +85,11 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     return state.conversations.get(owner);
   };
   const storedMessages = (conv) => { if (!state.messages.has(conv.id)) state.messages.set(conv.id, [{ id: id(500 + Number.parseInt(conv.clientId, 16)), sequence: "1", sender: "peer", body: `Private ${conv.clientId}`, createdAt: now, deletedAt: null, clientMessageId: null }]); return state.messages.get(conv.id); };
+  const worker = {}, workerEvents = new Map(), acknowledgements = [];
+  const location = { origin: "https://example.invalid", pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", hash: notification ? `#notification=${notification}` : "", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } };
+  const history = { replaceState(_state, _title, path) { const next = new URL(path, location.origin); location.pathname = next.pathname; location.hash = next.hash; } };
   const context = vm.createContext({ __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
-    location: { pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } },
+    location, history, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
     setTimeout: (handler, delay) => { const value = ++timerId; timers.set(value, { handler, at: time + delay }); return value; }, clearTimeout: (value) => timers.delete(value),
@@ -117,11 +121,14 @@ function harness({ currentSession = session(), visible = true, intercept = null,
       throw new Error(`Unexpected request ${path}`);
     } });
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
+  vm.runInContext(notificationLinkSource, context, { filename: "public/notification-link.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
   const executable = source.replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
-    "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration});";
+    "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
+    async notification(reference, role = currentSession?.user.role ?? "client") { workerEvents.get("message")({ origin: location.origin, source: worker,
+      data: { type: "jessie-open-notification", role, notification: reference }, ports: [{ postMessage(value) { acknowledgements.push(value); } }] }); await flush(); return acknowledgements.at(-1); },
     async event(name, data = {}) { const handler = documentEvents.get(name) ?? windowEvents.get(name); assert.equal(typeof handler, "function", name); handler(data); await flush(); },
     async hide() { document.visibilityState = "hidden"; await this.event("visibilitychange"); },
     async show() { document.visibilityState = "visible"; await this.event("visibilitychange"); },
@@ -136,6 +143,62 @@ function harness({ currentSession = session(), visible = true, intercept = null,
 }
 const contents = (element) => [element.textContent, element.value, ...element.children.map(contents)].join(" ");
 const posts = (f) => f.calls.filter((call) => call.options.method === "POST" && call.path.includes("/messages"));
+
+test("an authenticated notification opens its exact message and clears only its navigation reference", async () => {
+  const reference = id(910), f = harness({ notification: reference, intercept: (path) => path === "/api/notifications/client/open"
+    ? response(200, { conversationId: id(101), messageId: id(501), sequence: "1" }) : undefined });
+  await flush(); assert.equal(f.inspect().selected, id(101));
+  assert.equal(f.inspect().pendingNotification, null); assert.equal(f.context.location.hash, "");
+  assert.equal(f.document.activeElement.classList.contains("notification-target"), true);
+  assert.equal(f.redirects.length, 0);
+  assert.equal(f.calls.find((call) => call.path.endsWith("/open")).options.headers["X-CSRF-Token"], "A".repeat(43));
+});
+
+test("notification opening preserves its destination through a genuinely missing session", async () => {
+  const reference = id(911), f = harness({ currentSession: null, notification: reference }); await flush();
+  assert.deepEqual(f.redirects, [`/access#notification=${reference}`]);
+  assert.equal(f.element("workspace").hidden, true);
+  assert.equal(f.calls.some((call) => call.path.endsWith("/open")), false);
+});
+
+test("an existing chat acknowledges a notification without reloading or losing its draft, including after backgrounding", async () => {
+  const reference = id(912), f = harness({ intercept: (path) => path === "/api/notifications/client/open"
+    ? response(200, { conversationId: id(101), messageId: id(501), sequence: "1" }) : undefined });
+  await flush(); f.element("message-body").value = "Unsent private draft";
+  await f.hide(); assert.equal((await f.notification(reference)).accepted, true);
+  assert.equal(f.calls.some((call) => call.path.endsWith("/open")), false);
+  await f.show();
+  assert.equal(f.element("message-body").value, "Unsent private draft");
+  assert.equal(f.inspect().pendingNotification, null); assert.equal(f.redirects.length, 0);
+});
+
+test("an administrator notification loads a conversation outside its first inbox page and anchors an old bigint message without a history gap", async () => {
+  const reference = id(913), targetSequence = "9007199254740993", conversationId = id(777), messageId = id(778);
+  const conversation = { id: conversationId, peerName: "Target peer", clientId: id(779), createdAt: now, closedAt: null, lastActivityAt: now,
+    latestSequence: "9007199254741093", latestEventSequence: "1", lastReadSequence: "0", peerReadSequence: "0", unreadCount: 1, canSend: true };
+  const item = { id: messageId, sequence: targetSequence, sender: "peer", body: "The precise notification message", createdAt: now, deletedAt: null };
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), notification: reference, intercept: (path) => {
+    if (path === "/api/notifications/admin/open") return response(200, { conversationId, messageId, sequence: targetSequence });
+    if (path.includes(`/conversations/${conversationId}/messages?`)) return response(200, { conversation, messages: [item], eventCursor: "1", hasMoreBefore: true, nextBefore: targetSequence, hasMoreAfter: true, nextAfter: targetSequence });
+    if (path.includes(`/conversations/${conversationId}/events?`)) return response(200, { conversation, events: [{ sequence: "2", kind: "message", message: { ...item, id: id(780), sequence: "9007199254741093", body: "Later message beyond a gap" } }], nextCursor: "2", hasMore: false });
+    if (path.endsWith(`/conversations/${conversationId}/read`)) return response(200, { lastReadSequence: targetSequence });
+  } });
+  await flush();
+  assert.equal(f.inspect().selected, conversationId);
+  assert.equal(f.calls.some((call) => call.path.endsWith("&after=9007199254740992")), true, "no Number rounding and no scan through intervening pages");
+  assert.equal(f.document.activeElement.dataset.sequence, targetSequence);
+  assert.equal(f.element("newer-messages").hidden, false);
+  assert.match(f.element("new-messages").textContent, /récents/);
+  await f.advance(3000);
+  assert.doesNotMatch(contents(f.element("messages")), /beyond a gap/);
+  assert.equal(f.inspect().states.get(conversationId).messages.size, 1);
+});
+
+test("an unavailable notification leaves the signed-in client in their conversation", async () => {
+  const f = harness({ notification: id(914), intercept: (path) => path.endsWith("/open") ? response(404, { error: "not_found" }) : undefined });
+  await flush(); assert.equal(f.inspect().ready, true); assert.equal(f.inspect().pendingNotification, null);
+  assert.match(f.element("chat-status").textContent, /notification n’est plus disponible/); assert.equal(f.redirects.length, 0);
+});
 function assertOwner(f, value, csrf = "A".repeat(43)) {
   assert.equal(f.inspect().sessionOwner.id, id(value)); assert.equal(f.inspect().sessionOwner.csrf, csrf);
   assert.equal(f.inspect().ready, true); assert.equal(f.element("workspace").hidden, false);

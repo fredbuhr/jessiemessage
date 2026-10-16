@@ -27,7 +27,8 @@ async function fixture(t, overrides = {}) {
     capabilities: record("capabilities", { enabled: true, vapidPublicKey: publicKey, subscriptions: [row()], secret: "private-secret" }),
     status: record("status", { enabled: true, subscriptionId, endpoint }),
     subscribe: record("subscribe", { enabled: true, subscriptionId, endpoint }),
-    disable: record("disable", { enabled: false, endpoint }), ...overrides,
+    disable: record("disable", { enabled: false, endpoint }),
+    open: record("open", { conversationId: "dd".repeat(16), messageId: "ee".repeat(16), sequence: "9007199254740993" }), ...overrides,
   };
   const handler = createNotificationsHttpHandler(service, { origin });
   const server = createServer(async (request, response) => { if (!await handler(request, response)) { response.writeHead(404); response.end(); } });
@@ -36,6 +37,22 @@ async function fixture(t, overrides = {}) {
   return { service, handler, calls, server, base: `http://127.0.0.1:${server.address().port}` };
 }
 const post = (base, kind, body, role = "admin", extra = {}) => fetch(`${base}${path(kind, role)}`, { method: "POST", headers: headers(role, extra), body: typeof body === "string" ? body : JSON.stringify(body) });
+
+test("notification opening requires the current role cookie, CSRF and a bounded opaque reference", async (t) => {
+  const f = await fixture(t), notification = "ff".repeat(16);
+  for (const role of ["admin", "client"]) {
+    const result = await post(f.base, "open", { notification }, role);
+    assert.equal(result.status, 200); privateHeaders(result);
+    assert.deepEqual(await result.json(), { conversationId: "dd".repeat(16), messageId: "ee".repeat(16), sequence: "9007199254740993" });
+    assert.deepEqual(f.calls.at(-1), ["open", role, tokens[role], { notification }]);
+  }
+  const before = f.calls.filter(([method]) => method === "open").length;
+  for (const [body, extra, status] of [[{ notification }, { Cookie: "" }, 401], [{ notification }, { "X-CSRF-Token": "wrong" }, 403],
+    [{ notification, next: "https://evil.invalid" }, {}, 400], [{ notification: "bad" }, {}, 400], [{ notification }, { Origin: "https://evil.invalid" }, 403]]) {
+    const result = await post(f.base, "open", body, "client", extra); assert.equal(result.status, status);
+  }
+  assert.equal(f.calls.filter(([method]) => method === "open").length, before);
+});
 function privateHeaders(response) {
   for (const [name, value] of Object.entries(AUTH_HEADERS)) assert.equal(response.headers.get(name), value, name);
   assert.equal(response.headers.get("access-control-allow-origin"), null);
@@ -43,7 +60,7 @@ function privateHeaders(response) {
 function privateFields(value) { assert.doesNotMatch(JSON.stringify(value), /private-|endpoint|ciphertext|p256dh|ownerId|secret/); }
 
 test("notifications HTTP requires a full service and canonical HTTPS origin", () => {
-  const service = Object.fromEntries(["actor", "capabilities", "status", "subscribe", "disable"].map((method) => [method, () => {}]));
+  const service = Object.fromEntries(["actor", "capabilities", "status", "subscribe", "disable", "open"].map((method) => [method, () => {}]));
   for (const candidate of ["http://example.invalid", `${origin}/`, `${origin}/app`, "https://user:pass@example.invalid", `${origin}?x=1`]) assert.throws(() => createNotificationsHttpHandler(service, { origin: candidate }));
   assert.throws(() => createNotificationsHttpHandler({}, { origin }));
 });

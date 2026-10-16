@@ -437,7 +437,8 @@ test("public access page preserves the approved identity and distinguishes decla
   assert.doesNotMatch(html, /ageAssured|onclick=|data:image/);
   const script = await (await fetch(`${base}/access.js`)).text();
   assert.doesNotMatch(script, /localStorage|sessionStorage|innerHTML/);
-  assert.match(script, /history\.replaceState\(null, "", "\/access"\)/);
+  assert.match(script, /history\.replaceState\(null, "", notificationReference \?/);
+  assert.match(script, /JessieNotificationLink\?\.read\(\)/);
   assert.match(script, /credentials: "same-origin"/); assert.match(script, /textContent/); assert.match(script, /ticket !== generation/);
   for (const path of ["/access.html", "/server/access/http.mjs", "/api/access/unknown", "/api/admin/clients/bad/approve"]) assert.equal((await fetch(`${base}${path}`)).status, 404);
 });

@@ -1,4 +1,4 @@
-import { createSessionClock, sessionIsValid, adminSessionExpiry, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
+import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionExpiry, CLIENT_SESSION_SECONDS, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { manuallyAdmittedClient, invitationConsumptionProjection } from "../access/admission.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
@@ -217,12 +217,10 @@ export function createChatStore(pool, { clock, enqueueNotification } = {}) {
       if (version(row.mfa_version) !== version(proof.version) || verified < createdAt || verified < enrolled || verified > lastSeenAt) fail("CHAT_UNAUTHORIZED");
     } else if (version(row.credential_version) !== version(proof.credential_version)) fail("CHAT_UNAUTHORIZED");
     let expiresAt = timestamp(row.expires_at);
-    if (now - lastSeenAt >= SESSION_TOUCH_MILLISECONDS) {
+    if (now - lastSeenAt >= SESSION_TOUCH_MILLISECONDS || role === "client" && expiresAt - now < CLIENT_SESSION_SECONDS * 1000 - SESSION_TOUCH_MILLISECONDS) {
       await connection.query(`UPDATE ${table} SET last_seen_at = ? WHERE session_id = ?`, [sqlDate(now), row.id]);
-      if (role === "admin") {
-        expiresAt = Math.max(expiresAt, adminSessionExpiry(now));
-        await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(expiresAt), row.id]);
-      }
+      expiresAt = Math.max(expiresAt, role === "admin" ? adminSessionExpiry(now) : clientSessionExpiry(now));
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(expiresAt), row.id]);
     }
     return { ...row, expires_at: new Date(expiresAt), now };
   }

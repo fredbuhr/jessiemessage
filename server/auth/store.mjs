@@ -202,7 +202,7 @@ export function createAuthStore(pool, { clock } = {}) {
 
     async getSession(tokenHash, { now, idleSeconds }) {
       bytes(tokenHash, 32); instant(now);
-      if (!Number.isSafeInteger(idleSeconds) || idleSeconds < 1 || idleSeconds > 86400) invalid();
+      if (!Number.isSafeInteger(idleSeconds) || idleSeconds < 0 || idleSeconds > 86400) invalid();
       return withConnection(async (connection) => {
         const record = await lockedAdminSession(connection, tokenHash, now);
         if (!record) return null;

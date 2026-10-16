@@ -66,7 +66,10 @@ export function createNotificationWorker({ store, transport, config, clock = Dat
         if (!Number.isFinite(ttl) || ttl <= 0) result = { status: "failed" };
         else {
           deliveryStarted = true;
-          const response = await transport.send(delivery.subscription, payloads[delivery.locale === "en" ? "en" : "fr"],
+          const generic = payloads[delivery.locale === "en" ? "en" : "fr"];
+          const payload = ["admin", "client"].includes(delivery.role)
+            ? JSON.stringify({ ...JSON.parse(generic), role: delivery.role, notification: job.jobId.toString("hex") }) : generic;
+          const response = await transport.send(delivery.subscription, payload,
             { signal: controller.signal, ttl, topic: delivery.topic ?? "JessieMessage" });
           if (!Number.isInteger(response?.statusCode) || response.statusCode < 100 || response.statusCode > 599) throw new NotificationWorkerError();
           const { statusCode } = response;

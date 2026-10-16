@@ -21,3 +21,5 @@
 @media(max-width:780px){.workspace.is-admin:not(.selected) .conversation-skip{display:none}}
 
 .connection-actions{padding:0 28px}.connection-actions:has(>button[hidden]){display:none}.connection-actions .button{margin-bottom:12px}.confirm-dialog{width:min(420px,calc(100% - 28px));padding:24px;border:1px solid #76556b;border-radius:20px;background:var(--surface);color:var(--ink)}.confirm-dialog::backdrop{background:#09060dcc}.confirm-dialog h2{font-size:19px;margin:0 0 12px}.confirm-dialog p{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 22px}.confirm-actions{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+
+.message.notification-target{outline:2px solid var(--champagne);outline-offset:4px;scroll-margin-block:24px}

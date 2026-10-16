@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/brand/brand.css" />
     <link rel="stylesheet" href="/i18n.css" />
     <link rel="stylesheet" href="/notifications.css" />
+    <script defer src="/notification-link.js"></script>
     <title data-jm-i18n="JessieMessage — Ton accès privé">JessieMessage — Ton accès privé</title>
     <script src="/i18n.js" defer></script>
     <script src="/i18n-access.js" defer></script>
@@ -40,6 +41,7 @@
             <div class="field"><label for="login-email" data-jm-i18n="Adresse e-mail">Adresse e-mail</label><input id="login-email" type="email" autocomplete="username" maxlength="254" required /></div>
             <div class="field"><label for="login-password" data-jm-i18n="Mot de passe">Mot de passe</label><input id="login-password" type="password" autocomplete="current-password" maxlength="128" required /></div>
             <button class="button button-primary" type="submit" data-jm-i18n="Se connecter">Se connecter</button>
+            <p class="field-help" data-jm-i18n="Ta connexion reste ouverte sur cet appareil. Tu peux la fermer dans « Mon accès ».">Ta connexion reste ouverte sur cet appareil. Tu peux la fermer dans « Mon accès ».</p>
             <p class="field-help"><a id="client-recovery-link" href="/recover" hidden data-jm-i18n="Mot de passe oublié ?">Mot de passe oublié ?</a></p>
           </form>
           <form id="registration-form" hidden>

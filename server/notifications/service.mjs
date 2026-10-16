@@ -46,7 +46,7 @@ function publicKey(value) {
 export async function createNotificationsService({ store, config, chatService, authStore, clock = Date.now }) {
   if (config?.enabled !== true || !Buffer.isBuffer(config.key) || config.key.length !== 32 || !publicKey(config.vapid?.publicKey)
     || typeof clock !== "function" || typeof chatService?.actor !== "function" || typeof authStore?.consumeRateLimit !== "function"
-    || ["status", "subscribe", "disable"].some((method) => typeof store?.[method] !== "function")) fail("NOTIFICATIONS_CONFIG");
+    || ["status", "subscribe", "disable", "open"].some((method) => typeof store?.[method] !== "function")) fail("NOTIFICATIONS_CONFIG");
   const key = Buffer.from(config.key), vapidPublicKey = config.vapid.publicKey;
   const nowValue = () => { const now = clock(); if (!instant(now)) fail("NOTIFICATIONS_UNAVAILABLE"); return now; };
   async function guarded(operation) {
@@ -86,6 +86,16 @@ export async function createNotificationsService({ store, config, chatService, a
   }
   return Object.freeze({
     actor: (role, raw) => guarded(() => actor(role, raw)),
+    open: (role, raw, input = {}) => guarded(async () => {
+      shape(input, ["notification"]);
+      if (!id(input.notification)) fail("NOTIFICATIONS_INPUT");
+      const { session, request } = await context(role, raw);
+      await limit(session, "read", nowValue());
+      const result = await store.open({ ...request, notificationId: Buffer.from(input.notification, "hex"), now: nowValue() });
+      if (!result || !id(result.conversationId) || !id(result.messageId) || typeof result.sequence !== "string"
+        || !/^[1-9][0-9]{0,19}$/.test(result.sequence) || BigInt(result.sequence) > 18446744073709551615n) fail("NOTIFICATIONS_UNAVAILABLE");
+      return { conversationId: result.conversationId, messageId: result.messageId, sequence: result.sequence };
+    }),
     capabilities: (role, raw) => guarded(async () => {
       const { session, request } = await context(role, raw);
       await limit(session, "read", nowValue());

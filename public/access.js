@@ -45,12 +45,13 @@ element("client-recovery-link").parentElement.append(recoveryRetry);
 
 // Tokens travel in URL fragments, never query strings, storage or page markup.
 const fragment = new URLSearchParams(location.hash.slice(1));
+const notificationReference = globalThis.JessieNotificationLink?.read() ?? null;
 const entries = [...fragment.entries()];
 if (entries.length === 1 && /^[A-Za-z0-9_-]{43}$/.test(entries[0][1])) {
   if (entries[0][0] === "invitation") invitationToken = entries[0][1];
   if (entries[0][0] === "verification") verificationToken = entries[0][1];
 }
-history.replaceState(null, "", "/access");
+history.replaceState(null, "", notificationReference ? `/access#notification=${notificationReference}` : "/access");
 
 function notice(message, error = false) { accessI18n.text(status, message); status.classList.toggle("is-error", error); }
 function clearBroadcastPreference() { broadcastPreferenceEpoch += 1; broadcastPreference?.clear(); broadcastPreference = null; element("broadcast-preference-host")?.remove(); }
@@ -174,6 +175,9 @@ async function loadChatAccess() {
     const capability = await request("/api/chat/client/capabilities");
     if (ticket !== generation) return;
     if (capability.enabled !== true) { element("client-chat-note").hidden = false; accessI18n.text(element("client-chat-note"), "La conversation sera bientôt disponible. Tu peux revenir ici pour la retrouver."); return; }
+    if (notificationReference && visible()) {
+      location.replace(globalThis.JessieNotificationLink.destination("client", notificationReference)); return;
+    }
     element("client-chat-link").hidden = false;
     element("client-chat-note").hidden = true;
     accessI18n.rawText(element("client-chat-note"), "");

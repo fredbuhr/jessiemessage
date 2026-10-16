@@ -34,6 +34,9 @@ let crm = null;
 let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
 let broadcastPreference = null;
 let notificationsPanel = null;
+let pendingNotification = globalThis.JessieNotificationLink?.read() ?? null;
+let notificationTask = null;
+let newerBusy = false;
 // The live region contains only a cumulative count for this visible selection.
 // No message body, sender name, caption or persistent announcement log is kept.
 let messageAnnouncement = null;
@@ -139,7 +142,7 @@ function clearChat() {
   ui.text(el("conversation-status"), "Choisis une conversation.");
   el("message-body").value = ""; el("message-body").disabled = true; el("send").disabled = true;
   el("photo-tools").hidden = true; el("open-gallery").hidden = true; el("image-draft").hidden = true; el("image-file").value = "";
-  for (const id of ["older-messages", "new-messages", "empty-message", "pending-controls"]) el(id).hidden = true;
+  for (const id of ["older-messages", "newer-messages", "new-messages", "empty-message", "pending-controls"]) if (el(id)) el(id).hidden = true;
   el("workspace").classList.remove("selected"); notice("");
 }
 function clearNotificationSettings() {
@@ -160,7 +163,7 @@ function clearPrivate() {
   cancelConfirmation(); stopReconnect(); resumeTask = null; retryConnection(false);
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
   sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
-  olderBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
+  olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
   mediaEnabled = false;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   broadcastPreference?.clear(); broadcastPreference = null; document.getElementById("broadcast-preference-host")?.remove();
@@ -207,6 +210,7 @@ async function resumeConnection({ reset = false } = {}) {
       void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
       el("workspace").hidden = false; notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
+      await openNotification();
     } catch (error) {
       if (error.stale || !fresh(ticket, true)) return;
       if (error.status === 401) { signOut(); return; }
@@ -219,7 +223,10 @@ async function resumeConnection({ reset = false } = {}) {
 function hasUnsavedWork() {
   return !loggingOut && [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft);
 }
-function signOut() { clearPrivate(); location.replace(role === "admin" ? "/admin/login" : "/access"); }
+function signOut() {
+  clearPrivate();
+  location.replace(pendingNotification ? globalThis.JessieNotificationLink.destination(role, pendingNotification, true) : role === "admin" ? "/admin/login" : "/access");
+}
 function snapshot(state = null) { return { generation, visibilityGeneration, selectionEpoch, id: state?.id, epoch: state?.epoch }; }
 function fresh(ticket, account = false) { return ticket.generation === generation && ticket.visibilityGeneration === visibilityGeneration && (account || (ticket.selectionEpoch === selectionEpoch && (!ticket.id || belongsTo(currentState(), ticket.id, ticket.epoch)))); }
 async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null, verifyOwner = true } = {}) {
@@ -754,6 +761,7 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
       row?.article.remove();
       row = createMessageRow(state, message, contentKey); messageRows.set(message.sequence, row);
     }
+    row.article.classList.toggle("notification-target", state.notificationSequence === message.sequence);
     ui.text(row.time, "{date}", { date: dateParameter(message.createdAt, true) });
     if (message.deletedAt != null) ui.text(row.body, "Message supprimé");
     if (row.remove) { ui.text(row.remove, "Supprimer"); ui.attr(row.remove, "aria-label", "Supprimer mon message du {date}", { date: dateParameter(message.createdAt, true) }); }
@@ -781,16 +789,21 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
     else scroll.scrollTop = oldTop;
   }
   renderMeta(state); scheduleRead();
+  if (el("newer-messages")) { el("newer-messages").hidden = !state.hasMoreAfter; el("newer-messages").disabled = newerBusy; }
+  if (state.hasMoreAfter) { el("new-messages").hidden = false; ui.text(el("new-messages"), "Messages récents ↓"); }
+  else ui.text(el("new-messages"), "Nouveaux messages ↓");
   if (focusedRow && !focused.isConnected && focusWasLost(focused)) focusMessage(focusedRow.article.dataset.sequence);
 }
-async function selectConversation(id, { focus = false } = {}) {
-  if (id === selected) { if (focus) focusVisible(el("message-scroll")); return; }
+async function selectConversation(id, { focus = false, target = null } = {}) {
+  if (focus && !target && pendingNotification) { pendingNotification = null; history.replaceState(null, "", location.pathname); }
+  if (id === selected && (!target || currentState()?.messages.get(target.sequence)?.id === target.messageId)) { if (focus) focusVisible(el("message-scroll")); return; }
   const previous = currentState(); if (previous) { previous.draft = el("message-body").value; if (previous.pending?.status === "sending") retrySend(previous); }
-  selectionEpoch += 1; stopPolling(); abortRequests(true); inboxLoading = false; olderBusy = false; sendBusy = false; readBusy = false; selectionLoading = true;
+  selectionEpoch += 1; stopPolling(); abortRequests(true); inboxLoading = false; olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = true;
   selected = id;
   crm?.selectConversation(id);
   const oldState = states.get(id);
   const state = oldState ? { ...oldState, epoch: selectionEpoch } : makeConversationState(id, selectionEpoch);
+  if (target) { state.messages = new Map(); state.conversation = null; state.notificationSequence = target.sequence; }
   if (state.pending?.status === "sending") retrySend(state);
   states.set(id, state);
   clearChat(); el("workspace").classList.add("selected"); el("message-body").value = state.draft;
@@ -801,14 +814,62 @@ async function selectConversation(id, { focus = false } = {}) {
   try {
     if (state.messages.size || state.conversation) { renderMessages(state, { initial: true }); moreHistory = await fetchEvents(state); }
     else {
-      const result = await request(`${conversationPath(state)}/messages?limit=50`, { state });
+      const anchor = target ? `&after=${(BigInt(target.sequence) - 1n).toString()}` : "";
+      const result = await request(`${conversationPath(state)}/messages?limit=50${anchor}`, { state });
       mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
       state.eventCursor = sequence(result.eventCursor); state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore;
+      state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
+      inbox.set(id, result.conversation);
       renderMessages(state, { initial: true });
     }
     if (!moreHistory) armMessageAnnouncement(state); schedulePolling(moreHistory ? 300 : retryDelay);
   } catch (error) { await handleError(error, state); }
   finally { if (belongsTo(currentState(), state.id, state.epoch)) { selectionLoading = false; schedulePolling(moreHistory ? 300 : retryDelay); } }
+}
+async function loadNewer({ latest = false } = {}) {
+  const state = currentState(); if (!state || newerBusy || !latest && (!state.hasMoreAfter || !state.nextAfter)) return;
+  const ticket = snapshot(state); newerBusy = true;
+  try {
+    const result = await request(`${conversationPath(state)}/messages?limit=50${latest ? "" : `&after=${state.nextAfter}`}`, { state });
+    if (latest) { state.messages = new Map(); state.eventCursor = sequence(result.eventCursor); state.notificationSequence = null; }
+    mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
+    if (latest) { state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore; }
+    state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
+    renderMessages(state, { initial: latest });
+    return true;
+  } catch (error) { await handleError(error, state); }
+  finally { if (fresh(ticket)) { newerBusy = false; if (el("newer-messages")) el("newer-messages").disabled = false; } }
+}
+function focusNotification(target) {
+  const state = currentState(), message = state?.messages.get(target.sequence);
+  if (!state || message?.id !== target.messageId) return false;
+  state.notificationSequence = target.sequence; renderMessages(state);
+  const article = messageRows.get(target.sequence)?.article;
+  if (!article || !visible()) return false;
+  article.setAttribute("tabindex", "-1"); article.scrollIntoView?.({ block: "center" }); focusVisible(article);
+  if (message.deletedAt != null) notice("Ce message a été supprimé.");
+  return true;
+}
+async function openNotification() {
+  if (!ready || !visible() || !pendingNotification || notificationTask) return;
+  const reference = pendingNotification, ticket = snapshot(), task = {}; notificationTask = task;
+  try {
+    const target = await request(`/api/notifications/${role}/open`, { account: true, mutation: true, body: { notification: reference } });
+    if (!fresh(ticket, true) || pendingNotification !== reference || !visible()) return;
+    if (!target || !/^[a-f0-9]{32}$/.test(target.conversationId) || !/^[a-f0-9]{32}$/.test(target.messageId) || sequence(target.sequence) === "0") throw new Error("invalid_notification_target");
+    await selectConversation(target.conversationId, { focus: true, target });
+    if (!fresh(ticket, true) || pendingNotification !== reference || !visible()) return;
+    if (!focusNotification(target)) throw new Error("notification_target_missing");
+    pendingNotification = null; history.replaceState(null, "", location.pathname);
+  } catch (error) {
+    if (error.stale || !fresh(ticket, true) || pendingNotification !== reference) return;
+    if (error.status === 401 || error.status === 403) { signOut(); return; }
+    if (error.status === 404) { pendingNotification = null; history.replaceState(null, "", location.pathname); notice("Cette notification n’est plus disponible. Retrouve les échanges dans ta conversation."); }
+    else { notice("Le message n’a pas pu être ouvert. Réessaie dès que la connexion revient.", true); retryConnection(); }
+  } finally {
+    if (notificationTask === task) notificationTask = null;
+    if (pendingNotification && pendingNotification !== reference && ready && visible()) void openNotification();
+  }
 }
 async function loadOlder() {
   const state = currentState(); if (!state || olderBusy || !state.hasMoreBefore || !state.nextBefore) return;
@@ -836,7 +897,8 @@ async function fetchEvents(state) {
     const previousCursor = state.eventCursor;
     const acceptedEvents = result.events.filter((event) => compareSequence(event.sequence, previousCursor) > 0);
     const candidates = incomingAnnouncements(state, acceptedEvents, previousCursor);
-    mergeConversation(state, result.conversation); mergeEvents(state, result.events, result.nextCursor);
+    const windowEvents = state.hasMoreAfter ? result.events.filter((event) => state.messages.has(event.message.sequence)) : result.events;
+    mergeConversation(state, result.conversation); mergeEvents(state, windowEvents, result.nextCursor);
     pruneDeletedPhotos(state, result.events.filter((event) => event.kind === "delete").map((event) => event.message));
     if (pending && !state.pending) { state.draft = ""; el("message-body").value = ""; notice("Message enregistré."); }
     renderMessages(state); announceIncoming(state, acceptedEvents, candidates);
@@ -869,6 +931,7 @@ async function poll() {
 function newClientId() { return [...crypto.getRandomValues(new Uint8Array(16))].map((byte) => byte.toString(16).padStart(2, "0")).join(""); }
 async function sendMessage(retry = false) {
   const state = currentState(); if (!state || sendBusy || !state.conversation?.canSend || (!retry && state.pending)) return;
+  if (state.hasMoreAfter && (!await loadNewer({ latest: true }) || state !== currentState())) return;
   if ((retry && state.pending?.kind === "image") || (!retry && state.imageDraft)) { await sendImage(retry); return; }
   const ticket = snapshot(state);
   const body = retry ? state.pending?.body : el("message-body").value;
@@ -992,13 +1055,15 @@ el("media-dialog").addEventListener("close", () => { if (panel) closeMedia(); })
 el("lightbox").addEventListener("close", () => { if (lightboxItem) closeLightbox(); });
 el("more-media").addEventListener("click", () => { void loadMediaPage(true); });
 el("older-messages").addEventListener("click", () => { void loadOlder(); });
+el("newer-messages")?.addEventListener("click", () => { void loadNewer(); });
 el("more-conversations").addEventListener("click", () => { void loadInbox(true).catch((error) => handleError(error)); });
 el("new-messages").addEventListener("click", () => {
+  if (currentState()?.hasMoreAfter) { void loadNewer({ latest: true }); return; }
   const restoreFocus = document.activeElement === el("new-messages");
   el("message-scroll").scrollTop = el("message-scroll").scrollHeight; el("new-messages").hidden = true;
   if (restoreFocus) focusVisible(el("message-scroll")); scheduleRead();
 });
-el("message-scroll").addEventListener("scroll", () => { if (nearBottom(el("message-scroll"))) el("new-messages").hidden = true; scheduleRead(); }, { passive: true });
+el("message-scroll").addEventListener("scroll", () => { if (nearBottom(el("message-scroll")) && !currentState()?.hasMoreAfter) el("new-messages").hidden = true; scheduleRead(); }, { passive: true });
 el("back-to-inbox").addEventListener("click", () => {
   const state = currentState(); const returnId = state?.id;
   if (state) { state.draft = el("message-body").value; if (state.pending?.status === "sending") retrySend(state); }
@@ -1022,12 +1087,21 @@ el("accept-delete").addEventListener("click", () => {
 });
 window.addEventListener("beforeunload", (event) => { if (hasUnsavedWork()) { event.preventDefault(); event.returnValue = ""; } });
 window.addEventListener("online", () => { void resumeConnection({ reset: true }); });
+globalThis.navigator?.serviceWorker?.addEventListener("message", (event) => {
+  const data = event.data, link = globalThis.JessieNotificationLink;
+  if (event.source !== navigator.serviceWorker.controller || event.origin !== location.origin
+    || data?.type !== "jessie-open-notification" || data.role !== role || !link?.valid(data.notification)) return;
+  pendingNotification = data.notification;
+  history.replaceState(null, "", link.destination(role, pendingNotification));
+  event.ports?.[0]?.postMessage({ accepted: true });
+  if (ready && visible()) void openNotification();
+});
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
     clearNotificationSettings();
     cancelConfirmation(); stopReconnect(); resumeTask = null; clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
-    sendBusy = false; olderBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
+    sendBusy = false; olderBusy = false; newerBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
   } else if (!loggingOut) void resumeConnection({ reset: true });
 });
 window.addEventListener("pagehide", clearPrivate);
@@ -1071,6 +1145,7 @@ async function start({ session = null } = {}) {
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false; notice("", false, "session-status");
       mountNotificationSettings(); void refreshBroadcastAccess(); scheduleRead(); schedulePolling();
+      await openNotification();
     } catch (error) {
       if (error.stale || !fresh(task.ticket, true)) return;
       if (error.status === 401 || error.status === 403) { signOut(); return; }

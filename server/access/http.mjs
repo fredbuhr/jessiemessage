@@ -215,7 +215,7 @@ export function createAccessHandler(service, { origin }) {
         const session = token ? await service.session(token) : null;
         if (!session) { reply(response, method, 401, { error: "authentication_required" }, { "Set-Cookie": clearCookie(CLIENT_COOKIE) }); return true; }
         const data = safeClientSession(session);
-        if (pathname === "/api/access/session") reply(response, method, 200, data);
+        if (pathname === "/api/access/session") reply(response, method, 200, data, { "Set-Cookie": sessionCookie(token, data.expiresAt, CLIENT_COOKIE) });
         else {
           if (!sameText(request.headers["x-csrf-token"], data.csrf)) throw httpError(403, "request_rejected");
           shape(await readJson(request), []);

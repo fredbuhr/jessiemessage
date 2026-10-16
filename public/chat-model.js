@@ -11,7 +11,7 @@ export function compareSequence(left, right) {
 }
 export function maxSequence(left, right) { return compareSequence(left, right) < 0 ? right : left; }
 export function makeConversationState(id, epoch = 0) {
-  return { id, epoch, messages: new Map(), conversation: null, eventCursor: "0", pending: null, draft: "", imageDraft: null, hasMoreBefore: false, nextBefore: null };
+  return { id, epoch, messages: new Map(), conversation: null, eventCursor: "0", pending: null, draft: "", imageDraft: null, hasMoreBefore: false, nextBefore: null, hasMoreAfter: false, nextAfter: null, notificationSequence: null };
 }
 export function belongsTo(state, id, epoch) { return Boolean(state && state.id === id && state.epoch === epoch); }
 export function orderedMessages(state) { return [...state.messages.values()].sort((a, b) => compareSequence(a.sequence, b.sequence)); }

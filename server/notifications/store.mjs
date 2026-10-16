@@ -234,6 +234,24 @@ export function createNotificationsStore({ pool, chatStore, key, clock } = {}) {
         return true;
       });
     },
+    open(request) {
+      bytes(request.notificationId);
+      return withActor(request, async (connection, context) => {
+        const member = request.role === "admin" ? "admin_id" : "client_id";
+        // The reference grants nothing: current session, recipient ownership,
+        // role and conversation membership are independently required.
+        const row = (await connection.query(`SELECT m.id AS message_id, m.conversation_id, m.sequence_no
+          FROM push_outbox o JOIN push_subscriptions p ON p.id = o.subscription_id
+          JOIN messages m ON m.id = o.message_id JOIN conversations c ON c.id = m.conversation_id
+          WHERE o.id = ? AND p.user_id = ? AND p.role = ? AND c.${member} = ?
+          AND m.created_at <= ? AND c.created_at <= ?`,
+        [request.notificationId, context.actor.id, request.role, context.actor.id, sqlDate(context.now), sqlDate(context.now)]))[0];
+        if (!row) fail("NOTIFICATIONS_NOT_FOUND");
+        const sequence = String(row.sequence_no);
+        if (!/^[1-9][0-9]{0,19}$/.test(sequence) || BigInt(sequence) > 18446744073709551615n) fail();
+        return { conversationId: bytes(row.conversation_id).toString("hex"), messageId: bytes(row.message_id).toString("hex"), sequence };
+      });
+    },
     status(request) {
       if (request.endpointDigest !== undefined) bytes(request.endpointDigest, 32);
       return withActor(request, async (connection, context) => {
@@ -347,7 +365,7 @@ export function createNotificationsStore({ pool, chatStore, key, clock } = {}) {
           await connection.query("UPDATE push_subscriptions SET enabled = 0, updated_at = ? WHERE id = ?", [sqlDate(current), subscription.id]);
           await finish(connection, job, "skipped", current); return null;
         }
-        return { subscription: value, locale: validateLocale(subscription.locale), expiresAt: timestamp(job.expires_at) };
+        return { subscription: value, role: subscription.role, locale: validateLocale(subscription.locale), expiresAt: timestamp(job.expires_at) };
       }));
     },
     settleDelivery({ jobId, leaseToken, now, result } = {}) {

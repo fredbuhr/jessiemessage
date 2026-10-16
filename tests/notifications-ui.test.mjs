@@ -132,7 +132,7 @@ function workerHarness(windows = []) {
   vm.runInNewContext(swSource, { URL, self: { location: { origin: "https://example.invalid" }, addEventListener: (name, callback) => listeners.set(name, callback), skipWaiting: async () => {},
     registration: { async showNotification(title, options) { shown.push({ title, options }); } }, clients: { async claim() {}, async matchAll() { return windows.map((url) => ({ url, async focus() { focused++; } })); }, async openWindow(url) { opened.push(url); } } } });
   return { listeners, shown, opened, get focused() { return focused; }, get closed() { return closed; },
-    async event(name, data) { let pending; listeners.get(name)({ data, notification: { data: { url: "https://evil.invalid/private" }, close() { closed++; } }, waitUntil(promise) { pending = promise; } }); await pending; } };
+    async event(name, data, notification = { url: "https://evil.invalid/private" }) { let pending; listeners.get(name)({ data, notification: { data: notification, close() { closed++; } }, waitUntil(promise) { pending = promise; } }); await pending; } };
 }
 test("the worker displays only fixed generic copy and cannot fetch or cache private data", async () => {
   const f = workerHarness(); await f.event("install"); await f.event("activate");
@@ -148,6 +148,20 @@ test("notification clicks always reach app entry and preserve a draft in an alre
   assert.equal(existing.focused, 1); assert.equal(existing.opened.length, 0); assert.equal(existing.closed, 1);
   const chat = workerHarness(["https://example.invalid/messages", "https://evil.invalid/app"]); await chat.event("notificationclick");
   assert.deepEqual(chat.opened, ["/app"]); assert.equal(chat.focused, 0);
+});
+
+test("new notifications open the intended role directly without exposing message or conversation identifiers", async () => {
+  for (const role of ["client", "admin"]) {
+    const f = workerHarness(), reference = "cd".repeat(16);
+    await f.event("push", { json: () => ({ language: "fr", role, notification: reference, url: "https://evil.invalid" }) });
+    const path = `${role === "admin" ? "/admin/messages" : "/messages"}#notification=${reference}`;
+    assert.equal(f.shown[0].options.data.url, path);
+    await f.event("notificationclick", undefined, f.shown[0].options.data);
+    assert.deepEqual(f.opened, [path]);
+  }
+  const f = workerHarness();
+  await f.event("push", { json: () => ({ role: "admin", notification: "../../private" }) });
+  assert.equal(f.shown[0].options.data.url, "/app");
 });
 
 
@@ -168,4 +182,20 @@ test("a malformed enabled status cannot claim notifications are active without a
   const f = harness({ local: true, permission: "granted", intercept: (path) => path.endsWith("/status") ? response({ enabled: true, subscriptionId: null }) : undefined });
   await flush(); assert.match(f.host.textContent, /pas pu être vérifiés/); assert.equal(f.button("disable").hidden, true);
   assert.equal(f.button("enable").hidden, true); f.clear();
+});
+
+test("a supported open chat acknowledges the click and keeps its browsing context instead of being navigated", async () => {
+  const listeners = new Map(), opened = [], received = []; let focused = 0;
+  const reference = "ef".repeat(16), origin = "https://example.invalid";
+  const live = { url: `${origin}/messages`, focused: false, async focus() { focused++; return this; },
+    postMessage(value, ports) { received.push(value); ports[0].postMessage({ accepted: true }); } };
+  vm.runInNewContext(swSource, { URL, MessageChannel, setTimeout, clearTimeout, self: { location: { origin },
+    addEventListener: (name, callback) => listeners.set(name, callback), clients: {
+      async matchAll() { return [live]; }, async openWindow(path) { opened.push(path); },
+    } } });
+  let pending;
+  listeners.get("notificationclick")({ notification: { data: { url: `/messages#notification=${reference}` }, close() {} }, waitUntil(value) { pending = value; } });
+  await pending;
+  assert.equal(focused, 1); assert.deepEqual(opened, []);
+  assert.equal(received[0].type, "jessie-open-notification"); assert.equal(received[0].notification, reference);
 });
