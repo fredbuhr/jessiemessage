@@ -4,12 +4,14 @@ import { fileURLToPath } from "node:url";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
+import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile } from "../server/backup/profiles.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { readManifest, verifyBackupManifest, backupIdentity, assertCloneIdentity } from "../server/backup/manifest.mjs";
 import { assertBackupInspection } from "../server/backup/inspection.mjs";
 import { APPLICATION_COVERAGE, validateApplicationCoverage, assertApplicationTableInspection } from "../server/backup/application-scope.mjs";
-import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData } from "../server/backup/verify.mjs";
+import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData, verifyPhotoNotificationRecoveryCrmBackupData } from "../server/backup/verify.mjs";
 import { connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
 import { inspectDumpClient, readFrozenBackup, dumpCloneSql, inspectClone } from "./verify-text-clone.mjs";
@@ -18,7 +20,6 @@ import { main as backupMain } from "./backup.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const CA = "/etc/ssl/certs/ca-certificates.crt";
-const RECOVERY_PROFILE = "photos-notify-recovery";
 const FIELDS = ["command", "privateDirectory", "privatePathMode", "checkpointDirectory", "database", "confirmation", "user"];
 const COUNT_NAMES = ["rows", "mfa", "mail", "reset", "messages", "crm", "broadcast", "broadcastRecipients", "media", "mediaFiles", "notifications", "notificationJobs"];
 const KEY_FIELDS = { totpKey: "JESSIEMESSAGE_MFA_KEY", mailKey: "JESSIEMESSAGE_MAIL_KEY", messageKey: "JESSIEMESSAGE_MESSAGE_KEY",
@@ -47,7 +48,7 @@ export function parseArguments(args) {
   }
   if (selected.privatePathMode !== "linux-dirfd" || !/^[A-Za-z0-9_]{1,64}$/.test(selected.database)
     || selected.database !== selected.confirmation || !/^[A-Za-z0-9_]{1,80}$/.test(selected.user)
-    || Object.hasOwn(selected, "profile") && selected.profile !== RECOVERY_PROFILE) fail("USAGE");
+    || Object.hasOwn(selected, "profile") && !CHECKPOINT_RUNTIME_PROFILES.includes(selected.profile)) fail("USAGE");
   for (const directory of [selected.privateDirectory, selected.checkpointDirectory]) {
     if (typeof directory !== "string" || !directory.startsWith("/") || directory === "/" || directory.length > 4096
       || directory !== resolve(directory) || /[\\\x00-\x1f\x7f]/.test(directory) || inside(directory, REPOSITORY) || inside(REPOSITORY, directory)) fail("USAGE");
@@ -83,8 +84,9 @@ export async function verifyApplicationCloneSnapshot(source, selection, password
     const selected = optionsFromRecord(selection);
     if (selected.command !== "verify-application" || typeof password !== "string" || !password
       || !password.isWellFormed() || /[\x00-\x1f\x7f]/.test(password) || Buffer.byteLength(password, "utf8") > 4096) fail("SNAPSHOT");
-    const recovery = selected.profile === RECOVERY_PROFILE;
-    cloneEnv = recovery ? copyRuntimeNotificationsEnvironment(source, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(source);
+    const profile = checkpointBackupProfile(selected.profile, true), { recovery, crm } = profile;
+    cloneEnv = crm ? copyRuntimeCrmEnvironment(source, { originProfile: "primary", recovery: true })
+      : recovery ? copyRuntimeNotificationsEnvironment(source, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(source);
     if (selected.database.toLowerCase() === cloneEnv.JESSIEMESSAGE_DB_NAME.toLowerCase()
       || selected.user === cloneEnv.JESSIEMESSAGE_RUNTIME_DB_USER) fail("SNAPSHOT");
     cloneEnv.JESSIEMESSAGE_DB_NAME = selected.database;
@@ -99,7 +101,7 @@ export async function verifyApplicationCloneSnapshot(source, selection, password
     delete cloneEnv.JESSIEMESSAGE_DB_USER;
     delete cloneEnv.JESSIEMESSAGE_DB_PASSWORD;
     const report = await backup(["verify", "--offline", "--manifest", join(selected.checkpointDirectory, "manifest.json"),
-      "--profile", recovery ? "photos-notify-recovery-application" : "photos-notify-application"], cloneEnv, { signal, outputStream: { write() {} } });
+      "--profile", profile.name], cloneEnv, { signal, outputStream: { write() {} } });
     assertApplicationSnapshotReport(report);
     return report;
   } catch (error) {
@@ -111,21 +113,21 @@ export async function verifyApplicationCloneSnapshot(source, selection, password
 /** Verify an imported checkpoint with one read-only connection. No restoration,
  * capacity rebinding, worker, transport or application server is started. */
 export async function run(value, { inheritedEnv = process.env, execArgv = process.execArgv, inputStream = process.stdin,
-  scopeOperation = withPrivateDirectory, loadEnvironment = loadRuntimeNotificationsEnvironment, makeStorage = createMediaStorage,
+  scopeOperation = withPrivateDirectory, loadEnvironment, makeStorage = createMediaStorage,
   readCheckpoint = readReceipt, verifyCheckpointMedia = verifyMedia, readBackup = readFrozenBackup,
   readBackupManifest = readManifest, verifyManifest = verifyBackupManifest, identity = backupIdentity, assertIdentity = assertCloneIdentity,
   inspectClient = inspectDumpClient, readSecret = readPassword, dump = dumpCloneSql, connect = connectDatabase,
   inspect = inspectClone, inspectPrivileges = assertBackupInspection, inspectApplicationPrivileges = assertApplicationTableInspection,
   verify = verifyPhotoNotificationBackupData, verifyRecovery = verifyPhotoNotificationRecoveryBackupData,
+  verifyCrm = verifyPhotoNotificationRecoveryCrmBackupData,
   verifyApplicationSnapshot = verifyApplicationCloneSnapshot, signal } = {}) {
   let sourceEnv, env, keys, password = "", connectionEnv, connection, transaction = false, result, failure;
   const active = () => { if (signal?.aborted) fail("CANCELLED"); };
   try {
     active(); const selected = optionsFromRecord(value);
-    const application = selected.command.endsWith("-application"), recovery = selected.profile === RECOVERY_PROFILE;
-    const profile = `messaging-photos-notify${recovery ? "-recovery" : ""}${application ? "-application" : ""}`;
-    const manifestVersion = recovery ? application ? 6 : 5 : application ? 4 : 3;
-    const receiptVersion = recovery ? application ? 4 : 3 : application ? 2 : 1;
+    const application = selected.command.endsWith("-application");
+    const { recovery, crm, manifestProfile: profile, manifestVersion, receiptVersion } = checkpointBackupProfile(selected.profile, application);
+    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let dumpTables;
     if (application) {
       const migrations = await loadMigrations();
@@ -135,9 +137,11 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("ENVIRONMENT"); }
     sourceEnv = await loadEnvironment(selected.privateDirectory, { port: processOptions.port, ...(recovery ? { originProfile: "primary", recovery: true } : {}) });
-    env = recovery ? copyRuntimeNotificationsEnvironment(sourceEnv, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(sourceEnv);
+    env = crm ? copyRuntimeCrmEnvironment(sourceEnv, { originProfile: "primary", recovery: true })
+      : recovery ? copyRuntimeNotificationsEnvironment(sourceEnv, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(sourceEnv);
     if (selected.database.toLowerCase() === env.JESSIEMESSAGE_DB_NAME.toLowerCase() || selected.user === env.JESSIEMESSAGE_RUNTIME_DB_USER) fail("CONFIGURATION");
-    keys = Object.fromEntries(Object.entries(KEY_FIELDS).map(([name, field]) => [name, Buffer.from(env[field], "base64url")]));
+    keys = Object.fromEntries([...Object.entries(KEY_FIELDS), ...(crm ? [["crmKey", "JESSIEMESSAGE_CRM_KEY"]] : [])]
+      .map(([name, field]) => [name, Buffer.from(env[field], "base64url")]));
     const mediaDirectory = join(selected.checkpointDirectory, "media");
     await scopeOperation(selected.privateDirectory, async sourceScope => scopeOperation(selected.checkpointDirectory, async checkpointScope =>
       scopeOperation(mediaDirectory, async mediaScope => {
@@ -213,7 +217,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           if (typeof sql !== "string" || !/^SELECT\s/.test(sql) || /\b(?:INTO|OUTFILE|DUMPFILE|FOR\s+UPDATE|LOCK\s+IN\s+SHARE)\b/i.test(sql)) fail("DATABASE");
           return connection.query(sql, parameters);
         }, release: async () => {} }) };
-        const report = await (recovery ? verifyRecovery : verify)({ pool, storage, keys, signal }); active();
+        const report = await (crm ? verifyCrm : recovery ? verifyRecovery : verify)({ pool, storage, keys, signal }); active();
         if (report?.complete !== true || report.healthy !== true || !Array.isArray(report.issues) || report.issues.length
           || !same(Object.keys(report.counts ?? {}).sort(), [...COUNT_NAMES].sort())
           || COUNT_NAMES.some(name => !Number.isSafeInteger(report.counts[name]) || report.counts[name] < 0)) fail("CRYPTO");

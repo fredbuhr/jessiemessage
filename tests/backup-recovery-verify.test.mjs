@@ -5,7 +5,8 @@ import { tokenDigest } from "../server/auth/crypto.mjs";
 import { sealVerificationPayload } from "../server/mail/crypto.mjs";
 import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 import { sealSubscription, endpointDigest } from "../server/notifications/crypto.mjs";
-import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData } from "../server/backup/verify.mjs";
+import { sealNotes } from "../server/crm/crypto.mjs";
+import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData, verifyPhotoNotificationRecoveryCrmBackupData } from "../server/backup/verify.mjs";
 
 const id = number => { const value = Buffer.alloc(16); value.writeUInt32BE(number, 12); return value; };
 const names = ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"];
@@ -38,6 +39,47 @@ function fixture() {
   return { keys, token, email, clientId, jobId, subscription, rows, calls, pool, storage, options: { keys, pool, storage }, released: () => released };
 }
 const copyKeys = keys => Object.fromEntries(Object.entries(keys).map(([name, key]) => [name, Buffer.from(key)]));
+function crmFixture() {
+  const f = fixture(), adminId = id(1), conversationId = id(10), notes = "Synthetic shared private note";
+  f.keys.crmKey = randomBytes(32);
+  f.rows.crm_profiles = [{ id: Buffer.concat([adminId, conversationId]), admin_id: adminId, conversation_id: conversationId, notes_revision: 2, version: 3,
+    encrypted: sealNotes(notes, f.keys.crmKey, { adminId, conversationId, version: "2" }) }];
+  f.rows.crm_labels = [{ id: id(11) }]; f.rows.crm_memberships = [{ id: id(12) }];
+  return { ...f, notes };
+}
+
+test("the CRM recovery verifier authenticates populated notes, reset mail and Push with exactly six keys and reads only SQL", async () => {
+  const f = crmFixture(), before = copyKeys(f.keys), report = await verifyPhotoNotificationRecoveryCrmBackupData(f.options);
+  assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.deepEqual(report.issues, []);
+  assert.equal(report.counts.crm, 1); assert.equal(report.counts.reset, 1); assert.equal(report.counts.notificationJobs, 1);
+  assert.deepEqual(f.keys, before); assert.equal(f.calls.filter(call => call.sql.startsWith("SELECT EXISTS")).length, 3);
+  for (const value of [f.notes, f.token, f.rows.crm_profiles[0].encrypted, ...Object.values(f.keys).map(key => key.toString("base64url"))])
+    assert.equal(JSON.stringify(report).includes(value), false);
+});
+
+test("CRM notes fail verification for a changed key, owner, revision or ciphertext, without changing caller-owned secrets", async () => {
+  for (const changed of ["key", "owner", "revision", "ciphertext", "missingKey", "collision"]) {
+    const f = crmFixture(), row = f.rows.crm_profiles[0];
+    if (changed === "key") f.keys.crmKey = randomBytes(32);
+    if (changed === "owner") { row.admin_id = id(13); row.id = Buffer.concat([row.admin_id, row.conversation_id]); }
+    if (changed === "revision") row.notes_revision = 3;
+    if (changed === "ciphertext") row.encrypted = `${row.encrypted.slice(0, -5)}AAAAA`;
+    if (changed === "missingKey") delete f.keys.crmKey;
+    if (changed === "collision") f.keys.crmKey = f.keys.mediaKey;
+    const before = copyKeys(f.keys), report = await verifyPhotoNotificationRecoveryCrmBackupData(f.options);
+    assert.equal(report.healthy, false, changed); assert.ok(report.issues.length, changed); assert.deepEqual(f.keys, before);
+    if (["missingKey", "collision"].includes(changed)) assert.deepEqual(f.calls, []);
+  }
+});
+
+test("CRM restoration retains the inactive broadcast boundary, including metadata-only rows", async () => {
+  for (const table of ["broadcast_preferences", "broadcast_campaigns", "broadcast_recipients"]) {
+    const f = crmFixture(); f.rows[table] = [{ id: id(20) }];
+    const report = await verifyPhotoNotificationRecoveryCrmBackupData(f.options);
+    assert.equal(report.complete, false); assert.deepEqual(report.issues, [{ purpose: "broadcast", code: "inactive_domain_populated" }]);
+    assert.equal(f.calls.some(call => !call.sql.startsWith("SELECT EXISTS")), false);
+  }
+});
 
 test("recovery photo notification backup authenticates reset mail and Push offline with exactly the existing five keys", async () => {
   const f = fixture(), before = copyKeys(f.keys), report = await verifyPhotoNotificationRecoveryBackupData(f.options);

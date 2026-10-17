@@ -7,6 +7,8 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
+import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { checkpointBackupProfile } from "../server/backup/profiles.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { connectDatabase } from "../server/db/connection.mjs";
@@ -238,7 +240,7 @@ export async function importNativeSql(scope, selected, configuration, password, 
 }
 
 export async function run(value, { inheritedEnv = process.env, execArgv = process.execArgv, inputStream = process.stdin,
-  verify = verifyCheckpoint, loadEnvironment = loadRuntimeNotificationsEnvironment, readSecret = readPassword,
+  verify = verifyCheckpoint, loadEnvironment, readSecret = readPassword,
   scopeOperation = withPrivateDirectory, readSql = readApplicationSql, inspectClient = inspectImportClient, connect = connectDatabase,
   inspect = inspectEmptyClone, importSql = importNativeSql, signal } = {}) {
   let environment, password = "", sql, connection, connectionEnv, result, failure;
@@ -248,8 +250,9 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       "--checkpoint-directory", value.checkpointDirectory, "--database", value.database, "--confirm-database", value.confirmation, "--user", value.user,
       ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : [])]);
     if (!["check-application", "verify-application"].includes(selected.command) || !/^[a-f0-9]{64}$/.test(value.sqlSha256)) fail("USAGE");
-    const recovery = selected.profile === "photos-notify-recovery";
-    const matchesRecovery = report => !recovery || report?.version === 4 && report.profile === "messaging-photos-notify-recovery-application";
+    const { recovery, crm, receiptVersion, manifestProfile } = checkpointBackupProfile(selected.profile, true);
+    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
+    const matchesRecovery = report => !recovery || report?.version === receiptVersion && report.profile === manifestProfile;
     active(signal); const processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv);
     const check = { ...selected, command: "check-application" }, dependencies = { inheritedEnv, execArgv, signal };
     const before = await verify(check, dependencies);

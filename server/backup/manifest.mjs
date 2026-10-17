@@ -4,6 +4,7 @@ import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, 
 import path from "node:path";
 import { openPrivateDirectory, privatePathMode } from "../files/private-directory.mjs";
 import { validateApplicationCoverage } from "./application-scope.mjs";
+import { manifestBackupProfile } from "./profiles.mjs";
 
 const MAX_BYTES = 64 * 1024 * 1024;
 const MAX_NODES = 2000000;
@@ -12,9 +13,6 @@ const KEY_NAMES = ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"];
 const TAG_FIELDS = ["databaseTag", "rootPathTag", "rootPhysicalTag", "rootFingerprint"];
 const HEX = /^[a-f0-9]{64}$/;
 const forbiddenKeys = new Set(["__proto__", "constructor", "prototype"]);
-const APPLICATION_PROFILE = "messaging-photos-notify-application";
-const RECOVERY_PROFILE = "messaging-photos-notify-recovery";
-const RECOVERY_APPLICATION_PROFILE = "messaging-photos-notify-recovery-application";
 
 export class BackupManifestError extends Error {
   constructor(code = "BACKUP_MANIFEST_INVALID") {
@@ -70,9 +68,9 @@ function safeJson(value, budget = { nodes: MAX_NODES, bytes: MAX_BYTES }, depth 
 const canonical = (value) => JSON.stringify(safeJson(value));
 const instant = (value) => { if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail(); return value; };
 const profileKeyNames = (profile) => {
-  if (profile === "messaging-photos") return KEY_NAMES.slice(0, 4);
+  const selected = manifestBackupProfile(profile);
+  if (selected) return [...KEY_NAMES.slice(0, selected.crm ? 5 : 4), ...(selected.notifications ? ["notificationKey"] : [])];
   if (profile === "full") return KEY_NAMES;
-  if (["messaging-photos-notify", APPLICATION_PROFILE, RECOVERY_PROFILE, RECOVERY_APPLICATION_PROFILE].includes(profile)) return [...KEY_NAMES.slice(0, 4), "notificationKey"];
   if (profile === "full-notify") return [...KEY_NAMES, "notificationKey"];
   fail();
 };
@@ -116,13 +114,10 @@ function canaryFields(value, name) {
 }
 function manifestValue(manifest) {
   const result = safeJson(manifest);
-  const profiled = [2, 3, 4, 5, 6].includes(result.version);
+  const selected = manifestBackupProfile(result.profile), profiled = [2, 3, 4, 5, 6, 7, 8].includes(result.version);
   exact(result, ["version", "payload", "signature", ...(profiled ? ["profile"] : [])]);
-  if (![1, 2, 3, 4, 5, 6].includes(result.version) || result.version === 2 && result.profile !== "messaging-photos"
-    || result.version === 3 && !["messaging-photos-notify", "full-notify"].includes(result.profile)
-    || result.version === 4 && result.profile !== APPLICATION_PROFILE
-    || result.version === 5 && result.profile !== RECOVERY_PROFILE
-    || result.version === 6 && result.profile !== RECOVERY_APPLICATION_PROFILE
+  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(result.version)
+    || profiled && !(selected?.manifestVersion === result.version || result.version === 3 && result.profile === "full-notify")
     || typeof result.signature !== "string" || !HEX.test(result.signature)) fail();
   exact(result.payload, ["createdAt", "identity", "snapshot", "canaries"]);
   instant(result.payload.createdAt); identityValue(result.payload.identity);
@@ -133,14 +128,11 @@ function manifestValue(manifest) {
   for (const name of names) canaryFields(result.payload.canaries[name], name);
   return result;
 }
-const envelope = (profile) => profile === "messaging-photos" ? { version: 2, profile }
-  : ["messaging-photos-notify", "full-notify"].includes(profile) ? { version: 3, profile }
-    : profile === APPLICATION_PROFILE ? { version: 4, profile }
-      : profile === RECOVERY_PROFILE ? { version: 5, profile }
-        : profile === RECOVERY_APPLICATION_PROFILE ? { version: 6, profile } : { version: 1 };
+const envelope = (profile) => manifestBackupProfile(profile) ? { version: manifestBackupProfile(profile).manifestVersion, profile }
+  : profile === "full-notify" ? { version: 3, profile } : { version: 1 };
 function snapshotScope(snapshot, profile) {
   plain(snapshot);
-  if ([APPLICATION_PROFILE, RECOVERY_APPLICATION_PROFILE].includes(profile)) {
+  if (manifestBackupProfile(profile)?.application) {
     if (snapshot.version !== 2 || snapshot.counts?.tables !== 30) fail();
     validateApplicationCoverage(snapshot.coverage);
   } else if (snapshot.version === 2 || Object.hasOwn(snapshot, "coverage")) {

@@ -211,14 +211,15 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
 
 export async function createConfiguredServer(env = process.env, options = {}) {
   if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
-    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery"].includes(name))
+    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm"].includes(name))
     || Object.values(Object.getOwnPropertyDescriptors(options)).some(property => !Object.hasOwn(property, "value"))) throw new RequestOriginError();
   const requestOrigin = Object.hasOwn(options, "requestOrigin") ? options.requestOrigin : null;
   const clock = Object.hasOwn(options, "clock") ? options.clock : Date.now;
   const deviceTransition = Object.hasOwn(options, "deviceTransition") ? options.deviceTransition : false;
   const recovery = Object.hasOwn(options, "recovery") ? options.recovery : false;
-  if (typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof clock !== "function"
-    || deviceTransition && requestOrigin !== PRIMARY_ORIGIN || recovery && !deviceTransition) throw new RequestOriginError();
+  const crm = Object.hasOwn(options, "crm") ? options.crm : false;
+  if (typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof crm !== "boolean" || typeof clock !== "function"
+    || deviceTransition && requestOrigin !== PRIMARY_ORIGIN || recovery && !deviceTransition || crm && !recovery) throw new RequestOriginError();
   if (requestOrigin !== null) createRequestOriginGuard(requestOrigin);
   const { authConfiguration } = await import("./auth/config.mjs");
   const { accessConfiguration } = await import("./access/config.mjs");
@@ -240,13 +241,13 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   if (deviceTransition) {
     const { inspectPreproductionConfiguration } = await import("./preflight/config.mjs");
     const profile = inspectPreproductionConfiguration(env, { expectedOrigin: PRIMARY_ORIGIN,
-      target: recovery ? "messaging-photos-notify-recovery" : "messaging-photos-notify", originProfile: "primary" });
+      target: crm ? "messaging-photos-notify-recovery-crm" : recovery ? "messaging-photos-notify-recovery" : "messaging-photos-notify", originProfile: "primary" });
     // The operator loader requires verified TLS. The lower-level server keeps
     // runtimeDatabaseOptions' existing, explicit loopback test policy so SQL
     // rehearsals exercise these same factories without a deployment bypass.
     if (profile.checks.some(check => check.name !== "database_tls" && check.status === "fail")
       || ![config, accessConfig, chatConfig, mediaConfig, notificationsConfig].every(value => value.enabled === true)
-      || crmConfig.enabled || resetConfig.enabled !== recovery || broadcastConfig.enabled) throw new RequestOriginError();
+      || crmConfig.enabled !== crm || resetConfig.enabled !== recovery || broadcastConfig.enabled) throw new RequestOriginError();
   }
   if (!config.enabled) return { server: createAppServer({ requestOrigin }), pool: null };
   const { mailConfiguration } = await import("./mail/config.mjs");

@@ -6,6 +6,8 @@ import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink,
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
+import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { sealNotes } from "../server/crm/crypto.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { backupIdentity, createBackupManifest, writeManifest, readManifest } from "../server/backup/manifest.mjs";
 import { writeCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
@@ -32,7 +34,7 @@ const neutral = code => error => {
   assert.equal(error.cause, undefined); return true;
 };
 
-async function fixture(t, { application = false, recovery = false, envelopeRecovery = recovery } = {}) {
+async function fixture(t, { application = false, crm = false, recovery = crm, envelopeRecovery = recovery } = {}) {
   const origin = recovery ? "https://jessiemessage.com" : "https://recette.jessiemessage.com";
   await mkdir(base, { recursive: true, mode: 0o700 });
   const directory = await mkdtemp(join(base, "private-checkpoint-verify-")); await chmod(directory, 0o700);
@@ -46,8 +48,9 @@ async function fixture(t, { application = false, recovery = false, envelopeRecov
     messaging: { format: "jessiemessage-runtime-messaging", version: 1, origin, mailKey: key(2), messageKey: key(3), smtpHost: "smtp.example.invalid", smtpPort: "587", smtpUser: "synthetic-smtp-user", smtpPassword: "synthetic-smtp-password" },
     media: { format: "jessiemessage-runtime-media", version: 1, origin, mediaKey: key(4), mediaRoot: sourceRoot, ownerBytes: "1073741824", totalBytes: "10737418240", minimumFreeBytes: "0" },
     notifications: { version: 1, origin, notificationKey: key(5), vapidPublicKey: curve.getPublicKey().toString("base64url"), vapidPrivateKey: curve.getPrivateKey().toString("base64url"), vapidSubject: "mailto:contact@jessiemessage.com" },
+    ...(crm ? { crm: { version: 1, origin, crmKey: key(6) } } : {}),
   });
-  const keys = Object.fromEntries(["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"].map((name, index) => [name, Buffer.from(key(index + 1), "base64url")]));
+  const keys = Object.fromEntries(["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey", ...(crm ? ["crmKey"] : [])].map((name, index) => [name, Buffer.from(key(index + 1), "base64url")]));
   const sourceStorage = await createMediaStorage({ root: sourceRoot, key: keys.mediaKey, pathMode: "strict" });
   const full = Buffer.from("synthetic-private-photo"), thumbnail = Buffer.from("synthetic-private-thumbnail"), mediaId = id(6), storageKey = Buffer.alloc(32, 8);
   await sourceStorage.put({ assetId: mediaId, storageKey, full, thumbnail });
@@ -57,24 +60,27 @@ async function fixture(t, { application = false, recovery = false, envelopeRecov
     const content = await readFile(join(mediaRoot, name)); mediaFiles.push({ name, bytes: content.length, sha256: hash(content) });
   }
   const identity = await backupIdentity({ databaseName: "only_source", rootPath: sourceRoot, storage: sourceStorage, mediaKey: keys.mediaKey });
-  const profile = `messaging-photos-notify${envelopeRecovery ? "-recovery" : ""}${application ? "-application" : ""}`;
+  const profile = `messaging-photos-notify${envelopeRecovery ? "-recovery" : ""}${crm ? "-crm" : ""}${application ? "-application" : ""}`;
   const manifest = createBackupManifest({ snapshot: { ...(application ? { version: 2, coverage: { ...APPLICATION_COVERAGE } } : {}),
     counts: { tables: 30, rows: 6 }, capacity: { rootFingerprint: identity.rootFingerprint } }, identity, keys, now: 1792200000000, profile });
   await writeManifest(join(checkpointDirectory, "manifest.json"), manifest, { pathMode: "strict" });
   const archive = gzipSync(sql); await writeFile(join(checkpointDirectory, "database.sql.gz"), archive, { mode: 0o600 });
-  const receipt = { format: "jessiemessage-private-checkpoint", version: envelopeRecovery ? application ? 4 : 3 : application ? 2 : 1, profile,
+  const receipt = { format: "jessiemessage-private-checkpoint", version: crm ? application ? 6 : 5 : envelopeRecovery ? application ? 4 : 3 : application ? 2 : 1, profile,
     ...(application ? { coverage: { ...APPLICATION_COVERAGE } } : {}), createdAt: 1792200000000,
     schema: { tables: 30, migrations: 30 }, sql: { file: "database.sql.gz", bytes: archive.length, sha256: hash(archive), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) },
     manifest: { file: "manifest.json", sha256: hash(await readFile(join(checkpointDirectory, "manifest.json"))) }, media: { files: mediaFiles, bytes: mediaFiles.reduce((total, file) => total + file.bytes, 0) } };
   await writeCheckpointReceipt(scopeFor(checkpointDirectory), receipt);
   const args = [application ? "verify-application" : "verify", "--private-directory", sourceDirectory, "--private-path-mode", "linux-dirfd", "--checkpoint-directory", checkpointDirectory,
-    "--database", "only_clone", "--confirm-database", "only_clone", "--user", "inspection_user", ...(recovery ? ["--profile", "photos-notify-recovery"] : [])];
+    "--database", "only_clone", "--confirm-database", "only_clone", "--user", "inspection_user", ...(recovery ? ["--profile", `photos-notify-recovery${crm ? "-crm" : ""}`] : [])];
   const selected = parseArguments(args), migrations = await loadMigrations(), tables = [...createdMigrationTables(migrations), "schema_migrations"];
   const admin = id(1), client = id(2), conversationId = id(3), messageId = id(4), mailId = id(5), token = newToken(), email = "synthetic@example.invalid", body = "Synthetic private text";
   const binding = { conversationId, messageId, senderId: admin }, subscription = { endpoint: "https://fcm.googleapis.com/fcm/send/synthetic-private-checkpoint", expirationTime: null,
     keys: { p256dh: curve.getPublicKey().toString("base64url"), auth: Buffer.alloc(16, 9).toString("base64url") } };
   const notificationBinding = { subscriptionId: id(7), userId: client, generation: 1 };
   const rows = {
+    ...(crm ? { crm_profiles: [{ id: Buffer.concat([admin, conversationId]), admin_id: admin, conversation_id: conversationId, notes_revision: 2, version: 3,
+      encrypted: sealNotes("Synthetic restored CRM note", keys.crmKey, { adminId: admin, conversationId, version: "2" }) }],
+      crm_labels: [{ id: id(12) }], crm_memberships: [{ id: id(13) }] } : {}),
     admin_mfa: [{ id: admin, encrypted: sealTotpSecret(makeTotpSecret(), keys.totpKey, admin) }],
     mail_outbox: [{ id: mailId, encrypted: sealVerificationPayload({ email, token }, keys.mailKey, mailId), recipient_user_id: client, challenge_user_id: client, token_hash: tokenDigest(token), recipient_email: email }],
     messages: [{ id: messageId, conversation_id: conversationId, sender_id: admin, sender_role: "admin", admin_id: admin, client_id: client,
@@ -110,7 +116,7 @@ async function fixture(t, { application = false, recovery = false, envelopeRecov
     scopeOperation: async (directory, callback) => callback(scopeFor(directory)),
     loadEnvironment: async (_directory, parameters = {}) => {
       assert.deepEqual(parameters, Object.keys(parameters).length ? { port: "3000", ...(recovery ? { originProfile: "primary", recovery: true } : {}) } : {});
-      const env = await loadRuntimeNotificationsEnvironment(sourceDirectory, recovery ? { originProfile: "primary", recovery: true } : {}, { readBundle: async () => bundle() });
+      const env = await (crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment)(sourceDirectory, recovery ? { originProfile: "primary", recovery: true } : {}, { readBundle: async () => bundle() });
       environments.push(env); return env;
     },
     makeStorage: options => createMediaStorage({ ...options, pathMode: "strict" }),
@@ -135,6 +141,39 @@ test("private checkpoint check verifies real gzip, five-key manifest and copied 
   assert.equal(report.independentMediaDirectory, true); assert.equal(report.capacityRebound, false);
   assert.deepEqual(f.events, ["client"]); assert.deepEqual(f.connected, []);
   assert.equal(f.environments[0].JESSIEMESSAGE_RUNTIME_DB_PASSWORD, ""); assert.equal(f.environments[0].JESSIEMESSAGE_VAPID_PRIVATE_KEY, "");
+});
+
+test("CRM checkpoint verification authenticates the populated notes and recovery outbox while keeping SQL and files read-only", async t => {
+  for (const application of [false, true]) {
+    const f = await fixture(t, { application, crm: true }), before = structuredClone(f.rows);
+    const report = await run(f.selected, { ...f.dependencies,
+      verify: () => assert.fail("Legacy verifier cannot accept CRM data"), verifyRecovery: () => assert.fail("Five-key verifier cannot accept CRM data"),
+    });
+    assert.equal(report.status, "verified"); assert.equal(report.version, application ? 6 : 5);
+    assert.equal(report.profile, `messaging-photos-notify-recovery-crm${application ? "-application" : ""}`);
+    assert.equal(report.counts.crm, 1); assert.equal(report.counts.reset, 1); assert.equal(report.workersStarted, false);
+    assert.equal(report.capacityRebound, false); assert.equal(report.httpStarted, false); assert.equal(report.smtpStarted, false);
+    assert.deepEqual(structuredClone(f.rows), before);
+    for (const env of f.environments) assert.equal(env.JESSIEMESSAGE_CRM_KEY, "");
+    assert.doesNotMatch(JSON.stringify(report), /Synthetic restored CRM note|synthetic inspection password/);
+    const corrupted = await fixture(t, { application, crm: true });
+    corrupted.rows.crm_profiles[0].notes_revision = 3;
+    await assert.rejects(run(corrupted.selected, corrupted.dependencies), neutral("CRYPTO"));
+    assert.equal(corrupted.environments[0].JESSIEMESSAGE_CRM_KEY, "");
+  }
+});
+
+test("the CRM application snapshot check forwards six keys only to an isolated clone and preserves its source envelope", async t => {
+  const f = await fixture(t, { application: true, crm: true });
+  const env = await f.dependencies.loadEnvironment(f.sourceDirectory), before = structuredClone(env);
+  await verifyApplicationCloneSnapshot(env, f.selected, "synthetic inspection password", { backup: async (args, clone) => {
+    assert.equal(args.at(-1), "photos-notify-recovery-crm-application");
+    assert.equal(clone.JESSIEMESSAGE_CRM_KEY, key(6)); assert.equal(clone.JESSIEMESSAGE_ENABLE_CRM, "1");
+    assert.equal(clone.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY, "1"); assert.equal(clone.JESSIEMESSAGE_ENABLE_BROADCAST, "0");
+    assert.equal(clone.JESSIEMESSAGE_DB_NAME, "only_clone"); assert.equal(clone.JESSIEMESSAGE_RUNTIME_DB_USER, "inspection_user");
+    assert.equal(clone.JESSIEMESSAGE_MEDIA_ROOT, f.mediaRoot); return snapshotVerified();
+  } });
+  assert.deepEqual(env, before);
 });
 
 test("recovery verification authenticates a populated reset outbox with five existing keys and no enabled runtime", async t => {

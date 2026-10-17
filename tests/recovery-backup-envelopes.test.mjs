@@ -12,7 +12,10 @@ const names = ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"
 const profiles = [
   { profile: "messaging-photos-notify-recovery", version: 5, receiptVersion: 3, legacyVersion: 3, legacyProfile: "messaging-photos-notify", application: false },
   { profile: "messaging-photos-notify-recovery-application", version: 6, receiptVersion: 4, legacyVersion: 4, legacyProfile: "messaging-photos-notify-application", application: true },
+  { profile: "messaging-photos-notify-recovery-crm", version: 7, receiptVersion: 5, legacyVersion: 5, legacyProfile: "messaging-photos-notify-recovery", application: false, crm: true },
+  { profile: "messaging-photos-notify-recovery-crm-application", version: 8, receiptVersion: 6, legacyVersion: 6, legacyProfile: "messaging-photos-notify-recovery-application", application: true, crm: true },
 ];
+const keyNames = spec => [...names, ...(spec.crm ? ["crmKey"] : [])];
 const copy = (value) => JSON.parse(JSON.stringify(value));
 const invalidManifest = (error) => error instanceof BackupManifestError && error.code === "BACKUP_MANIFEST_INVALID";
 const invalidReceipt = (error) => error instanceof CheckpointReceiptError && error.code === "CHECKPOINT_RECEIPT_INVALID";
@@ -24,7 +27,7 @@ function resign(manifest, key) {
   return manifest;
 }
 function input(spec) {
-  return { profile: spec.profile, now: 1792240000000, keys: Object.fromEntries(names.map((name) => [name, randomBytes(32)])),
+  return { profile: spec.profile, now: 1792240000000, keys: Object.fromEntries(keyNames(spec).map((name) => [name, randomBytes(32)])),
     identity: { databaseTag: "1".repeat(64), rootPathTag: "2".repeat(64), rootPhysicalTag: "3".repeat(64), rootFingerprint: "4".repeat(64), rootAncestors: ["5".repeat(64)] },
     snapshot: { version: spec.application ? 2 : 1, ...(spec.application ? { coverage: { ...APPLICATION_COVERAGE } } : {}),
       schemaDigest: "7".repeat(64), coreDigest: "8".repeat(64), counts: { tables: 30, rows: 0 }, objects: [], assets: [] } };
@@ -37,15 +40,18 @@ async function fixture(t) {
 }
 
 for (const spec of profiles) {
-  test(`recovery manifest v${spec.version} authenticates the existing five keys and preserves its snapshot scope`, () => {
+  test(`recovery manifest v${spec.version} authenticates exactly ${keyNames(spec).length} keys and preserves its snapshot scope`, () => {
     const value = input(spec), manifest = createBackupManifest(value);
     assert.equal(manifest.version, spec.version); assert.equal(manifest.profile, spec.profile);
     assert.deepEqual(verifyBackupManifest({ manifest, keys: value.keys }).snapshot, value.snapshot);
-    assert.deepEqual(Object.keys(manifest.payload.canaries).sort(), [...names].sort());
-    for (const name of names) {
+    assert.deepEqual(Object.keys(manifest.payload.canaries).sort(), keyNames(spec).sort());
+    for (const name of keyNames(spec)) {
       assert.throws(() => verifyBackupManifest({ manifest, keys: { ...value.keys, [name]: randomBytes(32) } }), invalidManifest);
     }
-    assert.throws(() => createBackupManifest({ ...value, keys: { ...value.keys, crmKey: randomBytes(32) } }), invalidManifest);
+    assert.throws(() => createBackupManifest({ ...value, keys: { ...value.keys, unrelatedKey: randomBytes(32) } }), invalidManifest);
+    const wrongScope = { ...value.keys };
+    if (spec.crm) delete wrongScope.crmKey; else wrongScope.crmKey = randomBytes(32);
+    assert.throws(() => createBackupManifest({ ...value, keys: wrongScope }), invalidManifest);
     const missingMail = { ...value.keys }; delete missingMail.mailKey;
     assert.throws(() => createBackupManifest({ ...value, keys: missingMail }), invalidManifest);
     if (spec.application) {
@@ -62,7 +68,8 @@ for (const spec of profiles) {
 
   test(`recovery v${spec.version} and legacy v${spec.legacyVersion} cannot be relabeled, including with the media signing key`, () => {
     const value = input(spec), recovery = createBackupManifest(value);
-    const legacy = createBackupManifest({ ...value, profile: spec.legacyProfile });
+    const legacyKeys = Object.fromEntries(Object.entries(value.keys).filter(([name]) => name !== "crmKey"));
+    const legacy = createBackupManifest({ ...value, keys: legacyKeys, profile: spec.legacyProfile });
     assert.equal(legacy.version, spec.legacyVersion);
     for (const [original, version, profile] of [[recovery, spec.legacyVersion, spec.legacyProfile], [legacy, spec.version, spec.profile]]) {
       for (const change of [{ version }, { profile }, { version, profile }]) {
@@ -73,7 +80,7 @@ for (const spec of profiles) {
     }
     const changed = copy(recovery); changed.payload.canaries.mailKey = legacy.payload.canaries.mailKey;
     assert.throws(() => verifyBackupManifest({ manifest: resign(changed, value.keys.mediaKey), keys: value.keys }), invalidManifest);
-    assert.deepEqual(verifyBackupManifest({ manifest: legacy, keys: value.keys }).snapshot, value.snapshot);
+    assert.deepEqual(verifyBackupManifest({ manifest: legacy, keys: legacyKeys }).snapshot, value.snapshot);
   });
 
   test(`recovery manifest v${spec.version} and receipt v${spec.receiptVersion} publish exact private canonical bytes`, async (t) => {

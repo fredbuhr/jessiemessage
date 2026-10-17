@@ -5,6 +5,7 @@ import { privateAuthenticationProcessOptions } from "../server/config/private-au
 import { clearRuntimeMessagingSecrets, copyRuntimeMessagingEnvironment, loadRuntimeMessagingEnvironment } from "../server/config/runtime-messaging.mjs";
 import { copyRuntimeMediaEnvironment, loadRuntimeMediaEnvironment } from "../server/config/runtime-media.mjs";
 import { copyRuntimeNotificationsEnvironment, loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
+import { copyRuntimeCrmEnvironment, loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { checkRuntimeMediaStorage } from "../server/config/runtime-media-storage.mjs";
 import { inspectDatabase } from "../server/preflight/database.mjs";
 import { makePreflightReport } from "../server/preflight/report.mjs";
@@ -26,9 +27,9 @@ export function parseArguments(args) {
     }
     if (args[offset] === "--profile") {
       const profile = args[offset + 1];
-      if (!["photos", "photos-notify", "photos-notify-recovery"].includes(profile)
-        || deployment && !["photos-notify", "photos-notify-recovery"].includes(profile)
-        || profile === "photos-notify-recovery" && !deployment) fail("PRIVATE_MESSAGING_USAGE");
+      if (!["photos", "photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm"].includes(profile)
+        || deployment && !["photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm"].includes(profile)
+        || ["photos-notify-recovery", "photos-notify-recovery-crm"].includes(profile) && !deployment) fail("PRIVATE_MESSAGING_USAGE");
       return { command: args[0], ...(deployment ? { deployment } : {}), profile: args[offset + 1], ...authenticationArguments(args.slice(offset + 2)) };
     }
     if (deployment) fail("PRIVATE_MESSAGING_USAGE");
@@ -64,6 +65,10 @@ export async function checkMessagingSchema(env) {
       await createResetStore(pool).assertSchema();
       await createResetMailStore(pool).assertSchema();
     }
+    if (env.JESSIEMESSAGE_ENABLE_CRM === "1") {
+      const { createCrmStore } = await import("../server/crm/store.mjs");
+      await createCrmStore({ pool, chatStore }).assertSchema();
+    }
   } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
   finally { try { await pool?.end(); } catch { fail("PRIVATE_MESSAGING_SCHEMA"); } }
 }
@@ -82,17 +87,18 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       ...(Object.hasOwn(options, "profile") ? ["--profile", options.profile] : []),
       "--private-directory", options.privateDirectory, "--private-path-mode", options.privatePathMode]);
     const transition = selected.deployment === "primary-transition", originOptions = transition ? { originProfile: "primary" } : {};
-    const recovery = selected.profile === "photos-notify-recovery";
+    const crm = selected.profile === "photos-notify-recovery-crm";
+    const recovery = crm || selected.profile === "photos-notify-recovery";
     const notifications = recovery || selected.profile === "photos-notify", photos = notifications || selected.profile === "photos";
     const profileOptions = { ...originOptions, ...(recovery ? { recovery: true } : {}) };
-    loadEnvironment ??= notifications ? loadRuntimeNotificationsEnvironment : photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
+    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : notifications ? loadRuntimeNotificationsEnvironment : photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); }
     catch { fail("PRIVATE_MESSAGING_ENVIRONMENT"); }
     try {
       source = await loadEnvironment(selected.privateDirectory, { ...processOptions, ...profileOptions });
-      env = (notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source, profileOptions);
-      if (recovery) {
+      env = (crm ? copyRuntimeCrmEnvironment : notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source, profileOptions);
+      if (recovery && !crm) {
         // The files contain no recovery switch. Activate it only after their
         // unchanged, anchored profile has passed validation, never from env.
         const activated = copyRuntimeNotificationsEnvironment({ ...env, JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1" }, profileOptions);
@@ -110,10 +116,10 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       if (photos) await checkStorage(env);
     } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
     if (selected.command === "start") {
-      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}) }); }
+      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}), ...(crm ? { crm: true } : {}) }); }
       catch { fail("PRIVATE_MESSAGING_STARTUP"); }
     }
-    return { status: selected.command === "start" ? "started" : "checks_passed", profile: recovery ? "messaging-photos-notify-recovery" : notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
+    return { status: selected.command === "start" ? "started" : "checks_passed", profile: crm ? "messaging-photos-notify-recovery-crm" : recovery ? "messaging-photos-notify-recovery" : notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
       ...(transition ? { deployment: "primary-transition" } : {}),
       started: selected.command === "start", smtpDeliveryTested: false, launchApproved: false };
   } catch (error) {
@@ -121,7 +127,7 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
     fail("PRIVATE_MESSAGING_STARTUP");
   } finally {
     clearRuntimeMessagingSecrets(env);
-    if ([loadRuntimeMessagingEnvironment, loadRuntimeMediaEnvironment, loadRuntimeNotificationsEnvironment].includes(loadEnvironment)) clearRuntimeMessagingSecrets(source);
+    if ([loadRuntimeMessagingEnvironment, loadRuntimeMediaEnvironment, loadRuntimeNotificationsEnvironment, loadRuntimeCrmEnvironment].includes(loadEnvironment)) clearRuntimeMessagingSecrets(source);
   }
 }
 

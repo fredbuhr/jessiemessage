@@ -77,33 +77,35 @@ test("the optional recovery profile is closed and absent from every legacy optio
   await assert.rejects(run(legacy, dependencies([])), neutral("USAGE")); assert.equal(getter, false);
 });
 
-test("recovery restore carries its exact profile through all checks without activating a runtime", async () => {
+for (const crm of [false, true]) test(`${crm ? "CRM and recovery" : "recovery"} restore carries its exact profile through all checks without activating a runtime`, async () => {
   const events = [], selections = [];
-  const profile = { version: 4, profile: "messaging-photos-notify-recovery-application" };
+  const selectedProfile = `photos-notify-recovery${crm ? "-crm" : ""}`;
+  const profile = { version: crm ? 6 : 4, profile: `messaging-${selectedProfile}-application` };
   const original = dependencies(events);
-  const result = await run(parseArguments([...args("restore"), "--profile", "photos-notify-recovery"]), { ...original,
+  const result = await run(parseArguments([...args("restore"), "--profile", selectedProfile]), { ...original,
     verify: async (selected, options) => {
-      selections.push(selected); assert.equal(selected.profile, "photos-notify-recovery");
+      selections.push(selected); assert.equal(selected.profile, selectedProfile);
       return { ...await original.verify(selected, options), ...profile };
     },
     loadEnvironment: async (directory, options) => {
       assert.equal(directory, "/private/source"); assert.deepEqual(options, { port: "3000", originProfile: "primary", recovery: true });
       return { ...await original.loadEnvironment(), JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "0" };
     },
-    importSql: async (...parameters) => { assert.equal(parameters[1].profile, "photos-notify-recovery"); return original.importSql(...parameters); },
+    importSql: async (...parameters) => { assert.equal(parameters[1].profile, selectedProfile); return original.importSql(...parameters); },
   });
-  assert.equal(result.profile, profile.profile); assert.equal(result.version, 4); assert.equal(result.status, "application_checkpoint_restored_verified");
+  assert.equal(result.profile, profile.profile); assert.equal(result.version, profile.version); assert.equal(result.status, "application_checkpoint_restored_verified");
   assert.equal(selections.length, 3); assert.deepEqual(events, ["check-application", "client", "sql", "load", "password", "connect", "empty", "close", "check-application", "import", "verify-application"]);
 });
 
-test("recovery restoration cannot downgrade its verified precheck or final receipt", async () => {
+for (const crm of [false, true]) test(`${crm ? "CRM and recovery" : "recovery"} restoration cannot downgrade its verified precheck or final receipt`, async () => {
   for (const stage of ["precheck", "final"]) {
     const events = [], original = dependencies(events);
-    await assert.rejects(run(parseArguments([...args("restore"), "--profile", "photos-notify-recovery"]), { ...original,
+    const selectedProfile = `photos-notify-recovery${crm ? "-crm" : ""}`;
+    await assert.rejects(run(parseArguments([...args("restore"), "--profile", selectedProfile]), { ...original,
       verify: async (selected, options) => {
         const report = await original.verify(selected, options);
         return stage === "precheck" || selected.command === "verify-application" ? { ...report, version: 2, profile: "messaging-photos-notify-application" }
-          : { ...report, version: 4, profile: "messaging-photos-notify-recovery-application" };
+          : { ...report, version: crm ? 6 : 4, profile: `messaging-${selectedProfile}-application` };
       },
     }), neutral(stage === "precheck" ? "CHECKPOINT" : "VERIFY"));
     assert.equal(events.includes("import"), stage === "final");

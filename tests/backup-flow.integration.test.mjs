@@ -16,7 +16,7 @@ import { createMediaStorage } from "../server/media/storage.mjs";
 import { normalizeImage } from "../server/media/image.mjs";
 import { makeTotpSecret, sealTotpSecret, tokenDigest } from "../server/auth/crypto.mjs";
 import { encryptMessageBody, messageFingerprint } from "../server/chat/crypto.mjs";
-import { sealNotes } from "../server/crm/crypto.mjs";
+import { sealNotes, openNotes } from "../server/crm/crypto.mjs";
 import { sealVerificationPayload } from "../server/mail/crypto.mjs";
 import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 import { sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
@@ -560,7 +560,7 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       for (const text of output) assert.equal(text.includes(notificationKey.toString("base64url")) || text.includes(subscription.endpoint), false);
     });
 
-    await t.test("recovery notification checkpoint captures populated reset SQL and restores its isolated application clone without sending mail or Push", async () => {
+    for (const crmProfile of [false, true]) await t.test(`${crmProfile ? "CRM and recovery" : "recovery"} notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push`, async () => {
       // This starts with real populated tables and authenticated ciphertext,
       // then copies SQL to the separately named disposable schema. No worker,
       // HTTP application, mail transport or Push transport is started.
@@ -571,6 +571,15 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       const subscription = { endpoint: "https://fcm.googleapis.com/fcm/send/synthetic-recovery-isolated-clone", expirationTime: null,
         keys: { p256dh: curve.getPublicKey().toString("base64url"), auth: randomBytes(16).toString("base64url") } };
       const recoveryEncrypted = sealResetPayload({ email: client.email, token: recoveryToken }, keys.mailKey, recoveryJobId);
+      const privateNotes = "Synthetic restored shared notes with reminder", labelId = id();
+      const notesEncrypted = sealNotes(privateNotes, keys.crmKey, { adminId: admin.id, conversationId, version: "2" });
+      if (crmProfile) {
+        await sourceConnection.query(`INSERT INTO crm_profiles (admin_id, conversation_id, nickname, notes_encrypted, reminder_at, version, notes_revision, created_at, updated_at)
+          VALUES (?, ?, 'Synthetic shared record', ?, ?, 3, 2, ?, ?)`, [admin.id, conversationId, notesEncrypted, sqlDate(now + 86400000), sqlDate(now), sqlDate(now)]);
+        await sourceConnection.query(`INSERT INTO crm_labels (id, owner_admin_id, kind, name, normalized_name, created_at, updated_at)
+          VALUES (?, ?, 'tag', 'Synthetic restore label', 'synthetic restore label', ?, ?)`, [labelId, admin.id, sqlDate(now), sqlDate(now)]);
+        await sourceConnection.query(`INSERT INTO crm_memberships (admin_id, conversation_id, label_id, created_at) VALUES (?, ?, ?, ?)`, [admin.id, conversationId, labelId, sqlDate(now)]);
+      }
       await sourceConnection.query(`INSERT INTO client_password_resets (id, user_id, token_hash, credential_version, email_hash, created_at, expires_at)
         VALUES (?, ?, ?, 1, ?, ?, ?)`, [recoveryId, client.id, tokenDigest(recoveryToken), createHash("sha256").update(client.email, "utf8").digest(), sqlDate(now), sqlDate(now + 1800000)]);
       await sourceConnection.query(`INSERT INTO password_reset_outbox (id, reset_id, recipient_user_id, payload_encrypted, available_at, expires_at, created_at)
@@ -586,31 +595,48 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       const deps = (database, root, changed = {}) => {
         const selected = dependencies(database, root, {}, changed), configure = selected.configure;
         selected.configure = () => {
-          const config = configure(); delete config.keys.crmKey; config.keys.notificationKey = Buffer.from(notificationKey);
+          const config = configure(); if (!crmProfile) delete config.keys.crmKey; config.keys.notificationKey = Buffer.from(notificationKey);
           suppliedKeys.push({ keys: config.keys, before: Object.fromEntries(Object.entries(config.keys).map(([name, key]) => [name, Buffer.from(key)])) });
           return config;
         };
         return selected;
       };
-      const file = path.join(temporaryRoot, "recovery-application-checkpoint.json");
-      const args = command => [command, "--offline", "--manifest", file, "--profile", "photos-notify-recovery-application"];
+      const profileName = `photos-notify-recovery${crmProfile ? "-crm" : ""}`;
+      const file = path.join(temporaryRoot, `${profileName}-application-checkpoint.json`);
+      const args = command => [command, "--offline", "--manifest", file, "--profile", `${profileName}-application`];
       await assert.rejects(main(["prepare", "--offline", "--manifest", path.join(temporaryRoot, "must-not-hide-recovery.json"), "--profile", "photos-notify"],
         process.env, deps(options.database, sourceRoot)), backupError);
-      const strictFile = path.join(temporaryRoot, "recovery-strict-checkpoint.json");
-      assert.equal((await main(["prepare", "--offline", "--manifest", strictFile, "--profile", "photos-notify-recovery"],
+      if (crmProfile) {
+        const oldProfile = dependencies(options.database, sourceRoot), configure = oldProfile.configure;
+        oldProfile.configure = () => { const value = configure(); delete value.keys.crmKey; value.keys.notificationKey = Buffer.from(notificationKey); return value; };
+        await assert.rejects(main(["prepare", "--offline", "--manifest", path.join(temporaryRoot, "must-not-hide-crm.json"), "--profile", "photos-notify-recovery"], process.env, oldProfile), backupError);
+      }
+      const strictFile = path.join(temporaryRoot, `${profileName}-strict-checkpoint.json`);
+      assert.equal((await main(["prepare", "--offline", "--manifest", strictFile, "--profile", profileName],
         process.env, deps(options.database, sourceRoot))).prepared, true);
       const strictManifest = JSON.parse(await readFile(strictFile, "utf8"));
-      assert.equal(strictManifest.version, 5); assert.equal(strictManifest.profile, "messaging-photos-notify-recovery");
+      assert.equal(strictManifest.version, crmProfile ? 7 : 5); assert.equal(strictManifest.profile, `messaging-${profileName}`);
       assert.equal((await main(args("prepare"), process.env, deps(options.database, sourceRoot))).prepared, true);
       const manifest = JSON.parse(await readFile(file, "utf8"));
-      assert.equal(manifest.version, 6); assert.equal(manifest.profile, "messaging-photos-notify-recovery-application");
+      assert.equal(manifest.version, crmProfile ? 8 : 6); assert.equal(manifest.profile, `messaging-${profileName}-application`);
       assert.equal(manifest.payload.snapshot.version, 2);
       assert.equal(manifest.payload.snapshot.coverage.scope, "application-tables");
       assert.equal(manifest.payload.snapshot.coverage.completeDatabase, false);
-      assert.deepEqual(Object.keys(manifest.payload.canaries).sort(), ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"].sort());
+      assert.deepEqual(Object.keys(manifest.payload.canaries).sort(), ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey", ...(crmProfile ? ["crmKey"] : [])].sort());
       await sourceUnchanged(); await clone();
       const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
       await assert.rejects(main(args("verify"), targetEnv, deps(restoreDatabase, targetRoot, { mailKey: randomBytes(32) })), backupError);
+      if (crmProfile) {
+        await assert.rejects(main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot, { crmKey: randomBytes(32) })), backupError);
+        assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore);
+        const changed = sealNotes("Synthetic tampering", keys.crmKey, { adminId: admin.id, conversationId, version: "2" });
+        await targetConnection.query("UPDATE crm_profiles SET notes_encrypted = ? WHERE admin_id = ? AND conversation_id = ?", [changed, admin.id, conversationId]);
+        const changedHash = await databaseHash(restoreDatabase);
+        await assert.rejects(main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot)), backupError);
+        assert.equal(await databaseHash(restoreDatabase), changedHash); assert.deepEqual(await filesUnder(targetRoot), filesBefore);
+        await targetConnection.query("UPDATE crm_profiles SET notes_encrypted = ? WHERE admin_id = ? AND conversation_id = ?", [notesEncrypted, admin.id, conversationId]);
+        assert.equal(await databaseHash(restoreDatabase), before);
+      }
       assert.equal((await main(args("verify"), targetEnv, deps(restoreDatabase, targetRoot))).verified, true);
       assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore);
       const restored = await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot));
@@ -624,11 +650,20 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       assert.deepEqual({ ...push }, { status: "pending", attempts: 0, lease_token: null, lease_until: null, finished_at: null });
       assert.equal((await targetConnection.query("SELECT enabled FROM push_subscriptions WHERE id = ?", [subscriptionId]))[0].enabled, 1);
       assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS count FROM sessions WHERE id IN (?, ?)", [client.sessionId, admin.sessionId]))[0].count), 2);
+      if (crmProfile) {
+        const profile = (await targetConnection.query("SELECT nickname, notes_encrypted, reminder_at, version, notes_revision FROM crm_profiles WHERE admin_id = ? AND conversation_id = ?", [admin.id, conversationId]))[0];
+        assert.equal(profile.nickname, "Synthetic shared record"); assert.equal(Number(profile.version), 3); assert.equal(Number(profile.notes_revision), 2);
+        const reminder = profile.reminder_at instanceof Date ? profile.reminder_at.getTime() : Date.parse(`${profile.reminder_at.replace(" ", "T")}Z`);
+        assert.equal(reminder, now + 86400000);
+        assert.equal(profile.notes_encrypted, notesEncrypted); assert.equal(openNotes(profile.notes_encrypted, keys.crmKey, { adminId: admin.id, conversationId, version: "2" }), privateNotes);
+        assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS n FROM crm_memberships WHERE admin_id = ? AND conversation_id = ? AND label_id = ?", [admin.id, conversationId, labelId]))[0].n), 1);
+        assert.equal((await targetConnection.query("SELECT name FROM crm_labels WHERE id = ?", [labelId]))[0].name, "Synthetic restore label");
+      }
       const completed = await databaseHash(restoreDatabase);
       assert.equal((await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot))).restored, true);
       assert.equal(await databaseHash(restoreDatabase), completed); await sourceUnchanged();
       for (const supplied of suppliedKeys) assert.deepEqual(supplied.keys, supplied.before, "verification erases only its own key copies");
-      for (const text of output) for (const privateValue of [recoveryToken, recoveryEncrypted, subscription.endpoint, notificationKey.toString("base64url")])
+      for (const text of output) for (const privateValue of [recoveryToken, recoveryEncrypted, privateNotes, notesEncrypted, subscription.endpoint, notificationKey.toString("base64url")])
         assert.equal(text.includes(privateValue), false);
     });
 

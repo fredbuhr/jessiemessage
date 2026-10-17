@@ -5,6 +5,8 @@ import { main, parseArguments, BackupCliError } from "../scripts/backup.mjs";
 import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { tokenDigest } from "../server/auth/crypto.mjs";
 import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
+import { loadRuntimeCrmEnvironment, CRM_RUNTIME_OPTIONS } from "../server/config/runtime-crm.mjs";
+import { bundle as crmBundle } from "./fixtures/crm-private.mjs";
 
 const manifestPath = "/private-backup/manifest.json";
 const args = (command) => [command, "--offline", "--manifest", manifestPath];
@@ -59,6 +61,27 @@ function fixture({ source = false } = {}) {
   return { state, config, dependencies, events, output, pool, inspectionPool, storage, snapshots, manifests, recovery, original, sourceIdentity, targetIdentity };
 }
 const mutations = (f) => f.events.filter((item) => Array.isArray(item) && ["close", "remove", "release", "rebind"].includes(item[0]));
+
+test("the real CRM backup configuration forwards six actual keys and rejects inactive CRM or active broadcasts before opening SQL", async () => {
+  const env = await loadRuntimeCrmEnvironment("/private/synthetic-crm", CRM_RUNTIME_OPTIONS, { readBundle: async () => crmBundle() });
+  const f = fixture({ source: true });
+  f.config.databaseName = env.JESSIEMESSAGE_DB_NAME;
+  f.config.media.capacity = { ownerBytes: Number(env.JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES), totalBytes: Number(env.JESSIEMESSAGE_MEDIA_TOTAL_BYTES) };
+  const create = f.manifests.createBackupManifest;
+  f.manifests.createBackupManifest = value => ({ ...create(value), version: 7, profile: value.profile });
+  assert.equal((await main([...args("prepare"), "--profile", "photos-notify-recovery-crm"], env, { ...f.dependencies, configure: undefined })).prepared, true);
+  const crypto = f.events.find(event => Array.isArray(event) && event[0] === "crypto")[1];
+  assert.deepEqual(Object.keys(crypto.keys).sort(), ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey", "crmKey"].sort());
+  assert.equal(crypto.keys.crmKey.toString("base64url"), env.JESSIEMESSAGE_CRM_KEY); assert.equal(f.state.manifest.profile, "messaging-photos-notify-recovery-crm");
+  for (const override of [{ JESSIEMESSAGE_ENABLE_CRM: "0" }, { JESSIEMESSAGE_ENABLE_BROADCAST: "1" },
+    { JESSIEMESSAGE_CRM_KEY: "" }, { JESSIEMESSAGE_CRM_KEY: env.JESSIEMESSAGE_MESSAGE_KEY }]) {
+    let opened = false;
+    await assert.rejects(main([...args("prepare"), "--profile", "photos-notify-recovery-crm"], { ...env, ...override }, {
+      createPool: async () => { opened = true; assert.fail("Invalid profile cannot reach SQL"); },
+    }));
+    assert.equal(opened, false);
+  }
+});
 
 test("backup commands require exact offline arguments and a canonical absolute manifest path", () => {
   for (const command of ["prepare", "verify", "restore"]) assert.deepEqual(parseArguments(args(command)), { command, offline: true, manifestPath });

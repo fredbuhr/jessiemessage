@@ -10,6 +10,7 @@ import { gunzipSync } from "node:zlib";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
+import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { readCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
 import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
@@ -69,7 +70,7 @@ async function syntheticScope(directory) {
   };
 }
 
-async function fixture(t, { recovery = false } = {}) {
+async function fixture(t, { crm = false, recovery = crm } = {}) {
   await mkdir(base, { recursive: true, mode: 0o700 });
   const root = await mkdtemp(join(base, "private-checkpoint-capture-"));
   await chmod(root, 0o700);
@@ -86,15 +87,16 @@ async function fixture(t, { recovery = false } = {}) {
   const inputStream = { isTTY: true };
   const command = (mode = "capture") => [mode, ...(["capture", "capture-application"].includes(mode) ? ["--offline"] : []),
     "--private-directory", privateDirectory, "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination,
-    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", "photos-notify-recovery"] : [])];
+    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", `photos-notify-recovery${crm ? "-crm" : ""}`] : [])];
   const dependencies = {
     inheritedEnv: { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" }, execArgv: [], inputStream,
     async scopeOperation(directory, operation) { return operation(await syntheticScope(directory)); },
     async loadEnvironment(directory, parameters) {
       assert.equal(directory, privateDirectory);
       assert.deepEqual(parameters, { port: "3000", ...(recovery ? { originProfile: "primary", recovery: true } : {}) });
-      const environment = await loadRuntimeNotificationsEnvironment(directory, parameters,
-        { readBundle: async () => bundle(mediaRoot, recovery ? "https://jessiemessage.com" : origin) });
+      const environment = await (crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment)(directory, parameters,
+        { readBundle: async () => ({ ...bundle(mediaRoot, recovery ? "https://jessiemessage.com" : origin),
+          ...(crm ? { crm: { version: 1, origin: "https://jessiemessage.com", crmKey: key(6) } } : {}) }) });
       state.loaded.push(environment);
       state.events.push("load");
       return environment;
@@ -121,7 +123,7 @@ async function fixture(t, { recovery = false } = {}) {
       assert.equal(args[0], "prepare");
       assert.equal(args[1], "--offline");
       assert.equal(args[2], "--manifest");
-      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${state.application ? "-application" : ""}`]);
+      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${state.application ? "-application" : ""}`]);
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_USER, state.application ? undefined : "synthetic_inspection");
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD, state.application ? undefined : inspectionPassword);
       assert.equal(environment.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, runtimePassword);
@@ -130,15 +132,15 @@ async function fixture(t, { recovery = false } = {}) {
       state.usedEnvironments.push(environment);
       state.prepares += 1;
       state.events.push(`prepare:${basename(args[3])}`);
-      await writeFile(args[3], `${JSON.stringify({ version: recovery ? state.application ? 6 : 5 : state.application ? 4 : 3,
-        profile: `messaging-photos-notify${recovery ? "-recovery" : ""}${state.application ? "-application" : ""}`, payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
+      await writeFile(args[3], `${JSON.stringify({ version: crm ? state.application ? 8 : 7 : recovery ? state.application ? 6 : 5 : state.application ? 4 : 3,
+        profile: `messaging-photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${state.application ? "-application" : ""}`, payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
         { mode: 0o600, flag: "wx" });
       return { command: "prepare", verified: true, prepared: true, restored: false };
     },
     async getManifest(filename) { state.manifests += 1; return JSON.parse(await readFile(filename, "utf8")); },
     async verifyManifest({ manifest, keys }) {
       state.keys.push(keys);
-      assert.deepEqual(Object.keys(keys).sort(), ["mailKey", "mediaKey", "messageKey", "notificationKey", "totpKey"]);
+      assert.deepEqual(Object.keys(keys).sort(), ["mailKey", "mediaKey", "messageKey", "notificationKey", "totpKey", ...(crm ? ["crmKey"] : [])].sort());
       for (const value of Object.values(keys)) assert.equal(value.length, 32);
       return manifest.payload;
     },
@@ -447,6 +449,32 @@ test("recovery capture refuses downgraded backup profiles before SQL dumping", a
       } }), { code: "PRIVATE_CHECKPOINT_BACKUP" });
     assert.equal(f.state.dumps, 0); await assert.rejects(lstat(join(f.destination, "receipt.json")), { code: "ENOENT" }); cleared(f.state);
   }
+});
+
+test("CRM checkpoint capture carries all six keys through strict and application archives, then erases only owned secrets", { timeout: 15000 }, async t => {
+  for (const application of [false, true]) {
+    const f = await fixture(t, { crm: true }); f.state.application = application;
+    if (application) Object.assign(f.state.snapshot, { version: 2, coverage: { ...APPLICATION_COVERAGE } });
+    const report = await run(parseArguments(f.command(application ? "capture-application" : "capture")), f.dependencies);
+    const receipt = await readCheckpointReceipt(await syntheticScope(f.destination));
+    assert.equal(receipt.version, application ? 6 : 5); assert.equal(receipt.profile, `messaging-photos-notify-recovery-crm${application ? "-application" : ""}`);
+    assert.equal(report.profile, receipt.profile); assert.equal(report.archiveContentsVerified, true);
+    assert.equal(report.started, false); assert.equal(report.migrationPerformed, false); assert.equal(report.capacityRebound, false);
+    assert.equal(f.state.secretReads, application ? 0 : 1);
+    for (const env of f.state.loaded) assert.equal(env.JESSIEMESSAGE_CRM_KEY, "");
+    for (const keys of f.state.keys) assert.equal(keys.crmKey.equals(Buffer.alloc(32)), true);
+    publicOnly(report, f); cleared(f.state);
+  }
+});
+
+test("CRM capture rejects an old five-key envelope before dumping SQL or publishing a receipt", async t => {
+  const f = await fixture(t, { crm: true }), prepare = f.dependencies.prepare;
+  await assert.rejects(run(parseArguments(f.command()), { ...f.dependencies, prepare: async (...args) => {
+    const result = await prepare(...args), file = args[0][3], manifest = JSON.parse(await readFile(file, "utf8"));
+    manifest.version = 5; manifest.profile = "messaging-photos-notify-recovery"; await writeFile(file, JSON.stringify(manifest)); return result;
+  } }), { code: "PRIVATE_CHECKPOINT_BACKUP" });
+  assert.equal(f.state.dumps, 0); await assert.rejects(lstat(join(f.destination, "receipt.json")), { code: "ENOENT" });
+  cleared(f.state); assert.equal(f.state.loaded[0].JESSIEMESSAGE_CRM_KEY, "");
 });
 
 test("an existing destination is rejected before password input or any database operation", async (t) => {

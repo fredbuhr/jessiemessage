@@ -33,7 +33,7 @@ La quatrième vérification concerne un outil d’exploitation et peut accompagn
 | Ordre | Fonction | Suite |
 | --- | --- | --- |
 | 0.44 | Clé et coffre des fiches privées | [Préparation de la configuration primaire](crm-private-configuration.md), validation de la configuration et chiffrement GPG réel réussis en CI, précontrôle hébergé conforme ; clé/coffre réels et activation restent à réaliser |
-| 0.45 | Fiches privées, tags, groupes, notes et rappels | Ajouter le profil de démarrage explicite, ses assertions SQL et la couverture du checkpoint/restauration incluant le CRM ; préparer clé/coffre réels, copie indépendante puis activation ciblée |
+| 0.45 | Fiches privées, tags, groupes, notes et rappels | [Profil explicite, assertions SQL et reprise à six clés implémentés](crm-runtime-backup.md) ; terminer les preuves exactes et la préparation hébergée, puis coffre indépendant, checkpoint courant/restauration isolée et activation ciblée |
 | Ensuite | Envois groupés livrés individuellement | Préparer le profil, la prévisualisation des destinataires, les règles existantes d’accord/retrait, la détection des doublons et la reprise ; tester avant activation |
 | Entretien | Version stable et suivi des appareils | Consolider les PR empilées sans remplacer implicitement la révision servie ; compléter la matrice appareils au fil du pilote |
 
