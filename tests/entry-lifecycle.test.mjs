@@ -169,3 +169,16 @@ test("entry opens a single connected role directly and preserves a choice when b
     assert.deepEqual(f.calls.map((call) => call.path), ["/api/entry"]);
   }
 });
+
+test("device resume remains an explicit role choice with welcoming FR/EN copy", async () => {
+  const f = harness({ handler: () => response(200, dto({ state: "signed_out", href: "/connect-device/client" }, { state: "signed_out", href: "/connect-device/admin" })) });
+  await flush();
+  assert.equal(f.element("client-link").href, "/connect-device/client");
+  assert.equal(f.element("client-link").textContent, "Retrouver mon espace");
+  assert.equal(f.element("administrator-link").textContent, "Retrouver l’administration");
+  assert.equal(f.navigation.length, 0, "the two roles never guess which identity to resume");
+  await f.click("language-switch");
+  assert.equal(f.element("client-link").textContent, "Return to my space");
+  assert.equal(f.element("administrator-link").textContent, "Return to administration");
+  assert.equal(f.calls.length, 1, "language does not authorize or restart a transition");
+});

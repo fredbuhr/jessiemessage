@@ -8,6 +8,8 @@ import { createEntryHandler } from "./entry/http.mjs";
 import { createRequestOriginGuard, isOriginFormTarget, RequestOriginError } from "./http/request-origin.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
+const PRIMARY_ORIGIN = "https://jessiemessage.com";
+const RECIPE_ORIGIN = "https://recette.jessiemessage.com";
 
 const publicFiles = new Map([
   ["/", ["index.html", "text/html; charset=utf-8"]],
@@ -60,12 +62,25 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
 }
 
 export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler,
-  entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null } = {}) {
+  entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null,
+  legacyHandlers = null, transitionHandler = null } = {}) {
   const requestOriginAllowed = requestOrigin === null ? null : createRequestOriginGuard(requestOrigin);
+  let legacyOriginAllowed = null, legacyChain = null;
+  if (legacyHandlers !== null) {
+    const names = ["authHandler", "accessHandler", "chatHandler", "mediaHandler", "crmHandler", "resetHandler", "readinessHandler", "broadcastHandler", "notificationsHandler", "entryHandler"];
+    if (requestOrigin !== PRIMARY_ORIGIN || !legacyHandlers || Object.getPrototypeOf(legacyHandlers) !== Object.prototype
+      || Object.getOwnPropertySymbols(legacyHandlers).length
+      || Object.getOwnPropertyNames(legacyHandlers).some(name => !names.includes(name))
+      || names.some(name => { const property = Object.getOwnPropertyDescriptor(legacyHandlers, name); return property && (!Object.hasOwn(property, "value") || property.value !== undefined && typeof property.value !== "function"); })
+      || typeof legacyHandlers.entryHandler !== "function") throw new RequestOriginError();
+    legacyOriginAllowed = createRequestOriginGuard(RECIPE_ORIGIN);
+    legacyChain = [transitionHandler, legacyHandlers.entryHandler, ...names.slice(0, -1).reverse().map(name => legacyHandlers[name])].filter(Boolean);
+  }
+  if (transitionHandler !== null && (typeof transitionHandler !== "function" || legacyChain === null)) throw new RequestOriginError();
   if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
   const privateHandlers = [notificationsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
-  const handlers = [entryHandler, ...privateHandlers];
+  const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness",
     "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/broadcast-preference.js",
     "/crm.js", "/crm-model.js", "/crm.css", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
@@ -74,6 +89,8 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   const requestWaiters = new Set();
   async function handleRequest(request, response) {
     const method = request.method ?? "GET";
+    let activeHandlers = handlers;
+    let activeNotifications = notificationsHandler;
     if (draining) {
       response.writeHead(503, { ...securityHeaders, "Content-Type": "application/json; charset=utf-8", Connection: "close" });
       response.end(method === "HEAD" ? undefined : '{"error":"service_unavailable"}');
@@ -92,8 +109,13 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
         return;
       }
       if (!requestOriginAllowed(request)) {
-        reply(response, method, 421, "application/json; charset=utf-8", '{"error":"misdirected_request"}', { Connection: "close" });
-        request.resume(); return;
+        if (legacyOriginAllowed?.(request)) {
+          activeHandlers = legacyChain;
+          activeNotifications = legacyHandlers.notificationsHandler;
+        } else {
+          reply(response, method, 421, "application/json; charset=utf-8", '{"error":"misdirected_request"}', { Connection: "close" });
+          request.resume(); return;
+        }
       }
     }
     let pathname, url;
@@ -128,7 +150,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
       return;
     }
     try {
-      for (const handler of handlers) {
+      for (const handler of activeHandlers) {
         try { if (await handler(request, response)) return; }
         catch {
           if (response.headersSent) response.destroy();
@@ -149,7 +171,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
       // Authentication is registered only by explicit private configuration.
       // Private routes require their explicitly configured feature handlers.
       // Never serve arbitrary file paths from the filesystem.
-      const file = pathname === "/sw.js" && notificationsHandler ? ["sw.js", "text/javascript; charset=utf-8"] : publicFiles.get(pathname);
+      const file = pathname === "/sw.js" && activeNotifications ? ["sw.js", "text/javascript; charset=utf-8"] : publicFiles.get(pathname);
       if (!file) {
         reply(response, method, 404, "text/plain; charset=utf-8", "Not found");
         return;
@@ -183,7 +205,14 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   return server;
 }
 
-export async function createConfiguredServer(env = process.env, { requestOrigin = null, clock = Date.now } = {}) {
+export async function createConfiguredServer(env = process.env, options = {}) {
+  if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
+    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition"].includes(name))
+    || Object.values(Object.getOwnPropertyDescriptors(options)).some(property => !Object.hasOwn(property, "value"))) throw new RequestOriginError();
+  const requestOrigin = Object.hasOwn(options, "requestOrigin") ? options.requestOrigin : null;
+  const clock = Object.hasOwn(options, "clock") ? options.clock : Date.now;
+  const deviceTransition = Object.hasOwn(options, "deviceTransition") ? options.deviceTransition : false;
+  if (typeof deviceTransition !== "boolean" || typeof clock !== "function" || deviceTransition && requestOrigin !== PRIMARY_ORIGIN) throw new RequestOriginError();
   if (requestOrigin !== null) createRequestOriginGuard(requestOrigin);
   const { authConfiguration } = await import("./auth/config.mjs");
   const { accessConfiguration } = await import("./access/config.mjs");
@@ -202,6 +231,16 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
   const resetConfig = clientRecoveryConfiguration(env);
   const broadcastConfig = broadcastConfiguration(env, { crmEnabled: crmConfig.enabled });
   const notificationsConfig = loadNotificationsConfig(env);
+  if (deviceTransition) {
+    const { inspectPreproductionConfiguration } = await import("./preflight/config.mjs");
+    const profile = inspectPreproductionConfiguration(env, { expectedOrigin: PRIMARY_ORIGIN, target: "messaging-photos-notify", originProfile: "primary" });
+    // The operator loader requires verified TLS. The lower-level server keeps
+    // runtimeDatabaseOptions' existing, explicit loopback test policy so SQL
+    // rehearsals exercise these same factories without a deployment bypass.
+    if (profile.checks.some(check => check.name !== "database_tls" && check.status === "fail")
+      || ![config, accessConfig, chatConfig, mediaConfig, notificationsConfig].every(value => value.enabled === true)
+      || crmConfig.enabled || resetConfig.enabled || broadcastConfig.enabled) throw new RequestOriginError();
+  }
   if (!config.enabled) return { server: createAppServer({ requestOrigin }), pool: null };
   const { mailConfiguration } = await import("./mail/config.mjs");
   const mailConfig = mailConfiguration(env);
@@ -218,6 +257,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
     await store.assertSchema();
     const service = await createAuthService({ store, totpKey: config.totpKey, clock });
     const authHandler = createAuthHandler(service, { origin: config.origin, clock });
+    const legacyHandlers = deviceTransition ? { authHandler: createAuthHandler(service, { origin: RECIPE_ORIGIN, clock }) } : null;
     const workerNames = [accessConfig.enabled ? "verification" : null, resetConfig.enabled ? "recovery" : null,
       broadcastConfig.enabled ? "broadcasts" : null, notificationsConfig.enabled ? "notifications" : null].filter(Boolean);
     operations = createOperationsMonitor({
@@ -234,6 +274,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
       features: { clientAccess: accessConfig.enabled, chat: chatConfig.enabled, photos: mediaConfig.enabled,
         clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled, notifications: notificationsConfig.enabled } });
     const readinessHandler = createReadinessHandler(readinessService, { origin: config.origin });
+    if (legacyHandlers) legacyHandlers.readinessHandler = createReadinessHandler(readinessService, { origin: RECIPE_ORIGIN });
     let diagnosticClosing;
     const diagnostics = { close() {
       if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close()]).then((results) => {
@@ -260,6 +301,9 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
     await mailStore.assertSchema();
     const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
       totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin, clock });
+    const legacyAccessService = deviceTransition ? await createAccessService({ store: accessStore, authStore: store, authService: service,
+      totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: RECIPE_ORIGIN, clock }) : null;
+    if (legacyHandlers) legacyHandlers.accessHandler = createAccessHandler(legacyAccessService, { origin: RECIPE_ORIGIN, clock });
     let resetHandler;
     let resetMailStore;
     if (resetConfig.enabled) {
@@ -290,6 +334,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
       const chatService = await createChatService({ store: chatStore, authStore: store, authService: service,
         accessService, key: chatConfig.key, clock });
       chatHandler = createChatHandler(chatService, { origin: chatConfig.origin });
+      if (legacyHandlers) legacyHandlers.chatHandler = createChatHandler(chatService, { origin: RECIPE_ORIGIN });
       if (notificationsConfig.enabled) {
         const { createNotificationsService } = await import("./notifications/service.mjs");
         const { createNotificationsHttpHandler } = await import("./notifications/http.mjs");
@@ -300,6 +345,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
         const notificationsService = await createNotificationsService({ store: notificationsStore, config: notificationsConfig,
           chatService, authStore: store, clock });
         notificationsHandler = createNotificationsHttpHandler(notificationsService, { origin: notificationsConfig.origin });
+        if (legacyHandlers) legacyHandlers.notificationsHandler = createNotificationsHttpHandler(notificationsService, { origin: RECIPE_ORIGIN });
         notificationTransport = createNotificationTransport(notificationsConfig);
         notificationWorker = createNotificationWorker({ store: notificationsStore, transport: notificationTransport,
           config: notificationsConfig, clock, onState: observe("notifications"),
@@ -337,6 +383,7 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
         const mediaService = await createMediaService({ store: mediaStore, chatService, authStore: store,
           storage: mediaStorage, key: mediaConfig.key, minimumFreeBytes: mediaConfig.minimumFreeBytes });
         mediaHandler = createMediaHandler(mediaService, { origin: mediaConfig.origin });
+        if (legacyHandlers) legacyHandlers.mediaHandler = createMediaHandler(mediaService, { origin: RECIPE_ORIGIN });
       }
       if (broadcastConfig.enabled) {
         const { createBroadcastStore } = await import("./broadcast/store.mjs");
@@ -352,8 +399,16 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, operations, requestOrigin,
-      entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled }) });
+    let transitionHandler = null;
+    if (deviceTransition) {
+      const { createDeviceTransitionHandler } = await import("./transition/http.mjs");
+      transitionHandler = createDeviceTransitionHandler({ authService: service, accessService, clock, admission: null });
+      legacyHandlers.entryHandler = createEntryHandler({ adminSession: (token) => service.session(token),
+        clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, clock });
+    }
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, operations, requestOrigin,
+      legacyHandlers, transitionHandler,
+      entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled, deviceTransition, clock }) });
     const workers = [];
     let closing, stopping, aborting;
     const mailWorker = {
@@ -404,10 +459,10 @@ export async function createConfiguredServer(env = process.env, { requestOrigin 
   }
 }
 
-export async function start(env = process.env, { requestOrigin = null } = {}) {
+export async function start(env = process.env, options = {}) {
   const rawPort = Number(env.PORT ?? 3000);
   const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3000;
-  const { server, pool, mailWorker, diagnostics } = await createConfiguredServer(env, { requestOrigin });
+  const { server, pool, mailWorker, diagnostics } = await createConfiguredServer(env, options);
   const drain = createShutdown({ server, pool, mailWorker, diagnostics });
   let listening = false, rejectBinding;
   const shutdown = (exitCode = 0) => {

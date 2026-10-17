@@ -1,8 +1,8 @@
 import { readRuntimeNotificationsBundle, validateRuntimeNotificationsConfiguration } from "./runtime-database-file.mjs";
 import { MEDIA_ENV_FIELDS, copyRuntimeMediaEnvironment, loadRuntimeMediaEnvironment } from "./runtime-media.mjs";
-import { clearRuntimeMessagingSecrets } from "./runtime-messaging.mjs";
+import { clearRuntimeMessagingSecrets, runtimeOriginProfile } from "./runtime-messaging.mjs";
 import { loadNotificationsConfig } from "../notifications/config.mjs";
-import { NOTIFICATIONS_CONFIG_CHECK_NAMES, inspectPreproductionConfiguration } from "../preflight/config.mjs";
+import { NOTIFICATIONS_CONFIG_CHECK_NAMES, PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES, inspectPreproductionConfiguration } from "../preflight/config.mjs";
 
 const NOTIFICATION_FIELDS = ["JESSIEMESSAGE_NOTIFICATIONS_KEY", "JESSIEMESSAGE_VAPID_PUBLIC_KEY", "JESSIEMESSAGE_VAPID_PRIVATE_KEY", "JESSIEMESSAGE_VAPID_SUBJECT"];
 export const NOTIFICATIONS_ENV_FIELDS = Object.freeze([...MEDIA_ENV_FIELDS, ...NOTIFICATION_FIELDS]);
@@ -21,19 +21,21 @@ function record(value, fields, optional = []) {
   }));
 }
 
-export function copyRuntimeNotificationsEnvironment(value) {
+export function copyRuntimeNotificationsEnvironment(value, options = {}) {
   let selected, base, configuration;
   try {
+    const originOptions = runtimeOriginProfile(options);
+    const names = originOptions.originProfile === "primary" ? PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES : NOTIFICATIONS_CONFIG_CHECK_NAMES;
     selected = record(value, NOTIFICATIONS_ENV_FIELDS);
     if (NOTIFICATIONS_ENV_FIELDS.some(name => typeof selected[name] !== "string") || selected.JESSIEMESSAGE_ENABLE_NOTIFICATIONS !== "1") fail();
     // Validate the original photo profile with notifications explicitly disabled;
     // its strict field set cannot absorb notification keys or unrelated flags.
-    base = copyRuntimeMediaEnvironment({ ...Object.fromEntries(MEDIA_ENV_FIELDS.map(name => [name, selected[name]])), JESSIEMESSAGE_ENABLE_NOTIFICATIONS: "0" });
+    base = copyRuntimeMediaEnvironment({ ...Object.fromEntries(MEDIA_ENV_FIELDS.map(name => [name, selected[name]])), JESSIEMESSAGE_ENABLE_NOTIFICATIONS: "0" }, originOptions);
     configuration = loadNotificationsConfig(selected);
     if (!configuration.enabled || configuration.vapid.subject !== "mailto:contact@jessiemessage.com") fail();
-    const report = inspectPreproductionConfiguration(selected, { expectedOrigin: selected.JESSIEMESSAGE_SITE_ORIGIN, target: "messaging-photos-notify" });
-    if (!report.valid || report.checks.length !== NOTIFICATIONS_CONFIG_CHECK_NAMES.length
-      || report.checks.some((check, index) => check.name !== NOTIFICATIONS_CONFIG_CHECK_NAMES[index] || !["pass", "disabled"].includes(check.status))) fail();
+    const report = inspectPreproductionConfiguration(selected, { expectedOrigin: selected.JESSIEMESSAGE_SITE_ORIGIN, target: "messaging-photos-notify", ...originOptions });
+    if (!report.valid || report.checks.length !== names.length
+      || report.checks.some((check, index) => check.name !== names[index] || !["pass", "disabled"].includes(check.status))) fail();
     return { ...base, ...Object.fromEntries(NOTIFICATION_FIELDS.map(name => [name, selected[name]])), JESSIEMESSAGE_ENABLE_NOTIFICATIONS: "1" };
   } catch { fail(); }
   finally { clearRuntimeMessagingSecrets(selected); clearRuntimeMessagingSecrets(base); configuration?.key.fill(0); }
@@ -42,20 +44,21 @@ export function copyRuntimeNotificationsEnvironment(value) {
 export async function loadRuntimeNotificationsEnvironment(directory, options = {}, dependencies = {}) {
   let source, bundle, base, env, notifications, readBundle;
   try {
-    const selected = record(dependencies, [], ["readBundle"]);
+    const parameters = record(options, [], ["port", "originProfile"]), selected = record(dependencies, [], ["readBundle"]);
+    const originOptions = runtimeOriginProfile(Object.hasOwn(parameters, "originProfile") ? { originProfile: parameters.originProfile } : {});
     readBundle = selected.readBundle ?? readRuntimeNotificationsBundle;
     if (typeof readBundle !== "function") fail();
     // Acquire all configuration files through one protected directory anchor.
-    base = await loadRuntimeMediaEnvironment(directory, options, { readBundle: async () => {
-      source = await readBundle(directory);
+    base = await loadRuntimeMediaEnvironment(directory, parameters, { readBundle: async (_directory, forwardedOriginOptions) => {
+      source = await readBundle(directory, forwardedOriginOptions);
       bundle = record(source, ["database", "authentication", "messaging", "media", "notifications"]);
       return { database: bundle.database, authentication: bundle.authentication, messaging: bundle.messaging, media: bundle.media };
     } });
-    notifications = validateRuntimeNotificationsConfiguration(bundle.notifications);
+    notifications = validateRuntimeNotificationsConfiguration(bundle.notifications, originOptions);
     if (notifications.origin !== base.JESSIEMESSAGE_SITE_ORIGIN) fail();
     env = copyRuntimeNotificationsEnvironment({ ...base, JESSIEMESSAGE_ENABLE_NOTIFICATIONS: "1",
       JESSIEMESSAGE_NOTIFICATIONS_KEY: notifications.notificationKey, JESSIEMESSAGE_VAPID_PUBLIC_KEY: notifications.vapidPublicKey,
-      JESSIEMESSAGE_VAPID_PRIVATE_KEY: notifications.vapidPrivateKey, JESSIEMESSAGE_VAPID_SUBJECT: notifications.vapidSubject });
+      JESSIEMESSAGE_VAPID_PRIVATE_KEY: notifications.vapidPrivateKey, JESSIEMESSAGE_VAPID_SUBJECT: notifications.vapidSubject }, originOptions);
     return env;
   } catch { clearRuntimeMessagingSecrets(env); fail(); }
   finally {

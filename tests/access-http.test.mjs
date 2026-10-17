@@ -24,7 +24,7 @@ const page = (kind, rows, nextCursor = null) => ({ [kind]: rows, nextCursor, has
 const adminSession = () => ({ user: { id: adminId, role: "admin", pseudonym: "Jessie" }, csrf, expiresAt: Date.now() + 3600000 });
 const clientSession = () => ({ user: { id: clientId, role: "client", pseudonym: "Client" }, token: clientToken, csrf, expiresAt: Date.now() + 3600000, access: { state: "pending", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
 
-async function fixture(t, overrides = {}) {
+async function fixture(t, overrides = {}, options = {}) {
   const calls = [];
   const methods = {
     adminSession: (token) => token === adminToken ? adminSession() : null,
@@ -40,7 +40,7 @@ async function fixture(t, overrides = {}) {
   };
   const service = {};
   for (const [name, implementation] of Object.entries({ ...methods, ...overrides })) service[name] = async (...args) => { calls.push([name, ...args]); return implementation(...args); };
-  const handler = createAccessHandler(service, { origin });
+  const handler = createAccessHandler(service, { origin, ...options });
   const server = createServer(async (req, res) => { if (!await handler(req, res)) { res.writeHead(404); res.end("fallback"); } });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(async () => { server.closeAllConnections(); await new Promise((resolve) => server.close(resolve)); });
@@ -57,6 +57,31 @@ function assertHeaders(response) {
 test("access handler requires exact HTTPS origin and a complete service", () => {
   for (const value of ["http://jessiemessage.example", `${origin}/`, `${origin}/access`, `${origin}?x=1`, "https://user:password@jessiemessage.example"]) assert.throws(() => createAccessHandler({}, { origin: value }));
   assert.throws(() => createAccessHandler({}, { origin }));
+});
+
+test("client login, cookie renewal and admission renewal use the same injected clock as their services", async t => {
+  const now = Date.UTC(2024, 0, 1), expiresAt = now + 3600000, accessExpiresAt = now + 86400000;
+  const session = { ...clientSession(), expiresAt };
+  const { base, service } = await fixture(t, { login: () => session, session: () => session,
+    renewClient: (_token, id) => ({ id, accessExpiresAt }) }, { clock: () => now });
+  for (const response of [await post(base, "/api/access/login", credentials),
+    await fetch(`${base}/api/access/session`, { headers: { Cookie: clientCookie } })]) {
+    assert.equal(response.status, 200); assert.equal((await response.json()).expiresAt, expiresAt);
+    assert.match(response.headers.get("set-cookie"), /Max-Age=3600; Secure; HttpOnly; SameSite=Strict/);
+  }
+  const renewed = await post(base, `/api/admin/clients/${clientId}/renew`, { accessDays: 1, expectedExpiresAt: now }, adminHeaders());
+  assert.equal(renewed.status, 200); assert.equal((await renewed.json()).client.accessExpiresAt, accessExpiresAt);
+  for (const clock of [null, true, 1, "now"]) assert.throws(() => createAccessHandler(service, { origin, clock }), TypeError);
+});
+
+test("invalid injected access clock values cannot produce cookies or approve renewal DTOs", async t => {
+  for (const now of [NaN, -1, Infinity, "2024", 253402300800000]) {
+    const { base } = await fixture(t, {}, { clock: () => now });
+    const login = await post(base, "/api/access/login", credentials);
+    assert.equal(login.status, 503); assert.equal(login.headers.get("set-cookie"), null);
+    const renewed = await post(base, `/api/admin/clients/${clientId}/renew`, { accessDays: 1, expectedExpiresAt: Date.now() }, adminHeaders());
+    assert.equal(renewed.status, 503);
+  }
 });
 
 test("invitation inspection requires a body token and exposes only expiry and access duration", async (t) => {

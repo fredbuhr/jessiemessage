@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { createWebDriverRequester } from "./browser/webdriver.mjs";
+import { createWebDriverNavigationPolicy, createWebDriverRequester } from "./browser/webdriver.mjs";
 
 const secret = "synthetic-sensitive-value";
 
@@ -45,10 +45,29 @@ test("WebDriver real loopback responses preserve success while protocol failures
 
 test("WebDriver diagnostic transport refuses non-loopback origins and unsupported commands before fetch", async () => {
   let calls = 0; const fetchRequest = async () => { calls += 1; throw new Error("must not be reached"); };
-  for (const origin of ["https://external.example.invalid", "http://127.0.0.1.example.invalid", `http://${secret}@127.0.0.1`, "http://127.0.0.1/path"]) {
+  for (const origin of ["https://external.example.invalid", "http://127.0.0.1.example.invalid", `http://${secret}@127.0.0.1`, "http://127.0.0.1/path", "http://jessiemessage.localhost:4444"]) {
     assert.throws(() => createWebDriverRequester(origin, fetchRequest));
   }
   const request = createWebDriverRequester("http://127.0.0.1:12345", fetchRequest);
   await assert.rejects(request("POST", `/session/${secret}/unknown?${secret}`), { message: "Unsupported WebDriver command" });
   assert.equal(calls, 0);
+});
+
+test("browser navigation permits only its explicit fixed HTTPS loopback sibling on the same port", () => {
+  const primary = "https://jessiemessage.localhost:4444", source = "https://recette.jessiemessage.localhost:4444";
+  const policy = createWebDriverNavigationPolicy(primary, [source]);
+  assert.equal(policy.url("/migration#state=test"), `${primary}/migration#state=test`);
+  assert.equal(policy.url(`${source}/migration`), `${source}/migration`);
+  assert.equal(policy.transitionAlias, true);
+  assert.throws(() => createWebDriverNavigationPolicy(primary).url(source));
+  for (const foreign of ["https://jessiemessage.com", "https://recette.jessiemessage.com", "https://other.localhost:4444", "https://127.0.0.1:4444", "http://recette.jessiemessage.localhost:4444", "https://recette.jessiemessage.localhost:5555", `${source}/path`, `https://${secret}@recette.jessiemessage.localhost:4444`]) {
+    assert.throws(() => createWebDriverNavigationPolicy(primary, [foreign]));
+  }
+  assert.throws(() => policy.url("https://jessiemessage.com/migration"));
+  assert.throws(() => policy.url(`https://${secret}@jessiemessage.localhost:4444/`));
+  assert.throws(() => createWebDriverNavigationPolicy("http://127.0.0.1:4444", [source]));
+  assert.throws(() => createWebDriverNavigationPolicy(primary, [source, source]));
+  const ordinary = createWebDriverNavigationPolicy("http://127.0.0.1:4444");
+  assert.equal(ordinary.url("/app"), "http://127.0.0.1:4444/app");
+  assert.throws(() => ordinary.url("http://localhost:4444/app"));
 });

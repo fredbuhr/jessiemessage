@@ -44,6 +44,36 @@ function localOrigin(value) {
   return url.origin;
 }
 
+const transitionHosts = new Set(["jessiemessage.localhost", "recette.jessiemessage.localhost"]);
+function browserOrigin(value) {
+  const url = new URL(value);
+  if (!transitionHosts.has(url.hostname)) return localOrigin(value);
+  if (url.protocol !== "https:" || url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
+    throw new Error("WebDriver requires a fixed HTTPS loopback test alias");
+  }
+  return url.origin;
+}
+
+// The sole cross-origin rehearsal is this fixed pair of HTTPS .localhost names.
+// Both resolve to loopback in Chrome; the WebDriver command transport continues
+// to accept numeric / localhost loopback only. No deployment origin is allowed.
+export function createWebDriverNavigationPolicy(origin, siblingOrigins = []) {
+  const base = browserOrigin(origin), parsed = new URL(base);
+  if (!Array.isArray(siblingOrigins) || siblingOrigins.length > 1) throw new Error("WebDriver requires a bounded sibling-origin allowlist");
+  const origins = new Set([base]);
+  for (const sibling of siblingOrigins) {
+    const selected = browserOrigin(sibling), url = new URL(selected);
+    if (!transitionHosts.has(parsed.hostname) || !transitionHosts.has(url.hostname)
+      || parsed.hostname === url.hostname || url.port !== parsed.port) throw new Error("WebDriver sibling navigation requires the fixed HTTPS loopback pair on one port");
+    origins.add(selected);
+  }
+  return Object.freeze({ origin: base, transitionAlias: transitionHosts.has(parsed.hostname), url(path) {
+    const url = new URL(path, base);
+    if (!origins.has(url.origin) || url.username || url.password) throw new Error("WebDriver navigation must stay on its allowed loopback origins");
+    return url.href;
+  } });
+}
+
 function commandRoute(path) {
   if (path === "/status" || path === "/session") return path;
   const match = typeof path === "string" && /^\/session\/[^/?#]+(\/.*)?$/.exec(path);
@@ -164,12 +194,12 @@ export async function startWebDriver() {
 
   return {
     close,
-    async browser({ origin, width = 1280, acceptInsecureCerts = false } = {}) {
+    async browser({ origin, siblingOrigins = [], width = 1280, acceptInsecureCerts = false } = {}) {
       if (closed) throw new Error("WebDriver already closed");
-      const baseUrl = localOrigin(origin);
+      const navigation = createWebDriverNavigationPolicy(origin, siblingOrigins), baseUrl = navigation.origin;
       if (acceptInsecureCerts && !baseUrl.startsWith("https:")) throw new Error("Insecure test certificates require HTTPS loopback");
       const value = await request("POST", "/session", { capabilities: { alwaysMatch: { browserName: "chrome", acceptInsecureCerts, "goog:chromeOptions": {
-        binary: chromeBin, args: ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-background-networking", "--disable-component-update", "--disable-default-apps", "--disable-sync", "--no-first-run", "--lang=fr-FR", "--window-size=1280,900"],
+        binary: chromeBin, args: ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-background-networking", "--disable-component-update", "--disable-default-apps", "--disable-sync", "--no-first-run", "--lang=fr-FR", "--window-size=1280,900", ...(navigation.transitionAlias ? ["--no-proxy-server", "--host-resolver-rules=MAP jessiemessage.localhost 127.0.0.1, MAP recette.jessiemessage.localhost 127.0.0.1, MAP * ~NOTFOUND"] : [])],
         prefs: { "intl.accept_languages": "fr-FR,fr" },
         ...(width < 800 ? { mobileEmulation: { deviceMetrics: { width, height: 844, pixelRatio: 1, mobile: true, touch: true } } } : {})
       } } } });
@@ -183,8 +213,7 @@ export async function startWebDriver() {
         execute: (script, ...args) => request("POST", `${endpoint}/execute/sync`, { script, args }),
         executeAsync: (script, ...args) => request("POST", `${endpoint}/execute/async`, { script, args }),
         navigate: (path) => {
-          const url = new URL(path, baseUrl); if (url.origin !== baseUrl) throw new Error("WebDriver navigation must stay on its loopback origin");
-          return request("POST", `${endpoint}/url`, { url: url.href });
+          return request("POST", `${endpoint}/url`, { url: navigation.url(path) });
         },
         async click(selector) { await request("POST", `${endpoint}/element/${await find(selector)}/click`, {}); },
         async type(selector, text) {

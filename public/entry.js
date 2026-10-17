@@ -8,6 +8,7 @@ const words = {
     checking: "Vérification de l’accès…", available: "Choisis l’espace que tu souhaites ouvrir.", unavailable: "L’ouverture des accès est en préparation. Reviens plus tard ou contacte Jessie.",
     offline: "La connexion internet est indisponible. Reconnecte-toi, puis vérifie à nouveau les accès.", error: "L’accès n’a pas pu être vérifié. Réessaie dans un moment.", retry: "Vérifier à nouveau", retryChecking: "Vérification en cours…",
     clientSignIn: "Me connecter", clientSignedOut: "Connecte-toi pour retrouver notre conversation.",
+    clientResume: "Retrouver mon espace", resumeHelp: "Retrouvons l’accès déjà ouvert sur cet appareil.", administratorResume: "Retrouver l’administration",
     clientPending: "Ton compte attend encore la validation de son accès.", clientExpired: "Consulte ton accès pour connaître les possibilités de renouvellement.",
     clientAccess: "Consulter mon accès", clientActive: "Ta conversation privée est accessible.", clientMessages: "Reprendre ma conversation", clientChatUnavailable: "Retrouve l’état de ton accès et les fonctions disponibles.",
     administratorSignedOut: "Accès réservé à l’administration de Jessie.", administratorSignIn: "Connexion administrateur", administratorConnected: "Ouvre les outils de ton espace administrateur.", administratorOpen: "Ouvrir l’administration", administratorMessages: "Ouvrir les conversations",
@@ -25,6 +26,7 @@ const words = {
     checking: "Checking access…", available: "Choose the space you would like to open.", unavailable: "Access is being prepared. Come back later or contact Jessie.",
     offline: "An internet connection is unavailable. Reconnect, then check access again.", error: "Access could not be checked. Please try again in a moment.", retry: "Check again", retryChecking: "Checking access…",
     clientSignIn: "Sign in", clientSignedOut: "Sign in to return to our conversation.",
+    clientResume: "Return to my space", resumeHelp: "Let’s use the connection already open on this device.", administratorResume: "Return to administration",
     clientPending: "Your account is still waiting for access approval.", clientExpired: "Check your access for renewal options.",
     clientAccess: "View my access", clientActive: "Your private conversation is available.", clientMessages: "Return to my conversation", clientChatUnavailable: "View your access status and available features.",
     administratorSignedOut: "Reserved for Jessie’s administration.", administratorSignIn: "Administrator sign-in", administratorConnected: "Open the tools in your administrator space.", administratorOpen: "Open administration", administratorMessages: "Open conversations",
@@ -74,13 +76,15 @@ function render() {
     const { client, administrator } = state.entry;
     if (client) {
       el("client-card").hidden = false; const link = el("client-link"); link.href = client.href; link.hidden = false;
-      const description = client.state === "signed_out" ? "clientSignedOut" : client.state === "pending" ? "clientPending" : client.state === "expired" ? "clientExpired" : client.href === "/messages" ? "clientActive" : "clientChatUnavailable";
-      link.textContent = t(client.state === "signed_out" ? "clientSignIn" : client.href === "/messages" ? "clientMessages" : "clientAccess"); el("client-description").textContent = t(description);
+      const resuming = client.href === "/connect-device/client";
+      const description = resuming ? "resumeHelp" : client.state === "signed_out" ? "clientSignedOut" : client.state === "pending" ? "clientPending" : client.state === "expired" ? "clientExpired" : client.href === "/messages" ? "clientActive" : "clientChatUnavailable";
+      link.textContent = t(resuming ? "clientResume" : client.state === "signed_out" ? "clientSignIn" : client.href === "/messages" ? "clientMessages" : "clientAccess"); el("client-description").textContent = t(description);
     }
     if (administrator) {
       el("administrator-card").hidden = false; const link = el("administrator-link"); link.href = administrator.href; link.hidden = false;
-      link.textContent = t(administrator.state === "signed_out" ? "administratorSignIn" : administrator.href === "/admin/messages" ? "administratorMessages" : "administratorOpen");
-      el("administrator-description").textContent = t(administrator.state === "signed_out" ? "administratorSignedOut" : "administratorConnected");
+      const resuming = administrator.href === "/connect-device/admin";
+      link.textContent = t(resuming ? "administratorResume" : administrator.state === "signed_out" ? "administratorSignIn" : administrator.href === "/admin/messages" ? "administratorMessages" : "administratorOpen");
+      el("administrator-description").textContent = t(resuming ? "resumeHelp" : administrator.state === "signed_out" ? "administratorSignedOut" : "administratorConnected");
     }
   }
   renderInstall();
