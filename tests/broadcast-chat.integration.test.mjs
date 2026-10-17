@@ -6,6 +6,7 @@ import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
+import { CLIENT_SESSION_SECONDS } from "../server/auth/session-policy.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), digest = () => randomBytes(32);
@@ -89,7 +90,7 @@ test("real MariaDB trusted broadcast/chat transactions (synthetic disposable dat
         else await connection.query("UPDATE users SET status = 'active', age_assured_at = ?, access_approved_at = ?, access_expires_at = ? WHERE id = ?", [sqlDate(now + 1), sqlDate(now - 2000), sqlDate(now - 1), client.id]);
         const result = await store.withPreferenceActor(preference(client), (_connection, context) => ({ id: context.actor.id, client: context.client.id, expiresAt: context.expiresAt }));
         assert.ok(result.id.equals(client.id)); assert.ok(result.client.equals(client.id));
-        assert.equal(result.expiresAt, now + 8 * 3600000);
+        assert.equal(result.expiresAt, now + CLIENT_SESSION_SECONDS * 1000);
       }
     });
 
@@ -118,14 +119,14 @@ test("real MariaDB trusted broadcast/chat transactions (synthetic disposable dat
       await assert.rejects(store.withPreferenceActor(preference(missingProof), () => true), code("CHAT_UNAUTHORIZED"));
     });
 
-    await t.test("preferences enforce absolute and idle boundaries and reject future session state", async () => {
-      const client = await user();
-      await assert.rejects(store.withPreferenceActor(preference(client, { now: now + 1800000 }), () => true), code("CHAT_UNAUTHORIZED"));
-      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + 1), client.sessionId]);
-      await assert.rejects(store.withPreferenceActor(preference(client, { now: now + 1 }), () => true), code("CHAT_UNAUTHORIZED"));
-      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + 8 * 3600000), client.sessionId]);
-      await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now + 1), client.sessionId]);
-      await assert.rejects(store.withPreferenceActor(preference(client), () => true), code("CHAT_UNAUTHORIZED"));
+    await t.test("preferences survive inactivity while persisted expiry and future session state remain enforced", async () => {
+      const client = await user(), at = now + 1800000;
+      assert.equal(await store.withPreferenceActor(preference(client, { now: at }), () => true), true);
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(at + 1), client.sessionId]);
+      await assert.rejects(store.withPreferenceActor(preference(client, { now: at + 1 }), () => true), code("CHAT_UNAUTHORIZED"));
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(at + CLIENT_SESSION_SECONDS * 1000), client.sessionId]);
+      await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(at + 1), client.sessionId]);
+      await assert.rejects(store.withPreferenceActor(preference(client, { now: at }), () => true), code("CHAT_UNAUTHORIZED"));
     });
 
     await t.test("durable delivery needs no live administrator cookie and produces ordinary isolated chat rows", async () => {

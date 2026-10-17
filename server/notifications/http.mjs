@@ -61,11 +61,11 @@ function mappedError(error) {
 export function createNotificationsHttpHandler(service, { origin }) {
   const configured = new URL(origin);
   if (configured.protocol !== "https:" || configured.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
-  if (["actor", "capabilities", "status", "subscribe", "disable"].some((method) => typeof service?.[method] !== "function")) throw new TypeError("A notification service is required");
+  if (["actor", "capabilities", "status", "subscribe", "disable", "open"].some((method) => typeof service?.[method] !== "function")) throw new TypeError("A notification service is required");
   return async (request, response) => {
     let url;
     try { url = new URL(request.url ?? "/", "http://localhost"); } catch { return false; }
-    const route = /^\/api\/notifications\/(admin|client)\/(capabilities|status|subscription|disable)$/.exec(url.pathname);
+    const route = /^\/api\/notifications\/(admin|client)\/(capabilities|status|subscription|disable|open)$/.exec(url.pathname);
     if (!route) return false;
     const role = route[1], kind = route[2], method = request.method ?? "GET", allowed = kind === "capabilities" ? "GET" : "POST";
     if (method !== allowed) {
@@ -88,7 +88,13 @@ export function createNotificationsHttpHandler(service, { origin }) {
       if (kind === "capabilities") reply(response, method, 200, safeCapabilities(await service.capabilities(role, token)));
       else {
         const body = await readJson(request, { maxBytes: 8192 });
-        if (kind === "status") {
+        if (kind === "open") {
+          shape(body, ["notification"]); if (!id(body.notification)) throw invalid();
+          const result = await service.open(role, token, body);
+          if (!result || !id(result.conversationId) || !id(result.messageId) || typeof result.sequence !== "string"
+            || !/^[1-9][0-9]{0,19}$/.test(result.sequence) || BigInt(result.sequence) > 18446744073709551615n) throw unavailable();
+          reply(response, method, 200, { conversationId: result.conversationId, messageId: result.messageId, sequence: result.sequence });
+        } else if (kind === "status") {
           shape(body, ["endpoint"]);
           if (typeof body.endpoint !== "string" || body.endpoint.length < 1 || body.endpoint.length > 4096 || !body.endpoint.isWellFormed()) throw invalid();
           reply(response, method, 200, safeStatus(await service.status(role, token, body)));

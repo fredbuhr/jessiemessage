@@ -2,6 +2,7 @@
 
 // Only fixed interface sources belong in this catalog. Account fields stay raw.
 globalThis.JessieI18n?.register({
+  "Ta connexion reste ouverte sur cet appareil. Tu peux la fermer dans « Mon accès ».": "You stay signed in on this device. You can sign out in ‘My access’.",
     "Notifications": "Notifications",
 
   "Espace réservé aux adultes. Après ton inscription, confirme ton e-mail ; Jessie validera ensuite ton accès. Cette déclaration ne vérifie pas ta majorité.": "This space is for adults. After signing up, confirm your email; Jessie will then approve your access. This declaration does not verify your age.",

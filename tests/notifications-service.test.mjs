@@ -17,7 +17,7 @@ const hasCode = (code) => (error) => error instanceof NotificationsError && erro
 async function fixture() {
   const calls = [], rateCalls = [], actorCalls = [], key = Buffer.alloc(32, 13), state = { time: now, actorError: null,
     rates: [], status: { subscriptions: [row()], currentId: subscriptionId }, subscribed: row(), disabled: true };
-  const store = Object.fromEntries(["status", "subscribe", "disable"].map((method) => [method, async (request) => {
+  const store = Object.fromEntries(["status", "subscribe", "disable", "open"].map((method) => [method, async (request) => {
     calls.push({ method, request });
     if (state.storeError) throw state.storeError;
     return method === "status" ? state.status : method === "subscribe" ? state.subscribed : state.disabled;
@@ -40,6 +40,23 @@ test("notifications service requires enabled configuration, explicit key/VAPID a
     await assert.rejects(createNotificationsService({ ...f.options, config }), hasCode("NOTIFICATIONS_CONFIG"));
   }
   for (const changes of [{ authStore: {} }, { chatService: {} }, { store: {} }, { clock: null }]) await assert.rejects(createNotificationsService({ ...f.options, ...changes }), hasCode("NOTIFICATIONS_CONFIG"));
+});
+
+test("notification destinations are resolved only after current actor proof and share the bounded read budget", async () => {
+  const f = await fixture(), notification = "ff".repeat(16);
+  f.store.open = async (request) => {
+    f.calls.push({ method: "open", request });
+    return { conversationId: "cc".repeat(16), messageId: "dd".repeat(16), sequence: "9007199254740993", secret: "private" };
+  };
+  const result = await f.service.open("client", token, { notification });
+  assert.deepEqual(result, { conversationId: "cc".repeat(16), messageId: "dd".repeat(16), sequence: "9007199254740993" });
+  assert.equal(f.calls.at(-1).request.notificationId.toString("hex"), notification);
+  assert.equal(f.rateCalls.length, 2);
+  const before = f.calls.length;
+  await assert.rejects(f.service.open("client", token, { notification, next: "/admin" }), hasCode("NOTIFICATIONS_INPUT"));
+  f.state.actorError = { code: "CHAT_UNAUTHORIZED" };
+  await assert.rejects(f.service.open("client", token, { notification }), hasCode("CHAT_UNAUTHORIZED"));
+  assert.equal(f.calls.length, before);
 });
 
 test("capabilities publish only the public VAPID key and the current account's safe device metadata", async () => {

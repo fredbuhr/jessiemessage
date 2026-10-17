@@ -329,6 +329,9 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       const boundary = now + 1;
       await connection.query("UPDATE sessions SET expires_at = ? WHERE token_hash = ?", [sqlDate(boundary), hash]);
       assert.equal((await request("/api/chat/client/conversation", { headers: headersFor(temporary) })).status, 200);
+      // The successful request renewed this device. Reapply the persisted
+      // boundary before testing an expiry that has not been renewed.
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE token_hash = ?", [sqlDate(boundary), hash]);
       now = boundary;
       const expired = await request("/api/chat/client/conversation", { headers: headersFor(temporary) });
       assert.equal(expired.status, 401);

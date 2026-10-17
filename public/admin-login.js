@@ -1,4 +1,5 @@
 "use strict";
+const notificationReference = globalThis.JessieNotificationLink?.read() ?? null;
 
 const adminUI = globalThis.JessieI18n ?? {
   t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -119,7 +120,7 @@ function signedIn(session) {
   notice("");
   document.getElementById("session-retry").hidden = true;
   planSessionCheck(session.expiresAt);
-  if (location.pathname === "/admin/login") history.replaceState(null, "", "/admin");
+  if (location.pathname === "/admin/login") history.replaceState(null, "", notificationReference ? `/admin#notification=${notificationReference}` : "/admin");
   void loadAccess();
   if (session.user.role === "admin") {
     void loadChatAccess();
@@ -142,6 +143,9 @@ async function loadChatAccess() {
     const capability = await request("/api/chat/admin/capabilities");
     if (ticket !== generation || capability.enabled !== true) return;
     await verifyIdentity(ticket);
+    if (notificationReference && current(ticket)) {
+      location.replace(globalThis.JessieNotificationLink.destination("admin", notificationReference)); return;
+    }
     document.getElementById("admin-chat-link").hidden = false;
     adminUI.text(document.getElementById("admin-session-note"), "Tes conversations privées sont accessibles.");
   } catch (error) {

@@ -31,6 +31,17 @@ test("worker serializes runOnce, claims at most five and sends only generic loca
   await f.worker.stop();
 });
 
+test("role-aware deliveries carry only their opaque job reference and generic copy", async () => {
+  for (const role of ["admin", "client"]) {
+    const f = fixture({ prepare: async () => ({ subscription: {}, locale: "en", role, expiresAt: current + 86400000 }) });
+    await f.worker.runOnce(); const value = JSON.parse(f.sent[0][1]);
+    assert.equal(value.role, role); assert.equal(value.notification, job().jobId.toString("hex"));
+    assert.equal(value.body, "A new message is waiting for you.");
+    assert.doesNotMatch(JSON.stringify(value), /conversationId|messageId|endpoint|password|csrf/);
+    await f.worker.stop();
+  }
+});
+
 test("worker distinguishes permanent subscription removal, provider rejection and bounded retries", async () => {
   for (const [statusCode, expected] of [[201, "accepted"], [204, "accepted"], [404, "invalid_subscription"], [410, "invalid_subscription"], [429, "retry"], [500, "retry"], [503, "retry"], [401, "failed"], [403, "failed"], [413, "failed"], [307, "failed"], [999, "failed"]]) {
     const f = fixture({ response: { statusCode, retryAfterSeconds: 120 } }); const counts = await f.worker.runOnce();

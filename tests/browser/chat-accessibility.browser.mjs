@@ -21,7 +21,7 @@ let server, driver, baseUrl;
 let fixture;
 
 function resetFixture() {
-  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" } };
+  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0 };
 }
 function media(role) {
   const prefix = `/api/media/${role}/conversations/${conversationId}/messages/${photoMessageId}`;
@@ -52,7 +52,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["notifications.js", "notifications.css", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "broadcast-preference.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -70,16 +70,31 @@ async function startFixtureServer() {
       response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
       const sendJson = (status, value) => { response.writeHead(status, { "Content-Type": "application/json" }); response.end(JSON.stringify(value)); };
       if (request.method === "GET" && ["/messages", "/admin/messages"].includes(url.pathname)) {
+        if (!fixture.signedIn) { response.writeHead(303, { Location: url.pathname === "/messages" ? "/access" : "/admin/login" }); response.end(); return; }
         response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); response.end(html); return;
+      }
+      if (request.method === "GET" && ["/access", "/admin/login", "/admin"].includes(url.pathname)) {
+        const name = url.pathname === "/access" ? "/access.html" : "/admin-login.html";
+        response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        response.end(files.get(name).toString().replace("<head>", '<head><script src="/browser-fixture.js"></script>')); return;
       }
       if (request.method === "GET" && files.has(url.pathname)) {
         const extension = url.pathname.slice(url.pathname.lastIndexOf("."));
         response.writeHead(200, { "Content-Type": contentTypes[extension] ?? "application/octet-stream" }); response.end(files.get(url.pathname)); return;
       }
       const sessionRole = url.pathname === "/api/auth/session" ? "admin" : url.pathname === "/api/access/session" ? "client" : null;
-      if (sessionRole && request.method === "GET") {
-        sendJson(200, { user: { id: id(sessionRole === "admin" ? 1 : 2), role: sessionRole, pseudonym: sessionRole === "admin" ? "Jessie" : peerName },
-          csrf: "A".repeat(43), expiresAt: Date.now() + 3600000, ...(sessionRole === "client" ? { access: { state: "active" } } : {}) }); return;
+      const loginRole = url.pathname === "/api/auth/login" ? "admin" : url.pathname === "/api/access/login" ? "client" : null;
+      if (sessionRole && request.method === "GET" || loginRole && request.method === "POST") {
+        if (loginRole) { for await (const _chunk of request) { /* Synthetic credentials only. */ } fixture.signedIn = true; fixture.loginRequests++; }
+        if (!fixture.signedIn) { sendJson(401, { error: "authentication_required" }); return; }
+        const role = sessionRole ?? loginRole;
+        sendJson(200, { user: { id: id(role === "admin" ? 1 : 2), role, pseudonym: role === "admin" ? "Jessie" : peerName },
+          csrf: "A".repeat(43), expiresAt: Date.now() + 3600000, ...(role === "client" ? { access: { state: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, expiresAt: null } } : {}) }); return;
+      }
+      if (/^\/api\/notifications\/(admin|client)\/open$/.test(url.pathname) && request.method === "POST") {
+        let body = ""; for await (const chunk of request) body += chunk;
+        assert.deepEqual(JSON.parse(body), { notification: id(999) });
+        sendJson(200, { conversationId, messageId: id(201), sequence: "1" }); return;
       }
       const match = /^\/api\/(chat|media)\/(admin|client)(\/.*)$/.exec(url.pathname);
       if (match) {
@@ -90,7 +105,7 @@ async function startFixtureServer() {
           if (suffix === "/conversations") { sendJson(200, { conversations: [conversation(role)], nextCursor: null, hasMore: false }); return; }
           if (suffix === `/conversations/${conversationId}/messages`) {
             const older = url.searchParams.has("before");
-            sendJson(200, { conversation: conversation(role), messages: (older ? [1] : [2, 3]).map((n) => message(n, role)),
+            sendJson(200, { conversation: conversation(role), messages: (url.searchParams.has("after") ? [1, 2, 3] : older ? [1] : [2, 3]).map((n) => message(n, role)),
               eventCursor: String(fixture.latest), hasMoreBefore: !older, nextBefore: older ? null : "2" }); return;
           }
           if (suffix === `/conversations/${conversationId}/events`) {
@@ -255,4 +270,27 @@ test("Chrome mobile: deleting a message has a keyboard-accessible confirmation w
     assert.equal(await page.execute("return document.activeElement.dataset.sequence"), "2", "focus moves to the tombstone");
     await noJavascriptErrors(page);
   } finally { await page.close(); }
+});
+
+test("Chrome: a notification reaches its exact old message for each role, directly or after required login", { timeout: 60000 }, async () => {
+  for (const role of ["client", "admin"]) for (const signedIn of [true, false]) {
+    resetFixture(); fixture.signedIn = signedIn; const page = await browser(390);
+    const path = role === "admin" ? "/admin/messages" : "/messages";
+    try {
+      await page.navigate(`${path}#notification=${id(999)}`);
+      if (!signedIn) {
+        const form = role === "admin" ? "login-form" : "client-login-form";
+        await waitUntil(() => page.execute("const form=document.getElementById(arguments[0]);return !!form&&!form.hidden;", form), "required login preserves the notification destination");
+        assert.equal(await page.execute("return location.hash"), `#notification=${id(999)}`, "HTTP 303 and the actual login controller retain the reference");
+        await page.type(role === "admin" ? "#email" : "#login-email", "synthetic@example.invalid");
+        await page.type(role === "admin" ? "#password" : "#login-password", "synthetic-test-password");
+        if (role === "admin") await page.type("#factor", "123456");
+        await page.click(`#${form} button[type=submit]`);
+      }
+      await waitUntil(() => page.execute("return location.pathname===arguments[0]&&location.hash===''&&!!document.querySelector('#messages [data-sequence=\"1\"].notification-target');", path), "exact notification message after live session proof");
+      assert.equal(await page.execute("return document.activeElement.dataset.sequence"), "1");
+      assert.equal(fixture.loginRequests, signedIn ? 0 : 1);
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
 });

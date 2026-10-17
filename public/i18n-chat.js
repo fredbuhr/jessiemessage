@@ -1,5 +1,10 @@
 /* Explicit UI catalogue only. User messages, captions and names are never keys. */
 globalThis.JessieI18n?.register({
+  "Messages suivants": "Next messages",
+  "Messages récents ↓": "Recent messages ↓",
+  "Ce message a été supprimé.": "This message has been deleted.",
+  "Cette notification n’est plus disponible. Retrouve les échanges dans ta conversation.": "This notification is no longer available. Find the messages in your conversation.",
+  "Le message n’a pas pu être ouvert. Réessaie dès que la connexion revient.": "The message could not be opened. Try again when your connection returns.",
     "Notifications": "Notifications",
 
   "Réessayer la connexion": "Retry the connection",

@@ -1,5 +1,7 @@
 # Adresses et entrée publique — étape 0.32
 
+**Suite 0.33 :** l’export public reste inchangé ; son entrée mène maintenant au runtime privé `f2677249`, décrit dans [l’ouverture des notifications](notification-opening.md). La vérification du 17 octobre à 02:01:32.525 Europe/Paris confirme aussi ce lien. Le relevé 0.32 ci-dessous conserve son runtime observé à l’époque ; le plan de l’origine finale reste à réaliser.
+
 **Correction en ligne le 17 octobre 2026.** Export public `1f669e4509baf41357c9677249eb63d0b708bd9b`, arbre `c728dd76fe6558c6ad9dd5628d362d3256d7eb50`. Les 25 fichiers et leurs permissions sont vérifiés avant affectation à Apache. À **01:20:24.480 Europe/Paris**, les vingt fichiers servis correspondent aux empreintes attendues et les **56 requêtes réelles** passent. Chrome confirme accueil principal → bouton → choix de connexion actifs, ainsi que l’arrivée depuis HTTP/`www`/`app`. Le runtime privé reste `017cafaf`, schéma 30 ; ses sondes santé/disponibilité répondent 200. L’ancien export public est conservé pour repli. [PR #43](https://github.com/fredbuhr/jessiemessage/pull/43), [CI #244, cinq jobs réussis](https://github.com/fredbuhr/jessiemessage/actions/runs/38980546827).
 
 ## Problème et correction

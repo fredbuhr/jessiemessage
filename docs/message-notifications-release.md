@@ -1,5 +1,7 @@
 # Notifications privées — état de livraison 0.31
 
+**Suite 0.33 active — ouverture du message et connexion client durable :** runtime `f2677249`, schéma 30, build/redémarrage du 17 octobre à 02:00 Europe/Paris ; quatorze fichiers et 39 réponses HTTP conformes à 02:01:32.525. Les cinq jobs CI passent. La [correction du clic](notification-opening.md) ajoute le message exact, la reprise après connexion si nécessaire et 180 jours glissants pour les clients. Le clic réel après cette mise à jour reste à confirmer sur les appareils. Les reçus et l’acceptation 0.31 ci-dessous gardent leur portée historique.
+
 **Acceptation réelle du propriétaire — 17 octobre 2026 :** le système de notifications fonctionne très bien. La livraison réelle est confirmée par ce retour ; le détail des plateformes et les essais simultanés de tous les appareils ne sont pas précisés. Les limites des contrôles automatisés ci-dessous restent distinctes de cette acceptation.
 
 ## Révision validée

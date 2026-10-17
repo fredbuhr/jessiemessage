@@ -1,4 +1,4 @@
-import { createSessionClock, sessionIsValid, adminSessionExpiry, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
+import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionExpiry, CLIENT_SESSION_SECONDS, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { randomBytes } from "node:crypto";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
 import { encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
@@ -339,7 +339,7 @@ export function createAccessStore(pool, { clock } = {}) {
 
     async getClientSession(tokenHash, { now, idleSeconds }) {
       bytes(tokenHash, 32); instant(now);
-      if (!Number.isSafeInteger(idleSeconds) || idleSeconds < 1 || idleSeconds > 86400) invalid();
+      if (!Number.isSafeInteger(idleSeconds) || idleSeconds < 0 || idleSeconds > 86400) invalid();
       return withConnection(async (connection) => {
         const candidate = (await connection.query("SELECT user_id FROM sessions WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
         if (!candidate) return null;
@@ -355,7 +355,7 @@ export function createAccessStore(pool, { clock } = {}) {
         const createdAt = fromSqlDate(row.created_at);
         now = sessionNow(now);
         const lastSeen = fromSqlDate(row.last_seen_at);
-        const expiresAt = fromSqlDate(row.expires_at);
+        let expiresAt = fromSqlDate(row.expires_at);
         if (!sessionIsValid({ role: "client", createdAt, lastSeenAt: lastSeen, expiresAt, now, idleSeconds })) return null;
         const emailVerified = user.email_verified_at !== null && fromSqlDate(user.email_verified_at) <= now;
         const ageAssured = user.age_assured_at !== null && fromSqlDate(user.age_assured_at) <= now;
@@ -365,7 +365,13 @@ export function createAccessStore(pool, { clock } = {}) {
           || fromSqlDate(user.access_approved_at) < fromSqlDate(user.invitation_consumed_at)))) return null;
         const accessExpiresAt = optionalDate(user.access_expires_at);
         const accessState = user.status === "pending" ? "pending" : accessExpiresAt !== null && now >= accessExpiresAt ? "expired" : "active";
-        if (now - lastSeen >= 60000) await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now), row.id]);
+        if (now - lastSeen >= SESSION_TOUCH_MILLISECONDS || idleSeconds === 0 && expiresAt - now < CLIENT_SESSION_SECONDS * 1000 - SESSION_TOUCH_MILLISECONDS) {
+          await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now), row.id]);
+          if (idleSeconds === 0) {
+            expiresAt = Math.max(expiresAt, clientSessionExpiry(now));
+            await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(expiresAt), row.id]);
+          }
+        }
         return { id: row.id, userId: user.id, role: "client", pseudonym: user.pseudonym, expiresAt,
           access: { state: accessState, admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed, emailVerified, ageAssured, approved, expiresAt: accessExpiresAt } };
       }, true);

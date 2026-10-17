@@ -40,10 +40,12 @@ function fixture(role = "admin", { at = now, seen = now - 3600000, expires = adm
   return { state, session, pool: { async getConnection() { return connection; } }, clock: () => state.at };
 }
 
-test("one policy gives administrators 180 sliding days and preserves client idle and absolute limits", () => {
+test("messaging devices survive inactivity while persisted session expiry is still enforced", () => {
   const base = { createdAt: now - 7200000, lastSeenAt: now - 3600000, expiresAt: now + 1000, now };
   assert.equal(sessionIsValid({ ...base, role: "admin" }), true);
-  assert.equal(sessionIsValid({ ...base, role: "client" }), false);
+  assert.equal(sessionIsValid({ ...base, role: "client" }), true);
+  assert.equal(sessionIsValid({ ...base, role: "client", idleSeconds: 1800 }), false);
+  assert.equal(sessionIsValid({ ...base, role: "client", expiresAt: now }), false);
   assert.equal(sessionIsValid({ ...base, role: "admin", expiresAt: now }), false);
   assert.equal(sessionIsValid({ ...base, role: "admin", lastSeenAt: now + 1 }), false);
   assert.equal(sessionIsValid({ ...base, role: "admin", createdAt: now + 1 }), false);
@@ -59,7 +61,7 @@ test("injected session clocks are monotone and reject corrupt clock values", () 
   assert.equal(createSessionClock()(123), 123);
 });
 
-test("administrator cookies last 180 days, client cookies keep their eight-hour maximum", () => {
+test("administrator and client cookies persist for at most 180 days with HttpOnly, Secure and host-only scope", () => {
   const token = Buffer.alloc(32, 7).toString("base64url");
   assert.match(sessionCookie(token, adminSessionExpiry(now), undefined, { now }), new RegExp(`Max-Age=${ADMIN_SESSION_SECONDS};`));
   assert.match(sessionCookie(token, adminSessionExpiry(now), "__Host-jessie_client", { now }), new RegExp(`Max-Age=${CLIENT_SESSION_SECONDS};`));
@@ -95,6 +97,19 @@ test("client idle expiry and stale MFA generations still fail after authority mo
   assert.equal(await createAccessStore(f.pool, { clock: f.clock }).getClientSession(hash, { now, idleSeconds: 1800 }), null);
   const admin = fixture(); admin.state.proofVersion = 2;
   assert.equal(await createAuthStore(admin.pool, { clock: admin.clock }).getSession(hash, { now, idleSeconds: 1800 }), null);
+});
+
+test("a valid client session renews its own device after inactivity, while an expired session cannot be revived", async () => {
+  const f = fixture("client", { seen: now - 3600000, expires: now + 1000 });
+  const record = await createAccessStore(f.pool, { clock: f.clock }).getClientSession(hash, { now, idleSeconds: 0 });
+  assert.equal(record.expiresAt, now + CLIENT_SESSION_SECONDS * 1000);
+  assert.equal(f.state.seen, now);
+  assert.equal(f.state.queried.filter(([sql]) => sql.startsWith("UPDATE sessions SET expires_at")).length, 1);
+  const expired = fixture("client", { expires: now });
+  assert.equal(await createAccessStore(expired.pool, { clock: expired.clock }).getClientSession(hash, { now, idleSeconds: 0 }), null);
+  assert.equal(expired.state.queried.some(([sql]) => sql.startsWith("UPDATE ")), false);
+  const revoked = fixture("client"); revoked.state.revoked = date(now);
+  assert.equal(await createAccessStore(revoked.pool, { clock: revoked.clock }).getClientSession(hash, { now, idleSeconds: 0 }), null);
 });
 
 test("device listing filters invalid proofs and leaks no session hashes, revocation scopes the same account", async () => {
