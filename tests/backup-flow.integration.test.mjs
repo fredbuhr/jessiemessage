@@ -677,7 +677,7 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       if (broadcast) {
         const campaign = (await targetConnection.query("SELECT payload_encrypted, status FROM broadcast_campaigns WHERE id = ?", [broadcastId]))[0];
         assert.equal(campaign.payload_encrypted, broadcastEncrypted); assert.equal(campaign.status, "queued");
-        assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS n FROM broadcast_recipients WHERE campaign_id = ? AND status = 'pending'", [broadcastId]))[0].n), 1);
+        assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS n FROM broadcast_recipients WHERE campaign_id = ? AND state = 'pending'", [broadcastId]))[0].n), 1);
         assert.equal(Number((await targetConnection.query("SELECT enabled FROM broadcast_preferences WHERE user_id = ?", [client.id]))[0].enabled), 1);
       }
       const completed = await databaseHash(restoreDatabase);
