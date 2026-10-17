@@ -1,6 +1,8 @@
 # Lot 0.39 — récupération client et sauvegardes compatibles
 
-**Lot 0.39 activé le 17 octobre 2026 à 18:28 Europe/Paris ; réception personnelle client restante.** Runtime `b651d44ed5909173008d896e7175ecb7a4c1b703`, arbre `87f2a0357a992076e9b28decf18cd0aee7ec4108`, schéma 30, profil `messaging-photos-notify-recovery`, déploiement `primary-transition`. [PR brouillon #54](https://github.com/fredbuhr/jessiemessage/pull/54). Le [plan initial](client-recovery-readiness.md) conserve les constats de départ. Ce document distingue le code livré, les preuves automatisées et la réception réelle.
+**Lot 0.39 activé le 17 octobre 2026 à 18:28 Europe/Paris ; parcours essayé accepté à 18:52:47.** Runtime `b651d44ed5909173008d896e7175ecb7a4c1b703`, arbre `87f2a0357a992076e9b28decf18cd0aee7ec4108`, schéma 30, profil `messaging-photos-notify-recovery`, déploiement `primary-transition`. [PR brouillon #54](https://github.com/fredbuhr/jessiemessage/pull/54). Le [plan initial](client-recovery-readiness.md) conserve les constats de départ. Ce document distingue le code livré, les preuves automatisées et la réception réelle.
+
+**Acceptation propriétaire — 17 octobre 2026 à 18:52:47 Europe/Paris :** « test mot de passe ok, continue ». Le parcours de récupération essayé est accepté globalement. Ce retour ne précise ni la plateforme, ni un essai de réutilisation du lien, ni le Push après reset ou tous les appareils ; aucune répétition globale n’est demandée. Les vérifications détaillées restent des références pour un incident ciblé.
 
 ## Périmètre
 
@@ -55,7 +57,7 @@ La confirmation du formulaire invite à se reconnecter sur ses appareils. Les an
 
 Les messages de demande restent neutres quant à l’existence et à l’éligibilité du compte. Le formulaire reste français/anglais ; l’e-mail de récupération est encore français, désormais au tutoiement. Il ne contient jamais le mot de passe.
 
-## Vérifications et réception restante
+## Vérifications de référence et acceptation
 
 - Vérifier les anciens formats et les nouveaux profils, les refus de déclassement et les charges altérées.
 - Prouver sur les deux MariaDB de CI la capture et la vérification cryptographique d’un état contenant de vraies lignes de récupération, puis la restauration de sa copie SQL isolée. Cette preuve ne doit pas être présentée comme une nouvelle répétition de l’import natif hébergé.
@@ -63,7 +65,7 @@ Les messages de demande restent neutres quant à l’existence et à l’éligib
 - Vérifier le runtime réel avec les deux origines : récupération présente sur l’apex et absente sur recette, schéma physique et sessions existantes conservés.
 - Attendre les cinq jobs CI de la révision exacte avant tout démarrage hébergé. Passer ensuite le préflight sans listener et les contrôles HTTPS de la révision épinglée.
 
-La recette personnelle de bout en bout reste distincte : seul un client de test choisit lui-même son nouveau mot de passe, ouvre l’e-mail reçu depuis `contact@jessiemessage.com`, se reconnecte et rattache ses notifications. Aucun mot de passe n’est demandé dans la discussion et aucun compte administrateur n’est réinitialisé.
+Le retour propriétaire ci-dessus accepte le parcours essayé. Les scénarios de lien consommé, de coexistence des comptes et de Push restent des références ciblées si un incident apparaît ; ce retour ne détaille pas leur exécution réelle. Aucun mot de passe n’est demandé dans la discussion et aucune réinitialisation administrateur n’est requise.
 
 Les quotas réseau existants restent inchangés : aucune confiance supplémentaire n’est accordée aux en-têtes de proxy. La conservation des challenges de récupération reste à définir ; aucune purge ou durée nouvelle n’est introduite.
 

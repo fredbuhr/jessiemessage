@@ -6,11 +6,16 @@ import vm from "node:vm";
 const html = await readFile(new URL("../public/admin-login.html", import.meta.url), "utf8");
 const clockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const controller = await readFile(new URL("../public/admin-login.js", import.meta.url), "utf8");
+const helpLinks = await readFile(new URL("../public/help-link.js", import.meta.url), "utf8");
 const catalogue = await readFile(new URL("../public/i18n-admin.js", import.meta.url), "utf8");
 const now = 1750000000000;
 const flush = async () => { for (let index = 0; index < 8; index++) await new Promise((resolve) => setImmediate(resolve)); };
 const dictionaries = {};
-vm.runInNewContext(catalogue, { JessieI18n: { register(value) { Object.assign(dictionaries, value); } } });
+const catalogContext = {
+  JessieI18n: { register(value) { Object.assign(dictionaries, value); }, getLanguage: () => "fr", onChange() {} },
+  document: { querySelectorAll: () => [] },
+};
+for (const script of [helpLinks, catalogue]) vm.runInNewContext(script, catalogContext);
 
 class Element {
   constructor(tag = "div") {
@@ -32,6 +37,7 @@ class Element {
   removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(name, handler) { if (!this.events.has(name)) this.events.set(name, []); this.events.get(name).push(handler); }
   matches(selector) {
+    if (selector === "a[data-help-link]") return this.tagName === "A" && this.hasAttribute("data-help-link");
     if (selector.startsWith("[")) return this.hasAttribute(selector.slice(1, -1));
     return this.tagName.toLowerCase() === selector.toLowerCase();
   }
@@ -92,6 +98,7 @@ async function harness({ clients = [client(), client(4, { status: "pending", ema
       throw new Error("Unexpected synthetic request");
     } });
   vm.runInContext(runtime, context, { filename: "public/i18n.js" });
+  vm.runInContext(helpLinks, context, { filename: "public/help-link.js" });
   vm.runInContext(catalogue, context, { filename: "public/i18n-admin.js" });
   vm.runInContext(clockSource, context);
   vm.runInContext(controller, context, { filename: "public/admin-login.js" });

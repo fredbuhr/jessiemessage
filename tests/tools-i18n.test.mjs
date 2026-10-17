@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import vm from "node:vm";
 
-const files = Object.fromEntries(await Promise.all(["i18n.js", "i18n-tools.js", "session-clock.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "crm.js", "crm-model.js", "broadcast-preference.js"].map(async (name) => [name, await readFile(new URL(`../public/${name}`, import.meta.url), "utf8")])));
+const files = Object.fromEntries(await Promise.all(["i18n.js", "help-link.js", "i18n-tools.js", "session-clock.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "crm.js", "crm-model.js", "broadcast-preference.js"].map(async (name) => [name, await readFile(new URL(`../public/${name}`, import.meta.url), "utf8")])));
 const flush = async () => { for (let index = 0; index < 10; index++) await new Promise((resolve) => setImmediate(resolve)); };
 const id = (value) => value.toString(16).padStart(32, "0");
 class Element {
@@ -20,7 +20,8 @@ class Element {
   remove() { if (this.parentElement) this.parentElement.children.splice(this.parentElement.children.indexOf(this), 1); this.parentElement = null; }
   addEventListener(name, callback) { if (!this.events.has(name)) this.events.set(name, []); this.events.get(name).push(callback); }
   removeEventListener(name, callback) { this.events.set(name, (this.events.get(name) ?? []).filter((value) => value !== callback)); }
-  matches(selector) { if (selector.startsWith("[")) return this.getAttribute(selector.slice(1, -1)) !== null;
+  matches(selector) { if (selector === "a[data-help-link]") return this.tagName === "A" && this.getAttribute("data-help-link") !== null;
+    if (selector.startsWith("[")) return this.getAttribute(selector.slice(1, -1)) !== null;
     if (selector.startsWith(".")) return this.className.split(" ").includes(selector.slice(1));
     if (selector === "input:checked") return this.tagName === "INPUT" && this.checked;
     return this.tagName.toLowerCase() === selector.toLowerCase(); }
@@ -56,7 +57,7 @@ function harness({ respond } = {}) {
       ? { user: { id: id(1), role: "client" }, csrf: "a".repeat(43), expiresAt: Date.now() + 3600000 }
       : { enabled: options.method === "POST", version: options.method === "POST" ? "2" : "1", updatedAt: Date.now() } }; } });
   const run = (code) => vm.runInContext(code, context);
-  run(files["i18n.js"]); run(files["i18n-tools.js"]); run(files["session-clock.js"]);
+  run(files["i18n.js"]); run(files["help-link.js"]); run(files["i18n-tools.js"]); run(files["session-clock.js"]);
   const model = (name) => {
     const source = files[name], exports = [...source.matchAll(/export (?:function|const) ([A-Za-z][A-Za-z0-9_]*)/g)].map((match) => match[1]);
     run(`globalThis.model = (() => {${source.replaceAll("export function ", "function ").replaceAll("export const ", "const ")}\nreturn {${exports.join(",")}};})();`);
@@ -196,11 +197,14 @@ test("broadcast feature checks cannot postpone cookie renewal and offline recove
 // Conflicting generic copy would reject an entire later catalog atomically.
 test("all private-interface catalogs can coexist and every static broadcast marker has a registered translation", async () => {
   const h = harness(), dictionary = new Map();
-  const names = (await readdir(new URL("../public/", import.meta.url))).filter((name) => /^i18n-.+\.js$/.test(name));
+  const names = ["help-link.js", ...(await readdir(new URL("../public/", import.meta.url))).filter((name) => /^i18n-.+\.js$/.test(name))];
   for (const name of names) {
     const source = await readFile(new URL(`../public/${name}`, import.meta.url), "utf8");
     assert.doesNotThrow(() => h.run(source), name);
-    vm.runInNewContext(source, { JessieI18n: { register(values) { for (const [key, value] of Object.entries(values)) dictionary.set(key, value); } } });
+    vm.runInNewContext(source, {
+      JessieI18n: { register(values) { for (const [key, value] of Object.entries(values)) dictionary.set(key, value); }, getLanguage: () => "fr", onChange() {} },
+      document: { querySelectorAll: () => [] },
+    });
   }
   for (const node of h.root.querySelectorAll("[data-jm-i18n],[data-jm-i18n-placeholder],[data-jm-i18n-title],[data-jm-i18n-aria-label]")) {
     for (const name of ["data-jm-i18n", "data-jm-i18n-placeholder", "data-jm-i18n-title", "data-jm-i18n-aria-label"]) {

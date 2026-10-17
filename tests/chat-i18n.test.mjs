@@ -10,6 +10,7 @@ const modelSource = await readFile(new URL("../public/chat-model.js", import.met
 const modelExports = [...modelSource.matchAll(/export function ([a-zA-Z0-9_]+)\(/g)].map((match) => match[1]);
 const html = await readFile(new URL("../public/chat.html", import.meta.url), "utf8");
 const i18nSource = await readFile(new URL("../public/i18n.js", import.meta.url), "utf8");
+const helpLinksSource = await readFile(new URL("../public/help-link.js", import.meta.url), "utf8");
 const catalogueSource = await readFile(new URL("../public/i18n-chat.js", import.meta.url), "utf8");
 const now = 1750000000000;
 const id = (value) => value.toString(16).padStart(32, "0");
@@ -60,6 +61,7 @@ class Element {
     this.parentElement = null; this._connected = false;
   }
   matches(selector) { return selector.split(",").some((part) => { const value = part.trim();
+    if (value === "a[data-help-link]") return this.tagName === "a" && this.getAttribute("data-help-link") !== null;
     if (value.startsWith("[")) return this.getAttribute(value.slice(1, -1)) !== null;
     if (value.startsWith(".")) return this._classes.has(value.slice(1));
     if (value.startsWith("#")) return this.id === value.slice(1);
@@ -139,6 +141,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
       throw new Error(`Unexpected request ${path}`);
     } });
   vm.runInContext(i18nSource, context, { filename: "public/i18n.js" });
+  vm.runInContext(helpLinksSource, context, { filename: "public/help-link.js" });
   vm.runInContext(catalogueSource, context, { filename: "public/i18n-chat.js" });
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
@@ -173,7 +176,7 @@ function photoFixture(f, sender = "me") {
 }
 
 test("chat HTML loads explicit catalogues before its controller and marks UI leaves without user content", () => {
-  const scripts = ["/i18n.js", "/i18n-chat.js", "/i18n-tools.js", "/chat.js"];
+  const scripts = ["/i18n.js", "/help-link.js", "/i18n-chat.js", "/i18n-tools.js", "/chat.js"];
   for (let index = 1; index < scripts.length; index++) assert.ok(html.indexOf(`src="${scripts[index - 1]}"`) < html.indexOf(`src="${scripts[index]}"`));
   assert.match(html, /href="\/i18n\.css"/); assert.match(html, /data-jm-language/);
   const f = harness({ visible: false });

@@ -11,15 +11,17 @@ const decode = (value) => value.replace(/&#(x[0-9a-f]+|[0-9]+);|&(amp|lt|gt|quot
 
 test("all private UI catalogues can coexist and each HTML source has an English translation in its loaded catalogues", async () => {
   const all = new Map(), perCatalogue = new Map();
-  for (const name of catalogues) {
+  for (const name of [...catalogues, "help-link"]) {
     const own = new Map();
-    vm.runInNewContext(await readFile(new URL(`../public/i18n-${name}.js`, import.meta.url), "utf8"), {
+    const filename = name === "help-link" ? "help-link.js" : `i18n-${name}.js`;
+    vm.runInNewContext(await readFile(new URL(`../public/${filename}`, import.meta.url), "utf8"), {
+      document: { querySelectorAll() { return []; } },
       JessieI18n: { register(entries) {
         for (const [source, english] of Object.entries(entries)) {
           if (all.has(source)) assert.equal(english, all.get(source), `conflicting translation: ${source}`);
           all.set(source, english); own.set(source, english);
         }
-      } },
+      }, getLanguage() { return "fr"; }, onChange() {} },
     });
     perCatalogue.set(name, own);
   }
@@ -27,8 +29,9 @@ test("all private UI catalogues can coexist and each HTML source has an English 
   for (const [page, names] of [["access", ["access", "tools"]], ["recover", ["access"]], ["admin-login", ["admin"]],
     ["chat", ["chat", "tools"]], ["broadcast", ["tools"]], ["readiness", ["readiness"]]]) {
     const html = await readFile(new URL(`../public/${page}.html`, import.meta.url), "utf8");
-    const loaded = new Map(names.flatMap((name) => [...perCatalogue.get(name)]));
+    const loaded = new Map(["help-link", ...names].flatMap((name) => [...perCatalogue.get(name)]));
     const runtime = html.indexOf('src="/i18n.js"'); assert.ok(runtime >= 0, page);
+    assert.ok(html.indexOf('src="/help-link.js"') > runtime, `${page}: runtime before help links`);
     for (const name of names) {
       const script = html.indexOf(`src="/i18n-${name}.js"`);
       assert.ok(script > runtime, `${page}: runtime before ${name}`);
@@ -47,7 +50,7 @@ test("translation assets are public UI only, served without storage or private f
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(async () => { server.closeAllConnections(); await new Promise((resolve) => server.close(resolve)); });
   const base = `http://127.0.0.1:${server.address().port}`;
-  for (const path of ["i18n.js", "i18n.css", ...catalogues.map((name) => `i18n-${name}.js`)]) {
+  for (const path of ["i18n.js", "i18n.css", "help-link.js", ...catalogues.map((name) => `i18n-${name}.js`)]) {
     const response = await fetch(`${base}/${path}`);
     assert.equal(response.status, 200, path);
     assert.equal(response.headers.get("cache-control"), "no-store");

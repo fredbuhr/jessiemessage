@@ -2,9 +2,11 @@
 
 Version applicative **0.18.0**, branche `feat/private-data-export`, construite sur le lot de supervision 0.17a. Ce lot fournit un **outil opérateur hors ligne**, sans route HTTP, bouton client, effacement ou modification du schéma. L’adresse officielle reste **contact@jessiemessage.com**.
 
+**État courant — 17 octobre 2026, schéma 30 :** `server/data/policy.mjs` décrit **29 catégories de tables applicatives**, dont **22 rattachables au client**, cinq administrateur et deux globales ; le registre des migrations est exclu. Les ajouts sont `push_subscriptions` et `push_outbox`, comptés sans exporter les endpoints, clés navigateur, identifiants de session ou charges chiffrées. Les compteurs restent bornés ; l’export de contenu conserve sa portée limitée. Aucune conservation générale ni suppression de compte n’est activée. Les nombres 27 ci-dessous décrivent les preuves historiques du lot 0.17b.
+
 ## Portée
 
-L’inventaire décrit les **27 tables applicatives**. Pour un client explicitement sélectionné, il compte les lignes associées sans exporter leur contenu. Les catégories administrateur et globales ont un compteur `null` : cela signifie « hors périmètre du comptage », jamais zéro. Le registre des migrations n’est pas une catégorie personnelle.
+À la livraison historique 0.17b, l’inventaire décrivait **27 tables applicatives** ; le catalogue courant ci-dessus en couvre 29. Pour un client explicitement sélectionné, il compte les lignes associées sans exporter leur contenu. Les catégories administrateur et globales ont un compteur `null` : cela signifie « hors périmètre du comptage », jamais zéro. Le registre des migrations n’est pas une catégorie personnelle.
 
 Chaque comptage lit au plus 10 001 lignes et restitue au maximum 10 000 avec `truncated: true` au-delà. Ce résultat signifie **au moins 10 000**, pas un total exact. Les profils et appartenances CRM associés sont comptés, mais leurs notes, surnoms et libellés restent exclus de l’export de contenu.
 
