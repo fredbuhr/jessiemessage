@@ -1,5 +1,7 @@
 # JessieMessage
 
+**Étape 0.51 — bilan courant et exploitation :** le [plan précis avant usage privé régulier](docs/production-readiness-2026-10-17.md) remplace les anciennes listes. La [surveillance externe](docs/external-monitoring-051.md) est implémentée et en cours de mise en service. La révision hébergée reste 0.50 `0a1cafd8`. Restent la capture cohérente récurrente, le chiffrement complet et la copie indépendante, la réception des alertes et la consolidation de version ; les acceptations 0.46 restent acquises. **Les paragraphes ci-dessous sont un historique daté, pas la liste courante.**
+
 Invitation-only private messaging PWA. Public source, private user data.
 
 **Stage 0.50 — recipient correction activated:** [the activation record](docs/broadcast-activation-050.md) confirms source `0a1cafd85c3d8699be1961075b18e80e36bcd041`, tree `17db89aa165e23ca427d073f5a3fcc28387f5168`, after the 01:19:57 hosted preflight and the 01:21 Manager build/restart on 18 October 2026. At 01:22:38, **69/69 HTTPS checks** and sixteen exact resource hashes pass on both origins. Recipients have no separate broadcast preference; they receive ordinary individual messages without audience or campaign metadata. All [five exact-source CI jobs pass](https://github.com/fredbuhr/jessiemessage/actions/runs/39078063012), including 383/383 on each MariaDB and 101/101 Chrome. Existing configuration, keys, schema and session rules are retained. The limit remains 100 recipients per campaign; no real test campaign was created by the agent.
