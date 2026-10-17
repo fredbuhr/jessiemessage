@@ -1,0 +1,58 @@
+name: Private service monitor
+
+on:
+  schedule:
+    - cron: "2-59/5 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/service-monitor.yml
+      - server/operations/external-probe.mjs
+      - scripts/check-private-service.mjs
+      - tests/external-probe*.test.mjs
+  pull_request:
+    branches: [main, "feat/**", "fix/**"]
+    paths:
+      - .github/workflows/service-monitor.yml
+      - server/operations/external-probe.mjs
+      - scripts/check-private-service.mjs
+      - tests/external-probe*.test.mjs
+
+permissions:
+  contents: read
+
+concurrency:
+  group: private-service-monitor-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    name: Probe failure and privacy tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Native Node tests, no hosting access
+        run: node --test tests/external-probe.test.mjs tests/external-probe-cli.test.mjs
+
+  service:
+    name: Anonymous HTTPS and readiness
+    needs: tests
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Check fixed primary endpoints, confirm persistent failures
+        run: node scripts/check-private-service.mjs
