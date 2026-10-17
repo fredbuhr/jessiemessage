@@ -119,9 +119,13 @@ async function transitionFixture() {
       }
       if (url.pathname.endsWith("/complete") && active.revokeBeforeComplete) sessions.delete(active.sourceToken);
       if (await handler(request, response)) return;
+      if (["/i18n.js", "/i18n-access.js"].includes(url.pathname)) {
+        response.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-store" });
+        response.end(await readFile(new URL(`../../public${url.pathname}`, import.meta.url))); return;
+      }
       if (["/messages", "/admin/messages", "/access", "/admin/login"].includes(url.pathname)) {
         response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-        response.end("<!doctype html><html lang=fr><title>Destination fixture</title><main id=destination>Destination fixture</main></html>"); return;
+        response.end('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Destination fixture</title><script src="/i18n.js" defer></script><script src="/i18n-access.js" defer></script></head><body><main id="destination"><p id="destination-copy" data-jm-i18n="Bienvenue.">Bienvenue.</p></main></body></html>'); return;
       }
       if (["/favicon.ico", "/brand/icon-128.png"].includes(url.pathname)) {
         response.writeHead(200, { "Content-Type": url.pathname.endsWith(".png") ? "image/png" : "image/x-icon", "Cache-Control": "no-store" });
@@ -152,13 +156,21 @@ async function transitionFixture() {
   }
 }
 
-async function startTransition(page, fixture, role, reference = null) {
+async function seedTransition(page, fixture, { primaryLanguage = "fr", legacyLanguage = "fr" } = {}) {
   await page.navigate("/__fixture"); // The fresh browser starts at the destination.
   await page.navigate(`${fixture.legacyOrigin}/__fixture/seed`);
+  await page.execute("sessionStorage.setItem('jessiemessage.language', arguments[0])", legacyLanguage);
   await page.navigate("/__fixture/seed");
+  await page.execute("sessionStorage.setItem('jessiemessage.language', arguments[0])", primaryLanguage);
+}
+
+async function startTransition(page, fixture, role, reference = null, { language = "fr", primaryLanguage = "fr", legacyLanguage = "fr" } = {}) {
+  await seedTransition(page, fixture, { primaryLanguage, legacyLanguage });
   await page.navigate(`/connect-device/${role}${reference ? `#notification=${reference}` : ""}`);
   await waitUntil(() => page.execute("return !!document.getElementById('transition-start') && !document.getElementById('transition-start').disabled"), "real transition start button");
   assert.equal(await page.execute("return location.hash"), "", "initial notification fragment is removed immediately");
+  if (await page.execute("return document.documentElement.lang") !== language) await page.click("#transition-language");
+  assert.equal(await page.execute("return document.documentElement.lang"), language);
   await page.click("#transition-start");
 }
 
@@ -274,9 +286,7 @@ test("real Chrome: two HTTPS hosts preserve native protected sessions through th
     await t.test("a forged retry hint cannot replace the real ticket's authenticated notification destination", async () => {
       const role = "client", tokens = fixture.reset({ role }), page = await browser();
       try {
-        await page.navigate("/__fixture");
-        await page.navigate(`${fixture.legacyOrigin}/__fixture/seed`);
-        await page.navigate("/__fixture/seed");
+        await seedTransition(page, fixture);
         const challenge = await page.executeAsync(`const done = arguments[arguments.length - 1];
           fetch('/api/device-transition/client/begin', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Jessie-Request': '1' }, body: JSON.stringify({ notification: arguments[0] }) })
             .then(response => response.json()).then(result => done(result.challenge), () => done(null));`, notification);
@@ -329,7 +339,7 @@ test("real Chrome: two HTTPS hosts preserve native protected sessions through th
         await startTransition(page, fixture, "client", notification);
         await waitUntil(() => page.execute("return location.origin === arguments[0] && !!document.getElementById('transition-login') && !document.getElementById('transition-login').hidden", fixture.legacyOrigin), "source session missing notice");
         assert.equal(await page.execute("return location.hash"), "");
-        assert.equal(await page.execute("return document.getElementById('transition-login').href"), `${fixture.primaryOrigin}/access#notification=${notification}`);
+        assert.equal(await page.execute("return document.getElementById('transition-login').href"), `${fixture.primaryOrigin}/connect-device/client#signin=fr&notification=${notification}`);
         await noCredentialExposure(page, [tokens.sourceToken]);
         await page.click("#transition-login");
         await waitUntil(() => page.execute("return location.origin === arguments[0] && location.pathname === '/access' && !!document.getElementById('destination')", fixture.primaryOrigin), "new-address sign-in destination");
@@ -400,6 +410,8 @@ test("real Chrome: transition actions stay distinct and accessible in every resp
         const page = await driver.browser({ origin: fixture.primaryOrigin, siblingOrigins: [fixture.legacyOrigin], acceptInsecureCerts: true, width });
         try {
           if (scenario.name === "initial") {
+            await page.navigate("/__fixture");
+            await page.execute("sessionStorage.setItem('jessiemessage.language', 'fr')");
             await page.navigate(`/connect-device/${scenario.role}`);
             await waitUntil(() => page.execute("return document.getElementById('transition-start')?.textContent === 'Retrouver mon espace'"), "initial transition rendered");
           } else {
@@ -438,5 +450,78 @@ test("real Chrome: transition actions stay distinct and accessible in every resp
         } finally { await page.close(); }
       });
     }
+  } finally { try { await driver.close(); } finally { await fixture?.close(); } }
+});
+
+async function translatedDestination(page, fixture, path, language, reference) {
+  const expected = language === "en" ? "Welcome." : "Bienvenue.";
+  await waitUntil(() => page.execute(`return location.origin === arguments[0] && location.pathname === arguments[1]
+    && document.documentElement.lang === arguments[2] && globalThis.JessieI18n?.getLanguage() === arguments[2]
+    && document.getElementById('destination-copy')?.textContent === arguments[3]`, fixture.primaryOrigin, path, language, expected), "the destination uses the actual shared language runtime and catalog");
+  assert.equal(await page.execute("return location.hash"), reference ? `#notification=${reference}` : "", "only the canonical notification fragment reaches the destination");
+  assert.equal(await page.execute("return sessionStorage.getItem('jessiemessage.language')"), language);
+}
+
+test("real Chrome: the chosen language survives both origins, retries and the sign-in fallback", { timeout: 90000 }, async t => {
+  const driver = await startWebDriver();
+  let fixture;
+  try {
+    fixture = await transitionFixture();
+    const browser = () => driver.browser({ origin: fixture.primaryOrigin, siblingOrigins: [fixture.legacyOrigin], acceptInsecureCerts: true, width: 360 });
+
+    for (const role of ["admin", "client"]) await t.test(`${role}: English overrides an old French source preference and reaches a genuinely translated destination`, async () => {
+      const tokens = fixture.reset({ role }), page = await browser();
+      try {
+        await startTransition(page, fixture, role, notification, { language: "en", primaryLanguage: "fr", legacyLanguage: "fr" });
+        await translatedDestination(page, fixture, role === "admin" ? "/admin/messages" : "/messages", "en", notification);
+        await protectedCookie(page, role, tokens.sourceToken, new URL(fixture.primaryOrigin).hostname);
+        await noCredentialExposure(page, [tokens.sourceToken]);
+        await page.navigate(`${fixture.legacyOrigin}/__fixture`);
+        assert.equal(await page.execute("return sessionStorage.getItem('jessiemessage.language')"), "en", "the source preference also follows the chosen language");
+        cleanRequests(fixture);
+      } finally { await page.close(); }
+    });
+
+    await t.test("an English source error followed by a French choice keeps the latest language and notification through retry", async () => {
+      const role = "client", tokens = fixture.reset({ role, failAction: "authorize", failureMode: "503" }), page = await browser();
+      try {
+        await startTransition(page, fixture, role, notification, { language: "en", primaryLanguage: "fr", legacyLanguage: "fr" });
+        await waitUntil(() => page.execute("return location.origin === arguments[0] && document.getElementById('transition-start')?.textContent === 'Try again' && !document.getElementById('transition-start').disabled", fixture.legacyOrigin), "a real source failure is shown in English");
+        assert.equal(await page.execute("return sessionStorage.getItem('jessiemessage.language')"), "en");
+        await page.click("#transition-language");
+        assert.equal(await page.execute("return globalThis.JessieI18n.getLanguage()"), "fr");
+        await page.click("#transition-start");
+        await waitUntil(() => page.execute("return location.origin === arguments[0] && document.getElementById('transition-start')?.textContent === 'Retrouver mon espace'", fixture.primaryOrigin), "the retry overwrites the primary's older English preference");
+        assert.equal(await page.execute("return sessionStorage.getItem('jessiemessage.language')"), "fr");
+        await page.click("#transition-start");
+        await translatedDestination(page, fixture, "/messages", "fr", notification);
+        assert.equal(fixture.requests.filter(({ path }) => path.endsWith("/begin")).length, 2, "a retry starts a fresh handoff");
+        await protectedCookie(page, role, tokens.sourceToken, new URL(fixture.primaryOrigin).hostname);
+        await noCredentialExposure(page, [tokens.sourceToken]); cleanRequests(fixture);
+      } finally { await page.close(); }
+    });
+
+    await t.test("missing source sign-in carries its latest language and the server's reference instead of a forged retry hint", async () => {
+      const role = "client", authenticated = notification, forged = "b2".repeat(16);
+      const tokens = fixture.reset({ role, missing: true }), page = await browser();
+      try {
+        await seedTransition(page, fixture, { primaryLanguage: "en", legacyLanguage: "fr" });
+        const challenge = await page.executeAsync(`const done = arguments[arguments.length - 1];
+          fetch('/api/device-transition/client/begin', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Jessie-Request': '1' }, body: JSON.stringify({ notification: arguments[0] }) })
+            .then(response => response.json()).then(result => done(result.challenge), () => done(null));`, authenticated);
+        assert.match(challenge, /^[A-Za-z0-9_-]{80,2048}$/);
+        await page.navigate(`${fixture.legacyOrigin}/connect-device/client#challenge=${challenge}&notification=${forged}&locale=en`);
+        await waitUntil(() => page.execute("return location.origin === arguments[0] && document.getElementById('transition-login')?.hidden === false && document.documentElement.lang === 'en'", fixture.legacyOrigin), "missing source session is explained in the requested language");
+        assert.equal(await page.execute("return document.getElementById('transition-login').href"), `${fixture.primaryOrigin}/connect-device/client#signin=en&notification=${authenticated}`);
+        await page.click("#transition-language");
+        assert.equal(await page.execute("return document.getElementById('transition-login').href"), `${fixture.primaryOrigin}/connect-device/client#signin=fr&notification=${authenticated}`, "changing language updates the existing sign-in action");
+        const apiCount = fixture.requests.filter(({ path }) => path.startsWith("/api/")).length;
+        await page.click("#transition-login");
+        await translatedDestination(page, fixture, "/access", "fr", authenticated);
+        assert.equal(fixture.requests.filter(({ path }) => path.startsWith("/api/")).length, apiCount, "the sign-in preference hop performs no authentication API request");
+        assert.equal((await page.cookies()).some(({ name }) => name === cookieNames.client), false, "a preference cannot create a primary session");
+        await noCredentialExposure(page, [tokens.sourceToken]); cleanRequests(fixture);
+      } finally { await page.close(); }
+    });
   } finally { try { await driver.close(); } finally { await fixture?.close(); } }
 });

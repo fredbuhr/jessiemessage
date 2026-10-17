@@ -5,40 +5,70 @@
   const role = path?.[1], start = document.getElementById("transition-start"), status = document.getElementById("transition-status");
   const login = document.getElementById("transition-login"), back = document.getElementById("transition-back");
   const language = document.getElementById("transition-language");
+  const sharedLanguage = globalThis.JessieI18n;
   const words = {
-    fr: { eyebrow: "TOUJOURS À TES CÔTÉS", title: "Ton espace trouve sa nouvelle adresse.", copy: "Retrouve tes messages sur jessiemessage.com, en gardant la connexion de cet appareil.",
+    fr: { pageTitle: "Jessie — Retrouver mon espace", eyebrow: "TOUJOURS À TES CÔTÉS", title: "Ton espace trouve sa nouvelle adresse.", copy: "Retrouve tes messages sur jessiemessage.com, en gardant la connexion de cet appareil.",
       start: "Retrouver mon espace", back: "Revenir à mon espace", login: "Me connecter", note: "Les notifications et l’icône de l’app se règlent ensuite sur la nouvelle adresse.",
       preparing: "Un instant, on retrouve ton espace…", unavailable: "La reprise n’a pas abouti. Tu peux réessayer ou revenir à ton espace.",
       missing: "Pour retrouver tes messages, connecte-toi une fois sur la nouvelle adresse.",
       conflict: "Un autre compte est déjà ouvert à cette adresse. Reviens à l’espace de ce compte pour continuer.", retry: "Réessayer", badLink: "Ce lien n’est plus disponible. Recommence depuis la nouvelle adresse." },
-    en: { eyebrow: "ALWAYS CLOSE BY", title: "Your space has a new address.", copy: "Find your messages at jessiemessage.com and keep this device signed in.",
+    en: { pageTitle: "Jessie — Find my space", eyebrow: "ALWAYS CLOSE BY", title: "Your space has a new address.", copy: "Find your messages at jessiemessage.com and keep this device signed in.",
       start: "Find my space", back: "Back to my space", login: "Sign in", note: "Notifications and the app icon can then be set up at the new address.",
       preparing: "Just a moment while we find your space…", unavailable: "We couldn’t finish this time. Try again or return to your space.",
       missing: "To find your messages, sign in once at the new address.",
       conflict: "Another account is already open at this address. Return to that account’s space to continue.", retry: "Try again", badLink: "This link is no longer available. Start again at the new address." },
   };
-  let locale = document.documentElement.lang === "en" ? "en" : "fr", statusKey = null, busy = false, epoch = 0, active = true;
+  const initialLocale = sharedLanguage?.getLanguage?.();
+  let locale = initialLocale === "en" || initialLocale === "fr" ? initialLocale : document.documentElement.lang === "en" ? "en" : "fr";
+  let carryLocale = Boolean(sharedLanguage), loginDestination = null, statusKey = null, busy = false, epoch = 0, active = true;
   const pending = new Set();
   function render() {
-    const t = words[locale]; document.documentElement.lang = locale;
+    const t = words[locale]; document.documentElement.lang = locale; document.title = t.pageTitle;
     for (const [id, key] of [["transition-eyebrow", "eyebrow"], ["transition-title", "title"], ["transition-copy", "copy"], ["transition-notifications", "note"]]) document.getElementById(id).textContent = t[key];
     start.textContent = t[statusKey && statusKey !== "preparing" ? "retry" : "start"]; back.textContent = t.back; login.textContent = t.login;
     status.textContent = statusKey ? t[statusKey] : ""; language.textContent = locale === "fr" ? "EN" : "FR";
     language.setAttribute("aria-label", locale === "fr" ? "Switch to English" : "Passer en français");
+    refreshLogin();
   }
-  language.addEventListener("click", () => { locale = locale === "fr" ? "en" : "fr"; render(); });
+  language.addEventListener("click", () => {
+    locale = locale === "fr" ? "en" : "fr"; carryLocale = true;
+    sharedLanguage?.setLanguage?.(locale); render();
+  });
   // Read once, then remove the complete fragment before any asynchronous work.
   const fragment = location.hash;
   history.replaceState(null, "", location.pathname);
-  const value = /^#(challenge|ticket)=([A-Za-z0-9_-]{80,2048})(?:&notification=([a-f0-9]{32}))?$/.exec(fragment);
+  const match = (pattern, input = fragment) => {
+    const result = typeof input === "string" ? pattern.exec(input) : null;
+    return result?.[0] === input ? result : null;
+  };
+  const value = match(/^#(challenge|ticket)=([A-Za-z0-9_-]{80,2048})(?:&notification=([a-f0-9]{32}))?(?:&locale=(fr|en))?$/);
+  const notificationFragment = match(/^#notification=([a-f0-9]{32})(?:&locale=(fr|en))?$/);
+  const localeFragment = match(/^#locale=(fr|en)$/);
+  const signIn = match(/^#signin=(fr|en)(?:&notification=([a-f0-9]{32}))?$/);
   // The public message reference only helps restart an interrupted handoff.
   // Completion still follows the server's authenticated packet destination.
-  const notification = value?.[3] ?? /^#notification=([a-f0-9]{32})$/.exec(fragment)?.[1] ?? null;
-  const retryHint = notification ? `&notification=${notification}` : "";
+  const notification = value?.[3] ?? notificationFragment?.[1] ?? null;
+  const receivedLocale = value?.[4] ?? notificationFragment?.[2] ?? localeFragment?.[1] ?? signIn?.[1] ?? null;
   const page = `/connect-device/${role}`;
   const messagePath = role === "admin" ? "/admin/messages" : "/messages";
+  const defaultLogin = role === "admin" ? "/admin/login" : "/access";
   const allowedDestination = role === "admin" ? /^\/admin\/messages(?:#notification=[a-f0-9]{32})?$/ : /^\/(?:messages|access)(?:#notification=[a-f0-9]{32})?$/;
+  const contextValid = Boolean(role) && [legacy, primary].includes(location.origin) && !location.search;
+  const fragmentValid = !fragment || Boolean(value || notificationFragment || localeFragment || signIn);
+  const directionValid = (!value || value[1] === "challenge" && location.origin === legacy || value[1] === "ticket" && location.origin === primary)
+    && (!signIn || location.origin === primary);
   const setState = (key) => { statusKey = key; render(); };
+  const localeSuffix = () => carryLocale ? `&locale=${locale}` : "";
+  const packetFragment = (kind, packet) => `#${kind}=${packet}${notification ? `&notification=${notification}` : ""}${localeSuffix()}`;
+  const restartFragment = () => notification ? `#notification=${notification}${localeSuffix()}` : carryLocale ? `#locale=${locale}` : "";
+  function refreshLogin() {
+    if (loginDestination === null) return;
+    if (location.origin !== legacy) { login.href = `${primary}${loginDestination}`; return; }
+    // Keep only the reference from the validated server login destination.
+    // The primary bridge saves the language before opening its ordinary login.
+    const reference = /#notification=([a-f0-9]{32})$/.exec(loginDestination)?.[1];
+    login.href = `${primary}${page}#signin=${locale}${reference ? `&notification=${reference}` : ""}`;
+  }
   function requireCurrent(generation) { if (!active || generation !== epoch) throw new Error("unavailable"); }
   async function requestJson(url, options, generation) {
     requireCurrent(generation);
@@ -63,7 +93,7 @@
     return result;
   }
   async function run(action) {
-    if (busy || !active) return; const generation = ++epoch;
+    if (busy || !active || signIn) return; const generation = ++epoch;
     busy = true; start.disabled = true; login.hidden = true; setState("preparing");
     try {
       if (action === "authorize") {
@@ -73,23 +103,24 @@
         if (current && (current.user?.role !== role || typeof current.csrf !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(current.csrf))) throw new Error("unavailable");
         const result = await post("authorize", { challenge: value[2] }, current?.csrf, generation);
         if (typeof result.ticket !== "string" || !/^[A-Za-z0-9_-]{80,2048}$/.test(result.ticket)) throw new Error("unavailable");
-        location.replace(`${primary}${page}#ticket=${result.ticket}${retryHint}`);
+        location.replace(`${primary}${page}${packetFragment("ticket", result.ticket)}`);
       } else if (action === "complete") {
         const result = await post("complete", { ticket: value[2] }, undefined, generation);
-        if (typeof result.destination !== "string" || !allowedDestination.test(result.destination)) throw new Error("unavailable");
+        if (!match(allowedDestination, result.destination)) throw new Error("unavailable");
         location.replace(result.destination);
       } else {
-        if (location.origin !== primary) { location.assign(`${primary}${page}${notification ? `#notification=${notification}` : ""}`); return; }
+        if (location.origin !== primary) { location.assign(`${primary}${page}${restartFragment()}`); return; }
         const result = await post("begin", { notification }, undefined, generation);
         if (typeof result.challenge !== "string" || !/^[A-Za-z0-9_-]{80,2048}$/.test(result.challenge)) throw new Error("unavailable");
-        location.replace(`${legacy}${page}#challenge=${result.challenge}${retryHint}`);
+        location.replace(`${legacy}${page}${packetFragment("challenge", result.challenge)}`);
       }
     } catch (error) {
       if (!active || generation !== epoch) return;
       setState(error.status === 401 ? "missing" : error.status === 409 && error.code === "account_conflict" ? "conflict" : "unavailable");
       if (error.status === 401) {
         const allowedLogin = role === "admin" ? /^\/admin\/login(?:#notification=[a-f0-9]{32})?$/ : /^\/access(?:#notification=[a-f0-9]{32})?$/;
-        login.href = `${primary}${typeof error.login === "string" && allowedLogin.test(error.login) ? error.login : role === "admin" ? "/admin/login" : "/access"}`;
+        loginDestination = match(allowedLogin, error.login) ? error.login : defaultLogin;
+        refreshLogin();
         login.hidden = false;
       }
       start.disabled = false; busy = false;
@@ -104,9 +135,17 @@
     if (statusKey === "preparing") setState("unavailable");
   });
   back.href = `${location.origin === legacy ? legacy : primary}${messagePath}`;
+  sharedLanguage?.onChange?.((next) => {
+    if (next !== "fr" && next !== "en") return;
+    locale = next; carryLocale = true; render();
+  });
+  if (contextValid && fragmentValid && directionValid && receivedLocale) {
+    locale = receivedLocale; carryLocale = true; sharedLanguage?.setLanguage?.(locale);
+  }
   start.addEventListener("click", () => void run("begin")); render();
-  if (!role || ![legacy, primary].includes(location.origin) || location.search) { setState("badLink"); start.hidden = true; return; }
-  if (fragment && !value && notification === null) { setState("badLink"); return; }
+  if (!contextValid) { setState("badLink"); start.hidden = true; return; }
+  if (!fragmentValid || !directionValid) { setState("badLink"); return; }
+  if (signIn) { location.replace(`${defaultLogin}${signIn[2] ? `#notification=${signIn[2]}` : ""}`); return; }
   if (value) {
     if (value[1] === "challenge" && location.origin === legacy) void run("authorize");
     else if (value[1] === "ticket" && location.origin === primary) void run("complete");

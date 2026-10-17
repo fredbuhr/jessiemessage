@@ -133,6 +133,8 @@ test("bridge pages and assets are fixed files, have no inline script, and purge 
     const result = await f.request(`/connect-device/${role}`, { origin, method: "GET" }); assert.equal(result.status, 200);
     assert.match(result.text, /data-transition-primary="https:\/\/jessiemessage.com"/);
     assert.match(result.text, /id="transition-start"/); assert.doesNotMatch(result.text, /<script[^>]*>\s*[^<\s]/);
+    assert.ok(result.text.indexOf('src="/i18n.js"') >= 0 && result.text.indexOf('src="/i18n.js"') < result.text.indexOf('src="/device-transition.js"'), "the shared language runtime is loaded before the bridge controller");
+    assert.doesNotMatch(result.text, /id="transition-language"[^>]*\bdata-jm-language\b/, "only the bridge's own click listener changes its language");
     assert.equal((await f.request(`/connect-device/${role}`, { origin, method: "HEAD" })).text, "");
   }
   for (const name of ["js", "css"]) assert.equal((await f.request(`/device-transition.${name}`, { method: "GET" })).status, 200);
