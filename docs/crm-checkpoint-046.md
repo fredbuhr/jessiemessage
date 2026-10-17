@@ -1,6 +1,6 @@
 # JessieMessage — coffre validé et checkpoint courant, étape 0.46
 
-**État à 23:37 Europe/Paris :** le propriétaire transmet un échec `APPLICATION_CHECKPOINT_IMPORT_OPERATION` à 23:32. Ses droits sur le clone sont bien enregistrés, mais l’import et l’état SQL de la copie ne sont pas encore confirmés. Le [diagnostic courant](crm-checkpoint-046-incident.md) remplace la prochaine manipulation d’import ci-dessous par une inspection authentifiée en lecture seule, dont le précontrôle passe. La copie PC et le coffre restent validés ; le service 0.42 reste actif, fiches désactivées.
+**État à 23:41 Europe/Paris :** après l’échec d’import général de 23:32, le [diagnostic en lecture seule](crm-checkpoint-046-incident.md) retourne `PRIVATE_CHECKPOINT_VERIFY_AUTHENTICATION`. Les droits du clone sont conformes ; son identification SQL est refusée avant toute comparaison. Le propriétaire doit utiliser le mot de passe SQL correct de `fb4hmr_jm_mig`, ou le redéfinir personnellement s’il est perdu, puis relancer la seule inspection. L’import et l’état SQL du clone restent non confirmés. Copie PC et coffre validés ; service 0.42 actif, fiches désactivées.
 
 ## Coffre de configuration accepté
 

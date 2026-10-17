@@ -1,5 +1,7 @@
 # JessieMessage — diagnostic de la restauration CRM 0.46
 
+**Résultat à 23:41:52 Europe/Paris :** la nouvelle capture personnelle contient **`PRIVATE_CHECKPOINT_VERIFY_AUTHENTICATION`**. Le vérificateur classe ainsi le refus SQL natif 1045 lors de l’export du clone. L’identification SQL est donc refusée pour cette inspection, avant toute comparaison de données ; les trois droits sont déjà enregistrés. Le propriétaire doit utiliser le mot de passe SQL correct de `fb4hmr_jm_mig`, ou le redéfinir personnellement s’il ne le possède plus, puis relancer une seule inspection en lecture seule. L’agent n’obtient ni ne modifie ce secret. La restauration reste non confirmée.
+
 ## Résultat transmis à 23:32 le 17 octobre 2026
 
 La capture du propriétaire contient `APPLICATION_CHECKPOINT_IMPORT_OPERATION: Application checkpoint restoration was not confirmed.` Elle est lisible depuis la pièce jointe locale malgré le message initial de fichier inaccessible. Elle ne constitue pas un reçu de restauration réussie.
@@ -23,9 +25,11 @@ Le mode `check` appelle uniquement le précontrôle existant de l’importateur,
 
 Sans argument, le lanceur lit personnellement le mot de passe SQL une fois avec `read -r -s`, puis le transmet par entrée standard au seul `verify-private-checkpoint.mjs verify-application`. Il reprend les protections du [wrapper de vérification existant](../scripts/capture-private-checkpoint-verification.sh), en conservant la sélection applicative CRM. Le secret n’est ni argument, ni variable d’environnement exportée, ni fichier permanent, ni sortie du terminal.
 
-Le vérificateur compare l’export du clone au SQL figé, puis contrôle schéma, données authentifiées, médias et snapshot applicatif. Il ne crée ni ne remplace de table et ne démarre aucun runtime. Son résultat permettra de préciser l’échec avec les codes fermés du vérificateur : notamment `PRIVATE_CHECKPOINT_VERIFY_AUTHENTICATION`, `ACCESS`, `DATABASE`, `DUMP`, `DUMP_MISMATCH`, ou le reçu `verified`. Un code `DUMP` seul ne prouve pas une cause précise. La vérification authentifiée n’est pas encore exécutée.
+Le vérificateur compare l’export du clone au SQL figé, puis contrôle schéma, données authentifiées, médias et snapshot applicatif. Il ne crée ni ne remplace de table et ne démarre aucun runtime. Les codes fermés distinguent notamment `PRIVATE_CHECKPOINT_VERIFY_AUTHENTICATION`, `ACCESS`, `DATABASE`, `DUMP`, `DUMP_MISMATCH`, ou le reçu `verified`. Un code `DUMP` seul ne prouve pas une cause précise. L’inspection personnelle de 23:41 échoue à l’identification (`AUTHENTICATION`) ; ni le contenu ni le vide SQL du clone ne sont encore confirmés. Ce résultat ne permet pas de réattribuer avec certitude la phase du premier échec à un mot de passe précis.
 
-## Seule prochaine action personnelle
+## Prochaine action personnelle : identité SQL puis inspection
+
+Le mot de passe à utiliser est celui de l’utilisateur **SQL `fb4hmr_jm_mig`**, défini dans la section Bases de données / Utilisateurs. S’il est connu, le propriétaire peut relancer l’inspection ci-dessous en l’utilisant. Si ce mot de passe n’est plus disponible, il ouvre [la fiche exacte de ce compte](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig), clique **Modifier le mot de passe** et réalise personnellement sa définition et son enregistrement. Les droits sont déjà conformes. Aucune nouvelle clé de chiffrement ni configuration applicative n’est demandée.
 
 Dans la [console SSH Node.js Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter :
 
@@ -33,4 +37,4 @@ Dans la [console SSH Node.js Infomaniak](https://manager.infomaniak.com/v3/hosti
 bash /srv/customer/jessiemessage-private/inspect-restore-primary-crm-046.sh
 ```
 
-Saisir personnellement le mot de passe SQL du compte `fb4hmr_jm_mig`, puis transmettre le message d’erreur complet ou la dernière ligne JSON. Les droits sont déjà enregistrés. L’ancien lanceur d’import reste en attente tant que l’état de la copie n’est pas établi. Une copie partiellement remplie ne sera pas réutilisée pour un import ; aucun effacement n’est autorisé par cette inspection. Les fiches restent désactivées.
+Saisir personnellement le mot de passe SQL correct du compte `fb4hmr_jm_mig`, puis transmettre le message d’erreur complet ou la dernière ligne JSON. Le secret reste hors de la conversation. Une répétition avec les mêmes identifiants refusés n’apporterait pas de nouvelle preuve. L’ancien lanceur d’import reste en attente tant que l’état de la copie n’est pas établi. Une copie partiellement remplie ne sera pas réutilisée pour un import ; aucun effacement n’est autorisé par cette inspection. Les fiches restent désactivées.
