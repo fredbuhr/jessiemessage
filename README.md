@@ -1,6 +1,6 @@
 # JessieMessage
 
-**Étape 0.51 — bilan courant et exploitation :** le [plan précis avant usage privé régulier](docs/production-readiness-2026-10-17.md) remplace les anciennes listes. La [surveillance externe](docs/external-monitoring-051.md) est implémentée et en cours de mise en service. La révision hébergée reste 0.50 `0a1cafd8`. Restent la capture cohérente récurrente, le chiffrement complet et la copie indépendante, la réception des alertes et la consolidation de version ; les acceptations 0.46 restent acquises. **Les paragraphes ci-dessous sont un historique daté, pas la liste courante.**
+**Étape 0.51 — bilan courant et exploitation :** le [plan précis avant usage privé régulier](docs/production-readiness-2026-10-17.md) remplace les anciennes listes. La [surveillance externe](docs/external-monitoring-051.md) est active sur GitHub : 24 tests distants et un passage HTTPS réel sains ; planification configurée, réception d’alerte encore à éprouver. La révision hébergée reste 0.50 `0a1cafd8`. Restent la capture cohérente récurrente, le chiffrement complet et la copie indépendante, la réception des alertes et la consolidation de version ; les acceptations 0.46 restent acquises. **Les paragraphes ci-dessous sont un historique daté, pas la liste courante.**
 
 Invitation-only private messaging PWA. Public source, private user data.
 
