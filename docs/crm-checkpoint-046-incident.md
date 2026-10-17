@@ -1,6 +1,6 @@
 # JessieMessage — diagnostic et reprise du checkpoint CRM 0.46
 
-**État au 18 octobre 2026 à 00:05 Europe/Paris :** la reprise en une saisie est installée et son précontrôle passe. Adresse SQL, TLS, pilote Node, client natif et neuf cas de caractères de mot de passe sont vérifiés physiquement. Les dernières tentatives personnelles refusent l’identification de `fb4hmr_jm_mig`. Son identité doit être rétablie personnellement ; le nouveau lanceur inspectera ensuite la copie avant de décider d’importer ou de vérifier. Restauration non confirmée, service 0.42 actif, fiches et diffusions désactivées.
+**Incident clos à 00:13:21 Europe/Paris le 18 octobre 2026 :** le propriétaire fournit le reçu réel `application_checkpoint_restored_verified`. La reprise unique a importé la copie vide puis vérifié les trente tables/migrations, le snapshot applicatif et les fichiers, avec source non modifiée. L’accès de maintenance fonctionne pour cette opération ; aucune cause antérieure non observée n’est déduite. Coffre et copie PC déjà acceptés. L’[activation CRM 0.47](crm-activation-047.md) prend désormais le relais.
 
 ## Diagnostic physique
 
@@ -45,13 +45,6 @@ Sa syntaxe et son mode `check` passent à **00:05:20.413110 le 18 octobre** : `a
 
 Les anciens lanceurs d’import et d’inspection restent historiques. Le coffre et la copie PC acceptés dans le [relevé du checkpoint](crm-checkpoint-046.md) ne sont pas à refaire.
 
-## Deux actions personnelles
+## Clôture personnelle
 
-1. Ouvrir [le compte SQL `fb4hmr_jm_mig`](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig), puis **Modifier le mot de passe**. Définir personnellement un nouveau mot de passe et cliquer **Enregistrer dans cette fenêtre**, puis attendre la confirmation. Exigences affichées : huit caractères minimum, une minuscule, une majuscule, un chiffre, un caractère spécial. Le bouton **Valider** derrière le formulaire concerne les droits et ne remplace pas **Enregistrer**. Il s’agit du compte SQL, distinct de JessieMessage, du coffre et du Manager. La règle de prise en main des changements d’identifiants réserve saisie, confirmation et enregistrement au propriétaire.
-2. Dans la [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter :
-
-```bash
-bash /srv/customer/jessiemessage-private/resume-primary-crm-046.sh
-```
-
-À l’invite, saisir le mot de passe SQL nouvellement enregistré et appuyer sur Entrée ; aucun caractère ne s’affiche. Transmettre seulement la dernière ligne JSON ou le message complet, sans secret. Connexion, inspection et import/vérification appropriés s’enchaînent dans cette exécution. Un nouveau refus portera sa phase ; aucune répétition identique ni destruction de copie partielle n’est prévue. L’activation CRM exige encore un reçu de vérification réel.
+La capture reçue à 00:13:21 confirme `action: "imported_empty_clone"`, `importedThisRun: true`, `applicationSnapshotMatched: true`, `checkpointFilesMatched: true`, `sourceMutated: false` et `capacityRebound: false`. La commande de reprise a abouti ; aucune nouvelle saisie, inspection ou modification de mot de passe n’est demandée. Le [relevé d’activation](crm-activation-047.md) conserve les champs du reçu et la suite hébergée.

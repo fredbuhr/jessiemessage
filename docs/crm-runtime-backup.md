@@ -1,6 +1,6 @@
 # JessieMessage — profil des fiches et reprise SQL/photos
 
-**État 0.46 au 18 octobre à 00:05 :** le [checkpoint courant](crm-checkpoint-046.md), son coffre et sa copie PC sont acquis ; runtime 0.42 conservé. L’identification SQL de maintenance reste refusée. Le [diagnostic et la nouvelle reprise](crm-checkpoint-046-incident.md), source `edf696ec`, vérifient adresse/TLS/clients/parseur, passent cinq jobs CI et un précontrôle hébergé. Après enregistrement personnel du mot de passe SQL avec **Enregistrer** dans sa fenêtre, une saisie permet inspection puis import si vide ou vérification si complète ; une copie partielle est conservée et refusée. Restauration non confirmée, fiches/diffusions désactivées. Les sections ci-dessous conservent la préparation applicative 0.45 `8f4162a4`.
+**État 0.47 au 18 octobre à 00:16 :** le [checkpoint courant](crm-checkpoint-046.md), son coffre et sa copie PC sont acceptés, puis la restauration native isolée est vérifiée à 00:13:21. L’[activation CRM](crm-activation-047.md), source `edf696ec`, arbre `3daa88c3`, réussit à 00:15 après préflight conforme. À 00:16:25 : 56/56 contrôles HTTPS et seize empreintes exactes. Fiches activées sur les deux origines, diffusions désactivées ; observation personnelle à deux en attente. Les sections suivantes conservent la préparation 0.45 `8f4162a4`, incluse dans la source servie.
 
 ## Lot 0.45
 

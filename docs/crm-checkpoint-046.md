@@ -1,6 +1,6 @@
 # JessieMessage — coffre validé et checkpoint courant, étape 0.46
 
-**État au 18 octobre à 00:05 Europe/Paris :** coffre et copie PC acceptés, checkpoint courant capturé et service 0.42 actif. L’identification SQL de maintenance reste refusée. Le [diagnostic physique et nouveau lanceur de reprise](crm-checkpoint-046-incident.md), source `edf696ec`, valident adresse/TLS/deux clients/neuf cas du parseur et passent cinq jobs CI. Le nouveau lanceur épinglé passe son précontrôle hébergé sans SQL. Suite : enregistrer personnellement le mot de passe SQL avec **Enregistrer** dans sa fenêtre, puis utiliser la reprise unique qui inspecte avant import/vérification. L’état SQL du clone et sa restauration restent non confirmés ; fiches désactivées. Les anciens lanceurs ci-dessous sont historiques.
+**Étape 0.46 validée à 00:13:21 Europe/Paris le 18 octobre :** le propriétaire fournit `application_checkpoint_restored_verified`, trente tables/migrations, snapshot et fichiers concordants, médias indépendants, import depuis copie vide, source non modifiée et aucune réassociation du stockage. Coffre et copie PC/empreinte déjà acceptés. L’[incident de maintenance](crm-checkpoint-046-incident.md) est clos ; aucune nouvelle saisie n’est demandée. L’[activation des fiches 0.47](crm-activation-047.md) réussit ensuite à 00:15, suivie de 56 contrôles HTTPS conformes à 00:16:25.
 
 ## Coffre de configuration accepté
 
