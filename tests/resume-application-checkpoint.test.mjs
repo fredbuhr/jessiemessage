@@ -176,3 +176,21 @@ test("the CLI success output reports the exact action without the credential", a
   await main(args(), { ...f.dependencies, outputStream: output });
   assert.equal(JSON.parse(text).action, "imported_empty_clone"); assert.doesNotMatch(text, /synthetic password|private-sql/);
 });
+
+test("broadcast resume accepts only the new profile-bound receipt and preserves single-read import and verify behavior", async () => {
+  const selectedProfile = "photos-notify-recovery-crm-broadcast", receipt = { version: 8, profile: "messaging-photos-notify-recovery-crm-broadcast-application" };
+  for (const state of ["empty", "application-schema"]) {
+    const f = fixture(state), original = f.dependencies.importOperation, selectedArgs = args().map(value => value === profile ? selectedProfile : value);
+    f.dependencies.importOperation = async (selection, options) => ({ ...await original(selection, options), ...receipt });
+    f.dependencies.verifyOperation = async (selection, options) => {
+      f.events.push("verify"); assert.equal(selection.profile, selectedProfile); assert.equal(await options.readSecret(), "synthetic password");
+      return { ...verified(), ...receipt };
+    };
+    const result = await run(parseArguments(selectedArgs), f.dependencies);
+    assert.equal(result.version, 8); assert.equal(result.profile, receipt.profile);
+    assert.equal(f.events.filter(event => event === "password").length, 1);
+    assert.equal(result.importedThisRun, state === "empty");
+  }
+  const f = fixture(); await assert.rejects(run(parseArguments(args().map(value => value === profile ? selectedProfile : value)), f.dependencies), neutral("CHECKPOINT", "precheck"));
+  assert.deepEqual(f.events, ["precheck"]);
+});

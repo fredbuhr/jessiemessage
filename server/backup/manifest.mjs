@@ -114,9 +114,9 @@ function canaryFields(value, name) {
 }
 function manifestValue(manifest) {
   const result = safeJson(manifest);
-  const selected = manifestBackupProfile(result.profile), profiled = [2, 3, 4, 5, 6, 7, 8].includes(result.version);
+  const selected = manifestBackupProfile(result.profile), profiled = [2, 3, 4, 5, 6, 7, 8, 9, 10].includes(result.version);
   exact(result, ["version", "payload", "signature", ...(profiled ? ["profile"] : [])]);
-  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(result.version)
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(result.version)
     || profiled && !(selected?.manifestVersion === result.version || result.version === 3 && result.profile === "full-notify")
     || typeof result.signature !== "string" || !HEX.test(result.signature)) fail();
   exact(result.payload, ["createdAt", "identity", "snapshot", "canaries"]);

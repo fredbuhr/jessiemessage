@@ -5,8 +5,9 @@ import { tokenDigest } from "../server/auth/crypto.mjs";
 import { sealVerificationPayload } from "../server/mail/crypto.mjs";
 import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 import { sealSubscription, endpointDigest } from "../server/notifications/crypto.mjs";
+import { sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
 import { sealNotes } from "../server/crm/crypto.mjs";
-import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData, verifyPhotoNotificationRecoveryCrmBackupData } from "../server/backup/verify.mjs";
+import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData, verifyPhotoNotificationRecoveryCrmBackupData, verifyPhotoNotificationRecoveryCrmBroadcastBackupData } from "../server/backup/verify.mjs";
 
 const id = number => { const value = Buffer.alloc(16); value.writeUInt32BE(number, 12); return value; };
 const names = ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"];
@@ -33,7 +34,7 @@ function fixture() {
     assert.match(sql, /^SELECT\s/); assert.doesNotMatch(sql, /\b(?:INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|FOR UPDATE)\b/);
     calls.push({ sql, parameters }); const table = /\bFROM ([a-z_]+)/.exec(sql)?.[1];
     if (sql.startsWith("SELECT EXISTS")) return [{ present: rows[table]?.length ? 1 : 0 }];
-    return (rows[table] ?? []).filter(row => parameters.length === 1 || Buffer.compare(row.id, parameters[0]) > 0).slice(0, parameters.at(-1));
+    return (rows[table] ?? []).filter(row => parameters.length === 1 || Buffer.compare(row.id, parameters[0]) > 0).slice(0, table === "broadcast_recipients" ? 101 : parameters.at(-1));
   }, release() { released++; } }) };
   const storage = { async get() { assert.fail("this metadata-only fixture has no media to read"); } };
   return { keys, token, email, clientId, jobId, subscription, rows, calls, pool, storage, options: { keys, pool, storage }, released: () => released };
@@ -172,4 +173,42 @@ test("reset verification paginates all encrypted mail, obeys row limits and abor
   const aborted = await verifyPhotoNotificationRecoveryBackupData({ ...f.options, signal: controller.signal });
   assert.equal(aborted.complete, false); assert.equal(aborted.issues[0].code, "aborted"); assert.equal(f.calls.length, callsBefore);
   assert.deepEqual(f.keys, before);
+});
+
+function broadcastFixture() {
+  const f = crmFixture(), binding = { campaignId: id(20), adminId: id(1) };
+  const payload = { title: "Synthetic private campaign", body: "Synthetic broadcast only", mediaId: null, allowRepeatMedia: false,
+    conversationIds: [id(10).toString("hex"), id(11).toString("hex")] };
+  f.rows.broadcast_campaigns = [{ id: binding.campaignId, admin_id: binding.adminId, encrypted: sealPayload(payload, f.keys.messageKey, binding),
+    request_fingerprint: campaignFingerprint(payload, f.keys.messageKey, binding), media_id: null, allow_repeat_media: 0 }];
+  f.rows.broadcast_recipients = payload.conversationIds.map(value => ({ conversation_id: Buffer.from(value, "hex") }));
+  f.rows.broadcast_preferences = [{ id: id(2) }];
+  return { ...f, payload };
+}
+
+test("the broadcast recovery verifier authenticates campaigns, complete audiences, notes, reset and Push with the same six keys and SELECT only", async () => {
+  const f = broadcastFixture(), before = copyKeys(f.keys), result = await verifyPhotoNotificationRecoveryCrmBroadcastBackupData(f.options);
+  assert.equal(result.healthy, true); assert.equal(result.complete, true); assert.deepEqual(result.issues, []);
+  assert.equal(result.counts.broadcast, 1); assert.equal(result.counts.broadcastRecipients, 2);
+  assert.equal(result.counts.crm, 1); assert.equal(result.counts.reset, 1); assert.equal(result.counts.notificationJobs, 1);
+  assert.equal(f.calls.filter(({ sql }) => sql.startsWith("SELECT EXISTS")).length, 0); assert.deepEqual(f.keys, before);
+  for (const value of [f.payload.body, f.payload.title, f.notes, ...Object.values(f.keys).map(key => key.toString("base64url"))])
+    assert.equal(JSON.stringify(result).includes(value), false);
+});
+
+test("broadcast backup refuses changed keys, ciphertext, owner, audience, media or fingerprint without touching caller secrets", async () => {
+  for (const change of ["key", "ciphertext", "owner", "audience", "missingRecipient", "media", "fingerprint", "repeat"]) {
+    const f = broadcastFixture(), row = f.rows.broadcast_campaigns[0];
+    if (change === "key") f.keys.messageKey = randomBytes(32);
+    if (change === "ciphertext") { const parts = row.encrypted.split("."), tag = Buffer.from(parts[3], "base64url"); tag[0] ^= 1; parts[3] = tag.toString("base64url"); row.encrypted = parts.join("."); }
+    if (change === "owner") row.admin_id = id(19);
+    if (change === "audience") f.rows.broadcast_recipients.reverse();
+    if (change === "missingRecipient") f.rows.broadcast_recipients.pop();
+    if (change === "media") row.media_id = id(25);
+    if (change === "fingerprint") row.request_fingerprint = randomBytes(32);
+    if (change === "repeat") row.allow_repeat_media = 1;
+    const before = copyKeys(f.keys), result = await verifyPhotoNotificationRecoveryCrmBroadcastBackupData(f.options);
+    assert.equal(result.healthy, false, change); assert.ok(result.issues.some(issue => issue.purpose === "broadcast"), change);
+    assert.deepEqual(f.keys, before);
+  }
 });

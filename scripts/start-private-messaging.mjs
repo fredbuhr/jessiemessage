@@ -6,6 +6,7 @@ import { clearRuntimeMessagingSecrets, copyRuntimeMessagingEnvironment, loadRunt
 import { copyRuntimeMediaEnvironment, loadRuntimeMediaEnvironment } from "../server/config/runtime-media.mjs";
 import { copyRuntimeNotificationsEnvironment, loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { copyRuntimeCrmEnvironment, loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { copyRuntimeBroadcastEnvironment, loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { checkRuntimeMediaStorage } from "../server/config/runtime-media-storage.mjs";
 import { inspectDatabase } from "../server/preflight/database.mjs";
 import { makePreflightReport } from "../server/preflight/report.mjs";
@@ -27,9 +28,9 @@ export function parseArguments(args) {
     }
     if (args[offset] === "--profile") {
       const profile = args[offset + 1];
-      if (!["photos", "photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm"].includes(profile)
-        || deployment && !["photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm"].includes(profile)
-        || ["photos-notify-recovery", "photos-notify-recovery-crm"].includes(profile) && !deployment) fail("PRIVATE_MESSAGING_USAGE");
+      if (!["photos", "photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast"].includes(profile)
+        || deployment && !["photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast"].includes(profile)
+        || ["photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast"].includes(profile) && !deployment) fail("PRIVATE_MESSAGING_USAGE");
       return { command: args[0], ...(deployment ? { deployment } : {}), profile: args[offset + 1], ...authenticationArguments(args.slice(offset + 2)) };
     }
     if (deployment) fail("PRIVATE_MESSAGING_USAGE");
@@ -69,6 +70,10 @@ export async function checkMessagingSchema(env) {
       const { createCrmStore } = await import("../server/crm/store.mjs");
       await createCrmStore({ pool, chatStore }).assertSchema();
     }
+    if (env.JESSIEMESSAGE_ENABLE_BROADCAST === "1") {
+      const { assertBroadcastSchema } = await import("../server/broadcast/store.mjs");
+      await assertBroadcastSchema(pool);
+    }
   } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
   finally { try { await pool?.end(); } catch { fail("PRIVATE_MESSAGING_SCHEMA"); } }
 }
@@ -87,17 +92,18 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       ...(Object.hasOwn(options, "profile") ? ["--profile", options.profile] : []),
       "--private-directory", options.privateDirectory, "--private-path-mode", options.privatePathMode]);
     const transition = selected.deployment === "primary-transition", originOptions = transition ? { originProfile: "primary" } : {};
-    const crm = selected.profile === "photos-notify-recovery-crm";
+    const broadcast = selected.profile === "photos-notify-recovery-crm-broadcast";
+    const crm = broadcast || selected.profile === "photos-notify-recovery-crm";
     const recovery = crm || selected.profile === "photos-notify-recovery";
     const notifications = recovery || selected.profile === "photos-notify", photos = notifications || selected.profile === "photos";
     const profileOptions = { ...originOptions, ...(recovery ? { recovery: true } : {}) };
-    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : notifications ? loadRuntimeNotificationsEnvironment : photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
+    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : notifications ? loadRuntimeNotificationsEnvironment : photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); }
     catch { fail("PRIVATE_MESSAGING_ENVIRONMENT"); }
     try {
       source = await loadEnvironment(selected.privateDirectory, { ...processOptions, ...profileOptions });
-      env = (crm ? copyRuntimeCrmEnvironment : notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source, profileOptions);
+      env = (broadcast ? copyRuntimeBroadcastEnvironment : crm ? copyRuntimeCrmEnvironment : notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source, profileOptions);
       if (recovery && !crm) {
         // The files contain no recovery switch. Activate it only after their
         // unchanged, anchored profile has passed validation, never from env.
@@ -116,10 +122,10 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       if (photos) await checkStorage(env);
     } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
     if (selected.command === "start") {
-      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}), ...(crm ? { crm: true } : {}) }); }
+      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}), ...(crm ? { crm: true } : {}), ...(broadcast ? { broadcast: true } : {}) }); }
       catch { fail("PRIVATE_MESSAGING_STARTUP"); }
     }
-    return { status: selected.command === "start" ? "started" : "checks_passed", profile: crm ? "messaging-photos-notify-recovery-crm" : recovery ? "messaging-photos-notify-recovery" : notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
+    return { status: selected.command === "start" ? "started" : "checks_passed", profile: broadcast ? "messaging-photos-notify-recovery-crm-broadcast" : crm ? "messaging-photos-notify-recovery-crm" : recovery ? "messaging-photos-notify-recovery" : notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
       ...(transition ? { deployment: "primary-transition" } : {}),
       started: selected.command === "start", smtpDeliveryTested: false, launchApproved: false };
   } catch (error) {
@@ -127,7 +133,7 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
     fail("PRIVATE_MESSAGING_STARTUP");
   } finally {
     clearRuntimeMessagingSecrets(env);
-    if ([loadRuntimeMessagingEnvironment, loadRuntimeMediaEnvironment, loadRuntimeNotificationsEnvironment, loadRuntimeCrmEnvironment].includes(loadEnvironment)) clearRuntimeMessagingSecrets(source);
+    if ([loadRuntimeMessagingEnvironment, loadRuntimeMediaEnvironment, loadRuntimeNotificationsEnvironment, loadRuntimeCrmEnvironment, loadRuntimeBroadcastEnvironment].includes(loadEnvironment)) clearRuntimeMessagingSecrets(source);
   }
 }
 

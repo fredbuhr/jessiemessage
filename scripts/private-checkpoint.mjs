@@ -8,6 +8,7 @@ import { createGzip } from "node:zlib";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { loadRuntimeBroadcastEnvironment, copyRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile } from "../server/backup/profiles.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
@@ -234,12 +235,13 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   try {
     const selected = options(value); active(signal);
     const application = selected.command.endsWith("-application"), selectedProfile = checkpointBackupProfile(selected.profile, application);
-    const { recovery, crm, name: backupProfile, manifestProfile: profile, manifestVersion, receiptVersion } = selectedProfile;
-    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
+    const { recovery, crm, broadcast, name: backupProfile, manifestProfile: profile, manifestVersion, receiptVersion } = selectedProfile;
+    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let parameters; try { parameters = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("PRIVATE_CHECKPOINT_ENVIRONMENT"); }
     if (recovery) parameters = { ...parameters, originProfile: "primary", recovery: true };
     loaded = await loadEnvironment(selected.privateDirectory, parameters);
-    env = crm ? copyRuntimeCrmEnvironment(loaded, { originProfile: "primary", recovery: true })
+    env = broadcast ? copyRuntimeBroadcastEnvironment(loaded, { originProfile: "primary", recovery: true })
+      : crm ? copyRuntimeCrmEnvironment(loaded, { originProfile: "primary", recovery: true })
       : recovery ? copyRuntimeNotificationsEnvironment(loaded, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(loaded);
     if (selected.inspectionUser === env.JESSIEMESSAGE_RUNTIME_DB_USER || inside(selected.destination, env.JESSIEMESSAGE_MEDIA_ROOT)
       || inside(env.JESSIEMESSAGE_MEDIA_ROOT, selected.destination)) fail("PRIVATE_CHECKPOINT_CONFIGURATION");

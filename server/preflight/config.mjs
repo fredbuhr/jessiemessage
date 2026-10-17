@@ -21,6 +21,7 @@ export const PRIMARY_MESSAGING_CONFIG_CHECK_NAMES = Object.freeze(MESSAGING_CONF
 export const PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES = Object.freeze(NOTIFICATIONS_CONFIG_CHECK_NAMES.map((name) => name === "official_subdomain" ? "primary_origin" : name));
 export const PRIMARY_NOTIFICATIONS_RECOVERY_CONFIG_CHECK_NAMES = Object.freeze(PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES.map((name) => name === "messaging_photos_notify" ? "messaging_photos_notify_recovery" : name));
 export const PRIMARY_NOTIFICATIONS_RECOVERY_CRM_CONFIG_CHECK_NAMES = Object.freeze(PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES.map((name) => name === "messaging_photos_notify" ? "messaging_photos_notify_recovery_crm" : name));
+export const PRIMARY_BROADCAST_CONFIG_CHECK_NAMES = Object.freeze(PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES.map((name) => name === "messaging_photos_notify" ? "messaging_photos_notify_recovery_crm_broadcast" : name));
 
 const TARGET = "auth-only";
 const FLAGS = Object.freeze([
@@ -49,11 +50,12 @@ function report(statuses, target = TARGET, originProfile = "preproduction") {
   const names = originProfile === "primary"
     ? target === "messaging-text" ? PRIMARY_MESSAGING_CONFIG_CHECK_NAMES : target === "messaging-photos-notify" ? PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES
       : target === "messaging-photos-notify-recovery" ? PRIMARY_NOTIFICATIONS_RECOVERY_CONFIG_CHECK_NAMES
-        : target === "messaging-photos-notify-recovery-crm" ? PRIMARY_NOTIFICATIONS_RECOVERY_CRM_CONFIG_CHECK_NAMES : PRIMARY_CONFIG_CHECK_NAMES
+        : target === "messaging-photos-notify-recovery-crm" ? PRIMARY_NOTIFICATIONS_RECOVERY_CRM_CONFIG_CHECK_NAMES
+          : target === "messaging-photos-notify-recovery-crm-broadcast" ? PRIMARY_BROADCAST_CONFIG_CHECK_NAMES : PRIMARY_CONFIG_CHECK_NAMES
     : target === "messaging-text" ? MESSAGING_CONFIG_CHECK_NAMES
       : target === "messaging-photos-notify" ? NOTIFICATIONS_CONFIG_CHECK_NAMES : CONFIG_CHECK_NAMES;
   return Object.freeze({
-    target: ["messaging-text", "messaging-photos-notify", "messaging-photos-notify-recovery", "messaging-photos-notify-recovery-crm"].includes(target) ? target : TARGET,
+    target: ["messaging-text", "messaging-photos-notify", "messaging-photos-notify-recovery", "messaging-photos-notify-recovery-crm", "messaging-photos-notify-recovery-crm-broadcast"].includes(target) ? target : TARGET,
     valid: names.every((name) => statuses[name] !== "fail"),
     checks: Object.freeze(names.map((name) => Object.freeze({ name, status: statuses[name] }))),
   });
@@ -140,6 +142,8 @@ export function inspectPreproductionConfiguration(env = {}, options = {}) {
   statuses.messaging_photos_notify_recovery_crm = target === "messaging-photos-notify-recovery-crm" && originProfile === "primary" && validFlags
     && [0, 1, 2, 3, 4, 5, 6, 8].every((index) => source[FLAGS[index]] === "1")
     && source[FLAGS[7]] === "0" ? "pass" : "fail";
+  statuses.messaging_photos_notify_recovery_crm_broadcast = target === "messaging-photos-notify-recovery-crm-broadcast"
+    && originProfile === "primary" && validFlags && FLAGS.every(name => source[name] === "1") ? "pass" : "fail";
   const port = source.PORT;
   if (port !== undefined) statuses.port = typeof port === "string" && /^[1-9][0-9]{0,4}$/.test(port) && Number(port) <= 65535 ? "pass" : "fail";
   return report(statuses, target, originProfile);

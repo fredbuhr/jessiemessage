@@ -5,6 +5,7 @@ import { databaseOptions } from "../server/db/connection.mjs";
 import { loadMigrations, createdMigrationTables } from "../server/db/migrations.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { checkpointBackupProfile, CHECKPOINT_RUNTIME_PROFILES } from "../server/backup/profiles.mjs";
@@ -97,7 +98,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   readSecret = readPassword, connect = connectOperatorDatabase, inspect = inspectResumeClone, signal } = {}) {
   let phase = "arguments", environment, connectionEnv, connection, password = "", result, failure;
   try {
-    const selected = selectedRecord(value), { crm } = checkpointBackupProfile(selected.profile, true);
+    const selected = selectedRecord(value), { crm, broadcast } = checkpointBackupProfile(selected.profile, true);
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("ENVIRONMENT", "precheck"); }
     const dependencies = { inheritedEnv, execArgv, signal };
@@ -108,7 +109,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     active(signal, phase);
     if (selected.command === "check") return { ...before, resumeSupported: true };
     phase = "configuration"; active(signal, phase);
-    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
+    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     environment = await loadEnvironment(selected.privateDirectory, { port: processOptions.port, originProfile: "primary", recovery: true });
     if (selected.database.toLowerCase() === environment.JESSIEMESSAGE_DB_NAME.toLowerCase() || selected.user === environment.JESSIEMESSAGE_RUNTIME_DB_USER) fail("CONFIGURATION", phase);
     phase = "password";

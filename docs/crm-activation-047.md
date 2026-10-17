@@ -1,5 +1,7 @@
 # JessieMessage — activation des fiches privées, étape 0.47
 
+**État ultérieur :** les fiches sont acceptées personnellement à 00:31:47 ; l’[activation des diffusions 0.49](broadcast-activation-049.md) à 00:47 conserve ce module, les clés et les sessions. Le relevé ci-dessous garde les preuves de 0.47.
+
 **Livré le 18 octobre 2026 à 00:15 Europe/Paris.** Le profil `messaging-photos-notify-recovery-crm` est actif sur l’origine principale et l’origine recette conservée. Les fiches privées, surnoms, notes chiffrées, tags, groupes et dates de suivi sont activés pour l’administrateur. Les diffusions restent désactivées. La réception d’une notification de rappel n’est pas ajoutée : la date de suivi est privée et affichée dans l’espace administrateur.
 
 ## Prérequis 0.46 effectivement levé
@@ -81,7 +83,7 @@ Ces sondes sont des GET anonymes, sans cookie, compte réel, POST, note, e-mail 
 
 ## Observation personnelle ciblée
 
-Depuis les deux appareils administrateur habituels, actualiser l’application après avoir enregistré tout brouillon utile. Ouvrir une conversation, puis **Fiche** : vérifier surnom, notes, tags/groupes et rappel privé. Enregistrer une petite note sur un appareil, puis rafraîchir la fiche sur l’autre et vérifier la concordance. Pour vérifier un conflit, ouvrir la même version sur les deux appareils, enregistrer sur le premier puis essayer sur le second : le second brouillon doit rester visible avec le choix explicite de recharger ou de conserver sa version. Cette observation n’est pas encore reçue. Aucun reset administrateur ni répétition générale des photos, notifications ou récupération n’est demandé.
+Depuis les deux appareils administrateur habituels, actualiser l’application après avoir enregistré tout brouillon utile. Ouvrir une conversation, puis **Fiche** : vérifier surnom, notes, tags/groupes et rappel privé. Enregistrer une petite note sur un appareil, puis rafraîchir la fiche sur l’autre et vérifier la concordance. Pour vérifier un conflit, ouvrir la même version sur les deux appareils, enregistrer sur le premier puis essayer sur le second : le second brouillon doit rester visible avec le choix explicite de recharger ou de conserver sa version. À **00:31:47 Europe/Paris le 18 octobre**, le propriétaire répond « C’est bon ça fonctionne » au parcours proposé. Ce retour accepte globalement le fonctionnement essayé de la fiche partagée. Aucun test de conflit, inventaire de plateformes ni couverture de tous les appareils n’est déduit ; aucune répétition globale n’est demandée. Aucun reset administrateur ni répétition générale des photos, notifications ou récupération n’est demandé.
 
 ## Repli et suite
 
@@ -93,4 +95,4 @@ bash /srv/customer/jessiemessage-private/start-primary-operations-checked-ed78b5
 
 Son Build reste celui du checkout `operations-report-ed78b55e`, source `ed78b55e99480ce07967b4c54c7e2de13e46951e`, arbre `5bdb9e75989ca30ad800053ed783dd6ed3edfd70`, avec les gardes Git et `npm run check` déjà conservés dans le [relevé 0.42](operations-diagnostic.md). Le repli passe par le Manager et une relance contrôlée, jamais par un second serveur SSH. Il désactive les fiches tout en conservant leurs tables et leur clé ; aucun ancien état de sessions, mots de passe ou SQL n’est restauré. Après création de notes réelles, conserver les outils CRM pour toute sauvegarde/restauration, y compris si le runtime revient à 0.42.
 
-Étape 0.47 : activation et contrôles opérateur terminés, observation personnelle à deux en attente. Suite : préparation distincte des envois groupés ; sauvegardes récurrentes avec copie indépendante et surveillance/alerte restent au bilan d’exploitation.
+Étape 0.47 acceptée : activation, contrôles opérateur et parcours personnel essayé validés à 00:31:47. Suite : préparation distincte des envois groupés ; sauvegardes récurrentes avec copie indépendante et surveillance/alerte restent au bilan d’exploitation.

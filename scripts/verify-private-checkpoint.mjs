@@ -5,13 +5,14 @@ import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { loadRuntimeBroadcastEnvironment, copyRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile } from "../server/backup/profiles.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { readManifest, verifyBackupManifest, backupIdentity, assertCloneIdentity } from "../server/backup/manifest.mjs";
 import { assertBackupInspection } from "../server/backup/inspection.mjs";
 import { APPLICATION_COVERAGE, validateApplicationCoverage, assertApplicationTableInspection } from "../server/backup/application-scope.mjs";
-import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData, verifyPhotoNotificationRecoveryCrmBackupData } from "../server/backup/verify.mjs";
+import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData, verifyPhotoNotificationRecoveryCrmBackupData, verifyPhotoNotificationRecoveryCrmBroadcastBackupData } from "../server/backup/verify.mjs";
 import { connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
 import { inspectDumpClient, readFrozenBackup, dumpCloneSql, inspectClone } from "./verify-text-clone.mjs";
@@ -84,8 +85,9 @@ export async function verifyApplicationCloneSnapshot(source, selection, password
     const selected = optionsFromRecord(selection);
     if (selected.command !== "verify-application" || typeof password !== "string" || !password
       || !password.isWellFormed() || /[\x00-\x1f\x7f]/.test(password) || Buffer.byteLength(password, "utf8") > 4096) fail("SNAPSHOT");
-    const profile = checkpointBackupProfile(selected.profile, true), { recovery, crm } = profile;
-    cloneEnv = crm ? copyRuntimeCrmEnvironment(source, { originProfile: "primary", recovery: true })
+    const profile = checkpointBackupProfile(selected.profile, true), { recovery, crm, broadcast } = profile;
+    cloneEnv = broadcast ? copyRuntimeBroadcastEnvironment(source, { originProfile: "primary", recovery: true })
+      : crm ? copyRuntimeCrmEnvironment(source, { originProfile: "primary", recovery: true })
       : recovery ? copyRuntimeNotificationsEnvironment(source, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(source);
     if (selected.database.toLowerCase() === cloneEnv.JESSIEMESSAGE_DB_NAME.toLowerCase()
       || selected.user === cloneEnv.JESSIEMESSAGE_RUNTIME_DB_USER) fail("SNAPSHOT");
@@ -119,15 +121,15 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   inspectClient = inspectDumpClient, readSecret = readPassword, dump = dumpCloneSql, connect = connectDatabase,
   inspect = inspectClone, inspectPrivileges = assertBackupInspection, inspectApplicationPrivileges = assertApplicationTableInspection,
   verify = verifyPhotoNotificationBackupData, verifyRecovery = verifyPhotoNotificationRecoveryBackupData,
-  verifyCrm = verifyPhotoNotificationRecoveryCrmBackupData,
+  verifyCrm = verifyPhotoNotificationRecoveryCrmBackupData, verifyBroadcast = verifyPhotoNotificationRecoveryCrmBroadcastBackupData,
   verifyApplicationSnapshot = verifyApplicationCloneSnapshot, signal } = {}) {
   let sourceEnv, env, keys, password = "", connectionEnv, connection, transaction = false, result, failure;
   const active = () => { if (signal?.aborted) fail("CANCELLED"); };
   try {
     active(); const selected = optionsFromRecord(value);
     const application = selected.command.endsWith("-application");
-    const { recovery, crm, manifestProfile: profile, manifestVersion, receiptVersion } = checkpointBackupProfile(selected.profile, application);
-    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
+    const { recovery, crm, broadcast, manifestProfile: profile, manifestVersion, receiptVersion } = checkpointBackupProfile(selected.profile, application);
+    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let dumpTables;
     if (application) {
       const migrations = await loadMigrations();
@@ -137,7 +139,8 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("ENVIRONMENT"); }
     sourceEnv = await loadEnvironment(selected.privateDirectory, { port: processOptions.port, ...(recovery ? { originProfile: "primary", recovery: true } : {}) });
-    env = crm ? copyRuntimeCrmEnvironment(sourceEnv, { originProfile: "primary", recovery: true })
+    env = broadcast ? copyRuntimeBroadcastEnvironment(sourceEnv, { originProfile: "primary", recovery: true })
+      : crm ? copyRuntimeCrmEnvironment(sourceEnv, { originProfile: "primary", recovery: true })
       : recovery ? copyRuntimeNotificationsEnvironment(sourceEnv, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(sourceEnv);
     if (selected.database.toLowerCase() === env.JESSIEMESSAGE_DB_NAME.toLowerCase() || selected.user === env.JESSIEMESSAGE_RUNTIME_DB_USER) fail("CONFIGURATION");
     keys = Object.fromEntries([...Object.entries(KEY_FIELDS), ...(crm ? [["crmKey", "JESSIEMESSAGE_CRM_KEY"]] : [])]
@@ -217,7 +220,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           if (typeof sql !== "string" || !/^SELECT\s/.test(sql) || /\b(?:INTO|OUTFILE|DUMPFILE|FOR\s+UPDATE|LOCK\s+IN\s+SHARE)\b/i.test(sql)) fail("DATABASE");
           return connection.query(sql, parameters);
         }, release: async () => {} }) };
-        const report = await (crm ? verifyCrm : recovery ? verifyRecovery : verify)({ pool, storage, keys, signal }); active();
+        const report = await (broadcast ? verifyBroadcast : crm ? verifyCrm : recovery ? verifyRecovery : verify)({ pool, storage, keys, signal }); active();
         if (report?.complete !== true || report.healthy !== true || !Array.isArray(report.issues) || report.issues.length
           || !same(Object.keys(report.counts ?? {}).sort(), [...COUNT_NAMES].sort())
           || COUNT_NAMES.some(name => !Number.isSafeInteger(report.counts[name]) || report.counts[name] < 0)) fail("CRYPTO");

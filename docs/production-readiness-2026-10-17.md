@@ -1,6 +1,6 @@
 # JessieMessage — bilan avant ouverture privée
 
-**Bilan actualisé au 18 octobre 2026 à 00:16 Europe/Paris, périmètre privé autour de Jessie.** Le [profil CRM est activé](crm-activation-047.md), runtime `edf696ec`, arbre `3daa88c3`, après le reçu personnel de restauration isolée à 00:13:21 et le build/redémarrage Manager à 00:15. Coffre et copie indépendante acceptés ; trente tables applicatives et quatre photos chiffrées vérifiées dans la copie restaurée. **56/56 contrôles HTTPS et seize empreintes exactes** passent à 00:16:25. Les fiches privées sont disponibles sur les deux origines ; les diffusions restent désactivées. Observation personnelle à deux, sauvegardes récurrentes/copie indépendante et surveillance/alerte restent au bilan. Les acceptations précédentes sont conservées.
+**Bilan actualisé au 18 octobre 2026 à 00:48 Europe/Paris, périmètre privé autour de Jessie.** Le parcours personnel essayé des fiches est accepté à 00:31:47. Les [diffusions individuelles sont activées](broadcast-activation-049.md), source `d77f16fb`, arbre `5897917c`, après préflight et cinq jobs CI réussis, dont 383/383 par MariaDB. Build/redémarrage Manager à 00:47 ; 68/68 contrôles HTTPS et seize empreintes exactes passent à 00:48:20. Accord individuel et confirmation de campagne conservés, aucune campagne réelle de test créée par l’agent. Le coffre et la restauration native 0.46 restent acquis ; les nouveaux formats 9/10 couvrent les campagnes peuplées en CI. Premier essai personnel, sauvegardes récurrentes/copie indépendante et surveillance/alerte restent au bilan.
 
 L’application est déjà hébergée à son adresse principale avec les accès sur invitation. Le passage à un usage privé régulier consiste à compléter son exploitation et ses fonctions restantes ; aucun changement d’hébergement ou ouverture publique de la messagerie n’est prévu.
 
@@ -15,7 +15,7 @@ L’application est déjà hébergée à son adresse principale avec les accès 
 | Récupération du mot de passe invité | Déployée, parcours essayé accepté à 18:52:47 ; aucune répétition générale demandée |
 | Domaine principal, FR/EN, aide et contact | Déployés ; 38 contrôles HTTPS et seize empreintes exactes au recontrôle de 22:15:18 |
 | Sauvegarde et restauration applicatives de référence | Checkpoint schéma 30 et import isolé réellement vérifiés au lot 0.36 |
-| Fiches privées : comportement du navigateur | Activées en 0.47 ; conflits explicites, brouillons conservés et 101 tests Chrome ; observation personnelle à deux encore attendue |
+| Fiches privées : comportement du navigateur | Activées en 0.47 ; conflits explicites, brouillons conservés et 101 tests Chrome ; parcours personnel essayé accepté à 00:31:47 |
 
 ## Avant d’élargir l’usage
 
@@ -33,8 +33,8 @@ La quatrième vérification concerne un outil d’exploitation et peut accompagn
 | Ordre | Fonction | Suite |
 | --- | --- | --- |
 | 0.44–0.46 | Clé et coffre des fiches privées | [Clé créée, coffre primaire et copie PC vérifiés](crm-checkpoint-046.md), empreinte concordante et déchiffrement personnel confirmé à 22:48 ; anciens coffres conservés |
-| 0.45–0.46 | Fiches privées, tags, groupes, notes et rappels | [Activées après restauration isolée vérifiée](crm-activation-047.md) ; observation personnelle ciblée encore attendue |
-| Ensuite | Envois groupés livrés individuellement | Préparer le profil, la prévisualisation des destinataires, les règles existantes d’accord/retrait, la détection des doublons et la reprise ; tester avant activation |
+| 0.45–0.46 | Fiches privées, tags, groupes, notes et rappels | [Activées après restauration isolée vérifiée](crm-activation-047.md) ; parcours personnel essayé accepté à 00:31:47 |
+| 0.48–0.49 | Envois groupés livrés individuellement | [Activés](broadcast-activation-049.md) avec accord, aperçu, confirmation et reprise ; premier essai personnel ciblé encore attendu |
 | Entretien | Version stable et suivi des appareils | Consolider les PR empilées sans remplacer implicitement la révision servie ; compléter la matrice appareils au fil du pilote |
 
 Les fiches et les diffusions enrichissent la version complète. Les conversations individuelles déjà actives peuvent servir à un pilote privé une fois les mesures d’exploitation ci-dessus organisées. Aucune démarche déclarative n’est ajoutée au plan de développement. Les décisions de conservation et d’effacement restent distinctes : aucune purge irréversible ni durée générale n’est activée par défaut.

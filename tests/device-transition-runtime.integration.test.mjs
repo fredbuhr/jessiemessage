@@ -306,6 +306,79 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
       assert.deepEqual(await credentials(), credentialsBefore);
       assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM password_reset_outbox WHERE status = 'pending'"))[0].n), 1);
     });
+    const broadcastEnv = { ...crmEnv, JESSIEMESSAGE_ENABLE_BROADCAST: "1" };
+    await closeRuntime();
+    await t.test("broadcast preflight requires the three physical tables before listening", async () => {
+      await checkMessagingSchema(broadcastEnv);
+      for (const table of ["broadcast_preferences", "broadcast_campaigns", "broadcast_recipients"]) {
+        await connection.query(`RENAME TABLE ${table} TO migration_probe`);
+        try { await assert.rejects(checkMessagingSchema(broadcastEnv), { code: "PRIVATE_MESSAGING_SCHEMA" }); }
+        finally { await connection.query(`RENAME TABLE migration_probe TO ${table}`); }
+      }
+      await checkMessagingSchema(broadcastEnv); assert.deepEqual(await credentials(), credentialsBefore);
+    });
+    runtime = await createConfiguredServer(broadcastEnv, { requestOrigin: primary, deviceTransition: true, recovery: true, crm: true, broadcast: true, clock: () => now });
+    await runtime.mailWorker.stop();
+    await new Promise(resolveRequest => runtime.server.listen(0, "127.0.0.1", resolveRequest));
+    let queuedCampaign;
+    await t.test("both authorities share explicit client consent and one immutable campaign under the runtime clock without starting deliveries", async () => {
+      const broadcastPort = runtime.server.address().port, preferencePath = "/api/broadcast/client/preference";
+      const messagesBefore = Number((await connection.query("SELECT COUNT(*) AS n FROM messages"))[0].n);
+      for (const origin of [primary, recipe]) {
+        for (const path of ["/admin/broadcasts", "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/api/broadcast/admin/session"]) {
+          assert.equal((await request(broadcastPort, origin, path)).status, 401, path);
+          assert.equal((await request(broadcastPort, origin, path, { cookie: cookie("client") })).status, 401, path);
+          assert.equal((await request(broadcastPort, origin, path, { cookie: cookie("admin") })).status, 200, path);
+        }
+        const preference = await request(broadcastPort, origin, preferencePath, { cookie: cookie("client") });
+        assert.equal(preference.status, 200); assert.equal(preference.json().enabled, false); assert.equal(preference.json().version, "0");
+        assert.equal((await request(broadcastPort, origin, preferencePath, { cookie: cookie("admin") })).status, 401);
+        const readiness = await request(broadcastPort, origin, "/api/admin/readiness", { cookie: cookie("admin") });
+        assert.equal(readiness.json().features.broadcasts, true);
+        assert.deepEqual(readiness.json().operations.workers.map(worker => worker.name).sort(), ["broadcasts", "notifications", "recovery", "verification"]);
+      }
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM broadcast_preferences"))[0].n), 0);
+      const previewPath = "/api/broadcast/admin/preview", previewBody = { conversationIds: [conversationId.toString("hex")], mediaId: null };
+      const previewOptions = { method: "POST", cookie: cookie("admin"), csrf: csrfToken(raw.admin), body: previewBody };
+      const optedOut = await request(broadcastPort, primary, previewPath, previewOptions);
+      assert.equal(optedOut.status, 200); assert.equal(optedOut.json().eligibleCount, 0);
+      const preferenceOptions = { method: "POST", cookie: cookie("client"), csrf: csrfToken(raw.client), body: { enabled: true, expectedVersion: "0" } };
+      assert.equal((await request(broadcastPort, recipe, preferencePath, { ...preferenceOptions, extra: { Origin: primary } })).status, 403);
+      const saved = await request(broadcastPort, recipe, preferencePath, preferenceOptions);
+      assert.equal(saved.status, 200); assert.equal(saved.json().updatedAt, now);
+      assert.equal((await request(broadcastPort, primary, preferencePath, { cookie: cookie("client") })).json().enabled, true);
+      assert.equal((await request(broadcastPort, recipe, previewPath, { ...previewOptions, extra: { Origin: primary } })).status, 403);
+      const preview = await request(broadcastPort, recipe, previewPath, previewOptions);
+      assert.equal(preview.status, 200); assert.equal(preview.json().eligibleCount, 1);
+      const input = { clientCampaignId: id().toString("hex"), title: "Synthetic dual-origin campaign", body: "Synthetic individual delivery", mediaId: null,
+        allowRepeatMedia: false, conversationIds: previewBody.conversationIds };
+      const options = { method: "POST", cookie: cookie("admin"), csrf: csrfToken(raw.admin), body: input };
+      const created = await request(broadcastPort, recipe, "/api/broadcast/admin/campaigns", options);
+      assert.equal(created.status, 201); queuedCampaign = created.json().campaign;
+      assert.equal(queuedCampaign.createdAt, now); assert.equal(queuedCampaign.status, "queued");
+      const retry = await request(broadcastPort, primary, "/api/broadcast/admin/campaigns", options);
+      assert.equal(retry.status, 200); assert.equal(retry.json().duplicate, true); assert.equal(retry.json().campaign.id, queuedCampaign.id);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM broadcast_campaigns"))[0].n), 1);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM messages"))[0].n), messagesBefore);
+      const stored = (await connection.query("SELECT payload_encrypted FROM broadcast_campaigns WHERE id = ?", [Buffer.from(queuedCampaign.id, "hex")]))[0];
+      assert.equal(stored.payload_encrypted.includes(input.body), false); assert.deepEqual(await credentials(), credentialsBefore);
+    });
+    await closeRuntime();
+    runtime = await createConfiguredServer(crmEnv, { requestOrigin: primary, deviceTransition: true, recovery: true, crm: true, clock: () => now });
+    await runtime.mailWorker.stop();
+    await new Promise(resolveRequest => runtime.server.listen(0, "127.0.0.1", resolveRequest));
+    await t.test("CRM fallback removes both broadcast entry points while preserving queued campaigns, client consent and current sessions", async () => {
+      const fallbackPort = runtime.server.address().port;
+      for (const origin of [primary, recipe]) {
+        assert.equal((await request(fallbackPort, origin, "/api/broadcast/client/preference", { cookie: cookie("client") })).status, 404);
+        assert.equal((await request(fallbackPort, origin, "/admin/broadcasts", { cookie: cookie("admin") })).status, 404);
+        for (const role of ["admin", "client"]) assert.equal((await request(fallbackPort, origin, role === "admin" ? "/api/auth/session" : "/api/access/session", { cookie: cookie(role) })).status, 200);
+      }
+      assert.equal((await connection.query("SELECT status FROM broadcast_campaigns WHERE id = ?", [Buffer.from(queuedCampaign.id, "hex")]))[0].status, "queued");
+      assert.equal(Number((await connection.query("SELECT enabled FROM broadcast_preferences WHERE user_id = ?", [users.client]))[0].enabled), 1);
+      assert.deepEqual(await credentials(), credentialsBefore);
+    });
+
   } finally {
     await closeRuntime();
     await bootstrapPool?.end(); await reset(); await connection.end();
