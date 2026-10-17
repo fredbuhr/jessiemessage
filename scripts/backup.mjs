@@ -7,6 +7,7 @@ import { chatConfiguration } from "../server/chat/config.mjs";
 import { crmConfiguration } from "../server/crm/config.mjs";
 import { loadNotificationsConfig } from "../server/notifications/config.mjs";
 import { runtimeDatabaseOptions } from "../server/db/runtime.mjs";
+import { PHOTO_BACKUP_PROFILES, photoBackupProfile } from "../server/backup/profiles.mjs";
 
 export class BackupCliError extends Error {
   constructor(code) { super("Private backup operation failed. Consult the offline backup procedure."); this.name = "BackupCliError"; this.code = code; }
@@ -18,13 +19,9 @@ const assertReport = (report) => { if (report?.complete !== true || report?.heal
 const checkSignal = (signal) => { if (signal?.aborted) fail("BACKUP_ABORTED"); };
 const candidateKeys = ["id", "owner_id", "owner_role", "storage_key", "content_digest", "full_bytes", "thumbnail_bytes", "stored_bytes", "asset_id", "state", "created_at"];
 const candidateDTO = (value) => Object.fromEntries(candidateKeys.map((key) => [key, value[key]]));
-const PHOTO_PROFILES = ["photos", "photos-notify", "photos-notify-application", "photos-notify-recovery", "photos-notify-recovery-application"];
-const NOTIFICATION_PROFILES = PHOTO_PROFILES.filter((profile) => profile !== "photos");
-const RECOVERY_PROFILES = ["photos-notify-recovery", "photos-notify-recovery-application"];
-const APPLICATION_PROFILES = ["photos-notify-application", "photos-notify-recovery-application"];
+const PHOTO_PROFILES = PHOTO_BACKUP_PROFILES;
 const manifestProfile = (profile) => PHOTO_PROFILES.includes(profile) ? `messaging-${profile}` : "full";
-const manifestVersion = (profile) => ({ photos: 2, "photos-notify": 3, "photos-notify-application": 4,
-  "photos-notify-recovery": 5, "photos-notify-recovery-application": 6 })[profile] ?? 1;
+const manifestVersion = (profile) => photoBackupProfile(profile)?.manifestVersion ?? 1;
 
 export function parseArguments(args) {
   if (Array.isArray(args) && args.length === 6 && args[4] === "--profile" && PHOTO_PROFILES.includes(args[5])) {
@@ -38,14 +35,16 @@ export function parseArguments(args) {
 
 function configuration(env, profile) {
   const media = mediaConfiguration(env), auth = authConfiguration(env), access = accessConfiguration(env), chat = chatConfiguration(env), crm = crmConfiguration(env);
-  const photos = PHOTO_PROFILES.includes(profile), recovery = RECOVERY_PROFILES.includes(profile), notifications = loadNotificationsConfig(env);
-  if ([media, auth, access, chat].some((value) => value.enabled !== true) || !photos && crm.enabled !== true
-    || photos && (["CRM", "BROADCAST"].some(name => ![undefined, "0"].includes(env[`JESSIEMESSAGE_ENABLE_${name}`]))
+  const selected = photoBackupProfile(profile), photos = Boolean(selected), recovery = selected?.recovery, crmProfile = selected?.crm;
+  const notifications = loadNotificationsConfig(env);
+  if ([media, auth, access, chat].some((value) => value.enabled !== true) || (!photos || crmProfile) && crm.enabled !== true
+    || photos && ((crmProfile ? env.JESSIEMESSAGE_ENABLE_CRM !== "1" : ![undefined, "0"].includes(env.JESSIEMESSAGE_ENABLE_CRM))
+      || ![undefined, "0"].includes(env.JESSIEMESSAGE_ENABLE_BROADCAST)
       || !(recovery ? [undefined, "0", "1"] : [undefined, "0"]).includes(env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY))
-    || NOTIFICATION_PROFILES.includes(profile) !== notifications.enabled) fail("BACKUP_CONFIG");
+    || Boolean(selected?.notifications) !== notifications.enabled) fail("BACKUP_CONFIG");
   return { media, databaseName: runtimeDatabaseOptions(env).database,
     keys: { totpKey: auth.totpKey, mailKey: access.mail.key, messageKey: chat.key, mediaKey: media.key,
-      ...(photos ? {} : { crmKey: crm.key }), ...(NOTIFICATION_PROFILES.includes(profile) ? { notificationKey: notifications.key } : {}) } };
+      ...(photos && !crmProfile ? {} : { crmKey: crm.key }), ...(selected?.notifications ? { notificationKey: notifications.key } : {}) } };
 }
 
 /** All commands require an operator-confirmed offline source or isolated clone. */
@@ -54,9 +53,9 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
   let pool, inspectionPool, result;
   try {
     checkSignal(dependencies.signal);
-    const photos = PHOTO_PROFILES.includes(options.profile), notifications = NOTIFICATION_PROFILES.includes(options.profile),
-      application = APPLICATION_PROFILES.includes(options.profile), recovery = RECOVERY_PROFILES.includes(options.profile);
-    const keyNames = [...["totpKey", "mailKey", "messageKey", "mediaKey"], ...(!photos ? ["crmKey"] : []), ...(notifications ? ["notificationKey"] : [])];
+    const selected = photoBackupProfile(options.profile), photos = Boolean(selected), notifications = selected?.notifications,
+      application = selected?.application, recovery = selected?.recovery, crm = selected?.crm;
+    const keyNames = [...["totpKey", "mailKey", "messageKey", "mediaKey"], ...(!photos || crm ? ["crmKey"] : []), ...(notifications ? ["notificationKey"] : [])];
     const config = (dependencies.configure ?? configuration)(env, options.profile), { media, keys } = config ?? {};
     if (media?.enabled !== true || !media.capacity || typeof config.databaseName !== "string" || !/^[A-Za-z0-9_]{1,64}$/.test(config.databaseName)
       || !keys || keyNames.some((key) => !Buffer.isBuffer(keys[key]) || keys[key].length !== 32)
@@ -68,7 +67,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     const manifests = dependencies.manifests ?? await import("../server/backup/manifest.mjs");
     const snapshots = dependencies.snapshots ?? await import("../server/backup/snapshot.mjs");
     const verification = await import("../server/backup/verify.mjs");
-    const verifyCrypto = dependencies.verifyBackupData ?? (recovery ? verification.verifyPhotoNotificationRecoveryBackupData
+    const verifyCrypto = dependencies.verifyBackupData ?? (crm ? verification.verifyPhotoNotificationRecoveryCrmBackupData : recovery ? verification.verifyPhotoNotificationRecoveryBackupData
       : notifications ? verification.verifyPhotoNotificationBackupData : photos ? verification.verifyPhotoBackupData : verification.verifyBackupData);
     const makeCryptoStore = dependencies.makeCryptoStore ?? (await import("../server/backup/crypto-store.mjs")).createBackupCryptoStore;
     let manifest, payload;

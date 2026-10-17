@@ -7,6 +7,8 @@ import { promisify } from "node:util";
 import { createGzip } from "node:zlib";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
+import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile } from "../server/backup/profiles.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { readManifest, verifyBackupManifest } from "../server/backup/manifest.mjs";
@@ -26,7 +28,6 @@ const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const PROCESS_ENV = Object.freeze({ PATH: "/usr/bin:/bin", HOME: "/", LANG: "C", LC_ALL: "C" });
 const MAX_ARCHIVE = 2 * 1024 * 1024 * 1024;
 const FIELDS = ["command", "offline", "privateDirectory", "privatePathMode", "destination", "inspectionUser"];
-const RECOVERY_PROFILE = "photos-notify-recovery";
 const CODES = new Set(["USAGE", "ENVIRONMENT", "CONFIGURATION", "DESTINATION", "TOOLS", "PASSWORD", "INSPECTION", "CONNECTION", "DATABASE", "AUTHENTICATION", "ACCESS", "BACKUP", "DUMP", "DRIFT", "ARCHIVE", "CANCELLED", "OPERATION"].map(name => `PRIVATE_CHECKPOINT_${name}`));
 export class PrivateCheckpointError extends Error {
   constructor(code) { const selected = CODES.has(code) ? code : "PRIVATE_CHECKPOINT_OPERATION"; super(selected); this.name = "PrivateCheckpointError"; this.code = selected; }
@@ -54,7 +55,7 @@ export function parseArguments(args) {
   if (!path(value.privateDirectory) || !path(value.destination) || inside(value.privateDirectory, REPOSITORY) || inside(value.destination, REPOSITORY)
     || value.privatePathMode !== "linux-dirfd" || !application && !/^[A-Za-z0-9_]{1,80}$/.test(value.inspectionUser)
     || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(basename(value.destination))
-    || Object.hasOwn(value, "profile") && value.profile !== RECOVERY_PROFILE) fail("PRIVATE_CHECKPOINT_USAGE");
+    || Object.hasOwn(value, "profile") && !CHECKPOINT_RUNTIME_PROFILES.includes(value.profile)) fail("PRIVATE_CHECKPOINT_USAGE");
   return Object.fromEntries([...FIELDS, ...(Object.hasOwn(value, "profile") ? ["profile"] : [])].map(name => [name, value[name]]));
 }
 function options(value) {
@@ -224,7 +225,7 @@ export async function archiveCheckpoint(scope, inventory, { signal, spawnClient 
 }
 
 export async function run(value, { inheritedEnv = process.env, execArgv = process.execArgv, inputStream = process.stdin, signal,
-  scopeOperation = withPrivateDirectory, loadEnvironment = loadRuntimeNotificationsEnvironment, inspectTools = inspectCheckpointTools,
+  scopeOperation = withPrivateDirectory, loadEnvironment, inspectTools = inspectCheckpointTools,
   inspectIdentity = inspectCheckpointIdentity, diagnoseIdentity = diagnoseCheckpointIdentity, inspectApplicationIdentity = inspectApplicationCheckpointIdentity,
   readSecret = readPassword, prepare = backupMain, dump = dumpCloneSql, copyMedia = copyCheckpointMedia, verifyMedia = verifyCheckpointMedia,
   getManifest = readManifest, verifyManifest = verifyBackupManifest, compareSnapshots = assertBackupSnapshot,
@@ -232,14 +233,14 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   let env, loaded, password = "", keys;
   try {
     const selected = options(value); active(signal);
-    const application = selected.command.endsWith("-application"), recovery = selected.profile === RECOVERY_PROFILE;
-    const backupProfile = `photos-notify${recovery ? "-recovery" : ""}${application ? "-application" : ""}`, profile = `messaging-${backupProfile}`;
-    const manifestVersion = recovery ? application ? 6 : 5 : application ? 4 : 3;
-    const receiptVersion = recovery ? application ? 4 : 3 : application ? 2 : 1;
+    const application = selected.command.endsWith("-application"), selectedProfile = checkpointBackupProfile(selected.profile, application);
+    const { recovery, crm, name: backupProfile, manifestProfile: profile, manifestVersion, receiptVersion } = selectedProfile;
+    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let parameters; try { parameters = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("PRIVATE_CHECKPOINT_ENVIRONMENT"); }
     if (recovery) parameters = { ...parameters, originProfile: "primary", recovery: true };
     loaded = await loadEnvironment(selected.privateDirectory, parameters);
-    env = recovery ? copyRuntimeNotificationsEnvironment(loaded, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(loaded);
+    env = crm ? copyRuntimeCrmEnvironment(loaded, { originProfile: "primary", recovery: true })
+      : recovery ? copyRuntimeNotificationsEnvironment(loaded, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(loaded);
     if (selected.inspectionUser === env.JESSIEMESSAGE_RUNTIME_DB_USER || inside(selected.destination, env.JESSIEMESSAGE_MEDIA_ROOT)
       || inside(env.JESSIEMESSAGE_MEDIA_ROOT, selected.destination)) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     await inspectTools(); active(signal);
@@ -262,7 +263,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       if (["inspect", "inspect-application"].includes(selected.command)) return { status: application ? "application_inspection_verified" : "inspection_verified", profile, tables: 30, migrations: 30,
         ...(application ? { coverage: APPLICATION_COVERAGE, passwordInputRequired: false } : {}),
         databaseConnected: true, ...(application ? { applicationTablesVerified: true } : { inspectionPrivilegesVerified: true }), checkpointSaved: false, started: false, migrationPerformed: false };
-      keys = Object.fromEntries([["totpKey", "MFA"], ["mailKey", "MAIL"], ["messageKey", "MESSAGE"], ["mediaKey", "MEDIA"], ["notificationKey", "NOTIFICATIONS"]]
+      keys = Object.fromEntries([["totpKey", "MFA"], ["mailKey", "MAIL"], ["messageKey", "MESSAGE"], ["mediaKey", "MEDIA"], ["notificationKey", "NOTIFICATIONS"], ...(crm ? [["crmKey", "CRM"]] : [])]
         .map(([name, field]) => [name, Buffer.from(env[`JESSIEMESSAGE_${field}_KEY`], "base64url")]));
       const destinationIdentity = await childDirectory(parent, basename(selected.destination));
       return scopeOperation(selected.destination, async scope => {

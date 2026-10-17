@@ -263,6 +263,49 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
       assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM client_password_resets"))[0].n), 1);
       assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM password_reset_outbox WHERE status = 'pending'"))[0].n), 1);
     });
+
+    const crmEnv = { ...recoveryEnv, JESSIEMESSAGE_ENABLE_CRM: "1", JESSIEMESSAGE_CRM_KEY: Buffer.alloc(32, 25).toString("base64url") };
+    await closeRuntime();
+    await t.test("CRM startup checks all three physical tables before listening and preserves credentials", async () => {
+      await checkMessagingSchema(crmEnv);
+      for (const table of ["crm_profiles", "crm_labels", "crm_memberships"]) {
+        await connection.query(`RENAME TABLE ${table} TO migration_probe`);
+        try { await assert.rejects(checkMessagingSchema(crmEnv), { code: "PRIVATE_MESSAGING_SCHEMA" }); }
+        finally { await connection.query(`RENAME TABLE migration_probe TO ${table}`); }
+      }
+      await checkMessagingSchema(crmEnv); assert.deepEqual(await credentials(), credentialsBefore);
+    });
+    runtime = await createConfiguredServer(crmEnv, { requestOrigin: primary, deviceTransition: true, recovery: true, crm: true, clock: () => now });
+    await runtime.mailWorker.stop();
+    await new Promise(resolveRequest => runtime.server.listen(0, "127.0.0.1", resolveRequest));
+    await t.test("the explicit primary CRM runtime exposes files to the same admin on both authorities while broadcasts remain disabled", async () => {
+      const crmPort = runtime.server.address().port;
+      for (const origin of [primary, recipe]) {
+        assert.equal((await request(crmPort, origin, "/api/admin/crm/capabilities", { cookie: cookie("admin") })).status, 200);
+        assert.equal((await request(crmPort, origin, `/api/admin/crm/conversations/${conversationId.toString("hex")}`, { cookie: cookie("admin") })).status, 200);
+        assert.notEqual((await request(crmPort, origin, "/api/admin/crm/capabilities", { cookie: cookie("client") })).status, 200);
+        const readiness = await request(crmPort, origin, "/api/admin/readiness", { cookie: cookie("admin") });
+        assert.equal(readiness.status, 200); assert.equal(readiness.json().features.clientFiles, true);
+        assert.equal(readiness.json().features.broadcasts, false);
+        assert.equal(readiness.json().features.passwordRecovery, origin === primary);
+        assert.deepEqual(readiness.json().operations.workers.map(worker => worker.name).sort(), ["notifications", "recovery", "verification"]);
+        for (const role of ["admin", "client"]) assert.equal((await request(crmPort, origin, role === "admin" ? "/api/auth/session" : "/api/access/session", { cookie: cookie(role) })).status, 200);
+      }
+      const profilePath = `/api/admin/crm/conversations/${conversationId.toString("hex")}`;
+      const draft = { expectedVersion: "0", nickname: "Synthetic shared file", notes: "Synthetic shared runtime note", reminderAt: null, labelIds: [] };
+      const write = { method: "POST", cookie: cookie("admin"), csrf: csrfToken(raw.admin), body: draft };
+      assert.equal((await request(crmPort, primary, profilePath, { ...write, extra: { Origin: recipe } })).status, 403);
+      const saved = await request(crmPort, primary, profilePath, write);
+      assert.equal(saved.status, 200); assert.equal(saved.json().version, "1");
+      const shared = await request(crmPort, recipe, profilePath, { cookie: cookie("admin") });
+      assert.equal(shared.status, 200); assert.equal(shared.json().notes, draft.notes); assert.equal(shared.json().version, "1");
+      assert.equal((await request(crmPort, recipe, profilePath, { ...write, body: { ...draft, notes: "Stale second editor" } })).status, 409);
+      assert.equal((await request(crmPort, primary, profilePath, { cookie: cookie("admin") })).json().notes, draft.notes);
+      const row = (await connection.query("SELECT notes_encrypted FROM crm_profiles WHERE admin_id = ? AND conversation_id = ?", [users.admin, conversationId]))[0];
+      assert.equal(row.notes_encrypted.includes(draft.notes), false);
+      assert.deepEqual(await credentials(), credentialsBefore);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM password_reset_outbox WHERE status = 'pending'"))[0].n), 1);
+    });
   } finally {
     await closeRuntime();
     await bootstrapPool?.end(); await reset(); await connection.end();

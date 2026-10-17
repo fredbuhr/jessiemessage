@@ -1,5 +1,7 @@
 # Lot 0.43 — fiches privées et administration partagée
 
+**Activation ultérieure :** le [lot 0.47](crm-activation-047.md) active ce module le 18 octobre à 00:15, après restauration isolée vérifiée. Le relevé ci-dessous conserve la préparation et ses preuves.
+
 **État : préparation validée, source `42bc5eff2c9a56b8bd3de51fa1c958c0ab55dcf9`, arbre `1d5ebfeb82f16f2b99970f40ae83f3b6ec0c3084`.** Les cinq jobs CI exacts et les six nouveaux scénarios Chrome passent. Base : `d18bb02ce201d5c8ebf485ac3f4d3005ebc7b268`, compte rendu de la livraison 0.42. Le runtime hébergé reste `ed78b55e`, profil `messaging-photos-notify-recovery`, schéma 30 ; les fiches privées et les diffusions restent désactivées.
 
 Le même compte administrateur est utilisé sur plusieurs appareils par les personnes autorisées à gérer l’espace Jessie. Les fiches disposent déjà de versions côté SQL : deux sauvegardes partant de la même version ne doivent pas s’écraser silencieusement. Le navigateur conserve le brouillon en cas de conflit et propose de recharger la fiche enregistrée ou de sauvegarder explicitement sa propre version. Une nouvelle modification concurrente reste susceptible de provoquer un autre conflit ; aucun verrou global ni fusion automatique de notes n’est ajouté.

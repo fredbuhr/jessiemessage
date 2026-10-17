@@ -2,6 +2,7 @@ import { constants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { APPLICATION_COVERAGE, validateApplicationCoverage } from "./application-scope.mjs";
+import { manifestBackupProfile } from "./profiles.mjs";
 
 const MIB = 1024 * 1024;
 const MAX_FILE = 64 * MIB, MAX_RECEIPT = 32 * MIB, MAX_MEDIA = 1024 * MIB, MAX_HASH = 2 * 1024 * MIB;
@@ -32,7 +33,7 @@ function record(value, fields) {
 }
 
 function canonicalReceipt(value) {
-  const application = value && typeof value === "object" && [2, 4].includes(Object.getOwnPropertyDescriptor(value, "version")?.value);
+  const application = value && typeof value === "object" && [2, 4, 6].includes(Object.getOwnPropertyDescriptor(value, "version")?.value);
   const root = record(value, ["format", "version", "profile", ...(application ? ["coverage"] : []), "createdAt", "schema", "sql", "manifest", "media"]);
   if (application) {
     try { validateApplicationCoverage(root.coverage); }
@@ -42,10 +43,7 @@ function canonicalReceipt(value) {
   const sql = record(root.sql, ["file", "bytes", "sha256", "uncompressedBytes", "uncompressedSha256"]);
   const manifest = record(root.manifest, ["file", "sha256"]), media = record(root.media, ["files", "bytes"]);
   if (root.format !== "jessiemessage-private-checkpoint"
-    || !(root.version === 1 && root.profile === "messaging-photos-notify"
-      || root.version === 2 && root.profile === "messaging-photos-notify-application"
-      || root.version === 3 && root.profile === "messaging-photos-notify-recovery"
-      || root.version === 4 && root.profile === "messaging-photos-notify-recovery-application")
+    || manifestBackupProfile(root.profile)?.receiptVersion !== root.version || !integer(root.version, 1, 6)
     || !integer(root.createdAt, 0, 253402300799999) || schema.tables !== 30 || schema.migrations !== 30
     || sql.file !== "database.sql.gz" || !integer(sql.bytes, 1, 16 * MIB) || !digest(sql.sha256)
     || !integer(sql.uncompressedBytes, 1, MAX_FILE) || !digest(sql.uncompressedSha256)
