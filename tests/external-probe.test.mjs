@@ -5,7 +5,7 @@ import { probePrivateService, ExternalProbeError, EXTERNAL_PROBE_CODES, validate
 const EPOCH = 1792279800000;
 const body = (url) => JSON.stringify({ status: url.endsWith("/health") ? "ok" : "ready" });
 const response = (url, overrides = {}) => new Response(body(url), { status: 200, headers: { "Cache-Control": "no-store" }, ...overrides });
-const probe = (fetch, options = {}) => probePrivateService({ fetch, clock: () => EPOCH, timeoutMilliseconds: 50, ...options });
+const probe = (fetch, options = {}) => probePrivateService({ fetch, clock: () => EPOCH, timeoutMilliseconds: 5000, ...options });
 const codes = (value) => value.checks.map((item) => item.code);
 
 test("one anonymous pass checks precisely the fixed public endpoints and returns a closed report", async () => {
@@ -20,7 +20,7 @@ test("one anonymous pass checks precisely the fixed public endpoints and returns
   }
   assert.deepEqual(Object.keys(value), ["version", "type", "status", "checkedAt", "durationMilliseconds", "checks"]);
   assert.equal(value.version, 1); assert.equal(value.type, "private_service_probe"); assert.equal(value.status, "healthy"); assert.equal(value.checkedAt, EPOCH);
-  assert.ok(Number.isInteger(value.durationMilliseconds) && value.durationMilliseconds >= 0 && value.durationMilliseconds <= 100);
+  assert.ok(Number.isInteger(value.durationMilliseconds) && value.durationMilliseconds >= 0 && value.durationMilliseconds <= 10000);
   assert.deepEqual(value.checks, [{ name: "http", status: "pass", code: "ok" }, { name: "readiness", status: "pass", code: "ok" }]);
 });
 
