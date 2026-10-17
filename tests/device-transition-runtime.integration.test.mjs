@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createECDH, randomBytes } from "node:crypto";
-import { request as httpRequest } from "node:http";
+import { createServer as createHttpServer, request as httpRequest } from "node:http";
 import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
@@ -90,8 +90,14 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
     // Exercise the real configuration without sending SMTP or Push externally.
     // stop() also prevents the one listening callback from starting producers.
     await runtime.mailWorker.stop();
-    assert.equal(runtime.server.listenerCount("listening"), 1);
+    // Node itself registers setupConnectionsTracking on every HTTP server.
+    // Compare actual callback references with a neutral server so only the
+    // application's producer-start callback is counted, regardless of native listeners.
+    const nativeListening = new Set(createHttpServer().listeners("listening"));
+    const producerStarts = runtime.server.listeners("listening").filter(callback => !nativeListening.has(callback));
+    assert.equal(producerStarts.length, 1);
     await new Promise(resolveRequest => runtime.server.listen(0, "127.0.0.1", resolveRequest));
+    assert.ok(producerStarts.every(callback => !runtime.server.listeners("listening").includes(callback)), "the one producer callback is consumed on the first listen");
     const port = runtime.server.address().port;
     const cookie = role => `${role === "admin" ? "__Host-jessie_session" : "__Host-jessie_client"}=${raw[role]}`;
 
