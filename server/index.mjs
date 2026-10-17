@@ -388,8 +388,9 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         const { createCrmHandler } = await import("./crm/http.mjs");
         const crmStore = createCrmStore({ pool, chatStore });
         await crmStore.assertSchema();
-        const crmService = await createCrmService({ store: crmStore, authStore: store, authService: service, key: crmConfig.key });
+        const crmService = await createCrmService({ store: crmStore, authStore: store, authService: service, key: crmConfig.key, clock });
         crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin });
+        if (legacyHandlers) legacyHandlers.crmHandler = createCrmHandler(crmService, { origin: RECIPE_ORIGIN });
       }
       if (mediaConfig.enabled) {
         const { createMediaCapacityStore } = await import("./media/capacity-store.mjs");

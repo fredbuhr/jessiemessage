@@ -14,6 +14,8 @@ Un retour au lanceur 0.42 désactive les fiches sans supprimer leurs lignes ni l
 
 Seule la sélection de ce profil active CRM et récupération dans cette enveloppe. Les anciens chargeurs gardent leurs champs et leurs domaines autorisés. Le serveur exige aussi les options explicites `deviceTransition`, `recovery` et `crm`, avec l’origine principale. Les diffusions sont toujours refusées dans ce profil.
 
+Le gestionnaire CRM est aussi raccordé à l’ancienne origine recette, avec la même instance de service et la même horloge que le runtime. Les appareils qui y possèdent encore leur session peuvent ainsi lire et modifier leurs fiches avec les contrôles d’origine propres à chaque adresse.
+
 La commande `check` valide la configuration, les droits SQL, les schémas physiques — dont les trois tables CRM — et le stockage des photos avant tout appel de démarrage. Elle n’ouvre ni listener, ni transport de livraison, ni worker, et n’effectue aucune migration. Les contrôles de schéma sont des lectures ; ils ne déchiffrent pas toutes les notes. La sauvegarde vérifiée ci-dessous assure cette seconde vérification.
 
 Depuis un checkout épinglé et vérifié :
