@@ -16,6 +16,8 @@ const MESSAGING_BASENAME = "runtime-messaging.json";
 const MEDIA_BASENAME = "runtime-media.json";
 const NOTIFICATIONS_BASENAME = "runtime-notifications.json";
 const CRM_BASENAME = "runtime-crm.json";
+const CONFIGURATION_BASENAMES = Object.freeze([BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME,
+  MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME, CRM_BASENAME]);
 const MAX_BYTES = 16384;
 const REPOSITORY = fileURLToPath(new URL("../../", import.meta.url));
 const FIELDS = ["format", "version", "host", "port", "database", "user", "password", "privilegeProfile"];
@@ -338,7 +340,7 @@ async function writeConfiguration(directory, config, basename) {
   let contents;
   try {
     // Only typed entry points select these internal, fixed filenames.
-    if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME, CRM_BASENAME].includes(basename)) fail();
+    if (!CONFIGURATION_BASENAMES.includes(basename)) fail();
     contents = Buffer.from(`${JSON.stringify(config)}\n`, "utf8");
     if (contents.length > MAX_BYTES) fail();
     return await privateScope(directory, async (scope) => {
@@ -480,7 +482,7 @@ async function readAnchoredConfiguration(scope, basename, validate) {
   const bytes = Buffer.alloc(MAX_BYTES + 1);
   try {
     try {
-      if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME].includes(basename)) fail();
+      if (!CONFIGURATION_BASENAMES.includes(basename)) fail();
       const filename = scope.file(basename);
       await scope.assertReady();
       file = await open(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
