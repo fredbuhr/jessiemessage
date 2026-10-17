@@ -14,14 +14,18 @@
 </head>
 <body>
   <main class="transition-card" aria-labelledby="transition-title">
-    <a class="brand" href="/app" aria-label="JessieMessage"><img src="/brand/icon-128.png" width="48" height="48" alt="" /><span>Jessie</span></a>
-    <button id="transition-language" class="language" type="button" aria-label="Switch to English">EN</button>
+    <header class="transition-header">
+      <a class="brand" href="/app" aria-label="JessieMessage"><img src="/brand/icon-128.png" width="48" height="48" alt="" /><span>Jessie</span></a>
+      <button id="transition-language" class="language" type="button" aria-label="Switch to English">EN</button>
+    </header>
     <p class="eyebrow" id="transition-eyebrow">TOUJOURS À TES CÔTÉS</p>
     <h1 id="transition-title">Ton espace trouve sa nouvelle adresse.</h1>
     <p id="transition-copy">Retrouve tes messages sur jessiemessage.com, en gardant la connexion de cet appareil.</p>
     <p id="transition-status" role="status" aria-live="polite"></p>
-    <button id="transition-start" class="button" type="button">Retrouver mon espace</button>
-    <a id="transition-login" class="button secondary" href="/app" hidden>Ouvrir mon espace</a>
+    <div class="transition-actions">
+      <a id="transition-login" class="button" href="/app" hidden>Me connecter</a>
+      <button id="transition-start" class="button" type="button">Retrouver mon espace</button>
+    </div>
     <a id="transition-back" class="back" href="/app">Revenir à mon espace</a>
     <p class="small" id="transition-notifications">Les notifications et l’icône de l’app se règlent ensuite sur la nouvelle adresse.</p>
     <noscript><p>Active JavaScript pour reprendre la connexion de cet appareil. Besoin d’aide ? <a href="mailto:contact@jessiemessage.com">contact@jessiemessage.com</a>.</p></noscript>

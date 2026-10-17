@@ -2,6 +2,8 @@
 
 **Correction livrée en 0.37 le 17 octobre 2026 à 16:57 Europe/Paris.** Runtime `3e952101f7c7aa3d7536e7cb7cc57de83dee71ac`, arbre `8dd5d28c750edc6f417b2339aa67c3ab344d183e`, déploiement `primary-transition`, schéma 30. [PR brouillon #51](https://github.com/fredbuhr/jessiemessage/pull/51) ; [CI de la révision exacte, cinq jobs réussis](https://github.com/fredbuhr/jessiemessage/actions/runs/39042669295).
 
+Cette preuve de livraison est historique. Le runtime courant `0c88f61b`, activé à 17:38, conserve intégralement cette correction et ajoute la [présentation des actions de reprise](device-transition-interface.md). Le propriétaire confirme globalement à 17:28 que le parcours proposé fonctionne ; ce retour ne détaille pas toutes les plateformes ou les sessions simultanées.
+
 ## Défaut confirmé
 
 Dans le runtime de transition `a0b17ce0`, un clic de notification peut lancer la reprise avec une référence de message. Le premier aller-retour réussit normalement, car le serveur conserve cette référence dans les paquets authentifiés. Mais après une erreur réseau, une réponse 503 ou un délai dépassé pendant l’autorisation ou la fin de reprise, **Réessayer** recommence avec un nouveau `begin` sans cette référence. La connexion peut alors aboutir sans ouvrir le message initial.
