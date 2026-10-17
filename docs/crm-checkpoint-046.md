@@ -1,5 +1,7 @@
 # JessieMessage — coffre validé et checkpoint courant, étape 0.46
 
+**État à 23:37 Europe/Paris :** le propriétaire transmet un échec `APPLICATION_CHECKPOINT_IMPORT_OPERATION` à 23:32. Ses droits sur le clone sont bien enregistrés, mais l’import et l’état SQL de la copie ne sont pas encore confirmés. Le [diagnostic courant](crm-checkpoint-046-incident.md) remplace la prochaine manipulation d’import ci-dessous par une inspection authentifiée en lecture seule, dont le précontrôle passe. La copie PC et le coffre restent validés ; le service 0.42 reste actif, fiches désactivées.
+
 ## Coffre de configuration accepté
 
 Le propriétaire fournit le reçu de création du coffre primaire à six fichiers, puis la capture PowerShell du SHA-256 de sa copie PC à **22:44 Europe/Paris le 17 octobre 2026**. Il confirme **`COFFRE_DECHIFFRE_OK` à 22:48:05** après le contrôle local GPG qui masque la sortie déchiffrée. La copie personnelle, son empreinte et son déchiffrement sont donc acceptés. La phrase et le contenu privé restent hors de la conversation et du dépôt.
@@ -96,7 +98,7 @@ if ((Get-FileHash -LiteralPath $jmCopie -Algorithm SHA256 -ErrorAction Stop).Has
 }
 ```
 
-## Prochaine action personnelle : accès du clone et import masqué
+## Procédure d’import transmise avant l’incident de 23:32
 
 Après le reçu de copie, le lanceur corrigé est relu : 1 116 octets, mode `0700`, même empreinte `c3110164724e87309e0928aa5b76934209e52645c2e145a29f5c0cdb672424ae`. Sa syntaxe et son précontrôle passent de nouveau, avec `databaseConnected: false` et `imported: false`.
 
