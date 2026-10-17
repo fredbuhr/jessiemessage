@@ -1,4 +1,4 @@
-import { createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, featureNames, operationNames, databaseStateNames, workerStateNames, queueDelayMinutes } from "/readiness-model.js";
+import { createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, featureNames, operationNames, databaseStateNames, workerStateNames, queueDelayMinutes, formatOperationsReport } from "/readiness-model.js";
 
 const interpolate = (source, values = {}) => source.replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key) => String(values[key] ?? ""));
 const ui = globalThis.JessieI18n ?? { t: interpolate,
@@ -12,6 +12,7 @@ const el = (id) => document.getElementById(id);
 const state = createReadinessState();
 const controllers = new Set();
 let cancelSessionCheck = null; let logoutBusy = false; let sessionPaused = false;
+let reportTask = null;
 const visible = () => document.visibilityState === "visible";
 function notice(text, error = false, id = "session-status") {
   const node = el(id); ui.text(node, text); node.classList.toggle("is-error", error);
@@ -21,6 +22,8 @@ function clearDisplay() {
   el("refresh").disabled = false;
   el("mail-sender").textContent = ""; el("mail-status").textContent = ""; el("feature-list").replaceChildren();
   el("operations-details").hidden = true; el("operations-status").textContent = ""; el("operations-sample").textContent = "";
+  el("download-operations").hidden = true; el("download-operations").disabled = false;
+  notice("", false, "operations-download-status");
   for (const id of ["operations-database", "operations-workers", "operations-queues"]) el(id).replaceChildren();
   el("smtp-proof-date").textContent = ""; el("smtp-proof-date").hidden = true; el("verify-smtp").hidden = true;
   el("verify-smtp").disabled = false; ui.text(el("verify-smtp"), "Vérifier la connexion e-mail");
@@ -63,6 +66,7 @@ function renderOperations(operations) {
 }
 function clearPrivate(isVisible = false) {
   for (const controller of controllers) controller.abort(); controllers.clear();
+  reportTask = null;
   cancelSessionCheck?.(); cancelSessionCheck = null; sessionPaused = false; clearReadiness(state, { visible: isVisible }); clearDisplay();
 }
 function signOut() { clearPrivate(); location.replace("/admin/login"); }
@@ -102,6 +106,8 @@ function render() {
   }
   el("feature-list").replaceChildren(...rows);
   renderOperations(summary.operations);
+  el("download-operations").hidden = !summary.operations;
+  el("download-operations").disabled = state.busy || reportTask !== null;
   if (state.proof) {
     notice("Connexion chiffrée et authentification réussies. La réception d’un e-mail reste à tester.", false, "smtp-status");
     ui.text(el("smtp-proof-date"), "Vérification de cette session : {date}.", { date: ui.dateParam(state.proof.checkedAt) });
@@ -195,6 +201,41 @@ async function verify() {
     notice(text, true, "smtp-status"); render();
   }
 }
+async function downloadOperations() {
+  if (reportTask || !visible() || sessionPaused || !state.visible || !state.session || !state.summary?.operations || state.busy) return;
+  const task = { ticket: readinessTicket(state) }; reportTask = task; render();
+  notice("Préparation du diagnostic…", false, "operations-download-status");
+  try {
+    const session = await request("/api/auth/session", { ticket: task.ticket });
+    if (!acceptAdminSession(state, task.ticket, session)) {
+      if (state.visible) await bootstrap("La session a changé. Recommence le téléchargement du diagnostic."); else signOut();
+      return;
+    }
+    const summary = await request("/api/admin/readiness", { ticket: task.ticket });
+    const finalSession = await request("/api/auth/session", { ticket: task.ticket });
+    if (!acceptAdminSession(state, task.ticket, finalSession)) {
+      if (state.visible) await bootstrap("La session a changé. Recommence le téléchargement du diagnostic."); else signOut();
+      return;
+    }
+    if (reportTask !== task || sessionPaused || !acceptReadinessSummary(state, task.ticket, summary)) return;
+    if (state.busy || !state.summary.operations) throw new TypeError("operations_report_unavailable");
+    armExpiry();
+    const text = formatOperationsReport(state.summary.operations, { translate: (source, values) => ui.t(source, values) });
+    // Small fixed-field plaintext: no Blob URL, browser storage or upload.
+    const link = document.createElement("a");
+    link.href = `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
+    link.download = "JessieMessage-diagnostic.txt"; link.hidden = true;
+    document.body.append(link);
+    try { link.click(); } finally { link.remove(); }
+    notice("Le téléchargement du diagnostic a été lancé.", false, "operations-download-status");
+  } catch (error) {
+    if (error.stale) return;
+    if (error.status === 401) { signOut(); return; }
+    notice("Le diagnostic n’a pas pu être préparé. Actualise la page puis réessaie.", true, "operations-download-status");
+  } finally {
+    if (reportTask === task) { reportTask = null; render(); }
+  }
+}
 async function logout() {
   if (logoutBusy || !state.session || !visible()) return;
   logoutBusy = true; const csrf = state.session.csrf; clearPrivate(); const epoch = state.epoch;
@@ -210,6 +251,7 @@ async function logout() {
   } finally { clearTimeout(timer); controllers.delete(controller); logoutBusy = false; }
 }
 el("verify-smtp").addEventListener("click", () => { void verify(); });
+el("download-operations").addEventListener("click", () => { void downloadOperations(); });
 el("refresh").addEventListener("click", () => { void bootstrap(); });
 el("logout").addEventListener("click", () => { void logout(); });
 document.addEventListener("visibilitychange", () => { if (visible()) void bootstrap(); else clearPrivate(); });

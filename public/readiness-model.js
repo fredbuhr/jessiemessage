@@ -15,7 +15,7 @@ export function parseOperations(input) {
   if (!input || !["ready", "unavailable"].includes(input.status) || typeof input.database?.state !== "string" || !Object.hasOwn(databaseStateNames, input.database.state)
     || !nullableDate(input.database.checkedAt) || input.database.state === "ok" && input.database.checkedAt === null || !nullableDate(input.queuesCheckedAt)) invalid();
   function list(items, parse) {
-    if (!Array.isArray(items) || items.length > 3) invalid();
+    if (!Array.isArray(items) || items.length > Object.keys(operationNames).length) invalid();
     const names = new Set();
     return Array.from(items, (item) => {
       if (!item || typeof item.name !== "string" || !Object.hasOwn(operationNames, item.name) || names.has(item.name)) invalid();
@@ -45,6 +45,33 @@ export function parseOperations(input) {
 export function queueCountText(value) { return `${value.truncated ? "au moins " : ""}${value.count.toLocaleString("fr-FR")}`; }
 export function queueDelayMinutes(oldestDueAt, measuredAt) {
   return oldestDueAt === null || measuredAt === null ? null : Math.max(0, Math.floor((measuredAt - oldestDueAt) / 60000));
+}
+
+/** Explicit operator download: fixed aggregate fields, never the raw summary. */
+export function formatOperationsReport(input, { now = Date.now(), translate = (source, values = {}) => source.replace(/\{([a-zA-Z0-9_]+)\}/g, (_, name) => String(values[name] ?? "")) } = {}) {
+  if (!date(now) || typeof translate !== "function") throw new TypeError("invalid_operations_report");
+  const operations = parseOperations(input);
+  const timestamp = value => value === null ? translate("aucune mesure disponible") : new Date(value).toISOString();
+  const field = (name, value) => `${translate(name)} : ${value}`;
+  const lines = [translate("JessieMessage — État du service"), field("Diagnostic créé", timestamp(now)), translate("Les dates du diagnostic sont en UTC."), "",
+    translate(operations.status === "ready" ? "Signal de service : disponible." : "Signal de service : indisponible."),
+    field("Base de données", translate(databaseStateNames[operations.database.state])), field("Dernier contrôle de la base", timestamp(operations.database.checkedAt)),
+    field("Mesure des files", timestamp(operations.queuesCheckedAt)), "", translate("Traitements")];
+  if (!operations.workers.length) lines.push(translate("Aucun traitement suivi dans cette mesure."));
+  for (const worker of operations.workers) lines.push(`${translate(operationNames[worker.name])} — ${translate(workerStateNames[worker.state])}`,
+    field("Traités", worker.processed), field("Échecs", worker.failures), field("Échecs consécutifs", worker.consecutiveFailures),
+    field("Dernier cycle terminé", timestamp(worker.lastCompletedAt)), field("Dernière erreur", timestamp(worker.lastErrorAt)), "");
+  lines.push("", translate("Files d’attente"));
+  if (!operations.queues.length) lines.push(translate("Aucune file suivie dans cette mesure."));
+  for (const queue of operations.queues) {
+    lines.push(translate(operationNames[queue.name]));
+    for (const [key, name] of [["pending", "En attente"], ["sending", "En traitement"], ["failed", "En échec"]]) {
+      const value = queue[key]; lines.push(field(name, value.truncated ? translate("au moins {count}", { count: value.count }) : value.count));
+    }
+    lines.push(field("Plus ancienne échéance en attente", timestamp(queue.oldestDueAt)), "");
+  }
+  lines.push(translate("Instantané global de ce processus serveur. Les compteurs de traitement repartent à zéro à son redémarrage. Ces mesures ne certifient pas la mise en production ni la réception des messages."));
+  return `${lines.join("\n")}\n`;
 }
 
 export function createReadinessState() { return { epoch: 0, checkEpoch: 0, visible: false, session: null, summary: null, proof: null, busy: false, csrfRefreshRequired: false }; }
