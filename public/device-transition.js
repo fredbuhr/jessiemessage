@@ -30,8 +30,11 @@
   // Read once, then remove the complete fragment before any asynchronous work.
   const fragment = location.hash;
   history.replaceState(null, "", location.pathname);
-  const value = /^#(challenge|ticket)=([A-Za-z0-9_-]{80,2048})$/.exec(fragment);
-  const notification = /^#notification=([a-f0-9]{32})$/.exec(fragment)?.[1] ?? null;
+  const value = /^#(challenge|ticket)=([A-Za-z0-9_-]{80,2048})(?:&notification=([a-f0-9]{32}))?$/.exec(fragment);
+  // The public message reference only helps restart an interrupted handoff.
+  // Completion still follows the server's authenticated packet destination.
+  const notification = value?.[3] ?? /^#notification=([a-f0-9]{32})$/.exec(fragment)?.[1] ?? null;
+  const retryHint = notification ? `&notification=${notification}` : "";
   const page = `/connect-device/${role}`;
   const messagePath = role === "admin" ? "/admin/messages" : "/messages";
   const allowedDestination = role === "admin" ? /^\/admin\/messages(?:#notification=[a-f0-9]{32})?$/ : /^\/(?:messages|access)(?:#notification=[a-f0-9]{32})?$/;
@@ -70,7 +73,7 @@
         if (current && (current.user?.role !== role || typeof current.csrf !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(current.csrf))) throw new Error("unavailable");
         const result = await post("authorize", { challenge: value[2] }, current?.csrf, generation);
         if (typeof result.ticket !== "string" || !/^[A-Za-z0-9_-]{80,2048}$/.test(result.ticket)) throw new Error("unavailable");
-        location.replace(`${primary}${page}#ticket=${result.ticket}`);
+        location.replace(`${primary}${page}#ticket=${result.ticket}${retryHint}`);
       } else if (action === "complete") {
         const result = await post("complete", { ticket: value[2] }, undefined, generation);
         if (typeof result.destination !== "string" || !allowedDestination.test(result.destination)) throw new Error("unavailable");
@@ -79,7 +82,7 @@
         if (location.origin !== primary) { location.assign(`${primary}${page}${notification ? `#notification=${notification}` : ""}`); return; }
         const result = await post("begin", { notification }, undefined, generation);
         if (typeof result.challenge !== "string" || !/^[A-Za-z0-9_-]{80,2048}$/.test(result.challenge)) throw new Error("unavailable");
-        location.replace(`${legacy}${page}#challenge=${result.challenge}`);
+        location.replace(`${legacy}${page}#challenge=${result.challenge}${retryHint}`);
       }
     } catch (error) {
       if (!active || generation !== epoch) return;
