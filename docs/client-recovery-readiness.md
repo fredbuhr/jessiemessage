@@ -1,6 +1,6 @@
 # Lot 0.39 — préparer la récupération de compte client
 
-**État : préparation à réaliser, non livrée.** Ce plan part du runtime `0c88f61bf6b0a9bcf45917862462db838bf73c78`, arbre `7df1c850d84597be96f458a69ca9955f8e6c257a`, schéma 30, profil `messaging-photos-notify`, déploiement `primary-transition`. La récupération client reste inactive. Le confort bilingue du lot 0.38 est un travail distinct en cours ; aucune révision future n’est présentée ici comme déployée.
+**État : préparation à réaliser, non livrée.** L’état opérationnel de départ est le runtime 0.38 `4433309f09f0eb6bd2a4f498d32394d0d39b5cb2`, arbre `b8f82034b61c1837552c2d50c7749475453a1909`, schéma 30, profil `messaging-photos-notify`, déploiement `primary-transition`. Les constats métier ci-dessous ont été établis sur `0c88f61b` ; le lot 0.38 ne modifie que l’interface de reprise et les conserve. La récupération client reste inactive. Le [confort bilingue 0.38](device-transition-language.md) est livré ; ce plan n’annonce aucune activation de récupération.
 
 Le métier, les routes, les formulaires et les tests de récupération existent déjà. L’activation n’est toutefois pas un simple changement de variable dans le Manager. Le lot proposé ajoute un profil explicite **`photos-notify-recovery`**, avec récupération **sur l’apex seulement**, en conservant recette pour les connexions et notifications existantes.
 
