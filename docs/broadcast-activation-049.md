@@ -1,5 +1,7 @@
 # JessieMessage — activation des diffusions privées, étape 0.49
 
+**Relevé historique :** la [correction 0.50 est activée](broadcast-activation-050.md) depuis le 18 octobre à 01:21. Elle retire l’accord invité décrit dans ce lot 0.49. Ce document conserve la preuve et le repli de la version antérieure.
+
 **Livré le 18 octobre 2026 à 00:47 Europe/Paris.** Le profil `messaging-photos-notify-recovery-crm-broadcast` est actif sur `jessiemessage.com` et l’origine recette conservée. Les conversations, photos, notifications, récupération et fiches privées restent incluses. Chaque campagne est choisie et confirmée dans l’interface ; aucune campagne réelle de test n’est créée ni envoyée par l’agent.
 
 ## Référence servie et prérequis

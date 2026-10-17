@@ -1,6 +1,8 @@
 # Étape 0.50 — activation de la correction
 
-Ces instructions permettent d’activer la [correction des messages individuels](broadcast-individual-delivery-050.md). L’accès d’exécution et le navigateur de l’agent sont actuellement déconnectés (`environment_offline`) : cette procédure est préparée, pas exécutée. La production reste sur le lot 0.49 tant que le Build/redémarrage n’a pas été réalisé.
+**Activation réalisée le 18 octobre 2026 à 01:21 Europe/Paris.** Le préflight hébergé est réussi à 01:19:57.163475 ; le Manager effectue le Build/redémarrage et confirme l’état Actif. À 01:22:38.231618, 69 contrôles HTTPS et seize empreintes de ressources exactes sont conformes. Le [relevé d’activation](broadcast-activation-050.md) conserve les preuves. La coupure `environment_offline` du premier passage est résolue.
+
+Les instructions ci-dessous décrivent cette activation et permettent de la comprendre ou de la reprendre. Le dossier de l’étape 1 existe désormais : ne pas relancer son bloc de création sur un dossier déjà préparé et ne pas le supprimer pour recommencer.
 
 Source applicative à utiliser : `0a1cafd85c3d8699be1961075b18e80e36bcd041`, arbre `17db89aa165e23ca427d073f5a3fcc28387f5168`. Les commits de documentation ultérieurs ne changent pas ce choix. [Les cinq validations de cette source](https://github.com/fredbuhr/jessiemessage/actions/runs/39078063012) sont réussies. Aucune clé, migration, restauration SQL, réinitialisation de compte ou nouvelle autorisation du destinataire n’est nécessaire.
 
@@ -49,7 +51,7 @@ Vérifier sur les deux adresses que `/api/health` répond 200, que `/broadcast-p
 
 Dans JessieMessage, actualiser la page, ouvrir **Messages → Diffusions**, choisir les destinataires, préparer le message et confirmer. Le destinataire n’a aucune démarche supplémentaire : il reçoit le message dans sa conversation privée. La limite reste 100 destinataires par campagne. Un premier essai personnel sur un compte de confiance reste à constater ; l’agent n’a envoyé aucun message réel.
 
-Les vérifications HTTPS exactes, le préflight hébergé et l’heure de redémarrage devront être ajoutés au relevé d’activation après leur exécution. La réussite de la CI seule ne prouve pas l’activation sur le serveur.
+Les vérifications HTTPS exactes, le préflight hébergé et le redémarrage sont maintenant consignés dans le relevé d’activation. La première réception réelle d’une campagne sur un appareil personnel n’a pas encore été constatée.
 
 ## Retour à la version 0.49 en cas d’échec
 
