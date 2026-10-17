@@ -1,6 +1,6 @@
 # JessieMessage — profil des fiches et reprise SQL/photos
 
-**État 0.46 au 17 octobre à 22:48 :** le [coffre primaire est créé, copié sur le PC, son empreinte concorde et son déchiffrement personnel est confirmé](crm-checkpoint-046.md). Les précontrôles du checkpoint courant passent ; sa capture attend une pause du service explicitement autorisée. Le service 0.42 reste actif, fiches désactivées. Les relevés ci-dessous conservent la préparation 0.45.
+**État 0.46 au 17 octobre à 23:12 :** le [relevé courant](crm-checkpoint-046.md) confirme le coffre personnel, la capture hors activité des trente tables et quatre photos à 23:04, puis la reprise du même runtime 0.42 avec 38 contrôles HTTPS et seize empreintes conformes. La nouvelle base vide et le lanceur corrigé passent les précontrôles de restauration sans connexion SQL ni import. La copie PC de l’archive et sa restauration isolée réelle restent à effectuer. Les fiches restent désactivées ; les relevés ci-dessous conservent la préparation 0.45.
 
 ## Lot 0.45
 
