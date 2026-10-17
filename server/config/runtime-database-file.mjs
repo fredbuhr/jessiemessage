@@ -5,7 +5,7 @@ import { isIP } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { inspectDirectoryIdentities, withPrivateDirectory } from "../files/private-directory.mjs";
-import { isOfficialOrigin, SITE_DOMAIN } from "../site.mjs";
+import { isOfficialOrigin, isPreproductionOrigin, SITE_DOMAIN } from "../site.mjs";
 import { mailConfiguration } from "../mail/config.mjs";
 import { validateNotificationVapid } from "../notifications/config.mjs";
 
@@ -25,6 +25,19 @@ const MEDIA_FIELDS = ["format", "version", "origin", "mediaKey", "mediaRoot", "o
 const NOTIFICATIONS_FIELDS = ["version", "origin", "notificationKey", "vapidPublicKey", "vapidPrivateKey", "vapidSubject"];
 const FLAGS = ["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY", "NOTIFICATIONS"];
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
+
+export const PRIMARY_SITE_ORIGIN = `https://${SITE_DOMAIN}`;
+// This opt-in validates an offline candidate only. Existing launchers and
+// environment preflights still require their original subdomain profile.
+function originProfile(options = {}) {
+  if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
+    || Object.getOwnPropertyNames(options).some(name => name !== "originProfile")) authenticationFailure();
+  const descriptor = Object.getOwnPropertyDescriptor(options, "originProfile");
+  if (descriptor && !Object.hasOwn(descriptor, "value")) authenticationFailure();
+  const selected = descriptor ? descriptor.value : "preproduction";
+  if (!["preproduction", "primary"].includes(selected)) authenticationFailure();
+  return selected;
+}
 
 export class RuntimeDatabaseConfigurationError extends Error {
   constructor() {
@@ -123,9 +136,10 @@ export function validateRuntimeDiagnosticConfiguration(value) {
   } catch { clearSecrets(selected); fail(); }
 }
 
-export function validateRuntimeAuthenticationConfiguration(value) {
+export function validateRuntimeAuthenticationConfiguration(value, options = {}) {
   let selected, decoded;
   try {
+    const profile = originProfile(options);
     if (!value || Object.getPrototypeOf(value) !== Object.prototype
       || Object.getOwnPropertySymbols(value).length
       || Object.getOwnPropertyNames(value).sort().join(",") !== [...AUTHENTICATION_FIELDS].sort().join(",")) authenticationFailure();
@@ -139,7 +153,8 @@ export function validateRuntimeAuthenticationConfiguration(value) {
       || typeof selected.origin !== "string" || selected.origin.length > 512 || !isOfficialOrigin(selected.origin)
       || typeof selected.mfaKey !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(selected.mfaKey)) authenticationFailure();
     const origin = new URL(selected.origin);
-    if (origin.hostname === SITE_DOMAIN || origin.hostname === `www.${SITE_DOMAIN}` || origin.port !== ""
+    if ((profile === "primary" ? selected.origin !== PRIMARY_SITE_ORIGIN
+      : !isPreproductionOrigin(selected.origin)) || origin.port !== ""
       || origin.hostname.length > 253 || !origin.hostname.split(".").every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))) authenticationFailure();
     decoded = Buffer.from(selected.mfaKey, "base64url");
     if (decoded.length !== 32 || decoded.toString("base64url") !== selected.mfaKey
@@ -149,7 +164,7 @@ export function validateRuntimeAuthenticationConfiguration(value) {
   finally { decoded?.fill(0); }
 }
 
-export function validateRuntimeMessagingConfiguration(value) {
+export function validateRuntimeMessagingConfiguration(value, options = {}) {
   let selected, authentication, mail, messageKey;
   try {
     if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
@@ -164,7 +179,7 @@ export function validateRuntimeMessagingConfiguration(value) {
     // Reuse the persisted auth origin/key syntax without inventing another URL
     // policy. This temporary metadata record is never saved or used as MFA.
     authentication = validateRuntimeAuthenticationConfiguration({ format: "jessiemessage-runtime-auth", version: 1,
-      origin: selected.origin, mfaKey: selected.mailKey });
+      origin: selected.origin, mfaKey: selected.mailKey }, options);
     mail = mailConfiguration({ JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "1", JESSIEMESSAGE_SITE_ORIGIN: selected.origin,
       JESSIEMESSAGE_MAIL_KEY: selected.mailKey, JESSIEMESSAGE_SMTP_HOST: selected.smtpHost,
       JESSIEMESSAGE_SMTP_PORT: selected.smtpPort, JESSIEMESSAGE_SMTP_USER: selected.smtpUser,
@@ -190,7 +205,7 @@ export function runtimeDatabaseEnvironment(value) {
   };
 }
 
-export function validateRuntimeMediaConfiguration(value) {
+export function validateRuntimeMediaConfiguration(value, options = {}) {
   let selected, syntax;
   try {
     if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
@@ -204,7 +219,7 @@ export function validateRuntimeMediaConfiguration(value) {
     if (selected.format !== "jessiemessage-runtime-media" || selected.version !== 1) messagingFailure();
     // Reuse the canonical origin/key syntax; this metadata is never saved as MFA.
     syntax = validateRuntimeAuthenticationConfiguration({ format: "jessiemessage-runtime-auth", version: 1,
-      origin: selected.origin, mfaKey: selected.mediaKey });
+      origin: selected.origin, mfaKey: selected.mediaKey }, options);
     const root = selected.mediaRoot;
     if (typeof root !== "string" || !path.isAbsolute(root) || root !== path.resolve(root) || root.length > 4096
       || /[\\\x00-\x1f\x7f]/.test(root) || inside(root, path.resolve(REPOSITORY)) || inside(path.resolve(REPOSITORY), root)) messagingFailure();
@@ -219,7 +234,7 @@ export function validateRuntimeMediaConfiguration(value) {
   finally { clearSecrets(syntax); }
 }
 
-export function validateRuntimeNotificationsConfiguration(value) {
+export function validateRuntimeNotificationsConfiguration(value, options = {}) {
   let selected, syntax;
   try {
     if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
@@ -232,7 +247,7 @@ export function validateRuntimeNotificationsConfiguration(value) {
     }
     if (selected.version !== 1 || selected.vapidSubject !== "mailto:contact@jessiemessage.com") notificationsFailure();
     syntax = validateRuntimeAuthenticationConfiguration({ format: "jessiemessage-runtime-auth", version: 1,
-      origin: selected.origin, mfaKey: selected.notificationKey });
+      origin: selected.origin, mfaKey: selected.notificationKey }, options);
     validateNotificationVapid({ publicKey: selected.vapidPublicKey, privateKey: selected.vapidPrivateKey, subject: selected.vapidSubject });
     if (selected.notificationKey === selected.vapidPrivateKey || Buffer.byteLength(JSON.stringify(selected), "utf8") + 1 > MAX_BYTES) notificationsFailure();
     return selected;
@@ -325,29 +340,29 @@ export async function writeRuntimeDiagnosticConfiguration(directory, value) {
   finally { clearSecrets(record); }
 }
 
-export async function writeRuntimeAuthenticationConfiguration(directory, value) {
-  const record = validateRuntimeAuthenticationConfiguration(value);
+export async function writeRuntimeAuthenticationConfiguration(directory, value, options = {}) {
+  const record = validateRuntimeAuthenticationConfiguration(value, options);
   try { return await writeConfiguration(directory, record, AUTHENTICATION_BASENAME); }
   catch { authenticationFailure(); }
   finally { clearSecrets(record); }
 }
 
-export async function writeRuntimeMessagingConfiguration(directory, value) {
-  const record = validateRuntimeMessagingConfiguration(value);
+export async function writeRuntimeMessagingConfiguration(directory, value, options = {}) {
+  const record = validateRuntimeMessagingConfiguration(value, options);
   try { return await writeConfiguration(directory, record, MESSAGING_BASENAME); }
   catch { messagingFailure(); }
   finally { clearSecrets(record); }
 }
 
-export async function writeRuntimeMediaConfiguration(directory, value) {
-  const record = validateRuntimeMediaConfiguration(value);
+export async function writeRuntimeMediaConfiguration(directory, value, options = {}) {
+  const record = validateRuntimeMediaConfiguration(value, options);
   try { return await writeConfiguration(directory, record, MEDIA_BASENAME); }
   catch { messagingFailure(); }
   finally { clearSecrets(record); }
 }
 
-export async function writeRuntimeNotificationsConfiguration(directory, value) {
-  const record = validateRuntimeNotificationsConfiguration(value);
+export async function writeRuntimeNotificationsConfiguration(directory, value, options = {}) {
+  const record = validateRuntimeNotificationsConfiguration(value, options);
   try { return await writeConfiguration(directory, record, NOTIFICATIONS_BASENAME); }
   catch { notificationsFailure(); }
   finally { clearSecrets(record); }
@@ -453,23 +468,23 @@ export async function readRuntimeDiagnosticConfiguration(directory) {
   return readConfiguration(directory, DIAGNOSTIC_BASENAME, validateRuntimeDiagnosticConfiguration);
 }
 
-export async function readRuntimeAuthenticationConfiguration(directory) {
-  try { return await readConfiguration(directory, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration); }
+export async function readRuntimeAuthenticationConfiguration(directory, options = {}) {
+  try { return await readConfiguration(directory, AUTHENTICATION_BASENAME, value => validateRuntimeAuthenticationConfiguration(value, options)); }
   catch { authenticationFailure(); }
 }
 
-export async function readRuntimeMessagingConfiguration(directory) {
-  try { return await readConfiguration(directory, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration); }
+export async function readRuntimeMessagingConfiguration(directory, options = {}) {
+  try { return await readConfiguration(directory, MESSAGING_BASENAME, value => validateRuntimeMessagingConfiguration(value, options)); }
   catch { messagingFailure(); }
 }
 
-export async function readRuntimeMediaConfiguration(directory) {
-  try { return await readConfiguration(directory, MEDIA_BASENAME, validateRuntimeMediaConfiguration); }
+export async function readRuntimeMediaConfiguration(directory, options = {}) {
+  try { return await readConfiguration(directory, MEDIA_BASENAME, value => validateRuntimeMediaConfiguration(value, options)); }
   catch { messagingFailure(); }
 }
 
-export async function readRuntimeNotificationsConfiguration(directory) {
-  try { return await readConfiguration(directory, NOTIFICATIONS_BASENAME, validateRuntimeNotificationsConfiguration); }
+export async function readRuntimeNotificationsConfiguration(directory, options = {}) {
+  try { return await readConfiguration(directory, NOTIFICATIONS_BASENAME, value => validateRuntimeNotificationsConfiguration(value, options)); }
   catch { notificationsFailure(); }
 }
 
@@ -513,12 +528,12 @@ export async function runtimeAuthenticationConfigurationExists(directory) {
   } catch { authenticationFailure(); }
 }
 
-export async function readRuntimeAuthenticationBundle(directory) {
+export async function readRuntimeAuthenticationBundle(directory, options = {}) {
   let database, authentication;
   try {
     return await privateScope(directory, async (scope) => {
       database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
-      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration);
+      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, value => validateRuntimeAuthenticationConfiguration(value, options));
       return { database, authentication };
     });
   } catch {
@@ -527,13 +542,13 @@ export async function readRuntimeAuthenticationBundle(directory) {
   }
 }
 
-export async function readRuntimeMessagingBundle(directory) {
+export async function readRuntimeMessagingBundle(directory, options = {}) {
   let database, authentication, messaging;
   try {
     return await privateScope(directory, async (scope) => {
       database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
-      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration);
-      messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration);
+      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, value => validateRuntimeAuthenticationConfiguration(value, options));
+      messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, value => validateRuntimeMessagingConfiguration(value, options));
       if (messaging.origin !== authentication.origin || [messaging.mailKey, messaging.messageKey].includes(authentication.mfaKey)) messagingFailure();
       return { database, authentication, messaging };
     });
@@ -543,14 +558,14 @@ export async function readRuntimeMessagingBundle(directory) {
   }
 }
 
-export async function readRuntimeMediaBundle(directory) {
+export async function readRuntimeMediaBundle(directory, options = {}) {
   let database, authentication, messaging, media;
   try {
     return await privateScope(directory, async (scope) => {
       database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
-      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration);
-      messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration);
-      media = await readAnchoredConfiguration(scope, MEDIA_BASENAME, validateRuntimeMediaConfiguration);
+      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, value => validateRuntimeAuthenticationConfiguration(value, options));
+      messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, value => validateRuntimeMessagingConfiguration(value, options));
+      media = await readAnchoredConfiguration(scope, MEDIA_BASENAME, value => validateRuntimeMediaConfiguration(value, options));
       if (authentication.origin !== messaging.origin || authentication.origin !== media.origin
         || [messaging.mailKey, messaging.messageKey].includes(authentication.mfaKey)
         || [authentication.mfaKey, messaging.mailKey, messaging.messageKey].includes(media.mediaKey)) messagingFailure();
@@ -562,15 +577,15 @@ export async function readRuntimeMediaBundle(directory) {
   }
 }
 
-export async function readRuntimeNotificationsBundle(directory) {
+export async function readRuntimeNotificationsBundle(directory, options = {}) {
   let database, authentication, messaging, media, notifications;
   try {
     return await privateScope(directory, async (scope) => {
       database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
-      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, validateRuntimeAuthenticationConfiguration);
-      messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, validateRuntimeMessagingConfiguration);
-      media = await readAnchoredConfiguration(scope, MEDIA_BASENAME, validateRuntimeMediaConfiguration);
-      notifications = await readAnchoredConfiguration(scope, NOTIFICATIONS_BASENAME, validateRuntimeNotificationsConfiguration);
+      authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, value => validateRuntimeAuthenticationConfiguration(value, options));
+      messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, value => validateRuntimeMessagingConfiguration(value, options));
+      media = await readAnchoredConfiguration(scope, MEDIA_BASENAME, value => validateRuntimeMediaConfiguration(value, options));
+      notifications = await readAnchoredConfiguration(scope, NOTIFICATIONS_BASENAME, value => validateRuntimeNotificationsConfiguration(value, options));
       const records = [authentication, messaging, media, notifications];
       const keys = [authentication.mfaKey, messaging.mailKey, messaging.messageKey, media.mediaKey, notifications.notificationKey, notifications.vapidPrivateKey];
       if (records.some(record => record.origin !== authentication.origin) || new Set(keys).size !== keys.length) notificationsFailure();

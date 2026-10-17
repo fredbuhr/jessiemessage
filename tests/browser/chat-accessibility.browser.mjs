@@ -21,7 +21,7 @@ let server, driver, baseUrl;
 let fixture;
 
 function resetFixture() {
-  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0 };
+  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false };
 }
 function media(role) {
   const prefix = `/api/media/${role}/conversations/${conversationId}/messages/${photoMessageId}`;
@@ -52,7 +52,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "broadcast-preference.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -95,6 +95,11 @@ async function startFixtureServer() {
         let body = ""; for await (const chunk of request) body += chunk;
         assert.deepEqual(JSON.parse(body), { notification: id(999) });
         sendJson(200, { conversationId, messageId: id(201), sequence: "1" }); return;
+      }
+      if (/^\/api\/notifications\/(admin|client)\/capabilities$/.test(url.pathname) && request.method === "GET" && fixture.notificationsEnabled) {
+        // Public synthetic key only. This fixture never requests permission,
+        // creates a push subscription or sends a notification.
+        sendJson(200, { enabled: true, vapidPublicKey: Buffer.from([4, ...Array(64).fill(1)]).toString("base64url") }); return;
       }
       const match = /^\/api\/(chat|media)\/(admin|client)(\/.*)$/.exec(url.pathname);
       if (match) {
@@ -179,6 +184,48 @@ test("Chrome desktop and 320px: actual Tab / Enter contact selection and return,
       assert.equal(await page.execute("return document.activeElement.dataset.conversationId"), conversationId, "return restores the contact recreated by the controller");
       assert.equal(await page.execute("return document.activeElement.querySelector('strong').textContent"), peerName);
       if (width === 320) assert.equal(await page.execute("return document.documentElement.scrollWidth <= window.innerWidth"), true, "no page overflow at 320px");
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome mobile: every account control stays visible and separate with Notifications, French / English, both roles", { timeout: 90000 }, async () => {
+  for (const width of [320, 360, 390]) for (const path of ["/messages", "/admin/messages"]) {
+    resetFixture(); fixture.notificationsEnabled = true;
+    const page = await browser(width);
+    try {
+      await loaded(page, path);
+      await waitUntil(() => page.execute("return !document.getElementById('open-notifications').hidden"), "real notification capability exposes the account control");
+      for (const language of ["fr", "en"]) {
+        if (language === "en") await page.click("[data-jm-language]");
+        assert.equal(await page.execute("return document.documentElement.lang"), language);
+        const layout = await page.execute(`
+          const header = document.querySelector('.topbar').getBoundingClientRect();
+          const controls = [...document.querySelectorAll('.topbar .brand, .account-nav > a, .account-nav > button')]
+            .filter(node => !node.hidden).map(node => {
+              const rect = node.getBoundingClientRect(), hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+              return { name: node.id || (node.matches('[data-jm-language]') ? 'language' : 'brand'),
+                left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, height: rect.height,
+                reachable: hit === node || node.contains(hit) };
+            });
+          return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, headerBottom: header.bottom, controls };
+        `);
+        const context = `${path}, ${width}px, ${language}`;
+        assert.equal(layout.width, width, context);
+        assert.equal(layout.scrollWidth <= layout.width, true, `${context}: no horizontal page overflow`);
+        assert.deepEqual(layout.controls.map(control => control.name).sort(), ["account-link", "brand", "language", "logout", "open-notifications"], `${context}: all five controls are present`);
+        for (const control of layout.controls) {
+          assert.ok(control.left >= -1 && control.right <= layout.width + 1, `${context}: ${control.name} stays inside the viewport`);
+          assert.ok(control.top >= 0 && control.bottom <= layout.headerBottom + 1, `${context}: ${control.name} stays inside the header`);
+          assert.ok(control.height >= 44, `${context}: ${control.name} keeps its 44px touch height`);
+          assert.equal(control.reachable, true, `${context}: ${control.name} is not covered`);
+        }
+        for (let first = 0; first < layout.controls.length; first++) for (let second = first + 1; second < layout.controls.length; second++) {
+          const a = layout.controls[first], b = layout.controls[second];
+          assert.ok(a.right <= b.left + 1 || b.right <= a.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1,
+            `${context}: ${a.name} and ${b.name} do not overlap`);
+        }
+      }
       await noJavascriptErrors(page);
     } finally { await page.close(); }
   }

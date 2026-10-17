@@ -35,7 +35,11 @@ Public source code is compatible with a secure product only if every release han
 - CI has read-only token permissions and no deploy credentials on ordinary PRs.
 - Do not automatically deploy every push to production.
 
-## Current status
+## Current status — 17 October 2026
+
+Stage 0.33 is active in recipe with schema 30, durable role-specific sessions and neutral per-device Push. Direct notification opening rechecks the authenticated recipient and conversation membership; an opaque notification reference grants no access by itself. Hosted physical-schema/configuration checks pass for the active profile. Client recovery, CRM and broadcasts remain disabled. Retention, full account deletion, a fresh schema-30 recovery exercise and the final-origin device transition remain open; see the [current audit](AUDIT-2026-10-17.md). At-rest encryption is not end-to-end encryption. Manual admission remains distinct from independent age verification.
+
+## Historical scope — version 0.11
 
 Version 0.11 adds opted-in individual broadcasts to the fixed contact identity, administrator preparation tools, optional client recovery, text/photo chat, administrator MFA/recovery, invitations, restricted client sessions and CRM. This development lot passes the [verified 0.11 CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38659783930) with 624 general tests and 243 real tests per MariaDB version. Live SQL checks bind every conversation operation to its assigned participants and current session generation. Clients need current email/age/approval gates and unexpired access; an administrator can retain authorized history after a client expires but cannot send to that client. Message bodies use AES-256-GCM with a separate private key; this is server-side at-rest encryption, not end-to-end encryption. Deletion removes the body from the live row and synchronizes a tombstone; backup retention and data export are still to implement. JPEG/PNG/WebP uploads are normalized by an isolated bounded decoder, stripped of metadata, encrypted with a fourth distinct key and kept in a private directory outside the checkout. Every photo URL is authorized against its live owner or message delivery; an author tombstone revokes that delivery on subsequent reads. Browser screenshots, already authorized transfers and backups cannot be recalled. See [media configuration and limits](private-media.md) and [messaging scope](private-messaging.md).
 

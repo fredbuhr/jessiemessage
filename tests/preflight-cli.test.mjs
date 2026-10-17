@@ -24,6 +24,8 @@ test("preflight requires exact explicit command confirmations and refuses danger
     ["config", "--offline", "--origin", "https://www.jessiemessage.com"],
     ["config", "--offline", "--origin", "https://preprod.jessiemessage.com.evil.invalid"],
     ["config", "--offline", "--origin", `${origin}/`],
+    ["config", "--offline", "--origin", `${origin}:8443`],
+    ["config", "--offline", "--origin", "https://invalid_label.jessiemessage.com"],
     ["config", "--offline", "--origin", `https://${secret}@preprod.jessiemessage.com`],
     ["platform", "--offline", "--scratch", "relative"], ["platform", "--offline", "--scratch", "/private/../other"],
     ["platform", "--offline", "--scratch", "/private/control\npath"],

@@ -1,8 +1,10 @@
 # Recette de préproduction — étapes 0.18–0.22, version 0.24.0
 
+**État au 17 octobre 2026 :** les étapes 0.26–0.28 sont acceptées en recette ; le runtime 0.33 `f2677249`, schéma 30, est actif sur `recette.jessiemessage.com`, avec photos, sessions durables et notifications. L’hébergement, SQL et la réception e-mail sont identifiés et vérifiés dans leurs comptes rendus. L’ouverture ciblée des nouvelles alertes et les appareils simultanés restent à accepter. Voir [l’audit courant](AUDIT-2026-10-17.md). Les observations 0.23–0.25 ci-dessous sont historiques ; la procédure d’environnement synthétique isolé reste distincte de l’application réelle déjà utilisée en recette.
+
 Ce document prépare les vérifications de l'entrée PWA et d'un pilote privé. Cette procédure ne vaut pas compte rendu de déploiement ou d’acceptation ; les résultats réels sont consignés séparément. Les comptes réels, changements DNS, réception e-mail et installations sur téléphone ne sont pas validés par les essais automatiques. Les essais locaux et CI utilisent des identités fictives, des données synthétiques et des services maîtrisés.
 
-Le [relevé d’hébergement de l’étape 0.23](hosting-inventory-2026-10-15.md) constate seulement l’état public et prépare la consultation du Manager. Projet privé, sous-domaine isolé et paramètres réels restent à identifier.
+Le [relevé d’hébergement de l’étape 0.23](hosting-inventory-2026-10-15.md) constate seulement l’état public et prépare la consultation du Manager. À la date de ce relevé historique, le projet privé, le sous-domaine et les paramètres réels restaient à identifier.
 
 Le [premier démarrage neutre de l’étape 0.24](first-hosted-start.md) utilise le projet existant choisi par l’utilisateur. L’accueil public et l’entrée ont répondu lors des premiers contrôles, avec toutes les fonctions privées désactivées. Après un 502 et une déconnexion de l’environnement technique, une [contre-vérification](hosted-database-preparation.md) a constaté le retour des réponses neutres sans relance ni repli ; la cause et la disponibilité durable ne sont pas établies. Une base de recette vide sans utilisateur et une négociation TLS vérifiée sont préparées ; la connexion applicative SQL, les droits et la recette privée restent à vérifier. Il ne constitue pas la préproduction isolée décrite ci-dessous ni la recette d’un pilote privé. Le diagnostic de configuration de préproduction reste limité à un sous-domaine officiel distinct de l’apex ; ce lot ne modifie pas cette règle.
 
@@ -19,7 +21,7 @@ La création du schéma, l'initialisation média hors ligne et l'initialisation 
 
 ### Compatibilité Infomaniak : état documentaire au 15 octobre 2026
 
-Le [comparatif officiel](https://www.infomaniak.com/fr/hebergement/tarifs-et-caracteristiques) annonce un site Node.js et MariaDB 10.11 sur l’offre Hébergement Web. La [FAQ de création](https://www.infomaniak.com/fr/support/faq/2537/creer-un-site-nodejs-chez-infomaniak) explique l’ajout d’un projet Node à un plan Web. Un serveur Cloud n’est donc pas démontré nécessaire par principe. Le compte et les options de l’abonnement existant n’ont pas été consultés ; ces sources ne prouvent pas son éligibilité.
+Le [comparatif officiel](https://www.infomaniak.com/fr/hebergement/tarifs-et-caracteristiques) annonce un site Node.js et MariaDB 10.11 sur l’offre Hébergement Web. La [FAQ de création](https://www.infomaniak.com/fr/support/faq/2537/creer-un-site-nodejs-chez-infomaniak) explique l’ajout d’un projet Node à un plan Web. Un serveur Cloud n’est donc pas démontré nécessaire par principe. Au moment de cette étude documentaire, le compte et les options de l’abonnement existant n’avaient pas été consultés ; ces sources seules ne prouvaient pas son éligibilité. Les comptes rendus hébergés ultérieurs et l’audit courant documentent le service effectivement utilisé.
 
 | Contrat documenté | Vérification restant à faire dans la préproduction isolée |
 | --- | --- |

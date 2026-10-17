@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { inspectPreproductionConfiguration } from "../server/preflight/config.mjs";
 import { inspectPlatform } from "../server/preflight/platform.mjs";
 import { inspectDatabase } from "../server/preflight/database.mjs";
-import { isOfficialOrigin } from "../server/site.mjs";
+import { isPreproductionOrigin } from "../server/site.mjs";
 import { makePreflightReport, preflightFailure, preflightExitCode, PreflightReportError } from "../server/preflight/report.mjs";
 import { privatePathMode } from "../server/files/private-directory.mjs";
 
@@ -14,9 +14,7 @@ const usage = () => { throw new PreflightCliError(); };
 const pathValue = (value) => typeof value === "string" && value.length <= 4096 && value.startsWith("/")
   && resolve(value) === value && !/[\x00-\x1f\x7f]/.test(value);
 function originValue(value) {
-  if (typeof value !== "string" || value.length > 512 || !isOfficialOrigin(value)) return false;
-  const hostname = new URL(value).hostname;
-  return hostname !== "jessiemessage.com" && hostname !== "www.jessiemessage.com";
+  return typeof value === "string" && value.length <= 512 && isPreproductionOrigin(value);
 }
 
 export function parsePreflightArguments(args) {
