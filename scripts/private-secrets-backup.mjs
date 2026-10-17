@@ -6,7 +6,8 @@ import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { validateRuntimeAuthenticationConfiguration, validateRuntimeDatabaseConfiguration, validateRuntimeMessagingConfiguration,
-  validateRuntimeMediaConfiguration, validateRuntimeNotificationsConfiguration } from "../server/config/runtime-database-file.mjs";
+  validateRuntimeMediaConfiguration, validateRuntimeNotificationsConfiguration, validateRuntimeCrmConfiguration,
+  validateRuntimeCrmBundle } from "../server/config/runtime-database-file.mjs";
 import { readPassword } from "./migration-input.mjs";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeMediaEnvironment } from "../server/config/runtime-media.mjs";
@@ -17,6 +18,9 @@ const FILES = ["runtime-auth.json", "admin-setup.json", "runtime-database.json"]
 const MESSAGING_FILE = "runtime-messaging.json";
 const MEDIA_FILE = "runtime-media.json";
 const NOTIFICATIONS_FILE = "runtime-notifications.json";
+const CRM_FILE = "runtime-crm.json";
+const PRIMARY_CRM_PROFILE = "primary-crm";
+const PRIMARY = Object.freeze({ originProfile: "primary" });
 const FILE_LIMIT = 16384, PAYLOAD_LIMIT = 65536, CIPHER_LIMIT = 131072;
 const STATS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 const FORMAT = "jessiemessage-private-secrets-backup";
@@ -43,7 +47,7 @@ export function parseArguments(args) {
   }
   const { privateDirectory, output } = selected;
   if (typeof privateDirectory !== "string" || typeof output !== "string"
-    || selected.profile !== undefined && !["auth", "messaging", "messaging-photos", "messaging-photos-notify"].includes(selected.profile)
+    || selected.profile !== undefined && !["auth", "messaging", "messaging-photos", "messaging-photos-notify", PRIMARY_CRM_PROFILE].includes(selected.profile)
     || !privateDirectory.startsWith("/") || privateDirectory === "/" || privateDirectory.length > 4096
     || resolve(privateDirectory) !== privateDirectory || /[\\\x00-\x1f\x7f]/.test(privateDirectory)
     || inside(privateDirectory, REPOSITORY) || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}\.json\.gpg$/.test(output)) fail("PRIVATE_SECRETS_USAGE");
@@ -60,20 +64,27 @@ function options(value) {
     ...(profile ? ["--profile", profile.value] : [])]);
 }
 
-const sourceNames = (selected) => selected.profile === "messaging-photos-notify" ? [...FILES, MESSAGING_FILE, MEDIA_FILE, NOTIFICATIONS_FILE]
+const sourceNames = (selected) => selected.profile === PRIMARY_CRM_PROFILE ? [FILES[0], FILES[2], MESSAGING_FILE, MEDIA_FILE, NOTIFICATIONS_FILE, CRM_FILE]
+  : selected.profile === "messaging-photos-notify" ? [...FILES, MESSAGING_FILE, MEDIA_FILE, NOTIFICATIONS_FILE]
   : selected.profile === "messaging-photos" ? [...FILES, MESSAGING_FILE, MEDIA_FILE]
   : selected.profile === "messaging" ? [...FILES, MESSAGING_FILE] : FILES;
-const payloadVersion = (selected) => selected.profile === "messaging-photos-notify" ? 4 : selected.profile === "messaging-photos" ? 3 : selected.profile === "messaging" ? 2 : 1;
+const payloadVersion = (selected) => selected.profile === PRIMARY_CRM_PROFILE ? 5 : selected.profile === "messaging-photos-notify" ? 4 : selected.profile === "messaging-photos" ? 3 : selected.profile === "messaging" ? 2 : 1;
+const profileMetadata = selected => selected.profile === PRIMARY_CRM_PROFILE ? { profile: PRIMARY_CRM_PROFILE } : {};
 
 // Refuse a new AUTH-only receipt that would omit already-prepared mail/chat
 // secrets. Old three-file coffres remain valid and are never replaced.
 async function assertNotificationsProfile(scope, selected) {
-  if (selected.profile === "messaging-photos-notify") return;
+  if (["messaging-photos-notify", PRIMARY_CRM_PROFILE].includes(selected.profile)) return;
   await scope.assertReady();
   try { await lstat(scope.file(NOTIFICATIONS_FILE)); fail("PRIVATE_SECRETS_SOURCE"); }
   catch (error) { if (error.code !== "ENOENT") throw error; }
 }
 async function assertProfile(scope, selected) {
+  if (selected.profile === PRIMARY_CRM_PROFILE) return;
+  // A legacy new archive cannot silently omit the newly prepared CRM key.
+  await scope.assertReady();
+  try { await lstat(scope.file(CRM_FILE)); fail("PRIVATE_SECRETS_SOURCE"); }
+  catch (error) { if (error.code !== "ENOENT") throw error; }
   await assertNotificationsProfile(scope, selected);
   if (["messaging-photos", "messaging-photos-notify"].includes(selected.profile)) return;
   await scope.assertReady();
@@ -144,15 +155,17 @@ async function inspectGpg() {
   if (!version || Number(version[1]) !== 2 || Number(version[2]) < 2 || !output.includes("AES256") || !output.includes("SHA512")) fail("PRIVATE_SECRETS_GPG");
 }
 
-function validateSource(name, content) {
+function validateSource(name, content, selected) {
   let value, validated;
   try {
     value = JSON.parse(content);
-    if (name === "runtime-auth.json") validated = validateRuntimeAuthenticationConfiguration(value);
+    const originOptions = selected.profile === PRIMARY_CRM_PROFILE ? PRIMARY : {};
+    if (name === "runtime-auth.json") validated = validateRuntimeAuthenticationConfiguration(value, originOptions);
     else if (name === "runtime-database.json") validated = validateRuntimeDatabaseConfiguration(value);
-    else if (name === MESSAGING_FILE) validated = validateRuntimeMessagingConfiguration(value);
-    else if (name === MEDIA_FILE) validated = validateRuntimeMediaConfiguration(value);
-    else if (name === NOTIFICATIONS_FILE) validated = validateRuntimeNotificationsConfiguration(value);
+    else if (name === MESSAGING_FILE) validated = validateRuntimeMessagingConfiguration(value, originOptions);
+    else if (name === MEDIA_FILE) validated = validateRuntimeMediaConfiguration(value, originOptions);
+    else if (name === NOTIFICATIONS_FILE) validated = validateRuntimeNotificationsConfiguration(value, originOptions);
+    else if (name === CRM_FILE) validated = validateRuntimeCrmConfiguration(value, originOptions);
     else if (!plain(value) || value.schema !== "jessiemessage-admin-setup-v1" || !plain(value.totp)
       || typeof value.totp.secret !== "string" || !/^[A-Z2-7]{26,103}$/.test(value.totp.secret)
       || !Array.isArray(value.recoveryCodes) || value.recoveryCodes.length !== 8
@@ -160,7 +173,7 @@ function validateSource(name, content) {
   } catch { fail("PRIVATE_SECRETS_SOURCE"); }
   finally {
     for (const record of [value, validated]) if (record && typeof record === "object") {
-      for (const name of ["password", "mfaKey", "smtpUser", "smtpPassword", "mailKey", "messageKey", "mediaKey", "notificationKey", "vapidPrivateKey"]) if (Object.hasOwn(record, name)) record[name] = "";
+      for (const name of ["password", "mfaKey", "smtpUser", "smtpPassword", "mailKey", "messageKey", "mediaKey", "notificationKey", "vapidPrivateKey", "crmKey"]) if (Object.hasOwn(record, name)) record[name] = "";
       if (record.totp) { record.totp.secret = ""; record.totp.uri = ""; }
       if (record.recoveryCodes) record.recoveryCodes.fill("");
     }
@@ -176,13 +189,13 @@ async function capture(scope, now, snapshots, selected) {
       try {
         bytes = await readPrivateFile(scope, name, FILE_LIMIT, snapshots);
         const content = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
-        validateSource(name, content);
+        validateSource(name, content, selected);
         files.push({ name, encoding: "utf-8", content, sha256: digest(bytes) });
       } finally { bytes?.fill(0); }
     }
     await validatePhotoBundle(files, selected);
     payload = Buffer.from(JSON.stringify({ format: FORMAT, version: payloadVersion(selected),
-      ...(["messaging", "messaging-photos", "messaging-photos-notify"].includes(selected.profile) ? { profile: selected.profile } : {}),
+      ...(["messaging", "messaging-photos", "messaging-photos-notify", PRIMARY_CRM_PROFILE].includes(selected.profile) ? { profile: selected.profile } : {}),
       createdAt: new Date(now).toISOString(), applicationVersion: "0.24.0", files }) + "\n", "utf8");
     if (payload.length > PAYLOAD_LIMIT) fail("PRIVATE_SECRETS_SOURCE");
     return payload;
@@ -191,16 +204,20 @@ async function capture(scope, now, snapshots, selected) {
 }
 
 async function validatePhotoBundle(files, selected) {
-  if (!["messaging-photos", "messaging-photos-notify"].includes(selected.profile)) return;
-  let records, env;
+  if (!["messaging-photos", "messaging-photos-notify", PRIMARY_CRM_PROFILE].includes(selected.profile)) return;
+  let records, env, crmBundle;
   try {
     records = Object.fromEntries(files.filter(file => file.name !== "admin-setup.json").map(file => [file.name, JSON.parse(file.content)]));
-    const notifications = selected.profile === "messaging-photos-notify";
-    env = await (notifications ? loadRuntimeNotificationsEnvironment : loadRuntimeMediaEnvironment)(selected.privateDirectory, {}, { readBundle: async () => ({
+    const primaryCrm = selected.profile === PRIMARY_CRM_PROFILE;
+    const notifications = primaryCrm || selected.profile === "messaging-photos-notify";
+    const baseBundle = {
       database: records["runtime-database.json"], authentication: records["runtime-auth.json"], messaging: records[MESSAGING_FILE], media: records[MEDIA_FILE],
-      ...(notifications ? { notifications: records[NOTIFICATIONS_FILE] } : {}) }) });
+      ...(notifications ? { notifications: records[NOTIFICATIONS_FILE] } : {}) };
+    env = await (notifications ? loadRuntimeNotificationsEnvironment : loadRuntimeMediaEnvironment)(selected.privateDirectory,
+      primaryCrm ? { ...PRIMARY, recovery: true } : {}, { readBundle: async () => baseBundle });
+    if (primaryCrm) crmBundle = validateRuntimeCrmBundle({ ...baseBundle, crm: records[CRM_FILE] }, PRIMARY);
   } catch { fail("PRIVATE_SECRETS_SOURCE"); }
-  finally { clearRuntimeMessagingSecrets(env); for (const value of Object.values(records ?? {})) clearRuntimeMessagingSecrets(value); }
+  finally { clearRuntimeMessagingSecrets(env); for (const value of [...Object.values(records ?? {}), ...Object.values(crmBundle ?? {})]) clearRuntimeMessagingSecrets(value); }
 }
 
 async function absent(scope, name) {
@@ -323,7 +340,7 @@ export async function check(value) {
       for (const name of sourceNames(selected)) await inspectPrivateFile(scope, name);
       await inspectGpg();
       await assertProfile(scope, selected);
-      return { status: "checked", files: sourceNames(selected).length, sourceContentsRead: false, gpgAvailable: true, secretsOnly: true, databaseBackup: false };
+      return { status: "checked", ...profileMetadata(selected), files: sourceNames(selected).length, sourceContentsRead: false, gpgAvailable: true, secretsOnly: true, databaseBackup: false };
     });
   } catch (error) { if (error instanceof PrivateSecretsBackupError) throw error; fail("PRIVATE_SECRETS_SOURCE"); }
 }
@@ -351,7 +368,7 @@ export async function run(value, password) {
       await publish(scope, selected.output, ciphertext);
       await assertProfile(scope, selected);
       for (const record of snapshots) await inspectPrivateFile(scope, record.name, record.stats);
-      return { status: "saved", output: selected.output, files: sourceNames(selected).length, bytes: ciphertext.length, sha256: digest(ciphertext),
+      return { status: "saved", ...profileMetadata(selected), output: selected.output, files: sourceNames(selected).length, bytes: ciphertext.length, sha256: digest(ciphertext),
         encrypted: true, verified: true, secretsOnly: true, databaseBackup: false };
     });
   } catch (error) { if (error instanceof PrivateSecretsBackupError) throw error; fail("PRIVATE_SECRETS_OPERATION"); }
@@ -368,17 +385,17 @@ export async function verifyCiphertext(value, ciphertext, password) {
       await assertNotificationsProfile(scope, selected);
       decrypted = await gpg(scope, homeFd, "decrypt", ciphertext, pass);
       parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(decrypted));
-      const names = sourceNames(selected), messaging = ["messaging", "messaging-photos", "messaging-photos-notify"].includes(selected.profile);
+      const names = sourceNames(selected), messaging = ["messaging", "messaging-photos", "messaging-photos-notify", PRIMARY_CRM_PROFILE].includes(selected.profile);
       if (!plain(parsed) || parsed.format !== FORMAT || parsed.version !== payloadVersion(selected)
         || messaging && parsed.profile !== selected.profile || !Array.isArray(parsed.files) || parsed.files.length !== names.length) fail("PRIVATE_SECRETS_VERIFY");
       for (let index = 0; index < names.length; index += 1) {
         const file = parsed.files[index];
         if (!plain(file) || file.name !== names[index] || file.encoding !== "utf-8" || typeof file.content !== "string"
           || digest(Buffer.from(file.content, "utf8")) !== file.sha256) fail("PRIVATE_SECRETS_VERIFY");
-        validateSource(file.name, file.content);
+        validateSource(file.name, file.content, selected);
       }
       await validatePhotoBundle(parsed.files, selected);
-      return { verified: true, files: names.length, secretsOnly: true, databaseBackup: false };
+      return { verified: true, ...profileMetadata(selected), files: names.length, secretsOnly: true, databaseBackup: false };
     }));
   } catch (error) { if (error instanceof PrivateSecretsBackupError) throw error; fail("PRIVATE_SECRETS_VERIFY"); }
   finally { password = ""; pass?.fill(0); decrypted?.fill(0); for (const file of Array.isArray(parsed?.files) ? parsed.files : []) if (file && typeof file === "object") file.content = ""; }

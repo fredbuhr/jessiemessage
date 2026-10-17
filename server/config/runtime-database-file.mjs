@@ -15,6 +15,9 @@ const AUTHENTICATION_BASENAME = "runtime-auth.json";
 const MESSAGING_BASENAME = "runtime-messaging.json";
 const MEDIA_BASENAME = "runtime-media.json";
 const NOTIFICATIONS_BASENAME = "runtime-notifications.json";
+const CRM_BASENAME = "runtime-crm.json";
+const CONFIGURATION_BASENAMES = Object.freeze([BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME,
+  MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME, CRM_BASENAME]);
 const MAX_BYTES = 16384;
 const REPOSITORY = fileURLToPath(new URL("../../", import.meta.url));
 const FIELDS = ["format", "version", "host", "port", "database", "user", "password", "privilegeProfile"];
@@ -23,6 +26,7 @@ const AUTHENTICATION_FIELDS = ["format", "version", "origin", "mfaKey"];
 const MESSAGING_FIELDS = ["format", "version", "origin", "mailKey", "messageKey", "smtpHost", "smtpPort", "smtpUser", "smtpPassword"];
 const MEDIA_FIELDS = ["format", "version", "origin", "mediaKey", "mediaRoot", "ownerBytes", "totalBytes", "minimumFreeBytes"];
 const NOTIFICATIONS_FIELDS = ["version", "origin", "notificationKey", "vapidPublicKey", "vapidPrivateKey", "vapidSubject"];
+const CRM_FIELDS = ["version", "origin", "crmKey"];
 const FLAGS = ["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY", "NOTIFICATIONS"];
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 
@@ -70,6 +74,10 @@ export class RuntimeNotificationsConfigurationError extends Error {
   }
 }
 const notificationsFailure = () => { throw new RuntimeNotificationsConfigurationError(); };
+export class RuntimeCrmConfigurationError extends Error {
+  constructor() { super("Private file configuration is unavailable."); this.code = "RUNTIME_CRM_CONFIGURATION"; }
+}
+const crmFailure = () => { throw new RuntimeCrmConfigurationError(); };
 const messagingFailure = () => { throw new RuntimeMessagingConfigurationError(); };
 const inside = (filename, root) => {
   const suffix = path.relative(root, filename);
@@ -78,10 +86,10 @@ const inside = (filename, root) => {
 
 function clearSecrets(value) {
   if (!value || typeof value !== "object") return;
-  const nested = ["credentials", "database", "authentication", "messaging", "media", "notifications"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
+  const nested = ["credentials", "database", "authentication", "messaging", "media", "notifications", "crm"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
   for (const record of [value, ...nested]) {
     if (record && typeof record === "object") {
-      for (const name of ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "notificationKey", "vapidPrivateKey", "smtpUser", "smtpPassword"]) {
+      for (const name of ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "notificationKey", "vapidPrivateKey", "crmKey", "smtpUser", "smtpPassword"]) {
         const descriptor = Object.getOwnPropertyDescriptor(record, name);
         if (descriptor && Object.hasOwn(descriptor, "value") && descriptor.writable) record[name] = "";
       }
@@ -255,6 +263,47 @@ export function validateRuntimeNotificationsConfiguration(value, options = {}) {
   finally { clearSecrets(syntax); }
 }
 
+export function validateRuntimeCrmConfiguration(value, options = {}) {
+  let selected, syntax;
+  try {
+    if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
+      || Object.getOwnPropertyNames(value).sort().join(",") !== [...CRM_FIELDS].sort().join(",")) crmFailure();
+    selected = Object.fromEntries(CRM_FIELDS.map(name => {
+      const descriptor = Object.getOwnPropertyDescriptor(value, name);
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) crmFailure();
+      return [name, descriptor.value];
+    }));
+    if (selected.version !== 1) crmFailure();
+    syntax = validateRuntimeAuthenticationConfiguration({ format: "jessiemessage-runtime-auth", version: 1,
+      origin: selected.origin, mfaKey: selected.crmKey }, options);
+    return selected;
+  } catch { clearSecrets(selected); crmFailure(); }
+  finally { clearSecrets(syntax); }
+}
+
+// Offline configuration only: no environment flag, HTTP service or SQL pool.
+// The new primary coffre binds all six records and all seven private keys.
+export function validateRuntimeCrmBundle(value, options = {}) {
+  let selected;
+  try {
+    const names = ["database", "authentication", "messaging", "media", "notifications", "crm"];
+    if (originProfile(options) !== "primary" || !value || Object.getPrototypeOf(value) !== Object.prototype
+      || Object.getOwnPropertySymbols(value).length || Object.getOwnPropertyNames(value).sort().join(",") !== [...names].sort().join(",")) crmFailure();
+    const validators = [validateRuntimeDatabaseConfiguration, validateRuntimeAuthenticationConfiguration,
+      validateRuntimeMessagingConfiguration, validateRuntimeMediaConfiguration, validateRuntimeNotificationsConfiguration, validateRuntimeCrmConfiguration];
+    selected = {};
+    for (let index = 0; index < names.length; index++) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, names[index]);
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) crmFailure();
+      selected[names[index]] = validators[index](descriptor.value, options);
+    }
+    const keys = [selected.authentication.mfaKey, selected.messaging.mailKey, selected.messaging.messageKey,
+      selected.media.mediaKey, selected.notifications.notificationKey, selected.notifications.vapidPrivateKey, selected.crm.crmKey];
+    if (new Set(keys).size !== keys.length || names.slice(1).some(name => selected[name].origin !== PRIMARY_SITE_ORIGIN)) crmFailure();
+    return selected;
+  } catch { clearSecrets(selected); crmFailure(); }
+}
+
 async function privateScope(directory, callback) {
   try {
     if (typeof directory !== "string" || !path.isAbsolute(directory) || path.normalize(directory) !== directory
@@ -291,7 +340,7 @@ async function writeConfiguration(directory, config, basename) {
   let contents;
   try {
     // Only typed entry points select these internal, fixed filenames.
-    if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME].includes(basename)) fail();
+    if (!CONFIGURATION_BASENAMES.includes(basename)) fail();
     contents = Buffer.from(`${JSON.stringify(config)}\n`, "utf8");
     if (contents.length > MAX_BYTES) fail();
     return await privateScope(directory, async (scope) => {
@@ -368,6 +417,13 @@ export async function writeRuntimeNotificationsConfiguration(directory, value, o
   finally { clearSecrets(record); }
 }
 
+export async function writeRuntimeCrmConfiguration(directory, value, options = {}) {
+  const record = validateRuntimeCrmConfiguration(value, options);
+  try { return await writeConfiguration(directory, record, CRM_BASENAME); }
+  catch { crmFailure(); }
+  finally { clearSecrets(record); }
+}
+
 // Password rotation is separate from exclusive first publication. It may
 // replace only the SMTP password, using the exact previously read record.
 export async function replaceRuntimeMessagingSmtpPassword(directory, expected, smtpPassword) {
@@ -426,7 +482,7 @@ async function readAnchoredConfiguration(scope, basename, validate) {
   const bytes = Buffer.alloc(MAX_BYTES + 1);
   try {
     try {
-      if (![BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME, MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME].includes(basename)) fail();
+      if (!CONFIGURATION_BASENAMES.includes(basename)) fail();
       const filename = scope.file(basename);
       await scope.assertReady();
       file = await open(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
@@ -486,6 +542,21 @@ export async function readRuntimeMediaConfiguration(directory, options = {}) {
 export async function readRuntimeNotificationsConfiguration(directory, options = {}) {
   try { return await readConfiguration(directory, NOTIFICATIONS_BASENAME, value => validateRuntimeNotificationsConfiguration(value, options)); }
   catch { notificationsFailure(); }
+}
+
+export async function readRuntimeCrmConfiguration(directory, options = {}) {
+  try { return await readConfiguration(directory, CRM_BASENAME, value => validateRuntimeCrmConfiguration(value, options)); }
+  catch { crmFailure(); }
+}
+
+export async function runtimeCrmConfigurationExists(directory) {
+  try {
+    return await privateScope(directory, async scope => {
+      await scope.assertReady();
+      try { await lstat(scope.file(CRM_BASENAME), { bigint: true }); return true; }
+      catch (error) { if (error.code === "ENOENT") return false; throw error; }
+    });
+  } catch { crmFailure(); }
 }
 
 export async function runtimeNotificationsConfigurationExists(directory) {
@@ -595,4 +666,21 @@ export async function readRuntimeNotificationsBundle(directory, options = {}) {
     for (const record of [database, authentication, messaging, media, notifications]) clearSecrets(record);
     notificationsFailure();
   }
+}
+
+export async function readRuntimeCrmBundle(directory, options = {}) {
+  let records;
+  try {
+    return await privateScope(directory, async scope => {
+      records = {};
+      records.database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
+      records.authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, value => validateRuntimeAuthenticationConfiguration(value, options));
+      records.messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, value => validateRuntimeMessagingConfiguration(value, options));
+      records.media = await readAnchoredConfiguration(scope, MEDIA_BASENAME, value => validateRuntimeMediaConfiguration(value, options));
+      records.notifications = await readAnchoredConfiguration(scope, NOTIFICATIONS_BASENAME, value => validateRuntimeNotificationsConfiguration(value, options));
+      records.crm = await readAnchoredConfiguration(scope, CRM_BASENAME, value => validateRuntimeCrmConfiguration(value, options));
+      return validateRuntimeCrmBundle(records, options);
+    });
+  } catch { crmFailure(); }
+  finally { clearSecrets(records); }
 }
