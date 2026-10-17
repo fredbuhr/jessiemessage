@@ -1,5 +1,7 @@
 # Coffre privé des secrets — étape 0.25
 
+**Lot 0.44 — configuration primaire et fiches privées :** le [profil de coffre `primary-crm`](crm-private-configuration.md) ajoute un format v5 explicite pour les six configurations de l’adresse principale, nouvelle clé CRM comprise, sans dépendre du fichier historique d’enrôlement absent de ce répertoire. Les coffres historiques restent conservés. Aucune nouvelle capture avec un ancien profil ne doit omettre la clé CRM préparée. Ce coffre ne sauvegarde ni SQL ni les photos et n’active aucune fonction.
+
 **Lot 0.26 extension:** the default AUTH coffre still has three files. Once `runtime-messaging.json` is prepared, use `--profile messaging` to create a four-file v2 coffre, covering the durable mail/chat keys and SMTP configuration as well. New code refuses a three-file AUTH creation when the messaging file already exists. Existing v1 coffres remain intact and readable. See the [current operator order](manual-invitation-runtime.md); neither profile dumps SQL.
 
 
