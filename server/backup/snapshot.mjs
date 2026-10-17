@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { createdMigrationTables, loadMigrations } from "../db/migrations.mjs";
 import { assertBackupInspection } from "./inspection.mjs";
+import { assertApplicationTableInspection, validateApplicationCoverage, APPLICATION_COVERAGE } from "./application-scope.mjs";
 
 export class BackupSnapshotError extends Error {
   constructor(code = "BACKUP_SNAPSHOT_STATE") { super("The private backup could not be verified."); this.name = "BackupSnapshotError"; this.code = code; }
@@ -46,8 +47,8 @@ function assetRow(row) {
 }
 
 /** A bounded consistent read of every application row, including tombstones and outboxes. */
-export function createBackupSnapshotStore({ pool, inspectionPool }) {
-  if (typeof pool?.getConnection !== "function") fail("BACKUP_SNAPSHOT_INPUT");
+export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "complete-schema" }) {
+  if (typeof pool?.getConnection !== "function" || !["complete-schema", "application-tables"].includes(coverage)) fail("BACKUP_SNAPSHOT_INPUT");
   async function read(operation, transaction = false) {
     let connection, inspection, begun = false;
     try {
@@ -76,7 +77,8 @@ export function createBackupSnapshotStore({ pool, inspectionPool }) {
       const { maxRows } = budget(limits); checkSignal(signal);
       const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
       if (typeof database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(database)) fail();
-      await assertBackupInspection(inspection, database);
+      if (coverage === "application-tables") await assertApplicationTableInspection(inspection, database);
+      else await assertBackupInspection(inspection, database);
       const migrations = await loadMigrations();
       // A reviewed ALTER adds a migration-ledger row, not another table. The
       // shared inventory validates every statement before selecting CREATEs.
@@ -158,7 +160,9 @@ export function createBackupSnapshotStore({ pool, inspectionPool }) {
           after = table.primary.map((name) => rows.at(-1)[name]);
         }
       }
-      const snapshot = { version: 1, schemaDigest, coreDigest: core.digest("hex"), counts: { tables: definitions.length, rows: rowsRead }, capacity, objects, assets };
+      const snapshot = { version: coverage === "application-tables" ? 2 : 1,
+        ...(coverage === "application-tables" ? { coverage: validateApplicationCoverage(APPLICATION_COVERAGE) } : {}),
+        schemaDigest, coreDigest: core.digest("hex"), counts: { tables: definitions.length, rows: rowsRead }, capacity, objects, assets };
       validateSnapshot(snapshot); return snapshot;
     }, true),
   });
@@ -170,9 +174,16 @@ export async function captureBackupSnapshot({ store, signal, limits } = {}) {
 }
 
 function validateSnapshot(snapshot) {
-  if (!snapshot || snapshot.version !== 1 || !hex(snapshot.schemaDigest, 32) || !hex(snapshot.coreDigest, 32)
+  if (!snapshot || ![1, 2].includes(snapshot.version) || !hex(snapshot.schemaDigest, 32) || !hex(snapshot.coreDigest, 32)
     || !snapshot.counts || !integer(snapshot.counts.tables, 1) || !integer(snapshot.counts.rows)
     || !Array.isArray(snapshot.objects) || !Array.isArray(snapshot.assets) || snapshot.objects.length + snapshot.assets.length > 100000) fail();
+  if (snapshot.version === 1) {
+    if ("coverage" in snapshot) fail();
+  } else {
+    const coverage = Object.getOwnPropertyDescriptor(snapshot, "coverage");
+    if (!coverage?.enumerable || !Object.hasOwn(coverage, "value") || snapshot.counts.tables !== 30) fail();
+    try { validateApplicationCoverage(coverage.value); } catch { fail(); }
+  }
   const capacity = snapshot.capacity;
   if (!capacity || !integer(capacity.ownerBytes, 1) || !integer(capacity.totalBytes, capacity.ownerBytes) || !integer(capacity.heldBytes)
     || !hex(capacity.rootFingerprint, 32) || !date(capacity.initializedAt)) fail();
@@ -213,7 +224,8 @@ export function assertBackupSnapshot({ expected, actual, mode, targetFingerprint
   if (!["exact", "recovery"].includes(mode)) fail("BACKUP_SNAPSHOT_INPUT");
   if (mode === "exact") { if (!same(expected, actual)) fail("BACKUP_SNAPSHOT_DRIFT"); }
   else {
-    if (expected.schemaDigest !== actual.schemaDigest || expected.coreDigest !== actual.coreDigest || !same(expected.counts, actual.counts)
+    if (expected.version !== actual.version || !same(expected.coverage, actual.coverage)
+      || expected.schemaDigest !== actual.schemaDigest || expected.coreDigest !== actual.coreDigest || !same(expected.counts, actual.counts)
       || !same(expected.assets, actual.assets) || expected.objects.length !== actual.objects.length
       || expected.capacity.ownerBytes !== actual.capacity.ownerBytes || expected.capacity.totalBytes !== actual.capacity.totalBytes
       || expected.capacity.initializedAt !== actual.capacity.initializedAt

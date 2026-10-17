@@ -20,7 +20,7 @@ const candidateKeys = ["id", "owner_id", "owner_role", "storage_key", "content_d
 const candidateDTO = (value) => Object.fromEntries(candidateKeys.map((key) => [key, value[key]]));
 
 export function parseArguments(args) {
-  if (Array.isArray(args) && args.length === 6 && args[4] === "--profile" && ["photos", "photos-notify"].includes(args[5])) {
+  if (Array.isArray(args) && args.length === 6 && args[4] === "--profile" && ["photos", "photos-notify", "photos-notify-application"].includes(args[5])) {
     return { ...parseArguments(args.slice(0, 4)), profile: args[5] };
   }
   if (!Array.isArray(args) || args.length !== 4 || !["prepare", "verify", "restore"].includes(args[0])
@@ -31,13 +31,13 @@ export function parseArguments(args) {
 
 function configuration(env, profile) {
   const media = mediaConfiguration(env), auth = authConfiguration(env), access = accessConfiguration(env), chat = chatConfiguration(env), crm = crmConfiguration(env);
-  const photos = ["photos", "photos-notify"].includes(profile), notifications = loadNotificationsConfig(env);
+  const photos = ["photos", "photos-notify", "photos-notify-application"].includes(profile), notifications = loadNotificationsConfig(env);
   if ([media, auth, access, chat].some((value) => value.enabled !== true) || !photos && crm.enabled !== true
     || photos && (["CRM", "CLIENT_RECOVERY", "BROADCAST"].some(name => ![undefined, "0"].includes(env[`JESSIEMESSAGE_ENABLE_${name}`])))
-    || (profile === "photos-notify") !== notifications.enabled) fail("BACKUP_CONFIG");
+    || (["photos-notify", "photos-notify-application"].includes(profile)) !== notifications.enabled) fail("BACKUP_CONFIG");
   return { media, databaseName: runtimeDatabaseOptions(env).database,
     keys: { totpKey: auth.totpKey, mailKey: access.mail.key, messageKey: chat.key, mediaKey: media.key,
-      ...(photos ? {} : { crmKey: crm.key }), ...(profile === "photos-notify" ? { notificationKey: notifications.key } : {}) } };
+      ...(photos ? {} : { crmKey: crm.key }), ...(["photos-notify", "photos-notify-application"].includes(profile) ? { notificationKey: notifications.key } : {}) } };
 }
 
 /** All commands require an operator-confirmed offline source or isolated clone. */
@@ -46,7 +46,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
   let pool, inspectionPool, result;
   try {
     checkSignal(dependencies.signal);
-    const photos = ["photos", "photos-notify"].includes(options.profile), notifications = options.profile === "photos-notify";
+    const photos = ["photos", "photos-notify", "photos-notify-application"].includes(options.profile), notifications = ["photos-notify", "photos-notify-application"].includes(options.profile), application = options.profile === "photos-notify-application";
     const keyNames = [...["totpKey", "mailKey", "messageKey", "mediaKey"], ...(!photos ? ["crmKey"] : []), ...(notifications ? ["notificationKey"] : [])];
     const config = (dependencies.configure ?? configuration)(env, options.profile), { media, keys } = config ?? {};
     if (media?.enabled !== true || !media.capacity || typeof config.databaseName !== "string" || !/^[A-Za-z0-9_]{1,64}$/.test(config.databaseName)
@@ -64,7 +64,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     let manifest, payload;
     if (options.command !== "prepare") {
       manifest = await manifests.readManifest(options.manifestPath);
-      if (photos && (manifest?.version !== (notifications ? 3 : 2) || manifest.profile !== (notifications ? "messaging-photos-notify" : "messaging-photos"))
+      if (photos && (manifest?.version !== (application ? 4 : notifications ? 3 : 2) || manifest.profile !== (application ? "messaging-photos-notify-application" : notifications ? "messaging-photos-notify" : "messaging-photos"))
         || !photos && manifest?.version !== 1) fail("BACKUP_VERIFY");
       payload = await manifests.verifyBackupManifest({ manifest, keys });
       if (!payload?.snapshot || payload.snapshot.capacity?.rootFingerprint !== payload.identity?.rootFingerprint) fail("BACKUP_VERIFY");
@@ -77,9 +77,11 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     const schemaStore = dependencies.makeSchemaStore ? dependencies.makeSchemaStore({ pool, capacity })
       : (await import("../server/media/store.mjs")).createMediaStore({ pool, capacity, chatStore: (await import("../server/chat/store.mjs")).createChatStore(pool) });
     await schemaStore.assertSchema();
-    inspectionPool = await (dependencies.createInspectionPool ?? (await import("../server/backup/inspection.mjs")).createBackupInspectionPool)(env);
+    inspectionPool = await (dependencies.createInspectionPool ?? (application
+      ? (await import("../server/backup/application-scope.mjs")).createApplicationInspectionPool
+      : (await import("../server/backup/inspection.mjs")).createBackupInspectionPool))(env);
     if (!inspectionPool || inspectionPool === pool) fail("BACKUP_CONFIG");
-    const store = (dependencies.makeSnapshotStore ?? snapshots.createBackupSnapshotStore)({ pool, inspectionPool });
+    const store = (dependencies.makeSnapshotStore ?? snapshots.createBackupSnapshotStore)({ pool, inspectionPool, ...(application ? { coverage: "application-tables" } : {}) });
     const databaseName = await store.databaseName();
     if (databaseName !== config.databaseName) fail("BACKUP_CONFIG");
     const identity = await manifests.backupIdentity({ databaseName, rootPath: media.root, storage, mediaKey: keys.mediaKey });
@@ -114,7 +116,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       await verifyData(before, "exact");
       const after = await capture(); compare(before, after, "exact"); await sameIdentity();
       manifest = await manifests.createBackupManifest({ snapshot: after, identity, keys, now: instant(clock),
-        ...(photos ? { profile: notifications ? "messaging-photos-notify" : "messaging-photos" } : {}) });
+        ...(photos ? { profile: application ? "messaging-photos-notify-application" : notifications ? "messaging-photos-notify" : "messaging-photos" } : {}) });
       checkSignal(dependencies.signal);
       await manifests.writeManifest(options.manifestPath, manifest);
       result = { command: options.command, verified: true, prepared: true, restored: false, releasedCandidates: 0, manifestHash: manifests.manifestHash(manifest) };

@@ -8,13 +8,16 @@ import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { readManifest, verifyBackupManifest, backupIdentity, assertCloneIdentity } from "../server/backup/manifest.mjs";
 import { assertBackupInspection } from "../server/backup/inspection.mjs";
+import { APPLICATION_COVERAGE, validateApplicationCoverage, assertApplicationTableInspection } from "../server/backup/application-scope.mjs";
 import { verifyPhotoNotificationBackupData } from "../server/backup/verify.mjs";
 import { connectDatabase } from "../server/db/connection.mjs";
+import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
 import { inspectDumpClient, readFrozenBackup, dumpCloneSql, inspectClone } from "./verify-text-clone.mjs";
 import { readPassword } from "./migration-input.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const CA = "/etc/ssl/certs/ca-certificates.crt";
+const APPLICATION_PROFILE = "messaging-photos-notify-application";
 const FIELDS = ["command", "privateDirectory", "privatePathMode", "checkpointDirectory", "database", "confirmation", "user"];
 const COUNT_NAMES = ["rows", "mfa", "mail", "reset", "messages", "crm", "broadcast", "broadcastRecipients", "media", "mediaFiles", "notifications", "notificationJobs"];
 const KEY_FIELDS = { totpKey: "JESSIEMESSAGE_MFA_KEY", mailKey: "JESSIEMESSAGE_MAIL_KEY", messageKey: "JESSIEMESSAGE_MESSAGE_KEY",
@@ -33,7 +36,7 @@ const readReceipt = async (scope, options) => (await import("../server/backup/ch
 const verifyMedia = async (scope, media, options) => (await import("../server/backup/checkpoint-files.mjs")).verifyCheckpointMedia(scope, media, options);
 
 export function parseArguments(args) {
-  if (!Array.isArray(args) || args.length !== 13 || !["check", "verify"].includes(args[0])) fail("USAGE");
+  if (!Array.isArray(args) || args.length !== 13 || !["check", "verify", "check-application", "verify-application"].includes(args[0])) fail("USAGE");
   const selected = { command: args[0] }, names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"],
     ["--checkpoint-directory", "checkpointDirectory"], ["--database", "database"], ["--confirm-database", "confirmation"], ["--user", "user"]]);
   for (let index = 1; index < args.length; index += 2) {
@@ -70,11 +73,19 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   readCheckpoint = readReceipt, verifyCheckpointMedia = verifyMedia, readBackup = readFrozenBackup,
   readBackupManifest = readManifest, verifyManifest = verifyBackupManifest, identity = backupIdentity, assertIdentity = assertCloneIdentity,
   inspectClient = inspectDumpClient, readSecret = readPassword, dump = dumpCloneSql, connect = connectDatabase,
-  inspect = inspectClone, inspectPrivileges = assertBackupInspection, verify = verifyPhotoNotificationBackupData, signal } = {}) {
+  inspect = inspectClone, inspectPrivileges = assertBackupInspection, inspectApplicationPrivileges = assertApplicationTableInspection,
+  verify = verifyPhotoNotificationBackupData, signal } = {}) {
   let sourceEnv, env, keys, password = "", connectionEnv, connection, transaction = false, result, failure;
   const active = () => { if (signal?.aborted) fail("CANCELLED"); };
   try {
     active(); const selected = optionsFromRecord(value);
+    const application = selected.command.endsWith("-application");
+    let dumpTables;
+    if (application) {
+      const migrations = await loadMigrations();
+      dumpTables = [...createdMigrationTables(migrations), "schema_migrations"].sort();
+      if (migrations.length !== 30 || dumpTables.length !== 30 || new Set(dumpTables).size !== 30) fail("SCHEMA");
+    }
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("ENVIRONMENT"); }
     sourceEnv = await loadEnvironment(selected.privateDirectory, { port: processOptions.port });
@@ -94,14 +105,24 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         const targetIdentity = await identity({ databaseName: selected.database, rootPath: mediaDirectory, storage, mediaKey: keys.mediaKey });
         await assertIdentity(sourceIdentity, targetIdentity);
         const checkpoint = await readCheckpoint(checkpointScope, { signal });
+        if (checkpoint?.version !== (application ? 2 : 1)
+          || checkpoint.profile !== (application ? APPLICATION_PROFILE : "messaging-photos-notify")) fail("CHECKPOINT");
+        if (application) {
+          try { validateApplicationCoverage(checkpoint.coverage); } catch { fail("CHECKPOINT"); }
+        }
         const backupSelection = { backup: "database.sql.gz", backupSha256: checkpoint.sql.sha256 };
         const backup = await readBackup(checkpointScope, backupSelection); frozenMatches(checkpoint, backup);
         async function checkManifest() {
           const manifest = await readBackupManifest(join(selected.checkpointDirectory, "manifest.json"), { pathMode: selected.privatePathMode });
-          if (manifest?.version !== 3 || manifest.profile !== "messaging-photos-notify") fail("CHECKPOINT");
+          if (manifest?.version !== (application ? 4 : 3)
+            || manifest.profile !== (application ? APPLICATION_PROFILE : "messaging-photos-notify")) fail("CHECKPOINT");
           const payload = await verifyManifest({ manifest, keys });
           if (!same(payload?.identity, sourceIdentity) || payload?.snapshot?.counts?.tables !== 30
             || payload?.snapshot?.capacity?.rootFingerprint !== sourceIdentity.rootFingerprint) fail("CHECKPOINT");
+          if (application) {
+            try { validateApplicationCoverage(payload.snapshot.coverage); } catch { fail("CHECKPOINT"); }
+            if (payload.snapshot.version !== 2 || !same(payload.snapshot.coverage, checkpoint.coverage)) fail("CHECKPOINT");
+          } else if (payload.snapshot.version === 2 || Object.hasOwn(payload.snapshot, "coverage")) fail("CHECKPOINT");
           return payload;
         }
         const payload = await checkManifest();
@@ -120,17 +141,18 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           await assertIdentity(currentSource, currentTarget);
           await sourceScope.assertReady(); await checkpointScope.assertReady(); await mediaScope.assertReady(); active();
         }
-        const common = { tables: 30, migrations: 30, backupBytes: backup.backupBytes, sqlBytes: backup.sqlBytes,
+        const common = { ...(application ? { version: 2, profile: APPLICATION_PROFILE, coverage: { ...APPLICATION_COVERAGE }, completeDatabase: false } : {}),
+          tables: 30, migrations: 30, backupBytes: backup.backupBytes, sqlBytes: backup.sqlBytes,
           backupSha256: backup.backupSha256, sqlSha256: backup.sqlSha256, checkpointFilesMatched: true, independentMediaDirectory: true,
           httpStarted: false, smtpStarted: false, workersStarted: false, capacityRebound: false };
-        if (selected.command === "check") { await unchanged(); result = { status: "ready_for_input", ...common, databaseConnected: false }; return; }
+        if (["check", "check-application"].includes(selected.command)) { await unchanged(); result = { status: "ready_for_input", ...common, databaseConnected: false }; return; }
         try {
           password = await readSecret(inputStream);
           if (typeof password !== "string" || !password || !password.isWellFormed() || /[\x00-\x1f\x7f]/.test(password) || Buffer.byteLength(password, "utf8") > 4096) fail("PASSWORD");
         } catch { fail("PASSWORD"); }
         active();
         const dumped = await dump(checkpointScope, { database: selected.database, user: selected.user },
-          { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal });
+          { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, ...(application ? { tables: [...dumpTables] } : {}) });
         if (dumped?.sqlBytes !== backup.sqlBytes || dumped.sqlSha256 !== backup.sqlSha256) fail("DUMP_MISMATCH");
         active();
         connectionEnv = { JESSIEMESSAGE_DB_HOST: env.JESSIEMESSAGE_DB_HOST, JESSIEMESSAGE_DB_PORT: env.JESSIEMESSAGE_DB_PORT,
@@ -139,7 +161,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         connection = await connect(connectionEnv); active();
         await connection.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"); transaction = true;
         await connection.query("START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT"); active();
-        await inspectPrivileges(connection, selected.database);
+        await (application ? inspectApplicationPrivileges : inspectPrivileges)(connection, selected.database);
         const schema = await inspect(connection, selected.database);
         if (schema?.tables !== 30 || schema.migrations !== 30) fail("SCHEMA");
         const pool = { getConnection: async () => ({ query(sql, parameters) {
@@ -150,6 +172,12 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         if (report?.complete !== true || report.healthy !== true || !Array.isArray(report.issues) || report.issues.length
           || !same(Object.keys(report.counts ?? {}).sort(), [...COUNT_NAMES].sort())
           || COUNT_NAMES.some(name => !Number.isSafeInteger(report.counts[name]) || report.counts[name] < 0)) fail("CRYPTO");
+        if (application) {
+          const after = await dump(checkpointScope, { database: selected.database, user: selected.user },
+            { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, tables: [...dumpTables] });
+          if (after?.sqlBytes !== backup.sqlBytes || after.sqlSha256 !== backup.sqlSha256) fail("DUMP_MISMATCH");
+          active();
+        }
         await unchanged();
         result = { status: "verified", ...common, databaseConnected: true,
           counts: Object.fromEntries(COUNT_NAMES.map(name => [name, report.counts[name]])) };

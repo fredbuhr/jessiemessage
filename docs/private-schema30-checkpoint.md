@@ -2,6 +2,10 @@
 
 Ce lot prépare les commandes avant la bascule du domaine. Le service actif reste 0.33 `f2677249`, profil `messaging-photos-notify`, trente migrations et trente tables physiques. Le pont de session 0.35 reste préparé, sans activation. **Aucun nouveau checkpoint réel ni restauration réelle n’est encore attesté par ce document.**
 
+## Diagnostic personnel confirmé et suite
+
+La capture personnelle du 17 octobre à 14:24 confirme `databaseConnected: true`, `databaseMatched: true`, `scope: raw_underscore_pattern`, `privilegeProfile: shared_admin` et visibilité non prouvée. Le refus strict est donc expliqué. La suite est le [checkpoint limité aux données applicatives](application-table-checkpoint.md), avec formats et couverture distincts et sans nouvelle saisie de mot de passe. Les anciennes commandes ci-dessous sont conservées comme preuve du chemin strict ; elles ne doivent pas servir à contourner ce refus.
+
 ## Parcours personnel court
 
 Après le refus du 17 octobre à 13:48 Europe/Paris, la première action est désormais un **diagnostic en lecture seule, sans arrêter l’application**. Le refus `PRIVATE_CHECKPOINT_INSPECTION` n’a produit aucune sauvegarde ; les anciens reçus de préparation ne prouvent pas la réussite de cette inspection. Le lanceur demande le mot de passe SQL du compte de migration ou d’inspection existant dans la console SSH personnelle. Il ne faut pas le saisir dans la conversation. Le compte applicatif garde ses droits actuels.

@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { readCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
+import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { PrivateCheckpointError, archiveCheckpoint, parseArguments, run, main } from "../scripts/private-checkpoint.mjs";
 
 const base = fileURLToPath(new URL("../../audit/", import.meta.url));
@@ -83,9 +84,9 @@ async function fixture(t) {
   const state = { events: [], loaded: [], usedEnvironments: [], keys: [], dumps: 0, prepares: 0, secretReads: 0,
     manifests: 0, compares: 0, copies: 0, verifications: 0, tools: 0, identities: 0, clocks: 0, snapshot };
   const inputStream = { isTTY: true };
-  const command = (mode = "capture") => [mode, ...(mode === "capture" ? ["--offline"] : []),
+  const command = (mode = "capture") => [mode, ...(["capture", "capture-application"].includes(mode) ? ["--offline"] : []),
     "--private-directory", privateDirectory, "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination,
-    "--inspection-user", "synthetic_inspection"];
+    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"])];
   const dependencies = {
     inheritedEnv: { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" }, execArgv: [], inputStream,
     async scopeOperation(directory, operation) { return operation(await syntheticScope(directory)); },
@@ -108,20 +109,27 @@ async function fixture(t) {
       state.identities += 1;
       state.events.push("identity");
     },
+    async inspectApplicationIdentity(environment) {
+      assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_USER, undefined);
+      assert.equal(environment.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, runtimePassword);
+      assert.equal(environment.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE, "infomaniak-shared-pattern");
+      await assert.rejects(lstat(destination), { code: "ENOENT" });
+      state.usedEnvironments.push(environment); state.identities += 1; state.events.push("application-identity");
+    },
     async prepare(args, environment, parameters) {
       assert.equal(args[0], "prepare");
       assert.equal(args[1], "--offline");
       assert.equal(args[2], "--manifest");
-      assert.deepEqual(args.slice(4), ["--profile", "photos-notify"]);
-      assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_USER, "synthetic_inspection");
-      assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD, inspectionPassword);
+      assert.deepEqual(args.slice(4), ["--profile", state.application ? "photos-notify-application" : "photos-notify"]);
+      assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_USER, state.application ? undefined : "synthetic_inspection");
+      assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD, state.application ? undefined : inspectionPassword);
       assert.equal(environment.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, runtimePassword);
       assert.equal(environment.JESSIEMESSAGE_MEDIA_ROOT, mediaRoot);
       assert.equal(typeof parameters.outputStream.write, "function");
       state.usedEnvironments.push(environment);
       state.prepares += 1;
       state.events.push(`prepare:${basename(args[3])}`);
-      await writeFile(args[3], `${JSON.stringify({ version: 3, profile: "messaging-photos-notify", payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
+      await writeFile(args[3], `${JSON.stringify({ version: state.application ? 4 : 3, profile: state.application ? "messaging-photos-notify-application" : "messaging-photos-notify", payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
         { mode: 0o600, flag: "wx" });
       return { command: "prepare", verified: true, prepared: true, restored: false };
     },
@@ -135,9 +143,11 @@ async function fixture(t) {
     compareSnapshots({ expected, actual, mode }) { assert.equal(mode, "exact"); state.compares += 1; assert.deepEqual(actual, expected); },
     async dump(scope, target, configuration, password, parameters) {
       assert.equal(scope.path, destination);
-      assert.deepEqual(target, { user: "synthetic_inspection", database: "synthetic_checkpoint" });
+      assert.deepEqual(target, { user: state.application ? "synthetic_runtime" : "synthetic_inspection", database: "synthetic_checkpoint" });
       assert.deepEqual(configuration, { host: "db.example.invalid", port: "3306" });
-      assert.equal(password, inspectionPassword);
+      assert.equal(password, state.application ? runtimePassword : inspectionPassword);
+      if (state.application) { assert.equal(parameters.tables.length, 30); assert.equal(new Set(parameters.tables).size, 30); assert.ok(parameters.tables.includes("schema_migrations")); }
+      else assert.equal(parameters.tables, undefined);
       state.dumps += 1;
       state.events.push(`dump:${state.dumps}`);
       if (state.dumps === 1) {
@@ -345,6 +355,50 @@ test("offline capture verifies two SQL dumps and both manifests, builds the real
   assert.deepEqual(await readFile(join(f.mediaRoot, mediaName("full"))), f.full);
   publicOnly(result, f);
   cleared(f.state);
+});
+
+test("application precheck and inspection use existing guarded credentials without password input or files", async (t) => {
+  for (const mode of ["check-application", "inspect-application"]) {
+    const f = await fixture(t);
+    const result = await run(parseArguments(f.command(mode)), { ...f.dependencies, readSecret: () => assert.fail("no personal input in application mode") });
+    assert.equal(result.status, mode === "check-application" ? "application_precheck_passed" : "application_inspection_verified");
+    assert.equal(result.profile, "messaging-photos-notify-application"); assert.deepEqual(result.coverage, APPLICATION_COVERAGE);
+    assert.equal(result.checkpointSaved, false); assert.equal(result.passwordInputRequired, false);
+    assert.equal(f.state.secretReads, 0); assert.equal(f.state.prepares, 0); assert.equal(f.state.dumps, 0);
+    assert.equal(f.state.identities, mode === "check-application" ? 0 : 1);
+    await assert.rejects(lstat(f.destination), { code: "ENOENT" }); publicOnly(result, f); cleared(f.state);
+    const invalid = f.command(mode); invalid.push("--inspection-user", "synthetic_inspection");
+    assert.throws(() => parseArguments(invalid), { code: "PRIVATE_CHECKPOINT_USAGE" });
+  }
+});
+
+test("application capture archives the limited manifest and matching coverage receipt without reading a password", { timeout: 15000 }, async (t) => {
+  const f = await fixture(t); f.state.application = true;
+  Object.assign(f.state.snapshot, { version: 2, coverage: { ...APPLICATION_COVERAGE } });
+  const result = await run(parseArguments(f.command("capture-application")), { ...f.dependencies, readSecret: () => assert.fail("no personal input") });
+  assert.equal(result.status, "application_checkpoint_saved"); assert.equal(result.profile, "messaging-photos-notify-application");
+  assert.deepEqual(result.coverage, APPLICATION_COVERAGE); assert.equal(result.coverage.completeDatabase, false);
+  assert.equal(f.state.secretReads, 0); assert.equal(f.state.dumps, 2); assert.equal(f.state.prepares, 2); assert.equal(f.state.compares, 1);
+  const receipt = await readCheckpointReceipt(await syntheticScope(f.destination));
+  assert.equal(receipt.version, 2); assert.equal(receipt.profile, result.profile); assert.deepEqual(receipt.coverage, APPLICATION_COVERAGE);
+  assert.equal(result.archiveContentsVerified, true); assert.equal(result.sqlRestorePending, true); assert.equal(result.independentCopyPending, true);
+  publicOnly(result, f); cleared(f.state);
+});
+
+test("application capture refuses missing coverage or a strict manifest before dumping data", async (t) => {
+  for (const variant of ["missing", "strict", "falsified"]) {
+    const f = await fixture(t); f.state.application = true;
+    Object.assign(f.state.snapshot, { version: 2, ...(variant === "missing" ? {} : { coverage: { ...APPLICATION_COVERAGE, completeDatabase: variant === "falsified" } }) });
+    const prepare = f.dependencies.prepare;
+    await assert.rejects(run(parseArguments(f.command("capture-application")), { ...f.dependencies,
+      async prepare(...args) {
+        const result = await prepare(...args);
+        if (variant === "strict") { const file = args[0][3], value = JSON.parse(await readFile(file, "utf8")); value.version = 3; value.profile = "messaging-photos-notify"; await writeFile(file, JSON.stringify(value)); }
+        return result;
+      } }), neutral);
+    assert.equal(f.state.dumps, 0); assert.equal(f.state.secretReads, 0);
+    await assert.rejects(lstat(join(f.destination, "checkpoint.tar.gz")), { code: "ENOENT" }); cleared(f.state);
+  }
 });
 
 test("an existing destination is rejected before password input or any database operation", async (t) => {

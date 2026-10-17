@@ -472,6 +472,45 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       assert.equal(await databaseHash(restoreDatabase), completed); await sourceUnchanged();
     });
 
+    await t.test("application-table checkpoint uses runtime privileges, keeps explicit coverage and restores only its isolated clone", async () => {
+      const { APPLICATION_COVERAGE, createApplicationInspectionPool } = await import("../server/backup/application-scope.mjs");
+      const { createBackupSnapshotStore, captureBackupSnapshot } = await import("../server/backup/snapshot.mjs");
+      const { createBackupInspectionPool } = await import("../server/backup/inspection.mjs");
+      const appInspector = await createApplicationInspectionPool(process.env), strictInspector = await createBackupInspectionPool(process.env);
+      try {
+        const app = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool: appInspector, coverage: "application-tables" }) });
+        const strict = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool: strictInspector }) });
+        assert.equal(app.version, 2); assert.deepEqual(app.coverage, APPLICATION_COVERAGE);
+        assert.equal(app.schemaDigest, strict.schemaDigest); assert.equal(app.coreDigest, strict.coreDigest); assert.deepEqual(app.counts, strict.counts);
+        await sourceConnection.query("CREATE TRIGGER synthetic_application_scope BEFORE UPDATE ON media_storage_state FOR EACH ROW SET NEW.held_bytes = NEW.held_bytes");
+        try {
+          await assert.rejects(captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool: strictInspector }) }), backupError);
+          const scoped = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool: appInspector, coverage: "application-tables" }) });
+          assert.equal(scoped.coreDigest, app.coreDigest); assert.equal(scoped.coverage.executableInventory, "unproven");
+          assert.equal(scoped.coverage.completeDatabase, false);
+        } finally { await sourceConnection.query("DROP TRIGGER synthetic_application_scope"); }
+      } finally { await Promise.all([appInspector.end(), strictInspector.end()]); }
+      const notificationKey = randomBytes(32);
+      const deps = (database, root) => {
+        const selected = dependencies(database, root), configure = selected.configure;
+        selected.configure = () => { const config = configure(); delete config.keys.crmKey; config.keys.notificationKey = notificationKey; return config; };
+        return selected;
+      };
+      const file = path.join(temporaryRoot, "application-tables-checkpoint.json");
+      const args = command => [command, "--offline", "--manifest", file, "--profile", "photos-notify-application"];
+      assert.equal((await main(args("prepare"), process.env, deps(options.database, sourceRoot))).prepared, true);
+      const manifest = JSON.parse(await readFile(file, "utf8"));
+      assert.equal(manifest.version, 4); assert.equal(manifest.profile, "messaging-photos-notify-application");
+      assert.deepEqual(manifest.payload.snapshot.coverage, APPLICATION_COVERAGE);
+      await assert.rejects(main(["verify", "--offline", "--manifest", file, "--profile", "photos-notify"], targetEnv, deps(restoreDatabase, targetRoot)), backupError);
+      await clone();
+      const before = await databaseHash(restoreDatabase);
+      assert.equal((await main(args("verify"), targetEnv, deps(restoreDatabase, targetRoot))).verified, true);
+      assert.equal(await databaseHash(restoreDatabase), before);
+      assert.equal((await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot))).restored, true);
+      await assertRestored();
+    });
+
     await t.test("notification photo checkpoint restores encrypted subscriptions and pending jobs offline without changing delivery state", async () => {
       const notificationKey = randomBytes(32), subscriptionId = id(), jobId = id();
       const curve = createECDH("prime256v1"); curve.generateKeys();
