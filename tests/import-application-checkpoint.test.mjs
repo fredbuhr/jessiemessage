@@ -77,10 +77,10 @@ test("the optional recovery profile is closed and absent from every legacy optio
   await assert.rejects(run(legacy, dependencies([])), neutral("USAGE")); assert.equal(getter, false);
 });
 
-for (const crm of [false, true]) test(`${crm ? "CRM and recovery" : "recovery"} restore carries its exact profile through all checks without activating a runtime`, async () => {
+for (const { crm, broadcast = false } of [{ crm: false }, { crm: true }, { crm: true, broadcast: true }]) test(`${broadcast ? "broadcast, CRM and recovery" : crm ? "CRM and recovery" : "recovery"} restore carries its exact profile through all checks without activating a runtime`, async () => {
   const events = [], selections = [];
-  const selectedProfile = `photos-notify-recovery${crm ? "-crm" : ""}`;
-  const profile = { version: crm ? 6 : 4, profile: `messaging-${selectedProfile}-application` };
+  const selectedProfile = `photos-notify-recovery${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}`;
+  const profile = { version: broadcast ? 8 : crm ? 6 : 4, profile: `messaging-${selectedProfile}-application` };
   const original = dependencies(events);
   const result = await run(parseArguments([...args("restore"), "--profile", selectedProfile]), { ...original,
     verify: async (selected, options) => {
@@ -97,15 +97,15 @@ for (const crm of [false, true]) test(`${crm ? "CRM and recovery" : "recovery"} 
   assert.equal(selections.length, 3); assert.deepEqual(events, ["check-application", "client", "sql", "load", "password", "connect", "empty", "close", "check-application", "import", "verify-application"]);
 });
 
-for (const crm of [false, true]) test(`${crm ? "CRM and recovery" : "recovery"} restoration cannot downgrade its verified precheck or final receipt`, async () => {
+for (const { crm, broadcast = false } of [{ crm: false }, { crm: true }, { crm: true, broadcast: true }]) test(`${broadcast ? "broadcast, CRM and recovery" : crm ? "CRM and recovery" : "recovery"} restoration cannot downgrade its verified precheck or final receipt`, async () => {
   for (const stage of ["precheck", "final"]) {
     const events = [], original = dependencies(events);
-    const selectedProfile = `photos-notify-recovery${crm ? "-crm" : ""}`;
+    const selectedProfile = `photos-notify-recovery${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}`;
     await assert.rejects(run(parseArguments([...args("restore"), "--profile", selectedProfile]), { ...original,
       verify: async (selected, options) => {
         const report = await original.verify(selected, options);
         return stage === "precheck" || selected.command === "verify-application" ? { ...report, version: 2, profile: "messaging-photos-notify-application" }
-          : { ...report, version: crm ? 6 : 4, profile: `messaging-${selectedProfile}-application` };
+          : { ...report, version: broadcast ? 8 : crm ? 6 : 4, profile: `messaging-${selectedProfile}-application` };
       },
     }), neutral(stage === "precheck" ? "CHECKPOINT" : "VERIFY"));
     assert.equal(events.includes("import"), stage === "final");

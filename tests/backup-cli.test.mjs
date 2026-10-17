@@ -6,6 +6,7 @@ import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { tokenDigest } from "../server/auth/crypto.mjs";
 import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 import { loadRuntimeCrmEnvironment, CRM_RUNTIME_OPTIONS } from "../server/config/runtime-crm.mjs";
+import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { bundle as crmBundle } from "./fixtures/crm-private.mjs";
 
 const manifestPath = "/private-backup/manifest.json";
@@ -421,4 +422,25 @@ test("schema inspection uses its separate pool and closes both pools even if one
   const shared = fixture(); shared.dependencies.createInspectionPool = async () => shared.pool;
   await assert.rejects(main(args("verify"), {}, shared.dependencies), errorCode("BACKUP_CONFIG"));
   assert.equal(shared.state.captures, 0); assert.equal(shared.events.filter((item) => item === "pool-end").length, 1);
+});
+
+test("the real broadcast backup configuration forwards the same six keys and refuses disabled broadcasts before opening SQL", async () => {
+  const env = await loadRuntimeBroadcastEnvironment("/private/synthetic-crm", CRM_RUNTIME_OPTIONS, { readBundle: async () => crmBundle() });
+  const f = fixture({ source: true });
+  f.config.databaseName = env.JESSIEMESSAGE_DB_NAME;
+  f.config.media.capacity = { ownerBytes: Number(env.JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES), totalBytes: Number(env.JESSIEMESSAGE_MEDIA_TOTAL_BYTES) };
+  const create = f.manifests.createBackupManifest;
+  f.manifests.createBackupManifest = value => ({ ...create(value), version: 9, profile: value.profile });
+  assert.equal((await main([...args("prepare"), "--profile", "photos-notify-recovery-crm-broadcast"], env, { ...f.dependencies, configure: undefined })).prepared, true);
+  const crypto = f.events.find(event => Array.isArray(event) && event[0] === "crypto")[1];
+  assert.deepEqual(Object.keys(crypto.keys).sort(), ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey", "crmKey"].sort());
+  assert.equal(crypto.keys.crmKey.toString("base64url"), env.JESSIEMESSAGE_CRM_KEY); assert.equal(f.state.manifest.profile, "messaging-photos-notify-recovery-crm-broadcast");
+  for (const override of [{ JESSIEMESSAGE_ENABLE_CRM: "0" }, { JESSIEMESSAGE_ENABLE_BROADCAST: "0" },
+    { JESSIEMESSAGE_CRM_KEY: "" }, { JESSIEMESSAGE_CRM_KEY: env.JESSIEMESSAGE_MESSAGE_KEY }]) {
+    let opened = false;
+    await assert.rejects(main([...args("prepare"), "--profile", "photos-notify-recovery-crm-broadcast"], { ...env, ...override }, {
+      createPool: async () => { opened = true; assert.fail("Invalid profile cannot reach SQL"); },
+    }));
+    assert.equal(opened, false);
+  }
 });

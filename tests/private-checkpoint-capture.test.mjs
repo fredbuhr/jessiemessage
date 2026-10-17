@@ -11,6 +11,7 @@ import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { readCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
 import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
@@ -70,7 +71,7 @@ async function syntheticScope(directory) {
   };
 }
 
-async function fixture(t, { crm = false, recovery = crm } = {}) {
+async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm } = {}) {
   await mkdir(base, { recursive: true, mode: 0o700 });
   const root = await mkdtemp(join(base, "private-checkpoint-capture-"));
   await chmod(root, 0o700);
@@ -87,14 +88,14 @@ async function fixture(t, { crm = false, recovery = crm } = {}) {
   const inputStream = { isTTY: true };
   const command = (mode = "capture") => [mode, ...(["capture", "capture-application"].includes(mode) ? ["--offline"] : []),
     "--private-directory", privateDirectory, "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination,
-    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", `photos-notify-recovery${crm ? "-crm" : ""}`] : [])];
+    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", `photos-notify-recovery${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}`] : [])];
   const dependencies = {
     inheritedEnv: { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" }, execArgv: [], inputStream,
     async scopeOperation(directory, operation) { return operation(await syntheticScope(directory)); },
     async loadEnvironment(directory, parameters) {
       assert.equal(directory, privateDirectory);
       assert.deepEqual(parameters, { port: "3000", ...(recovery ? { originProfile: "primary", recovery: true } : {}) });
-      const environment = await (crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment)(directory, parameters,
+      const environment = await (broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment)(directory, parameters,
         { readBundle: async () => ({ ...bundle(mediaRoot, recovery ? "https://jessiemessage.com" : origin),
           ...(crm ? { crm: { version: 1, origin: "https://jessiemessage.com", crmKey: key(6) } } : {}) }) });
       state.loaded.push(environment);
@@ -123,7 +124,7 @@ async function fixture(t, { crm = false, recovery = crm } = {}) {
       assert.equal(args[0], "prepare");
       assert.equal(args[1], "--offline");
       assert.equal(args[2], "--manifest");
-      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${state.application ? "-application" : ""}`]);
+      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${state.application ? "-application" : ""}`]);
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_USER, state.application ? undefined : "synthetic_inspection");
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD, state.application ? undefined : inspectionPassword);
       assert.equal(environment.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, runtimePassword);
@@ -132,8 +133,8 @@ async function fixture(t, { crm = false, recovery = crm } = {}) {
       state.usedEnvironments.push(environment);
       state.prepares += 1;
       state.events.push(`prepare:${basename(args[3])}`);
-      await writeFile(args[3], `${JSON.stringify({ version: crm ? state.application ? 8 : 7 : recovery ? state.application ? 6 : 5 : state.application ? 4 : 3,
-        profile: `messaging-photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${state.application ? "-application" : ""}`, payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
+      await writeFile(args[3], `${JSON.stringify({ version: broadcast ? state.application ? 10 : 9 : crm ? state.application ? 8 : 7 : recovery ? state.application ? 6 : 5 : state.application ? 4 : 3,
+        profile: `messaging-photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${state.application ? "-application" : ""}`, payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
         { mode: 0o600, flag: "wx" });
       return { command: "prepare", verified: true, prepared: true, restored: false };
     },
@@ -599,4 +600,20 @@ test("a private configuration key changed during capture prevents success even a
   assert.equal(output, "");
   assert.equal((await lstat(join(f.destination, "checkpoint.tar.gz"))).isFile(), true);
   cleared(f.state);
+});
+
+test("Broadcast checkpoint capture carries all six keys through strict and application archives, then erases only owned secrets", { timeout: 15000 }, async t => {
+  for (const application of [false, true]) {
+    const f = await fixture(t, { broadcast: true }); f.state.application = application;
+    if (application) Object.assign(f.state.snapshot, { version: 2, coverage: { ...APPLICATION_COVERAGE } });
+    const report = await run(parseArguments(f.command(application ? "capture-application" : "capture")), f.dependencies);
+    const receipt = await readCheckpointReceipt(await syntheticScope(f.destination));
+    assert.equal(receipt.version, application ? 8 : 7); assert.equal(receipt.profile, `messaging-photos-notify-recovery-crm-broadcast${application ? "-application" : ""}`);
+    assert.equal(report.profile, receipt.profile); assert.equal(report.archiveContentsVerified, true);
+    assert.equal(report.started, false); assert.equal(report.migrationPerformed, false); assert.equal(report.capacityRebound, false);
+    assert.equal(f.state.secretReads, application ? 0 : 1);
+    for (const env of f.state.loaded) assert.equal(env.JESSIEMESSAGE_CRM_KEY, "");
+    for (const keys of f.state.keys) assert.equal(keys.crmKey.equals(Buffer.alloc(32)), true);
+    publicOnly(report, f); cleared(f.state);
+  }
 });

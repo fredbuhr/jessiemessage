@@ -560,11 +560,24 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       for (const text of output) assert.equal(text.includes(notificationKey.toString("base64url")) || text.includes(subscription.endpoint), false);
     });
 
-    for (const crmProfile of [false, true]) await t.test(`${crmProfile ? "CRM and recovery" : "recovery"} notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push`, async () => {
+    for (const { crm: crmProfile, broadcast = false } of [{ crm: false }, { crm: true }, { crm: true, broadcast: true }]) await t.test(`${broadcast ? "broadcast, CRM and recovery" : crmProfile ? "CRM and recovery" : "recovery"} notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push`, async () => {
       // This starts with real populated tables and authenticated ciphertext,
       // then copies SQL to the separately named disposable schema. No worker,
       // HTTP application, mail transport or Push transport is started.
       for (const table of ["push_outbox", "push_subscriptions"]) await sourceConnection.query(`DELETE FROM ${qualified(options.database, table)}`);
+      if (broadcast) for (const table of ["broadcast_recipients", "broadcast_campaigns", "broadcast_preferences", "crm_memberships", "crm_labels", "crm_profiles"])
+        await sourceConnection.query(`DELETE FROM ${qualified(options.database, table)}`);
+      const broadcastId = id(), broadcastPayload = { title: "Synthetic full backup campaign", body: "Synthetic restored campaign only", mediaId: null,
+        allowRepeatMedia: false, conversationIds: [conversationId.toString("hex")] };
+      const broadcastEncrypted = sealPayload(broadcastPayload, keys.messageKey, { adminId: admin.id, campaignId: broadcastId });
+      if (broadcast) {
+        await sourceConnection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 1, 1, ?, ?)", [client.id, sqlDate(now), sqlDate(now)]);
+        await sourceConnection.query(`INSERT INTO broadcast_campaigns (id, admin_id, client_campaign_id, mfa_version, payload_encrypted, request_fingerprint,
+          created_at, updated_at, expires_at) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?)`, [broadcastId, admin.id, id(), broadcastEncrypted,
+          campaignFingerprint(broadcastPayload, keys.messageKey, { adminId: admin.id }), sqlDate(now), sqlDate(now), sqlDate(now + 86400000)]);
+        await sourceConnection.query(`INSERT INTO broadcast_recipients (campaign_id, conversation_id, client_id, proposed_message_id, client_message_id, available_at, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`, [broadcastId, conversationId, client.id, id(), id(), sqlDate(now), sqlDate(now)]);
+      }
       const notificationKey = randomBytes(32), subscriptionId = id(), pushJobId = id(), recoveryId = id(), recoveryJobId = id();
       const recoveryToken = randomBytes(32).toString("base64url");
       const curve = createECDH("prime256v1"); curve.generateKeys();
@@ -601,7 +614,7 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         };
         return selected;
       };
-      const profileName = `photos-notify-recovery${crmProfile ? "-crm" : ""}`;
+      const profileName = `photos-notify-recovery${crmProfile ? "-crm" : ""}${broadcast ? "-broadcast" : ""}`;
       const file = path.join(temporaryRoot, `${profileName}-application-checkpoint.json`);
       const args = command => [command, "--offline", "--manifest", file, "--profile", `${profileName}-application`];
       await assert.rejects(main(["prepare", "--offline", "--manifest", path.join(temporaryRoot, "must-not-hide-recovery.json"), "--profile", "photos-notify"],
@@ -612,13 +625,15 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         await assert.rejects(main(["prepare", "--offline", "--manifest", path.join(temporaryRoot, "must-not-hide-crm.json"), "--profile", "photos-notify-recovery"], process.env, oldProfile), backupError);
       }
       const strictFile = path.join(temporaryRoot, `${profileName}-strict-checkpoint.json`);
+      if (broadcast) await assert.rejects(main(["prepare", "--offline", "--manifest", path.join(temporaryRoot, "must-not-hide-campaigns.json"),
+        "--profile", "photos-notify-recovery-crm"], process.env, deps(options.database, sourceRoot)), backupError);
       assert.equal((await main(["prepare", "--offline", "--manifest", strictFile, "--profile", profileName],
         process.env, deps(options.database, sourceRoot))).prepared, true);
       const strictManifest = JSON.parse(await readFile(strictFile, "utf8"));
-      assert.equal(strictManifest.version, crmProfile ? 7 : 5); assert.equal(strictManifest.profile, `messaging-${profileName}`);
+      assert.equal(strictManifest.version, broadcast ? 9 : crmProfile ? 7 : 5); assert.equal(strictManifest.profile, `messaging-${profileName}`);
       assert.equal((await main(args("prepare"), process.env, deps(options.database, sourceRoot))).prepared, true);
       const manifest = JSON.parse(await readFile(file, "utf8"));
-      assert.equal(manifest.version, crmProfile ? 8 : 6); assert.equal(manifest.profile, `messaging-${profileName}-application`);
+      assert.equal(manifest.version, broadcast ? 10 : crmProfile ? 8 : 6); assert.equal(manifest.profile, `messaging-${profileName}-application`);
       assert.equal(manifest.payload.snapshot.version, 2);
       assert.equal(manifest.payload.snapshot.coverage.scope, "application-tables");
       assert.equal(manifest.payload.snapshot.coverage.completeDatabase, false);
@@ -658,6 +673,12 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         assert.equal(profile.notes_encrypted, notesEncrypted); assert.equal(openNotes(profile.notes_encrypted, keys.crmKey, { adminId: admin.id, conversationId, version: "2" }), privateNotes);
         assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS n FROM crm_memberships WHERE admin_id = ? AND conversation_id = ? AND label_id = ?", [admin.id, conversationId, labelId]))[0].n), 1);
         assert.equal((await targetConnection.query("SELECT name FROM crm_labels WHERE id = ?", [labelId]))[0].name, "Synthetic restore label");
+      }
+      if (broadcast) {
+        const campaign = (await targetConnection.query("SELECT payload_encrypted, status FROM broadcast_campaigns WHERE id = ?", [broadcastId]))[0];
+        assert.equal(campaign.payload_encrypted, broadcastEncrypted); assert.equal(campaign.status, "queued");
+        assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS n FROM broadcast_recipients WHERE campaign_id = ? AND status = 'pending'", [broadcastId]))[0].n), 1);
+        assert.equal(Number((await targetConnection.query("SELECT enabled FROM broadcast_preferences WHERE user_id = ?", [client.id]))[0].enabled), 1);
       }
       const completed = await databaseHash(restoreDatabase);
       assert.equal((await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot))).restored, true);

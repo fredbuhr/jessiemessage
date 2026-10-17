@@ -39,7 +39,7 @@ function configuration(env, profile) {
   const notifications = loadNotificationsConfig(env);
   if ([media, auth, access, chat].some((value) => value.enabled !== true) || (!photos || crmProfile) && crm.enabled !== true
     || photos && ((crmProfile ? env.JESSIEMESSAGE_ENABLE_CRM !== "1" : ![undefined, "0"].includes(env.JESSIEMESSAGE_ENABLE_CRM))
-      || ![undefined, "0"].includes(env.JESSIEMESSAGE_ENABLE_BROADCAST)
+      || !(selected?.broadcast ? ["1"] : [undefined, "0"]).includes(env.JESSIEMESSAGE_ENABLE_BROADCAST)
       || !(recovery ? [undefined, "0", "1"] : [undefined, "0"]).includes(env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY))
     || Boolean(selected?.notifications) !== notifications.enabled) fail("BACKUP_CONFIG");
   return { media, databaseName: runtimeDatabaseOptions(env).database,
@@ -54,7 +54,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
   try {
     checkSignal(dependencies.signal);
     const selected = photoBackupProfile(options.profile), photos = Boolean(selected), notifications = selected?.notifications,
-      application = selected?.application, recovery = selected?.recovery, crm = selected?.crm;
+      application = selected?.application, recovery = selected?.recovery, crm = selected?.crm, broadcast = selected?.broadcast;
     const keyNames = [...["totpKey", "mailKey", "messageKey", "mediaKey"], ...(!photos || crm ? ["crmKey"] : []), ...(notifications ? ["notificationKey"] : [])];
     const config = (dependencies.configure ?? configuration)(env, options.profile), { media, keys } = config ?? {};
     if (media?.enabled !== true || !media.capacity || typeof config.databaseName !== "string" || !/^[A-Za-z0-9_]{1,64}$/.test(config.databaseName)
@@ -67,7 +67,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     const manifests = dependencies.manifests ?? await import("../server/backup/manifest.mjs");
     const snapshots = dependencies.snapshots ?? await import("../server/backup/snapshot.mjs");
     const verification = await import("../server/backup/verify.mjs");
-    const verifyCrypto = dependencies.verifyBackupData ?? (crm ? verification.verifyPhotoNotificationRecoveryCrmBackupData : recovery ? verification.verifyPhotoNotificationRecoveryBackupData
+    const verifyCrypto = dependencies.verifyBackupData ?? (broadcast ? verification.verifyPhotoNotificationRecoveryCrmBroadcastBackupData : crm ? verification.verifyPhotoNotificationRecoveryCrmBackupData : recovery ? verification.verifyPhotoNotificationRecoveryBackupData
       : notifications ? verification.verifyPhotoNotificationBackupData : photos ? verification.verifyPhotoBackupData : verification.verifyBackupData);
     const makeCryptoStore = dependencies.makeCryptoStore ?? (await import("../server/backup/crypto-store.mjs")).createBackupCryptoStore;
     let manifest, payload;

@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { checkpointBackupProfile } from "../server/backup/profiles.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
@@ -250,8 +251,8 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       "--checkpoint-directory", value.checkpointDirectory, "--database", value.database, "--confirm-database", value.confirmation, "--user", value.user,
       ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : [])]);
     if (!["check-application", "verify-application"].includes(selected.command) || !/^[a-f0-9]{64}$/.test(value.sqlSha256)) fail("USAGE");
-    const { recovery, crm, receiptVersion, manifestProfile } = checkpointBackupProfile(selected.profile, true);
-    loadEnvironment ??= crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
+    const { recovery, crm, broadcast, receiptVersion, manifestProfile } = checkpointBackupProfile(selected.profile, true);
+    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     const matchesRecovery = report => !recovery || report?.version === receiptVersion && report.profile === manifestProfile;
     active(signal); const processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv);
     const check = { ...selected, command: "check-application" }, dependencies = { inheritedEnv, execArgv, signal };

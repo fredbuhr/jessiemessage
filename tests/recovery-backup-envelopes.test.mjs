@@ -10,6 +10,8 @@ import { CheckpointReceiptError, readCheckpointReceipt, writeCheckpointReceipt }
 
 const names = ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"];
 const profiles = [
+  { profile: "messaging-photos-notify-recovery-crm-broadcast", version: 9, receiptVersion: 7, legacyVersion: 7, legacyProfile: "messaging-photos-notify-recovery-crm", application: false, crm: true, broadcast: true },
+  { profile: "messaging-photos-notify-recovery-crm-broadcast-application", version: 10, receiptVersion: 8, legacyVersion: 8, legacyProfile: "messaging-photos-notify-recovery-crm-application", application: true, crm: true, broadcast: true },
   { profile: "messaging-photos-notify-recovery", version: 5, receiptVersion: 3, legacyVersion: 3, legacyProfile: "messaging-photos-notify", application: false },
   { profile: "messaging-photos-notify-recovery-application", version: 6, receiptVersion: 4, legacyVersion: 4, legacyProfile: "messaging-photos-notify-application", application: true },
   { profile: "messaging-photos-notify-recovery-crm", version: 7, receiptVersion: 5, legacyVersion: 5, legacyProfile: "messaging-photos-notify-recovery", application: false, crm: true },
@@ -68,7 +70,7 @@ for (const spec of profiles) {
 
   test(`recovery v${spec.version} and legacy v${spec.legacyVersion} cannot be relabeled, including with the media signing key`, () => {
     const value = input(spec), recovery = createBackupManifest(value);
-    const legacyKeys = Object.fromEntries(Object.entries(value.keys).filter(([name]) => name !== "crmKey"));
+    const legacyKeys = Object.fromEntries(Object.entries(value.keys).filter(([name]) => spec.broadcast || name !== "crmKey"));
     const legacy = createBackupManifest({ ...value, keys: legacyKeys, profile: spec.legacyProfile });
     assert.equal(legacy.version, spec.legacyVersion);
     for (const [original, version, profile] of [[recovery, spec.legacyVersion, spec.legacyProfile], [legacy, spec.version, spec.profile]]) {
@@ -110,7 +112,7 @@ for (const spec of profiles) {
       schema: { tables: 30, migrations: 30 }, sql: { file: "database.sql.gz", bytes: 120, sha256: "b".repeat(64), uncompressedBytes: 700, uncompressedSha256: "c".repeat(64) },
       manifest: { file: "manifest.json", sha256: createHash("sha256").update("synthetic").digest("hex") }, media: { files: [], bytes: 0 } };
     for (const change of [v => { v.version = spec.application ? 2 : 1; }, v => { v.profile = spec.legacyProfile; },
-      v => { v.version = 7; }, v => { v.extra = true; }, v => { v.schema.tables = 29; },
+      v => { v.version = 99; }, v => { v.extra = true; }, v => { v.schema.tables = 29; },
       v => { if (spec.application) delete v.coverage; else v.coverage = { ...APPLICATION_COVERAGE }; },
       v => { if (spec.application) v.coverage.executableInventory = "proven"; else v.version = 4; }]) {
       const changed = copy(receipt); change(changed);

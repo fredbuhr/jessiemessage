@@ -8,12 +8,14 @@ const definitions = [
   ["photos-notify-recovery-application", 6, 4],
   ["photos-notify-recovery-crm", 7, 5],
   ["photos-notify-recovery-crm-application", 8, 6],
+  ["photos-notify-recovery-crm-broadcast", 9, 7],
+  ["photos-notify-recovery-crm-broadcast-application", 10, 8],
 ].map(([name, manifestVersion, receiptVersion]) => Object.freeze({
   name, manifestProfile: `messaging-${name}`, manifestVersion, receiptVersion,
-  notifications: name !== "photos", recovery: name.includes("-recovery"), crm: name.includes("-crm"), application: name.endsWith("-application"),
+  notifications: name !== "photos", recovery: name.includes("-recovery"), crm: name.includes("-crm"), broadcast: name.includes("-broadcast"), application: name.endsWith("-application"),
 }));
 export const PHOTO_BACKUP_PROFILES = Object.freeze(definitions.map(value => value.name));
-export const CHECKPOINT_RUNTIME_PROFILES = Object.freeze(["photos-notify-recovery", "photos-notify-recovery-crm"]);
+export const CHECKPOINT_RUNTIME_PROFILES = Object.freeze(["photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast"]);
 export const photoBackupProfile = name => definitions.find(value => value.name === name) ?? null;
 export const manifestBackupProfile = name => definitions.find(value => value.manifestProfile === name) ?? null;
 export function checkpointBackupProfile(name, application = false) {

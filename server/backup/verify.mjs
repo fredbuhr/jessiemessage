@@ -70,12 +70,18 @@ export async function verifyPhotoNotificationRecoveryBackupData({ pool, storage,
 export async function verifyPhotoNotificationRecoveryCrmBackupData({ pool, storage, keys, signal, limits = {} } = {}) {
   return verifyData({ pool, storage, keys, signal, limits }, "photos-notify-recovery-crm");
 }
+/** Campaign payloads and their complete recipient bindings use the existing
+ * message key. No worker, transport, claim or delivery is created offline. */
+export async function verifyPhotoNotificationRecoveryCrmBroadcastBackupData({ pool, storage, keys, signal, limits = {} } = {}) {
+  return verifyData({ pool, storage, keys, signal, limits }, "photos-notify-recovery-crm-broadcast");
+}
 export async function verifyFullNotificationBackupData({ store, storage, keys, signal, limits = {} } = {}) {
   return verifyData({ store, storage, keys, signal, limits }, "full-notify");
 }
 
 async function verifyData({ store, storage, keys, signal, limits = {}, pool } = {}, profile = "full") {
-  const textOnly = profile === "text", crm = profile === "photos-notify-recovery-crm";
+  const broadcast = profile === "photos-notify-recovery-crm-broadcast";
+  const textOnly = profile === "text", crm = broadcast || profile === "photos-notify-recovery-crm";
   const limited = crm || ["text", "photos", "photos-notify", "photos-notify-recovery"].includes(profile);
   const notifications = crm || ["photos-notify", "photos-notify-recovery", "full-notify"].includes(profile);
   const recovery = crm || profile === "photos-notify-recovery";
@@ -107,7 +113,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
       let connection;
       try {
         checkSignal(); connection = await pool.getConnection(); checkSignal();
-        for (const [purpose, tables] of TEXT_INACTIVE_TABLES.filter(([purpose]) => (textOnly || purpose !== "media") && (!notifications || purpose !== "notifications") && (!recovery || purpose !== "reset") && (!crm || purpose !== "crm"))) for (const table of tables) {
+        for (const [purpose, tables] of TEXT_INACTIVE_TABLES.filter(([purpose]) => (textOnly || purpose !== "media") && (!notifications || purpose !== "notifications") && (!recovery || purpose !== "reset") && (!crm || purpose !== "crm") && (!broadcast || purpose !== "broadcast"))) for (const table of tables) {
           currentPurpose = purpose; checkSignal();
           // Fixed table allowlist, EXISTS stops at the first row. Checking the
           // underlying tables also catches deleted assets and empty CRM notes.
@@ -216,7 +222,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
         } finally { if (Buffer.isBuffer(plaintext)) plaintext.fill(0); }
       }
     }
-    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, ...(recovery ? ["reset"] : []), ...(crm ? ["crm"] : []), "media", ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
+    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, ...(recovery ? ["reset"] : []), ...(crm ? ["crm"] : []), ...(broadcast ? ["broadcast"] : []), "media", ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
     for (const purpose of purposes) {
       currentPurpose = purpose;
       let afterId = null;
