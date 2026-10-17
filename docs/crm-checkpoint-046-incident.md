@@ -1,40 +1,57 @@
-# JessieMessage — diagnostic de la restauration CRM 0.46
+# JessieMessage — diagnostic et reprise du checkpoint CRM 0.46
 
-**Résultat à 23:41:52 Europe/Paris :** la nouvelle capture personnelle contient **`PRIVATE_CHECKPOINT_VERIFY_AUTHENTICATION`**. Le vérificateur classe ainsi le refus SQL natif 1045 lors de l’export du clone. L’identification SQL est donc refusée pour cette inspection, avant toute comparaison de données ; les trois droits sont déjà enregistrés. Le propriétaire doit utiliser le mot de passe SQL correct de `fb4hmr_jm_mig`, ou le redéfinir personnellement s’il ne le possède plus, puis relancer une seule inspection en lecture seule. L’agent n’obtient ni ne modifie ce secret. La restauration reste non confirmée.
+**État au 18 octobre 2026 à 00:05 Europe/Paris :** la reprise en une saisie est installée et son précontrôle passe. Adresse SQL, TLS, pilote Node, client natif et neuf cas de caractères de mot de passe sont vérifiés physiquement. Les dernières tentatives personnelles refusent l’identification de `fb4hmr_jm_mig`. Son identité doit être rétablie personnellement ; le nouveau lanceur inspectera ensuite la copie avant de décider d’importer ou de vérifier. Restauration non confirmée, service 0.42 actif, fiches et diffusions désactivées.
 
-## Résultat transmis à 23:32 le 17 octobre 2026
+## Diagnostic physique
 
-La capture du propriétaire contient `APPLICATION_CHECKPOINT_IMPORT_OPERATION: Application checkpoint restoration was not confirmed.` Elle est lisible depuis la pièce jointe locale malgré le message initial de fichier inaccessible. Elle ne constitue pas un reçu de restauration réussie.
+La capture personnelle de **23:32:28 le 17 octobre** contient `APPLICATION_CHECKPOINT_IMPORT_OPERATION`. Ce code général ne situe pas le premier échec : connexion, import ou vérification finale. Les captures de **23:41:52** et **23:50:13** contiennent `PRIVATE_CHECKPOINT_VERIFY_AUTHENTICATION`, catégorie fermée du refus SQL natif 1045, avant comparaison des données. Les pièces jointes sont lisibles localement malgré leur message initial d’accès impossible. Les caractères visibles dans un champ masqué ou retouché ne sont pas considérés comme le secret réellement utilisé.
 
-Le code de l’importateur remplace par `OPERATION` les exceptions internes qui ne sont pas déjà des `ApplicationCheckpointImportError`. Cela inclut notamment une erreur de connexion SQL ou une erreur du vérificateur final. La ligne transmise ne permet pas d’attribuer l’échec au mot de passe, à TLS, au réseau ou à une phase après import. Aucun nouvel import n’est relancé.
+Les trois droits **Lecture / Écriture / Administration** de `fb4hmr_jm_mig` sur `fb4hmr_jm_crm30_20261017` sont enregistrés et observés. Le Manager affiche 0 octet, ce qui ne prouve pas le vide SQL. Les autres droits sont conservés ; aucun compte n’est recréé.
 
-## Observations sans nouvelle saisie privée
+À **23:54:01.168452 le 17 octobre**, une sonde séparée utilise la configuration ancrée et son compte runtime distinct `fb4hmr_jm_app`, sans afficher les valeurs privées :
 
-- La page du compte `fb4hmr_jm_mig`, rechargée après la capture, confirme **Lecture / Écriture / Administration** cochées sur la seule nouvelle ligne `fb4hmr_jm_crm30_20261017`. Les autres lignes observées conservent leurs cases précédentes. L’agent ne modifie aucun droit ni mot de passe.
-- Le Manager affiche le clone à **0 octet**. Cette indication ne prouve pas que le schéma est vide ; le contrôle SQL reste nécessaire avant tout autre import.
-- Le service Node.js est **Actif**, avec son Run/Build 0.42 et le profil `messaging-photos-notify-recovery`. Aucun arrêt ni déploiement supplémentaire n’est effectué.
-- Le coffre personnel et la copie PC de l’archive, acceptés dans le [relevé du checkpoint](crm-checkpoint-046.md), restent acquis.
+- Hôte, port et adresse résolue correspondent au Manager ; base source et identité runtime correspondent également.
+- `SELECT 1` réussit par le pilote Node sous TLS strict.
+- `SELECT 1` réussit par le client MariaDB natif sous TLS strict, avec le formateur de fichier d’options de l’exportateur. Aucun export de données SQL.
+- Le parseur natif `my_print_defaults`, appelé par le même formateur, restitue exactement **9 mots de passe synthétiques sur 9** : espaces, guillemets, barres obliques inverses, caractères spéciaux, accents et emoji. Les fichiers temporaires propriétaires `0600` sont nettoyés par le helper existant.
+- Aucune mutation de la source ou du clone, aucun import, aucune collecte du mot de passe de maintenance.
 
-## Inspection de la copie sans import préparée
+Cela écarte un défaut général du point de connexion, de TLS ou de l’échappement dans ce chemin testé. Cela ne prouve ni le mot de passe personnel ni la cause exacte d’un refus propre à l’identité de maintenance. Références primaires du parseur : [fichiers d’options MariaDB](https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/configuring-mariadb/configuring-mariadb-with-option-files), [my_print_defaults](https://mariadb.com/docs/server/clients-and-utilities/administrative-tools/my_print_defaults).
 
-Le nouveau lanceur **`/srv/customer/jessiemessage-private/inspect-restore-primary-crm-046.sh`** est créé exclusivement, relu et contrôlé : propriétaire `0700`, **1 741 octets**, SHA-256 **`5dc664ab99e755381efb9891586757199564cac1b4ee4f1536640afdaa342b18`**.
+## Reprise en une saisie
 
-Il épingle toujours la source opérateur `8f4162a4468b1e1548e1276f2d6e2a8033bbb213`, l’arbre `c6f17aaffba71c16e4e8ecd3e3b4c80abbe9bd3f`, la propreté du checkout, le profil `photos-notify-recovery-crm`, le checkpoint courant et l’identité exacte du clone. Il compare les empreintes archive/SQL avant sa préparation et utilise les modules déjà validés de cette source.
+Source **`edf696ec4874563aeaaa84b8986f18d146757c53`**, arbre **`3daa88c3b180fe1494245ea390807f800f783ae1`** : [coordinateur fermé](../scripts/resume-application-checkpoint.mjs), [wrapper masqué](../scripts/capture-application-checkpoint-resume.sh), [18 tests](../tests/resume-application-checkpoint.test.mjs). Les importateur et vérificateur existants conservent leurs contrôles.
 
-Le mode `check` appelle uniquement le précontrôle existant de l’importateur, avec l’empreinte SQL brute correcte. La syntaxe Bash et ce précontrôle passent à **23:37:10.017950 Europe/Paris** : `application_restore_precheck_passed`, `checkpointFilesMatched: true`, `trustedSqlSha256Matched: true`, `nativeImportClientVerified: true`, `sqlImportFormatVerified: true`, `databaseConnected: false`, `imported: false`, aucun HTTP/SMTP/worker ni réassociation de stockage.
+Le précontrôle valide checkpoint, clés, hash SQL brut, client natif et format SQL avant la saisie. Le secret est lu une fois, masqué, transmis par entrée standard. Une connexion TLS de maintenance inspecte uniquement l’identité du clone, TLS et les métadonnées des tables.
 
-Sans argument, le lanceur lit personnellement le mot de passe SQL une fois avec `read -r -s`, puis le transmet par entrée standard au seul `verify-private-checkpoint.mjs verify-application`. Il reprend les protections du [wrapper de vérification existant](../scripts/capture-private-checkpoint-verification.sh), en conservant la sélection applicative CRM. Le secret n’est ni argument, ni variable d’environnement exportée, ni fichier permanent, ni sortie du terminal.
+| État SQL observé | Action | Reçu attendu |
+| --- | --- | --- |
+| Aucune table | Import natif, puis vérification complète SQL/snapshot/photos | `application_checkpoint_restored_verified`, `action: "imported_empty_clone"`, `importedThisRun: true` |
+| Trente tables applicatives attendues, InnoDB | Vérification complète en lecture seule ; aucun import | `application_checkpoint_existing_clone_verified`, `action: "verified_existing_clone"`, `importedThisRun: false` |
+| Copie partielle, autre table, vue ou autre moteur | Refus conservant la copie | `APPLICATION_CHECKPOINT_RESUME_PARTIAL_CLONE`, `phase: "inspection"` |
 
-Le vérificateur compare l’export du clone au SQL figé, puis contrôle schéma, données authentifiées, médias et snapshot applicatif. Il ne crée ni ne remplace de table et ne démarre aucun runtime. Les codes fermés distinguent notamment `PRIVATE_CHECKPOINT_VERIFY_AUTHENTICATION`, `ACCESS`, `DATABASE`, `DUMP`, `DUMP_MISMATCH`, ou le reçu `verified`. Un code `DUMP` seul ne prouve pas une cause précise. L’inspection personnelle de 23:41 échoue à l’identification (`AUTHENTICATION`) ; ni le contenu ni le vide SQL du clone ne sont encore confirmés. Ce résultat ne permet pas de réattribuer avec certitude la phase du premier échec à un mot de passe précis.
+Les erreurs portent une catégorie fermée et une phase explicite, par exemple `APPLICATION_CHECKPOINT_RESUME_AUTHENTICATION`, `phase: "connection"`. Aucun message brut du pilote. Profil, versions, hash et champs de succès sont contrôlés avant émission du reçu. Base source et compte runtime sont refusés comme cibles. Aucun HTTP, SMTP, worker, migration, effacement ou réassociation du stockage. Couverture limitée aux trente tables applicatives et photos ; objets SQL exécutables exclus/non prouvés.
 
-## Prochaine action personnelle : identité SQL puis inspection
+## Validation et installation
 
-Le mot de passe à utiliser est celui de l’utilisateur **SQL `fb4hmr_jm_mig`**, défini dans la section Bases de données / Utilisateurs. S’il est connu, le propriétaire peut relancer l’inspection ci-dessous en l’utilisant. Si ce mot de passe n’est plus disponible, il ouvre [la fiche exacte de ce compte](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig), clique **Modifier le mot de passe** et réalise personnellement sa définition et son enregistrement. Les droits sont déjà conformes. Aucune nouvelle clé de chiffrement ni configuration applicative n’est demandée.
+- Suite ciblée **65/65**, dont les 18 nouveaux scénarios ; syntaxe conforme.
+- Suite générale locale : **2 285 cas, 2 130 réussites, 155 intégrations ignorées, aucun échec**.
+- [Cinq jobs CI de la source exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39073403629) réussis : **2 258 réussites générales, 27 wrappers SQL ignorés**, build/aperçu conformes ; **379/379** sur MariaDB 10.11 et 11.4 chacun ; **101/101** Chrome ; **1/1** authentification HTTPS/MariaDB. Workflow PR `39073406805` également réussi.
+- Checkout séparé **`/srv/customer/jessiemessage-operator/crm-checkpoint-resume-edf696ec`** prêt le **18 octobre à 00:04:58.242673** : source/arbre épinglés, Git propre, dépendances verrouillées sans scripts, syntaxe conforme sous Node 24.15.0. Runtime actif conservé.
 
-Dans la [console SSH Node.js Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter :
+Lanceur **`/srv/customer/jessiemessage-private/resume-primary-crm-046.sh`** créé exclusivement et relu : propriétaire `0700`, **1 114 octets**, SHA-256 **`47ce94b29e4c0ebb136d07f3094de8b707e7477e040978109fdc42298d423bc6`**. Il épingle source/arbre/propreté, checkpoint, clone, compte de maintenance, profil CRM et hash SQL brut correct.
+
+Sa syntaxe et son mode `check` passent à **00:05:20.413110 le 18 octobre** : `application_restore_precheck_passed`, reçu v6, trente tables/migrations, profil applicatif CRM, `resumeSupported: true`, fichiers/hash/client natif/format conformes, `databaseConnected: false`, `imported: false`. Aucun mot de passe utilisé pour ce contrôle ; aucun mode reprise exécuté par l’agent.
+
+Les anciens lanceurs d’import et d’inspection restent historiques. Le coffre et la copie PC acceptés dans le [relevé du checkpoint](crm-checkpoint-046.md) ne sont pas à refaire.
+
+## Deux actions personnelles
+
+1. Ouvrir [le compte SQL `fb4hmr_jm_mig`](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig), puis **Modifier le mot de passe**. Définir personnellement un nouveau mot de passe et cliquer **Enregistrer dans cette fenêtre**, puis attendre la confirmation. Exigences affichées : huit caractères minimum, une minuscule, une majuscule, un chiffre, un caractère spécial. Le bouton **Valider** derrière le formulaire concerne les droits et ne remplace pas **Enregistrer**. Il s’agit du compte SQL, distinct de JessieMessage, du coffre et du Manager. La règle de prise en main des changements d’identifiants réserve saisie, confirmation et enregistrement au propriétaire.
+2. Dans la [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter :
 
 ```bash
-bash /srv/customer/jessiemessage-private/inspect-restore-primary-crm-046.sh
+bash /srv/customer/jessiemessage-private/resume-primary-crm-046.sh
 ```
 
-Saisir personnellement le mot de passe SQL correct du compte `fb4hmr_jm_mig`, puis transmettre le message d’erreur complet ou la dernière ligne JSON. Le secret reste hors de la conversation. Une répétition avec les mêmes identifiants refusés n’apporterait pas de nouvelle preuve. L’ancien lanceur d’import reste en attente tant que l’état de la copie n’est pas établi. Une copie partiellement remplie ne sera pas réutilisée pour un import ; aucun effacement n’est autorisé par cette inspection. Les fiches restent désactivées.
+À l’invite, saisir le mot de passe SQL nouvellement enregistré et appuyer sur Entrée ; aucun caractère ne s’affiche. Transmettre seulement la dernière ligne JSON ou le message complet, sans secret. Connexion, inspection et import/vérification appropriés s’enchaînent dans cette exécution. Un nouveau refus portera sa phase ; aucune répétition identique ni destruction de copie partielle n’est prévue. L’activation CRM exige encore un reçu de vérification réel.

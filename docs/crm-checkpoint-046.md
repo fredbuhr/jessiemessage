@@ -1,6 +1,6 @@
 # JessieMessage — coffre validé et checkpoint courant, étape 0.46
 
-**État à 23:41 Europe/Paris :** après l’échec d’import général de 23:32, le [diagnostic en lecture seule](crm-checkpoint-046-incident.md) retourne `PRIVATE_CHECKPOINT_VERIFY_AUTHENTICATION`. Les droits du clone sont conformes ; son identification SQL est refusée avant toute comparaison. Le propriétaire doit utiliser le mot de passe SQL correct de `fb4hmr_jm_mig`, ou le redéfinir personnellement s’il est perdu, puis relancer la seule inspection. L’import et l’état SQL du clone restent non confirmés. Copie PC et coffre validés ; service 0.42 actif, fiches désactivées.
+**État au 18 octobre à 00:05 Europe/Paris :** coffre et copie PC acceptés, checkpoint courant capturé et service 0.42 actif. L’identification SQL de maintenance reste refusée. Le [diagnostic physique et nouveau lanceur de reprise](crm-checkpoint-046-incident.md), source `edf696ec`, valident adresse/TLS/deux clients/neuf cas du parseur et passent cinq jobs CI. Le nouveau lanceur épinglé passe son précontrôle hébergé sans SQL. Suite : enregistrer personnellement le mot de passe SQL avec **Enregistrer** dans sa fenêtre, puis utiliser la reprise unique qui inspecte avant import/vérification. L’état SQL du clone et sa restauration restent non confirmés ; fiches désactivées. Les anciens lanceurs ci-dessous sont historiques.
 
 ## Coffre de configuration accepté
 
@@ -19,7 +19,7 @@ Le propriétaire fournit le reçu de création du coffre primaire à six fichier
 
 ## Précontrôles du checkpoint
 
-La source opérateur reste **`8f4162a4468b1e1548e1276f2d6e2a8033bbb213`**, arbre **`c6f17aaffba71c16e4e8ecd3e3b4c80abbe9bd3f`**, checkout propre `/srv/customer/jessiemessage-operator/crm-runtime-backup-8f4162a4`. Ses cinq jobs exacts réussis et la répétition MariaDB à 379 cas sont décrits dans la [validation du profil CRM](crm-runtime-backup.md).
+La source opérateur de la capture est **`8f4162a4468b1e1548e1276f2d6e2a8033bbb213`**, arbre **`c6f17aaffba71c16e4e8ecd3e3b4c80abbe9bd3f`**, checkout propre `/srv/customer/jessiemessage-operator/crm-runtime-backup-8f4162a4`. Ses cinq jobs exacts réussis et la répétition MariaDB à 379 cas sont décrits dans la [validation du profil CRM](crm-runtime-backup.md).
 
 La configuration source est `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851`. Le checkpoint courant est **`/srv/customer/jessiemessage-private/checkpoint-primary-crm-046`**. Le profil SQL/photos est `photos-notify-recovery-crm-application` : manifeste v8, reçu v6, six clés authentifiées et couverture limitée aux trente tables applicatives. Les objets SQL exécutables restent exclus/non prouvés.
 
@@ -63,7 +63,7 @@ La nouvelle base **`fb4hmr_jm_crm30_20261017`** est créée dans le Manager. L�
 
 Le premier lanceur `restore-primary-crm-046.sh` contient une erreur de recopie du hash brut. Son précontrôle échoue avec `APPLICATION_CHECKPOINT_IMPORT_CHECKPOINT`, avant toute connexion SQL ou import. Il reste conservé et **ne doit pas être utilisé**. Les quatre blocs de seize caractères du hash original sont relus ; le lanceur corrigé est créé exclusivement sous un nouveau nom.
 
-Le seul lanceur à utiliser est **`/srv/customer/jessiemessage-private/restore-primary-crm-046-verified.sh`**, propriétaire `0700`, **1 116 octets**, SHA-256 **`c3110164724e87309e0928aa5b76934209e52645c2e145a29f5c0cdb672424ae`**. Il épingle source/arbre/propreté `8f4162a4`, la nouvelle base et sa confirmation, le profil CRM, l’utilisateur de maintenance existant et l’empreinte SQL brute correcte. Sans argument, il utilise le wrapper interactif existant qui lit le mot de passe SQL une fois, de façon masquée, et le transmet par entrée standard. Aucun secret n’est ajouté au fichier, à la ligne de commande ou au dépôt.
+Le lanceur historique corrigé, remplacé par la reprise du diagnostic courant, est **`/srv/customer/jessiemessage-private/restore-primary-crm-046-verified.sh`**, propriétaire `0700`, **1 116 octets**, SHA-256 **`c3110164724e87309e0928aa5b76934209e52645c2e145a29f5c0cdb672424ae`**. Il épingle source/arbre/propreté `8f4162a4`, la nouvelle base et sa confirmation, le profil CRM, l’utilisateur de maintenance existant et l’empreinte SQL brute correcte. Sans argument, il utilise le wrapper interactif existant qui lit le mot de passe SQL une fois, de façon masquée, et le transmet par entrée standard. Aucun secret n’est ajouté au fichier, à la ligne de commande ou au dépôt.
 
 Sa syntaxe Bash et son mode `check` passent à **23:12:14.103783** :
 
