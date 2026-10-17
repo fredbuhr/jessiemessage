@@ -1,5 +1,7 @@
 # JessieMessage — profil des fiches et reprise SQL/photos
 
+**État 0.46 au 17 octobre à 22:48 :** le [coffre primaire est créé, copié sur le PC, son empreinte concorde et son déchiffrement personnel est confirmé](crm-checkpoint-046.md). Les précontrôles du checkpoint courant passent ; sa capture attend une pause du service explicitement autorisée. Le service 0.42 reste actif, fiches désactivées. Les relevés ci-dessous conservent la préparation 0.45.
+
 ## Lot 0.45
 
 Le profil explicite `photos-notify-recovery-crm` ajoute les fiches privées au runtime primaire existant : notes chiffrées, surnoms, tags, groupes et rappels. Il conserve la récupération du mot de passe et laisse les diffusions désactivées. Le schéma reste à trente migrations ; ce lot n’en ajoute aucune.
