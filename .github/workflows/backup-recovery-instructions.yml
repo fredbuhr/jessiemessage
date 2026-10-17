@@ -1,0 +1,55 @@
+name: Windows backup recovery instructions
+
+on:
+  push:
+    branches: ["feat/**", "fix/**", main]
+    paths:
+      - scripts/JessieMessage-recuperation-052.ps1
+      - .github/workflows/backup-recovery-instructions.yml
+  pull_request:
+    branches: ["feat/**", "fix/**", main]
+    paths:
+      - scripts/JessieMessage-recuperation-052.ps1
+      - .github/workflows/backup-recovery-instructions.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: recovery-instructions-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syntax:
+    name: Windows PowerShell 5.1 instructions
+    runs-on: windows-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Parse owner instructions without creating any key
+        shell: powershell
+        run: |
+          $jmTokens = $null
+          $jmErrors = $null
+          $jmScript = (Resolve-Path 'scripts/JessieMessage-recuperation-052.ps1').Path
+          $null = [System.Management.Automation.Language.Parser]::ParseFile($jmScript, [ref]$jmTokens, [ref]$jmErrors)
+          if ($jmErrors.Count -ne 0) { throw ($jmErrors | Out-String) }
+          Write-Output 'Windows PowerShell 5.1 syntax verified; no key generated.'
+      - name: Verify harmless native warnings and failed native commands
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $jmTokens = $null
+          $jmErrors = $null
+          $jmAst = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/JessieMessage-recuperation-052.ps1').Path, [ref]$jmTokens, [ref]$jmErrors)
+          $jmFunction = $jmAst.Find({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Get-JmGpgOutput' }, $true)
+          Invoke-Expression $jmFunction.Extent.Text
+          $script:jmGpg = (Get-Process -Id $PID).Path
+          $jmResult = @(Get-JmGpgOutput -GpgArguments @('-NoProfile', '-Command', '[Console]::Error.WriteLine("harmless warning"); [Console]::Out.WriteLine("public fixture"); exit 0'))
+          if ($jmResult.Count -ne 1 -or $jmResult[0] -ne 'public fixture') { throw 'Native warning handling failed.' }
+          $jmRejected = $false
+          try { $null = Get-JmGpgOutput -GpgArguments @('-NoProfile', '-Command', '[Console]::Error.WriteLine("synthetic failure"); exit 1') } catch { $jmRejected = $true }
+          if (-not $jmRejected -or $ErrorActionPreference -ne 'Stop') { throw 'Native failure handling failed.' }
+          Write-Output 'Native warnings and failures verified without generating a key.'
