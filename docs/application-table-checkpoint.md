@@ -68,4 +68,31 @@ Capture effective de **14:46:14.008 à 14:46:16.769**, sortie `application_check
 
 Le **même Run 0.33** est relancé immédiatement après le résultat de capture ; le Manager indique `Actif`, écoute sur 3000 et profil `messaging-photos-notify`. À **14:47:06.537**, préflight conforme, santé/disponibilité HTTP 200, routage apex `/app` toujours 302 vers recette. Aucun domaine, clé, droit SQL ni schéma n’a été changé ; seuls la pause/reprise et les nouveaux fichiers privés du checkpoint ont eu lieu.
 
-Le complément de vérification du snapshot signé du clone est préparé après cette capture ; il ne modifie ni l’archive figée ni le runtime actif. Sa validation et l’import personnel seront consignés séparément. La bascule du domaine n’est pas encore effectuée.
+Le complément de vérification du snapshot signé du clone est validé sur **`123531df99d24f915bdd24a00f3fec77695cc63f`**, arbre `3c2a5658184836ac415982543b6666006faa1d1d`. Ses cinq [jobs CI exacts](https://github.com/fredbuhr/jessiemessage/actions/runs/39034174776) passent : **2 031 tests généraux**, 370 par MariaDB sans saut, vingt Chrome applicatifs et une authentification intégrée. Checkout séparé `/srv/customer/jessiemessage-operator/application-restore-123531df`, installation et syntaxe vérifiées. À **14:55:38.770**, `check-application` sur le vrai checkpoint annonce `checkpointFilesMatched: true`, média indépendant, trente tables/migrations, SQL brut **76 621 octets**, SHA-256 `246a75fdca87b02405e548092a21da1882330f1b9fa17e5aca619eb2b4502e4a`, **`databaseConnected: false`**. La base proposée `fb4hmr_jm_checkpoint30_20261017` reste à créer puis importer ; ce précontrôle ne prouve pas son existence ou sa restauration.
+
+Le contrôle du snapshot signé après import doit annoncer `applicationSnapshotMatched: true` avant validation de la copie. Il ne modifie ni l’archive figée ni le runtime actif. La bascule du domaine n’est pas encore effectuée.
+
+
+## Copie personnelle indépendante
+
+L’accès SSH/SFTP Node.js existant est confirmé dans le [Manager normal](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ftp-ssh) : serveur `57-118579.ssh.hosting-ik.com`, port `22`, compte de sauvegarde `QxrM8Gh3hsN_jessiebk`. Aucun compte, mot de passe ou droit d’accès n’a été changé. Le Web FTP montré par le Manager concerne l’environnement Apache/PHP ; il ne remplace pas cet accès Node.js.
+
+Avec le même client de transfert que pour le coffre, télécharger le fichier distant :
+
+```text
+/srv/customer/jessiemessage-private/checkpoint-schema30-application-before-domain/checkpoint.tar.gz
+```
+
+Ou, avec le [client OpenSSH Windows](https://learn.microsoft.com/fr-fr/windows-server/administration/openssh/openssh-overview), exécuter ce bloc dans **PowerShell sur le PC**, pas dans la console Infomaniak :
+
+```powershell
+& {
+  $jmCheckpointFile = Join-Path ([Environment]::GetFolderPath('Desktop')) 'JessieMessage-schema30-20261017-1446.tar.gz'
+  scp 'QxrM8Gh3hsN_jessiebk@57-118579.ssh.hosting-ik.com:/srv/customer/jessiemessage-private/checkpoint-schema30-application-before-domain/checkpoint.tar.gz' $jmCheckpointFile
+  if ($LASTEXITCODE -eq 0 -and (Get-FileHash -LiteralPath $jmCheckpointFile -Algorithm SHA256).Hash -eq '481407b64cf2d0ea997098d4a7c6100a30ef235d5b7f46ed076cd310093c943e') { 'COPIE_SCHEMA30_OK' } else { 'COPIE_NON_CONFIRMEE' }
+}
+```
+
+Le secret éventuellement demandé est celui de l’accès SSH/SFTP existant, pas celui de la base SQL ; sa saisie ne s’affiche pas. Le garder dans la fenêtre personnelle. La copie sur PC n’est pas encore attestée tant que son empreinte n’est pas confirmée. Le prochain lot prépare une base isolée neuve et un import au SQL exact, puis la vérification contre le snapshot signé, avant toute activation du domaine principal.
+
+À **14:57:14.751 Europe/Paris**, l’archive est relue : taille et SHA-256 identiques au résultat de capture ; le reçu et sa liaison au manifeste restent conformes. La disponibilité répond encore HTTP 200. Les marqueurs `independentCopyPending` et `sqlRestorePending` restent vrais jusqu’aux validations personnelles et à l’import effectif.
