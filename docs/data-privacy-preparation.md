@@ -1,6 +1,6 @@
 # Lot 0.41 — données et confidentialité : préparation
 
-**État : préparation, sans activation ni publication d’une notice définitive.** Base relue : `a4828caf725ccc7807ea8723b17be626ec56eaf6`, branche `feat/help-contact`, arbre `fd741aa31cd7839e8c0de85204b59110890fb247`. Le service reste celui du [lot 0.40](help-contact.md), source `5ea9c40a`, profil `messaging-photos-notify-recovery`, schéma 30. Les acceptations du propriétaire restent acquises.
+**État : dossier préparatoire, sans publication d’une notice définitive.** Base relue : `a4828caf725ccc7807ea8723b17be626ec56eaf6`, branche `feat/help-contact`, arbre `fd741aa31cd7839e8c0de85204b59110890fb247`. Les changements de source sont inclus dans le [runtime 0.42](operations-diagnostic.md) `ed78b55e`, activé le 17 octobre 2026 à 21:03 Europe/Paris, profil `messaging-photos-notify-recovery`, schéma 30. Le brouillon de notice reste non servi ; conservation et effacement restent à décider. Les acceptations du propriétaire restent acquises.
 
 ## Résultat préparé
 
