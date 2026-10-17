@@ -90,7 +90,8 @@ async function seedLanguage(page, language) {
   await page.execute("sessionStorage.setItem('jessiemessage.language', arguments[0])", language);
 }
 async function readyHelp(page, language) {
-  await waitUntil(() => page.execute("return document.documentElement.lang === arguments[0] && !!globalThis.JessieI18n && !!document.querySelector('main h1')", language), "real translated Help page");
+  const title = language === "fr" ? "Jessie — Aide et confidentialité" : "Jessie — Help and privacy";
+  await waitUntil(() => page.execute("return location.pathname === '/help' && !location.hash && !location.search && document.documentElement.lang === arguments[0] && document.title === arguments[1] && !!globalThis.JessieI18n && !!document.querySelector('main h1')", language, title), "fully initialised real Help page with its URL cleaned");
 }
 async function noErrors(page) { assert.deepEqual(await page.execute("return window.__helpErrors"), [], "no script, promise or CSP errors"); }
 async function privateSurfaces(page) {
@@ -125,13 +126,16 @@ test("real Chrome: practical Help is translated, accessible and never collects p
         assert.equal(await page.execute("return location.pathname === '/help' && !location.hash && !location.search"), true, "the complete fragment and query are removed");
         assert.equal(await page.execute("return document.title"), language === "fr" ? "Jessie — Aide et confidentialité" : "Jessie — Help and privacy", "the title follows the chosen language");
         assert.equal(await page.execute("return document.querySelector('main h1').textContent"), language === "fr" ? "Un coup de main ?" : "Need a hand?");
+        assert.deepEqual(await page.execute("const buttons = [...document.querySelectorAll('button[data-jm-language]')]; return { count: buttons.length, text: buttons[0]?.textContent, label: buttons[0]?.getAttribute('aria-label') };"),
+          { count: 1, text: language === "fr" ? "EN" : "FR", label: language === "fr" ? "Switch to English" : "Passer en français" },
+          "the language button has its independently translated text and accessible name");
         assert.equal(await page.execute("return [...document.querySelectorAll('[data-jm-i18n]')].every(node => node.textContent === globalThis.JessieI18n.t(node.getAttribute('data-jm-i18n')))"), true,
           "all marked page copy uses the real translation catalog");
         if (language === "en") assert.equal(await page.execute("return [...document.querySelectorAll('[data-jm-i18n]')].every(node => node.getAttribute('data-jm-i18n') === 'Notifications' || node.textContent !== node.getAttribute('data-jm-i18n'))"), true,
           "every French copy entry has its English translation");
         assert.equal(await page.execute(`const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let node;
-          while ((node = walker.nextNode())) { const text = node.textContent.trim(); if (text && !node.parentElement.closest('[data-jm-i18n]') && !['Jessie', 'contact@jessiemessage.com'].includes(text)) return false; } return true;`), true,
-          "all visible copy beyond the fixed brand/contact address is translatable");
+          while ((node = walker.nextNode())) { if (node.parentElement.closest('button[data-jm-language]')) continue; const text = node.textContent.trim(); if (text && !node.parentElement.closest('[data-jm-i18n]') && !['Jessie', 'contact@jessiemessage.com'].includes(text)) return false; } return true;`), true,
+          "all visible copy beyond the fixed brand/contact address and separately checked language button is translatable");
         await helpLayout(page); await noErrors(page); await privateSurfaces(page);
         const summaryCount = await page.execute("return document.querySelectorAll('details > summary').length");
         assert.equal(summaryCount >= 6, true, "the practical FAQ covers the essential journeys");
@@ -161,8 +165,11 @@ test("real Chrome: practical Help is translated, accessible and never collects p
     await t.test("unsupported or augmented language fragments are erased without changing the saved preference", async () => {
       fixture.reset(); const page = await driver.browser({ origin: fixture.origin, width: 320 });
       try {
-        await seedLanguage(page, "fr");
         for (const fragment of ["#lang=EN", "#lang=en&next=private", "#lang=en%0A", "#lang=fr&lang=en"]) {
+          // Each hint is an entry to a newly loaded page. Navigating directly
+          // from /help to /help#... changes only the existing document's hash
+          // and does not rerun the deliberately one-shot entry controller.
+          await seedLanguage(page, "fr");
           await page.navigate(`/help${fragment}`); await readyHelp(page, "fr");
           assert.equal(await page.execute("return !location.hash && !location.search && sessionStorage.getItem('jessiemessage.language') === 'fr'"), true,
             "a malformed hint cannot change language or survive in history");
