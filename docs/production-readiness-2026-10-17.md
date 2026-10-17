@@ -1,6 +1,6 @@
 # JessieMessage — bilan avant ouverture privée
 
-**Bilan du 17 octobre 2026, périmètre privé autour de Jessie.** Référence hébergée : lot 0.42 `ed78b55e`, contrôlé après son activation à 21:03 Europe/Paris. Le lot 0.43 est validé côté code, sans activation des fiches. Le présent bilan ne présente pas une nouvelle sonde en ligne ni une acceptation de tous les appareils.
+**Bilan du 17 octobre 2026, périmètre privé autour de Jessie.** Référence hébergée : lot 0.42 `ed78b55e`, recontrôlé à **21:51:17.150679 Europe/Paris** : 38 contrôles HTTPS et seize empreintes exactes conformes. Les lots 0.43 et 0.44 sont validés côté code ; le précontrôle de configuration primaire 0.44 réussit sur l’hébergement à 21:51:16. Aucune activation des fiches ni acceptation de tous les appareils n’est déduite de ces sondes anonymes.
 
 L’application est déjà hébergée à son adresse principale avec les accès sur invitation. Le passage à un usage privé régulier consiste à compléter son exploitation et ses fonctions restantes ; aucun changement d’hébergement ou ouverture publique de la messagerie n’est prévu.
 
@@ -13,7 +13,7 @@ L’application est déjà hébergée à son adresse principale avec les accès 
 | Notifications choisies par appareil | Réception réelle acceptée ; ouverture ciblée et reprise implémentées |
 | Sessions administrateur/client durables | 180 jours renouvelables, sans coupure pour inactivité ; sessions séparées par appareil |
 | Récupération du mot de passe invité | Déployée, parcours essayé accepté à 18:52:47 ; aucune répétition générale demandée |
-| Domaine principal, FR/EN, aide et contact | Déployés ; 34 contrôles HTTPS et seize empreintes exactes après la livraison 0.42 |
+| Domaine principal, FR/EN, aide et contact | Déployés ; 38 contrôles HTTPS et seize empreintes exactes au recontrôle de 21:51:17 |
 | Sauvegarde et restauration applicatives de référence | Checkpoint schéma 30 et import isolé réellement vérifiés au lot 0.36 |
 | Fiches privées : comportement du navigateur | Lot 0.43 validé : conflits explicites, brouillons conservés, reprise, 101 tests Chrome ; module encore désactivé |
 
@@ -32,7 +32,7 @@ La quatrième vérification concerne un outil d’exploitation et peut accompagn
 
 | Ordre | Fonction | Suite |
 | --- | --- | --- |
-| 0.44 | Clé et coffre des fiches privées | [Préparation de la configuration primaire](crm-private-configuration.md), tests de validation et chiffrement GPG réel en CI ; aucune activation dans ce lot |
+| 0.44 | Clé et coffre des fiches privées | [Préparation de la configuration primaire](crm-private-configuration.md), validation de la configuration et chiffrement GPG réel réussis en CI, précontrôle hébergé conforme ; clé/coffre réels et activation restent à réaliser |
 | 0.45 | Fiches privées, tags, groupes, notes et rappels | Ajouter le profil de démarrage explicite, ses assertions SQL et la couverture du checkpoint/restauration incluant le CRM ; préparer clé/coffre réels, copie indépendante puis activation ciblée |
 | Ensuite | Envois groupés livrés individuellement | Préparer le profil, la prévisualisation des destinataires, les règles existantes d’accord/retrait, la détection des doublons et la reprise ; tester avant activation |
 | Entretien | Version stable et suivi des appareils | Consolider les PR empilées sans remplacer implicitement la révision servie ; compléter la matrice appareils au fil du pilote |
