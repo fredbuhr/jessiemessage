@@ -103,13 +103,14 @@ async function visibleConfig(scope, canonical, name, expected) {
   const stats = await lstat(`${canonical}/${name}`, { bigint: true }); regular(stats); unchanged(expected, stats);
 }
 
-export async function dumpCloneSql(scope, selected, configuration, password, { spawnClient = spawn, signal } = {}) {
+export async function dumpCloneSql(scope, selected, configuration, password, { spawnClient = spawn, signal, onSqlChunk } = {}) {
   const name = `.text-clone-${randomBytes(16).toString("hex")}.cnf`;
   // Retain only a bounded diagnostic in memory. The native text can contain
   // private identities and is never attached to the public error or report.
   const diagnostic = Buffer.alloc(8192);
   let handle, identity, written, content, result, failure;
   try {
+    if (onSqlChunk !== undefined && typeof onSqlChunk !== "function") fail("TEXT_CLONE_DUMP");
     if (signal?.aborted) fail("TEXT_CLONE_CANCELLED");
     const canonical = await realpath(scope.path);
     content = Buffer.from(`[client]\nhost=${optionValue(configuration.host)}\nport=${configuration.port}\nuser=${optionValue(selected.user)}\npassword=${optionValue(password)}\n`, "utf8");
@@ -131,7 +132,19 @@ export async function dumpCloneSql(scope, selected, configuration, password, { s
         timer = setTimeout(reject, 90000);
         signal?.addEventListener("abort", reject, { once: true });
         if (signal?.aborted) reject();
-        child.stdout.on("data", (chunk) => { sqlBytes += chunk.length; if (sqlBytes > MAX_SQL) reject(); else if (!failed) hash.update(chunk); chunk.fill(0); });
+        child.stdout.on("data", (chunk) => {
+          try {
+            sqlBytes += chunk.length;
+            if (sqlBytes > MAX_SQL) reject();
+            else if (!failed) {
+              hash.update(chunk);
+              // A private sink must consume/copy bytes synchronously: this
+              // buffer is erased as soon as the callback returns.
+              if (onSqlChunk !== undefined && onSqlChunk(chunk) !== undefined) reject();
+            }
+          } catch { reject(); }
+          finally { chunk.fill(0); }
+        });
         child.stderr.on("data", (chunk) => {
           if (errors < diagnostic.length) chunk.copy(diagnostic, errors, 0, Math.min(chunk.length, diagnostic.length - errors));
           errors += chunk.length; chunk.fill(0); if (errors > diagnostic.length) reject();

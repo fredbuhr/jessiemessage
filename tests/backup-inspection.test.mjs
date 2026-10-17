@@ -14,6 +14,7 @@ function fixture({ name = "jessiemessage_test_ci", grant = "GRANT ALL PRIVILEGES
 }
 test("offline inspection requires explicit separate schema credentials before connecting", async () => {
   for (const env of [{}, { JESSIEMESSAGE_BACKUP_SCHEMA_USER: "same", JESSIEMESSAGE_RUNTIME_DB_USER: "same", JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD: "synthetic" },
+    { JESSIEMESSAGE_BACKUP_SCHEMA_USER: "same", JESSIEMESSAGE_RUNTIME_DB_USER: "same", JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD: "synthetic", JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "infomaniak-shared-pattern" },
     { JESSIEMESSAGE_BACKUP_SCHEMA_USER: "inspector", JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD: "" }]) await assert.rejects(createBackupInspectionPool(env));
 });
 test("inspection proves exact-schema metadata visibility and rejects scoped database mismatch or DML-only grants", async () => {
@@ -21,6 +22,7 @@ test("inspection proves exact-schema metadata visibility and rejects scoped data
     const f = fixture({ grant }); assert.equal(await assertBackupInspection(f.connection, "jessiemessage_test_ci"), true); assert.equal(f.queries.length, 5);
   }
   for (const changes of [{ name: "other" }, { grant: "GRANT SELECT, INSERT, UPDATE, DELETE ON `jessiemessage_test_ci`.* TO `runtime`@`%`" },
+    { grant: "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES ON `jessiemessage\\_test\\_ci`.* TO `runtime`@`%`" },
     { grant: "GRANT ALL PRIVILEGES ON *.* TO `root`@`%`" }, { grant: "GRANT ALL PRIVILEGES ON `jessiemessage_test_%`.* TO `inspector`@`%`" },
     { grant: "GRANT ALL PRIVILEGES ON `jessiemessage_test_ci`.* TO `inspector`@`%`" }]) {
     await assert.rejects(assertBackupInspection(fixture(changes).connection, "jessiemessage_test_ci"));

@@ -14,7 +14,12 @@ export async function createBackupInspectionPool(env = process.env) {
   if (typeof user !== "string" || !user.length || user === env.JESSIEMESSAGE_RUNTIME_DB_USER || typeof password !== "string" || !password.length) fail();
   let pool;
   try {
-    pool = await createRuntimePool({ ...env, JESSIEMESSAGE_RUNTIME_DB_USER: user, JESSIEMESSAGE_RUNTIME_DB_PASSWORD: password, JESSIEMESSAGE_DB_USER: undefined });
+    const inspectionEnv = { ...env, JESSIEMESSAGE_RUNTIME_DB_USER: user, JESSIEMESSAGE_RUNTIME_DB_PASSWORD: password, JESSIEMESSAGE_DB_USER: undefined };
+    // The application profile restricts its own six-rights identity on every
+    // acquisition. Inspection instead proves direct, exact-schema ALL below;
+    // inheriting the application profile would reject that separate identity.
+    delete inspectionEnv.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE;
+    pool = await createRuntimePool(inspectionEnv);
   } catch { fail(); }
   return Object.freeze({
     async getConnection() {
