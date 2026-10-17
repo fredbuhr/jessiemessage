@@ -15,13 +15,14 @@ import { makeTotpSecret, newToken, sealTotpSecret, tokenDigest } from "../server
 import { sealVerificationPayload } from "../server/mail/crypto.mjs";
 import { encryptMessageBody, messageFingerprint } from "../server/chat/crypto.mjs";
 import { sealSubscription, endpointDigest } from "../server/notifications/crypto.mjs";
-import { parseArguments, run, main } from "../scripts/verify-private-checkpoint.mjs";
+import { parseArguments, run, main, verifyApplicationCloneSnapshot } from "../scripts/verify-private-checkpoint.mjs";
 
 const base = fileURLToPath(new URL("../../audit/", import.meta.url));
 const key = number => Buffer.alloc(32, number).toString("base64url");
 const id = number => Buffer.alloc(16, number);
 const hash = value => createHash("sha256").update(value).digest("hex");
 const origin = "https://recette.jessiemessage.com";
+const snapshotVerified = () => ({ command: "verify", verified: true, prepared: false, restored: false, releasedCandidates: 0 });
 const sql = Buffer.from("CREATE TABLE synthetic_checkpoint (id INT);\nINSERT INTO synthetic_checkpoint VALUES (1);\n");
 const scopeFor = directory => ({ path: directory, file: name => join(directory, name),
   assertReady: () => lstat(directory, { bigint: true }), sync: async () => {} });
@@ -108,6 +109,11 @@ async function fixture(t, { application = false } = {}) {
     dump: async (_scope, selectedDump, configuration, password, options) => { events.push("dump"); dumps.push(options); assert.deepEqual(selectedDump, { database: "only_clone", user: "inspection_user" });
       assert.equal(configuration.host, "sql.example.invalid"); assert.equal(password, "synthetic inspection password"); return { sqlBytes: sql.length, sqlSha256: hash(sql) }; },
     connect: async env => { events.push("connect"); connected.push(env); return connection; },
+    verifyApplicationSnapshot: async (env, selection, password) => {
+      events.push("snapshot"); assert.equal(env.JESSIEMESSAGE_DB_NAME, "only_source");
+      assert.equal(selection.database, "only_clone"); assert.equal(password, "synthetic inspection password");
+      return snapshotVerified();
+    },
   };
   return { directory, sourceDirectory, sourceRoot, checkpointDirectory, mediaRoot, args, selected, receipt, archive, manifest, keys, rows, calls, connected, events, environments, connection, dependencies, dumps, tables };
 }
@@ -294,7 +300,8 @@ test("application clone verifies five domains and two exact table-only dumps wit
   assert.equal(f.dumps.length, 2);
   for (const options of f.dumps) assert.deepEqual(options.tables, [...f.tables].sort());
   assert.notEqual(f.dumps[0].tables, f.dumps[1].tables);
-  assert.deepEqual(f.events, ["client", "password", "dump", "connect", "dump", "rollback", "end"]);
+  assert.deepEqual(f.events, ["client", "password", "dump", "connect", "dump", "rollback", "end", "snapshot"]);
+  assert.equal(report.applicationSnapshotMatched, true);
   assert.ok(f.calls.some(({ statement }) => statement === "START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT"));
   assert.equal(f.connected[0].JESSIEMESSAGE_DB_PASSWORD, "");
   for (const field of ["httpStarted", "smtpStarted", "workersStarted", "capacityRebound"]) assert.equal(report[field], false);
@@ -351,4 +358,54 @@ test("application clone still rejects changed physical tables, ledger and TLS de
     assert.deepEqual(f.events.slice(-2), ["rollback", "end"]); assert.equal(f.dumps.length, 1);
     assert.equal(f.connected[0].JESSIEMESSAGE_DB_PASSWORD, "");
   }
+});
+
+test("application snapshot verification uses a separate ephemeral clone identity and wipes its credentials without modifying the source", async t => {
+  const f = await fixture(t, { application: true }), source = await f.dependencies.loadEnvironment();
+  const before = { ...source }, cancellation = new AbortController(); let observedEnv;
+  const report = await verifyApplicationCloneSnapshot(source, f.selected, "synthetic inspection password", {
+    signal: cancellation.signal, backup: async (args, env, options) => {
+      observedEnv = env; assert.notEqual(env, source);
+      assert.deepEqual(args, ["verify", "--offline", "--manifest", join(f.checkpointDirectory, "manifest.json"), "--profile", "photos-notify-application"]);
+      assert.equal(env.JESSIEMESSAGE_DB_NAME, "only_clone"); assert.equal(env.JESSIEMESSAGE_APPLICATION_DATABASE, "only_clone");
+      assert.equal(env.JESSIEMESSAGE_RUNTIME_DB_USER, "inspection_user"); assert.equal(env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "synthetic inspection password");
+      assert.equal(env.JESSIEMESSAGE_MEDIA_ROOT, f.mediaRoot); assert.equal(env.JESSIEMESSAGE_DB_TLS_CA_PATH, "/etc/ssl/certs/ca-certificates.crt");
+      for (const name of ["JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE", "JESSIEMESSAGE_DB_USER", "JESSIEMESSAGE_DB_PASSWORD"]) assert.equal(Object.hasOwn(env, name), false);
+      assert.equal(options.signal, cancellation.signal); assert.equal(typeof options.outputStream.write, "function");
+      options.outputStream.write("synthetic private backup output");
+      return snapshotVerified();
+    },
+  });
+  assert.deepEqual(report, snapshotVerified()); assert.deepEqual(source, before);
+  assert.equal(source.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE, "infomaniak-shared-pattern");
+  for (const name of ["JESSIEMESSAGE_RUNTIME_DB_PASSWORD", "JESSIEMESSAGE_MFA_KEY", "JESSIEMESSAGE_MAIL_KEY", "JESSIEMESSAGE_MESSAGE_KEY",
+    "JESSIEMESSAGE_MEDIA_KEY", "JESSIEMESSAGE_NOTIFICATIONS_KEY", "JESSIEMESSAGE_VAPID_PRIVATE_KEY", "JESSIEMESSAGE_SMTP_PASSWORD"]) assert.equal(observedEnv[name], "");
+});
+
+test("application snapshot comparison must succeed after rollback and close before a success report is emitted", async t => {
+  for (const report of [undefined, { ...snapshotVerified(), verified: false }, { ...snapshotVerified(), restored: true },
+    { ...snapshotVerified(), prepared: true }, { ...snapshotVerified(), releasedCandidates: 1 }, { ...snapshotVerified(), command: "restore" }]) {
+    const f = await fixture(t, { application: true }); let output = "";
+    await assert.rejects(main(f.args, { ...f.dependencies, outputStream: { write(value) { output += value; } },
+      verifyApplicationSnapshot: async () => { assert.deepEqual(f.events.slice(-2), ["rollback", "end"]); return report; } }), neutral("SNAPSHOT"));
+    assert.equal(output, ""); assert.deepEqual(f.events.slice(-2), ["rollback", "end"]);
+    assert.equal(f.connected[0].JESSIEMESSAGE_DB_PASSWORD, "");
+  }
+});
+
+test("application snapshot failures wipe their copied environment and file changes after comparison prevent success", async t => {
+  const f = await fixture(t, { application: true }), source = await f.dependencies.loadEnvironment(); let clone;
+  await assert.rejects(verifyApplicationCloneSnapshot(source, f.selected, "synthetic inspection password", {
+    backup: async (_args, env) => { clone = env; throw new Error("synthetic private snapshot failure"); },
+  }), neutral("SNAPSHOT"));
+  assert.equal(clone.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, ""); assert.equal(clone.JESSIEMESSAGE_MEDIA_KEY, "");
+  let output = "";
+  await assert.rejects(main(f.args, { ...f.dependencies, outputStream: { write(value) { output += value; } },
+    verifyApplicationSnapshot: async () => {
+      assert.deepEqual(f.events.slice(-2), ["rollback", "end"]);
+      const path = join(f.mediaRoot, f.receipt.media.files[0].name), bytes = await readFile(path); bytes[bytes.length - 1] ^= 1;
+      await writeFile(path, bytes); return snapshotVerified();
+    },
+  }), error => error.code.startsWith("PRIVATE_CHECKPOINT_VERIFY_"));
+  assert.equal(output, ""); assert.equal(f.connected[0].JESSIEMESSAGE_DB_PASSWORD, "");
 });

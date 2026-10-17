@@ -14,6 +14,7 @@ import { connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
 import { inspectDumpClient, readFrozenBackup, dumpCloneSql, inspectClone } from "./verify-text-clone.mjs";
 import { readPassword } from "./migration-input.mjs";
+import { main as backupMain } from "./backup.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const CA = "/etc/ssl/certs/ca-certificates.crt";
@@ -23,7 +24,7 @@ const COUNT_NAMES = ["rows", "mfa", "mail", "reset", "messages", "crm", "broadca
 const KEY_FIELDS = { totpKey: "JESSIEMESSAGE_MFA_KEY", mailKey: "JESSIEMESSAGE_MAIL_KEY", messageKey: "JESSIEMESSAGE_MESSAGE_KEY",
   mediaKey: "JESSIEMESSAGE_MEDIA_KEY", notificationKey: "JESSIEMESSAGE_NOTIFICATIONS_KEY" };
 const CODES = new Set(["USAGE", "ENVIRONMENT", "CONFIGURATION", "CHECKPOINT", "PASSWORD", "CLIENT", "DUMP", "DUMP_MISMATCH",
-  "AUTHENTICATION", "ACCESS", "DATABASE", "SCHEMA", "CRYPTO", "CLEANUP", "CANCELLED", "OPERATION"].map(name => `PRIVATE_CHECKPOINT_VERIFY_${name}`));
+  "AUTHENTICATION", "ACCESS", "DATABASE", "SCHEMA", "CRYPTO", "SNAPSHOT", "CLEANUP", "CANCELLED", "OPERATION"].map(name => `PRIVATE_CHECKPOINT_VERIFY_${name}`));
 export class PrivateCheckpointVerificationError extends Error {
   constructor(code) { const selected = CODES.has(code) ? code : "PRIVATE_CHECKPOINT_VERIFY_OPERATION"; super(selected); this.name = "PrivateCheckpointVerificationError"; this.code = selected; }
 }
@@ -66,6 +67,43 @@ function frozenMatches(receipt, backup) {
     || backup.sqlBytes !== receipt.sql.uncompressedBytes || backup.sqlSha256 !== receipt.sql.uncompressedSha256) fail("CHECKPOINT");
 }
 
+function assertApplicationSnapshotReport(report) {
+  if (report?.command !== "verify" || report.verified !== true || report.prepared !== false
+    || report.restored !== false || report.releasedCandidates !== 0) fail("SNAPSHOT");
+}
+
+/** Compare the isolated clone to the signed application snapshot, including
+ * schema and row digests. The source runtime configuration is never mutated. */
+export async function verifyApplicationCloneSnapshot(source, selection, password, { signal, backup = backupMain } = {}) {
+  let cloneEnv;
+  try {
+    const selected = optionsFromRecord(selection);
+    if (selected.command !== "verify-application" || typeof password !== "string" || !password
+      || !password.isWellFormed() || /[\x00-\x1f\x7f]/.test(password) || Buffer.byteLength(password, "utf8") > 4096) fail("SNAPSHOT");
+    cloneEnv = copyRuntimeNotificationsEnvironment(source);
+    if (selected.database.toLowerCase() === cloneEnv.JESSIEMESSAGE_DB_NAME.toLowerCase()
+      || selected.user === cloneEnv.JESSIEMESSAGE_RUNTIME_DB_USER) fail("SNAPSHOT");
+    cloneEnv.JESSIEMESSAGE_DB_NAME = selected.database;
+    cloneEnv.JESSIEMESSAGE_APPLICATION_DATABASE = selected.confirmation;
+    cloneEnv.JESSIEMESSAGE_RUNTIME_DB_USER = selected.user;
+    cloneEnv.JESSIEMESSAGE_RUNTIME_DB_PASSWORD = password;
+    cloneEnv.JESSIEMESSAGE_MEDIA_ROOT = join(selected.checkpointDirectory, "media");
+    cloneEnv.JESSIEMESSAGE_DB_TLS_CA_PATH = CA;
+    // This is an operator-only clone identity, not the six-right runtime user.
+    // Remove its runtime grant profile only from this ephemeral copy.
+    delete cloneEnv.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE;
+    delete cloneEnv.JESSIEMESSAGE_DB_USER;
+    delete cloneEnv.JESSIEMESSAGE_DB_PASSWORD;
+    const report = await backup(["verify", "--offline", "--manifest", join(selected.checkpointDirectory, "manifest.json"),
+      "--profile", "photos-notify-application"], cloneEnv, { signal, outputStream: { write() {} } });
+    assertApplicationSnapshotReport(report);
+    return report;
+  } catch (error) {
+    if (error instanceof PrivateCheckpointVerificationError) throw error;
+    fail("SNAPSHOT");
+  } finally { clearRuntimeMessagingSecrets(cloneEnv); }
+}
+
 /** Verify an imported checkpoint with one read-only connection. No restoration,
  * capacity rebinding, worker, transport or application server is started. */
 export async function run(value, { inheritedEnv = process.env, execArgv = process.execArgv, inputStream = process.stdin,
@@ -74,7 +112,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   readBackupManifest = readManifest, verifyManifest = verifyBackupManifest, identity = backupIdentity, assertIdentity = assertCloneIdentity,
   inspectClient = inspectDumpClient, readSecret = readPassword, dump = dumpCloneSql, connect = connectDatabase,
   inspect = inspectClone, inspectPrivileges = assertBackupInspection, inspectApplicationPrivileges = assertApplicationTableInspection,
-  verify = verifyPhotoNotificationBackupData, signal } = {}) {
+  verify = verifyPhotoNotificationBackupData, verifyApplicationSnapshot = verifyApplicationCloneSnapshot, signal } = {}) {
   let sourceEnv, env, keys, password = "", connectionEnv, connection, transaction = false, result, failure;
   const active = () => { if (signal?.aborted) fail("CANCELLED"); };
   try {
@@ -179,7 +217,15 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           active();
         }
         await unchanged();
-        result = { status: "verified", ...common, databaseConnected: true,
+        if (application) {
+          try { await connection.rollback(); transaction = false; } catch { fail("CLEANUP"); }
+          try { await connection.end(); connection = undefined; } catch { fail("CLEANUP"); }
+          active();
+          const snapshotReport = await verifyApplicationSnapshot(env, selected, password, { signal });
+          assertApplicationSnapshotReport(snapshotReport); active();
+          await unchanged();
+        }
+        result = { status: "verified", ...common, databaseConnected: true, ...(application ? { applicationSnapshotMatched: true } : {}),
           counts: Object.fromEntries(COUNT_NAMES.map(name => [name, report.counts[name]])) };
       })));
   } catch (error) {

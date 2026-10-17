@@ -38,10 +38,34 @@ La cohérence repose sur la pause des producteurs, deux dumps identiques encadra
 
 Reprendre ensuite le runtime **0.33 `f2677249`**, avec son lanceur existant, et vérifier préflight, santé, disponibilité et routage. Aucun changement de code actif, de clés, de droits SQL ou de domaine n’est requis pour ce checkpoint.
 
-La copie indépendante de l’archive et l’import des trente tables dans une **nouvelle base isolée** restent des opérations distinctes. Le contrôle `verify-private-checkpoint.mjs check-application|verify-application` exige le reçu v2, le manifeste v4 et leur couverture authentifiée identique. Il vérifie le dump du clone avant et après les contrôles en lecture seule, les trente tables et migrations, TLS, les données chiffrées et les médias. Il ne démarre aucun serveur, transport ni worker et ne réassocie pas le stockage. Le mot de passe du compte de copie reste saisi masqué dans la console personnelle ; ne jamais le transmettre dans la conversation.
+La copie indépendante de l’archive et l’import des trente tables dans une **nouvelle base isolée** restent des opérations distinctes. Le contrôle `verify-private-checkpoint.mjs check-application|verify-application` exige le reçu v2, le manifeste v4 et leur couverture authentifiée identique. Il vérifie le dump du clone avant et après les contrôles en lecture seule, les trente tables et migrations, TLS, les données chiffrées et les médias. Après rollback et fermeture de cette connexion, il appelle aussi le vérificateur de snapshot applicatif sur une copie éphémère de configuration du clone : les empreintes de structure et de toutes les lignes sont comparées au snapshot signé. Aucun mot de passe n’est conservé et la configuration source reste intacte. Le succès exige `applicationSnapshotMatched: true`. Il ne démarre aucun serveur, transport ni worker et ne réassocie pas le stockage. Le mot de passe du compte de copie reste saisi masqué dans la console personnelle ; ne jamais le transmettre dans la conversation.
 
 Ce contrôle établit la correspondance des tables restaurées et des fichiers au checkpoint applicatif. Il ne certifie pas les objets SQL exclus. La bascule du domaine attend toujours une sauvegarde cohérente, sa copie indépendante et une restauration isolée vérifiée.
 
 ## Validation du lot
 
 Les tests ciblés couvrent les formats signés distincts, les rétrogradations, les listes natives exactes, les identifiants runtime gardés, l’absence de saisie, les refus avant dump et les couvertures concordantes. La suite SQL ajoute une comparaison avec le snapshot strict, un trigger volontairement exclu du seul profil applicatif, et une vérification/restauration du clone sans mutation de la source. La capture réelle et les résultats CI/hébergés seront consignés après leur exécution.
+
+
+## Capture réelle du 17 octobre 2026
+
+Révision capturée **`9db08f96783226d29bf6bf9d2d719679c3bb920f`**, arbre **`7593542efdfa91b4ba233fecf83a6190ab5f07d4`**, [PR brouillon #49](https://github.com/fredbuhr/jessiemessage/pull/49). Les cinq jobs de la [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39033378512) réussissent : **2 028 tests généraux**, 27 wrappers SQL ignorés dans ce seul job ; **370 tests sans saut par MariaDB 10.11 et 11.4**, vingt Chrome applicatifs et une authentification Chrome/HTTPS/MariaDB. Le premier essai CI avait exposé un helper de test réclamant une campagne supprimée par la fixture photos précédente ; seule cette attente a été corrigée, les contrôles de capacité/photos/messages/source étant explicitement conservés.
+
+Checkout séparé `/srv/customer/jessiemessage-operator/application-checkpoint-9db08f96` installé, syntaxe et inspection réelle conformes à **14:40:05.212 Europe/Paris**. Le Manager confirme l’absence de tâche planifiée et le maintien du Run/Build 0.33 avant l’opération. Le processus Node a été arrêté dans le Manager et son état `Arrêté` confirmé. Le frontend de maintenance renvoie un 301 vers la même URL `/api/health/` (et non systématiquement un 503) ; les essais de garde précédents se sont arrêtés avant la création d’une destination. Le processus du service n’étant pas visible dans le namespace SSH même avant arrêt, aucun `pgrep` à zéro n’est présenté comme preuve d’arrêt. La preuve opérateur est l’état arrêté du Manager et la disparition de l’API réelle, avec aucun autre producteur connu.
+
+Capture effective de **14:46:14.008 à 14:46:16.769**, sortie `application_checkpoint_saved`, code retour zéro. Destination privée : `/srv/customer/jessiemessage-private/checkpoint-schema30-application-before-domain`.
+
+| Élément | Résultat |
+| --- | --- |
+| Tables / migrations | 30 / 30 |
+| Fichiers photo chiffrés | 4 fichiers, 380 528 octets |
+| SQL Gzip | 15 666 octets ; SHA-256 `26133cb319bd087540ec232d204e43c98c1d887ceb1d80f1722997640f4626cd` |
+| Archive `checkpoint.tar.gz` | 400 149 octets |
+| SHA-256 de l’archive | `481407b64cf2d0ea997098d4a7c6100a30ef235d5b7f46ed076cd310093c943e` |
+| Octets de l’archive | Vérifiés intégralement ; aucune extraction annoncée |
+| Copie indépendante / import réel | Encore à réaliser |
+| Réassociation du stockage | Non effectuée |
+
+Le **même Run 0.33** est relancé immédiatement après le résultat de capture ; le Manager indique `Actif`, écoute sur 3000 et profil `messaging-photos-notify`. À **14:47:06.537**, préflight conforme, santé/disponibilité HTTP 200, routage apex `/app` toujours 302 vers recette. Aucun domaine, clé, droit SQL ni schéma n’a été changé ; seuls la pause/reprise et les nouveaux fichiers privés du checkpoint ont eu lieu.
+
+Le complément de vérification du snapshot signé du clone est préparé après cette capture ; il ne modifie ni l’archive figée ni le runtime actif. Sa validation et l’import personnel seront consignés séparément. La bascule du domaine n’est pas encore effectuée.

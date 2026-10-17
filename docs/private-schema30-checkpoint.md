@@ -1,10 +1,10 @@
 # Sauvegarde du schéma 30 et vérification du clone — étape 0.36
 
-Ce lot prépare les commandes avant la bascule du domaine. Le service actif reste 0.33 `f2677249`, profil `messaging-photos-notify`, trente migrations et trente tables physiques. Le pont de session 0.35 reste préparé, sans activation. **Aucun nouveau checkpoint réel ni restauration réelle n’est encore attesté par ce document.**
+Ce lot prépare les commandes avant la bascule du domaine. Le service actif reste 0.33 `f2677249`, profil `messaging-photos-notify`, trente migrations et trente tables physiques. Le pont de session 0.35 reste préparé, sans activation. **Le checkpoint strict complet reste non réalisé. Un checkpoint applicatif distinct a été capturé le 17 octobre à 14:46 ; sa copie indépendante et son import isolé restent à vérifier. Voir la procédure dédiée liée ci-dessous.**
 
 ## Diagnostic personnel confirmé et suite
 
-La capture personnelle du 17 octobre à 14:24 confirme `databaseConnected: true`, `databaseMatched: true`, `scope: raw_underscore_pattern`, `privilegeProfile: shared_admin` et visibilité non prouvée. Le refus strict est donc expliqué. La suite est le [checkpoint limité aux données applicatives](application-table-checkpoint.md), avec formats et couverture distincts et sans nouvelle saisie de mot de passe. Les anciennes commandes ci-dessous sont conservées comme preuve du chemin strict ; elles ne doivent pas servir à contourner ce refus.
+La capture personnelle du 17 octobre à 14:24 confirme `databaseConnected: true`, `databaseMatched: true`, `scope: raw_underscore_pattern`, `privilegeProfile: shared_admin` et visibilité non prouvée. Le refus strict est donc expliqué. Le [checkpoint limité aux données applicatives](application-table-checkpoint.md) a ensuite été capturé à 14:46, avec formats et couverture distincts et sans nouvelle saisie de mot de passe. Le runtime 0.33 est repris et conforme à 14:47. Les anciennes commandes ci-dessous sont conservées comme preuve du chemin strict ; elles ne doivent pas servir à contourner ce refus.
 
 ## Parcours personnel court
 
