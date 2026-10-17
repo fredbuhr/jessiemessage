@@ -81,15 +81,17 @@ bash /srv/customer/jessiemessage-private/restore-primary-crm-046-verified.sh che
 Dans PowerShell sur le PC, le bloc suivant copie uniquement la nouvelle archive dans Téléchargements et compare son empreinte attendue. Il réutilise une copie déjà présente sans l’écraser, puis vérifie aussi son empreinte. Le mot de passe éventuellement demandé est celui du compte SSH/SFTP existant ; il est saisi personnellement, jamais dans la conversation.
 
 ```powershell
+& {
 $jmCopie = Join-Path $env:USERPROFILE 'Downloads\JessieMessage-checkpoint-crm-20261017.tar.gz'
 if (-not (Test-Path -LiteralPath $jmCopie)) {
     scp 'QxrM8Gh3hsN_jessiebk@57-118579.ssh.hosting-ik.com:/srv/customer/jessiemessage-private/checkpoint-primary-crm-046/checkpoint.tar.gz' $jmCopie
     if ($LASTEXITCODE -ne 0) { throw 'Copie interrompue : transmettre le message affiché.' }
 }
-if ((Get-FileHash -LiteralPath $jmCopie -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'd9444937c4f920f976ed8e5b4efacc487457aa5f94267eb735fc9b2b420ab8a9') {
+if ((Get-FileHash -LiteralPath $jmCopie -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant() -ne 'd9444937c4f920f976ed8e5b4efacc487457aa5f94267eb735fc9b2b420ab8a9') {
     throw 'Empreinte différente : conserver le fichier et transmettre ce message.'
 }
 'COPIE_CRM30_OK'
+}
 ```
 
 Après réception de ce résultat, restent l’accès de la seule identité de maintenance à cette nouvelle base, la saisie personnelle masquée du mot de passe SQL et l’import natif vérifié. Le résultat final devra confirmer `application_checkpoint_restored_verified`, `imported: true`, `applicationSnapshotMatched: true`, `checkpointFilesMatched: true`, `sourceMutated: false` et `capacityRebound: false`. Ces résultats ne sont pas encore acquis. Les fiches restent désactivées jusqu’à ces validations et à leur activation distincte ; les diffusions restent séparées.
