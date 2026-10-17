@@ -81,4 +81,18 @@ Cette commande ne réalise pas l’import SQL et ne lance pas le réparateur de 
 
 ## État de validation
 
-Les tests utilisent exclusivement des comptes, clés, SQL et photos fictifs. Ils couvrent les fichiers privés réels, la création et la lecture de Gzip/TAR, les altérations, les liens, les substitutions de répertoire, les refus de droits, les annulations et l’effacement des secrets en mémoire. La CI Linux doit exercer le véritable FD hérité vers GNU tar ; l’environnement local dont procfs est simulé emploie uniquement un adaptateur de fixture identifié. Les résultats CI exacts et le précontrôle hébergé sont à consigner après vérification.
+**Préparation du code et de l’hébergement validée le 17 octobre 2026.** Révision `ba7aed7e107c566768436e5399a00b95df40d530`, arbre `9de0af2f5f278e7f7a626e02f7517c32319c52fd`, [PR brouillon #47](https://github.com/fredbuhr/jessiemessage/pull/47). Les cinq jobs de la [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/38991898070) passent : **1 981 tests généraux réussis**, 27 wrappers SQL ignorés seulement dans ce job ; **368 tests sans saut sur chacune des MariaDB 10.11 et 11.4** ; vingt tests Chrome applicatifs et une authentification Chrome/HTTPS/MariaDB. La capture synthétique CI emploie GNU tar avec le vrai FD hérité ; l’acquisition réelle de l’identité d’inspection avec profil hébergeur passe.
+
+Checkout séparé `/srv/customer/jessiemessage-operator/checkpoint-ba7aed7e`, installation verrouillée et syntaxe vérifiées à **03:43:27.621 Europe/Paris**. À **03:43:42**, le contrôle réel annonce `ready_for_input`, `databaseConnected: false`, `checkpointSaved: false`. Le lanceur propriétaire `0700`, créé exclusivement et relu à **03:44:30.814**, est `/srv/customer/jessiemessage-private/checkpoint-schema30-ba7aed7e.sh` ; SHA-256 `ba30f91cf964bd054409a349b0afe2faa76fd2d3390c67fc5fba3a315631eab0`. Il épingle révision, arbre et propreté des fichiers suivis avant de demander le secret dans la console personnelle.
+
+À **03:45:14.592**, les contrôles de préparation passent encore ; le préflight du service 0.33 est conforme, santé/disponibilité répondent 200 et l’entrée apex conserve son 302 vers recette. Aucun arrêt, capture réelle, nouveau checkpoint, import, migration, changement de clés, droit ou domaine n’a été effectué. L’inspection réelle avec les identifiants personnels reste à faire.
+
+Première action personnelle, depuis la [console SSH Node.js normale](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), **sans arrêter l’application** :
+
+```sh
+bash /srv/customer/jessiemessage-private/checkpoint-schema30-ba7aed7e.sh inspect
+```
+
+Le mot de passe demandé est celui du compte SQL existant `fb4hmr_jm_mig`, pas celui du Manager Infomaniak. La saisie ne s’affiche pas. Ne transmettre dans la conversation que `inspection_verified` ou le code neutre d’erreur. Ce lanceur prépare la destination privée exclusive `checkpoint-schema30-before-domain` ; aucun fichier de capture n’est créé en mode `inspect`. Une inspection positive sera suivie de la pause/capture, du redémarrage contrôlé puis de la copie indépendante et de l’import isolé.
+
+Les tests utilisent exclusivement des comptes, clés, SQL et photos fictifs. Ils couvrent les fichiers privés réels, la création et la lecture de Gzip/TAR, les altérations, les liens, les substitutions de répertoire, les refus de droits, les annulations et l’effacement des secrets en mémoire. La CI Linux doit exercer le véritable FD hérité vers GNU tar ; l’environnement local dont procfs est simulé emploie uniquement un adaptateur de fixture identifié. Ces essais de code et le précontrôle hébergé ne remplacent pas l’inspection, la capture, la copie indépendante et la restauration réelles.
