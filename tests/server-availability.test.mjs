@@ -26,7 +26,7 @@ test("central admission rejects every SQL-bearing route before a handler or body
   t.after(() => close(server)); const base = await listen(server);
   for (const path of ["/api/auth/session", "/api/access/session", "/api/chat/client/conversation",
     "/api/media/admin/assets", "/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness",
-    "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/broadcast-preference.js",
+    "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
     "/crm.js", "/crm-model.js", "/crm.css", "/readiness.js", "/readiness-model.js", "/readiness.css"]) {
     const response = await fetch(`${base}${path}`, { headers: { Cookie: `__Host-jessie_session=${"A".repeat(43)}` } });
     assert.equal(response.status, 429, path);
@@ -44,7 +44,7 @@ test("central admission rejects every SQL-bearing route before a handler or body
   });
   assert.equal(response.statusCode, 429);
   assert.equal(response.headers.connection, "close");
-  assert.equal(lookups, 0); assert.equal(admissions, 20);
+  assert.equal(lookups, 0); assert.equal(admissions, 19);
 });
 
 test("health and public files do not spend private admission, and feature-off routes stay neutral", async (t) => {

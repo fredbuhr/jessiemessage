@@ -12,10 +12,9 @@ const cookie = `__Host-jessie_session=${token}`, clientCookie = `__Host-jessie_c
 const adminId = "a".repeat(32), clientId = "b".repeat(32), campaignId = "c".repeat(32), retryId = "d".repeat(32);
 const conversationId = "1".repeat(32), secondConversationId = "2".repeat(32), mediaId = "e".repeat(32), messageId = "f".repeat(32);
 const now = Date.now(), campaigns = `${root}/admin/campaigns`, detailPath = `${campaigns}/${campaignId}`;
-const methods = ["actor", "preference", "savePreference", "preview", "create", "activity", "list", "get", "cancel"];
+const methods = ["actor", "preview", "create", "activity", "list", "get", "cancel"];
 const actor = (role = "admin", changes = {}) => ({ user: { id: role === "admin" ? adminId : clientId, role, pseudonym: role === "admin" ? "Jessie" : "Client test", privateEmail: "private-email" },
   csrf: role === "admin" ? csrf : clientCsrf, expiresAt: now + 3600000, secret: "private-secret", ...changes });
-const preference = (changes = {}) => ({ enabled: true, version: "1", updatedAt: now, tokenHash: "private-hash", ...changes });
 const input = (changes = {}) => ({ clientCampaignId: retryId, title: "Nouvelles de Jess", body: "Bonjour <script>texte</script>\n", mediaId: null,
   allowRepeatMedia: false, conversationIds: [conversationId], ...changes });
 const recipient = (changes = {}) => ({ conversationId, client: { id: clientId, pseudonym: "Client test", email: "private-email" },
@@ -30,8 +29,6 @@ const preview = (changes = {}) => ({ recipients: [{ conversationId, client: { id
 function fixtureService(calls, overrides = {}) {
   return {
     async actor(role, value) { calls.push(["actor", role, value]); return value === (role === "admin" ? token : clientToken) ? actor(role) : null; },
-    async preference(value) { calls.push(["preference", value]); return preference(); },
-    async savePreference(value, body) { calls.push(["savePreference", value, body]); return preference({ enabled: body.enabled, version: String(BigInt(body.expectedVersion) + 1n) }); },
     async preview(value, body) { calls.push(["preview", value, body]); return preview(); },
     async create(value, body) { calls.push(["create", value, body]); return { campaign: campaign({ title: body.title, body: body.body, mediaId: body.mediaId, allowRepeatMedia: body.allowRepeatMedia }), duplicate: false, secret: "private-secret" }; },
     async activity(value) { calls.push(["activity", value]); return { campaigns: [campaign()], secret: "private-secret" }; },
@@ -96,21 +93,18 @@ test("broadcast handler requires canonical HTTPS, a boolean capability and the f
   for (const method of methods) assert.throws(() => createBroadcastHandler({ ...service, [method]: null }, { origin }));
 });
 
-test("sessions expose only their current role and the fixed admin media capability", async (t) => {
+test("only the admin broadcast session is exposed with its fixed media capability", async (t) => {
   const { base, calls } = await fixture(t);
-  for (const role of ["admin", "client"]) {
-    const response = await get(base, `${root}/${role}/session`, { Cookie: role === "admin" ? cookie : clientCookie });
-    assert.equal(response.status, 200); privateHeaders(response);
-    const body = await response.json(); noInternals(body);
-    assert.deepEqual(body, { user: { id: role === "admin" ? adminId : clientId, role, pseudonym: role === "admin" ? "Jessie" : "Client test" },
-      csrf: role === "admin" ? csrf : clientCsrf, expiresAt: now + 3600000, ...(role === "admin" ? { mediaEnabled: true } : {}) });
-  }
-  assert.deepEqual(calls, [["actor", "admin", token], ["actor", "client", clientToken]]);
+  const response = await get(base, `${root}/admin/session`);
+  assert.equal(response.status, 200); privateHeaders(response);
+  const body = await response.json(); noInternals(body);
+  assert.deepEqual(body, { user: { id: adminId, role: "admin", pseudonym: "Jessie" }, csrf, expiresAt: now + 3600000, mediaEnabled: true });
+  assert.deepEqual(calls, [["actor", "admin", token]]);
 });
 
 test("each role rejects missing, duplicate, noncanonical and opposite role cookies", async (t) => {
   const { base, calls } = await fixture(t);
-  for (const role of ["admin", "client"]) {
+  for (const role of ["admin"]) {
     const own = role === "admin" ? cookie : clientCookie, opposite = role === "admin" ? clientCookie : cookie;
     const cookieName = role === "admin" ? "__Host-jessie_session" : "__Host-jessie_client";
     for (const header of [null, opposite, `${cookieName}=${role === "admin" ? clientToken : token}`, `${own}; ${own}`, `${own}; ${cookieName}=wrong`, `${cookieName}=${"A".repeat(42)}B`]) {
@@ -138,8 +132,8 @@ test("wrong roles and corrupt actor DTOs fail before any broadcast data operatio
 
 test("all page and module GET/HEAD paths authenticate their own current role", async (t) => {
   const { base } = await fixture(t);
-  for (const path of ["/admin/broadcasts", "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/broadcast-preference.js"]) {
-    const client = path === "/broadcast-preference.js";
+  for (const path of ["/admin/broadcasts", "/broadcast.js", "/broadcast-model.js", "/broadcast.css"]) {
+    const client = false;
     for (const method of ["GET", "HEAD"]) {
       for (const headers of [{}, { Cookie: client ? cookie : clientCookie }]) {
         const response = await fetch(`${base}${path}`, { method, headers });
@@ -154,8 +148,8 @@ test("all page and module GET/HEAD paths authenticate their own current role", a
 test("authenticated page and source assets stay private and HEAD has no source body", async (t) => {
   const { base } = await fixture(t);
   for (const [path, type] of [["/admin/broadcasts", /text\/html/], ["/broadcast.js", /javascript/], ["/broadcast-model.js", /javascript/],
-    ["/broadcast.css", /text\/css/], ["/broadcast-preference.js", /javascript/]]) {
-    const headers = { Cookie: path === "/broadcast-preference.js" ? clientCookie : cookie };
+    ["/broadcast.css", /text\/css/]]) {
+    const headers = { Cookie: cookie };
     const response = await get(base, path, headers);
     assert.equal(response.status, 200); privateHeaders(response); assert.match(response.headers.get("content-type"), type);
     assert.ok((await response.text()).length > 0);
@@ -167,8 +161,7 @@ test("authenticated page and source assets stay private and HEAD has no source b
 test("unauthenticated and CSRF-rejected POSTs never attach a JSON body reader", async () => {
   const handler = createBroadcastHandler(fixtureService([]), { origin });
   for (const [path, headers, status, error] of [[`${root}/admin/preview`, mutationHeaders("admin", { Cookie: "" }), 401, "authentication_required"],
-    [campaigns, mutationHeaders("admin", { "X-CSRF-Token": "bad" }), 403, "csrf_failed"],
-    [`${root}/client/preference`, mutationHeaders("client", { "X-CSRF-Token": csrf }), 403, "csrf_failed"]]) {
+    [campaigns, mutationHeaders("admin", { "X-CSRF-Token": "bad" }), 403, "csrf_failed"]]) {
     const req = new PassThrough(); req.url = path; req.method = "POST";
     req.headers = Object.fromEntries(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value]));
     let responseStatus, responseHeaders, body;
@@ -193,39 +186,25 @@ test("all mutations require exact Origin, JSON and same origin fetch metadata", 
   assert.equal(calls.some(([name]) => ["preview", "create"].includes(name)), false);
 });
 
-test("preference reads and optimistic explicit saves expose only the client preference", async (t) => {
+test("retired client broadcast routes and module fall through without authentication or body reads", async (t) => {
   const { base, calls } = await fixture(t);
-  const read = await get(base, `${root}/client/preference`, { Cookie: clientCookie });
-  assert.equal(read.status, 200); const value = await read.json(); noInternals(value);
-  assert.deepEqual(value, { enabled: true, version: "1", updatedAt: now });
-  const saved = await post(base, `${root}/client/preference`, { enabled: false, expectedVersion: "1" }, mutationHeaders("client"));
-  assert.equal(saved.status, 200); assert.deepEqual(await saved.json(), { enabled: false, version: "2", updatedAt: now });
-  assert.deepEqual(calls.at(-1), ["savePreference", clientToken, { enabled: false, expectedVersion: "1" }]);
+  for (const path of ["/broadcast-preference.js", `${root}/client/session`, `${root}/client/preference`]) {
+    for (const headers of [{}, { Cookie: clientCookie }, { Cookie: cookie }]) {
+      for (const method of ["GET", "HEAD", "POST"]) {
+        const response = await fetch(`${base}${path}`, { method, headers, ...(method === "POST" ? { body: "{}" } : {}) });
+        assert.equal(response.status, 404, `${method} ${path}`); assert.equal(response.headers.get("set-cookie"), null);
+      }
+    }
+  }
+  assert.deepEqual(calls, []);
+  const handler = createBroadcastHandler(fixtureService(calls), { origin });
+  const req = new PassThrough(); req.url = `${root}/client/preference`; req.method = "POST"; req.headers = {};
+  assert.equal(await handler(req, {}), false); assert.equal(req.listenerCount("data"), 0); req.destroy();
 });
 
-test("preference inputs reject impersonation, loose booleans and noncanonical versions", async (t) => {
-  const { base, calls } = await fixture(t);
-  for (const body of [null, [], {}, { enabled: true }, { enabled: "true", expectedVersion: "0" }, { enabled: 1, expectedVersion: "0" },
-    { enabled: false, expectedVersion: 0 }, { enabled: true, expectedVersion: "01" }, { enabled: true, expectedVersion: "18446744073709551616" },
-    { enabled: true, expectedVersion: "0", clientId }, { enabled: true, expectedVersion: "0", adminId }, { enabled: true, expectedVersion: "0", version: "1" }]) {
-    await errorBody(await post(base, `${root}/client/preference`, JSON.stringify(body), mutationHeaders("client")), 400, "invalid_request");
-  }
-  assert.equal(calls.some(([name]) => name === "savePreference"), false);
-});
 
-test("preference output validates default state and save version/value bindings", async (t) => {
-  const { base, service } = await fixture(t);
-  service.preference = async () => preference({ enabled: false, version: "0", updatedAt: null });
-  assert.deepEqual(await (await get(base, `${root}/client/preference`, { Cookie: clientCookie })).json(), { enabled: false, version: "0", updatedAt: null });
-  for (const value of [null, preference({ enabled: 1 }), preference({ version: "01" }), preference({ version: "0" }), preference({ updatedAt: null }), preference({ updatedAt: -1 })]) {
-    service.preference = async () => value;
-    await errorBody(await get(base, `${root}/client/preference`, { Cookie: clientCookie }), 503, "broadcast_unavailable");
-  }
-  for (const value of [preference({ enabled: false }), preference({ version: "3" })]) {
-    service.savePreference = async () => value;
-    await errorBody(await post(base, `${root}/client/preference`, { enabled: true, expectedVersion: "1" }, mutationHeaders("client")), 503, "broadcast_unavailable");
-  }
-});
+
+
 
 test("preview preserves explicit requested recipients and strips all private fields", async (t) => {
   const { base, calls, service } = await fixture(t);
@@ -234,7 +213,7 @@ test("preview preserves explicit requested recipients and strips all private fie
   assert.equal(result.status, 200); privateHeaders(result); const value = await result.json(); noInternals(value);
   assert.deepEqual(value, { recipients: [{ conversationId, client: { id: clientId, pseudonym: "Client test" }, eligible: true, reason: null, repeatMedia: false }], eligibleCount: 1, repeatCount: 0 });
   assert.deepEqual(calls.at(-1), ["preview", token, body]);
-  service.preview = async () => preview({ recipients: [{ ...preview().recipients[0], eligible: false, reason: "opted_out", repeatMedia: true }], eligibleCount: 0, repeatCount: 1 });
+  service.preview = async () => preview({ recipients: [{ ...preview().recipients[0], eligible: false, reason: "access_inactive", repeatMedia: true }], eligibleCount: 0, repeatCount: 1 });
   const optedOut = await post(base, `${root}/admin/preview`, { ...body, mediaId });
   assert.equal(optedOut.status, 200); assert.equal((await optedOut.json()).repeatCount, 1);
 });
@@ -314,7 +293,7 @@ test("queries reject unknown, repeated or noncanonical values on every route", a
     `?afterId=${campaignId}&afterId=${campaignId}`, "?adminId=" + adminId, "?q=secret", "?=empty"]) {
     await errorBody(await get(base, campaigns + suffix), 400, "invalid_request");
   }
-  for (const path of [`${root}/admin/session?role=client`, `${root}/client/session?limit=1`, `${root}/client/preference?clientId=${clientId}`,
+  for (const path of [`${root}/admin/session?role=client`, 
     `${detailPath}?limit=1`, "/broadcast.js?cache=1"]) {
     await errorBody(await get(base, path, { Cookie: `${cookie}; ${clientCookie}` }), 400, "invalid_request");
   }
@@ -381,9 +360,9 @@ test("service failures map to bounded public errors and clear only the affected 
     ["BROADCAST_CONFLICT", 409, "record_changed"], ["BROADCAST_LIMIT", 409, "limit_reached"], ["BROADCAST_RECIPIENTS", 409, "recipients_unavailable"],
     ["BROADCAST_REPEAT", 409, "repeat_confirmation_required"], ["BROADCAST_MEDIA", 409, "media_unavailable"], ["BROADCAST_INPUT", 400, "invalid_request"],
     ["BROADCAST_CRYPTO", 503, "broadcast_unavailable"], ["SQL_PRIVATE", 503, "broadcast_unavailable"]]) {
-    service.preference = async () => { throw Object.assign(new Error("private SQL credentials ciphertext"), { code, cause: "private-cause" }); };
-    const response = await get(base, `${root}/client/preference`, { Cookie: clientCookie });
-    assert.equal(response.headers.get("set-cookie"), status === 401 ? "__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
+    service.get = async () => { throw Object.assign(new Error("private SQL credentials ciphertext"), { code, cause: "private-cause" }); };
+    const response = await get(base, detailPath);
+    assert.equal(response.headers.get("set-cookie"), status === 401 ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
     await errorBody(response, status, error);
   }
   for (const value of [{ httpStatus: 200, publicCode: "private-secret" }, { httpStatus: 503, publicCode: "private-secret" }, new Error("private-stack")]) {
@@ -406,7 +385,7 @@ test("exact routes expose only their methods and unknown paths fall through unto
   const { base, calls } = await fixture(t);
   for (const [path, method, allow] of [[`${root}/admin/session`, "HEAD", "GET"], [`${root}/admin/preview`, "GET", "POST"],
     [campaigns, "OPTIONS", "GET, POST"], [detailPath, "POST", "GET"], [`${detailPath}/cancel`, "GET", "POST"],
-    [`${root}/client/preference`, "HEAD", "GET, POST"], ["/broadcast.js", "POST", "GET, HEAD"], ["/admin/broadcasts", "OPTIONS", "GET, HEAD"]]) {
+    ["/broadcast.js", "POST", "GET, HEAD"], ["/admin/broadcasts", "OPTIONS", "GET, HEAD"]]) {
     const response = await fetch(`${base}${path}`, { method, ...(method === "POST" ? { body: "{}" } : {}) });
     assert.equal(response.status, 405); privateHeaders(response); assert.equal(response.headers.get("allow"), allow);
     if (method === "HEAD") assert.equal(await response.text(), ""); else assert.deepEqual(await response.json(), { error: "method_not_allowed" });
@@ -416,4 +395,15 @@ test("exact routes expose only their methods and unknown paths fall through unto
     const response = await get(base, path); assert.equal(response.status, 404); assert.equal(await response.text(), "fallback");
   }
   assert.deepEqual(calls, []);
+});
+
+test("historical opted-out terminal recipients remain readable without becoming sendable again", async (t) => {
+  const { base } = await fixture(t, { get: async () => campaign({
+    status: "completed", counts: { total: 1, pending: 0, sending: 0, delivered: 0, skipped: 1, cancelled: 0, failed: 0 },
+    recipients: [recipient({ state: "skipped", reason: "opted_out" })],
+  }) });
+  const response = await get(base, detailPath);
+  assert.equal(response.status, 200); privateHeaders(response);
+  const result = await response.json(); noInternals(result);
+  assert.equal(result.status, "completed"); assert.equal(result.recipients[0].reason, "opted_out"); assert.equal(result.counts.pending, 0);
 });

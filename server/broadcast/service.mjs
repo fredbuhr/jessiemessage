@@ -1,7 +1,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { csrfToken, tokenDigest } from "../auth/crypto.mjs";
+import { tokenDigest } from "../auth/crypto.mjs";
 import { campaignFingerprint, openPayload, sealPayload } from "./crypto.mjs";
-import { validateCampaign, validateId, validatePreview, validateVersion } from "./validation.mjs";
+import { validateCampaign, validateId, validatePreview } from "./validation.mjs";
 
 export class BroadcastError extends Error {
   constructor(code, retryAfter) {
@@ -17,19 +17,10 @@ const permitted = new Set(["BROADCAST_INPUT", "BROADCAST_UNAUTHORIZED", "BROADCA
 const storedId = (value) => { if (!Buffer.isBuffer(value) || value.length !== 16) fail("BROADCAST_UNAVAILABLE"); return value.toString("hex"); };
 const date = (value) => { if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail("BROADCAST_UNAVAILABLE"); return value; };
 const text = (value, max = 64) => { if (typeof value !== "string" || !value.isWellFormed() || value.length > max) fail("BROADCAST_UNAVAILABLE"); return value; };
-const exact = (value, keys) => { if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== keys.length || keys.some((key) => !Object.hasOwn(value, key))) fail("BROADCAST_INPUT"); };
-function version(value) { try { return validateVersion(value); } catch { fail("BROADCAST_UNAVAILABLE"); } }
-function preferenceDTO(row) {
-  if (!row || typeof row.enabled !== "boolean") fail("BROADCAST_UNAVAILABLE");
-  const current = version(row.version), updatedAt = row.updatedAt === null ? null : date(row.updatedAt);
-  if (current === "0" && (row.enabled || updatedAt !== null) || current !== "0" && updatedAt === null) fail("BROADCAST_UNAVAILABLE");
-  return { enabled: row.enabled, version: current, updatedAt };
-}
-
 export async function createBroadcastService({ store, authService, authStore, key, mediaEnabled = false, clock = Date.now }) {
   if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || typeof mediaEnabled !== "boolean"
     || typeof authService?.session !== "function" || typeof authStore?.consumeRateLimit !== "function"
-    || ["preferenceActor", "getPreference", "savePreference", "preview", "create", "activity", "list", "get", "cancel"].some((method) => typeof store?.[method] !== "function")) fail("BROADCAST_CONFIG");
+    || ["preview", "create", "activity", "list", "get", "cancel"].some((method) => typeof store?.[method] !== "function")) fail("BROADCAST_CONFIG");
   key = Buffer.from(key);
   async function guarded(operation) {
     try { return await operation(); }
@@ -42,15 +33,9 @@ export async function createBroadcastService({ store, authService, authStore, ke
     }
   }
   async function actor(role, token) {
-    if (!["admin", "client"].includes(role)) fail("BROADCAST_INPUT");
-    let hash; try { hash = tokenDigest(token); } catch { fail("BROADCAST_UNAUTHORIZED"); }
-    let session;
-    if (role === "admin") session = await authService.session(token);
-    else {
-      const current = await store.preferenceActor({ tokenHash: hash, now: date(clock()) });
-      if (!current) fail("BROADCAST_UNAUTHORIZED");
-      session = { user: { id: storedId(current.id), pseudonym: current.pseudonym, role }, csrf: csrfToken(token), expiresAt: current.expiresAt };
-    }
+    if (role !== "admin") fail("BROADCAST_UNAUTHORIZED");
+    try { tokenDigest(token); } catch { fail("BROADCAST_UNAUTHORIZED"); }
+    const session = await authService.session(token);
     if (!session || session.user?.role !== role) fail("BROADCAST_UNAUTHORIZED");
     try { validateId(session.user.id); tokenDigest(session.csrf); } catch { fail("BROADCAST_UNAVAILABLE"); }
     return { user: { id: session.user.id, role, pseudonym: text(session.user.pseudonym) }, csrf: session.csrf, expiresAt: date(session.expiresAt) };
@@ -106,16 +91,6 @@ export async function createBroadcastService({ store, authService, authStore, ke
   }
   return Object.freeze({
     actor: (role, token) => guarded(() => actor(role, token)),
-    preference: (token) => guarded(async () => {
-      const { request } = await context("client", token);
-      return preferenceDTO(await store.getPreference(request));
-    }),
-    savePreference: (token, input) => guarded(async () => {
-      exact(input, ["enabled", "expectedVersion"]);
-      if (typeof input.enabled !== "boolean") fail("BROADCAST_INPUT"); validateVersion(input.expectedVersion);
-      const { request } = await context("client", token, true);
-      return preferenceDTO(await store.savePreference({ ...request, enabled: input.enabled, expectedVersion: input.expectedVersion }));
-    }),
     preview: (token, input) => guarded(async () => {
       const parsed = validatePreview(input); imageEnabled(parsed.mediaId);
       const { request } = await context("admin", token);
@@ -125,7 +100,7 @@ export async function createBroadcastService({ store, authService, authStore, ke
       const recipients = row.recipients.map((recipient) => {
         const conversationId = storedId(recipient.conversationId);
         if (!expected.has(conversationId) || seen.has(conversationId) || !recipient.client || typeof recipient.eligible !== "boolean"
-          || typeof recipient.repeatMedia !== "boolean" || ![null, "access_inactive", "opted_out", "conversation_unavailable"].includes(recipient.reason)
+          || typeof recipient.repeatMedia !== "boolean" || ![null, "access_inactive", "conversation_unavailable"].includes(recipient.reason)
           || recipient.eligible !== (recipient.reason === null) || parsed.mediaId === null && recipient.repeatMedia) fail("BROADCAST_UNAVAILABLE");
         seen.add(conversationId);
         return { conversationId, client: { id: storedId(recipient.client.id), pseudonym: text(recipient.client.pseudonym) },

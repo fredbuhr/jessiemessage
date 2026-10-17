@@ -12,7 +12,7 @@ const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1", id = () => randomByte
 const now = Date.UTC(2026, 9, 15, 12), sqlDate = (value) => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
 const code = (expected) => (error) => error instanceof ChatStoreError && error.code === expected && error.cause === undefined;
 
-test("real MariaDB consent, immutable targeted campaigns and atomic private delivery (synthetic disposable schema only)", {
+test("real MariaDB active-access eligibility, immutable targeted campaigns and atomic private delivery (synthetic disposable schema only)", {
   skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.", timeout: 180000,
 }, async (t) => {
   const options = databaseOptions();
@@ -52,7 +52,6 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
       return fixture;
     }
     const actor = (fixture, extra = {}) => ({ tokenHash: fixture.admin.tokenHash, now, ...extra });
-    const consent = (fixture, extra = {}) => store.savePreference({ tokenHash: fixture.client.tokenHash, now, enabled: true, expectedVersion: "0", ...extra });
     const campaign = (fixtures, extra = {}) => ({ id: id(), clientCampaignId: id(), payloadEncrypted: "v1.synthetic-encrypted-campaign", requestFingerprint: digest(),
       mediaId: null, allowRepeatMedia: false, recipients: fixtures.map((fixture) => ({ conversationId: fixture.conversationId, messageId: id(), clientMessageId: id() })), ...extra });
     const create = (fixture, value = campaign([fixture]), extra = {}) => store.create({ ...actor(fixture), campaign: value, ...extra });
@@ -95,39 +94,35 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
       assert.equal(await store.assertSchema(), true);
     });
 
-    await subtest("preferences default off without insertion and only the current verified client can change them", async () => {
+    await subtest("active recipients need no preference row and delivery never inserts one", async () => {
       const fixture = await pair();
-      assert.deepEqual(await store.getPreference({ tokenHash: fixture.client.tokenHash, now }), { enabled: false, version: "0", updatedAt: null });
+      const preview = await store.preview({ ...actor(fixture), conversationIds: [fixture.conversationId] });
+      assert.equal(preview.eligibleCount, 1); assert.equal(preview.recipients[0].reason, null);
+      const created = await create(fixture), job = await store.claim({ now });
+      assert.ok(job); assert.equal((await store.deliver(job, { now, message: message(job) })).delivered, true);
+      assert.equal((await get(fixture, created.campaign.id)).counts.delivered, 1);
       assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM broadcast_preferences WHERE user_id = ?", [fixture.client.id]))[0].value), 0);
-      assert.ok((await store.preferenceActor({ tokenHash: fixture.client.tokenHash, now })).id.equals(fixture.client.id));
-      await assert.rejects(store.savePreference({ tokenHash: fixture.admin.tokenHash, now, enabled: true, expectedVersion: "0" }), code("CHAT_UNAUTHORIZED"));
-      await connection.query("UPDATE users SET status = 'pending', age_assured_at = NULL, access_approved_at = ?, access_expires_at = ? WHERE id = ?", [sqlDate(now - 1000), sqlDate(now), fixture.client.id]);
-      assert.deepEqual(await consent(fixture), { enabled: true, version: "1", updatedAt: now });
-      await connection.query("UPDATE client_auth_state SET credential_version = 2 WHERE user_id = ?", [fixture.client.id]);
-      await assert.rejects(store.getPreference({ tokenHash: fixture.client.tokenHash, now }), code("CHAT_UNAUTHORIZED"));
-      await connection.query("UPDATE client_auth_state SET credential_version = 1 WHERE user_id = ?", [fixture.client.id]);
-      await connection.query("UPDATE users SET email_verified_at = NULL WHERE id = ?", [fixture.client.id]);
-      await assert.rejects(consent(fixture, { expectedVersion: "1" }), code("CHAT_UNAUTHORIZED"));
+      assert.equal(store.getPreference, undefined); assert.equal(store.savePreference, undefined); assert.equal(store.preferenceActor, undefined);
     });
 
-    await subtest("concurrent preference saves and uint64 versions never overwrite a stale choice", async () => {
+    await subtest("historical disabled preferences do not gate preview, confirmation or worker claim", async () => {
       const fixture = await pair();
-      const attempts = await Promise.allSettled([consent(fixture), consent(fixture, { enabled: false })]);
-      assert.equal(attempts.filter((row) => row.status === "fulfilled").length, 1);
-      assert.equal(attempts.find((row) => row.status === "rejected").reason.code, "BROADCAST_CONFLICT");
-      await connection.query("UPDATE broadcast_preferences SET version = 18446744073709551614 WHERE user_id = ?", [fixture.client.id]);
-      assert.equal((await consent(fixture, { expectedVersion: "18446744073709551614" })).version, "18446744073709551615");
-      await assert.rejects(consent(fixture, { expectedVersion: "18446744073709551615" }), code("BROADCAST_LIMIT"));
-      await assert.rejects(consent(fixture, { expectedVersion: "01" }), code("BROADCAST_INPUT"));
+      await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 0, 7, ?, ?)", [fixture.client.id, sqlDate(now), sqlDate(now)]);
+      assert.equal((await store.preview({ ...actor(fixture), conversationIds: [fixture.conversationId] })).eligibleCount, 1);
+      const created = await create(fixture), job = await store.claim({ now });
+      assert.ok(job); assert.equal((await store.deliver(job, { now, message: message(job) })).delivered, true);
+      assert.equal((await get(fixture, created.campaign.id)).counts.delivered, 1);
+      const row = (await connection.query("SELECT enabled, version, updated_at FROM broadcast_preferences WHERE user_id = ?", [fixture.client.id]))[0];
+      assert.equal(Number(row.enabled), 0); assert.equal(String(row.version), "7");
     });
 
-    await subtest("preview requires ownership and reports inactive, closed and opted-out recipients without creating jobs", async () => {
+    await subtest("preview requires ownership and reports inactive and closed recipients without creating jobs", async () => {
       const one = await pair(), two = await pair(one.admin), three = await pair(one.admin), foreign = await pair();
-      await consent(one); await consent(two); await connection.query("UPDATE users SET status = 'pending', age_assured_at = NULL WHERE id = ?", [two.client.id]);
+      await connection.query("UPDATE users SET status = 'pending', age_assured_at = NULL WHERE id = ?", [two.client.id]);
       let preview = await store.preview({ ...actor(one), conversationIds: [one.conversationId, two.conversationId, three.conversationId], mediaId: null });
-      assert.equal(preview.eligibleCount, 1); assert.equal(preview.repeatCount, 0);
+      assert.equal(preview.eligibleCount, 2); assert.equal(preview.repeatCount, 0);
       assert.equal(preview.recipients.find((row) => row.conversationId.equals(two.conversationId)).reason, "access_inactive");
-      assert.equal(preview.recipients.find((row) => row.conversationId.equals(three.conversationId)).reason, "opted_out");
+      assert.equal(preview.recipients.find((row) => row.conversationId.equals(three.conversationId)).reason, null);
       await connection.query("UPDATE conversations SET closed_at = ? WHERE id = ?", [sqlDate(now), one.conversationId]);
       preview = await store.preview({ ...actor(one), conversationIds: [one.conversationId] }); assert.equal(preview.recipients[0].reason, "conversation_unavailable");
       await assert.rejects(store.preview({ ...actor(one), conversationIds: [foreign.conversationId] }), code("BROADCAST_NOT_FOUND"));
@@ -137,12 +132,12 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
 
     await subtest("confirmation is all-or-nothing and retries reuse the original immutable target snapshot", async () => {
       const one = await pair(), two = await pair(one.admin), value = campaign([one, two]);
-      await consent(one);
+      await connection.query("UPDATE users SET status = 'pending' WHERE id = ?", [two.client.id]);
       await assert.rejects(create(one, value), code("BROADCAST_RECIPIENTS"));
       assert.equal((await store.list(actor(one))).campaigns.length, 0);
-      await consent(two);
+      await connection.query("UPDATE users SET status = 'active' WHERE id = ?", [two.client.id]);
       const created = await create(one, value); assert.equal(created.duplicate, false); assert.equal(created.campaign.counts.total, 2);
-      await consent(two, { enabled: false, expectedVersion: "1" });
+      await connection.query("UPDATE users SET status = 'revoked' WHERE id = ?", [two.client.id]);
       const retried = await create(one, { ...value, id: id(), recipients: value.recipients.map((row) => ({ ...row, messageId: id(), clientMessageId: id() })) });
       assert.equal(retried.duplicate, true); assert.ok(retried.campaign.id.equals(value.id));
       await assert.rejects(create(one, { ...value, requestFingerprint: digest() }), code("BROADCAST_CONFLICT"));
@@ -152,7 +147,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("at most ten live campaigns per owner and safe duplicate retries remain possible at that cap", async () => {
-      const fixture = await pair(); await consent(fixture); const first = campaign([fixture]); await create(fixture, first);
+      const fixture = await pair(); const first = campaign([fixture]); await create(fixture, first);
       for (let index = 1; index < 10; index++) await create(fixture);
       await assert.rejects(create(fixture), code("BROADCAST_LIMIT")); assert.equal((await create(fixture, first)).duplicate, true);
       const page1 = await store.list({ ...actor(fixture), limit: 4 }), page2 = await store.list({ ...actor(fixture), limit: 4, afterId: page1.nextCursor });
@@ -161,7 +156,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("concurrent workers claim once and atomic delivery creates one ordinary message and event", async () => {
-      const fixture = await pair(); await consent(fixture); const created = await create(fixture);
+      const fixture = await pair(); const created = await create(fixture);
       const claimed = await Promise.all([store.claim({ now }), store.claim({ now })]), jobs = claimed.filter(Boolean); assert.equal(jobs.length, 1);
       const job = jobs[0], sent = await store.deliver(job, { now, message: message(job) }); assert.deepEqual(sent, { delivered: true, duplicate: false });
       assert.deepEqual(await store.deliver(job, { now, message: message(job) }), { delivered: false });
@@ -173,7 +168,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("crashed leases recover the same durable message IDs without spending failure attempts", async () => {
-      const fixture = await pair(); await consent(fixture); await create(fixture);
+      const fixture = await pair(); await create(fixture);
       const first = await store.claim({ now, leaseMilliseconds: 1000 }); assert.equal(await store.claim({ now: now + 999 }), null);
       const second = await store.claim({ now: now + 1000, leaseMilliseconds: 1000 });
       assert.ok(second.messageId.equals(first.messageId)); assert.ok(second.clientMessageId.equals(first.clientMessageId)); assert.ok(!second.leaseToken.equals(first.leaseToken));
@@ -182,16 +177,16 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
       assert.equal((await store.deliver(second, { now: now + 1000, message: message(second) })).delivered, true);
     });
 
-    await subtest("consent withdrawal between claim and insert prevents delivery", async () => {
-      const fixture = await pair(); await consent(fixture); const created = await create(fixture), job = await store.claim({ now });
-      await consent(fixture, { expectedVersion: "1", enabled: false });
-      assert.deepEqual(await store.deliver(job, { now, message: message(job) }), { delivered: false });
-      const detail = await get(fixture, created.campaign.id); assert.equal(detail.recipients[0].reason, "opted_out"); assert.equal(detail.counts.skipped, 1); await assertMessages(fixture.conversationId, 0);
+    await subtest("a historical preference changed after claim does not block ordinary delivery", async () => {
+      const fixture = await pair(), created = await create(fixture), job = await store.claim({ now });
+      await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 0, 1, ?, ?)", [fixture.client.id, sqlDate(now), sqlDate(now)]);
+      assert.equal((await store.deliver(job, { now, message: message(job) })).delivered, true);
+      const detail = await get(fixture, created.campaign.id); assert.equal(detail.recipients[0].reason, null); assert.equal(detail.counts.delivered, 1); await assertMessages(fixture.conversationId, 1);
     });
 
     await subtest("current client gates, assignment, closed conversation and seven-day expiry are rechecked", async () => {
       for (const mode of ["revoked", "expired", "closed", "reassigned", "campaign-expired"]) {
-        const fixture = await pair(); await consent(fixture); const created = await create(fixture), job = await store.claim({ now });
+        const fixture = await pair(); const created = await create(fixture), job = await store.claim({ now });
         if (mode === "revoked") await connection.query("UPDATE users SET status = 'revoked' WHERE id = ?", [fixture.client.id]);
         if (mode === "expired") await connection.query("UPDATE users SET access_approved_at = ?, access_expires_at = ? WHERE id = ?", [sqlDate(now - 1000), sqlDate(now), fixture.client.id]);
         if (mode === "closed") await connection.query("UPDATE conversations SET closed_at = ? WHERE id = ?", [sqlDate(now), fixture.conversationId]);
@@ -206,7 +201,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("cancellation invalidates outstanding leases and preserves already delivered messages", async () => {
-      const one = await pair(), two = await pair(one.admin); await consent(one); await consent(two);
+      const one = await pair(), two = await pair(one.admin); 
       const created = await create(one, campaign([one, two])), first = await store.claim({ now });
       assert.equal((await store.deliver(first, { now, message: message(first) })).delivered, true);
       const second = await store.claim({ now }), cancelled = await store.cancel({ ...actor(one), campaignId: created.campaign.id });
@@ -216,11 +211,11 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("approval survives browser logout but administrator suspension or MFA rotation pauses every remaining target", async () => {
-      const fixture = await pair(); await consent(fixture); await create(fixture);
+      const fixture = await pair(); await create(fixture);
       await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [sqlDate(now), fixture.admin.sessionId]);
       const job = await store.claim({ now }); assert.ok(job); assert.equal((await store.deliver(job, { now, message: message(job) })).delivered, true);
       for (const mode of ["mfa", "suspended"]) {
-        const one = await pair(), two = await pair(one.admin); await consent(one); await consent(two); const created = await create(one, campaign([one, two]));
+        const one = await pair(), two = await pair(one.admin); const created = await create(one, campaign([one, two]));
         if (mode === "mfa") await connection.query("UPDATE admin_mfa SET version = 2 WHERE user_id = ?", [one.admin.id]);
         else await connection.query("UPDATE users SET status = 'suspended' WHERE id = ?", [one.admin.id]);
         assert.equal(await store.claim({ now }), null);
@@ -232,7 +227,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("media ownership, deletion, repeat acknowledgement and disabled media are enforced again at delivery", async () => {
-      const fixture = await pair(); await consent(fixture); const mediaId = await asset(fixture.admin), foreign = await pair(), foreignMedia = await asset(foreign.admin);
+      const fixture = await pair(); const mediaId = await asset(fixture.admin), foreign = await pair(), foreignMedia = await asset(foreign.admin);
       await assert.rejects(store.preview({ ...actor(fixture), conversationIds: [fixture.conversationId], mediaId: foreignMedia }), code("BROADCAST_MEDIA"));
       let created = await create(fixture, campaign([fixture], { mediaId })), job = await store.claim({ now });
       assert.equal((await store.deliver(job, { now, message: message(job) })).delivered, true);
@@ -251,7 +246,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("manual photo sharing after preview requires repeat acknowledgement before the queued message can insert", async () => {
-      const fixture = await pair(); await consent(fixture); const mediaId = await asset(fixture.admin), created = await create(fixture, campaign([fixture], { mediaId }));
+      const fixture = await pair(); const mediaId = await asset(fixture.admin), created = await create(fixture, campaign([fixture], { mediaId }));
       const job = await store.claim({ now });
       await chat.sendMessage({ role: "admin", tokenHash: fixture.admin.tokenHash, now, conversationId: fixture.conversationId,
         message: { id: id(), clientMessageId: id(), bodyEncrypted: "v1.synthetic-manual-photo", bodyFingerprint: digest(), mediaId } });
@@ -260,7 +255,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("rate deferral and crash recovery preserve failure budgets; eight processing failures stop safely", async () => {
-      const fixture = await pair(); await consent(fixture); const created = await create(fixture);
+      const fixture = await pair(); const created = await create(fixture);
       let job = await store.claim({ now }); assert.equal(await store.defer(job, { now, availableAt: now + 1000 }), true);
       assert.equal(await store.defer(job, { now, availableAt: now + 1000 }), false); assert.equal(await store.claim({ now: now + 999 }), null);
       assert.equal(Number((await connection.query("SELECT attempts FROM broadcast_recipients WHERE campaign_id = ?", [created.campaign.id]))[0].attempts), 0);
@@ -275,7 +270,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("live activity includes older active work and the newest campaigns regardless of random ID keysets", async () => {
-      const fixture = await pair(); await consent(fixture);
+      const fixture = await pair(); 
       const oldActive = (await create(fixture, campaign([fixture], { id: Buffer.alloc(16, 254) }))).campaign;
       const recent = [];
       for (let index = 1; index <= 25; index++) {
@@ -284,7 +279,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
         await store.cancel({ ...actor(fixture), now: workTime, campaignId: result.campaign.id });
         recent.unshift(campaignId.toString("hex"));
       }
-      const foreign = await pair(); await consent(foreign);
+      const foreign = await pair(); 
       const foreignCampaign = (await create(foreign, campaign([foreign]), { now: now + 100 })).campaign;
       const activity = await store.activity({ ...actor(fixture), now: now + 100 });
       assert.equal(activity.campaigns.length, 21);
@@ -299,7 +294,7 @@ test("real MariaDB consent, immutable targeted campaigns and atomic private deli
     });
 
     await subtest("failure after message/event insertion rolls back the entire recipient delivery transaction", async () => {
-      const fixture = await pair(); await consent(fixture); const created = await create(fixture), job = await store.claim({ now }), payload = message(job);
+      const fixture = await pair(); const created = await create(fixture), job = await store.claim({ now }), payload = message(job);
       // Scope the fault to this synthetic campaign; earlier subtests retain
       // delivered history that must continue to satisfy the temporary CHECK.
       const probeCampaignHex = created.campaign.id.toString("hex");

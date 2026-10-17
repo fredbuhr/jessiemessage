@@ -86,7 +86,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   const privateHandlers = [notificationsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness",
-    "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/broadcast-preference.js",
+    "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
     "/crm.js", "/crm-model.js", "/crm.css", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
   let draining = false;
   let pendingRequests = 0;

@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
-import { validateCampaign, validateId, validatePreview, validateVersion } from "./validation.mjs";
+import { validateCampaign, validateId, validatePreview } from "./validation.mjs";
 
 const publicRoot = new URL("../../public/", import.meta.url);
-const COOKIES = Object.freeze({ admin: "__Host-jessie_session", client: "__Host-jessie_client" });
+const COOKIES = Object.freeze({ admin: "__Host-jessie_session" });
 const MAX_DATE = 253402300799999;
 const STATES = Object.freeze(["pending", "sending", "delivered", "skipped", "cancelled", "failed"]);
 const REASONS = Object.freeze(["access_inactive", "opted_out", "conversation_unavailable", "media_unavailable", "repeat_media", "expired", "administrator_invalid", "processing_failed", "cancelled"]);
@@ -12,7 +12,6 @@ const files = new Map([
   ["/broadcast.js", ["broadcast.js", "text/javascript; charset=utf-8", "admin"]],
   ["/broadcast-model.js", ["broadcast-model.js", "text/javascript; charset=utf-8", "admin"]],
   ["/broadcast.css", ["broadcast.css", "text/css; charset=utf-8", "admin"]],
-  ["/broadcast-preference.js", ["broadcast-preference.js", "text/javascript; charset=utf-8", "client"]],
 ]);
 const invalid = () => httpError(400, "invalid_request");
 const unavailable = () => httpError(503, "broadcast_unavailable");
@@ -55,21 +54,12 @@ function query(url, paginated = false) {
 
 function routeFor(pathname) {
   if (files.has(pathname)) return { kind: "asset", role: files.get(pathname)[2], methods: ["GET", "HEAD"] };
-  let match = /^\/api\/broadcast\/(admin|client)\/session$/.exec(pathname);
-  if (match) return { kind: "session", role: match[1], methods: ["GET"] };
-  if (pathname === "/api/broadcast/client/preference") return { kind: "preference", role: "client", methods: ["GET", "POST"] };
+  if (pathname === "/api/broadcast/admin/session") return { kind: "session", role: "admin", methods: ["GET"] };
   if (pathname === "/api/broadcast/admin/preview") return { kind: "preview", role: "admin", methods: ["POST"] };
   if (pathname === "/api/broadcast/admin/activity") return { kind: "activity", role: "admin", methods: ["GET"] };
   if (pathname === "/api/broadcast/admin/campaigns") return { kind: "campaigns", role: "admin", methods: ["GET", "POST"] };
-  match = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})(\/cancel)?$/.exec(pathname);
+  const match = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})(\/cancel)?$/.exec(pathname);
   return match ? { kind: match[2] ? "cancel" : "campaign", role: "admin", campaignId: match[1], methods: match[2] ? ["POST"] : ["GET"] } : null;
-}
-
-function safePreference(value) {
-  if (!value || typeof value.enabled !== "boolean" || !nullableDate(value.updatedAt)) throw unavailable();
-  checked(validateVersion, value.version);
-  if (value.version === "0" ? value.enabled || value.updatedAt !== null : value.updatedAt === null) throw unavailable();
-  return { enabled: value.enabled, version: value.version, updatedAt: value.updatedAt };
 }
 
 function safePreview(value, requested) {
@@ -81,7 +71,7 @@ function safePreview(value, requested) {
     if (!recipient || !id(recipient.conversationId) || !expected.delete(recipient.conversationId)
       || !recipient.client || !id(recipient.client.id) || !pseudonym(recipient.client.pseudonym)
       || typeof recipient.eligible !== "boolean" || typeof recipient.repeatMedia !== "boolean"
-      || ![null, "access_inactive", "opted_out", "conversation_unavailable"].includes(recipient.reason)
+      || ![null, "access_inactive", "conversation_unavailable"].includes(recipient.reason)
       || recipient.eligible !== (recipient.reason === null)
       || requested.mediaId === null && recipient.repeatMedia) throw unavailable();
     eligibleCount += Number(recipient.eligible); repeatCount += Number(recipient.repeatMedia);
@@ -182,7 +172,7 @@ export function createBroadcastHandler(service, { origin, mediaEnabled = false }
   const configured = new URL(origin);
   if (configured.protocol !== "https:" || configured.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   if (typeof mediaEnabled !== "boolean") throw new TypeError("A boolean media capability is required");
-  for (const method of ["actor", "preference", "savePreference", "preview", "create", "activity", "list", "get", "cancel"]) {
+  for (const method of ["actor", "preview", "create", "activity", "list", "get", "cancel"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("A private broadcast service is required");
   }
   return async (request, response) => {
@@ -209,16 +199,7 @@ export function createBroadcastHandler(service, { origin, mediaEnabled = false }
         const [name, type] = files.get(url.pathname);
         reply(response, method, 200, await readFile(new URL(name, publicRoot)), { "Content-Type": type });
       } else if (route.kind === "session") {
-        reply(response, method, 200, route.role === "admin" ? { ...current, mediaEnabled } : current);
-      } else if (route.kind === "preference" && method === "GET") {
-        reply(response, method, 200, safePreference(await service.preference(token)));
-      } else if (route.kind === "preference") {
-        const body = shape(await readJson(request, { maxBytes: 32768 }), ["enabled", "expectedVersion"]);
-        if (typeof body.enabled !== "boolean") throw invalid();
-        validateVersion(body.expectedVersion);
-        const result = safePreference(await service.savePreference(token, body));
-        if (result.enabled !== body.enabled || BigInt(result.version) !== BigInt(body.expectedVersion) + 1n) throw unavailable();
-        reply(response, method, 200, result);
+        reply(response, method, 200, { ...current, mediaEnabled });
       } else if (route.kind === "preview") {
         const body = await readJson(request, { maxBytes: 32768 }), requested = validatePreview(body);
         if (!mediaEnabled && requested.mediaId !== null) throw Object.assign(new Error("BROADCAST_MEDIA"), { code: "BROADCAST_MEDIA" });
