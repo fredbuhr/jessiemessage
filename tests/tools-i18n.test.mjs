@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import vm from "node:vm";
 
-const files = Object.fromEntries(await Promise.all(["i18n.js", "help-link.js", "i18n-tools.js", "session-clock.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "crm.js", "crm-model.js", "broadcast-preference.js"].map(async (name) => [name, await readFile(new URL(`../public/${name}`, import.meta.url), "utf8")])));
+const files = Object.fromEntries(await Promise.all(["i18n.js", "help-link.js", "i18n-tools.js", "session-clock.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "crm.js", "crm-model.js"].map(async (name) => [name, await readFile(new URL(`../public/${name}`, import.meta.url), "utf8")])));
 const flush = async () => { for (let index = 0; index < 10; index++) await new Promise((resolve) => setImmediate(resolve)); };
 const id = (value) => value.toString(16).padStart(32, "0");
 class Element {
@@ -53,9 +53,7 @@ function harness({ respond } = {}) {
   const context = vm.createContext({ document, window: { addEventListener: (name, callback) => add(windowEvents, name, callback), removeEventListener() {} }, navigator: { language: "fr-FR" },
     sessionStorage: { getItem() { return null; }, setItem() {} }, AbortController, URL, URLSearchParams, TextEncoder, console, location: { replace() {} },
     setTimeout(callback, delay) { timers.set(++timer, { callback, delay }); return timer; }, clearTimeout(value) { timers.delete(value); },
-    fetch: async (path, options = {}) => { calls.push({ path, options }); if (respond) return respond(path, options); return { ok: true, status: 200, json: async () => path.endsWith("/session")
-      ? { user: { id: id(1), role: "client" }, csrf: "a".repeat(43), expiresAt: Date.now() + 3600000 }
-      : { enabled: options.method === "POST", version: options.method === "POST" ? "2" : "1", updatedAt: Date.now() } }; } });
+    fetch: async (path, options = {}) => { calls.push({ path, options }); if (respond) return respond(path, options); throw new Error("Unexpected network request in the UI-only harness"); } });
   const run = (code) => vm.runInContext(code, context);
   run(files["i18n.js"]); run(files["help-link.js"]); run(files["i18n-tools.js"]); run(files["session-clock.js"]);
   const model = (name) => {
@@ -87,7 +85,7 @@ test("broadcast language switches translate live counts/status/date but preserve
   h.run(`document.getElementById("broadcast-content").hidden=false;tools.state.visible=true;tools.state.session={id:"${id(1)}",csrf:"${"a".repeat(43)}",expiresAt:Date.now()+3600000,mediaEnabled:true};
     tools.state.contacts.set("${id(3)}",{id:"${id(3)}",client:{id:"${id(4)}",pseudonym:"En attente"},nickname:"Supprimer",canSend:true});
     model.selectRecipient(tools.state,"${id(3)}",true);model.updateComposition(tools.state,{title:"En attente",body:"Supprimer"});
-    tools.state.preview={eligibleCount:1,repeatCount:1,recipients:[{client:{pseudonym:"En attente"},eligible:false,reason:"opted_out",repeatMedia:true}]};
+    tools.state.preview={eligibleCount:1,repeatCount:1,recipients:[{client:{pseudonym:"En attente"},eligible:false,reason:"access_inactive",repeatMedia:true}]};
     tools.state.acknowledged=true;tools.renderSelection();tools.renderPreview();
     globalThis.campaign={id:"${id(7)}",title:"En attente",body:"Supprimer",status:"queued",createdAt:1792050000000,mediaId:null,
       counts:{delivered:2,pending:1,sending:0,skipped:0,cancelled:0,failed:0},recipients:[{client:{pseudonym:"En attente"},state:"pending",reason:null}]};
@@ -95,7 +93,7 @@ test("broadcast language switches translate live counts/status/date but preserve
   const before = h.run("JSON.stringify({draft:tools.state.draft,ids:[...tools.state.selected.keys()],ack:tools.state.acknowledged})");
   h.switch("en");
   assert.equal(h.ids.get("confirm").textContent, "Confirm for 1 client");
-  assert.match(h.ids.get("preview-list").textContent, /En attente · Broadcasts not accepted · photo already shared/);
+  assert.match(h.ids.get("preview-list").textContent, /En attente · Access inactive · photo already shared/);
   assert.match(h.ids.get("campaign-detail").textContent, /En attentePending · 2 delivered/); assert.match(h.ids.get("campaign-detail").textContent, /Supprimer/);
   assert.ok(h.ids.get("history").textContent.includes(new Date(1792050000000).toLocaleString("en-US")), h.ids.get("history").textContent);
   assert.match(h.ids.get("selected").textContent, /En attenteRemove/); assert.match(h.ids.get("contacts").textContent, /SupprimerEn attente · Active access/);
@@ -135,37 +133,9 @@ test("CRM switching preserves raw names, label collisions, notes, inputs and sel
   h.context.crm.clear(); h.switch("en"); assert.equal(h.document.body.textContent.includes("private@example.invalid"), false);
 });
 
-test("preference switching cannot save or reload consent, alter a checkbox draft or restore hidden controls", async () => {
-  const h = harness(); h.visible();
-  h.run(`(() => {${files["broadcast-preference.js"].replaceAll("export function ", "function ")}\nglobalThis.preference = mountBroadcastPreference(document.body);})();`); await flush();
-  const section = h.document.body.children.at(-1), checkbox = section.querySelectorAll("input")[0];
-  checkbox.checked = true; const before = h.calls.length;
-  h.switch("en"); assert.match(section.textContent, /News from Jessie/); assert.match(section.textContent, /Save my choice/);
-  assert.equal(checkbox.checked, true); assert.equal(h.calls.length, before); assert.equal(h.calls.filter((call) => call.options.method === "POST").length, 0);
-  h.switch("fr"); assert.match(section.textContent, /Les nouvelles de Jessie/); assert.equal(checkbox.checked, true);
-  h.document.visibilityState = "hidden"; h.dispatchDocument("visibilitychange"); h.switch("en");
-  assert.equal(section.hidden, true); assert.equal(checkbox.checked, false); assert.equal(section.querySelectorAll("form")[0].hidden, true); assert.equal(h.calls.length, before);
-  h.context.preference.clear();
-});
 
-test("preference session checks preserve an unsaved choice through offline recovery and never save it", async () => {
-  let offline = false;
-  const h = harness({ respond: (path) => {
-    if (offline) throw new TypeError("offline");
-    return { ok: true, status: 200, json: async () => path.endsWith("/session")
-      ? { user: { id: id(1), role: "client" }, csrf: "a".repeat(43), expiresAt: Date.now() + 3600000 }
-      : { enabled: false, version: "1", updatedAt: Date.now() } };
-  } }); h.visible();
-  h.run(`(() => {${files["broadcast-preference.js"].replaceAll("export function ", "function ")}\nglobalThis.preference = mountBroadcastPreference(document.body);})();`); await flush();
-  const section = h.document.body.children.at(-1), checkbox = section.querySelectorAll("input")[0], form = section.querySelectorAll("form")[0]; checkbox.checked = true;
-  offline = true; await h.tick(300000);
-  assert.equal(form.hidden, true); assert.equal(checkbox.checked, true); assert.ok([...h.timers.values()].some((timer) => timer.delay === 30000));
-  offline = false; await h.online();
-  assert.equal(form.hidden, false); assert.equal(checkbox.checked, true);
-  assert.equal(h.calls.filter((call) => call.path.endsWith("/preference")).length, 1);
-  assert.equal(h.calls.filter((call) => call.options.method === "POST").length, 0);
-  h.context.preference.clear(); assert.equal(h.timers.size, 0);
-});
+
+
 
 test("broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft", async () => {
   let offline = false;
@@ -193,7 +163,7 @@ test("broadcast feature checks cannot postpone cookie renewal and offline recove
   assert.equal(h.calls.filter((call) => call.options.method === "POST").length, 0);
 });
 
-// Page catalogs share the runtime on access/chat as optional tools are mounted.
+// Administrator chat tools share the translation runtime with the private pages.
 // Conflicting generic copy would reject an entire later catalog atomically.
 test("all private-interface catalogs can coexist and every static broadcast marker has a registered translation", async () => {
   const h = harness(), dictionary = new Map();
