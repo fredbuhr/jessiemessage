@@ -1,6 +1,6 @@
 # JessieMessage — bilan avant ouverture privée
 
-**Bilan du 17 octobre 2026, périmètre privé autour de Jessie.** Référence hébergée : lot 0.42 `ed78b55e`, recontrôlé à **21:51:17.150679 Europe/Paris** : 38 contrôles HTTPS et seize empreintes exactes conformes. Les lots 0.43 et 0.44 sont validés côté code ; le précontrôle de configuration primaire 0.44 réussit sur l’hébergement à 21:51:16. Aucune activation des fiches ni acceptation de tous les appareils n’est déduite de ces sondes anonymes.
+**Bilan du 17 octobre 2026, périmètre privé autour de Jessie.** Référence hébergée : lot 0.42 `ed78b55e`, recontrôlé à **22:15:18.961044 Europe/Paris** : 38 contrôles HTTPS et seize empreintes exactes conformes. Les lots 0.43 à 0.45 sont validés côté code. La clé CRM réelle est créée à 22:14:48, puis les préflights CRM/coffre/checkpoint passent sans démarrage. Aucun nouveau coffre ou checkpoint n’est encore créé. Aucune activation des fiches ni acceptation de tous les appareils n’est déduite de ces sondes anonymes.
 
 L’application est déjà hébergée à son adresse principale avec les accès sur invitation. Le passage à un usage privé régulier consiste à compléter son exploitation et ses fonctions restantes ; aucun changement d’hébergement ou ouverture publique de la messagerie n’est prévu.
 
@@ -13,7 +13,7 @@ L’application est déjà hébergée à son adresse principale avec les accès 
 | Notifications choisies par appareil | Réception réelle acceptée ; ouverture ciblée et reprise implémentées |
 | Sessions administrateur/client durables | 180 jours renouvelables, sans coupure pour inactivité ; sessions séparées par appareil |
 | Récupération du mot de passe invité | Déployée, parcours essayé accepté à 18:52:47 ; aucune répétition générale demandée |
-| Domaine principal, FR/EN, aide et contact | Déployés ; 38 contrôles HTTPS et seize empreintes exactes au recontrôle de 21:51:17 |
+| Domaine principal, FR/EN, aide et contact | Déployés ; 38 contrôles HTTPS et seize empreintes exactes au recontrôle de 22:15:18 |
 | Sauvegarde et restauration applicatives de référence | Checkpoint schéma 30 et import isolé réellement vérifiés au lot 0.36 |
 | Fiches privées : comportement du navigateur | Lot 0.43 validé : conflits explicites, brouillons conservés, reprise, 101 tests Chrome ; module encore désactivé |
 
@@ -32,8 +32,8 @@ La quatrième vérification concerne un outil d’exploitation et peut accompagn
 
 | Ordre | Fonction | Suite |
 | --- | --- | --- |
-| 0.44 | Clé et coffre des fiches privées | [Préparation de la configuration primaire](crm-private-configuration.md), validation de la configuration et chiffrement GPG réel réussis en CI, précontrôle hébergé conforme ; clé/coffre réels et activation restent à réaliser |
-| 0.45 | Fiches privées, tags, groupes, notes et rappels | [Profil explicite, assertions SQL et reprise à six clés implémentés](crm-runtime-backup.md) ; terminer les preuves exactes et la préparation hébergée, puis coffre indépendant, checkpoint courant/restauration isolée et activation ciblée |
+| 0.44–0.45 | Clé et coffre des fiches privées | [Clé réelle créée exclusivement au lot 0.45](crm-runtime-backup.md), configurations anciennes préservées, préflight CRM et précontrôle GPG conformes ; création du coffre par saisie personnelle et copie indépendante vérifiée à réaliser |
+| 0.45–0.46 | Fiches privées, tags, groupes, notes et rappels | [Profil explicite et reprise à six clés validés](crm-runtime-backup.md), cinq jobs CI réussis et inspection applicative hébergée conforme ; checkpoint courant/restauration isolée et activation ciblée restent à réaliser |
 | Ensuite | Envois groupés livrés individuellement | Préparer le profil, la prévisualisation des destinataires, les règles existantes d’accord/retrait, la détection des doublons et la reprise ; tester avant activation |
 | Entretien | Version stable et suivi des appareils | Consolider les PR empilées sans remplacer implicitement la révision servie ; compléter la matrice appareils au fil du pilote |
 

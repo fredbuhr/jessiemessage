@@ -4,7 +4,7 @@
 
 Le profil explicite `photos-notify-recovery-crm` ajoute les fiches privées au runtime primaire existant : notes chiffrées, surnoms, tags, groupes et rappels. Il conserve la récupération du mot de passe et laisse les diffusions désactivées. Le schéma reste à trente migrations ; ce lot n’en ajoute aucune.
 
-La configuration et les outils de sauvegarde sont préparés sur une branche empilée depuis `10b049dc` (lot 0.44). Leur validation ne constitue pas une activation. Le service hébergé reste le lot 0.42 `ed78b55e` tant qu’un relevé ultérieur ne dit pas explicitement le contraire.
+La source applicative et opérateur validée est **`8f4162a4468b1e1548e1276f2d6e2a8033bbb213`**, arbre **`c6f17aaffba71c16e4e8ecd3e3b4c80abbe9bd3f`**, sur une branche empilée depuis `10b049dc` (lot 0.44), [PR #60](https://github.com/fredbuhr/jessiemessage/pull/60). Leur validation ne constitue pas une activation. Le service hébergé reste le lot 0.42 `ed78b55e` tant qu’un relevé ultérieur ne dit pas explicitement le contraire.
 
 ## Démarrage fermé
 
@@ -68,12 +68,42 @@ Le chemin de destination doit être neuf. `check-application` prouve seulement l
 - Outils opérateur : capture des deux variantes, archive et reçu cohérents, vérification en lecture seule de notes/récupération/Push peuplés, import transmettant le profil et refusant un reçu rétrogradé.
 - MariaDB : données CRM synthétiques peuplées, notes déchiffrées après reprise du clone, labels/appartenances/versions/rappel conservés, clé incorrecte et note modifiée refusées avant nettoyage, source inchangée, sessions et tâches mail/Push préservées, reprise rejouable.
 
-Les tests locaux et CI seront relevés avec leur source exacte après publication. Les tests SQL utilisent des bases jetables ; ils ne constituent pas une restauration native des données réelles de l’hébergement. Les captures unitaires emploient des adaptateurs SQL/dump synthétiques ; les tests de manifestes utilisent le vrai chiffrement, les tests de vérification déchiffrent de vrais ciphertexts synthétiques, et la répétition MariaDB couvre les vraies tables séparément.
+La suite locale Node 24.19.0 passe : **2 112 réussites, 155 cas ignorés sur 2 267, zéro échec**, syntaxe et build conformes. Les chemins Linux/procfs, GPG et les bases SQL dédiées ne sont pas disponibles localement ; la CI exécute leurs contrôles réels. Cent trente-six liens locaux de la documentation sont vérifiés.
+
+Les deux exécutions exactes [push 39065703717](https://github.com/fredbuhr/jessiemessage/actions/runs/39065703717) et [PR 39065709152](https://github.com/fredbuhr/jessiemessage/actions/runs/39065709152) réussissent sur `8f4162a4` :
+
+| Job | Résultat |
+| --- | --- |
+| Général, avec Linux/procfs et GPG réels | 2 240 réussites, 27 wrappers SQL ignorés sur 2 267, zéro échec |
+| MariaDB 10.11 | 379/379 |
+| MariaDB 11.4 | 379/379 |
+| Chrome applicatif | 101/101 |
+| Authentification Chrome/HTTPS/MariaDB | 1/1 |
+
+Les répétitions MariaDB confirment aussi la lecture et la modification d’une même fiche depuis les deux origines, le refus d’une origine de mutation incorrecte et le conflit explicite d’une seconde écriture obsolète. Les tests SQL utilisent des bases jetables ; ils ne constituent pas une restauration native des données réelles de l’hébergement. Les captures unitaires emploient des adaptateurs SQL/dump synthétiques ; les tests de manifestes utilisent le vrai chiffrement, les tests de vérification déchiffrent de vrais ciphertexts synthétiques, et la répétition MariaDB couvre les vraies tables séparément.
 
 ## Suite hébergée
 
-Après validation de la source exacte : préparer son checkout isolé, vérifier les cinq configurations et l’absence de remplacement de clé, puis créer exclusivement le fichier CRM si le contrôle le permet. Exécuter le préflight CRM et le précontrôle du coffre primaire à six fichiers sans démarrer le nouveau profil.
+Le checkout séparé **`/srv/customer/jessiemessage-operator/crm-runtime-backup-8f4162a4`** est préparé le 17 octobre 2026 à **22:12:29.639569 Europe/Paris** : source et arbre épinglés, suivi Git propre, dépendances verrouillées installées sans scripts, contrôle de syntaxe conforme sous Node 24.15.0. La première candidate `98137f97`, qui ne raccordait pas le CRM à l’origine recette, n’est jamais activée ; la source corrigée ci-dessus est la seule référence opérateur du lot.
+
+À **22:14:48**, le profil recovery conservé passe son préflight ; des lectures SQL confirment **zéro ligne dans chacune des trois tables CRM**. Le précontrôle de création constate l’absence de clé CRM. À **22:14:48.353003**, l’outil crée exclusivement `runtime-crm.json`, puis relit les six configurations : `status: prepared`, `crmConfigSaved: true`, `keysPreserved: true`, `started: false`, `migrationPerformed: false`. Les cinq anciennes configurations et clés sont conservées. Ne pas relancer `prepare` : le fichier existe désormais et doit être conservé.
+
+À **22:14:49.613792**, le préflight du vrai profil `messaging-photos-notify-recovery-crm` réussit, y compris les droits SQL, les schémas physiques et le stockage ; `started: false`. À **22:14:49.659363**, le précontrôle du coffre primaire confirme six fichiers privés et GPG disponible, sans lire leur contenu pour ce contrôle. Les précontrôles applicatifs du checkpoint passent à **22:14:49.792336** puis **22:14:49.959640** : trente tables/migrations vérifiées avec le compte runtime, `checkpointSaved: false`, aucun démarrage ni migration.
+
+**À ce stade, la clé réelle existe, mais aucun nouveau coffre chiffré ni checkpoint SQL/photos n’est créé. Le service actif reste 0.42 et les fiches restent désactivées.**
+
+À **22:15:18.961044 Europe/Paris**, après création de la clé, **38/38 contrôles HTTPS et seize empreintes exactes** confirment le runtime actif `ed78b55e` sur les deux origines, avec validation TLS normale : santé/disponibilité 200, ressources du diagnostic refusées anonymement, `runtime-crm.json` et l’API CRM non servis, récupération primaire seulement. Aucun cookie administrateur, POST, mail ou Push n’est utilisé par ces sondes.
 
 Avant activation, le propriétaire doit saisir personnellement la phrase du coffre dans sa console SSH avec saisie masquée, conserver le fichier chiffré hors de l’hébergement, comparer son empreinte et vérifier son déchiffrement. La phrase, les clés et les mots de passe ne passent ni par le chat ni par les arguments d’une commande. Le checkpoint SQL/photos courant et sa reprise isolée doivent aussi être validés avec ce profil. Les anciens coffres contenant notamment l’enrôlement administrateur restent nécessaires et sont conservés.
+
+Dans sa propre console SSH interactive, la commande suivante demande deux saisies masquées et vérifie le coffre avant sa publication :
+
+```bash
+bash /srv/customer/jessiemessage-operator/crm-runtime-backup-8f4162a4/scripts/capture-private-secrets.sh \
+  --private-directory /srv/customer/jessiemessage-private/primary-origin-candidate-4a355851 \
+  --output jessiemessage-primary-crm-045.json.gpg --profile primary-crm
+```
+
+Le fichier est publié dans le répertoire privé indiqué ; la commande affiche un reçu contenant son empreinte SHA-256. Copier le `.json.gpg` hors de l’hébergement, comparer le SHA-256 à celui du reçu et vérifier le déchiffrement de cette copie personnelle. Communiquer seulement le reçu de réussite et la confirmation de copie/vérification, jamais la phrase ou le contenu déchiffré. La création exclusive refuse un nom de sortie déjà présent ; conserver un coffre existant et diagnostiquer le reçu au lieu de l’écraser.
 
 Le [bilan avant usage privé régulier](production-readiness-2026-10-17.md) conserve également les sauvegardes récurrentes, la copie indépendante, la surveillance avec alerte éprouvée et l’observation ciblée des deux appareils administrateur.
