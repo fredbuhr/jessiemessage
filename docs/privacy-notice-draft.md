@@ -24,7 +24,7 @@ Certains échanges peuvent révéler des informations sur la vie sexuelle. **[À
 
 ### Qui peut les recevoir ?
 
-Tes échanges sont accessibles aux personnes habilitées qui gèrent le service et à toi dans ton espace. **[À COMPLÉTER D07 : personnes/fonctions habilitées et périmètre exact.]** L’hébergement est assuré chez Infomaniak. Les e-mails passent par le prestataire de messagerie ; les notifications choisies passent par le service Push de ton navigateur. **[À COMPLÉTER D07 : entités, lieux de traitement, éventuels transferts et garanties, autres prestataires ou destinataires applicables.]**
+Tes échanges sont accessibles à toi dans ton espace, ainsi qu’à Jess et à son partenaire, qui gèrent ensemble le service depuis un compte administrateur commun. Ils peuvent tous les deux lire les échanges. L’hébergement est assuré chez Infomaniak. Les e-mails passent par le prestataire de messagerie ; les notifications choisies passent par le service Push de ton navigateur. **[À COMPLÉTER D07 : entités, lieux de traitement, éventuels transferts et garanties, autres prestataires ou destinataires applicables.]**
 
 Les messages et photos sont chiffrés côté serveur, puis déchiffrés pour leur affichage autorisé. Ce service n’utilise pas de chiffrement de bout en bout. Les notifications affichent une alerte discrète, sans reprendre le contenu de la conversation ; leur présence peut rester visible sur ton appareil.
 
@@ -68,7 +68,7 @@ Some exchanges may reveal information about sex life. **[TO COMPLETE D03: applic
 
 ### Who can receive it?
 
-Your exchanges are available to you in your space and to authorised people managing the service. **[TO COMPLETE D07: authorised roles/people and exact scope.]** Hosting is provided by Infomaniak. Emails pass through the mail provider; optional notifications pass through your browser’s Push service. **[TO COMPLETE D07: entities, processing locations, any transfers and safeguards, other applicable providers or recipients.]**
+Your exchanges are available to you in your space, and to Jess and her partner, who manage the service together using a shared administrator account. Both can read the exchanges. Hosting is provided by Infomaniak. Emails pass through the mail provider; optional notifications pass through your browser’s Push service. **[TO COMPLETE D07: entities, processing locations, any transfers and safeguards, other applicable providers or recipients.]**
 
 Messages and photos are encrypted on the server and decrypted for authorised display. This service does not use end-to-end encryption. Notifications show a discreet alert without conversation content; the presence of the alert may remain visible on your device.
 

@@ -8,6 +8,8 @@ The owner describes invitees whose age was checked upstream on Stripchat. Jessie
 
 An invitation-only private messaging application between Jessie (creator/admin) and each invited client. The public site must be neutral and have no payments, public gallery or public chat room. The client only sees their own conversations and media.
 
+**Operating model confirmed by the owner on 17 October 2026:** Jess and her partner manage the restricted invitation-only service together, using the same administrator account simultaneously. Existing independent device sessions are retained; no second account or extra role system is requested. The shared account does not identify which of the two people performed an action. Practical help and the notice draft disclose that both can read the conversations. The owner requests simplicity and no administrative filing initiated by the assistant; this does not establish a household exemption or decide the remaining retention/erasure policy. See [stage 0.41 preparation](data-privacy-preparation.md).
+
 `contact@jessiemessage.com` is the public contact/help address and the official-domain identity for outgoing service mail, replies and the SMTP envelope. This choice does not create a mailbox or activate delivery.
 
 ## Intended scale

@@ -10,6 +10,8 @@ Le profil reste `messaging-photos`. La production reste fermée.
 
 ## Connexions sur plusieurs appareils
 
+**Précision propriétaire du 17 octobre 2026 à 20:15 Europe/Paris :** Jess et son partenaire utilisent volontairement le même compte administrateur en parallèle. Les sessions sont distinctes par appareil ; l’identité applicative reste celle du compte commun, sans attribution personnelle de l’auteur d’une action. Aucun second compte ni changement de durée n’est demandé. Cette précision ne remplace pas la recette simultanée de l’ensemble des appareils mentionnée plus bas.
+
 Une session administrateur valide dure désormais **180 jours glissants**,
 sans déconnexion après 30 minutes d'inactivité. Chaque appareil conserve son
 propre jeton opaque. Le serveur prolonge sa validité à l'usage et les pages
