@@ -1,6 +1,6 @@
 # Préparation de l’origine principale — étape 0.34
 
-**Suite :** le [lot 0.35](device-origin-transition.md) ajoute la reprise des sessions et un lancement explicite des deux origines sur ce candidat, en cours de validation. La préparation 0.34 ci-dessous reste inchangée ; le domaine et le runtime actif ne sont pas encore basculés.
+**Suite :** le [lot 0.35](device-origin-transition.md) ajoute la reprise des sessions et un lancement explicite des deux origines sur ce candidat, validé en CI et par son préflight hébergé sur `a0b17ce0` à 03:18:59 Europe/Paris. La préparation 0.34 ci-dessous reste inchangée ; le domaine et le runtime actif ne sont pas encore basculés.
 
 **Préparation hébergée terminée le 17 octobre 2026 à 02:35:37 Europe/Paris.** Révision `4a3558518eeb12f3436e1a2339bc7a8d5a7d89bd`, arbre `21ef093f0c9fbc783f3ce14a401c625019b54aed`, [PR #45](https://github.com/fredbuhr/jessiemessage/pull/45). Les cinq jobs de la [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/38986917156) passent : 1 876 tests généraux réussis, 26 wrappers SQL explicitement ignorés dans ce job ; 362 tests sans saut sur chacune des MariaDB 10.11 et 11.4 ; dix tests Chrome applicatifs et un test Chrome/HTTPS/MariaDB. Les treize nouveaux cas du candidat, dont les parcours réels sur fichiers Linux, passent. Syntaxe et installation verrouillée passent aussi sur l’hébergement.
 

@@ -1,5 +1,9 @@
 # Reprise des appareils et coexistence des adresses — étape 0.35
 
+**Préparation et contrôles terminés le 17 octobre 2026.** Révision `a0b17ce0a82a317b8a4f6782b26eef52fe9430b6`, arbre `44ea8cf1e0c3c2d0cbfe80aba6ac98ea22224af0`, [PR brouillon #46](https://github.com/fredbuhr/jessiemessage/pull/46). Les cinq jobs de la [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/38990150146) passent : **1 917 tests généraux**, 27 wrappers SQL ignorés seulement dans ce job ; **367 tests sans saut sur chacune des MariaDB 10.11 et 11.4** ; **20 tests Chrome applicatifs**, dont le parcours de reprise et ses neuf scénarios ; **un test Chrome/HTTPS/MariaDB**. Les lecteurs de vrais fichiers privés sous Linux passent. Aucun échec.
+
+Le checkout distinct `/srv/customer/jessiemessage-operator/device-transition-a0b17ce0` est installé et vérifié à **03:18:41.929 Europe/Paris**. Le préflight opérateur sur le candidat primaire existant passe à **03:18:59** : `checks_passed`, `deployment: primary-transition`, `started: false`, `launchApproved: false`. À **03:19:19.834**, le préflight du runtime actif 0.33 passe encore ; santé/disponibilité répondent 200 et l’apex `/app` conserve son 302 vers recette. Aucun lanceur, domaine, secret ou schéma n’a été changé ; aucun serveur supplémentaire n’a été démarré. La préparation 0.35 est validée, son activation reste à réaliser après le checkpoint du schéma 30.
+
 Ce lot prépare le passage de `recette.jessiemessage.com` à `jessiemessage.com` en conservant les connexions existantes. Le runtime actuellement utilisé reste 0.33 `f2677249`, schéma 30. Le candidat de configuration primaire du lot 0.34 conserve les mêmes comptes, réglages et clés ; ce document distingue le code de transition de sa future activation sur les deux domaines.
 
 ## Parcours de reprise

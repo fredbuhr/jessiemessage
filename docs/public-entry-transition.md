@@ -1,6 +1,6 @@
 # Adresses et entrée publique — étape 0.32
 
-**Suite 0.35 en validation :** la [reprise des sessions et le runtime des deux adresses](device-origin-transition.md) sont implémentés avec un profil primaire explicite. Le routage hébergeur et les appareils restent à basculer après checkpoint du schéma 30.
+**Suite 0.35 préparée et vérifiée :** la [reprise des sessions et le runtime des deux adresses](device-origin-transition.md) sont implémentés avec un profil primaire explicite ; cinq jobs CI et le préflight hébergé sur le candidat réel passent pour `a0b17ce0`. Le routage hébergeur et les appareils restent à basculer après checkpoint du schéma 30.
 
 **Préparation 0.34 terminée :** un [candidat privé pour l’origine principale](primary-origin-preparation.md) conserve les cinq fichiers runtime et leurs six clés, en ne changeant que les quatre origines. Le [bilan du 17 octobre](AUDIT-2026-10-17.md) actualise les priorités. Le candidat `4a355851` est préparé sur l’hébergement, ses cinq jobs CI passent et le service existant est recontrôlé. Il ne modifie pas encore les lanceurs, le domaine ou les appareils ; l’étape 2 ci-dessous reste partiellement réalisée, la bascule reste à faire.
 
