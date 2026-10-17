@@ -110,3 +110,17 @@ Le client natif `/usr/bin/mariadb` reçoit le SQL validé sur son entrée standa
 L’intervention personnelle restante se fait sur la [page vérifiée du compte opérateur existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig). Sur la seule ligne **`fb4hmr_jm_checkpoint30_20261017`**, accorder **Lecture**, **Écriture** et **Administration**, puis valider. Les lignes source et anciennes copies restent telles quelles, et le compte applicatif n’accède pas à la copie. Cet accès permet au compte de maintenance d’importer la nouvelle base ; le mot de passe existant ne change pas. La saisie du secret se fait ensuite dans la console SSH personnelle, jamais dans la conversation. L’agent ne soumet pas ce changement de permissions.
 
 L’import réel et son résultat restent à attester après cette intervention ; ni la création vide du Manager, ni les tests synthétiques, ni le précontrôle sans SQL ne sont présentés comme une restauration réussie.
+
+### Préparation vérifiée le 17 octobre à 15:16–15:18 Europe/Paris
+
+Révision opérateur **`9d653813f84d57175bef9f7fd2ba79699b312d23`**, arbre **`9af10d97e1b4a08518ab580e4852a58f323b9001`**. Les cinq [jobs CI exacts du push](https://github.com/fredbuhr/jessiemessage/actions/runs/39035874966) passent : **2 044 tests généraux**, 27 wrappers SQL ignorés dans ce seul job, **370 sans saut sur chacune des MariaDB 10.11 et 11.4**, vingt Chrome applicatifs et une authentification HTTPS intégrée. Les 45 tests ciblés import/checkpoint/dump passent ; les treize nouveaux tests simulent le client natif et ne certifient pas un import distant. Une seconde relecture indépendante ne trouve pas de défaut bloquant.
+
+Checkout séparé installé : `/srv/customer/jessiemessage-operator/application-import-9d653813`. À **15:16:52**, le précontrôle du vrai checkpoint publie `application_restore_precheck_passed`, `nativeImportClientVerified: true`, `sqlImportFormatVerified: true`, `trustedSqlSha256Matched: true`, **`databaseConnected: false`** et **`imported: false`**. Les 76 621 octets SQL passent donc effectivement le contrôle de format et l’empreinte indépendante, avant toute connexion SQL.
+
+Le lanceur personnel **`/srv/customer/jessiemessage-private/restore-schema30-application-9d653813.sh`** est créé exclusivement et relu à **15:17:43**, mode **`0700`**, SHA-256 **`bc7fd551e6c94faa94549a565280ff8afe35aac27df7bf7d277db370aa1dc35c`**. Il épingle révision, arbre suivi propre, base et empreinte SQL, sans mot de passe enregistré. Sa syntaxe Bash est vérifiée. Après l’accès opérateur sur la seule base de test, le propriétaire exécute depuis sa [console SSH personnelle](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) :
+
+```sh
+bash /srv/customer/jessiemessage-private/restore-schema30-application-9d653813.sh
+```
+
+À **15:18:50**, le runtime actif **0.33 `f2677249`** est toujours propre et conforme ; le préflight passe et la disponibilité répond HTTP 200. Aucun import, démarrage de copie, permission SQL, secret ou domaine n’a été modifié. Seuls les fichiers opérateur dédiés et la base vide sans utilisateur ont été créés. La validation finale reste conditionnée au résultat réel `application_checkpoint_restored_verified` après la saisie personnelle.
