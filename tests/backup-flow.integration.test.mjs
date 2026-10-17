@@ -210,6 +210,31 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       await sourceUnchanged();
     }
 
+    await t.test("separate exact-schema inspection does not inherit the application's Infomaniak six-rights guard", async () => {
+      const { createBackupInspectionPool, assertBackupInspection } = await import("../server/backup/inspection.mjs");
+      const env = { ...process.env, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "infomaniak-shared-pattern" };
+      const inspectionPool = await createBackupInspectionPool(env);
+      const applicationPool = await createRuntimePool({ ...env,
+        JESSIEMESSAGE_RUNTIME_DB_USER: env.JESSIEMESSAGE_BACKUP_SCHEMA_USER,
+        JESSIEMESSAGE_RUNTIME_DB_PASSWORD: env.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD,
+      });
+      let inspector;
+      try {
+        // ALL is deliberately incompatible with the application's profile.
+        // Removing its guard applies only to the separate inspection pool.
+        await assert.rejects(applicationPool.getConnection(), (error) => error?.code === "AUTH_DATABASE_CONNECTION");
+        inspector = await inspectionPool.getConnection();
+        assert.equal(await assertBackupInspection(inspector, options.database), true);
+        for (const sql of ["UPDATE users SET status = status", "SELECT * FROM users FOR UPDATE", "SELECT 1 INTO OUTFILE '/tmp/synthetic-backup-probe'"])
+          assert.throws(() => inspector.query(sql), (error) => error?.code === "BACKUP_INSPECTION_CONFIG");
+        assert.equal(env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE, "infomaniak-shared-pattern");
+        await sourceUnchanged();
+      } finally {
+        try { await inspector?.release(); }
+        finally { await Promise.all([inspectionPool.end(), applicationPool.end()]); }
+      }
+    });
+
     await t.test("prepare binds real encrypted data and five keys without exporting secrets or changing the source", async () => {
       const { createBackupInspectionPool, assertBackupInspection } = await import("../server/backup/inspection.mjs");
       const { createBackupSnapshotStore, captureBackupSnapshot } = await import("../server/backup/snapshot.mjs");

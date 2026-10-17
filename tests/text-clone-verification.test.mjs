@@ -117,6 +117,66 @@ test("native dump sees only the canonical private0600 config path, bounded optio
   assert.deepEqual(await readdir(f.directory), [f.selected.backup]);
 });
 
+test("a synchronous private dump sink receives every original chunk before its buffer is erased", async (t) => {
+  const f = await fixture(t), captured = [], observed = [], chunks = [Buffer.from(sql.subarray(0, 17)), Buffer.from(sql.subarray(17))];
+  const spawnClient = () => {
+    const child = new EventEmitter(); child.stdout = new PassThrough(); child.stderr = new PassThrough();
+    child.kill = () => assert.fail("a successful synchronous sink must not stop the dump");
+    setImmediate(() => { for (const chunk of chunks) child.stdout.write(chunk); child.stdout.end(); child.emit("close", 0, null); });
+    return child;
+  };
+  const report = await dumpCloneSql(f.scope, f.selected, f.bundle.database, "synthetic-password", {
+    spawnClient, onSqlChunk(chunk) { observed.push(chunk); captured.push(Buffer.from(chunk)); },
+  });
+  assert.deepEqual(report, { sqlBytes: sql.length, sqlSha256: hash(sql) });
+  assert.deepEqual(Buffer.concat(captured), sql); assert.equal(observed.length, chunks.length);
+  assert.ok(observed.every((chunk) => chunk.every((byte) => byte === 0)));
+  assert.ok(chunks.every((chunk) => chunk.every((byte) => byte === 0)));
+  assert.deepEqual(await readdir(f.directory), [f.selected.backup]);
+});
+
+test("invalid dump sinks are refused before any private path or temporary credential is accessed", async (t) => {
+  const f = await fixture(t); let accessed = false, spawned = false;
+  const scope = { get path() { accessed = true; throw new Error("private path must remain unread"); } };
+  for (const onSqlChunk of [null, false, 1, "synthetic-secret", {}]) {
+    await assert.rejects(dumpCloneSql(scope, f.selected, f.bundle.database, "synthetic-password", {
+      spawnClient() { spawned = true; assert.fail("an invalid sink must not spawn a dump"); }, onSqlChunk,
+    }), neutral("TEXT_CLONE_DUMP"));
+  }
+  assert.equal(accessed, false); assert.equal(spawned, false);
+  assert.deepEqual(await readdir(f.directory), [f.selected.backup]);
+});
+
+test("throwing, thenable and value-returning dump sinks stop the child, erase chunks and wait for close before credential cleanup", async (t) => {
+  for (const outcome of ["throw", "thenable", "value"]) {
+    const f = await fixture(t), chunk = Buffer.from(sql), events = []; let invoked = 0, thenRead = false;
+    const spawnClient = (_command, args) => {
+      const child = new EventEmitter(); child.stdout = new PassThrough(); child.stderr = new PassThrough();
+      child.kill = (signal) => {
+        assert.equal(signal, "SIGKILL"); events.push("kill");
+        setImmediate(async () => {
+          try {
+            assert.equal((await lstat(args[0].slice("--defaults-file=".length))).isFile(), true);
+            assert.ok(chunk.every((byte) => byte === 0));
+            events.push("close"); child.emit("close", null, "SIGKILL");
+          } catch (error) { child.emit("error", error); child.emit("close", 1, null); }
+        });
+      };
+      setImmediate(() => child.stdout.write(chunk)); return child;
+    };
+    await assert.rejects(dumpCloneSql(f.scope, f.selected, f.bundle.database, "synthetic-password", {
+      spawnClient, onSqlChunk() {
+        invoked++;
+        if (outcome === "throw") throw new Error("synthetic-private-sink-error");
+        if (outcome === "thenable") return { get then() { thenRead = true; throw new Error("do not resolve a rejected sink result"); } };
+        return 123;
+      },
+    }), neutral("TEXT_CLONE_DUMP"));
+    assert.equal(invoked, 1); assert.equal(thenRead, false); assert.deepEqual(events, ["kill", "close"]);
+    assert.ok(chunk.every((byte) => byte === 0)); assert.deepEqual(await readdir(f.directory), [f.selected.backup]);
+  }
+});
+
 test("failed native dump redacts stderr and removes only its own temporary client file", async (t) => {
   const f = await fixture(t);
   const spawnClient = () => {
