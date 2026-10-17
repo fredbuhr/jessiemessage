@@ -119,9 +119,11 @@ function errorResponse(error) {
 }
 
 /** Explicitly enabled by the parent server; no route provides age assurance. */
-export function createAccessHandler(service, { origin }) {
+export function createAccessHandler(service, { origin, clock = Date.now }) {
   const url = new URL(origin);
   if (url.protocol !== "https:" || url.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
+  if (typeof clock !== "function") throw new TypeError("An access clock is required");
+  const now = () => { const value = clock(); if (!millisecondDate(value)) throw unavailable(); return value; };
   for (const method of ["adminSession", "inspectInvitation", "createInvitation", "listInvitations", "revokeInvitation", "register", "verifyEmail", "resendVerification", "login", "session", "logout", "logoutAll", "listClients", "approveClient", "revokeClient", "renewClient"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("An access service is required");
   }
@@ -172,7 +174,7 @@ export function createAccessHandler(service, { origin }) {
         if (renewed === null) reply(response, method, 404, { error: "not_found" });
         else {
           if (!renewed || renewed.id !== target || !millisecondDate(renewed.accessExpiresAt)
-            || renewed.accessExpiresAt <= Date.now() || renewed.accessExpiresAt <= body.expectedExpiresAt) throw unavailable();
+            || renewed.accessExpiresAt <= now() || renewed.accessExpiresAt <= body.expectedExpiresAt) throw unavailable();
           reply(response, method, 200, { status: "renewed", client: { id: renewed.id, accessExpiresAt: renewed.accessExpiresAt } });
         }
       } else if (member) {
@@ -209,13 +211,13 @@ export function createAccessHandler(service, { origin }) {
         const body = credentials(shape(await readJson(request), ["email", "password"]));
         const session = await service.login({ ...body, peerAddress });
         const data = safeClientSession(session);
-        reply(response, method, 200, data, { "Set-Cookie": sessionCookie(session.token, data.expiresAt, CLIENT_COOKIE) });
+        reply(response, method, 200, data, { "Set-Cookie": sessionCookie(session.token, data.expiresAt, CLIENT_COOKIE, { role: "client", now: now() }) });
       } else {
         const token = sessionToken(request, CLIENT_COOKIE);
         const session = token ? await service.session(token) : null;
         if (!session) { reply(response, method, 401, { error: "authentication_required" }, { "Set-Cookie": clearCookie(CLIENT_COOKIE) }); return true; }
         const data = safeClientSession(session);
-        if (pathname === "/api/access/session") reply(response, method, 200, data, { "Set-Cookie": sessionCookie(token, data.expiresAt, CLIENT_COOKIE) });
+        if (pathname === "/api/access/session") reply(response, method, 200, data, { "Set-Cookie": sessionCookie(token, data.expiresAt, CLIENT_COOKIE, { role: "client", now: now() }) });
         else {
           if (!sameText(request.headers["x-csrf-token"], data.csrf)) throw httpError(403, "request_rejected");
           shape(await readJson(request), []);

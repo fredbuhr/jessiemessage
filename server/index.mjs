@@ -303,7 +303,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin, clock });
     const legacyAccessService = deviceTransition ? await createAccessService({ store: accessStore, authStore: store, authService: service,
       totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: RECIPE_ORIGIN, clock }) : null;
-    if (legacyHandlers) legacyHandlers.accessHandler = createAccessHandler(legacyAccessService, { origin: RECIPE_ORIGIN });
+    if (legacyHandlers) legacyHandlers.accessHandler = createAccessHandler(legacyAccessService, { origin: RECIPE_ORIGIN, clock });
     let resetHandler;
     let resetMailStore;
     if (resetConfig.enabled) {
@@ -406,7 +406,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       legacyHandlers.entryHandler = createEntryHandler({ adminSession: (token) => service.session(token),
         clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, clock });
     }
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, operations, requestOrigin,
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, operations, requestOrigin,
       legacyHandlers, transitionHandler,
       entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled, deviceTransition, clock }) });
     const workers = [];
