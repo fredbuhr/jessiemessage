@@ -63,7 +63,7 @@ Le premier lanceur `restore-primary-crm-046.sh` contient une erreur de recopie d
 
 Le seul lanceur à utiliser est **`/srv/customer/jessiemessage-private/restore-primary-crm-046-verified.sh`**, propriétaire `0700`, **1 116 octets**, SHA-256 **`c3110164724e87309e0928aa5b76934209e52645c2e145a29f5c0cdb672424ae`**. Il épingle source/arbre/propreté `8f4162a4`, la nouvelle base et sa confirmation, le profil CRM, l’utilisateur de maintenance existant et l’empreinte SQL brute correcte. Sans argument, il utilise le wrapper interactif existant qui lit le mot de passe SQL une fois, de façon masquée, et le transmet par entrée standard. Aucun secret n’est ajouté au fichier, à la ligne de commande ou au dépôt.
 
-Sa syntaxe Bash et son mode `check` passent à **23:12:14.903783** :
+Sa syntaxe Bash et son mode `check` passent à **23:12:14.103783** :
 
 - `application_restore_precheck_passed`, reçu v6, profil applicatif CRM, trente tables et migrations ;
 - `checkpointFilesMatched: true`, `independentMediaDirectory: true`, `trustedSqlSha256Matched: true` ;
@@ -76,7 +76,9 @@ Cette préparation ne restaure rien et ne démarre aucun serveur. Le mode préco
 bash /srv/customer/jessiemessage-private/restore-primary-crm-046-verified.sh check
 ```
 
-## Prochaine action personnelle : copie hors serveur
+## Copie hors serveur acceptée
+
+À **23:21:20 Europe/Paris le 17 octobre 2026**, le propriétaire confirme **`COPIE_CRM30_OK`** après le bloc PowerShell ci-dessous. La copie indépendante de `JessieMessage-checkpoint-crm-20261017.tar.gz` dans Téléchargements et sa concordance avec l’empreinte archive attendue sont donc acceptées. Aucune extraction locale de l’archive n’est déduite de ce reçu. Le champ `independentCopyPending` du reçu de capture historique reste inchangé ; ce nouveau reçu personnel lève cette attente opérationnelle.
 
 Dans PowerShell sur le PC, le bloc suivant copie uniquement la nouvelle archive dans Téléchargements et compare son empreinte attendue. Il réutilise une copie déjà présente sans l’écraser, puis vérifie aussi son empreinte. Le mot de passe éventuellement demandé est celui du compte SSH/SFTP existant ; il est saisi personnellement, jamais dans la conversation.
 
@@ -94,4 +96,18 @@ if ((Get-FileHash -LiteralPath $jmCopie -Algorithm SHA256 -ErrorAction Stop).Has
 }
 ```
 
-Après réception de ce résultat, restent l’accès de la seule identité de maintenance à cette nouvelle base, la saisie personnelle masquée du mot de passe SQL et l’import natif vérifié. Le résultat final devra confirmer `application_checkpoint_restored_verified`, `imported: true`, `applicationSnapshotMatched: true`, `checkpointFilesMatched: true`, `sourceMutated: false` et `capacityRebound: false`. Ces résultats ne sont pas encore acquis. Les fiches restent désactivées jusqu’à ces validations et à leur activation distincte ; les diffusions restent séparées.
+## Prochaine action personnelle : accès du clone et import masqué
+
+Après le reçu de copie, le lanceur corrigé est relu : 1 116 octets, mode `0700`, même empreinte `c3110164724e87309e0928aa5b76934209e52645c2e145a29f5c0cdb672424ae`. Sa syntaxe et son précontrôle passent de nouveau, avec `databaseConnected: false` et `imported: false`.
+
+La [page de l’identité de maintenance existante](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig) est ouverte et vérifiée en lecture seule. Pour `fb4hmr_jm_mig`, les trois droits de la nouvelle ligne **`fb4hmr_jm_crm30_20261017`** restent décochés. Le propriétaire doit cocher **Lecture**, **Écriture**, **Administration** dans cette seule ligne, puis cliquer **Valider**. Les autres lignes et le mot de passe ne font pas partie de cette manipulation. Aucun nouveau droit n’est encore enregistré par l’agent.
+
+Ensuite, dans la [console SSH Node.js Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), le propriétaire exécute une seule fois :
+
+```bash
+bash /srv/customer/jessiemessage-private/restore-primary-crm-046-verified.sh
+```
+
+Le mot de passe demandé est celui du compte **SQL `fb4hmr_jm_mig`**, déjà utilisé pour la précédente restauration isolée. La saisie est masquée ; le secret reste personnel. Le lanceur contrôle d’abord les fichiers et le hash, puis le vide SQL réel du clone et TLS avant d’importer. Il démarre uniquement les outils de restauration, sans HTTP, SMTP ou workers applicatifs.
+
+Le propriétaire transmet la ligne JSON finale ou le message d’erreur, sans secret. Le résultat devra confirmer `application_checkpoint_restored_verified`, `imported: true`, `applicationSnapshotMatched: true`, `checkpointFilesMatched: true`, `sourceMutated: false` et `capacityRebound: false`. Ces résultats ne sont pas encore acquis. Un clone partiellement rempli ne doit pas être réutilisé après un échec. Les fiches restent désactivées jusqu’à ces validations et à leur activation distincte ; les diffusions restent séparées.
