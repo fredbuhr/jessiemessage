@@ -8,7 +8,7 @@ import { broadcastConfiguration } from "../broadcast/config.mjs";
 import { loadNotificationsConfig } from "../notifications/config.mjs";
 import { mailConfiguration } from "../mail/config.mjs";
 import { runtimeDatabaseOptions } from "../db/runtime.mjs";
-import { isPreproductionOrigin } from "../site.mjs";
+import { isPreproductionOrigin, SITE_DOMAIN } from "../site.mjs";
 
 export const CONFIG_CHECK_NAMES = Object.freeze([
   "feature_flags", "authentication", "mail", "client_access", "chat", "media", "crm", "client_recovery", "broadcasts", "notifications",
@@ -16,6 +16,9 @@ export const CONFIG_CHECK_NAMES = Object.freeze([
 ]);
 export const MESSAGING_CONFIG_CHECK_NAMES = Object.freeze(CONFIG_CHECK_NAMES.map((name) => name === "auth_only" ? "messaging_text" : name));
 export const NOTIFICATIONS_CONFIG_CHECK_NAMES = Object.freeze(CONFIG_CHECK_NAMES.map((name) => name === "auth_only" ? "messaging_photos_notify" : name));
+export const PRIMARY_CONFIG_CHECK_NAMES = Object.freeze(CONFIG_CHECK_NAMES.map((name) => name === "official_subdomain" ? "primary_origin" : name));
+export const PRIMARY_MESSAGING_CONFIG_CHECK_NAMES = Object.freeze(MESSAGING_CONFIG_CHECK_NAMES.map((name) => name === "official_subdomain" ? "primary_origin" : name));
+export const PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES = Object.freeze(NOTIFICATIONS_CONFIG_CHECK_NAMES.map((name) => name === "official_subdomain" ? "primary_origin" : name));
 
 const TARGET = "auth-only";
 const FLAGS = Object.freeze([
@@ -31,7 +34,7 @@ const DATABASE_FIELDS = Object.freeze([
 // Copy data properties without invoking caller-supplied accessors. No input
 // value, validator result, error or path becomes part of the returned report.
 function dataRecord(value) {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new TypeError();
+  if (value === null || typeof value !== "object" || Array.isArray(value) || Object.getOwnPropertySymbols(value).length) throw new TypeError();
   const copy = Object.create(null);
   for (const [name, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(value))) {
     if (!Object.hasOwn(descriptor, "value")) throw new TypeError();
@@ -40,9 +43,11 @@ function dataRecord(value) {
   return copy;
 }
 
-function report(statuses, target = TARGET) {
-  const names = target === "messaging-text" ? MESSAGING_CONFIG_CHECK_NAMES
-    : target === "messaging-photos-notify" ? NOTIFICATIONS_CONFIG_CHECK_NAMES : CONFIG_CHECK_NAMES;
+function report(statuses, target = TARGET, originProfile = "preproduction") {
+  const names = originProfile === "primary"
+    ? target === "messaging-text" ? PRIMARY_MESSAGING_CONFIG_CHECK_NAMES : target === "messaging-photos-notify" ? PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES : PRIMARY_CONFIG_CHECK_NAMES
+    : target === "messaging-text" ? MESSAGING_CONFIG_CHECK_NAMES
+      : target === "messaging-photos-notify" ? NOTIFICATIONS_CONFIG_CHECK_NAMES : CONFIG_CHECK_NAMES;
   return Object.freeze({
     target: ["messaging-text", "messaging-photos-notify"].includes(target) ? target : TARGET,
     valid: names.every((name) => statuses[name] !== "fail"),
@@ -53,7 +58,10 @@ function report(statuses, target = TARGET) {
 export function inspectPreproductionConfiguration(env = {}, options = {}) {
   const statuses = Object.fromEntries(CONFIG_CHECK_NAMES.map((name) => [name, "not_checked"]));
   let source, parameters;
-  try { source = dataRecord(env); parameters = dataRecord(options); }
+  try {
+    source = dataRecord(env); parameters = dataRecord(options);
+    if (Object.keys(parameters).some(name => !["expectedOrigin", "target", "originProfile"].includes(name))) throw new TypeError();
+  }
   catch {
     statuses.feature_flags = "fail";
     statuses.auth_only = "fail";
@@ -63,6 +71,7 @@ export function inspectPreproductionConfiguration(env = {}, options = {}) {
   // supplies strings, so reject other types without invoking their toString.
   if (typeof source.JESSIEMESSAGE_SITE_ORIGIN !== "string") source.JESSIEMESSAGE_SITE_ORIGIN = undefined;
   const target = parameters.target === undefined ? TARGET : parameters.target;
+  const originProfile = parameters.originProfile === undefined ? "preproduction" : parameters.originProfile;
   const validFlags = FLAGS.every((name) => source[name] === undefined || source[name] === "0" || source[name] === "1")
     && Object.keys(source).every((name) => !name.startsWith("JESSIEMESSAGE_ENABLE_") || FLAGS.includes(name));
   statuses.feature_flags = validFlags ? "pass" : "fail";
@@ -108,9 +117,11 @@ export function inspectPreproductionConfiguration(env = {}, options = {}) {
   try {
     const expected = parameters.expectedOrigin;
     if (typeof expected !== "string") throw new TypeError();
-    statuses.official_subdomain = isPreproductionOrigin(expected)
-      && source.JESSIEMESSAGE_SITE_ORIGIN === expected ? "pass" : "fail";
+    const validOrigin = originProfile === "primary" ? expected === `https://${SITE_DOMAIN}`
+      : originProfile === "preproduction" && isPreproductionOrigin(expected);
+    statuses.official_subdomain = validOrigin && source.JESSIEMESSAGE_SITE_ORIGIN === expected ? "pass" : "fail";
   } catch { statuses.official_subdomain = "fail"; }
+  statuses.primary_origin = statuses.official_subdomain;
   statuses.auth_only = target === TARGET && validFlags && source.JESSIEMESSAGE_ENABLE_AUTH === "1"
     && FLAGS.slice(1).every((name) => source[name] === undefined || source[name] === "0") ? "pass" : "fail";
   statuses.messaging_text = target === "messaging-text" && validFlags
@@ -121,5 +132,5 @@ export function inspectPreproductionConfiguration(env = {}, options = {}) {
     && [5, 6, 7].every((index) => source[FLAGS[index]] === "0") ? "pass" : "fail";
   const port = source.PORT;
   if (port !== undefined) statuses.port = typeof port === "string" && /^[1-9][0-9]{0,4}$/.test(port) && Number(port) <= 65535 ? "pass" : "fail";
-  return report(statuses, target);
+  return report(statuses, target, originProfile);
 }

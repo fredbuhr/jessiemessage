@@ -10,29 +10,29 @@ function identity(session) {
   if (!instant(session.expiresAt, true) || typeof session.user.pseudonym !== "string"
     || !session.user.pseudonym.isWellFormed() || !session.user.pseudonym.trim().length) fail();
 }
-function clientChoice(value, now, chatEnabled) {
-  if (value === null) return { state: "signed_out", href: "/access" };
+function clientChoice(value, now, chatEnabled, signedOutHref) {
+  if (value === null) return { state: "signed_out", href: signedOutHref };
   const session = safeClientSession(value);
   identity(session);
   const access = session.access;
   if (access.expiresAt !== null && !instant(access.expiresAt) || access.state === "expired" && access.expiresAt === null) fail();
-  if (session.expiresAt <= now) return { state: "signed_out", href: "/access" };
+  if (session.expiresAt <= now) return { state: "signed_out", href: signedOutHref };
   const state = access.state === "active" && access.expiresAt !== null && access.expiresAt <= now ? "expired" : access.state;
   return { state, href: state === "active" && chatEnabled ? "/messages" : "/access" };
 }
-function administratorChoice(value, now, chatEnabled) {
-  if (value === null) return { state: "signed_out", href: "/admin/login" };
+function administratorChoice(value, now, chatEnabled, signedOutHref) {
+  if (value === null) return { state: "signed_out", href: signedOutHref };
   const session = safeSession(value);
   identity(session);
-  if (session.expiresAt <= now) return { state: "signed_out", href: "/admin/login" };
+  if (session.expiresAt <= now) return { state: "signed_out", href: signedOutHref };
   return { state: "connected", href: chatEnabled ? "/admin/messages" : "/admin" };
 }
 
 /** A neutral entry decision only. The parent keeps this SQL-capable handler
  * behind admission; each destination still authorizes its own private data. */
-export function createEntryHandler({ clientSession = null, adminSession = null, chatEnabled = false, clock = Date.now } = {}) {
+export function createEntryHandler({ clientSession = null, adminSession = null, chatEnabled = false, deviceTransition = false, clock = Date.now } = {}) {
   if (clientSession !== null && typeof clientSession !== "function" || adminSession !== null && typeof adminSession !== "function"
-    || typeof chatEnabled !== "boolean" || typeof clock !== "function") throw new TypeError("A valid private entry configuration is required.");
+    || typeof chatEnabled !== "boolean" || typeof deviceTransition !== "boolean" || typeof clock !== "function") throw new TypeError("A valid private entry configuration is required.");
   return async (request, response) => {
     let url;
     const rawUrl = request.url ?? "/";
@@ -58,8 +58,8 @@ export function createEntryHandler({ clientSession = null, adminSession = null, 
       if (results.some((result) => result.status !== "fulfilled")) fail();
       const now = clock();
       if (!instant(now)) fail();
-      const client = clientSession === null ? null : clientChoice(results[0].value, now, chatEnabled);
-      const administrator = adminSession === null ? null : administratorChoice(results[1].value, now, chatEnabled);
+      const client = clientSession === null ? null : clientChoice(results[0].value, now, chatEnabled, deviceTransition ? "/connect-device/client" : "/access");
+      const administrator = adminSession === null ? null : administratorChoice(results[1].value, now, chatEnabled, deviceTransition ? "/connect-device/admin" : "/admin/login");
       reply(response, method, 200, { status: client === null && administrator === null ? "unavailable" : "available", client, administrator });
     } catch {
       if (!response.headersSent && !response.destroyed) reply(response, method, 503, unavailable(), { "Retry-After": "5" });

@@ -213,3 +213,16 @@ test("an invalid or throwing post-wait clock cannot expose a usable role decisio
     assert.equal(response.status, 503); privateHeaders(response); assert.deepEqual(await response.json(), neutral);
   }
 });
+
+test("primary transition offers role-specific resume links only while a role is signed out", async t => {
+  for (const connected of [false, true]) {
+    const base = await listen(t, { deviceTransition: true, chatEnabled: true,
+      clientSession: async () => connected ? client() : null, adminSession: async () => connected ? administrator() : null });
+    const response = await fetch(`${base}/api/entry`, { headers: { Cookie: cookies() } });
+    privateHeaders(response);
+    assert.deepEqual(await response.json(), { status: "available",
+      client: { state: connected ? "active" : "signed_out", href: connected ? "/messages" : "/connect-device/client" },
+      administrator: { state: connected ? "connected" : "signed_out", href: connected ? "/admin/messages" : "/connect-device/admin" } });
+  }
+  for (const deviceTransition of ["true", 1, null, {}]) assert.throws(() => createEntryHandler({ deviceTransition }), TypeError);
+});

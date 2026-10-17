@@ -56,3 +56,12 @@ test("successful entry remains a choice and clearing the page discards every pre
   const next = beginEntryCheck(state); assert.equal(acceptEntry(state, next, entry()), true); assert.equal(state.phase, "unavailable");
   assert.equal(state.entry.client, null); assert.equal(state.entry.administrator, null);
 });
+
+test("device resume links are exact local choices for the corresponding signed-out role", () => {
+  const value = entry({ state: "signed_out", href: "/connect-device/client" }, { state: "signed_out", href: "/connect-device/admin" });
+  assert.deepEqual(parseEntry(value), value);
+  for (const state of ["active", "pending", "expired"]) assert.throws(() => parseEntry(entry({ state, href: "/connect-device/client" })), /invalid_entry/);
+  for (const href of ["/connect-device/admin", "/connect-device/client?next=/messages", "https://jessiemessage.com/connect-device/client"])
+    assert.throws(() => parseEntry(entry({ state: "signed_out", href })), /invalid_entry/);
+  assert.throws(() => parseEntry(entry(null, { state: "connected", href: "/connect-device/admin" })), /invalid_entry/);
+});

@@ -12,12 +12,12 @@ export function parseEntry(input) {
   let client = null, administrator = null;
   if (value.client !== null) {
     client = fields(value.client, ["state", "href"]);
-    const destinations = { signed_out: ["/access"], pending: ["/access"], active: ["/access", "/messages"], expired: ["/access"] };
+    const destinations = { signed_out: ["/access", "/connect-device/client"], pending: ["/access"], active: ["/access", "/messages"], expired: ["/access"] };
     if (typeof client.state !== "string" || !Object.hasOwn(destinations, client.state) || !destinations[client.state].includes(client.href)) throw new TypeError("invalid_entry");
   }
   if (value.administrator !== null) {
     administrator = fields(value.administrator, ["state", "href"]);
-    if (!(administrator.state === "signed_out" && administrator.href === "/admin/login"
+    if (!(administrator.state === "signed_out" && ["/admin/login", "/connect-device/admin"].includes(administrator.href)
       || administrator.state === "connected" && ["/admin", "/admin/messages"].includes(administrator.href))) throw new TypeError("invalid_entry");
   }
   if (value.status === "unavailable" ? client !== null || administrator !== null : client === null && administrator === null) throw new TypeError("invalid_entry");

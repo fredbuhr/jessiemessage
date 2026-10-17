@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { validateRuntimeDatabaseConfiguration, validateRuntimeAuthenticationConfiguration, validateRuntimeMessagingConfiguration,
   readRuntimeMessagingBundle, runtimeDatabaseEnvironment } from "./runtime-database-file.mjs";
-import { MESSAGING_CONFIG_CHECK_NAMES, inspectPreproductionConfiguration } from "../preflight/config.mjs";
+import { MESSAGING_CONFIG_CHECK_NAMES, PRIMARY_MESSAGING_CONFIG_CHECK_NAMES, inspectPreproductionConfiguration } from "../preflight/config.mjs";
 
 export const MESSAGING_ENV_FIELDS = Object.freeze(["PORT", "JESSIEMESSAGE_DB_HOST", "JESSIEMESSAGE_DB_PORT", "JESSIEMESSAGE_DB_NAME",
   "JESSIEMESSAGE_APPLICATION_DATABASE", "JESSIEMESSAGE_RUNTIME_DB_USER", "JESSIEMESSAGE_RUNTIME_DB_PASSWORD",
@@ -37,14 +37,23 @@ function record(value, fields, optional = []) {
   }));
 }
 
-export function copyRuntimeMessagingEnvironment(value) {
+export function runtimeOriginProfile(options = {}) {
+  const selected = record(options, [], ["originProfile"]);
+  const originProfile = selected.originProfile === undefined ? "preproduction" : selected.originProfile;
+  if (!["preproduction", "primary"].includes(originProfile)) fail();
+  return { originProfile };
+}
+
+export function copyRuntimeMessagingEnvironment(value, options = {}) {
   let env;
   try {
+    const originOptions = runtimeOriginProfile(options);
+    const names = originOptions.originProfile === "primary" ? PRIMARY_MESSAGING_CONFIG_CHECK_NAMES : MESSAGING_CONFIG_CHECK_NAMES;
     env = record(value, MESSAGING_ENV_FIELDS);
     if (MESSAGING_ENV_FIELDS.some((name) => typeof env[name] !== "string")) fail();
-    const report = inspectPreproductionConfiguration(env, { expectedOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, target: "messaging-text" });
-    if (!report.valid || report.checks.length !== MESSAGING_CONFIG_CHECK_NAMES.length
-      || report.checks.some((check, index) => check.name !== MESSAGING_CONFIG_CHECK_NAMES[index] || !["pass", "disabled"].includes(check.status))) fail();
+    const report = inspectPreproductionConfiguration(env, { expectedOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, target: "messaging-text", ...originOptions });
+    if (!report.valid || report.checks.length !== names.length
+      || report.checks.some((check, index) => check.name !== names[index] || !["pass", "disabled"].includes(check.status))) fail();
     return env;
   } catch { clearRuntimeMessagingSecrets(env); fail(); }
 }
@@ -55,16 +64,17 @@ export async function loadRuntimeMessagingEnvironment(privateDirectory, options 
   try {
     if (typeof privateDirectory !== "string" || !privateDirectory.startsWith("/") || privateDirectory === "/"
       || privateDirectory.length > 4096 || resolve(privateDirectory) !== privateDirectory || /[\\\x00-\x1f\x7f]/.test(privateDirectory)) fail();
-    const parameters = record(options, [], ["port"]), selected = record(dependencies, [], ["readBundle"]);
+    const parameters = record(options, [], ["port", "originProfile"]), selected = record(dependencies, [], ["readBundle"]);
+    const originOptions = runtimeOriginProfile(Object.hasOwn(parameters, "originProfile") ? { originProfile: parameters.originProfile } : {});
     const port = parameters.port === undefined ? "3000" : parameters.port;
     if (typeof port !== "string" || !/^[1-9][0-9]{0,4}$/.test(port) || Number(port) > 65535) fail();
     readBundle = selected.readBundle === undefined ? readRuntimeMessagingBundle : selected.readBundle;
     if (typeof readBundle !== "function") fail();
-    source = await readBundle(privateDirectory);
+    source = await readBundle(privateDirectory, originOptions);
     const bundle = record(source, ["database", "authentication", "messaging"]);
     database = validateRuntimeDatabaseConfiguration(bundle.database);
-    authentication = validateRuntimeAuthenticationConfiguration(bundle.authentication);
-    messaging = validateRuntimeMessagingConfiguration(bundle.messaging);
+    authentication = validateRuntimeAuthenticationConfiguration(bundle.authentication, originOptions);
+    messaging = validateRuntimeMessagingConfiguration(bundle.messaging, originOptions);
     if (authentication.origin !== messaging.origin) fail();
     env = copyRuntimeMessagingEnvironment({ ...runtimeDatabaseEnvironment(database), PORT: port,
       JESSIEMESSAGE_SITE_ORIGIN: authentication.origin, JESSIEMESSAGE_MFA_KEY: authentication.mfaKey,
@@ -72,7 +82,7 @@ export async function loadRuntimeMessagingEnvironment(privateDirectory, options 
       JESSIEMESSAGE_SMTP_HOST: messaging.smtpHost, JESSIEMESSAGE_SMTP_PORT: messaging.smtpPort,
       JESSIEMESSAGE_SMTP_USER: messaging.smtpUser, JESSIEMESSAGE_SMTP_PASSWORD: messaging.smtpPassword,
       JESSIEMESSAGE_ENABLE_AUTH: "1", JESSIEMESSAGE_ENABLE_ACCESS: "1",
-      JESSIEMESSAGE_ENABLE_CHAT: "1", JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "1" });
+      JESSIEMESSAGE_ENABLE_CHAT: "1", JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "1" }, originOptions);
     return env;
   } catch { clearRuntimeMessagingSecrets(env); fail(); }
   finally {
