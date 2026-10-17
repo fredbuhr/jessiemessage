@@ -63,7 +63,7 @@ Capture effective de **14:46:14.008 à 14:46:16.769**, sortie `application_check
 | Archive `checkpoint.tar.gz` | 400 149 octets |
 | SHA-256 de l’archive | `481407b64cf2d0ea997098d4a7c6100a30ef235d5b7f46ed076cd310093c943e` |
 | Octets de l’archive | Vérifiés intégralement ; aucune extraction annoncée |
-| Copie indépendante / import réel | Encore à réaliser |
+| Copie indépendante / import réel | Copie PC confirmée par le propriétaire à 15:06 ; import réel encore à réaliser |
 | Réassociation du stockage | Non effectuée |
 
 Le **même Run 0.33** est relancé immédiatement après le résultat de capture ; le Manager indique `Actif`, écoute sur 3000 et profil `messaging-photos-notify`. À **14:47:06.537**, préflight conforme, santé/disponibilité HTTP 200, routage apex `/app` toujours 302 vers recette. Aucun domaine, clé, droit SQL ni schéma n’a été changé ; seuls la pause/reprise et les nouveaux fichiers privés du checkpoint ont eu lieu.
@@ -93,6 +93,20 @@ Ou, avec le [client OpenSSH Windows](https://learn.microsoft.com/fr-fr/windows-s
 }
 ```
 
-Le secret éventuellement demandé est celui de l’accès SSH/SFTP existant, pas celui de la base SQL ; sa saisie ne s’affiche pas. Le garder dans la fenêtre personnelle. La copie sur PC n’est pas encore attestée tant que son empreinte n’est pas confirmée. Le prochain lot prépare une base isolée neuve et un import au SQL exact, puis la vérification contre le snapshot signé, avant toute activation du domaine principal.
+Le secret éventuellement demandé est celui de l’accès SSH/SFTP existant, pas celui de la base SQL ; sa saisie ne s’affiche pas. Le garder dans la fenêtre personnelle. Le propriétaire confirme **`COPIE_SCHEMA30_OK` le 17 octobre à 15:06 Europe/Paris** : le téléchargement indépendant et son empreinte sont désormais attestés par son exécution personnelle du bloc ci-dessus. Le prochain lot prépare une base isolée neuve et un import au SQL exact, puis la vérification contre le snapshot signé, avant toute activation du domaine principal.
 
 À **14:57:14.751 Europe/Paris**, l’archive est relue : taille et SHA-256 identiques au résultat de capture ; le reçu et sa liaison au manifeste restent conformes. La disponibilité répond encore HTTP 200. Les marqueurs `independentCopyPending` et `sqlRestorePending` restent vrais jusqu’aux validations personnelles et à l’import effectif.
+
+Après cette confirmation, la nouvelle base **`fb4hmr_jm_checkpoint30_20261017`** est créée dans le Manager, sans aucun utilisateur ni permission associés. L’inventaire affiche cinq bases, la nouvelle à **0 octet**, les quatre précédentes conservées. Aucun droit SQL n’est accordé par l’agent. À **15:09:53 Europe/Paris**, le service actif répond encore HTTP 200 ; le client natif disponible est MariaDB **10.11.14**. L’existence vide observée dans le Manager ne remplace pas le contrôle SQL avant import.
+
+## Import natif et vérification dans la base isolée
+
+Le lanceur `scripts/capture-application-checkpoint-restore.sh` regroupe un précontrôle sans SQL, une seule saisie masquée du mot de passe opérateur, l’import natif et la vérification complète `verify-application`. Le programme dédié `scripts/import-application-checkpoint.mjs` exige les six paramètres du vérificateur et un **`--sql-sha256` fourni indépendamment du reçu**. Pour ce checkpoint, le lanceur personnel doit épingler `246a75fdca87b02405e548092a21da1882330f1b9fa17e5aca619eb2b4502e4a`. Ce contrôle porte sur les octets SQL décompressés avant toute saisie de secret ou connexion : modifier ensemble un Gzip et son reçu ne permet pas d’importer d’autres octets.
+
+Le format fermé du dump est contrôlé : trente créations de tables attendues, noms non qualifiés, insertions littérales et seuls réglages de session du dump. Les changements de base, cibles externes, routines et commandes du client sont refusés. Le mode SQL d’import reste fixé au littéral du dump. La connexion doit confirmer TLS, le nom exact de la nouvelle base et l’absence de toute table ou vue. Une base partiellement remplie par un échec n’est jamais effacée ni réutilisée automatiquement.
+
+Le client natif `/usr/bin/mariadb` reçoit le SQL validé sur son entrée standard, la seule base cible sur sa ligne de commande, TLS avec validation du certificat, `--sandbox`, `--local-infile=0` et `--skip-reconnect`. Le mot de passe reste dans une configuration privée temporaire `0600`, contrôlée puis supprimée ; il n’est ni dans les arguments, ni dans l’environnement, ni dans les résultats. Un échec ou une annulation ne produit aucun reçu de réussite. Après l’import seulement, le vérificateur compare le dump natif du clone au SQL figé et contrôle les données chiffrées, médias et snapshot signé. Le statut final exige **`application_checkpoint_restored_verified`**, **`imported: true`** et **`applicationSnapshotMatched: true`**. Aucun serveur, e-mail, worker ou réassociation du stockage n’est lancé.
+
+L’intervention personnelle restante se fait sur la [page vérifiée du compte opérateur existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig). Sur la seule ligne **`fb4hmr_jm_checkpoint30_20261017`**, accorder **Lecture**, **Écriture** et **Administration**, puis valider. Les lignes source et anciennes copies restent telles quelles, et le compte applicatif n’accède pas à la copie. Cet accès permet au compte de maintenance d’importer la nouvelle base ; le mot de passe existant ne change pas. La saisie du secret se fait ensuite dans la console SSH personnelle, jamais dans la conversation. L’agent ne soumet pas ce changement de permissions.
+
+L’import réel et son résultat restent à attester après cette intervention ; ni la création vide du Manager, ni les tests synthétiques, ni le précontrôle sans SQL ne sont présentés comme une restauration réussie.
