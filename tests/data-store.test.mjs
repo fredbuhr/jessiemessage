@@ -47,8 +47,10 @@ test("data policy covers each application table once and defers every retention 
   assert.equal(DATA_POLICY_METADATA.retentionDecided, false);
   for (const entry of DATA_POLICY) { assert.equal(entry.retentionDays, null); assert.equal(entry.decisionRequired, true); assert.ok(Object.isFrozen(entry)); }
   assert.ok(Object.isFrozen(DATA_POLICY));
-  assert.deepEqual(DATA_POLICY_METADATA.existingCleanup.map((entry) => entry.days), [7, 7, 30]);
-  assert.equal(DATA_POLICY_METADATA.existingCleanup.at(-1).table, "push_outbox");
+  assert.deepEqual(DATA_POLICY_METADATA.existingCleanup.map(({ table, days }) => ({ table, days })), [
+    { table: "mail_outbox", days: 7 }, { table: "password_reset_outbox", days: 7 },
+    { table: "push_outbox", days: 30 }, { table: "auth_rate_limits", days: 1 },
+  ]);
 });
 test("data reader uses a single read-only snapshot, whitelists account data and retains revoked clients", async () => {
   const f = fixture(); let held;

@@ -2,11 +2,13 @@
 
 Status on 17 October 2026: **stage 0.33 active in recipe**, runtime `f2677249`, schema 30, profile `messaging-photos-notify`. Invitations, verified email, explicit manual admission, private text/photos, durable administrator/client sessions and per-device Push are deployed. The owner accepted the photo journey and real notification reception; the new direct notification click and simultaneous household devices still need real-device acceptance. CRM, individual broadcasts and client password recovery are implemented but disabled in the active profile. The final application origin remains planned: the main welcome page currently links to the temporary recipe application. See the [current audit and implementation plan](AUDIT-2026-10-17.md), [notification opening](notification-opening.md) and [domain transition](public-entry-transition.md). Historical stage 0.28 restore evidence remains in the [photo runtime note](private-photo-runtime.md); a fresh schema-30 checkpoint/isolated restoration is still required.
 
-The owner describes invitees whose age was checked upstream on Stripchat. JessieMessage records an administrator's manual admission, not an independent age verification or an automatically imported Stripchat proof. This product decision is not a legal certification of the upstream check. No new identity-verification provider is included in this implementation lot.
+JessieMessage records an administrator’s manual admission of invited adults. It does not receive an independent age-verification proof or certify adulthood. No external invitation source or identity-verification provider is part of this implementation lot.
 
 ## Purpose
 
-An invitation-only private messaging application between Jessie (creator/admin) and each invited client. The public site must be neutral and have no payments, public gallery or public chat room. The client only sees their own conversations and media.
+An invitation-only private messaging application between Jessie and each invited person. The public site must be neutral and have no payments, public gallery or public chat room. The client only sees their own conversations and media.
+
+**Operating model:** Jessie’s private space uses a shared administrator account with independent device sessions. Actions belong to that application identity, without identifying which authorised person performed them. User-facing text names Jessie and describes authorised access without implying that only one person can read the exchanges. No commercial purpose or external invitation source is assigned to the service. See [stage 0.41 preparation](data-privacy-preparation.md).
 
 `contact@jessiemessage.com` is the public contact/help address and the official-domain identity for outgoing service mail, replies and the SMTP envelope. This choice does not create a mailbox or activate delivery.
 
