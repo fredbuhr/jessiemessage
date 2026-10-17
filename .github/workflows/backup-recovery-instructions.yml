@@ -47,9 +47,11 @@ jobs:
           $jmFunction = $jmAst.Find({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Get-JmGpgOutput' }, $true)
           Invoke-Expression $jmFunction.Extent.Text
           $script:jmGpg = (Get-Process -Id $PID).Path
-          $jmResult = @(Get-JmGpgOutput -GpgArguments @('-NoProfile', '-Command', '[Console]::Error.WriteLine("harmless warning"); [Console]::Out.WriteLine("public fixture"); exit 0'))
+          $jmGoodCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('[Console]::Error.WriteLine("harmless warning"); [Console]::Out.WriteLine("public fixture"); exit 0'))
+          $jmBadCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('[Console]::Error.WriteLine("synthetic failure"); exit 1'))
+          $jmResult = @(Get-JmGpgOutput -GpgArguments @('-NoProfile', '-EncodedCommand', $jmGoodCommand))
           if ($jmResult.Count -ne 1 -or $jmResult[0] -ne 'public fixture') { throw 'Native warning handling failed.' }
           $jmRejected = $false
-          try { $null = Get-JmGpgOutput -GpgArguments @('-NoProfile', '-Command', '[Console]::Error.WriteLine("synthetic failure"); exit 1') } catch { $jmRejected = $true }
+          try { $null = Get-JmGpgOutput -GpgArguments @('-NoProfile', '-EncodedCommand', $jmBadCommand) } catch { $jmRejected = $true }
           if (-not $jmRejected -or $ErrorActionPreference -ne 'Stop') { throw 'Native failure handling failed.' }
           Write-Output 'Native warnings and failures verified without generating a key.'
