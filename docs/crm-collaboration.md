@@ -6,7 +6,7 @@ Le même compte administrateur est utilisé sur plusieurs appareils par les pers
 
 ## Défauts reproduits et corrections
 
-Une réponse réussie était rejetée si elle appartenait à un ancien cycle de l’interface, mais une requête rejetée échappait à ce contrôle. Une erreur 401/403 tardive pouvait donc atteindre le gestionnaire de session après une reprise et une autre erreur pouvait remplacer le message d’une action courante. Les succès et échecs utilisent désormais le même contrôle avant et après la requête. Une erreur de connexion du cycle courant est toujours transmise au contrôleur parent.
+Une réponse réussie était rejetée si elle appartenait à un ancien cycle du module, mais une requête rejetée échappait à ce contrôle. Avec un adaptateur qui transmet son échec tardif, une erreur 401/403 pouvait donc atteindre le gestionnaire de session après une reprise et une autre erreur pouvait remplacer le message d’une action courante. Le parent `chat.js` possède déjà ses propres contrôles de session et de génération ; aucun incident de déconnexion réelle n’est déduit du test isolé du module. Les succès et échecs du module utilisent désormais le même contrôle avant et après la requête. Une erreur de connexion du cycle courant reste transmise au parent.
 
 La finalisation d’une ancienne création ou modification d’étiquette remettait toujours les boutons en état actif. Après masquage/reprise, elle pouvait ainsi déverrouiller une nouvelle action encore en cours. Chaque opération conserve son cycle de départ ; seule une finalisation de ce cycle peut libérer son verrou ou modifier son retour. Le rafraîchissement après conflit vérifie aussi ce cycle après ses attentes intermédiaires.
 

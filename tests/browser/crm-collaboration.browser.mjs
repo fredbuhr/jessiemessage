@@ -32,7 +32,7 @@ await crm.initialize(); await crm.loadInbox(); crm.selectConversation("${convers
 const html = `<!doctype html><html lang=fr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>Synthetic CRM rehearsal</title><link rel=stylesheet href=/chat.css><link rel=stylesheet href=/brand/brand.css><link rel=stylesheet href=/crm.css><link rel=stylesheet href=/i18n.css>
 <script src=/i18n.js defer></script><script src=/i18n-tools.js defer></script><script type=module src=/fixture.js></script></head>
-<body><main class=page><section class="workspace is-admin"><aside><header class=inbox-head><h1>Jessie · fixture</h1></header></aside><section><header class=chat-head><h2>AlexFixture</h2></header></section></section></main></body></html>`;
+<body><main class=page><header class=inbox-head><h1>Jessie · fixture</h1></header><header class=chat-head><h2>AlexFixture</h2></header></main></body></html>`;
 
 async function fixture() {
   const resources = new Map(await Promise.all(files.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
@@ -109,7 +109,8 @@ test("real Chrome: shared administrator CRM drafts, conflicts and paused label r
         assert.equal(await second.execute("return document.querySelector('.crm-conflict textarea').value"), noteA);
         assert.equal(await second.execute("return document.querySelector('.crm-conflict h3').textContent"), language === "fr" ? "La fiche a été modifiée ailleurs" : "The profile was changed elsewhere");
         assert.equal(source.profile().notes, noteA); assert.equal(source.writes.length, 2, "no implicit overwrite");
-        assert.equal(await second.execute("const dialog=document.querySelector('.crm-dialog'); return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && dialog.scrollWidth <= dialog.clientWidth + 1"), true);
+        const overflow = await second.execute("const root=document.documentElement, dialog=document.querySelector('.crm-dialog'); return { page: root.scrollWidth-root.clientWidth, dialog: dialog.scrollWidth-dialog.clientWidth }");
+        assert.ok(overflow.page <= 1 && overflow.dialog <= 1, JSON.stringify(overflow));
         if (width === 375) {
           await second.click(".crm-conflict .crm-actions button:first-child");
           assert.equal(await second.execute("return document.querySelector(arguments[0]).value", profileSelector), noteA);
