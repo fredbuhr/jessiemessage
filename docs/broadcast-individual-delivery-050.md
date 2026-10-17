@@ -21,4 +21,16 @@ La limite actuelle reste **100 destinataires par campagne**, dix campagnes activ
 
 Les tests SQL couvrent l’absence de préférence, une ancienne préférence désactivée avant l’aperçu et avant la prise en file, puis une préférence modifiée après la prise en file. Les tests HTTP couvrent le retrait des routes et la réception de messages individuels sans métadonnées de campagne. Révocation, expiration, annulation, reprise sans doublons et isolation des conversations restent vérifiées.
 
-La publication de cette correction et sa CI sont en cours. Au début du lot, la version active demeure `d77f16fbddbee4bad90f0230ad344d148823aac5`, arbre `5897917c0e7810e16ab51e600e2cf1c6eff02f47`, décrite dans [l’activation 0.49](broadcast-activation-049.md). Cette note ne constitue pas une preuve de déploiement de la correction. Aucun message réel de test n’est envoyé par l’agent.
+La correction est publiée dans la [PR #62](https://github.com/fredbuhr/jessiemessage/pull/62), source `0a1cafd85c3d8699be1961075b18e80e36bcd041`, arbre `17db89aa165e23ca427d073f5a3fcc28387f5168`. Les [cinq jobs de CI de cette source exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39078063012) passent :
+
+| Vérification | Résultat |
+| --- | --- |
+| Général, vérifications de syntaxe et build | 2 295 tests, 2 268 réussis, 27 wrappers SQL ignorés, aucun échec ; build réussi |
+| MariaDB 11.4 | 383/383 réussis, aucun ignoré |
+| MariaDB 10.11 | 383/383 réussis, aucun ignoré |
+| Chrome, clavier et cycle de vie | 101/101 réussis |
+| Authentification Chrome HTTPS avec MariaDB | 1/1 réussi |
+
+L’environnement local et le navigateur se sont déconnectés pendant le lot. L’erreur persistante `409 environment_offline: Environment is not connected` empêche le préflight hébergé, la modification des commandes Manager et les contrôles HTTPS de la correction. L’agent poursuit l’implémentation via GitHub, sans prétendre avoir réalisé ces opérations hébergées. La [procédure d’activation précise](deploy-broadcast-individual-050.md), avec nouveau dossier, source figée, contrôle avant démarrage et repli, est préparée.
+
+La version active demeure `d77f16fbddbee4bad90f0230ad344d148823aac5`, arbre `5897917c0e7810e16ab51e600e2cf1c6eff02f47`, décrite dans [l’activation 0.49](broadcast-activation-049.md). Cette note atteste la correction et ses tests ; le déploiement de la correction reste à effectuer. Aucun message réel de test n’est envoyé par l’agent.
