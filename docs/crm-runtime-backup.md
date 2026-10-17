@@ -99,7 +99,7 @@ Avant activation, le propriétaire doit saisir personnellement la phrase du coff
 Dans sa propre console SSH interactive, la commande suivante demande deux saisies masquées et vérifie le coffre avant sa publication :
 
 ```bash
-bash /srv/customer/jessiemessage-operator/crm-runtime-backup-8f4162a4/scripts/capture-private-secrets.sh \
+JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd bash /srv/customer/jessiemessage-operator/crm-runtime-backup-8f4162a4/scripts/capture-private-secrets.sh \
   --private-directory /srv/customer/jessiemessage-private/primary-origin-candidate-4a355851 \
   --output jessiemessage-primary-crm-045.json.gpg --profile primary-crm
 ```
