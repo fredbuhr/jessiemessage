@@ -1,5 +1,7 @@
 # Étape 0.31 — notifications privées : plan d’implémentation
 
+**Suite 0.33 livrée en recette :** voir [l’ouverture du message et les sessions clients durables](notification-opening.md). Runtime actuel `f2677249`, profil `messaging-photos-notify`, schéma 30. Les contrôles CI et HTTPS passent ; le clic réel sur appareil reste à accepter après rechargement et réception d’une nouvelle alerte. Le périmètre initial et ses observations ci-dessous sont historiques ; une référence opaque et le rôle complètent maintenant le payload générique, sans identifiant de conversation/message.
+
 ## État et périmètre
 
 - Le code du lot est implémenté sur `feat/message-notifications` ; les cinq jobs de la CI #237 sont réussis. Voir le [bilan de validation](message-notifications-release.md).

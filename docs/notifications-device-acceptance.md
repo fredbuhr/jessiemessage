@@ -1,6 +1,15 @@
-# Notifications 0.31 — essais sur les appareils du foyer
+# Notifications — essais sur les appareils du foyer
 
-La recette est démarrée avec notifications sur `017cafaf`, schéma 30. Les contrôles CI et HTTPS sont consignés dans le [bilan](message-notifications-release.md). Le 17 octobre 2026, le propriétaire confirme que les notifications fonctionnent très bien : le fonctionnement réel est accepté. Les plateformes et les scénarios ci-dessous ne sont pas détaillés dans ce retour ; leurs lignes restent un relevé complémentaire, sans imposer de refaire les essais déjà satisfaisants.
+La recette utilise désormais `f2677249`, schéma 30, avec [l’ouverture directe du message et les connexions clients durables](notification-opening.md). Le propriétaire a accepté la réception réelle des notifications sur 0.31, puis signalé la friction du clic. La correction 0.33 passe les contrôles CI et HTTPS ; le clic réel après cette mise à jour reste à confirmer. Les plateformes et les scénarios ci-dessous ne sont pas détaillés dans le retour initial ; leurs lignes restent un relevé complémentaire, sans imposer de refaire les essais déjà satisfaisants.
+
+## Priorité après la mise à jour 0.33
+
+1. Recharger JessieMessage sur l’appareil destinataire. Si l’ancienne session client est déjà perdue, se connecter une seule fois ; les visites suivantes utilisent la connexion durable.
+2. Envoyer un nouveau message depuis le compte opposé de test, en gardant la page destinataire fermée jusqu’à l’alerte.
+3. Cliquer sur cette **nouvelle** notification : la bonne conversation doit s’ouvrir directement, avec le message mis en évidence. Aucun choix d’espace ni nouvelle identification lorsque la session est encore valable.
+4. Refaire le clic vers l’administrateur, puis si utile avec un brouillon déjà saisi dans une fenêtre ouverte : il doit rester disponible.
+
+Les alertes déjà affichées avant cette mise à jour ne contiennent pas la référence de destination et gardent leur ancien parcours. Les abonnements existants restent utilisables ; une réactivation n’est pas normalement nécessaire.
 
 ## Préparer chaque appareil
 
