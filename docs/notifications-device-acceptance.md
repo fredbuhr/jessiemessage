@@ -1,10 +1,10 @@
 # Notifications — essais sur les appareils du foyer
 
-**État courant : étape 0.37, runtime `3e952101`, déploiement `primary-transition`, schéma 30, mis à jour à 16:57 Europe/Paris le 17 octobre 2026.** L’adresse principale est désormais `https://jessiemessage.com`. L’ancienne adresse `https://recette.jessiemessage.com` reste disponible sans redirection pour conserver les connexions, installations et notifications existantes. La [correction de reprise après coupure](device-transition-retry.md) conserve le message visé lors d’une nouvelle tentative. Le [compte rendu de bascule](primary-origin-cutover.md) conserve les observations de routage et de propagation.
+**État courant : étape 0.37, runtime `0c88f61b`, déploiement `primary-transition`, schéma 30, mis à jour à 17:38 Europe/Paris le 17 octobre 2026.** L’adresse principale est désormais `https://jessiemessage.com`. L’ancienne adresse `https://recette.jessiemessage.com` reste disponible sans redirection pour conserver les connexions, installations et notifications existantes. La [correction de reprise après coupure](device-transition-retry.md) conserve le message visé lors d’une nouvelle tentative ; la [correction d’affichage](device-transition-interface.md) sépare et clarifie ses actions. Le [compte rendu de bascule](primary-origin-cutover.md) conserve les observations de routage et de propagation.
 
-Le propriétaire a accepté la réception réelle des notifications sur 0.31, puis signalé la friction du clic. La [correction 0.33](notification-opening.md), incluse dans ce runtime, apporte l’ouverture du message et les connexions clients durables. La [reprise des appareils](device-origin-transition.md) permet maintenant de retrouver sur l’adresse principale une connexion encore ouverte en recette. **La reprise et le clic réel sur les appareils du foyer restent à confirmer.** Les contrôles HTTP et les tests synthétiques ne remplacent pas cette acceptation.
+Le propriétaire a accepté la réception réelle des notifications sur 0.31, puis signalé la friction du clic. La [correction 0.33](notification-opening.md), incluse dans ce runtime, apporte l’ouverture du message et les connexions clients durables. La [reprise des appareils](device-origin-transition.md) permet de retrouver sur l’adresse principale une connexion encore ouverte en recette. À **17:28 Europe/Paris le 17 octobre 2026**, le propriétaire répond **« c’est bon, ça fonctionne »** à la recette proposée : le parcours essayé est confirmé globalement. Ce retour ne précise pas l’appareil, le navigateur, tous les sens d’envoi ni six à huit sessions simultanées. Les étapes ci-dessous restent une référence pour les autres appareils ; elles n’imposent pas de répéter l’essai déjà satisfaisant. Les contrôles HTTP et les tests synthétiques restent distincts de ce retour réel.
 
-## Premier essai sur un ordinateur
+## Parcours de référence — ordinateur et autres appareils
 
 1. Dans le navigateur et le profil où l’administration est déjà ouverte en recette, ouvrir [jessiemessage.com/app](https://jessiemessage.com/app).
 2. Choisir **Retrouver l’administration**, puis **Retrouver mon espace** sur l’écran suivant. Les conversations doivent apparaître sans nouveau mot de passe ni code si l’ancienne connexion est toujours valable. Si l’administration est déjà connectée sur la nouvelle adresse, son accès habituel est proposé ou ouvert directement.
@@ -12,7 +12,7 @@ Le propriétaire a accepté la réception réelle des notifications sur 0.31, pu
 4. Dans une conversation, ouvrir **Notifications → Activer sur cet appareil**, autoriser la demande du navigateur et attendre **Notifications activées sur cet appareil.**
 5. Fermer les pages destinataires jusqu’à l’alerte. Envoyer un **nouveau** message depuis le client de test, puis cliquer sur la notification : la bonne conversation doit s’ouvrir, avec le message mis en évidence, sans nouvelle identification lorsque la connexion est valable.
 
-Commencer par cet ordinateur, puis étendre aux autres appareils après ce premier résultat. Pour le client, le même parcours part de **Retrouver mon espace**. Si l’ancienne session est absente ou expirée, une connexion normale reste nécessaire une fois ; les visites suivantes bénéficient de la connexion durable.
+Le premier retour global est positif ; étendre maintenant aux autres appareils si nécessaire. Pour le client, le même parcours part de **Retrouver mon espace**. Si l’ancienne session est absente ou expirée, une connexion normale reste nécessaire une fois via **Me connecter** ; les visites suivantes bénéficient de la connexion durable.
 
 Une alerte déjà affichée avant la correction 0.33 ne contient pas la référence de destination et garde son ancien parcours. Utiliser une nouvelle alerte pour le contrôle du clic.
 
@@ -31,7 +31,7 @@ Le profil autorise seize inscriptions Push actives par compte. Tant que les deux
 
 ## Parcours à confirmer
 
-Ces lignes complètent le retour initial sans imposer de refaire les essais déjà satisfaisants. Elles désignent les points à accepter sur la nouvelle adresse.
+Ces lignes précisent les dimensions que le retour global positif de 17:28 ne détaille pas. Elles servent au relevé des autres appareils et n’annulent pas l’acceptation du parcours déjà essayé.
 
 | Essai | Action | Résultat attendu | État |
 | --- | --- | --- | --- |
