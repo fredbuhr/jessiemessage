@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CONTACT_EMAIL, createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, parseReadinessSummary, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, parseOperations, queueCountText, queueDelayMinutes } from "../public/readiness-model.js";
+import { CONTACT_EMAIL, createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, parseReadinessSummary, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, parseOperations, queueCountText, queueDelayMinutes, formatOperationsReport } from "../public/readiness-model.js";
 
 const now = 1800000000000;
 const admin = (extra = {}) => ({ user: { id: "a".repeat(32), role: "admin", pseudonym: "Jessie" }, csrf: "x".repeat(43), expiresAt: now + 3600000, ...extra });
@@ -169,8 +169,21 @@ test("operational worker and queue names are bounded, unique and fixed rather th
   }
   for (const value of inputs) assert.throws(() => parseOperations(value), /invalid_readiness_operations/);
   const all = operations();
-  for (const key of ["workers", "queues"]) all[key] = ["verification", "recovery", "broadcasts"].map((name) => ({ ...structuredClone(all[key][0]), name }));
+  for (const key of ["workers", "queues"]) all[key] = ["verification", "recovery", "broadcasts", "notifications"].map((name) => ({ ...structuredClone(all[key][0]), name }));
   assert.deepEqual(parseOperations(all), all);
+  for (const key of ["workers", "queues"]) { const tooMany = structuredClone(all); tooMany[key].push(structuredClone(tooMany[key][0])); assert.throws(() => parseOperations(tooMany), /invalid_readiness_operations/); }
+});
+
+test("operator diagnostic exports only validated aggregates, marks capped counts and dates without accepting raw provider fields", () => {
+  const input = operations(); input.private = "secret-report-marker"; input.database.hostname = "secret-report-marker";
+  input.workers[0].error = "secret-report-marker"; input.queues[0].endpoint = "secret-report-marker";
+  input.queues[0].pending = { count: 1000, truncated: true, payload: "secret-report-marker" };
+  const output = formatOperationsReport(input, { now });
+  assert.match(output, /JessieMessage — État du service/); assert.ok(output.includes(new Date(now).toISOString()));
+  assert.match(output, /En attente : au moins 1000/); assert.match(output, /Ces mesures ne certifient pas/);
+  assert.doesNotMatch(output, /secret-report-marker|hostname|endpoint|payload/);
+  assert.throws(() => formatOperationsReport({ ...input, status: "production" }, { now }), /invalid_readiness_operations/);
+  assert.throws(() => formatOperationsReport(input, { now: NaN }), /invalid_operations_report/);
 });
 
 test("operational states and dates reject malformed snapshots and accept the documented boundaries", () => {

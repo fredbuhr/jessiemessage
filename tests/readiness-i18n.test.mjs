@@ -35,6 +35,7 @@ class Element {
   hasAttribute(name) { return this.attributes.has(name); }
   removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(name, handler) { if (!this.events.has(name)) this.events.set(name, []); this.events.get(name).push(handler); }
+  remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(node => node !== this); this.parentElement = null; }
   matches(selector) { if (selector === "a[data-help-link]") return this.tagName === "A" && this.hasAttribute("data-help-link");
     return selector.startsWith("[") ? this.hasAttribute(selector.slice(1, -1)) : this.tagName.toLowerCase() === selector.toLowerCase(); }
   querySelectorAll(selector) { return this.children.flatMap((node) => [selector.split(",").some((part) => node.matches(part.trim())) ? node : null, ...node.querySelectorAll(selector)]).filter(Boolean); }
@@ -74,11 +75,11 @@ const summary = () => ({ contactEmail: "contact@jessiemessage.com", mail: { conf
   features: { clientAccess: true, chat: true, photos: false, clientFiles: true, passwordRecovery: false, broadcasts: true, notifications: false },
   checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" }, operations: operations() });
 async function harness({ input = summary(), language = "fr", expiresAt = now + 28800000, auth = (session) => response(session), snapshot = (input) => response(input), smtp = () => response({ status: "verified", scope: "smtp_authentication", delivery: "not_checked", checkedAt: now + 5000 }) } = {}) {
-  const { container, nodes } = parse(), documentEvents = new Map(), windowEvents = new Map(), calls = [], storage = new Map([["jessiemessage.language", language]]), writes = [], timers = new Map(), redirects = [];
+  const { container, nodes } = parse(), documentEvents = new Map(), windowEvents = new Map(), calls = [], storage = new Map([["jessiemessage.language", language]]), writes = [], timers = new Map(), redirects = [], downloads = [];
   const add = (map, name, callback) => { if (!map.has(name)) map.set(name, []); map.get(name).push(callback); };
   const document = { visibilityState: "visible", readyState: "complete", documentElement: container.querySelectorAll("html")[0], body: container.querySelectorAll("body")[0],
     getElementById: (id) => nodes.get(id), querySelectorAll: (selector) => container.querySelectorAll(selector),
-    createElement: (tag) => new Element(tag), addEventListener: (name, callback) => add(documentEvents, name, callback) };
+    createElement: (tag) => { const node = new Element(tag); if (tag === "a") node.click = () => downloads.push({ href: node.href, download: node.download }); return node; }, addEventListener: (name, callback) => add(documentEvents, name, callback) };
   const session = { user: { id: "1".repeat(32), role: "admin", pseudonym: "Vérification en cours…" }, csrf: "A".repeat(43), expiresAt };
   let timerId = 0;
   const context = vm.createContext({ document, window: { addEventListener: (name, callback) => add(windowEvents, name, callback) },
@@ -102,7 +103,7 @@ async function harness({ input = summary(), language = "fr", expiresAt = now + 2
   vm.runInContext(model.replace(/^export\s+/gm, ""), context, { filename: "public/readiness-model.js" });
   vm.runInContext(controller.replace(/^import\s*\{[\s\S]*?\}\s*from\s*"\/readiness-model\.js";\s*/, ""), context, { filename: "public/readiness.js" });
   await flush();
-  return { context, nodes, calls, storage, writes, document, container, redirects, timers,
+  return { context, nodes, calls, storage, writes, document, container, redirects, timers, downloads,
     language(value) { context.JessieI18n.setLanguage(value); },
     async click(id) { for (const callback of nodes.get(id).events.get("click") ?? []) callback({}); await flush(); },
     async hide() { document.visibilityState = "hidden"; for (const callback of documentEvents.get("visibilitychange") ?? []) callback({}); await flush(); },
@@ -279,4 +280,56 @@ test("a readiness final proof arriving after hide cannot attach the earlier priv
   proof.resolve(response(original)); await flush();
   assert.equal(f.calls.length, count); assert.equal(f.nodes.get("mail-sender").textContent, "");
   assert.equal(f.nodes.get("readiness-content").hidden, true); assert.equal(f.timers.size, 0);
+});
+
+test("diagnostic download refreshes the aggregate snapshot and exports translated fixed fields without account data", async () => {
+  for (const language of ["fr", "en"]) {
+    let snapshots = 0;
+    const input = summary();
+    input.operations.workers.push({ ...input.operations.workers[2], name: "notifications" });
+    input.operations.queues.push({ ...input.operations.queues[2], name: "notifications" });
+    const f = await harness({ input, language, snapshot: value => {
+      const copy = structuredClone(value); if (++snapshots > 1) copy.operations.queues[0].sending.count = 47;
+      copy.operations.private = "DO-NOT-EXPORT-PRIVATE"; return response(copy);
+    } });
+    assert.equal(f.nodes.get("download-operations").hidden, false); assert.equal(f.downloads.length, 0);
+    await f.click("download-operations");
+    assert.equal(f.downloads.length, 1); assert.equal(snapshots, 2); assert.equal(smtpCalls(f).length, 0);
+    const file = f.downloads[0]; assert.equal(file.download, "JessieMessage-diagnostic.txt");
+    assert.ok(file.href.startsWith("data:text/plain;charset=utf-8,"));
+    const text = decodeURIComponent(file.href.split(",").slice(1).join(","));
+    assert.ok(text.includes(language === "fr" ? "En traitement : 47" : "Processing : 47"));
+    assert.ok(text.includes(language === "fr" ? "Notifications sur les appareils" : "Device notifications"));
+    assert.doesNotMatch(text, /private-sender|DO-NOT-EXPORT|csrf|A{43}|1{32}|mailto|password/i);
+    assert.equal(f.nodes.get("download-operations").disabled, false);
+    assert.equal(f.container.querySelectorAll("a").some(node => node.download === file.download), false, "temporary download link is removed");
+  }
+});
+
+test("diagnostic export refuses a changed login at the final proof", async () => {
+  let checks = 0;
+  const f = await harness({ auth: session => response(++checks < 4 ? session : { ...session, csrf: "B".repeat(43) }) });
+  await f.click("download-operations");
+  assert.equal(f.downloads.length, 0); assert.equal(smtpCalls(f).length, 0);
+  assert.equal(vm.runInContext("state.session.csrf", f.context), "B".repeat(43));
+});
+
+test("a hidden page cannot download a diagnostic when a final proof arrives late", async () => {
+  let checks = 0, original;
+  const pending = deferred();
+  const f = await harness({ auth: session => { original = session; return ++checks === 4 ? pending.promise : response(session); } });
+  await f.click("download-operations");
+  assert.equal(f.nodes.get("download-operations").disabled, true);
+  await f.click("download-operations"); assert.equal(checks, 4, "a second click cannot overlap the report request");
+  await f.hide(); pending.resolve(response(original)); await flush();
+  assert.equal(f.downloads.length, 0); assert.equal(smtpCalls(f).length, 0); assert.equal(f.timers.size, 0);
+});
+
+test("a failed fresh snapshot never downloads the older cached diagnostic", async () => {
+  let snapshots = 0;
+  const f = await harness({ snapshot: value => ++snapshots === 1 ? response(value) : response({ error: "readiness_unavailable" }, 503) });
+  await f.click("download-operations");
+  assert.equal(f.downloads.length, 0); assert.equal(smtpCalls(f).length, 0);
+  assert.equal(f.nodes.get("operations-download-status").classList.contains("is-error"), true);
+  assert.equal(f.nodes.get("download-operations").disabled, false);
 });
