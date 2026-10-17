@@ -1,6 +1,7 @@
 import { constants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { APPLICATION_COVERAGE, validateApplicationCoverage } from "./application-scope.mjs";
 
 const MIB = 1024 * 1024;
 const MAX_FILE = 64 * MIB, MAX_RECEIPT = 32 * MIB, MAX_MEDIA = 1024 * MIB, MAX_HASH = 2 * 1024 * MIB;
@@ -31,11 +32,18 @@ function record(value, fields) {
 }
 
 function canonicalReceipt(value) {
-  const root = record(value, ["format", "version", "profile", "createdAt", "schema", "sql", "manifest", "media"]);
+  const application = value && typeof value === "object" && Object.getOwnPropertyDescriptor(value, "version")?.value === 2;
+  const root = record(value, ["format", "version", "profile", ...(application ? ["coverage"] : []), "createdAt", "schema", "sql", "manifest", "media"]);
+  if (application) {
+    try { validateApplicationCoverage(root.coverage); }
+    catch { fail("CHECKPOINT_RECEIPT_INVALID"); }
+  }
   const schema = record(root.schema, ["tables", "migrations"]);
   const sql = record(root.sql, ["file", "bytes", "sha256", "uncompressedBytes", "uncompressedSha256"]);
   const manifest = record(root.manifest, ["file", "sha256"]), media = record(root.media, ["files", "bytes"]);
-  if (root.format !== "jessiemessage-private-checkpoint" || root.version !== 1 || root.profile !== "messaging-photos-notify"
+  if (root.format !== "jessiemessage-private-checkpoint"
+    || !(root.version === 1 && root.profile === "messaging-photos-notify"
+      || root.version === 2 && root.profile === "messaging-photos-notify-application")
     || !integer(root.createdAt, 0, 253402300799999) || schema.tables !== 30 || schema.migrations !== 30
     || sql.file !== "database.sql.gz" || !integer(sql.bytes, 1, 16 * MIB) || !digest(sql.sha256)
     || !integer(sql.uncompressedBytes, 1, MAX_FILE) || !digest(sql.uncompressedSha256)
@@ -55,7 +63,8 @@ function canonicalReceipt(value) {
     previous = file.name; files.push(file);
   }
   if (total !== media.bytes) fail("CHECKPOINT_RECEIPT_INVALID");
-  return { format: root.format, version: root.version, profile: root.profile, createdAt: root.createdAt,
+  return { format: root.format, version: root.version, profile: root.profile,
+    ...(application ? { coverage: { ...APPLICATION_COVERAGE } } : {}), createdAt: root.createdAt,
     schema, sql, manifest, media: { files, bytes: total } };
 }
 

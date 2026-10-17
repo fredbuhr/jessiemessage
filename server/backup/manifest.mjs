@@ -3,6 +3,7 @@ import { lstat, open, realpath } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import path from "node:path";
 import { openPrivateDirectory, privatePathMode } from "../files/private-directory.mjs";
+import { validateApplicationCoverage } from "./application-scope.mjs";
 
 const MAX_BYTES = 64 * 1024 * 1024;
 const MAX_NODES = 2000000;
@@ -11,6 +12,7 @@ const KEY_NAMES = ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"];
 const TAG_FIELDS = ["databaseTag", "rootPathTag", "rootPhysicalTag", "rootFingerprint"];
 const HEX = /^[a-f0-9]{64}$/;
 const forbiddenKeys = new Set(["__proto__", "constructor", "prototype"]);
+const APPLICATION_PROFILE = "messaging-photos-notify-application";
 
 export class BackupManifestError extends Error {
   constructor(code = "BACKUP_MANIFEST_INVALID") {
@@ -68,7 +70,7 @@ const instant = (value) => { if (!Number.isSafeInteger(value) || value < 0 || va
 const profileKeyNames = (profile) => {
   if (profile === "messaging-photos") return KEY_NAMES.slice(0, 4);
   if (profile === "full") return KEY_NAMES;
-  if (profile === "messaging-photos-notify") return [...KEY_NAMES.slice(0, 4), "notificationKey"];
+  if (profile === "messaging-photos-notify" || profile === APPLICATION_PROFILE) return [...KEY_NAMES.slice(0, 4), "notificationKey"];
   if (profile === "full-notify") return [...KEY_NAMES, "notificationKey"];
   fail();
 };
@@ -112,22 +114,34 @@ function canaryFields(value, name) {
 }
 function manifestValue(manifest) {
   const result = safeJson(manifest);
-  const profiled = result.version === 2 || result.version === 3;
+  const profiled = result.version === 2 || result.version === 3 || result.version === 4;
   exact(result, ["version", "payload", "signature", ...(profiled ? ["profile"] : [])]);
-  if (![1, 2, 3].includes(result.version) || result.version === 2 && result.profile !== "messaging-photos"
+  if (![1, 2, 3, 4].includes(result.version) || result.version === 2 && result.profile !== "messaging-photos"
     || result.version === 3 && !["messaging-photos-notify", "full-notify"].includes(result.profile)
+    || result.version === 4 && result.profile !== APPLICATION_PROFILE
     || typeof result.signature !== "string" || !HEX.test(result.signature)) fail();
   exact(result.payload, ["createdAt", "identity", "snapshot", "canaries"]);
   instant(result.payload.createdAt); identityValue(result.payload.identity);
   // The coordinator owns the snapshot's schema and ciphertext-only contents.
-  plain(result.payload.snapshot);
+  snapshotScope(result.payload.snapshot, profiled ? result.profile : "full");
   const names = profileKeyNames(profiled ? result.profile : "full");
   exact(result.payload.canaries, names);
   for (const name of names) canaryFields(result.payload.canaries[name], name);
   return result;
 }
 const envelope = (profile) => profile === "messaging-photos" ? { version: 2, profile }
-  : ["messaging-photos-notify", "full-notify"].includes(profile) ? { version: 3, profile } : { version: 1 };
+  : ["messaging-photos-notify", "full-notify"].includes(profile) ? { version: 3, profile }
+    : profile === APPLICATION_PROFILE ? { version: 4, profile } : { version: 1 };
+function snapshotScope(snapshot, profile) {
+  plain(snapshot);
+  if (profile === APPLICATION_PROFILE) {
+    if (snapshot.version !== 2 || snapshot.counts?.tables !== 30) fail();
+    validateApplicationCoverage(snapshot.coverage);
+  } else if (snapshot.version === 2 || Object.hasOwn(snapshot, "coverage")) {
+    // Application-only snapshots cannot acquire the complete-backup envelope.
+    fail();
+  }
+}
 function binding(payload, profile = "full") {
   return createHash("sha256").update(canonical({ ...envelope(profile), createdAt: payload.createdAt, identity: payload.identity,
     snapshotHash: createHash("sha256").update(canonical(payload.snapshot)).digest("hex") })).digest();
@@ -165,7 +179,7 @@ export function createBackupManifest({ snapshot, identity, keys, now, profile = 
   try {
     const names = profileKeyNames(profile); secrets = keySet(keys, names);
     const payload = { createdAt: instant(now), identity: identityValue(identity), snapshot: safeJson(snapshot), canaries: Object.create(null) };
-    plain(payload.snapshot);
+    snapshotScope(payload.snapshot, profile);
     const bound = binding(payload, profile);
     for (const name of names) payload.canaries[name] = sealCanary(secrets[name], name, bound);
     return manifestValue({ ...envelope(profile), payload, signature: signature(payload, secrets.mediaKey, profile) });

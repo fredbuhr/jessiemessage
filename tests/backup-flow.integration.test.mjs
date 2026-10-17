@@ -472,6 +472,55 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       assert.equal(await databaseHash(restoreDatabase), completed); await sourceUnchanged();
     });
 
+    await t.test("application-table checkpoint uses runtime privileges, keeps explicit coverage and restores only its isolated clone", async () => {
+      const { APPLICATION_COVERAGE, createApplicationInspectionPool } = await import("../server/backup/application-scope.mjs");
+      const { createBackupSnapshotStore, captureBackupSnapshot } = await import("../server/backup/snapshot.mjs");
+      const { createBackupInspectionPool } = await import("../server/backup/inspection.mjs");
+      const appInspector = await createApplicationInspectionPool(process.env), strictInspector = await createBackupInspectionPool(process.env);
+      try {
+        const app = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool: appInspector, coverage: "application-tables" }) });
+        const strict = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool: strictInspector }) });
+        assert.equal(app.version, 2); assert.deepEqual(app.coverage, APPLICATION_COVERAGE);
+        assert.equal(app.schemaDigest, strict.schemaDigest); assert.equal(app.coreDigest, strict.coreDigest); assert.deepEqual(app.counts, strict.counts);
+        await sourceConnection.query("CREATE TRIGGER synthetic_application_scope BEFORE UPDATE ON media_storage_state FOR EACH ROW SET NEW.held_bytes = NEW.held_bytes");
+        try {
+          await assert.rejects(captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool: strictInspector }) }), backupError);
+          const scoped = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool: appInspector, coverage: "application-tables" }) });
+          assert.equal(scoped.coreDigest, app.coreDigest); assert.equal(scoped.coverage.executableInventory, "unproven");
+          assert.equal(scoped.coverage.completeDatabase, false);
+        } finally { await sourceConnection.query("DROP TRIGGER synthetic_application_scope"); }
+      } finally { await Promise.all([appInspector.end(), strictInspector.end()]); }
+      const notificationKey = randomBytes(32);
+      const deps = (database, root) => {
+        const selected = dependencies(database, root), configure = selected.configure;
+        selected.configure = () => { const config = configure(); delete config.keys.crmKey; config.keys.notificationKey = notificationKey; return config; };
+        return selected;
+      };
+      const file = path.join(temporaryRoot, "application-tables-checkpoint.json");
+      const args = command => [command, "--offline", "--manifest", file, "--profile", "photos-notify-application"];
+      assert.equal((await main(args("prepare"), process.env, deps(options.database, sourceRoot))).prepared, true);
+      const manifest = JSON.parse(await readFile(file, "utf8"));
+      assert.equal(manifest.version, 4); assert.equal(manifest.profile, "messaging-photos-notify-application");
+      assert.deepEqual(manifest.payload.snapshot.coverage, APPLICATION_COVERAGE);
+      await assert.rejects(main(["verify", "--offline", "--manifest", file, "--profile", "photos-notify"], targetEnv, deps(restoreDatabase, targetRoot)), backupError);
+      await clone();
+      const before = await databaseHash(restoreDatabase);
+      assert.equal((await main(args("verify"), targetEnv, deps(restoreDatabase, targetRoot))).verified, true);
+      assert.equal(await databaseHash(restoreDatabase), before);
+      const restored = await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot));
+      assert.equal(restored.restored, true); assert.equal(restored.releasedCandidates, 3);
+      const capacity = await targetStatus(); assert.equal(capacity.pendingBytes, 0);
+      assert.equal(capacity.heldBytes, active.fullBytes + active.thumbnailBytes + 80);
+      const files = await filesUnder(targetRoot); assert.equal(files.length, 2);
+      assert.ok(files.every(([name]) => name.startsWith(active.storageKey.toString("hex"))));
+      const restoredStorage = await createMediaStorage({ root: targetRoot, key: keys.mediaKey });
+      assert.ok((await restoredStorage.get({ assetId: active.id, storageKey: active.storageKey, variant: "full" })).length > 0);
+      assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS count FROM messages WHERE id = ?", [messageId]))[0].count), 1);
+      // Earlier photo fixtures deliberately removed CRM and broadcast rows.
+      // Validate this profile's real state without expecting a deleted campaign.
+      await sourceUnchanged();
+    });
+
     await t.test("notification photo checkpoint restores encrypted subscriptions and pending jobs offline without changing delivery state", async () => {
       const notificationKey = randomBytes(32), subscriptionId = id(), jobId = id();
       const curve = createECDH("prime256v1"); curve.generateKeys();

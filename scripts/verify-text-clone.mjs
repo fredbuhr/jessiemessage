@@ -6,6 +6,7 @@ import { createGunzip } from "node:zlib";
 import { Readable } from "node:stream";
 import { resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isProxy } from "node:util/types";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { readRuntimeMessagingBundle, validateRuntimeDatabaseConfiguration, validateRuntimeAuthenticationConfiguration,
   validateRuntimeMessagingConfiguration } from "../server/config/runtime-database-file.mjs";
@@ -103,7 +104,35 @@ async function visibleConfig(scope, canonical, name, expected) {
   const stats = await lstat(`${canonical}/${name}`, { bigint: true }); regular(stats); unchanged(expected, stats);
 }
 
-export async function dumpCloneSql(scope, selected, configuration, password, { spawnClient = spawn, signal, onSqlChunk } = {}) {
+async function applicationDumpTables(options) {
+  const descriptor = Object.getOwnPropertyDescriptor(options, "tables");
+  if (!descriptor) {
+    if ("tables" in options) fail("TEXT_CLONE_DUMP");
+    return undefined;
+  }
+  if (!Object.hasOwn(descriptor, "value")) fail("TEXT_CLONE_DUMP");
+  if (descriptor.value === undefined) return undefined;
+  const tables = descriptor.value;
+  if (!Array.isArray(tables) || isProxy(tables) || Object.getPrototypeOf(tables) !== Array.prototype
+    || Object.getOwnPropertySymbols(tables).length) fail("TEXT_CLONE_DUMP");
+  const properties = Object.getOwnPropertyDescriptors(tables);
+  if (properties.length?.value !== 30 || Object.keys(properties).length !== 31) fail("TEXT_CLONE_DUMP");
+  const supplied = [];
+  for (let index = 0; index < 30; index++) {
+    const item = properties[index];
+    if (!item || !Object.hasOwn(item, "value") || typeof item.value !== "string") fail("TEXT_CLONE_DUMP");
+    supplied.push(item.value);
+  }
+  const migrations = await loadMigrations(), expected = [...createdMigrationTables(migrations), "schema_migrations"].sort();
+  if (migrations.length !== 30 || expected.length !== 30 || new Set(expected).size !== 30
+    || expected.some((name, index) => !/^[a-z][a-z0-9_]*$/.test(name) || supplied[index] !== name)) fail("TEXT_CLONE_DUMP");
+  // Use the trusted migration inventory after validation, never the caller's
+  // mutable array, across the asynchronous private-file and native-client work.
+  return expected;
+}
+
+export async function dumpCloneSql(scope, selected, configuration, password, options = {}) {
+  const { spawnClient = spawn, signal, onSqlChunk } = options;
   const name = `.text-clone-${randomBytes(16).toString("hex")}.cnf`;
   // Retain only a bounded diagnostic in memory. The native text can contain
   // private identities and is never attached to the public error or report.
@@ -112,6 +141,7 @@ export async function dumpCloneSql(scope, selected, configuration, password, { s
   try {
     if (onSqlChunk !== undefined && typeof onSqlChunk !== "function") fail("TEXT_CLONE_DUMP");
     if (signal?.aborted) fail("TEXT_CLONE_CANCELLED");
+    const tables = await applicationDumpTables(options);
     const canonical = await realpath(scope.path);
     content = Buffer.from(`[client]\nhost=${optionValue(configuration.host)}\nport=${configuration.port}\nuser=${optionValue(selected.user)}\npassword=${optionValue(password)}\n`, "utf8");
     await scope.assertReady();
@@ -126,7 +156,7 @@ export async function dumpCloneSql(scope, selected, configuration, password, { s
       const reject = () => { failed = true; try { child?.kill("SIGKILL"); } catch {} };
       try {
         child = spawnClient(CLIENT, [`--defaults-file=${canonical}/${name}`, ...DUMP_FLAGS,
-          "--protocol=TCP", `--ssl-ca=${CA}`, "--ssl-verify-server-cert", selected.database], {
+          "--protocol=TCP", `--ssl-ca=${CA}`, "--ssl-verify-server-cert", selected.database, ...(tables ?? [])], {
           env: PROCESS_ENV, stdio: ["ignore", "pipe", "pipe"],
         });
         timer = setTimeout(reject, 90000);
