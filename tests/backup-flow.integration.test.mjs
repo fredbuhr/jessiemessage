@@ -507,8 +507,18 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       const before = await databaseHash(restoreDatabase);
       assert.equal((await main(args("verify"), targetEnv, deps(restoreDatabase, targetRoot))).verified, true);
       assert.equal(await databaseHash(restoreDatabase), before);
-      assert.equal((await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot))).restored, true);
-      await assertRestored();
+      const restored = await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot));
+      assert.equal(restored.restored, true); assert.equal(restored.releasedCandidates, 3);
+      const capacity = await targetStatus(); assert.equal(capacity.pendingBytes, 0);
+      assert.equal(capacity.heldBytes, active.fullBytes + active.thumbnailBytes + 80);
+      const files = await filesUnder(targetRoot); assert.equal(files.length, 2);
+      assert.ok(files.every(([name]) => name.startsWith(active.storageKey.toString("hex"))));
+      const restoredStorage = await createMediaStorage({ root: targetRoot, key: keys.mediaKey });
+      assert.ok((await restoredStorage.get({ assetId: active.id, storageKey: active.storageKey, variant: "full" })).length > 0);
+      assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS count FROM messages WHERE id = ?", [messageId]))[0].count), 1);
+      // Earlier photo fixtures deliberately removed CRM and broadcast rows.
+      // Validate this profile's real state without expecting a deleted campaign.
+      await sourceUnchanged();
     });
 
     await t.test("notification photo checkpoint restores encrypted subscriptions and pending jobs offline without changing delivery state", async () => {
