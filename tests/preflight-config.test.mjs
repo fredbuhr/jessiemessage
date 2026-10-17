@@ -91,7 +91,9 @@ test("expected origin is required, exact, canonical HTTPS and an official subdom
   const env = environment();
   for (const expected of [undefined, null, "", "http://synthetic-preprod.jessiemessage.com", `${expectedOrigin}/`, `${expectedOrigin}/path`,
     `${expectedOrigin}?token=synthetic`, "https://user:synthetic@synthetic-preprod.jessiemessage.com", "https://jessiemessage.com", "https://www.jessiemessage.com",
-    "https://synthetic-preprod.jessiemessage.com.example.invalid", "https://other.example.invalid", "https://SYNTHETIC-PREPROD.jessiemessage.com"]) {
+    "https://synthetic-preprod.jessiemessage.com.example.invalid", "https://other.example.invalid", "https://SYNTHETIC-PREPROD.jessiemessage.com",
+    `${expectedOrigin}:8443`, "https://invalid_label.jessiemessage.com", "https://-invalid.jessiemessage.com",
+    `https://${"a".repeat(64)}.jessiemessage.com`]) {
     const result = inspectPreproductionConfiguration({ ...env, JESSIEMESSAGE_SITE_ORIGIN: expected }, { target: "auth-only", expectedOrigin: expected });
     assert.equal(result.valid, false); assert.equal(statusOf(result, "official_subdomain"), "fail");
   }

@@ -1,5 +1,8 @@
 # JessieMessage — audit de reprise du 15 octobre 2026
 
+**Document historique :** les constats ci-dessous datent du 15 octobre. L’[audit du 17 octobre et son plan actualisé](AUDIT-2026-10-17.md) décrivent le runtime 0.33, les fonctions livrées et les points réellement ouverts. Les lignes A01/A02/A05/A06/A07/A08 notamment ne constituent plus l’état actuel.
+
+
 **Suivi FR/EN — étape 0.19 :** les [interfaces privées](private-ui-languages.md), version 0.21.0, branche `feat/private-ui-languages` sur #21, partagent le choix de langue pour accès, récupération, administration, chat/photos, CRM, diffusions et préparation. A07 est traité dans le code des écrans servis, avec régressions sur les valeurs privées, le DOM stable et la purge au masquage. Les e-mails de service restent en français ; la recette navigateur/accessibilité et les appareils restent ouverts. La préférence `fr`/`en` seule est conservée dans la session du navigateur. Aucune publication ni activation privée.
 
 **Suivi accessibilité du chat — étape 0.20 :** les [annonces et le focus clavier](chat-accessibility.md), version 0.22.0, branche `feat/chat-accessibility` sur #22, traitent A16 dans le code : réception comptée sans contenu privé, historique et reprises silencieux, conservation ou repli logique du focus après les actions. Un job Chrome séparé exerce les vrais fichiers avec des API synthétiques sur ordinateur et viewport étroit. Les lecteurs d’écran, les systèmes mobiles et les parcours réels de préproduction restent à vérifier. Aucune fusion ni publication.

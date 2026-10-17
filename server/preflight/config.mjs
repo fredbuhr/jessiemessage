@@ -8,7 +8,7 @@ import { broadcastConfiguration } from "../broadcast/config.mjs";
 import { loadNotificationsConfig } from "../notifications/config.mjs";
 import { mailConfiguration } from "../mail/config.mjs";
 import { runtimeDatabaseOptions } from "../db/runtime.mjs";
-import { SITE_DOMAIN, isOfficialOrigin } from "../site.mjs";
+import { isPreproductionOrigin } from "../site.mjs";
 
 export const CONFIG_CHECK_NAMES = Object.freeze([
   "feature_flags", "authentication", "mail", "client_access", "chat", "media", "crm", "client_recovery", "broadcasts", "notifications",
@@ -108,9 +108,8 @@ export function inspectPreproductionConfiguration(env = {}, options = {}) {
   try {
     const expected = parameters.expectedOrigin;
     if (typeof expected !== "string") throw new TypeError();
-    const url = new URL(expected);
-    statuses.official_subdomain = isOfficialOrigin(expected) && url.hostname !== SITE_DOMAIN
-      && url.hostname !== `www.${SITE_DOMAIN}` && source.JESSIEMESSAGE_SITE_ORIGIN === expected ? "pass" : "fail";
+    statuses.official_subdomain = isPreproductionOrigin(expected)
+      && source.JESSIEMESSAGE_SITE_ORIGIN === expected ? "pass" : "fail";
   } catch { statuses.official_subdomain = "fail"; }
   statuses.auth_only = target === TARGET && validFlags && source.JESSIEMESSAGE_ENABLE_AUTH === "1"
     && FLAGS.slice(1).every((name) => source[name] === undefined || source[name] === "0") ? "pass" : "fail";
