@@ -200,23 +200,25 @@ test("Chrome mobile: every account control stays visible and separate with Notif
         if (language === "en") await page.click("[data-jm-language]");
         assert.equal(await page.execute("return document.documentElement.lang"), language);
         const layout = await page.execute(`
-          const header = document.querySelector('.topbar').getBoundingClientRect();
-          const controls = [...document.querySelectorAll('.topbar .brand, .account-nav > a, .account-nav > button')]
+          const controls = [...document.querySelectorAll('.topbar .brand, .topbar .account-nav > a, .topbar .account-nav > button')]
             .filter(node => !node.hidden).map(node => {
               const rect = node.getBoundingClientRect(), hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
-              return { name: node.id || (node.matches('[data-jm-language]') ? 'language' : 'brand'),
+              const container = node.closest('.topbar').getBoundingClientRect();
+              return { name: node.id || (node.matches('.brand') ? 'brand' : node.matches('[data-jm-language]') ? 'language' : new URL(node.href).pathname),
                 left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, height: rect.height,
+                containerTop: container.top, containerBottom: container.bottom,
                 reachable: hit === node || node.contains(hit) };
             });
-          return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, headerBottom: header.bottom, controls };
+          return { width: innerWidth, height: innerHeight, scrollWidth: document.documentElement.scrollWidth, controls };
         `);
         const context = `${path}, ${width}px, ${language}`;
         assert.equal(layout.width, width, context);
         assert.equal(layout.scrollWidth <= layout.width, true, `${context}: no horizontal page overflow`);
-        assert.deepEqual(layout.controls.map(control => control.name).sort(), ["account-link", "brand", "language", "logout", "open-notifications"], `${context}: all five controls are present`);
+        assert.deepEqual(layout.controls.map(control => control.name).sort(), ["account-link", "brand", "language", "logout", "open-notifications"], `${context}: all five header controls are present`);
         for (const control of layout.controls) {
           assert.ok(control.left >= -1 && control.right <= layout.width + 1, `${context}: ${control.name} stays inside the viewport`);
-          assert.ok(control.top >= 0 && control.bottom <= layout.headerBottom + 1, `${context}: ${control.name} stays inside the header`);
+          assert.ok(control.top >= 0 && control.bottom <= layout.height + 1, `${context}: ${control.name} stays vertically visible`);
+          assert.ok(control.top >= control.containerTop - 1 && control.bottom <= control.containerBottom + 1, `${context}: ${control.name} stays inside the header`);
           assert.ok(control.height >= 44, `${context}: ${control.name} keeps its 44px touch height`);
           assert.equal(control.reachable, true, `${context}: ${control.name} is not covered`);
         }
