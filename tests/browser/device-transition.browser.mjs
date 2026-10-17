@@ -105,7 +105,14 @@ async function transitionFixture() {
           return;
         } else {
           request.resume();
-          if (active.failureMode === "network") response.destroy();
+          if (active.failureMode === "network") {
+            // Closing before headers permits Chrome to retry the POST on a
+            // reused connection. Deliver headers and an incomplete JSON body
+            // first, then close with a declared length larger than the body.
+            // Reading response.json() must fail without a timer or API replay.
+            response.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store", "Content-Length": "128", Connection: "close" });
+            response.end('{"ticket":');
+          }
           else json(response, 503, { error: "transition_unavailable" });
           return;
         }
@@ -159,6 +166,21 @@ function cleanRequests(fixture) {
   assert.deepEqual(fixture.failures, [], "the HTTPS fixture has no internal failures");
   assert.equal(fixture.requests.every(request => !request.query && !request.fragment && !request.rawTokenInUrl && !request.rawTokenInReferrer), true,
     "server requests never carry ticket fragments, query credentials or raw session tokens");
+}
+
+async function transitionDiagnostics(page, fixture) {
+  // Only fixed route names, UI categories and counts: never URL fragments,
+  // packet bodies, notification references or protected cookie values.
+  const ui = await page.execute(`const status = document.getElementById('transition-status')?.textContent ?? '';
+    return { pathname: location.pathname, status: document.getElementById('destination') ? 'destination'
+      : document.getElementById('transition-start')?.textContent === 'Réessayer' ? 'retry'
+      : status.startsWith('Un instant') ? 'preparing' : status.startsWith('La connexion de cet appareil') ? 'missing'
+      : status.startsWith('Un autre compte') ? 'conflict' : 'other' };`).catch(() => ({ pathname: "unavailable", status: "unavailable" }));
+  const requestCounts = {};
+  for (const { path } of fixture.requests) if (/^\/api\/(?:auth\/session|access\/session|device-transition\/(?:admin|client)\/(?:begin|authorize|complete))$/.test(path)) {
+    requestCounts[path] = (requestCounts[path] ?? 0) + 1;
+  }
+  return { ...ui, requestCounts };
 }
 
 test("real Chrome: two HTTPS hosts preserve native protected sessions through the real device transition", { timeout: 90000 }, async t => {
@@ -242,6 +264,9 @@ test("real Chrome: two HTTPS hosts preserve native protected sessions through th
           await protectedCookie(page, role, tokens.sourceToken, new URL(fixture.primaryOrigin).hostname);
           assert.equal((await page.cookies()).some(cookie => cookie.name.startsWith("__Host-jessie_transition_")), false);
           await noCredentialExposure(page, [tokens.sourceToken]); cleanRequests(fixture);
+        } catch (error) {
+          t.diagnostic(JSON.stringify(await transitionDiagnostics(page, fixture)));
+          throw error;
         } finally { await page.close(); }
       });
     }
