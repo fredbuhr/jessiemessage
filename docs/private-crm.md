@@ -1,6 +1,6 @@
 # Private client files and labels — development 0.8
 
-**Stage 0.43 preparation:** [shared-administrator collaboration and lifecycle corrections](crm-collaboration.md) reject obsolete failures as well as obsolete successes, preserve the current label-action lock after resume and add real-module Chrome collaboration fixtures. Existing SQL version/ownership checks are retained. CRM remains disabled in the hosted 0.42 profile; private configuration and backup support precede activation. The original 0.8 evidence below remains historical.
+**Stage 0.43 validated preparation (`42bc5eff`):** [shared-administrator collaboration and lifecycle corrections](crm-collaboration.md) reject obsolete failures as well as obsolete successes, preserve the current label-action lock after resume and add real-module Chrome collaboration fixtures. Existing SQL version/ownership checks are retained. CRM remains disabled in the hosted 0.42 profile; private configuration and backup support precede activation. The original 0.8 evidence below remains historical.
 
 This lot adds administrator-only client files and inbox filtering to the persistent private chat. A client file contains a private nickname, encrypted notes, optional reminder date and explicit tag/group memberships. The approved Nuit interface is preserved. The downloadable offline workbench remains fictional and does not contain real CRM data.
 
