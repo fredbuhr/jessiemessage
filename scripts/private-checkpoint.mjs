@@ -26,6 +26,7 @@ const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const PROCESS_ENV = Object.freeze({ PATH: "/usr/bin:/bin", HOME: "/", LANG: "C", LC_ALL: "C" });
 const MAX_ARCHIVE = 2 * 1024 * 1024 * 1024;
 const FIELDS = ["command", "offline", "privateDirectory", "privatePathMode", "destination", "inspectionUser"];
+const RECOVERY_PROFILE = "photos-notify-recovery";
 const CODES = new Set(["USAGE", "ENVIRONMENT", "CONFIGURATION", "DESTINATION", "TOOLS", "PASSWORD", "INSPECTION", "CONNECTION", "DATABASE", "AUTHENTICATION", "ACCESS", "BACKUP", "DUMP", "DRIFT", "ARCHIVE", "CANCELLED", "OPERATION"].map(name => `PRIVATE_CHECKPOINT_${name}`));
 export class PrivateCheckpointError extends Error {
   constructor(code) { const selected = CODES.has(code) ? code : "PRIVATE_CHECKPOINT_OPERATION"; super(selected); this.name = "PrivateCheckpointError"; this.code = selected; }
@@ -41,8 +42,9 @@ export function parseArguments(args) {
   if (!Array.isArray(args) || !["check", "diagnose", "inspect", "capture", "check-application", "inspect-application", "capture-application"].includes(args[0])) fail("PRIVATE_CHECKPOINT_USAGE");
   const application = args[0].endsWith("-application");
   const offline = args[1] === "--offline", offset = offline ? 2 : 1;
-  if (["capture", "capture-application"].includes(args[0]) !== offline || args.length !== offset + (application ? 6 : 8)) fail("PRIVATE_CHECKPOINT_USAGE");
-  const names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"], ["--destination-private-directory", "destination"], ["--inspection-user", "inspectionUser"]]);
+  const expectedLength = offset + (application ? 6 : 8);
+  if (["capture", "capture-application"].includes(args[0]) !== offline || ![expectedLength, expectedLength + 2].includes(args.length)) fail("PRIVATE_CHECKPOINT_USAGE");
+  const names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"], ["--destination-private-directory", "destination"], ["--inspection-user", "inspectionUser"], ["--profile", "profile"]]);
   const value = { command: args[0], offline, ...(application ? { inspectionUser: null } : {}) };
   for (let index = offset; index < args.length; index += 2) {
     const name = names.get(args[index]), content = args[index + 1];
@@ -51,17 +53,20 @@ export function parseArguments(args) {
   }
   if (!path(value.privateDirectory) || !path(value.destination) || inside(value.privateDirectory, REPOSITORY) || inside(value.destination, REPOSITORY)
     || value.privatePathMode !== "linux-dirfd" || !application && !/^[A-Za-z0-9_]{1,80}$/.test(value.inspectionUser)
-    || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(basename(value.destination))) fail("PRIVATE_CHECKPOINT_USAGE");
-  return Object.fromEntries(FIELDS.map(name => [name, value[name]]));
+    || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(basename(value.destination))
+    || Object.hasOwn(value, "profile") && value.profile !== RECOVERY_PROFILE) fail("PRIVATE_CHECKPOINT_USAGE");
+  return Object.fromEntries([...FIELDS, ...(Object.hasOwn(value, "profile") ? ["profile"] : [])].map(name => [name, value[name]]));
 }
 function options(value) {
+  const fields = [...FIELDS, ...(value && Object.hasOwn(value, "profile") ? ["profile"] : [])];
   if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
-    || Object.getOwnPropertyNames(value).sort().join(",") !== [...FIELDS].sort().join(",")
-    || FIELDS.some(name => !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name) ?? {}, "value"))
+    || Object.getOwnPropertyNames(value).sort().join(",") !== fields.sort().join(",")
+    || fields.some(name => !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name) ?? {}, "value"))
     || typeof value.offline !== "boolean") fail("PRIVATE_CHECKPOINT_USAGE");
   return parseArguments([value.command, ...(value.offline ? ["--offline"] : []), "--private-directory", value.privateDirectory,
     "--private-path-mode", value.privatePathMode, "--destination-private-directory", value.destination,
-    ...(value.inspectionUser === null ? [] : ["--inspection-user", value.inspectionUser])]);
+    ...(value.inspectionUser === null ? [] : ["--inspection-user", value.inspectionUser]),
+    ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : [])]);
 }
 export async function inspectCheckpointTools() {
   await inspectDumpClient();
@@ -227,9 +232,14 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   let env, loaded, password = "", keys;
   try {
     const selected = options(value); active(signal);
-    const application = selected.command.endsWith("-application"), profile = application ? "messaging-photos-notify-application" : "messaging-photos-notify";
+    const application = selected.command.endsWith("-application"), recovery = selected.profile === RECOVERY_PROFILE;
+    const backupProfile = `photos-notify${recovery ? "-recovery" : ""}${application ? "-application" : ""}`, profile = `messaging-${backupProfile}`;
+    const manifestVersion = recovery ? application ? 6 : 5 : application ? 4 : 3;
+    const receiptVersion = recovery ? application ? 4 : 3 : application ? 2 : 1;
     let parameters; try { parameters = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("PRIVATE_CHECKPOINT_ENVIRONMENT"); }
-    loaded = await loadEnvironment(selected.privateDirectory, parameters); env = copyRuntimeNotificationsEnvironment(loaded);
+    if (recovery) parameters = { ...parameters, originProfile: "primary", recovery: true };
+    loaded = await loadEnvironment(selected.privateDirectory, parameters);
+    env = recovery ? copyRuntimeNotificationsEnvironment(loaded, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(loaded);
     if (selected.inspectionUser === env.JESSIEMESSAGE_RUNTIME_DB_USER || inside(selected.destination, env.JESSIEMESSAGE_MEDIA_ROOT)
       || inside(env.JESSIEMESSAGE_MEDIA_ROOT, selected.destination)) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     await inspectTools(); active(signal);
@@ -245,7 +255,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       if (!application) { env.JESSIEMESSAGE_BACKUP_SCHEMA_USER = selected.inspectionUser; env.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD = password; }
       if (selected.command === "diagnose") {
         const diagnosis = publicDiagnosis(await diagnoseIdentity(env, { signal })); active(signal);
-        return { status: "inspection_diagnosed", profile: "messaging-photos-notify", databaseConnected: true, diagnosis,
+        return { status: "inspection_diagnosed", profile, databaseConnected: true, diagnosis,
           checkpointSaved: false, captureAllowed: false, started: false, migrationPerformed: false };
       }
       await (application ? inspectApplicationIdentity : inspectIdentity)(env, { signal }); active(signal);
@@ -259,11 +269,11 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         directoryIdentity(await scope.assertReady(), destinationIdentity);
         const prepareAt = async name => {
           active(signal);
-          const result = await prepare(["prepare", "--offline", "--manifest", `${selected.destination}/${name}`, "--profile", application ? "photos-notify-application" : "photos-notify"], env,
+          const result = await prepare(["prepare", "--offline", "--manifest", `${selected.destination}/${name}`, "--profile", backupProfile], env,
             { signal, outputStream: { write() {} } });
           if (result?.command !== "prepare" || result.verified !== true || result.prepared !== true || result.restored !== false) fail("PRIVATE_CHECKPOINT_BACKUP");
           const manifest = await getManifest(`${selected.destination}/${name}`), payload = await verifyManifest({ manifest, keys });
-          if (manifest.version !== (application ? 4 : 3) || manifest.profile !== profile || payload?.snapshot?.counts?.tables !== 30
+          if (manifest.version !== manifestVersion || manifest.profile !== profile || payload?.snapshot?.counts?.tables !== 30
             || application && payload.snapshot.version !== 2) fail("PRIVATE_CHECKPOINT_BACKUP");
           if (application) validateApplicationCoverage(payload.snapshot.coverage);
           return payload;
@@ -298,7 +308,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         const compressed = await hashCheckpointFile(scope, "database.sql.gz", { signal, maxBytes: 16 * 1024 * 1024 });
         const manifest = await hashCheckpointFile(scope, "manifest.json", { signal });
         const now = clock(); if (!Number.isSafeInteger(now) || now < 0 || now > 253402300799999) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
-        const receipt = { format: "jessiemessage-private-checkpoint", version: application ? 2 : 1, profile,
+        const receipt = { format: "jessiemessage-private-checkpoint", version: receiptVersion, profile,
           ...(application ? { coverage: APPLICATION_COVERAGE } : {}), createdAt: now,
           schema: { tables: 30, migrations: 30 }, sql: { file: "database.sql.gz", ...compressed, uncompressedBytes: saved.bytes, uncompressedSha256: saved.sha256 },
           manifest: { file: "manifest.json", sha256: manifest.sha256 }, media: inventory };

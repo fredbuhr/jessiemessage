@@ -4,6 +4,8 @@
 
 Le défaut est reproduit avant correction sur le service réel : le choix anglais de `/app` conduit encore à un pont en français. Le contrôleur ignorait le module de préférence partagé déjà utilisé par les autres pages.
 
+**Runtime courant :** le lot 0.39 `b651d44e`, activé à 18:28, conserve cette correction et ajoute la [récupération client sur l’adresse principale](client-recovery-activation.md). Les résultats ci-dessous restent les preuves datées de livraison du lot 0.38.
+
 ## Choix retenus
 
 La page de reprise charge et réutilise `i18n.js`, avec ses opérations existantes `getLanguage`, `setLanguage` et `onChange`, au lieu de maintenir une préférence indépendante. Les titres de page suivent aussi le français ou l’anglais. Le module partagé n’est pas modifié.

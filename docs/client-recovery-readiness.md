@@ -1,6 +1,6 @@
 # Lot 0.39 — préparer la récupération de compte client
 
-**État : préparation à réaliser, non livrée.** L’état opérationnel de départ est le runtime 0.38 `4433309f09f0eb6bd2a4f498d32394d0d39b5cb2`, arbre `b8f82034b61c1837552c2d50c7749475453a1909`, schéma 30, profil `messaging-photos-notify`, déploiement `primary-transition`. Les constats métier ci-dessous ont été établis sur `0c88f61b` ; le lot 0.38 ne modifie que l’interface de reprise et les conserve. La récupération client reste inactive. Le [confort bilingue 0.38](device-transition-language.md) est livré ; ce plan n’annonce aucune activation de récupération.
+**État : code livré et activé le 17 octobre 2026 à 18:28 Europe/Paris, réception personnelle client restante.** Runtime `b651d44ed5909173008d896e7175ecb7a4c1b703`, arbre `87f2a0357a992076e9b28decf18cd0aee7ec4108`, schéma 30, profil `messaging-photos-notify-recovery`, déploiement `primary-transition`. Le [compte rendu 0.39](client-recovery-activation.md) donne les preuves CI et hébergées. Les constats et prérequis ci-dessous conservent l’état de départ du runtime 0.38 `4433309f` ; les limites qui subsistent restent explicites. Aucun compte personnel n’a été réinitialisé.
 
 Le métier, les routes, les formulaires et les tests de récupération existent déjà. L’activation n’est toutefois pas un simple changement de variable dans le Manager. Le lot proposé ajoute un profil explicite **`photos-notify-recovery`**, avec récupération **sur l’apex seulement**, en conservant recette pour les connexions et notifications existantes.
 
@@ -20,7 +20,7 @@ Les migrations et droits nouveaux ne sont donc pas prévus pour ce périmètre. 
 
 ## Priorité : sauvegarde et restauration avec des resets présents
 
-Le vérificateur actuel `verifyPhotoNotificationBackupData()` utilise le profil limité `photos-notify`. Dans `server/backup/verify.mjs`, les tables `client_password_resets` et `password_reset_outbox` sont considérées comme inactives : **une seule ligne suffit à provoquer `inactive_domain_populated`**. `scripts/backup.mjs` et `scripts/verify-private-checkpoint.mjs` utilisent ce vérificateur, y compris pour le checkpoint applicatif. La première demande éligible de récupération rendrait donc cette chaîne incompatible avec les données nouvellement créées.
+Le vérificateur du runtime 0.38 `verifyPhotoNotificationBackupData()` utilise le profil limité `photos-notify`. Dans `server/backup/verify.mjs`, les tables `client_password_resets` et `password_reset_outbox` sont considérées comme inactives : **une seule ligne suffit à provoquer `inactive_domain_populated`**. `scripts/backup.mjs` et `scripts/verify-private-checkpoint.mjs` utilisent ce vérificateur, y compris pour le checkpoint applicatif. La première demande éligible de récupération rendrait donc cette chaîne incompatible avec les données nouvellement créées.
 
 **Résoudre ce point avant toute activation réelle :**
 
@@ -45,7 +45,7 @@ Ne pas passer au profil complet avec une clé CRM fictive. La couverture reste c
 
 Seule la validation du nouveau mot de passe révoque toutes les sessions du **client ciblé**, incrémente sa version d’identifiants et annule ses autres liens de récupération. Ce client doit ensuite se reconnecter normalement sur ses appareils ; le pont recette/apex ne rétablit pas un jeton révoqué. Les sessions administrateur et celles des autres clients restent inchangées côté SQL. Invitation, approbation, statut, échéance d’accès, conversations et photos sont conservés ; un accès expiré reste expiré.
 
-La réponse réussie efface uniquement le cookie client de l’origine répondante, sans créer de session ni toucher au cookie administrateur. Cet effacement est actuellement inconditionnel : si le navigateur est connecté au client B mais termine une récupération du client A, le cookie local de B est aussi effacé. Les sessions SQL et autres appareils de B restent valables. La recette réelle utilisera donc le profil du client de test concerné.
+Dans le runtime de départ, la réponse réussie efface inconditionnellement le cookie client local. Le code 0.39 préparé supprime cet effacement : si le navigateur est connecté au client B mais termine une récupération du client A, B conserve son accès. Les sessions de A sont toujours révoquées en SQL ; le contrôle normal de session rejette et nettoie son ancien cookie lorsqu’il est présenté. Aucune session nouvelle n’est créée et le cookie administrateur reste inchangé.
 
 Après un reset, les anciennes inscriptions Push du client restent stockées mais deviennent inéligibles par révocation/version. Après reconnexion, **Activer sur cet appareil** doit les rattacher à la nouvelle session. La permission du navigateur peut rester accordée ; aucune réactivation automatique des inscriptions n’existe actuellement. Les appareils administrateur ne sont pas concernés par ce reset client.
 

@@ -2,7 +2,7 @@
 
 **Correctif livré le 17 octobre 2026 à 17:38 Europe/Paris.** Runtime `0c88f61bf6b0a9bcf45917862462db838bf73c78`, arbre `7df1c850d84597be96f458a69ca9955f8e6c257a`, déploiement `primary-transition`, schéma 30. [PR brouillon #52](https://github.com/fredbuhr/jessiemessage/pull/52) ; [CI exacte, cinq jobs réussis](https://github.com/fredbuhr/jessiemessage/actions/runs/39045662415).
 
-La preuve ci-dessus décrit la livraison 0.37. Le runtime courant `4433309f`, activé en 0.38 à 18:03, conserve ces corrections et ajoute la [continuité de langue](device-transition-language.md).
+La preuve ci-dessus décrit la livraison 0.37. Le runtime courant `b651d44e`, activé en 0.39 à 18:28, conserve ces corrections, la [continuité de langue](device-transition-language.md) et ajoute la [récupération client primaire](client-recovery-activation.md).
 
 Le propriétaire confirme à **17:28** que le parcours proposé fonctionne, puis fournit une capture exploitable du défaut d’interface. Le retour global est accepté ; il ne détaille ni six à huit appareils simultanés, ni toutes les plateformes, ni un scénario Push précis. La recette conserve ces distinctions sans imposer de répéter le parcours satisfaisant.
 

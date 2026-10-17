@@ -65,6 +65,51 @@ test("only the explicit check/restore interface and exact database confirmation 
   const upperHash = args("restore"); upperHash[14] = expected.sqlSha256.toUpperCase(); assert.throws(() => parseArguments(upperHash), neutral("USAGE"));
 });
 
+test("the optional recovery profile is closed and absent from every legacy option record", async () => {
+  const legacy = parseArguments(args("check")); assert.equal(Object.hasOwn(legacy, "profile"), false);
+  const selected = parseArguments([...args("check"), "--profile", "photos-notify-recovery"]);
+  assert.deepEqual(selected, { ...legacy, profile: "photos-notify-recovery" });
+  for (const profile of ["photos-notify", "photos-notify-recovery-application", "full", undefined])
+    assert.throws(() => parseArguments([...args("check"), "--profile", profile]), neutral("USAGE"));
+  assert.throws(() => parseArguments([...args("check"), "--profile", "photos-notify-recovery", "--profile", "photos-notify-recovery"]), neutral("USAGE"));
+  let getter = false;
+  Object.defineProperty(legacy, "profile", { get() { getter = true; throw new Error("private profile"); } });
+  await assert.rejects(run(legacy, dependencies([])), neutral("USAGE")); assert.equal(getter, false);
+});
+
+test("recovery restore carries its exact profile through all checks without activating a runtime", async () => {
+  const events = [], selections = [];
+  const profile = { version: 4, profile: "messaging-photos-notify-recovery-application" };
+  const original = dependencies(events);
+  const result = await run(parseArguments([...args("restore"), "--profile", "photos-notify-recovery"]), { ...original,
+    verify: async (selected, options) => {
+      selections.push(selected); assert.equal(selected.profile, "photos-notify-recovery");
+      return { ...await original.verify(selected, options), ...profile };
+    },
+    loadEnvironment: async (directory, options) => {
+      assert.equal(directory, "/private/source"); assert.deepEqual(options, { port: "3000", originProfile: "primary", recovery: true });
+      return { ...await original.loadEnvironment(), JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "0" };
+    },
+    importSql: async (...parameters) => { assert.equal(parameters[1].profile, "photos-notify-recovery"); return original.importSql(...parameters); },
+  });
+  assert.equal(result.profile, profile.profile); assert.equal(result.version, 4); assert.equal(result.status, "application_checkpoint_restored_verified");
+  assert.equal(selections.length, 3); assert.deepEqual(events, ["check-application", "client", "sql", "load", "password", "connect", "empty", "close", "check-application", "import", "verify-application"]);
+});
+
+test("recovery restoration cannot downgrade its verified precheck or final receipt", async () => {
+  for (const stage of ["precheck", "final"]) {
+    const events = [], original = dependencies(events);
+    await assert.rejects(run(parseArguments([...args("restore"), "--profile", "photos-notify-recovery"]), { ...original,
+      verify: async (selected, options) => {
+        const report = await original.verify(selected, options);
+        return stage === "precheck" || selected.command === "verify-application" ? { ...report, version: 2, profile: "messaging-photos-notify-application" }
+          : { ...report, version: 4, profile: "messaging-photos-notify-recovery-application" };
+      },
+    }), neutral(stage === "precheck" ? "CHECKPOINT" : "VERIFY"));
+    assert.equal(events.includes("import"), stage === "final");
+  }
+});
+
 test("the closed SQL format accepts native conditional SET/ALTER and opaque string contents for all thirty tables", async () => {
   assert.deepEqual(await validateApplicationSql(sql), { tables: 30 });
   assert.deepEqual(await validateApplicationSql(Buffer.from(sql.toString().replace("/*!999999", "/*M!999999"))), { tables: 30 });

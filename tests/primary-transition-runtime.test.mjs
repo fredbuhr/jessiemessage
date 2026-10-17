@@ -7,7 +7,7 @@ import { chmod, mkdir, mkdtemp, readFile, rm, statfs, writeFile } from "node:fs/
 import { createAppServer, createConfiguredServer } from "../server/index.mjs";
 import { createAuthHandler } from "../server/auth/http.mjs";
 import { createEntryHandler } from "../server/entry/http.mjs";
-import { inspectPreproductionConfiguration, PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES } from "../server/preflight/config.mjs";
+import { inspectPreproductionConfiguration, PRIMARY_NOTIFICATIONS_CONFIG_CHECK_NAMES, PRIMARY_NOTIFICATIONS_RECOVERY_CONFIG_CHECK_NAMES } from "../server/preflight/config.mjs";
 import { loadRuntimeMessagingEnvironment, copyRuntimeMessagingEnvironment } from "../server/config/runtime-messaging.mjs";
 import { loadRuntimeMediaEnvironment, copyRuntimeMediaEnvironment } from "../server/config/runtime-media.mjs";
 import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
@@ -151,6 +151,110 @@ test("transition CLI is restricted to one explicit fixed deployment and the full
     ["start", "--profile", "photos-notify", "--deployment", "primary-transition", ...command("start").slice(5)]]) {
     assert.throws(() => parseArguments(args), fail("PRIVATE_MESSAGING_USAGE"));
   }
+});
+
+const recoveryOptions = { originProfile: "primary", recovery: true };
+const recoveryCommand = value => command(value).map(value => value === "photos-notify" ? "photos-notify-recovery" : value);
+
+test("offline recovery permission reuses the same five anchored files without activating or changing the environment", async () => {
+  const source = bundle(), before = structuredClone(source); let reads = 0;
+  const env = await loadRuntimeNotificationsEnvironment(directory, { ...recoveryOptions, port: "4321" }, {
+    readBundle: async (path, options) => {
+      reads++; assert.equal(path, directory); assert.deepEqual(options, { originProfile: "primary" }); return source;
+    },
+  });
+  assert.equal(reads, 1); assert.deepEqual(source, before);
+  assert.equal(env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY, "0"); assert.equal(env.PORT, "4321");
+  assert.deepEqual(copyRuntimeNotificationsEnvironment(env, recoveryOptions), env);
+  const active = { ...env, JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1" }, activeBefore = structuredClone(active);
+  assert.deepEqual(copyRuntimeNotificationsEnvironment(active, recoveryOptions), activeBefore);
+  assert.deepEqual(active, activeBefore); assert.deepEqual(Object.keys(active).sort(), Object.keys(env).sort());
+  assert.throws(() => copyRuntimeNotificationsEnvironment(active, { originProfile: "primary" }));
+  assert.throws(() => copyRuntimeNotificationsEnvironment(active, { originProfile: "primary", recovery: false }));
+  assert.equal(active.JESSIEMESSAGE_MAIL_KEY, key(2));
+  assert.equal(active.JESSIEMESSAGE_SMTP_HOST, env.JESSIEMESSAGE_SMTP_HOST);
+});
+
+test("recovery profile permission is primary-only, data-only, boolean and preserves every old feature boundary", async () => {
+  const env = await load(); let getters = 0;
+  const accessor = { originProfile: "primary" }; Object.defineProperty(accessor, "recovery", { get() { getters++; return true; } });
+  for (const options of [{ recovery: true }, { originProfile: "preproduction", recovery: true },
+    ...["1", 1, null, undefined, {}].map(recovery => ({ originProfile: "primary", recovery })), accessor,
+    { ...recoveryOptions, extra: true }, { ...recoveryOptions, [Symbol("extra")]: true }, Object.create(recoveryOptions)]) {
+    assert.throws(() => copyRuntimeNotificationsEnvironment(env, options));
+    await assert.rejects(loadRuntimeNotificationsEnvironment(directory, options, { readBundle: () => assert.fail("Invalid permission cannot read files") }));
+  }
+  assert.equal(getters, 0);
+  for (const override of [{ JESSIEMESSAGE_ENABLE_CRM: "1" }, { JESSIEMESSAGE_ENABLE_BROADCAST: "1" },
+    { JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "true" }, { JESSIEMESSAGE_ENABLE_NOTIFICATIONS: "0" },
+    { JESSIEMESSAGE_MAIL_KEY: env.JESSIEMESSAGE_MFA_KEY }]) {
+    assert.throws(() => copyRuntimeNotificationsEnvironment({ ...env, ...override }, recoveryOptions));
+  }
+});
+
+test("recovery preflight requires the explicit target, primary origin and precisely its enabled domains", async () => {
+  const inactive = await load(), active = { ...inactive, JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1" };
+  const options = { expectedOrigin: primary, originProfile: "primary", target: "messaging-photos-notify-recovery" };
+  const report = inspectPreproductionConfiguration(active, options);
+  assert.equal(report.target, options.target); assert.equal(report.valid, true);
+  assert.deepEqual(report.checks.map(row => row.name), PRIMARY_NOTIFICATIONS_RECOVERY_CONFIG_CHECK_NAMES);
+  assert.equal(report.checks.find(row => row.name === "client_recovery").status, "pass");
+  assert.equal(report.checks.find(row => row.name === "messaging_photos_notify_recovery").status, "pass");
+  assert.equal(inspectPreproductionConfiguration(inactive, options).valid, false);
+  assert.equal(inspectPreproductionConfiguration(active, { ...options, target: "messaging-photos-notify" }).valid, false);
+  for (const override of [{ JESSIEMESSAGE_SITE_ORIGIN: recipe }, { JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "0" },
+    { JESSIEMESSAGE_ENABLE_CRM: "1" }, { JESSIEMESSAGE_ENABLE_BROADCAST: "1" }, { JESSIEMESSAGE_ENABLE_MEDIA: "0" }]) {
+    assert.equal(inspectPreproductionConfiguration({ ...active, ...override }, options).valid, false);
+  }
+  assert.equal(inspectPreproductionConfiguration(active, { ...options, originProfile: "preproduction" }).valid, false);
+  assert.doesNotMatch(JSON.stringify(report), /synthetic|password|smtp|privateKey|base64|mailto/);
+});
+
+test("explicit recovery start alone activates the flag after loading and preserves all existing pre-listen gates", async () => {
+  const source = await load(), before = structuredClone(source), events = []; let runtime;
+  const dependencies = { inheritedEnv: { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" }, execArgv: [],
+    loadEnvironment: async (path, options) => { assert.equal(path, directory); assert.deepEqual(options, { port: "3000", ...recoveryOptions }); events.push("config"); return source; },
+    inspect: async ({ env }) => { assert.equal(env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY, "1"); events.push("database"); return inspection(); },
+    checkSchema: async env => { assert.equal(env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY, "1"); events.push("schema"); },
+    checkStorage: async () => events.push("storage"),
+    startServer: async (env, options) => {
+      assert.deepEqual(options, { requestOrigin: primary, deviceTransition: true, recovery: true });
+      assert.equal(env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY, "1"); runtime = env; events.push("start");
+    },
+  };
+  assert.deepEqual(await run(parseArguments(recoveryCommand("start")), dependencies), {
+    status: "started", profile: "messaging-photos-notify-recovery", deployment: "primary-transition", started: true, smtpDeliveryTested: false, launchApproved: false,
+  });
+  assert.deepEqual(events, ["config", "database", "schema", "storage", "start"]);
+  assert.deepEqual(source, before); assert.equal(runtime.JESSIEMESSAGE_MAIL_KEY, ""); assert.equal(runtime.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "");
+  events.length = 0;
+  assert.equal((await run(parseArguments(recoveryCommand("check")), dependencies)).started, false);
+  assert.deepEqual(events, ["config", "database", "schema", "storage"]);
+  for (const step of ["inspect", "checkSchema", "checkStorage"]) {
+    events.length = 0;
+    await assert.rejects(run(parseArguments(recoveryCommand("start")), { ...dependencies, [step]: async () => { throw new Error("synthetic failure"); } }));
+    assert.equal(events.includes("start"), false);
+  }
+  events.length = 0;
+  await assert.rejects(run(parseArguments(recoveryCommand("start")), { ...dependencies,
+    inheritedEnv: { ...dependencies.inheritedEnv, JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1" } }), fail("PRIVATE_MESSAGING_ENVIRONMENT"));
+  assert.deepEqual(events, []);
+});
+
+test("recovery cannot be selected through an old deployment, an ambient flag or an unguarded server option", async () => {
+  for (const args of [recoveryCommand("start").filter(value => !["--deployment", "primary-transition"].includes(value)),
+    [...command("start"), "--recovery"], [...recoveryCommand("start"), "--recovery", "1"]]) assert.throws(() => parseArguments(args));
+  const env = await load(), active = { ...env, JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1" };
+  await assert.rejects(createConfiguredServer(active, { requestOrigin: primary, deviceTransition: true }), fail("REQUEST_ORIGIN_CONFIG"));
+  await assert.rejects(createConfiguredServer(env, { requestOrigin: primary, deviceTransition: true, recovery: true }), fail("REQUEST_ORIGIN_CONFIG"));
+  for (const options of [{ recovery: true }, { requestOrigin: primary, recovery: true },
+    { requestOrigin: recipe, deviceTransition: true, recovery: true }, { requestOrigin: primary, deviceTransition: true, recovery: "1" },
+    { requestOrigin: primary, deviceTransition: true, recovery: undefined }]) {
+    await assert.rejects(createConfiguredServer(active, options), fail("REQUEST_ORIGIN_CONFIG"));
+  }
+  let invoked = 0; const accessor = { requestOrigin: primary, deviceTransition: true };
+  Object.defineProperty(accessor, "recovery", { get() { invoked++; return true; } });
+  await assert.rejects(createConfiguredServer(active, accessor), fail("REQUEST_ORIGIN_CONFIG")); assert.equal(invoked, 0);
 });
 
 function request(port, host, path = "/api/auth/session", { method = "GET", headers = {}, body } = {}) {

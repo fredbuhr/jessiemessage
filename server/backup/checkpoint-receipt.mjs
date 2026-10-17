@@ -32,7 +32,7 @@ function record(value, fields) {
 }
 
 function canonicalReceipt(value) {
-  const application = value && typeof value === "object" && Object.getOwnPropertyDescriptor(value, "version")?.value === 2;
+  const application = value && typeof value === "object" && [2, 4].includes(Object.getOwnPropertyDescriptor(value, "version")?.value);
   const root = record(value, ["format", "version", "profile", ...(application ? ["coverage"] : []), "createdAt", "schema", "sql", "manifest", "media"]);
   if (application) {
     try { validateApplicationCoverage(root.coverage); }
@@ -43,7 +43,9 @@ function canonicalReceipt(value) {
   const manifest = record(root.manifest, ["file", "sha256"]), media = record(root.media, ["files", "bytes"]);
   if (root.format !== "jessiemessage-private-checkpoint"
     || !(root.version === 1 && root.profile === "messaging-photos-notify"
-      || root.version === 2 && root.profile === "messaging-photos-notify-application")
+      || root.version === 2 && root.profile === "messaging-photos-notify-application"
+      || root.version === 3 && root.profile === "messaging-photos-notify-recovery"
+      || root.version === 4 && root.profile === "messaging-photos-notify-recovery-application")
     || !integer(root.createdAt, 0, 253402300799999) || schema.tables !== 30 || schema.migrations !== 30
     || sql.file !== "database.sql.gz" || !integer(sql.bytes, 1, 16 * MIB) || !digest(sql.sha256)
     || !integer(sql.uncompressedBytes, 1, MAX_FILE) || !digest(sql.uncompressedSha256)

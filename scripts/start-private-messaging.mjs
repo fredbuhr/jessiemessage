@@ -25,7 +25,10 @@ export function parseArguments(args) {
       deployment = args[offset + 1]; offset += 2;
     }
     if (args[offset] === "--profile") {
-      if (!["photos", "photos-notify"].includes(args[offset + 1]) || deployment && args[offset + 1] !== "photos-notify") fail("PRIVATE_MESSAGING_USAGE");
+      const profile = args[offset + 1];
+      if (!["photos", "photos-notify", "photos-notify-recovery"].includes(profile)
+        || deployment && !["photos-notify", "photos-notify-recovery"].includes(profile)
+        || profile === "photos-notify-recovery" && !deployment) fail("PRIVATE_MESSAGING_USAGE");
       return { command: args[0], ...(deployment ? { deployment } : {}), profile: args[offset + 1], ...authenticationArguments(args.slice(offset + 2)) };
     }
     if (deployment) fail("PRIVATE_MESSAGING_USAGE");
@@ -55,6 +58,12 @@ export async function checkMessagingSchema(env) {
       try { await createNotificationsStore({ pool, chatStore, key: notifications.key }).assertSchema(); }
       finally { notifications.key.fill(0); }
     }
+    if (env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY === "1") {
+      const { createResetStore } = await import("../server/reset/store.mjs");
+      const { createResetMailStore } = await import("../server/reset/mail-store.mjs");
+      await createResetStore(pool).assertSchema();
+      await createResetMailStore(pool).assertSchema();
+    }
   } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
   finally { try { await pool?.end(); } catch { fail("PRIVATE_MESSAGING_SCHEMA"); } }
 }
@@ -73,14 +82,22 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       ...(Object.hasOwn(options, "profile") ? ["--profile", options.profile] : []),
       "--private-directory", options.privateDirectory, "--private-path-mode", options.privatePathMode]);
     const transition = selected.deployment === "primary-transition", originOptions = transition ? { originProfile: "primary" } : {};
-    const notifications = selected.profile === "photos-notify", photos = notifications || selected.profile === "photos";
+    const recovery = selected.profile === "photos-notify-recovery";
+    const notifications = recovery || selected.profile === "photos-notify", photos = notifications || selected.profile === "photos";
+    const profileOptions = { ...originOptions, ...(recovery ? { recovery: true } : {}) };
     loadEnvironment ??= notifications ? loadRuntimeNotificationsEnvironment : photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); }
     catch { fail("PRIVATE_MESSAGING_ENVIRONMENT"); }
     try {
-      source = await loadEnvironment(selected.privateDirectory, { ...processOptions, ...originOptions });
-      env = (notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source, originOptions);
+      source = await loadEnvironment(selected.privateDirectory, { ...processOptions, ...profileOptions });
+      env = (notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source, profileOptions);
+      if (recovery) {
+        // The files contain no recovery switch. Activate it only after their
+        // unchanged, anchored profile has passed validation, never from env.
+        const activated = copyRuntimeNotificationsEnvironment({ ...env, JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1" }, profileOptions);
+        clearRuntimeMessagingSecrets(env); env = activated;
+      }
       if (env.PORT !== processOptions.port || env.JESSIEMESSAGE_PRIVATE_PATH_MODE !== selected.privatePathMode) fail("PRIVATE_MESSAGING_CONFIGURATION");
     } catch { fail("PRIVATE_MESSAGING_CONFIGURATION"); }
     try {
@@ -93,10 +110,10 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       if (photos) await checkStorage(env);
     } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
     if (selected.command === "start") {
-      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}) }); }
+      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}) }); }
       catch { fail("PRIVATE_MESSAGING_STARTUP"); }
     }
-    return { status: selected.command === "start" ? "started" : "checks_passed", profile: notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
+    return { status: selected.command === "start" ? "started" : "checks_passed", profile: recovery ? "messaging-photos-notify-recovery" : notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
       ...(transition ? { deployment: "primary-transition" } : {}),
       started: selected.command === "start", smtpDeliveryTested: false, launchApproved: false };
   } catch (error) {

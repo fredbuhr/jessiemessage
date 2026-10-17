@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createECDH, randomBytes } from "node:crypto";
+import { createECDH, createHash, randomBytes } from "node:crypto";
 import { main, parseArguments, BackupCliError } from "../scripts/backup.mjs";
+import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
+import { tokenDigest } from "../server/auth/crypto.mjs";
+import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 
 const manifestPath = "/private-backup/manifest.json";
 const args = (command) => [command, "--offline", "--manifest", manifestPath];
@@ -133,6 +136,128 @@ test("notification CLI real configuration requires VAPID and rejects choosing an
   assert.equal((await main([...args("prepare"), "--profile", "photos-notify"], env, dependencies)).prepared, true);
   await assert.rejects(main([...args("prepare"), "--profile", "photos"], env, dependencies), errorCode("BACKUP_CONFIG"));
   await assert.rejects(main([...args("prepare"), "--profile", "photos-notify"], { ...env, JESSIEMESSAGE_VAPID_PRIVATE_KEY: undefined }, dependencies), errorCode("BACKUP_OPERATION"));
+});
+
+const recoveryProfiles = [
+  { cli: "photos-notify-recovery", profile: "messaging-photos-notify-recovery", version: 5, application: false },
+  { cli: "photos-notify-recovery-application", profile: "messaging-photos-notify-recovery-application", version: 6, application: true },
+];
+function recoveryFixture(spec, options) {
+  const f = fixture(options); delete f.config.keys.crmKey; f.config.keys.notificationKey = randomBytes(32);
+  Object.assign(f.state.manifest, { version: spec.version, profile: spec.profile });
+  if (spec.application) {
+    f.state.snapshot.version = 2; f.state.snapshot.coverage = { ...APPLICATION_COVERAGE };
+    f.state.manifest.payload.snapshot.version = 2; f.state.manifest.payload.snapshot.coverage = { ...APPLICATION_COVERAGE };
+  }
+  const create = f.manifests.createBackupManifest;
+  f.manifests.createBackupManifest = value => {
+    assert.equal(value.profile, spec.profile);
+    return { ...create(value), version: spec.version, profile: value.profile };
+  };
+  return f;
+}
+function recoveryEnvironment(f) {
+  const curve = createECDH("prime256v1"); curve.generateKeys();
+  return { JESSIEMESSAGE_SITE_ORIGIN: "https://jessiemessage.com", JESSIEMESSAGE_ENABLE_AUTH: "1", JESSIEMESSAGE_ENABLE_ACCESS: "1",
+    JESSIEMESSAGE_ENABLE_CHAT: "1", JESSIEMESSAGE_ENABLE_MEDIA: "1", JESSIEMESSAGE_ENABLE_NOTIFICATIONS: "1", JESSIEMESSAGE_ENABLE_MAIL_DELIVERY: "1",
+    JESSIEMESSAGE_ENABLE_CRM: "0", JESSIEMESSAGE_ENABLE_BROADCAST: "0", JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1",
+    JESSIEMESSAGE_SMTP_HOST: "smtp.example.invalid", JESSIEMESSAGE_SMTP_PORT: "587", JESSIEMESSAGE_SMTP_USER: "synthetic-user", JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-password",
+    JESSIEMESSAGE_DB_HOST: "sql.example.invalid", JESSIEMESSAGE_DB_NAME: f.config.databaseName, JESSIEMESSAGE_APPLICATION_DATABASE: f.config.databaseName,
+    JESSIEMESSAGE_RUNTIME_DB_USER: "synthetic_runtime", JESSIEMESSAGE_RUNTIME_DB_PASSWORD: "synthetic-password",
+    JESSIEMESSAGE_MFA_KEY: f.config.keys.totpKey.toString("base64url"), JESSIEMESSAGE_MAIL_KEY: f.config.keys.mailKey.toString("base64url"),
+    JESSIEMESSAGE_MESSAGE_KEY: f.config.keys.messageKey.toString("base64url"), JESSIEMESSAGE_MEDIA_KEY: f.config.keys.mediaKey.toString("base64url"),
+    JESSIEMESSAGE_MEDIA_ROOT: f.config.media.root, JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: "1000", JESSIEMESSAGE_MEDIA_TOTAL_BYTES: "10000", JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES: "0",
+    JESSIEMESSAGE_NOTIFICATIONS_KEY: f.config.keys.notificationKey.toString("base64url"), JESSIEMESSAGE_VAPID_PUBLIC_KEY: curve.getPublicKey().toString("base64url"),
+    JESSIEMESSAGE_VAPID_PRIVATE_KEY: Buffer.concat([Buffer.alloc(32), curve.getPrivateKey()]).subarray(-32).toString("base64url"),
+    JESSIEMESSAGE_VAPID_SUBJECT: "mailto:contact@jessiemessage.com" };
+}
+
+test("recovery backup profiles prepare, verify and restore with five keys, exact envelopes and the existing clone guards", async () => {
+  for (const spec of recoveryProfiles) for (const command of ["prepare", "verify", "restore"]) {
+    assert.deepEqual(parseArguments([...args(command), "--profile", spec.cli]), { command, offline: true, manifestPath, profile: spec.cli });
+    const f = recoveryFixture(spec, { source: command === "prepare" });
+    const result = await main([...args(command), "--profile", spec.cli], {}, f.dependencies);
+    assert.equal(result.verified, true); assert.equal(result.prepared, command === "prepare"); assert.equal(result.restored, command === "restore");
+    assert.equal(f.events.find(event => Array.isArray(event) && event[0] === "crypto")[1].pool, f.pool);
+    assert.equal(f.events.find(event => Array.isArray(event) && event[0] === "snapshot-store")[1].coverage, spec.application ? "application-tables" : undefined);
+    assert.equal(mutations(f).some(event => event[0] === "rebind"), command === "restore");
+  }
+  for (const cli of ["photos-recovery", "photos-notify-recovery-application-extra", "full-recovery"]) {
+    assert.throws(() => parseArguments([...args("prepare"), "--profile", cli]), errorCode("BACKUP_USAGE"));
+  }
+});
+
+test("recovery backup commands reject every other envelope before opening SQL and refuse a CRM key", async () => {
+  const envelopes = [
+    { version: 2, profile: "messaging-photos" }, { version: 3, profile: "messaging-photos-notify" },
+    { version: 4, profile: "messaging-photos-notify-application" },
+    ...recoveryProfiles.map(({ version, profile }) => ({ version, profile })),
+  ];
+  for (const spec of recoveryProfiles) {
+    for (const envelope of envelopes.filter(item => item.version !== spec.version)) {
+      const f = recoveryFixture(spec); Object.assign(f.state.manifest, envelope);
+      await assert.rejects(main([...args("verify"), "--profile", spec.cli], {}, f.dependencies), errorCode("BACKUP_VERIFY"));
+      assert.equal(f.events.includes("pool"), false);
+    }
+    const f = recoveryFixture(spec); f.config.keys.crmKey = randomBytes(32);
+    await assert.rejects(main([...args("verify"), "--profile", spec.cli], {}, f.dependencies), errorCode("BACKUP_CONFIG"));
+    assert.deepEqual(f.events, []);
+  }
+  for (const [cli, version, profile] of [["photos-notify", 5, "messaging-photos-notify-recovery"], ["photos-notify-application", 6, "messaging-photos-notify-recovery-application"]]) {
+    const f = recoveryFixture(recoveryProfiles.find(spec => spec.version === version));
+    Object.assign(f.state.manifest, { version, profile });
+    await assert.rejects(main([...args("verify"), "--profile", cli], {}, f.dependencies), errorCode("BACKUP_VERIFY"));
+    assert.equal(f.events.includes("pool"), false);
+  }
+});
+
+test("recovery backup real configuration accepts enabled or disabled recovery, requires photos and notifications, and keeps CRM and broadcast inactive", async () => {
+  for (const spec of recoveryProfiles) {
+    for (const flag of [undefined, "0", "1"]) {
+      const f = recoveryFixture(spec, { source: true }), env = recoveryEnvironment(f), dependencies = { ...f.dependencies };
+      env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY = flag; delete dependencies.configure;
+      assert.equal((await main([...args("prepare"), "--profile", spec.cli], env, dependencies)).prepared, true);
+      assert.equal(Object.hasOwn(env, "JESSIEMESSAGE_CRM_KEY"), false);
+    }
+    for (const mutation of [
+      { JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "true" }, { JESSIEMESSAGE_ENABLE_CRM: "1" }, { JESSIEMESSAGE_ENABLE_BROADCAST: "1" },
+      { JESSIEMESSAGE_ENABLE_NOTIFICATIONS: "0" }, { JESSIEMESSAGE_ENABLE_MEDIA: "0" }, { JESSIEMESSAGE_NOTIFICATIONS_KEY: undefined },
+    ]) {
+      const f = recoveryFixture(spec, { source: true }), env = { ...recoveryEnvironment(f), ...mutation }, dependencies = { ...f.dependencies };
+      delete dependencies.configure;
+      await assert.rejects(main([...args("prepare"), "--profile", spec.cli], env, dependencies), error => error instanceof BackupCliError);
+      assert.equal(f.events.includes("pool"), false);
+    }
+  }
+  for (const cli of ["photos", "photos-notify", "photos-notify-application"]) {
+    const f = recoveryFixture(recoveryProfiles[0], { source: true }), env = recoveryEnvironment(f), dependencies = { ...f.dependencies };
+    if (cli === "photos") env.JESSIEMESSAGE_ENABLE_NOTIFICATIONS = "0";
+    delete dependencies.configure;
+    await assert.rejects(main([...args("prepare"), "--profile", cli], env, dependencies), errorCode("BACKUP_CONFIG"));
+    assert.equal(f.events.includes("pool"), false);
+  }
+});
+
+test("recovery CLI dispatches the real recovery crypto verifier for populated reset mail without starting workers or writing SQL", async () => {
+  for (const spec of recoveryProfiles) {
+    const f = recoveryFixture(spec, { source: true }), queries = [], jobId = Buffer.alloc(16, 6), clientId = Buffer.alloc(16, 2);
+    const email = "synthetic-backup@example.invalid", token = randomBytes(32).toString("base64url");
+    const resetRow = { id: jobId, encrypted: sealResetPayload({ email, token }, f.config.keys.mailKey, jobId),
+      recipient_user_id: clientId, challenge_user_id: clientId, token_hash: tokenDigest(token),
+      email_hash: createHash("sha256").update(email, "utf8").digest(), recipient_email: email };
+    f.pool.getConnection = async () => ({ query: async (sql) => {
+      assert.match(sql, /^SELECT\s/); queries.push(sql);
+      if (sql.startsWith("SELECT EXISTS")) return [{ present: /FROM (?:client_password_resets|password_reset_outbox)\b/.test(sql) ? 1 : 0 }];
+      return /FROM password_reset_outbox o\b/.test(sql) ? [resetRow] : [];
+    }, release() {} });
+    f.storage.get = async () => assert.fail("no media exists in this synthetic fixture");
+    delete f.dependencies.verifyBackupData;
+    const result = await main([...args("prepare"), "--profile", spec.cli], {}, f.dependencies);
+    assert.equal(result.prepared, true);
+    assert.ok(queries.some(sql => sql.includes("FROM password_reset_outbox o")));
+    assert.equal(queries.some(sql => /^SELECT EXISTS.*FROM (?:client_password_resets|password_reset_outbox)\b/.test(sql)), false);
+    assert.deepEqual(mutations(f), []);
+  }
 });
 
 test("prepare authenticates and verifies the stable source before writing the exclusive manifest, without recovery mutations", async () => {

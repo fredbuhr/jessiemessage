@@ -229,7 +229,7 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
       assert.equal((await request("/api/access/session", { headers: { Cookie: firstSession.cookie } })).status, 200);
     });
 
-    await t.test("successful recovery replaces the real password once, revokes every old client session and preserves administrator access", async () => {
+    await t.test("successful recovery revokes only the target client's sessions and preserves another client cookie and administrator access", async () => {
       const client = clients.active;
       const before = await unchangedFields(client);
       const sessionCount = await count("sessions");
@@ -238,11 +238,16 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
         [futureSession.id, client.id, tokenDigest(futureSession.token), sqlDate(now + 60000), sqlDate(now + 3600000)]);
       await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)",
         [futureSession.id, sqlDate(now + 60000)]);
-      const completed = await complete(tokenFor(client), newPassword, { Cookie: `${firstSession.cookie}; ${adminSession.cookie}` });
+      // A reset link can be opened in a browser already signed in as client B.
+      // Completing client A's reset must not remove B's still-valid cookie.
+      const completed = await complete(tokenFor(client), newPassword, { Cookie: `${pendingSession.cookie}; ${adminSession.cookie}` });
       assert.equal(completed.status, 200);
       assert.deepEqual(completed.body, { status: "password_changed" });
-      assert.match(completed.headers.get("set-cookie"), /^__Host-jessie_client=; Path=\/; Max-Age=0; Secure; HttpOnly; SameSite=Strict$/);
-      assert.equal(completed.headers.get("set-cookie").includes("__Host-jessie_session"), false);
+      assert.equal(completed.headers.get("set-cookie"), null);
+      const otherClient = await request("/api/access/session", { headers: { Cookie: pendingSession.cookie } });
+      assert.equal(otherClient.status, 200);
+      assert.equal(otherClient.body.user.id, hex(clients.pending.id));
+      assert.equal((await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ?", [clients.pending.id]))[0].credential_version, 1);
       assert.equal(await count("sessions"), sessionCount + 1, "password reset must not create a session");
       assert.equal(await unchangedFields(client), before);
       const user = await userRow(client);
@@ -254,10 +259,15 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
       assert.equal(sessions.length, 3);
       assert.ok(sessions.every((session) => session.revoked_at !== null && session.revoked_at >= session.created_at));
       for (const session of [firstSession, secondSession]) {
-        assert.equal((await request("/api/access/session", { headers: { Cookie: session.cookie } })).status, 401);
+        const stale = await request("/api/access/session", { headers: { Cookie: `${session.cookie}; ${adminSession.cookie}` } });
+        assert.equal(stale.status, 401);
+        assert.deepEqual(stale.body, { error: "authentication_required" });
+        assert.equal(stale.headers.get("set-cookie"), "__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict");
         assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: session.cookie } })).status, 401);
       }
-      assert.equal((await request("/api/auth/session", { headers: adminHeaders() })).status, 200);
+      const preservedAdmin = await request("/api/auth/session", { headers: adminHeaders() });
+      assert.equal(preservedAdmin.status, 200);
+      assert.equal(preservedAdmin.body.user.id, hex(admin.id));
       assert.equal((await complete(tokenFor(client))).status, 401);
       const staleLogin = await accessStore.completeClientLogin({ userId: client.id, expectedPasswordHash: originalHash, expectedVersion: 1, now,
         session: { id: randomBytes(16), tokenHash: tokenDigest(newToken()), expiresAt: now + 3600000 } });

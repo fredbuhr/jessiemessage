@@ -180,8 +180,8 @@ export async function createVerificationTransport(config, {
           to: email,
           envelope: { from, to: [email] },
           messageId: `<password-reset-${jobId.toString("hex")}@${new URL(config.origin).hostname}>`,
-          subject: "Réinitialisez votre mot de passe — JessieMessage",
-          text: `Bonjour,\n\nPour choisir un nouveau mot de passe JessieMessage, ouvrez ce lien :\n${link}\n\nCe lien est personnel, valable 30 minutes et utilisable une seule fois. Si vous n'avez pas demandé cette réinitialisation, ignorez ce message. Votre mot de passe reste inchangé tant que vous n'en avez pas choisi un nouveau.\n\nJessieMessage`,
+          subject: "Retrouver ton accès — JessieMessage",
+          text: `Bonjour,\n\nPour retrouver ton espace JessieMessage, choisis un nouveau mot de passe en ouvrant ce lien :\n${link}\n\nCe lien est personnel, valable 30 minutes et utilisable une seule fois.\n\nSi tu n'as pas demandé ce lien, tu peux ignorer cet e-mail. Ton mot de passe reste inchangé tant que tu n'en choisis pas un nouveau.\n\nÀ bientôt,\nJessieMessage`,
         }), "MAIL_DELIVERY_FAILED");
         const accepted = Array.isArray(result?.accepted) && result.accepted.some((address) => {
           try { return canonicalEmail(address) === email; } catch { return false; }

@@ -115,7 +115,7 @@ requestForm.addEventListener("submit", (event) => {
       if (data?.status !== "accepted") throw new Error("invalid_response");
       if (!finishRecoveryOperation(state, ticket, "accepted")) return;
       requestForm.reset();
-      notice("Si cette adresse correspond à un compte éligible, un e-mail de récupération sera envoyé. Le lien est valable 30 minutes et ne peut servir qu’une fois. Vérifie aussi tes courriers indésirables."); render();
+      notice("Si cette adresse est liée à ton espace, tu recevras un lien par e-mail. Il est valable 30 minutes et ne peut servir qu’une fois. Pense à vérifier tes courriers indésirables."); render();
     } catch (error) { operationFailure(error, ticket); }
   })();
 });
@@ -135,7 +135,7 @@ resetForm.addEventListener("submit", (event) => {
       const data = await send("/api/access/recovery/reset", { token: state.token, password: password.value }, ticket);
       if (data?.status !== "password_changed") throw new Error("invalid_response");
       if (!finishRecoveryOperation(state, ticket, "changed")) return;
-      notice("Ton mot de passe est modifié et toutes tes anciennes sessions sont déconnectées. Tu peux maintenant te reconnecter."); render();
+      notice("Ton mot de passe est modifié. Reconnecte-toi sur tes appareils pour retrouver ta conversation."); render();
     } catch (error) { operationFailure(error, ticket); }
     finally { if (ticket.generation === state.generation) clearPasswords(); }
   })();

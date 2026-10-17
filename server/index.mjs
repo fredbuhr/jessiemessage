@@ -207,12 +207,14 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
 
 export async function createConfiguredServer(env = process.env, options = {}) {
   if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
-    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition"].includes(name))
+    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery"].includes(name))
     || Object.values(Object.getOwnPropertyDescriptors(options)).some(property => !Object.hasOwn(property, "value"))) throw new RequestOriginError();
   const requestOrigin = Object.hasOwn(options, "requestOrigin") ? options.requestOrigin : null;
   const clock = Object.hasOwn(options, "clock") ? options.clock : Date.now;
   const deviceTransition = Object.hasOwn(options, "deviceTransition") ? options.deviceTransition : false;
-  if (typeof deviceTransition !== "boolean" || typeof clock !== "function" || deviceTransition && requestOrigin !== PRIMARY_ORIGIN) throw new RequestOriginError();
+  const recovery = Object.hasOwn(options, "recovery") ? options.recovery : false;
+  if (typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof clock !== "function"
+    || deviceTransition && requestOrigin !== PRIMARY_ORIGIN || recovery && !deviceTransition) throw new RequestOriginError();
   if (requestOrigin !== null) createRequestOriginGuard(requestOrigin);
   const { authConfiguration } = await import("./auth/config.mjs");
   const { accessConfiguration } = await import("./access/config.mjs");
@@ -233,13 +235,14 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const notificationsConfig = loadNotificationsConfig(env);
   if (deviceTransition) {
     const { inspectPreproductionConfiguration } = await import("./preflight/config.mjs");
-    const profile = inspectPreproductionConfiguration(env, { expectedOrigin: PRIMARY_ORIGIN, target: "messaging-photos-notify", originProfile: "primary" });
+    const profile = inspectPreproductionConfiguration(env, { expectedOrigin: PRIMARY_ORIGIN,
+      target: recovery ? "messaging-photos-notify-recovery" : "messaging-photos-notify", originProfile: "primary" });
     // The operator loader requires verified TLS. The lower-level server keeps
     // runtimeDatabaseOptions' existing, explicit loopback test policy so SQL
     // rehearsals exercise these same factories without a deployment bypass.
     if (profile.checks.some(check => check.name !== "database_tls" && check.status === "fail")
       || ![config, accessConfig, chatConfig, mediaConfig, notificationsConfig].every(value => value.enabled === true)
-      || crmConfig.enabled || resetConfig.enabled || broadcastConfig.enabled) throw new RequestOriginError();
+      || crmConfig.enabled || resetConfig.enabled !== recovery || broadcastConfig.enabled) throw new RequestOriginError();
   }
   if (!config.enabled) return { server: createAppServer({ requestOrigin }), pool: null };
   const { mailConfiguration } = await import("./mail/config.mjs");
@@ -274,7 +277,19 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       features: { clientAccess: accessConfig.enabled, chat: chatConfig.enabled, photos: mediaConfig.enabled,
         clientFiles: crmConfig.enabled, passwordRecovery: resetConfig.enabled, broadcasts: broadcastConfig.enabled, notifications: notificationsConfig.enabled } });
     const readinessHandler = createReadinessHandler(readinessService, { origin: config.origin });
-    if (legacyHandlers) legacyHandlers.readinessHandler = createReadinessHandler(readinessService, { origin: RECIPE_ORIGIN });
+    if (legacyHandlers) {
+      // The old authority preserves its existing session/chat routes. Recovery
+      // is offered only on the primary authority, including its diagnostics.
+      const legacyReadiness = resetConfig.enabled ? {
+        actor: (...args) => readinessService.actor(...args),
+        summary: async (...args) => {
+          const summary = await readinessService.summary(...args);
+          return { ...summary, features: { ...summary.features, passwordRecovery: false } };
+        },
+        verifySmtp: (...args) => readinessService.verifySmtp(...args),
+      } : readinessService;
+      legacyHandlers.readinessHandler = createReadinessHandler(legacyReadiness, { origin: RECIPE_ORIGIN });
+    }
     let diagnosticClosing;
     const diagnostics = { close() {
       if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close()]).then((results) => {
@@ -315,7 +330,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       resetMailStore = createResetMailStore(pool);
       await resetStore.assertSchema();
       await resetMailStore.assertSchema();
-      const resetService = await createResetService({ store: resetStore, authStore: store, mailKey: resetConfig.key });
+      const resetService = await createResetService({ store: resetStore, authStore: store, mailKey: resetConfig.key, clock });
       resetHandler = createResetHandler(resetService, { origin: resetConfig.origin });
     }
     let chatHandler;
