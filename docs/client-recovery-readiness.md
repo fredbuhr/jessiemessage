@@ -1,5 +1,7 @@
 # Lot 0.39 — préparer la récupération de compte client
 
+**Runtime actuel :** le [lot 0.40](help-contact.md) `5ea9c40a`, activé à 19:16 le 17 octobre 2026, conserve la récupération et ajoute l’aide. Les preuves datées 0.39 et l’acceptation du mot de passe ci-dessous restent acquises.
+
 **État : code livré et activé le 17 octobre 2026 à 18:28 Europe/Paris, parcours essayé accepté par le propriétaire à 18:52:47.** Runtime `b651d44ed5909173008d896e7175ecb7a4c1b703`, arbre `87f2a0357a992076e9b28decf18cd0aee7ec4108`, schéma 30, profil `messaging-photos-notify-recovery`, déploiement `primary-transition`. Le [compte rendu 0.39](client-recovery-activation.md) donne les preuves CI et hébergées. Les constats et prérequis ci-dessous conservent l’état de départ du runtime 0.38 `4433309f` ; les limites qui subsistent restent explicites. L’acceptation personnelle est consignée dans ce compte rendu ; les sondes opérateur précédentes étaient anonymes.
 
 Le métier, les routes, les formulaires et les tests de récupération existent déjà. L’activation n’est toutefois pas un simple changement de variable dans le Manager. Le lot proposé ajoute un profil explicite **`photos-notify-recovery`**, avec récupération **sur l’apex seulement**, en conservant recette pour les connexions et notifications existantes.

@@ -1,5 +1,7 @@
 # Récupération du mot de passe client — développement 0.9
 
+**Runtime actuel :** le [lot 0.40](help-contact.md) `5ea9c40a`, activé à 19:16 le 17 octobre 2026, conserve la récupération et ajoute l’aide. Les preuves datées 0.39 et l’acceptation du mot de passe ci-dessous restent acquises.
+
 **État courant — 17 octobre 2026 :** le [lot 0.39](client-recovery-activation.md) est activé à 18:28 sur le runtime `b651d44e`, schéma 30, profil privé `photos-notify-recovery`, récupération sur l’apex uniquement. Le propriétaire accepte le parcours essayé à 18:52:47 : « test mot de passe ok, continue ». Voir la [portée exacte de cette acceptation](client-recovery-activation.md) ; aucune nouvelle recette globale n’est demandée. Le présent guide conserve les résultats historiques 0.9 ; ses 22 migrations et son activation par environnement ne sont pas la procédure du lanceur privé actuel.
 
 Ce lot ajoute une récupération optionnelle par e-mail. Elle reste désactivée par défaut. Elle ne crée aucun compte, ne connecte pas le client et ne renouvelle pas son accès. La [CI 0.9 vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255) réussit ; les tests emploient exclusivement des comptes synthétiques, des adresses `example.invalid` et un transport de mail injecté. Aucun SMTP réel, déploiement, test visuel ou essai mobile sous HTTPS n'est revendiqué.

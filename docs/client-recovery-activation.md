@@ -1,5 +1,7 @@
 # Lot 0.39 — récupération client et sauvegardes compatibles
 
+**Runtime actuel :** le [lot 0.40](help-contact.md) `5ea9c40a`, activé à 19:16 le 17 octobre 2026, conserve la récupération et ajoute l’aide. Les preuves datées 0.39 et l’acceptation du mot de passe ci-dessous restent acquises.
+
 **Lot 0.39 activé le 17 octobre 2026 à 18:28 Europe/Paris ; parcours essayé accepté à 18:52:47.** Runtime `b651d44ed5909173008d896e7175ecb7a4c1b703`, arbre `87f2a0357a992076e9b28decf18cd0aee7ec4108`, schéma 30, profil `messaging-photos-notify-recovery`, déploiement `primary-transition`. [PR brouillon #54](https://github.com/fredbuhr/jessiemessage/pull/54). Le [plan initial](client-recovery-readiness.md) conserve les constats de départ. Ce document distingue le code livré, les preuves automatisées et la réception réelle.
 
 **Acceptation propriétaire — 17 octobre 2026 à 18:52:47 Europe/Paris :** « test mot de passe ok, continue ». Le parcours de récupération essayé est accepté globalement. Ce retour ne précise ni la plateforme, ni un essai de réutilisation du lien, ni le Push après reset ou tous les appareils ; aucune répétition globale n’est demandée. Les vérifications détaillées restent des références pour un incident ciblé.
