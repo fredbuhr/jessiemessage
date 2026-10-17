@@ -1,5 +1,7 @@
 # Private client files and labels — development 0.8
 
+**Stage 0.43 preparation:** [shared-administrator collaboration and lifecycle corrections](crm-collaboration.md) reject obsolete failures as well as obsolete successes, preserve the current label-action lock after resume and add real-module Chrome collaboration fixtures. Existing SQL version/ownership checks are retained. CRM remains disabled in the hosted 0.42 profile; private configuration and backup support precede activation. The original 0.8 evidence below remains historical.
+
 This lot adds administrator-only client files and inbox filtering to the persistent private chat. A client file contains a private nickname, encrypted notes, optional reminder date and explicit tag/group memberships. The approved Nuit interface is preserved. The downloadable offline workbench remains fictional and does not contain real CRM data.
 
 Implementation `9e399e6dd5589d21597fb35b0a3fe6d2d2856ee0` passed [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864) under Node.js 24.21.0: 402 general tests, 12 explicitly skipped database groups in that job, then 159 real tests without skips on each of MariaDB 10.11 and 11.4. [Draft PR #7](https://github.com/fredbuhr/jessiemessage/pull/7) is stacked on private media. All automated fixtures are synthetic; no real contact, note, account, photograph or email delivery is supplied by this lot.

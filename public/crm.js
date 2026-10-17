@@ -28,7 +28,7 @@ export function createCrmUI(adapter) {
   let life = 0; let loading = false; let pageRequest = 0; let refreshAfter = null; let refreshTarget = null;
   let debounce = null; let detailBusy = false; let detailRequest = 0; let profileOpen = false; let managerBusy = false;
   let profileReturnFocus = null; let labelsReturnFocus = null; let suspended = false; let deletedCandidate = null;
-  let labelsRequest = 0;
+  let labelsRequest = 0; let managerOpening = 0; let cleared = false;
   let inboxAbort = null;
   const filters = node("form", null, "crm-filters"); ui.attr(filters, "aria-label", "Filtrer les clients");
   const search = input("search", "q", 80); ui.attr(search, "placeholder", "Pseudo, surnom ou e-mail");
@@ -67,10 +67,21 @@ export function createCrmUI(adapter) {
   const createButton = node("button", "Créer", "button primary"); createButton.type = "submit"; createForm.append(field("Type", createKind), field("Nom", createName), createButton);
   const labelList = node("div", null, "crm-label-list"); manager.append(managerHeader, node("p", "Organise tes clients avec des tags et des groupes privés.", "crm-help"), managerStatus, createForm, labelList); document.body.append(manager); owned.push(manager);
 
+  const currentLife = ticket => !cleared && !suspended && ticket === life;
+  const stale = () => Object.assign(new Error("stale_crm"), { stale: true });
   async function ask(path, options = {}) {
-    const ticket = life; const result = await adapter.request(`${BASE}${path}`, { ...options, account: true });
-    if (ticket !== life || suspended) throw Object.assign(new Error("stale_crm"), { stale: true });
-    return result;
+    const ticket = life;
+    if (!currentLife(ticket)) throw stale();
+    try {
+      const result = await adapter.request(`${BASE}${path}`, { ...options, account: true });
+      if (!currentLife(ticket)) throw stale();
+      return result;
+    } catch (error) {
+      // A failed old request has the same lifecycle as a successful one. It
+      // must not sign out a resumed session or replace its current feedback.
+      if (!currentLife(ticket)) throw stale();
+      throw error;
+    }
   }
   function publish() {
     adapter.onContacts([...state.contacts.values()], { cursor: state.cursor, hasMore: state.hasMore, loading });
@@ -78,7 +89,7 @@ export function createCrmUI(adapter) {
     ui.text(selectionStatus, selectionStatus.hidden ? "" : "La conversation ouverte est hors des résultats actuels.");
   }
   async function report(error, target) {
-    if (error.stale || error.name === "AbortError") return;
+    if (cleared || suspended || error.stale || error.name === "AbortError") return;
     if (error.status === 401 || error.status === 403) { await adapter.onError(error); return; }
     let text = "La demande n’a pas abouti. Tes modifications restent ici ; réessaie dans un moment.";
     if (error.status === 429) text = "Trop de demandes. Patiente un moment avant de réessayer.";
@@ -120,7 +131,10 @@ export function createCrmUI(adapter) {
       status(filterStatus, state.contacts.size ? "" : "Aucun client ne correspond à ces filtres.");
     } catch (error) {
       if (requestId === pageRequest && epoch === state.filterEpoch) {
-        if (error.status === 404) { await loadLabels(); status(filterStatus, "Une étiquette de filtre a été retirée. Choisis un autre filtre.", true); }
+        if (error.status === 404) {
+          try { await loadLabels(); if (requestId === pageRequest && epoch === state.filterEpoch) status(filterStatus, "Une étiquette de filtre a été retirée. Choisis un autre filtre.", true); }
+          catch (reloadError) { if (requestId === pageRequest && epoch === state.filterEpoch) await report(reloadError, filterStatus); }
+        }
         else await report(error, filterStatus);
       }
     } finally { if (inboxAbort === controller) inboxAbort = null; if (requestId === pageRequest && epoch === state.filterEpoch) { loading = false; publish(); } }
@@ -137,10 +151,11 @@ export function createCrmUI(adapter) {
     const labels = new Map(); let cursor = null;
     do {
       const page = await ask(`/labels?limit=100${cursor ? `&afterId=${cursor}` : ""}`);
+      if (requestId !== labelsRequest || !currentLife(ticket)) throw stale();
       for (const label of page.labels) labels.set(label.id, label);
       cursor = page.hasMore ? page.nextCursor : null;
     } while (cursor);
-    if (requestId !== labelsRequest || ticket !== life || suspended) return;
+    if (requestId !== labelsRequest || !currentLife(ticket)) throw stale();
     state.labels = labels;
     replaceFilterOptions(tagFilter, "tag", "Tous les tags"); replaceFilterOptions(groupFilter, "group", "Tous les groupes");
     if (manager.open) renderLabels();
@@ -253,10 +268,16 @@ export function createCrmUI(adapter) {
     } finally { if (profileOpen && currentDetail(state, ticket)) { detailBusy = false; profileFields.disabled = false; renderConflict(state.drafts.get(ticket.id)); } }
   }
   async function openManager(opener) {
-    labelsReturnFocus = opener; manager.showModal(); status(managerStatus, "Chargement…");
-    try { await loadLabels(); status(managerStatus, ""); } catch (error) { await report(error, managerStatus); }
+    if (!currentLife(life)) return;
+    const ticket = life, opening = ++managerOpening;
+    labelsReturnFocus = opener; manager.showModal();
+    if (managerBusy) return;
+    status(managerStatus, "Chargement…");
+    const current = () => currentLife(ticket) && opening === managerOpening && manager.open;
+    try { await loadLabels(); if (current()) status(managerStatus, ""); }
+    catch (error) { if (current()) await report(error, managerStatus); }
   }
-  function closeManager(restore = true) { if (manager.open) manager.close(); deletedCandidate = null; if (restore && labelsReturnFocus?.isConnected) labelsReturnFocus.focus(); labelsReturnFocus = null; }
+  function closeManager(restore = true) { managerOpening += 1; if (manager.open) manager.close(); deletedCandidate = null; if (restore && labelsReturnFocus?.isConnected) labelsReturnFocus.focus(); labelsReturnFocus = null; }
   function renderLabels() {
     replace(labelList);
     for (const [kind, title] of [["tag", "Tags"], ["group", "Groupes"]]) {
@@ -283,29 +304,34 @@ export function createCrmUI(adapter) {
     for (const control of manager.querySelectorAll("input,select,button")) control.disabled = managerBusy;
   }
   async function mutateLabel(action, label, body) {
-    if (managerBusy) return; managerBusy = true; renderLabels(); status(managerStatus, "Enregistrement…");
+    if (managerBusy || !currentLife(life)) return;
+    const ticket = life; managerBusy = true; renderLabels(); status(managerStatus, "Enregistrement…");
     try {
       await ask(`/labels/${label.id}/${action}`, { mutation: true, body });
       renameDrafts.delete(label.id); labelConflicts.delete(label.id); deletedCandidate = null;
-      await loadLabels(); await loadInbox(false, true); status(managerStatus, action === "delete" ? "Étiquette supprimée." : "Nom enregistré.");
+      await loadLabels(); if (!currentLife(ticket)) return;
+      await loadInbox(false, true); if (currentLife(ticket)) status(managerStatus, action === "delete" ? "Étiquette supprimée." : "Nom enregistré.");
     } catch (error) {
+      if (!currentLife(ticket)) return;
       if (error.status === 409 && error.code === "record_changed") {
         labelConflicts.add(label.id); deletedCandidate = null;
-        try { await loadLabels(); } catch (reloadError) { await report(reloadError, managerStatus); }
-        status(managerStatus, "Cette étiquette a changé. Vérifie le nom enregistré avant de réessayer.", true);
-      } else { if (error.status === 404) { try { await loadLabels(); } catch {} } await report(error, managerStatus); }
-    } finally { managerBusy = false; renderLabels(); }
+        try { await loadLabels(); } catch (reloadError) { if (currentLife(ticket)) await report(reloadError, managerStatus); }
+        if (currentLife(ticket)) status(managerStatus, "Cette étiquette a changé. Vérifie le nom enregistré avant de réessayer.", true);
+      } else { if (error.status === 404) { try { await loadLabels(); } catch {} } if (currentLife(ticket)) await report(error, managerStatus); }
+    } finally { if (currentLife(ticket)) { managerBusy = false; renderLabels(); } }
   }
   createForm.addEventListener("submit", (event) => {
-    event.preventDefault(); if (managerBusy) return;
+    event.preventDefault(); if (managerBusy || !currentLife(life)) return;
     void (async () => {
+      const ticket = life;
       managerBusy = true; renderLabels(); status(managerStatus, "Création…");
       try { const value = await ask("/labels", { mutation: true, body: { kind: createKind.value, name: createName.value } }); createName.value = ""; await loadLabels(); status(managerStatus, value.duplicate ? "Cette étiquette existe déjà." : "Étiquette créée."); }
       catch (error) { await report(error, managerStatus); }
-      finally { managerBusy = false; renderLabels(); }
+      finally { if (currentLife(ticket)) { managerBusy = false; renderLabels(); } }
     })();
   });
   function clear() {
+    if (cleared) return; cleared = true; suspended = true;
     life += 1; pageRequest += 1; inboxAbort?.abort(); inboxAbort = null; clearTimeout(debounce); loading = false; detailBusy = false; managerBusy = false; refreshAfter = null; refreshTarget = null;
     closeProfile(false); closeManager(false); clearCrmState(state); renameDrafts.clear(); labelConflicts.clear();
     createName.value = ""; search.value = ""; replace(tagFilter); replace(groupFilter); replace(labelList); status(managerStatus, ""); status(filterStatus, "");
@@ -325,7 +351,7 @@ export function createCrmUI(adapter) {
     },
     displayName: contactName,
     clear,
-    suspend() { suspended = true; life += 1; pageRequest += 1; inboxAbort?.abort(); inboxAbort = null; loading = false; detailRequest += 1; detailBusy = false; managerBusy = false; clearTimeout(debounce); closeProfile(false); closeManager(false); },
-    async resume() { suspended = false; if (state.selected) ficheButton.hidden = false; await loadInbox(false, true); }
+    suspend() { if (cleared) return; suspended = true; life += 1; pageRequest += 1; inboxAbort?.abort(); inboxAbort = null; loading = false; detailRequest += 1; detailBusy = false; managerBusy = false; clearTimeout(debounce); closeProfile(false); closeManager(false); },
+    async resume() { if (cleared) return; suspended = false; if (state.selected) ficheButton.hidden = false; await loadInbox(false, true); }
   };
 }

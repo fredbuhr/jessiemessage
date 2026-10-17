@@ -1,6 +1,6 @@
 # JessieMessage — Product scope (draft)
 
-Status on 17 October 2026: **stage 0.33 active in recipe**, runtime `f2677249`, schema 30, profile `messaging-photos-notify`. Invitations, verified email, explicit manual admission, private text/photos, durable administrator/client sessions and per-device Push are deployed. The owner accepted the photo journey and real notification reception; the new direct notification click and simultaneous household devices still need real-device acceptance. CRM, individual broadcasts and client password recovery are implemented but disabled in the active profile. The final application origin remains planned: the main welcome page currently links to the temporary recipe application. See the [current audit and implementation plan](AUDIT-2026-10-17.md), [notification opening](notification-opening.md) and [domain transition](public-entry-transition.md). Historical stage 0.28 restore evidence remains in the [photo runtime note](private-photo-runtime.md); a fresh schema-30 checkpoint/isolated restoration is still required.
+Status on 17 October 2026: **stage 0.42 active**, runtime `ed78b55e`, schema 30, profile `messaging-photos-notify-recovery`, primary origin `https://jessiemessage.com`. Invitations, verified email, manual admission, private text/photos, durable administrator/client sessions, per-device Push, password recovery and FR/EN help are deployed. Recovery, photos and notification reception have owner acceptance; detailed all-device coverage is not inferred. The schema-30 isolated application restore was accepted at stage 0.36. The private diagnostic passes exact-source CI and anonymous hosted checks; its authenticated online download remains unverified in the operator browser without a session. [Stage 0.43](crm-collaboration.md) prepares the disabled private-file module for shared-administrator use; private runtime configuration and backup support precede its activation. Individual broadcasts remain disabled. See the [current delivery record](operations-diagnostic.md) and [audit](AUDIT-2026-10-17.md).
 
 JessieMessage records an administrator’s manual admission of invited adults. It does not receive an independent age-verification proof or certify adulthood. No external invitation source or identity-verification provider is part of this implementation lot.
 
@@ -74,11 +74,10 @@ Individual broadcast queues and client opt-in are implemented in 0.11. The lates
 - In-app payments or subscriptions.
 - Public timelines or public image galleries.
 
-## Must be resolved before real launch
+## Remaining delivery work
 
-- Written clarification of third-party platform rules for how invitations are distributed.
-- Hosting terms for the actual use case.
-- Legal classification and the scope of upstream eligibility checks remain outside this code acceptance; do not present manual admission as independently verified adulthood.
-- Privacy notice, legal notices, terms, complaint/reporting process and retention policy.
-- Security review, backups and successful restoration test.
-- Do not use real accounts/media in development or automated tests.
+- Prepare the explicit private CRM profile, separate key and backup/restore coverage, then perform its targeted activation checks.
+- Keep broadcasts separate, with recipient preview, individual deliveries and the existing consent/opt-out rules.
+- Decide retention and deletion behavior before implementing an irreversible purge; the incomplete information draft stays unserved.
+- Complete the device matrix through targeted observations while preserving accepted journeys.
+- Continue security and restoration checks with synthetic development fixtures; real accounts/media do not enter automated tests.
