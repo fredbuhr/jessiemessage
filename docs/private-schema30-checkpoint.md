@@ -4,17 +4,30 @@ Ce lot prépare les commandes avant la bascule du domaine. Le service actif rest
 
 ## Parcours personnel court
 
-La première action est une inspection en lecture seule, **sans arrêter l’application**. Le lanceur demande le mot de passe SQL du compte de migration ou d’inspection existant dans la console SSH personnelle. Il ne faut pas le saisir dans la conversation. Le compte applicatif garde ses droits actuels.
+Après le refus du 17 octobre à 13:48 Europe/Paris, la première action est désormais un **diagnostic en lecture seule, sans arrêter l’application**. Le refus `PRIVATE_CHECKPOINT_INSPECTION` n’a produit aucune sauvegarde ; les anciens reçus de préparation ne prouvent pas la réussite de cette inspection. Le lanceur demande le mot de passe SQL du compte de migration ou d’inspection existant dans la console SSH personnelle. Il ne faut pas le saisir dans la conversation. Le compte applicatif garde ses droits actuels.
 
 | Commande | Mot de passe | SQL | Fichiers créés | Interruption |
 | --- | --- | --- | --- | --- |
 | `check` | Aucun | Aucun accès | Aucun | Aucune |
+| `diagnose` | Saisie masquée | Identité et catégories de droits ; inventaire uniquement si la visibilité stricte est prouvée | Aucun | Aucune |
 | `inspect` | Saisie masquée | Identité, droits et métadonnées | Aucun | Aucune |
 | `capture --offline` | Saisie masquée | Lectures et dump | Nouvelle destination privée exclusive | Tous les producteurs doivent être arrêtés |
 | Vérification du clone : `check` | Aucun | Aucun accès | Aucun | Clone isolé, jamais démarré |
 | Vérification du clone : `verify` | Saisie masquée | Dump du clone et transaction en lecture seule | Seulement une configuration native temporaire, supprimée après fermeture | Aucune sur le service repris |
 
 L’inspection vérifie la véritable identité privilégiée avant de demander une pause. Le compte doit être distinct du runtime et présenter un droit direct `ALL PRIVILEGES` sur le nom exact de la base, avec les underscores échappés dans le `GRANT`. Le fait qu’il s’appelle « migrateur » ne suffit pas. Les droits globaux, rôles et motifs ne remplacent pas cette preuve. Le programme n’accorde aucun droit et ne change pas les comptes.
+
+### Refus sur l’hébergement mutualisé et diagnostic
+
+La [documentation officielle Infomaniak, FAQ 1981](https://www.infomaniak.com/fr/support/faq/1981/gerer-les-utilisateurs-et-bases-de-donnees-mysqlmariadb), consultée le 17 octobre 2026, distingue les treize droits des profils lecture/écriture/administration et réserve `TRIGGER`, `EVENT` et les droits sur les routines au Cloud. Le Manager confirme que le compte de maintenance dispose déjà des trois profils sur la base source. Cela rend très plausible un refus de notre exigence `ALL PRIVILEGES`, sans constituer une observation SQL de ses grants réels. Aucun droit ni mot de passe n’a été changé.
+
+`diagnose` acquiert la connexion avec la même identité séparée et TLS, puis publie uniquement des catégories fermées : correspondance de la base, portée exacte ou motif avec underscores, profil de droits, visibilité des métadonnées et état de l’inventaire. Il ne publie ni le `SHOW GRANTS` brut, ni les comptes, noms de bases, chemins, secrets ou empreintes d’authentification. Les erreurs de connexion ou de fermeture SQL sont désormais distinguées par `PRIVATE_CHECKPOINT_CONNECTION` ; elles ne permettent pas à elles seules de distinguer mot de passe, réseau et TLS.
+
+Un résultat `inspection_diagnosed` signifie que le diagnostic a abouti, **pas que la sauvegarde est autorisée**. Au niveau supérieur, `captureAllowed: false`, `checkpointSaved: false`, `started: false` et `migrationPerformed: false` restent explicites. `diagnosis.inspectionPolicySatisfied` porte seulement sur la politique de visibilité et d’absence d’objets exécutables ; il ne prouve ni les trente tables/migrations, ni une capture cohérente, ni l’arrêt des producteurs. Le mode `inspect` et le chemin `capture --offline` gardent leur contrôle strict existant.
+
+Si le profil observé est `shared_admin`, ou si le nom est un `raw_underscore_pattern`, la visibilité complète reste `unproven`. Le diagnostic ne transforme pas un compteur potentiellement filtré à zéro en preuve d’absence : il ne lit pas les vues des triggers/événements/routines dans ce cas. Plusieurs bases explicitement accordées au compte de maintenance ne justifient pas de réutiliser le garde-fou de namespace du compte applicatif.
+
+**Suite conditionnelle :** relever le résultat neutre du diagnostic, puis préparer une stratégie de sauvegarde adaptée au fournisseur (ou un export fournisseur dont la couverture peut être vérifiée). Tout profil reposant sur les capacités contractuelles de l’hébergeur devra annoncer cette hypothèse et un niveau de preuve distinct dans le manifeste et le reçu. Il ne doit pas réutiliser silencieusement la certification complète actuelle. La pause et la bascule de domaine restent suspendues à une sauvegarde cohérente et vérifiée.
 
 Le lot corrige une incompatibilité de l’ancien outil : le pool d’inspection recopiait le profil restrictif du runtime Infomaniak. Ce profil est désormais retiré **uniquement de la copie utilisée par le pool d’inspection**, dont les requêtes restent limitées aux métadonnées en lecture seule et dont le contrôle `ALL` exact reste obligatoire. L’environnement et le pool applicatifs restent inchangés.
 
@@ -85,9 +98,9 @@ Cette commande ne réalise pas l’import SQL et ne lance pas le réparateur de 
 
 Checkout séparé `/srv/customer/jessiemessage-operator/checkpoint-ba7aed7e`, installation verrouillée et syntaxe vérifiées à **03:43:27.621 Europe/Paris**. À **03:43:42**, le contrôle réel annonce `ready_for_input`, `databaseConnected: false`, `checkpointSaved: false`. Le lanceur propriétaire `0700`, créé exclusivement et relu à **03:44:30.814**, est `/srv/customer/jessiemessage-private/checkpoint-schema30-ba7aed7e.sh` ; SHA-256 `ba30f91cf964bd054409a349b0afe2faa76fd2d3390c67fc5fba3a315631eab0`. Il épingle révision, arbre et propreté des fichiers suivis avant de demander le secret dans la console personnelle.
 
-À **03:45:14.592**, les contrôles de préparation passent encore ; le préflight du service 0.33 est conforme, santé/disponibilité répondent 200 et l’entrée apex conserve son 302 vers recette. Aucun arrêt, capture réelle, nouveau checkpoint, import, migration, changement de clés, droit ou domaine n’a été effectué. L’inspection réelle avec les identifiants personnels reste à faire.
+À **03:45:14.592**, les contrôles de préparation passent encore ; le préflight du service 0.33 est conforme, santé/disponibilité répondent 200 et l’entrée apex conserve son 302 vers recette. Aucun arrêt, capture réelle, nouveau checkpoint, import, migration, changement de clés, droit ou domaine n’a été effectué. L’inspection personnelle a été tentée à 13:48 Europe/Paris et a échoué avec `PRIVATE_CHECKPOINT_INSPECTION`. Le nouveau diagnostic précis est préparé pour identifier la cause SQL réelle ; aucune capture n’est attestée.
 
-Première action personnelle, depuis la [console SSH Node.js normale](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), **sans arrêter l’application** :
+Ancienne commande d’inspection, conservée comme historique et à ne pas relancer à l’aveugle, depuis la [console SSH Node.js normale](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), **sans arrêter l’application** :
 
 ```sh
 bash /srv/customer/jessiemessage-private/checkpoint-schema30-ba7aed7e.sh inspect

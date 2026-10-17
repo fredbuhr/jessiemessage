@@ -2,11 +2,11 @@
 set +x
 set +a
 set -euo pipefail
-if [[ ! -t 0 || ! -t 2 || ( "${1:-}" != '--offline' && "${1:-}" != 'inspect' ) ]]; then
-  printf '%s\n' 'PRIVATE_CHECKPOINT_TTY: Ouvrir une console SSH interactive et choisir inspect, ou --offline après arrêt de JessieMessage.' >&2
+if [[ ! -t 0 || ! -t 2 || ( "${1:-}" != '--offline' && "${1:-}" != 'inspect' && "${1:-}" != 'diagnose' ) ]]; then
+  printf '%s\n' 'PRIVATE_CHECKPOINT_TTY: Ouvrir une console SSH interactive et choisir diagnose, inspect, ou --offline après arrêt de JessieMessage.' >&2
   exit 2
 fi
-JM_CHECKPOINT_COMMAND='inspect'
+JM_CHECKPOINT_COMMAND="$1"
 if [[ "$1" == '--offline' ]]; then JM_CHECKPOINT_COMMAND='capture'; fi
 shift
 JM_CHECKPOINT_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -24,5 +24,5 @@ printf '\n' >&2
 if [[ "$JM_CHECKPOINT_COMMAND" == 'capture' ]]; then
   printf '%s' "$JM_CHECKPOINT_PASSWORD" | env -u NODE_OPTIONS -u NODE_PATH JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd node "$JM_CHECKPOINT_DIRECTORY/private-checkpoint.mjs" capture --offline "$@"
 else
-  printf '%s' "$JM_CHECKPOINT_PASSWORD" | env -u NODE_OPTIONS -u NODE_PATH JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd node "$JM_CHECKPOINT_DIRECTORY/private-checkpoint.mjs" inspect "$@"
+  printf '%s' "$JM_CHECKPOINT_PASSWORD" | env -u NODE_OPTIONS -u NODE_PATH JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd node "$JM_CHECKPOINT_DIRECTORY/private-checkpoint.mjs" "$JM_CHECKPOINT_COMMAND" "$@"
 fi

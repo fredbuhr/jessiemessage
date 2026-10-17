@@ -234,6 +234,59 @@ test("inspection verifies the dedicated identity before any writes and leaves th
   cleared(f.state);
 });
 
+test("diagnosis publishes only fixed categories without passing the strict inspection or creating files", async (t) => {
+  const f = await fixture(t), original = fs.promises.open;
+  let writes = 0, diagnoses = 0, output = "";
+  fs.promises.open = async (...args) => {
+    if ((args[1] & (fs.constants.O_WRONLY | fs.constants.O_RDWR | fs.constants.O_CREAT)) !== 0) writes += 1;
+    return original(...args);
+  };
+  syncBuiltinESMExports();
+  let result;
+  try {
+    result = await main(f.command("diagnose"), { ...f.dependencies,
+      async diagnoseIdentity(environment) {
+        diagnoses += 1; f.state.usedEnvironments.push(environment);
+        assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD, inspectionPassword);
+        return { databaseMatched: true, scope: "raw_underscore_pattern", privilegeProfile: "shared_admin",
+          metadataVisibility: "unproven", objectInventory: "unproven", captureAllowed: false,
+          rawGrant: `private ${inspectionPassword}`, database: "synthetic_checkpoint" };
+      }, outputStream: { write(value) { output += value; } } });
+  } finally { fs.promises.open = original; syncBuiltinESMExports(); }
+  assert.deepEqual(result, { status: "inspection_diagnosed", profile: "messaging-photos-notify", databaseConnected: true,
+    diagnosis: { databaseMatched: true, scope: "raw_underscore_pattern", privilegeProfile: "shared_admin",
+      metadataVisibility: "unproven", objectInventory: "unproven", inspectionPolicySatisfied: false },
+    checkpointSaved: false, captureAllowed: false, started: false, migrationPerformed: false });
+  assert.equal(output, `${JSON.stringify(result)}\n`);
+  assert.equal(diagnoses, 1); assert.equal(writes, 0); assert.equal(f.state.secretReads, 1);
+  for (const name of ["identities", "dumps", "prepares", "copies", "clocks"]) assert.equal(f.state[name], 0, name);
+  assert.deepEqual(await readdir(f.root), ["media", "private"]);
+  publicOnly(result, f); cleared(f.state);
+});
+
+test("diagnosis failures and impossible success reports remain closed and clear credentials", async (t) => {
+  for (const mode of ["connection", "query", "inconsistent", "private-category", "cancelled"]) {
+    const f = await fixture(t), controller = new AbortController(); let output = "";
+    const expected = mode === "connection" ? "PRIVATE_CHECKPOINT_CONNECTION" : mode === "query" ? "PRIVATE_CHECKPOINT_OPERATION"
+      : mode === "cancelled" ? "PRIVATE_CHECKPOINT_CANCELLED" : "PRIVATE_CHECKPOINT_INSPECTION";
+    await assert.rejects(main(f.command("diagnose"), { ...f.dependencies, signal: controller.signal,
+      async diagnoseIdentity(environment) {
+        f.state.usedEnvironments.push(environment);
+        if (mode === "connection" || mode === "query") throw Object.assign(new Error(inspectionPassword), { code: mode === "connection" ? "AUTH_DATABASE_CONNECTION" : "ER_TABLEACCESS_DENIED_ERROR" });
+        if (mode === "cancelled") controller.abort();
+        return { databaseMatched: true, scope: mode === "private-category" ? inspectionPassword : "exact", privilegeProfile: "shared_admin",
+          metadataVisibility: "unproven", objectInventory: "unproven", captureAllowed: mode === "inconsistent" };
+      }, outputStream: { write(value) { output += value; } } }), error => {
+      assert.equal(error.code, expected); assert.doesNotMatch(error.message, /synthetic|password/); return true;
+    });
+    assert.equal(output, ""); assert.equal(f.state.identities, 0); assert.equal(f.state.dumps, 0);
+    await assert.rejects(lstat(f.destination), { code: "ENOENT" }); cleared(f.state);
+  }
+  const f = await fixture(t);
+  const args = f.command("diagnose"); args.splice(1, 0, "--offline");
+  assert.throws(() => parseArguments(args), { code: "PRIVATE_CHECKPOINT_USAGE" });
+});
+
 test("offline capture verifies two SQL dumps and both manifests, builds the real receipt, gzip and GNU tar archive", { timeout: 15000 }, async (t) => {
   const f = await fixture(t);
   let output = "";

@@ -12,6 +12,7 @@ import { privateAuthenticationProcessOptions } from "../server/config/private-au
 import { readManifest, verifyBackupManifest } from "../server/backup/manifest.mjs";
 import { assertBackupSnapshot } from "../server/backup/snapshot.mjs";
 import { assertBackupInspection, createBackupInspectionPool } from "../server/backup/inspection.mjs";
+import { diagnoseBackupInspection } from "../server/backup/inspection-diagnostics.mjs";
 import { createdMigrationTables, inspectHistory, loadMigrations } from "../server/db/migrations.mjs";
 import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { hashCheckpointFile, writeCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
@@ -24,7 +25,7 @@ const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const PROCESS_ENV = Object.freeze({ PATH: "/usr/bin:/bin", HOME: "/", LANG: "C", LC_ALL: "C" });
 const MAX_ARCHIVE = 2 * 1024 * 1024 * 1024;
 const FIELDS = ["command", "offline", "privateDirectory", "privatePathMode", "destination", "inspectionUser"];
-const CODES = new Set(["USAGE", "ENVIRONMENT", "CONFIGURATION", "DESTINATION", "TOOLS", "PASSWORD", "INSPECTION", "DATABASE", "AUTHENTICATION", "ACCESS", "BACKUP", "DUMP", "DRIFT", "ARCHIVE", "CANCELLED", "OPERATION"].map(name => `PRIVATE_CHECKPOINT_${name}`));
+const CODES = new Set(["USAGE", "ENVIRONMENT", "CONFIGURATION", "DESTINATION", "TOOLS", "PASSWORD", "INSPECTION", "CONNECTION", "DATABASE", "AUTHENTICATION", "ACCESS", "BACKUP", "DUMP", "DRIFT", "ARCHIVE", "CANCELLED", "OPERATION"].map(name => `PRIVATE_CHECKPOINT_${name}`));
 export class PrivateCheckpointError extends Error {
   constructor(code) { const selected = CODES.has(code) ? code : "PRIVATE_CHECKPOINT_OPERATION"; super(selected); this.name = "PrivateCheckpointError"; this.code = selected; }
 }
@@ -36,7 +37,7 @@ const same = (a, b) => ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mt
 function regular(value) { if (!value.isFile() || value.uid !== BigInt(process.getuid()) || (value.mode & 0o7777n) !== 0o600n || value.nlink !== 1n) fail("PRIVATE_CHECKPOINT_DESTINATION"); }
 
 export function parseArguments(args) {
-  if (!Array.isArray(args) || !["check", "inspect", "capture"].includes(args[0])) fail("PRIVATE_CHECKPOINT_USAGE");
+  if (!Array.isArray(args) || !["check", "diagnose", "inspect", "capture"].includes(args[0])) fail("PRIVATE_CHECKPOINT_USAGE");
   const offline = args[1] === "--offline", offset = offline ? 2 : 1;
   if ((args[0] === "capture") !== offline || args.length !== offset + 8) fail("PRIVATE_CHECKPOINT_USAGE");
   const names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"], ["--destination-private-directory", "destination"], ["--inspection-user", "inspectionUser"]]);
@@ -94,6 +95,27 @@ export async function inspectCheckpointIdentity(env, { signal } = {}) {
     if (ledger.length !== 30 || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     active(signal);
   } finally { try { await connection?.release(); } finally { await pool?.end(); } }
+}
+// This observation is deliberately separate from the strict capture gate.
+// In particular, a provider's admin profile cannot prove invisible objects absent.
+export async function diagnoseCheckpointIdentity(env, { signal } = {}) {
+  let pool, connection;
+  try {
+    active(signal); pool = await createBackupInspectionPool(env); connection = await pool.getConnection();
+    const diagnosis = await diagnoseBackupInspection(connection, env.JESSIEMESSAGE_DB_NAME);
+    active(signal); return diagnosis;
+  } finally { try { await connection?.release(); } finally { await pool?.end(); } }
+}
+function publicDiagnosis(value) {
+  const choices = { scope: ["exact", "raw_underscore_pattern", "other", "missing"],
+    privilegeProfile: ["schema_all", "shared_admin", "insufficient"], metadataVisibility: ["complete", "unproven"],
+    objectInventory: ["absent", "present_or_unverified", "unproven"] };
+  if (!value || typeof value.databaseMatched !== "boolean" || typeof value.captureAllowed !== "boolean"
+    || Object.entries(choices).some(([name, allowed]) => !allowed.includes(value[name]))
+    || value.captureAllowed && (!value.databaseMatched || value.scope !== "exact" || value.privilegeProfile !== "schema_all"
+      || value.metadataVisibility !== "complete" || value.objectInventory !== "absent")) fail("PRIVATE_CHECKPOINT_INSPECTION");
+  return { databaseMatched: value.databaseMatched, scope: value.scope, privilegeProfile: value.privilegeProfile,
+    metadataVisibility: value.metadataVisibility, objectInventory: value.objectInventory, inspectionPolicySatisfied: value.captureAllowed };
 }
 async function exclusive(scope, name) {
   await scope.assertReady();
@@ -184,7 +206,7 @@ export async function archiveCheckpoint(scope, inventory, { signal, spawnClient 
 
 export async function run(value, { inheritedEnv = process.env, execArgv = process.execArgv, inputStream = process.stdin, signal,
   scopeOperation = withPrivateDirectory, loadEnvironment = loadRuntimeNotificationsEnvironment, inspectTools = inspectCheckpointTools,
-  inspectIdentity = inspectCheckpointIdentity,
+  inspectIdentity = inspectCheckpointIdentity, diagnoseIdentity = diagnoseCheckpointIdentity,
   readSecret = readPassword, prepare = backupMain, dump = dumpCloneSql, copyMedia = copyCheckpointMedia, verifyMedia = verifyCheckpointMedia,
   getManifest = readManifest, verifyManifest = verifyBackupManifest, compareSnapshots = assertBackupSnapshot,
   compress = gzipCheckpointSql, archive = archiveCheckpoint, verifyArchive = verifyCheckpointArchive, clock = Date.now } = {}) {
@@ -205,6 +227,11 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       catch { fail("PRIVATE_CHECKPOINT_PASSWORD"); }
       active(signal);
       env.JESSIEMESSAGE_BACKUP_SCHEMA_USER = selected.inspectionUser; env.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD = password;
+      if (selected.command === "diagnose") {
+        const diagnosis = publicDiagnosis(await diagnoseIdentity(env, { signal })); active(signal);
+        return { status: "inspection_diagnosed", profile: "messaging-photos-notify", databaseConnected: true, diagnosis,
+          checkpointSaved: false, captureAllowed: false, started: false, migrationPerformed: false };
+      }
       await inspectIdentity(env, { signal }); active(signal);
       if (selected.command === "inspect") return { status: "inspection_verified", profile: "messaging-photos-notify", tables: 30, migrations: 30,
         databaseConnected: true, inspectionPrivilegesVerified: true, checkpointSaved: false, started: false, migrationPerformed: false };
@@ -282,6 +309,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   } catch (error) {
     if (signal?.aborted) fail("PRIVATE_CHECKPOINT_CANCELLED");
     if (error instanceof PrivateCheckpointError) throw error;
+    if (error?.code === "AUTH_DATABASE_CONNECTION" || error?.code === "AUTH_DATABASE_BUSY") fail("PRIVATE_CHECKPOINT_CONNECTION");
     if (error?.code === "BACKUP_INSPECTION_CONFIG") fail("PRIVATE_CHECKPOINT_INSPECTION");
     if (/^TEXT_CLONE_(?:AUTHENTICATION|ACCESS|DATABASE|DUMP)$/.test(error?.code ?? "")) fail(error.code.replace("TEXT_CLONE_", "PRIVATE_CHECKPOINT_"));
     fail("PRIVATE_CHECKPOINT_OPERATION");
@@ -298,6 +326,12 @@ export async function main(args = process.argv.slice(2), { outputStream = proces
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const cancellation = new AbortController(), cancel = () => cancellation.abort(); process.on("SIGINT", cancel); process.on("SIGTERM", cancel);
   try { await main(process.argv.slice(2), { signal: cancellation.signal }); }
-  catch (error) { process.stderr.write(`${error instanceof PrivateCheckpointError ? error.code : "PRIVATE_CHECKPOINT_OPERATION"}: La sauvegarde privée n’est pas confirmée.\n`); process.exitCode = 1; }
+  catch (error) {
+    const code = error instanceof PrivateCheckpointError ? error.code : "PRIVATE_CHECKPOINT_OPERATION";
+    const detail = code === "PRIVATE_CHECKPOINT_CONNECTION" ? "La connexion SQL n’a pas pu être établie ou fermée correctement."
+      : code === "PRIVATE_CHECKPOINT_INSPECTION" ? "Les droits ou métadonnées requis ne sont pas confirmés. Utiliser diagnose sans arrêter l’application."
+      : "La sauvegarde privée n’est pas confirmée.";
+    process.stderr.write(`${code}: ${detail}\n`); process.exitCode = 1;
+  }
   finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
 }

@@ -235,6 +235,22 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       }
     });
 
+    await t.test("inspection diagnosis handles native driver metadata and retains the exact-schema gate", async () => {
+      const { createBackupInspectionPool } = await import("../server/backup/inspection.mjs");
+      const { diagnoseBackupInspection } = await import("../server/backup/inspection-diagnostics.mjs");
+      const pool = await createBackupInspectionPool(process.env); let inspector;
+      try {
+        inspector = await pool.getConnection();
+        const nativeRows = await inspector.query("SHOW GRANTS");
+        assert.ok(Object.hasOwn(nativeRows, "meta"), "exercise the pinned MariaDB driver's native result shape");
+        const diagnosis = await diagnoseBackupInspection(inspector, options.database);
+        assert.deepEqual(diagnosis, { databaseMatched: true, scope: "exact", privilegeProfile: "schema_all",
+          metadataVisibility: "complete", objectInventory: "absent", captureAllowed: true });
+        assert.equal(Object.isFrozen(diagnosis), true);
+        await sourceUnchanged();
+      } finally { try { await inspector?.release(); } finally { await pool.end(); } }
+    });
+
     await t.test("prepare binds real encrypted data and five keys without exporting secrets or changing the source", async () => {
       const { createBackupInspectionPool, assertBackupInspection } = await import("../server/backup/inspection.mjs");
       const { createBackupSnapshotStore, captureBackupSnapshot } = await import("../server/backup/snapshot.mjs");
