@@ -10,7 +10,7 @@ Le profil reste `messaging-photos`. La production reste fermée.
 
 ## Connexions sur plusieurs appareils
 
-**Précision propriétaire du 17 octobre 2026 à 20:15 Europe/Paris :** Jess et son partenaire utilisent volontairement le même compte administrateur en parallèle. Les sessions sont distinctes par appareil ; l’identité applicative reste celle du compte commun, sans attribution personnelle de l’auteur d’une action. Aucun second compte ni changement de durée n’est demandé. Cette précision ne remplace pas la recette simultanée de l’ensemble des appareils mentionnée plus bas.
+**Usage retenu :** le compte administrateur de l’espace Jessie est utilisable en parallèle sur plusieurs appareils. Les sessions restent distinctes ; les actions sont attribuées à cette identité applicative commune. Aucun second compte ni changement de durée n’est demandé. Cette précision ne remplace pas la recette simultanée de l’ensemble des appareils mentionnée plus bas.
 
 Une session administrateur valide dure désormais **180 jours glissants**,
 sans déconnexion après 30 minutes d'inactivité. Chaque appareil conserve son

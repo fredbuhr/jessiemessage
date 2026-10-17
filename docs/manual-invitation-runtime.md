@@ -25,11 +25,10 @@ et copie : 225 colonnes, 156 entrées d'index, 167 CHECK et 55 entrées de clés
 étrangères. Aucun démarrage applicatif contre la copie n'a été effectué.
 
 Le périmètre demandé est une messagerie privée pour des invités sélectionnés par
-Jess. Le propriétaire indique que leur majorité est vérifiée en amont sur
-Stripchat. L'application n'intègre aucun fournisseur KYC, ne reçoit aucune preuve
-Stripchat et ne certifie pas avoir vérifié la majorité. Elle enregistre une
-**admission manuelle**. La portée juridique de la vérification préalable n'est pas
-établie par ce changement de code.
+Jessie. L’application n’intègre aucun fournisseur de vérification d’identité,
+ne reçoit aucune preuve indépendante de majorité et ne certifie pas l’avoir
+vérifiée. Elle enregistre une **admission manuelle**. Ce changement de code
+n’attribue aucune origine extérieure aux invitations.
 
 ## Un parcours, une politique
 
