@@ -167,8 +167,8 @@ test("real HTTP targeted broadcasts require active access and retain durable ord
       const previewBody = { conversationIds: [hex(clients.a.conversationId)], mediaId: null };
       assert.equal((await request(adminPath("preview"), { method: "POST", headers: { Cookie: adminSession.cookie }, body: previewBody })).status, 403);
       assert.equal((await request(adminPath("preview"), { method: "POST", headers: { ...headersFor(adminSession), Origin: "https://foreign.invalid" }, body: previewBody })).status, 403);
-      assert.equal((await request(preferencePath, { method: "POST", headers: { Cookie: sessions.a.cookie }, body: { enabled: true, expectedVersion: "0" } })).status, 404);
-      assert.equal((await request(preferencePath, { method: "POST", headers: headersFor(sessions.a), body: { enabled: true, expectedVersion: "0", clientId: hex(clients.b.id) } })).status, 404);
+      assert.equal((await request(preferencePath, { method: "POST", headers: { Cookie: sessions.a.cookie }, body: { enabled: true, expectedVersion: "0" } })).status, 405);
+      assert.equal((await request(preferencePath, { method: "POST", headers: headersFor(sessions.a), body: { enabled: true, expectedVersion: "0", clientId: hex(clients.b.id) } })).status, 405);
       const eligible = await request(adminPath("preview"), { method: "POST", headers: headersFor(adminSession), body: previewBody });
       assert.equal(eligible.status, 200);
       assert.equal(eligible.body.eligibleCount, 1);

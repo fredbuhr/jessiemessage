@@ -342,7 +342,7 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
       const previewOptions = { method: "POST", cookie: cookie("admin"), csrf: csrfToken(raw.admin), body: previewBody };
       const eligible = await request(broadcastPort, primary, previewPath, previewOptions);
       assert.equal(eligible.status, 200); assert.equal(eligible.json().eligibleCount, 1);
-      await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 0, 1, ?, ?)", [users.client, sqlDate(now), sqlDate(now)]);
+      await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 0, 1, ?, ?)", [users.client, date(now), date(now)]);
       assert.equal((await request(broadcastPort, recipe, previewPath, { ...previewOptions, extra: { Origin: primary } })).status, 403);
       const preview = await request(broadcastPort, recipe, previewPath, previewOptions);
       assert.equal(preview.status, 200); assert.equal(preview.json().eligibleCount, 1);
