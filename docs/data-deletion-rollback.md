@@ -48,6 +48,8 @@ Les médias de l’administrateur partagés restent préservés. Les référence
 
 ## Blocages et future exécution
 
+La [préparation 0.41](data-privacy-preparation.md) décrit désormais les catégories et copies à prendre en compte, les faits/décisions manquants et la procédure des demandes. Elle conserve intégralement les blocages ci-dessous ; un brouillon de notice, une demande reçue ou un diagnostic écrit ne constitue pas une autorisation ou une preuve d’effacement.
+
 Quatre blocages sont toujours présents : conservation non décidée, exécuteur destructif absent, arrêt externe non vérifié et traitement des sauvegardes à décider. Les observations ajoutent des blocages pour les comptages plafonnés, les travaux en cours ou en attente, le protocole média, les références externes, les données partagées et les rattachements incohérents.
 
 Une campagne conserve une audience chiffrée immuable et son empreinte. Retirer un seul destinataire SQL laisserait cette audience et les compteurs incohérents. Une invitation consommée couple son consommateur et sa date de consommation ; retirer seulement l’identifiant ou la révoquer ensuite viole les contraintes. Un journal média `released` possède encore une clé étrangère vers son propriétaire. Ces cas nécessitent une stratégie explicite ; l’ordre des tables ne suffit pas.
