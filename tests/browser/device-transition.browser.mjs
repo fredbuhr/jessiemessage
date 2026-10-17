@@ -174,7 +174,7 @@ async function transitionDiagnostics(page, fixture) {
   const ui = await page.execute(`const status = document.getElementById('transition-status')?.textContent ?? '';
     return { pathname: location.pathname, status: document.getElementById('destination') ? 'destination'
       : document.getElementById('transition-start')?.textContent === 'Réessayer' ? 'retry'
-      : status.startsWith('Un instant') ? 'preparing' : status.startsWith('La connexion de cet appareil') ? 'missing'
+      : status.startsWith('Un instant') ? 'preparing' : status.startsWith('Pour retrouver tes messages') ? 'missing'
       : status.startsWith('Un autre compte') ? 'conflict' : 'other' };`).catch(() => ({ pathname: "unavailable", status: "unavailable" }));
   const requestCounts = {};
   for (const { path } of fixture.requests) if (/^\/api\/(?:auth\/session|access\/session|device-transition\/(?:admin|client)\/(?:begin|authorize|complete))$/.test(path)) {
@@ -338,5 +338,105 @@ test("real Chrome: two HTTPS hosts preserve native protected sessions through th
         cleanRequests(fixture);
       } finally { await page.close(); }
     });
+  } finally { try { await driver.close(); } finally { await fixture?.close(); } }
+});
+
+async function transitionLayout(page) {
+  return page.execute(`
+    const box = node => {
+      const rect = node.getBoundingClientRect(), style = getComputedStyle(node);
+      return { id: node.id || node.className, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom,
+        width: rect.width, height: rect.height, scrollWidth: node.scrollWidth, clientWidth: node.clientWidth,
+        background: style.backgroundColor };
+    };
+    const visible = node => node.getClientRects().length > 0;
+    return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, language: document.documentElement.lang,
+      card: box(document.querySelector('.transition-card')), brand: box(document.querySelector('.brand')),
+      languageButton: box(document.getElementById('transition-language')),
+      actions: [...document.querySelectorAll('#transition-login, #transition-start')].filter(visible).map(box),
+      loginVisible: visible(document.getElementById('transition-login')),
+      back: box(document.getElementById('transition-back')) };
+  `);
+}
+
+function checkTransitionLayout(layout, { width, language, missing, context }) {
+  assert.equal(layout.width, width, `${context}: exact viewport width`);
+  assert.equal(layout.language, language, `${context}: selected language is rendered`);
+  assert.ok(layout.scrollWidth <= width, `${context}: no horizontal page overflow`);
+  assert.ok(layout.card.left >= 0 && layout.card.right <= width, `${context}: the card stays inside the viewport`);
+  assert.equal(layout.loginVisible, missing, `${context}: sign-in is shown only when the previous session is missing`);
+  const controls = [layout.brand, layout.languageButton, ...layout.actions, layout.back];
+  for (const control of controls) {
+    assert.ok(control.left >= layout.card.left && control.right <= layout.card.right, `${context}: ${control.id} stays inside the card`);
+    assert.ok(control.height >= 44 && control.width >= 44, `${context}: ${control.id} keeps its touch target`);
+    assert.ok(control.scrollWidth <= control.clientWidth + 1, `${context}: ${control.id} does not clip its label horizontally`);
+  }
+  const overlap = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  assert.equal(overlap(layout.brand, layout.languageButton), false, `${context}: brand and language control do not overlap`);
+  assert.deepEqual(layout.actions.map(({ id }) => id), missing ? ["transition-login", "transition-start"] : ["transition-start"], `${context}: DOM order matches action priority`);
+  for (let index = 1; index < layout.actions.length; index += 1) {
+    assert.ok(layout.actions[index].top - layout.actions[index - 1].bottom >= 12 - 0.1, `${context}: dynamic actions keep a twelve-pixel gap`);
+  }
+  if (missing) assert.notEqual(layout.actions[0].background, layout.actions[1].background, `${context}: sign-in and Retry have distinct visual priority`);
+  assert.ok(layout.back.top >= layout.actions.at(-1).bottom, `${context}: the return link does not overlap the actions`);
+}
+
+test("real Chrome: transition actions stay distinct and accessible in every responsive state and language", { timeout: 120000 }, async t => {
+  const driver = await startWebDriver();
+  let fixture;
+  try {
+    fixture = await transitionFixture();
+    const scenarios = [
+      { name: "initial", role: "client" },
+      { name: "preparing", role: "client", hangFirstBegin: true },
+      { name: "unavailable", role: "client", failFirstBegin: true },
+      { name: "missing client", role: "client", missing: true },
+      { name: "missing administrator", role: "admin", missing: true },
+      { name: "account conflict", role: "admin", target: "different" },
+    ];
+    for (const width of [320, 360, 390, 635]) for (const scenario of scenarios) {
+      await t.test(`${scenario.name}, ${width}px: French and English`, async () => {
+        fixture.reset(scenario);
+        const page = await driver.browser({ origin: fixture.primaryOrigin, siblingOrigins: [fixture.legacyOrigin], acceptInsecureCerts: true, width });
+        try {
+          if (scenario.name === "initial") {
+            await page.navigate(`/connect-device/${scenario.role}`);
+            await waitUntil(() => page.execute("return document.getElementById('transition-start')?.textContent === 'Retrouver mon espace'"), "initial transition rendered");
+          } else {
+            await startTransition(page, fixture, scenario.role, notification);
+            await waitUntil(() => page.execute(`
+              const start = document.getElementById('transition-start'), login = document.getElementById('transition-login');
+              if (!start || !login) return false;
+              if (arguments[0] === 'preparing') return start.disabled;
+              if (arguments[1]) return !login.hidden && !start.disabled;
+              if (arguments[0] === 'account conflict') return document.getElementById('transition-status').textContent.startsWith('Un autre compte est déjà ouvert');
+              return start.textContent === 'Réessayer' && !start.disabled;
+            `, scenario.name, Boolean(scenario.missing)), "the real transition state is visible");
+          }
+          for (const language of ["fr", "en"]) {
+            if (language === "en") await page.click("#transition-language");
+            const context = `${scenario.name}, ${width}px, ${language}`;
+            const layout = await transitionLayout(page);
+            checkTransitionLayout(layout, { width, language, missing: Boolean(scenario.missing), context });
+            if (scenario.name !== "preparing") {
+              await page.execute("document.getElementById('transition-language').focus()");
+              await page.key("\uE004");
+              const focus = await page.execute(`
+                const node = document.activeElement, rect = node.getBoundingClientRect(), style = getComputedStyle(node);
+                return { id: node.id, left: rect.left, right: rect.right,
+                  outlineWidth: parseFloat(style.outlineWidth), outlineOffset: parseFloat(style.outlineOffset), outlineStyle: style.outlineStyle };
+              `);
+              assert.equal(focus.id, scenario.missing ? "transition-login" : "transition-start", `${context}: the first Tab reaches the primary available action`);
+              assert.notEqual(focus.outlineStyle, "none", `${context}: keyboard focus remains visible`);
+              assert.ok(focus.outlineWidth >= 2, `${context}: keyboard focus has a visible outline`);
+              const clearance = focus.outlineWidth + focus.outlineOffset;
+              assert.ok(focus.left - clearance >= layout.card.left && focus.right + clearance <= layout.card.right, `${context}: focus ring stays clear of the card edges`);
+              if (scenario.missing) assert.ok(layout.actions[1].top - layout.actions[0].bottom >= clearance, `${context}: the sign-in focus ring does not touch Retry`);
+            }
+          }
+          cleanRequests(fixture);
+        } finally { await page.close(); }
+      });
+    }
   } finally { try { await driver.close(); } finally { await fixture?.close(); } }
 });

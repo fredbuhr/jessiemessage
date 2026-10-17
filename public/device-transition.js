@@ -7,15 +7,15 @@
   const language = document.getElementById("transition-language");
   const words = {
     fr: { eyebrow: "TOUJOURS À TES CÔTÉS", title: "Ton espace trouve sa nouvelle adresse.", copy: "Retrouve tes messages sur jessiemessage.com, en gardant la connexion de cet appareil.",
-      start: "Retrouver mon espace", back: "Revenir à mon espace", login: "Ouvrir mon espace", note: "Les notifications et l’icône de l’app se règlent ensuite sur la nouvelle adresse.",
+      start: "Retrouver mon espace", back: "Revenir à mon espace", login: "Me connecter", note: "Les notifications et l’icône de l’app se règlent ensuite sur la nouvelle adresse.",
       preparing: "Un instant, on retrouve ton espace…", unavailable: "La reprise n’a pas abouti. Tu peux réessayer ou revenir à ton espace.",
-      missing: "La connexion de cet appareil n’est plus disponible. Ouvre ton espace pour te connecter une fois.",
-      conflict: "Un autre compte est déjà ouvert à cette adresse. Reviens à ton espace pour choisir celui que tu souhaites utiliser.", retry: "Réessayer", badLink: "Ce lien n’est plus disponible. Recommence depuis la nouvelle adresse." },
+      missing: "Pour retrouver tes messages, connecte-toi une fois sur la nouvelle adresse.",
+      conflict: "Un autre compte est déjà ouvert à cette adresse. Reviens à l’espace de ce compte pour continuer.", retry: "Réessayer", badLink: "Ce lien n’est plus disponible. Recommence depuis la nouvelle adresse." },
     en: { eyebrow: "ALWAYS CLOSE BY", title: "Your space has a new address.", copy: "Find your messages at jessiemessage.com and keep this device signed in.",
-      start: "Find my space", back: "Back to my space", login: "Open my space", note: "Notifications and the app icon can then be set up at the new address.",
+      start: "Find my space", back: "Back to my space", login: "Sign in", note: "Notifications and the app icon can then be set up at the new address.",
       preparing: "Just a moment while we find your space…", unavailable: "We couldn’t finish this time. Try again or return to your space.",
-      missing: "This device’s previous sign-in is no longer available. Open your space to sign in once.",
-      conflict: "Another account is already open at this address. Return to your space to choose the account you want to use.", retry: "Try again", badLink: "This link is no longer available. Start again at the new address." },
+      missing: "To find your messages, sign in once at the new address.",
+      conflict: "Another account is already open at this address. Return to that account’s space to continue.", retry: "Try again", badLink: "This link is no longer available. Start again at the new address." },
   };
   let locale = document.documentElement.lang === "en" ? "en" : "fr", statusKey = null, busy = false, epoch = 0, active = true;
   const pending = new Set();
