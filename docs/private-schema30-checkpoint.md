@@ -43,17 +43,17 @@ JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd node scripts/private-checkpoint.mjs 
   --inspection-user COMPTE_INSPECTION
 ```
 
-La saisie personnelle est encadrée par Bash :
+Le diagnostic personnel est encadré par Bash :
 
 ```sh
-bash scripts/capture-private-checkpoint.sh inspect \
+bash scripts/capture-private-checkpoint.sh diagnose \
   --private-directory /srv/customer/jessiemessage-private \
   --private-path-mode linux-dirfd \
   --destination-private-directory /srv/customer/jessiemessage-private/checkpoint-schema30-before-domain \
   --inspection-user COMPTE_INSPECTION
 ```
 
-Le résultat attendu est `inspection_verified`, `checkpointSaved: false`, `started: false`. Il valide les droits et l’état du schéma à cet instant ; il ne constitue pas une capture. Si l’inspection échoue, ne pas arrêter l’application et ne pas élargir les droits du runtime pour contourner le refus.
+Le résultat attendu est `inspection_diagnosed`, avec les catégories de droits et `checkpointSaved: false`, `captureAllowed: false`, `started: false`. Il ne certifie aucune sauvegarde. Le mode strict `inspect` ne pourra ensuite produire `inspection_verified` que si ses droits et les trente tables/migrations sont réellement vérifiés. Si la politique reste insatisfaite, ne pas arrêter l’application et ne pas élargir les droits du runtime pour contourner le refus.
 
 Après cette inspection positive et arrêt de tous les serveurs, workers, tâches et outils d’écriture, remplacer `inspect` par `--offline` dans la même commande. Cette option est la déclaration de l’opérateur ; le programme ne prouve pas l’arrêt d’un producteur extérieur. Le service est repris avec son lanceur 0.33 après la capture, puis santé/disponibilité sont vérifiées. Aucun changement de lanceur ou de domaine n’est nécessaire pour sauvegarder.
 
@@ -92,7 +92,23 @@ Le précontrôle sans secret précède la saisie masquée. La copie, le SQL, le 
 
 Cette commande ne réalise pas l’import SQL et ne lance pas le réparateur de réservations ou la réassociation de capacité de `backup.mjs restore`. Cette opération reste distincte pour un futur redémarrage effectif sur un stockage déplacé. Le repli courant vers le code 0.33 conserve le stockage et le schéma 30 existants ; les anciens runtimes au schéma 28 demandent une restauration cohérente de leur propre checkpoint.
 
-## État de validation
+## Diagnostic 0.36 préparé après le refus personnel
+
+Révision du diagnostic **`673921d13ff3da4bbe6a8f863391996cb5f3da80`**, arbre **`862fe79b866e1ea3bb3745bf3d61dbcb8f11e712`**, [PR brouillon #48](https://github.com/fredbuhr/jessiemessage/pull/48). Les cinq jobs de la [CI exacte du push](https://github.com/fredbuhr/jessiemessage/actions/runs/39030768169) sont réussis : **1 997 tests généraux**, 27 wrappers SQL ignorés dans ce job seulement ; **369 tests sans saut par MariaDB 10.11 et 11.4**, vingt tests Chrome applicatifs et une authentification Chrome/HTTPS/MariaDB. Le nouveau test SQL utilise les vraies métadonnées du driver. Une seconde relecture ne trouve pas de défaut bloquant dans le diagnostic, le CLI et le lanceur.
+
+Checkout séparé `/srv/customer/jessiemessage-operator/checkpoint-diagnostic-673921d1` installé et syntaxe validée, arbre suivi propre. À **14:01:07.156 Europe/Paris le 17 octobre 2026**, le précontrôle réel est `ready_for_input`, sans connexion SQL ni capture. Le nouveau lanceur privé `0700` est créé exclusivement et relu à **14:03:00.471** : `/srv/customer/jessiemessage-private/checkpoint-schema30-diagnostic-673921d1.sh`, SHA-256 `e1d0c32853bd324093c50a846331aeef1a844e3ea2fdcc0b01c7b789a3b6617d`. Il épingle révision, arbre et propreté des fichiers suivis ; il accepte uniquement le diagnostic sans argument et ne peut pas lancer une capture.
+
+Depuis la [console SSH Node.js personnelle](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), sans arrêter l’application :
+
+```sh
+bash /srv/customer/jessiemessage-private/checkpoint-schema30-diagnostic-673921d1.sh
+```
+
+Saisir uniquement dans cette console le mot de passe SQL existant du compte `fb4hmr_jm_mig`, puis Entrée. La saisie est masquée. Renvoyer seulement la ligne JSON contenant `inspection_diagnosed`, ou le code neutre d’erreur. Aucune saisie personnelle n’a été faite par l’agent ; la classification SQL réelle reste à obtenir. Le lanceur précédent reste conservé comme historique.
+
+À **14:03:21.403**, le préflight du runtime actif **0.33 `f2677249`** passe encore, santé et disponibilité répondent **200**, et `/app` sur l’apex conserve son **302** vers `https://recette.jessiemessage.com/app`. Aucun arrêt, nouveau checkpoint, import, migration, changement de domaine, de clé ou de droit SQL n’a été effectué. La prochaine décision technique dépend du diagnostic réel et doit déboucher sur une sauvegarde adaptée au fournisseur, puis sur sa copie indépendante et sa restauration isolée avant la bascule.
+
+## État de validation initiale — conservé comme historique
 
 **Préparation du code et de l’hébergement validée le 17 octobre 2026.** Révision `ba7aed7e107c566768436e5399a00b95df40d530`, arbre `9de0af2f5f278e7f7a626e02f7517c32319c52fd`, [PR brouillon #47](https://github.com/fredbuhr/jessiemessage/pull/47). Les cinq jobs de la [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/38991898070) passent : **1 981 tests généraux réussis**, 27 wrappers SQL ignorés seulement dans ce job ; **368 tests sans saut sur chacune des MariaDB 10.11 et 11.4** ; vingt tests Chrome applicatifs et une authentification Chrome/HTTPS/MariaDB. La capture synthétique CI emploie GNU tar avec le vrai FD hérité ; l’acquisition réelle de l’identité d’inspection avec profil hébergeur passe.
 
@@ -100,12 +116,6 @@ Checkout séparé `/srv/customer/jessiemessage-operator/checkpoint-ba7aed7e`, in
 
 À **03:45:14.592**, les contrôles de préparation passent encore ; le préflight du service 0.33 est conforme, santé/disponibilité répondent 200 et l’entrée apex conserve son 302 vers recette. Aucun arrêt, capture réelle, nouveau checkpoint, import, migration, changement de clés, droit ou domaine n’a été effectué. L’inspection personnelle a été tentée à 13:48 Europe/Paris et a échoué avec `PRIVATE_CHECKPOINT_INSPECTION`. Le nouveau diagnostic précis est préparé pour identifier la cause SQL réelle ; aucune capture n’est attestée.
 
-Ancienne commande d’inspection, conservée comme historique et à ne pas relancer à l’aveugle, depuis la [console SSH Node.js normale](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), **sans arrêter l’application** :
-
-```sh
-bash /srv/customer/jessiemessage-private/checkpoint-schema30-ba7aed7e.sh inspect
-```
-
-Le mot de passe demandé est celui du compte SQL existant `fb4hmr_jm_mig`, pas celui du Manager Infomaniak. La saisie ne s’affiche pas. Ne transmettre dans la conversation que `inspection_verified` ou le code neutre d’erreur. Ce lanceur prépare la destination privée exclusive `checkpoint-schema30-before-domain` ; aucun fichier de capture n’est créé en mode `inspect`. Une inspection positive sera suivie de la pause/capture, du redémarrage contrôlé puis de la copie indépendante et de l’import isolé.
+Le lanceur initial `checkpoint-schema30-ba7aed7e.sh inspect` est conservé comme historique. Après son refus personnel, utiliser uniquement le nouveau diagnostic ci-dessus ; ne pas relancer cette inspection à l’aveugle.
 
 Les tests utilisent exclusivement des comptes, clés, SQL et photos fictifs. Ils couvrent les fichiers privés réels, la création et la lecture de Gzip/TAR, les altérations, les liens, les substitutions de répertoire, les refus de droits, les annulations et l’effacement des secrets en mémoire. La CI Linux doit exercer le véritable FD hérité vers GNU tar ; l’environnement local dont procfs est simulé emploie uniquement un adaptateur de fixture identifié. Ces essais de code et le précontrôle hébergé ne remplacent pas l’inspection, la capture, la copie indépendante et la restauration réelles.
