@@ -4,13 +4,17 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 
 const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), "utf8");
-const [html, runtime, catalogue, model, controller, sessionClock] = await Promise.all([read("readiness.html"), read("i18n.js"), read("i18n-readiness.js"), read("readiness-model.js"), read("readiness.js"), read("session-clock.js")]);
+const [html, runtime, catalogue, model, controller, sessionClock, helpLinks] = await Promise.all([read("readiness.html"), read("i18n.js"), read("i18n-readiness.js"), read("readiness-model.js"), read("readiness.js"), read("session-clock.js"), read("help-link.js")]);
 const now = 1750000000000;
 const flush = async () => { for (let index = 0; index < 8; index += 1) await new Promise((resolve) => setImmediate(resolve)); };
 const deferred = () => { let resolve; const promise = new Promise((yes) => { resolve = yes; }); return { promise, resolve }; };
 const response = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
 const dictionaries = {};
-vm.runInNewContext(catalogue, { JessieI18n: { register(value) { Object.assign(dictionaries, value); } } });
+const catalogContext = {
+  JessieI18n: { register(value) { Object.assign(dictionaries, value); }, getLanguage: () => "fr", onChange() {} },
+  document: { querySelectorAll: () => [] },
+};
+for (const script of [helpLinks, catalogue]) vm.runInNewContext(script, catalogContext);
 
 class Element {
   constructor(tag = "div") {
@@ -31,7 +35,8 @@ class Element {
   hasAttribute(name) { return this.attributes.has(name); }
   removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(name, handler) { if (!this.events.has(name)) this.events.set(name, []); this.events.get(name).push(handler); }
-  matches(selector) { return selector.startsWith("[") ? this.hasAttribute(selector.slice(1, -1)) : this.tagName.toLowerCase() === selector.toLowerCase(); }
+  matches(selector) { if (selector === "a[data-help-link]") return this.tagName === "A" && this.hasAttribute("data-help-link");
+    return selector.startsWith("[") ? this.hasAttribute(selector.slice(1, -1)) : this.tagName.toLowerCase() === selector.toLowerCase(); }
   querySelectorAll(selector) { return this.children.flatMap((node) => [selector.split(",").some((part) => node.matches(part.trim())) ? node : null, ...node.querySelectorAll(selector)]).filter(Boolean); }
   closest(selector) { for (let node = this; node; node = node.parentElement) if (node.matches(selector)) return node; return null; }
 }
@@ -89,6 +94,7 @@ async function harness({ input = summary(), language = "fr", expiresAt = now + 2
       throw new Error("Unexpected synthetic request");
     } });
   vm.runInContext(runtime, context, { filename: "public/i18n.js" });
+  vm.runInContext(helpLinks, context, { filename: "public/help-link.js" });
   vm.runInContext(sessionClock, context, { filename: "public/session-clock.js" });
   vm.runInContext(catalogue, context, { filename: "public/i18n-readiness.js" });
   // An account value that happens to match a catalog key must still remain raw.

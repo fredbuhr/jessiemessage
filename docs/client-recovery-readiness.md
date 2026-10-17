@@ -1,6 +1,8 @@
 # Lot 0.39 — préparer la récupération de compte client
 
-**État : code livré et activé le 17 octobre 2026 à 18:28 Europe/Paris, réception personnelle client restante.** Runtime `b651d44ed5909173008d896e7175ecb7a4c1b703`, arbre `87f2a0357a992076e9b28decf18cd0aee7ec4108`, schéma 30, profil `messaging-photos-notify-recovery`, déploiement `primary-transition`. Le [compte rendu 0.39](client-recovery-activation.md) donne les preuves CI et hébergées. Les constats et prérequis ci-dessous conservent l’état de départ du runtime 0.38 `4433309f` ; les limites qui subsistent restent explicites. Aucun compte personnel n’a été réinitialisé.
+**Runtime actuel :** le [lot 0.40](help-contact.md) `5ea9c40a`, activé à 19:16 le 17 octobre 2026, conserve la récupération et ajoute l’aide. Les preuves datées 0.39 et l’acceptation du mot de passe ci-dessous restent acquises.
+
+**État : code livré et activé le 17 octobre 2026 à 18:28 Europe/Paris, parcours essayé accepté par le propriétaire à 18:52:47.** Runtime `b651d44ed5909173008d896e7175ecb7a4c1b703`, arbre `87f2a0357a992076e9b28decf18cd0aee7ec4108`, schéma 30, profil `messaging-photos-notify-recovery`, déploiement `primary-transition`. Le [compte rendu 0.39](client-recovery-activation.md) donne les preuves CI et hébergées. Les constats et prérequis ci-dessous conservent l’état de départ du runtime 0.38 `4433309f` ; les limites qui subsistent restent explicites. L’acceptation personnelle est consignée dans ce compte rendu ; les sondes opérateur précédentes étaient anonymes.
 
 Le métier, les routes, les formulaires et les tests de récupération existent déjà. L’activation n’est toutefois pas un simple changement de variable dans le Manager. Le lot proposé ajoute un profil explicite **`photos-notify-recovery`**, avec récupération **sur l’apex seulement**, en conservant recette pour les connexions et notifications existantes.
 
@@ -45,18 +47,18 @@ Ne pas passer au profil complet avec une clé CRM fictive. La couverture reste c
 
 Seule la validation du nouveau mot de passe révoque toutes les sessions du **client ciblé**, incrémente sa version d’identifiants et annule ses autres liens de récupération. Ce client doit ensuite se reconnecter normalement sur ses appareils ; le pont recette/apex ne rétablit pas un jeton révoqué. Les sessions administrateur et celles des autres clients restent inchangées côté SQL. Invitation, approbation, statut, échéance d’accès, conversations et photos sont conservés ; un accès expiré reste expiré.
 
-Dans le runtime de départ, la réponse réussie efface inconditionnellement le cookie client local. Le code 0.39 préparé supprime cet effacement : si le navigateur est connecté au client B mais termine une récupération du client A, B conserve son accès. Les sessions de A sont toujours révoquées en SQL ; le contrôle normal de session rejette et nettoie son ancien cookie lorsqu’il est présenté. Aucune session nouvelle n’est créée et le cookie administrateur reste inchangé.
+Dans le runtime de départ, la réponse réussie efface inconditionnellement le cookie client local. Le code 0.39 livré supprime cet effacement : si le navigateur est connecté au client B mais termine une récupération du client A, B conserve son accès. Les sessions de A sont toujours révoquées en SQL ; le contrôle normal de session rejette et nettoie son ancien cookie lorsqu’il est présenté. Aucune session nouvelle n’est créée et le cookie administrateur reste inchangé.
 
 Après un reset, les anciennes inscriptions Push du client restent stockées mais deviennent inéligibles par révocation/version. Après reconnexion, **Activer sur cet appareil** doit les rattacher à la nouvelle session. La permission du navigateur peut rester accordée ; aucune réactivation automatique des inscriptions n’existe actuellement. Les appareils administrateur ne sont pas concernés par ce reset client.
 
-## Vérifications et limites restantes
+## Vérifications prévues à la préparation et limites
 
 - Étendre les tests de profil, préflight et runtime : ancien profil inchangé, nouveau profil accepté, configurations incohérentes refusées et aucun démarrage pendant `check`.
 - Conserver les tests SQL/HTTP de neutralité des demandes, usage unique, expiration, courses reset/connexion, maintien des droits et préservation de l’administration. Ajouter la coexistence avec les deux origines et le rattachement Push après reconnexion.
 - Vérifier la capture/restauration avec le domaine reset peuplé avant activation, puis exécuter les cinq jobs CI de la révision exacte.
 - Ajouter un parcours Chrome sur les vrais fichiers : demande, nouveau mot de passe, réussite, lien consommé/expiré, erreurs réseau, français/anglais et écran étroit. Les contrôleurs synthétiques et la preuve historique du lot 0.9 ne suffisent pas à certifier cette activation.
 - Après démarrage, vérifier HTTPS, capacités, fichiers exacts, `no-store`, refus cross-origin, routes recette conservées et sessions existantes. Aucun reset n’est nécessaire pour ces sondes anonymes.
-- Faire ensuite une recette réelle avec le seul client de test : réception depuis `contact@jessiemessage.com`, lien apex, mot de passe modifié, ancienne connexion refusée, nouveau login et droits/photos conservés ; rattacher Push et vérifier que l’administration reste ouverte. Ne pas réinitialiser le compte administrateur.
+- Le propriétaire accepte le parcours essayé à 18:52:47 : « test mot de passe ok, continue ». Les scénarios détaillés restent des références en cas d’incident, sans demander de nouvelle recette globale. Ce retour ne détaille ni plateforme, ni rejeu du lien, ni Push après reset ou ensemble des appareils ; aucun reset administrateur n’est requis.
 
 Les quotas réseau utilisent `request.socket.remoteAddress`, sans accepter aveuglément les en-têtes de proxy. **Observer le pair réellement présenté par l’hébergement avant d’ajuster les limites** : plusieurs clients peuvent partager un même frontal. Les limites actuelles restent en place tant que cette observation n’établit pas le besoin d’un changement.
 
@@ -64,4 +66,4 @@ La file de récupération possède déjà une purge bornée de certains jobs apr
 
 Le repli désactive la fonction avec le schéma conservé. Il ne doit ni restaurer les anciens mots de passe, ni ressusciter les sessions révoquées, ni supprimer les nouvelles lignes de récupération. Dès que ces lignes existent, les outils de sauvegarde compatibles restent nécessaires même si la fonction est ensuite désactivée.
 
-Le [guide historique de récupération](client-recovery.md) doit être complété lors de la livraison : ses vingt-deux migrations et résultats 0.9 restent des preuves datées, pas l’état du runtime actuel. Le [plan courant](AUDIT-2026-10-17.md) et le [compte rendu de bascule](primary-origin-cutover.md) conservent les étapes déjà livrées.
+Le [guide historique de récupération](client-recovery.md) porte un encadré courant : ses vingt-deux migrations et résultats 0.9 restent des preuves datées, pas l’état du runtime actuel. Le [plan courant](AUDIT-2026-10-17.md) et le [compte rendu de bascule](primary-origin-cutover.md) conservent les étapes déjà livrées.

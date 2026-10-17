@@ -2,6 +2,8 @@
 
 Version applicative **0.19.0**, branche `feat/data-deletion-plan`, sur le lot [inventaire/export 0.17b](private-data-export.md). Adresse officielle : **contact@jessiemessage.com**. Ce lot ajoute un diagnostic opérateur privé en lecture seule et des régressions de compatibilité des historiques. Aucun exécuteur de suppression ni purge automatique n’est livré.
 
+**État courant — 17 octobre 2026, schéma 30 :** le code et les tests du diagnostic couvrent **29 catégories**, dont **22 rattachables au client**, **23 observations** et **40 clés étrangères `RESTRICT`** (38 relations distinctes entre tables). Les quatre observations ajoutées depuis le lot historique sont `notificationSubscriptionsEnabled`, `pushPending`, `pushSending` et `foreignPushBindings`. Sources : `server/data/policy.mjs`, `server/data/deletion-store.mjs`, `server/data/deletion.mjs` et `tests/data-deletion.test.mjs`. Le rapport reste exclusivement `simulationOnly: true`, `executable: false`, `retentionDecided: false` : **aucun exécuteur de suppression n’est livré**. Les nombres 27/20/19/36 et les historiques 25/27 ci-dessous restent les preuves datées de 0.17c ; ils ne décrivent plus l’ensemble courant.
+
 ## Produire le diagnostic
 
 Les conditions de l’[outil de données](private-data-export.md) restent applicables : opérateur habilité, base confirmée, client explicitement sélectionné deux fois, tous les producteurs arrêtés, nouveau répertoire privé hors dépôt et stockage média. `--offline` reste une déclaration humaine. Une transaction SQL ne prouve pas l’arrêt des producteurs ni la cohérence des fichiers externes.
@@ -18,11 +20,11 @@ Il produit `deletion-plan.json` et, après validation de la transaction et ferme
 
 ## Lecture du rapport
 
-Les 27 catégories reprennent les compteurs de l’inventaire. Les 20 catégories rattachables au client ont le traitement `review_subject_rows` ; les cinq catégories administrateur et les deux catégories globales restent `preserve_shared`, compteur `null`. `affectedCategories` compte les catégories rattachables dont le compteur est positif ; ce n’est pas un nombre de lignes ou de suppressions approuvées.
+Dans le rapport historique 0.17c, les 27 catégories reprenaient les compteurs de l’inventaire. Les 20 catégories alors rattachables au client ont le traitement `review_subject_rows` ; les cinq catégories administrateur et les deux catégories globales restent `preserve_shared`, compteur `null`. `affectedCategories` compte les catégories rattachables dont le compteur est positif ; ce n’est pas un nombre de lignes ou de suppressions approuvées.
 
-`candidateOrder` place les tables enfants avant leurs parents d’après les migrations validées, uniquement parmi les catégories rattachables. Chaque entrée reste `proposedAction: review`, `blocked: true`, même à zéro ligne. Les relations de tables ne remplacent pas une stratégie métier : elles n’autorisent pas à supprimer un destinataire de campagne ou un journal média isolément. Les 36 clés étrangères actuelles utilisent `RESTRICT` ; aucune cascade ni mise à `NULL` automatique ne résout ces dépendances.
+`candidateOrder` place les tables enfants avant leurs parents d’après les migrations validées, uniquement parmi les catégories rattachables. Chaque entrée reste `proposedAction: review`, `blocked: true`, même à zéro ligne. Les relations de tables ne remplacent pas une stratégie métier : elles n’autorisent pas à supprimer un destinataire de campagne ou un journal média isolément. Les 36 clés étrangères de cette livraison historique utilisent `RESTRICT` ; aucune cascade ni mise à `NULL` automatique ne résout ces dépendances.
 
-Les **19 observations** sont lues dans le même instantané `REPEATABLE READ`, en transaction `READ ONLY` :
+Les **19 observations historiques** ci-dessous étaient lues dans le même instantané `REPEATABLE READ`, en transaction `READ ONLY` :
 
 | Observation | Unité et portée |
 | --- | --- |

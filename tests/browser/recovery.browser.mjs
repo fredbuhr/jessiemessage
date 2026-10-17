@@ -10,7 +10,7 @@ import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 const token = "a".repeat(42) + "A";
 const password = "  Été fictif  ";
 const email = "synthetic-recovery@example.invalid";
-const files = ["recover.html", "recover.js", "recover-model.js", "recover.css", "admin-login.css", "i18n.js", "i18n-access.js", "i18n.css",
+const files = ["recover.html", "recover.js", "recover-model.js", "recover.css", "admin-login.css", "i18n.js", "help-link.js", "i18n-access.js", "i18n.css",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-32.png", "brand/icon-128.png"];
 const types = { js: "text/javascript; charset=utf-8", html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", png: "image/png", ico: "image/x-icon", webmanifest: "application/manifest+json" };
 const copy = {

@@ -119,7 +119,7 @@ async function transitionFixture() {
       }
       if (url.pathname.endsWith("/complete") && active.revokeBeforeComplete) sessions.delete(active.sourceToken);
       if (await handler(request, response)) return;
-      if (["/i18n.js", "/i18n-access.js"].includes(url.pathname)) {
+      if (["/i18n.js", "/help-link.js", "/i18n-access.js"].includes(url.pathname)) {
         response.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-store" });
         response.end(await readFile(new URL(`../../public${url.pathname}`, import.meta.url))); return;
       }

@@ -90,7 +90,7 @@ function controller(name, fetchHandler, { language = "fr", hash = "" } = {}) {
     sessionStorage: { getItem(key) { return storage.get(key) ?? null; }, setItem(key, value) { writes.push([key, value]); storage.set(key, String(value)); } },
     setTimeout(callback, milliseconds) { const id = ++timer; timers.set(id, { callback, milliseconds }); return id; }, clearTimeout(id) { timers.delete(id); },
     fetch(path, options = {}) { calls.push({ path, options }); return Promise.resolve().then(() => fetchHandler(path, options, calls)); } });
-  for (const script of ["i18n.js", "i18n-access.js", "session-clock.js"]) new Script(read(script), { filename: `public/${script}` }).runInContext(context);
+  for (const script of ["i18n.js", "help-link.js", "i18n-access.js", "session-clock.js"]) new Script(read(script), { filename: `public/${script}` }).runInContext(context);
   let source = read(`${name}.js`);
   if (name === "recover") source = source.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*"\/recover-model\.js";/, "const {$1} = __recoveryModel;");
   new Script(source, { filename: `public/${name}.js`, importModuleDynamically: async () => { throw new Error("optional feature unavailable in fixture"); } }).runInContext(context);
@@ -104,7 +104,11 @@ const user = (state = "pending", pseudonym = "Bienvenue.") => ({ user: { id: "a"
   access: { state, admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
 
 test("access and recovery catalogs cover every declared UI leaf and load before their controllers", () => {
-  let catalog; new Script(read("i18n-access.js")).runInNewContext({ JessieI18n: { register(value) { catalog = value; } } });
+  const catalog = {}, catalogContext = {
+    JessieI18n: { register(value) { Object.assign(catalog, value); }, getLanguage: () => "fr", onChange() {} },
+    document: { querySelectorAll: () => [] },
+  };
+  for (const script of ["help-link.js", "i18n-access.js"]) new Script(read(script)).runInNewContext(catalogContext);
   for (const page of ["access", "recover"]) {
     const html = read(`${page}.html`); const document = new Document(html);
     assert.ok(html.indexOf('src="/i18n.js"') < html.indexOf('src="/i18n-access.js"'));

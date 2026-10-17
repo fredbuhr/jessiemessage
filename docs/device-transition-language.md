@@ -4,7 +4,7 @@
 
 Le défaut est reproduit avant correction sur le service réel : le choix anglais de `/app` conduit encore à un pont en français. Le contrôleur ignorait le module de préférence partagé déjà utilisé par les autres pages.
 
-**Runtime courant :** le lot 0.39 `b651d44e`, activé à 18:28, conserve cette correction et ajoute la [récupération client sur l’adresse principale](client-recovery-activation.md). Les résultats ci-dessous restent les preuves datées de livraison du lot 0.38.
+**Runtime courant :** le lot 0.40 `5ea9c40a`, activé à 19:16, conserve cette correction, la [récupération client sur l’adresse principale](client-recovery-activation.md) et ajoute [l’aide FR/EN](help-contact.md). Les résultats ci-dessous restent les preuves datées de livraison du lot 0.38.
 
 ## Choix retenus
 
@@ -52,4 +52,4 @@ Le navigateur reprend ensuite l’anglais précédemment choisi sur `/app` dans 
 
 Le repli direct conserve `0c88f61b` et son lanceur, compatibles avec les deux origines et le schéma 30. Il perd la continuité de langue mais conserve la correction de reprise après coupure et l’affichage 0.37. Comme pour tout redémarrage du pont, les paquets en mémoire en cours sont invalidés ; reprendre depuis `/app` après un repli. Aucun retour SQL, clé ou DNS n’est nécessaire.
 
-Le [plan de récupération client 0.39](client-recovery-readiness.md) accompagne ce lot comme préparation future uniquement : profil explicite et compatibilité sauvegarde/restauration avant toute activation. La récupération client reste inactive.
+À la livraison 0.38, le [plan de récupération client 0.39](client-recovery-readiness.md) était une préparation future. Le lot est ensuite activé à 18:28 et son parcours essayé accepté par le propriétaire à 18:52:47 ; voir le [compte rendu courant et sa portée](client-recovery-activation.md).
