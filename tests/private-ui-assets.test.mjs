@@ -26,7 +26,7 @@ test("all private UI catalogues can coexist and each HTML source has an English 
     perCatalogue.set(name, own);
   }
   assert.ok(all.size > 500);
-  for (const [page, names] of [["access", ["access", "tools"]], ["recover", ["access"]], ["admin-login", ["admin"]],
+  for (const [page, names] of [["access", ["access"]], ["recover", ["access"]], ["admin-login", ["admin"]],
     ["chat", ["chat", "tools"]], ["broadcast", ["tools"]], ["readiness", ["readiness"]]]) {
     const html = await readFile(new URL(`../public/${page}.html`, import.meta.url), "utf8");
     const loaded = new Map(["help-link", ...names].flatMap((name) => [...perCatalogue.get(name)]));

@@ -32,7 +32,6 @@ let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersi
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
 let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
-let broadcastPreference = null;
 let notificationsPanel = null;
 let pendingNotification = globalThis.JessieNotificationLink?.read() ?? null;
 let notificationTask = null;
@@ -166,7 +165,6 @@ function clearPrivate() {
   olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
   mediaEnabled = false;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
-  broadcastPreference?.clear(); broadcastPreference = null; document.getElementById("broadcast-preference-host")?.remove();
   document.getElementById("readiness-nav")?.remove();
   stopPolling(); abortRequests(); expiryTimer?.(); expiryTimer = null;
   states.clear(); inbox.clear(); selected = null; ui.forget(el("conversations")); el("conversations").replaceChildren(); clearChat();
@@ -304,21 +302,14 @@ async function confirmOwner(ticket, owner, account = false) {
 }
 
 async function refreshBroadcastAccess() {
-  if (role === "client" && broadcastPreference) return;
+  if (role !== "admin") return;
   const ticket = snapshot();
   try {
-    if (role === "admin") {
-      const capability = await request("/api/broadcast/admin/session", { account: true });
-      if (!fresh(ticket, true) || capability.user?.role !== "admin" || document.getElementById("broadcast-nav")) return;
-      const link = document.createElement("a"); link.id = "broadcast-nav"; link.href = "/admin/broadcasts"; ui.text(link, "Diffusions");
-      document.getElementById("readiness-nav")?.append(link);
-    } else {
-      const module = await import("/broadcast-preference.js");
-      if (!fresh(ticket, true) || !ready || !visible()) return;
-      const host = document.createElement("div"); host.id = "broadcast-preference-host"; el("client-aside").append(host);
-      broadcastPreference = module.mountBroadcastPreference(host, { isCurrent: () => ticket.generation === generation && ready && !loggingOut });
-    }
-  } catch (error) { if (role === "admin" && !error.stale && error.status === 401) signOut(); }
+    const capability = await request("/api/broadcast/admin/session", { account: true });
+    if (!fresh(ticket, true) || capability.user?.role !== "admin" || document.getElementById("broadcast-nav")) return;
+    const link = document.createElement("a"); link.id = "broadcast-nav"; link.href = "/admin/broadcasts"; ui.text(link, "Diffusions");
+    document.getElementById("readiness-nav")?.append(link);
+  } catch (error) { if (!error.stale && error.status === 401) signOut(); }
 }
 function conversationPath(state) { return `${chatBase}/conversations/${state.id}`; }
 function errorText(error) {

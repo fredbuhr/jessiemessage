@@ -34,8 +34,6 @@ let recoveryCapabilityFailed = false;
 let recoveryCapabilityEpoch = 0;
 let submitEpoch = 0;
 let sessionRefreshEpoch = 0;
-let broadcastPreference = null;
-let broadcastPreferenceEpoch = 0;
 const controllers = new Set();
 const visible = () => document.visibilityState === "visible";
 const recoveryRetry = document.createElement("button"); recoveryRetry.id = "client-recovery-retry";
@@ -54,21 +52,11 @@ if (entries.length === 1 && /^[A-Za-z0-9_-]{43}$/.test(entries[0][1])) {
 history.replaceState(null, "", notificationReference ? `/access#notification=${notificationReference}` : "/access");
 
 function notice(message, error = false) { accessI18n.text(status, message); status.classList.toggle("is-error", error); }
-function clearBroadcastPreference() { broadcastPreferenceEpoch += 1; broadcastPreference?.clear(); broadcastPreference = null; element("broadcast-preference-host")?.remove(); }
 function invalidate() {
   generation += 1; recoveryCapabilityEpoch += 1; recoveryCapabilityPending = false;
   notificationsPanel?.clear(); notificationsPanel = null;
   cancelSessionCheck?.(); cancelSessionCheck = null;
-  for (const controller of controllers) controller.abort(); controllers.clear(); clearBroadcastPreference();
-}
-async function loadBroadcastPreference() {
-  const ticket = generation; const epoch = broadcastPreferenceEpoch;
-  try {
-    const module = await import("/broadcast-preference.js");
-    if (ticket !== generation || epoch !== broadcastPreferenceEpoch || connected.hidden || document.visibilityState !== "visible") return;
-    const host = document.createElement("div"); host.id = "broadcast-preference-host"; element("client-account-preferences").append(host);
-    broadcastPreference = module.mountBroadcastPreference(host, { isCurrent: () => ticket === generation && epoch === broadcastPreferenceEpoch && !connected.hidden });
-  } catch { /* An optional protected feature can be disabled without changing login. */ }
+  for (const controller of controllers) controller.abort(); controllers.clear();
 }
 function setBusy(value) { busy = value; for (const button of document.querySelectorAll("button")) if (button.getAttribute("data-jm-language") === null) button.disabled = value; }
 function validClientSession(session) {
@@ -143,7 +131,6 @@ function signedIn(session) {
       });
     }
   }
-  if (session.user.role === "client" && access.emailVerified) void loadBroadcastPreference();
 }
 function updateRecoveryLink({ allowLoad = false } = {}) {
   element("client-recovery-link").hidden = recoveryEnabled !== true || loginForm.hidden || !visible();
@@ -261,7 +248,6 @@ element("resend-form").addEventListener("submit", (event) => {
   });
 });
 async function logout(all) { await submit(async () => {
-  clearBroadcastPreference();
   await request(all ? "/api/access/logout-all" : "/api/access/logout", { mutation: true, authenticated: true });
   signedOut(all ? "Toutes tes sessions sont déconnectées." : "Tu es déconnecté.");
 }); }

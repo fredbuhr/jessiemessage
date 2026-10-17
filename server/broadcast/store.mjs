@@ -20,11 +20,6 @@ const timestamp = (value) => {
   const result = Date.parse(`${value.replace(" ", "T")}Z`); if (!Number.isSafeInteger(result) || result < 0) state(); return result;
 };
 const nullableDate = (value) => value === null ? null : timestamp(value);
-const version = (value, allowZero = true) => {
-  if (typeof value !== "string" || !/^(?:0|[1-9][0-9]{0,19})$/.test(value) || BigInt(value) > 18446744073709551615n || BigInt(value).toString() !== value || (!allowZero && value === "0")) input();
-  return value;
-};
-const storedVersion = (value) => { try { return version(String(value), false); } catch { state(); } };
 const count = (value) => { const result = Number(value); if (!Number.isSafeInteger(result) || result < 0) state(); return result; };
 const uint32 = (value) => { if (!Number.isSafeInteger(value) || value < 1 || value > 4294967295) input(); return value; };
 const activeClient = (user, now) => manuallyAdmittedClient(user, now, timestamp);
@@ -209,14 +204,8 @@ export async function assertBroadcastSchema(pool) {
 
 export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } = {}) {
   if (!pool || typeof pool.getConnection !== "function" || typeof mediaEnabled !== "boolean" || !chatStore
-    || ["withActor", "withPreferenceActor", "withBroadcastDelivery"].some((name) => typeof chatStore[name] !== "function")) input();
+    || ["withActor", "withBroadcastDelivery"].some((name) => typeof chatStore[name] !== "function")) input();
   const withAdmin = (value, operation) => { request(value); return chatStore.withActor({ role: "admin", tokenHash: value.tokenHash, now: value.now }, operation); };
-  const withClient = (value, operation) => { request(value); return chatStore.withPreferenceActor({ tokenHash: value.tokenHash, now: value.now }, operation); };
-  async function preference(connection, clientId) {
-    return (await connection.query("SELECT enabled, version, created_at, updated_at FROM broadcast_preferences WHERE user_id = ? FOR UPDATE", [clientId]))[0] ?? null;
-  }
-  const preferenceDto = (row) => row ? { enabled: Number(row.enabled) === 1, version: storedVersion(row.version), updatedAt: timestamp(row.updated_at) }
-    : { enabled: false, version: "0", updatedAt: null };
   async function campaignRow(connection, campaignId, adminId) {
     const row = (await connection.query("SELECT * FROM broadcast_campaigns WHERE id = ? AND admin_id = ? FOR UPDATE", [campaignId, adminId]))[0];
     if (!row) fail("BROADCAST_NOT_FOUND"); return row;
@@ -254,8 +243,6 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
     const authIds = new Set(auth.map((row) => row.user_id.toString("hex")));
     const conversations = await connection.query(`SELECT id, client_id, admin_id, created_at, closed_at FROM conversations
       WHERE id IN (${placeholders(conversationIds)}) ORDER BY id ASC FOR UPDATE`, conversationIds);
-    const prefs = await connection.query(`SELECT user_id, enabled FROM broadcast_preferences WHERE user_id IN (${placeholders(clientIds)}) ORDER BY user_id ASC FOR UPDATE`, clientIds);
-    const optedIn = new Set(prefs.filter((row) => Number(row.enabled) === 1).map((row) => row.user_id.toString("hex")));
     if (!(await media(connection, actor.id, mediaId, now))) fail("BROADCAST_MEDIA");
     const recipients = [];
     for (const conversationId of conversationIds) {
@@ -265,7 +252,6 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
       let reason = null;
       if (conv.closed_at !== null || timestamp(conv.created_at) > now) reason = "conversation_unavailable";
       else if (!activeClient(client, now) || !authIds.has(client.id.toString("hex"))) reason = "access_inactive";
-      else if (!optedIn.has(client.id.toString("hex"))) reason = "opted_out";
       recipients.push({ conversationId: conv.id, client: { id: client.id, pseudonym: client.pseudonym }, eligible: reason === null, reason,
         repeatMedia: await repeated(connection, conv.id, mediaId) });
     }
@@ -303,9 +289,6 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
         if (context.reason === "administrator_invalid") { await pause(connection, campaign.id, now); return false; }
         const compatible = context.client?.id.equals(job.clientId) && context.conversation?.id.equals(job.conversationId)
           && context.conversation.admin_id.equals(job.adminId) && context.conversation.client_id.equals(job.clientId);
-        // A reassigned or unavailable conversation never touches a preference
-        // belonging to a client whose user row was not locked by the hook.
-        const pref = compatible && context.canSend ? await preference(connection, job.clientId) : null;
         const recipient = (await connection.query("SELECT * FROM broadcast_recipients WHERE campaign_id = ? AND conversation_id = ? FOR UPDATE", [campaign.id, job.conversationId]))[0];
         if (!recipient || recipient.state !== "sending" || !recipient.lease_token?.equals(job.leaseToken)
           || timestamp(recipient.lease_until) <= now || !recipient.client_id.equals(job.clientId)
@@ -315,7 +298,6 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
         }
         if (!context.canSend || !activeClient(context.client, now)) { await terminal(connection, campaign.id, job.conversationId, "access_inactive", now); return false; }
         if (timestamp(campaign.expires_at) <= now) { await terminal(connection, campaign.id, job.conversationId, "expired", now); return false; }
-        if (!pref || Number(pref.enabled) !== 1) { await terminal(connection, campaign.id, job.conversationId, "opted_out", now); return false; }
         if (campaign.payload_encrypted !== job.payloadEncrypted || (Number(campaign.allow_repeat_media) === 1) !== job.allowRepeatMedia
           || (campaign.media_id === null ? job.mediaId !== null : !campaign.media_id.equals(job.mediaId))) state();
         return operation(connection, context, append, campaign, recipient);
@@ -323,23 +305,6 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
   }
   return Object.freeze({
     assertSchema: () => assertBroadcastSchema(pool),
-    async preferenceActor(value) {
-      return withClient(value, async (_connection, context) => ({ id: context.actor.id, pseudonym: context.actor.pseudonym, expiresAt: context.expiresAt }));
-    },
-    async getPreference(value) { return withClient(value, async (connection, context) => preferenceDto(await preference(connection, context.actor.id))); },
-    async savePreference({ tokenHash, now, enabled, expectedVersion }) {
-      if (typeof enabled !== "boolean") input(); version(expectedVersion);
-      return withClient({ tokenHash, now }, async (connection, context) => {
-        const previous = await preference(connection, context.actor.id), current = previous ? storedVersion(previous.version) : "0";
-        if (current !== expectedVersion) fail("BROADCAST_CONFLICT");
-        if (current === "18446744073709551615") fail("BROADCAST_LIMIT");
-        if (previous && timestamp(previous.updated_at) > now) state();
-        const next = String(BigInt(current) + 1n);
-        if (previous) await connection.query("UPDATE broadcast_preferences SET enabled = ?, version = ?, updated_at = ? WHERE user_id = ?", [enabled ? 1 : 0, next, sqlDate(now), context.actor.id]);
-        else await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [context.actor.id, enabled ? 1 : 0, next, sqlDate(now), sqlDate(now)]);
-        return { enabled, version: next, updatedAt: now };
-      });
-    },
     async preview({ tokenHash, now, conversationIds, mediaId = null }) {
       const selected = ids(conversationIds); if (mediaId !== null) bytes(mediaId);
       return withAdmin({ tokenHash, now }, (connection, context) => preview(connection, context, selected, mediaId));
@@ -446,7 +411,6 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
             if (context.reason === "administrator_invalid") { await pause(connection, campaign.id, now); return null; }
             const compatible = context.client?.id.equals(candidate.client_id) && context.conversation?.id.equals(candidate.conversation_id)
               && context.conversation.admin_id.equals(candidate.admin_id) && context.conversation.client_id.equals(candidate.client_id);
-            const pref = compatible && context.canSend ? await preference(connection, candidate.client_id) : null;
             const recipient = (await connection.query("SELECT * FROM broadcast_recipients WHERE campaign_id = ? AND conversation_id = ? FOR UPDATE", [campaign.id, candidate.conversation_id]))[0];
             if (!recipient || !recipient.client_id.equals(candidate.client_id)) return null;
             const expired = timestamp(campaign.expires_at) <= now;
@@ -457,7 +421,6 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
             if (!compatible || context.conversation.closed_at !== null || timestamp(context.conversation.created_at) > now) reason = "conversation_unavailable";
             else if (!context.canSend || !activeClient(context.client, now)) reason = "access_inactive";
             else if (expired) reason = "expired";
-            else if (!pref || Number(pref.enabled) !== 1) reason = "opted_out";
             else if (!(await media(connection, campaign.admin_id, campaign.media_id, now))) reason = "media_unavailable";
             else if (Number(campaign.allow_repeat_media) !== 1 && await repeated(connection, candidate.conversation_id, campaign.media_id, recipient.proposed_message_id)) reason = "repeat_media";
             if (reason !== null) { await terminal(connection, campaign.id, candidate.conversation_id, reason, now); return null; }

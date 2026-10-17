@@ -8,9 +8,6 @@ summary { color: #d8b999; font-size: 13px; cursor: pointer; line-height: 1.6; }
 summary:focus-visible { outline: 2px solid #d8b999; outline-offset: 4px; }
 details form { margin-top: 20px; }
 details .field-help { margin-bottom: 16px; }
-.broadcast-preference { margin-top: 24px; padding-top: 20px; border-top: 1px solid #554353; }
-.broadcast-preference h2 { font-size: 18px; }
-.broadcast-preference .button { margin-top: 14px; }
 
 #client-connected > .actions { margin-top: 24px; }
 #client-validity { margin-bottom: 20px; }

@@ -53,7 +53,7 @@ window.addEventListener("unhandledrejection", event => { window.__browserErrors.
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
 const fileNames = ["notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
-  "broadcast-preference.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
+  "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
 const contentTypes = { ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
@@ -199,6 +199,10 @@ test("Chrome mobile: every account control stays visible and separate with Notif
       for (const language of ["fr", "en"]) {
         if (language === "en") await page.click("[data-jm-language]");
         assert.equal(await page.execute("return document.documentElement.lang"), language);
+        if (path === "/messages") {
+          assert.equal(await page.execute("return !!document.querySelector('.broadcast-preference, #broadcast-preference-host, #broadcast-nav')"), false);
+          assert.equal(await page.execute("return performance.getEntriesByType('resource').some(entry => /\\/api\\/broadcast\\/|broadcast-preference\\.js/.test(new URL(entry.name).pathname))"), false, "the recipient workspace never loads broadcast settings or campaign metadata");
+        }
         const layout = await page.execute(`
           const controls = [...document.querySelectorAll('.topbar .brand, .topbar .account-nav > a, .topbar .account-nav > button')]
             .filter(node => !node.hidden).map(node => {

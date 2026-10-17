@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign } from "../public/broadcast-model.js";
-import { parseBroadcastPreference, createPreferenceState, clearPreference, preferenceTicket, currentPreference, acceptPreferenceSession, acceptPreference, preferenceSaveBody, mountBroadcastPreference } from "../public/broadcast-preference.js";
 import "../public/session-clock.js";
 
 const now = 1800000000000;
@@ -76,8 +75,8 @@ test("eligibility preview rejects missing, duplicate, foreign or contradictory r
   for (const input of inputs) assert.throws(() => acceptPreview(state, previewTicket(state), input), /invalid_preview/);
   assert.equal(state.preview, null);
 });
-test("consent or access failure blocks the entire explicit confirmation", () => {
-  const state = selected(); const input = preview(state); input.recipients[0].eligible = false; input.recipients[0].reason = "opted_out"; input.eligibleCount = 1;
+test("inactive access blocks the entire explicit confirmation", () => {
+  const state = selected(); const input = preview(state); input.recipients[0].eligible = false; input.recipients[0].reason = "access_inactive"; input.eligibleCount = 1;
   acceptPreview(state, previewTicket(state), input); state.acknowledged = true; assert.equal(canConfirmBroadcast(state, now), false); assert.equal(prepareCampaign(state, id(90), now), null);
 });
 test("a previously shared photo requires its own override followed by another explicit acknowledgment", () => {
@@ -144,117 +143,3 @@ test("older history responses cannot roll back delivery counts or repaint a canc
   assert.strictEqual(mergeCampaign(queued, running), running);
 });
 
-test("client diffusion preference defaults to opt-out and versions remain exact unsigned 64-bit strings", () => {
-  assert.deepEqual(parseBroadcastPreference({ enabled: false, version: "0", updatedAt: null }), { enabled: false, version: "0", updatedAt: null });
-  assert.equal(parseBroadcastPreference({ enabled: true, version: "18446744073709551615", updatedAt: now }).version, "18446744073709551615");
-  for (const version of [1, "01", "-1", "1\n", "1\r\n", " 1", "1e2", "18446744073709551616"]) assert.throws(() => parseBroadcastPreference({ enabled: true, version, updatedAt: now }));
-  for (const input of [{ enabled: true, version: "0", updatedAt: null }, { enabled: false, version: "1", updatedAt: null }, { enabled: "true", version: "1", updatedAt: now }]) assert.throws(() => parseBroadcastPreference(input));
-});
-test("only a current client session can load or save preferences and it need not have active chat gates", () => {
-  const state = createPreferenceState(); assert.equal(preferenceSaveBody(state, true, now), null);
-  let ticket = clearPreference(state, { visible: true }); assert.equal(acceptPreferenceSession(state, ticket, admin(), now), false);
-  ticket = clearPreference(state, { visible: true }); assert.equal(acceptPreferenceSession(state, ticket, client({ access: { state: "expired" } }), now), true);
-  acceptPreference(state, preferenceTicket(state), { enabled: false, version: "0", updatedAt: null });
-  const body = preferenceSaveBody(state, true, now); assert.deepEqual(body, { enabled: true, expectedVersion: "0" }); assert.equal(preferenceSaveBody(state, false, now), null);
-});
-test("conflict or CSRF refresh requirement requires a new GET and another explicit save", () => {
-  const state = createPreferenceState(); acceptPreferenceSession(state, clearPreference(state, { visible: true }), client(), now);
-  const ticket = preferenceTicket(state); acceptPreference(state, ticket, { enabled: true, version: "2", updatedAt: now }); state.refreshRequired = true;
-  assert.equal(preferenceSaveBody(state, false, now), null); acceptPreference(state, ticket, { enabled: false, version: "3", updatedAt: now + 1 });
-  assert.equal(state.busy, false); assert.deepEqual(preferenceSaveBody(state, true, now), { enabled: true, expectedVersion: "3" });
-});
-test("a hidden page or a changed client login cannot accept an older preference acknowledgment", () => {
-  const state = createPreferenceState(); acceptPreferenceSession(state, clearPreference(state, { visible: true }), client(), now); const ticket = preferenceTicket(state);
-  acceptPreference(state, ticket, { enabled: false, version: "0", updatedAt: null }); preferenceSaveBody(state, true, now);
-  assert.equal(acceptPreferenceSession(state, ticket, client({ csrf: "z".repeat(43) }), now), false); assert.equal(state.session, null); assert.equal(state.preference, null);
-  assert.equal(acceptPreference(state, ticket, { enabled: true, version: "1", updatedAt: now }), false);
-  clearPreference(state); assert.equal(currentPreference(state, ticket), false);
-});
-
-class FakeNode extends EventTarget {
-  constructor(tag) { super(); this.tagName = tag; this.children = []; this.hidden = false; this.disabled = false; this.checked = false; this.isConnected = true; this.textContent = ""; this.classList = { toggle() {} }; }
-  append(...nodes) { for (const item of nodes) { item.parentNode = this; this.children.push(item); } }
-  setAttribute() {}
-  remove() { this.isConnected = false; if (this.parentNode) this.parentNode.children = this.parentNode.children.filter((item) => item !== this); }
-}
-function descendants(root) { return [root, ...root.children.flatMap(descendants)]; }
-const flush = async () => { for (let index = 0; index < 10; index += 1) await new Promise((resolve) => setImmediate(resolve)); };
-function browserFixture(handler) {
-  const originals = { document: globalThis.document, window: globalThis.window, fetch: globalThis.fetch };
-  const document = Object.assign(new EventTarget(), { visibilityState: "visible", createElement: (tag) => new FakeNode(tag) }); const window = new EventTarget(); const calls = [];
-  globalThis.document = document; globalThis.window = window;
-  globalThis.fetch = async (path, options) => { calls.push({ path, options }); return handler(path, options); };
-  const response = (data, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => data });
-  const container = new FakeNode("div");
-  return { document, container, calls, response, restore() { Object.assign(globalThis, originals); }, find: (tag) => descendants(container).filter((item) => item.tagName === tag) };
-}
-const liveClient = () => client({ expiresAt: Date.now() + 3600000 });
-
-test("preference mount clears private controls on hide and ignores a late network result", async () => {
-  let release; let fixture;
-  fixture = browserFixture(async (path) => path.endsWith("/session") ? fixture.response(liveClient()) : new Promise((resolve) => { release = () => resolve(fixture.response({ enabled: true, version: "7", updatedAt: now })); }));
-  let ui;
-  try {
-    ui = mountBroadcastPreference(fixture.container); await flush(); assert.equal(fixture.calls.length, 2);
-    fixture.document.visibilityState = "hidden"; fixture.document.dispatchEvent(new Event("visibilitychange")); release(); await flush();
-    assert.equal(fixture.container.children[0].hidden, true); assert.equal(fixture.find("input")[0].checked, false); assert.equal(fixture.find("form")[0].hidden, true);
-    assert.equal(fixture.calls.some((call) => call.options.method === "POST"), false);
-  } finally { ui?.clear(); fixture.restore(); }
-});
-test("preference mount does not automatically repeat a conflicting POST and reload requires an explicit save", async () => {
-  let fixture; let version = "2";
-  fixture = browserFixture(async (path, options) => path.endsWith("/session") ? fixture.response(liveClient()) : options.method === "POST" ? fixture.response({ error: "record_changed" }, 409) : fixture.response({ enabled: false, version, updatedAt: now }));
-  let ui;
-  try {
-    ui = mountBroadcastPreference(fixture.container); await flush(); fixture.find("input")[0].checked = true;
-    fixture.find("form")[0].dispatchEvent(new Event("submit", { cancelable: true })); await flush(); assert.equal(fixture.calls.filter((call) => call.options.method === "POST").length, 1);
-    assert.equal(fixture.find("button")[0].disabled, true); fixture.find("form")[0].dispatchEvent(new Event("submit", { cancelable: true })); await flush();
-    assert.equal(fixture.calls.filter((call) => call.options.method === "POST").length, 1);
-    version = "3"; await ui.reload(); await flush(); assert.equal(fixture.calls.filter((call) => call.options.method === "POST").length, 1); assert.equal(fixture.find("button")[0].disabled, false);
-  } finally { ui?.clear(); fixture.restore(); }
-});
-test("clearing a preference mount aborts current work and cannot reattach its private controls", async () => {
-  let release; let fixture;
-  fixture = browserFixture(async () => new Promise((resolve) => { release = () => resolve(fixture.response(liveClient())); }));
-  let ui;
-  try {
-    ui = mountBroadcastPreference(fixture.container); assert.equal(fixture.calls.length, 1); ui.clear(); assert.equal(fixture.calls[0].options.signal.aborted, true); release(); await flush();
-    assert.equal(fixture.container.children.length, 0); fixture.document.dispatchEvent(new Event("visibilitychange")); await flush(); assert.equal(fixture.calls.length, 1);
-  } finally { ui?.clear(); fixture.restore(); }
-});
-
-for (const change of ["account", "login"]) test(`preference bootstrap rejects a private read under a changed ${change} before showing a choice`, async () => {
-  let resolveProof; const proof = new Promise((resolve) => { resolveProof = resolve; });
-  let fixture; let ui; let authCalls = 0; let reads = 0;
-  const original = liveClient(), replacement = { ...original, user: { ...original.user, id: change === "account" ? id(777) : original.user.id }, csrf: "z".repeat(43) };
-  fixture = browserFixture(async (path) => {
-    if (path.endsWith("/session")) {
-      authCalls += 1;
-      return authCalls === 1 ? fixture.response(original) : authCalls === 2 ? proof : fixture.response(replacement);
-    }
-    return fixture.response({ enabled: ++reads === 1, version: String(reads), updatedAt: now });
-  });
-  try {
-    ui = mountBroadcastPreference(fixture.container); await flush();
-    assert.equal(authCalls, 2); assert.equal(fixture.find("form")[0].hidden, true); assert.equal(fixture.find("input")[0].checked, false);
-    resolveProof(fixture.response(replacement)); await flush();
-    assert.equal(reads, 2); assert.equal(fixture.find("form")[0].hidden, false); assert.equal(fixture.find("input")[0].checked, false);
-    assert.equal(fixture.calls.filter((call) => call.options.method === "POST").length, 0);
-  } finally { ui?.clear(); fixture.restore(); }
-});
-
-test("a preference final session proof arriving after hide cannot restore the private choice", async () => {
-  let resolveProof; const proof = new Promise((resolve) => { resolveProof = resolve; });
-  let fixture; let ui; let authCalls = 0; const session = liveClient();
-  fixture = browserFixture(async (path) => path.endsWith("/session")
-    ? ++authCalls === 1 ? fixture.response(session) : proof
-    : fixture.response({ enabled: true, version: "1", updatedAt: now }));
-  try {
-    ui = mountBroadcastPreference(fixture.container); await flush(); assert.equal(authCalls, 2);
-    fixture.document.visibilityState = "hidden"; fixture.document.dispatchEvent(new Event("visibilitychange"));
-    const count = fixture.calls.length; resolveProof(fixture.response(session)); await flush();
-    assert.equal(fixture.calls.length, count); assert.equal(fixture.container.children[0].hidden, true);
-    assert.equal(fixture.find("form")[0].hidden, true); assert.equal(fixture.find("input")[0].checked, false);
-    assert.equal(fixture.calls.some((call) => call.options.method === "POST"), false);
-  } finally { ui?.clear(); fixture.restore(); }
-});

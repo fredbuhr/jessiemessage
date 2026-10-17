@@ -1,6 +1,6 @@
 const ID = /^[0-9a-f]{32}$/;
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
-const reasons = new Set([null, "access_inactive", "opted_out", "conversation_unavailable"]);
+const reasons = new Set([null, "access_inactive", "conversation_unavailable"]);
 export const recipientNames = Object.freeze({ pending: "En attente", sending: "En cours", delivered: "Remis", skipped: "Ignoré", cancelled: "Annulé", failed: "Échec" });
 export const campaignNames = Object.freeze({ queued: "En attente", running: "En cours", completed: "Terminée", cancelled: "Annulée", paused: "Interrompue" });
 export const reasonNames = Object.freeze({ access_inactive: "Accès non actif", opted_out: "Diffusions non acceptées", conversation_unavailable: "Conversation indisponible", media_unavailable: "Photo indisponible", repeat_media: "Photo déjà partagée", expired: "Délai d’envoi dépassé", administrator_invalid: "Autorisation de Jessie à renouveler", processing_failed: "Envoi non abouti", cancelled: "Annulé par Jessie" });

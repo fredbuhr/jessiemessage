@@ -27,7 +27,7 @@ const sqlDate = (value) => new Date(value).toISOString().replace("T", " ").repla
 const hex = (value) => value.toString("hex");
 const newId = () => hex(randomBytes(16));
 
-test("real HTTP targeted broadcasts retain individual consent and durable ordinary chat delivery (synthetic disposable database only)", {
+test("real HTTP targeted broadcasts require active access and retain durable ordinary chat delivery (synthetic disposable database only)", {
   skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.", timeout: 180000,
 }, async (t) => {
   const options = databaseOptions();
@@ -135,13 +135,10 @@ test("real HTTP targeted broadcasts retain individual consent and durable ordina
       assert.equal(result.status, 200, JSON.stringify(result.body));
       return result.body;
     }
-    async function preference(client, enabledValue, expectedVersion) {
-      return request(preferencePath, { method: "POST", headers: headersFor(sessions[client.kind]), body: { enabled: enabledValue, expectedVersion } });
-    }
     let firstCampaign;
     let firstInput;
 
-    await t.test("real MFA and client logins preserve separate roles and opt-out defaults", async () => {
+    await t.test("real MFA and client logins preserve separate roles without a client broadcast surface", async () => {
       await loginAdmin();
       for (const client of Object.values(clients).filter((value) => value.kind !== "foreign")) {
         const result = await request("/api/access/login", { method: "POST", body: { email: client.email, password: clientPassword } });
@@ -149,16 +146,15 @@ test("real HTTP targeted broadcasts retain individual consent and durable ordina
         assert.equal(result.body.access.state, ["pending", "expired"].includes(client.kind) ? client.kind : "active");
         sessions[client.kind] = { cookie: result.headers.get("set-cookie").split(";")[0], csrf: result.body.csrf };
         const initial = await request(preferencePath, { headers: headersFor(sessions[client.kind]) });
-        assert.equal(initial.status, 200);
-        assert.deepEqual(initial.body, { enabled: false, version: "0", updatedAt: null });
+        assert.equal(initial.status, 404);
       }
-      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM broadcast_preferences"))[0].count), 0, "preference reads must not create consent");
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM broadcast_preferences"))[0].count), 0, "retired routes must not create preference rows");
       assert.equal((await request(adminPath("session"), { headers: headersFor(adminSession) })).body.mediaEnabled, true);
       for (const headers of [{}, headersFor(sessions.a), { Cookie: `__Host-jessie_session=${sessions.a.cookie.split("=")[1]}` }]) {
         assert.equal((await request(adminPath("session"), { headers })).status, 401);
         assert.equal((await request(adminPath("campaigns"), { headers })).status, 401);
       }
-      assert.equal((await request(preferencePath, { headers: headersFor(adminSession) })).status, 401);
+      assert.equal((await request(preferencePath, { headers: headersFor(adminSession) })).status, 404);
     });
 
     await t.test("protected administrator sources and all mutations require the current role, origin and CSRF", async () => {
@@ -171,25 +167,20 @@ test("real HTTP targeted broadcasts retain individual consent and durable ordina
       const previewBody = { conversationIds: [hex(clients.a.conversationId)], mediaId: null };
       assert.equal((await request(adminPath("preview"), { method: "POST", headers: { Cookie: adminSession.cookie }, body: previewBody })).status, 403);
       assert.equal((await request(adminPath("preview"), { method: "POST", headers: { ...headersFor(adminSession), Origin: "https://foreign.invalid" }, body: previewBody })).status, 403);
-      assert.equal((await request(preferencePath, { method: "POST", headers: { Cookie: sessions.a.cookie }, body: { enabled: true, expectedVersion: "0" } })).status, 403);
-      assert.equal((await request(preferencePath, { method: "POST", headers: headersFor(sessions.a), body: { enabled: true, expectedVersion: "0", clientId: hex(clients.b.id) } })).status, 400);
-      const optedOut = await request(adminPath("preview"), { method: "POST", headers: headersFor(adminSession), body: previewBody });
-      assert.equal(optedOut.status, 200);
-      assert.equal(optedOut.body.eligibleCount, 0);
-      assert.equal(optedOut.body.recipients[0].reason, "opted_out");
-      assert.equal((await request(adminPath("campaigns"), { method: "POST", headers: headersFor(adminSession), body: campaignInput([clients.a]) })).status, 409);
+      assert.equal((await request(preferencePath, { method: "POST", headers: { Cookie: sessions.a.cookie }, body: { enabled: true, expectedVersion: "0" } })).status, 405);
+      assert.equal((await request(preferencePath, { method: "POST", headers: headersFor(sessions.a), body: { enabled: true, expectedVersion: "0", clientId: hex(clients.b.id) } })).status, 405);
+      const eligible = await request(adminPath("preview"), { method: "POST", headers: headersFor(adminSession), body: previewBody });
+      assert.equal(eligible.status, 200);
+      assert.equal(eligible.body.eligibleCount, 1);
+      assert.equal(eligible.body.recipients[0].reason, null);
+      assert.equal((await request(adminPath("campaigns"), { method: "POST", headers: headersFor(adminSession), body: campaignInput([clients.pending]) })).status, 409);
     });
 
-    await t.test("only the client can opt in, including limited accounts, with optimistic consent versions", async () => {
-      for (const client of Object.values(clients).filter((value) => value.kind !== "foreign")) {
-        const result = await preference(client, true, "0");
-        assert.equal(result.status, 200, client.kind);
-        assert.equal(result.body.enabled, true);
-        assert.equal(result.body.version, "1");
-        assert.equal(result.body.updatedAt, now);
+    await t.test("active access is sufficient while pending, expired and foreign conversations remain unavailable", async () => {
+      await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 0, 1, ?, ?)", [clients.a.id, sqlDate(now), sqlDate(now)]);
+      for (const path of ["/broadcast-preference.js", "/api/broadcast/client/session", preferencePath]) {
+        for (const headers of [{}, headersFor(sessions.a), headersFor(adminSession)]) assert.equal((await request(path, { headers })).status, 404, path);
       }
-      assert.equal((await preference(clients.a, false, "0")).status, 409);
-      assert.equal((await request(preferencePath, { headers: headersFor(sessions.a) })).body.enabled, true);
       for (const client of [clients.pending, clients.expired]) {
         assert.equal((await request("/api/chat/client/conversation", { headers: headersFor(sessions[client.kind]) })).status, 403);
       }
@@ -271,23 +262,22 @@ test("real HTTP targeted broadcasts retain individual consent and durable ordina
       assert.equal(await countMessages(clients.b), 1);
     });
 
-    await t.test("opt-out and revocation after confirmation prevent remaining deliveries while direct chat still works", async () => {
+    await t.test("historical disabled preferences permit delivery while revocation stops the remaining recipient", async () => {
       const campaign = await create(campaignInput([clients.a, clients.revokeLater]));
-      assert.equal((await preference(clients.a, false, "1")).status, 200);
       const revoked = await request(`/api/admin/clients/${hex(clients.revokeLater.id)}/revoke`, { method: "POST", headers: headersFor(adminSession), body: {} });
       assert.equal(revoked.status, 200);
       await worker.runOnce();
       const stopped = await detail(campaign);
-      assert.equal(stopped.counts.delivered, 0);
-      assert.equal(stopped.counts.skipped, 2);
-      assert.equal(stopped.recipients.find((recipient) => recipient.conversationId === hex(clients.a.conversationId)).reason, "opted_out");
+      assert.equal(stopped.counts.delivered, 1);
+      assert.equal(stopped.counts.skipped, 1);
+      assert.equal(stopped.recipients.find((recipient) => recipient.conversationId === hex(clients.a.conversationId)).reason, null);
       assert.equal(stopped.recipients.find((recipient) => recipient.conversationId === hex(clients.revokeLater.conversationId)).state, "skipped");
-      assert.equal(await countMessages(clients.a), 1);
-      assert.equal(await countMessages(clients.revokeLater), 0);
-      assert.equal((await request(preferencePath, { headers: headersFor(sessions.revokeLater) })).status, 401);
-      const direct = await request(messagesPath(clients.a, "admin"), { method: "POST", headers: headersFor(adminSession), body: { clientMessageId: newId(), body: "A direct individual reply remains available after broadcast opt-out." } });
-      assert.equal(direct.status, 201);
       assert.equal(await countMessages(clients.a), 2);
+      assert.equal(await countMessages(clients.revokeLater), 0);
+      assert.equal((await request(preferencePath, { headers: headersFor(sessions.revokeLater) })).status, 404);
+      const direct = await request(messagesPath(clients.a, "admin"), { method: "POST", headers: headersFor(adminSession), body: { clientMessageId: newId(), body: "A direct individual reply remains available after an ordinary queued delivery." } });
+      assert.equal(direct.status, 201);
+      assert.equal(await countMessages(clients.a), 3);
     });
 
     await t.test("access expiry is rechecked after confirmation before any chat insertion", async () => {
@@ -299,7 +289,7 @@ test("real HTTP targeted broadcasts retain individual consent and durable ordina
       assert.equal(stopped.counts.skipped, 1);
       assert.equal(stopped.counts.delivered, 0);
       assert.equal(await countMessages(clients.expireLater), 0);
-      assert.equal((await request(preferencePath, { headers: headersFor(sessions.expireLater) })).status, 200, "expired access still permits managing consent");
+      assert.equal((await request(preferencePath, { headers: headersFor(sessions.expireLater) })).status, 404, "the preference route is retired regardless of access state");
     });
 
     await t.test("cancellation wins over an already leased recipient and never inserts a delayed message", async () => {
