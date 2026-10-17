@@ -13,6 +13,8 @@ const TAG_FIELDS = ["databaseTag", "rootPathTag", "rootPhysicalTag", "rootFinger
 const HEX = /^[a-f0-9]{64}$/;
 const forbiddenKeys = new Set(["__proto__", "constructor", "prototype"]);
 const APPLICATION_PROFILE = "messaging-photos-notify-application";
+const RECOVERY_PROFILE = "messaging-photos-notify-recovery";
+const RECOVERY_APPLICATION_PROFILE = "messaging-photos-notify-recovery-application";
 
 export class BackupManifestError extends Error {
   constructor(code = "BACKUP_MANIFEST_INVALID") {
@@ -70,7 +72,7 @@ const instant = (value) => { if (!Number.isSafeInteger(value) || value < 0 || va
 const profileKeyNames = (profile) => {
   if (profile === "messaging-photos") return KEY_NAMES.slice(0, 4);
   if (profile === "full") return KEY_NAMES;
-  if (profile === "messaging-photos-notify" || profile === APPLICATION_PROFILE) return [...KEY_NAMES.slice(0, 4), "notificationKey"];
+  if (["messaging-photos-notify", APPLICATION_PROFILE, RECOVERY_PROFILE, RECOVERY_APPLICATION_PROFILE].includes(profile)) return [...KEY_NAMES.slice(0, 4), "notificationKey"];
   if (profile === "full-notify") return [...KEY_NAMES, "notificationKey"];
   fail();
 };
@@ -114,11 +116,13 @@ function canaryFields(value, name) {
 }
 function manifestValue(manifest) {
   const result = safeJson(manifest);
-  const profiled = result.version === 2 || result.version === 3 || result.version === 4;
+  const profiled = [2, 3, 4, 5, 6].includes(result.version);
   exact(result, ["version", "payload", "signature", ...(profiled ? ["profile"] : [])]);
-  if (![1, 2, 3, 4].includes(result.version) || result.version === 2 && result.profile !== "messaging-photos"
+  if (![1, 2, 3, 4, 5, 6].includes(result.version) || result.version === 2 && result.profile !== "messaging-photos"
     || result.version === 3 && !["messaging-photos-notify", "full-notify"].includes(result.profile)
     || result.version === 4 && result.profile !== APPLICATION_PROFILE
+    || result.version === 5 && result.profile !== RECOVERY_PROFILE
+    || result.version === 6 && result.profile !== RECOVERY_APPLICATION_PROFILE
     || typeof result.signature !== "string" || !HEX.test(result.signature)) fail();
   exact(result.payload, ["createdAt", "identity", "snapshot", "canaries"]);
   instant(result.payload.createdAt); identityValue(result.payload.identity);
@@ -131,10 +135,12 @@ function manifestValue(manifest) {
 }
 const envelope = (profile) => profile === "messaging-photos" ? { version: 2, profile }
   : ["messaging-photos-notify", "full-notify"].includes(profile) ? { version: 3, profile }
-    : profile === APPLICATION_PROFILE ? { version: 4, profile } : { version: 1 };
+    : profile === APPLICATION_PROFILE ? { version: 4, profile }
+      : profile === RECOVERY_PROFILE ? { version: 5, profile }
+        : profile === RECOVERY_APPLICATION_PROFILE ? { version: 6, profile } : { version: 1 };
 function snapshotScope(snapshot, profile) {
   plain(snapshot);
-  if (profile === APPLICATION_PROFILE) {
+  if ([APPLICATION_PROFILE, RECOVERY_APPLICATION_PROFILE].includes(profile)) {
     if (snapshot.version !== 2 || snapshot.counts?.tables !== 30) fail();
     validateApplicationCoverage(snapshot.coverage);
   } else if (snapshot.version === 2 || Object.hasOwn(snapshot, "coverage")) {

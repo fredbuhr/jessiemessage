@@ -10,6 +10,7 @@ import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
 import { createConfiguredServer } from "../server/index.mjs";
+import { checkMessagingSchema } from "../scripts/start-private-messaging.mjs";
 import { newToken, tokenDigest, csrfToken } from "../server/auth/crypto.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 
@@ -42,6 +43,13 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
   const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
   const allowed = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let bootstrapPool, runtime, mediaRoot;
+  async function closeRuntime() {
+    if (!runtime) return;
+    runtime.server.closeAllConnections();
+    await new Promise(resolveRequest => runtime.server.close(() => resolveRequest()));
+    await runtime.mailWorker?.close(); await runtime.diagnostics?.close(); await runtime.pool?.end();
+    runtime = null;
+  }
   // Deliberately differ from wall time: both entries must use the runtime clock.
   const now = Date.UTC(2024, 0, 1), raw = { admin: newToken(), client: newToken() }, users = { admin: id(), client: id() };
   async function reset() {
@@ -160,12 +168,103 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
       const current = await request(port, primary, "/api/notifications/client/status", { method: "POST", cookie: cookie("client"), csrf: csrfToken(raw.client), body: { endpoint: subscription.endpoint } });
       assert.equal(current.status, 200); assert.equal(current.json().subscriptionId, saved.json().subscriptionId);
     });
+
+    await t.test("the existing deployed profile offers no recovery routes on either authority", async () => {
+      for (const origin of [primary, recipe]) for (const path of ["/recover", "/api/access/recovery/capabilities"]) {
+        assert.equal((await request(port, origin, path)).status, 404);
+      }
+    });
+
+    await closeRuntime();
+    const recoveryEnv = { ...env, JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1" };
+    const credentials = async () => ({
+      versions: await connection.query("SELECT user_id, credential_version FROM client_auth_state ORDER BY user_id"),
+      sessions: await connection.query("SELECT id, user_id, token_hash, revoked_at FROM sessions ORDER BY id"),
+      passwords: await connection.query("SELECT id, password_hash FROM users ORDER BY id"),
+    });
+    const credentialsBefore = await credentials();
+
+    await t.test("recovery schema preflight reads both physical tables without starting services or changing credentials", async () => {
+      await checkMessagingSchema(recoveryEnv);
+      for (const table of ["client_password_resets", "password_reset_outbox"]) {
+        await connection.query(`RENAME TABLE ${table} TO migration_probe`);
+        try { await assert.rejects(checkMessagingSchema(recoveryEnv), { code: "PRIVATE_MESSAGING_SCHEMA" }); }
+        finally { await connection.query(`RENAME TABLE migration_probe TO ${table}`); }
+      }
+      await checkMessagingSchema(recoveryEnv);
+      assert.deepEqual(await credentials(), credentialsBefore);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM client_password_resets"))[0].n), 0);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM password_reset_outbox"))[0].n), 0);
+    });
+
+    runtime = await createConfiguredServer(recoveryEnv, { requestOrigin: primary, deviceTransition: true, recovery: true, clock: () => now });
+    // Full store/service/transport factories have run; delivery is then stopped
+    // before listening so this disposable rehearsal never sends SMTP or Push.
+    await runtime.mailWorker.stop();
+    assert.equal(runtime.server.listeners("listening").filter(callback => !nativeListening.has(callback)).length, 1);
+    assert.deepEqual(await credentials(), credentialsBefore, "feature activation alone cannot revoke sessions or change passwords");
+    await new Promise(resolveRequest => runtime.server.listen(0, "127.0.0.1", resolveRequest));
+    const recoveryPort = runtime.server.address().port;
+
+    await t.test("recovery is available only at the primary authority while both ordinary sessions remain connected", async () => {
+      for (const path of ["/recover", "/recover.js", "/recover-model.js", "/recover.css", "/api/access/recovery/capabilities"]) {
+        const active = await request(recoveryPort, primary, path), legacy = await request(recoveryPort, recipe, path);
+        assert.equal(active.status, 200); assert.equal(active.headers["cache-control"], "no-store");
+        assert.equal(legacy.status, 404);
+      }
+      for (const origin of [primary, recipe]) {
+        for (const role of ["admin", "client"]) {
+          assert.equal((await request(recoveryPort, origin, role === "admin" ? "/api/auth/session" : "/api/access/session", { cookie: cookie(role) })).status, 200);
+        }
+        const readiness = await request(recoveryPort, origin, "/api/admin/readiness", { cookie: cookie("admin") });
+        assert.equal(readiness.status, 200); assert.equal(readiness.json().features.passwordRecovery, origin === primary);
+        assert.equal(readiness.json().features.clientFiles, false); assert.equal(readiness.json().features.broadcasts, false);
+        assert.deepEqual(readiness.json().operations.workers.map(worker => worker.name).sort(), ["notifications", "recovery", "verification"]);
+      }
+      assert.deepEqual(await credentials(), credentialsBefore);
+    });
+
+    await t.test("requests queue only eligible client mail and never change either role's passwords, versions or sessions", async () => {
+      const path = "/api/access/recovery/request", email = "device-transition-client@example.invalid";
+      const rejected = await request(recoveryPort, primary, path, { method: "POST", body: { email }, extra: { Origin: recipe } });
+      assert.equal(rejected.status, 403);
+      const legacy = await request(recoveryPort, recipe, path, { method: "POST", body: { email } });
+      assert.equal(legacy.status, 405);
+      for (const candidate of ["device-transition-admin@example.invalid", "unknown@example.invalid", email]) {
+        const response = await request(recoveryPort, primary, path, { method: "POST", body: { email: candidate }, cookie: `${cookie("admin")}; ${cookie("client")}` });
+        assert.equal(response.status, 202); assert.deepEqual(response.json(), { status: "accepted" });
+        assert.equal(response.headers["set-cookie"], undefined);
+      }
+      assert.deepEqual(await credentials(), credentialsBefore);
+      const resets = await connection.query("SELECT user_id, credential_version, created_at, expires_at, consumed_at, revoked_at FROM client_password_resets");
+      assert.equal(resets.length, 1); assert.deepEqual(resets[0].user_id, users.client);
+      assert.equal(Number(resets[0].credential_version), 1); assert.equal(resets[0].consumed_at, null); assert.equal(resets[0].revoked_at, null);
+      const storedTime = value => value instanceof Date ? value.getTime() : Date.parse(`${value.replace(" ", "T")}Z`);
+      assert.equal(storedTime(resets[0].created_at), now); assert.equal(storedTime(resets[0].expires_at), now + 1800000);
+      const jobs = await connection.query("SELECT recipient_user_id, payload_encrypted, status, attempts FROM password_reset_outbox");
+      assert.equal(jobs.length, 1); assert.deepEqual(jobs[0].recipient_user_id, users.client);
+      assert.equal(jobs[0].status, "pending"); assert.equal(Number(jobs[0].attempts), 0);
+      assert.ok(!jobs[0].payload_encrypted.includes(email));
+    });
+
+    await closeRuntime();
+    runtime = await createConfiguredServer(env, { requestOrigin: primary, deviceTransition: true, clock: () => now });
+    await runtime.mailWorker.stop();
+    await new Promise(resolveRequest => runtime.server.listen(0, "127.0.0.1", resolveRequest));
+    await t.test("disabling recovery leaves queued data intact and preserves both authority sessions", async () => {
+      const rollbackPort = runtime.server.address().port;
+      for (const origin of [primary, recipe]) {
+        assert.equal((await request(rollbackPort, origin, "/api/access/recovery/capabilities")).status, 404);
+        for (const role of ["admin", "client"]) {
+          assert.equal((await request(rollbackPort, origin, role === "admin" ? "/api/auth/session" : "/api/access/session", { cookie: cookie(role) })).status, 200);
+        }
+      }
+      assert.deepEqual(await credentials(), credentialsBefore);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM client_password_resets"))[0].n), 1);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS n FROM password_reset_outbox WHERE status = 'pending'"))[0].n), 1);
+    });
   } finally {
-    if (runtime) {
-      runtime.server.closeAllConnections();
-      await new Promise(resolveRequest => runtime.server.close(() => resolveRequest()));
-      await runtime.mailWorker?.close(); await runtime.diagnostics?.close(); await runtime.pool?.end();
-    }
+    await closeRuntime();
     await bootstrapPool?.end(); await reset(); await connection.end();
     if (mediaRoot) await rm(mediaRoot, { recursive: true, force: true });
   }

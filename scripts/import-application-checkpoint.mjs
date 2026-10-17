@@ -39,7 +39,7 @@ function optionValue(value) {
 }
 
 export function parseArguments(args) {
-  if (!Array.isArray(args) || args.length !== 15 || !["check", "restore"].includes(args[0])) fail("USAGE");
+  if (!Array.isArray(args) || ![15, 17].includes(args.length) || !["check", "restore"].includes(args[0])) fail("USAGE");
   const flags = args.slice(1), positions = flags.flatMap((value, index) => value === "--sql-sha256" ? [index] : []);
   if (positions.length !== 1 || positions[0] % 2 || !/^[a-f0-9]{64}$/.test(flags[positions[0] + 1])) fail("USAGE");
   const sqlSha256 = flags[positions[0] + 1]; flags.splice(positions[0], 2);
@@ -243,19 +243,24 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   inspect = inspectEmptyClone, importSql = importNativeSql, signal } = {}) {
   let environment, password = "", sql, connection, connectionEnv, result, failure;
   try {
+    if (value && Object.hasOwn(value, "profile") && !Object.hasOwn(Object.getOwnPropertyDescriptor(value, "profile") ?? {}, "value")) fail("USAGE");
     const selected = verificationArguments([value.command, "--private-directory", value.privateDirectory, "--private-path-mode", value.privatePathMode,
-      "--checkpoint-directory", value.checkpointDirectory, "--database", value.database, "--confirm-database", value.confirmation, "--user", value.user]);
+      "--checkpoint-directory", value.checkpointDirectory, "--database", value.database, "--confirm-database", value.confirmation, "--user", value.user,
+      ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : [])]);
     if (!["check-application", "verify-application"].includes(selected.command) || !/^[a-f0-9]{64}$/.test(value.sqlSha256)) fail("USAGE");
+    const recovery = selected.profile === "photos-notify-recovery";
+    const matchesRecovery = report => !recovery || report?.version === 4 && report.profile === "messaging-photos-notify-recovery-application";
     active(signal); const processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv);
     const check = { ...selected, command: "check-application" }, dependencies = { inheritedEnv, execArgv, signal };
     const before = await verify(check, dependencies);
-    if (before?.status !== "ready_for_input" || before.checkpointFilesMatched !== true || before.databaseConnected !== false || before.tables !== 30 || before.migrations !== 30 || before.sqlSha256 !== value.sqlSha256) fail("CHECKPOINT");
+    if (before?.status !== "ready_for_input" || before.checkpointFilesMatched !== true || before.databaseConnected !== false || before.tables !== 30 || before.migrations !== 30 || before.sqlSha256 !== value.sqlSha256 || !matchesRecovery(before)) fail("CHECKPOINT");
     await inspectClient();
     await scopeOperation(selected.checkpointDirectory, async scope => {
       sql = await readSql(scope, before, { signal }); active(signal);
       if (digest(sql) !== value.sqlSha256) fail("CHECKPOINT");
       if (selected.command === "check-application") { result = { ...before, status: "application_restore_precheck_passed", imported: false, nativeImportClientVerified: true, sqlImportFormatVerified: true, trustedSqlSha256Matched: true }; return; }
-      environment = await loadEnvironment(selected.privateDirectory, { port: processOptions.port });
+      environment = await loadEnvironment(selected.privateDirectory, { port: processOptions.port,
+        ...(recovery ? { originProfile: "primary", recovery: true } : {}) });
       if (selected.database.toLowerCase() === environment.JESSIEMESSAGE_DB_NAME.toLowerCase() || selected.user === environment.JESSIEMESSAGE_RUNTIME_DB_USER) fail("CONFIGURATION");
       try { password = passwordValue(await readSecret(inputStream)); } catch { fail("PASSWORD"); }
       connectionEnv = { JESSIEMESSAGE_DB_HOST: environment.JESSIEMESSAGE_DB_HOST, JESSIEMESSAGE_DB_PORT: environment.JESSIEMESSAGE_DB_PORT,
@@ -268,7 +273,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       await importSql(scope, selected, { host: environment.JESSIEMESSAGE_DB_HOST, port: environment.JESSIEMESSAGE_DB_PORT }, password, sql, { signal }); active(signal);
       sql.fill(0); sql = undefined;
       const verified = await verify(selected, { ...dependencies, readSecret: async () => password });
-      if (verified?.status !== "verified" || verified.applicationSnapshotMatched !== true || verified.checkpointFilesMatched !== true || verified.databaseConnected !== true || verified.capacityRebound !== false) fail("VERIFY");
+      if (verified?.status !== "verified" || verified.applicationSnapshotMatched !== true || verified.checkpointFilesMatched !== true || verified.databaseConnected !== true || verified.capacityRebound !== false || !matchesRecovery(verified)) fail("VERIFY");
       result = { ...verified, status: "application_checkpoint_restored_verified", imported: true, completeDatabase: false, sourceMutated: false };
     });
   } catch (error) { failure = error instanceof ApplicationCheckpointImportError ? error : new ApplicationCheckpointImportError("APPLICATION_CHECKPOINT_IMPORT_OPERATION"); }

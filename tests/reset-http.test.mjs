@@ -95,12 +95,12 @@ test("request always returns a neutral accepted DTO and uses only the socket pee
   assert.deepEqual(calls, [email, "unknown@example.invalid", "not a canonical email", " "].map((value) => ["requestReset", { email: value, peerAddress: "127.0.0.1" }]));
 });
 
-test("successful reset passes exact password and clears only the client cookie without signing in", async (t) => {
+test("successful reset passes exact password without replacing client or administrator cookies or signing in", async (t) => {
   const { base, calls } = await fixture(t, { resetPassword: () => ({ status: "password_changed", token, email, session: "private", userId: "private" }) });
-  const response = await post(base, resetPath, { token, password }, headers({ Cookie: "__Host-jessie_session=admin-preserved; __Host-jessie_client=client-old" }));
+  const response = await post(base, resetPath, { token, password }, headers({ Cookie: "__Host-jessie_session=admin-preserved; __Host-jessie_client=unrelated-client-preserved" }));
   assert.equal(response.status, 200); assertHeaders(response);
   assert.deepEqual(await response.json(), { status: "password_changed" });
-  assert.equal(response.headers.get("set-cookie"), "__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict");
+  assert.equal(response.headers.get("set-cookie"), null);
   assert.deepEqual(calls, [["resetPassword", { token, password, peerAddress: "127.0.0.1" }]]);
 });
 

@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { checkMutation, clearCookie, httpError, isToken, readJson, reply } from "../auth/http.mjs";
+import { checkMutation, httpError, isToken, readJson, reply } from "../auth/http.mjs";
 
 const publicRoot = new URL("../../public/", import.meta.url);
 const files = new Map([
@@ -95,7 +95,10 @@ export function createResetHandler(service, { origin }) {
           reply(response, method, 202, safeStatus(result, "accepted"));
         } else {
           const result = await service.resetPassword({ ...resetBody(body), peerAddress });
-          reply(response, method, 200, safeStatus(result, "password_changed"), { "Set-Cookie": clearCookie("__Host-jessie_client") });
+          // The reset transaction revokes the target client's sessions. Its next
+          // session check clears its stale cookie; a different client's cookie
+          // in this browser must remain untouched.
+          reply(response, method, 200, safeStatus(result, "password_changed"));
         }
       }
     } catch (error) {

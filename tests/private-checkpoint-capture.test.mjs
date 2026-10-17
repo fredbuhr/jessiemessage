@@ -31,7 +31,7 @@ const secretFields = ["JESSIEMESSAGE_RUNTIME_DB_PASSWORD", "JESSIEMESSAGE_MFA_KE
 const neutral = (error) => error instanceof PrivateCheckpointError && /^PRIVATE_CHECKPOINT_[A-Z]+$/.test(error.code)
   && error.message === error.code && !error.cause && !JSON.stringify(error).includes("synthetic");
 
-function bundle(mediaRoot) {
+function bundle(mediaRoot, origin = "https://recette.jessiemessage.com") {
   const vapid = createECDH("prime256v1");
   vapid.setPrivateKey(Buffer.alloc(32, 7));
   return {
@@ -69,7 +69,7 @@ async function syntheticScope(directory) {
   };
 }
 
-async function fixture(t) {
+async function fixture(t, { recovery = false } = {}) {
   await mkdir(base, { recursive: true, mode: 0o700 });
   const root = await mkdtemp(join(base, "private-checkpoint-capture-"));
   await chmod(root, 0o700);
@@ -82,18 +82,19 @@ async function fixture(t) {
   await writeFile(join(mediaRoot, mediaName("thumb")), thumb, { mode: 0o600 });
   const snapshot = { schemaDigest: "a".repeat(64), coreDigest: "b".repeat(64), counts: { tables: 30, rows: 1 } };
   const state = { events: [], loaded: [], usedEnvironments: [], keys: [], dumps: 0, prepares: 0, secretReads: 0,
-    manifests: 0, compares: 0, copies: 0, verifications: 0, tools: 0, identities: 0, clocks: 0, snapshot };
+    manifests: 0, compares: 0, copies: 0, verifications: 0, tools: 0, identities: 0, clocks: 0, snapshot, recovery };
   const inputStream = { isTTY: true };
   const command = (mode = "capture") => [mode, ...(["capture", "capture-application"].includes(mode) ? ["--offline"] : []),
     "--private-directory", privateDirectory, "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination,
-    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"])];
+    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", "photos-notify-recovery"] : [])];
   const dependencies = {
     inheritedEnv: { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" }, execArgv: [], inputStream,
     async scopeOperation(directory, operation) { return operation(await syntheticScope(directory)); },
     async loadEnvironment(directory, parameters) {
       assert.equal(directory, privateDirectory);
-      assert.deepEqual(parameters, { port: "3000" });
-      const environment = await loadRuntimeNotificationsEnvironment(directory, parameters, { readBundle: async () => bundle(mediaRoot) });
+      assert.deepEqual(parameters, { port: "3000", ...(recovery ? { originProfile: "primary", recovery: true } : {}) });
+      const environment = await loadRuntimeNotificationsEnvironment(directory, parameters,
+        { readBundle: async () => bundle(mediaRoot, recovery ? "https://jessiemessage.com" : origin) });
       state.loaded.push(environment);
       state.events.push("load");
       return environment;
@@ -120,7 +121,7 @@ async function fixture(t) {
       assert.equal(args[0], "prepare");
       assert.equal(args[1], "--offline");
       assert.equal(args[2], "--manifest");
-      assert.deepEqual(args.slice(4), ["--profile", state.application ? "photos-notify-application" : "photos-notify"]);
+      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${state.application ? "-application" : ""}`]);
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_USER, state.application ? undefined : "synthetic_inspection");
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD, state.application ? undefined : inspectionPassword);
       assert.equal(environment.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, runtimePassword);
@@ -129,7 +130,8 @@ async function fixture(t) {
       state.usedEnvironments.push(environment);
       state.prepares += 1;
       state.events.push(`prepare:${basename(args[3])}`);
-      await writeFile(args[3], `${JSON.stringify({ version: state.application ? 4 : 3, profile: state.application ? "messaging-photos-notify-application" : "messaging-photos-notify", payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
+      await writeFile(args[3], `${JSON.stringify({ version: recovery ? state.application ? 6 : 5 : state.application ? 4 : 3,
+        profile: `messaging-photos-notify${recovery ? "-recovery" : ""}${state.application ? "-application" : ""}`, payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
         { mode: 0o600, flag: "wx" });
       return { command: "prepare", verified: true, prepared: true, restored: false };
     },
@@ -398,6 +400,52 @@ test("application capture refuses missing coverage or a strict manifest before d
       } }), neutral);
     assert.equal(f.state.dumps, 0); assert.equal(f.state.secretReads, 0);
     await assert.rejects(lstat(join(f.destination, "checkpoint.tar.gz")), { code: "ENOENT" }); cleared(f.state);
+  }
+});
+
+test("recovery is an explicit closed selection and leaves old argument records unchanged", async t => {
+  const f = await fixture(t);
+  assert.deepEqual(Object.keys(parseArguments(f.command("check"))).sort(), ["command", "destination", "inspectionUser", "offline", "privateDirectory", "privatePathMode"].sort());
+  for (const profile of ["photos-notify", "photos-notify-recovery-application", "full", "", undefined])
+    assert.throws(() => parseArguments([...f.command("check"), "--profile", profile]), { code: "PRIVATE_CHECKPOINT_USAGE" });
+  assert.throws(() => parseArguments([...f.command("check"), "--profile", "photos-notify-recovery", "--profile", "photos-notify-recovery"]), { code: "PRIVATE_CHECKPOINT_USAGE" });
+  let getter = false; const selection = { ...parseArguments(f.command("check")) };
+  Object.defineProperty(selection, "profile", { get() { getter = true; throw new Error("private profile"); } });
+  await assert.rejects(run(selection, f.dependencies), { code: "PRIVATE_CHECKPOINT_USAGE" }); assert.equal(getter, false);
+});
+
+test("recovery capture authenticates distinct strict/application envelopes while recovery stays disabled", { timeout: 15000 }, async t => {
+  for (const application of [false, true]) {
+    const f = await fixture(t, { recovery: true }); f.state.application = application;
+    if (application) Object.assign(f.state.snapshot, { version: 2, coverage: { ...APPLICATION_COVERAGE } });
+    const prepare = f.dependencies.prepare;
+    f.dependencies.prepare = async (args, environment, parameters) => {
+      assert.equal(environment.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY, "0");
+      return prepare(args, environment, parameters);
+    };
+    const result = await run(parseArguments(f.command(application ? "capture-application" : "capture")), f.dependencies);
+    const receipt = await readCheckpointReceipt(await syntheticScope(f.destination));
+    assert.equal(result.profile, `messaging-photos-notify-recovery${application ? "-application" : ""}`);
+    assert.equal(receipt.profile, result.profile); assert.equal(receipt.version, application ? 4 : 3);
+    assert.equal(result.started, false); assert.equal(result.migrationPerformed, false); assert.equal(result.capacityRebound, false);
+    assert.equal(result.archiveContentsVerified, true); assert.equal(f.state.secretReads, application ? 0 : 1);
+    if (application) assert.deepEqual(receipt.coverage, APPLICATION_COVERAGE);
+    publicOnly(result, f); cleared(f.state);
+  }
+});
+
+test("recovery capture refuses downgraded backup profiles before SQL dumping", async t => {
+  for (const application of [false, true]) {
+    const f = await fixture(t, { recovery: true }); f.state.application = application;
+    if (application) Object.assign(f.state.snapshot, { version: 2, coverage: { ...APPLICATION_COVERAGE } });
+    const prepare = f.dependencies.prepare;
+    await assert.rejects(run(parseArguments(f.command(application ? "capture-application" : "capture")), { ...f.dependencies,
+      async prepare(...args) {
+        const result = await prepare(...args), file = args[0][3], manifest = JSON.parse(await readFile(file, "utf8"));
+        manifest.version = application ? 4 : 3; manifest.profile = `messaging-photos-notify${application ? "-application" : ""}`;
+        await writeFile(file, JSON.stringify(manifest)); return result;
+      } }), { code: "PRIVATE_CHECKPOINT_BACKUP" });
+    assert.equal(f.state.dumps, 0); await assert.rejects(lstat(join(f.destination, "receipt.json")), { code: "ENOENT" }); cleared(f.state);
   }
 });
 

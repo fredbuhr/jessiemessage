@@ -560,6 +560,78 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       for (const text of output) assert.equal(text.includes(notificationKey.toString("base64url")) || text.includes(subscription.endpoint), false);
     });
 
+    await t.test("recovery notification checkpoint captures populated reset SQL and restores its isolated application clone without sending mail or Push", async () => {
+      // This starts with real populated tables and authenticated ciphertext,
+      // then copies SQL to the separately named disposable schema. No worker,
+      // HTTP application, mail transport or Push transport is started.
+      for (const table of ["push_outbox", "push_subscriptions"]) await sourceConnection.query(`DELETE FROM ${qualified(options.database, table)}`);
+      const notificationKey = randomBytes(32), subscriptionId = id(), pushJobId = id(), recoveryId = id(), recoveryJobId = id();
+      const recoveryToken = randomBytes(32).toString("base64url");
+      const curve = createECDH("prime256v1"); curve.generateKeys();
+      const subscription = { endpoint: "https://fcm.googleapis.com/fcm/send/synthetic-recovery-isolated-clone", expirationTime: null,
+        keys: { p256dh: curve.getPublicKey().toString("base64url"), auth: randomBytes(16).toString("base64url") } };
+      const recoveryEncrypted = sealResetPayload({ email: client.email, token: recoveryToken }, keys.mailKey, recoveryJobId);
+      await sourceConnection.query(`INSERT INTO client_password_resets (id, user_id, token_hash, credential_version, email_hash, created_at, expires_at)
+        VALUES (?, ?, ?, 1, ?, ?, ?)`, [recoveryId, client.id, tokenDigest(recoveryToken), createHash("sha256").update(client.email, "utf8").digest(), sqlDate(now), sqlDate(now + 1800000)]);
+      await sourceConnection.query(`INSERT INTO password_reset_outbox (id, reset_id, recipient_user_id, payload_encrypted, available_at, expires_at, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`, [recoveryJobId, recoveryId, client.id, recoveryEncrypted, sqlDate(now), sqlDate(now + 1800000), sqlDate(now)]);
+      await sourceConnection.query(`INSERT INTO push_subscriptions (id, user_id, role, session_id, credential_version, generation,
+        endpoint_digest, subscription_encrypted, locale, created_at, updated_at) VALUES (?, ?, 'client', ?, 1, 1, ?, ?, 'fr', ?, ?)`,
+      [subscriptionId, client.id, client.sessionId, endpointDigest(subscription.endpoint, notificationKey),
+        sealSubscription(subscription, notificationKey, { subscriptionId, userId: client.id, generation: 1 }), sqlDate(now), sqlDate(now)]);
+      await sourceConnection.query(`INSERT INTO push_outbox (id, message_id, subscription_id, subscription_generation,
+        available_at, created_at, expires_at) VALUES (?, ?, ?, 1, ?, ?, ?)`, [pushJobId, messageId, subscriptionId, sqlDate(now), sqlDate(now), sqlDate(now + 86400000)]);
+      originalDatabaseHash = await databaseHash(options.database); originalFiles = await filesUnder(sourceRoot);
+      const suppliedKeys = [];
+      const deps = (database, root, changed = {}) => {
+        const selected = dependencies(database, root, {}, changed), configure = selected.configure;
+        selected.configure = () => {
+          const config = configure(); delete config.keys.crmKey; config.keys.notificationKey = Buffer.from(notificationKey);
+          suppliedKeys.push({ keys: config.keys, before: Object.fromEntries(Object.entries(config.keys).map(([name, key]) => [name, Buffer.from(key)])) });
+          return config;
+        };
+        return selected;
+      };
+      const file = path.join(temporaryRoot, "recovery-application-checkpoint.json");
+      const args = command => [command, "--offline", "--manifest", file, "--profile", "photos-notify-recovery-application"];
+      await assert.rejects(main(["prepare", "--offline", "--manifest", path.join(temporaryRoot, "must-not-hide-recovery.json"), "--profile", "photos-notify"],
+        process.env, deps(options.database, sourceRoot)), backupError);
+      const strictFile = path.join(temporaryRoot, "recovery-strict-checkpoint.json");
+      assert.equal((await main(["prepare", "--offline", "--manifest", strictFile, "--profile", "photos-notify-recovery"],
+        process.env, deps(options.database, sourceRoot))).prepared, true);
+      const strictManifest = JSON.parse(await readFile(strictFile, "utf8"));
+      assert.equal(strictManifest.version, 5); assert.equal(strictManifest.profile, "messaging-photos-notify-recovery");
+      assert.equal((await main(args("prepare"), process.env, deps(options.database, sourceRoot))).prepared, true);
+      const manifest = JSON.parse(await readFile(file, "utf8"));
+      assert.equal(manifest.version, 6); assert.equal(manifest.profile, "messaging-photos-notify-recovery-application");
+      assert.equal(manifest.payload.snapshot.version, 2);
+      assert.equal(manifest.payload.snapshot.coverage.scope, "application-tables");
+      assert.equal(manifest.payload.snapshot.coverage.completeDatabase, false);
+      assert.deepEqual(Object.keys(manifest.payload.canaries).sort(), ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"].sort());
+      await sourceUnchanged(); await clone();
+      const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      await assert.rejects(main(args("verify"), targetEnv, deps(restoreDatabase, targetRoot, { mailKey: randomBytes(32) })), backupError);
+      assert.equal((await main(args("verify"), targetEnv, deps(restoreDatabase, targetRoot))).verified, true);
+      assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore);
+      const restored = await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot));
+      assert.equal(restored.restored, true); assert.equal(restored.releasedCandidates, 3);
+      const reset = (await targetConnection.query("SELECT status, attempts, lease_token, lease_until, sent_at, payload_encrypted FROM password_reset_outbox WHERE id = ?", [recoveryJobId]))[0];
+      assert.deepEqual({ ...reset }, { status: "pending", attempts: 0, lease_token: null, lease_until: null, sent_at: null, payload_encrypted: recoveryEncrypted });
+      const challenge = (await targetConnection.query("SELECT user_id, token_hash, email_hash, credential_version, consumed_at FROM client_password_resets WHERE id = ?", [recoveryId]))[0];
+      assert.deepEqual(challenge.user_id, client.id); assert.deepEqual(challenge.token_hash, tokenDigest(recoveryToken));
+      assert.deepEqual(challenge.email_hash, createHash("sha256").update(client.email, "utf8").digest()); assert.equal(challenge.credential_version, 1); assert.equal(challenge.consumed_at, null);
+      const push = (await targetConnection.query("SELECT status, attempts, lease_token, lease_until, finished_at FROM push_outbox WHERE id = ?", [pushJobId]))[0];
+      assert.deepEqual({ ...push }, { status: "pending", attempts: 0, lease_token: null, lease_until: null, finished_at: null });
+      assert.equal((await targetConnection.query("SELECT enabled FROM push_subscriptions WHERE id = ?", [subscriptionId]))[0].enabled, 1);
+      assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS count FROM sessions WHERE id IN (?, ?)", [client.sessionId, admin.sessionId]))[0].count), 2);
+      const completed = await databaseHash(restoreDatabase);
+      assert.equal((await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot))).restored, true);
+      assert.equal(await databaseHash(restoreDatabase), completed); await sourceUnchanged();
+      for (const supplied of suppliedKeys) assert.deepEqual(supplied.keys, supplied.before, "verification erases only its own key copies");
+      for (const text of output) for (const privateValue of [recoveryToken, recoveryEncrypted, subscription.endpoint, notificationKey.toString("base64url")])
+        assert.equal(text.includes(privateValue), false);
+    });
+
     assert.ok(output.length > 0);
     for (const text of output) for (const key of Object.values(keys)) assert.equal(text.includes(key.toString("base64url")), false);
   } finally {
