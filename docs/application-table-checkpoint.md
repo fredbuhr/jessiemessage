@@ -1,5 +1,7 @@
 # Checkpoint des données applicatives — étape 0.36
 
+**Étape 0.36 validée le 17 octobre 2026 à 15:26 Europe/Paris.** Après la confirmation de sa copie PC et de l’empreinte à 15:06, le propriétaire fournit le reçu réel **`application_checkpoint_restored_verified`** : import natif des trente tables dans la nouvelle base isolée, trente migrations, snapshot signé et fichiers du checkpoint concordants, répertoire média indépendant et source non modifiée. Aucune réassociation du stockage ni activation d’un serveur de copie. La couverture reste limitée aux données applicatives ; les objets SQL exécutables restent exclus/non prouvés. **Le prochain lot 0.37 concerne le routage et les certificats, le lanceur primaire épinglé, l’activation puis la recette des appareils ; la bascule du domaine reste à faire.** Les relevés suivants sont conservés avec leur heure et leur état historique.
+
 Le diagnostic personnel du 17 octobre 2026 à 14:24 Europe/Paris confirme une connexion réussie à la bonne base, `scope: raw_underscore_pattern`, `privilegeProfile: shared_admin`, avec visibilité des objets exécutables non prouvée. Ce résultat explique le refus de l’inspection complète. Aucun mot de passe supplémentaire ni élargissement des droits applicatifs n’est nécessaire pour la voie décrite ici.
 
 ## Couverture et limites
@@ -40,11 +42,11 @@ Reprendre ensuite le runtime **0.33 `f2677249`**, avec son lanceur existant, et 
 
 La copie indépendante de l’archive et l’import des trente tables dans une **nouvelle base isolée** restent des opérations distinctes. Le contrôle `verify-private-checkpoint.mjs check-application|verify-application` exige le reçu v2, le manifeste v4 et leur couverture authentifiée identique. Il vérifie le dump du clone avant et après les contrôles en lecture seule, les trente tables et migrations, TLS, les données chiffrées et les médias. Après rollback et fermeture de cette connexion, il appelle aussi le vérificateur de snapshot applicatif sur une copie éphémère de configuration du clone : les empreintes de structure et de toutes les lignes sont comparées au snapshot signé. Aucun mot de passe n’est conservé et la configuration source reste intacte. Le succès exige `applicationSnapshotMatched: true`. Il ne démarre aucun serveur, transport ni worker et ne réassocie pas le stockage. Le mot de passe du compte de copie reste saisi masqué dans la console personnelle ; ne jamais le transmettre dans la conversation.
 
-Ce contrôle établit la correspondance des tables restaurées et des fichiers au checkpoint applicatif. Il ne certifie pas les objets SQL exclus. La bascule du domaine attend toujours une sauvegarde cohérente, sa copie indépendante et une restauration isolée vérifiée.
+Ce contrôle établit la correspondance des tables restaurées et des fichiers au checkpoint applicatif. Il ne certifie pas les objets SQL exclus. Les préalables de sauvegarde cohérente, copie indépendante et restauration isolée sont validés à 15:26 ; la préparation puis l’activation du domaine restent distinctes.
 
 ## Validation du lot
 
-Les tests ciblés couvrent les formats signés distincts, les rétrogradations, les listes natives exactes, les identifiants runtime gardés, l’absence de saisie, les refus avant dump et les couvertures concordantes. La suite SQL ajoute une comparaison avec le snapshot strict, un trigger volontairement exclu du seul profil applicatif, et une vérification/restauration du clone sans mutation de la source. La capture réelle et les résultats CI/hébergés seront consignés après leur exécution.
+Les tests ciblés couvrent les formats signés distincts, les rétrogradations, les listes natives exactes, les identifiants runtime gardés, l’absence de saisie, les refus avant dump et les couvertures concordantes. La suite SQL ajoute une comparaison avec le snapshot strict, un trigger volontairement exclu du seul profil applicatif, et une vérification/restauration du clone sans mutation de la source. La capture réelle, les résultats CI/hébergés et le reçu personnel de restauration sont consignés ci-dessous.
 
 
 ## Capture réelle du 17 octobre 2026
@@ -63,14 +65,14 @@ Capture effective de **14:46:14.008 à 14:46:16.769**, sortie `application_check
 | Archive `checkpoint.tar.gz` | 400 149 octets |
 | SHA-256 de l’archive | `481407b64cf2d0ea997098d4a7c6100a30ef235d5b7f46ed076cd310093c943e` |
 | Octets de l’archive | Vérifiés intégralement ; aucune extraction annoncée |
-| Copie indépendante / import réel | Copie PC confirmée par le propriétaire à 15:06 ; import réel encore à réaliser |
+| Copie indépendante / import réel | Copie PC/empreinte confirmées à 15:06 ; reçu d’import natif isolé et de vérification fourni à 15:26 |
 | Réassociation du stockage | Non effectuée |
 
 Le **même Run 0.33** est relancé immédiatement après le résultat de capture ; le Manager indique `Actif`, écoute sur 3000 et profil `messaging-photos-notify`. À **14:47:06.537**, préflight conforme, santé/disponibilité HTTP 200, routage apex `/app` toujours 302 vers recette. Aucun domaine, clé, droit SQL ni schéma n’a été changé ; seuls la pause/reprise et les nouveaux fichiers privés du checkpoint ont eu lieu.
 
 Le complément de vérification du snapshot signé du clone est validé sur **`123531df99d24f915bdd24a00f3fec77695cc63f`**, arbre `3c2a5658184836ac415982543b6666006faa1d1d`. Ses cinq [jobs CI exacts](https://github.com/fredbuhr/jessiemessage/actions/runs/39034174776) passent : **2 031 tests généraux**, 370 par MariaDB sans saut, vingt Chrome applicatifs et une authentification intégrée. Checkout séparé `/srv/customer/jessiemessage-operator/application-restore-123531df`, installation et syntaxe vérifiées. À **14:55:38.770**, `check-application` sur le vrai checkpoint annonce `checkpointFilesMatched: true`, média indépendant, trente tables/migrations, SQL brut **76 621 octets**, SHA-256 `246a75fdca87b02405e548092a21da1882330f1b9fa17e5aca619eb2b4502e4a`, **`databaseConnected: false`**. La base proposée `fb4hmr_jm_checkpoint30_20261017` reste à créer puis importer ; ce précontrôle ne prouve pas son existence ou sa restauration.
 
-Le contrôle du snapshot signé après import doit annoncer `applicationSnapshotMatched: true` avant validation de la copie. Il ne modifie ni l’archive figée ni le runtime actif. La bascule du domaine n’est pas encore effectuée.
+Le contrôle du snapshot signé après import doit annoncer `applicationSnapshotMatched: true` avant validation de la copie ; le reçu réel de 15:26 le confirme. Il ne modifie ni l’archive figée ni le runtime actif. La bascule du domaine n’est pas encore effectuée.
 
 
 ## Copie personnelle indépendante
@@ -93,7 +95,7 @@ Ou, avec le [client OpenSSH Windows](https://learn.microsoft.com/fr-fr/windows-s
 }
 ```
 
-Le secret éventuellement demandé est celui de l’accès SSH/SFTP existant, pas celui de la base SQL ; sa saisie ne s’affiche pas. Le garder dans la fenêtre personnelle. Le propriétaire confirme **`COPIE_SCHEMA30_OK` le 17 octobre à 15:06 Europe/Paris** : le téléchargement indépendant et son empreinte sont désormais attestés par son exécution personnelle du bloc ci-dessus. Le prochain lot prépare une base isolée neuve et un import au SQL exact, puis la vérification contre le snapshot signé, avant toute activation du domaine principal.
+Le secret éventuellement demandé est celui de l’accès SSH/SFTP existant, pas celui de la base SQL ; sa saisie ne s’affiche pas. Le garder dans la fenêtre personnelle. Le propriétaire confirme **`COPIE_SCHEMA30_OK` le 17 octobre à 15:06 Europe/Paris** : le téléchargement indépendant et son empreinte sont attestés par son exécution personnelle du bloc ci-dessus. La base isolée neuve, l’import au SQL exact et sa vérification sont ensuite préparés ; le reçu personnel de 15:26 valide leur réussite avant toute activation du domaine principal.
 
 À **14:57:14.751 Europe/Paris**, l’archive est relue : taille et SHA-256 identiques au résultat de capture ; le reçu et sa liaison au manifeste restent conformes. La disponibilité répond encore HTTP 200. Les marqueurs `independentCopyPending` et `sqlRestorePending` restent vrais jusqu’aux validations personnelles et à l’import effectif.
 
@@ -107,9 +109,9 @@ Le format fermé du dump est contrôlé : trente créations de tables attendues,
 
 Le client natif `/usr/bin/mariadb` reçoit le SQL validé sur son entrée standard, la seule base cible sur sa ligne de commande, TLS avec validation du certificat, `--sandbox`, `--local-infile=0` et `--skip-reconnect`. Le mot de passe reste dans une configuration privée temporaire `0600`, contrôlée puis supprimée ; il n’est ni dans les arguments, ni dans l’environnement, ni dans les résultats. Un échec ou une annulation ne produit aucun reçu de réussite. Après l’import seulement, le vérificateur compare le dump natif du clone au SQL figé et contrôle les données chiffrées, médias et snapshot signé. Le statut final exige **`application_checkpoint_restored_verified`**, **`imported: true`** et **`applicationSnapshotMatched: true`**. Aucun serveur, e-mail, worker ou réassociation du stockage n’est lancé.
 
-L’intervention personnelle restante se fait sur la [page vérifiée du compte opérateur existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig). Sur la seule ligne **`fb4hmr_jm_checkpoint30_20261017`**, accorder **Lecture**, **Écriture** et **Administration**, puis valider. Les lignes source et anciennes copies restent telles quelles, et le compte applicatif n’accède pas à la copie. Cet accès permet au compte de maintenance d’importer la nouvelle base ; le mot de passe existant ne change pas. La saisie du secret se fait ensuite dans la console SSH personnelle, jamais dans la conversation. L’agent ne soumet pas ce changement de permissions.
+La procédure personnelle préparée utilise la [page vérifiée du compte opérateur existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/databases/dashboard/users/edit/fb4hmr_jm_mig). Sur la seule ligne **`fb4hmr_jm_checkpoint30_20261017`**, elle prévoit **Lecture**, **Écriture** et **Administration**, puis validation. Les lignes source et anciennes copies restent telles quelles, et le compte applicatif n’accède pas à la copie. Cet accès permet au compte de maintenance d’importer la nouvelle base ; le mot de passe existant ne change pas. La saisie du secret se fait dans la console SSH personnelle, jamais dans la conversation. L’agent ne soumet pas ce changement de permissions. Ce relevé décrit la préparation de l’import maintenant attesté à 15:26 ; il ne demande pas de recommencer l’import dans la base remplie.
 
-L’import réel et son résultat restent à attester après cette intervention ; ni la création vide du Manager, ni les tests synthétiques, ni le précontrôle sans SQL ne sont présentés comme une restauration réussie.
+Avant le reçu de 15:26, l’import réel et son résultat restaient à attester ; ni la création vide du Manager, ni les tests synthétiques, ni le précontrôle sans SQL n’étaient présentés comme une restauration réussie.
 
 ### Préparation vérifiée le 17 octobre à 15:16–15:18 Europe/Paris
 
@@ -123,4 +125,25 @@ Le lanceur personnel **`/srv/customer/jessiemessage-private/restore-schema30-app
 bash /srv/customer/jessiemessage-private/restore-schema30-application-9d653813.sh
 ```
 
-À **15:18:50**, le runtime actif **0.33 `f2677249`** est toujours propre et conforme ; le préflight passe et la disponibilité répond HTTP 200. Aucun import, démarrage de copie, permission SQL, secret ou domaine n’a été modifié. Seuls les fichiers opérateur dédiés et la base vide sans utilisateur ont été créés. La validation finale reste conditionnée au résultat réel `application_checkpoint_restored_verified` après la saisie personnelle.
+À **15:18:50**, le runtime actif **0.33 `f2677249`** est toujours propre et conforme ; le préflight passe et la disponibilité répond HTTP 200. À cet instant, aucun import, démarrage de copie, permission SQL, secret ou domaine n’a été modifié. Seuls les fichiers opérateur dédiés et la base vide sans utilisateur ont été créés. La validation finale reste alors conditionnée au résultat réel `application_checkpoint_restored_verified` après la saisie personnelle.
+
+## Restauration réelle validée le 17 octobre à 15:26 Europe/Paris
+
+La capture fournie par le propriétaire montre le reçu final du lanceur personnel `restore-schema30-application-9d653813.sh`, au profil **`messaging-photos-notify-application`**. Le statut **`application_checkpoint_restored_verified`**, **`databaseConnected: true`** et **`imported: true`** atteste l’import natif réel, distinct du précontrôle sans SQL. Le contrôle TLS réussit ; les trente tables et trente migrations sont vérifiées dans la base isolée `fb4hmr_jm_checkpoint30_20261017`.
+
+Les contrôles **`applicationSnapshotMatched: true`**, **`checkpointFilesMatched: true`** et **`independentMediaDirectory: true`** établissent la correspondance avec le snapshot signé, les fichiers du checkpoint et le répertoire photo physiquement indépendant. Les empreintes restent celles des octets figés : SQL brut **`246a75fdca87b02405e548092a21da1882330f1b9fa17e5aca619eb2b4502e4a`**, SQL Gzip **`26133cb319bd087540ec232d204e43c98c1d887ceb1d80f1722997640f4626cd`**.
+
+| Catégorie vérifiée | Nombre |
+| --- | --- |
+| Enregistrements chiffrés au total | 13 |
+| MFA | 1 |
+| E-mail | 1 |
+| Récupération client | 0 |
+| Messages | 7 |
+| CRM | 0 |
+| Diffusions / destinataires de diffusion | 0 / 0 |
+| Médias | 2 |
+| Fichiers photo chiffrés | 4 |
+| Notifications / jobs de notification | 1 / 1 |
+
+Le reçu confirme **`sourceMutated: false`** et **`capacityRebound: false`**. Aucun serveur de copie ni worker n’est démarré et la réassociation du stockage n’est pas effectuée. Le succès valide la restauration des données applicatives couvertes ; il ne prouve pas l’inventaire des triggers, événements ou routines exclus. La copie PC et son empreinte étant déjà confirmées à 15:06, **le lot 0.36 est validé**. Ne pas relancer l’import dans cette base désormais remplie. Le domaine, le lanceur actif et la recette des appareils relèvent du lot 0.37 encore à effectuer.
