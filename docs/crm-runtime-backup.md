@@ -1,6 +1,6 @@
 # JessieMessage — profil des fiches et reprise SQL/photos
 
-**État 0.47 au 18 octobre à 00:16 :** le [checkpoint courant](crm-checkpoint-046.md), son coffre et sa copie PC sont acceptés, puis la restauration native isolée est vérifiée à 00:13:21. L’[activation CRM](crm-activation-047.md), source `edf696ec`, arbre `3daa88c3`, réussit à 00:15 après préflight conforme. À 00:16:25 : 56/56 contrôles HTTPS et seize empreintes exactes. Fiches activées sur les deux origines, diffusions désactivées ; parcours personnel essayé accepté à 00:31:47, sans déduction d’un test de conflit ou de toutes les plateformes. Les sections suivantes conservent la préparation 0.45 `8f4162a4`, incluse dans la source servie.
+**État courant 0.49 au 18 octobre à 00:48 :** fiches acceptées personnellement à 00:31:47, puis [diffusions privées activées](broadcast-activation-049.md), source `d77f16fb`, arbre `5897917c`, après [préparation et reprise des campagnes](broadcast-runtime-backup-048.md) validées par cinq jobs exacts. Préflight hébergé conforme, trois tables de diffusion vides avant activation et build/redémarrage à 00:47 ; 68 contrôles HTTPS et seize empreintes exactes passent à 00:48:20. Schéma 30 et six clés conservés. Après toute donnée de diffusion, utiliser les nouveaux formats 9/10, même lors d’un repli CRM. Les sections suivantes conservent la préparation CRM 0.45.
 
 ## Lot 0.45
 

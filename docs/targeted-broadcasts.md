@@ -1,5 +1,7 @@
 # Diffusions individuelles 0.11
 
+**Activation ultérieure 0.49 :** les [diffusions privées sont actives](broadcast-activation-049.md) depuis le 18 octobre à 00:47, source `d77f16fb`, après [préparation et sauvegarde à six clés](broadcast-runtime-backup-048.md) et cinq jobs CI exacts réussis. Schéma 30 déjà présent ; aucune migration lors de cette activation. Premier essai personnel ciblé encore attendu ; les sections suivantes décrivent le moteur initial et ses garanties.
+
 Ce lot ajoute une file durable de messages individuels. La sélection utilise les contacts et filtres CRM ; les groupes restent des classements privés. Chaque destinataire reçoit un message ordinaire dans sa conversation avec Jess, sans audience, nom de campagne, données CRM ni identité d'autres clients.
 
 ## Activation privée

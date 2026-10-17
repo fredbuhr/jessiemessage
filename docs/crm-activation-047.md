@@ -1,5 +1,7 @@
 # JessieMessage — activation des fiches privées, étape 0.47
 
+**État ultérieur :** les fiches sont acceptées personnellement à 00:31:47 ; l’[activation des diffusions 0.49](broadcast-activation-049.md) à 00:47 conserve ce module, les clés et les sessions. Le relevé ci-dessous garde les preuves de 0.47.
+
 **Livré le 18 octobre 2026 à 00:15 Europe/Paris.** Le profil `messaging-photos-notify-recovery-crm` est actif sur l’origine principale et l’origine recette conservée. Les fiches privées, surnoms, notes chiffrées, tags, groupes et dates de suivi sont activés pour l’administrateur. Les diffusions restent désactivées. La réception d’une notification de rappel n’est pas ajoutée : la date de suivi est privée et affichée dans l’espace administrateur.
 
 ## Prérequis 0.46 effectivement levé
