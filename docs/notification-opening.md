@@ -1,6 +1,6 @@
 # Ouvrir le message depuis une notification — étape 0.33
 
-**État courant : runtime `a0b17ce0`, déploiement `primary-transition`, schéma 30, activé en 0.37.** Il inclut la correction 0.33 décrite ici et conserve recette pendant la reprise vers `jessiemessage.com`. Voir le [compte rendu de bascule](primary-origin-cutover.md) et les [essais sur les appareils du foyer](notifications-device-acceptance.md). La réception précédemment acceptée reste acquise ; le clic réel vers le bon message et la reprise sur la nouvelle adresse restent à confirmer.
+**État courant : runtime `3e952101`, déploiement `primary-transition`, schéma 30, mis à jour en 0.37 à 16:57 Europe/Paris le 17 octobre 2026.** Il inclut la correction 0.33 décrite ici et la [conservation du message après une nouvelle tentative de reprise](device-transition-retry.md). Recette reste accessible pendant la reprise vers `jessiemessage.com`. Voir le [compte rendu de bascule](primary-origin-cutover.md) et les [essais sur les appareils du foyer](notifications-device-acceptance.md). La réception précédemment acceptée reste acquise ; le clic réel vers le bon message et la reprise sur la nouvelle adresse restent à confirmer.
 
 ## Historique — déploiement 0.33
 
