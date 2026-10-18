@@ -55,3 +55,4 @@ jobs:
           try { $null = Get-JmGpgOutput -GpgArguments @('-NoProfile', '-EncodedCommand', $jmBadCommand) } catch { $jmRejected = $true }
           if (-not $jmRejected -or $ErrorActionPreference -ne 'Stop') { throw 'Native failure handling failed.' }
           Write-Output 'Native warnings and failures verified without generating a key.'
+          exit 0

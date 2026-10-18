@@ -197,7 +197,9 @@ async function gpg({ source, recipient, home, spawnClient, active, signal, timeo
     active(); if (failure) throw failure;
     if (code !== 0 || termination !== null || bytes < 1) fail("GPG");
     const states = Buffer.concat(status).toString("ascii");
-    if (!inspect && (!/^\[GNUPG:\] BEGIN_ENCRYPTION 2 9\r?$/m.test(states) || !/^\[GNUPG:\] END_ENCRYPTION\r?$/m.test(states)
+    // GnuPG DETAILS permits an optional AEAD identifier. Zero still means
+    // the required MDC/AES-256 profile; a nonzero AEAD mode is not accepted.
+    if (!inspect && (!/^\[GNUPG:\] BEGIN_ENCRYPTION 2 9(?: 0)?\r?$/m.test(states) || !/^\[GNUPG:\] END_ENCRYPTION\r?$/m.test(states)
       || /^\[GNUPG:\] (?:FAILURE|ERROR|INV_RECP|NO_RECP)\b/m.test(states))) fail("GPG");
     return { bytes, sha256: digest.digest("hex"), ...(inspect ? { content: Buffer.concat(collected) } : {}) };
   } catch (error) { child?.kill("SIGKILL"); if (error instanceof CheckpointEncryptionError) throw error; fail("GPG"); }

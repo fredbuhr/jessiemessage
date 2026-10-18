@@ -5,7 +5,7 @@ import { chmod, link, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, wri
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CheckpointEncryptionError, encryptCheckpointArchive, inspectCheckpointRecipient } from "../server/backup/checkpoint-encryption.mjs";
@@ -100,6 +100,12 @@ test("encryption publishes closed honest metadata and verifies byte hashes on di
   assert.equal(gpg.observed[1].args[gpg.observed[1].args.indexOf("--cipher-algo") + 1], "AES256");
 });
 
+test("documented optional zero AEAD identifier preserves the required MDC AES-256 profile", { skip: !supported }, async t => {
+  const f = await fixture(t);
+  const gpg = fakeGpg({ status: "[GNUPG:] BEGIN_ENCRYPTION 2 9 0\n[GNUPG:] END_ENCRYPTION\n" });
+  assert.equal((await encryptCheckpointArchive(f.selected, gpg)).encrypted, true);
+});
+
 test("encryption and preflight reject unsafe or accessor configuration before reading it", async t => {
   const f = await fixture(t);
   for (const changed of [{ checkpointDirectory: repository }, { checkpointDirectory: "/" }, { recipientDirectory: "relative" },
@@ -161,6 +167,9 @@ test("existing ciphertext or receipt is preserved and prevents all subprocesses"
 test("GPG failure missing final status or empty ciphertext never publishes success", { skip: !supported }, async t => {
   for (const config of [{ code: 2 }, { status: "[GNUPG:] BEGIN_ENCRYPTION 2 9\n" },
     { status: "[GNUPG:] BEGIN_ENCRYPTION 0 9\n[GNUPG:] END_ENCRYPTION\n" },
+    { status: "[GNUPG:] BEGIN_ENCRYPTION 2 9 2\n[GNUPG:] END_ENCRYPTION\n" },
+    { status: "[GNUPG:] BEGIN_ENCRYPTION 0 9 2\n[GNUPG:] END_ENCRYPTION\n" },
+    { status: "[GNUPG:] BEGIN_ENCRYPTION 2 7 0\n[GNUPG:] END_ENCRYPTION\n" },
     { status: "[GNUPG:] BEGIN_ENCRYPTION 2 9\n[GNUPG:] END_ENCRYPTION\n[GNUPG:] FAILURE encrypt 1\n" },
     { ciphertext: Buffer.alloc(0) }, { throwSpawn: true }]) {
     const f = await fixture(t); await assert.rejects(encryptCheckpointArchive(f.selected, fakeGpg(config)), closedFailure); await noReceipt(f);
@@ -210,7 +219,19 @@ test("standard GPG public-only encryption roundtrips independently with a synthe
     await writeFile(path.join(f.recipientDirectory, "recipient-public.asc"), publicKey);
     f.selected.recipientSha256 = digest(publicKey);
     const preflight = await inspectCheckpointRecipient(recipientSelection(f)); assert.equal(preflight.usable, true);
-    const result = await encryptCheckpointArchive(f.selected);
+    const fixtureStatuses = [];
+    const spawnFixture = (executable, args, options) => {
+      const child = spawn(executable, args, options); let pending = "";
+      child.stdio[5].on("data", chunk => {
+        pending += chunk.toString("ascii");
+        const lines = pending.split("\n"); pending = lines.pop();
+        for (const line of lines) if (/^\[GNUPG:\] (?:BEGIN_ENCRYPTION \d+ \d+(?: \d+)?|END_ENCRYPTION)\r?$/.test(line)) fixtureStatuses.push(line);
+      });
+      return child;
+    };
+    let result;
+    try { result = await encryptCheckpointArchive(f.selected, { spawnClient: spawnFixture }); }
+    finally { t.diagnostic(JSON.stringify({ type: "synthetic_gpg_encryption_status", statuses: fixtureStatuses })); }
     assert.equal(result.recipient.fingerprint, preflight.fingerprint);
     const filename = path.join(f.checkpointDirectory, "checkpoint.tar.gz.gpg");
     const recovered = execFileSync("/usr/bin/gpg", [...base, "--decrypt", filename], { env, timeout: 10000, maxBuffer: 65536, stdio: ["ignore", "pipe", "pipe"] });
