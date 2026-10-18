@@ -1,5 +1,7 @@
 # Sessions et confort quotidien — étape 0.30
 
+**Suite 0.57, activée le 18 octobre 2026 :** les [liens externes vers l’administration](admin-comfort-057.md) passent par un document public puis une preuve de session depuis la même origine. Le cookie Strict existant n’est plus effacé par cette navigation ; le chemin demandé est repris sans nouveau jeton. Les 180 jours glissants, le MFA et les révocations sont conservés. Les états datés suivants restent historiques.
+
 **Suite 0.33 :** les [connexions clients durables et l’ouverture des notifications](notification-opening.md) sont désormais actives en recette sur `f2677249`. Les sessions administrateur de ce lot sont conservées ; les clients disposent aussi de 180 jours glissants sans coupure pour simple inactivité. Les descriptions de la politique client de l’époque, plus courte, restent historiques. Une session effectivement expirée ou révoquée ne peut pas être reprise.
 
 Ce lot applique les premières corrections de l'audit du 16 octobre 2026.

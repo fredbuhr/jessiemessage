@@ -1,6 +1,6 @@
 # Administration plus simple — 0.57
 
-Préparation du 18 octobre 2026. Le runtime actif reste 0.56 jusqu’au relevé d’activation.
+**Activée le 18 octobre 2026 à 19:57 Europe/Paris**, source `53246777`, arbre `9b517b6c`. [PR #73 fusionnée](https://github.com/fredbuhr/jessiemessage/pull/73). Le [dossier de reprise](REPRISE.md) et les [preuves structurées](activation-proofs/jm057-activation.json) donnent les commandes et le repli exacts.
 
 ## Connexion
 
@@ -22,4 +22,10 @@ Aucun kit à réinstaller, aucune nouvelle clé, aucun changement de données ou
 
 Contrôles HTTP de la navigation, des origines, des routes désactivées et des refus API. Régression Chrome dédiée avec deux sites HTTPS locaux : cookie Strict réellement absent au premier GET, preuve depuis la même origine et conservation du même jeton ; retour profond et refus des retours extérieurs/doublons. Écran des copies couvert au clavier, en français/anglais et sur trois largeurs ; une taille de reçu différente ne doit pas confirmer la copie.
 
-Les résultats et références d’activation seront consignés après la CI et le cycle normal du Manager. Le repli immédiat prévu est le runtime 0.56 `2faf32ce`, arbre `8bc8029e0b93166ee33ded9cdb6ab65647fb5b40`, avec son lanceur existant. Aucune capture hors ligne ni restauration n’est nécessaire pour ce changement de code.
+CI [source](https://github.com/fredbuhr/jessiemessage/actions/runs/39151369335), [PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39151389889) et [main](https://github.com/fredbuhr/jessiemessage/actions/runs/39151664880) : cinq jobs réussis chacune. Source exacte : 2 488 réussites, 27 wrappers SQL ignorés sur 2 515 cas ; 383/383 sur chacune des deux versions MariaDB ; 112/112 Chrome ; authentification HTTPS/MFA ; syntaxe et build conformes. Sur l’hébergement, 95/95 sans saut puis préflight réussi sans démarrage ni capture.
+
+Le cycle Manager, sans réinstallation, a été lancé à 17:57:51.679 UTC ; état Actif et modification 19:57 Europe/Paris. Mesures après le dernier démarrage à 17:58:08.886 et 17:59:08.929 UTC : current / OK, aucun incident ni alerte en attente. À 17:59:58.923900 UTC, 44/44 contrôles HTTPS et 18 empreintes exactes, sans désactiver TLS ni suivre les redirections. [Preuve visuelle](activation-proofs/jm057-activation-20261018.jpg).
+
+Dernier reçu PC observé à 17:56:29.005 UTC, avant cette activation : il confirme la copie courante, sans revendiquer un nouveau passage du PC après le redémarrage. À 18:01:01.951179 UTC, source propre, version 0.57.0, même journal et dernier succès ; état d’alerte vide. Un premier relevé supposait le fichier d’alerte toujours présent ; le lecteur applicatif valide aussi son absence comme état vide. Seule cette lecture diagnostique a été corrigée, aucun contrôle HTTPS répété.
+
+Le repli immédiat est le runtime 0.56 `2faf32ce`, arbre `8bc8029e0b93166ee33ded9cdb6ab65647fb5b40`. Run/Build ont été sauvegardés avant changement dans `/srv/customer/jessiemessage-private/manager-before-admin-comfort-057.json`, 0600. Aucune capture hors ligne, restauration SQL, migration, nouvelle clé, révocation de session ou alerte de test dans ce lot.

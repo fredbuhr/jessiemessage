@@ -1,83 +1,81 @@
 # Reprendre JessieMessage
 
-**0.56.0 est activée le 18 octobre 2026 à 18:59 Europe/Paris. Mon PC est raccordé et reçoit la dernière sauvegarde chiffrée.** L’écran Administration → Sauvegardes propose maintenant une vérification graphique du déchiffrement sur le PC. La copie indépendante est acquise par reçus du collecteur ; le déchiffrement personnel de cette archive reste à constater. Ne pas refaire le raccordement accepté.
+**0.57.0 est activée le 18 octobre 2026 à 19:57 Europe/Paris.** Les liens administrateur ouverts depuis un autre site reprennent une session valide ; l’accueil et l’écran des sauvegardes sont simplifiés. Aucun outil à réinstaller sur le PC. Le collecteur Windows existant continue de fonctionner.
 
-Lire le [relevé 0.56](backup-verification-056.md), les [preuves structurées](activation-proofs/jm056-activation.json) et le [plan d’exploitation](production-readiness-2026-10-17.md). Les [destinations 0.55](backup-destinations-055.md) restent en service. Les relevés antérieurs conservent leur valeur historique.
+Lire le [relevé 0.57](admin-comfort-057.md), les [preuves structurées](activation-proofs/jm057-activation.json) et le [plan d’exploitation](production-readiness-2026-10-17.md). Les relevés [0.56](backup-verification-056.md) et [0.55](backup-destinations-055.md) restent historiques et décrivent les outils Windows inchangés.
+
+## Utilisation quotidienne
+
+Point d’entrée : [Administration](https://jessiemessage.com/admin/login). Une session valide est reprise ; une session déjà effacée, expirée ou révoquée demande une connexion normale. Les accès aux conversations, invitations/clients, sauvegardes et état du service sont visibles sur l’accueil.
+
+Administration → Sauvegardes affiche d’abord la dernière copie reçue, puis les destinations. Les réglages, détails techniques et la vérification ponctuelle sont repliés. Pour changer de dossier, utiliser le raccourci Bureau JessieMessage — Sauvegardes installé sur le PC. Le collecteur passe toutes les quinze minutes et à l’ouverture de session ; PC allumé, connecté, session Windows ouverte. Aucun nouveau raccordement ni nouvelle clé à demander.
+
+Le déchiffrement personnel de la capture courante reste à constater. L’outil 0.56 est accessible dans « Vérification ponctuelle sur le PC » ; il ne s’agit pas d’une manipulation quotidienne. La clé et sa phrase restent exclusivement sur le PC. Ne pas présenter une réception chiffrée comme un déchiffrement ou une restauration SQL.
 
 ## Source et exécution
 
 | Élément | Référence |
 | --- | --- |
-| Dépôt complet | `https://github.com/fredbuhr/jessiemessage`, branche `main` |
-| Version et repère | `0.56.0`, `release/0.56.0` |
-| Runtime et superviseur exécutés | `2faf32ce1bf22553d6dd62f053ebcdc76bdc9a5b`, arbre `8bc8029e0b93166ee33ded9cdb6ab65647fb5b40` |
-| Intégration applicative | [PR #71 fusionnée](https://github.com/fredbuhr/jessiemessage/pull/71), fusion `548f419b41c9ecb01797659ea2c97eeaddebd0d1`, même arbre |
-| Banc de test sur main | [PR #72 fusionnée](https://github.com/fredbuhr/jessiemessage/pull/72), fusion `8bdb5e261fa5ddc14cd7df9f18de95849decf56b`, arbre `13be35321b60c1f8c0bd0f7b732395bb8fda6a96`. Différences limitées à deux fichiers de tests Chrome ; fichiers de l’application et du kit identiques au runtime |
-| Checkout actif | `/srv/customer/jessiemessage-operator/backup-verification-056-2faf32ce` |
+| Dépôt et intégration | `https://github.com/fredbuhr/jessiemessage`, main, [PR #73 fusionnée](https://github.com/fredbuhr/jessiemessage/pull/73) |
+| Version et repère | `0.57.0`, `release/0.57.0` |
+| Runtime et superviseur exécutés | `5324677707d9bd6da85cde39c8b393fc7d7f1283`, arbre `9b517b6c9708b17461809243ca4a78b2d9aa097a` |
+| Fusion applicative | `9819f7998f9635febb69d6f19688e144b23663cf`, même arbre |
+| Checkout actif | `/srv/customer/jessiemessage-operator/admin-comfort-057-53246777` |
 | Profil | `messaging-photos-notify-recovery-crm-broadcast`, déploiement `primary-transition`, Node 24, port 3000 |
-| Données | Schéma 30, six configurations privées, mêmes comptes et clés |
+| Données | Schéma 30, six configurations privées, comptes, sessions, clés et autorisations PC conservés |
 
-Les commits de documentation ultérieurs sont distincts du code exécuté. Préparer les futurs changements depuis main, dans un autre checkout, puis épingler leur commit et leur arbre propres. Le principal `https://jessiemessage.com` et la recette `https://recette.jessiemessage.com` partagent runtime et données ; la recette n’est pas une base de test isolée. Les sauvegardes administrées sont réservées au principal.
+Les commits de documentation ultérieurs sont distincts du code exécuté. Préparer les futurs changements depuis main, dans un nouveau checkout, puis épingler leur commit et leur arbre. Le principal `https://jessiemessage.com` et la recette `https://recette.jessiemessage.com` partagent runtime et données ; la recette n’est pas une base isolée. Les sauvegardes administrées restent réservées au principal.
 
-Configurations : `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851`. Captures, alertes et état de copie : `/srv/customer/jessiemessage-private/recurring-backup-052`, mode 0700 ; fichiers privés en 0600. Aucune clé privée GPG sur le serveur.
+Configurations : `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851`. Captures, alertes et copie : `/srv/customer/jessiemessage-private/recurring-backup-052`, mode 0700 ; fichiers privés en 0600. Aucune clé privée GPG sur le serveur.
 
-Run Manager : `bash /srv/customer/jessiemessage-private/start-primary-backup-verification-056-2faf32ce.sh`. Lanceur 0700, 851 octets, SHA-256 `75596f26fcd861e401f07d99507d41608ca69db02f55887f9bd5ac5926918950`.
+Run Manager : `bash /srv/customer/jessiemessage-private/start-primary-admin-comfort-057-53246777.sh`. Lanceur 0700, 839 octets, SHA-256 `fac36f42ca51111a2200ea740c6eb05bf899ca0105f8e404627808cc4390573f`.
 
 Build :
 
 ```sh
-cd /srv/customer/jessiemessage-operator/backup-verification-056-2faf32ce && test "$(git rev-parse HEAD)" = 2faf32ce1bf22553d6dd62f053ebcdc76bdc9a5b && test "$(git rev-parse HEAD^{tree})" = 8bc8029e0b93166ee33ded9cdb6ab65647fb5b40 && test -z "$(git status --porcelain)" && npm run check
+cd /srv/customer/jessiemessage-operator/admin-comfort-057-53246777 && test "$(git rev-parse HEAD)" = 5324677707d9bd6da85cde39c8b393fc7d7f1283 && test "$(git rev-parse HEAD^{tree})" = 9b517b6c9708b17461809243ca4a78b2d9aa097a && test -z "$(git status --porcelain)" && npm run check
 ```
 
-[Manager Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) ; [terminal SSH](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal). Cycle normal de Build, sans réinstallation des dépendances ; aucune réinitialisation de site.
+[Manager Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) ; [terminal SSH](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal). Utiliser le cycle normal de Build, sans réinstallation des dépendances ni réinitialisation de site.
 
-## Étape personnelle immédiate : vérifier le déchiffrement
+## Connexion et sécurité
 
-1. Sur le PC Windows, ouvrir [Administration → Sauvegardes](https://jessiemessage.com/admin/backups) dans la session administrateur habituelle.
-2. Dans « Vérifier le déchiffrement sur le PC », télécharger la vérification Windows. Extraire tout le ZIP puis ouvrir **Verifier.cmd**.
-3. Choisir la copie chiffrée indiquée. Le trousseau existant `Downloads\JessieMessage-recuperation-052` est proposé ; Changer permet de le retrouver s’il a été déplacé. GPG peut ouvrir son Pinentry pour la phrase, exclusivement sur le PC.
+Le cookie Strict n’est pas envoyé lors du premier GET venant d’un autre site. Les refus précédents pouvaient l’effacer. Les navigations HTML GET/HEAD sans cookie passent maintenant par le document public de connexion ; sa preuve de session depuis la même origine permet de rejoindre la page demandée. Les retours sont limités à quatre chemins exacts et à des pages activées. Les API gardent leurs refus. Un lien ne crée aucun nouveau jeton ni autorisation.
 
-Le succès attendu est **DECHIFFREMENT_VERIFIE**. Il confirme cette archive uniquement. Le flux déchiffré est comparé en mémoire au nombre d’octets et au SHA-256 de la capture ; aucun fichier clair, export de clé ou envoi automatique du résultat. Le site conserve donc `decryptionStatus: not_checked`. Attendre le résultat personnel avant de consigner le déchiffrement comme acquis. La restauration SQL reste une preuve distincte.
-
-Le collecteur installé en 0.55 continue ses passages toutes les quinze minutes et à l’ouverture de session : PC allumé, connecté et session Windows ouverte. Le raccourci Bureau **JessieMessage - Sauvegardes-…** change graphiquement son dossier. Le site permet nom/type, suspension/reprise et révocation ; un autre appareil se raccorde par un nouveau kit. Dossier synchronisé ou partage réseau possibles ; API cloud directes et collecteur Linux restent des extensions futures.
-
-## Sauvegardes et alertes
-
-- Capture quotidienne **05:15 UTC**. Ne jamais lancer `capture --offline` pendant que l’application tourne ; utiliser le superviseur.
-- Deux archives disponibles, journal de quatre enregistrements ; dernière tentative `1792300533262`, dernier succès `1792300539807` (18 octobre à 05:15:39.807 UTC). Aucun checkpoint déclenché par cette activation.
-- Dernière archive `capture-1792300533262-3ae62972be4d93f5` : chiffré 402 792 octets, SHA-256 `dbd63e6d1a7d91b0f9372a062a761d5e92a4b3abb9dd9a44ddbcdd330d983578`.
-- Mon PC raccordé à **15:49:46.459 UTC**. Reçus conformes observés à **15:50:47.747**, **16:05:54.244**, puis **17:05:56.485 UTC après l’activation 0.56**. Intervalle entre les deux premiers : 906 497 ms. Copie courante confirmée, pas de synchronisation cloud certifiée.
-- À **17:09:14.579 UTC**, source/version relues propres, même journal et dernier succès, aucun incident actif ni alerte en attente, reçu PC courant conservé.
-- Deux mails [TEST] incident/rétablissement confirmés reçus le 18 octobre à **15:54:05 Europe/Paris**. Ne pas les renvoyer. Surveillance minute et reprise SMTP espacée jusqu’à quinze minutes.
-
-Le moniteur historique mesure la capture et garde `copyStatus: not_checked` ; l’écran privé lit les reçus du collecteur séparément. Dans l’état d’alertes, `lastObservedAt` date la dernière transition persistée d’incident/rétablissement, pas chaque échantillon sain. Lire les mesures de console après le dernier démarrage pour vérifier la cadence.
+Sessions indépendantes de 180 jours glissants, sans coupure d’inactivité. Cookies Strict/Secure/HttpOnly, MFA, origine, CSRF et révocation conservés. Un 403 de capacité de conversation offre une reprise ; un 401 ferme toujours l’accès. La correction ne ressuscite aucune session expirée, révoquée ou supprimée du navigateur.
 
 ## Validation et activation
 
-CI de l’application : [source 39145729016](https://github.com/fredbuhr/jessiemessage/actions/runs/39145729016) et [PR 39145732843](https://github.com/fredbuhr/jessiemessage/actions/runs/39145732843), cinq jobs réussis chacune : **2 483 réussites et 27 wrappers SQL ignorés sur 2 510 cas**, **383/383** par MariaDB 10.11 et 11.4, **110/110 Chrome**, authentification HTTPS intégrée ; syntaxe de 447 fichiers et build conformes.
+[CI source 39151369335](https://github.com/fredbuhr/jessiemessage/actions/runs/39151369335), [PR 39151389889](https://github.com/fredbuhr/jessiemessage/actions/runs/39151389889) et [main 39151664880](https://github.com/fredbuhr/jessiemessage/actions/runs/39151664880) : cinq jobs réussis chacune. Source exacte : **2 488 réussites et 27 wrappers SQL ignorés sur 2 515 cas**, zéro échec ; **383/383** par MariaDB 10.11 et 11.4 ; **112/112 Chrome**, sans saut ; authentification HTTPS/MFA intégrée ; syntaxe de 449 fichiers et build conformes.
 
-Windows PowerShell 5.1 : [source](https://github.com/fredbuhr/jessiemessage/actions/runs/39145728910), [PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39145732837) et [fusion applicative](https://github.com/fredbuhr/jessiemessage/actions/runs/39145940881) réussies. GPG natif portable épinglé, vrai déchiffrement binaire MDC et OCB, fenêtre graphique, annulation/échecs et absence de fichier clair ; clé synthétique jetable uniquement.
+Chrome vérifie réellement deux sites HTTPS locaux, l’absence du cookie Strict au premier GET externe, sa récupération depuis la même origine, le même jeton après reprise et le retour profond. Les retours extérieurs et doublons sont refusés. Le nouvel écran est vérifié au clavier, en français/anglais et sur trois largeurs ; un reçu de taille différente n’est pas confirmé. Aucun kit ou script Windows modifié : la validation Windows 0.56 reste applicable à ces mêmes fichiers.
 
-Le premier passage main a été interrompu après un démarrage Chrome trop long et une fixture conservée ouverte. La PR #72 rend sa fermeture systématique et borne le démarrage initial à 45 s ; les commandes ordinaires gardent 25 s. [CI du correctif 39147068115](https://github.com/fredbuhr/jessiemessage/actions/runs/39147068115) et [main 39147447171](https://github.com/fredbuhr/jessiemessage/actions/runs/39147447171) : cinq jobs réussis, dont 110/110 Chrome. Le passage PR a aussi réussi après une reprise ciblée demandée pour un HTTP 500 WebDriver dans un cas de transition existant ; cet écart reste tracé dans les preuves.
+Hébergement : **95/95 contrôles natifs sans saut**, préflight réel passé à **17:53:37.811758 UTC**, sans démarrage ni capture. Run/Build sauvegardés puis relus après enregistrement. Cycle Manager lancé à **17:57:51.679 UTC** ; statut Actif, modification **19:57 Europe/Paris**. Après le dernier message de démarrage : mesures **17:58:08.886 et 17:59:08.929 UTC**, intervalle **60 043 ms**, `current / OK`, aucun incident ni alerte en attente. [Preuve visuelle](activation-proofs/jm057-activation-20261018.jpg).
 
-Hébergement : **163/163 tests natifs, sans saut**, préflight réel réussi sans démarrage/capture, puis kit de la véritable archive validé en mémoire (22 529 octets). Préparation finale à **16:38:15.858795 UTC** ; cycle Manager lancé à **16:59:31.136 UTC**, statut Actif et modification 18:59 Europe/Paris. Après le dernier message de démarrage, échantillons **16:59:50.577 et 17:00:50.635 UTC**, intervalle **60 058 ms**, `current / OK`, aucun incident ni alerte en attente.
+À **17:59:58.923900 UTC**, **44/44 contrôles HTTPS**, TLS vérifié sans suivre les redirections, dont **18 empreintes exactes** : navigations sans effacement de cookie, refus API, origine, santé et sauvegardes réservées au principal. Le navigateur cloud est anonyme ; la reprise d’une session personnelle est couverte par la régression Chrome synthétique, pas présentée comme observée sur le PC du propriétaire.
 
-**66/66 contrôles HTTPS et vingt-deux empreintes exactes** : première lecture à 17:03:19.420436 UTC, deux attentes de statut corrigées et relues à **17:05:34.598593 UTC**. Sur la recette, un POST inconnu reçoit le refus générique 405, tandis que le GET privé reste 404 ; le nouveau téléchargement reste réservé au principal. Le navigateur cloud n’a pas de session administrateur personnelle ; les parcours authentifiés sont testés en CI. [Preuve visuelle](activation-proofs/jm056-activation-20261018.jpg).
+À **18:01:01.951179 UTC**, source relue propre, version 0.57.0, journal de quatre enregistrements et dernier succès inchangés ; aucun incident ni alerte en attente. L’absence de `backup-alert-state.json` correspond à l’état vide validé par le lecteur applicatif : ne pas supposer qu’un fichier est écrit à chaque mesure saine.
 
-## Repli immédiat 0.55
+## Sauvegardes conservées
 
-Run/Build sauvegardés dans `/srv/customer/jessiemessage-private/manager-before-backup-verification-056.json`, mode 0600. Reprendre ces paramètres puis le cycle Manager normal :
+Capture quotidienne **05:15 UTC**. Ne jamais lancer `capture --offline` pendant l’exécution de l’application ; utiliser le superviseur. Aucun checkpoint déclenché dans ce lot.
 
-- checkout `/srv/customer/jessiemessage-operator/backup-copies-055-088e6e1f` ;
-- HEAD `088e6e1f1dc283a28ab81359f756d76eb0ac9d9b`, arbre `2c9e81dc0b4c5e0e14d35c5caae051a87ac3fcdb` ;
-- Run `bash /srv/customer/jessiemessage-private/start-primary-backup-copies-055-088e6e1f.sh`.
+Dernière archive : `capture-1792300533262-3ae62972be4d93f5`, chiffré 402 792 octets, SHA-256 `dbd63e6d1a7d91b0f9372a062a761d5e92a4b3abb9dd9a44ddbcdd330d983578`. Dernier succès `1792300539807`, 18 octobre à 05:15:39.807 UTC. Deux archives disponibles au relevé 0.56, aucun retrait dans ce lot.
 
-Ancien checkout propre et lanceur vérifié : 839 octets, SHA-256 `c8f220c202d775fa60febba9754c368e8fae6d1d53ed5d3d4b4b8d8aa1527632`. Conserver l’état de copie et ses autorisations. Aucun repli réel ni restauration SQL provoqué ; un repli de code ne demande pas de restauration SQL.
+Mon PC reste raccordé, actif et en possession de cette copie. Dernier reçu observé **17:56:29.005 UTC**, donc **avant** l’activation 0.57 ; aucun nouveau reçu post-activation n’est revendiqué. Le moniteur mesure séparément la capture et conserve `copyStatus: not_checked`. L’écran privé lit les reçus du collecteur. Les deux mails [TEST] incident/rétablissement ont été confirmés reçus à 15:54:05 Europe/Paris ; ne pas les renvoyer.
+
+## Repli immédiat 0.56
+
+Run/Build antérieurs dans `/srv/customer/jessiemessage-private/manager-before-admin-comfort-057.json`, mode 0600. Reprendre ces paramètres puis le cycle Manager normal :
+
+- checkout `/srv/customer/jessiemessage-operator/backup-verification-056-2faf32ce` ;
+- HEAD `2faf32ce1bf22553d6dd62f053ebcdc76bdc9a5b`, arbre `8bc8029e0b93166ee33ded9cdb6ab65647fb5b40` ;
+- Run `bash /srv/customer/jessiemessage-private/start-primary-backup-verification-056-2faf32ce.sh`.
+
+Checkout propre et lanceur vérifié avant activation : 851 octets, SHA-256 `75596f26fcd861e401f07d99507d41608ca69db02f55887f9bd5ac5926918950`. Conserver l’état de copie et ses autorisations. Aucun repli réel, aucune restauration SQL ni rotation de clé effectués ; aucune restauration SQL n’est nécessaire pour revenir au code 0.56.
 
 ## Acquis et suite
 
-Invitations, messages, photos, notifications, récupération du mot de passe et fiches déjà acceptés. Sessions administrateur indépendantes de 180 jours renouvelables, sans coupure d’inactivité. Diffusions individuelles ordinaires sans accord supplémentaire ni métadonnées d’audience, limite 100 destinataires. Adresse officielle `contact@jessiemessage.com`. Aucun message client, campagne réelle, alerte de test ou rotation de clé réalisé dans ce lot.
+Invitations, messages, photos, notifications, récupération du mot de passe et fiches déjà acceptés. Diffusions individuelles ordinaires, sans accord supplémentaire ni métadonnées d’audience, limite 100. Adresse officielle `contact@jessiemessage.com`. Aucun message client, campagne réelle ou mail de test envoyé dans ce lot.
 
-Coffre/copie CRM 0.46 acquis (`COFFRE_DECHIFFRE_OK`, `COPIE_CRM30_OK`), restauration native isolée trente tables/photos vérifiée. Ne pas refaire une recette générale des appareils.
-
-Suite : constater le déchiffrement personnel de l’archive courante, puis la restitution native d’une capture contenant les nouvelles campagnes. Utiliser `photos-notify-recovery-crm-broadcast-application`, manifeste 10 / reçu 8, six clés et trente tables ; les objets SQL exécutables restent exclus (`completeDatabase: false`). Décisions de confidentialité, durées et effacement complet encore ouvertes, aucune purge automatique. Cadence effective et réception des alertes de la sonde GitHub restent à éprouver. Première diffusion personnelle, administration simultanée et téléchargement réel du diagnostic non consignés. Ces limites empêchent d’annoncer l’ensemble comme définitivement prêt pour la production.
+Coffre/copie CRM 0.46 acquis (`COFFRE_DECHIFFRE_OK`, `COPIE_CRM30_OK`) et restauration native isolée trente tables/photos vérifiée. Ne pas refaire une recette générale des appareils. Le déchiffrement personnel de l’archive courante, la restitution d’une capture contenant les campagnes, les décisions de confidentialité/durées/effacement complet restent ouverts. La restitution applicative utilise `photos-notify-recovery-crm-broadcast-application`, manifeste 10 / reçu 8, six clés et trente tables ; objets SQL exécutables exclus (`completeDatabase: false`). Aucune purge automatique. La première diffusion personnelle et l’administration simultanée ne sont pas consignées. Ne pas annoncer l’ensemble comme définitivement prêt pour la production.

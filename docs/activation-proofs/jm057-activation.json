@@ -1,0 +1,274 @@
+{
+  "version": 1,
+  "stage": "0.57.0",
+  "source": {
+    "head": "5324677707d9bd6da85cde39c8b393fc7d7f1283",
+    "tree": "9b517b6c9708b17461809243ca4a78b2d9aa097a",
+    "release": "release/0.57.0",
+    "merge": "9819f7998f9635febb69d6f19688e144b23663cf",
+    "pr": 73
+  },
+  "ci": {
+    "sourceRun": 39151369335,
+    "sourceJobs": [
+      {
+        "id": 117745534001,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117745534081,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117745534084,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117745534121,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117745534168,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "prRun": 39151389889,
+    "prJobs": [
+      {
+        "id": 117745590828,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117745590930,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117745590961,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117745591051,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117745591089,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "general": {
+      "tests": 2515,
+      "passed": 2488,
+      "skippedSqlWrappers": 27,
+      "failed": 0,
+      "syntaxFiles": 449
+    },
+    "chrome": {
+      "tests": 112,
+      "passed": 112,
+      "skipped": 0,
+      "failed": 0,
+      "regressions": [
+        "real cross-site Strict cookie navigation and deep return",
+        "copied backup overview with collapsed details and mismatch refusal"
+      ]
+    },
+    "mariaDB": {
+      "10.11": {
+        "passed": 383,
+        "failed": 0,
+        "skipped": 0
+      },
+      "11.4": {
+        "passed": 383,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "mainRun": 39151664880,
+    "mainJobs": [
+      {
+        "id": 117746397851,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117746397954,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117746398021,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117746398045,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117746398053,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "preparation": {
+    "at": "2026-10-18T17:53:37.811758+00:00",
+    "runtimePath": "/srv/customer/jessiemessage-operator/admin-comfort-057-53246777",
+    "native": {
+      "tests": 95,
+      "passed": 95,
+      "failed": 0,
+      "skipped": 0
+    },
+    "preflight": {
+      "status": "passed",
+      "started": false,
+      "backupStarted": false,
+      "enabled": true,
+      "hourUtc": 5,
+      "minuteUtc": 15
+    },
+    "launcher": {
+      "path": "/srv/customer/jessiemessage-private/start-primary-admin-comfort-057-53246777.sh",
+      "bytes": 839,
+      "sha256": "fac36f42ca51111a2200ea740c6eb05bf899ca0105f8e404627808cc4390573f"
+    },
+    "privateReport": "/srv/customer/jessiemessage-private/admin-comfort-preparation-057.json"
+  },
+  "security": {
+    "strictCookie": true,
+    "slidingDays": 180,
+    "inactivityLogout": false,
+    "newSessionOnReturn": false,
+    "newPermission": false,
+    "mfaUnchanged": true,
+    "originAndCsrfUnchanged": true,
+    "noMigration": true,
+    "windowsToolsUnchanged": true
+  },
+  "acceptance": {
+    "personalDecryption": "not_checked",
+    "pcCopy": "last current receipt observed before activation; post-start capture monitor healthy; no new PC receipt claimed",
+    "generalProductionReadiness": "not_claimed"
+  },
+  "activation": {
+    "launchedAt": "2026-10-18T17:57:51.679Z",
+    "managerStatus": "Actif",
+    "managerModificationParis": "2026-10-18 19:57",
+    "dependenciesReinstalled": false,
+    "sampleBoundary": "strictly after the last listening marker",
+    "samples": [
+      {
+        "checkedAt": 1792346288886,
+        "state": "current",
+        "code": "OK",
+        "activeIncident": false,
+        "pendingAlerts": 0
+      },
+      {
+        "checkedAt": 1792346348929,
+        "state": "current",
+        "code": "OK",
+        "activeIncident": false,
+        "pendingAlerts": 0
+      }
+    ],
+    "sampleIntervalMs": 60043,
+    "screenshot": {
+      "path": "docs/activation-proofs/jm057-activation-20261018.jpg",
+      "bytes": 90425,
+      "sha256": "78df769fa8f8c76df730d3565179ed347ed98901a6db38abb245a65c4b5d09d5"
+    }
+  },
+  "https": {
+    "at": "2026-10-18T17:59:58.923900+00:00",
+    "tlsVerified": true,
+    "redirectsFollowed": false,
+    "authenticatedRequests": false,
+    "total": 44,
+    "passed": 44,
+    "failed": 0,
+    "exactAssetHashes": 18,
+    "privateReport": "/srv/customer/jessiemessage-private/admin-comfort-https-057.json",
+    "coverage": [
+      "five primary HTML administrator pages GET/HEAD redirect without Set-Cookie",
+      "closed backup return path despite injected query",
+      "nine exact public source files on primary and recipe",
+      "health and readiness",
+      "unauthenticated APIs and protected assets refused",
+      "Origin checks before verification download and logout",
+      "primary-only backup pages and kit unavailable on recipe"
+    ]
+  },
+  "observations": {
+    "at": "2026-10-18T18:01:01.951179+00:00",
+    "sourceClean": true,
+    "applicationVersion": "0.57.0",
+    "journalRecords": 4,
+    "lastSuccessAt": 1792300539807,
+    "alertStatePersisted": false,
+    "activeIncident": false,
+    "pendingAlerts": 0,
+    "destinations": [
+      {
+        "kind": "computer",
+        "enabled": true,
+        "paired": true,
+        "pairedAt": 1792338586459,
+        "lastSeenAt": 1792346189004,
+        "lastReceiptAt": 1792346189005,
+        "currentCopy": true,
+        "receiptAfterActivation": false
+      }
+    ],
+    "privateReport": "/srv/customer/jessiemessage-private/admin-comfort-observations-057.json",
+    "note": "Absent backup-alert-state.json maps to the validated empty state in the application reader. Initial observation script assumed a persisted file; only this read was corrected. The HTTPS report remained 44/44 and was not repeated."
+  },
+  "rollback": {
+    "head": "2faf32ce1bf22553d6dd62f053ebcdc76bdc9a5b",
+    "tree": "8bc8029e0b93166ee33ded9cdb6ab65647fb5b40",
+    "runtimePath": "/srv/customer/jessiemessage-operator/backup-verification-056-2faf32ce",
+    "managerSnapshot": "/srv/customer/jessiemessage-private/manager-before-admin-comfort-057.json",
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-backup-verification-056-2faf32ce.sh",
+    "launcherSha256": "75596f26fcd861e401f07d99507d41608ca69db02f55887f9bd5ac5926918950",
+    "sourceCleanObserved": true,
+    "noRollbackPerformed": true
+  },
+  "localVerification": {
+    "fullLog": "incomplete despite zero reported shell exit; not counted as full validation",
+    "authoritativeFullSuite": "exact-source, PR and main CI plus native hosting checks",
+    "initialFocusedWorkingDraft": {
+      "tests": 73,
+      "passed": 51,
+      "skippedNativeUnavailable": 22,
+      "failed": 0
+    }
+  }
+}
