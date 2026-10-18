@@ -1,5 +1,10 @@
 /* Explicit UI catalogue only. User messages, captions and names are never keys. */
 globalThis.JessieI18n?.register({
+  "Réponses rapides": "Quick replies",
+  "Langue des réponses": "Reply language",
+  "Choisis une phrase. Elle s’ajoute au brouillon ; tu peux la modifier avant d’envoyer.": "Choose a phrase. It is added to your draft; you can edit it before sending.",
+  "Réponse ajoutée au brouillon. Relis le message avant de l’envoyer.": "Reply added to your draft. Review the message before sending.",
+  "Cette réponse ne peut pas être ajoutée. Raccourcis ou corrige le brouillon puis réessaie.": "This reply cannot be added. Shorten or correct the draft and try again.",
   "Messages suivants": "Next messages",
   "Messages récents ↓": "Recent messages ↓",
   "Ce message a été supprimé.": "This message has been deleted.",

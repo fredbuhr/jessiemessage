@@ -446,7 +446,7 @@ test("authenticated pages share the safe UI shell and its explicit assets", asyn
     assert.equal(head.status, 200);
     assert.equal(await head.text(), "");
   }
-  for (const [endpoint, type] of [["/chat.js", /javascript/], ["/chat-model.js", /javascript/], ["/chat.css", /text\/css/]]) {
+  for (const [endpoint, type] of [["/chat.js", /javascript/], ["/chat-model.js", /javascript/], ["/quick-replies.js", /javascript/], ["/chat.css", /text\/css/]]) {
     const response = await fetch(`${base}${endpoint}`);
     assert.equal(response.status, 200);
     headersArePrivate(response);

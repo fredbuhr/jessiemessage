@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -233,7 +234,9 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       const response = await fetch(base + pathFor("client", "export"), { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", "X-Jessie-Request": "1", ...headersFor(a) }, body: JSON.stringify({ includePhotos: false }) });
       assert.equal(response.status, 200); assert.equal(response.headers.get("content-type"), "application/zip");
       const archive = Buffer.from(await response.arrayBuffer()); assert.equal(archive.readUInt32LE(), 0x04034b50);
-      assert.ok(archive.includes(Buffer.from(firstMessage.body))); assert.ok(archive.includes(Buffer.from(replyMessage.body)));
+      const exported = JSON.parse(execFileSync("python3", ["-c", "import io,sys,zipfile;z=zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read()));assert z.testzip() is None;print(z.read('conversation.json').decode())"], { input: archive, encoding: "utf8" }));
+      assert.deepEqual(exported.messages.map(message => message.body), [firstMessage.body, replyMessage.body]);
+      assert.deepEqual(exported.messages.map(message => message.sender), ["peer", "me"]);
       for (const marker of [clientA.email, clientB.email, adminEmail, "clientMessageId", "campaignId", "bodyEncrypted", "broadcast_preferences"]) assert.equal(archive.includes(Buffer.from(marker)), false);
       assert.deepEqual(await connection.query("SELECT user_id, last_read_sequence, updated_at FROM chat_receipts WHERE conversation_id = ? ORDER BY user_id", [clientA.conversationId]), receipts);
     });

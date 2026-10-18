@@ -1,5 +1,6 @@
 import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
 import { prepareImageUpload } from "/image-preparation.js";
+import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";
 
 const ui = globalThis.JessieI18n ?? {
   register() {}, t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -32,6 +33,7 @@ let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersi
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
 let conversationDownload = null; let conversationDownloadCapability = null;
+let quickReplyContext = null, quickReplyLanguage = null;
 let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
 let notificationsPanel = null;
 let pendingNotification = globalThis.JessieNotificationLink?.read() ?? null;
@@ -137,6 +139,7 @@ function clearImages() {
 }
 function clearChat() {
   conversationDownload?.suspend();
+  closeQuickReplies();
   clearMessageAnnouncement(); messageRows.clear();
   clearImages();
   ui.forget(el("messages")); el("messages").replaceChildren(); ui.text(el("peer-name"), "Messages privés");
@@ -174,6 +177,7 @@ function mountNotificationSettings() {
   });
 }
 function clearPrivate() {
+  quickReplyLanguage = null;
   clearNotificationSettings();
   cancelConfirmation(); stopReconnect(); resumeTask = null; retryConnection(false);
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
@@ -714,7 +718,11 @@ function renderMeta(state) {
   el("message-body").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image");
   el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage ? validCaption(el("message-body").value) : validBody(el("message-body").value));
-  el("photo-tools").hidden = !mediaEnabled; el("open-gallery").hidden = !mediaEnabled;
+  el("photo-tools").hidden = !mediaEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
+  for (const id of ["pick-image", "open-library"]) el(id).hidden = !mediaEnabled;
+  el("open-quick-replies").hidden = role !== "admin";
+  el("open-quick-replies").disabled = !canUseQuickReplies();
+  if (quickReplyContext && (!canUseQuickReplies() || !fresh(quickReplyContext.ticket))) closeQuickReplies();
   for (const id of ["pick-image", "open-library"]) el(id).disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   renderImageDraft(state);
   el("pending-controls").hidden = state.pending?.status !== "retry";
@@ -1051,6 +1059,51 @@ async function sendWithFocus(retry, button) {
       && el("message-body").value === "" && focusWasLost(button)) focusVisible(el("message-body"));
   }
 }
+function canUseQuickReplies() {
+  const state = currentState();
+  return role === "admin" && ready && visible() && !loggingOut && !logoutBusy && !selectionLoading && !sendBusy
+    && Boolean(sessionOwner && state?.conversation?.canSend && !state.pending);
+}
+function closeQuickReplies(restoreFocus = false) {
+  quickReplyContext = null;
+  if (el("quick-replies-dialog").open) el("quick-replies-dialog").close();
+  ui.forget(el("quick-replies-list")); el("quick-replies-list").replaceChildren();
+  notice("", false, "quick-replies-status");
+  if (restoreFocus) focusVisible(el("message-body"));
+}
+function renderQuickReplies() {
+  ui.forget(el("quick-replies-list")); el("quick-replies-list").replaceChildren();
+  for (const reply of quickReplyOptions(quickReplyLanguage)) {
+    const button = document.createElement("button"); button.type = "button"; button.className = "quick-reply";
+    button.dataset.quickReply = reply.id; button.lang = quickReplyLanguage; ui.rawText(button, reply.text);
+    button.addEventListener("click", () => {
+      const context = quickReplyContext, state = currentState();
+      if (!context || !canUseQuickReplies() || !fresh(context.ticket) || context.owner !== sessionOwner.id || context.csrf !== csrf) { closeQuickReplies(); return; }
+      try {
+        const value = appendQuickReply(el("message-body").value, reply.id, quickReplyLanguage, Boolean(state.imageDraft));
+        el("message-body").value = value; state.draft = value; closeQuickReplies(true); renderMeta(state);
+        el("message-body").setSelectionRange?.(value.length, value.length);
+        notice("Réponse ajoutée au brouillon. Relis le message avant de l’envoyer.");
+      } catch {
+        notice("Cette réponse ne peut pas être ajoutée. Raccourcis ou corrige le brouillon puis réessaie.", true, "quick-replies-status");
+      }
+    });
+    el("quick-replies-list").append(button);
+  }
+}
+el("open-quick-replies").addEventListener("click", () => {
+  if (!canUseQuickReplies()) return;
+  quickReplyContext = { ticket: snapshot(currentState()), owner: sessionOwner.id, csrf };
+  quickReplyLanguage ??= ui.getLanguage() === "en" ? "en" : "fr";
+  el("quick-reply-language").value = quickReplyLanguage; renderQuickReplies();
+  el("quick-replies-dialog").showModal(); focusVisible(el("quick-reply-language"));
+});
+el("quick-reply-language").addEventListener("change", () => {
+  if (!quickReplyContext || !["fr", "en"].includes(el("quick-reply-language").value)) return;
+  quickReplyLanguage = el("quick-reply-language").value; renderQuickReplies(); notice("", false, "quick-replies-status");
+});
+el("close-quick-replies").addEventListener("click", () => closeQuickReplies(true));
+el("quick-replies-dialog").addEventListener("close", () => { if (quickReplyContext && !el("quick-replies-dialog").open) closeQuickReplies(true); });
 el("composer").addEventListener("submit", (event) => { event.preventDefault(); void sendWithFocus(false, el("send")); });
 el("message-body").addEventListener("input", () => { const state = currentState(); if (state) { state.draft = el("message-body").value; renderMeta(state); } });
 el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
@@ -1120,6 +1173,7 @@ globalThis.navigator?.serviceWorker?.addEventListener("message", (event) => {
 });
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
+    closeQuickReplies();
     clearNotificationSettings();
     cancelConfirmation(); stopReconnect(); resumeTask = null; clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend(); conversationDownload?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
