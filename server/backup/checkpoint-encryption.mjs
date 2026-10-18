@@ -157,7 +157,7 @@ async function gpg({ source, recipient, home, spawnClient, active, signal, timeo
     "--no-auto-key-locate", "--no-auto-key-retrieve", "--no-auto-key-import", "--no-encrypt-to", "--no-default-recipient",
     "--trust-model", "always", "--homedir", "/proc/self/fd/3", "--status-fd", "5"];
   if (inspect) args.push("--with-colons", "--fixed-list-mode", "--show-keys", "/proc/self/fd/4");
-  else args.push("--rfc4880", "--compress-algo", "none", "--cipher-algo", "AES256", "--recipient-file", "/proc/self/fd/4", "--output", "-", "--encrypt");
+  else args.push("--compress-algo", "none", "--cipher-algo", "AES256", "--recipient-file", "/proc/self/fd/4", "--output", "-", "--encrypt");
   let child, timer, abort, failure, statusSize = 0, bytes = 0;
   const status = [], collected = [], digest = createHash("sha256");
   try {
@@ -197,11 +197,23 @@ async function gpg({ source, recipient, home, spawnClient, active, signal, timeo
     active(); if (failure) throw failure;
     if (code !== 0 || termination !== null || bytes < 1) fail("GPG");
     const states = Buffer.concat(status).toString("ascii");
-    // GnuPG DETAILS permits an optional AEAD identifier. Zero still means
-    // the required MDC/AES-256 profile; a nonzero AEAD mode is not accepted.
-    if (!inspect && (!/^\[GNUPG:\] BEGIN_ENCRYPTION 2 9(?: 0)?\r?$/m.test(states) || !/^\[GNUPG:\] END_ENCRYPTION\r?$/m.test(states)
-      || /^\[GNUPG:\] (?:FAILURE|ERROR|INV_RECP|NO_RECP)\b/m.test(states))) fail("GPG");
-    return { bytes, sha256: digest.digest("hex"), ...(inspect ? { content: Buffer.concat(collected) } : {}) };
+    let protection;
+    if (!inspect) {
+      // GnuPG negotiates authenticated protection from the pinned key.
+      // Whitelist only AES-256 with MDC or OCB, including the documented
+      // optional zero AEAD identifier in a legacy MDC status line.
+      const lines = states.split(/\r?\n/), starts = [], ends = [];
+      for (let index = 0; index < lines.length; index++) {
+        if (lines[index].startsWith("[GNUPG:] BEGIN_ENCRYPTION")) starts.push(index);
+        if (lines[index] === "[GNUPG:] END_ENCRYPTION") ends.push(index);
+      }
+      if (starts.length !== 1 || ends.length !== 1 || ends[0] <= starts[0]
+        || /^\[GNUPG:\] (?:FAILURE|ERROR|INV_RECP|NO_RECP)\b/m.test(states)) fail("GPG");
+      if (/^\[GNUPG:\] BEGIN_ENCRYPTION 2 9(?: 0)?$/.test(lines[starts[0]])) protection = "mdc";
+      else if (lines[starts[0]] === "[GNUPG:] BEGIN_ENCRYPTION 0 9 2") protection = "ocb-aead";
+      else fail("GPG");
+    }
+    return { bytes, sha256: digest.digest("hex"), ...(inspect ? { content: Buffer.concat(collected) } : { protection }) };
   } catch (error) { child?.kill("SIGKILL"); if (error instanceof CheckpointEncryptionError) throw error; fail("GPG"); }
   finally { clearTimeout(timer); signal?.removeEventListener("abort", abort); for (const chunk of [...status, ...collected]) chunk.fill(0); }
 }
@@ -291,7 +303,7 @@ export async function encryptCheckpointArchive(value, internal = {}) {
         finally { await saved.file.close(); }
         const after = await readHash(source, active); await unchanged(recipient);
         if (after.bytes !== original.bytes || after.sha256 !== original.sha256) fail("CHANGED");
-        return Object.freeze({ format: "jessiemessage-checkpoint-encryption", version: 1, createdAt, encrypted: true,
+        return Object.freeze({ format: "jessiemessage-checkpoint-encryption", version: 1, createdAt, encrypted: true, protection: encrypted.protection,
           decryptionVerified: false, independentCopyPending: true,
           source: Object.freeze({ file: SOURCE, bytes: original.bytes, sha256: original.sha256 }),
           recipient: Object.freeze({ file: PUBLIC_KEY, sha256: key.sha256, fingerprint }),

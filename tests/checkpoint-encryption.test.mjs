@@ -78,7 +78,7 @@ test("encryption publishes closed honest metadata and verifies byte hashes on di
   const actual = await encryptCheckpointArchive(f.selected, { spawnClient: gpg.spawnClient, clock: () => now });
   const ciphertext = await readFile(path.join(f.checkpointDirectory, "checkpoint.tar.gz.gpg"));
   assert.deepEqual(actual, { format: "jessiemessage-checkpoint-encryption", version: 1, createdAt: now,
-    encrypted: true, decryptionVerified: false, independentCopyPending: true,
+    encrypted: true, protection: "mdc", decryptionVerified: false, independentCopyPending: true,
     source: { file: "checkpoint.tar.gz", bytes: f.source.length, sha256: digest(f.source) },
     recipient: { file: "recipient-public.asc", sha256: f.selected.recipientSha256, fingerprint },
     ciphertext: { file: "checkpoint.tar.gz.gpg", bytes: ciphertext.length, sha256: digest(ciphertext) } });
@@ -97,15 +97,18 @@ test("encryption publishes closed honest metadata and verifies byte hashes on di
     assert.equal(call.args.includes("--import"), false); assert.equal(JSON.stringify(call).includes(marker), false);
   }
   assert.ok(gpg.observed[1].args.includes("--recipient-file"));
-  assert.ok(gpg.observed[1].args.includes("--rfc4880"));
+  assert.equal(gpg.observed[1].args.includes("--rfc4880"), false);
   assert.equal(gpg.observed[1].args.includes("--force-mdc"), false);
   assert.equal(gpg.observed[1].args[gpg.observed[1].args.indexOf("--cipher-algo") + 1], "AES256");
 });
 
-test("documented optional zero AEAD identifier preserves the required MDC AES-256 profile", { skip: !supported }, async t => {
-  const f = await fixture(t);
-  const gpg = fakeGpg({ status: "[GNUPG:] BEGIN_ENCRYPTION 2 9 0\n[GNUPG:] END_ENCRYPTION\n" });
-  assert.equal((await encryptCheckpointArchive(f.selected, gpg)).encrypted, true);
+test("only documented authenticated AES-256 MDC and OCB profiles are identified in the receipt", { skip: !supported }, async t => {
+  for (const [parameters, protection] of [["2 9", "mdc"], ["2 9 0", "mdc"], ["0 9 2", "ocb-aead"]]) {
+    const f = await fixture(t), gpg = fakeGpg({ status: `[GNUPG:] BEGIN_ENCRYPTION ${parameters}\n[GNUPG:] END_ENCRYPTION\n` });
+    const actual = await encryptCheckpointArchive(f.selected, gpg);
+    assert.equal(actual.encrypted, true); assert.equal(actual.protection, protection);
+    assert.equal(JSON.parse(await readFile(path.join(f.checkpointDirectory, "encryption-receipt.json"), "utf8")).protection, protection);
+  }
 });
 
 test("encryption and preflight reject unsafe or accessor configuration before reading it", async t => {
@@ -170,8 +173,13 @@ test("GPG failure missing final status or empty ciphertext never publishes succe
   for (const config of [{ code: 2 }, { status: "[GNUPG:] BEGIN_ENCRYPTION 2 9\n" },
     { status: "[GNUPG:] BEGIN_ENCRYPTION 0 9\n[GNUPG:] END_ENCRYPTION\n" },
     { status: "[GNUPG:] BEGIN_ENCRYPTION 2 9 2\n[GNUPG:] END_ENCRYPTION\n" },
-    { status: "[GNUPG:] BEGIN_ENCRYPTION 0 9 2\n[GNUPG:] END_ENCRYPTION\n" },
+    { status: "[GNUPG:] BEGIN_ENCRYPTION 0 9 1\n[GNUPG:] END_ENCRYPTION\n" },
+    { status: "[GNUPG:] BEGIN_ENCRYPTION 0 9 3\n[GNUPG:] END_ENCRYPTION\n" },
+    { status: "[GNUPG:] BEGIN_ENCRYPTION 0 7 2\n[GNUPG:] END_ENCRYPTION\n" },
     { status: "[GNUPG:] BEGIN_ENCRYPTION 2 7 0\n[GNUPG:] END_ENCRYPTION\n" },
+    { status: "[GNUPG:] END_ENCRYPTION\n[GNUPG:] BEGIN_ENCRYPTION 2 9\n" },
+    { status: "[GNUPG:] BEGIN_ENCRYPTION 2 9\n[GNUPG:] BEGIN_ENCRYPTION 0 9\n[GNUPG:] END_ENCRYPTION\n" },
+    { status: "[GNUPG:] BEGIN_ENCRYPTION 2 9\n[GNUPG:] END_ENCRYPTION\n[GNUPG:] END_ENCRYPTION\n" },
     { status: "[GNUPG:] BEGIN_ENCRYPTION 2 9\n[GNUPG:] END_ENCRYPTION\n[GNUPG:] FAILURE encrypt 1\n" },
     { ciphertext: Buffer.alloc(0) }, { throwSpawn: true }]) {
     const f = await fixture(t); await assert.rejects(encryptCheckpointArchive(f.selected, fakeGpg(config)), closedFailure); await noReceipt(f);
@@ -240,6 +248,7 @@ test("standard GPG public-only encryption roundtrips independently with a synthe
     assert.deepEqual(recovered, f.source);
     const ciphertext = await readFile(filename); assert.equal(ciphertext.includes(Buffer.from(marker)), false);
     assert.equal(result.decryptionVerified, false); assert.equal(result.independentCopyPending, true);
+    assert.ok(["mdc", "ocb-aead"].includes(result.protection));
     assert.deepEqual(await readdir(f.recipientDirectory), ["recipient-public.asc"]);
   } finally {
     try { execFileSync("/usr/bin/gpgconf", ["--homedir", home, "--kill", "gpg-agent"], { env, stdio: "ignore", timeout: 3000 }); } catch { /* Fixture cleanup only. */ }
