@@ -1,4 +1,5 @@
 import { constants } from "node:fs";
+import application from "../package.json" with { type: "json" };
 import { chmod, lstat, mkdir, open, readdir, realpath, rmdir, unlink } from "node:fs/promises";
 import { createHash, randomBytes } from "node:crypto";
 import { execFile, spawn } from "node:child_process";
@@ -196,7 +197,7 @@ async function capture(scope, now, snapshots, selected) {
     await validatePhotoBundle(files, selected);
     payload = Buffer.from(JSON.stringify({ format: FORMAT, version: payloadVersion(selected),
       ...(["messaging", "messaging-photos", "messaging-photos-notify", PRIMARY_CRM_PROFILE].includes(selected.profile) ? { profile: selected.profile } : {}),
-      createdAt: new Date(now).toISOString(), applicationVersion: "0.24.0", files }) + "\n", "utf8");
+      createdAt: new Date(now).toISOString(), applicationVersion: application.version, files }) + "\n", "utf8");
     if (payload.length > PAYLOAD_LIMIT) fail("PRIVATE_SECRETS_SOURCE");
     return payload;
   } catch (error) { payload?.fill(0); throw error; }
