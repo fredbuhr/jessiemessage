@@ -6,10 +6,10 @@ function Assert-Fails { param([scriptblock]$Operation) $failed = $false; try { $
 function Invoke-FixtureGpg {
     param([string[]]$Arguments)
     $previous = $ErrorActionPreference
-    try { $ErrorActionPreference = 'Continue'; $output = @(& $script:FixtureGpg @Arguments 2>$null); $code = $LASTEXITCODE }
+    try { $ErrorActionPreference = 'Continue'; $output = @(& $script:FixtureGpg @Arguments 2>&1); $code = $LASTEXITCODE }
     finally { $ErrorActionPreference = $previous }
-    if ($code -ne 0) { throw 'Synthetic GPG fixture failed.' }
-    return $output
+    if ($code -ne 0) { throw ('Synthetic CI GPG fixture failed: ' + ($output -join ' ')) }
+    return @($output | Where-Object { $_ -is [string] })
 }
 $root = Join-Path $env:RUNNER_TEMP ('jm-verify-' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $root
@@ -100,7 +100,9 @@ class Fixture {
     # Stop only the two synthetic per-test agents so their handles do not impede cleanup.
     $gpgconf = Join-Path ([IO.Path]::GetDirectoryName($script:FixtureGpg)) 'gpgconf.exe'
     if (Test-Path -LiteralPath $gpgconf) {
+        $ErrorActionPreference = 'Continue'
         foreach ($directory in @($keyHome, (Join-Path $root 'empty key home'))) { & $gpgconf --homedir $directory --kill gpg-agent 2>$null }
+        $ErrorActionPreference = 'Stop'
     }
     Remove-Item -LiteralPath $root -Recurse -Force
 }
