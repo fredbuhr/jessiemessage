@@ -55,6 +55,6 @@ try {
     Assert-True ((Read-JmConfiguration $jmPrivate).LocationId -ceq ('3' * 32)) 'Atomic settings replacement failed.'
     $jmTask = New-JmTaskDefinition (Join-Path $jmPrivate 'agent.ps1')
     Assert-True ($jmTask.Principal.LogonType -eq 3 -and $jmTask.Principal.RunLevel -eq 0) 'Unexpected task privilege or logon type.'
-    Assert-True ($jmTask.Triggers.Count -eq 2 -and $jmTask.Triggers[0].Repetition.Interval -eq 'PT15M') 'Wrong task timing.'
+    Assert-True ($jmTask.Triggers.Count -eq 2 -and [Xml.XmlConvert]::ToTimeSpan($jmTask.Triggers[0].Repetition.Interval).TotalMinutes -eq 15) 'Wrong task timing.'
     Write-Output 'Windows: hash, interrupted/corrupt copy, no overwrite, receipt ordering, DPAPI and task definition verified. No real endpoint or task registered.'
 } finally { Remove-Item -LiteralPath $jmTestRoot -Recurse -Force }

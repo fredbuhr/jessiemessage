@@ -39,7 +39,7 @@ function Save-JmConfiguration {
     $jmTemporary = Join-Path $Directory ([Guid]::NewGuid().ToString('N') + '.tmp')
     try {
         $Configuration | Export-Clixml -LiteralPath $jmTemporary -Depth 5
-        if (Test-Path -LiteralPath $jmTarget) { [IO.File]::Replace($jmTemporary, $jmTarget, $null) }
+        if (Test-Path -LiteralPath $jmTarget) { [IO.File]::Replace($jmTemporary, $jmTarget, [NullString]::Value) }
         else { [IO.File]::Move($jmTemporary, $jmTarget) }
     } finally { if (Test-Path -LiteralPath $jmTemporary) { Remove-Item -LiteralPath $jmTemporary -Force } }
 }
