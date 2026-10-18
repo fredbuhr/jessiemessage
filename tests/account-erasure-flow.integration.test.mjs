@@ -200,11 +200,12 @@ test("durable account erasure removes the selected graph and actual encrypted fi
         await new Promise(done => api.close(done));
         const managedRoot = path.join(directory, "managed-runtime"); await mkdir(managedRoot, { mode: 0o700 });
         managed = await managedClosureFixture(step, managedRoot); await managed.runtime.start();
-        inspector = await createBackupInspectionPool(process.env); let inventoryChecks = 0;
+        inspector = await createBackupInspectionPool(process.env); let inventoryChecks = 0, inventoryRejections = 0;
         const operations = createClosureOperations({ store, storage, journalFor, batch, clock: () => now,
           async inspectExecutableObjects() {
             const c = await inspector.getConnection();
             try { await assertBackupInspection(c, options.database); inventoryChecks++; return { verified: true }; }
+            catch (error) { if (error?.code === "BACKUP_INSPECTION_CONFIG") inventoryRejections++; throw error; }
             finally { await c.release(); }
           },
           // Disposable fixture: this private directory is retained independently
@@ -220,7 +221,10 @@ test("durable account erasure removes the selected graph and actual encrypted fi
             assert.equal(rows.length, 1); assert.equal(rows[0].body, null); assert.equal(rows[0].owner, null, "DML exposes a partial trigger record, not privileged executable inspection");
           }
           finally { await dml.release(); }
-          await assert.rejects(runManagedClosures({ runtime: managed.runtime, operations, directory: journalRoot, source: async () => {} }), { code: "BACKUP_INSPECTION_CONFIG" });
+          // The existing capture-lock facade deliberately sanitizes callback
+          // failures. Check the real rejection as well as the public boundary.
+          await assert.rejects(runManagedClosures({ runtime: managed.runtime, operations, directory: journalRoot, source: async () => {} }), { code: "RECURRING_FILES_IO" });
+          assert.equal(inventoryRejections, 1);
           assert.equal(managed.runtime.state().status, "running"); assert.equal(await databaseHash(), before);
         } finally { await connection.query("DROP TRIGGER closure_fixture_trigger"); }
         await runManagedClosures({ runtime: managed.runtime, operations, directory: journalRoot, source: async () => {} });
