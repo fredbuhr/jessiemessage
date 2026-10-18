@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "stage": "0.54",
+  "type": "stable_release_prepared",
+  "preparedAt": "2026-10-18T14:07:12.747118Z",
+  "applicationVersion": "0.54.0",
+  "sourceHead": "6cfce890827c835fdbda2488163b5c0f1695b2dc",
+  "sourceTree": "9308cb4dc736e7a869fa50796801ddc83a098d69",
+  "releaseBranch": "release/0.54.0",
+  "sourceParents": ["08c90dc68ab0db43ef7c48951f34df786312438e", "a688b30ef4e039a30de7bf05e98761845dcee8d4"],
+  "consolidation": {
+    "pr": 69,
+    "merged": true,
+    "mainCommit": "12c16c6f0a63da3b20ba9af522447caf19f6fc5f",
+    "mainTreeMatchesSource": true,
+    "monitoringFilesUnchanged": 6,
+    "historyRewritten": false
+  },
+  "ci": {
+    "candidateRunId": 39133998681,
+    "candidateJobsPassed": 5,
+    "candidateWindowsRunId": 39133998668,
+    "candidateWindowsPassed": true,
+    "mainRunId": 39134356546,
+    "mainJobsPassed": 5,
+    "mainWindowsRunId": 39134356534,
+    "mainWindowsPassed": true,
+    "general": { "tests": 2479, "pass": 2452, "fail": 0, "skipped": 27 },
+    "mariaDb1011": { "tests": 383, "pass": 383, "fail": 0, "skipped": 0 },
+    "mariaDb114": { "tests": 383, "pass": 383, "fail": 0, "skipped": 0 },
+    "chrome": { "tests": 101, "pass": 101, "fail": 0, "skipped": 0 },
+    "httpsAuthentication": { "tests": 1, "pass": 1, "fail": 0, "skipped": 0 }
+  },
+  "nativeTests": { "tests": 111, "pass": 111, "fail": 0, "skipped": 0 },
+  "syntaxSourceFiles": 431,
+  "buildPassed": true,
+  "preflight": { "status": "passed", "enabled": true, "hourUtc": 5, "minuteUtc": 15, "started": false, "backupStarted": false },
+  "rollbackSaved": true,
+  "rollbackFile": "/srv/customer/jessiemessage-private/manager-before-release-054.json",
+  "rollbackFileMode": "0600",
+  "rollbackSourcesPinnedAndClean": true,
+  "rollbackLauncherSyntaxVerified": true,
+  "rollbackActuallyPerformed": false,
+  "launcher": {
+    "path": "/srv/customer/jessiemessage-private/start-primary-release-054-6cfce890.sh",
+    "mode": "0700",
+    "bytes": 827,
+    "sha256": "385e136964386e0d7b55581b7690e1afbc8490125c11f082cbc52880571d39d7"
+  },
+  "migrationPerformed": false,
+  "keysChanged": false
+}

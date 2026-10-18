@@ -1,6 +1,6 @@
 # Étape 0.53 — contrôle de fraîcheur du journal
 
-**Évolution du 18 octobre à 15:07 Europe/Paris :** le CLI est inchangé ; le [superviseur `e1842a39`](backup-email-alerts-053.md) utilise son lecteur chaque minute et conserve désormais une file privée d'alertes SMTP. Deux tests sont acceptés par SMTP pour l'adresse officielle ; la réception reste non confirmée. Voir [REPRISE.md](REPRISE.md) pour les commandes actuelles ; les preuves ci-dessous sont datées.
+**Évolution courante du 18 octobre :** le CLI reste en lecture seule ; le [superviseur unifié 0.54.0](stable-release-054.md), source `6cfce890`, utilise son lecteur chaque minute. La file SMTP et la réception des deux tests sont acquises, confirmation du propriétaire à 15:54 Europe/Paris. Voir [REPRISE.md](REPRISE.md) pour les commandes actuelles ; les preuves ponctuelles ci-dessous sont datées.
 
 **Mise à jour du 18 octobre à 14:37 Europe/Paris :** le CLI ci-dessous reste en lecture seule ; il est désormais utilisé chaque minute par le [moniteur 0.53 activé](periodic-backup-monitor-053.md). Les événements sont consignés dans le Manager, sans envoi d’alerte. Le contrôle ponctuel de 00:55 décrit plus bas est une preuve historique.
 

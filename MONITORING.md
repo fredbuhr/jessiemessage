@@ -1,6 +1,6 @@
 # Surveillance externe de JessieMessage — 0.51
 
-Le workflow `Private service monitor` fonctionne avec Node 24 et ses modules natifs, sans dépendance applicative ni secret. Il ne remplace pas le service hébergé, actuellement épinglé à la révision `0a1cafd8`.
+Le workflow `Private service monitor` fonctionne avec Node 24 et ses modules natifs, sans dépendance applicative ni secret. Il observe le service hébergé 0.54.0, source épinglée `6cfce890`, et conserve son fonctionnement indépendant. Depuis la consolidation [0.54](docs/stable-release-054.md), main contient aussi l'application complète ; la sonde n'a pas besoin de démarrer cette application sur GitHub.
 
 Deux lectures HTTPS anonymes fixes contrôlent `https://jessiemessage.com/api/health` et `https://jessiemessage.com/api/ready`. Les redirections sont refusées, le certificat est vérifié normalement, chaque requête et son corps sont bornés à cinq secondes et 1 024 octets. HTTP 200 seul ne suffit pas : le JSON attendu, `no-store` et l’absence de cookie sont contrôlés. Aucun accès authentifié, message, envoi de campagne, e-mail ou opération SQL directe.
 

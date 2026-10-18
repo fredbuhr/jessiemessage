@@ -1,61 +1,68 @@
 # Reprendre JessieMessage
 
-Ce fichier est le point d'entrée de reprise après la perte d'une discussion. Lire ensuite le [rapport d'audit du 18 octobre](AUDIT-REPRISE-2026-10-18.md), le [plan courant](production-readiness-2026-10-17.md) et le [relevé 0.52](recurring-private-checkpoints-052.md).
+La source complète **0.54.0** est maintenant réunie dans `main` et activée. Ce fichier est le point d'entrée courant après une interruption de discussion. Le [relevé 0.54](stable-release-054.md), les [preuves d'activation](activation-proofs/jm054-activation.json) et le [plan avant usage privé régulier](production-readiness-2026-10-17.md) complètent cette fiche.
 
-## Source complète et code exécuté
+## Source et code réellement exécuté
 
-| Élément | Référence à préserver |
+| Élément | Référence courante |
 | --- | --- |
-| Dépôt | `https://github.com/fredbuhr/jessiemessage` |
-| Dernière source complète retrouvée | Branche `feat/recurring-private-checkpoints`, commit `dc02ec6795a7e8c3312d253797ad6382439f5735`, arbre `9454ed83059615d420f8182fac6382310577f91a` |
-| Branche de reprise | `feat/reprise-audit-backup-freshness`, issue de ce commit complet |
-| Runtime applicatif réellement actif | `0a1cafd85c3d8699be1961075b18e80e36bcd041`, arbre `17db89aa165e23ca427d073f5a3fcc28387f5168` — étape 0.50 |
-| Superviseur réellement actif | `e1842a395925b19a50dcabbccfb7e9b9b03fcd8e`, arbre `ad44e230db9a1ec89902e616b1315496b4afe284` — surveillance et file d'alertes SMTP 0.53 |
-| Branche complète courante | `feat/backup-email-alerts`, [PR #68](https://github.com/fredbuhr/jessiemessage/pull/68), issue de `feat/periodic-backup-monitor` ; documentation ultérieure distincte du commit exécuté |
-| Branche par défaut au moment de la reprise | `main` = `a688b30ef4e039a30de7bf05e98761845dcee8d4` : sous-ensemble de surveillance, pas l'application complète |
+| Dépôt | `https://github.com/fredbuhr/jessiemessage` ; branche par défaut `main`, application complète |
+| Version | `0.54.0` ; repère `release/0.54.0` |
+| Source exécutée, runtime et superviseur | `6cfce890827c835fdbda2488163b5c0f1695b2dc`, arbre `9308cb4dc736e7a869fa50796801ddc83a098d69` |
+| Intégration dans main | [PR #69](https://github.com/fredbuhr/jessiemessage/pull/69), fusion `12c16c6f0a63da3b20ba9af522447caf19f6fc5f`, arbre identique ; documentation ultérieure distincte du code exécuté |
+| Runtime | Profil `messaging-photos-notify-recovery-crm-broadcast`, déploiement `primary-transition`, Node 24, port 3000 |
 | Données | Schéma 30, six configurations privées existantes, mêmes clés/comptes/sessions |
 
-**Ne pas déployer `main` comme si cette branche contenait l'application.** Ne pas réécrire la pile de PR pour reprendre. Créer une branche depuis la tête vérifiée de la branche complète courante, puis vérifier les nouveaux commits éventuels. Les preuves d'activation distinguent toujours le code applicatif, le code opérateur et la documentation ultérieure.
+**Reprendre depuis la tête vérifiée de main. Pour déployer, épingler un commit et son arbre validés ; une branche peut évoluer.** Avant la consolidation, `main` ne contenait que la surveillance externe : cet ancien avertissement dans les relevés datés est historique. La fusion conserve les deux historiques, sans rebase ni réécriture des anciennes branches.
 
-## Hébergement et accès existants
+## Hébergement et commandes
 
-- Principal : `https://jessiemessage.com` ; recette conservée : `https://recette.jessiemessage.com`. Les deux adresses partagent le runtime et les données ; ce ne sont pas deux bases indépendantes.
-- [Tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard).
-- [Terminal SSH existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal).
-- Runtime : `/srv/customer/jessiemessage-operator/broadcast-direct-delivery-0a1cafd8`.
-- Superviseur : `/srv/customer/jessiemessage-operator/backup-alerts-e1842a39` ; repli minute précédent conservé dans `periodic-monitor-9df56feb`, puis ancien 0.52 dans `recurring-checkpoints-9665d54c`.
+- Principal : `https://jessiemessage.com` ; recette conservée : `https://recette.jessiemessage.com`. Elles partagent le runtime et les données ; la recette n'est pas une base de test indépendante.
+- [Manager Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) ; [terminal SSH](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal).
+- Checkout actif, runtime et superviseur : `/srv/customer/jessiemessage-operator/release-054-6cfce890`.
 - Configuration : `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851`.
-- Sauvegardes : `/srv/customer/jessiemessage-private/recurring-backup-052` ; quotidien à **05:15 UTC**.
-- Run Manager : `bash /srv/customer/jessiemessage-private/start-primary-alerts-e1842a39.sh`.
-- Repli immédiat : commandes minute 0.53 dans `/srv/customer/jessiemessage-private/manager-before-alerts-053.json`, lanceur `start-primary-monitored-9df56feb.sh`. Repli antérieur 0.52 dans `manager-before-monitor-053.json`, lanceur `start-primary-backups-checked-9665d54c.sh`. Le repli sans superviseur reste dans `recurring-backup-052/manager-before-activation-052.json`. Utiliser le cycle Manager normal ; aucune restauration SQL.
+- Sauvegardes et état des alertes : `/srv/customer/jessiemessage-private/recurring-backup-052`.
+- Run Manager : `bash /srv/customer/jessiemessage-private/start-primary-release-054-6cfce890.sh`.
+- Build : depuis le checkout actif, vérifier HEAD `6cfce890...`, arbre `9308cb4d...`, propreté Git, puis `npm run check`. La [procédure 0.54](stable-release-054.md) contient la commande complète.
+- Capture quotidienne : **05:15 UTC**. Contrôle du journal chaque minute, incident après trois échecs, reprise SMTP espacée de 1 à 15 minutes.
 
-Ne pas modifier les dossiers actifs pour y installer un nouvel outil : leur source et leur propreté Git sont épinglées. Préparer un checkout opérateur séparé. Ne pas lancer une capture `--offline` pendant que le runtime tourne. La clé privée GPG et sa phrase restent sur le PC du propriétaire ; aucune demande de secret dans la discussion.
+Ne pas modifier le checkout actif : sa propreté est contrôlée. Préparer tout nouveau code dans un checkout séparé. Ne jamais lancer une capture `--offline` pendant que l'application tourne. Ne pas lire, afficher ou copier les secrets dans les preuves ou dans le dépôt.
 
-## Acquis et contraintes de produit
+## Repli prêt
 
-- Invités, messages, photos, notifications, récupération de mot de passe et parcours des fiches déjà acceptés : conserver ces acquis, demander seulement des observations nouvelles ciblées.
-- `COFFRE_DECHIFFRE_OK` et `COPIE_CRM30_OK` acquis ; restauration isolée trente tables/photos vérifiée en 0.46.
-- Aucun accord aux envois groupés côté invité. Messages livrés individuellement, sans métadonnées de groupe ou d'audience. Limite actuelle : **100 destinataires par campagne**.
-- Les données historiques `broadcast_preferences` restent dans le schéma et les sauvegardes ; ne pas supprimer leur migration. Elles ne conditionnent plus la livraison.
-- Contact officiel : `contact@jessiemessage.com`.
-- Les comptes administrateurs partagés conservent leurs sessions par appareil ; ne pas réinitialiser de compte ou de clé pour reprendre.
+Les commandes Run/Build précédentes sont sauvegardées exclusivement dans `/srv/customer/jessiemessage-private/manager-before-release-054.json`, mode 0600. Elles restaurent :
 
-## Point d'arrêt et suite
+- superviseur `e1842a395925b19a50dcabbccfb7e9b9b03fcd8e`, arbre `ad44e230db9a1ec89902e616b1315496b4afe284`, checkout `backup-alerts-e1842a39` ;
+- runtime 0.50 `0a1cafd85c3d8699be1961075b18e80e36bcd041`, arbre `17db89aa165e23ca427d073f5a3fcc28387f5168`, checkout `broadcast-direct-delivery-0a1cafd8` ;
+- Run `bash /srv/customer/jessiemessage-private/start-primary-alerts-e1842a39.sh`.
 
-La première capture 0.52 est consignée comme réussie le 18 octobre à 02:28:16 Europe/Paris. Le contrôle SSH du 18 octobre à 00:47:06.582 UTC retrouve deux enregistrements, `lastSuccessAt: 1792283296649`, `succeeded / finished / OK / runtimeResumed: true` et configuration activée à 05:15 UTC.
+Les deux checkouts de repli sont contrôlés épinglés/propre et le lanceur passe `bash -n`. Le repli réel n'a pas été provoqué pendant ce lot. Reprendre les commandes sauvegardées puis utiliser le cycle Manager normal ; **aucune restauration SQL pour un simple repli de code**.
 
-La copie et le déchiffrement PC de cette nouvelle archive restent **non confirmés**. Les instructions exactes figurent dans le relevé 0.52 ; attendre `SAUVEGARDE_052_OK` pour les marquer acquis. Le premier passage quotidien est encore futur au moment de cette reprise. Ne pas confondre la capture du démarrage avec un déclenchement calendaire.
+Les replis antérieurs restent dans `manager-before-alerts-053.json`, puis `manager-before-monitor-053.json` et `recurring-backup-052/manager-before-activation-052.json`. Ne pas les confondre avec le repli immédiat ci-dessus.
 
-La reprise ajoute le [contrôle de fraîcheur 0.53](backup-freshness-053.md) en lecture seule. Source opérateur éprouvée : `5c64a9d6c72552555b0b57980779391a860b262e`, arbre `ff0d0b3977f04c44b15ee8f53575b10711cd9a9d`, checkout séparé `/srv/customer/jessiemessage-operator/reprise-freshness-5c64a9d6`. À 00:55:23.605 UTC, 11/11 tests natifs passent et la lecture réelle est `current / OK`, puis HTTPS `healthy`. La [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39084535494) passe ses cinq jobs, dont MariaDB 383/383 par version et Chrome 101/101. Le lecteur est maintenant réutilisé chaque minute par le superviseur 0.53 ; aucun canal de réception d’alertes n’est encore raccordé. La copie indépendante automatique, ses reçus et les alertes réellement reçues restent ouverts. La consolidation 0.54 doit ensuite fournir une source stable complète et un repli reproductible. Les brouillons de confidentialité/conservation et l'effacement complet restent également ouverts ; ne pas les annoncer comme finalisés.
+## Acquis à conserver
 
-## Poursuite du 18 octobre en journée
+- Invitations, messages, photos, notifications, mot de passe oublié et parcours des fiches déjà acceptés. Ne pas demander une répétition générale des appareils ou parcours acquis.
+- Compte administrateur partagé, sessions indépendantes par appareil, 180 jours renouvelables, sans déconnexion d'inactivité.
+- Diffusions livrées comme des messages individuels, sans accord supplémentaire du client ni métadonnées d'audience. Limite actuelle : **100 destinataires par campagne**. Conserver la table historique `broadcast_preferences` et ses migrations pour la compatibilité des sauvegardes.
+- Adresse officielle : **contact@jessiemessage.com**.
+- `COFFRE_DECHIFFRE_OK` et `COPIE_CRM30_OK` acquis en 0.46 ; restauration native isolée des trente tables/photos/recovery/CRM vérifiée.
+- Première capture quotidienne 0.52 du 18 octobre : **05:15:33.262 → 05:15:39.807 UTC**, chiffrement/reprise et empreintes vérifiés. Ce n'est plus un passage futur.
+- **Réception des deux courriels [TEST] incident/rétablissement confirmée par le propriétaire le 18 octobre à 15:54:05 Europe/Paris.** Le [reçu personnel](activation-proofs/jm053-alerts-owner-confirmation.json) complète les acceptations SMTP. Les anciennes recherches IMAPS sans résultat restent historiques ; ne pas renvoyer les tests.
 
-Le [premier passage quotidien](activation-proofs/jm052-first-scheduled-20261018.json) est maintenant observé : 05:15:33.262 → 05:15:39.807 UTC, capture/chiffrement/reprise réussis, empreintes relues à 12:23 UTC. Les trois passages planifiés de la sonde externe sont réussis mais espacés de plusieurs heures. La [surveillance locale minute 0.53](periodic-backup-monitor-053.md) est **activée** depuis le checkout opérateur `9df56feb` sur `feat/periodic-backup-monitor` ([PR #67](https://github.com/fredbuhr/jessiemessage/pull/67)). Cinq jobs CI et 42/42 tests natifs passent. Deux lectures `current / OK` sont observées à 12:35:53.815 et 12:36:53.823 UTC ; 38 contrôles HTTPS et seize empreintes conformes à 12:37:06.392 UTC. Les événements restent dans la console d’exploitation ; aucun destinataire d’alerte n’est encore raccordé. Les sections ci-dessus conservent le point d'arrêt précédent et ses limites ; le déchiffrement PC et la copie indépendante restent non confirmés.
+## Preuves de la version 0.54
 
-### Prochain lot à reprendre
+Les cinq jobs CI de la [source candidate](https://github.com/fredbuhr/jessiemessage/actions/runs/39133998681) et de son [intégration dans main](https://github.com/fredbuhr/jessiemessage/actions/runs/39134356546) passent. La vérification Windows passe aussi sur les deux références. Syntaxe de 431 fichiers et build réussis ; **111/111 tests natifs** passent sur l'hébergement, sans saut, ainsi que le préflight sans lancement ni capture.
 
-Le [lot d'alertes SMTP](backup-email-alerts-053.md) est maintenant **activé à 15:07 Europe/Paris**, source opérateur `e1842a39` : cinq jobs CI, 87/87 tests natifs, préflights et cycle Manager réussis. Deux observations minute sont saines, zéro alerte en attente ; à 13:10:53.337 UTC, 38 contrôles HTTPS et seize empreintes passent. Aucun compte, secret, schéma, message client ou journal de capture n'est modifié.
+Le cycle normal Manager réussit le 18 octobre, modification affichée **16:09 Europe/Paris**. Deux observations après le nouveau démarrage, **14:10:01.303 et 14:11:01.348 UTC**, sont `current / OK`, zéro incident et zéro alerte en attente. À **14:10:31.318 UTC**, **38/38 lectures HTTPS et seize empreintes exactes** passent sur les deux origines. Le journal garde quatre enregistrements et le succès du matin : aucune capture supplémentaire. Les sources de fichiers et la version 0.54.0 sont relues propres à 14:12:42.640 UTC.
 
-Deux courriels **[TEST]**, incident puis rétablissement, ont été acceptés par SMTP pour **contact@jessiemessage.com**. **Leur réception reste non confirmée** : la recherche IMAPS ciblée dans `INBOX` ne les retrouve pas à 13:17:07.909789 UTC. Le MX pointe vers Infomaniak ; aucune règle de boîte n'a été changée. Demander au propriétaire seulement s'il a reçu ces deux sujets, avant de clore la réception ; ne pas renvoyer les tests automatiquement ni fabriquer une preuve. Le canal surveille le journal local, pas une panne totale de l'hébergement.
+Cette vérification utilise les commandes épinglées du Manager, le démarrage du profil complet et les réponses HTTPS. L'inspection directe des PID depuis la session SSH n'a pas confirmé les processus applicatifs ; ne pas présenter cette sonde supplémentaire comme une preuve acquise. Les parcours authentifiés réels n'ont pas été répétés dans ce lot, leurs acceptations antérieures sont conservées.
 
-La copie automatique hors hébergement n'a pas encore de destination raccordée ; la clé privée et le déchiffrement restent personnels sur le PC. Continuer les préparatifs de copie indépendante et la consolidation 0.54 sans attendre une répétition des parcours déjà acquis. Ne pas refaire les validations 0.46 ni la capture planifiée maintenant observée. Les [preuves d'activation](activation-proofs/jm053-alerts-activation.json) et de [préparation/CI](activation-proofs/jm053-alerts-preparation.json) sont la référence actuelle.
+## Suite concrète
+
+1. **Copie indépendante récurrente** : aucune destination automatique hors hébergement n'est encore raccordée. Choisir un espace réellement disponible ; transférer seulement l'archive chiffrée, contrôler taille/empreinte et écrire un reçu. Aucune purge automatique ou nouveau prestataire choisi par défaut.
+2. **Nouvelle archive 0.52 sur le PC** : sa copie/déchiffrement restent non confirmés ; attendre une observation ciblée `SAUVEGARDE_052_OK`. Les clés privées et phrases restent exclusivement sur le PC. Les acceptations 0.46 ne sont pas à refaire.
+3. **Sonde externe** : trois passages planifiés GitHub réussis, mais espacés de plusieurs heures ; ne pas garantir cinq minutes de détection. La réception confirmée des mails locaux ne valide pas les notifications GitHub ni une panne totale de l'hébergement.
+4. **Observations et données** : première diffusion personnelle, administration simultanée et téléchargement du diagnostic non consignés ; décisions de confidentialité/conservation et exécuteur d'effacement complet encore ouverts. Voir le plan courant ; ne pas les annoncer comme finalisés.
+
+L'[audit de récupération du 18 octobre](AUDIT-REPRISE-2026-10-18.md) garde la source complète retrouvée `dc02ec6...` et l'ancien état de main comme preuves historiques. La consolidation 0.54 et le présent point de reprise sont la référence actuelle.

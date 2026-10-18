@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "stage": "0.54",
+  "type": "stable_release_activated",
+  "applicationVersion": "0.54.0",
+  "runtimeHead": "6cfce890827c835fdbda2488163b5c0f1695b2dc",
+  "runtimeTree": "9308cb4dc736e7a869fa50796801ddc83a098d69",
+  "operatorHead": "6cfce890827c835fdbda2488163b5c0f1695b2dc",
+  "operatorTree": "9308cb4dc736e7a869fa50796801ddc83a098d69",
+  "sourceDirectory": "/srv/customer/jessiemessage-operator/release-054-6cfce890",
+  "mainConsolidationCommit": "12c16c6f0a63da3b20ba9af522447caf19f6fc5f",
+  "mainContainsCompleteApplication": true,
+  "profile": "messaging-photos-notify-recovery-crm-broadcast",
+  "deployment": "primary-transition",
+  "schema": 30,
+  "run": "bash /srv/customer/jessiemessage-private/start-primary-release-054-6cfce890.sh",
+  "manager": { "active": true, "buildSucceeded": true, "modifiedAtMinuteEuropeParis": "2026-10-18T16:09:00+02:00", "nodeMajor": 24, "port": 3000 },
+  "sourceFilesVerification": {
+    "checkedAt": "2026-10-18T14:12:42.640Z",
+    "headMatches": true,
+    "treeMatches": true,
+    "clean": true,
+    "applicationVersion": "0.54.0",
+    "runtimeProcessInspectionFromSsh": "not_confirmed",
+    "matchingOwnedProcessesVisibleFromSsh": 0,
+    "runtimeActivationEvidence": ["pinned_manager_run", "successful_build_restart", "complete_runtime_profile_started", "anonymous_https_checks"]
+  },
+  "samplesAfterNewRuntimeStartup": [
+    { "checkedAt": 1792332601303, "state": "current", "code": "OK", "activeIncident": false, "lastSuccessAt": 1792300539807, "ageMilliseconds": 32061496, "pendingAlerts": 0 },
+    { "checkedAt": 1792332661348, "state": "current", "code": "OK", "activeIncident": false, "lastSuccessAt": 1792300539807, "ageMilliseconds": 32121541, "pendingAlerts": 0 }
+  ],
+  "observedIntervalMilliseconds": 60045,
+  "postDeployment": {
+    "checkedAt": "2026-10-18T14:10:31.318Z",
+    "httpsReads": 38,
+    "exactResourceHashes": 16,
+    "failures": 0,
+    "journalRecords": 4,
+    "lastAttemptAt": 1792300533262,
+    "lastSuccessAt": 1792300539807,
+    "additionalCaptureObserved": false
+  },
+  "alertReception": { "status": "confirmed_by_owner", "confirmedAt": "2026-10-18T15:54:05+02:00", "syntheticMessages": 2, "newTestMessagesSent": 0 },
+  "previousCommandsSaved": true,
+  "rollbackActuallyPerformed": false,
+  "migrationPerformed": false,
+  "keysChanged": false,
+  "customerCampaignsCreatedByAgent": 0,
+  "independentCopyStatus": "not_checked",
+  "newArchivePcDecryptionStatus": "not_checked",
+  "authenticatedProductionJourneysRetested": false,
+  "screenshot": {
+    "file": "jm054-activation-20261018.jpg",
+    "bytes": 90432,
+    "sha256": "d710df5933d0fe2642f10bdb6e9e1469751e151d61aa76e762b343058ba66b58"
+  }
+}

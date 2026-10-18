@@ -1,6 +1,6 @@
 # Étape 0.52 — capture récurrente cohérente et archive chiffrée
 
-**Évolution du 18 octobre à 15:07 Europe/Paris :** le [superviseur opérateur `e1842a39`](backup-email-alerts-053.md) conserve cette capture quotidienne et le runtime 0.50 ; il ajoute la file d'alertes SMTP à la surveillance minute. Tests acceptés par SMTP, réception non confirmée. Le [point de reprise](REPRISE.md) donne le Run et le repli actuels ; la copie indépendante et le déchiffrement PC restent ouverts.
+**Évolution courante du 18 octobre :** le [runtime/superviseur unifié 0.54.0](stable-release-054.md), source `6cfce890`, conserve la capture quotidienne, le journal et la file SMTP. Les deux alertes de test sont confirmées reçues à 15:54 Europe/Paris. Le [point de reprise](REPRISE.md) donne les commandes et le repli actuels. La copie indépendante automatique et le déchiffrement PC de la nouvelle archive restent ouverts.
 
 **Mise à jour du 18 octobre en journée :** le [premier déclenchement quotidien](activation-proofs/jm052-first-scheduled-20261018.json) est maintenant vérifié à 05:15:33–05:15:39 UTC, empreintes relues. Le [superviseur 0.53](periodic-backup-monitor-053.md) conserve cette capture et ajoute la surveillance minute. Les relevés datés de la nuit ci-dessous conservent leur portée historique ; copie et déchiffrement PC restent non confirmés.
 
