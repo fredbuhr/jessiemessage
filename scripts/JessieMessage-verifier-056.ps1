@@ -3,6 +3,15 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+function Find-JmVerificationGpg {
+    # Prefer the native Windows installation over Git's MSYS-only executable.
+    foreach ($folder in @([Environment]::GetFolderPath('ProgramFilesX86'), [Environment]::GetFolderPath('ProgramFiles'))) {
+        if (-not $folder) { continue }
+        $candidate = Join-Path $folder 'GnuPG\bin\gpg.exe'
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
+    }
+    return (Get-Command gpg -CommandType Application -ErrorAction Stop).Source
+}
 function Assert-JmVerificationDirectory {
     param([string]$Path)
     if (-not [IO.Path]::IsPathRooted($Path) -or $Path -match '["\x00-\x1f]') { throw 'DOSSIER_INDISPONIBLE' }
@@ -29,6 +38,9 @@ function Read-JmVerification {
     Assert-JmVerificationFields $record.archive @('id', 'startedAt', 'filename', 'bytes', 'sha256')
     Assert-JmVerificationFields $record.source @('bytes', 'sha256')
     Assert-JmVerificationFields $record.recipient @('fingerprint')
+    foreach ($text in @($record.format, $record.archive.id, $record.archive.filename, $record.archive.sha256, $record.source.sha256, $record.recipient.fingerprint, $record.protection)) {
+        if ($text -isnot [string]) { throw 'KIT_INVALIDE' }
+    }
     if ($record.format -cne 'jessiemessage-backup-verification' -or $record.version -isnot [int] -or $record.version -ne 1 -or
         $record.archive.id -cnotmatch '^capture-[1-9][0-9]{0,14}-[a-f0-9]{16}$' -or
         $record.archive.filename -cne ('JessieMessage-' + $record.archive.id + '.tar.gz.gpg') -or
@@ -159,19 +171,21 @@ namespace JessieMessage {
 '@
 }
 function Start-JmVerificationWindow {
+    param([string]$MetadataPath = (Join-Path $PSScriptRoot 'verification.json'), [switch]$CheckLayout)
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing
     [Windows.Forms.Application]::EnableVisualStyles()
-    $record = Read-JmVerification (Join-Path $PSScriptRoot 'verification.json')
+    $record = Read-JmVerification $MetadataPath
     Initialize-JmVerificationRuntime
-    $gpg = (Get-Command gpg -CommandType Application -ErrorAction Stop).Source
+    $gpg = Find-JmVerificationGpg
     $form = [Windows.Forms.Form]::new()
     $form.Text = 'JessieMessage - Verifier une sauvegarde'
-    $form.ClientSize = [Drawing.Size]::new(680, 440)
-    $form.MinimumSize = [Drawing.Size]::new(600, 460)
+    $form.ClientSize = [Drawing.Size]::new(680, 500)
+    $form.MinimumSize = [Drawing.Size]::new(600, 500)
     $form.StartPosition = 'CenterScreen'
     $layout = [Windows.Forms.TableLayoutPanel]::new()
     $layout.Dock = 'Fill'; $layout.Padding = [Windows.Forms.Padding]::new(18); $layout.ColumnCount = 2; $layout.RowCount = 8
+    for ($row = 0; $row -lt 8; $row++) { $layout.RowStyles.Add([Windows.Forms.RowStyle]::new([Windows.Forms.SizeType]::AutoSize)) | Out-Null }
     $layout.ColumnStyles.Add([Windows.Forms.ColumnStyle]::new([Windows.Forms.SizeType]::Percent, 100)) | Out-Null
     $layout.ColumnStyles.Add([Windows.Forms.ColumnStyle]::new([Windows.Forms.SizeType]::Absolute, 115)) | Out-Null
     $form.Controls.Add($layout)
@@ -198,6 +212,10 @@ function Start-JmVerificationWindow {
     $verify = [Windows.Forms.Button]::new(); $verify.Text = 'Verifier'; $verify.AutoSize = $true
     $cancel = [Windows.Forms.Button]::new(); $cancel.Text = 'Fermer'; $cancel.AutoSize = $true
     $layout.Controls.Add($verify, 0, 7); $layout.Controls.Add($cancel, 1, 7)
+    $form.Add_Resize({
+        $width = [Math]::Max(100, $layout.ClientSize.Width - $layout.Padding.Horizontal)
+        foreach ($label in @($intro, $fileLabel, $keyHomeLabel, $instructions, $status)) { $label.MaximumSize = [Drawing.Size]::new($width, 0) }
+    })
     $work = @{ Task = $null; Cancellation = $null }
     $chooseFile.Add_Click({
         $dialog = [Windows.Forms.OpenFileDialog]::new()
@@ -245,7 +263,20 @@ function Start-JmVerificationWindow {
         }
     })
     $cancel.Add_Click({ if ($null -ne $work.Task) { $work.Cancellation.Cancel(); $status.Text = 'Annulation en cours...' } else { $form.Close() } })
-    try { $null = $form.ShowDialog() }
+    try {
+        if ($CheckLayout) {
+            # Native CI opens only the empty form, without a file chooser or GPG.
+            $form.Show()
+            foreach ($width in @(680, 600)) {
+                $form.ClientSize = [Drawing.Size]::new($width, 500); $layout.PerformLayout()
+                foreach ($control in $layout.Controls) {
+                    if ($control.Left -lt 0 -or $control.Top -lt 0 -or $control.Right -gt $layout.ClientSize.Width -or $control.Bottom -gt $layout.ClientSize.Height) { throw 'WINDOW_LAYOUT_INVALID' }
+                }
+            }
+            $form.Close(); return
+        }
+        $null = $form.ShowDialog()
+    }
     finally {
         $timer.Stop(); $timer.Dispose()
         if ($null -ne $work.Cancellation) {

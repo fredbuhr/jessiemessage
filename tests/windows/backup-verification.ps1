@@ -13,7 +13,7 @@ function Invoke-FixtureGpg {
 }
 $root = Join-Path $env:RUNNER_TEMP ('jm-verify-' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $root
-$script:FixtureGpg = (Get-Command gpg -CommandType Application -ErrorAction Stop).Source
+$script:FixtureGpg = Find-JmVerificationGpg
 $keyHome = Join-Path $root ('key home ' + [char]0xe9)
 $null = New-Item -ItemType Directory -Path $keyHome
 $base = @('--no-options', '--homedir', $keyHome, '--no-auto-key-retrieve', '--auto-key-locate', 'clear')
@@ -40,6 +40,7 @@ try {
     $metadata = Join-Path $root 'verification.json'
     [IO.File]::WriteAllText($metadata, ($record | ConvertTo-Json -Depth 5 -Compress), [Text.UTF8Encoding]::new($false))
     Assert-True ((Read-JmVerification $metadata).archive.id -ceq $id) 'Native kit reader rejected valid metadata.'
+    Start-JmVerificationWindow -MetadataPath $metadata -CheckLayout
     $before = @(Get-ChildItem -LiteralPath $root -File).Name -join ','
     $result = [JessieMessage.BackupVerifier056]::Verify($script:FixtureGpg, $keyHome, $cipher, $cipherBytes, $cipherHash,
         $content.Length, $sourceHash, $fingerprint, 'mdc', 30000, [Threading.CancellationToken]::None)
@@ -95,7 +96,7 @@ class Fixture {
         Assert-True ($watch.ElapsedMilliseconds -lt 7000) 'Process deadline was not bounded.'
     }
     Assert-True ((Get-FileHash -LiteralPath $cipher -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $cipherHash) 'Original encrypted copy changed.'
-    Write-Output 'Windows 5.1: real GPG binary decryption, async job, no plaintext file, wrong key/hash/protection, corruption, cancellation, process/status bounds and path guards passed. Synthetic CI key only.'
+    Write-Output 'Windows 5.1: native window layout, real GPG binary decryption, async job, no plaintext file, wrong key/hash/protection, corruption, cancellation, process/status bounds and path guards passed. Synthetic CI key only.'
 } finally {
     # Stop only the two synthetic per-test agents so their handles do not impede cleanup.
     $gpgconf = Join-Path ([IO.Path]::GetDirectoryName($script:FixtureGpg)) 'gpgconf.exe'

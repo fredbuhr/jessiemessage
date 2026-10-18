@@ -35,7 +35,7 @@ jobs:
   syntax:
     name: Windows PowerShell 5.1 instructions
     runs-on: windows-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -108,6 +108,12 @@ jobs:
           $jmVerification = Read-JmVerification (Join-Path (Resolve-Path synthetic-verification).Path 'verification.json')
           if ($jmVerification.format -cne 'jessiemessage-backup-verification') { throw 'Invalid offline metadata.' }
           Write-Output 'Actual offline verification ZIP expanded and parsed by Windows; no credential or private key.'
+      - name: Install pinned native Windows GnuPG for the synthetic recovery test
+        shell: powershell
+        run: |
+          choco install gnupg --version=2.5.20 --yes --no-progress --limit-output
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 3010) { throw 'Native Windows GnuPG installation failed.' }
+          exit 0
       - name: Parse and verify actual GPG decryption in memory on Windows PowerShell 5.1
         shell: powershell
         run: |
