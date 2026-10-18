@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { chmod, link, mkdir, readFile, readdir, statfs, symlink, unlink, writeFile } from "node:fs/promises";
-import { createErasureJournal } from "../server/data/erasure-journal.mjs";
+import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
+import { createClosureOperations } from "../server/data/closure-operations.mjs";
 import { createRegistryWitness } from "../server/backup/registry-witness.mjs";
 import { assertErasureContinuity } from "../server/backup/registry-continuity.mjs";
 import { registryHash, registryIdentity, snapshotErasureRegistry } from "../server/backup/registry-snapshot.mjs";
@@ -114,7 +115,7 @@ test("a source publication during the exchange invalidates that proof and requir
 });
 test("lost acknowledgement is uncertain; only a fresh challenge and a durable reread resolve it", async t => {
   const f = await registryWitnessFixture(t, parameters); await advance(f); let lose = true;
-  const gate = f.makeGate({ exchange: async value => { const result = await f.witness.exchange(value); if (lose && value.snapshot !== null) throw new Error("Synthetic secret and host details"); return result; } });
+  const gate = f.makeGate({ exchange: async value => { const result = await f.witness.exchange(value); if (lose && value.snapshot !== null) throw Object.assign(new Error("Synthetic secret and host details"), { continuityCode: "Synthetic private error property" }); return result; } });
   await assert.rejects(gate.verify(allow), error => { assert.equal(error.code, "ERASURE_CONTINUITY_UNAVAILABLE"); assert.doesNotMatch(error.message, /secret|host|synthetic_registry/); return true; });
   lose = false; assert.equal((await gate.verify(allow)).witnessRevision, 2);
 });
@@ -161,6 +162,36 @@ test("a journal outside the observed directory, or at a different phase, never b
   await advance(f); await f.gate.verifyJournal(clientId, state, allow);
   await advance(f, "prepared");
   await assert.rejects(f.gate.verifyJournal(clientId, state, allow), { code: "ERASURE_CONTINUITY_JOURNAL" });
+});
+test("the actual journal lock keeps its maintenance/root authorization without recapturing a locked registry", async t => {
+  const f = await registryWitnessFixture(t, parameters); await advance(f); const mutations = [];
+  let stopped = true, rootChecks = 0, rootsUnderLock = 0, driftDuringCommit = false;
+  const secondId = "c".repeat(32);
+  const guard = async () => { assert.equal(stopped, true); };
+  const store = { binding, async withLease(id, work) { assert.ok([clientId, secondId].includes(id)); return work({ binding,
+    async prepare() { mutations.push("prepare"); return { prepared: true }; },
+    async nextMedia() { return null; }, async finish() { mutations.push("finish"); return { completed: true }; }, async verifyAbsent() {},
+  }); } };
+  const continuity = f.makeGate({ exchange: async value => {
+    assert.equal((await readdir(f.sourceDirectory)).some(name => name.startsWith("erasure-") && name.endsWith(".lock")), false);
+    return f.witness.exchange(value);
+  } });
+  const operations = createClosureOperations({ store, continuity, storage: { async fingerprint() {
+    rootChecks++; const locked = (await readdir(f.sourceDirectory)).some(name => name.startsWith("erasure-") && name.endsWith(".lock"));
+    if (locked) rootsUnderLock++;
+    return locked && driftDuringCommit ? Buffer.alloc(32, 1) : Buffer.from(binding.rootFingerprint, "hex");
+  }, async remove() { assert.fail("No media in this fixture"); } },
+    journalFor: id => writer(f, id), batch: args => readErasureJournalBatch({ directory: f.sourceDirectory, key, binding, ...args }, { withDirectory: withErasureDirectory }),
+    inspectExecutableObjects: async () => ({ verified: true }), clock: () => now + 1 });
+  assert.deepEqual(await operations.run(guard), { completedReceipts: 1 });
+  assert.deepEqual(mutations, ["prepare", "finish"]); assert.ok(rootChecks > 6); assert.equal(rootsUnderLock, 3);
+  const journal = writer(f); try { assert.equal((await journal.read()).record.phase, "completed"); } finally { journal.close(); }
+  assert.equal((await continuity.recover(guard)).state.files.length, 1);
+  await advance(f, "requested", secondId); driftDuringCommit = true;
+  await assert.rejects(operations.run(guard), { code: "ERASURE_BINDING" });
+  const second = writer(f, secondId); try { assert.equal((await second.read()).record.phase, "requested"); } finally { second.close(); }
+  assert.deepEqual(mutations, ["prepare", "finish", "prepare"]);
+  stopped = false; await assert.rejects(operations.run(guard));
 });
 test("a fresh witness recovery preserves receipts newer than an old SQL capture after the local registry is lost", async t => {
   const f = await registryWitnessFixture(t, parameters), backup = await f.readCurrent();

@@ -61,7 +61,7 @@ export function createClosureOperations({ store, storage, journalFor, batch, ins
         });
       };
       const engine = createAccountErasure({ store, storage, journalFor: witnessedJournal, clock,
-        maintenance: { async withQuiescedProducers(work) { await witnessed(); return work(witnessed); } } });
+        maintenance: { async withQuiescedProducers(work) { await witnessed(); return work(witnessed, assertQuiescent); } } });
       let afterName = null, passes = 0, completed = 0;
       do {
         await assertQuiescent(); const page = await batch({ afterName, limit: 100 });

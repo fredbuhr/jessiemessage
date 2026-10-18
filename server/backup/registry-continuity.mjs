@@ -34,8 +34,8 @@ export function createErasureContinuity({ key: sourceKey, binding: sourceBinding
       Object.freeze(snapshot.files); Object.freeze(snapshot);
     }
     const challenge = randomBytes(32).toString("hex"), controller = new AbortController();
-    let timer, cancel;
-    const abort = new Promise((_resolve, reject) => { cancel = code => { controller.abort(); reject(Object.assign(new Error("Registry witness proof unavailable."), { continuityCode: code })); }; });
+    let timer, cancel, cancelledCode = null;
+    const abort = new Promise((_resolve, reject) => { cancel = code => { cancelledCode = code; controller.abort(); reject(new Error("Registry witness proof unavailable.")); }; });
     const cancelled = () => cancel("ERASURE_CONTINUITY_ABORTED");
     signal?.addEventListener("abort", cancelled, { once: true });
     activeCancel = cancel; timer = setTimeout(() => cancel("ERASURE_CONTINUITY_TIMEOUT"), timeoutMs);
@@ -57,7 +57,7 @@ export function createErasureContinuity({ key: sourceKey, binding: sourceBinding
       previous = value; highwater = response.revision; highwaterHash = response.sha256;
       return { value, revision: highwater, sha256: highwaterHash };
     } catch (error) {
-      if (error?.continuityCode) failContinuity(error.continuityCode);
+      if (cancelledCode !== null) failContinuity(cancelledCode);
       throw error;
     } finally { clearTimeout(timer); signal?.removeEventListener("abort", cancelled); activeCancel = null; }
   }
