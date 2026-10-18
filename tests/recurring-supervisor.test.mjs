@@ -4,6 +4,7 @@ import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 import { parseRecurringArguments, recurringCheckpointDue, createRecurringSupervisor, recurringPreflight, checkpointProcess } from "../server/backup/recurring-supervisor.mjs";
 import { main } from "../scripts/start-recurring-private-messaging.mjs";
+import { runManagedClosures } from "../server/backup/managed-closures.mjs";
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 const configuration = { version: 1, enabled: true, recipientSha256: "a".repeat(64), hourUtc: 5, minuteUtc: 15 };
@@ -56,6 +57,45 @@ test("daily schedule catches the first installation but does not retry a recorde
   assert.equal(recurringCheckpointDue(NOW + 86400000, configuration, { lastAttemptAt: NOW }), true);
   assert.equal(recurringCheckpointDue(NOW, { ...configuration, enabled: false }, { lastAttemptAt: null }), false);
   assert.throws(() => recurringCheckpointDue(NOW, configuration, { lastAttemptAt: NOW + 1 }));
+});
+
+test("confirmed closure takes priority over capture, with one drain shared by concurrent ticks", async () => {
+  let pending = false, status = "stopped", capability = null;
+  const events = [], operations = { async hasPending() { return pending; }, async preflight(guard) { await guard(); },
+    async run(guard) { await guard(); events.push("erase"); pending = false; return { completedReceipts: 1 }; } };
+  const runtime = { state: () => ({ status }), async start() { events.push("start"); status = "running"; },
+    async stop() { events.push("stop"); status = "stopped"; return { exitCode: 0, signal: null }; }, async destroy() { status = "stopped"; } };
+  const f = fixture({ closureOperations: operations, makeRuntime(value) { capability = value.accountClosures; return runtime; },
+    runClosures: args => runManagedClosures(args, { lock: (_directory, work) => work({ async assertReady() {} }) }),
+    readConfiguration: async () => ({ ...configuration, enabled: false }), checkpoint: () => assert.fail("No capture during closure") });
+  await f.supervisor.start(); await f.supervisor.tick(); assert.equal(capability, true); pending = true;
+  const first = f.supervisor.tick(); assert.equal(f.supervisor.tick(), first); await first;
+  assert.deepEqual(events, ["start", "stop", "erase", "start"]);
+  assert.equal(f.notices.some(value => value.type === "account_closures" && value.status === "completed"), true);
+  await f.supervisor.close();
+});
+
+test("a queued closure is resolved before the first managed listener after supervisor restart", async () => {
+  let pending = true, status = "stopped"; const events = [];
+  const runtime = { state: () => ({ status }), async start() { if (status !== "running") events.push("listen"); status = "running"; },
+    async stop() { status = "stopped"; return { exitCode: 0, signal: null }; }, async destroy() { status = "stopped"; } };
+  const operations = { async hasPending() { return pending; }, async preflight(guard) { await guard(); },
+    async run(guard) { await guard(); assert.equal(status, "stopped"); events.push("erase"); pending = false; return { completedReceipts: 1 }; } };
+  const f = fixture({ closureOperations: operations, makeRuntime: () => runtime, readConfiguration: async () => ({ ...configuration, enabled: false }),
+    runClosures: args => runManagedClosures(args, { lock: (_directory, work) => work({ async assertReady() {} }) }) });
+  await f.supervisor.start(); await f.supervisor.tick(); assert.deepEqual(events, ["erase", "listen"]); await f.supervisor.close();
+});
+
+test("corrupt intent discovery or uncertain erasure ends the supervisor instead of retrying or resuming", async () => {
+  for (const phase of ["discovery", "erasure"]) {
+    let pending = false;
+    const operations = { async hasPending() { if (pending && phase === "discovery") throw new Error("Synthetic private error"); return pending; }, async preflight() {}, async run() {} };
+    const f = fixture({ closureOperations: operations, readConfiguration: async () => ({ ...configuration, enabled: false }),
+      runClosures: async () => { throw new Error("Synthetic private error"); } });
+    await f.supervisor.start(); await f.supervisor.tick(); pending = true; await f.supervisor.tick();
+    assert.deepEqual(await f.supervisor.finished, { failed: true }); assert.equal(f.events.at(-1), "destroy");
+    assert.equal(f.events.filter(value => value === "start").length, 1); assert.doesNotMatch(JSON.stringify(f.notices), /private error/);
+  }
 });
 
 test("journal precedes stop; capture and encryption finish before a ready runtime marks success", async () => {

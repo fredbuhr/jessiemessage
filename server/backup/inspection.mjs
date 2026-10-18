@@ -7,8 +7,8 @@ const fail = () => { throw new BackupInspectionError(); };
 
 /** Explicit offline inspection identity. No mutation method is exposed and
  * every statement issued through this pool is restricted to metadata reads.
- * Scoped ALL is required because DML-only accounts can see an empty trigger
- * inventory even while triggers exist. No grant is created by this command. */
+ * Scoped ALL is required for complete executable-object inspection; DML-only
+ * identities can expose partial metadata. No grant is created by this command. */
 export async function createBackupInspectionPool(env = process.env) {
   const user = env.JESSIEMESSAGE_BACKUP_SCHEMA_USER, password = env.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD;
   if (typeof user !== "string" || !user.length || user === env.JESSIEMESSAGE_RUNTIME_DB_USER || typeof password !== "string" || !password.length) fail();

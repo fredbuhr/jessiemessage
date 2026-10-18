@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createECDH, randomBytes } from "node:crypto";
 import { mkdir, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
@@ -11,8 +11,16 @@ import { openPayload, sealPayload, campaignFingerprint } from "../server/broadca
 import { createErasureStore } from "../server/data/erasure-store.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
 import { createAccountErasure } from "../server/data/erasure.mjs";
+import { createServer } from "node:http";
+import { createClosureService, createClosureTargets } from "../server/data/closure-service.mjs";
+import { createClosureHandler } from "../server/data/closure-http.mjs";
+import { createClosureOperations, verifyClosureStartup } from "../server/data/closure-operations.mjs";
+import { runManagedClosures } from "../server/backup/managed-closures.mjs";
+import { createBackupInspectionPool, assertBackupInspection } from "../server/backup/inspection.mjs";
+import { createConfiguredServer } from "../server/index.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import { erasureDirectory } from "./fixtures/erasure-files.mjs";
+import { managedClosureFixture } from "./fixtures/managed-closure-runtime.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), hex = value => value.toString("hex");
@@ -170,6 +178,105 @@ test("durable account erasure removes the selected graph and actual encrypted fi
     await cleanup(); await applyMigrations(connection, { database: options.database, migrations }); pool = await createRuntimePool(process.env);
     await connection.query("INSERT INTO media_storage_state (id, owner_bytes, total_bytes, root_fingerprint, held_bytes, initialized_at) VALUES (1, ?, ?, ?, 0, ?)", [capacity.ownerBytes, capacity.totalBytes, rootFingerprint, created]);
     admin = await user("admin"); adminSession = await session(admin, "admin");
+    await t.test("confirmed HTTP intent survives a real managed drain, privileged inventory and SQL erasure; startup blocks a restored identity", async step => {
+      const f = await seed(), before = await databaseHash(), peerBefore = await peerSnapshot(f);
+      const store = createErasureStore({ pool, database: options.database, capacity, broadcastKey });
+      const batch = page => readErasureJournalBatch({ directory: journalRoot, key: journalKey, binding: store.binding, ...page });
+      const journalFor = clientId => createErasureJournal({ directory: journalRoot, key: journalKey, binding: store.binding, clientId });
+      const vapid = createECDH("prime256v1"); vapid.setPrivateKey(Buffer.alloc(32, 5));
+      const configuredEnv = { ...process.env, JESSIEMESSAGE_SITE_ORIGIN: "https://jessiemessage.com",
+        ...Object.fromEntries(["AUTH", "ACCESS", "CHAT", "MAIL_DELIVERY", "MEDIA", "NOTIFICATIONS", "CRM", "CLIENT_RECOVERY", "BROADCAST"].map(name => [`JESSIEMESSAGE_ENABLE_${name}`, "1"])),
+        ...Object.fromEntries([["MFA", 1], ["MAIL", 2], ["MESSAGE", 3], ["NOTIFICATIONS", 4], ["MEDIA", 6], ["CRM", 7]].map(([name, byte]) => [`JESSIEMESSAGE_${name}_KEY`, Buffer.alloc(32, byte).toString("base64url")])),
+        JESSIEMESSAGE_MEDIA_ROOT: mediaRoot, JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: String(capacity.ownerBytes), JESSIEMESSAGE_MEDIA_TOTAL_BYTES: String(capacity.totalBytes), JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES: "0",
+        JESSIEMESSAGE_SMTP_HOST: "smtp.synthetic.invalid", JESSIEMESSAGE_SMTP_PORT: "587", JESSIEMESSAGE_SMTP_USER: "synthetic-user", JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-password",
+        JESSIEMESSAGE_VAPID_PUBLIC_KEY: vapid.getPublicKey().toString("base64url"), JESSIEMESSAGE_VAPID_PRIVATE_KEY: vapid.getPrivateKey().toString("base64url"), JESSIEMESSAGE_VAPID_SUBJECT: "mailto:contact@jessiemessage.com" };
+      async function configureWithoutListening() {
+        const configured = await createConfiguredServer(configuredEnv, { requestOrigin: "https://jessiemessage.com", deviceTransition: true,
+          recovery: true, crm: true, broadcast: true, backupDirectory: journalRoot, clock: () => now });
+        try {
+          // No listener and no external SMTP/Push: stopping before listen also
+          // prevents the sole producer-start callback from starting workers.
+          await configured.mailWorker.stop(); assert.equal(configured.server.listening, false);
+        } finally { await configured.mailWorker.close(); await configured.diagnostics.close(); await configured.pool.end(); }
+      }
+      await configureWithoutListening();
+      const service = createClosureService({ directory: journalRoot, key: journalKey, store, target: createClosureTargets(pool), clock: () => now });
+      const token = Buffer.alloc(32, 1).toString("base64url"), csrf = Buffer.alloc(32, 2).toString("base64url");
+      const handler = createClosureHandler(service, { origin: "https://jessiemessage.com", actor: async value => value === token
+        ? { user: { id: hex(admin), role: "admin", pseudonym: "Synthetic administrator" }, csrf, expiresAt: now + 3600000 } : null });
+      const api = createServer(async (request, response) => { if (!await handler(request, response)) { response.writeHead(404); response.end(); } });
+      let managed, inspector;
+      try {
+        await new Promise(done => api.listen(0, "127.0.0.1", done));
+        const client = await createClosureTargets(pool)(hex(f.first));
+        const accepted = await fetch(`http://127.0.0.1:${api.address().port}/api/admin/closures/clients/${hex(f.first)}`, { method: "POST",
+          headers: { Cookie: `__Host-jessie_session=${token}`, Origin: "https://jessiemessage.com", "Content-Type": "application/json", "X-CSRF-Token": csrf },
+          body: JSON.stringify({ confirmation: "FERMER", expectedPseudonym: client.pseudonym }) });
+        assert.equal(accepted.status, 202); assert.equal((await accepted.json()).closure.phase, "requested");
+        assert.equal(await databaseHash(), before, "The web request writes no SQL row");
+        await assert.rejects(verifyClosureStartup({ store, batch, clock: () => now }), { code: "ERASURE_PENDING" });
+        await assert.rejects(configureWithoutListening(), /Authentication startup failed/);
+        await new Promise(done => api.close(done));
+        const managedRoot = path.join(directory, "managed-runtime"); await mkdir(managedRoot, { mode: 0o700 });
+        managed = await managedClosureFixture(step, managedRoot); await managed.runtime.start();
+        inspector = await createBackupInspectionPool(process.env); let inventoryChecks = 0, inventoryRejections = 0;
+        const operations = createClosureOperations({ store, storage, journalFor, batch, clock: () => now,
+          async inspectExecutableObjects() {
+            const c = await inspector.getConnection();
+            try { await assertBackupInspection(c, options.database); inventoryChecks++; return { verified: true }; }
+            catch (error) { if (error?.code === "BACKUP_INSPECTION_CONFIG") inventoryRejections++; throw error; }
+            finally { await c.release(); }
+          },
+          // Disposable fixture: this private directory is retained independently
+          // of SQL restoration for the whole test. This is not production proof.
+          async verifyRegistryContinuity() { await batch({ limit: 100 }); return { verified: true }; },
+        });
+        assert.equal(await operations.hasPending(), true);
+        await connection.query("CREATE TRIGGER closure_fixture_trigger BEFORE DELETE ON users FOR EACH ROW SET @closure_probe = 1");
+        try {
+          const dml = await pool.getConnection();
+          try {
+            const rows = await dml.query("SELECT TRIGGER_NAME AS name, ACTION_STATEMENT AS body, DEFINER AS owner FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = ?", [options.database]);
+            assert.equal(rows.length, 1); assert.equal(rows[0].body, null); assert.equal(rows[0].owner, null, "DML exposes a partial trigger record, not privileged executable inspection");
+          }
+          finally { await dml.release(); }
+          // The existing capture-lock facade deliberately sanitizes callback
+          // failures. Check the real rejection as well as the public boundary.
+          await assert.rejects(runManagedClosures({ runtime: managed.runtime, operations, directory: journalRoot, source: async () => {} }), { code: "RECURRING_FILES_IO" });
+          assert.equal(inventoryRejections, 1);
+          assert.equal(managed.runtime.state().status, "running"); assert.equal(await databaseHash(), before);
+        } finally { await connection.query("DROP TRIGGER closure_fixture_trigger"); }
+        await runManagedClosures({ runtime: managed.runtime, operations, directory: journalRoot, source: async () => {} });
+        assert.ok(inventoryChecks >= 2); assert.equal(await operations.hasPending(), false);
+        assert.equal(await peerSnapshot(f), peerBefore);
+        assert.equal((await service.preview(hex(f.first))).client, null); assert.equal((await journal(f)).record.phase, "completed");
+        assert.equal((await verifyClosureStartup({ store, batch, clock: () => now })).verified, true);
+        await configureWithoutListening();
+        await managed.runtime.stop();
+        await connection.query("INSERT INTO users (id, role, status, pseudonym, email, created_at, updated_at) VALUES (?, 'client', 'pending', 'Restored closure fixture', ?, ?, ?)", [f.first, `${hex(f.first)}-closure-restore@example.invalid`, created, created]);
+        try {
+          await assert.rejects(verifyClosureStartup({ store, batch, clock: () => now }), { code: "ERASURE_RESTORE_REPLAY_REQUIRED" });
+          await assert.rejects(configureWithoutListening(), /Authentication startup failed/);
+        }
+        finally { await connection.query("DELETE FROM users WHERE id = ?", [f.first]); }
+        assert.equal(managed.runtime.state().status, "stopped"); assert.equal((await journal(f)).record.phase, "completed");
+        await assert.rejects(createClosureTargets(pool)(hex(admin)), { code: "ERASURE_TARGET" });
+      } finally {
+        api.closeAllConnections(); await new Promise(done => api.close(done)); handler.close();
+        await managed?.runtime.destroy(); await inspector?.end();
+      }
+    });
+    await t.test("a pending client without any conversation can be closed from its account card", async () => {
+      const uid = await user("client"); await connection.query("UPDATE users SET status = 'pending', email_verified_at = NULL, access_approved_at = NULL, updated_at = ? WHERE id = ?", [created, uid]);
+      const store = createErasureStore({ pool, database: options.database, capacity, broadcastKey });
+      const service = createClosureService({ directory: journalRoot, key: journalKey, store, target: createClosureTargets(pool), clock: () => now });
+      try {
+        const client = (await service.preview(hex(uid))).client; assert.equal(client.status, "pending");
+        await service.request(hex(uid), { confirmation: "FERMER", expectedPseudonym: client.pseudonym }, async () => {});
+        assert.equal((await engine().resume({ clientId: hex(uid) })).completed, true);
+        assert.equal((await service.preview(hex(uid))).client, null);
+      } finally { service.close(); }
+    });
     await t.test("complete removal preserves peer data, reused administrator photos and coherent shared campaign audiences", async () => {
       const f = await seed(), before = await peerSnapshot(f), held = Number((await connection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes);
       const result = await engine().resume({ clientId: hex(f.first) }); assert.equal(result.completed, true); assert.equal(result.processedMedia, 4);
