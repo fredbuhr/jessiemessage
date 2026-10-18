@@ -69,6 +69,7 @@
     "Ton accès est prêt.": "Your access is ready.",
     "Ouvrir les conversations": "Open conversations",
     "Préparer le site": "Prepare the site",
+    "Sauvegardes": "Backups",
     "Inviter un client": "Invite a client",
     "Validité du lien (heures)": "Link validity (hours)",
     "Durée d’accès (jours)": "Access duration (days)",

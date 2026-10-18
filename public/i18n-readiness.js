@@ -1,6 +1,7 @@
 globalThis.JessieI18n?.register({
   "JessieMessage — Préparer le site": "JessieMessage — Prepare the site",
   "Administration": "Administration",
+  "Sauvegardes": "Backups",
   "Gérer les accès": "Manage access",
   "Se déconnecter": "Sign out",
   "ADMINISTRATION": "ADMINISTRATION",
