@@ -35,6 +35,10 @@ try {
     $null = Invoke-FixtureGpg ($base + @('--batch', '--trust-model', 'always', '--rfc4880', '--cipher-algo', 'AES256', '--output', $cipher, '--recipient', $fingerprint, '--encrypt', '--', $plain))
     $aead = Join-Path $root 'synthetic-ocb.gpg'
     $null = Invoke-FixtureGpg ($base + @('--batch', '--trust-model', 'always', '--force-ocb', '--cipher-algo', 'AES256', '--output', $aead, '--recipient', $fingerprint, '--encrypt', '--', $plain))
+    foreach ($fixture in @($cipher, $aead)) {
+        $statusLines = @(Invoke-FixtureGpg ($base + @('--batch', '--yes', '--no-tty', '--status-fd', '1', '--output', 'NUL', '--decrypt', '--', $fixture)))
+        $statusLines | Where-Object { $_ -match '^\[GNUPG:\] DECRYPTION_INFO ' } | ForEach-Object { Write-Output ('Synthetic protection status: ' + $_) }
+    }
     Remove-Item -LiteralPath $plain
     $cipherHash = (Get-FileHash -LiteralPath $cipher -Algorithm SHA256).Hash.ToLowerInvariant()
     $cipherBytes = (Get-Item -LiteralPath $cipher).Length

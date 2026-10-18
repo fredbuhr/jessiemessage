@@ -153,8 +153,10 @@ namespace JessieMessage {
                             Regex.Matches(diagnostics, @"(?m)^\[GNUPG:\] DECRYPTION_KEY [A-F0-9]+ " + Regex.Escape(fingerprint) + @" [^\r\n]+\r?$").Count != 1 ||
                             Regex.IsMatch(diagnostics, @"(?m)^\[GNUPG:\] (?:DECRYPTION_FAILED|FAILURE|ERROR|BADMDC|ERRMDC|NODATA)(?: |\r?$)"))
                             throw new InvalidDataException("DECHIFFREMENT_NON_CONFIRME");
-                        string info = protection == "mdc" ? @"2 9(?: 0)?" : @"0 9 2";
-                        if (Regex.Matches(diagnostics, @"(?m)^\[GNUPG:\] DECRYPTION_INFO " + info + @"(?: 0)?\r?$").Count != 1)
+                        // The optional fourth value reports a separate compliance
+                        // policy, not the authenticated-encryption algorithm.
+                        string info = protection == "mdc" ? @"2 9(?: 0(?: [0-9]+)?)?" : @"0 9 2(?: [0-9]+)?";
+                        if (Regex.Matches(diagnostics, @"(?m)^\[GNUPG:\] DECRYPTION_INFO " + info + @"\r?$").Count != 1)
                             throw new InvalidDataException("PROTECTION_NON_CONFIRMEE");
                         pinned.Position = 0;
                         if (Hash(pinned) != cipherHash) throw new InvalidDataException("COPIE_NON_CONFORME");
