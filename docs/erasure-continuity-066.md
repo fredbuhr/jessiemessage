@@ -1,0 +1,37 @@
+# Continuité du registre — lot logiciel 0.66
+
+Étape 4/6. Ce lot prépare le protocole d’un témoin durable séparé et le raccorde au propriétaire d’effacement. **Le service hébergé reste sur 0.65. Les fermetures réelles restent désactivées.** Aucun transport vers le PC, nouveau compte, droit SQL, secret, migration ou changement du collecteur Windows n’est installé ici.
+
+## Ce que le moteur exige désormais
+
+`createClosureOperations` exige une instance de `createErasureContinuity` rattachée à la même base et à la même racine. L’ancien callback `verifyRegistryContinuity() => ({ verified: true })` ne suffit plus. Le précontrôle exige un échange complet ; chaque contrôle de maintenance avant une mutation SQL ou un retrait physique refait cette preuve. La lecture et chaque publication du journal réellement utilisé par le moteur sont aussi comparées à cet inventaire : une instance surveillant un autre dossier vide ne peut pas autoriser ce journal.
+
+Le protocole lit d’abord le témoin avec un défi aléatoire neuf de 256 bits, authentifie les enveloppes reçues avec la clé CRM et vérifie les transitions. Il propose ensuite l’inventaire courant avec un autre défi, attend sa publication durable puis relit la source. Un journal nouveau doit être une intention `requested` à la révision 1 ; une suppression déjà préparée ou terminée ne peut pas être certifiée rétroactivement. Une fermeture disparue, un recul ou un saut de phase/révision, un recul de curseur, un changement d’identité ou de date initiale, une divergence à révision égale et la modification d’un reçu terminé sont refusés.
+
+Le défi empêche l’utilisation d’une ancienne réponse telle quelle. **Il n’authentifie pas le transport.** L’adaptateur devra prouver une liaison authentifiée au vrai témoin hors hébergement et conserver son rattachement lors d’une restauration. Un retour local de fixture ou un second dossier sur le même serveur ne constitue pas cette preuve d’exploitation.
+
+Les échanges sont bornés à 30 secondes par défaut, annulables, sans chevauchement dans une même instance. Les erreurs publiées sont fixes, sans identifiants, chemins ou cause privée. Une interruption après l’arrêt réel laisse les producteurs arrêtés. Une réponse perdue ne devient pas un succès ; seule une nouvelle lecture durable et un nouveau défi peuvent lever cette incertitude. Les changements SQL déjà acquittés restent reprenables ; un échec d’accusé du journal `prepared` arrête avant le retrait des fichiers et la libération de capacité.
+
+## Stockage du témoin
+
+`registry-witness.mjs` ne reçoit ni clé CRM ni clé GPG. Son identifiant est dérivé par HMAC avec la clé CRM, le contexte de base/racine et un domaine distinct. Les fichiers contiennent les enveloppes d’origine, des noms opaques, des révisions et des empreintes ; aucun index d’identités déchiffrées n’est créé. L’application vérifie l’authenticité et la continuité à l’intérieur des enveloppes ; le témoin vérifie leur format canonique et refuse les suppressions, baisses de révision et conflits de mêmes révisions.
+
+L’initialisation est une opération explicite sur un dossier privé entièrement vide, avant toute fermeture réelle. L’absence du fichier de tête pendant un échange est un échec ; elle ne réinitialise jamais un témoin vide. En cas de perte du témoin, **ne pas utiliser `initializeEmpty()` pour contourner le refus**.
+
+Chaque nouvel inventaire est écrit exclusivement sous un numéro continu et son SHA-256, synchronisé, relu et conservé. La tête est ensuite publiée par révision optimiste avec verrou, synchronisation et relecture. Les fichiers exigent propriétaire courant, mode 0600, un seul lien, absence de lien symbolique et ancrage du répertoire 0700. Les inventaires immuables détectent une tête revenue en arrière ou une publication manquante. Une unique publication complète dont seule la tête n’a pas été acquittée peut terminer ce pointeur ; elle ne peut être remplacée par une autre proposition. Une tête reculée de plusieurs publications, un trou, un doublon de numéro, un fichier incomplet ou un verrou ambigu restent bloquants.
+
+Limites : 9 990 journaux, capsule d’inventaire de 64 Mio, 10 000 publications et 1 Gio cumulé de publications. Le dépassement bloque avant l’ajout. Aucune purge automatique ni procédure de compactage ne peut effacer cette histoire dans ce lot. Le témoin doit être conservé indépendamment des restaurations de l’application ; la perte ou le recul simultané de toutes les copies ne peut pas être prouvé par ces seules copies.
+
+## Récupération
+
+`recover()` lit le témoin avec un nouveau défi et restitue les enveloppes authentifiées **avec leur rattachement source original**. Il ne demande ni lecture de la source vivante ni connexion SQL. Cette sortie peut fournir le registre courant à `planOperationalRestore` et à la quarantaine 0.65, même si la copie SQL est plus ancienne et le registre local perdu. La préparation de confidentialité reste récupérée dans la capsule de sauvegarde, séparément de ce registre.
+
+Aucune empreinte de racine, aucun nom de journal et aucun reçu original n’est réécrit. La quarantaine et son marqueur restent bloquants. `externalContinuityVerified: false` dans le plan 0.65 reste exact tant qu’un raccordement réel et une réconciliation source/cible n’ont pas été prouvés ; `recover()` n’ouvre aucun producteur et ne rejoue aucune suppression.
+
+## Validation et suite réelle
+
+Les fixtures utilisent de vrais fichiers chiffrés, synchronisations et révisions dans deux dossiers jetables. L’ancrage Linux natif est obligatoire en CI. La suite MariaDB utilise le protocole réel à la place de l’ancien callback booléen et interrompt le témoin après l’arrêt du processus, puis après la préparation SQL : données fictives uniquement. Les preuves complètes seront consignées dans [le relevé de vérification](verification-proofs/jm066-verification.json).
+
+Restent à raccorder : transport authentifié du témoin hors hébergement (le PC est le premier choix, en réutilisant la destination existante), conservation durable/contrôle de son rattachement, barrière fraîche au démarrage du vrai processus, réconciliation contrôlée de la restauration vers une autre base/racine et propriétaire de maintenance de production. L’inventaire SQL privilégié réel et la restauration native isolée courante restent distincts ; le précontrôle 0.65 ne vaut pas import. Le déchiffrement personnel courant reste non confirmé et ne doit jamais être remplacé par une clé privée transférée au serveur.
+
+L’étude de l’inspection SQL doit tenir compte de l’offre réelle : [Infomaniak décrit les privilèges des offres mutualisées et Cloud](https://www.infomaniak.com/fr/support/faq/1981/gerer-les-utilisateurs-et-bases-de-donnees-mysqlmariadb) et [restreint triggers et routines aux Serveurs Cloud](https://www.infomaniak.com/fr/support/faq/821/utiliser-views-triggers-stored-procedures-et-routines). Cela ne transforme ni les métadonnées partielles DML ni le profil d’administration mutualisée en inventaire privilégié complet. Aucun droit n’est ajouté et aucun contrat d’inspection n’est relâché dans ce lot.

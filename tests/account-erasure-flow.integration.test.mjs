@@ -21,6 +21,8 @@ import { createConfiguredServer } from "../server/index.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import { erasureDirectory } from "./fixtures/erasure-files.mjs";
 import { managedClosureFixture } from "./fixtures/managed-closure-runtime.mjs";
+import { registryWitnessFixture } from "./fixtures/registry-witness.mjs";
+import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), hex = value => value.toString("hex");
@@ -183,6 +185,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       const store = createErasureStore({ pool, database: options.database, capacity, broadcastKey });
       const batch = page => readErasureJournalBatch({ directory: journalRoot, key: journalKey, binding: store.binding, ...page });
       const journalFor = clientId => createErasureJournal({ directory: journalRoot, key: journalKey, binding: store.binding, clientId });
+      const witness = await registryWitnessFixture(step, { key: journalKey, binding: store.binding, sourceDirectory: journalRoot, withDirectory: withPrivateDirectory });
       const vapid = createECDH("prime256v1"); vapid.setPrivateKey(Buffer.alloc(32, 5));
       const configuredEnv = { ...process.env, JESSIEMESSAGE_SITE_ORIGIN: "https://jessiemessage.com",
         ...Object.fromEntries(["AUTH", "ACCESS", "CHAT", "MAIL_DELIVERY", "MEDIA", "NOTIFICATIONS", "CRM", "CLIENT_RECOVERY", "BROADCAST"].map(name => [`JESSIEMESSAGE_ENABLE_${name}`, "1"])),
@@ -237,9 +240,9 @@ test("durable account erasure removes the selected graph and actual encrypted fi
             catch (error) { if (error?.code === "BACKUP_INSPECTION_CONFIG") inventoryRejections++; throw error; }
             finally { await c.release(); }
           },
-          // Disposable fixture: this private directory is retained independently
-          // of SQL restoration for the whole test. This is not production proof.
-          async verifyRegistryContinuity() { await batch({ limit: 100 }); return { verified: true }; },
+          // Actual challenge/inventory/CAS protocol on disposable files. Its
+          // local transport is NOT a production off-host continuity proof.
+          continuity: witness.gate,
         });
         assert.equal(await operations.hasPending(), true);
         await connection.query("CREATE TRIGGER closure_fixture_trigger BEFORE DELETE ON users FOR EACH ROW SET @closure_probe = 1");
@@ -256,6 +259,34 @@ test("durable account erasure removes the selected graph and actual encrypted fi
           assert.equal(inventoryRejections, 1);
           assert.equal(managed.runtime.state().status, "running"); assert.equal(await databaseHash(), before);
         } finally { await connection.query("DROP TRIGGER closure_fixture_trigger"); }
+        await step.test("witness loss after the actual process stop leaves SQL intact and the runtime stopped", async () => {
+          const disconnected = witness.makeGate({ exchange: value => {
+            if (managed.runtime.state().status === "stopped") throw new Error("Synthetic independent witness disconnected");
+            return witness.witness.exchange(value);
+          } });
+          const guarded = createClosureOperations({ store, storage, journalFor, batch, clock: () => now,
+            inspectExecutableObjects: async () => { const c = await inspector.getConnection(); try { await assertBackupInspection(c, options.database); return { verified: true }; } finally { await c.release(); } },
+            continuity: disconnected });
+          await assert.rejects(runManagedClosures({ runtime: managed.runtime, operations: guarded, directory: journalRoot, source: async () => {} }), { code: "RECURRING_FILES_IO" });
+          assert.equal(managed.runtime.state().status, "stopped"); assert.equal(await databaseHash(), before);
+          assert.equal((await journal(f)).record.phase, "requested");
+        });
+        await step.test("loss of the prepared journal acknowledgement stops before physical deletion or capacity release", async () => {
+          const held = Number((await connection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes);
+          const files = (await readdir(mediaRoot)).sort();
+          const disconnected = witness.makeGate({ exchange: async value => {
+            if ((await journal(f)).record.phase === "prepared") throw new Error("Synthetic lost prepared receipt");
+            return witness.witness.exchange(value);
+          } });
+          const guarded = createClosureOperations({ store, storage, journalFor, batch, clock: () => now,
+            inspectExecutableObjects: async () => { const c = await inspector.getConnection(); try { await assertBackupInspection(c, options.database); return { verified: true }; } finally { await c.release(); } },
+            continuity: disconnected });
+          await assert.rejects(runManagedClosures({ runtime: managed.runtime, operations: guarded, directory: journalRoot, source: async () => {} }), { code: "RECURRING_FILES_IO" });
+          assert.equal(managed.runtime.state().status, "stopped"); assert.equal((await journal(f)).record.phase, "prepared");
+          assert.equal((await connection.query("SELECT status FROM users WHERE id = ?", [f.first]))[0].status, "deleted");
+          assert.equal(Number((await connection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes), held);
+          assert.deepEqual((await readdir(mediaRoot)).sort(), files); assert.equal(await peerSnapshot(f), peerBefore);
+        });
         await runManagedClosures({ runtime: managed.runtime, operations, directory: journalRoot, source: async () => {} });
         assert.ok(inventoryChecks >= 2); assert.equal(await operations.hasPending(), false);
         assert.equal(await peerSnapshot(f), peerBefore);

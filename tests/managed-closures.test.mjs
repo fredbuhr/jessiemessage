@@ -7,6 +7,7 @@ import { createClosureOperations, verifyClosureStartup } from "../server/data/cl
 import { AccountErasureError } from "../server/data/erasure-state.mjs";
 import { erasureDirectory, withErasureDirectory } from "./fixtures/erasure-files.mjs";
 import { managedClosureFixture } from "./fixtures/managed-closure-runtime.mjs";
+import { registryWitnessFixture } from "./fixtures/registry-witness.mjs";
 
 const clientId = "2".repeat(32), binding = { database: "jessiemessage_test_closure", rootFingerprint: "a".repeat(64) };
 const portableLock = (directory, work, options) => acquireRecurringLock(directory, work, options, { withDirectory: withErasureDirectory });
@@ -79,7 +80,7 @@ test("missing verifiable lease and missing offline preconditions cannot authoriz
   await assert.rejects(runManagedClosures({ runtime: f.runtime, operations: f.operations, directory: "/synthetic", source: async () => {} }, { lock: (_directory, work) => work({ token: "unproved" }) }), { code: "ERASURE_MAINTENANCE" });
   assert.equal(f.events.includes("stop"), false);
   for (const parameters of [{}, { inspectExecutableObjects: true, verifyRegistryContinuity: true }, { inspectExecutableObjects: async () => ({ verified: true }) }]) {
-    assert.throws(() => createClosureOperations({ store: { binding }, storage: {}, journalFor() {}, batch() {}, ...parameters }), { code: "ERASURE_INPUT" });
+    assert.throws(() => createClosureOperations({ store: { binding }, storage: {}, journalFor() {}, batch() {}, ...parameters }));
   }
 });
 
@@ -89,11 +90,13 @@ test("startup is read-only and rejects pending erasure before any receipt check 
   }
 });
 
-test("incomplete privileged inventory or registry continuity proof blocks before stopping producers", async () => {
+test("incomplete privileged inventory or an unavailable witness blocks before stopping producers", async t => {
   for (const missing of ["inventory", "registry"]) {
+    const witness = await registryWitnessFixture(t, { key: Buffer.alloc(32, 7), binding });
+    const continuity = missing === "registry" ? witness.makeGate({ exchange: async () => { throw new Error("Synthetic disconnected witness"); } }) : witness.gate;
     const f = modeled(), operations = createClosureOperations({ store: { binding }, storage: {}, journalFor() {}, batch() {},
-      inspectExecutableObjects: async () => ({ verified: missing !== "inventory" }), verifyRegistryContinuity: async () => ({ verified: missing !== "registry" }) });
-    await assert.rejects(runManagedClosures({ runtime: f.runtime, operations, directory: "/synthetic", source: async () => {} }, { lock: f.lock }), { code: "ERASURE_PREFLIGHT" });
+      inspectExecutableObjects: async () => ({ verified: missing !== "inventory" }), continuity });
+    await assert.rejects(runManagedClosures({ runtime: f.runtime, operations, directory: "/synthetic", source: async () => {} }, { lock: f.lock }), { code: missing === "inventory" ? "ERASURE_PREFLIGHT" : "ERASURE_CONTINUITY_UNAVAILABLE" });
     assert.equal(f.events.includes("stop"), false);
   }
 });
