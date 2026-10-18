@@ -64,7 +64,7 @@ function destination(item) {
   const details = node("dl", undefined, "backup-details"); details.append(detail("Emplacement", ui.t(kinds[item.kind])), detail("Dernier contact du PC", date(item.lastSeenAt)), detail("Dernier reçu de copie vérifiée", date(item.lastReceipt?.receivedAt ?? null)));
   card.append(details);
   const actions = node("div", undefined, "backup-actions");
-  const kit = action("Raccorder Windows", () => void perform(`/api/admin/backups/destinations/${item.id}/windows-kit`, {}, true), "primary"); kit.dataset.action = "kit";
+  const kit = action("Raccorder Windows", () => void perform(`/api/admin/backups/destinations/${item.id}/windows-kit`, {}, "JessieMessage-sauvegardes-Windows.zip"), "primary"); kit.dataset.action = "kit";
   const toggle = action(item.enabled ? "Suspendre les copies" : "Reprendre les copies", () => void perform(`/api/admin/backups/destinations/${item.id}/settings`, { label: item.label, kind: item.kind, enabled: !item.enabled }));
   toggle.dataset.action = "toggle"; actions.append(kit, toggle); card.append(actions);
   card.append(node("p", "Un nouveau raccordement remplace l’autorisation de l’appareil précédent lorsqu’il aboutit. Le kit est personnel et valable 15 minutes.", "small-copy"));
@@ -82,6 +82,7 @@ function render() {
   el("backup-content").hidden = false;
   const schedule = summary.schedule, time = `${String(schedule.hourUtc).padStart(2, "0")}:${String(schedule.minuteUtc).padStart(2, "0")} UTC`;
   el("capture-details").replaceChildren(detail("Prochaine capture quotidienne", schedule.enabled ? time : ui.t("Suspendue")), detail("Dernière archive chiffrée", date(summary.latestArchive?.startedAt ?? null)), detail("Archives disponibles", String(summary.archiveCount)));
+  el("verify-archive").disabled = !summary.latestArchive;
   el("destinations").replaceChildren(...summary.destinations.map(destination));
   if (!summary.destinations.length) el("destinations").append(node("p", "Ajoute une destination pour recevoir les copies hors du site.", "body-copy"));
   el("add-form").querySelector('button[type="submit"]').disabled = summary.destinations.length >= 5;
@@ -99,19 +100,21 @@ async function bootstrap(message = "") {
     clear(); notice("Les sauvegardes sont momentanément indisponibles. Actualise la page.", true);
   }
 }
-async function perform(path, body, zip = false) {
+async function perform(path, body, download = null) {
   if (busy || !state.session || !visible()) return;
   busy = true; const ticket = readinessTicket(state);
   for (const button of el("backup-content").querySelectorAll("button")) button.disabled = true;
   notice("Enregistrement en cours…");
   try {
-    await prove(ticket); const result = await request(path, { ticket, body, zip }); await prove(ticket);
-    if (zip) {
-      const url = URL.createObjectURL(result); blobs.add(url); const link = document.createElement("a"); link.href = url; link.download = "JessieMessage-sauvegardes-Windows.zip";
+    await prove(ticket); const result = await request(path, { ticket, body, zip: download !== null }); await prove(ticket);
+    if (download) {
+      const url = URL.createObjectURL(result); blobs.add(url); const link = document.createElement("a"); link.href = url; link.download = download;
       document.body.append(link); try { link.click(); } finally { link.remove(); }
       // Revoke at the next private clear or after download startup.
       setTimeout(() => { URL.revokeObjectURL(url); blobs.delete(url); }, 5000);
-      render(); notice("Kit téléchargé. Extrais le ZIP puis ouvre Installer.cmd sur le PC choisi."); return;
+      render(); notice(download === "JessieMessage-verifier-Windows.zip"
+        ? "Vérification téléchargée. Extrais le ZIP puis ouvre Verifier.cmd sur le PC qui contient la copie et ta clé GPG."
+        : "Kit téléchargé. Extrais le ZIP puis ouvre Installer.cmd sur le PC choisi."); return;
     }
     await bootstrap("Réglages enregistrés.");
   } catch (error) {
@@ -121,6 +124,9 @@ async function perform(path, body, zip = false) {
   } finally { busy = false; }
 }
 el("refresh").addEventListener("click", () => { if (!busy) void bootstrap(); });
+el("verify-archive").addEventListener("click", () => {
+  if (summary?.latestArchive) void perform("/api/admin/backups/verification-kit", { captureId: summary.latestArchive.id }, "JessieMessage-verifier-Windows.zip");
+});
 el("add-form").addEventListener("submit", event => { event.preventDefault(); void perform("/api/admin/backups/destinations", { label: el("destination-label").value.trim(), kind: el("destination-kind").value }); });
 document.addEventListener("visibilitychange", () => { if (visible()) void bootstrap(); else clear(); });
 window.addEventListener("pagehide", clear); window.addEventListener("pageshow", event => { if (event.persisted && visible()) void bootstrap(); });

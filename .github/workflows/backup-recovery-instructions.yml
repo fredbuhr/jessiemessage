@@ -6,16 +6,22 @@ on:
     paths:
       - scripts/JessieMessage-recuperation-052.ps1
       - scripts/JessieMessage-sauvegardes-055.ps1
+      - scripts/JessieMessage-verifier-056.ps1
+      - server/backup/verification-kit.mjs
       - server/backup/copy-kit.mjs
       - tests/windows/backup-copy.ps1
+      - tests/windows/backup-verification.ps1
       - .github/workflows/backup-recovery-instructions.yml
   pull_request:
     branches: ["feat/**", "fix/**", main]
     paths:
       - scripts/JessieMessage-recuperation-052.ps1
       - scripts/JessieMessage-sauvegardes-055.ps1
+      - scripts/JessieMessage-verifier-056.ps1
+      - server/backup/verification-kit.mjs
       - server/backup/copy-kit.mjs
       - tests/windows/backup-copy.ps1
+      - tests/windows/backup-verification.ps1
       - .github/workflows/backup-recovery-instructions.yml
 
 permissions:
@@ -79,8 +85,13 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           import { createCopyKit } from './server/backup/copy-kit.mjs';
+          import { createVerificationKit } from './server/backup/verification-kit.mjs';
           import { writeFile } from 'node:fs/promises';
           await writeFile('synthetic-kit.zip', await createCopyKit({version:1,destinationId:'1'.repeat(32),pairingCode:'A'.repeat(43),expiresAt:1,origin:'https://jessiemessage.com'}));
+          const id = 'capture-1792340000000-' + 'c'.repeat(16);
+          await writeFile('synthetic-verification.zip', await createVerificationKit({format:'jessiemessage-backup-verification',version:1,
+            archive:{id,startedAt:1792340000000,filename:`JessieMessage-${id}.tar.gz.gpg`,bytes:100,sha256:'a'.repeat(64)},
+            source:{bytes:50,sha256:'d'.repeat(64)},recipient:{fingerprint:'F'.repeat(40)},protection:'mdc'}));
           JS
       - name: Expand ZIP using native Windows tools without running the installer
         shell: powershell
@@ -91,3 +102,18 @@ jobs:
             if (-not (Test-Path -LiteralPath (Join-Path synthetic-kit $jmFile))) { throw 'Missing Windows kit file.' }
           }
           Write-Output 'Actual ZIP expanded by Windows; expired synthetic code only, installer not run.'
+          Expand-Archive -LiteralPath synthetic-verification.zip -DestinationPath synthetic-verification
+          if (@(Get-ChildItem synthetic-verification -File).Count -ne 4) { throw 'Incomplete verification kit.' }
+          . ./scripts/JessieMessage-verifier-056.ps1
+          $jmVerification = Read-JmVerification (Join-Path (Resolve-Path synthetic-verification).Path 'verification.json')
+          if ($jmVerification.format -cne 'jessiemessage-backup-verification') { throw 'Invalid offline metadata.' }
+          Write-Output 'Actual offline verification ZIP expanded and parsed by Windows; no credential or private key.'
+      - name: Parse and verify actual GPG decryption in memory on Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $jmTokens = $null
+          $jmErrors = $null
+          $null = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/JessieMessage-verifier-056.ps1').Path, [ref]$jmTokens, [ref]$jmErrors)
+          if ($jmErrors.Count -ne 0) { throw (($jmErrors | ForEach-Object { 'Line ' + $_.Extent.StartLineNumber + ': ' + $_.Message }) -join "`n") }
+          & ./tests/windows/backup-verification.ps1
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Windows decryption verification failed.' }
