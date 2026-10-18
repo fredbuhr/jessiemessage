@@ -1,0 +1,178 @@
+{
+  "format": "jessiemessage-source-verification",
+  "version": 1,
+  "release": "0.65.0",
+  "step": "4/6",
+  "source": {
+    "head": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+    "tree": "51717124bf15df3845a97e4f675c8549d59715c2",
+    "branch": "release/0.65.0",
+    "pullRequest": 81,
+    "merge": "1dcb5fa3155e90c6b6bf2faa7f404fa01f14e876"
+  },
+  "runs": [
+    {
+      "id": 39174491849,
+      "jobs": [
+        {
+          "id": 117814258327,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117814258379,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117814258441,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117814258491,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117814258598,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 39174494568,
+      "jobs": [
+        {
+          "id": 117814267355,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117814267383,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117814267430,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117814267440,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117814267441,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 39174755468,
+      "jobs": [
+        {
+          "id": 117815030433,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117815030519,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117815030523,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117815030580,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117815030635,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "general": {
+      "total": 2668,
+      "passed": 2640,
+      "skipped": 28,
+      "failed": 0
+    },
+    "mariadb1011": {
+      "total": 405,
+      "passed": 405,
+      "skipped": 0,
+      "failed": 0
+    },
+    "mariadb114": {
+      "total": 405,
+      "passed": 405,
+      "skipped": 0,
+      "failed": 0
+    },
+    "chromeLifecycle": {
+      "total": 156,
+      "passed": 156,
+      "skipped": 0,
+      "failed": 0
+    },
+    "chromeHttpsMfa": {
+      "total": 1,
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    "syntaxFiles": 494,
+    "build": "passed"
+  },
+  "local": {
+    "total": 2668,
+    "passed": 2483,
+    "skipped": 185,
+    "failed": 0,
+    "concurrency": 2,
+    "notes": "Constrained scratch has no MariaDB, Chrome or procfs. CI provides those proofs."
+  },
+  "guarantees": [
+    "Operational capsule authenticated against original SQL, manifest and media inventory",
+    "Exact original encrypted privacy and erasure file bytes preserved",
+    "Newer current receipts survive an older checkpoint",
+    "Lost, rolled-back and conflicting registries refused",
+    "Restored operations quarantined and startup blocked, including an empty registry",
+    "Capture resume rechecks pending closures",
+    "Configured server internal closure flag exercised on disposable MariaDB"
+  ],
+  "exclusions": {
+    "independentRegistryContinuityVerified": false,
+    "privilegedProductionInspectionInstalled": false,
+    "productionClosureOperationsEnabled": false,
+    "currentPersonalGpgDecryptionVerified": false,
+    "currentNativeIsolatedSqlRestoreVerified": false
+  }
+}

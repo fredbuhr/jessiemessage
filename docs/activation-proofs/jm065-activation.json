@@ -1,0 +1,204 @@
+{
+  "format": "jessiemessage-activation-proof",
+  "version": 1,
+  "release": "0.65.0",
+  "step": "4/6",
+  "sourceHead": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+  "sourceTree": "51717124bf15df3845a97e4f675c8549d59715c2",
+  "pullRequest": 81,
+  "merge": "1dcb5fa3155e90c6b6bf2faa7f404fa01f14e876",
+  "manager": {
+    "modifiedLocal": "2026-10-19 01:07",
+    "timezone": "Europe/Paris",
+    "precision": "minute",
+    "node": "24",
+    "port": 3000,
+    "reinstalledDependencies": false,
+    "status": "Actif"
+  },
+  "launcher": {
+    "path": "/srv/customer/jessiemessage-private/start-primary-operational-backup-065-f53d6982.sh",
+    "bytes": 849,
+    "mode": "0700",
+    "sha256": "8ac14501e02220a50bf004cabb3c9fa2ca260f0d90d4bd98b5cc73b8fc1169c3"
+  },
+  "preflight": {
+    "checkedAt": "2026-10-18T23:04:14.548649Z",
+    "status": "passed",
+    "started": false,
+    "backupStarted": false
+  },
+  "hostedNative": {
+    "node": "24.15.0",
+    "tests": 126,
+    "passed": 126,
+    "failed": 0,
+    "skipped": 0,
+    "initialBroaderSelection": {
+      "tests": 158,
+      "passed": 126,
+      "failed": 32,
+      "reason": "All 32 private-checkpoint-verify fixtures explicitly force strict path mode, refused during media initialization under group-writable /srv (02775 root:process-group). Those fixtures pass in CI; production uses existing linux-dirfd. No protection was weakened."
+    }
+  },
+  "https": {
+    "checkedAt": "2026-10-18T23:12:39.155839Z",
+    "tests": 149,
+    "passed": 149,
+    "failed": 0,
+    "publicSourceHashes": 44,
+    "anonymous": true,
+    "tlsVerified": true,
+    "redirectsFollowed": false,
+    "privateReport": "operational-065-https-r3.json",
+    "notes": "Content-Length is checked when present; GET hashes always checked. Private API HEAD is 405; closure mutation includes /clients/."
+  },
+  "capture": {
+    "startedAt": 1792365269393,
+    "finishedAt": 1792365275602,
+    "runtimeResumed": true,
+    "scheduleRestored": true,
+    "dailyUtc": "05:15",
+    "configurationSha256": "256b025cdf8f47046dc970ad6d603e864d5b98ad70cc04f129eed5228fff4b3c",
+    "archive": {
+      "id": "capture-1792365269393-ff5d9fa2282f06ec",
+      "bytes": 402538,
+      "sha256": "46cd15488065ff03227cac34768d21f18d261acd43c8539652f76f5d6c10cd04"
+    },
+    "operationalReceipt": {
+      "version": 10,
+      "files": 0,
+      "mediaFiles": 4,
+      "sha256": "32ab22974316ac67ec94e4e4457e9c324d3209bf39c9dbf16b387317f89cb78a",
+      "authenticated": true,
+      "sourceBindingMatched": true,
+      "notes": "No personal privacy draft or erasure job existed at capture. The empty registry is explicitly covered, not evidence of independent continuity."
+    },
+    "independentCopy": {
+      "matched": true,
+      "receivedAt": 1792365660272,
+      "checkedAt": "2026-10-18T23:23:24.936Z",
+      "verification": "captureId, encrypted bytes and sha256 match",
+      "personalDecryptionVerified": false
+    }
+  },
+  "postCaptureMonitor": {
+    "lastSuccessAt": 1792365275602,
+    "samples": [
+      1792365329099,
+      1792365389156,
+      1792365449203
+    ],
+    "gapMilliseconds": 60057,
+    "state": "current",
+    "code": "OK",
+    "consecutiveFailures": 0,
+    "activeIncident": false,
+    "pendingAlerts": 0
+  },
+  "runtimeObservation": {
+    "checkedAt": "2026-10-18T23:17:34.303Z",
+    "head": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+    "tree": "51717124bf15df3845a97e4f675c8549d59715c2",
+    "clean": true,
+    "archiveCount": 3,
+    "privacyPreparationExists": false,
+    "erasureJournals": 0,
+    "restorationMarker": false,
+    "healthAndReadiness": {
+      "primary": "200",
+      "recipe": "200"
+    },
+    "pc": {
+      "enabled": true,
+      "paired": true,
+      "lastSeenAt": 1792364749973,
+      "receiptMatchesCurrentArchive": false,
+      "pollIntervalMinutes": 15
+    }
+  },
+  "exclusions": {
+    "accountClosuresEnabled": false,
+    "independentRegistryContinuityVerified": false,
+    "personalCurrentGpgDecryptionVerified": false,
+    "nativeCurrentIsolatedSqlRestoreVerified": false,
+    "privateGpgKeyMovedOrRegenerated": false,
+    "realAccountErased": false,
+    "externalTestMessageSent": false
+  },
+  "rollback": {
+    "beforeAnyRealClosureOnly": true,
+    "parametersFile": "/srv/customer/jessiemessage-private/manager-before-operational-backup-065.json",
+    "runtime": "0.62.0",
+    "sqlRestoreRequired": false
+  },
+  "nativeRestorePrecheck": {
+    "checkedAt": "2026-10-18T23:22:05.819Z",
+    "archiveId": "capture-1792365269393-ff5d9fa2282f06ec",
+    "status": "application_restore_precheck_passed",
+    "receiptVersion": 10,
+    "tables": 30,
+    "migrations": 30,
+    "gzipBytes": 16873,
+    "sqlBytes": 79500,
+    "gzipSha256": "83c8f64a98f4f43d0598cd34d83f9d09042c6c82a83f3e4dd9092d1c21f7a4eb",
+    "sqlSha256": "0359942fb4f00ec751f5a2a2267b28902514180dc746c4fc1c5258d9ee7b9668",
+    "nativeImportClientVerified": true,
+    "sqlImportFormatVerified": true,
+    "trustedSqlSha256Matched": true,
+    "operationsCovered": true,
+    "operationsBytes": 303,
+    "databaseConnected": false,
+    "imported": false,
+    "httpStarted": false,
+    "smtpStarted": false,
+    "workersStarted": false,
+    "operationalRestorationPending": true,
+    "externalRegistryContinuityVerified": false,
+    "prospectiveIsolatedTargetNotConnected": true,
+    "invocation": "actual CLI file with protected environment, not the rejected stdin/module harness"
+  },
+  "verificationKit": {
+    "archiveId": "capture-1792365269393-ff5d9fa2282f06ec",
+    "bytes": 22529,
+    "sha256": "fe4c7c9c90f2af95c799a4feb418126cdbed033d4f6ec5ee18b17d0b4f3bfb7a",
+    "generatedInMemory": true,
+    "privateKeyExported": false,
+    "personalDecryptionVerified": false
+  },
+  "screenshot": {
+    "path": "docs/activation-proofs/jm065-activation-20261019.jpg",
+    "bytes": 121547,
+    "sha256": "f7a6d238b2f5c6c3b40dfa3da161e7de7f9bf21f5d235b17a55ac32fa96e2a95",
+    "gitBlob": "7f07fc2a170fba07c96f145a5d3281dfae41d10e"
+  },
+  "latestRuntimeObservation": {
+    "checkedAt": "2026-10-18T23:23:24.936Z",
+    "head": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+    "tree": "51717124bf15df3845a97e4f675c8549d59715c2",
+    "clean": true,
+    "schedule": {
+      "enabled": true,
+      "hourUtc": 5,
+      "minuteUtc": 15
+    },
+    "freshnessCode": "OK",
+    "pendingAlerts": 0,
+    "activeIncident": false,
+    "consecutiveFailures": 0,
+    "archiveCount": 3,
+    "privacyPreparationExists": false,
+    "erasureJournals": 0,
+    "restoreMarker": false,
+    "postCaptureHealthChecksPassed": 4,
+    "pc": {
+      "enabled": true,
+      "paired": true,
+      "receivedAt": 1792365660272,
+      "lastSeenAt": 1792365660272,
+      "receiptMatchesCurrentArchive": true,
+      "pollIntervalMinutes": 15,
+      "personalDecryptionVerified": false
+    }
+  }
+}
