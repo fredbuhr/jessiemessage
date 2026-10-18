@@ -42,13 +42,13 @@ function html(document) {
 
 /** Reuse the ordinary authorized conversation and message-photo readers only.
  * Never enumerate a participant's private library, CRM notes or campaigns. */
-export function createConversationExporter({ history, photo = null, clock = Date.now, elapsed = () => performance.now(), limits = CONVERSATION_EXPORT_LIMITS }) {
-  if (typeof history !== "function" || photo !== null && typeof photo !== "function" || typeof clock !== "function" || typeof elapsed !== "function"
+export function createConversationExporter({ history, role = "admin", photo = null, clock = Date.now, elapsed = () => performance.now(), limits = CONVERSATION_EXPORT_LIMITS }) {
+  if (!["admin", "client"].includes(role) || typeof history !== "function" || photo !== null && typeof photo !== "function" || typeof clock !== "function" || typeof elapsed !== "function"
     || Object.keys(CONVERSATION_EXPORT_LIMITS).some(key => !Number.isSafeInteger(limits[key]) || limits[key] < 1 || limits[key] > CONVERSATION_EXPORT_LIMITS[key])) throw new TypeError("Bounded conversation readers required.");
   let busy = false, nextAllowedAt = 0;
   return Object.freeze({ photos: photo !== null, maxBytes: limits.archiveBytes,
-    async create({ token, conversationId, expectedClientId, includePhotos, signal }) {
-      if (!id(conversationId) || !id(expectedClientId) || typeof includePhotos !== "boolean" || includePhotos && !photo) fail("input");
+    async create({ token, conversationId, expectedClientId, clientName, includePhotos, signal }) {
+      if (!id(conversationId) || !id(expectedClientId) || role === "client" && !text(clientName, 64) || typeof includePhotos !== "boolean" || includePhotos && !photo) fail("input");
       const startedAt = clock(); if (!instant(startedAt)) fail();
       if (busy || startedAt < nextAllowedAt) fail("busy");
       const began = elapsed(); if (!Number.isFinite(began) || began < 0) fail();
@@ -65,11 +65,11 @@ export function createConversationExporter({ history, photo = null, clock = Date
         while (true) {
           active(); const page = await history(token, conversationId, { before, limit: 100 }); active();
           const conversation = page?.conversation;
-          if (!conversation || conversation.id !== conversationId || !id(conversation.client?.id) || !text(conversation.client.pseudonym, 64)
+          if (!conversation || conversation.id !== conversationId || (role === "admin" ? !id(conversation.client?.id) || !text(conversation.client.pseudonym, 64) : conversation.client !== null)
             || !text(conversation.peerName, 64) || !seq(conversation.latestSequence) || !Array.isArray(page.messages) || page.messages.length > 100
             || typeof page.hasMoreBefore !== "boolean") fail();
-          if (upper === null) { upper = conversation.latestSequence; clientId = conversation.client.id; client = conversation.client.pseudonym; }
-          if (conversation.client.id !== clientId || clientId !== expectedClientId) fail("changed");
+          if (upper === null) { upper = conversation.latestSequence; clientId = role === "admin" ? conversation.client.id : expectedClientId; client = role === "admin" ? conversation.client.pseudonym : clientName; }
+          if (role === "admin" && conversation.client.id !== clientId || clientId !== expectedClientId) fail("changed");
           let previous = 0n;
           for (const message of page.messages) {
             if (!message || !id(message.id) || seen.has(message.id) || !seq(message.sequence) || BigInt(message.sequence) <= previous
@@ -80,7 +80,7 @@ export function createConversationExporter({ history, photo = null, clock = Date
             previous = BigInt(message.sequence); seen.add(message.id);
             if (seen.size > limits.messages) fail("limit");
             const body = message.body ?? ""; textBytes += Buffer.byteLength(body, "utf8"); if (textBytes > limits.textBytes) fail("limit");
-            const exported = { id: message.id, sequence: message.sequence, sender: message.sender, body, createdAt: message.createdAt, deletedAt: message.deletedAt };
+            const exported = { id: message.id, sequence: message.sequence, sender: role === "client" ? message.sender === "me" ? "peer" : "me" : message.sender, body, createdAt: message.createdAt, deletedAt: message.deletedAt };
             if (message.deletedAt === null && message.media !== undefined) {
               const media = message.media;
               if (!id(media?.id) || media.sharedHere !== true || !Number.isSafeInteger(media.bytes) || media.bytes < 5 || media.bytes > 10485760
@@ -119,7 +119,7 @@ export function createConversationExporter({ history, photo = null, clock = Date
           throughSequence: upper, administrator: "Jess", client, includePhotos, messages };
         add("conversation.json", Buffer.from(JSON.stringify(document, null, 2) + "\n"));
         add("Conversation.html", Buffer.from(html(document)));
-        add("LIRE-MOI.txt", Buffer.from("JessieMessage — Conversation\n\nExtraire tout le ZIP puis ouvrir Conversation.html pour lire les messages et les photos incluses.\nExtract the whole ZIP and open Conversation.html to read messages and included photos.\n\nconversation.json fournit les mêmes échanges dans un format portable.\nconversation.json contains the same exchanges in a portable format.\n\nCe fichier se lit sans connexion : conserver le dossier dans un endroit privé.\nThis file can be read offline: keep the folder in a private location.\n\nLes notes, tags, groupes, la bibliothèque non partagée, et les identifiants de connexion ne sont pas inclus.\nPrivate notes, labels, groups, unshared library files, and credentials are not included.\n\nIl s'agit d'un export de conversation, pas d'une sauvegarde du site ni d'un dossier complet d'exercice des droits. Les échanges supprimés avant leur lecture restent supprimés ; la conversation peut évoluer pendant la préparation.\nThis is a conversation export, not a site backup or a complete data-rights export. Messages deleted before they are read remain deleted; the conversation may change during preparation.\n"));
+        add("LIRE-MOI.txt", Buffer.from("JessieMessage — Conversation\n\nExtraire tout le ZIP puis ouvrir Conversation.html pour lire les messages et les photos incluses.\nExtract the whole ZIP and open Conversation.html to read messages and included photos.\n\nconversation.json fournit les mêmes échanges dans un format portable.\nconversation.json contains the same exchanges in a portable format.\n\nCe fichier se lit sans connexion : conserver le dossier dans un endroit privé.\nThis file can be read offline: keep the folder in a private location.\n\nSeuls les échanges de cette conversation sont inclus. Les photos non envoyées et les identifiants de connexion ne sont pas inclus.\nOnly exchanges in this conversation are included. Unsent photos and sign-in credentials are not included.\n\nIl s'agit d'un export de conversation, pas d'une sauvegarde du site ni d'un dossier complet d'exercice des droits. Les échanges supprimés avant leur lecture restent supprimés ; la conversation peut évoluer pendant la préparation.\nThis is a conversation export, not a site backup or a complete data-rights export. Messages deleted before they are read remain deleted; the conversation may change during preparation.\n"));
         active(); archive = zip(files, limits.archiveBytes); active();
         return archive;
       } catch (error) {

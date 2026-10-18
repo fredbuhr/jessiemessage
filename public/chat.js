@@ -31,6 +31,7 @@ let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previ
 let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersion = 0; let lightboxItem = null;
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
+let conversationDownload = null; let conversationDownloadCapability = null;
 let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
 let notificationsPanel = null;
 let pendingNotification = globalThis.JessieNotificationLink?.read() ?? null;
@@ -135,6 +136,7 @@ function clearImages() {
   for (const image of el("messages").querySelectorAll("img")) image.removeAttribute("src");
 }
 function clearChat() {
+  conversationDownload?.suspend();
   clearMessageAnnouncement(); messageRows.clear();
   clearImages();
   ui.forget(el("messages")); el("messages").replaceChildren(); ui.text(el("peer-name"), "Messages privés");
@@ -148,6 +150,20 @@ function clearNotificationSettings() {
   notificationsPanel?.clear(); notificationsPanel = null;
   el("open-notifications").hidden = true;
   if (el("notifications-dialog").open) el("notifications-dialog").close();
+}
+async function mountConversationDownload(capability) {
+  if (role !== "client" || capability?.enabled !== true || conversationDownload) return;
+  const ticket = snapshot(), getContext = () => {
+    const state = currentState();
+    return ready && visible() && !loggingOut && !el("workspace").hidden && state?.conversation
+      ? { id: state.id, key: `${generation}:${visibilityGeneration}:${selectionEpoch}:${state.epoch}`, state } : null;
+  };
+  try {
+    const { createConversationDownload } = await import("/conversation-download.js");
+    if (!fresh(ticket, true) || !getContext() || conversationDownload) return;
+    conversationDownload = createConversationDownload({ parent: el("chat-footer"), capability, getContext, request, onError: error => handleError(error) });
+    conversationDownload.update();
+  } catch (error) { if (fresh(ticket, true) && getContext()) notice("Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.", true); }
 }
 function mountNotificationSettings() {
   if (notificationsPanel || !ready || !sessionOwner || !visible() || !globalThis.JessieNotifications) return;
@@ -164,6 +180,7 @@ function clearPrivate() {
   sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
   olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
   mediaEnabled = false;
+  conversationDownload?.clear(); conversationDownload = null; conversationDownloadCapability = null;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   document.getElementById("readiness-nav")?.remove();
   stopPolling(); abortRequests(); expiryTimer?.(); expiryTimer = null;
@@ -206,7 +223,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {
@@ -240,7 +257,7 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
     let data;
     if (archive && response.ok) {
       try {
-        const { readPrivateArchive } = await import("/private-archive.js");
+        const { readPrivateArchive } = await import(role === "client" ? "/client-archive.js" : "/private-archive.js");
         data = await readPrivateArchive(response, controller.signal);
       } catch (error) { controller.abort(); throw error; }
     } else { try { data = await response.json(); } catch { data = {}; } }
@@ -690,6 +707,7 @@ async function loadInbox(more = false, refresh = false) {
   } }
 }
 function renderMeta(state) {
+  conversationDownload?.update();
   const conversation = state.conversation; if (!conversation) return;
   ui.rawText(el("peer-name"), crm?.displayName(inbox.get(state.id) ?? conversation) ?? conversation.peerName);
   ui.text(el("conversation-status"), conversation.closedAt != null ? "Conversation fermée · historique disponible" : !conversation.canSend ? "Accès à l’envoi suspendu · historique disponible" : "Conversation privée");
@@ -1103,7 +1121,7 @@ globalThis.navigator?.serviceWorker?.addEventListener("message", (event) => {
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
     clearNotificationSettings();
-    cancelConfirmation(); stopReconnect(); resumeTask = null; clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend();
+    cancelConfirmation(); stopReconnect(); resumeTask = null; clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend(); conversationDownload?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
     sendBusy = false; olderBusy = false; newerBusy = false; readBusy = false; inboxLoading = false; if (state) renderMeta(state);
   } else if (!loggingOut) void resumeConnection({ reset: true });
@@ -1148,6 +1166,9 @@ async function start({ session = null } = {}) {
       }
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false; notice("", false, "session-status");
+      conversationDownloadCapability = capability.conversationExport;
+      await mountConversationDownload(conversationDownloadCapability);
+      if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       mountNotificationSettings(); void refreshBroadcastAccess(); scheduleRead(); schedulePolling();
       await openNotification();
     } catch (error) {

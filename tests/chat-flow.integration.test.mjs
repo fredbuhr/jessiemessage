@@ -13,6 +13,7 @@ import { createAccessService } from "../server/access/service.mjs";
 import { createAccessHandler } from "../server/access/http.mjs";
 import { createChatStore } from "../server/chat/store.mjs";
 import { createChatService } from "../server/chat/service.mjs";
+import { createConversationExporter } from "../server/chat/conversation-export.mjs";
 import { createChatHandler } from "../server/chat/http.mjs";
 import { createAppServer } from "../server/index.mjs";
 import { createRecoveryCodes, hashPassword, makeTotpSecret, recoveryCodeDigest, sealTotpSecret, tokenDigest, totpCode } from "../server/auth/crypto.mjs";
@@ -85,7 +86,7 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
     const accessService = await createAccessService({ store: accessStore, authStore, authService, totpKey, mailKey, origin, clock });
     const chatService = await createChatService({ store: chatStore, authStore, authService, accessService, key: messageKey, clock });
     server = createAppServer({ authHandler: createAuthHandler(authService, { origin }),
-      accessHandler: createAccessHandler(accessService, { origin }), chatHandler: createChatHandler(chatService, { origin }) });
+      accessHandler: createAccessHandler(accessService, { origin }), chatHandler: createChatHandler(chatService, { origin, clientConversationExporter: createConversationExporter({ role: "client", history: (token, id, options) => chatService.messages("client", token, id, options), clock }) }) });
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     const base = `http://127.0.0.1:${server.address().port}`;
     async function request(path, { method = "GET", body, headers = {} } = {}) {
@@ -126,7 +127,7 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       b = await loginClient(clientB);
       assert.equal((await request("/messages", { headers: headersFor(a) })).status, 200);
       assert.equal((await request("/admin/messages", { headers: headersFor(admin) })).status, 200);
-      assert.deepEqual((await request("/api/chat/client/capabilities", { headers: headersFor(a) })).body, { enabled: true });
+      assert.deepEqual((await request("/api/chat/client/capabilities", { headers: headersFor(a) })).body, { enabled: true, conversationExport: { enabled: true, photos: false, maxBytes: 32 * 1024 * 1024 } });
       assert.deepEqual((await request("/api/chat/admin/capabilities", { headers: headersFor(admin) })).body, { enabled: true });
       assert.equal((await request("/api/chat/admin/conversations", { headers: { Cookie: `__Host-jessie_session=${cookieToken(a.cookie)}` } })).status, 401);
       assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: `__Host-jessie_client=${cookieToken(admin.cookie)}` } })).status, 401);
@@ -221,6 +222,20 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       assert.equal(senderView.body.conversation.unreadCount, 1);
       assert.equal((await request(pathFor("admin", "read"), { method: "POST", headers: headersFor(admin), body: { throughSequence: "1" } })).status, 200);
       assert.equal((await request(pathFor("admin"), { headers: headersFor(admin) })).body.conversation.unreadCount, 0);
+    });
+
+    await t.test("client archive decrypts only its own conversation and leaves read acknowledgements unchanged", async () => {
+      for (const session of [admin, b]) {
+        const denied = await request(pathFor("client", "export"), { method: "POST", headers: headersFor(session), body: { includePhotos: false } });
+        assert.equal(denied.status, session === admin ? 401 : 404);
+      }
+      const receipts = await connection.query("SELECT user_id, last_read_sequence, updated_at FROM chat_receipts WHERE conversation_id = ? ORDER BY user_id", [clientA.conversationId]);
+      const response = await fetch(base + pathFor("client", "export"), { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", "X-Jessie-Request": "1", ...headersFor(a) }, body: JSON.stringify({ includePhotos: false }) });
+      assert.equal(response.status, 200); assert.equal(response.headers.get("content-type"), "application/zip");
+      const archive = Buffer.from(await response.arrayBuffer()); assert.equal(archive.readUInt32LE(), 0x04034b50);
+      assert.ok(archive.includes(Buffer.from(firstMessage.body))); assert.ok(archive.includes(Buffer.from(replyMessage.body)));
+      for (const marker of [clientA.email, clientB.email, adminEmail, "clientMessageId", "campaignId", "bodyEncrypted", "broadcast_preferences"]) assert.equal(archive.includes(Buffer.from(marker)), false);
+      assert.deepEqual(await connection.query("SELECT user_id, last_read_sequence, updated_at FROM chat_receipts WHERE conversation_id = ? ORDER BY user_id", [clientA.conversationId]), receipts);
     });
 
     await t.test("concurrent identical retries create one row, sender-scoped keys and bounded cursor pages", async () => {

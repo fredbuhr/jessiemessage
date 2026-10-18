@@ -4,6 +4,8 @@
   "Télécharger la conversation": "Download the conversation",
   "Messages et photos partagées, sans notes privées, tags ni photos non envoyées.": "Messages and shared photos, without private notes, labels or unsent photos.",
   "Inclure les photos partagées": "Include shared photos",
+  "Télécharger ma conversation": "Download my conversation",
+  "Les messages et les photos partagées avec Jessie.": "The messages and photos shared with Jessie.",
   "Télécharger le ZIP": "Download the ZIP",
   "Le fichier se lit sans connexion. Conserve-le dans un endroit privé.": "The file can be read offline. Keep it in a private location.",
   "Préparation de la conversation…": "Preparing the conversation…",
