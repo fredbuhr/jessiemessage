@@ -40,7 +40,7 @@ test("real Chrome: backup destinations, keyboard controls, translations and kit 
         assert.equal(await page.execute("return document.querySelector('h1').textContent"), language === "fr" ? "Sauvegardes" : "Backups");
         assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && [...document.querySelectorAll('.backup-actions button')].every(b => b.getBoundingClientRect().height >= 44)"), true);
         await tabUntil(page, '[data-action="toggle"]'); await page.key("\uE007");
-        await waitUntil(() => page.execute("return document.querySelector('.copy-badge').textContent === arguments[0]", language === "fr" ? "Copies suspendues" : "Copies paused"), "paused status");
+        await waitUntil(() => page.execute("return document.querySelector('.copy-badge')?.textContent === arguments[0]", language === "fr" ? "Copies suspendues" : "Copies paused"), "paused status");
         await page.execute("document.addEventListener('click', e => { const a=e.target.closest('a[download]'); if(a){e.preventDefault();window.__kitName=a.download;}})");
         await tabUntil(page, '[data-action="kit"]'); await page.key("\uE007");
         await waitUntil(() => page.execute("return !!window.__kitName"), "explicit kit download");
