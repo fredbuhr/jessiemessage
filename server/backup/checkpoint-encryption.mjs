@@ -157,7 +157,7 @@ async function gpg({ source, recipient, home, spawnClient, active, signal, timeo
     "--no-auto-key-locate", "--no-auto-key-retrieve", "--no-auto-key-import", "--no-encrypt-to", "--no-default-recipient",
     "--trust-model", "always", "--homedir", "/proc/self/fd/3", "--status-fd", "5"];
   if (inspect) args.push("--with-colons", "--fixed-list-mode", "--show-keys", "/proc/self/fd/4");
-  else args.push("--compress-algo", "none", "--cipher-algo", "AES256", "--force-mdc", "--recipient-file", "/proc/self/fd/4", "--output", "-", "--encrypt");
+  else args.push("--rfc4880", "--compress-algo", "none", "--cipher-algo", "AES256", "--recipient-file", "/proc/self/fd/4", "--output", "-", "--encrypt");
   let child, timer, abort, failure, statusSize = 0, bytes = 0;
   const status = [], collected = [], digest = createHash("sha256");
   try {

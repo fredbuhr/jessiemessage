@@ -82,7 +82,7 @@ try {
     $jmProofEncrypted = Join-Path $jmProofDirectory 'verification.gpg'
     $jmProofRestored = Join-Path $jmProofDirectory 'restaure.bin'
     [System.IO.File]::WriteAllBytes($jmProofSource, [System.Text.Encoding]::UTF8.GetBytes('JessieMessage recovery verification 0.52'))
-    & $jmGpg @jmBase --trust-model always --recipient-file $jmPublic --cipher-algo AES256 --compress-algo none --force-mdc --output $jmProofEncrypted --encrypt $jmProofSource
+    & $jmGpg @jmBase --trust-model always --recipient-file $jmPublic --rfc4880 --cipher-algo AES256 --compress-algo none --output $jmProofEncrypted --encrypt $jmProofSource
     if ($LASTEXITCODE -ne 0) { throw 'Le chiffrement de verification a echoue.' }
     & $jmGpg @jmProofBase --output $jmProofRestored --decrypt $jmProofEncrypted
     if ($LASTEXITCODE -ne 0 -or (Get-FileHash -LiteralPath $jmProofSource -Algorithm SHA256).Hash -ne

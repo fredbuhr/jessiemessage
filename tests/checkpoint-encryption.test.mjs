@@ -97,6 +97,8 @@ test("encryption publishes closed honest metadata and verifies byte hashes on di
     assert.equal(call.args.includes("--import"), false); assert.equal(JSON.stringify(call).includes(marker), false);
   }
   assert.ok(gpg.observed[1].args.includes("--recipient-file"));
+  assert.ok(gpg.observed[1].args.includes("--rfc4880"));
+  assert.equal(gpg.observed[1].args.includes("--force-mdc"), false);
   assert.equal(gpg.observed[1].args[gpg.observed[1].args.indexOf("--cipher-algo") + 1], "AES256");
 });
 
