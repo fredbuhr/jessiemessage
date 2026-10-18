@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "stage": "0.52",
+  "type": "first_scheduled_checkpoint_observed",
+  "journalCheckedAt": "2026-10-18T12:17:44.038Z",
+  "archiveCheckedAt": "2026-10-18T12:23:18.853Z",
+  "startedAt": 1792300533262,
+  "finishedAt": 1792300539807,
+  "operationMilliseconds": 6545,
+  "status": "succeeded",
+  "phase": "finished",
+  "code": "OK",
+  "runtimeResumed": true,
+  "scheduledOccurrenceObserved": true,
+  "capture": "capture-1792300533262-3ae62972be4d93f5",
+  "protection": "mdc",
+  "recipientFingerprint": "B4E5570BF03A5B048B6AF394D49C2329ABD5FEE2",
+  "source": {
+    "file": "checkpoint.tar.gz",
+    "bytes": 402240,
+    "sha256": "1f6ea60267f971574433b057b60f429be6d0fc530298c7c61119a29d7b770aae"
+  },
+  "ciphertext": {
+    "file": "checkpoint.tar.gz.gpg",
+    "bytes": 402792,
+    "sha256": "dbd63e6d1a7d91b0f9372a062a761d5e92a4b3abb9dd9a44ddbcdd330d983578"
+  },
+  "checksumsMatch": true,
+  "decryptionVerified": false,
+  "independentCopyPending": true
+}

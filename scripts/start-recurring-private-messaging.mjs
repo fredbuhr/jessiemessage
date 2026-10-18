@@ -2,9 +2,10 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { parseRecurringArguments, recurringPreflight, createRecurringSupervisor, RecurringSupervisorError } from "../server/backup/recurring-supervisor.mjs";
+import { createPeriodicBackupMonitor } from "../server/backup/periodic-monitor.mjs";
 
 export async function main(args = process.argv.slice(2), { environment = process.env, execArgv = process.execArgv,
-  preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, outputStream = process.stdout,
+  preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor, outputStream = process.stdout,
   signal } = {}) {
   const options = parseRecurringArguments(args);
   try { privateAuthenticationProcessOptions(environment, execArgv); } catch { throw new RecurringSupervisorError("ENVIRONMENT"); }
@@ -16,14 +17,27 @@ export async function main(args = process.argv.slice(2), { environment = process
     outputStream.write(`${JSON.stringify(report)}\n`); return report;
   }
   const supervisor = makeSupervisor(options, { environment, emit: report => outputStream.write(`${JSON.stringify(report)}\n`) });
-  const abort = () => { void supervisor.close(); };
+  let monitor;
+  const monitorUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_monitor","event":"unavailable","code":"MONITOR_UNAVAILABLE","notificationStatus":"not_sent"}\n'); } catch {} };
+  const abort = () => { try { void Promise.resolve(monitor?.close()).catch(monitorUnavailable); } catch { monitorUnavailable(); } void supervisor.close(); };
   signal?.addEventListener("abort", abort, { once: true });
   try {
-    await supervisor.start(); if (signal?.aborted) await supervisor.close();
+    await supervisor.start();
+    if (signal?.aborted) await supervisor.close();
+    else {
+      try {
+        monitor = makeMonitor({ operationsDirectory: options.operationsDirectory }, { emit: report => outputStream.write(`${JSON.stringify(report)}\n`) });
+        Promise.resolve(monitor.start()).catch(monitorUnavailable);
+      } catch { monitorUnavailable(); }
+    }
     const result = await supervisor.finished;
     if (result.failed) throw new RecurringSupervisorError("RUNTIME");
     return { version: 1, type: "recurring_supervisor", status: "stopped" };
-  } finally { signal?.removeEventListener("abort", abort); await supervisor.close(); }
+  } finally {
+    signal?.removeEventListener("abort", abort);
+    try { await monitor?.close(); } catch { monitorUnavailable(); }
+    await supervisor.close();
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -4,6 +4,8 @@ export const CHECKPOINT_MAXIMUM_AGE = 26 * 60 * 60 * 1000;
 const MAXIMUM_CAPTURE_TIME = 10 * 60 * 1000;
 const MAX_DATE = 253402300799999;
 const instant = value => Number.isSafeInteger(value) && value >= 0 && value <= MAX_DATE;
+export const BACKUP_FRESHNESS_CODES = Object.freeze(["OK", "BACKUP_DISABLED", "JOURNAL_INCOMPLETE", "CAPTURE_RUNNING", "CAPTURE_STALLED",
+  "LAST_ATTEMPT_FAILED", "NO_SUCCESS", "BACKUP_STALE"]);
 
 export class BackupFreshnessError extends Error {
   constructor() {
@@ -28,6 +30,34 @@ function records(value) {
     if (!item || !Object.hasOwn(item, "value")) throw new BackupFreshnessError();
     return validateRecurringCheckpointReport(item.value);
   });
+}
+
+/** Closed projection for observers; never accept getters or extra private fields. */
+export function validateBackupFreshnessReport(value) {
+  try {
+    const item = fields(value, ["version", "type", "scope", "status", "code", "checkedAt", "maximumAgeMilliseconds",
+      "lastAttemptAt", "lastSuccessAt", "ageMilliseconds", "lastAttemptStatus", "lastAttemptCode", "copyStatus", "decryptionStatus"]);
+    if (item.version !== 1 || item.type !== "private_backup_freshness" || item.scope !== "capture-journal"
+      || !BACKUP_FRESHNESS_CODES.includes(item.code) || item.status !== (item.code === "OK" ? "current" : "attention")
+      || !instant(item.checkedAt) || item.maximumAgeMilliseconds !== CHECKPOINT_MAXIMUM_AGE
+      || [item.lastAttemptAt, item.lastSuccessAt].some(at => at !== null && (!instant(at) || at > item.checkedAt))
+      || item.ageMilliseconds !== (item.lastSuccessAt === null ? null : item.checkedAt - item.lastSuccessAt)
+      || !["none", "running", "succeeded", "failed"].includes(item.lastAttemptStatus)
+      || (item.lastAttemptAt === null) !== (item.lastAttemptStatus === "none")
+      || ![null, "OK", "CLOCK_INVALID", "JOURNAL_FAILED", "STOP_FAILED", "CAPTURE_FAILED", "ENCRYPT_FAILED", "RESUME_FAILED", "CANCELLED"].includes(item.lastAttemptCode)
+      || (["none", "running"].includes(item.lastAttemptStatus) ? item.lastAttemptCode !== null : item.lastAttemptCode === null)
+      || item.lastAttemptStatus === "succeeded" && (item.lastAttemptCode !== "OK" || item.lastSuccessAt === null)
+      || item.lastAttemptStatus === "failed" && item.lastAttemptCode === "OK"
+      || item.lastAttemptStatus === "none" && item.lastSuccessAt !== null
+      || item.code === "OK" && (item.lastAttemptStatus !== "succeeded" || item.ageMilliseconds >= CHECKPOINT_MAXIMUM_AGE)
+      || item.code === "BACKUP_STALE" && (item.lastAttemptStatus !== "succeeded" || item.ageMilliseconds < CHECKPOINT_MAXIMUM_AGE)
+      || item.code === "NO_SUCCESS" && item.lastAttemptStatus !== "none"
+      || item.code === "LAST_ATTEMPT_FAILED" && item.lastAttemptStatus !== "failed"
+      || ["CAPTURE_RUNNING", "CAPTURE_STALLED"].includes(item.code) && (item.lastAttemptStatus !== "running"
+        || (item.checkedAt - item.lastAttemptAt >= MAXIMUM_CAPTURE_TIME) !== (item.code === "CAPTURE_STALLED"))
+      || item.copyStatus !== "not_checked" || item.decryptionStatus !== "not_checked") throw new BackupFreshnessError();
+    return Object.freeze(item);
+  } catch { throw new BackupFreshnessError(); }
 }
 
 /** Journal freshness only: never infer an independent copy or a decryption. */
@@ -64,7 +94,7 @@ export function evaluateCheckpointFreshness(value) {
     else if (lastAttemptStatus === "failed") code = "LAST_ATTEMPT_FAILED";
     else if (lastSuccessAt === null) code = "NO_SUCCESS";
     else if (ageMilliseconds >= CHECKPOINT_MAXIMUM_AGE) code = "BACKUP_STALE";
-    return Object.freeze({ version: 1, type: "private_backup_freshness", scope: "capture-journal",
+    return validateBackupFreshnessReport({ version: 1, type: "private_backup_freshness", scope: "capture-journal",
       status: code === "OK" ? "current" : "attention", code, checkedAt: now,
       maximumAgeMilliseconds: CHECKPOINT_MAXIMUM_AGE, lastAttemptAt, lastSuccessAt, ageMilliseconds,
       lastAttemptStatus, lastAttemptCode: latest?.terminal?.code ?? null,

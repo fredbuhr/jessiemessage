@@ -1,5 +1,7 @@
 # JessieMessage — reste à faire avant un usage privé régulier
 
+**Mise à jour en journée du 18 octobre :** première sauvegarde calendaire réussie à 05:15 UTC, empreintes relues ; voir le [reçu](activation-proofs/jm052-first-scheduled-20261018.json). La [surveillance locale minute](periodic-backup-monitor-053.md) est préparée pour compléter la sonde externe. Les lignes ci-dessous conservent le bilan initial ; copie indépendante et réception d’alertes restent ouvertes.
+
 **Reprise du 18 octobre :** [point d’entrée autonome](REPRISE.md) et [audit courant](AUDIT-REPRISE-2026-10-18.md). Le [contrôle de fraîcheur du journal 0.53](backup-freshness-053.md) est implémenté en lecture seule ; il ne constitue ni une copie indépendante ni une alerte reçue. Les preuves 0.50/0.52 et acceptations ci-dessous restent conservées.
 
 Bilan 0.51 du 18 octobre 2026, autour de Jessie. L’application est déjà hébergée et fonctionnelle. La révision active reste `0a1cafd85c3d8699be1961075b18e80e36bcd041` (0.50), profil `messaging-photos-notify-recovery-crm-broadcast`, schéma 30. Le [relevé d’activation](broadcast-activation-050.md) établit 69/69 contrôles HTTPS et seize empreintes exactes, après les cinq jobs CI de cette source. Ce bilan remplace les anciennes listes en présent ; leurs relevés restent des preuves historiques.
