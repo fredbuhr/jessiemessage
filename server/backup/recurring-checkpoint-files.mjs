@@ -152,7 +152,7 @@ export async function acquireRecurringLock(directory, operation, selected = {}, 
     cancelled(signal);
     return (internal.withDirectory ?? withPrivateDirectory)(directory, async scope => {
       const name = "recurring-backup.lock";
-      let handle, created, stable, result, failed = false, failure;
+      let handle, created, stable, result, failed = false, failure, held = false;
       try {
         cancelled(signal); await scope.assertReady(); cancelled(signal);
         try { handle = await open(scope.file(name), constants.O_RDWR | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600); }
@@ -165,10 +165,20 @@ export async function acquireRecurringLock(directory, operation, selected = {}, 
           stable = await verifyCreated(scope, name, handle, created, bytes.length);
         } finally { bytes.fill(0); }
         cancelled(signal);
-        result = await operation(Object.freeze({ token }));
+        held = true;
+        const assertReady = async () => {
+          if (!held) fail("CHANGED");
+          cancelled(signal); await scope.assertReady();
+          const current = await handle.stat({ bigint: true }), visible = await lstat(scope.file(name), { bigint: true });
+          regular(current, MAX_RECORD_BYTES); regular(visible, MAX_RECORD_BYTES);
+          if (!same(stable, current) || !same(current, visible)) fail("CHANGED");
+          cancelled(signal); if (!held) fail("CHANGED");
+        };
+        result = await operation(Object.freeze({ token, assertReady }));
         cancelled(signal);
       } catch (error) { failed = true; failure = error; }
       finally {
+        held = false;
         if (handle && created) {
           try {
             const current = await handle.stat({ bigint: true }), visible = await lstat(scope.file(name), { bigint: true });

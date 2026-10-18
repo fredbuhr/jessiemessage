@@ -3,6 +3,8 @@
   const dictionary = {
     "Accès rapides": "Quick access",
     "Invitations et clients": "Invitations and clients",
+    "Fermeture des comptes": "Account closures",
+    "Fermer définitivement": "Permanently close",
     "Notifications": "Notifications",
     "Réessayer les conversations": "Retry conversations",
     "Les conversations n’ont pas pu être ouvertes. Réessaie quand la connexion revient.": "Conversations could not be opened. Try again when the connection is back.",

@@ -10,6 +10,7 @@ import { createRecurringCheckpoint, nextDailyCheckpoint } from "./recurring-chec
 import { readRecurringConfiguration, readCheckpointHistory, acquireRecurringLock, appendCheckpointRecord } from "./recurring-checkpoint-files.mjs";
 import { inspectCheckpointRecipient, encryptCheckpointArchive } from "./checkpoint-encryption.mjs";
 import { createManagedRuntime } from "./managed-runtime.mjs";
+import { runManagedClosures } from "./managed-closures.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const PROFILE = "photos-notify-recovery-crm-broadcast";
@@ -153,8 +154,9 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   readConfiguration = readRecurringConfiguration, history = readCheckpointHistory, lock = acquireRecurringLock,
   append = appendCheckpointRecord, preflight = recurringPreflight, source = assertRuntimeSource, checkpoint = checkpointProcess,
   encrypt = encryptCheckpointArchive, makeRuntime = createManagedRuntime, emit = () => {}, intervalMilliseconds = 60000,
-  schedule = setTimeout, unschedule = clearTimeout } = {}) {
+  schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures } = {}) {
   if (!Number.isSafeInteger(intervalMilliseconds) || intervalMilliseconds < 1 || intervalMilliseconds > 60000) fail("CONFIGURATION");
+  if (closureOperations !== null && ["hasPending", "preflight", "run"].some(name => typeof closureOperations?.[name] !== "function")) fail("CONFIGURATION");
   const processOptions = privateAuthenticationProcessOptions(environment, []);
   const cancellation = new AbortController();
   let timer, closed = false, started = false, starting = false, ticking = null, closing = null, controller = null, lastNotice = null, fatal = false;
@@ -169,12 +171,28 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     if (!closed) { fatal = true; unavailable(new RecurringSupervisorError("RUNTIME")); void close().catch(() => finish({ failed: true })); }
   };
   const runtime = makeRuntime({ runtimeDirectory: options.runtimeDirectory, privateDirectory: options.privateDirectory, operationsDirectory: options.operationsDirectory,
-    port: Number(processOptions.port), environment, onUnexpectedExit: unexpected });
+    port: Number(processOptions.port), environment, onUnexpectedExit: unexpected, accountClosures: closureOperations !== null });
   function tick() {
     if (closed || !started) return Promise.resolve(null);
     if (ticking) return ticking;
     ticking = (async () => {
       try {
+        let closurePending = false;
+        if (closureOperations !== null) {
+          try { closurePending = await closureOperations.hasPending(); }
+          catch { if (!closed) unexpected(); return null; }
+        }
+        if (closurePending) {
+          try {
+            const result = await runClosures({ runtime, operations: closureOperations, directory: options.operationsDirectory,
+              source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
+            notice({ version: 1, type: "account_closures", status: "completed", completedReceipts: result.completedReceipts });
+          } catch {
+            // Never reopen producers after an uncertain destructive operation.
+            if (!closed) unexpected();
+          }
+          return null;
+        }
         const configuration = await readConfiguration(options.operationsDirectory, { signal: cancellation.signal });
         if (!configuration.enabled) return null;
         const previous = await history(options.operationsDirectory, { signal: cancellation.signal });
@@ -217,6 +235,12 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     starting = true;
     try {
       await source(options, { signal: cancellation.signal }); active(cancellation.signal);
+      // A queued confirmed intent survives a parent/child restart. Resolve it
+      // while the child is still stopped, before any listener or producer.
+      if (closureOperations !== null && await closureOperations.hasPending()) {
+        await runClosures({ runtime, operations: closureOperations, directory: options.operationsDirectory,
+          source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
+      }
       await runtime.start(); if (closed) fail("ABORTED"); started = true;
       notice({ version: 1, type: "recurring_supervisor", status: "started", backupStarted: false });
       void tick().finally(arm);

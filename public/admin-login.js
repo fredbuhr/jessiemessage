@@ -4,7 +4,7 @@ const notificationReference = globalThis.JessieNotificationLink?.read() ?? null;
 const adminContinueTarget = (() => {
   if (!location.search) return null;
   const query = new URLSearchParams(location.search);
-  const allowed = new Set(["/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/admin/privacy"]);
+  const allowed = new Set(["/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/admin/privacy", "/admin/closures"]);
   return query.size === 1 && query.getAll("continue").length === 1 && allowed.has(query.get("continue")) ? query.get("continue") : null;
 })();
 
@@ -463,6 +463,11 @@ function paintClients(clients, renewalDraft = null) {
       if (!window.confirm(adminUI.t("Révoquer l’accès de {name} ? Ses appareils seront déconnectés.", { name: client.pseudonym }))) return;
       await request(`/api/admin/clients/${client.id}/revoke`, { mutation: true }); await refreshAccessLists({ afterMutation: true }); notice("L’accès client est révoqué.");
     });
+    if (client.status !== "deleted") {
+      const closure = document.createElement("a"); closure.className = "button button-secondary";
+      closure.href = `/admin/closures?client=${encodeURIComponent(client.id)}`;
+      adminUI.text(closure, "Fermer définitivement"); card.append(closure);
+    }
     container.append(card);
   }
 }
