@@ -19,7 +19,9 @@ $null = New-Item -ItemType Directory -Path $keyHome
 $base = @('--no-options', '--homedir', $keyHome, '--no-auto-key-retrieve', '--auto-key-locate', 'clear')
 try {
     Initialize-JmVerificationRuntime
-    $null = Invoke-FixtureGpg ($base + @('--batch', '--pinentry-mode', 'loopback', '--passphrase=', '--quick-generate-key', 'JessieMessage synthetic CI only', 'rsa2048', 'encr', '0'))
+    # Omit an AEAD preference on this disposable key to obtain an actual MDC
+    # fixture. --force-ocb separately exercises OCB with the very same key.
+    $null = Invoke-FixtureGpg ($base + @('--batch', '--pinentry-mode', 'loopback', '--passphrase=', '--default-preference-list', 'AES256 SHA256 ZLIB', '--quick-generate-key', 'JessieMessage synthetic CI only', 'rsa2048', 'encr', '0'))
     $listing = @(Invoke-FixtureGpg ($base + @('--with-colons', '--fingerprint', '--list-secret-keys')))
     $fingerprint = (@($listing | Where-Object { $_ -match '^fpr:' })[0] -split ':')[9]
     $plain = Join-Path $root 'synthetic.bin'
@@ -30,9 +32,7 @@ try {
     $sourceHash = (Get-FileHash -LiteralPath $plain -Algorithm SHA256).Hash.ToLowerInvariant()
     $id = 'capture-1792340000000-cccccccccccccccc'
     $cipher = Join-Path $root ('JessieMessage-' + $id + '.tar.gz.gpg')
-    # --force-mdc is ignored by modern GPG. Select the legacy standard only in
-    # this synthetic fixture, then separately exercise modern OCB below.
-    $null = Invoke-FixtureGpg ($base + @('--batch', '--trust-model', 'always', '--rfc4880', '--cipher-algo', 'AES256', '--output', $cipher, '--recipient', $fingerprint, '--encrypt', '--', $plain))
+    $null = Invoke-FixtureGpg ($base + @('--batch', '--trust-model', 'always', '--cipher-algo', 'AES256', '--output', $cipher, '--recipient', $fingerprint, '--encrypt', '--', $plain))
     $aead = Join-Path $root 'synthetic-ocb.gpg'
     $null = Invoke-FixtureGpg ($base + @('--batch', '--trust-model', 'always', '--force-ocb', '--cipher-algo', 'AES256', '--output', $aead, '--recipient', $fingerprint, '--encrypt', '--', $plain))
     foreach ($fixture in @($cipher, $aead)) {
