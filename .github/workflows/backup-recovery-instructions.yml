@@ -5,11 +5,17 @@ on:
     branches: ["feat/**", "fix/**", main]
     paths:
       - scripts/JessieMessage-recuperation-052.ps1
+      - scripts/JessieMessage-sauvegardes-055.ps1
+      - server/backup/copy-kit.mjs
+      - tests/windows/backup-copy.ps1
       - .github/workflows/backup-recovery-instructions.yml
   pull_request:
     branches: ["feat/**", "fix/**", main]
     paths:
       - scripts/JessieMessage-recuperation-052.ps1
+      - scripts/JessieMessage-sauvegardes-055.ps1
+      - server/backup/copy-kit.mjs
+      - tests/windows/backup-copy.ps1
       - .github/workflows/backup-recovery-instructions.yml
 
 permissions:
@@ -23,11 +29,14 @@ jobs:
   syntax:
     name: Windows PowerShell 5.1 instructions
     runs-on: windows-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
       - name: Parse owner instructions without creating any key
         shell: powershell
         run: |
@@ -56,3 +65,29 @@ jobs:
           if (-not $jmRejected -or $ErrorActionPreference -ne 'Stop') { throw 'Native failure handling failed.' }
           Write-Output 'Native warnings and failures verified without generating a key.'
           exit 0
+      - name: Parse and exercise Windows backup collector with synthetic local files
+        shell: powershell
+        run: |
+          $jmTokens = $null
+          $jmErrors = $null
+          $null = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/JessieMessage-sauvegardes-055.ps1').Path, [ref]$jmTokens, [ref]$jmErrors)
+          if ($jmErrors.Count -ne 0) { throw ($jmErrors | Out-String) }
+          & ./tests/windows/backup-copy.ps1
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Windows collector verification failed.' }
+      - name: Create the actual Windows ZIP with a synthetic expired pairing code
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import { createCopyKit } from './server/backup/copy-kit.mjs';
+          import { writeFile } from 'node:fs/promises';
+          await writeFile('synthetic-kit.zip', await createCopyKit({version:1,destinationId:'1'.repeat(32),pairingCode:'A'.repeat(43),expiresAt:1,origin:'https://jessiemessage.com'}));
+          JS
+      - name: Expand ZIP using native Windows tools without running the installer
+        shell: powershell
+        run: |
+          Expand-Archive -LiteralPath synthetic-kit.zip -DestinationPath synthetic-kit
+          if (@(Get-ChildItem synthetic-kit -File).Count -ne 4) { throw 'Incomplete Windows kit.' }
+          foreach ($jmFile in @('Installer.cmd', 'JessieMessage-sauvegardes-055.ps1', 'raccordement.json', 'LIRE-MOI.txt')) {
+            if (-not (Test-Path -LiteralPath (Join-Path synthetic-kit $jmFile))) { throw 'Missing Windows kit file.' }
+          }
+          Write-Output 'Actual ZIP expanded by Windows; expired synthetic code only, installer not run.'

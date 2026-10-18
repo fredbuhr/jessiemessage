@@ -23,7 +23,7 @@ async function fixture(t, source, overrides = {}) {
   const base = fileURLToPath(new URL("../../audit/", import.meta.url)); await mkdir(base, { recursive: true, mode: 0o700 });
   const directory = await mkdtemp(join(base, "jm-managed-runtime-")), file = join(directory, "child.mjs"), children = [], invocations = [];
   await writeFile(file, `process.on('message',()=>{});\n${source}`);
-  const internal = { startupMilliseconds: 180, stopMilliseconds: 80, requestMilliseconds: 30, retryMilliseconds: 5,
+  const internal = { startupMilliseconds: 500, stopMilliseconds: 80, requestMilliseconds: 30, retryMilliseconds: 5,
     fetchClient: ready,
     forkClient(path, args, settings) { invocations.push({ path, args, settings }); const child = fork(file, [], settings); children.push(child); return child; }, ...overrides };
   const runtime = createManagedRuntime(options(3000), internal);
@@ -154,6 +154,17 @@ test("actual shim cannot begin a listener after shutdown was requested during st
 test("production shim refuses execution without an IPC parent and rejects extra arguments", async () => {
   await assert.rejects(promisify(execFile)(process.execPath, [shim, "--runtime-directory", "/synthetic-runtime", "--private-directory", "/synthetic-private", "--port", "3000"], { env: environment(), timeout: 1000 }), error => error.code === 1 && /PRIVATE_MESSAGING_CHILD/.test(error.stderr));
   assert.throws(() => parseArguments(["--runtime-directory", "/synthetic-runtime", "--private-directory", "/synthetic-private", "--port", "3000", "--fixture", "unsafe"]), { code: "PRIVATE_MESSAGING_CHILD" });
+});
+
+test("the optional copy directory crosses the fixed IPC launcher and reaches only internal startup options", async t => {
+  const port = await freePort();
+  const source = shimFixture().replace("port:Number(process.env.PORT)},", "port:Number(process.env.PORT),operationsDirectory:'/synthetic-operations'},")
+    .replace("async start(){const server", "async start(env,options){if(options.backupDirectory!=='/synthetic-operations')throw new Error('missing bounded copy directory');const server");
+  const f = await fixture(t, source), runtime = createManagedRuntime({ ...options(port), operationsDirectory: "/synthetic-operations" }, { ...f.internal, startupMilliseconds: 1500, stopMilliseconds: 400, fetchClient: undefined });
+  t.after(() => runtime.destroy()); await runtime.start();
+  assert.deepEqual(f.invocations[0].args.slice(-2), ["--operations-directory", "/synthetic-operations"]);
+  assert.deepEqual(parseArguments(f.invocations[0].args), { runtimeDirectory: "/synthetic-runtime", privateDirectory: "/synthetic-private", port, operationsDirectory: "/synthetic-operations" });
+  assert.deepEqual(await runtime.stop(), { exitCode: 0, signal: null });
 });
 
 test("paths, ambient application secrets, port mismatch and callback configuration fail before fork", () => {

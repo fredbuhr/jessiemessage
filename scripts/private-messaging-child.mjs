@@ -6,9 +6,10 @@ const fail = () => { throw Object.assign(new Error("The managed private runtime 
 const path = value => typeof value === "string" && value.startsWith("/") && value !== "/" && resolve(value) === value
   && value.length <= 4096 && !/[\\\x00-\x1f\x7f]/.test(value);
 export function parseArguments(args) {
-  if (!Array.isArray(args) || args.length !== 6 || args[0] !== "--runtime-directory" || args[2] !== "--private-directory"
-    || args[4] !== "--port" || !path(args[1]) || !path(args[3]) || !/^[1-9]\d{0,4}$/.test(args[5]) || Number(args[5]) > 65535) fail();
-  return { runtimeDirectory: args[1], privateDirectory: args[3], port: Number(args[5]) };
+  if (!Array.isArray(args) || ![6, 8].includes(args.length) || args[0] !== "--runtime-directory" || args[2] !== "--private-directory"
+    || args[4] !== "--port" || !path(args[1]) || !path(args[3]) || !/^[1-9]\d{0,4}$/.test(args[5]) || Number(args[5]) > 65535
+    || args.length === 8 && (args[6] !== "--operations-directory" || !path(args[7]))) fail();
+  return { runtimeDirectory: args[1], privateDirectory: args[3], port: Number(args[5]), ...(args.length === 8 ? { operationsDirectory: args[7] } : {}) };
 }
 
 /** The loader seam is for subprocess fixtures; production only imports pinned local source. */
@@ -17,7 +18,8 @@ export async function run(options, { loadRuntime = async directory => {
     import(pathToFileURL(`${directory}/server/index.mjs`).href)]);
   return { main, start };
 } } = {}) {
-  const selected = parseArguments(["--runtime-directory", options?.runtimeDirectory, "--private-directory", options?.privateDirectory, "--port", String(options?.port)]);
+  const selected = parseArguments(["--runtime-directory", options?.runtimeDirectory, "--private-directory", options?.privateDirectory, "--port", String(options?.port),
+    ...(options?.operationsDirectory === undefined ? [] : ["--operations-directory", options.operationsDirectory])]);
   if (typeof process.send !== "function" || process.connected !== true || typeof loadRuntime !== "function") fail();
   try { if (privateAuthenticationProcessOptions(process.env, process.execArgv).port !== String(selected.port)) fail(); } catch { fail(); }
   let closing = false, stopping = null, runtime = null, startupComplete;
@@ -50,7 +52,7 @@ export async function run(options, { loadRuntime = async directory => {
       "--private-directory", selected.privateDirectory, "--private-path-mode", "linux-dirfd"], {
       async startServer(env, startupOptions) {
         if (closing) fail();
-        runtime = await loaded.start(env, startupOptions);
+        runtime = await loaded.start(env, { ...startupOptions, ...(selected.operationsDirectory === undefined ? {} : { backupDirectory: selected.operationsDirectory }) });
         if (typeof runtime?.drain !== "function" || closing) fail();
         return runtime;
       },

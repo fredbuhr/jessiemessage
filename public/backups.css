@@ -1,0 +1,21 @@
+input, select { font: inherit; color: #f5eef2; background: #100d12; border: 1px solid #635063; border-radius: 9px; min-height: 46px; padding: 10px 12px; width: 100%; min-width: 0; }
+input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid #d8b999; outline-offset: 3px; }
+label { display: block; font-size: 13px; margin: 18px 0 8px; color: #cfc0cc; }
+.capture-card, .add-destination, .how-to { margin-bottom: 24px; }
+.backup-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 24px 0; }
+.backup-details dt { font-size: 12px; color: #bcaebb; margin-bottom: 6px; }
+.backup-details dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; line-height: 1.6; }
+.section-heading { margin: 32px 0 20px; }
+.destinations { display: grid; gap: 20px; margin-bottom: 24px; }
+.destination-heading { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.destination-heading h3 { margin: 0; overflow-wrap: anywhere; font-size: 20px; }
+.copy-badge { font-size: 12px; color: #e3c49d; line-height: 1.7; }
+.copy-badge.current { color: #b8d5bd; }
+.backup-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 10px; }
+.destination-settings { margin-top: 20px; border-top: 1px solid #423343; padding-top: 20px; }
+summary { cursor: pointer; min-height: 44px; line-height: 1.7; padding-top: 8px; }
+.revoke-panel { margin-top: 20px; padding: 18px; background: #261720; border-radius: 12px; }
+.how-to li { margin: 16px 0; line-height: 1.7; color: #cfc0cc; }
+.how-to ol { padding-left: 22px; }
+.footer { display: flex; justify-content: space-between; gap: 20px; padding: 20px 0; color: #bcaebb; font-size: 12px; }
+@media (max-width: 600px) { .backup-details { grid-template-columns: 1fr; gap: 16px; } .topbar { gap: 12px; flex-wrap: wrap; } .account-nav { justify-content: flex-start; } .backup-actions .button { width: 100%; } }

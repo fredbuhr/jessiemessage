@@ -73,10 +73,10 @@ async function readiness(fetchClient, port, signal, milliseconds) {
 }
 
 /** A fixed IPC child, never an arbitrary command or shell. Internal seams are tests only. */
-export function createManagedRuntime({ runtimeDirectory, privateDirectory, port = 3000, environment, onUnexpectedExit } = {}, internal = {}) {
+export function createManagedRuntime({ runtimeDirectory, privateDirectory, operationsDirectory, port = 3000, environment, onUnexpectedExit } = {}, internal = {}) {
   const { forkClient = fork, fetchClient = localFetch, startupMilliseconds = 30000, stopMilliseconds = 20000,
     requestMilliseconds = 1000, retryMilliseconds = 100 } = internal;
-  if (!path(runtimeDirectory) || !path(privateDirectory) || !Number.isSafeInteger(port) || port < 1 || port > 65535
+  if (!path(runtimeDirectory) || !path(privateDirectory) || operationsDirectory !== undefined && !path(operationsDirectory) || !Number.isSafeInteger(port) || port < 1 || port > 65535
     || typeof forkClient !== "function" || typeof fetchClient !== "function" || onUnexpectedExit !== undefined && typeof onUnexpectedExit !== "function"
     || [startupMilliseconds, stopMilliseconds, requestMilliseconds, retryMilliseconds].some(value => !Number.isSafeInteger(value) || value < 1 || value > 60000)) throw neutral("MANAGED_RUNTIME_CONFIGURATION");
   try {
@@ -117,7 +117,8 @@ export function createManagedRuntime({ runtimeDirectory, privateDirectory, port 
     }
     let child;
     try {
-      child = forkClient(CHILD, ["--runtime-directory", runtimeDirectory, "--private-directory", privateDirectory, "--port", String(port)],
+      child = forkClient(CHILD, ["--runtime-directory", runtimeDirectory, "--private-directory", privateDirectory, "--port", String(port),
+        ...(operationsDirectory === undefined ? [] : ["--operations-directory", operationsDirectory])],
         { env: childEnvironment, execArgv: [], stdio: ["ignore", "inherit", "inherit", "ipc"], serialization: "json" });
     } catch { return Promise.reject(neutral("MANAGED_RUNTIME_START")); }
     const record = { child, status: "starting", cancel: new AbortController(), result: null, stopping: null, starting: null, closed: null };

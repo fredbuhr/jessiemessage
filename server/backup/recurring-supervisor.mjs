@@ -168,7 +168,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   const unexpected = () => {
     if (!closed) { fatal = true; unavailable(new RecurringSupervisorError("RUNTIME")); void close().catch(() => finish({ failed: true })); }
   };
-  const runtime = makeRuntime({ runtimeDirectory: options.runtimeDirectory, privateDirectory: options.privateDirectory,
+  const runtime = makeRuntime({ runtimeDirectory: options.runtimeDirectory, privateDirectory: options.privateDirectory, operationsDirectory: options.operationsDirectory,
     port: Number(processOptions.port), environment, onUnexpectedExit: unexpected });
   function tick() {
     if (closed || !started) return Promise.resolve(null);
