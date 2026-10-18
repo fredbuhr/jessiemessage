@@ -1,5 +1,7 @@
 # Lot 0.41 — données et confidentialité : préparation
 
+**Suite 0.61 active :** les décisions D01–D08 et les deux textes sont réunis dans [Administration → Confidentialité](privacy-preparation-061.md). Les informations saisies restent privées et chiffrées ; elles ne constituent ni une publication ni une validation juridique. La liste des décisions ci-dessous reste ouverte. Les passages 0.41 sur CRM/diffusions sont historiques : les fiches et communications individuelles actuelles sont acquises, sans réglage invité d’acceptation des envois groupés depuis 0.50.
+
 **État : dossier préparatoire, sans publication d’une notice définitive.** Base relue : `a4828caf725ccc7807ea8723b17be626ec56eaf6`, branche `feat/help-contact`, arbre `fd741aa31cd7839e8c0de85204b59110890fb247`. Les changements de source sont inclus dans le [runtime 0.42](operations-diagnostic.md) `ed78b55e`, activé le 17 octobre 2026 à 21:03 Europe/Paris, profil `messaging-photos-notify-recovery`, schéma 30. Le brouillon de notice reste non servi ; conservation et effacement restent à décider. Les acceptations du propriétaire restent acquises.
 
 ## Résultat préparé

@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "release": "0.61.0",
+  "iteration": {
+    "number": 1,
+    "totalPlanned": 6,
+    "technicalDelivery": "active",
+    "privacyDecisions": "pending",
+    "finalNotice": "not_published",
+    "retentionExecutor": "not_enabled"
+  },
+  "observedAt": "2026-10-18T20:43:58.359Z",
+  "activationLocal": "2026-10-18T22:40:00+02:00",
+  "activationLocalPrecision": "minute shown by Manager",
+  "source": {
+    "head": "bc09053c2d52a4d9b99e532d54ee382b0e92c510",
+    "tree": "59c6273e2c8a5616d8bd0a3710749911d0d16e6e",
+    "merge": "c06d70b6ad0bebd787e6d3cfa458f774691ada15",
+    "pr": 77,
+    "releaseBranch": "release/0.61.0",
+    "cleanAtRuntimeObservation": true
+  },
+  "runtime": {
+    "checkout": "/srv/customer/jessiemessage-operator/privacy-preparation-061-bc09053c",
+    "node": "24.15.0",
+    "port": 3000,
+    "profile": "messaging-photos-notify-recovery-crm-broadcast",
+    "deployment": "primary-transition",
+    "schema": 30,
+    "operationsDirectory": "/srv/customer/jessiemessage-private/recurring-backup-052",
+    "configurationDirectory": "/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851",
+    "configurationFiles": 6,
+    "privateGpgKeyOnServer": false
+  },
+  "launcher": {
+    "path": "/srv/customer/jessiemessage-private/start-primary-privacy-preparation-061-bc09053c.sh",
+    "mode": "0700",
+    "bytes": 851,
+    "sha256": "0d0faf9ec0be200445b2b5c4684946a946d3ed6de155ac2bc9e51f654f381355"
+  },
+  "ci": {
+    "sourceRun": 39163785035,
+    "prRun": 39163789313,
+    "mainRun": 39164050712,
+    "allFiveJobsSucceededEach": true,
+    "general": {
+      "total": 2590,
+      "passed": 2563,
+      "skippedSqlWrappers": 27,
+      "failed": 0
+    },
+    "mariadb": {
+      "10.11": 387,
+      "11.4": 387,
+      "failed": 0,
+      "skipped": 0
+    },
+    "chrome": {
+      "passed": 144,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syntaxSources": 470,
+    "integratedHttpsMfa": "passed"
+  },
+  "native": {
+    "total": 178,
+    "passed": 175,
+    "failed": 0,
+    "skipped": 3,
+    "skipReason": "Three CI-only assertions are skipped when CI is unset; real anchored directory tests pass natively and all mandatory assertions run on GitHub Linux CI.",
+    "privateReport": "/srv/customer/jessiemessage-private/privacy-061-native-tests.log"
+  },
+  "preflight": {
+    "checkedAt": "2026-10-18T20:36:53.053846Z",
+    "passed": true,
+    "started": false,
+    "backupStarted": false,
+    "privateReport": "/srv/customer/jessiemessage-private/privacy-061-preflight.json"
+  },
+  "https": {
+    "checkedAt": "2026-10-18T20:41:50.037841Z",
+    "passed": 122,
+    "total": 122,
+    "exactPublicAssetHashes": 44,
+    "tlsVerified": true,
+    "followRedirects": false,
+    "authenticatedPersonalActions": false,
+    "privateReport": "/srv/customer/jessiemessage-private/privacy-061-https-20261018.json"
+  },
+  "afterLastListening": true,
+  "samples": [
+    {
+      "version": 1,
+      "type": "private_backup_monitor",
+      "event": "sample",
+      "checkedAt": 1792356054020,
+      "state": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false,
+      "lastSuccessAt": 1792300539807,
+      "ageMilliseconds": 55514213,
+      "copyStatus": "not_checked",
+      "decryptionStatus": "not_checked",
+      "notificationStatus": "not_sent"
+    },
+    {
+      "version": 1,
+      "type": "private_backup_monitor",
+      "event": "sample",
+      "checkedAt": 1792356114072,
+      "state": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false,
+      "lastSuccessAt": 1792300539807,
+      "ageMilliseconds": 55574265,
+      "copyStatus": "not_checked",
+      "decryptionStatus": "not_checked",
+      "notificationStatus": "not_sent"
+    }
+  ],
+  "sampleIntervalMilliseconds": 60052,
+  "alerts": [
+    {
+      "version": 1,
+      "type": "private_backup_alert",
+      "event": "observed",
+      "code": "OK",
+      "checkedAt": 1792356054020,
+      "alertId": null,
+      "alertEvent": null,
+      "pending": 0,
+      "notificationStatus": "not_confirmed",
+      "inboxStatus": "not_checked"
+    },
+    {
+      "version": 1,
+      "type": "private_backup_alert",
+      "event": "observed",
+      "code": "OK",
+      "checkedAt": 1792356114072,
+      "alertId": null,
+      "alertEvent": null,
+      "pending": 0,
+      "notificationStatus": "not_confirmed",
+      "inboxStatus": "not_checked"
+    }
+  ],
+  "runtimeObservation": {
+    "checkedAt": "2026-10-18T20:43:30.630312Z",
+    "privateReport": "/srv/customer/jessiemessage-private/privacy-061-runtime-observation.json",
+    "privacyPreparationExists": false,
+    "freshness": "current",
+    "code": "OK",
+    "pendingAlerts": 0,
+    "activeIncident": false
+  },
+  "backup": {
+    "archiveId": "capture-1792300533262-3ae62972be4d93f5",
+    "archiveCount": 2,
+    "bytes": 402792,
+    "sha256": "dbd63e6d1a7d91b0f9372a062a761d5e92a4b3abb9dd9a44ddbcdd330d983578",
+    "lastSuccessAt": 1792300539807,
+    "dailyUtc": "05:15",
+    "pcEnabled": true,
+    "pcPaired": true,
+    "pcPairedAt": 1792338586459,
+    "lastSeenAt": 1792355751068,
+    "receiptReceivedAt": 1792355751068,
+    "receiptMatchesCurrentArchive": true,
+    "receiptPrecedes061Activation": true,
+    "personalDecryption": "not_confirmed",
+    "currentNativeRestore": "not_confirmed",
+    "newCaptureTriggered": false,
+    "testEmailsResent": false
+  },
+  "rollback": {
+    "version": "0.60.0",
+    "head": "dd50d098dd5c35433190b8799359c7af00384d71",
+    "tree": "714aa8255d2184a2adbd413af2a989c1d7641119",
+    "checkout": "/srv/customer/jessiemessage-operator/client-conversation-export-060-dd50d098",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-client-conversation-export-060-dd50d098.sh",
+    "launcherBytes": 865,
+    "launcherSha256": "883812e812bce05bf99b5999e76c80291d451733c48418dfe25f6a2dc24f86f8",
+    "managerBefore": "/srv/customer/jessiemessage-private/manager-before-privacy-preparation-061.json",
+    "managerBeforeMode": "0600",
+    "actualRollbackPerformed": false,
+    "sqlRestoreRequiredForCodeRollback": false
+  },
+  "screenshot": {
+    "path": "jm061-activation-20261018.jpg",
+    "bytes": 124443,
+    "sha256": "5f0d58c7577277dbae92f00ad0ab8b4ae458abd61bdf89dce12d33fc4ecf3439"
+  },
+  "limits": [
+    "No final privacy notice or legal identity invented.",
+    "Filling all eight answers is preparation, not legal validation.",
+    "No new consent workflow, purge or complete deletion executor.",
+    "Preparatory operational file is not yet proven included in application restore.",
+    "External monitoring maximum cadence and alert receipt remain open.",
+    "Positive browser/SQL tests use synthetic data; cloud browser remains anonymous.",
+    "No personal conversation exported or real message sent."
+  ]
+}

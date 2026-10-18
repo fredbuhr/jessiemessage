@@ -1,0 +1,65 @@
+{
+  "observedAt": "2026-10-18T20:43:58.359Z",
+  "managerUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard",
+  "source": "bc09053c2d52a4d9b99e532d54ee382b0e92c510",
+  "tree": "59c6273e2c8a5616d8bd0a3710749911d0d16e6e",
+  "afterLastListening": true,
+  "samples": [
+    {
+      "version": 1,
+      "type": "private_backup_monitor",
+      "event": "sample",
+      "checkedAt": 1792356054020,
+      "state": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false,
+      "lastSuccessAt": 1792300539807,
+      "ageMilliseconds": 55514213,
+      "copyStatus": "not_checked",
+      "decryptionStatus": "not_checked",
+      "notificationStatus": "not_sent"
+    },
+    {
+      "version": 1,
+      "type": "private_backup_monitor",
+      "event": "sample",
+      "checkedAt": 1792356114072,
+      "state": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false,
+      "lastSuccessAt": 1792300539807,
+      "ageMilliseconds": 55574265,
+      "copyStatus": "not_checked",
+      "decryptionStatus": "not_checked",
+      "notificationStatus": "not_sent"
+    }
+  ],
+  "alerts": [
+    {
+      "version": 1,
+      "type": "private_backup_alert",
+      "event": "observed",
+      "code": "OK",
+      "checkedAt": 1792356054020,
+      "alertId": null,
+      "alertEvent": null,
+      "pending": 0,
+      "notificationStatus": "not_confirmed",
+      "inboxStatus": "not_checked"
+    },
+    {
+      "version": 1,
+      "type": "private_backup_alert",
+      "event": "observed",
+      "code": "OK",
+      "checkedAt": 1792356114072,
+      "alertId": null,
+      "alertEvent": null,
+      "pending": 0,
+      "notificationStatus": "not_confirmed",
+      "inboxStatus": "not_checked"
+    }
+  ]
+}
