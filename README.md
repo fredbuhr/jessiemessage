@@ -1,5 +1,7 @@
 # JessieMessage
 
+**Étape 0.52 — sauvegarde récurrente préparée :** le [parent de capture et le chiffrement complet](docs/recurring-private-checkpoints-052.md) sont validés par cinq jobs CI et les contrôles Windows, avec journal durable, verrou, arrêt gracieux et reprise. L’opérateur séparé et son lanceur sont préparés sur l’hébergement ; un aller-retour GPG synthétique y passe. Le [script Windows](scripts/JessieMessage-recuperation-052.ps1) prépare uniquement sur le PC la clé de récupération et fournit son export public. La récurrence n’est pas activée : clé publique réelle et première capture contrôlée encore nécessaires. La version hébergée reste 0.50 `0a1cafd8` ; les acceptations 0.46 sont conservées.
+
 **Étape 0.51 — bilan courant et exploitation :** le [plan précis avant usage privé régulier](docs/production-readiness-2026-10-17.md) remplace les anciennes listes. La [surveillance externe](docs/external-monitoring-051.md) est active sur GitHub : 24 tests distants et un passage HTTPS réel sains ; planification configurée, réception d’alerte encore à éprouver. La révision hébergée reste 0.50 `0a1cafd8`. Restent la capture cohérente récurrente, le chiffrement complet et la copie indépendante, la réception des alertes et la consolidation de version ; les acceptations 0.46 restent acquises. **Les paragraphes ci-dessous sont un historique daté, pas la liste courante.**
 
 Invitation-only private messaging PWA. Public source, private user data.
