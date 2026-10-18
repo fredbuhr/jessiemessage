@@ -94,7 +94,10 @@ export function createWebDriverRequester(driverUrl, fetchRequest = globalThis.fe
     const label = `WebDriver ${method} ${commandRoute(path)}`;
     let response, data;
     try {
-      response = await fetchRequest(`${origin}${path}`, { method, ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }), signal: AbortSignal.timeout(25000) });
+      // A cold Chrome process can take longer than an ordinary command on CI.
+      // Keep that allowance specific to session creation; commands stay bounded.
+      const deadline = method === "POST" && path === "/session" ? 45000 : 25000;
+      response = await fetchRequest(`${origin}${path}`, { method, ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }), signal: AbortSignal.timeout(deadline) });
       data = await response.json();
     } catch (error) {
       // Transport errors can contain URLs or request details. Preserve only a
