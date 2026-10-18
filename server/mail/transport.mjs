@@ -3,6 +3,7 @@ import { isIP, Socket } from "node:net";
 import { canonicalEmail } from "../auth/config.mjs";
 import { tokenDigest } from "../auth/crypto.mjs";
 import { SITE_CONTACT_EMAIL, isOfficialOrigin } from "../site.mjs";
+import { backupAlertMessage } from "./backup-alert-message.mjs";
 
 export class MailDeliveryError extends Error {
   constructor(code = "MAIL_DELIVERY_FAILED") {
@@ -187,6 +188,21 @@ export async function createVerificationTransport(config, {
           try { return canonicalEmail(address) === email; } catch { return false; }
         });
         if (!accepted) throw new Error();
+        return true;
+      } catch { throw new MailDeliveryError(); }
+    },
+    async sendBackupAlert(input) {
+      if (closed) throw new MailDeliveryError();
+      let message;
+      try {
+        if (config.origin !== "https://jessiemessage.com" || from !== SITE_CONTACT_EMAIL || replyTo !== SITE_CONTACT_EMAIL) throw new Error();
+        message = backupAlertMessage(input);
+      } catch { throw new MailDeliveryError("PAYLOAD_INVALID"); }
+      try {
+        const result = await operation(() => transport.sendMail(message), "MAIL_DELIVERY_FAILED");
+        if (!Array.isArray(result?.accepted) || result.accepted.length !== 1 || canonicalEmail(result.accepted[0]) !== SITE_CONTACT_EMAIL
+          || result.rejected !== undefined && (!Array.isArray(result.rejected) || result.rejected.length !== 0)
+          || result.pending !== undefined && (!Array.isArray(result.pending) || result.pending.length !== 0)) throw new Error();
         return true;
       } catch { throw new MailDeliveryError(); }
     },

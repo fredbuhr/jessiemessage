@@ -3,9 +3,11 @@ import { fileURLToPath } from "node:url";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { parseRecurringArguments, recurringPreflight, createRecurringSupervisor, RecurringSupervisorError } from "../server/backup/recurring-supervisor.mjs";
 import { createPeriodicBackupMonitor } from "../server/backup/periodic-monitor.mjs";
+import { createBackupAlertWorker } from "../server/backup/alert-worker.mjs";
 
 export async function main(args = process.argv.slice(2), { environment = process.env, execArgv = process.execArgv,
-  preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor, outputStream = process.stdout,
+  preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor,
+  makeAlerts = createBackupAlertWorker, outputStream = process.stdout,
   signal } = {}) {
   const options = parseRecurringArguments(args);
   try { privateAuthenticationProcessOptions(environment, execArgv); } catch { throw new RecurringSupervisorError("ENVIRONMENT"); }
@@ -17,16 +19,27 @@ export async function main(args = process.argv.slice(2), { environment = process
     outputStream.write(`${JSON.stringify(report)}\n`); return report;
   }
   const supervisor = makeSupervisor(options, { environment, emit: report => outputStream.write(`${JSON.stringify(report)}\n`) });
-  let monitor;
+  let monitor, alerts;
   const monitorUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_monitor","event":"unavailable","code":"MONITOR_UNAVAILABLE","notificationStatus":"not_sent"}\n'); } catch {} };
-  const abort = () => { try { void Promise.resolve(monitor?.close()).catch(monitorUnavailable); } catch { monitorUnavailable(); } void supervisor.close(); };
+  const alertsUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_alert","event":"unavailable","code":"ALERT_UNAVAILABLE","notificationStatus":"not_confirmed","inboxStatus":"not_checked"}\n'); } catch {} };
+  const abort = () => {
+    try { void Promise.resolve(monitor?.close()).catch(monitorUnavailable); } catch { monitorUnavailable(); }
+    try { void Promise.resolve(alerts?.close()).catch(alertsUnavailable); } catch { alertsUnavailable(); }
+    void supervisor.close();
+  };
   signal?.addEventListener("abort", abort, { once: true });
   try {
     await supervisor.start();
     if (signal?.aborted) await supervisor.close();
     else {
+      try { alerts = makeAlerts({ operationsDirectory: options.operationsDirectory, privateDirectory: options.privateDirectory },
+        { emit: report => outputStream.write(`${JSON.stringify(report)}\n`) }); } catch { alertsUnavailable(); }
       try {
-        monitor = makeMonitor({ operationsDirectory: options.operationsDirectory }, { emit: report => outputStream.write(`${JSON.stringify(report)}\n`) });
+        monitor = makeMonitor({ operationsDirectory: options.operationsDirectory }, { emit: report => {
+          // A broken console cannot prevent enqueueing a technical alert.
+          try { outputStream.write(`${JSON.stringify(report)}\n`); } catch {}
+          try { Promise.resolve(alerts?.observe(report)).catch(alertsUnavailable); } catch { alertsUnavailable(); }
+        } });
         Promise.resolve(monitor.start()).catch(monitorUnavailable);
       } catch { monitorUnavailable(); }
     }
@@ -36,7 +49,9 @@ export async function main(args = process.argv.slice(2), { environment = process
   } finally {
     signal?.removeEventListener("abort", abort);
     try { await monitor?.close(); } catch { monitorUnavailable(); }
+    // Stop the application without waiting for mail delivery/cleanup.
     await supervisor.close();
+    try { await alerts?.close(); } catch { alertsUnavailable(); }
   }
 }
 
