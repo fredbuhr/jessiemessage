@@ -1,6 +1,11 @@
 globalThis.JessieI18n?.register({
   "JessieMessage — Sauvegardes": "JessieMessage — Backups",
   "Sauvegardes": "Backups",
+  "Vérifier le déchiffrement sur le PC": "Verify decryption on the PC",
+  "Télécharge l’outil pour la dernière archive, extrais le ZIP et ouvre Verifier.cmd. Choisis ta copie chiffrée ; le dossier de récupération GPG habituel est proposé.": "Download the tool for the latest archive, extract the ZIP and open Verifier.cmd. Choose your encrypted copy; your usual GPG recovery folder is suggested.",
+  "Télécharger la vérification Windows": "Download Windows verification",
+  "La clé et sa phrase restent sur ton PC. Le contrôle compare le contenu déchiffré en mémoire à la capture du site. Le résultat apparaît sur le PC ; il ne certifie pas une restauration dans l’application.": "The key and its passphrase stay on your PC. The check compares the content decrypted in memory with the site capture. The result appears on the PC; it does not certify an application restore.",
+  "Vérification téléchargée. Extrais le ZIP puis ouvre Verifier.cmd sur le PC qui contient la copie et ta clé GPG.": "Verification downloaded. Extract the ZIP and open Verifier.cmd on the PC containing the copy and your GPG key.",
   "Administration": "Administration",
   "ADMINISTRATION": "ADMINISTRATION",
   "Gérer les accès": "Manage access",

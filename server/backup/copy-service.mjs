@@ -112,5 +112,6 @@ export function createBackupCopyService(directory, internal = {}) {
       return consume(...args);
     }, options);
   }
-  return Object.freeze({ summary, create, update, revoke, preparePairing, pair, manifest, acknowledge, transfer });
+  return Object.freeze({ summary, create, update, revoke, preparePairing, pair, manifest, acknowledge, transfer,
+    verification: id => catalog.verification(id) });
 }

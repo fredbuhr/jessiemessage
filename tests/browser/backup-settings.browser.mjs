@@ -21,6 +21,7 @@ async function fixture(controlClock = false) {
     if (path === "/api/admin/backups") return json({ version: 1, checkedAt: Date.now(), archiveCount: 2, latestArchive: { id: "capture-1792340000000-cccccccccccccccc", startedAt: 1792340000000 }, schedule: { enabled: true, hourUtc: 5, minuteUtc: 15 }, destinations: destination ? [destination] : [], decryptionStatus: "not_checked" });
     if (path.endsWith("/settings")) { destination = { ...destination, ...JSON.parse(text) }; return json({}); }
     if (path.endsWith("/windows-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic kit"); }
+    if (path.endsWith("/verification-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic verification kit"); }
     if (path.endsWith("/revoke")) { destination = null; return json({ revoked: true }); }
     if (path === "/admin/backups") return send(200, "text/html", resources.get("/backups.html"));
     if (resources.has(path)) return send(200, path.endsWith(".js") ? "text/javascript" : path.endsWith(".css") ? "text/css" : path.endsWith(".png") ? "image/png" : "application/octet-stream", resources.get(path));
@@ -47,21 +48,32 @@ test("real Chrome: backup destinations, keyboard controls, translations and kit 
         await waitUntil(() => page.execute("return !!window.__kitName"), "explicit kit download");
         assert.equal(await page.execute("return window.__kitName"), "JessieMessage-sauvegardes-Windows.zip");
         assert.equal(source.requests.filter(r => r.path.endsWith("/windows-kit")).length, 1);
+        await page.execute("window.__kitName=null");
+        await tabUntil(page, '#verify-archive'); await page.key("\uE007");
+        await waitUntil(() => page.execute("return window.__kitName === 'JessieMessage-verifier-Windows.zip'"), "offline verification download");
+        const verification = source.requests.filter(r => r.path.endsWith("/verification-kit")); assert.equal(verification.length, 1);
+        assert.deepEqual(JSON.parse(verification[0].text), { captureId: "capture-1792340000000-cccccccccccccccc" });
+        assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && document.getElementById('verify-archive').getBoundingClientRect().height >= 44"), true);
         assert.equal(await page.execute("return document.body.textContent.includes('A'.repeat(43)) || Object.keys(localStorage).length > 0"), false);
       } finally { await page.close(); await source.close(); }
     });
   } finally { await driver.close(); }
 });
-test("real Chrome: a login change during kit creation suppresses the download and never repeats the mutation", { timeout: 60000 }, async () => {
-  const driver = await startWebDriver(), source = await fixture(); source.changeOnKit(); let page;
+test("real Chrome: a login change during either kit suppresses its download and never repeats the request", { timeout: 90000 }, async () => {
+  const driver = await startWebDriver();
   try {
+    for (const [selector, suffix] of [['[data-action="kit"]', "/windows-kit"], ["#verify-archive", "/verification-kit"]]) {
+      const source = await fixture(); source.changeOnKit(); let page;
+      try {
     page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/backups");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden"), "initial session");
     await page.execute("document.addEventListener('click',e=>{if(e.target.closest('a[download]')){e.preventDefault();window.__downloaded=true;}})");
-    await tabUntil(page, '[data-action="kit"]'); await page.key("\uE007");
+    await tabUntil(page, selector); await page.key("\uE007");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden && document.getElementById('backup-status').textContent.length > 0 && !document.querySelector('[data-action=kit]').disabled"), "fresh session after rejected old response");
-    assert.equal(await page.execute("return !!window.__downloaded"), false); assert.equal(source.requests.filter(r => r.path.endsWith("/windows-kit")).length, 1);
-  } finally { await page?.close(); await source.close(); await driver.close(); }
+    assert.equal(await page.execute("return !!window.__downloaded"), false); assert.equal(source.requests.filter(r => r.path.endsWith(suffix)).length, 1);
+      } finally { await page?.close(); await source.close(); }
+    }
+  } finally { await driver.close(); }
 });
 test("real Chrome: periodic proof replaces private settings after another login without a mutation", { timeout: 60000 }, async () => {
   const driver = await startWebDriver(), source = await fixture(true); let page;

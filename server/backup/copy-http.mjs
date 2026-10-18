@@ -3,6 +3,7 @@ import { pipeline } from "node:stream/promises";
 import { AUTH_HEADERS, checkMutation, clearCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionToken } from "../auth/http.mjs";
 import { BackupCopyError, copyFields } from "./copy-state.mjs";
 import { createCopyKit } from "./copy-kit.mjs";
+import { createVerificationKit } from "./verification-kit.mjs";
 
 const assets = new Map([["/admin/backups", ["backups.html", "text/html; charset=utf-8"]],
   ["/backups.js", ["backups.js", "text/javascript; charset=utf-8"]], ["/backups.css", ["backups.css", "text/css; charset=utf-8"]],
@@ -11,6 +12,7 @@ const ROOT = new URL("../../public/", import.meta.url);
 function route(path) {
   if (assets.has(path)) return { kind: "asset", methods: ["GET", "HEAD"] };
   if (path === "/api/admin/backups") return { kind: "summary", methods: ["GET"] };
+  if (path === "/api/admin/backups/verification-kit") return { kind: "verification-kit", methods: ["POST"] };
   if (path === "/api/admin/backups/destinations") return { kind: "create", methods: ["POST"] };
   const admin = /^\/api\/admin\/backups\/destinations\/([a-f0-9]{32})\/(settings|revoke|windows-kit)$/.exec(path);
   if (admin) return { kind: admin[2], id: admin[1], methods: ["POST"] };
@@ -40,7 +42,7 @@ function mapped(error, agent) {
   if (error?.httpStatus && [400, 401, 403, 408, 413, 415].includes(error.httpStatus)) return { status: error.httpStatus, code: error.publicCode };
   return { status: 503, code: agent ? "copy_unavailable" : "backups_unavailable" };
 }
-export function createBackupCopyHandler(service, { origin, actor, kit = createCopyKit, clock = Date.now }) {
+export function createBackupCopyHandler(service, { origin, actor, kit = createCopyKit, verificationKit = createVerificationKit, clock = Date.now }) {
   if (origin !== "https://jessiemessage.com" || typeof actor !== "function") throw new TypeError("Private primary backup administration required.");
   let activeTransfers = 0, windowStart = 0, requests = 0, closing = false;
   const transfers = new Set();
@@ -51,7 +53,7 @@ export function createBackupCopyHandler(service, { origin, actor, kit = createCo
     try {
       if (closing) throw new BackupCopyError();
       if (!selected.methods.includes(method)) { reply(response, method, 405, { error: "method_not_allowed" }, { Allow: selected.methods.join(", ") }); request.resume(); return true; }
-      let token;
+      let token, adminProof;
       if (selected.agent) {
         const now = clock(); if (now - windowStart >= 60000 || now < windowStart) { windowStart = now; requests = 0; }
         if (++requests > 240) { reply(response, method, 429, { error: "try_again_later" }, { "Retry-After": "60" }); request.resume(); return true; }
@@ -63,6 +65,7 @@ export function createBackupCopyHandler(service, { origin, actor, kit = createCo
         const session = token ? await actor(token) : null;
         if (!session || session.user?.role !== "admin") throw httpError(401, "authentication_required");
         const current = safeSession(session);
+        adminProof = current;
         if (method === "POST" && !sameText(request.headers["x-csrf-token"], current.csrf)) throw httpError(403, "csrf_failed");
       }
       if (url.search || url.hash) throw httpError(400, "invalid_request");
@@ -87,7 +90,15 @@ export function createBackupCopyHandler(service, { origin, actor, kit = createCo
         } finally { clearTimeout(timer); response.off("close", close); transfers.delete(cancellation); activeTransfers--; }
       } else {
         const body = await readJson(request);
-        if (selected.kind === "pair") reply(response, method, 200, await service.pair(body));
+        if (selected.kind === "verification-kit") {
+          const { captureId } = copyFields(body, ["captureId"]);
+          const bytes = await verificationKit(await service.verification(captureId));
+          const session = await actor(token);
+          if (!session || session.user?.role !== "admin") throw httpError(401, "authentication_required");
+          const current = safeSession(session);
+          if (current.user.id !== adminProof.user.id || !sameText(current.csrf, adminProof.csrf)) throw httpError(401, "authentication_required");
+          reply(response, method, 200, bytes, { "Content-Type": "application/zip", "Content-Disposition": 'attachment; filename="JessieMessage-verifier-Windows.zip"' });
+        } else if (selected.kind === "pair") reply(response, method, 200, await service.pair(body));
         else if (selected.kind === "receipt") reply(response, method, 200, await service.acknowledge(token, body));
         else if (selected.kind === "create") reply(response, method, 201, await service.create(body));
         else if (selected.kind === "settings") reply(response, method, 200, await service.update(selected.id, body));

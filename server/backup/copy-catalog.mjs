@@ -52,7 +52,7 @@ async function withStableFile(scope, name, maximum, callback) {
     await unchanged(); return result;
   } finally { await file.close(); }
 }
-function receipt(value, id, configuration) {
+function receipt(value, id, configuration, verification = false) {
   const result = copyFields(value, ["format", "version", "createdAt", "encrypted", "protection", "decryptionVerified", "independentCopyPending", "source", "recipient", "ciphertext"]);
   const ciphertext = copyFields(result.ciphertext, ["file", "bytes", "sha256"]);
   const recipient = copyFields(result.recipient, ["file", "sha256", "fingerprint"]);
@@ -66,7 +66,11 @@ function receipt(value, id, configuration) {
     || source.file !== "checkpoint.tar.gz" || !copyHash(source.sha256) || !Number.isSafeInteger(source.bytes) || source.bytes < 1
     || ciphertext.file !== CIPHERTEXT || !Number.isSafeInteger(ciphertext.bytes) || ciphertext.bytes < 1 || ciphertext.bytes > MAX_BYTES
     || !copyHash(ciphertext.sha256)) failCopy();
-  return { id, startedAt, bytes: ciphertext.bytes, sha256: ciphertext.sha256, filename: `JessieMessage-${id}.tar.gz.gpg` };
+  const archive = { id, startedAt, bytes: ciphertext.bytes, sha256: ciphertext.sha256, filename: `JessieMessage-${id}.tar.gz.gpg` };
+  if (!verification) return archive;
+  if (source.bytes > MAX_BYTES) failCopy("limit");
+  return { format: "jessiemessage-backup-verification", version: 1, archive,
+    source: { bytes: source.bytes, sha256: source.sha256 }, recipient: { fingerprint: recipient.fingerprint }, protection: result.protection };
 }
 
 export function createCopyCatalog(directory, internal = {}) {
@@ -74,14 +78,14 @@ export function createCopyCatalog(directory, internal = {}) {
   const withCapture = (id, callback) => withCopyCapture(directory, id, callback, internal);
   const configuration = () => (internal.readConfiguration ?? readRecurringConfiguration)(directory);
   const history = () => (internal.readHistory ?? readCheckpointHistory)(directory);
-  async function inspect(id, config) {
+  async function inspect(id, config, verification = false) {
     return withCapture(id, scope => withStableFile(scope, RECEIPT, 4096, async (file, size) => {
       const bytes = Buffer.alloc(size + 1); let offset = 0;
       try {
         while (offset < bytes.length) { const { bytesRead } = await file.read(bytes, offset, bytes.length - offset, offset); if (!bytesRead) break; offset += bytesRead; }
         if (offset !== size) failCopy("changed");
-        const record = receipt(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, size))), id, config);
-        return await withStableFile(scope, CIPHERTEXT, MAX_BYTES, async (_file, length) => { if (length !== record.bytes) failCopy("changed"); return record; });
+        const record = receipt(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, size))), id, config, verification);
+        return await withStableFile(scope, CIPHERTEXT, MAX_BYTES, async (_file, length) => { if (length !== (verification ? record.archive.bytes : record.bytes)) failCopy("changed"); return record; });
       }
       finally { bytes.fill(0); }
     }));
@@ -125,5 +129,13 @@ export function createCopyCatalog(directory, internal = {}) {
       } finally { chunk.fill(0); }
     }));
   }
-  return Object.freeze({ list, transfer });
+  async function verification(id) {
+    if (!captureId(id)) failCopy("input");
+    const listing = await list(), expected = listing.archives.find(item => item.id === id);
+    if (!expected) failCopy("missing");
+    const result = await inspect(id, await configuration(), true);
+    if (JSON.stringify(result.archive) !== JSON.stringify(expected)) failCopy("changed");
+    return result;
+  }
+  return Object.freeze({ list, transfer, verification });
 }

@@ -43,6 +43,16 @@ test("ciphertext tampering is rejected before the download consumer or headers",
   const f = await fixture(t); await writeFile(join(f.capture, "checkpoint.tar.gz.gpg"), Buffer.alloc(bytes.length, 120), { mode: 0o600 });
   await assert.rejects(f.catalog.transfer(id, () => assert.fail("corrupt ciphertext was exposed")), { code: "changed" });
 });
+test("offline verification exposes only validated hashes for an already successful capture", async t => {
+  const f = await fixture(t), result = await f.catalog.verification(id);
+  assert.deepEqual(result, { format: "jessiemessage-backup-verification", version: 1, archive: (await f.catalog.list()).archives[0],
+    source: { bytes: receipt.source.bytes, sha256: receipt.source.sha256 }, recipient: { fingerprint: receipt.recipient.fingerprint }, protection: "mdc" });
+  assert.doesNotMatch(JSON.stringify(result), /\/|recipient-public|encryption-receipt|checkpoint\.tar\.gz"|key|token|password|csrf/i);
+  await assert.rejects(f.catalog.verification(`capture-${start + 1}-${"c".repeat(16)}`), { code: "missing" });
+  await assert.rejects(f.catalog.verification("../encryption-receipt.json"), { code: "input" });
+  await writeFile(join(f.capture, "encryption-receipt.json"), JSON.stringify({ ...receipt, source: { ...receipt.source, bytes: 2151677953 } }), { mode: 0o600 });
+  await assert.rejects(f.catalog.verification(id), { code: "limit" });
+});
 test("symbolic links, hardlinks, broad file permissions and a linked capture directory are refused", async t => {
   for (const defect of ["file-symlink", "file-hardlink", "file-mode", "receipt-symlink", "directory-symlink"]) {
     const f = await fixture(t), target = join(f.capture, defect === "receipt-symlink" ? "encryption-receipt.json" : "checkpoint.tar.gz.gpg");
