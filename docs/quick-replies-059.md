@@ -1,6 +1,6 @@
 # Réponses rapides — 0.59
 
-Préparation du 18 octobre 2026. La version active reste 0.58 jusqu’au relevé d’activation.
+**Activée le 18 octobre 2026 à 21:45 Europe/Paris**, source `6fab86ff`, arbre `29ee7d3b`, [PR #75 fusionnée](https://github.com/fredbuhr/jessiemessage/pull/75). [Relevé d’activation et repli 0.59](quick-replies-activation-059.md), [preuves structurées](activation-proofs/jm059-activation.json).
 
 ## Usage
 
@@ -24,4 +24,14 @@ Les tests de modèle couvrent la conservation exacte du préfixe, les deux langu
 
 Chrome exerce les vrais modules du chat sur 320/1 280 px, en français/anglais, avec changement de langue des phrases au clavier, ajout à un brouillon existant, édition, un seul envoi après action explicite et contrôle du résultat. Échap, dépassement de longueur et retour à la liste ne doivent produire aucun envoi. Les fixtures restent synthétiques ; aucune communication réelle n’est déclenchée.
 
-Les résultats CI et le relevé hébergé seront ajoutés après vérification. Aucun schéma, dépendance, clé, compte, paramètre de conservation ou outil Windows n’est modifié. Le repli prévu reste 0.58 `f92eaf38`, arbre `aa5d5a4694f29c40490c92634730f16812ec3d6e`. Les P0 de déchiffrement personnel, de conservation/confidentialité et d’effacement complet restent ouverts.
+CI [source](https://github.com/fredbuhr/jessiemessage/actions/runs/39159780258), [PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39159783819) et [main](https://github.com/fredbuhr/jessiemessage/actions/runs/39160034447) : cinq jobs réussis chacune. Source exacte : 2 535 réussites et 27 wrappers SQL ignorés sur 2 562 cas ; 385/385 sur chaque MariaDB ; 124/124 Chrome, sans saut ; authentification HTTPS/MFA ; syntaxe de 455 fichiers et build conformes. Les anciens bancs VM de traduction/accessibilité ont été adaptés pour charger le nouveau module ; 96 tests ciblés passent localement. Sur l’hébergement : 240/240 natifs sans saut, puis préflight réel passé à 19:40:35.582052 UTC sans démarrage ni capture.
+
+Les paramètres 0.58 ont été contrôlés inchangés et sauvegardés avant remplacement. Run/Build relus après enregistrement ; cycle Manager lancé à 19:45:55.569 UTC, sans réinstallation. État Actif, modification 21:45 Europe/Paris. Après le dernier démarrage : mesures 19:46:11.843 et 19:47:11.902 UTC, intervalle 60 059 ms, current / OK, aucun incident ni alerte en attente. [Preuve visuelle](activation-proofs/jm059-activation-20261018.jpg).
+
+À 19:48:21.586622 UTC : 82/82 HTTPS et vingt-quatre empreintes exactes, avec TLS vérifié et redirections non suivies. Six sondes HEAD supposaient à tort la présence de Content-Length, que le handler existant omet ; seules ces sondes ont été corrigées et répétées. Statut, corps vide, type MIME et taille exacte si fournie sont contrôlés ; le rapport initial est conservé. Aucun code applicatif modifié pendant cette vérification.
+
+À 19:52:15.565 UTC : version 0.59.0, source et checkout propres, quatre enregistrements du journal et dernier succès inchangés, aucun incident ni alerte en attente. Copie PC courante confirmée par identifiant, taille et SHA-256, avec reçu à 19:50:51.025 UTC après activation. La reconnexion du terminal a précédé le premier relevé d’observation ; son absence a été vérifiée avant sa relance, sans répéter aucune capture ni opération de service.
+
+Les changements d’export apparus en parallèle dans le dossier initial sont préservés. Ce lot a été reconstruit dans une copie isolée, à partir de `98e189a`, et les exclut. Le dossier de reprise identifie les deux copies pour éviter toute confusion lors de la suite.
+
+Aucun schéma, dépendance, clé, compte, paramètre de conservation ou outil Windows modifié. Repli 0.58 `f92eaf38`, arbre `aa5d5a4694f29c40490c92634730f16812ec3d6e`, avec paramètres antérieurs dans `/srv/customer/jessiemessage-private/manager-before-quick-replies-059.json` en 0600. Aucun repli ni restauration SQL provoqué. Déchiffrement personnel, conservation/confidentialité et effacement complet restent ouverts.

@@ -1,0 +1,344 @@
+{
+  "version": 1,
+  "stage": "0.59.0",
+  "source": {
+    "head": "6fab86ff2f346303cde2143d862b07c1137f65a2",
+    "tree": "29ee7d3b884e41c778308b1f07e47f90201426d9",
+    "release": "release/0.59.0",
+    "merge": "36aee069ca557ae662f400d2aee4233510db9072",
+    "pr": 75
+  },
+  "ci": {
+    "sourceRun": 39159780258,
+    "sourceJobs": [
+      {
+        "id": 117770456190,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117770456331,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117770456354,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117770456355,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117770456373,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "prRun": 39159783819,
+    "prJobs": [
+      {
+        "id": 117770466819,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117770466959,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117770466971,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117770467006,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117770467132,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "mainRun": 39160034447,
+    "mainJobs": [
+      {
+        "id": 117771215644,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117771215876,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117771215973,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117771215974,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117771215992,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "general": {
+      "tests": 2562,
+      "passed": 2535,
+      "skippedSqlWrappers": 27,
+      "failed": 0,
+      "syntaxFiles": 455
+    },
+    "chrome": {
+      "tests": 124,
+      "passed": 124,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariaDB": {
+      "10.11": {
+        "passed": 385,
+        "failed": 0,
+        "skipped": 0
+      },
+      "11.4": {
+        "passed": 385,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "httpsAuthentication": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "preparation": {
+    "at": "2026-10-18T19:40:35.582052+00:00",
+    "runtimePath": "/srv/customer/jessiemessage-operator/quick-replies-059-6fab86ff",
+    "native": {
+      "tests": 240,
+      "passed": 240,
+      "failed": 0,
+      "skipped": 0
+    },
+    "preflight": {
+      "status": "passed",
+      "started": false,
+      "backupStarted": false,
+      "enabled": true,
+      "hourUtc": 5,
+      "minuteUtc": 15
+    },
+    "launcher": {
+      "path": "/srv/customer/jessiemessage-private/start-primary-quick-replies-059-6fab86ff.sh",
+      "bytes": 839,
+      "sha256": "5329eeba534085f84d40a441fec64ea2f45f85a391f4877e1559abda50e1b052"
+    },
+    "privateReport": "/srv/customer/jessiemessage-private/quick-replies-preparation-059.json"
+  },
+  "https": {
+    "at": "2026-10-18T19:48:21.586622+00:00",
+    "initialReportAt": "2026-10-18T19:47:24.666033+00:00",
+    "tlsVerified": true,
+    "redirectsFollowed": false,
+    "authenticatedRequests": false,
+    "total": 82,
+    "passed": 82,
+    "failed": 0,
+    "exactAssetHashes": 24,
+    "privateReport": "/srv/customer/jessiemessage-private/quick-replies-https-059.json",
+    "initialReport": "/srv/customer/jessiemessage-private/quick-replies-https-initial-059.json",
+    "diagnosticCorrection": {
+      "repeatedCases": 6,
+      "reason": "Existing public asset reply omits Content-Length for HEAD. Only six probes corrected: expected status, empty body, MIME type and exact length when present. All six observed headers absent; original report retained."
+    },
+    "coverage": [
+      "twelve public files on each origin match the pinned checkout",
+      "new module and existing chat assets GET/HEAD",
+      "five enabled primary HTML administrator pages and four recipe pages redirect without Set-Cookie",
+      "private modules and chat/CRM capabilities denied anonymously",
+      "conversation export method and Origin checks, anonymous export 401 preserves cookie",
+      "health and readiness",
+      "backup pages and assets remain primary-only"
+    ]
+  },
+  "security": {
+    "newPermission": false,
+    "mfaUnchanged": true,
+    "strictCookie": true,
+    "slidingDays": 180,
+    "inactivityLogout": false,
+    "originAndCsrfUnchanged": true,
+    "noMigration": true,
+    "dependenciesUnchanged": true,
+    "windowsToolsUnchanged": true,
+    "automaticSend": false,
+    "newPrivateStorage": false
+  },
+  "feature": {
+    "phrasesPerLanguage": 6,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "independentPhraseLanguage": true,
+    "appendWithoutReplacingDraft": true,
+    "editableBeforeSending": true,
+    "ordinarySendPath": true,
+    "textCharacters": 4096,
+    "captionCharacters": 1000,
+    "closesOnHideAndSelectionChange": true,
+    "staleOwnerSelectionRejected": true
+  },
+  "rollback": {
+    "head": "f92eaf38ced2fac876bd3ead538a7788e8cc1d79",
+    "tree": "aa5d5a4694f29c40490c92634730f16812ec3d6e",
+    "runtimePath": "/srv/customer/jessiemessage-operator/conversation-export-058-f92eaf38",
+    "managerSnapshot": "/srv/customer/jessiemessage-private/manager-before-quick-replies-059.json",
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-conversation-export-058-f92eaf38.sh",
+    "launcherSha256": "b62a13de5fa93876fbeeb1ea177ce7d3985d5918a05e6b27af9a584e7f686eb5",
+    "launcherBytes": 851,
+    "sourceCleanObserved": true,
+    "noRollbackPerformed": true
+  },
+  "acceptance": {
+    "personalDecryption": "not_checked",
+    "generalProductionReadiness": "not_claimed",
+    "dataRetention": "not_decided",
+    "completeDataErasure": "not_implemented_by_this_stage",
+    "realClientMessageSentByAgent": false,
+    "pcCopy": "current receipt observed at 2026-10-18T19:50:51.025Z, after activation; matching capture id, bytes and SHA-256"
+  },
+  "localVerification": {
+    "focused": {
+      "tests": 96,
+      "passed": 96,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fullSuite": "exact-source, PR and main CI are authoritative"
+  },
+  "workspace": {
+    "isolated": "/workspace/scratch/b01756ad0fe5/jessiemessage-quick-replies-059",
+    "initial": "/workspace/scratch/b01756ad0fe5/jessiemessage",
+    "parallelExportWorkPreserved": true,
+    "parallelExportWorkExcluded": true
+  },
+  "activation": {
+    "launchedAt": "2026-10-18T19:45:55.569Z",
+    "managerStatus": "Actif",
+    "managerModificationParis": "2026-10-18 21:45",
+    "dependenciesReinstalled": false,
+    "sampleBoundary": "strictly after the last listening marker",
+    "samples": [
+      {
+        "checkedAt": 1792352771843,
+        "state": "current",
+        "code": "OK",
+        "activeIncident": false
+      },
+      {
+        "checkedAt": 1792352831902,
+        "state": "current",
+        "code": "OK",
+        "activeIncident": false
+      }
+    ],
+    "alertObservations": [
+      {
+        "checkedAt": 1792352771843,
+        "pending": 0
+      },
+      {
+        "checkedAt": 1792352831902,
+        "pending": 0
+      }
+    ],
+    "sampleIntervalMs": 60059,
+    "screenshot": {
+      "path": "docs/activation-proofs/jm059-activation-20261018.jpg",
+      "bytes": 90632,
+      "sha256": "ae7690617fd904d44a811507cc348c0cec50854722a36938bb53c63a1c09bb5e"
+    }
+  },
+  "manager": {
+    "before": {
+      "build": "cd /srv/customer/jessiemessage-operator/conversation-export-058-f92eaf38 && test \"$(git rev-parse HEAD)\" = f92eaf38ced2fac876bd3ead538a7788e8cc1d79 && test \"$(git rev-parse HEAD^{tree})\" = aa5d5a4694f29c40490c92634730f16812ec3d6e && test -z \"$(git status --porcelain)\" && npm run check",
+      "buildEnabled": true,
+      "port": "3000",
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-conversation-export-058-f92eaf38.sh"
+    },
+    "active": {
+      "build": "cd /srv/customer/jessiemessage-operator/quick-replies-059-6fab86ff && test \"$(git rev-parse HEAD)\" = 6fab86ff2f346303cde2143d862b07c1137f65a2 && test \"$(git rev-parse HEAD^{tree})\" = 29ee7d3b884e41c778308b1f07e47f90201426d9 && test -z \"$(git status --porcelain)\" && npm run check",
+      "buildEnabled": true,
+      "port": "3000",
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-quick-replies-059-6fab86ff.sh"
+    },
+    "parametersReadBackAfterSave": true,
+    "port": 3000,
+    "nodeMajor": 24,
+    "nodeVersionObserved": "24.15.0"
+  },
+  "observations": {
+    "at": "2026-10-18T19:52:15.565Z",
+    "sourceClean": true,
+    "head": "6fab86ff2f346303cde2143d862b07c1137f65a2",
+    "applicationVersion": "0.59.0",
+    "nodeVersion": "24.15.0",
+    "journalRecords": 4,
+    "lastSuccessAt": 1792300539807,
+    "alertStatePersisted": false,
+    "activeIncident": false,
+    "pendingAlerts": 0,
+    "destinations": [
+      {
+        "kind": "computer",
+        "enabled": true,
+        "paired": true,
+        "pairedAt": 1792338586459,
+        "lastSeenAt": 1792353051025,
+        "lastReceiptAt": 1792353051025,
+        "currentCopy": true,
+        "receiptAfterActivation": true
+      }
+    ],
+    "privateReport": "/srv/customer/jessiemessage-private/quick-replies-observations-059.json",
+    "note": "SSH reconnected before the first observation report was written. Absence was confirmed, then the observation completed; no capture, test mail or service operation was repeated."
+  },
+  "handoff": {
+    "kind": "historical_stage",
+    "currentEntry": "../REPRISE.md",
+    "mainAdvancedAfterActivation": "1f2aad9ee256dc910bc79589493aaaeb07ce504d",
+    "parallelPr": 76,
+    "parallelVersion": "0.60.0",
+    "quickReplyModuleAndControllerPreserved": true,
+    "centralDocumentsPreserved": true
+  }
+}
