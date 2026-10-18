@@ -1,0 +1,75 @@
+{
+  "observedAt": "2026-10-18T21:12:14.021Z",
+  "managerUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard",
+  "managerState": "Actif",
+  "lastModification": "- generic: Dernière modification le 18/10/2026 à 23:10",
+  "run": "bash /srv/customer/jessiemessage-private/start-primary-privacy-choices-062-a15b5595.sh",
+  "build": "cd /srv/customer/jessiemessage-operator/privacy-choices-062-a15b5595 && test \"$(git rev-parse HEAD)\" = a15b5595b804f2eccf95c13be46152570a6ebc12 && test \"$(git rev-parse HEAD^{tree})\" = d653aeb733cdc2bc7bd87853f747fbdd3010141c && test -z \"$(git status --porcelain)\" && npm run check",
+  "persistedSettings": true,
+  "source": "a15b5595b804f2eccf95c13be46152570a6ebc12",
+  "tree": "d653aeb733cdc2bc7bd87853f747fbdd3010141c",
+  "afterLastListening": true,
+  "samples": [
+    {
+      "version": 1,
+      "type": "private_backup_monitor",
+      "event": "sample",
+      "checkedAt": 1792357854287,
+      "state": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false,
+      "lastSuccessAt": 1792300539807,
+      "ageMilliseconds": 57314480,
+      "copyStatus": "not_checked",
+      "decryptionStatus": "not_checked",
+      "notificationStatus": "not_sent"
+    },
+    {
+      "version": 1,
+      "type": "private_backup_monitor",
+      "event": "sample",
+      "checkedAt": 1792357914345,
+      "state": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false,
+      "lastSuccessAt": 1792300539807,
+      "ageMilliseconds": 57374538,
+      "copyStatus": "not_checked",
+      "decryptionStatus": "not_checked",
+      "notificationStatus": "not_sent"
+    }
+  ],
+  "alerts": [
+    {
+      "version": 1,
+      "type": "private_backup_alert",
+      "event": "observed",
+      "code": "OK",
+      "checkedAt": 1792357854287,
+      "alertId": null,
+      "alertEvent": null,
+      "pending": 0,
+      "notificationStatus": "not_confirmed",
+      "inboxStatus": "not_checked"
+    },
+    {
+      "version": 1,
+      "type": "private_backup_alert",
+      "event": "observed",
+      "code": "OK",
+      "checkedAt": 1792357914345,
+      "alertId": null,
+      "alertEvent": null,
+      "pending": 0,
+      "notificationStatus": "not_confirmed",
+      "inboxStatus": "not_checked"
+    }
+  ],
+  "sampleIntervalMilliseconds": 60058,
+  "publicHelpUrl": "https://jessiemessage.com/help#privacy",
+  "publicHelpLanguage": "fr",
+  "cloudBrowser": "anonymous",
+  "screenshot": "jm062-activation-20261018.jpg"
+}
