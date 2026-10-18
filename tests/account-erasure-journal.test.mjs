@@ -44,11 +44,13 @@ test("two erasure writers cannot silently overwrite their acknowledged revision"
 });
 test("phase rollback, progress rollback and a revoked producer exclusion preserve the last receipt", async t => {
   const f = await fixture(t); await f.journal.save(record(), 0, allow);
-  const prepared = { ...record(), phase: "prepared", cursor: "1".repeat(32), updatedAt: record().updatedAt + 1 };
-  await f.journal.save(prepared, 1, allow); const before = await readFile(await f.filename());
-  await assert.rejects(f.journal.save(record(), 2, allow));
-  await assert.rejects(f.journal.save({ ...prepared, cursor: null }, 2, allow));
-  await assert.rejects(f.journal.save({ ...prepared, phase: "files_erased" }, 2, async () => { throw new Error("Synthetic exclusion lost"); }));
+  const prepared = { ...record(), phase: "prepared", cursor: null, updatedAt: record().updatedAt + 1 };
+  await f.journal.save(prepared, 1, allow);
+  const progress = { ...prepared, cursor: "1".repeat(32) }; await f.journal.save(progress, 2, allow);
+  const before = await readFile(await f.filename());
+  await assert.rejects(f.journal.save(record(), 3, allow));
+  await assert.rejects(f.journal.save({ ...progress, cursor: null }, 3, allow));
+  await assert.rejects(f.journal.save({ ...progress, phase: "files_erased" }, 3, async () => { throw new Error("Synthetic exclusion lost"); }));
   assert.deepEqual(await readFile(await f.filename()), before);
 });
 test("a durable rename with a lost acknowledgement is discovered on the next read", async t => {

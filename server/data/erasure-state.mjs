@@ -42,7 +42,7 @@ export function erasureTransition(previous, next) {
   if (previous.clientId !== next.clientId || JSON.stringify(previous.binding) !== JSON.stringify(next.binding)
     || previous.startedAt !== next.startedAt || next.updatedAt < previous.updatedAt || to < from || to > from + 1
     || previous.cursor !== null && (next.cursor === null || next.cursor < previous.cursor)
-    || previous.phase !== "prepared" && next.phase !== "prepared" && next.cursor !== previous.cursor
+    || next.cursor !== previous.cursor && (previous.phase !== "prepared" || next.phase !== "prepared")
     || previous.phase === "completed" && JSON.stringify(previous) !== JSON.stringify(next)) failErasure("ERASURE_CHANGED");
   return next;
 }

@@ -129,7 +129,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       await connection.query("INSERT INTO chat_receipts (conversation_id, user_id, last_read_sequence, updated_at) VALUES (?, ?, 2, ?), (?, ?, 2, ?)", [conversationId, uid, created, conversationId, admin, created]);
       await connection.query("INSERT INTO crm_profiles (admin_id, conversation_id, nickname, notes_encrypted, version, notes_revision, created_at, updated_at) VALUES (?, ?, 'Synthetic internal note', 'synthetic-encrypted-private-note', 1, 1, ?, ?)", [admin, conversationId, created, created]);
       await connection.query("INSERT INTO crm_memberships (admin_id, conversation_id, label_id, created_at) VALUES (?, ?, ?, ?)", [admin, conversationId, label, created]);
-      await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, created_at, updated_at) VALUES (?, 1, ?, ?)", [uid, created, created]);
+      await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 1, 1, ?, ?)", [uid, created, created]);
       for (const table of ["mail_outbox", "password_reset_outbox"]) for (const state of ["pending", "sending", "sent"]) await mail(uid, table, state);
     }
     const sub = await subscription(first, sid, "client"), peerSub = await subscription(peer, peerSid, "client"), adminSub = await subscription(admin, adminSession, "admin");

@@ -107,11 +107,15 @@ test("a busy database erasure lease cannot touch a journal or files", async () =
 });
 test("journal bindings, identity and monotone phases cannot be reset or crossed", () => {
   const start = erasureRecord({ version: 1, clientId, binding, phase: "requested", cursor: null, startedAt: 5, updatedAt: 5 });
-  const prepared = { ...start, phase: "prepared", updatedAt: 6, cursor: "1".repeat(32) };
+  const prepared = { ...start, phase: "prepared", updatedAt: 6, cursor: null };
   assert.deepEqual(erasureTransition(start, prepared), prepared);
+  const progress = { ...prepared, cursor: "1".repeat(32) };
+  assert.deepEqual(erasureTransition(prepared, progress), progress);
+  assert.throws(() => erasureTransition(start, progress));
+  assert.throws(() => erasureTransition(progress, { ...progress, phase: "files_erased", cursor: "2".repeat(32) }));
   for (const next of [{ ...prepared, phase: "completed" }, { ...prepared, startedAt: 4 }, { ...prepared, binding: { ...binding, database: "other" } }, { ...prepared, clientId: "b".repeat(32) }])
     assert.throws(() => erasureTransition(start, next));
-  assert.throws(() => erasureTransition(prepared, { ...prepared, cursor: null }));
+  assert.throws(() => erasureTransition(progress, { ...progress, cursor: null }));
   assert.throws(() => erasureTransition(prepared, start));
   assert.throws(() => erasureRecord({ ...start, extra: true }));
 });
