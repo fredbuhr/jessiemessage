@@ -1,5 +1,7 @@
 # Étape 0.51 — surveillance externe et bilan de production
 
+**Mise à jour du 18 octobre en journée :** les événements `schedule` 39086832046 (01:31:54 UTC), 39104289229 (06:30:38 UTC) et 39123886814 (11:35:58 UTC) sont observés terminés en succès. Ils sont espacés de plusieurs heures : aucune cadence maximale de cinq minutes n’est garantie. La [surveillance locale minute 0.53](periodic-backup-monitor-053.md) complète ces sondes, sans remplacer leur indépendance ni prouver la réception d’alertes. Les paragraphes datés ci-dessous conservent l’historique initial.
+
 Le [bilan courant](production-readiness-2026-10-17.md) distingue les travaux P0 d’exploitation des observations personnelles ciblées. Les fonctionnalités autour de Jessie sont déjà actives sur la révision 0.50 `0a1cafd8` ; le lot 0.51 ne nécessite aucun déploiement ni redémarrage applicatif.
 
 ## Implémentation

@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "stage": "0.53",
+  "type": "periodic_backup_monitor_activated",
+  "sourceHead": "9df56feb80b94051ede34f2e53cc7d7ff7e194ba",
+  "sourceTree": "8272fbd55841556556f9d78acfeb048767b2f1e9",
+  "runtimeHead": "0a1cafd85c3d8699be1961075b18e80e36bcd041",
+  "runtimeTree": "17db89aa165e23ca427d073f5a3fcc28387f5168",
+  "run": "bash /srv/customer/jessiemessage-private/start-primary-monitored-9df56feb.sh",
+  "manager": {
+    "buildSucceeded": true,
+    "active": true,
+    "modifiedAtMinuteEuropeParis": "2026-10-18T14:35:00+02:00"
+  },
+  "samples": [
+    {
+      "version": 1,
+      "type": "private_backup_monitor",
+      "event": "sample",
+      "checkedAt": 1792326953815,
+      "state": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false,
+      "lastSuccessAt": 1792300539807,
+      "ageMilliseconds": 26414008,
+      "copyStatus": "not_checked",
+      "decryptionStatus": "not_checked",
+      "notificationStatus": "not_sent"
+    },
+    {
+      "version": 1,
+      "type": "private_backup_monitor",
+      "event": "sample",
+      "checkedAt": 1792327013823,
+      "state": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false,
+      "lastSuccessAt": 1792300539807,
+      "ageMilliseconds": 26474016,
+      "copyStatus": "not_checked",
+      "decryptionStatus": "not_checked",
+      "notificationStatus": "not_sent"
+    }
+  ],
+  "observedIntervalMilliseconds": 60008,
+  "postDeployment": {
+    "checkedAt": "2026-10-18T12:37:06.392Z",
+    "httpsReads": 38,
+    "exactResourceHashes": 16,
+    "failures": 0,
+    "journalRecords": 4,
+    "lastAttemptAt": 1792300533262,
+    "lastSuccessAt": 1792300539807,
+    "additionalCaptureObserved": false
+  },
+  "previousCommandsSaved": true,
+  "notificationSent": false,
+  "decryptionVerified": false,
+  "independentCopyPending": true,
+  "migrationPerformed": false,
+  "keysChanged": false
+}

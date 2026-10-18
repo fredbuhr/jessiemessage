@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "stage": "0.53",
+  "type": "periodic_monitor_preparation",
+  "sourceHead": "9df56feb80b94051ede34f2e53cc7d7ff7e194ba",
+  "sourceTree": "8272fbd55841556556f9d78acfeb048767b2f1e9",
+  "operatorCheckout": "/srv/customer/jessiemessage-operator/periodic-monitor-9df56feb",
+  "nativeTests": {
+    "tests": 42,
+    "pass": 42,
+    "fail": 0,
+    "skipped": 0
+  },
+  "preflight": {
+    "status": "passed",
+    "started": false,
+    "backupStarted": false,
+    "enabled": true,
+    "hourUtc": 5,
+    "minuteUtc": 15
+  },
+  "launcher": {
+    "file": "start-primary-monitored-9df56feb.sh",
+    "mode": "0700",
+    "bytes": 846,
+    "sha256": "d5f89844c5002923135ee0b939d074d2fcb98c61662040a343d8f39ac4af246e",
+    "checkedAt": "2026-10-18T12:33:17.940769+00:00"
+  },
+  "previousCommands": {
+    "file": "manager-before-monitor-053.json",
+    "mode": "0600",
+    "bytes": 396,
+    "saved": true
+  },
+  "ci": {
+    "runId": 39127547912,
+    "head": "9df56feb80b94051ede34f2e53cc7d7ff7e194ba",
+    "jobs": 5,
+    "conclusion": "success",
+    "general": {
+      "tests": 2455,
+      "pass": 2428,
+      "fail": 0,
+      "skipped": 27
+    },
+    "mariadb1011": 383,
+    "mariadb114": 383,
+    "chrome": 101,
+    "httpsAuthentication": 1
+  },
+  "notificationSent": false,
+  "keysChanged": false,
+  "migrationPerformed": false
+}

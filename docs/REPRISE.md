@@ -10,7 +10,7 @@ Ce fichier est le point d'entrée de reprise après la perte d'une discussion. L
 | Dernière source complète retrouvée | Branche `feat/recurring-private-checkpoints`, commit `dc02ec6795a7e8c3312d253797ad6382439f5735`, arbre `9454ed83059615d420f8182fac6382310577f91a` |
 | Branche de reprise | `feat/reprise-audit-backup-freshness`, issue de ce commit complet |
 | Runtime applicatif réellement actif | `0a1cafd85c3d8699be1961075b18e80e36bcd041`, arbre `17db89aa165e23ca427d073f5a3fcc28387f5168` — étape 0.50 |
-| Superviseur réellement actif | `9665d54cc6abb236b04eecc9d92540d7e1c5d035`, arbre `67a0757f77cced10d07f25936b71a30fd6539075` — étape 0.52 |
+| Superviseur réellement actif | `9df56feb80b94051ede34f2e53cc7d7ff7e194ba`, arbre `8272fbd55841556556f9d78acfeb048767b2f1e9` — surveillance minute 0.53 |
 | Branche par défaut au moment de la reprise | `main` = `a688b30ef4e039a30de7bf05e98761845dcee8d4` : sous-ensemble de surveillance, pas l'application complète |
 | Données | Schéma 30, six configurations privées existantes, mêmes clés/comptes/sessions |
 
@@ -22,11 +22,11 @@ Ce fichier est le point d'entrée de reprise après la perte d'une discussion. L
 - [Tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard).
 - [Terminal SSH existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal).
 - Runtime : `/srv/customer/jessiemessage-operator/broadcast-direct-delivery-0a1cafd8`.
-- Superviseur : `/srv/customer/jessiemessage-operator/recurring-checkpoints-9665d54c`.
+- Superviseur : `/srv/customer/jessiemessage-operator/periodic-monitor-9df56feb` ; ancien 0.52 conservé pour le repli dans `recurring-checkpoints-9665d54c`.
 - Configuration : `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851`.
 - Sauvegardes : `/srv/customer/jessiemessage-private/recurring-backup-052` ; quotidien à **05:15 UTC**.
-- Run Manager : `bash /srv/customer/jessiemessage-private/start-primary-backups-checked-9665d54c.sh`.
-- Repli du superviseur : anciennes commandes conservées dans `recurring-backup-052/manager-before-activation-052.json`. Pour un repli de code, utiliser le cycle Manager normal ; aucune restauration SQL.
+- Run Manager : `bash /srv/customer/jessiemessage-private/start-primary-monitored-9df56feb.sh`.
+- Repli immédiat : commandes 0.52 dans `/srv/customer/jessiemessage-private/manager-before-monitor-053.json`, lanceur `start-primary-backups-checked-9665d54c.sh`. Le repli plus ancien sans superviseur reste dans `recurring-backup-052/manager-before-activation-052.json`. Utiliser le cycle Manager normal ; aucune restauration SQL.
 
 Ne pas modifier les dossiers actifs pour y installer un nouvel outil : leur source et leur propreté Git sont épinglées. Préparer un checkout opérateur séparé. Ne pas lancer une capture `--offline` pendant que le runtime tourne. La clé privée GPG et sa phrase restent sur le PC du propriétaire ; aucune demande de secret dans la discussion.
 
@@ -45,8 +45,12 @@ La première capture 0.52 est consignée comme réussie le 18 octobre à 02:28:1
 
 La copie et le déchiffrement PC de cette nouvelle archive restent **non confirmés**. Les instructions exactes figurent dans le relevé 0.52 ; attendre `SAUVEGARDE_052_OK` pour les marquer acquis. Le premier passage quotidien est encore futur au moment de cette reprise. Ne pas confondre la capture du démarrage avec un déclenchement calendaire.
 
-La reprise ajoute le [contrôle de fraîcheur 0.53](backup-freshness-053.md) en lecture seule. Source opérateur éprouvée : `5c64a9d6c72552555b0b57980779391a860b262e`, arbre `ff0d0b3977f04c44b15ee8f53575b10711cd9a9d`, checkout séparé `/srv/customer/jessiemessage-operator/reprise-freshness-5c64a9d6`. À 00:55:23.605 UTC, 11/11 tests natifs passent et la lecture réelle est `current / OK`, puis HTTPS `healthy`. La [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39084535494) passe ses cinq jobs, dont MariaDB 383/383 par version et Chrome 101/101. Cet outil n’est pas encore raccordé à une tâche périodique ou à un canal d’alerte. La copie indépendante automatique, ses reçus et les alertes réellement reçues restent ouverts. La consolidation 0.54 doit ensuite fournir une source stable complète et un repli reproductible. Les brouillons de confidentialité/conservation et l'effacement complet restent également ouverts ; ne pas les annoncer comme finalisés.
+La reprise ajoute le [contrôle de fraîcheur 0.53](backup-freshness-053.md) en lecture seule. Source opérateur éprouvée : `5c64a9d6c72552555b0b57980779391a860b262e`, arbre `ff0d0b3977f04c44b15ee8f53575b10711cd9a9d`, checkout séparé `/srv/customer/jessiemessage-operator/reprise-freshness-5c64a9d6`. À 00:55:23.605 UTC, 11/11 tests natifs passent et la lecture réelle est `current / OK`, puis HTTPS `healthy`. La [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39084535494) passe ses cinq jobs, dont MariaDB 383/383 par version et Chrome 101/101. Le lecteur est maintenant réutilisé chaque minute par le superviseur 0.53 ; aucun canal de réception d’alertes n’est encore raccordé. La copie indépendante automatique, ses reçus et les alertes réellement reçues restent ouverts. La consolidation 0.54 doit ensuite fournir une source stable complète et un repli reproductible. Les brouillons de confidentialité/conservation et l'effacement complet restent également ouverts ; ne pas les annoncer comme finalisés.
 
 ## Poursuite du 18 octobre en journée
 
-Le [premier passage quotidien](activation-proofs/jm052-first-scheduled-20261018.json) est maintenant observé : 05:15:33.262 → 05:15:39.807 UTC, capture/chiffrement/reprise réussis, empreintes relues à 12:23 UTC. Les trois passages planifiés de la sonde externe sont réussis mais espacés de plusieurs heures. La [surveillance locale minute 0.53](periodic-backup-monitor-053.md) est préparée sur `feat/periodic-backup-monitor` ; son activation et sa CI restent à observer. Les sections ci-dessus conservent le point d'arrêt précédent et ses limites ; le déchiffrement PC et la copie indépendante restent non confirmés.
+Le [premier passage quotidien](activation-proofs/jm052-first-scheduled-20261018.json) est maintenant observé : 05:15:33.262 → 05:15:39.807 UTC, capture/chiffrement/reprise réussis, empreintes relues à 12:23 UTC. Les trois passages planifiés de la sonde externe sont réussis mais espacés de plusieurs heures. La [surveillance locale minute 0.53](periodic-backup-monitor-053.md) est **activée** depuis le checkout opérateur `9df56feb` sur `feat/periodic-backup-monitor` ([PR #67](https://github.com/fredbuhr/jessiemessage/pull/67)). Cinq jobs CI et 42/42 tests natifs passent. Deux lectures `current / OK` sont observées à 12:35:53.815 et 12:36:53.823 UTC ; 38 contrôles HTTPS et seize empreintes conformes à 12:37:06.392 UTC. Les événements restent dans la console d’exploitation ; aucun destinataire d’alerte n’est encore raccordé. Les sections ci-dessus conservent le point d'arrêt précédent et ses limites ; le déchiffrement PC et la copie indépendante restent non confirmés.
+
+### Prochain lot à reprendre
+
+Raccorder les alertes techniques à l’adresse officielle déjà retenue pour le projet, **contact@jessiemessage.com**, puis éprouver panne et rétablissement avec des données synthétiques et consigner la réception réelle. Aucun message d’alerte n’a été envoyé dans le lot de surveillance minute. La copie automatique hors hébergement n’a pas encore de destination raccordée ; la clé privée et le déchiffrement restent personnels sur le PC. Ne pas refaire les validations acquises 0.46 ni la capture planifiée maintenant observée.

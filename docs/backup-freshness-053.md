@@ -1,5 +1,7 @@
 # Étape 0.53 — contrôle de fraîcheur du journal
 
+**Mise à jour du 18 octobre à 14:37 Europe/Paris :** le CLI ci-dessous reste en lecture seule ; il est désormais utilisé chaque minute par le [moniteur 0.53 activé](periodic-backup-monitor-053.md). Les événements sont consignés dans le Manager, sans envoi d’alerte. Le contrôle ponctuel de 00:55 décrit plus bas est une preuve historique.
+
 Le contrôle en lecture seule complète la sauvegarde 0.52. Il n'arrête pas l'application, ne lance aucune capture, ne crée pas de verrou, ne restaure aucune base et ne transfère aucun fichier. Le runtime 0.50 et son superviseur 0.52 peuvent continuer dans leurs dossiers épinglés.
 
 ```bash
@@ -33,6 +35,6 @@ Restent à raccorder et éprouver : destination indépendante réellement retenu
 
 Le 18 octobre à **00:55:23.605 UTC**, la source `5c64a9d6` (arbre `ff0d0b39`) est installée dans le checkout séparé `/srv/customer/jessiemessage-operator/reprise-freshness-5c64a9d6`. Les **11/11 tests natifs** passent, aucun ignoré. Le lecteur réel renvoie `current / OK`, dernier succès `1792283296649`, âge 1 626 956 ms, copie et déchiffrement `not_checked`. Le passage HTTPS suivant est `healthy`, premier essai, santé et disponibilité conformes. Le [reçu fermé](activation-proofs/jm053-freshness-check.json) conserve cette portée.
 
-L'outil est disponible à la demande ; aucune tâche de contrôle périodique ni alerte reçue n'est annoncée. Le Manager, le runtime 0.50, le superviseur 0.52, les clés et les données restent conservés.
+Lors de ce contrôle de 00:55, l’outil était disponible à la demande, sans tâche périodique ni alerte reçue. La surveillance minute est activée plus tard dans la journée par le superviseur 0.53 ; le runtime 0.50, les clés et les données restent conservés.
 
 La [CI de cette source](https://github.com/fredbuhr/jessiemessage/actions/runs/39084535494) est réussie : cinq jobs, 2 413 tests généraux réussis et 27 wrappers SQL ignorés, 383/383 sur chaque MariaDB, 101/101 Chrome et 1/1 authentification HTTPS. Les commits documentaires ultérieurs ne modifient aucun code exécuté.

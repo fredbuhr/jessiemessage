@@ -1,5 +1,7 @@
 # Étape 0.52 — capture récurrente cohérente et archive chiffrée
 
+**Mise à jour du 18 octobre en journée :** le [premier déclenchement quotidien](activation-proofs/jm052-first-scheduled-20261018.json) est maintenant vérifié à 05:15:33–05:15:39 UTC, empreintes relues. Le [superviseur 0.53](periodic-backup-monitor-053.md) conserve cette capture et ajoute la surveillance minute. Les relevés datés de la nuit ci-dessous conservent leur portée historique ; copie et déchiffrement PC restent non confirmés.
+
 État au **18 octobre 2026 à 02:29:40 Europe/Paris** : **superviseur récurrent activé, première capture réelle chiffrée et reprise vérifiées**. La révision opérateur est `9665d54cc6abb236b04eecc9d92540d7e1c5d035`, arbre `67a0757f77cced10d07f25936b71a30fd6539075`. La révision applicative hébergée reste **0.50 `0a1cafd85c3d8699be1961075b18e80e36bcd041`**, arbre `17db89aa165e23ca427d073f5a3fcc28387f5168`. Seul l’export public réel créé sur le PC est installé ; aucune clé privée de récupération n’a été reçue. La copie et le déchiffrement PC de cette archive réelle restent à confirmer. Les reçus 0.46 restent acquis.
 
 ## Fonctionnement préparé

@@ -1,5 +1,7 @@
 # JessieMessage — bilan et chemin vers le pilote
 
+**État courant après 14:37 Europe/Paris le 18 octobre :** [superviseur 0.53 activé](periodic-backup-monitor-053.md), source `9df56feb`, cinq jobs CI et 42/42 tests natifs réussis, deux lectures minute `current / OK`, 38 contrôles HTTPS et seize empreintes conformes. Le premier checkpoint quotidien est maintenant vérifié. Suite : réception des alertes, copie indépendante/déchiffrement PC, puis consolidation 0.54 et décisions de confidentialité. Le [point de reprise](REPRISE.md) contient le Run actuel et le repli 0.52.
+
 **Reprise courante :** lire [REPRISE.md](REPRISE.md), le [rapport du 18 octobre](AUDIT-REPRISE-2026-10-18.md) et le [plan d’exploitation](production-readiness-2026-10-17.md). Le contrôle de fraîcheur 0.53 est implémenté en lecture seule ; copie indépendante et alertes reçues restent ouvertes. Les sections suivantes conservent les relevés historiques.
 
 **Étape 0.52 — récurrence activée :** le [superviseur de sauvegarde et le chiffrement complet](recurring-private-checkpoints-052.md) sont actifs via le Manager. Première capture réelle réussie le 18 octobre à **02:28:16 Europe/Paris**, reprise confirmée, opération de 5,842 s ; empreintes et HTTPS vérifiés à 02:29:40. Horaire quotidien : 05:15 UTC. Seule la clé publique du propriétaire est installée ; le déchiffrement de cette archive sur le PC et sa copie indépendante restent à confirmer. Le runtime applicatif reste 0.50 `0a1cafd8` et les acceptations 0.46 sont conservées.
