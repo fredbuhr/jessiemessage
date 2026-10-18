@@ -11,6 +11,7 @@ import { Readable } from "node:stream";
 import { parseArguments, check, run, verifyCiphertext, main } from "../scripts/private-secrets-backup.mjs";
 
 const repository = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
+const applicationVersion = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")).version;
 const password = "five synthetic words for private recovery";
 const marker = "synthetic_SQL_secret_not_for_reports";
 const sourceNames = ["runtime-auth.json", "admin-setup.json", "runtime-database.json"];
@@ -190,7 +191,7 @@ test("real GPG makes a portable authenticated three-file JSON coffre without dis
   const home = path.join(f.root, "independent-gpg"); await mkdir(home, { mode: 0o700 });
   const opened = spawnSync("/usr/bin/gpg", ["--no-options", "--batch", "--no-tty", "--no-autostart", "--no-symkey-cache", "--pinentry-mode", "loopback", "--homedir", home, "--passphrase-fd", "0", "--decrypt", path.join(f.directory, f.selected.output)], { input: password, encoding: "utf8", timeout: 30000, maxBuffer: 131072, env: { PATH: "/usr/bin:/bin", LANG: "C", LC_ALL: "C" } });
   assert.equal(opened.status, 0); const payload = JSON.parse(opened.stdout);
-  assert.equal(payload.format, "jessiemessage-private-secrets-backup"); assert.equal(payload.version, 1); assert.equal(payload.applicationVersion, "0.60.0");
+  assert.equal(payload.format, "jessiemessage-private-secrets-backup"); assert.equal(payload.version, 1); assert.equal(payload.applicationVersion, applicationVersion);
   assert.equal(new Date(payload.createdAt).toISOString(), payload.createdAt);
   assert.deepEqual(payload.files.map((file) => file.name), sourceNames);
   for (let index = 0; index < sourceNames.length; index += 1) {
