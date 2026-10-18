@@ -111,8 +111,14 @@ jobs:
       - name: Install pinned native Windows GnuPG for the synthetic recovery test
         shell: powershell
         run: |
-          choco install gnupg --version=2.5.20 --yes --no-progress --limit-output
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 3010) { throw 'Native Windows GnuPG installation failed.' }
+          $jmInstaller = Join-Path $env:RUNNER_TEMP 'jm-gnupg-2.5.20.exe'
+          Invoke-WebRequest -UseBasicParsing -TimeoutSec 60 -Uri 'https://www.gnupg.org/ftp/gcrypt/binary/gnupg-w32-2.5.20_20260513.exe' -OutFile $jmInstaller
+          if ((Get-FileHash -LiteralPath $jmInstaller -Algorithm SHA256).Hash -cne 'CA26CD20602581B2CE05E95B16F6249F6FB6C4DCF32304165FC90519328D7981') { throw 'Unexpected native GnuPG installer hash.' }
+          $jmInstallProcess = Start-Process -FilePath $jmInstaller -ArgumentList '/S' -PassThru
+          try {
+            if (-not $jmInstallProcess.WaitForExit(90000)) { $jmInstallProcess.Kill(); throw 'Native GnuPG installation deadline exceeded.' }
+            if ($jmInstallProcess.ExitCode -ne 0) { throw 'Native Windows GnuPG installation failed.' }
+          } finally { $jmInstallProcess.Dispose() }
           exit 0
       - name: Parse and verify actual GPG decryption in memory on Windows PowerShell 5.1
         shell: powershell

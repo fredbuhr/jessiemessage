@@ -30,7 +30,11 @@ try {
     $sourceHash = (Get-FileHash -LiteralPath $plain -Algorithm SHA256).Hash.ToLowerInvariant()
     $id = 'capture-1792340000000-cccccccccccccccc'
     $cipher = Join-Path $root ('JessieMessage-' + $id + '.tar.gz.gpg')
-    $null = Invoke-FixtureGpg ($base + @('--batch', '--trust-model', 'always', '--cipher-algo', 'AES256', '--force-mdc', '--output', $cipher, '--recipient', $fingerprint, '--encrypt', '--', $plain))
+    # --force-mdc is ignored by modern GPG. Select the legacy standard only in
+    # this synthetic fixture, then separately exercise modern OCB below.
+    $null = Invoke-FixtureGpg ($base + @('--batch', '--trust-model', 'always', '--rfc4880', '--cipher-algo', 'AES256', '--output', $cipher, '--recipient', $fingerprint, '--encrypt', '--', $plain))
+    $aead = Join-Path $root 'synthetic-ocb.gpg'
+    $null = Invoke-FixtureGpg ($base + @('--batch', '--trust-model', 'always', '--force-ocb', '--cipher-algo', 'AES256', '--output', $aead, '--recipient', $fingerprint, '--encrypt', '--', $plain))
     Remove-Item -LiteralPath $plain
     $cipherHash = (Get-FileHash -LiteralPath $cipher -Algorithm SHA256).Hash.ToLowerInvariant()
     $cipherBytes = (Get-Item -LiteralPath $cipher).Length
@@ -45,6 +49,10 @@ try {
     $result = [JessieMessage.BackupVerifier056]::Verify($script:FixtureGpg, $keyHome, $cipher, $cipherBytes, $cipherHash,
         $content.Length, $sourceHash, $fingerprint, 'mdc', 30000, [Threading.CancellationToken]::None)
     Assert-True ($result.Bytes -eq $content.Length -and $result.Sha256 -ceq $sourceHash) 'Real GPG binary stream hash failed.'
+    $aeadHash = (Get-FileHash -LiteralPath $aead -Algorithm SHA256).Hash.ToLowerInvariant()
+    $aeadResult = [JessieMessage.BackupVerifier056]::Verify($script:FixtureGpg, $keyHome, $aead, (Get-Item -LiteralPath $aead).Length, $aeadHash,
+        $content.Length, $sourceHash, $fingerprint, 'ocb-aead', 30000, [Threading.CancellationToken]::None)
+    Assert-True ($aeadResult.Sha256 -ceq $sourceHash) 'Real OCB decryption verification failed.'
     Assert-True ((@(Get-ChildItem -LiteralPath $root -File).Name -join ',') -ceq $before) 'Verifier created a plaintext or result file.'
     $task = [JessieMessage.BackupVerifier056]::Start($script:FixtureGpg, $keyHome, $cipher, $cipherBytes, $cipherHash,
         $content.Length, $sourceHash, $fingerprint, 'mdc', 30000, [Threading.CancellationToken]::None)
