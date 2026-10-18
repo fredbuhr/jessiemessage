@@ -1,0 +1,319 @@
+{
+  "version": 1,
+  "stage": "0.58.0",
+  "source": {
+    "head": "f92eaf38ced2fac876bd3ead538a7788e8cc1d79",
+    "tree": "aa5d5a4694f29c40490c92634730f16812ec3d6e",
+    "release": "release/0.58.0",
+    "merge": "954417753f25a206586637cee1840b664979b20c",
+    "pr": 74
+  },
+  "ci": {
+    "sourceRun": 39156744713,
+    "sourceJobs": [
+      {
+        "id": 117761431173,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117761431392,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117761431437,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117761431520,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117761432059,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "prRun": 39156749182,
+    "prJobs": [
+      {
+        "id": 117761444367,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117761444515,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117761444530,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117761444625,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117761444694,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "mainRun": 39156987490,
+    "mainJobs": [
+      {
+        "id": 117762129597,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117762129767,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117762129798,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117762129825,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117762129829,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "general": {
+      "tests": 2556,
+      "passed": 2529,
+      "skippedSqlWrappers": 27,
+      "failed": 0,
+      "syntaxFiles": 453
+    },
+    "chrome": {
+      "tests": 119,
+      "passed": 119,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariaDB": {
+      "10.11": {
+        "passed": 385,
+        "failed": 0,
+        "skipped": 0
+      },
+      "11.4": {
+        "passed": 385,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "httpsAuthentication": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "preparation": {
+    "at": "2026-10-18T19:05:59.788370+00:00",
+    "runtimePath": "/srv/customer/jessiemessage-operator/conversation-export-058-f92eaf38",
+    "native": {
+      "tests": 181,
+      "passed": 181,
+      "failed": 0,
+      "skipped": 0
+    },
+    "preflight": {
+      "status": "passed",
+      "started": false,
+      "backupStarted": false,
+      "enabled": true,
+      "hourUtc": 5,
+      "minuteUtc": 15
+    },
+    "launcher": {
+      "path": "/srv/customer/jessiemessage-private/start-primary-conversation-export-058-f92eaf38.sh",
+      "bytes": 851,
+      "sha256": "b62a13de5fa93876fbeeb1ea177ce7d3985d5918a05e6b27af9a584e7f686eb5"
+    },
+    "privateReport": "/srv/customer/jessiemessage-private/conversation-export-preparation-058.json"
+  },
+  "https": {
+    "at": "2026-10-18T19:10:19.373611+00:00",
+    "initialReportAt": "2026-10-18T19:09:25.223311+00:00",
+    "tlsVerified": true,
+    "redirectsFollowed": false,
+    "authenticatedRequests": false,
+    "total": 70,
+    "passed": 70,
+    "failed": 0,
+    "exactAssetHashes": 20,
+    "privateReport": "/srv/customer/jessiemessage-private/conversation-export-https-058.json",
+    "initialReport": "/srv/customer/jessiemessage-private/conversation-export-https-initial-058.json",
+    "diagnosticCorrection": {
+      "repeatedCases": 10,
+      "reason": "Existing source routes corrected in the diagnostic only: public chat.js, /admin/broadcasts and /backups.js. Initial report retained; other successful probes were not repeated."
+    },
+    "coverage": [
+      "primary and recipe public files match the pinned checkout",
+      "five enabled administrator HTML pages GET/HEAD and exact known redirects without Set-Cookie",
+      "private archive module and CRM assets refused without an administrator",
+      "conversation export method, exact Origin and anonymous refusals; export 401 preserves cookie",
+      "health and readiness",
+      "backup pages and assets remain primary-only"
+    ]
+  },
+  "observations": {
+    "at": "2026-10-18T19:12:08.409Z",
+    "sourceClean": true,
+    "applicationVersion": "0.58.0",
+    "journalRecords": 4,
+    "lastSuccessAt": 1792300539807,
+    "alertStatePersisted": false,
+    "activeIncident": false,
+    "pendingAlerts": 0,
+    "destinations": [
+      {
+        "kind": "computer",
+        "enabled": true,
+        "paired": true,
+        "pairedAt": 1792338586459,
+        "lastSeenAt": 1792350348995,
+        "lastReceiptAt": 1792350348995,
+        "currentCopy": true,
+        "receiptAfterActivation": false
+      }
+    ],
+    "privateReport": "/srv/customer/jessiemessage-private/conversation-export-observations-058.json"
+  },
+  "security": {
+    "newPermission": false,
+    "mfaUnchanged": true,
+    "strictCookie": true,
+    "slidingDays": 180,
+    "inactivityLogout": false,
+    "originAndCsrfUnchanged": true,
+    "noMigration": true,
+    "windowsToolsUnchanged": true,
+    "exportsPrivateCrmData": false,
+    "archiveEncrypted": false,
+    "serverPlaintextTemporaryFile": false
+  },
+  "limits": {
+    "messages": 10000,
+    "textBytes": 8388608,
+    "archiveBytes": 33554432,
+    "concurrent": 1,
+    "cooldownMs": 30000,
+    "preparationMs": 60000,
+    "browserTimeoutMs": 65000
+  },
+  "rollback": {
+    "head": "5324677707d9bd6da85cde39c8b393fc7d7f1283",
+    "tree": "9b517b6c9708b17461809243ca4a78b2d9aa097a",
+    "runtimePath": "/srv/customer/jessiemessage-operator/admin-comfort-057-53246777",
+    "managerSnapshot": "/srv/customer/jessiemessage-private/manager-before-conversation-export-058.json",
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-admin-comfort-057-53246777.sh",
+    "launcherSha256": "fac36f42ca51111a2200ea740c6e805bf899ca0105f8e404627808cc4390573f",
+    "launcherBytes": 839,
+    "sourceCleanObserved": true,
+    "noRollbackPerformed": true,
+    "documentationCorrection": "The 0.57 written hash had b at index 28; the launcher observed unchanged at 0.58 has 8. The exact runtime pins and all 839 launcher bytes were checked before derivation; no prior launcher was modified."
+  },
+  "acceptance": {
+    "personalDecryption": "not_checked",
+    "pcCopy": "current receipt observed before 0.58 activation; no post-activation receipt claimed",
+    "generalProductionReadiness": "not_claimed",
+    "dataRetention": "not_decided",
+    "completeDataErasure": "not_implemented_by_this_stage"
+  },
+  "localVerification": {
+    "focused": {
+      "tests": 160,
+      "passed": 160,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fullSuite": "exact-source, PR and main CI are authoritative"
+  },
+  "activation": {
+    "launchedAt": "2026-10-18T19:08:13.026Z",
+    "managerStatus": "Actif",
+    "managerModificationParis": "2026-10-18 21:08",
+    "dependenciesReinstalled": false,
+    "sampleBoundary": "strictly after the last listening marker",
+    "samples": [
+      {
+        "checkedAt": 1792350519227,
+        "state": "current",
+        "code": "OK",
+        "activeIncident": false
+      },
+      {
+        "checkedAt": 1792350579283,
+        "state": "current",
+        "code": "OK",
+        "activeIncident": false
+      }
+    ],
+    "sampleIntervalMs": 60056,
+    "alertObservations": [
+      {
+        "checkedAt": 1792350519228,
+        "pending": 0
+      },
+      {
+        "checkedAt": 1792350579283,
+        "pending": 0
+      }
+    ],
+    "screenshot": {
+      "path": "docs/activation-proofs/jm058-activation-20261018.jpg",
+      "bytes": 90413,
+      "sha256": "9a93466fcb7ef23909c1ae5e5f33f0876d326f764c825e851c0d78da7b95254d"
+    }
+  },
+  "manager": {
+    "before": {
+      "build": "cd /srv/customer/jessiemessage-operator/admin-comfort-057-53246777 && test \"$(git rev-parse HEAD)\" = 5324677707d9bd6da85cde39c8b393fc7d7f1283 && test \"$(git rev-parse HEAD^{tree})\" = 9b517b6c9708b17461809243ca4a78b2d9aa097a && test -z \"$(git status --porcelain)\" && npm run check",
+      "buildEnabled": true,
+      "port": "3000",
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-admin-comfort-057-53246777.sh"
+    },
+    "active": {
+      "build": "cd /srv/customer/jessiemessage-operator/conversation-export-058-f92eaf38 && test \"$(git rev-parse HEAD)\" = f92eaf38ced2fac876bd3ead538a7788e8cc1d79 && test \"$(git rev-parse HEAD^{tree})\" = aa5d5a4694f29c40490c92634730f16812ec3d6e && test -z \"$(git status --porcelain)\" && npm run check",
+      "buildEnabled": true,
+      "port": "3000",
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-conversation-export-058-f92eaf38.sh"
+    },
+    "parametersReadBackAfterSave": true,
+    "port": 3000,
+    "nodeMajor": 24,
+    "nodeVersionObserved": "24.15.0"
+  }
+}

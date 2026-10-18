@@ -1,6 +1,6 @@
 # Télécharger une conversation — 0.58
 
-Préparation du 18 octobre 2026. La version active reste 0.57 jusqu’au relevé d’activation.
+**Activée le 18 octobre 2026 à 21:08 Europe/Paris**, source `f92eaf38`, arbre `aa5d5a46`, [PR #74 fusionnée](https://github.com/fredbuhr/jessiemessage/pull/74). Le [dossier de reprise](REPRISE.md) et les [preuves structurées](activation-proofs/jm058-activation.json) conservent les commandes et le repli exacts.
 
 ## Usage
 
@@ -28,4 +28,12 @@ Tests ciblés : ZIP lu indépendamment par Python, ordre/pagination et duplicati
 
 Chrome utilise les vrais modules de chat, de fiche et de lecture du ZIP. Le parcours est exercé au clavier, en français/anglais et sur mobile/bureau. Un changement de connexion ou la fermeture de la fiche ne doit produire ni téléchargement ni répétition de la requête.
 
-Les références CI, le relevé hébergé et le point de repli seront ajoutés après vérification. Aucun schéma, clé, compte, réglage de conservation ou script Windows n’est modifié. Le repli prévu reste 0.57 `53246777`, arbre `9b517b6c9708b17461809243ca4a78b2d9aa097a`.
+CI [source](https://github.com/fredbuhr/jessiemessage/actions/runs/39156744713), [PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39156749182) et [main](https://github.com/fredbuhr/jessiemessage/actions/runs/39156987490) : cinq jobs réussis chacune. Source exacte : 2 529 réussites et 27 wrappers SQL ignorés sur 2 556 cas ; 385/385 sur chacune des deux MariaDB ; 119/119 Chrome, sans saut ; authentification HTTPS/MFA ; syntaxe de 453 fichiers et build conformes. Les 160 tests locaux ciblés puis 181/181 sur l’hébergement passent sans saut. Le préflight réel passe à 19:05:59.788370 UTC sans démarrage ni capture.
+
+Cycle Manager lancé à 19:08:13.026 UTC, sans réinstallation des dépendances ; paramètres Run/Build relus après enregistrement. État Actif et modification 21:08 Europe/Paris. Après le dernier démarrage, mesures 19:08:39.227 et 19:09:39.283 UTC, intervalle 60 056 ms : current / OK, aucun incident ; observations d’alertes correspondantes sans envoi en attente. [Preuve visuelle](activation-proofs/jm058-activation-20261018.jpg).
+
+À 19:10:19.373611 UTC, 70/70 contrôles HTTPS et vingt empreintes exactes des fichiers publics, avec TLS vérifié et redirections non suivies. Le premier relevé avait dix sondes mal définies : `chat.js` est public et les chemins réels sont `/admin/broadcasts` et `/backups.js`. Seules ces sondes sont corrigées et répétées ; le rapport initial est conservé. Aucun changement applicatif pendant ce contrôle. Le navigateur cloud reste anonyme ; aucun téléchargement personnel positif n’est revendiqué.
+
+À 19:12:08.409 UTC, version 0.58.0 et checkout propres, quatre enregistrements de journal et même dernier succès de capture, sans incident ni alerte en attente. La copie PC courante est confirmée ; le dernier reçu observé, 19:05:48.995 UTC, précède cette activation. Déchiffrement personnel toujours non constaté. Aucun schéma, clé, compte, réglage de conservation ou script Windows n’est modifié.
+
+Repli : 0.57 `53246777`, arbre `9b517b6c9708b17461809243ca4a78b2d9aa097a`, anciens Run/Build enregistrés en 0600 dans `/srv/customer/jessiemessage-private/manager-before-conversation-export-058.json`. Le lanceur antérieur est conservé. Son empreinte réelle corrige une erreur écrite d’un caractère dans le relevé 0.57 ; voir REPRISE.md. Aucun repli, restauration SQL ni capture hors ligne n’a été provoqué.
