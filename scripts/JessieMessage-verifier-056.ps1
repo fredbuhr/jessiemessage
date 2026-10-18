@@ -10,7 +10,7 @@ function Find-JmVerificationGpg {
         $candidate = Join-Path $folder 'GnuPG\bin\gpg.exe'
         if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
     }
-    return (Get-Command gpg -CommandType Application -ErrorAction Stop).Source
+    return (Get-Command gpg -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
 }
 function Assert-JmVerificationDirectory {
     param([string]$Path)
