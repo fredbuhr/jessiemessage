@@ -50,7 +50,7 @@ test("linked, multi-linked, nonprivate and nonregular queue entries are refused 
     const directory = await fixture(t), name = path.join(directory, NAME), text = `${JSON.stringify(emptyCopyState())}\n`;
     if (defect === "symlink") { await writeFile(path.join(directory, "outside"), text, { mode: 0o600 }); await symlink("outside", name); }
     if (defect === "hardlink") { await writeFile(name, text, { mode: 0o600 }); await link(name, path.join(directory, "alias")); }
-    if (defect === "mode") await writeFile(name, text, { mode: 0o640 });
+    if (defect === "mode") { await writeFile(name, text, { mode: 0o600 }); await chmod(name, 0o640); }
     if (defect === "directory") await mkdir(name, { mode: 0o700 });
     await assert.rejects(read(directory), { code: "unavailable" });
     await assert.rejects(save(directory, emptyCopyState(), 0), { code: "unavailable" });
