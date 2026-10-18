@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createECDH, randomBytes } from "node:crypto";
 import { mkdir, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
@@ -17,6 +17,7 @@ import { createClosureHandler } from "../server/data/closure-http.mjs";
 import { createClosureOperations, verifyClosureStartup } from "../server/data/closure-operations.mjs";
 import { runManagedClosures } from "../server/backup/managed-closures.mjs";
 import { createBackupInspectionPool, assertBackupInspection } from "../server/backup/inspection.mjs";
+import { createConfiguredServer } from "../server/index.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import { erasureDirectory } from "./fixtures/erasure-files.mjs";
 import { managedClosureFixture } from "./fixtures/managed-closure-runtime.mjs";
@@ -182,6 +183,23 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       const store = createErasureStore({ pool, database: options.database, capacity, broadcastKey });
       const batch = page => readErasureJournalBatch({ directory: journalRoot, key: journalKey, binding: store.binding, ...page });
       const journalFor = clientId => createErasureJournal({ directory: journalRoot, key: journalKey, binding: store.binding, clientId });
+      const vapid = createECDH("prime256v1"); vapid.setPrivateKey(Buffer.alloc(32, 5));
+      const configuredEnv = { ...process.env, JESSIEMESSAGE_SITE_ORIGIN: "https://jessiemessage.com",
+        ...Object.fromEntries(["AUTH", "ACCESS", "CHAT", "MAIL_DELIVERY", "MEDIA", "NOTIFICATIONS", "CRM", "CLIENT_RECOVERY", "BROADCAST"].map(name => [`JESSIEMESSAGE_ENABLE_${name}`, "1"])),
+        ...Object.fromEntries([["MFA", 1], ["MAIL", 2], ["MESSAGE", 3], ["NOTIFICATIONS", 4], ["MEDIA", 6], ["CRM", 7]].map(([name, byte]) => [`JESSIEMESSAGE_${name}_KEY`, Buffer.alloc(32, byte).toString("base64url")])),
+        JESSIEMESSAGE_MEDIA_ROOT: mediaRoot, JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: String(capacity.ownerBytes), JESSIEMESSAGE_MEDIA_TOTAL_BYTES: String(capacity.totalBytes), JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES: "0",
+        JESSIEMESSAGE_SMTP_HOST: "smtp.synthetic.invalid", JESSIEMESSAGE_SMTP_PORT: "587", JESSIEMESSAGE_SMTP_USER: "synthetic-user", JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-password",
+        JESSIEMESSAGE_VAPID_PUBLIC_KEY: vapid.getPublicKey().toString("base64url"), JESSIEMESSAGE_VAPID_PRIVATE_KEY: vapid.getPrivateKey().toString("base64url"), JESSIEMESSAGE_VAPID_SUBJECT: "mailto:contact@jessiemessage.com" };
+      async function configureWithoutListening() {
+        const configured = await createConfiguredServer(configuredEnv, { requestOrigin: "https://jessiemessage.com", deviceTransition: true,
+          recovery: true, crm: true, broadcast: true, backupDirectory: journalRoot, clock: () => now });
+        try {
+          // No listener and no external SMTP/Push: stopping before listen also
+          // prevents the sole producer-start callback from starting workers.
+          await configured.mailWorker.stop(); assert.equal(configured.server.listening, false);
+        } finally { await configured.mailWorker.close(); await configured.diagnostics.close(); await configured.pool.end(); }
+      }
+      await configureWithoutListening();
       const service = createClosureService({ directory: journalRoot, key: journalKey, store, target: createClosureTargets(pool), clock: () => now });
       const token = Buffer.alloc(32, 1).toString("base64url"), csrf = Buffer.alloc(32, 2).toString("base64url");
       const handler = createClosureHandler(service, { origin: "https://jessiemessage.com", actor: async value => value === token
@@ -197,6 +215,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
         assert.equal(accepted.status, 202); assert.equal((await accepted.json()).closure.phase, "requested");
         assert.equal(await databaseHash(), before, "The web request writes no SQL row");
         await assert.rejects(verifyClosureStartup({ store, batch, clock: () => now }), { code: "ERASURE_PENDING" });
+        await assert.rejects(configureWithoutListening(), /Authentication startup failed/);
         await new Promise(done => api.close(done));
         const managedRoot = path.join(directory, "managed-runtime"); await mkdir(managedRoot, { mode: 0o700 });
         managed = await managedClosureFixture(step, managedRoot); await managed.runtime.start();
@@ -232,9 +251,13 @@ test("durable account erasure removes the selected graph and actual encrypted fi
         assert.equal(await peerSnapshot(f), peerBefore);
         assert.equal((await service.preview(hex(f.first))).client, null); assert.equal((await journal(f)).record.phase, "completed");
         assert.equal((await verifyClosureStartup({ store, batch, clock: () => now })).verified, true);
+        await configureWithoutListening();
         await managed.runtime.stop();
         await connection.query("INSERT INTO users (id, role, status, pseudonym, email, created_at, updated_at) VALUES (?, 'client', 'pending', 'Restored closure fixture', ?, ?, ?)", [f.first, `${hex(f.first)}-closure-restore@example.invalid`, created, created]);
-        try { await assert.rejects(verifyClosureStartup({ store, batch, clock: () => now }), { code: "ERASURE_RESTORE_REPLAY_REQUIRED" }); }
+        try {
+          await assert.rejects(verifyClosureStartup({ store, batch, clock: () => now }), { code: "ERASURE_RESTORE_REPLAY_REQUIRED" });
+          await assert.rejects(configureWithoutListening(), /Authentication startup failed/);
+        }
         finally { await connection.query("DELETE FROM users WHERE id = ?", [f.first]); }
         assert.equal(managed.runtime.state().status, "stopped"); assert.equal((await journal(f)).record.phase, "completed");
         await assert.rejects(createClosureTargets(pool)(hex(admin)), { code: "ERASURE_TARGET" });
