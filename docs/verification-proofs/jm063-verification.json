@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "release": "0.63.0",
+  "iteration": {
+    "number": 2,
+    "totalPlanned": 6,
+    "code": "merged",
+    "productionActivation": "not_integrated",
+    "next": 3
+  },
+  "source": {
+    "head": "71de968ebe5a036ffdd76325844b68c148069648",
+    "tree": "e0ff079995cc8ee33f0b33085f298c7d262c0bef",
+    "merge": "8b5a2f5b7f405aec473861d0b5f1706dca3165c2",
+    "pr": 79,
+    "releaseBranch": "release/0.63.0",
+    "mergeTreeMatchesSource": true
+  },
+  "observedAt": "2026-10-18T21:49:24.898636+00:00",
+  "scope": {
+    "activeDatabaseAndClientOwnedMedia": true,
+    "subject": "invited_client_account",
+    "administratorTargets": "refused",
+    "otherClients": "preserved",
+    "sharedAdministratorMedia": "preserved",
+    "campaignAudience": "atomically_reencrypted_and_refingerprinted",
+    "backupCopies": "separate_not_erased",
+    "externalCopies": "not_checked"
+  },
+  "deployment": {
+    "status": "not_activated",
+    "runtimeLastObservedVersion": "0.62.0",
+    "runtimeReference": "../activation-proofs/jm062-activation.json",
+    "hostingChangedByThisRelease": false,
+    "runtimeImportsErasureEngine": false,
+    "httpEndpointInstalled": false,
+    "productionWorkerInstalled": false,
+    "productionMaintenanceAdapterInstalled": false,
+    "liveAccountsDeleted": 0,
+    "schemaMigrationsAdded": 0,
+    "persistentKeysAdded": 0,
+    "realEmailsOrMessagesSent": 0
+  },
+  "requirements": {
+    "allProducersQuiescedForWholeOperation": true,
+    "databaseAdvisoryLockAloneIsInsufficient": true,
+    "schemaMigrations": 30,
+    "dataTables": 29,
+    "foreignKeysRestrict": 40,
+    "constraintsEnabled": true
+  },
+  "ci": {
+    "sourceRun": 39169092096,
+    "prRun": 39169094740,
+    "mainRun": 39169308502,
+    "sourceAndPrAllFiveJobsSucceeded": true,
+    "mainStatus": "success",
+    "general": {
+      "total": 2620,
+      "passed": 2592,
+      "skippedSqlWrappers": 28,
+      "failed": 0
+    },
+    "mariadb": {
+      "10.11": {
+        "total": 402,
+        "passed": 402,
+        "failed": 0,
+        "skipped": 0
+      },
+      "11.4": {
+        "total": 402,
+        "passed": 402,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "engineIntegrationCasesPerDatabase": 15,
+    "chrome": {
+      "total": 144,
+      "passed": 144,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syntaxSources": 480,
+    "build": "passed",
+    "integratedHttpsMfa": "passed",
+    "actualProcfsJournalAnchoring": "passed",
+    "allFiveJobsSucceededEach": true,
+    "mainJobs": [
+      {
+        "id": 117798848424,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success"
+      },
+      {
+        "id": 117798848560,
+        "name": "verify",
+        "conclusion": "success"
+      },
+      {
+        "id": 117798848563,
+        "name": "MariaDB 11.4",
+        "conclusion": "success"
+      },
+      {
+        "id": 117798848564,
+        "name": "MariaDB 10.11",
+        "conclusion": "success"
+      },
+      {
+        "id": 117798848691,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "local": {
+    "focusedTotal": 27,
+    "focusedPassed": 25,
+    "focusedSkipped": 2,
+    "failed": 0,
+    "skips": "Native procfs and CI-only assertion unavailable in scratch; both execute successfully in Linux CI.",
+    "syntax": "passed",
+    "fullSuiteLocalCountUsedAsEvidence": false
+  },
+  "recovery": {
+    "intentBeforeSql": true,
+    "filesBeforeCapacityRelease": true,
+    "phaseAndCursorMonotone": true,
+    "boundedMediaPass": {
+      "default": 25,
+      "maximum": 100
+    },
+    "journalDiscovery": "paged_encrypted_authenticated_files_without_plaintext_identity_index",
+    "lostCommitAcknowledgements": [
+      "prepare",
+      "release",
+      "finish"
+    ],
+    "lostGetLockAcknowledgement": "released_before_connection_return",
+    "lostRenameAcknowledgement": "read_durable_state_on_next_pass",
+    "restoredAccountWithCompletedReceipt": "ERASURE_RESTORE_REPLAY_REQUIRED"
+  },
+  "limits": [
+    "No production erasure action or end-user button installed.",
+    "Maintenance exclusion/drain needs a verified production adapter before activation.",
+    "Current metadata checks do not prove the absence of invisible SQL objects or external producers.",
+    "Restoration reconciliation, root changes and receipt retention remain to integrate.",
+    "The legacy data plan CLI remains a read-only blocked simulation.",
+    "No current backup decryption or native hosted restore is inferred from these synthetic tests."
+  ]
+}

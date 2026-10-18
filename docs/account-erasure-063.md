@@ -4,7 +4,7 @@
 
 ## Portée de cette livraison
 
-La bibliothèque est implémentée et doit être éprouvée sur des comptes fictifs dans les deux MariaDB de CI. Elle n’est reliée à aucune route HTTP, tâche périodique ou commande de suppression de production. Aucun compte réel n’est fermé. Le runtime 0.62 reste la référence active jusqu’à l’intégration du parcours de l’étape 3.
+La bibliothèque est implémentée et éprouvée sur des comptes fictifs dans les deux MariaDB de CI. Elle n’est reliée à aucune route HTTP, tâche périodique ou commande de suppression de production. Aucun compte réel n’est fermé. Le runtime 0.62 reste la référence active jusqu’à l’intégration du parcours de l’étape 3.
 
 `createAccountErasure` impose un adaptateur `withQuiescedProducers` qui doit exclure et drainer tous les producteurs pendant l’opération : accès/mutations, uploads, transports SMTP/Push, campagnes et captures. Aucun adaptateur de production permissif, booléen « offline » ou repli sans maintenance n’est fourni. Le verrou consultatif MariaDB sérialise seulement les effaceurs ; il ne neutralise pas les workers existants. L’exclusion réelle et son maintien seront raccordés et vérifiés avec le parcours graphique avant une activation.
 
@@ -40,4 +40,11 @@ La vérification des métadonnées n’est pas une preuve d’absence de product
 
 Tests ciblés : chiffrement et relecture sur disque, refus de mauvaise clé/tag/révision, liens et permissions, écritures concurrentes, perte d’accusé de renommage, phases monotones, pertes d’accusé SQL avant toute action suivante, erreur physique sans libération, reprise bornée, mauvaise racine et refus des cibles administrateur. Le cas Linux CI exerce le vrai ancrage procfs.
 
-Les intégrations MariaDB emploient uniquement une base loopback explicitement nommée `jessiemessage_test…`, des secrets fictifs et un répertoire média indépendant. Elles suppriment effectivement le graphe fictif et les fichiers chiffrés, comparent le pair avant/après, vérifient les campagnes partagées et simulent les accusés COMMIT/GET_LOCK perdus. Aucun listener, transport ou worker n’est lancé. Les résultats exacts de CI seront consignés après observation.
+Les intégrations MariaDB emploient uniquement une base loopback explicitement nommée `jessiemessage_test…`, des secrets fictifs et un répertoire média indépendant. Elles suppriment effectivement le graphe fictif et les fichiers chiffrés, comparent le pair avant/après, vérifient les campagnes partagées et simulent les accusés COMMIT/GET_LOCK perdus. Aucun listener, transport ou worker n’est lancé. Les résultats observés sont consignés ci-dessous.
+
+
+## Livraison vérifiée
+
+Source `71de968ebe5a036ffdd76325844b68c148069648`, arbre `e0ff079995cc8ee33f0b33085f298c7d262c0bef`, [PR #79](https://github.com/fredbuhr/jessiemessage/pull/79), merge `8b5a2f5b7f405aec473861d0b5f1706dca3165c2`, repère `release/0.63.0`. Les CI [source 39169092096](https://github.com/fredbuhr/jessiemessage/actions/runs/39169092096), [PR 39169094740](https://github.com/fredbuhr/jessiemessage/actions/runs/39169094740) et [main 39169308502](https://github.com/fredbuhr/jessiemessage/actions/runs/39169308502) réussissent leurs cinq jobs chacune : **2 592 réussites générales et 28 wrappers SQL ignorés sur 2 620 cas**, zéro échec ; **402/402** sur chaque MariaDB 10.11 et 11.4, dont quinze cas liés à ce moteur, sans saut ; **144/144 Chrome**, authentification HTTPS/MFA, syntaxe de **480 sources** et build réussis. Le journal réel ancré procfs et sa découverte sont exercés en CI Linux.
+
+Localement, **25/27 contrôles ciblés** passent ; les deux cas procfs/CI indisponibles dans scratch sont explicitement ignorés et passent en CI. La validation générale de référence est la CI Linux de la source figée. L’ensemble validé n’ajoute ni dépendance, migration, clé persistante, endpoint ou worker. Aucun compte réel n’est effacé, aucun message ni e-mail réel envoyé. Les [preuves structurées](verification-proofs/jm063-verification.json) qualifient cette livraison comme **non activée**, et le [point de reprise](REPRISE.md) conserve le runtime 0.62 et son repli 0.61.
