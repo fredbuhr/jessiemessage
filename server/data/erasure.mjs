@@ -16,18 +16,24 @@ export function createAccountErasure({ store, storage, journalFor, maintenance, 
       const clientId = erasureId(input.clientId), maxMedia = input.maxMedia ?? 25;
       if (!Number.isSafeInteger(maxMedia) || maxMedia < 1 || maxMedia > 100) failErasure("ERASURE_INPUT");
       try {
-        return await maintenance.withQuiescedProducers(async assertQuiescent => {
-          if (typeof assertQuiescent !== "function") failErasure("ERASURE_MAINTENANCE");
+        return await maintenance.withQuiescedProducers(async (assertQuiescent, assertJournalCommit = assertQuiescent) => {
+          if (typeof assertQuiescent !== "function" || typeof assertJournalCommit !== "function") failErasure("ERASURE_MAINTENANCE");
           let current;
           const now = () => {
             const value = erasureTime(clock());
             if (current?.record && value < current.record.updatedAt) failErasure("ERASURE_CLOCK"); return value;
           };
-          const guard = async () => {
-            await assertQuiescent();
+          const guardWith = async proof => {
+            await proof();
             const root = await storage.fingerprint();
             if (!Buffer.isBuffer(root) || root.length !== 32 || root.toString("hex") !== binding.rootFingerprint) failErasure("ERASURE_BINDING");
           };
+          const guard = () => guardWith(assertQuiescent);
+          // A complete registry capture refuses active journal writer locks.
+          // While our own journal lock is held, retain the actual maintenance
+          // and root checks; its owner must witness immediately before/after
+          // publication, before allowing any further destructive operation.
+          const commitGuard = () => guardWith(assertJournalCommit);
           await guard();
           return store.withLease(clientId, async scope => {
             if (JSON.stringify(erasureBinding(scope.binding)) !== JSON.stringify(binding)) failErasure("ERASURE_BINDING");
@@ -42,7 +48,7 @@ export function createAccountErasure({ store, storage, journalFor, maintenance, 
             }
             async function save(record) {
               await guard();
-              const saved = checked(await journal.save(record, current.revision, guard));
+              const saved = checked(await journal.save(record, current.revision, commitGuard));
               if (saved.revision !== current.revision + 1 || JSON.stringify(saved.record) !== JSON.stringify(record)) failErasure("ERASURE_CHANGED");
               current = saved;
             }
