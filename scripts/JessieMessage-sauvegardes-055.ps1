@@ -11,7 +11,7 @@ function Assert-JmDirectory {
     if (-not [IO.Path]::IsPathRooted($Path) -or $Path.Contains('"')) { throw 'Dossier non valide.' }
     $jmDirectory = Get-Item -LiteralPath $Path -Force
     while ($null -ne $jmDirectory) {
-        if (-not $jmDirectory.PSIsContainer -or ($jmDirectory.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Choisir un dossier sans lien ni jonction.' }
+        if ($jmDirectory -isnot [IO.DirectoryInfo] -or ($jmDirectory.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Choisir un dossier sans lien ni jonction.' }
         $jmDirectory = $jmDirectory.Parent
     }
 }

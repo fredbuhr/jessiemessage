@@ -38,7 +38,7 @@ try {
     $script:JmCalls.Clear(); $script:JmCorrupt = $true
     Assert-Fails { Invoke-JmCopies $jmConfiguration }
     Assert-True (-not $script:JmCalls.Contains('receipt')) 'Corrupt copy acknowledged.'
-    Assert-True ((Get-ChildItem -LiteralPath $script:JmCurrentFolder -Force).Count -eq 0) 'Partial copy left behind.'
+    Assert-True (@(Get-ChildItem -LiteralPath $script:JmCurrentFolder -Force).Count -eq 0) 'Partial copy left behind.'
     $script:JmCorrupt = $false
     [IO.File]::WriteAllText((Join-Path $script:JmCurrentFolder $script:JmArchive.filename), 'existing wrong file')
     $script:JmCalls.Clear(); Assert-Fails { Invoke-JmCopies $jmConfiguration }
