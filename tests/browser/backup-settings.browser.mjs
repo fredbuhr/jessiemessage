@@ -5,10 +5,12 @@ import { readFile } from "node:fs/promises";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 
 const names = ["backups.html", "backups.js", "backups.css", "readiness.css", "readiness-model.js", "i18n.js", "i18n-backups.js", "i18n.css", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "favicon.ico", "manifest.webmanifest"];
-async function fixture(controlClock = false) {
+async function fixture(controlClock = false, paired = false) {
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   const id = "1".repeat(32), csrf = "A".repeat(43), requests = []; let sessionChanged = false, changeOnKit = false;
   let destination = { id: "2".repeat(32), label: "PC personnel", kind: "computer", enabled: true, paired: false, pairedAt: null, pairingExpiresAt: null, lastSeenAt: null, lastReceipt: null };
+  if (paired) destination = { ...destination, paired: true, pairedAt: 1792340000000, lastSeenAt: 1792340300000,
+    lastReceipt: { captureId: "capture-1792340000000-cccccccccccccccc", bytes: 1000, sha256: "a".repeat(64), receivedAt: 1792340300000 } };
   const server = createServer(async (request, response) => {
     const path = new URL(request.url, "http://localhost").pathname; let text = "";
     for await (const chunk of request) text += chunk;
@@ -18,7 +20,7 @@ async function fixture(controlClock = false) {
     if (path === "/__fixture") return send(200, "text/html", "<!doctype html><title>Local fixture</title>");
     if (path === "/session-clock.js" && controlClock) return send(200, "text/javascript", "globalThis.JessieSessionClock={scheduleSessionCheck(expiry,callback){window.__sessionCheck=callback;return()=>{};}};");
     if (path === "/api/auth/session") return json({ user: { id, role: "admin", pseudonym: "Synthetic" }, csrf: sessionChanged ? "C".repeat(43) : csrf, expiresAt: Date.now() + 3600000 });
-    if (path === "/api/admin/backups") return json({ version: 1, checkedAt: Date.now(), archiveCount: 2, latestArchive: { id: "capture-1792340000000-cccccccccccccccc", startedAt: 1792340000000 }, schedule: { enabled: true, hourUtc: 5, minuteUtc: 15 }, destinations: destination ? [destination] : [], decryptionStatus: "not_checked" });
+    if (path === "/api/admin/backups") return json({ version: 1, checkedAt: Date.now(), archiveCount: 2, latestArchive: { id: "capture-1792340000000-cccccccccccccccc", startedAt: 1792340000000, bytes: 1000, sha256: "a".repeat(64) }, schedule: { enabled: true, hourUtc: 5, minuteUtc: 15 }, destinations: destination ? [destination] : [], decryptionStatus: "not_checked" });
     if (path.endsWith("/settings")) { destination = { ...destination, ...JSON.parse(text) }; return json({}); }
     if (path.endsWith("/windows-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic kit"); }
     if (path.endsWith("/verification-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic verification kit"); }
@@ -29,6 +31,7 @@ async function fixture(controlClock = false) {
   });
   await new Promise(yes => server.listen(0, "127.0.0.1", yes));
   return { origin: `http://127.0.0.1:${server.address().port}`, requests, changeOnKit() { changeOnKit = true; }, changeSession() { sessionChanged = true; destination.label = "Second session"; },
+    changeReceipt() { destination.lastReceipt.bytes = 999; },
     async close() { server.closeAllConnections(); await new Promise(yes => server.close(yes)); } };
 }
 test("real Chrome: backup destinations, keyboard controls, translations and kit download at three widths", { timeout: 150000 }, async t => {
@@ -50,6 +53,7 @@ test("real Chrome: backup destinations, keyboard controls, translations and kit 
         assert.equal(await page.execute("return window.__kitName"), "JessieMessage-sauvegardes-Windows.zip");
         assert.equal(source.requests.filter(r => r.path.endsWith("/windows-kit")).length, 1);
         await page.execute("window.__kitName=null");
+        await page.click('#verification-panel > summary');
         await tabUntil(page, '#verify-archive'); await page.key("\uE007");
         await waitUntil(() => page.execute("return window.__kitName === 'JessieMessage-verifier-Windows.zip'"), "offline verification download");
         const verification = source.requests.filter(r => r.path.endsWith("/verification-kit")); assert.equal(verification.length, 1);
@@ -60,6 +64,19 @@ test("real Chrome: backup destinations, keyboard controls, translations and kit 
     });
   } finally { await driver.close(); }
 });
+test("real Chrome: copied backups show a simple overview and keep technical controls closed", { timeout: 60000 }, async () => {
+  const driver = await startWebDriver(); let source, page;
+  try {
+    source = await fixture(false, true);
+    page = await driver.browser({ origin: source.origin, width: 320 }); await page.navigate("/admin/backups");
+    await waitUntil(() => page.execute("return document.getElementById('backup-overview-title').textContent === 'La dernière sauvegarde est copiée'"), "confirmed copy overview");
+    assert.equal(await page.execute("return ['verification-panel','backup-technical'].every(id=>!document.getElementById(id).open) && !document.querySelector('.destination-settings').open"), true);
+    assert.equal(source.requests.some(item => item.method !== "GET"), false, "opening the simple page neither re-pairs nor checks decryption");
+    source.changeReceipt(); await page.click('#refresh');
+    await waitUntil(() => page.execute("return document.getElementById('backup-overview-title').textContent === 'Tes copies automatiques'"), "mismatched receipt is not confirmed");
+    assert.equal(await page.execute("return document.querySelector('.copy-badge').textContent === 'Copie en attente' && !document.getElementById('backup-overview-copy').textContent.includes('Rien à faire')"), true);
+  } finally { try { await page?.close(); } finally { try { await source?.close(); } finally { await driver.close(); } } }
+});
 test("real Chrome: a login change during either kit suppresses its download and never repeats the request", { timeout: 90000 }, async () => {
   const driver = await startWebDriver();
   try {
@@ -69,6 +86,7 @@ test("real Chrome: a login change during either kit suppresses its download and 
     page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/backups");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden"), "initial session");
     await page.execute("document.addEventListener('click',e=>{if(e.target.closest('a[download]')){e.preventDefault();window.__downloaded=true;}})");
+    if (selector === '#verify-archive') await page.click('#verification-panel > summary');
     await tabUntil(page, selector); await page.key("\uE007");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden && document.getElementById('backup-status').textContent.length > 0 && !document.querySelector('[data-action=kit]').disabled"), "fresh session after rejected old response");
     assert.equal(await page.execute("return !!window.__downloaded"), false); assert.equal(source.requests.filter(r => r.path.endsWith(suffix)).length, 1);

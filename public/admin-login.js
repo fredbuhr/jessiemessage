@@ -1,5 +1,12 @@
 "use strict";
 const notificationReference = globalThis.JessieNotificationLink?.read() ?? null;
+// A closed list keeps login return links on enabled administration pages.
+const adminContinueTarget = (() => {
+  if (!location.search) return null;
+  const query = new URLSearchParams(location.search);
+  const allowed = new Set(["/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups"]);
+  return query.size === 1 && query.getAll("continue").length === 1 && allowed.has(query.get("continue")) ? query.get("continue") : null;
+})();
 
 const adminUI = globalThis.JessieI18n ?? {
   t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -106,6 +113,10 @@ function signedIn(session) {
     signedOut("Ta session a expiré. Reconnecte-toi pour continuer.");
     return;
   }
+  if (adminContinueTarget) {
+    location.replace(adminContinueTarget + (notificationReference ? `#notification=${notificationReference}` : ""));
+    return;
+  }
   invalidate();
   clearAccess();
   document.getElementById("admin-chat-link").hidden = true;
@@ -150,7 +161,7 @@ async function loadChatAccess() {
     adminUI.text(document.getElementById("admin-session-note"), "Tes conversations privées sont accessibles.");
   } catch (error) {
     if (error.stale || error.status === 404) return;
-    if (error.status === 401 || error.status === 403) signedOut(errorMessage(error));
+    if (error.status === 401) signedOut(errorMessage(error));
     else {
       adminUI.text(document.getElementById("admin-session-note"), "Les conversations n’ont pas pu être ouvertes. Réessaie quand la connexion revient.");
       document.getElementById("admin-chat-retry").hidden = false;

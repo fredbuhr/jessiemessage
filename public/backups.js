@@ -11,9 +11,10 @@ function clear() {
   clearReadiness(state); summary = null; busy = false; cancelCheck?.(); cancelCheck = null;
   for (const controller of controllers) controller.abort(); controllers.clear();
   for (const url of blobs) URL.revokeObjectURL(url); blobs.clear();
-  el("backup-content").hidden = true; el("destinations").replaceChildren(); el("capture-details").replaceChildren(); notice("");
+  el("backup-content").hidden = true; el("destinations").replaceChildren(); el("capture-details").replaceChildren();
+  el("backup-overview-title").textContent = ""; el("backup-overview-copy").textContent = ""; notice("");
 }
-function signOut() { clear(); location.replace("/admin/login"); }
+function signOut() { clear(); location.replace("/admin/login?continue=%2Fadmin%2Fbackups"); }
 async function request(path, { body, ticket = readinessTicket(state), zip = false } = {}) {
   const controller = new AbortController(); controllers.add(controller); const timer = setTimeout(() => controller.abort(), 20000);
   try {
@@ -55,20 +56,24 @@ function field(form, label, value, choices = null) {
   input.value = value; form.append(heading, input); return input;
 }
 function action(text, callback, className = "secondary") { const button = node("button", text, `button ${className}`); button.type = "button"; button.addEventListener("click", callback); return button; }
+const currentCopy = item => Boolean(item.enabled && item.paired && item.lastReceipt && summary.latestArchive
+  && item.lastReceipt.captureId === summary.latestArchive.id && item.lastReceipt.sha256 === summary.latestArchive.sha256
+  && item.lastReceipt.bytes === summary.latestArchive.bytes);
 function destination(item) {
   const card = node("article", undefined, "card destination"); card.dataset.id = item.id;
   const heading = node("div", undefined, "destination-heading"), title = node("h3"); title.textContent = item.label;
-  const current = item.lastReceipt && summary.latestArchive && item.lastReceipt.captureId === summary.latestArchive.id && item.lastReceipt.sha256 === summary.latestArchive.sha256;
+  const current = currentCopy(item);
   const status = !item.enabled ? "Copies suspendues" : !item.paired ? "À raccorder" : current ? "Dernière archive copiée" : "Copie en attente";
   heading.append(title, node("span", status, `copy-badge${current && item.enabled ? " current" : ""}`)); card.append(heading);
   const details = node("dl", undefined, "backup-details"); details.append(detail("Emplacement", ui.t(kinds[item.kind])), detail("Dernier contact du PC", date(item.lastSeenAt)), detail("Dernier reçu de copie vérifiée", date(item.lastReceipt?.receivedAt ?? null)));
-  card.append(details);
+  const settings = node("details", undefined, "destination-settings"); settings.append(node("summary", "Gérer cette destination"));
+  settings.append(details);
   const actions = node("div", undefined, "backup-actions");
   const kit = action("Raccorder Windows", () => void perform(`/api/admin/backups/destinations/${item.id}/windows-kit`, {}, "JessieMessage-sauvegardes-Windows.zip"), "primary"); kit.dataset.action = "kit";
   const toggle = action(item.enabled ? "Suspendre les copies" : "Reprendre les copies", () => void perform(`/api/admin/backups/destinations/${item.id}/settings`, { label: item.label, kind: item.kind, enabled: !item.enabled }));
-  toggle.dataset.action = "toggle"; actions.append(kit, toggle); card.append(actions);
-  card.append(node("p", "Un nouveau raccordement remplace l’autorisation de l’appareil précédent lorsqu’il aboutit. Le kit est personnel et valable 15 minutes.", "small-copy"));
-  const settings = node("details", undefined, "destination-settings"); settings.append(node("summary", "Modifier la destination"));
+  toggle.dataset.action = "toggle"; actions.append(kit, toggle); settings.append(actions);
+  settings.append(node("p", "Un nouveau raccordement remplace l’autorisation de l’appareil précédent lorsqu’il aboutit. Le kit est personnel et valable 15 minutes.", "small-copy"));
+  if (!item.paired) settings.open = true;
   const form = node("form"); form.dataset.id = item.id;
   const label = field(form, "Nom de la destination", item.label), kind = field(form, "Emplacement", item.kind, kinds);
   form.append(node("p", "Le dossier se choisit sur le PC avec le raccourci JessieMessage — Sauvegardes. Pour un autre appareil, télécharge son kit depuis cette carte.", "small-copy"));
@@ -80,6 +85,13 @@ function destination(item) {
 function render() {
   if (!summary || !state.session || !visible()) return;
   el("backup-content").hidden = false;
+  const copied = summary.destinations.some(currentCopy);
+  ui.text(el("backup-overview-title"), copied ? "La dernière sauvegarde est copiée" : "Tes copies automatiques");
+  ui.text(el("backup-overview-copy"), copied
+    ? "Rien à faire au quotidien. Les copies continuent quand le PC est allumé, connecté et ta session Windows ouverte."
+    : summary.destinations.some(item => item.enabled && item.paired)
+      ? "Le PC attend la prochaine copie. Laisse-le allumé, connecté et ta session Windows ouverte ; puis actualise cet écran."
+      : "Ouvre les réglages d’une destination pour activer ses copies ou raccorder ton PC.");
   const schedule = summary.schedule, time = `${String(schedule.hourUtc).padStart(2, "0")}:${String(schedule.minuteUtc).padStart(2, "0")} UTC`;
   el("capture-details").replaceChildren(detail("Prochaine capture quotidienne", schedule.enabled ? time : ui.t("Suspendue")), detail("Dernière archive chiffrée", date(summary.latestArchive?.startedAt ?? null)), detail("Archives disponibles", String(summary.archiveCount)));
   el("verify-archive").disabled = !summary.latestArchive;

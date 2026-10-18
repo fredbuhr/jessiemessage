@@ -60,5 +60,18 @@ globalThis.JessieI18n?.register({
   "Réglages enregistrés.": "Settings saved.",
   "La session a changé. Recommence l’action.": "The session changed. Start the action again.",
   "Trop de demandes. Patiente une minute puis réessaie.": "Too many requests. Wait one minute and try again.",
-  "L’action n’est pas confirmée. Vérifie l’état affiché avant de réessayer.": "The action is unconfirmed. Check the displayed state before trying again."
+  "L’action n’est pas confirmée. Vérifie l’état affiché avant de réessayer.": "The action is unconfirmed. Check the displayed state before trying again.",
+
+  "Tes copies arrivent automatiquement sur ton PC. Retrouve ici leur état et tes réglages.": "Your copies arrive automatically on your PC. Find their status and settings here.",
+  "EN UN COUP D’ŒIL": "AT A GLANCE",
+  "Pour changer de dossier, ouvre le raccourci JessieMessage — Sauvegardes sur le Bureau de ton PC.": "To change the folder, open the JessieMessage — Backups shortcut on your PC desktop.",
+  "Vérification ponctuelle sur le PC": "Occasional check on the PC",
+  "Détails techniques": "Technical details",
+  "Aide pour changer d’appareil": "Help with changing devices",
+  "Gérer cette destination": "Manage this destination",
+  "La dernière sauvegarde est copiée": "The latest backup has been copied",
+  "Tes copies automatiques": "Your automatic copies",
+  "Rien à faire au quotidien. Les copies continuent quand le PC est allumé, connecté et ta session Windows ouverte.": "No daily action is needed. Copies continue while the PC is on, online and your Windows session signed in.",
+  "Le PC attend la prochaine copie. Laisse-le allumé, connecté et ta session Windows ouverte ; puis actualise cet écran.": "The PC is waiting for the next copy. Keep it on, online and your Windows session signed in, then refresh this screen.",
+  "Ouvre les réglages d’une destination pour activer ses copies ou raccorder ton PC.": "Open a destination’s settings to enable its copies or connect your PC.",
 });

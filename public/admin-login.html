@@ -64,6 +64,11 @@
             <p id="admin-session-note" class="session-note" data-jm-i18n="L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.">L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.</p>
             <button id="admin-chat-retry" class="button button-secondary" type="button" hidden data-jm-i18n="Réessayer les conversations">Réessayer les conversations</button>
             <a id="admin-chat-link" class="button button-primary" href="/admin/messages" hidden data-jm-i18n="Ouvrir les conversations">Ouvrir les conversations</a>
+            <nav class="admin-shortcuts" aria-label="Accès rapides" data-jm-i18n-aria-label="Accès rapides">
+              <a class="button button-secondary" href="#access-tools" data-jm-i18n="Invitations et clients">Invitations et clients</a>
+              <a class="button button-secondary" href="/admin/backups" data-jm-i18n="Sauvegardes">Sauvegardes</a>
+              <a class="button button-secondary" href="/admin/readiness" data-jm-i18n="État du service">État du service</a>
+            </nav>
 
             <section id="access-tools" hidden aria-labelledby="invitation-title">
               <div class="access-section">
@@ -98,8 +103,6 @@
                 <div id="devices-list" class="access-list"></div>
                 <div class="actions"><button id="devices-refresh" class="button button-secondary" type="button" data-jm-i18n="Actualiser les appareils">Actualiser les appareils</button><button id="devices-next" class="button button-secondary" type="button" hidden data-jm-i18n="Voir d’autres appareils">Voir d’autres appareils</button></div>
               </details>
-              <p class="session-note"><a href="/admin/readiness" data-jm-i18n="État du service">État du service</a></p>
-              <p class="session-note"><a href="/admin/backups" data-jm-i18n="Sauvegardes">Sauvegardes</a></p>
               <div class="actions">
                 <button id="logout-button" class="button button-secondary" type="button" data-jm-i18n="Déconnecter cet appareil">Déconnecter cet appareil</button>
                 <button id="logout-all-button" class="button button-secondary" type="button" data-jm-i18n="Déconnecter tous mes appareils">Déconnecter tous mes appareils</button>

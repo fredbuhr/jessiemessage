@@ -6,6 +6,7 @@ import { createRequestAdmission } from "./http/admission.mjs";
 import { createShutdown } from "./lifecycle.mjs";
 import { createEntryHandler } from "./entry/http.mjs";
 import { createRequestOriginGuard, isOriginFormTarget, RequestOriginError } from "./http/request-origin.mjs";
+import { sessionToken } from "./auth/http.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
 const PRIMARY_ORIGIN = "https://jessiemessage.com";
@@ -85,6 +86,9 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
   const privateHandlers = [backupHandler, notificationsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
+  const adminPages = new Map([["/admin", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"],
+    ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"]]);
+  const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, readinessHandler, backupHandler };
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
     "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
     "/crm.js", "/crm-model.js", "/crm.css", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
@@ -154,6 +158,17 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
       return;
     }
     try {
+      // Strict cookies are deliberately absent on a navigation from another
+      // site. First load a public same-origin document; its session fetch can
+      // prove the existing login. Never let this navigation erase that cookie.
+      const pageHandlers = activeHandlers === legacyChain ? legacyHandlers : primaryPageHandlers;
+      if (["GET", "HEAD"].includes(method) && pageHandlers?.authHandler && pageHandlers[adminPages.get(pathname)]
+        && (request.headers["sec-fetch-mode"] === "navigate" || /(?:^|[,;\s])text\/html(?:$|[,;\s])/i.test(request.headers.accept ?? ""))
+        && !sessionToken(request)) {
+        const destination = pathname === "/admin" ? "/admin/login" : `/admin/login?continue=${encodeURIComponent(pathname)}`;
+        reply(response, method, 303, "text/html; charset=utf-8", "", { Location: destination });
+        return;
+      }
       for (const handler of activeHandlers) {
         try { if (await handler(request, response)) return; }
         catch {
