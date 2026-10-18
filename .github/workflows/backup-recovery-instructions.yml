@@ -44,7 +44,7 @@ jobs:
           $jmErrors = $null
           $jmScript = (Resolve-Path 'scripts/JessieMessage-recuperation-052.ps1').Path
           $null = [System.Management.Automation.Language.Parser]::ParseFile($jmScript, [ref]$jmTokens, [ref]$jmErrors)
-          if ($jmErrors.Count -ne 0) { throw ($jmErrors | Out-String) }
+          if ($jmErrors.Count -ne 0) { throw (($jmErrors | ForEach-Object { 'Line ' + $_.Extent.StartLineNumber + ': ' + $_.Message }) -join "`n") }
           Write-Output 'Windows PowerShell 5.1 syntax verified; no key generated.'
       - name: Verify harmless native warnings and failed native commands
         shell: powershell
@@ -71,7 +71,7 @@ jobs:
           $jmTokens = $null
           $jmErrors = $null
           $null = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/JessieMessage-sauvegardes-055.ps1').Path, [ref]$jmTokens, [ref]$jmErrors)
-          if ($jmErrors.Count -ne 0) { throw ($jmErrors | Out-String) }
+          if ($jmErrors.Count -ne 0) { throw (($jmErrors | ForEach-Object { 'Line ' + $_.Extent.StartLineNumber + ': ' + $_.Message }) -join "`n") }
           & ./tests/windows/backup-copy.ps1
           if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Windows collector verification failed.' }
       - name: Create the actual Windows ZIP with a synthetic expired pairing code

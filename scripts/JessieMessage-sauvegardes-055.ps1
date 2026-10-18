@@ -49,8 +49,8 @@ function Read-JmConfiguration {
     $jmFile = Get-Item -LiteralPath (Join-Path $Directory 'configuration.xml') -Force
     if ($jmFile.Length -gt 32768 -or ($jmFile.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Configuration non valide.' }
     $jmConfig = Import-Clixml -LiteralPath $jmFile.FullName
-    if ($jmConfig.Version -ne 1 -or $jmConfig.DestinationId -notmatch '^[a-f0-9]{32}$' -or $jmConfig.LocationId -notmatch '^[a-f0-9]{32}$'
-        -or $jmConfig.Credential -isnot [Management.Automation.PSCredential] -or $jmConfig.Credential.UserName -ne $jmConfig.DestinationId) { throw 'Raccordement non valide.' }
+    if ($jmConfig.Version -ne 1 -or $jmConfig.DestinationId -notmatch '^[a-f0-9]{32}$' -or $jmConfig.LocationId -notmatch '^[a-f0-9]{32}$' -or
+        $jmConfig.Credential -isnot [Management.Automation.PSCredential] -or $jmConfig.Credential.UserName -ne $jmConfig.DestinationId) { throw 'Raccordement non valide.' }
     return $jmConfig
 }
 function Invoke-JmApi {
@@ -122,9 +122,9 @@ function Test-JmArchive {
 }
 function Assert-JmArchive {
     param($Archive)
-    if ($Archive.id -cnotmatch '^capture-[1-9][0-9]{0,14}-[a-f0-9]{16}$' -or $Archive.sha256 -cnotmatch '^[a-f0-9]{64}$'
-        -or $Archive.bytes -lt 1 -or $Archive.bytes -gt 2151677952L
-        -or $Archive.filename -cne ('JessieMessage-' + $Archive.id + '.tar.gz.gpg')) { throw 'Catalogue non valide.' }
+    if ($Archive.id -cnotmatch '^capture-[1-9][0-9]{0,14}-[a-f0-9]{16}$' -or $Archive.sha256 -cnotmatch '^[a-f0-9]{64}$' -or
+        $Archive.bytes -lt 1 -or $Archive.bytes -gt 2151677952L -or
+        $Archive.filename -cne ('JessieMessage-' + $Archive.id + '.tar.gz.gpg')) { throw 'Catalogue non valide.' }
 }
 function Copy-JmArchive {
     param([string]$Directory, $Archive, [string]$Token)
@@ -220,8 +220,8 @@ function Start-JmBackup {
             $jmPairFile = Get-Item -LiteralPath (Join-Path $PSScriptRoot 'raccordement.json') -Force
             if ($jmPairFile.Length -gt 4096 -or ($jmPairFile.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Kit non valide.' }
             $jmPair = Get-Content -LiteralPath $jmPairFile.FullName -Raw | ConvertFrom-Json
-            if ($jmPair.version -ne 1 -or $jmPair.destinationId -cnotmatch '^[a-f0-9]{32}$' -or $jmPair.pairingCode -cnotmatch '^[A-Za-z0-9_-]{43}$'
-                -or $jmPair.origin -cne $script:JmOrigin -or $jmPair.expiresAt -lt [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) { throw 'Kit expire. Telecharger un nouveau kit depuis Sauvegardes sur le site.' }
+            if ($jmPair.version -ne 1 -or $jmPair.destinationId -cnotmatch '^[a-f0-9]{32}$' -or $jmPair.pairingCode -cnotmatch '^[A-Za-z0-9_-]{43}$' -or
+                $jmPair.origin -cne $script:JmOrigin -or $jmPair.expiresAt -lt [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) { throw 'Kit expire. Telecharger un nouveau kit depuis Sauvegardes sur le site.' }
             $jmFolder = Select-JmFolder -Current (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'JessieMessage-sauvegardes') -Installing $true
             if ([string]::IsNullOrWhiteSpace($jmFolder)) { return }
             $jmDirectory = Join-Path $env:LOCALAPPDATA ('JessieMessage\Sauvegardes\' + $jmPair.destinationId)
