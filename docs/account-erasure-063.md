@@ -18,6 +18,8 @@ La bibliothèque est implémentée et doit être éprouvée sur des comptes fict
 
 Le journal utilise les protections communes : répertoire privé ancré Linux, fichier 0600, JSON canonique borné, verrou court, révision optimiste, fsync et remplacement atomique. AES-256-GCM, sous-clé HKDF distincte dérivée de la clé CRM existante ; AAD liée au compte, à la base, à la racine média et à la révision. Aucun nouveau secret persistant ni migration SQL. Le nom opaque est indépendant de la clé de chiffrement. Phases et curseur sont monotones ; un reçu terminé n’est pas remis à zéro.
 
+Une lecture de récupération paginée retrouve les identifiants à partir des journaux chiffrés, même si la ligne SQL a déjà disparu avant l’accusé final. Elle utilise le même répertoire ancré, vérifie que le nom correspond à l’identité déchiffrée et ne crée aucun index nominatif en clair. Le raccordement du superviseur pourra donc reprendre les travaux sans dépendre de l’onglet d’administration resté ouvert.
+
 ## Données partagées
 
 Les photos appartenant à Jessie et réutilisées dans d’autres échanges restent dans sa bibliothèque. Les liens de la conversation fermée sont retirés ; les autres échanges et fichiers sont conservés. Une photo appartenant au client mais liée à une autre conversation ou campagne est une incohérence bloquante, pas une autorisation d’effacer des données étrangères.

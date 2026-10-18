@@ -9,7 +9,7 @@ import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { openPayload, sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
 import { createErasureStore } from "../server/data/erasure-store.mjs";
-import { createErasureJournal } from "../server/data/erasure-journal.mjs";
+import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
 import { createAccountErasure } from "../server/data/erasure.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import { erasureDirectory } from "./fixtures/erasure-files.mjs";
@@ -210,7 +210,12 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       } };
       await assert.rejects(engine(ambiguousPool).resume({ clientId: hex(f.first) })); assert.equal(injected, true);
       if (phase === "prepare") { assert.equal((await journal(f)).record.phase, "requested"); for (const object of f.objects) assert.ok((await readdir(mediaRoot)).some(name => name.includes(hex(object.storageKey)))); }
-      if (phase === "finish") assert.equal((await connection.query("SELECT 1 FROM users WHERE id = ?", [f.first])).length, 0);
+      if (phase === "finish") {
+        assert.equal((await connection.query("SELECT 1 FROM users WHERE id = ?", [f.first])).length, 0);
+        const discovered = await readErasureJournalBatch({ directory: journalRoot, key: journalKey,
+          binding: { database: options.database, rootFingerprint: hex(rootFingerprint) } });
+        assert.equal(discovered.jobs.find(x => x.clientId === hex(f.first))?.phase, "files_erased");
+      }
       assert.equal((await engine().resume({ clientId: hex(f.first) })).completed, true);
     });
     await t.test("an administrator target or nonexistent subject cannot create a destructive intent", async () => {
@@ -223,7 +228,8 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       await connection.query("UPDATE messages SET sender_id = ? WHERE id = ?", [f.first, f.ownMessage]);
     });
     await t.test("a client-owned photo linked outside its conversation cannot be erased", async () => {
-      const f = await seed(), mid = await message(f.peerConv, f.peer, "client", 3, f.own), before = await databaseHash();
+      const f = await seed(), sequence = Number((await connection.query("SELECT MAX(sequence_no) AS n FROM messages WHERE conversation_id = ?", [f.peerConv]))[0].n) + 1;
+      const mid = await message(f.peerConv, f.peer, "client", sequence, f.own), before = await databaseHash();
       await assert.rejects(engine().resume({ clientId: hex(f.first) }), { code: "ERASURE_BINDINGS" }); assert.equal(await databaseHash(), before);
       await connection.query("DELETE FROM message_media WHERE message_id = ?", [mid]);
     });

@@ -1,8 +1,11 @@
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from "node:crypto";
+import { opendir } from "node:fs/promises";
 import { createPrivateJsonStore } from "../files/private-json.mjs";
+import { withPrivateDirectory } from "../files/private-directory.mjs";
 import { AccountErasureError, erasureBinding, erasureFields, erasureId, erasureRecord, erasureTransition, failErasure } from "./erasure-state.mjs";
 
 const namespace = "jessiemessage:account-erasure:https://jessiemessage.com:v1";
+const journalName = (binding, clientId) => `erasure-${createHash("sha256").update(`${namespace}:${JSON.stringify(binding)}:${clientId}`).digest("hex")}`;
 const revision = value => {
   if (!Number.isSafeInteger(value) || value < 0 || value >= Number.MAX_SAFE_INTEGER) failErasure("ERASURE_INPUT"); return value;
 };
@@ -27,15 +30,18 @@ function validate(value) {
  * Key-independent opaque names ensure a wrong key cannot hide an existing job. */
 export function createErasureJournal({ directory, key: sourceKey, binding, clientId }, internal = {}) {
   erasureId(clientId); binding = erasureBinding(binding);
+  return journalFile({ directory, sourceKey, binding, clientId, name: journalName(binding, clientId) }, internal);
+}
+function journalFile({ directory, sourceKey, binding, clientId, name }, internal) {
   if (!Buffer.isBuffer(sourceKey) || sourceKey.length !== 32) failErasure("ERASURE_INPUT");
-  const context = `${namespace}:${JSON.stringify(binding)}:${clientId}`;
-  const name = `erasure-${createHash("sha256").update(context).digest("hex")}`;
+  const context = `${namespace}:${JSON.stringify(binding)}:${name}`;
   const key = Buffer.from(hkdfSync("sha256", sourceKey, Buffer.alloc(0), Buffer.from(namespace), 32));
   let closed = false;
   const available = () => { if (closed) failErasure(); };
   const check = value => {
     const record = erasureRecord(value);
-    if (record.clientId !== clientId || JSON.stringify(record.binding) !== JSON.stringify(binding)) failErasure("ERASURE_CHANGED");
+    if (clientId !== null && record.clientId !== clientId || journalName(binding, record.clientId) !== name
+      || JSON.stringify(record.binding) !== JSON.stringify(binding)) failErasure("ERASURE_CHANGED");
     return record;
   };
   const store = createPrivateJsonStore({ name: `${name}.json`, lock: `${name}.lock`, maxBytes: 4096, validate,
@@ -76,4 +82,36 @@ export function createErasureJournal({ directory, key: sourceKey, binding, clien
     },
     close() { closed = true; key.fill(0); },
   });
+}
+
+/** Read-only recovery discovery, including a job whose SQL account is already
+ * gone. No plaintext identity index or remembered browser ID is required. */
+export async function readErasureJournalBatch({ directory, key, binding, afterName = null, limit = 25 }, internal = {}) {
+  binding = erasureBinding(binding);
+  const pattern = /^erasure-[a-f0-9]{64}\.json$/;
+  if (!Buffer.isBuffer(key) || key.length !== 32 || afterName !== null && (typeof afterName !== "string" || !pattern.test(afterName))
+    || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) failErasure("ERASURE_INPUT");
+  try {
+    return await (internal.withDirectory ?? withPrivateDirectory)(directory, async scope => {
+      await scope.assertReady(); const names = []; let entries = 0;
+      const handle = await opendir(scope.path);
+      for await (const entry of handle) {
+        if (++entries > 10000) failErasure("ERASURE_LIMIT");
+        if (!entry.name.startsWith("erasure-") || !entry.name.endsWith(".json")) continue;
+        if (!pattern.test(entry.name)) failErasure("ERASURE_INPUT");
+        if (afterName === null || entry.name > afterName) names.push(entry.name);
+      }
+      names.sort(); const jobs = [];
+      for (const filename of names.slice(0, limit)) {
+        const file = journalFile({ directory, sourceKey: key, binding, clientId: null, name: filename.slice(0, -5) },
+          { withDirectory: (_directory, work) => work(scope) });
+        try {
+          const { revision, record } = await file.read();
+          if (record === null) failErasure("ERASURE_CHANGED");
+          jobs.push({ clientId: record.clientId, phase: record.phase, revision, updatedAt: record.updatedAt });
+        } finally { file.close(); }
+      }
+      await scope.assertReady(); return { jobs, nextCursor: names.length > limit ? names[limit - 1] : null };
+    });
+  } catch (error) { if (error instanceof AccountErasureError) throw error; failErasure(); }
 }

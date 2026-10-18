@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { chmod, link, lstat, readFile, readdir, statfs, symlink, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { createErasureJournal } from "../server/data/erasure-journal.mjs";
+import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
 import { erasureDirectory, withErasureDirectory } from "./fixtures/erasure-files.mjs";
 
 const key = Buffer.alloc(32, 7), clientId = "a".repeat(32), binding = { database: "synthetic_private_database", rootFingerprint: "b".repeat(64) };
@@ -82,6 +82,20 @@ test("copied ciphertext cannot be rebound to a different account, database or ph
 test("a closed journal destroys its derived key and refuses further reads or writes", async t => {
   const f = await fixture(t); await f.journal.save(record(), 0, allow); f.journal.close();
   await assert.rejects(f.journal.read()); await assert.rejects(f.journal.save(record(), 1, allow)); assert.deepEqual(key, Buffer.alloc(32, 7));
+});
+test("recovery discovery finds bounded jobs from encrypted files without an in-memory subject index", async t => {
+  const f = await fixture(t), ids = ["a", "b", "c"].map(x => x.repeat(32));
+  for (const clientId of ids) {
+    const journal = createErasureJournal({ ...f.options, clientId }, { withDirectory: withErasureDirectory });
+    try { await journal.save({ ...record(), clientId }, 0, allow); } finally { journal.close(); }
+  }
+  await writeFile(path.join(f.directory, "unrelated.json"), "unrelated", { mode: 0o600 });
+  const input = { directory: f.directory, key, binding, limit: 2 }, internal = { withDirectory: withErasureDirectory };
+  const first = await readErasureJournalBatch(input, internal); assert.equal(first.jobs.length, 2); assert.ok(first.nextCursor);
+  const second = await readErasureJournalBatch({ ...input, afterName: first.nextCursor }, internal); assert.equal(second.jobs.length, 1); assert.equal(second.nextCursor, null);
+  assert.deepEqual([...first.jobs, ...second.jobs].map(x => x.clientId).sort(), ids);
+  await assert.rejects(readErasureJournalBatch({ ...input, key: Buffer.alloc(32, 8) }, internal));
+  await assert.rejects(readErasureJournalBatch({ ...input, afterName: "../" }, internal));
 });
 let procfs = false; try { procfs = (await statfs("/proc/self/fd", { bigint: true })).type === 0x9fa0n; } catch {}
 test("native Linux anchoring persists the actual erasure receipt without a test directory adapter", { skip: !procfs }, async t => {

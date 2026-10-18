@@ -6,7 +6,7 @@ import path from "node:path";
 // separately and mandatorily in Linux CI. This seam is never runtime configuration.
 export async function withErasureDirectory(directory, work) {
   const before = await lstat(directory, { bigint: true });
-  const scope = { file: name => path.join(directory, name),
+  const scope = { path: directory, file: name => path.join(directory, name),
     async assertReady() {
       const after = await lstat(directory, { bigint: true });
       if (after.ino !== before.ino || after.dev !== before.dev || (after.mode & 0o7777n) !== 0o700n) throw new Error("Synthetic directory changed");
