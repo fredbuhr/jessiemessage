@@ -1,6 +1,6 @@
 # Fermeture d’un compte — parcours 0.64
 
-**Étape 3/6 : parcours livré dans le code, effacement réel désactivé.** Le runtime hébergé reste la version 0.62. Aucun compte réel, clé, schéma, configuration d’hébergement ou outil PC n’a été modifié pour ce lot. Les preuves automatiques seront consignées dans `verification-proofs/jm064-verification.json` après les cinq jobs CI de la source, de la PR et de main.
+**Étape 3/6 : parcours livré dans le code, effacement réel désactivé.** Source `2c108a56fe9fb00f4791881decef7f6373ae5cc4`, arbre `28a532fd59e98ee9bad0a0801d955b3610a6ec5e`, [PR #80](https://github.com/fredbuhr/jessiemessage/pull/80), merge `9eab134017d7a39b9ad8bcf3da099217af1e174f`, repère `release/0.64.0`. Les cinq jobs CI de la source, de la PR et de main passent ; voir les [preuves exactes](verification-proofs/jm064-verification.json). Le runtime hébergé reste la version 0.62. Aucun compte réel, clé, schéma, configuration d’hébergement ou outil PC n’a été modifié pour ce lot.
 
 ## Le parcours prévu
 
@@ -41,11 +41,15 @@ Les callbacks de test représentent ces responsabilités ; ils ne sont pas des p
 
 ## Validation
 
+Résultats de la source figée et de main : **2 615 réussites générales, 28 wrappers SQL ignorés, zéro échec** ; **404/404 sur MariaDB 10.11 et 404/404 sur 11.4**, dont dix-sept cas d’effacement en comptant le parent ; **156/156 Chrome**, plus l’authentification HTTPS/MFA ; syntaxe de **490 sources** et build conformes. Les runs sont `39172543066` (source), `39172546970` (PR) et `39172787533` (main).
+
 Les tests HTTP exercent les vrais fichiers chiffrés : lecture sans intention, confirmation exacte, répétition, changement de pseudo, révocation avant publication, réponse tardive incertaine, fermeture du handler, refus Origin/CSRF/type/taille et isolement de l’ancienne origine. Le mode désactivé reste vérifiable.
 
 Un vrai sous-processus passe par le shim IPC et l’arrêt applicatif : requête encore active, producteur, transport et pool sont drainés avant l’exécution. Les cas verrou occupé, sortie forcée/non zéro, source/lease changée et annulation ne reprennent pas les producteurs. Les tests de superviseur couvrent priorité, concurrence, reprise avant écoute et erreurs sans nouvelle tentative.
 
 Le scénario MariaDB supplémentaire crée uniquement des comptes fictifs dans une base loopback explicitement jetable. Il vérifie un POST confirmé sans modification SQL, un inventaire privilégié réel, le cycle IPC, les fichiers chiffrés retirés, les autres conversations inchangées et le blocage après réapparition SQL d’un compte fermé.
+
+Il construit aussi le **vrai serveur configuré**, avec les demandes désactivées et sans lancer ses producteurs externes : registre vide et reçus terminés acceptés, intention inachevée et identité restaurée refusées. Le compte en attente sans conversation dispose de son scénario propre. Ces contrôles ne sont pas une activation de la fonction sur l’hébergement.
 
 Un trigger fictif bloque le précontrôle privilégié avant l’arrêt du processus. Sur MariaDB 10.11/11.4, son nom peut être visible au compte DML alors que sa définition et son propriétaire sont masqués ; le test n’assimile pas cette visibilité partielle à une inspection complète. Voir la [documentation MariaDB de TRIGGERS](https://mariadb.com/docs/server/reference/system-tables/information-schema/information-schema-tables/information-schema-triggers-table). Les données de ce scénario gardent une horloge fixe, y compris les colonnes mises à jour automatiquement par SQL.
 

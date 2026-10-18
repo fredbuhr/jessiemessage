@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "release": "0.64.0",
+  "iteration": {
+    "number": 3,
+    "totalPlanned": 6,
+    "code": "merged_verified",
+    "productionActivation": "not_bound",
+    "next": 4
+  },
+  "source": {
+    "head": "2c108a56fe9fb00f4791881decef7f6373ae5cc4",
+    "tree": "28a532fd59e98ee9bad0a0801d955b3610a6ec5e",
+    "merge": "9eab134017d7a39b9ad8bcf3da099217af1e174f",
+    "pr": 80,
+    "releaseBranch": "release/0.64.0",
+    "mergeTreeMatchesSource": true
+  },
+  "observedAt": "2026-10-18T22:37:30.365Z",
+  "deployment": {
+    "status": "not_activated",
+    "runtimeLastObservedVersion": "0.62.0",
+    "runtimeReference": "../activation-proofs/jm062-activation.json",
+    "hostingChangedByThisRelease": false,
+    "liveAccountsDeleted": 0,
+    "schemaMigrationsAdded": 0,
+    "persistentKeysAdded": 0,
+    "realEmailsMessagesOrPushSent": 0,
+    "pcToolChanged": false
+  },
+  "implementation": {
+    "adminJourney": "private_primary_only_fr_en",
+    "explicitConfirmation": "selected_client_name_copy_acknowledgement_and_FERMER",
+    "intent": "existing_encrypted_erasure_journal_outside_sql",
+    "httpSqlMutation": false,
+    "repeatedRequests": "same_intent_or_conflict_then_read",
+    "responseRecovery": "get_only_at_application_level",
+    "maintenance": "real_managed_child_exit_zero_without_signal_and_shared_capture_lock",
+    "startupBarrier": "before_listener_and_producers_even_when_requests_disabled",
+    "restoredCompletedAccount": "blocks_without_silent_redeletion",
+    "defaultService": "disabled",
+    "productionExecutionOwnerInstalled": false,
+    "productionInspectionBindingInstalled": false,
+    "productionRegistryContinuityBindingInstalled": false
+  },
+  "scope": {
+    "testedOnlyWithSyntheticData": true,
+    "administratorTargets": "refused",
+    "otherClientsAndSharedAdministratorMedia": "preserved",
+    "backupCopies": "separate_not_erased",
+    "externalCopies": "not_checked"
+  },
+  "ci": {
+    "sourceRun": 39172543066,
+    "prRun": 39172546970,
+    "mainRun": 39172787533,
+    "allFiveJobsSucceededEach": true,
+    "general": {
+      "total": 2643,
+      "passed": 2615,
+      "skippedSqlWrappers": 28,
+      "failed": 0
+    },
+    "mariadb": {
+      "10.11": {
+        "total": 404,
+        "passed": 404,
+        "failed": 0,
+        "skipped": 0
+      },
+      "11.4": {
+        "total": 404,
+        "passed": 404,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "erasureIntegrationCasesIncludingParentPerDatabase": 17,
+    "configuredServerBarrier": "empty_and_completed_accepted_pending_and_restored_rejected",
+    "privilegedSqlPreflight": "real_trigger_rejected_before_process_stop_partial_dml_metadata_observed",
+    "chrome": {
+      "total": 156,
+      "passed": 156,
+      "failed": 0,
+      "skipped": 0
+    },
+    "integratedHttpsMfa": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "syntaxSources": 490,
+    "build": "passed",
+    "actualProcfsAnchoring": "passed_in_mandatory_linux_ci",
+    "sourceJobs": [
+      {
+        "id": 117808443169,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "conclusion": "success"
+      },
+      {
+        "id": 117808443395,
+        "name": "verify",
+        "conclusion": "success"
+      },
+      {
+        "id": 117808443407,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success"
+      },
+      {
+        "id": 117808443471,
+        "name": "MariaDB 10.11",
+        "conclusion": "success"
+      },
+      {
+        "id": 117808443623,
+        "name": "MariaDB 11.4",
+        "conclusion": "success"
+      }
+    ],
+    "prJobs": [
+      {
+        "id": 117808455142,
+        "name": "verify",
+        "conclusion": "success"
+      },
+      {
+        "id": 117808455234,
+        "name": "MariaDB 10.11",
+        "conclusion": "success"
+      },
+      {
+        "id": 117808455242,
+        "name": "MariaDB 11.4",
+        "conclusion": "success"
+      },
+      {
+        "id": 117808455309,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "conclusion": "success"
+      },
+      {
+        "id": 117808455364,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success"
+      }
+    ],
+    "mainJobs": [
+      {
+        "id": 117809161579,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "conclusion": "success"
+      },
+      {
+        "id": 117809161740,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success"
+      },
+      {
+        "id": 117809161779,
+        "name": "MariaDB 11.4",
+        "conclusion": "success"
+      },
+      {
+        "id": 117809161814,
+        "name": "verify",
+        "conclusion": "success"
+      },
+      {
+        "id": 117809161826,
+        "name": "MariaDB 10.11",
+        "conclusion": "success"
+      }
+    ],
+    "mainEvidence": {
+      "Chrome HTTPS authentication with MariaDB": {
+        "id": 117809161579,
+        "counts": {
+          "tests": 1,
+          "pass": 1,
+          "fail": 0,
+          "skipped": 0
+        }
+      },
+      "Chrome keyboard and chat lifecycle": {
+        "id": 117809161740,
+        "counts": {
+          "tests": 156,
+          "pass": 156,
+          "fail": 0,
+          "skipped": 0
+        }
+      },
+      "MariaDB 11.4": {
+        "id": 117809161779,
+        "counts": {
+          "tests": 404,
+          "pass": 404,
+          "fail": 0,
+          "skipped": 0
+        }
+      },
+      "verify": {
+        "id": 117809161814,
+        "counts": {
+          "tests": 2643,
+          "pass": 2615,
+          "fail": 0,
+          "skipped": 28
+        },
+        "syntaxSources": 490,
+        "build": "passed"
+      },
+      "MariaDB 10.11": {
+        "id": 117809161826,
+        "counts": {
+          "tests": 404,
+          "pass": 404,
+          "fail": 0,
+          "skipped": 0
+        }
+      }
+    }
+  },
+  "remainingBeforeActivation": [
+    "Protect current privacy preparation and erasure registry through coherent backup and restore, including binding changes and lost/older registry detection.",
+    "Bind real privileged executable-object inspection and the complete production exclusion; test startup and capture/closure races.",
+    "Verify current personal decryption and native isolated restoration without regenerating or moving the private key.",
+    "Retain completed receipts independently; never reopen a restored account with pre-barrier source."
+  ]
+}
