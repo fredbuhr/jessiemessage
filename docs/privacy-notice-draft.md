@@ -1,6 +1,6 @@
-# Notice de confidentialité — brouillon FR/EN 0.41
+# Notice de confidentialité — brouillon FR/EN 0.61
 
-**Document de préparation non publié.** Les champs `[À COMPLÉTER Dxx]` et `[TO COMPLETE Dxx]` se rapportent aux [décisions du lot 0.41](data-privacy-preparation.md). Les compléter de façon concordante avant une publication dans le produit ; ne pas servir ce fichier tel quel. Ce brouillon décrit le service actuel, avec CRM et diffusions désactivés. La mise en œuvre de futurs traitements nécessitera une information actualisée.
+**Document de préparation non publié.** Les champs `[À COMPLÉTER Dxx]` et `[TO COMPLETE Dxx]` se rapportent aux [décisions du lot 0.41](data-privacy-preparation.md). Les compléter de façon concordante avant une publication dans le produit ; ne pas servir ce fichier tel quel. Ce brouillon décrit la messagerie actuelle, les fiches privées et les communications individuelles. Il est relu dans la préparation privée 0.61 ; il reste à compléter avant publication.
 
 ## Français — tes données dans JessieMessage
 
@@ -16,6 +16,7 @@ JessieMessage est un espace privé sur invitation pour échanger avec Jess. Le r
 | Échanger avec Jess | Messages, photos envoyées, dates et état de lecture ; les photos sont normalisées et leurs métadonnées retirées | [À COMPLÉTER D02 ; D03 pour les données sensibles] |
 | Maintenir et protéger le service | Sessions et activités de connexion, preuves de vérification/récupération, compteurs anti-abus et données techniques nécessaires | [À COMPLÉTER D02 ; intérêt précis si retenu] |
 | Envoyer les notifications choisies | Inscription technique de ton appareil, langue, référence du message et état d’envoi | [À COMPLÉTER D02] |
+| Assurer le suivi de nos échanges | Informations de suivi ajoutées par les personnes autorisées (notes, classement et rappels), historique des communications | [À COMPLÉTER D02 et D03] |
 | Répondre à tes demandes et signalements | Coordonnées communiquées, objet de la demande et éléments nécessaires à son traitement | [À COMPLÉTER D02] |
 
 Les informations de ton compte viennent de toi, de ton usage du service et des décisions d’admission de Jess. **[À COMPLÉTER D07 : confirmer toute autre source, notamment lors d’une invitation.]** Les données indispensables à l’accès et les conséquences de leur absence seront précisées ici : **[À COMPLÉTER D02]**. Envoyer des messages ou photos et activer les notifications restent des choix. N’envoie pas le mot de passe ou le code de connexion d’un compte par courrier.
@@ -35,6 +36,8 @@ Les messages et photos sont chiffrés côté serveur, puis déchiffrés pour leu
 Supprimer ton message retire son contenu de la conversation conservée dans la base active ; une trace de suppression reste. Une photo de bibliothèque, ses autres partages, les téléchargements des destinataires et les sauvegardes sont des copies distinctes. **[À COMPLÉTER D05–D06 : traitement retenu pour une demande d’effacement, copies, sauvegardes et restauration.]** Une demande reçue n’est pas une preuve d’effacement réalisé.
 
 ### Tes choix et tes droits
+
+Tu peux télécharger ta conversation et les photos partagées depuis « Télécharger ma conversation ». Cette archive ne couvre pas toutes les données du compte.
 
 Tu peux demander l’accès à tes données, leur rectification, leur effacement ou la limitation de leur utilisation. Les droits d’opposition et de portabilité et le retrait d’un consentement s’exercent selon le traitement concerné : **[À COMPLÉTER D02–D03 : modalités applicables]**. Écris à **contact@jessiemessage.com** ; indique le compte et la demande sans joindre spontanément une pièce d’identité. Si une vérification est nécessaire, nous préciserons les éléments utiles.
 
@@ -60,6 +63,7 @@ JessieMessage is a private, invitation-only space for talking with Jess. The con
 | Talking with Jess | Messages, uploaded photos, dates and read status; photos are normalised and their metadata removed | [TO COMPLETE D02; D03 for sensitive data] |
 | Maintaining and protecting the service | Sessions and sign-in activity, verification/recovery records, anti-abuse counters and necessary technical data | [TO COMPLETE D02; specific interest if relied upon] |
 | Sending notifications you choose | Your device’s technical subscription, language, message reference and delivery status | [TO COMPLETE D02] |
+| Following up on our exchanges | Follow-up information added by authorised people (notes, categorisation and reminders), communication history | [TO COMPLETE D02 and D03] |
 | Responding to requests and reports | Contact details provided, the request and information needed to handle it | [TO COMPLETE D02] |
 
 Your account data comes from you, your use of the service and Jess’s admission decisions. **[TO COMPLETE D07: confirm any other source, including invitations.]** Required account information and the consequences of not providing it will be specified here: **[TO COMPLETE D02]**. Sending messages or photos and enabling notifications are optional. Do not email an account password or sign-in code.
@@ -79,6 +83,8 @@ Messages and photos are encrypted on the server and decrypted for authorised dis
 Deleting your message removes its content from the conversation stored in the active database; a deletion marker remains. A library photo, its other shares, recipients’ downloads and backups are separate copies. **[TO COMPLETE D05–D06: treatment of erasure requests, copies, backups and restoration.]** Receiving a request is not evidence that erasure has been completed.
 
 ### Your choices and rights
+
+You can download your conversation and shared photos using “Download my conversation”. This archive does not include all account data.
 
 You can request access, rectification, erasure or restriction of the use of your data. Objection, portability and withdrawal of consent apply according to the processing concerned: **[TO COMPLETE D02–D03: applicable arrangements]**. Email **contact@jessiemessage.com**, identifying the account and request without sending an identity document unless asked. If verification is necessary, we will explain what is needed.
 
