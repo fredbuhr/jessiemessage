@@ -35,8 +35,9 @@ test("real Chrome: backup destinations, keyboard controls, translations and kit 
   const driver = await startWebDriver();
   try {
     for (const language of ["fr", "en"]) for (const width of [320, 375, 1280]) await t.test(`${language} ${width}px`, async () => {
-      const source = await fixture(), page = await driver.browser({ origin: source.origin, width });
+      const source = await fixture(); let page;
       try {
+        page = await driver.browser({ origin: source.origin, width });
         await page.navigate("/__fixture"); await page.execute("sessionStorage.setItem('jessiemessage.language',arguments[0])", language); await page.navigate("/admin/backups");
         await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden && document.querySelectorAll('.destination').length === 1"), "private destinations");
         assert.equal(await page.execute("return document.querySelector('h1').textContent"), language === "fr" ? "Sauvegardes" : "Backups");
@@ -55,7 +56,7 @@ test("real Chrome: backup destinations, keyboard controls, translations and kit 
         assert.deepEqual(JSON.parse(verification[0].text), { captureId: "capture-1792340000000-cccccccccccccccc" });
         assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && document.getElementById('verify-archive').getBoundingClientRect().height >= 44"), true);
         assert.equal(await page.execute("return document.body.textContent.includes('A'.repeat(43)) || Object.keys(localStorage).length > 0"), false);
-      } finally { await page.close(); await source.close(); }
+      } finally { try { await page?.close(); } finally { await source.close(); } }
     });
   } finally { await driver.close(); }
 });
