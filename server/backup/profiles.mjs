@@ -22,3 +22,22 @@ export function checkpointBackupProfile(name, application = false) {
   if (name !== undefined && !CHECKPOINT_RUNTIME_PROFILES.includes(name) || typeof application !== "boolean") return null;
   return photoBackupProfile(`${name ?? "photos-notify"}${application ? "-application" : ""}`);
 }
+
+// Operational capsules extend only the broadcast checkpoint receipt. The SQL
+// manifest, six existing keys and all historical receipt versions stay intact.
+export function checkpointReceiptVersion(profile, operations = false) {
+  if (operations && !profile?.broadcast) return null;
+  return operations ? profile.application ? 10 : 9 : profile?.receiptVersion ?? null;
+}
+export function matchesCheckpointReceipt(profile, value) {
+  return Boolean(profile && value && value.profile === profile.manifestProfile
+    && value.version === checkpointReceiptVersion(profile, Object.hasOwn(value, "operations")));
+}
+export function sameCheckpointReceiptScope(before, after) {
+  if (before?.version !== after?.version || before?.profile !== after?.profile
+    || Object.hasOwn(before ?? {}, "operations") !== Object.hasOwn(after ?? {}, "operations")) return false;
+  if (!Object.hasOwn(before ?? {}, "operations")) return true;
+  return ["file", "bytes", "sha256"].every(name => before.operations?.[name] === after.operations?.[name])
+    && [before, after].every(value => value.operationsCovered === true && value.operationalRestorationPending === true
+      && value.externalRegistryContinuityVerified === false);
+}

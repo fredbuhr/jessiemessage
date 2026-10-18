@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, createECDH, randomBytes } from "node:crypto";
-import { mkdir, readdir, readFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
@@ -190,9 +190,10 @@ test("durable account erasure removes the selected graph and actual encrypted fi
         JESSIEMESSAGE_MEDIA_ROOT: mediaRoot, JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: String(capacity.ownerBytes), JESSIEMESSAGE_MEDIA_TOTAL_BYTES: String(capacity.totalBytes), JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES: "0",
         JESSIEMESSAGE_SMTP_HOST: "smtp.synthetic.invalid", JESSIEMESSAGE_SMTP_PORT: "587", JESSIEMESSAGE_SMTP_USER: "synthetic-user", JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-password",
         JESSIEMESSAGE_VAPID_PUBLIC_KEY: vapid.getPublicKey().toString("base64url"), JESSIEMESSAGE_VAPID_PRIVATE_KEY: vapid.getPrivateKey().toString("base64url"), JESSIEMESSAGE_VAPID_SUBJECT: "mailto:contact@jessiemessage.com" };
-      async function configureWithoutListening() {
+      async function configureWithoutListening(accountClosures = false) {
         const configured = await createConfiguredServer(configuredEnv, { requestOrigin: "https://jessiemessage.com", deviceTransition: true,
-          recovery: true, crm: true, broadcast: true, backupDirectory: journalRoot, clock: () => now });
+          recovery: true, crm: true, broadcast: true, backupDirectory: journalRoot, clock: () => now,
+          ...(accountClosures ? { accountClosures: true } : {}) });
         try {
           // No listener and no external SMTP/Push: stopping before listen also
           // prevents the sole producer-start callback from starting workers.
@@ -200,6 +201,15 @@ test("durable account erasure removes the selected graph and actual encrypted fi
         } finally { await configured.mailWorker.close(); await configured.diagnostics.close(); await configured.pool.end(); }
       }
       await configureWithoutListening();
+      await step.test("a restored operational quarantine blocks the actual configured runtime even with an empty registry", async () => {
+        const marker = path.join(journalRoot, "operational-restore.json"), before = await databaseHash();
+        try {
+          await writeFile(marker, '{"version":1,"status":"reconciliation_required"}\n', { mode: 0o600, flag: "wx" });
+          await assert.rejects(configureWithoutListening(), /Authentication startup failed/);
+          assert.equal(await databaseHash(), before);
+        } finally { await unlink(marker); }
+        await configureWithoutListening(true);
+      });
       const service = createClosureService({ directory: journalRoot, key: journalKey, store, target: createClosureTargets(pool), clock: () => now });
       const token = Buffer.alloc(32, 1).toString("base64url"), csrf = Buffer.alloc(32, 2).toString("base64url");
       const handler = createClosureHandler(service, { origin: "https://jessiemessage.com", actor: async value => value === token

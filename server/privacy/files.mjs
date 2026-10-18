@@ -24,6 +24,30 @@ function validate(value) {
 const store = createPrivateJsonStore({ name: "privacy-preparation.json", lock: "privacy-preparation.lock", maxBytes: 65536,
   validate, empty: () => ({ version: 1, revision: 0, envelope: null }), fail: failPrivacy, isKnownError: error => error instanceof PrivacyError || Number.isInteger(error?.httpStatus) });
 
+function decryptState(state, key) {
+  if (state.envelope === null) return { revision: 0, prepared: null };
+  let plaintext, tail;
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", key, encoded(state.envelope.iv, 12));
+    decipher.setAAD(Buffer.from(`${namespace}:${revision(state.revision)}`)); decipher.setAuthTag(encoded(state.envelope.tag, 16));
+    plaintext = decipher.update(encoded(state.envelope.ciphertext, 1, MAX_DRAFT_BYTES + 128)); tail = decipher.final();
+    if (tail.length) failPrivacy();
+    return { revision: state.revision, prepared: validatePrepared(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(plaintext))) };
+  } catch { failPrivacy(); }
+  finally { plaintext?.fill(0); tail?.fill(0); }
+}
+
+export function verifyPrivacyEnvelope(content, sourceKey) {
+  if (!Buffer.isBuffer(sourceKey) || sourceKey.length !== 32 || !Buffer.isBuffer(content) || content.length > 65536) failPrivacy();
+  const key = Buffer.from(hkdfSync("sha256", sourceKey, Buffer.alloc(0), Buffer.from(namespace), 32));
+  try {
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(content), state = validate(JSON.parse(text));
+    if (`${JSON.stringify(state)}\n` !== text || state.envelope === null || state.revision < 1) failPrivacy();
+    return decryptState(state, key);
+  } catch { failPrivacy(); }
+  finally { key.fill(0); }
+}
+
 export function createPrivacyFiles(directory, sourceKey, internal = {}) {
   if (!Buffer.isBuffer(sourceKey) || sourceKey.length !== 32) throw new TypeError("A private application key is required.");
   const key = Buffer.from(hkdfSync("sha256", sourceKey, Buffer.alloc(0), Buffer.from(namespace), 32));
@@ -31,17 +55,7 @@ export function createPrivacyFiles(directory, sourceKey, internal = {}) {
   const available = () => { if (closed) failPrivacy(); };
   const aad = value => Buffer.from(`${namespace}:${revision(value)}`);
   function opened(state) {
-      if (state.envelope === null) return { revision: 0, prepared: null };
-      let plaintext, tail;
-      try {
-        const decipher = createDecipheriv("aes-256-gcm", key, encoded(state.envelope.iv, 12));
-        decipher.setAAD(aad(state.revision)); decipher.setAuthTag(encoded(state.envelope.tag, 16));
-        plaintext = decipher.update(encoded(state.envelope.ciphertext, 1, MAX_DRAFT_BYTES + 128)); tail = decipher.final();
-        if (tail.length) failPrivacy();
-        const value = validatePrepared(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(plaintext)));
-        available(); return { revision: state.revision, prepared: value };
-      } catch { failPrivacy(); }
-      finally { plaintext?.fill(0); tail?.fill(0); }
+      const result = decryptState(state, key); available(); return result;
   }
   return Object.freeze({
     async read() {

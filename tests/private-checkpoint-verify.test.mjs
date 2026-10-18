@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createECDH, createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
-import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
@@ -13,6 +13,7 @@ import { sealNotes } from "../server/crm/crypto.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { backupIdentity, createBackupManifest, writeManifest, readManifest } from "../server/backup/manifest.mjs";
 import { writeCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
+import { writeOperationalCheckpoint } from "../server/backup/operational-checkpoint.mjs";
 import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
 import { makeTotpSecret, newToken, sealTotpSecret, tokenDigest } from "../server/auth/crypto.mjs";
@@ -151,6 +152,31 @@ test("private checkpoint check verifies real gzip, five-key manifest and copied 
   assert.equal(report.independentMediaDirectory, true); assert.equal(report.capacityRebound, false);
   assert.deepEqual(f.events, ["client"]); assert.deepEqual(f.connected, []);
   assert.equal(f.environments[0].JESSIEMESSAGE_RUNTIME_DB_PASSWORD, ""); assert.equal(f.environments[0].JESSIEMESSAGE_VAPID_PRIVATE_KEY, "");
+});
+
+test("operational receipts authenticate their capsule before password input and preserve the separate restoration prerequisite", async t => {
+  for (const application of [false, true]) {
+    const f = await fixture(t, { application, broadcast: true });
+    const scope = scopeFor(f.checkpointDirectory), selected = { ...f.receipt, version: application ? 10 : 9 };
+    const value = { version: 1, binding: { database: "only_source", rootFingerprint: f.manifest.payload.identity.rootFingerprint }, files: [] };
+    selected.operations = await writeOperationalCheckpoint(scope, value, selected, f.keys.crmKey);
+    await unlink(join(f.checkpointDirectory, "receipt.json")); await writeCheckpointReceipt(scope, selected);
+    const report = await run({ ...f.selected, command: application ? "check-application" : "check" }, f.dependencies);
+    assert.equal(report.operationsCovered, true); assert.equal(report.operationalFiles, 0); assert.equal(report.operationalRestorationPending, true);
+    assert.equal(report.externalRegistryContinuityVerified, false); assert.equal(report.version, selected.version);
+    assert.deepEqual(f.events, ["client"]);
+    const before = f.events.length;
+    await writeFile(join(f.checkpointDirectory, "operations.enc.json"), "tampered", { mode: 0o600 });
+    await assert.rejects(run(f.selected, f.dependencies)); assert.equal(f.events.length, before);
+    assert.deepEqual(f.connected, []);
+  }
+});
+
+test("a capsule cannot be concealed by lowering its receipt to an old SQL-only version", async t => {
+  const f = await fixture(t, { application: true, broadcast: true });
+  await writeFile(join(f.checkpointDirectory, "operations.enc.json"), "untrusted extra file", { mode: 0o600 });
+  await assert.rejects(run({ ...f.selected, command: "check-application" }, f.dependencies));
+  assert.deepEqual(f.events, []); assert.deepEqual(f.connected, []);
 });
 
 test("CRM checkpoint verification authenticates the populated notes and recovery outbox while keeping SQL and files read-only", async t => {

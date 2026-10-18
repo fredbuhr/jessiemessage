@@ -9,7 +9,8 @@ import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment, copyRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
-import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile } from "../server/backup/profiles.mjs";
+import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile, checkpointReceiptVersion } from "../server/backup/profiles.mjs";
+import { captureOperationalState, operationalStateHash, writeOperationalCheckpoint, readOperationalCheckpoint, assertNoOperationalRestore, OPERATIONAL_CHECKPOINT } from "../server/backup/operational-checkpoint.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { readManifest, verifyBackupManifest } from "../server/backup/manifest.mjs";
@@ -45,8 +46,8 @@ export function parseArguments(args) {
   const application = args[0].endsWith("-application");
   const offline = args[1] === "--offline", offset = offline ? 2 : 1;
   const expectedLength = offset + (application ? 6 : 8);
-  if (["capture", "capture-application"].includes(args[0]) !== offline || ![expectedLength, expectedLength + 2].includes(args.length)) fail("PRIVATE_CHECKPOINT_USAGE");
-  const names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"], ["--destination-private-directory", "destination"], ["--inspection-user", "inspectionUser"], ["--profile", "profile"]]);
+  if (["capture", "capture-application"].includes(args[0]) !== offline || ![expectedLength, expectedLength + 2, expectedLength + 4].includes(args.length)) fail("PRIVATE_CHECKPOINT_USAGE");
+  const names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"], ["--destination-private-directory", "destination"], ["--inspection-user", "inspectionUser"], ["--profile", "profile"], ["--operations-directory", "operationsDirectory"]]);
   const value = { command: args[0], offline, ...(application ? { inspectionUser: null } : {}) };
   for (let index = offset; index < args.length; index += 2) {
     const name = names.get(args[index]), content = args[index + 1];
@@ -56,11 +57,13 @@ export function parseArguments(args) {
   if (!path(value.privateDirectory) || !path(value.destination) || inside(value.privateDirectory, REPOSITORY) || inside(value.destination, REPOSITORY)
     || value.privatePathMode !== "linux-dirfd" || !application && !/^[A-Za-z0-9_]{1,80}$/.test(value.inspectionUser)
     || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(basename(value.destination))
-    || Object.hasOwn(value, "profile") && !CHECKPOINT_RUNTIME_PROFILES.includes(value.profile)) fail("PRIVATE_CHECKPOINT_USAGE");
-  return Object.fromEntries([...FIELDS, ...(Object.hasOwn(value, "profile") ? ["profile"] : [])].map(name => [name, value[name]]));
+    || Object.hasOwn(value, "profile") && !CHECKPOINT_RUNTIME_PROFILES.includes(value.profile)
+    || Object.hasOwn(value, "operationsDirectory") && (!path(value.operationsDirectory) || inside(value.operationsDirectory, REPOSITORY)
+      || value.profile !== "photos-notify-recovery-crm-broadcast" || inside(value.operationsDirectory, value.destination))) fail("PRIVATE_CHECKPOINT_USAGE");
+  return Object.fromEntries([...FIELDS, ...["profile", "operationsDirectory"].filter(name => Object.hasOwn(value, name))].map(name => [name, value[name]]));
 }
 function options(value) {
-  const fields = [...FIELDS, ...(value && Object.hasOwn(value, "profile") ? ["profile"] : [])];
+  const fields = [...FIELDS, ...["profile", "operationsDirectory"].filter(name => value && Object.hasOwn(value, name))];
   if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
     || Object.getOwnPropertyNames(value).sort().join(",") !== fields.sort().join(",")
     || fields.some(name => !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name) ?? {}, "value"))
@@ -68,7 +71,8 @@ function options(value) {
   return parseArguments([value.command, ...(value.offline ? ["--offline"] : []), "--private-directory", value.privateDirectory,
     "--private-path-mode", value.privatePathMode, "--destination-private-directory", value.destination,
     ...(value.inspectionUser === null ? [] : ["--inspection-user", value.inspectionUser]),
-    ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : [])]);
+    ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : []),
+    ...(Object.hasOwn(value, "operationsDirectory") ? ["--operations-directory", value.operationsDirectory] : [])]);
 }
 export async function inspectCheckpointTools() {
   await inspectDumpClient();
@@ -177,7 +181,7 @@ export async function gzipCheckpointSql(scope, { signal } = {}) {
 
 // A single native tar process reads only the explicit, already verified members.
 // The archive output is an exclusive pinned FD, never a filename opened by tar.
-export async function archiveCheckpoint(scope, inventory, { signal, spawnClient = spawn } = {}) {
+export async function archiveCheckpoint(scope, inventory, { signal, spawnClient = spawn, operations = false } = {}) {
   let output, input, directory, child;
   const run = (args, stdio, collect = false, sink = null) => new Promise((yes, no) => {
     let length = 0, diagnostics = 0, text = "", failed = false;
@@ -207,7 +211,7 @@ export async function archiveCheckpoint(scope, inventory, { signal, spawnClient 
     const pinned = await scope.assertReady(), actual = await directory.stat({ bigint: true });
     if (pinned.dev !== actual.dev || pinned.ino !== actual.ino) fail("PRIVATE_CHECKPOINT_DRIFT");
     output = await exclusive(scope, "checkpoint.tar.gz");
-    await run(["--create", "--gzip", "--file=-", "--directory=/proc/self/fd/3", "--", "manifest.json", "database.sql.gz", "receipt.json", "media"], ["ignore", "pipe", "pipe", directory.fd], false, output);
+    await run(["--create", "--gzip", "--file=-", "--directory=/proc/self/fd/3", "--", "manifest.json", "database.sql.gz", "receipt.json", "media", ...(operations ? [OPERATIONAL_CHECKPOINT] : [])], ["ignore", "pipe", "pipe", directory.fd], false, output);
     await output.sync(); const stats = await output.stat({ bigint: true }); regular(stats);
     if (stats.size < 1n || stats.size > BigInt(MAX_ARCHIVE)) fail("PRIVATE_CHECKPOINT_ARCHIVE");
     await visible(scope, "checkpoint.tar.gz", stats); await output.close(); output = null;
@@ -215,7 +219,7 @@ export async function archiveCheckpoint(scope, inventory, { signal, spawnClient 
     if (!same(stats, await input.stat({ bigint: true }))) fail("PRIVATE_CHECKPOINT_DRIFT");
     const listing = await run(["--list", "--gzip", "--file=-"], [input.fd, "pipe", "pipe"], true);
     const names = listing.trimEnd().split("\n").sort();
-    const expected = ["manifest.json", "database.sql.gz", "receipt.json", "media/", ...inventory.files.map(file => `media/${file.name}`)].sort();
+    const expected = ["manifest.json", "database.sql.gz", "receipt.json", "media/", ...inventory.files.map(file => `media/${file.name}`), ...(operations ? [OPERATIONAL_CHECKPOINT] : [])].sort();
     if (JSON.stringify(names) !== JSON.stringify(expected)) fail("PRIVATE_CHECKPOINT_ARCHIVE");
     if (!same(stats, await input.stat({ bigint: true }))) fail("PRIVATE_CHECKPOINT_DRIFT");
     await visible(scope, "checkpoint.tar.gz", stats); await scope.sync();
@@ -235,7 +239,8 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   try {
     const selected = options(value); active(signal);
     const application = selected.command.endsWith("-application"), selectedProfile = checkpointBackupProfile(selected.profile, application);
-    const { recovery, crm, broadcast, name: backupProfile, manifestProfile: profile, manifestVersion, receiptVersion } = selectedProfile;
+    const { recovery, crm, broadcast, name: backupProfile, manifestProfile: profile, manifestVersion } = selectedProfile;
+    const operational = Object.hasOwn(selected, "operationsDirectory"), receiptVersion = checkpointReceiptVersion(selectedProfile, operational);
     loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let parameters; try { parameters = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("PRIVATE_CHECKPOINT_ENVIRONMENT"); }
     if (recovery) parameters = { ...parameters, originProfile: "primary", recovery: true };
@@ -245,6 +250,9 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       : recovery ? copyRuntimeNotificationsEnvironment(loaded, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(loaded);
     if (selected.inspectionUser === env.JESSIEMESSAGE_RUNTIME_DB_USER || inside(selected.destination, env.JESSIEMESSAGE_MEDIA_ROOT)
       || inside(env.JESSIEMESSAGE_MEDIA_ROOT, selected.destination)) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
+    if (operational && (inside(selected.operationsDirectory, env.JESSIEMESSAGE_MEDIA_ROOT) || inside(env.JESSIEMESSAGE_MEDIA_ROOT, selected.operationsDirectory)
+      || inside(selected.privateDirectory, selected.operationsDirectory) || inside(selected.operationsDirectory, selected.privateDirectory))) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
+    if (operational) await scopeOperation(selected.operationsDirectory, assertNoOperationalRestore);
     await inspectTools(); active(signal);
     return await scopeOperation(dirname(selected.destination), async parent => {
       await absent(parent, basename(selected.destination));
@@ -282,6 +290,9 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           return payload;
         };
         const before = await prepareAt("manifest.json");
+        const binding = operational ? { database: env.JESSIEMESSAGE_DB_NAME, rootFingerprint: before.snapshot.capacity?.rootFingerprint } : null;
+        const captureOperations = () => scopeOperation(selected.operationsDirectory, scope => captureOperationalState(scope, { key: keys.crmKey, binding, signal }));
+        const operationsBefore = operational ? await captureOperations() : null;
         let output;
         const configuration = { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT };
         const target = { user: application ? env.JESSIEMESSAGE_RUNTIME_DB_USER : selected.inspectionUser, database: env.JESSIEMESSAGE_DB_NAME };
@@ -315,13 +326,19 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           ...(application ? { coverage: APPLICATION_COVERAGE } : {}), createdAt: now,
           schema: { tables: 30, migrations: 30 }, sql: { file: "database.sql.gz", ...compressed, uncompressedBytes: saved.bytes, uncompressedSha256: saved.sha256 },
           manifest: { file: "manifest.json", sha256: manifest.sha256 }, media: inventory };
+        if (operational) {
+          if (operationalStateHash(await captureOperations()) !== operationalStateHash(operationsBefore)) fail("PRIVATE_CHECKPOINT_DRIFT");
+          receipt.operations = await writeOperationalCheckpoint(scope, operationsBefore, receipt, keys.crmKey, { signal });
+          if (operationalStateHash(await readOperationalCheckpoint(scope, receipt, keys.crmKey, { signal })) !== operationalStateHash(operationsBefore)) fail("PRIVATE_CHECKPOINT_DRIFT");
+        }
         await writeCheckpointReceipt(scope, receipt, { signal });
         const receiptFile = await hashCheckpointFile(scope, "receipt.json", { signal });
-        const archived = await archive(scope, inventory, { signal });
+        const archived = await archive(scope, inventory, { signal, ...(operational ? { operations: true } : {}) });
         const archiveCheck = await verifyArchive(scope, [
           { name: "manifest.json", bytes: manifest.bytes, sha256: manifest.sha256 },
           { name: "database.sql.gz", ...compressed }, { name: "receipt.json", ...receiptFile },
           ...inventory.files.map(file => ({ ...file, name: `media/${file.name}` })),
+          ...(operational ? [{ name: receipt.operations.file, bytes: receipt.operations.bytes, sha256: receipt.operations.sha256 }] : []),
         ], { signal });
         if (archiveCheck.archiveBytes !== archived.bytes || archiveCheck.archiveSha256 !== archived.sha256) fail("PRIVATE_CHECKPOINT_ARCHIVE");
         await scopeOperation(`${selected.destination}/media`, async targetScope => {
@@ -330,12 +347,15 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         if ((await hashCheckpointFile(scope, "database.sql.gz", { signal })).sha256 !== compressed.sha256
           || (await hashCheckpointFile(scope, "manifest.json", { signal })).sha256 !== manifest.sha256
           || (await hashCheckpointFile(scope, "receipt.json", { signal })).sha256 !== receiptFile.sha256) fail("PRIVATE_CHECKPOINT_DRIFT");
+        if (operational && (operationalStateHash(await captureOperations()) !== operationalStateHash(operationsBefore)
+          || operationalStateHash(await readOperationalCheckpoint(scope, receipt, keys.crmKey, { signal })) !== operationalStateHash(operationsBefore))) fail("PRIVATE_CHECKPOINT_DRIFT");
         active(signal); const finalEnvironment = await loadEnvironment(selected.privateDirectory, parameters);
         try { if (Object.keys(loaded).some(name => finalEnvironment[name] !== loaded[name]) || Object.keys(finalEnvironment).length !== Object.keys(loaded).length) fail("PRIVATE_CHECKPOINT_DRIFT"); }
         finally { clearRuntimeMessagingSecrets(finalEnvironment); }
         await parent.assertReady(); directoryIdentity(await scope.assertReady(), destinationIdentity);
         return { status: application ? "application_checkpoint_saved" : "checkpoint_saved", profile, tables: 30, migrations: 30,
           ...(application ? { coverage: APPLICATION_COVERAGE } : {}),
+          ...(operational ? { operationsCovered: true, operationalFiles: operationsBefore.files.length, externalRegistryContinuityVerified: false } : {}),
           sqlBytes: compressed.bytes, sqlSha256: compressed.sha256, mediaFiles: inventory.files.length, mediaBytes: inventory.bytes,
           archive: { file: "checkpoint.tar.gz", ...archived }, archiveListed: true, archiveContentsVerified: true, archiveExtracted: false,
           independentCopyPending: true, sqlRestorePending: true, capacityRebound: false, started: false, migrationPerformed: false };

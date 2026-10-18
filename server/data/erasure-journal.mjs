@@ -26,6 +26,39 @@ function validate(value) {
     : { iv: value.envelope.iv, ciphertext: value.envelope.ciphertext, tag: value.envelope.tag } };
 }
 
+function decryptState(state, key, context, check) {
+  if (state.envelope === null) return { revision: 0, record: null };
+  let bytes, tail;
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", key, encoded(state.envelope.iv, 12));
+    decipher.setAAD(Buffer.from(`${context}:${state.revision}`)); decipher.setAuthTag(encoded(state.envelope.tag, 16));
+    bytes = decipher.update(encoded(state.envelope.ciphertext, 1, 2048)); tail = decipher.final();
+    if (tail.length) failErasure();
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes), record = check(JSON.parse(text));
+    if (JSON.stringify(record) !== text) failErasure();
+    return { revision: state.revision, record };
+  } catch { failErasure(); }
+  finally { bytes?.fill(0); tail?.fill(0); }
+}
+
+/** Authenticate original bytes without rebinding a recovered receipt. */
+export function verifyErasureJournalEnvelope({ key: sourceKey, binding, filename, content }) {
+  binding = erasureBinding(binding);
+  if (!Buffer.isBuffer(sourceKey) || sourceKey.length !== 32 || !Buffer.isBuffer(content) || content.length > 4096
+    || typeof filename !== "string" || !/^erasure-[a-f0-9]{64}\.json$/.test(filename)) failErasure("ERASURE_INPUT");
+  const name = filename.slice(0, -5), key = Buffer.from(hkdfSync("sha256", sourceKey, Buffer.alloc(0), Buffer.from(namespace), 32));
+  try {
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(content), state = validate(JSON.parse(text));
+    if (`${JSON.stringify(state)}\n` !== text || state.envelope === null || state.revision < 1) failErasure();
+    return decryptState(state, key, `${namespace}:${JSON.stringify(binding)}:${name}`, value => {
+      const record = erasureRecord(value);
+      if (journalName(binding, record.clientId) !== name || JSON.stringify(record.binding) !== JSON.stringify(binding)) failErasure("ERASURE_CHANGED");
+      return record;
+    });
+  } catch (error) { if (error instanceof AccountErasureError) throw error; failErasure(); }
+  finally { key.fill(0); }
+}
+
 /** Outside the SQL/media backup: a minimal encrypted intent and completion receipt.
  * Key-independent opaque names ensure a wrong key cannot hide an existing job. */
 export function createErasureJournal({ directory, key: sourceKey, binding, clientId }, internal = {}) {
@@ -49,18 +82,7 @@ function journalFile({ directory, sourceKey, binding, clientId, name }, internal
     fail: code => failErasure(({ input: "ERASURE_INPUT", changed: "ERASURE_CHANGED", busy: "ERASURE_BUSY" })[code]),
     isKnownError: error => error instanceof AccountErasureError });
   function opened(state) {
-    if (state.envelope === null) return { revision: 0, record: null };
-    let bytes, tail;
-    try {
-      const decipher = createDecipheriv("aes-256-gcm", key, encoded(state.envelope.iv, 12));
-      decipher.setAAD(Buffer.from(`${context}:${state.revision}`)); decipher.setAuthTag(encoded(state.envelope.tag, 16));
-      bytes = decipher.update(encoded(state.envelope.ciphertext, 1, 2048)); tail = decipher.final();
-      if (tail.length) failErasure();
-      const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes), record = check(JSON.parse(text));
-      if (JSON.stringify(record) !== text) failErasure();
-      available(); return { revision: state.revision, record };
-    } catch { failErasure(); }
-    finally { bytes?.fill(0); tail?.fill(0); }
+    const result = decryptState(state, key, context, check); available(); return result;
   }
   return Object.freeze({
     async read() { available(); const state = await store.read(directory, internal); available(); return opened(state); },

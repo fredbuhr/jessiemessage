@@ -8,7 +8,7 @@ import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
-import { checkpointBackupProfile, CHECKPOINT_RUNTIME_PROFILES } from "../server/backup/profiles.mjs";
+import { checkpointBackupProfile, CHECKPOINT_RUNTIME_PROFILES, matchesCheckpointReceipt, sameCheckpointReceiptScope } from "../server/backup/profiles.mjs";
 import { parseArguments as importArguments, run as importCheckpoint, ApplicationCheckpointImportError } from "./import-application-checkpoint.mjs";
 import { run as verifyCheckpoint, PrivateCheckpointVerificationError } from "./verify-private-checkpoint.mjs";
 import { readPassword } from "./migration-input.mjs";
@@ -84,7 +84,7 @@ export async function inspectResumeClone(connection, database) {
 
 function matches(result, selected, status) {
   const profile = checkpointBackupProfile(selected.profile, true);
-  return result?.status === status && result.version === profile.receiptVersion && result.profile === profile.manifestProfile
+  return result?.status === status && matchesCheckpointReceipt(profile, result)
     && result.tables === 30 && result.migrations === 30 && result.sqlSha256 === selected.sqlSha256
     && result.checkpointFilesMatched === true && result.capacityRebound === false
     && result.httpStarted === false && result.smtpStarted === false && result.workersStarted === false;
@@ -126,14 +126,14 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     if (state === "empty") {
       phase = "import"; active(signal, phase);
       const restored = await importOperation({ ...selected, command: "verify-application" }, authenticated);
-      if (!matches(restored, selected, "application_checkpoint_restored_verified") || restored.imported !== true
+      if (!matches(restored, selected, "application_checkpoint_restored_verified") || !sameCheckpointReceiptScope(before, restored) || restored.imported !== true
         || restored.databaseConnected !== true || restored.applicationSnapshotMatched !== true || restored.sourceMutated !== false) fail("RESULT", phase);
       result = { ...restored, action: "imported_empty_clone", importedThisRun: true };
     } else if (state === "application-schema") {
       phase = "verification"; active(signal, phase);
       const { sqlSha256: _hash, command: _command, ...verification } = selected;
       const verified = await verifyOperation({ ...verification, command: "verify-application" }, authenticated);
-      if (!matches(verified, selected, "verified") || verified.databaseConnected !== true || verified.applicationSnapshotMatched !== true) fail("RESULT", phase);
+      if (!matches(verified, selected, "verified") || !sameCheckpointReceiptScope(before, verified) || verified.databaseConnected !== true || verified.applicationSnapshotMatched !== true) fail("RESULT", phase);
       result = { ...verified, status: "application_checkpoint_existing_clone_verified", action: "verified_existing_clone", imported: false, importedThisRun: false, sourceMutated: false };
     } else fail("DATABASE", phase);
   } catch (error) {

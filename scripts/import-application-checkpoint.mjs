@@ -9,7 +9,7 @@ import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
-import { checkpointBackupProfile } from "../server/backup/profiles.mjs";
+import { checkpointBackupProfile, matchesCheckpointReceipt, sameCheckpointReceiptScope } from "../server/backup/profiles.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { connectDatabase } from "../server/db/connection.mjs";
@@ -251,9 +251,9 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       "--checkpoint-directory", value.checkpointDirectory, "--database", value.database, "--confirm-database", value.confirmation, "--user", value.user,
       ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : [])]);
     if (!["check-application", "verify-application"].includes(selected.command) || !/^[a-f0-9]{64}$/.test(value.sqlSha256)) fail("USAGE");
-    const { recovery, crm, broadcast, receiptVersion, manifestProfile } = checkpointBackupProfile(selected.profile, true);
+    const selectedProfile = checkpointBackupProfile(selected.profile, true), { recovery, crm, broadcast } = selectedProfile;
     loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
-    const matchesRecovery = report => !recovery || report?.version === receiptVersion && report.profile === manifestProfile;
+    const matchesRecovery = report => !recovery || matchesCheckpointReceipt(selectedProfile, report);
     active(signal); const processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv);
     const check = { ...selected, command: "check-application" }, dependencies = { inheritedEnv, execArgv, signal };
     const before = await verify(check, dependencies);
@@ -277,7 +277,8 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       await importSql(scope, selected, { host: environment.JESSIEMESSAGE_DB_HOST, port: environment.JESSIEMESSAGE_DB_PORT }, password, sql, { signal }); active(signal);
       sql.fill(0); sql = undefined;
       const verified = await verify(selected, { ...dependencies, readSecret: async () => password });
-      if (verified?.status !== "verified" || verified.applicationSnapshotMatched !== true || verified.checkpointFilesMatched !== true || verified.databaseConnected !== true || verified.capacityRebound !== false || !matchesRecovery(verified)) fail("VERIFY");
+      if (verified?.status !== "verified" || verified.applicationSnapshotMatched !== true || verified.checkpointFilesMatched !== true || verified.databaseConnected !== true || verified.capacityRebound !== false
+        || !matchesRecovery(verified) || !sameCheckpointReceiptScope(before, verified)) fail("VERIFY");
       result = { ...verified, status: "application_checkpoint_restored_verified", imported: true, completeDatabase: false, sourceMutated: false };
     });
   } catch (error) { failure = error instanceof ApplicationCheckpointImportError ? error : new ApplicationCheckpointImportError("APPLICATION_CHECKPOINT_IMPORT_OPERATION"); }
