@@ -72,7 +72,7 @@ test("real Chrome: a login change during either kit suppresses its download and 
     await tabUntil(page, selector); await page.key("\uE007");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden && document.getElementById('backup-status').textContent.length > 0 && !document.querySelector('[data-action=kit]').disabled"), "fresh session after rejected old response");
     assert.equal(await page.execute("return !!window.__downloaded"), false); assert.equal(source.requests.filter(r => r.path.endsWith(suffix)).length, 1);
-      } finally { await page?.close(); await source.close(); }
+      } finally { try { await page?.close(); } finally { await source.close(); } }
     }
   } finally { await driver.close(); }
 });
@@ -84,5 +84,8 @@ test("real Chrome: periodic proof replaces private settings after another login 
     source.changeSession(); await page.execute("window.__sessionCheck()");
     await waitUntil(() => page.execute("return document.querySelector('.destination h3')?.textContent === 'Second session'"), "settings from proved replacement login");
     assert.equal(source.requests.some(request => request.method !== "GET"), false);
-  } finally { await page?.close(); await source.close(); await driver.close(); }
+  } finally {
+    try { await page?.close(); }
+    finally { try { await source.close(); } finally { await driver.close(); } }
+  }
 });
