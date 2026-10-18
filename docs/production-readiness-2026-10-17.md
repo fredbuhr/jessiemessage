@@ -1,5 +1,7 @@
 # JessieMessage — reste à faire avant un usage privé régulier
 
+**Reprise du 18 octobre :** [point d’entrée autonome](REPRISE.md) et [audit courant](AUDIT-REPRISE-2026-10-18.md). Le [contrôle de fraîcheur du journal 0.53](backup-freshness-053.md) est implémenté en lecture seule ; il ne constitue ni une copie indépendante ni une alerte reçue. Les preuves 0.50/0.52 et acceptations ci-dessous restent conservées.
+
 Bilan 0.51 du 18 octobre 2026, autour de Jessie. L’application est déjà hébergée et fonctionnelle. La révision active reste `0a1cafd85c3d8699be1961075b18e80e36bcd041` (0.50), profil `messaging-photos-notify-recovery-crm-broadcast`, schéma 30. Le [relevé d’activation](broadcast-activation-050.md) établit 69/69 contrôles HTTPS et seize empreintes exactes, après les cinq jobs CI de cette source. Ce bilan remplace les anciennes listes en présent ; leurs relevés restent des preuves historiques.
 
 **Étape 0.52 — récurrence activée :** le [superviseur de sauvegarde et le chiffrement complet](recurring-private-checkpoints-052.md) sont actifs via le Manager. Première capture réelle réussie le 18 octobre à **02:28:16 Europe/Paris**, reprise confirmée, opération de 5,842 s ; empreintes et HTTPS vérifiés à 02:29:40. Horaire quotidien : 05:15 UTC. Seule la clé publique du propriétaire est installée ; le déchiffrement de cette archive sur le PC et sa copie indépendante restent à confirmer. Le runtime applicatif reste 0.50 `0a1cafd8` et les acceptations 0.46 sont conservées.

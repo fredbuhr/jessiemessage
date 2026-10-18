@@ -1,8 +1,10 @@
 # Technical architecture — draft
 
-## Current runtime — 17 October 2026
+## Current runtime — 18 October 2026
 
-Stage 0.33 is active at `f2677249`, schema 30, on the temporary recipe origin. Node.js 24 serves private text/photos, durable administrator/client sessions and per-device Web Push under the explicit `messaging-photos-notify` profile. Push subscriptions and jobs are persisted in `push_subscriptions` and `push_outbox`; notification clicks resolve an opaque reference only after current recipient/role/membership authorization. CRM, broadcasts and client recovery remain implemented but disabled. [Current audit and next lots](AUDIT-2026-10-17.md) distinguish this deployment from older design evidence. The final apex origin and device transition remain pending.
+Application 0.50 (`0a1cafd8`, schema 30) serves the primary and retained recipe origins with invitations, private text/photos, durable administrator/client sessions, Web Push, primary-only client recovery, private CRM and individually delivered campaigns. Recipients have no separate broadcast opt-in. The retained recipe shares the application's runtime and data; it is not an isolated staging database.
+
+The separately pinned 0.52 supervisor (`9665d54`) runs daily coherent encrypted checkpoints at 05:15 UTC, stopping the application gracefully and resuming it after capture. Its first startup capture is verified; the first scheduled occurrence, PC decryption and recurring independent copy remain unproved. The 0.53 read-only freshness CLI inspects the journal without changing this runtime. See [recovery entry point](REPRISE.md), [current audit](AUDIT-REPRISE-2026-10-18.md) and [operational plan](production-readiness-2026-10-17.md). The sections below describe historical scope where a version is named.
 
 ## Historical development: media capacity and private inventory
 

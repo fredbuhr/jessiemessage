@@ -35,9 +35,13 @@ Public source code is compatible with a secure product only if every release han
 - CI has read-only token permissions and no deploy credentials on ordinary PRs.
 - Do not automatically deploy every push to production.
 
-## Current status — 17 October 2026
+## Current status — 18 October 2026
 
-Stage 0.40 is active on the primary origin with recipe coexistence, schema 30, durable role-specific sessions, neutral per-device Push and primary-only client recovery. Practical FR/EN help is delivered; the owner’s accepted recovery and primary-entry journeys remain acquired. Direct notification opening rechecks the authenticated recipient and conversation membership; an opaque notification reference grants no access by itself. CRM and broadcasts remain disabled. The historical native application restore at 0.36 is accepted; recovery-specific SQL-copy evidence remains distinct from a new hosted native import with populated reset data. The [0.41 privacy preparation](data-privacy-preparation.md) provides a retention register, notice draft and request procedure; controller details, lawful handling of sensitive data, retention, full account deletion, backup lifecycle and the remaining device matrix are still open. See the [current audit](AUDIT-2026-10-17.md). At-rest encryption is not end-to-end encryption. Manual admission remains distinct from independent age verification.
+Application 0.50 is active on both retained origins, schema 30, with role-specific durable sessions, private photos/messages, neutral per-device Push, primary-only recovery, private CRM and individually delivered campaigns. There is no separate recipient broadcast preference in the active flow. Administrator campaign confirmation, current access/ownership checks and the 100-recipient limit remain. At-rest encryption is not end-to-end encryption; manual admission is distinct from independent age verification.
+
+The 0.52 supervisor has completed a real coherent encrypted checkpoint and resumed the application. The 0.46 configuration coffre, independent copy and isolated application restore remain accepted. PC decryption of the new 0.52 archive, its first scheduled occurrence, recurring independent copies and actual alert reception remain open. The new 0.53 freshness CLI checks only the capture journal and explicitly does not certify a copy or decryption. It exposes no public endpoint.
+
+The [privacy preparation](data-privacy-preparation.md) still contains a draft retention register, notice and rights procedure. Controller details, grounds, retention choices, complete account erasure and the backup lifecycle are not finalized. See [current audit](AUDIT-REPRISE-2026-10-18.md) and [recovery entry point](REPRISE.md); the following versioned sections are historical evidence.
 
 ## Historical scope — version 0.11
 
