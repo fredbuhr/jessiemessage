@@ -1,0 +1,32 @@
+CREATE TABLE push_subscriptions (
+  id VARBINARY(16) NOT NULL,
+  user_id VARBINARY(16) NOT NULL,
+  role VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  session_id VARBINARY(16) NOT NULL,
+  credential_version INT UNSIGNED NOT NULL,
+  generation INT UNSIGNED NOT NULL,
+  endpoint_digest VARBINARY(32) NOT NULL,
+  subscription_encrypted VARCHAR(4096) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  locale VARCHAR(2) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  enabled TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  created_at DATETIME(6) NOT NULL,
+  updated_at DATETIME(6) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY push_subscriptions_endpoint (endpoint_digest),
+  KEY push_subscriptions_owner (user_id, enabled, id),
+  KEY push_subscriptions_session (session_id),
+  CONSTRAINT push_subscriptions_id_size CHECK (OCTET_LENGTH(id) = 16),
+  CONSTRAINT push_subscriptions_user_size CHECK (OCTET_LENGTH(user_id) = 16),
+  CONSTRAINT push_subscriptions_session_size CHECK (OCTET_LENGTH(session_id) = 16),
+  CONSTRAINT push_subscriptions_digest_size CHECK (OCTET_LENGTH(endpoint_digest) = 32),
+  CONSTRAINT push_subscriptions_role CHECK (role IN ('admin', 'client')),
+  CONSTRAINT push_subscriptions_versions CHECK (credential_version >= 1 AND generation >= 1),
+  CONSTRAINT push_subscriptions_payload CHECK (CHAR_LENGTH(subscription_encrypted) >= 1),
+  CONSTRAINT push_subscriptions_locale CHECK (locale IN ('fr', 'en')),
+  CONSTRAINT push_subscriptions_enabled CHECK (enabled IN (0, 1)),
+  CONSTRAINT push_subscriptions_dates CHECK (updated_at >= created_at),
+  CONSTRAINT push_subscriptions_user_fk FOREIGN KEY (user_id, role)
+    REFERENCES users (id, role) ON UPDATE RESTRICT ON DELETE RESTRICT,
+  CONSTRAINT push_subscriptions_session_fk FOREIGN KEY (session_id)
+    REFERENCES sessions (id) ON UPDATE RESTRICT ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

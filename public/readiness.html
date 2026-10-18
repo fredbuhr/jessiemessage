@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#100d12" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" />
+    <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="/readiness.css" />
+    <link rel="stylesheet" href="/i18n.css" />
+    <link rel="stylesheet" href="/brand/brand.css" />
+    <title data-jm-i18n="JessieMessage — Préparer le site">JessieMessage — Préparer le site</title>
+    <script src="/i18n.js" defer></script>
+    <script src="/help-link.js" defer></script>
+    <script src="/i18n-readiness.js" defer></script>
+    <script src="/session-clock.js" defer></script>
+    <script type="module" src="/readiness.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
+        <button data-jm-language type="button" class="jm-language" aria-label="Switch to English">EN</button>
+        <nav class="account-nav" aria-label="Administration" data-jm-i18n-aria-label="Administration"><a href="/admin" data-jm-i18n="Gérer les accès">Gérer les accès</a><button id="logout" type="button" hidden data-jm-i18n="Se déconnecter">Se déconnecter</button></nav>
+      </header>
+      <main class="readiness-main">
+        <div class="page-heading"><div class="eyebrow" data-jm-i18n="ADMINISTRATION">ADMINISTRATION</div><h1 data-jm-i18n="Préparer le site">Préparer le site</h1><p class="intro" data-jm-i18n="Retrouve les fonctions configurées et les vérifications qui restent à faire avant l’ouverture.">Retrouve les fonctions configurées et les vérifications qui restent à faire avant l’ouverture.</p></div>
+        <p id="session-status" class="status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p>
+        <button id="refresh" class="button secondary" type="button" hidden data-jm-i18n="Actualiser la page">Actualiser la page</button>
+        <div id="readiness-content" class="readiness-grid" hidden>
+          <section class="card mail-card" aria-labelledby="mail-title">
+            <div class="card-heading"><span class="eyebrow" data-jm-i18n="GARDER LE CONTACT">GARDER LE CONTACT</span><h2 id="mail-title" data-jm-i18n="Les e-mails du site">Les e-mails du site</h2></div>
+            <dl class="mail-identity"><div><dt data-jm-i18n="Adresse de contact">Adresse de contact</dt><dd><a href="mailto:contact@jessiemessage.com">contact@jessiemessage.com</a></dd></div><div><dt data-jm-i18n="Adresse d’envoi et de réponse">Adresse d’envoi et de réponse</dt><dd id="mail-sender"></dd></div></dl>
+            <p id="mail-status" class="body-copy"></p>
+            <button id="verify-smtp" class="button primary" type="button" hidden data-jm-i18n="Vérifier la connexion e-mail">Vérifier la connexion e-mail</button>
+            <p id="smtp-status" class="status smtp-status" role="status" aria-live="polite"></p>
+            <p id="smtp-proof-date" class="small-copy" hidden></p>
+            <p class="small-copy" data-jm-i18n="Cette vérification contrôle la connexion chiffrée et l’authentification. Elle n’envoie aucun e-mail et ne confirme pas la réception des invitations ou des liens de récupération.">Cette vérification contrôle la connexion chiffrée et l’authentification. Elle n’envoie aucun e-mail et ne confirme pas la réception des invitations ou des liens de récupération.</p>
+          </section>
+          <section class="card" aria-labelledby="features-title"><div class="card-heading"><span class="eyebrow" data-jm-i18n="DANS TON ESPACE">DANS TON ESPACE</span><h2 id="features-title" data-jm-i18n="Fonctions configurées">Fonctions configurées</h2></div><ul id="feature-list" class="feature-list"></ul><p class="small-copy" data-jm-i18n="« Activée » indique la configuration du site. Cela ne remplace pas une vérification en conditions réelles.">« Activée » indique la configuration du site. Cela ne remplace pas une vérification en conditions réelles.</p></section>
+          <section class="card operations-card" aria-labelledby="operations-title">
+            <div class="card-heading"><span class="eyebrow" data-jm-i18n="EXPLOITATION">EXPLOITATION</span><h2 id="operations-title" data-jm-i18n="État du service">État du service</h2></div>
+            <p id="operations-status" class="status" role="status" aria-live="polite" data-jm-i18n="Mesure non disponible.">Mesure non disponible.</p>
+            <button id="download-operations" class="button secondary" type="button" hidden data-jm-i18n="Télécharger le diagnostic">Télécharger le diagnostic</button>
+            <p class="small-copy" data-jm-i18n="Le fichier contient l’état et les compteurs du service, sans messages ni photos.">Le fichier contient l’état et les compteurs du service, sans messages ni photos.</p>
+            <p id="operations-download-status" class="status" role="status" aria-live="polite"></p>
+            <p class="small-copy" data-jm-i18n="Instantané global de ce processus serveur. Les compteurs de traitement repartent à zéro à son redémarrage. Ces mesures ne certifient pas la mise en production ni la réception des messages.">Instantané global de ce processus serveur. Les compteurs de traitement repartent à zéro à son redémarrage. Ces mesures ne certifient pas la mise en production ni la réception des messages.</p>
+            <div id="operations-details" hidden>
+              <dl id="operations-database" class="operations-database"></dl>
+              <div class="operations-columns"><section aria-labelledby="operations-workers-title"><h3 id="operations-workers-title" data-jm-i18n="Traitements">Traitements</h3><ul id="operations-workers" class="operation-list"></ul></section><section aria-labelledby="operations-queues-title"><h3 id="operations-queues-title" data-jm-i18n="Files d’attente">Files d’attente</h3><ul id="operations-queues" class="operation-list"></ul></section></div>
+              <p class="small-copy" data-jm-i18n="Le retard correspond à l’échéance planifiée d’un élément en attente. Il ne mesure pas la livraison d’un e-mail ou la lecture d’un message. Les nombres plafonnés sont indiqués par « au moins ».">Le retard correspond à l’échéance planifiée d’un élément en attente. Il ne mesure pas la livraison d’un e-mail ou la lecture d’un message. Les nombres plafonnés sont indiqués par « au moins ».</p>
+              <p id="operations-sample" class="small-copy"></p>
+            </div>
+          </section>
+          <section class="card remaining-card" aria-labelledby="remaining-title"><div class="card-heading"><span class="eyebrow" data-jm-i18n="AVANT L’OUVERTURE">AVANT L’OUVERTURE</span><h2 id="remaining-title" data-jm-i18n="Les prochaines vérifications">Les prochaines vérifications</h2></div><ul class="remaining-list"><li><strong data-jm-i18n="Réception des e-mails">Réception des e-mails</strong><span data-jm-i18n="Recevoir et utiliser une invitation et un lien de récupération sur de vraies boîtes e-mail.">Recevoir et utiliser une invitation et un lien de récupération sur de vraies boîtes e-mail.</span></li><li><strong data-jm-i18n="Admission manuelle">Admission manuelle</strong><span data-jm-i18n="Vérifier une inscription sur invitation, l’e-mail puis l’approbation manuelle par Jess.">Vérifier une inscription sur invitation, l’e-mail puis l’approbation manuelle par Jess.</span></li><li><strong data-jm-i18n="Essai sur les appareils">Essai sur les appareils</strong><span data-jm-i18n="Vérifier les parcours sur téléphone et ordinateur avec le site en HTTPS.">Vérifier les parcours sur téléphone et ordinateur avec le site en HTTPS.</span></li></ul></section>
+        </div>
+        <noscript><p class="status" data-jm-i18n="Active JavaScript pour consulter la préparation du site.">Active JavaScript pour consulter la préparation du site.</p></noscript>
+      </main>
+      <footer class="footer"><span data-jm-i18n="JessieMessage · Accès privé sur invitation ·">JessieMessage · Accès privé sur invitation ·</span> <a href="mailto:contact@jessiemessage.com" data-jm-i18n="Contact">Contact</a> <a href="/help" target="_blank" rel="noopener noreferrer" data-help-link data-jm-i18n="Aide et confidentialité" aria-label="Aide et confidentialité (nouvel onglet)" data-jm-i18n-aria-label="Aide et confidentialité (nouvel onglet)">Aide et confidentialité</a></footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,73 @@
+{
+  "stage": "0.51",
+  "checkedAt": "2026-10-17T23:40:45.234Z",
+  "sourceHead": "c74436079092f41c5f90f160a103f9c692f0f39a",
+  "mainHead": "a688b30ef4e039a30de7bf05e98761845dcee8d4",
+  "mainTree": "d955f495b931ac8adb0869e25b1aec2d8ec133f2",
+  "pullRequest": 63,
+  "workflowRun": 39079931320,
+  "workflowEvent": "push",
+  "workflowConclusion": "success",
+  "testJob": 117534628866,
+  "serviceJob": 117534645560,
+  "report": {
+    "version": 1,
+    "type": "private_service_check",
+    "status": "healthy",
+    "attempts": 1,
+    "confirmedFailure": false,
+    "lastProbe": {
+      "version": 1,
+      "type": "private_service_probe",
+      "status": "healthy",
+      "checkedAt": 1792280445234,
+      "durationMilliseconds": 1127,
+      "checks": [
+        {
+          "name": "http",
+          "status": "pass",
+          "code": "ok"
+        },
+        {
+          "name": "readiness",
+          "status": "pass",
+          "code": "ok"
+        }
+      ]
+    }
+  },
+  "hostedApplicationHead": "0a1cafd85c3d8699be1961075b18e80e36bcd041",
+  "applicationRestarted": false,
+  "scheduledExecutionObserved": false,
+  "alertReceiptVerified": false,
+  "fullApplicationSource": {
+    "head": "19b1d9a59305704a749696ea7a9c70994d4b688b",
+    "tree": "712724fb2d78cf32247a842bb9fac1cebe8fa6a9",
+    "workflowRun": 39079905378,
+    "conclusion": "success",
+    "jobs": {
+      "verify": {
+        "tests": 2319,
+        "passed": 2292,
+        "skipped": 27,
+        "failed": 0
+      },
+      "mariadb10_11": {
+        "passed": 383,
+        "failed": 0
+      },
+      "mariadb11_4": {
+        "passed": 383,
+        "failed": 0
+      },
+      "chrome": {
+        "passed": 101,
+        "failed": 0
+      },
+      "httpsAuthentication": {
+        "passed": 1,
+        "failed": 0
+      }
+    }
+  }
+}

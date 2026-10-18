@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "stage": "0.53",
+  "type": "backup_alert_reception_owner_confirmation",
+  "confirmedAt": "2026-10-18T15:54:05+02:00",
+  "evidence": "direct_owner_confirmation_in_current_conversation",
+  "recipient": "contact@jessiemessage.com",
+  "synthetic": true,
+  "messages": 2,
+  "events": ["incident", "recovered"],
+  "status": "received_confirmed_by_owner",
+  "previousTargetedImapCheck": "not_confirmed_at_time_of_check",
+  "newMessagesSent": 0,
+  "externalOutageNotificationVerified": false,
+  "independentCopyVerified": false,
+  "decryptionVerified": false
+}

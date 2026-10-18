@@ -1,0 +1,46 @@
+# Adresses et entrée publique — étape 0.32
+
+**Suite 0.35 préparée et vérifiée :** la [reprise des sessions et le runtime des deux adresses](device-origin-transition.md) sont implémentés avec un profil primaire explicite ; cinq jobs CI et le préflight hébergé sur le candidat réel passent pour `a0b17ce0`. Le routage hébergeur et les appareils restent à basculer après checkpoint du schéma 30.
+
+**Préparation 0.34 terminée :** un [candidat privé pour l’origine principale](primary-origin-preparation.md) conserve les cinq fichiers runtime et leurs six clés, en ne changeant que les quatre origines. Le [bilan du 17 octobre](AUDIT-2026-10-17.md) actualise les priorités. Le candidat `4a355851` est préparé sur l’hébergement, ses cinq jobs CI passent et le service existant est recontrôlé. Il ne modifie pas encore les lanceurs, le domaine ou les appareils ; l’étape 2 ci-dessous reste partiellement réalisée, la bascule reste à faire.
+
+
+**Suite 0.33 :** l’export public reste inchangé ; son entrée mène maintenant au runtime privé `f2677249`, décrit dans [l’ouverture des notifications](notification-opening.md). La vérification du 17 octobre à 02:01:32.525 Europe/Paris confirme aussi ce lien. Le relevé 0.32 ci-dessous conserve son runtime observé à l’époque ; le plan de l’origine finale reste à réaliser.
+
+**Correction en ligne le 17 octobre 2026.** Export public `1f669e4509baf41357c9677249eb63d0b708bd9b`, arbre `c728dd76fe6558c6ad9dd5628d362d3256d7eb50`. Les 25 fichiers et leurs permissions sont vérifiés avant affectation à Apache. À **01:20:24.480 Europe/Paris**, les vingt fichiers servis correspondent aux empreintes attendues et les **56 requêtes réelles** passent. Chrome confirme accueil principal → bouton → choix de connexion actifs, ainsi que l’arrivée depuis HTTP/`www`/`app`. Le runtime privé reste `017cafaf`, schéma 30 ; ses sondes santé/disponibilité répondent 200. L’ancien export public est conservé pour repli. [PR #43](https://github.com/fredbuhr/jessiemessage/pull/43), [CI #244, cinq jobs réussis](https://github.com/fredbuhr/jessiemessage/actions/runs/38980546827).
+
+## Problème et correction
+
+Le 17 octobre 2026, le propriétaire signale que `jessiemessage.com` bloque les visiteurs. Chrome confirme le parcours : accueil public, bouton **Ouvrir mon espace**, puis `/app` avec le message de préparation sans lien de connexion. Le domaine public sert toujours l’export neutre Apache ; la messagerie, les sessions durables et les notifications fonctionnent sur `recette.jessiemessage.com`. Le propriétaire accepte les notifications dans ce même retour.
+
+L’adresse **recette est temporaire**. L’adresse finale destinée aux utilisateurs reste **https://jessiemessage.com**.
+
+La correction d’accueil est en ligne : l’option `--connect-recipe` du bâtisseur public fait répondre `/app` et `/app/` en **302** vers l’entrée HTTPS fixe `https://recette.jessiemessage.com/app`. L’accueil conserve son bouton familier. Les paramètres d’URL sont abandonnés avec `QSD` ; aucun en-tête ni paramètre ne choisit la destination. Les méthodes autres que GET/HEAD restent refusées avant ce lien. L’API d’entrée publique reste neutre, les routes privées restent fermées et aucun proxy n’est ajouté. Sans l’option, l’export existant reste inchangé.
+
+Cette étape ne déplace pas l’origine de l’application : les appareils continuent à utiliser leurs cookies, installations et abonnements actuels. Le nom temporaire reste visible après ouverture jusqu’à la bascule définitive. Il ne faut pas présenter ce lien comme une mise en production complète.
+
+## Construction et validation
+
+Depuis un checkout exact, vers un nouveau dossier absolu hors checkout :
+
+```sh
+node scripts/build-neutral-site.mjs --output /absolute/new-directory --connect-recipe
+```
+
+Les dix tests du bâtisseur passent, dont le mode par défaut, la destination fixe temporaire, l’absence de propagation des paramètres, l’ordre des contrôles de méthode, la liste fermée des fichiers et l’indépendance des constructions successives. `npm run check` réussit. Les cinq jobs de la CI #244 passent, y compris les deux MariaDB et les deux parcours Chrome. Les contrôles Apache réels sont distingués ci-dessus.
+
+Le manifeste local et hébergé a le SHA-256 `ec64fe5af832c97dc558f1678c02a521d76245ce25318ff16ab7c80e349e8863`, pour 25 fichiers et 500 872 octets. Le contrôle HTTPS couvre vingt empreintes, GET/HEAD et paramètres de l’entrée, refus POST/OPTIONS, API neutre, erreurs, routes privées et fichiers internes fermés, neuf variantes de canonicalisation et trois réponses de la recette. La réception Push n’a pas été répétée par l’agent ; l’acceptation du propriétaire et le runtime privé sont conservés.
+
+Avant affectation, comparer les 25 fichiers au manifeste et conserver l’ancien document root pour repli. Après affectation, vérifier les variantes apex/`www`, HTTP/HTTPS, `/app` et `/app/`, la disparition de l’impasse dans Chrome, la destination exacte sans paramètre, le refus des méthodes et routes privées, ainsi que la santé de la recette. Aucun changement DNS, SQL, SMTP, clé, session ou abonnement n’est requis pour cette correction limitée.
+
+## Plan de bascule définitive
+
+1. **Accès public temporaire — fait.** L’export séparé est en ligne, ses fichiers et le vrai parcours sont contrôlés. Garder l’adresse de recette pour les essais ; communiquer l’adresse principale comme point d’entrée.
+2. **Préparer l’origine définitive — candidat terminé au lot 0.34, lancement restant.** Le profil explicite de candidat accepte seulement `https://jessiemessage.com` et permet une copie séparée à valeurs/clés identiques. Les lanceurs et diagnostics de recette gardent leur défaut strict. Le lot 0.35 ajoute un profil de lancement primaire et ses diagnostics, sans supprimer les vérifications d’origine, TLS, stockage ou privilèges ; sa validation et sa future activation sont consignées séparément.
+3. **Préparer le routage et le repli.** Vérifier domaines et certificat Node, quotas, DNS Web uniquement, préservation des enregistrements de messagerie, snapshot cohérent au schéma 30 et copie indépendante. Établir une procédure d’arrêt/bascule et de retour cohérent avant toute affectation du domaine principal à Node.
+4. **Prévoir la transition des appareils.** Les cookies `__Host-` et les inscriptions Push dépendent de l’origine ; ils ne se transfèrent pas par renommage DNS. Choisir et éprouver soit une reprise de session ponctuelle sécurisée, soit une reconnexion unique annoncée, puis activer les notifications et réinstaller l’app si nécessaire sur l’adresse finale. Les sessions durables restent ensuite la règle. Ne pas promettre une migration silencieuse ni partager un cookie sur tous les sous-domaines.
+5. **Basculer et accepter.** Faire servir l’application par `jessiemessage.com`, canonicaliser `www`, vérifier invitations/e-mails, connexions existantes, appareils simultanés, textes/photos, notifications en arrière-plan et ouverture depuis l’icône. Garder un parcours de transition pour les anciens liens ; réserver ensuite la recette aux essais, sans en faire une adresse client.
+
+La validation des notifications ne vaut pas encore validation simultanée de six à huit appareils. CRM, récupération client, diffusions, politique de conservation et autres points du plan principal gardent leur statut ; cette correction d’adresse ne les active pas.
+
+Référence technique : [drapeaux Apache 2.4, redirection et QSD](https://httpd.apache.org/docs/2.4/rewrite/flags.html).

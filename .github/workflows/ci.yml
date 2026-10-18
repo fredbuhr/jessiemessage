@@ -1,0 +1,182 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**", "fix/**"]
+  pull_request:
+    branches: [main, "feat/**", "fix/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Check JavaScript syntax
+        run: npm run check
+      - name: Run tests
+        run: npm test
+      - name: Build offline workbench
+        run: npm run build
+      - name: Downloadable preview (open HTML, no console)
+        uses: actions/upload-artifact@v4
+        with:
+          name: JessieMessage-apercu-${{ github.run_number }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            artifacts/JessieMessage.html
+            artifacts/SHA256.txt
+            artifacts/LIRE-EN-PREMIER.txt
+          include-hidden-files: false
+
+  browser:
+    name: Chrome keyboard and chat lifecycle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Exercise real Chrome with synthetic local fixtures
+        run: npm run test:browser
+
+  auth-browser:
+    name: Chrome HTTPS authentication with MariaDB
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          # Isolated synthetic CI credentials; this job never targets hosting.
+          MARIADB_ROOT_PASSWORD: ci-only-root-not-a-secret
+          MARIADB_DATABASE: jessiemessage_test_auth_browser_ci
+          MARIADB_USER: jessiemessage_test
+          MARIADB_PASSWORD: ci-only-not-a-secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Create disposable DML-only runtime account
+        run: |
+          docker exec -i -e MYSQL_PWD=ci-only-root-not-a-secret ${{ job.services.mariadb.id }} mariadb --user=root <<'SQL'
+          CREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret';
+          GRANT SELECT, INSERT, UPDATE, DELETE ON `jessiemessage\_test\_auth\_browser\_ci`.* TO 'jessiemessage_runtime_test'@'%';
+          SQL
+      - name: Rehearse real administrator authentication over loopback HTTPS
+        run: npm run test:auth-browser
+        env:
+          JESSIEMESSAGE_DB_TEST: "1"
+          JESSIEMESSAGE_DB_HOST: "127.0.0.1"
+          JESSIEMESSAGE_DB_PORT: "3306"
+          JESSIEMESSAGE_DB_NAME: jessiemessage_test_auth_browser_ci
+          JESSIEMESSAGE_DB_USER: jessiemessage_test
+          JESSIEMESSAGE_DB_PASSWORD: ci-only-not-a-secret
+          JESSIEMESSAGE_MIGRATION_DATABASE: jessiemessage_test_auth_browser_ci
+          JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL: "1"
+          JESSIEMESSAGE_RUNTIME_DB_USER: jessiemessage_runtime_test
+          JESSIEMESSAGE_RUNTIME_DB_PASSWORD: ci-runtime-only-not-a-secret
+          JESSIEMESSAGE_APPLICATION_DATABASE: jessiemessage_test_auth_browser_ci
+
+  database:
+    name: MariaDB ${{ matrix.mariadb }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mariadb: ["10.11", "11.4"]
+    services:
+      mariadb:
+        image: mariadb:${{ matrix.mariadb }}
+        env:
+          # Disposable synthetic CI credentials; never used in deployment.
+          MARIADB_ROOT_PASSWORD: ci-only-root-not-a-secret
+          MARIADB_DATABASE: jessiemessage_test_ci
+          MARIADB_USER: jessiemessage_test
+          MARIADB_PASSWORD: ci-only-not-a-secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Create disposable runtime and offline schema inspection accounts
+        run: |
+          docker exec -i -e MYSQL_PWD=ci-only-root-not-a-secret ${{ job.services.mariadb.id }} mariadb --user=root <<'SQL'
+          CREATE DATABASE jessiemessage_test_restore_ci CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          GRANT ALL PRIVILEGES ON jessiemessage_test_restore_ci.* TO 'jessiemessage_test'@'%';
+          CREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret';
+          GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_ci.* TO 'jessiemessage_runtime_test'@'%';
+          GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_restore_ci.* TO 'jessiemessage_runtime_test'@'%';
+          CREATE USER 'jessiemessage_preflight_test'@'%' IDENTIFIED BY 'ci-preflight-only-not-a-secret';
+          CREATE USER 'jessiemessage_shared_test'@'%' IDENTIFIED BY 'ci-shared-only-not-a-secret' WITH MAX_USER_CONNECTIONS 38;
+          GRANT SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_shared_test'@'%';
+          GRANT ALL PRIVILEGES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_test'@'%' WITH GRANT OPTION;
+          CREATE USER 'jessiemessage_backup_test'@'%' IDENTIFIED BY 'ci-backup-only-not-a-secret';
+          GRANT ALL PRIVILEGES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_backup_test'@'%';
+          GRANT ALL PRIVILEGES ON `jessiemessage\_test\_restore\_ci`.* TO 'jessiemessage_backup_test'@'%';
+          SQL
+      - name: Exercise migrations and constraints on disposable database
+        run: npm run test:db
+        env:
+          JESSIEMESSAGE_DB_TEST: "1"
+          JESSIEMESSAGE_RESTORE_TEST_DATABASE: jessiemessage_test_restore_ci
+          JESSIEMESSAGE_BACKUP_SCHEMA_USER: jessiemessage_backup_test
+          JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD: ci-backup-only-not-a-secret
+          JESSIEMESSAGE_DB_HOST: "127.0.0.1"
+          JESSIEMESSAGE_DB_PORT: "3306"
+          JESSIEMESSAGE_DB_NAME: jessiemessage_test_ci
+          JESSIEMESSAGE_DB_USER: jessiemessage_test
+          JESSIEMESSAGE_DB_PASSWORD: ci-only-not-a-secret
+          JESSIEMESSAGE_MIGRATION_DATABASE: jessiemessage_test_ci
+          JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL: "1"
+          JESSIEMESSAGE_RUNTIME_DB_USER: jessiemessage_runtime_test
+          JESSIEMESSAGE_RUNTIME_DB_PASSWORD: ci-runtime-only-not-a-secret
+          JESSIEMESSAGE_APPLICATION_DATABASE: jessiemessage_test_ci
+          JESSIEMESSAGE_PREFLIGHT_DB_USER: jessiemessage_preflight_test
+          JESSIEMESSAGE_PREFLIGHT_DB_PASSWORD: ci-preflight-only-not-a-secret
+          JESSIEMESSAGE_SHARED_PREFLIGHT_DB_USER: jessiemessage_shared_test
+          JESSIEMESSAGE_SHARED_PREFLIGHT_DB_PASSWORD: ci-shared-only-not-a-secret
+          # Disposable root fixture used only to demonstrate wildcard collisions.
+          JESSIEMESSAGE_PATTERN_TEST_ROOT_PASSWORD: ci-only-root-not-a-secret

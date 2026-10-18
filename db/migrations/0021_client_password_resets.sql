@@ -1,0 +1,27 @@
+CREATE TABLE client_password_resets (
+  id VARBINARY(16) NOT NULL,
+  user_id VARBINARY(16) NOT NULL,
+  token_hash VARBINARY(32) NOT NULL,
+  credential_version INT UNSIGNED NOT NULL,
+  email_hash VARBINARY(32) NOT NULL,
+  created_at DATETIME(6) NOT NULL,
+  expires_at DATETIME(6) NOT NULL,
+  consumed_at DATETIME(6) NULL,
+  revoked_at DATETIME(6) NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY client_password_resets_token_hash (token_hash),
+  UNIQUE KEY client_password_resets_id_user (id, user_id),
+  KEY client_password_resets_user (user_id, created_at),
+  KEY client_password_resets_expiry (expires_at),
+  CONSTRAINT client_password_reset_id_size CHECK (OCTET_LENGTH(id) = 16),
+  CONSTRAINT client_password_reset_user_size CHECK (OCTET_LENGTH(user_id) = 16),
+  CONSTRAINT client_password_reset_token_size CHECK (OCTET_LENGTH(token_hash) = 32),
+  CONSTRAINT client_password_reset_email_size CHECK (OCTET_LENGTH(email_hash) = 32),
+  CONSTRAINT client_password_reset_version CHECK (credential_version >= 1),
+  CONSTRAINT client_password_reset_lifetime CHECK (expires_at > created_at AND expires_at <= created_at + INTERVAL 30 MINUTE),
+  CONSTRAINT client_password_reset_consumption CHECK (consumed_at IS NULL OR (consumed_at >= created_at AND consumed_at < expires_at)),
+  CONSTRAINT client_password_reset_revocation CHECK (revoked_at IS NULL OR revoked_at >= created_at),
+  CONSTRAINT client_password_reset_terminal CHECK (consumed_at IS NULL OR revoked_at IS NULL),
+  CONSTRAINT client_password_reset_user_fk FOREIGN KEY (user_id)
+    REFERENCES client_auth_state (user_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

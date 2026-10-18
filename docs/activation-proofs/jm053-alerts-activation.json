@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "stage": "0.53",
+  "type": "backup_email_alerts_activated",
+  "sourceHead": "e1842a395925b19a50dcabbccfb7e9b9b03fcd8e",
+  "sourceTree": "ad44e230db9a1ec89902e616b1315496b4afe284",
+  "runtimeHead": "0a1cafd85c3d8699be1961075b18e80e36bcd041",
+  "runtimeTree": "17db89aa165e23ca427d073f5a3fcc28387f5168",
+  "run": "bash /srv/customer/jessiemessage-private/start-primary-alerts-e1842a39.sh",
+  "manager": {
+    "buildSucceeded": true,
+    "active": true,
+    "modifiedAtMinuteEuropeParis": "2026-10-18T15:07:00+02:00"
+  },
+  "samples": [
+    { "checkedAt": 1792328871090, "state": "current", "code": "OK", "activeIncident": false, "lastSuccessAt": 1792300539807, "ageMilliseconds": 28331283, "pendingAlerts": 0 },
+    { "checkedAt": 1792328931121, "state": "current", "code": "OK", "activeIncident": false, "lastSuccessAt": 1792300539807, "ageMilliseconds": 28391314, "pendingAlerts": 0 }
+  ],
+  "observedIntervalMilliseconds": 60031,
+  "syntheticMailTest": {
+    "recipient": "contact@jessiemessage.com",
+    "events": ["incident", "recovered"],
+    "messages": 2,
+    "synthetic": true,
+    "notificationStatus": "smtp_accepted",
+    "sentBeforeActivation": true,
+    "productionQueueChanged": false,
+    "actualOutageCreated": false,
+    "inboxStatus": "not_confirmed"
+  },
+  "receptionCheck": {
+    "checkedAt": "2026-10-18T13:17:07.909789Z",
+    "protocol": "IMAPS",
+    "tlsCertificateVerified": true,
+    "readOnly": true,
+    "scope": "INBOX-exact-synthetic-reference",
+    "foldersChecked": 1,
+    "messagesMatched": 0,
+    "status": "not_confirmed",
+    "humanReadStatus": "not_checked",
+    "mailboxSettingsChanged": false,
+    "mx": [{ "exchange": "mta-gw.infomaniak.ch", "priority": 5 }]
+  },
+  "postDeployment": {
+    "checkedAt": "2026-10-18T13:10:53.337Z",
+    "httpsReads": 38,
+    "exactResourceHashes": 16,
+    "failures": 0,
+    "protectedBroadcastRoute": "/api/broadcast/admin/campaigns",
+    "journalRecords": 4,
+    "lastAttemptAt": 1792300533262,
+    "lastSuccessAt": 1792300539807,
+    "additionalCaptureObserved": false
+  },
+  "previousCommandsSaved": true,
+  "migrationPerformed": false,
+  "keysChanged": false,
+  "customerMessagesSent": 0,
+  "independentCopyStatus": "not_checked",
+  "decryptionStatus": "not_checked",
+  "screenshot": {
+    "file": "jm053-alerts-activation-20261018.jpg",
+    "bytes": 90410,
+    "sha256": "adfb6ce84550e2773f122491869b39a134fa50e8a1b2e248c28052fe2c09bdaa"
+  }
+}

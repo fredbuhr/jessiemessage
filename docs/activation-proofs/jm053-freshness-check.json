@@ -1,0 +1,75 @@
+{
+  "stage": "0.53",
+  "type": "private_backup_freshness_hosted_check",
+  "version": 1,
+  "checkedAt": "2026-10-18T00:55:23.605Z",
+  "sourceHead": "5c64a9d6c72552555b0b57980779391a860b262e",
+  "sourceTree": "ff0d0b3977f04c44b15ee8f53575b10711cd9a9d",
+  "checkout": "/srv/customer/jessiemessage-operator/reprise-freshness-5c64a9d6",
+  "nativeTests": {
+    "tests": 11,
+    "pass": 11,
+    "fail": 0,
+    "skipped": 0
+  },
+  "journalReport": {
+    "version": 1,
+    "type": "private_backup_freshness",
+    "scope": "capture-journal",
+    "status": "current",
+    "code": "OK",
+    "checkedAt": 1792284923605,
+    "maximumAgeMilliseconds": 93600000,
+    "lastAttemptAt": 1792283290807,
+    "lastSuccessAt": 1792283296649,
+    "ageMilliseconds": 1626956,
+    "lastAttemptStatus": "succeeded",
+    "lastAttemptCode": "OK",
+    "copyStatus": "not_checked",
+    "decryptionStatus": "not_checked"
+  },
+  "httpsAfterCheck": {
+    "checkedAt": 1792284923621,
+    "status": "healthy",
+    "attempts": 1,
+    "health": "ok",
+    "readiness": "ready"
+  },
+  "scheduledFreshnessCheckInstalled": false,
+  "alertSent": false,
+  "applicationRestarted": false,
+  "databaseMigrated": false,
+  "keysChanged": false,
+  "ci": {
+    "runId": 39084535494,
+    "head": "5c64a9d6c72552555b0b57980779391a860b262e",
+    "conclusion": "success",
+    "jobs": 5,
+    "general": {
+      "tests": 2440,
+      "pass": 2413,
+      "fail": 0,
+      "skipped": 27
+    },
+    "mariadb1011": {
+      "pass": 383,
+      "fail": 0,
+      "skipped": 0
+    },
+    "mariadb114": {
+      "pass": 383,
+      "fail": 0,
+      "skipped": 0
+    },
+    "chrome": {
+      "pass": 101,
+      "fail": 0,
+      "skipped": 0
+    },
+    "httpsAuthentication": {
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0
+    }
+  }
+}

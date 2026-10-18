@@ -1,0 +1,28 @@
+/* Approved identity: preserve PNG geometry, colour and transparency. */
+.brand {
+  display:inline-flex; align-items:center; gap:11px; flex-shrink:0;
+  text-decoration:none; color:#f5eef2; white-space:nowrap;
+}
+.brandmark {
+  display:inline-flex; flex:0 0 44px; width:44px; height:44px;
+  border:0; border-radius:0; background:transparent; padding:0;
+  box-shadow:none; overflow:visible;
+}
+.brandmark img {
+  display:block; width:100%; height:100%; object-fit:contain;
+  border:0; border-radius:0; filter:none; box-shadow:none;
+}
+.brand-name {
+  font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+  font-size:28px; font-weight:550; line-height:1.12;
+  letter-spacing:-.035em; color:#f5eef2; text-transform:none;
+  text-shadow:none; -webkit-text-stroke:0;
+}
+.brand-fallback { display:block; width:min(52%,192px); height:auto; margin:auto; object-fit:contain; }
+.avatar.brand-avatar { border-radius:0; background:transparent; overflow:visible; }
+.avatar.brand-avatar img { object-fit:contain; object-position:center; transform:none; }
+@media(max-width:780px) {
+  .brand { gap:10px; }
+  .brandmark { width:40px; height:40px; flex-basis:40px; }
+  .brand-name { font-size:25px; }
+}

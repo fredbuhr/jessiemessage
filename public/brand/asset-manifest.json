@@ -1,0 +1,75 @@
+{
+  "revision": "approved-2026-10-14",
+  "displayName": "Jessie",
+  "applicationName": "JessieMessage",
+  "source": "Approved PNG icon pack supplied by the owner. No symbol redraw.",
+  "maskableEmblemMaxRadius": 201.84,
+  "assets": [
+    {
+      "file": "/brand/icon-128.png",
+      "width": 128,
+      "height": 128,
+      "sha256": "476ef6a5f6fbcfc1fa425eb5a2a829d6fd5d5d0b30980592bce2a041c664adca",
+      "role": "approved-original"
+    },
+    {
+      "file": "/brand/icon-16.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "f9d2f9ce90ad98b2f92867d5d7e3909e199049f3df7f7f836e3cbcb68c9c4e4d",
+      "role": "approved-original"
+    },
+    {
+      "file": "/brand/icon-192.png",
+      "width": 192,
+      "height": 192,
+      "sha256": "58f63d8249159541c6a2ddbd1b5f8980cd1efee8f475fff3d6e6789d0c515680",
+      "role": "approved-original"
+    },
+    {
+      "file": "/brand/icon-32.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "6d19eb66bfc3ec9a45ac30786d82c06319b653fc638027309a264b7e249db5aa",
+      "role": "approved-original"
+    },
+    {
+      "file": "/brand/icon-48.png",
+      "width": 48,
+      "height": 48,
+      "sha256": "3a585bfff8925a4bb693daa48c1f9ac3f7dc83898232762abe8712c8e7bf5abc",
+      "role": "approved-original"
+    },
+    {
+      "file": "/brand/icon-512.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "80623bdfa83e75c09f213f174a39af1913934328fa92f3bb71ae2e18c83e467b",
+      "role": "approved-original"
+    },
+    {
+      "file": "/brand/icon-64.png",
+      "width": 64,
+      "height": 64,
+      "sha256": "616334df23d9dc3062be794979021eedb659ee03c9df3fdee31a6c35023c580f",
+      "role": "approved-original"
+    },
+    {
+      "file": "/brand/icon-maskable-512.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "03e057a049e60beffc611dfeb4f17171d963d2c7b930656e80f6cf69c564e4d8",
+      "role": "maskable"
+    },
+    {
+      "file": "/favicon.ico",
+      "sha256": "d7c4168563ecda525ac9d6aeb83770635319925c722a8b461512043df43b6f16",
+      "role": "browser"
+    },
+    {
+      "file": "/apple-touch-icon.png",
+      "sha256": "7e301411f82a11c61643f12fe75457ba3d24adc464dfcaa6c81b14ae75525946",
+      "role": "apple-touch"
+    }
+  ]
+}

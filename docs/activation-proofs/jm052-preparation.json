@@ -1,0 +1,75 @@
+{
+  "stage": "0.52",
+  "status": "operator_prepared",
+  "checkedAt": "2026-10-18T00:10:34.116896+00:00",
+  "operator": {
+    "head": "9665d54cc6abb236b04eecc9d92540d7e1c5d035",
+    "tree": "67a0757f77cced10d07f25936b71a30fd6539075",
+    "treeMatched": true,
+    "cleanCheckout": true,
+    "lockedDependenciesInstalled": true,
+    "syntaxPassed": true
+  },
+  "hosting": {
+    "gpgVersion": "2.2.40",
+    "hostedSyntheticGpgRoundtripPassed": true,
+    "privateDirectoryPrepared": true,
+    "privateDirectoryMode": "0700",
+    "preflightBlockedBeforeStop": true,
+    "preflightCode": "RECURRING_FILES_IO",
+    "publicRecipientRequired": true,
+    "productionRecipientInstalled": false,
+    "recurrenceActivated": false,
+    "applicationStopped": false,
+    "newProductionCheckpointCreated": false,
+    "httpsHealth": "ok",
+    "httpsReadiness": "ready"
+  },
+  "launcher": {
+    "file": "start-primary-backups-checked-9665d54c.sh",
+    "bytes": 851,
+    "sha256": "8e162dab6fd444f685d06bcfc3ceb559ac64ab691aa42fb7cd4343f21db0b0c8",
+    "mode": "0700",
+    "syntaxPassed": true,
+    "executed": false
+  },
+  "runtime": {
+    "head": "0a1cafd85c3d8699be1961075b18e80e36bcd041",
+    "tree": "17db89aa165e23ca427d073f5a3fcc28387f5168",
+    "managerRunChanged": false
+  },
+  "ci": {
+    "sourceHead": "9665d54cc6abb236b04eecc9d92540d7e1c5d035",
+    "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39081600837",
+    "jobsPassed": 5,
+    "jobsTotal": 5,
+    "generalSuite": {
+      "tests": 2429,
+      "passed": 2402,
+      "skipped": 27,
+      "failed": 0
+    },
+    "mariadb1011Passed": 383,
+    "mariadb114Passed": 383,
+    "chromePassed": 101,
+    "httpsAuthPassed": 1,
+    "syntheticGpgRoundtripPassed": true,
+    "syntheticGpgProtection": "ocb-aead",
+    "windowsRunUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39081600849",
+    "windowsPowerShell51Passed": true,
+    "windowsRealKeyCreated": false
+  },
+  "pending": [
+    "Owner-created public recovery key and public SHA-256",
+    "Successful public-recipient preflight",
+    "Manager supervisor activation",
+    "First coherent encrypted application checkpoint and runtime resume",
+    "Owner-side decryption of the real encrypted archive"
+  ],
+  "nextStage": "0.53: independent recurring copy, freshness and received alerts",
+  "screenshot": {
+    "file": "jm052-preparation-20261018.jpg",
+    "bytes": 109585,
+    "sha256": "84843cbd86d10a5ad0b1659b0ba451edbf439b4fcb78b62ff8d96f748b130ab2"
+  }
+}

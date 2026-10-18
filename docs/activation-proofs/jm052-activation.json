@@ -1,0 +1,79 @@
+{
+  "stage": "0.52",
+  "status": "first_encrypted_checkpoint_verified",
+  "checkedAt": "2026-10-18T00:29:40.533373+00:00",
+  "operatorHead": "9665d54cc6abb236b04eecc9d92540d7e1c5d035",
+  "operatorTree": "67a0757f77cced10d07f25936b71a30fd6539075",
+  "runtimeHead": "0a1cafd85c3d8699be1961075b18e80e36bcd041",
+  "runtimeTree": "17db89aa165e23ca427d073f5a3fcc28387f5168",
+  "recipient": {
+    "file": "recipient-public.asc",
+    "bytes": 1363,
+    "sha256": "c759ad91a49a951adee26f51699380723515c71e4477d267c741508513f20270",
+    "fingerprint": "B4E5570BF03A5B048B6AF394D49C2329ABD5FEE2",
+    "privateKeyReceived": false
+  },
+  "preflight": {
+    "passed": true,
+    "checkedAt": "2026-10-18T00:26:10.860028+00:00",
+    "applicationStopped": false,
+    "backupStarted": false
+  },
+  "manager": {
+    "buildSucceeded": true,
+    "applicationActiveObserved": true,
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-backups-checked-9665d54c.sh",
+    "previousCommandsSaved": true
+  },
+  "captureDirectory": "/srv/customer/jessiemessage-private/recurring-backup-052/capture-1792283290807-da0b3c1143fa53a3",
+  "journal": {
+    "version": 1,
+    "type": "recurring_checkpoint",
+    "status": "succeeded",
+    "phase": "finished",
+    "code": "OK",
+    "startedAt": 1792283290807,
+    "finishedAt": 1792283296649,
+    "runtimeResumed": true
+  },
+  "operationMilliseconds": 5842,
+  "lastSuccessAt": 1792283296649,
+  "receiptVersion": 8,
+  "manifestVersion": 10,
+  "profile": "messaging-photos-notify-recovery-crm-broadcast-application",
+  "tables": 30,
+  "migrations": 30,
+  "coverage": {
+    "scope": "application-tables",
+    "tables": 30,
+    "encryptedMedia": true,
+    "executableObjects": "excluded",
+    "executableInventory": "unproven",
+    "completeDatabase": false
+  },
+  "sourceArchive": {
+    "bytes": 402250,
+    "sha256": "623c43013bf4c2a6f613bbea878b1fcfc89884d17e7920c1d86bfbd28ab2e6c8"
+  },
+  "ciphertext": {
+    "bytes": 402802,
+    "sha256": "edbe5326c951826622542fb4ced4b684d0da770a4da507b569beb9d4bed8b8e2"
+  },
+  "protection": "mdc",
+  "lockAbsent": true,
+  "https": {
+    "health": "ok",
+    "ready": "ready"
+  },
+  "ownerSyntheticRecoveryVerified": true,
+  "realArchiveDecryptionVerified": false,
+  "independentCopyPending": true,
+  "dailyHourUtc": 5,
+  "dailyMinuteUtc": 15,
+  "scheduledOccurrenceObserved": false,
+  "screenshot": {
+    "file": "jm052-activation-20261018.jpg",
+    "bytes": 100630,
+    "sha256": "7ce82c7ec0e8afd678779c29a1f25a6422ea55697606d6e22f96f47914ac4c1b"
+  }
+}
