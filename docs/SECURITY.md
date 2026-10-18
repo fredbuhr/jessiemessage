@@ -5,6 +5,10 @@
 
 Public source code is compatible with a secure product only if every release handles secrets and data correctly. Treat all externally submitted data as untrusted.
 
+## Backup collector boundary — 0.55
+
+Primary administrator sessions and CSRF protect settings and the personal Windows kit. Pairing uses a random 256-bit code, single use and fifteen minutes; the revocable capability reads encrypted checkpoints only and cannot act as an administrator. Hashes are stored server-side; the Windows credential uses DPAPI and user/SYSTEM ACLs. Native endpoints reject browser Origin/fetch metadata and cookie authorization, and never export plaintext archives, configurations or GPG keys. Anchored bounded files, ciphertext prehash, strict receipts, folder generations and cancellation during drain protect the daily capture. The PC is not paired yet and no real copy receipt exists. See [scope and limits](backup-destinations-055.md).
+
 ## Must be true before invite links are activated
 
 - Strong, hashed, one-time invitation tokens with expiry and revocation.

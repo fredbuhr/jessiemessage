@@ -1,0 +1,306 @@
+{
+  "version": 1,
+  "stage": "0.55",
+  "release": "0.55.0",
+  "source": {
+    "head": "088e6e1f1dc283a28ab81359f756d76eb0ac9d9b",
+    "tree": "2c9e81dc0b4c5e0e14d35c5caae051a87ac3fcdb",
+    "merge": "34b01aa3a5a0ef8f1a62f0c567d7b575998557ae",
+    "pullRequest": 70,
+    "releaseRef": "release/0.55.0"
+  },
+  "ci": {
+    "sourceRun": 39139756404,
+    "pullRequestRun": 39139759906,
+    "windowsRun": 39139759897,
+    "mainRun": 39139992278,
+    "mainWindowsRun": 39139992258,
+    "sourceJobs": [
+      {
+        "run_id": 39139756404,
+        "jobs": [
+          {
+            "id": 117711564318,
+            "name": "Chrome HTTPS authentication with MariaDB",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117711564429,
+            "name": "MariaDB 11.4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117711564492,
+            "name": "Chrome keyboard and chat lifecycle",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117711564515,
+            "name": "MariaDB 10.11",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117711564546,
+            "name": "verify",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "run_id": 39139759906,
+        "jobs": [
+          {
+            "id": 117711575129,
+            "name": "MariaDB 10.11",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117711575225,
+            "name": "Chrome HTTPS authentication with MariaDB",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117711575271,
+            "name": "MariaDB 11.4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117711575299,
+            "name": "Chrome keyboard and chat lifecycle",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117711575322,
+            "name": "verify",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "mainJobs": [
+      {
+        "run_id": 39139992278,
+        "jobs": [
+          {
+            "id": 117712255762,
+            "name": "verify",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117712255824,
+            "name": "MariaDB 11.4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117712255901,
+            "name": "Chrome keyboard and chat lifecycle",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117712255947,
+            "name": "Chrome HTTPS authentication with MariaDB",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 117712255990,
+            "name": "MariaDB 10.11",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "run_id": 39139992258,
+        "jobs": [
+          {
+            "id": 117712255581,
+            "name": "Windows PowerShell 5.1 instructions",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "sourceResults": [
+      {
+        "id": 117711564318,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "conclusion": "success",
+        "summary": [
+          "2026-10-18T15:17:22.8158937Z ℹ tests 1",
+          "2026-10-18T15:17:22.8159415Z ℹ pass 1",
+          "2026-10-18T15:17:22.8159619Z ℹ fail 0",
+          "2026-10-18T15:17:22.8160032Z ℹ skipped 0"
+        ]
+      },
+      {
+        "id": 117711564429,
+        "name": "MariaDB 11.4",
+        "conclusion": "success",
+        "summary": [
+          "2026-10-18T15:18:41.1393447Z ℹ tests 383",
+          "2026-10-18T15:18:41.1394987Z ℹ pass 383",
+          "2026-10-18T15:18:41.1395406Z ℹ fail 0",
+          "2026-10-18T15:18:41.1396240Z ℹ skipped 0"
+        ]
+      },
+      {
+        "id": 117711564492,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success",
+        "summary": [
+          "2026-10-18T15:18:20.4530264Z ℹ tests 110",
+          "2026-10-18T15:18:20.4530652Z ℹ pass 110",
+          "2026-10-18T15:18:20.4530844Z ℹ fail 0",
+          "2026-10-18T15:18:20.4531246Z ℹ skipped 0"
+        ]
+      },
+      {
+        "id": 117711564515,
+        "name": "MariaDB 10.11",
+        "conclusion": "success",
+        "summary": [
+          "2026-10-18T15:17:58.3630826Z ℹ tests 383",
+          "2026-10-18T15:17:58.3631262Z ℹ pass 383",
+          "2026-10-18T15:17:58.3631439Z ℹ fail 0",
+          "2026-10-18T15:17:58.3631883Z ℹ skipped 0"
+        ]
+      },
+      {
+        "id": 117711564546,
+        "name": "verify",
+        "conclusion": "success",
+        "summary": [
+          "2026-10-18T15:17:07.4240314Z Syntax verified: 445 JavaScript and shell source files.",
+          "2026-10-18T15:17:54.7673908Z ℹ tests 2506",
+          "2026-10-18T15:17:54.7674717Z ℹ pass 2479",
+          "2026-10-18T15:17:54.7675096Z ℹ fail 0",
+          "2026-10-18T15:17:54.7675893Z ℹ skipped 27",
+          "2026-10-18T15:18:06.2194037Z Syntax verified: 445 JavaScript and shell source files."
+        ]
+      }
+    ],
+    "windows": {
+      "run": 39139759897,
+      "jobs": [
+        {
+          "id": 117711575088,
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "hosting": {
+    "checkout": "/srv/customer/jessiemessage-operator/backup-copies-055-088e6e1f",
+    "profile": "messaging-photos-notify-recovery-crm-broadcast",
+    "deployment": "primary-transition",
+    "schema": 30,
+    "privateConfigurationFiles": 6,
+    "nativeTests": {
+      "tests": 159,
+      "pass": 159,
+      "fail": 0,
+      "skipped": 0
+    },
+    "preflight": {
+      "status": "passed",
+      "started": false,
+      "backupStarted": false,
+      "enabled": true,
+      "hourUtc": 5,
+      "minuteUtc": 15
+    },
+    "manager": {
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-backup-copies-055-088e6e1f.sh",
+      "status": "active",
+      "build": "passed",
+      "lastModifiedDisplayed": "18/10/2026 à 17:22",
+      "displayTimeZone": "Europe/Paris"
+    },
+    "observations": [
+      {
+        "checkedAt": 1792336960813,
+        "state": "current",
+        "code": "OK",
+        "activeIncident": false,
+        "pendingAlerts": 0
+      },
+      {
+        "checkedAt": 1792337020866,
+        "state": "current",
+        "code": "OK",
+        "activeIncident": false,
+        "pendingAlerts": 0
+      }
+    ],
+    "https": {
+      "checkedAt": "2026-10-18T15:25:25.403541+00:00",
+      "checks": 60,
+      "passed": 60,
+      "exactResourceHashes": 22,
+      "origins": [
+        "https://jessiemessage.com",
+        "https://recette.jessiemessage.com"
+      ],
+      "anonymousPrimaryBackupUi": 401,
+      "anonymousLegacyBackupUi": 404,
+      "agentWithoutMarkerPrimary": 403,
+      "agentWithoutCapabilityPrimary": 401
+    },
+    "sourcesClean": true
+  },
+  "backups": {
+    "journalRecords": 4,
+    "lastAttemptAt": 1792300533262,
+    "lastSuccessAt": 1792300539807,
+    "archivesAvailable": 2,
+    "captureTriggeredByDeployment": false,
+    "activeIncident": false,
+    "pendingAlerts": 0,
+    "destination": {
+      "label": "Mon PC",
+      "kind": "computer",
+      "paired": false,
+      "lastReceipt": null
+    },
+    "independentCopyStatus": "pending",
+    "decryptionStatus": "not_checked",
+    "cloudSynchronizationStatus": "not_checked"
+  },
+  "rollback": {
+    "head": "6cfce890827c835fdbda2488163b5c0f1695b2dc",
+    "tree": "9308cb4dc736e7a869fa50796801ddc83a098d69",
+    "checkout": "/srv/customer/jessiemessage-operator/release-054-6cfce890",
+    "privateManagerSnapshot": "/srv/customer/jessiemessage-private/manager-before-backup-copies-055.json",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-release-054-6cfce890.sh",
+    "performed": false,
+    "sqlRestoreRequired": false
+  },
+  "scope": {
+    "actualCustomerCampaignSent": false,
+    "testAlertResent": false,
+    "privateGpgKeyRead": false,
+    "agentCredentialCreated": false,
+    "ownerPcInstallationPending": true,
+    "existingAcceptedJourneysRepeated": false
+  },
+  "screenshot": {
+    "file": "jm055-activation-20261018.jpg",
+    "bytes": 90439,
+    "sha256": "e5ec38f65d12b65064c4c7ef85be5ae61182f5d538e4baa4e7bfb8d40b7921dc"
+  }
+}
