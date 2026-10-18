@@ -676,11 +676,13 @@ test("late device data after hide cannot repopulate a new account and malformed 
   assert.match(malformed.element("devices-status").textContent, /pas pu être vérifiés/);
 });
 
-test("an isolated conversation capability failure offers retry without losing the administrator session", async () => {
+test("an isolated conversation capability failure offers retry without losing the administrator session", async t => {
+  for (const status of [403, 503]) await t.test(String(status), async () => {
   let failure = true;
-  const f = harness({ intercept: (path) => path === "/api/chat/admin/capabilities" && failure ? response(503, { error: "temporarily_unavailable" }) : undefined });
+  const f = harness({ intercept: (path) => path === "/api/chat/admin/capabilities" && failure ? response(status, { error: "temporarily_unavailable" }) : undefined });
   await flush(); assert.equal(f.element("connected").hidden, false); assert.equal(f.element("admin-chat-link").hidden, true);
   assert.equal(f.element("admin-chat-retry").hidden, false); assert.match(f.element("admin-session-note").textContent, /Réessaie quand la connexion revient/);
   failure = false; await f.click("admin-chat-retry"); assert.equal(f.element("admin-chat-link").hidden, false); assert.equal(f.element("admin-chat-retry").hidden, true);
   assert.equal(f.element("connected-name").textContent, "Jess"); assert.equal(posts(f).length, 0);
+  });
 });
