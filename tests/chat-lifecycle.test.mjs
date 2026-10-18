@@ -7,6 +7,7 @@ import { webcrypto } from "node:crypto";
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const notificationLinkSource = await readFile(new URL("../public/notification-link.js", import.meta.url), "utf8");
+const quickRepliesSource = await readFile(new URL("../public/quick-replies.js", import.meta.url), "utf8");
 const modelSource = await readFile(new URL("../public/chat-model.js", import.meta.url), "utf8");
 const modelExports = [...modelSource.matchAll(/export function ([a-zA-Z0-9_]+)\(/g)].map((match) => match[1]);
 const html = await readFile(new URL("../public/chat.html", import.meta.url), "utf8");
@@ -123,7 +124,8 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(notificationLinkSource, context, { filename: "public/notification-link.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  vm.runInContext(`globalThis.__quickReplies = (() => {${quickRepliesSource.replace(/^import .*;\n/, "const { validBody, validCaption } = __model;\n").replaceAll("export function ", "function ")}\nreturn {quickReplyOptions,appendQuickReply};})();`, context, { filename: "public/quick-replies.js" });
+  const executable = source.replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -246,6 +248,39 @@ test("a new login for the same account also abandons the old pending send, while
   }
 });
 
+test("quick replies append to the administrator draft, remain editable, and require the ordinary send action", async () => {
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin") }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
+  f.element("message-body").value = "Private draft";
+  await f.click("open-quick-replies"); assert.equal(f.element("quick-replies-dialog").open, true);
+  const button = f.element("quick-replies-list").children.find(node => node.dataset.quickReply === "good-night");
+  for (const handler of button.events.get("click")) handler({}); await flush();
+  assert.equal(f.element("message-body").value, "Private draft\nBonne nuit, bisous 😘");
+  assert.equal(f.element("quick-replies-dialog").open, false); assert.equal(f.state.posts, 0);
+  assert.equal(f.inspect().states.get(f.inspect().selected).draft, f.element("message-body").value);
+  await f.send(f.element("message-body").value + " Edited"); assert.equal(f.state.posts, 1);
+  const sent = JSON.parse(f.calls.find(call => call.options.method === "POST" && /\/messages$/.test(call.path)).options.body);
+  assert.equal(sent.body, "Private draft\nBonne nuit, bisous 😘 Edited");
+});
+test("quick replies reject clients, full drafts, suspended sending and stale choices after hiding or account replacement", async () => {
+  const client = harness(); await flush(); await client.click("open-quick-replies");
+  assert.equal(client.element("open-quick-replies").hidden, true); assert.equal(client.element("quick-replies-dialog").open, false);
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin") }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
+  f.element("message-body").value = "x".repeat(4096); await f.click("open-quick-replies");
+  let button = f.element("quick-replies-list").children[0];
+  for (const handler of button.events.get("click")) handler({}); await flush();
+  assert.equal(f.element("message-body").value.length, 4096); assert.equal(f.element("quick-replies-dialog").open, true);
+  assert.match(f.element("quick-replies-status").textContent, /ne peut pas être ajoutée/);
+  await f.hide(); assert.equal(f.element("quick-replies-dialog").open, false);
+  for (const handler of button.events.get("click")) handler({}); await flush(); assert.equal(f.state.posts, 0);
+  await f.show(); await f.click("open-quick-replies"); button = f.element("quick-replies-list").children[0];
+  f.inspect().states.get(f.inspect().selected).conversation.canSend = false;
+  for (const handler of button.events.get("click")) handler({}); await flush(); assert.equal(f.element("quick-replies-dialog").open, false);
+  f.conversation().canSend = true; await f.hide(); f.state.currentSession = session(2, "B".repeat(43), "admin"); await f.show();
+  for (const handler of button.events.get("click")) handler({}); await flush();
+  assertOwner(f, 2, "B".repeat(43)); assert.equal(f.element("message-body").value, ""); assert.equal(f.element("quick-replies-list").children.length, 0); assert.equal(f.state.posts, 0);
+});
 test("a new administrator session clears all loaded inbox and conversation caches before adopting the new owner", async () => {
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin") }); await flush(); assertOwner(f, 1);
   const firstButton = f.element("conversations").children[0]; for (const handler of firstButton.events.get("click")) handler({}); await flush();

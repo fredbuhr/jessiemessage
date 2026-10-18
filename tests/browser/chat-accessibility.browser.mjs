@@ -22,7 +22,7 @@ let server, driver, baseUrl;
 let fixture;
 
 function resetFixture() {
-  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false };
+  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false, sent: [] };
 }
 function media(role) {
   const prefix = `/api/media/${role}/conversations/${conversationId}/messages/${photoMessageId}`;
@@ -31,6 +31,7 @@ function media(role) {
     fullUrl: `${prefix}/full`, thumbnailUrl: `${prefix}/thumb` };
 }
 function message(sequence, role) {
+  const sent = fixture.sent.find(message => message.sequence === String(sequence)); if (sent) return { ...sent };
   const number = Number(sequence);
   return { id: id(200 + number), sequence: String(number), sender: number === 2 ? "me" : "peer",
     body: number === 1 ? "Earlier fictional message" : number === 2 ? "Fictional message from me" : number === 3 ? "Fictional photo caption" : `Fictional incoming body ${number}`,
@@ -53,7 +54,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -139,6 +140,14 @@ async function startFixtureServer() {
             sendJson(200, { conversation: conversation(role), events: fixture.events.filter((n) => n > after).map((n) => ({ sequence: String(n), kind: "message", message: message(n, role) })),
               nextCursor: String(fixture.latest), hasMore: false }); return;
           }
+        }
+        if (feature === "chat" && request.method === "POST" && suffix === `/conversations/${conversationId}/messages`) {
+          let body = ""; for await (const chunk of request) { body += chunk; if (body.length > 20000) throw new Error("oversized_fixture_request"); }
+          const parsed = JSON.parse(body); assert.match(parsed.clientMessageId, /^[a-f0-9]{32}$/); assert.equal(typeof parsed.body, "string");
+          fixture.latest += 1; fixture.events.push(fixture.latest);
+          const sent = { id: id(200 + fixture.latest), sequence: String(fixture.latest), sender: "me", body: parsed.body,
+            createdAt: Date.now(), deletedAt: null, clientMessageId: parsed.clientMessageId };
+          fixture.sent.push(sent); sendJson(201, { message: sent }); return;
         }
         if (feature === "chat" && request.method === "POST" && suffix === `/conversations/${conversationId}/messages/${id(202)}/delete`) {
           fixture.deleteRequests += 1;
@@ -418,4 +427,56 @@ test("real Chrome: closing a profile cancels its download and cannot unlock or p
     assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
     assert.equal(await page.execute("return document.querySelector('.crm-export button').disabled"), false);
   } finally { fixture.releaseExport?.(); await page.close(); }
+});
+
+for (const width of [320, 1280]) for (const language of ["fr", "en"]) {
+  test(`Chrome ${width}px ${language}: quick replies preserve the draft and send only after editing and explicit submission`, { timeout: 35000 }, async () => {
+    resetFixture(); const page = await browser(width);
+    try {
+      await loaded(page, "/admin/messages"); await tabUntil(page, ".contact"); await page.key("\uE007");
+      await waitUntil(() => page.execute("return !document.querySelector('#open-quick-replies').hidden && !document.querySelector('#open-quick-replies').disabled"), "administrator quick replies ready");
+      if (language === "en") await page.click("[data-jm-language]");
+      await page.type("#message-body", "Personal draft");
+      await tabUntil(page, "#open-quick-replies"); await page.key("\uE007");
+      assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), true);
+      assert.equal(await page.execute("return document.querySelector('#quick-reply-language').value"), language);
+      assert.equal(await page.execute("return document.querySelector('#quick-replies-title').textContent"), language === "fr" ? "Réponses rapides" : "Quick replies");
+      assert.equal(await page.execute("const d=document.querySelector('#quick-replies-dialog');return d.scrollWidth<=d.clientWidth+1 && [...d.querySelectorAll('.quick-reply')].every(b=>b.getBoundingClientRect().height>=44)"), true);
+      // Phrase language is explicitly independent from the interface language.
+      await page.click("#quick-reply-language"); await page.key(language === "fr" ? "\uE015" : "\uE013"); await page.key("\uE007");
+      const replyLanguage = language === "fr" ? "en" : "fr";
+      await waitUntil(() => page.execute(`return document.querySelector('#quick-reply-language').value === '${replyLanguage}'`), "phrase language selected with keyboard");
+      await tabUntil(page, '[data-quick-reply="good-night"]'); await page.key("\uE007");
+      const expected = "Personal draft\n" + (replyLanguage === "fr" ? "Bonne nuit, bisous 😘" : "Good night, kisses 😘");
+      assert.equal(await page.execute("return document.querySelector('#message-body').value"), expected);
+      assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
+      assert.equal(await page.execute("return document.activeElement.id"), "message-body"); assert.equal(fixture.sent.length, 0, "insertion never sends");
+      assert.match(await page.execute("return document.querySelector('#chat-status').textContent"), language === "fr" ? /ajoutée au brouillon/ : /added to your draft/);
+      await page.type("#message-body", expected + " Edited"); await page.click("#send");
+      await waitUntil(() => fixture.sent.length === 1, "explicit ordinary send");
+      assert.equal(fixture.sent[0].body, expected + " Edited");
+      await waitUntil(() => page.execute("return document.querySelector('#message-body').value === ''"), "ordinary acknowledgement clears sent draft");
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  });
+}
+
+test("Chrome: clients have no quick replies; Escape, full drafts and returning to the inbox never send", { timeout: 35000 }, async () => {
+  resetFixture(); const page = await browser(320);
+  try {
+    await loaded(page, "/messages"); assert.equal(await page.execute("return document.querySelector('#open-quick-replies').hidden"), true);
+    await loaded(page, "/admin/messages"); await page.click(".contact");
+    await waitUntil(() => page.execute("return !document.querySelector('#open-quick-replies').disabled"), "quick replies available");
+    await page.type("#message-body", "Unsent draft"); await page.click("#open-quick-replies"); await page.key("\uE00C");
+    assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
+    assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Unsent draft");
+    await page.type("#message-body", "x".repeat(4096)); await page.click("#open-quick-replies"); await page.click('[data-quick-reply="thanks"]');
+    assert.equal(await page.execute("return document.querySelector('#message-body').value.length"), 4096);
+    assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), true);
+    assert.match(await page.execute("return document.querySelector('#quick-replies-status').textContent"), /ne peut pas être ajoutée/);
+    await page.key("\uE00C"); await page.click("#back-to-inbox");
+    assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
+    assert.equal(await page.execute("return document.querySelector('#quick-replies-list').children.length"), 0);
+    assert.equal(fixture.sent.length, 0); await noJavascriptErrors(page);
+  } finally { await page.close(); }
 });
