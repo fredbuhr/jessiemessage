@@ -1,4 +1,4 @@
-import { realpath } from "node:fs/promises";
+import { lstat, realpath } from "node:fs/promises";
 import { resolve, relative, sep, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
@@ -6,7 +6,8 @@ import { privateAuthenticationProcessOptions } from "../server/config/private-au
 import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment, copyRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
-import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile } from "../server/backup/profiles.mjs";
+import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile, matchesCheckpointReceipt } from "../server/backup/profiles.mjs";
+import { readOperationalCheckpoint, OPERATIONAL_CHECKPOINT } from "../server/backup/operational-checkpoint.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { readManifest, verifyBackupManifest, backupIdentity, assertCloneIdentity } from "../server/backup/manifest.mjs";
@@ -128,7 +129,8 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   try {
     active(); const selected = optionsFromRecord(value);
     const application = selected.command.endsWith("-application");
-    const { recovery, crm, broadcast, manifestProfile: profile, manifestVersion, receiptVersion } = checkpointBackupProfile(selected.profile, application);
+    const selectedProfile = checkpointBackupProfile(selected.profile, application);
+    const { recovery, crm, broadcast, manifestProfile: profile, manifestVersion } = selectedProfile;
     loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let dumpTables;
     if (application) {
@@ -158,7 +160,12 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         const targetIdentity = await identity({ databaseName: selected.database, rootPath: mediaDirectory, storage, mediaKey: keys.mediaKey });
         await assertIdentity(sourceIdentity, targetIdentity);
         const checkpoint = await readCheckpoint(checkpointScope, { signal });
-        if (checkpoint?.version !== receiptVersion || checkpoint.profile !== profile) fail("CHECKPOINT");
+        if (!matchesCheckpointReceipt(selectedProfile, checkpoint)) fail("CHECKPOINT");
+        const receiptVersion = checkpoint.version, operational = Object.hasOwn(checkpoint, "operations");
+        if (!operational) {
+          try { await lstat(checkpointScope.file(OPERATIONAL_CHECKPOINT)); fail("CHECKPOINT"); }
+          catch (error) { if (error.code !== "ENOENT") throw error; }
+        }
         if (application) {
           try { validateApplicationCoverage(checkpoint.coverage); } catch { fail("CHECKPOINT"); }
         }
@@ -177,6 +184,13 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           return payload;
         }
         const payload = await checkManifest();
+        async function checkOperations() {
+          if (!operational) return null;
+          const recovered = await readOperationalCheckpoint(checkpointScope, checkpoint, keys.crmKey, { signal });
+          if (recovered.binding.database !== env.JESSIEMESSAGE_DB_NAME || recovered.binding.rootFingerprint !== sourceIdentity.rootFingerprint) fail("CHECKPOINT");
+          return recovered;
+        }
+        const operations = await checkOperations();
         await verifyCheckpointMedia(mediaScope, checkpoint.media, { signal }); active();
         try { await inspectClient(); } catch { fail("CLIENT"); }
         async function unchanged() {
@@ -185,6 +199,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           if (!same(final, checkpoint)) fail("CHECKPOINT");
           frozenMatches(checkpoint, await readBackup(checkpointScope, backupSelection));
           if (!same(await checkManifest(), payload)) fail("CHECKPOINT");
+          if (!same(await checkOperations(), operations)) fail("CHECKPOINT");
           await verifyCheckpointMedia(mediaScope, checkpoint.media, { signal });
           const currentSource = await identity({ databaseName: env.JESSIEMESSAGE_DB_NAME, rootPath: env.JESSIEMESSAGE_MEDIA_ROOT, storage: sourceStorage, mediaKey: keys.mediaKey });
           const currentTarget = await identity({ databaseName: selected.database, rootPath: mediaDirectory, storage, mediaKey: keys.mediaKey });
@@ -197,6 +212,8 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           tables: 30, migrations: 30, backupBytes: backup.backupBytes, sqlBytes: backup.sqlBytes,
           backupSha256: backup.backupSha256, sqlSha256: backup.sqlSha256, checkpointFilesMatched: true, independentMediaDirectory: true,
           httpStarted: false, smtpStarted: false, workersStarted: false, capacityRebound: false };
+        if (operational) Object.assign(common, { operationsCovered: true, operationalFiles: operations.files.length,
+          operations: { ...checkpoint.operations }, externalRegistryContinuityVerified: false, operationalRestorationPending: true });
         if (["check", "check-application"].includes(selected.command)) { await unchanged(); result = { status: "ready_for_input", ...common, databaseConnected: false }; return; }
         try {
           password = await readSecret(inputStream);

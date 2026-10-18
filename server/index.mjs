@@ -226,7 +226,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
 
 export async function createConfiguredServer(env = process.env, options = {}) {
   if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
-    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "backupDirectory"].includes(name))
+    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "backupDirectory", "accountClosures"].includes(name))
     || Object.values(Object.getOwnPropertyDescriptors(options)).some(property => !Object.hasOwn(property, "value"))) throw new RequestOriginError();
   const requestOrigin = Object.hasOwn(options, "requestOrigin") ? options.requestOrigin : null;
   const clock = Object.hasOwn(options, "clock") ? options.clock : Date.now;
@@ -288,6 +288,9 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     const authHandler = createAuthHandler(service, { origin: config.origin, clock });
     let backupHandler, privacyHandler, crmHandler, chatHandler;
     if (backupDirectory !== undefined) {
+      const [{ withPrivateDirectory }, { assertNoOperationalRestore }] = await Promise.all([
+        import("./files/private-directory.mjs"), import("./backup/operational-checkpoint.mjs")]);
+      await withPrivateDirectory(backupDirectory, assertNoOperationalRestore);
       const [{ createBackupCopyService }, { createBackupCopyHandler }] = await Promise.all([import("./backup/copy-service.mjs"), import("./backup/copy-http.mjs")]);
       backupHandler = createBackupCopyHandler(createBackupCopyService(backupDirectory), { origin: config.origin, actor: token => service.session(token), clock });
       const [{ createPrivacyService }, { createPrivacyHandler }] = await Promise.all([import("./privacy/service.mjs"), import("./privacy/http.mjs")]);

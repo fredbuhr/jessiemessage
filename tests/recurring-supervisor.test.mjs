@@ -107,6 +107,22 @@ test("journal precedes stop; capture and encryption finish before a ready runtim
   await f.supervisor.close(); assert.equal(f.events.at(-1), "destroy");
 });
 
+test("a closure published during capture preflight or HTTP drain keeps producers stopped before any reopen", async () => {
+  for (const phase of ["preflight", "drain", "capture_failure"]) {
+    let pending = false;
+    const operations = { async hasPending() { return pending; }, async preflight() {}, async run() { assert.fail("No implicit destructive retry in the capture cycle"); } };
+    const f = fixture({ closureOperations: operations,
+      preflight: async () => { if (phase === "preflight") pending = true; return { ...configuration }; },
+      ...(phase === "capture_failure" ? { checkpoint: async () => { pending = true; throw new Error("Synthetic capture failure"); } } : {}) });
+    if (phase === "drain") f.runtime.stop = async () => { pending = true; f.events.push("stop"); return { exitCode: 0, signal: null }; };
+    await f.supervisor.start(); const report = await f.supervisor.tick();
+    assert.equal(report.runtimeResumed, false); assert.equal(report.status, "failed");
+    assert.equal(f.events.filter(value => value === "start").length, 1);
+    assert.deepEqual(await f.supervisor.finished, { failed: true });
+    assert.equal(f.events.at(-1), "destroy"); await f.supervisor.close();
+  }
+});
+
 test("missing or unsafe backup configuration leaves the application available and emits only a fixed code", async () => {
   const f = fixture({ readConfiguration: async () => { throw new Error("password=secret"); } });
   await f.supervisor.start(); await f.supervisor.tick(); await f.supervisor.tick();
@@ -197,13 +213,14 @@ function processFixture(payload, exitCode = 0) {
 
 test("checkpoint subprocess accepts the precise application profile and discards all other output", async () => {
   const value = { status: "application_checkpoint_saved", profile: "messaging-photos-notify-recovery-crm-broadcast-application",
-    tables: 30, migrations: 30, archiveListed: true, archiveContentsVerified: true, archive: { sha256: "c".repeat(64) }, started: false, migrationPerformed: false };
+    tables: 30, migrations: 30, operationsCovered: true, archiveListed: true, archiveContentsVerified: true, archive: { sha256: "c".repeat(64) }, started: false, migrationPerformed: false };
   let called;
   const accepted = await checkpointProcess("capture-application", options, "/srv/private-backups/capture-test", { environment },
     { spawnClient: (_command, args, config) => { called = { args, config }; return processFixture(JSON.stringify(value)); } });
   assert.deepEqual(accepted, { saved: true, precheckPassed: false }); assert.ok(called.args.includes("--offline")); assert.equal(called.config.stdio[0], "ignore");
   assert.equal(called.config.stdio[3], "ipc"); assert.match(called.args[0], /private-checkpoint-child\.mjs$/);
-  for (const payload of [JSON.stringify({ ...value, profile: "old" }), "private error password=secret", "x".repeat(17000)]) {
+  assert.equal(called.args[called.args.indexOf("--operations-directory") + 1], options.operationsDirectory);
+  for (const payload of [JSON.stringify({ ...value, operationsCovered: false }), JSON.stringify({ ...value, profile: "old" }), "private error password=secret", "x".repeat(17000)]) {
     await assert.rejects(checkpointProcess("capture-application", options, "/srv/private-backups/capture-test", { environment },
       { spawnClient: () => processFixture(payload) }), error => error.code === "RECURRING_SUPERVISOR_CHECKPOINT" && !error.message.includes("secret"));
   }

@@ -2,11 +2,11 @@ import { constants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { APPLICATION_COVERAGE, validateApplicationCoverage } from "./application-scope.mjs";
-import { manifestBackupProfile } from "./profiles.mjs";
+import { manifestBackupProfile, matchesCheckpointReceipt } from "./profiles.mjs";
 
 const MIB = 1024 * 1024;
 const MAX_FILE = 64 * MIB, MAX_RECEIPT = 32 * MIB, MAX_MEDIA = 1024 * MIB, MAX_HASH = 2 * 1024 * MIB;
-const FILE_NAMES = new Set(["database.sql", "database.sql.gz", "manifest.json", "manifest-after.json", "receipt.json", "checkpoint.tar.gz"]);
+const FILE_NAMES = new Set(["database.sql", "database.sql.gz", "manifest.json", "manifest-after.json", "receipt.json", "checkpoint.tar.gz", "operations.enc.json"]);
 const HEX = /^[a-f0-9]{64}$/;
 const MEDIA_NAME = /^[a-f0-9]{64}\.(?:full|thumb)\.enc$/;
 const STATS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
@@ -33,8 +33,9 @@ function record(value, fields) {
 }
 
 function canonicalReceipt(value) {
-  const application = value && typeof value === "object" && [2, 4, 6, 8].includes(Object.getOwnPropertyDescriptor(value, "version")?.value);
-  const root = record(value, ["format", "version", "profile", ...(application ? ["coverage"] : []), "createdAt", "schema", "sql", "manifest", "media"]);
+  const version = value && typeof value === "object" && Object.getOwnPropertyDescriptor(value, "version")?.value;
+  const application = [2, 4, 6, 8, 10].includes(version), operational = [9, 10].includes(version);
+  const root = record(value, ["format", "version", "profile", ...(application ? ["coverage"] : []), "createdAt", "schema", "sql", "manifest", "media", ...(operational ? ["operations"] : [])]);
   if (application) {
     try { validateApplicationCoverage(root.coverage); }
     catch { fail("CHECKPOINT_RECEIPT_INVALID"); }
@@ -43,7 +44,7 @@ function canonicalReceipt(value) {
   const sql = record(root.sql, ["file", "bytes", "sha256", "uncompressedBytes", "uncompressedSha256"]);
   const manifest = record(root.manifest, ["file", "sha256"]), media = record(root.media, ["files", "bytes"]);
   if (root.format !== "jessiemessage-private-checkpoint"
-    || manifestBackupProfile(root.profile)?.receiptVersion !== root.version || !integer(root.version, 1, 8)
+    || !matchesCheckpointReceipt(manifestBackupProfile(root.profile), root) || !integer(root.version, 1, 10)
     || !integer(root.createdAt, 0, 253402300799999) || schema.tables !== 30 || schema.migrations !== 30
     || sql.file !== "database.sql.gz" || !integer(sql.bytes, 1, 16 * MIB) || !digest(sql.sha256)
     || !integer(sql.uncompressedBytes, 1, MAX_FILE) || !digest(sql.uncompressedSha256)
@@ -63,9 +64,11 @@ function canonicalReceipt(value) {
     previous = file.name; files.push(file);
   }
   if (total !== media.bytes) fail("CHECKPOINT_RECEIPT_INVALID");
+  const operations = operational ? record(root.operations, ["file", "bytes", "sha256"]) : null;
+  if (operational && (operations.file !== "operations.enc.json" || !integer(operations.bytes, 1, MAX_FILE) || !digest(operations.sha256))) fail("CHECKPOINT_RECEIPT_INVALID");
   return { format: root.format, version: root.version, profile: root.profile,
     ...(application ? { coverage: { ...APPLICATION_COVERAGE } } : {}), createdAt: root.createdAt,
-    schema, sql, manifest, media: { files, bytes: total } };
+    schema, sql, manifest, media: { files, bytes: total }, ...(operational ? { operations } : {}) };
 }
 
 function regular(stats) {

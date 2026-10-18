@@ -14,6 +14,9 @@ import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { readCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
+import { createErasureJournal } from "../server/data/erasure-journal.mjs";
+import { readOperationalCheckpoint } from "../server/backup/operational-checkpoint.mjs";
+import { withErasureDirectory } from "./fixtures/erasure-files.mjs";
 import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { PrivateCheckpointError, archiveCheckpoint, parseArguments, run, main } from "../scripts/private-checkpoint.mjs";
 
@@ -616,4 +619,42 @@ test("Broadcast checkpoint capture carries all six keys through strict and appli
     for (const keys of f.state.keys) assert.equal(keys.crmKey.equals(Buffer.alloc(32)), true);
     publicOnly(report, f); cleared(f.state);
   }
+});
+
+test("managed operational captures put exact encrypted receipts in the verified native archive for strict and application SQL", { timeout: 15000 }, async t => {
+  for (const application of [false, true]) {
+    const f = await fixture(t, { broadcast: true }), operationsDirectory = join(f.root, "operations"); await mkdir(operationsDirectory, { mode: 0o700 });
+    f.state.application = application;
+    Object.assign(f.state.snapshot, { capacity: { rootFingerprint: "b".repeat(64) }, ...(application ? { version: 2, coverage: { ...APPLICATION_COVERAGE } } : {}) });
+    const binding = { database: "synthetic_checkpoint", rootFingerprint: "b".repeat(64) }, clientId = "a".repeat(32);
+    const journal = createErasureJournal({ directory: operationsDirectory, key: Buffer.alloc(32, 6), binding, clientId }, { withDirectory: withErasureDirectory });
+    try { await journal.save({ version: 1, clientId, binding, phase: "requested", cursor: null, startedAt: now, updatedAt: now }, 0, async () => {}); }
+    finally { journal.close(); }
+    const report = await run(parseArguments([...f.command(application ? "capture-application" : "capture"), "--operations-directory", operationsDirectory]), f.dependencies);
+    const scope = await syntheticScope(f.destination), receipt = await readCheckpointReceipt(scope);
+    assert.equal(receipt.version, application ? 10 : 9); assert.equal(report.operationsCovered, true); assert.equal(report.operationalFiles, 1);
+    assert.equal(report.externalRegistryContinuityVerified, false);
+    const recovered = await readOperationalCheckpoint(scope, receipt, Buffer.alloc(32, 6));
+    assert.deepEqual(recovered.binding, binding); assert.equal(recovered.files.length, 1);
+    const archive = await promisify(execFile)("/usr/bin/tar", ["--list", "--gzip", `--file=${f.destination}/checkpoint.tar.gz`], { encoding: "utf8" });
+    assert.ok(archive.stdout.split("\n").includes("operations.enc.json"));
+    assert.equal(report.archiveContentsVerified, true); cleared(f.state);
+  }
+});
+
+test("an operational publication during SQL capture refuses the receipt and never emits checkpoint_saved", async t => {
+  const f = await fixture(t, { broadcast: true }), operationsDirectory = join(f.root, "operations"); await mkdir(operationsDirectory, { mode: 0o700 });
+  f.state.application = true; Object.assign(f.state.snapshot, { version: 2, coverage: { ...APPLICATION_COVERAGE }, capacity: { rootFingerprint: "b".repeat(64) } });
+  const original = f.dependencies.dump;
+  await assert.rejects(run(parseArguments([...f.command("capture-application"), "--operations-directory", operationsDirectory]), { ...f.dependencies,
+    dump: async (...args) => {
+      const result = await original(...args);
+      if (f.state.dumps === 2) {
+        const clientId = "a".repeat(32), binding = { database: "synthetic_checkpoint", rootFingerprint: "b".repeat(64) };
+        const journal = createErasureJournal({ directory: operationsDirectory, key: Buffer.alloc(32, 6), binding, clientId }, { withDirectory: withErasureDirectory });
+        try { await journal.save({ version: 1, clientId, binding, phase: "requested", cursor: null, startedAt: now, updatedAt: now }, 0, async () => {}); } finally { journal.close(); }
+      }
+      return result;
+    } }), { code: "PRIVATE_CHECKPOINT_DRIFT" });
+  await assert.rejects(lstat(join(f.destination, "receipt.json")), { code: "ENOENT" }); cleared(f.state);
 });

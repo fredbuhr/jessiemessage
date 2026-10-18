@@ -194,3 +194,21 @@ test("broadcast resume accepts only the new profile-bound receipt and preserves 
   const f = fixture(); await assert.rejects(run(parseArguments(args().map(value => value === profile ? selectedProfile : value)), f.dependencies), neutral("CHECKPOINT", "precheck"));
   assert.deepEqual(f.events, ["precheck"]);
 });
+
+test("operational restore scope survives native import and populated-clone verification and cannot be downgraded afterwards", async () => {
+  const selectedArgs = args().map(value => value === profile ? "photos-notify-recovery-crm-broadcast" : value);
+  const modern = { version: 10, profile: "messaging-photos-notify-recovery-crm-broadcast-application",
+    operations: { file: "operations.enc.json", bytes: 4096, sha256: "d".repeat(64) }, operationsCovered: true,
+    operationalRestorationPending: true, externalRegistryContinuityVerified: false };
+  for (const state of ["empty", "application-schema"]) for (const downgrade of [false, true]) {
+    const f = fixture(state), original = f.dependencies.importOperation;
+    const after = downgrade ? { version: 8, profile: modern.profile } : modern;
+    f.dependencies.importOperation = async (selected, options) => ({ ...await original(selected, options), ...(selected.command === "check-application" ? modern : after) });
+    f.dependencies.verifyOperation = async () => ({ ...verified(), ...after });
+    if (downgrade) await assert.rejects(run(parseArguments(selectedArgs), f.dependencies), neutral("RESULT", state === "empty" ? "import" : "verification"));
+    else {
+      const result = await run(parseArguments(selectedArgs), f.dependencies);
+      assert.equal(result.operationalRestorationPending, true); assert.equal(result.externalRegistryContinuityVerified, false); assert.equal(result.version, 10);
+    }
+  }
+});

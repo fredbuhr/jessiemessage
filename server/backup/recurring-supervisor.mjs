@@ -99,7 +99,8 @@ export async function checkpointProcess(command, options, destination, { signal,
     try {
       const args = [fileURLToPath(new URL("../../scripts/private-checkpoint-child.mjs", import.meta.url)), command,
         ...(command === "capture-application" ? ["--offline"] : []), "--private-directory", options.privateDirectory,
-        "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination, "--profile", PROFILE];
+        "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination, "--profile", PROFILE,
+        "--operations-directory", options.operationsDirectory];
       child = spawnClient(process.execPath, args, { cwd: REPOSITORY, env: environment, stdio: ["ignore", "pipe", "pipe", "ipc"] });
       timer = setTimeout(() => stop("TIMEOUT"), timeoutMilliseconds);
       signal?.addEventListener("abort", abort, { once: true }); if (signal?.aborted) abort();
@@ -120,7 +121,7 @@ export async function checkpointProcess(command, options, destination, { signal,
           const expected = command === "capture-application" ? "application_checkpoint_saved" : "application_precheck_passed";
           if (result?.status !== expected || result.profile !== "messaging-photos-notify-recovery-crm-broadcast-application" || result.started !== false
             || result.migrationPerformed !== false || command === "capture-application" && (result.tables !== 30 || result.migrations !== 30
-              || result.archiveListed !== true || result.archiveContentsVerified !== true || !/^[a-f0-9]{64}$/.test(result.archive?.sha256 ?? ""))) fail("CHECKPOINT");
+              || result.operationsCovered !== true || result.archiveListed !== true || result.archiveContentsVerified !== true || !/^[a-f0-9]{64}$/.test(result.archive?.sha256 ?? ""))) fail("CHECKPOINT");
           yes({ saved: command === "capture-application", precheckPassed: command === "check-application" });
         } catch (error) { no(error instanceof RecurringSupervisorError ? error : new RecurringSupervisorError("CHECKPOINT")); }
         finally { output.forEach(bytes => bytes.fill(0)); output = []; }
@@ -214,7 +215,13 @@ export function createRecurringSupervisor(options, { environment = process.env, 
             capture: ({ signal }) => checkpoint("capture-application", options, destination, { signal, environment }),
             encrypt: ({ signal }) => encrypt({ checkpointDirectory: destination, recipientDirectory: options.operationsDirectory,
               recipientSha256: current.recipientSha256, signal }),
-            resumeRuntime: async ({ signal }) => { active(signal); await source(options, { signal }); active(signal); return runtime.start(); },
+            resumeRuntime: async ({ signal }) => {
+              active(signal); await source(options, { signal }); active(signal);
+              // An intent can arrive after the initial tick check, while the
+              // preflight or HTTP drain is in progress. Keep producers stopped.
+              if (closureOperations !== null && await closureOperations.hasPending()) fail("RUNTIME");
+              active(signal); return runtime.start();
+            },
           });
           const report = await controller.run({ signal: cancellation.signal });
           notice(report); lastNotice = null;

@@ -5,7 +5,7 @@ import { createGunzip } from "node:zlib";
 
 const MAX_BYTES = 2 * 1024 * 1024 * 1024, CHUNK = 64 * 1024, BLOCK = 512;
 const ROOT_NAMES = ["manifest.json", "database.sql.gz", "receipt.json"];
-const NAME = /^(?:manifest\.json|database\.sql\.gz|receipt\.json|media\/[a-f0-9]{64}\.(?:full|thumb)\.enc)$/;
+const NAME = /^(?:manifest\.json|database\.sql\.gz|receipt\.json|operations\.enc\.json|media\/[a-f0-9]{64}\.(?:full|thumb)\.enc)$/;
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 
 export class CheckpointArchiveError extends Error {
@@ -28,7 +28,7 @@ function record(value, names) {
 }
 
 function inventory(value) {
-  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length < 3 || value.length > 100003) fail("INPUT");
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length < 3 || value.length > 100004) fail("INPUT");
   const descriptors = Object.getOwnPropertyDescriptors(value);
   if (Reflect.ownKeys(descriptors).length !== value.length + 1) fail("INPUT");
   const files = new Map(); let bytes = 0;
