@@ -285,7 +285,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     await store.assertSchema();
     const service = await createAuthService({ store, totpKey: config.totpKey, clock });
     const authHandler = createAuthHandler(service, { origin: config.origin, clock });
-    let backupHandler;
+    let backupHandler, crmHandler;
     if (backupDirectory !== undefined) {
       const [{ createBackupCopyService }, { createBackupCopyHandler }] = await Promise.all([import("./backup/copy-service.mjs"), import("./backup/copy-http.mjs")]);
       backupHandler = createBackupCopyHandler(createBackupCopyService(backupDirectory), { origin: config.origin, actor: token => service.session(token), clock });
@@ -365,7 +365,6 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     }
     let chatHandler;
     let mediaHandler;
-    let crmHandler;
     let broadcastHandler;
     let notificationsHandler;
     let broadcastWorker;
