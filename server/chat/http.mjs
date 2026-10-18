@@ -1,3 +1,4 @@
+import { createClientConversationExportHandler } from "./client-export-http.mjs";
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { readFile } from "node:fs/promises";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
@@ -152,13 +153,16 @@ function mappedError(error) {
 }
 
 /** Routes exist only when the parent has explicitly enabled the chat feature. */
-export function createChatHandler(service, { origin }) {
+export function createChatHandler(service, { origin, clientConversationExporter = null }) {
   const configuredOrigin = new URL(origin);
   if (configuredOrigin.protocol !== "https:" || configuredOrigin.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   for (const method of ["actor", "listConversations", "clientConversation", "messages", "events", "send", "markRead", "delete"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("A messaging service is required");
   }
-  return async (request, response) => {
+  const clientExport = createClientConversationExportHandler({ actor: async token => { const value = await service.actor("client", token); return value ? safeActor(value, "client") : null; },
+    conversation: async token => safeConversation(await service.clientConversation(token), "client") }, { origin, conversationExporter: clientConversationExporter });
+  const handler = async (request, response) => {
+    if (await clientExport(request, response)) return true;
     let url;
     try { url = new URL(request.url ?? "/", "http://localhost"); } catch { return false; }
     const pathname = url.pathname;
@@ -191,7 +195,7 @@ export function createChatHandler(service, { origin }) {
         reply(response, method, 200, await readFile(new URL("chat.html", publicRoot)), { "Content-Type": "text/html; charset=utf-8" });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true });
+        reply(response, method, 200, { enabled: true, ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes } } : {}) });
       } else if (route.kind === "list") {
         const options = query(url, ["afterId", "limit"], 50);
         const afterId = options.afterId ?? null;
@@ -268,4 +272,5 @@ export function createChatHandler(service, { origin }) {
     }
     return true;
   };
+  return Object.assign(handler, { close: () => clientExport.close() });
 }

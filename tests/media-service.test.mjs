@@ -719,3 +719,16 @@ test("aggregate conversation export keeps the administrator/message ACL without 
   f.state.roleOverride = "client"; f.calls.length = 0;
   await assert.rejects(f.service.exportMessageAsset(f.token, conversationHex, messageHex), MediaError); assert.equal(f.calls.length, 0);
 });
+
+test("client aggregate photos retain active admission and exact message authorization without display quota", async () => {
+  const f = await fixture();
+  for (let i = 0; i < 25; i++) {
+    const result = await f.service.exportClientMessageAsset(f.token, conversationHex, messageHex);
+    assert.deepEqual(result.bytes, Buffer.from([1, 2, 3, 4]));
+  }
+  assert.equal(f.rateCalls.length, 0); assert.equal(f.actorCalls.every(call => call.role === "client"), true);
+  const reads = f.calls.filter(call => call.name === "getMessageAsset"); assert.equal(reads.length, 25);
+  assert.equal(reads.every(call => call.options.role === "client" && call.options.conversationId.equals(conversationId) && call.options.messageId.equals(messageId)), true);
+  f.state.roleOverride = "admin"; f.calls.length = 0;
+  await assert.rejects(f.service.exportClientMessageAsset(f.token, conversationHex, messageHex), MediaError); assert.equal(f.calls.length, 0);
+});

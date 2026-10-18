@@ -54,7 +54,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -63,6 +63,7 @@ const contentTypes = { ".js": "text/javascript; charset=utf-8", ".css": "text/cs
 
 async function startFixtureServer() {
   const files = new Map(await Promise.all(fileNames.map(async (name) => [`/${name}`, await readFile(join(publicRoot, name))])));
+  files.set("/client-archive.js", files.get("/private-archive.js"));
   files.set("/browser-fixture.js", Buffer.from(bootstrap));
   const html = Buffer.from(files.get("/chat.html").toString().replace("<head>", '<head><script src="/browser-fixture.js"></script>'));
   server = createServer((request, response) => {
@@ -122,10 +123,22 @@ async function startFixtureServer() {
         // creates a push subscription or sends a notification.
         sendJson(200, { enabled: true, vapidPublicKey: Buffer.from([4, ...Array(64).fill(1)]).toString("base64url") }); return;
       }
+      if (fixture.clientExportEnabled && url.pathname === `/api/chat/client/conversations/${conversationId}/export` && request.method === "POST") {
+        let raw = ""; for await (const chunk of request) raw += chunk;
+        const body = JSON.parse(raw); fixture.exportRequests ??= []; fixture.exportRequests.push(body);
+        if (fixture.holdExport) await new Promise(resolve => { fixture.releaseExport = resolve; });
+        if (response.destroyed) return;
+        if (fixture.clientExportFailure) { sendJson(413, { error: "conversation_export_limit" }); return; }
+        const exporter = createConversationExporter({ role: "client", history: async () => ({ conversation: conversation("client"), messages: [message("1", "client"), message("2", "client"), message("3", "client")], hasMoreBefore: false, nextBefore: null }),
+          photo: async () => ({ bytes: Buffer.from(jpeg), mime: "image/jpeg" }) });
+        const bytes = await exporter.create({ token: "synthetic", conversationId, expectedClientId: id(2), clientName: peerName, includePhotos: body.includePhotos });
+        if (fixture.replaceExportSession) fixture.csrf = "C".repeat(43);
+        response.writeHead(200, { "Content-Type": "application/zip", "Content-Length": String(bytes.length) }); response.end(bytes); return;
+      }
       const match = /^\/api\/(chat|media)\/(admin|client)(\/.*)$/.exec(url.pathname);
       if (match) {
         const [, feature, role, suffix] = match;
-        if (request.method === "GET" && suffix === "/capabilities") { sendJson(200, { enabled: true }); return; }
+        if (request.method === "GET" && suffix === "/capabilities") { sendJson(200, { enabled: true, ...(fixture.clientExportEnabled && feature === "chat" && role === "client" ? { conversationExport: { enabled: true, photos: true, maxBytes: 32 * 1024 * 1024 } } : {}) }); return; }
         if (feature === "chat" && request.method === "GET") {
           if (suffix === "/conversation") { sendJson(200, { id: conversationId }); return; }
           if (suffix === "/conversations") { sendJson(200, { conversations: [conversation(role)], nextCursor: null, hasMore: false }); return; }
@@ -426,6 +439,92 @@ test("real Chrome: closing a profile cancels its download and cannot unlock or p
     await waitUntil(() => page.execute("return document.querySelector('.crm-dialog[open] .crm-export .crm-status').textContent === ''"), "a fresh profile has no old download status");
     assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
     assert.equal(await page.execute("return document.querySelector('.crm-export button').disabled"), false);
+  } finally { fixture.releaseExport?.(); await page.close(); }
+});
+
+async function openClientExport(page, language = "fr") {
+  await loaded(page, "/messages");
+  await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download-entry:not([hidden])')"), "client download control mounted");
+  if (language === "en") await page.click("[data-jm-language]");
+  await page.execute("window.__exportDownloads=[];const original=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{if(blob.type==='application/zip')window.__exportDownloadBytes=blob.size;return original(blob);};document.addEventListener('click',e=>{const a=e.target.closest('a[download]');if(a){e.preventDefault();window.__exportDownloads.push(a.download);}})");
+  await tabUntil(page, ".conversation-download-entry"); await page.key("\uE007");
+  await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download[open]')"), "client export dialog open");
+}
+
+test("real Chrome: clients download their own conversation at mobile/desktop widths in both languages", { timeout: 120000 }, async t => {
+  for (const width of [320, 1280]) for (const language of ["fr", "en"]) await t.test(`${language} ${width}px`, async () => {
+    resetFixture(); fixture.clientExportEnabled = true; const page = await browser(width);
+    try {
+      await openClientExport(page, language);
+      assert.equal(await page.execute("return document.querySelector('.conversation-download h2').textContent"), language === "fr" ? "Télécharger ma conversation" : "Download my conversation");
+      await page.key("\uE00C"); await page.type("#message-body", "Unsent client draft");
+      await page.click(".conversation-download-entry");
+      if (language === "en") await page.click(".conversation-download-photos input");
+      await tabUntil(page, ".conversation-download .primary"); await page.key("\uE007");
+      await waitUntil(() => page.execute("return window.__exportDownloads.length === 1 && window.__exportDownloadBytes > 22"), "client ZIP accepted by the actual archive reader");
+      assert.deepEqual(fixture.exportRequests, [{ includePhotos: language !== "en" }]);
+      assert.equal(await page.execute("return window.__exportDownloads[0]"), `JessieMessage-conversation-${conversationId}.zip`);
+      assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Unsent client draft");
+      assert.equal(await page.execute("return document.querySelector('.conversation-download [role=status]').textContent"), language === "fr" ? "Conversation téléchargée. Extrais le ZIP puis ouvre Conversation.html." : "Conversation downloaded. Extract the ZIP and open Conversation.html.");
+      assert.equal(await page.execute("const d=document.querySelector('.conversation-download');return d.scrollWidth<=d.clientWidth+1 && document.querySelector('.conversation-download-photos').getBoundingClientRect().height>=44 && document.querySelector('.conversation-download .primary').getBoundingClientRect().height>=44"), true);
+      assert.equal(await page.execute("return document.querySelector('.conversation-download').textContent.includes('notes') || document.querySelector('.conversation-download').textContent.includes('groups')"), false);
+      await page.key("\uE00C");
+      assert.equal(await page.execute("return document.activeElement.matches('.conversation-download-entry')"), true);
+      await noJavascriptErrors(page);
+    } finally { fixture.releaseExport?.(); await page.close(); }
+  });
+});
+
+test("real Chrome: a replacement client login suppresses the previous archive without replay", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.clientExportEnabled = true; fixture.replaceExportSession = true; const page = await browser(375);
+  try {
+    await openClientExport(page); await page.click(".conversation-download .primary");
+    await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download-entry:not([hidden])') && !document.querySelector('.conversation-download[open]')"), "replacement client session has a fresh download control");
+    assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
+    assert.equal(await page.execute("return document.querySelector('.conversation-download [role=status]').textContent"), "");
+    await noJavascriptErrors(page);
+  } finally { fixture.releaseExport?.(); await page.close(); }
+});
+
+test("real Chrome: closing the client dialog cancels a held archive and never updates a reopened dialog", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.clientExportEnabled = true; fixture.holdExport = true; const page = await browser(375);
+  try {
+    await openClientExport(page); await page.click(".conversation-download .primary");
+    await waitUntil(() => Boolean(fixture.releaseExport), "server holds client export");
+    await page.key("\uE00C"); fixture.releaseExport(); await page.click(".conversation-download-entry");
+    await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download[open]') && !document.querySelector('.conversation-download .primary').disabled"), "reopened client dialog remains usable");
+    assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
+    assert.equal(await page.execute("return document.querySelector('.conversation-download [role=status]').textContent"), "");
+    await noJavascriptErrors(page);
+  } finally { fixture.releaseExport?.(); await page.close(); }
+});
+
+test("real Chrome: client size limit offers an explicit text-only retry without sending a message", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.clientExportEnabled = true; fixture.clientExportFailure = true; const page = await browser(375);
+  try {
+    await openClientExport(page, "en"); await page.click(".conversation-download .primary");
+    await waitUntil(() => page.execute("return document.querySelector('.conversation-download [role=status]').textContent.includes('Try without photos')"), "translated size limit");
+    assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
+    fixture.clientExportFailure = false; await page.click(".conversation-download-photos input"); await page.click(".conversation-download .primary");
+    await waitUntil(() => page.execute("return window.__exportDownloads.length === 1"), "explicit text-only retry");
+    assert.deepEqual(fixture.exportRequests, [{ includePhotos: true }, { includePhotos: false }]);
+    await noJavascriptErrors(page);
+  } finally { fixture.releaseExport?.(); await page.close(); }
+});
+
+test("real Chrome: hiding the client page cancels the archive and returns with no stale download", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.clientExportEnabled = true; fixture.holdExport = true; const page = await browser(375);
+  try {
+    await openClientExport(page); await page.click(".conversation-download .primary");
+    await waitUntil(() => Boolean(fixture.releaseExport), "server holds archive before page is hidden");
+    await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>window.__exportVisibility??'visible'});window.__exportVisibility='hidden';document.dispatchEvent(new Event('visibilitychange'))");
+    assert.equal(await page.execute("return !!document.querySelector('.conversation-download[open]')"), false);
+    fixture.releaseExport();
+    await page.execute("window.__exportVisibility='visible';document.dispatchEvent(new Event('visibilitychange'))");
+    await waitUntil(() => page.execute("return !document.querySelector('#workspace').hidden && !!document.querySelector('.conversation-download-entry:not([hidden])')"), "visible client session resumes with its download control");
+    assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
+    assert.equal(await page.execute("return document.querySelector('.conversation-download [role=status]').textContent"), "");
+    await noJavascriptErrors(page);
   } finally { fixture.releaseExport?.(); await page.close(); }
 });
 

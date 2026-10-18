@@ -91,7 +91,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, readinessHandler, backupHandler };
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
     "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
-    "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
+    "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/client-archive.js", "/conversation-download.js", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
   let draining = false;
   let pendingRequests = 0;
   const requestWaiters = new Set();
@@ -285,7 +285,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     await store.assertSchema();
     const service = await createAuthService({ store, totpKey: config.totpKey, clock });
     const authHandler = createAuthHandler(service, { origin: config.origin, clock });
-    let backupHandler, crmHandler;
+    let backupHandler, crmHandler, chatHandler;
     if (backupDirectory !== undefined) {
       const [{ createBackupCopyService }, { createBackupCopyHandler }] = await Promise.all([import("./backup/copy-service.mjs"), import("./backup/copy-http.mjs")]);
       backupHandler = createBackupCopyHandler(createBackupCopyService(backupDirectory), { origin: config.origin, actor: token => service.session(token), clock });
@@ -322,7 +322,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     }
     let diagnosticClosing;
     const diagnostics = { close() {
-      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), backupHandler?.close(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.()]).then((results) => {
+      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), backupHandler?.close(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.(), chatHandler?.close?.(), legacyHandlers?.chatHandler?.close?.()]).then((results) => {
         if (results.some((result) => result.status === "rejected")) throw new Error("Private diagnostics could not close cleanly.");
       });
       return diagnosticClosing;
@@ -363,7 +363,6 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const resetService = await createResetService({ store: resetStore, authStore: store, mailKey: resetConfig.key, clock });
       resetHandler = createResetHandler(resetService, { origin: resetConfig.origin });
     }
-    let chatHandler;
     let mediaHandler;
     let broadcastHandler;
     let notificationsHandler;
@@ -377,8 +376,6 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       await chatStore.assertSchema();
       const chatService = await createChatService({ store: chatStore, authStore: store, authService: service,
         accessService, key: chatConfig.key, clock });
-      chatHandler = createChatHandler(chatService, { origin: chatConfig.origin });
-      if (legacyHandlers) legacyHandlers.chatHandler = createChatHandler(chatService, { origin: RECIPE_ORIGIN });
       if (notificationsConfig.enabled) {
         const { createNotificationsService } = await import("./notifications/service.mjs");
         const { createNotificationsHttpHandler } = await import("./notifications/http.mjs");
@@ -406,6 +403,9 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       }
       const mediaStore = createMediaStore({ pool, chatStore, capacity: mediaCapacity });
       await mediaStore.assertSchema();
+      const { createConversationExporter } = await import("./chat/conversation-export.mjs");
+      const clientConversationExporter = createConversationExporter({ role: "client", history: (token, id, options) => chatService.messages("client", token, id, options),
+        photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportClientMessageAsset(token, id, message) : null, clock });
       if (crmConfig.enabled) {
         const { createCrmStore } = await import("./crm/store.mjs");
         const { createCrmService } = await import("./crm/service.mjs");
@@ -413,7 +413,6 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         const crmStore = createCrmStore({ pool, chatStore });
         await crmStore.assertSchema();
         const crmService = await createCrmService({ store: crmStore, authStore: store, authService: service, key: crmConfig.key, clock });
-        const { createConversationExporter } = await import("./chat/conversation-export.mjs");
         const conversationExporter = createConversationExporter({ history: (token, id, options) => chatService.messages("admin", token, id, options),
           photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportMessageAsset(token, id, message) : null, clock });
         crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin, conversationExporter });
@@ -433,6 +432,8 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         mediaHandler = createMediaHandler(mediaService, { origin: mediaConfig.origin });
         if (legacyHandlers) legacyHandlers.mediaHandler = createMediaHandler(mediaService, { origin: RECIPE_ORIGIN });
       }
+      chatHandler = createChatHandler(chatService, { origin: chatConfig.origin, clientConversationExporter });
+      if (legacyHandlers) legacyHandlers.chatHandler = createChatHandler(chatService, { origin: RECIPE_ORIGIN, clientConversationExporter });
       if (broadcastConfig.enabled) {
         const { createBroadcastStore } = await import("./broadcast/store.mjs");
         const { createBroadcastService } = await import("./broadcast/service.mjs");

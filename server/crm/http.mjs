@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { canonicalEmail } from "../auth/config.mjs";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { validateId, validateLabelIds, validateLabelName, validateNickname, validateNotes, validateReminder, validateSearch, validateVersion } from "./validation.mjs";
+import { createArchiveTransfer, conversationExportFailure } from "../chat/archive-transfer.mjs";
 import { ConversationExportError } from "../chat/conversation-export.mjs";
 
 const publicRoot = new URL("../../public/", import.meta.url);
@@ -147,11 +148,7 @@ function safePage(result, field, options, rebuild) {
 }
 
 function mappedError(error) {
-  if (error instanceof ConversationExportError) {
-    const states = { input: [400, "invalid_request"], limit: [413, "conversation_export_limit"], busy: [429, "conversation_export_busy"], changed: [409, "conversation_export_changed"], unauthorized: [401, "authentication_required"], cancelled: [503, "conversation_export_interrupted"] };
-    const [status, code] = states[error.code] ?? [503, "conversation_export_unavailable"];
-    return { status, code, ...(status === 429 ? { retry: 30 } : {}) };
-  }
+  const exported = conversationExportFailure(error); if (exported) return exported;
   if (Number.isInteger(error?.httpStatus) && [400, 403, 408, 413, 415, 503].includes(error.httpStatus)
     && ["invalid_request", "request_rejected", "csrf_failed", "request_timeout", "request_too_large", "json_required", "crm_unavailable"].includes(error.publicCode)) return { status: error.httpStatus, code: error.publicCode };
   if (["CRM_UNAUTHORIZED", "CHAT_UNAUTHORIZED", "AUTH_INVALID"].includes(error?.code)) return { status: 401, code: "authentication_required" };
@@ -175,9 +172,7 @@ export function createCrmHandler(service, { origin, conversationExporter = null 
   for (const method of ["actor", "listLabels", "createLabel", "renameLabel", "deleteLabel", "profile", "saveProfile", "contacts"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("A private CRM service is required");
   }
-  if (conversationExporter !== null && (typeof conversationExporter?.create !== "function" || typeof conversationExporter.photos !== "boolean"
-    || !Number.isSafeInteger(conversationExporter.maxBytes) || conversationExporter.maxBytes < 22 || conversationExporter.maxBytes > 32 * 1024 * 1024)) throw new TypeError("A bounded conversation exporter is required.");
-  const exports = new Set(); let closing = false;
+  const transfer = createArchiveTransfer(conversationExporter, { invalidArchive: unavailable });
   const handler = async (request, response) => {
     let url;
     try { url = new URL(request.url ?? "/", "http://localhost"); } catch { return false; }
@@ -207,29 +202,13 @@ export function createCrmHandler(service, { origin, conversationExporter = null 
         query(url, []);
         const body = shape(await readJson(request, { maxBytes: 1024 }), ["includePhotos"]);
         if (typeof body.includePhotos !== "boolean" || body.includePhotos && !conversationExporter.photos) throw invalid();
-        if (closing) throw unavailable();
         const profile = safeProfile(await service.profile(token, route.conversationId), route.conversationId);
-        const controller = new AbortController(), abort = () => controller.abort(); let archive;
-        const abortTransfer = () => { if (response.headersSent && !response.writableFinished) response.destroy(); };
-        controller.signal.addEventListener("abort", abortTransfer);
-        exports.add(controller); request.once("aborted", abort); response.once("close", abort);
-        try {
-          if (request.aborted || response.destroyed || closing) controller.abort();
-          archive = await conversationExporter.create({ token, conversationId: route.conversationId, expectedClientId: profile.client.id, includePhotos: body.includePhotos, signal: controller.signal });
-          if (!Buffer.isBuffer(archive) || archive.length < 22 || archive.length > conversationExporter.maxBytes || archive.readUInt32LE() !== 0x04034b50) throw unavailable();
+        await transfer.send(request, response, { token, conversationId: route.conversationId, expectedClientId: profile.client.id, includePhotos: body.includePhotos }, async () => {
           const current = safeActor(await service.actor(token));
           if (!sameText(current.id, authenticated.id) || !sameText(current.csrf, authenticated.csrf)) throw Object.assign(new Error("CRM_UNAUTHORIZED"), { code: "CRM_UNAUTHORIZED" });
           const finalProfile = safeProfile(await service.profile(token, route.conversationId), route.conversationId);
           if (finalProfile.client.id !== profile.client.id) throw new ConversationExportError("changed");
-          if (controller.signal.aborted) throw new ConversationExportError("cancelled");
-          await new Promise((resolve, reject) => {
-            const done = () => { response.off("finish", done); response.off("close", done); resolve(); };
-            response.once("finish", done); response.once("close", done);
-            try { reply(response, method, 200, archive, { "Content-Type": "application/zip", "Content-Length": String(archive.length),
-              "Content-Disposition": `attachment; filename="JessieMessage-conversation-${route.conversationId}.zip"` }); }
-            catch (error) { response.off("finish", done); response.off("close", done); reject(error); }
-          });
-        } finally { archive?.fill?.(0); exports.delete(controller); controller.signal.removeEventListener("abort", abortTransfer); request.off("aborted", abort); response.off("close", abort); }
+        });
       } else if (route.kind === "labels" && method === "GET") {
         const parsed = query(url, ["kind", "afterId", "limit"], 100);
         const options = { kind: parsed.kind ?? null, afterId: parsed.afterId ?? null, limit: parsed.limit };
@@ -297,5 +276,5 @@ export function createCrmHandler(service, { origin, conversationExporter = null 
     }
     return true;
   };
-  return Object.assign(handler, { close() { closing = true; for (const controller of exports) controller.abort(); } });
+  return Object.assign(handler, { close() { transfer.close(); } });
 }

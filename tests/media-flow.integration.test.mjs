@@ -432,6 +432,20 @@ test("real HTTP private media uses normalized encrypted files and current delive
       await assert.rejects(mediaService.exportMessageAsset(raw, convA, adminAsset.id), "an asset identifier cannot substitute for an authorized message");
     });
 
+    await t.test("client conversation ZIP reads only photos delivered in its own authorized messages", async () => {
+      const raw = a.cookie.slice(a.cookie.indexOf("=") + 1), other = b.cookie.slice(b.cookie.indexOf("=") + 1);
+      const exporter = createConversationExporter({ role: "client", history: (token, conversationId, options) => chatService.messages("client", token, conversationId, options),
+        photo: (token, conversationId, messageId) => mediaService.exportClientMessageAsset(token, conversationId, messageId), clock });
+      const archive = await exporter.create({ token: raw, conversationId: convA, expectedClientId: clientA.id.toString("hex"), clientName: clientA.pseudonym, includePhotos: true });
+      assert.equal(archive.readUInt32LE(), 0x04034b50); assert.ok(archive.includes(normalizedA));
+      assert.equal(archive.indexOf(normalizedA, archive.indexOf(normalizedA) + 1), -1);
+      assert.ok(archive.includes(Buffer.from(`photos/${adminAsset.id}.jpg`)));
+      for (const marker of [storageRoot, mediaKey.toString("base64url"), privateMarker, clientA.email, clientB.email, "clientMessageId", "campaignId"]) assert.equal(archive.includes(Buffer.from(marker)), false);
+      await assert.rejects(mediaService.exportClientMessageAsset(raw, convB, firstMessage.id));
+      await assert.rejects(mediaService.exportClientMessageAsset(other, convA, firstMessage.id));
+      await assert.rejects(mediaService.exportClientMessageAsset(raw, convA, assetA.id));
+    });
+
     await t.test("tampered encrypted files fail generically without exposing storage paths, keys or source metadata", async () => {
       const filename = firstFiles.find((item) => /full/.test(path.basename(item)));
       assert.ok(filename, "the normalized full variant has a distinct encrypted file");

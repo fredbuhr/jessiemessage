@@ -93,3 +93,24 @@ test("aborts and elapsed limits stop preparation and do not release a busy read 
 test("one bounded cooldown is shared by all callers and resets after thirty seconds", async () => {
   const f = fixture(); await f.create(); await assert.rejects(f.create(), error => error.code === "busy"); f.advance(); await f.create();
 });
+
+test("client exports retain the archive's canonical authors without private CRM or campaign hints", async t => {
+  const exporter = createConversationExporter({ role: "client", clock: () => now, history: async () => page([
+    message(1, { sender: "me", body: "My own client message" }), message(2, { sender: "peer", body: "A message from Jess" })
+  ], { conversation: { id: conversationId, client: null, peerName: "Private administrator login", latestSequence: "2" } }) });
+  const data = await inspect(t, await exporter.create({ token: "client-session", conversationId, expectedClientId: clientId, clientName: "Client <test>", includePhotos: false }));
+  assert.equal(data.document.client, "Client <test>"); assert.equal(data.document.administrator, "Jess");
+  assert.deepEqual(data.document.messages.map(row => row.sender), ["peer", "me"], "me in archive v1 always denotes Jess, independent of downloader");
+  assert.match(data.html, /<b>Client &lt;test&gt;<\/b>/); assert.match(data.html, /<b>Jess<\/b>/);
+  for (const marker of ["Private administrator login", "never-export", "campaign", "broadcast", "notes", "tags", "groupes", "groups", "labels"]) {
+    assert.equal(JSON.stringify(data).toLowerCase().includes(marker.toLowerCase()), false, marker);
+  }
+});
+
+test("client export accepts only its role-specific reader shape and an authenticated display name", async () => {
+  assert.throws(() => createConversationExporter({ role: "guest", history: async () => page([]) }), TypeError);
+  const exporter = createConversationExporter({ role: "client", clock: () => now, history: async () => page([]) });
+  const input = { token: "synthetic", conversationId, expectedClientId: clientId, includePhotos: false };
+  await assert.rejects(exporter.create(input), error => error.code === "input");
+  await assert.rejects(exporter.create({ ...input, clientName: "Client" }), error => error.code === "unavailable");
+});
