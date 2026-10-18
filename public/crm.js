@@ -30,6 +30,8 @@ export function createCrmUI(adapter) {
   let profileReturnFocus = null; let labelsReturnFocus = null; let suspended = false; let deletedCandidate = null;
   let labelsRequest = 0; let managerOpening = 0; let cleared = false;
   let inboxAbort = null;
+  let exportAbort = null, exportBusy = false, exportEpoch = 0;
+  const exportUrls = new Set();
   const filters = node("form", null, "crm-filters"); ui.attr(filters, "aria-label", "Filtrer les clients");
   const search = input("search", "q", 80); ui.attr(search, "placeholder", "Pseudo, surnom ou e-mail");
   const tagFilter = select([["", "Tous les tags"]]); const groupFilter = select([["", "Tous les groupes"]]);
@@ -58,6 +60,15 @@ export function createCrmUI(adapter) {
   profileFields.append(field("Surnom privé", nickname), field("Notes privées", notes), notesCount, field("Rappel privé · heure locale", reminder), reminderHelp, memberships, saveButton); profileForm.append(profileFields);
   const conflict = node("section", null, "crm-conflict"); conflict.hidden = true; ui.attr(conflict, "aria-label", "Modification à comparer");
   profileDialog.append(profileHeader, profileHelp, clientInfo, profileStatus, profileForm, conflict); document.body.append(profileDialog); owned.push(profileDialog);
+  const exportSection = node("details", null, "crm-export"); exportSection.hidden = adapter.conversationExport?.enabled !== true;
+  exportSection.append(node("summary", "Télécharger la conversation"));
+  const exportHelp = node("p", "Messages et photos partagées, sans notes privées, tags ni photos non envoyées.", "crm-help");
+  const exportPhotos = input("checkbox", "exportPhotos"); exportPhotos.checked = adapter.conversationExport?.photos === true;
+  const exportPhotosLabel = node("label", null, "crm-check"); exportPhotosLabel.hidden = adapter.conversationExport?.photos !== true;
+  exportPhotosLabel.append(exportPhotos, node("span", "Inclure les photos partagées"));
+  const exportButton = button("Télécharger le ZIP", () => { void downloadConversation(); }, "button secondary");
+  const exportStatus = node("p", null, "crm-status"); exportStatus.setAttribute("role", "status"); exportStatus.setAttribute("aria-live", "polite");
+  exportSection.append(exportHelp, exportPhotosLabel, exportButton, exportStatus, node("p", "Le fichier se lit sans connexion. Conserve-le dans un endroit privé.", "crm-help")); profileDialog.append(exportSection);
 
   const manager = node("dialog", null, "crm-dialog crm-label-dialog"); manager.setAttribute("aria-labelledby", "crm-label-title");
   const managerTitle = node("h2", "Tags et groupes"); managerTitle.id = "crm-label-title";
@@ -205,7 +216,7 @@ export function createCrmUI(adapter) {
     const profile = draft.profile; nickname.value = draft.nickname; notes.value = draft.notes; reminder.value = localDateTime(draft.reminderAt);
     ui.text(notesCount, "{count} / 8 000", { count: ui.numberParam(draft.notes.length) }); ui.text(profileTitle, "Fiche · {name}", { name: profile.client.pseudonym });
     replace(clientInfo, rawNode("p", profile.client.email), textNode("p", "{status}{expiry}", { status: ui.messageParam(accessNames[profile.access.state] ?? "En attente"), expiry: ui.messageParam(profile.access.expiresAt === null ? "" : " · jusqu’au {date}", { date: profile.access.expiresAt === null ? "" : dateName(profile.access.expiresAt) }) }));
-    profileFields.hidden = false; profileFields.disabled = detailBusy; renderMemberships(draft); renderConflict(draft);
+    profileFields.hidden = false; profileFields.disabled = detailBusy; exportSection.hidden = adapter.conversationExport?.enabled !== true; renderMemberships(draft); renderConflict(draft);
     if (draft.dirty && !draft.conflict) status(profileStatus, "Modifications non enregistrées.");
   }
   async function loadProfile() {
@@ -225,16 +236,41 @@ export function createCrmUI(adapter) {
   async function openProfile(opener) {
     if (!state.selected || suspended) return;
     invalidateDetail(state); const ticket = detailTicket(state);
-    profileReturnFocus = opener; profileOpen = true; profileFields.hidden = true; conflict.hidden = true; replace(clientInfo); ui.text(profileTitle, "Fiche client"); status(profileStatus, "Chargement…");
+    profileReturnFocus = opener; profileOpen = true; profileFields.hidden = true; exportSection.hidden = true; conflict.hidden = true; replace(clientInfo); ui.text(profileTitle, "Fiche client"); status(profileStatus, "Chargement…");
     profileDialog.showModal(); const existing = state.drafts.get(state.selected); if (existing) renderProfile(existing);
     try { await loadLabels(); if (profileOpen && currentDetail(state, ticket)) await loadProfile(); } catch (error) { if (profileOpen && currentDetail(state, ticket)) await report(error, profileStatus); }
   }
   function closeProfile(restore = true) {
+    exportEpoch += 1; exportAbort?.abort(); exportAbort = null; exportBusy = false; exportButton.disabled = false; exportPhotos.disabled = false; exportSection.open = false; exportSection.hidden = true; status(exportStatus, "");
+    for (const url of exportUrls) URL.revokeObjectURL(url); exportUrls.clear();
     profileOpen = false; invalidateDetail(state); detailRequest += 1; detailBusy = false; if (profileDialog.open) profileDialog.close();
     profileFields.hidden = true; profileFields.disabled = false; ui.text(profileTitle, "Fiche client"); nickname.value = ""; notes.value = ""; reminder.value = ""; replace(memberships); replace(clientInfo); replace(conflict); conflict.hidden = true; status(profileStatus, "");
     if (restore && profileReturnFocus?.isConnected) profileReturnFocus.focus(); profileReturnFocus = null;
   }
   profileDialog.addEventListener("close", () => { if (profileOpen) closeProfile(); });
+  async function downloadConversation() {
+    if (!profileOpen || !profileDialog.open || exportBusy || detailBusy || !state.selected || adapter.conversationExport?.enabled !== true) return;
+    const ticket = detailTicket(state), epoch = ++exportEpoch, controller = new AbortController(); exportAbort = controller; exportBusy = true;
+    exportButton.disabled = true; exportPhotos.disabled = true; status(exportStatus, "Préparation de la conversation…");
+    try {
+      const blob = await ask(`/conversations/${ticket.id}/export`, { mutation: true, archive: true, body: { includePhotos: exportPhotos.checked }, signal: controller.signal });
+      if (!profileOpen || !profileDialog.open || epoch !== exportEpoch || !currentDetail(state, ticket) || controller.signal.aborted) return;
+      const url = URL.createObjectURL(blob); exportUrls.add(url); const link = document.createElement("a"); link.href = url; link.download = `JessieMessage-conversation-${ticket.id}.zip`;
+      document.body.append(link); try { link.click(); } finally { link.remove(); }
+      setTimeout(() => { URL.revokeObjectURL(url); exportUrls.delete(url); }, 5000);
+      status(exportStatus, "Conversation téléchargée. Extrais le ZIP puis ouvre Conversation.html.");
+    } catch (error) {
+      if (!profileOpen || epoch !== exportEpoch || !currentDetail(state, ticket) || controller.signal.aborted || error.stale || error.name === "AbortError") return;
+      if (error.status === 401 || error.status === 403) { await report(error, exportStatus); return; }
+      const message = error.code === "conversation_export_limit"
+        ? "La conversation dépasse la limite de téléchargement. Essaie sans les photos si elles sont incluses."
+        : error.status === 429 ? "Une préparation est déjà en cours ou vient de se terminer. Patiente trente secondes puis réessaie."
+        : "Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.";
+      status(exportStatus, message, true);
+    } finally {
+      if (epoch === exportEpoch) { exportBusy = false; exportAbort = null; exportButton.disabled = false; exportPhotos.disabled = false; }
+    }
+  }
   profileForm.addEventListener("submit", (event) => { event.preventDefault(); void saveProfile(); });
   async function saveProfile(overwrite = false) {
     const draft = state.drafts.get(state.selected); if (!profileOpen || !draft || detailBusy || (draft.conflict && !overwrite)) return;

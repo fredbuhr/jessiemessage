@@ -18,6 +18,7 @@ import { createAccessService } from "../server/access/service.mjs";
 import { createAccessHandler } from "../server/access/http.mjs";
 import { createChatStore } from "../server/chat/store.mjs";
 import { createChatService } from "../server/chat/service.mjs";
+import { createConversationExporter } from "../server/chat/conversation-export.mjs";
 import { createChatHandler } from "../server/chat/http.mjs";
 import { createMediaStore } from "../server/media/store.mjs";
 import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
@@ -416,6 +417,19 @@ test("real HTTP private media uses normalized encrypted files and current delive
       assert.equal((await request(imageSendPath("client"), { method: "POST", headers: headersFor(a),
         body: { ...firstInput, mediaId: adminAsset.id } })).status, 409);
       assert.equal(await count("messages"), 3);
+    });
+
+    await t.test("a conversation ZIP decrypts only delivered photos and deduplicates repeated shares", async () => {
+      const raw = admin.cookie.slice(admin.cookie.indexOf("=") + 1);
+      const exporter = createConversationExporter({ history: (token, conversationId, options) => chatService.messages("admin", token, conversationId, options),
+        photo: (token, conversationId, messageId) => mediaService.exportMessageAsset(token, conversationId, messageId), clock });
+      const archive = await exporter.create({ token: raw, conversationId: convA, expectedClientId: clientA.id.toString("hex"), includePhotos: true });
+      assert.equal(archive.readUInt32LE(), 0x04034b50); assert.equal(archive.includes(normalizedA), true);
+      assert.equal(archive.indexOf(normalizedA, archive.indexOf(normalizedA) + 1), -1, "the repeated photo is copied once");
+      assert.equal(archive.includes(Buffer.from(`photos/${adminAsset.id}.jpg`)), true);
+      for (const marker of [storageRoot, mediaKey.toString("base64url"), privateMarker, clientA.email, "clientMessageId", "campaignId"]) assert.equal(archive.includes(Buffer.from(marker)), false);
+      await assert.rejects(mediaService.exportMessageAsset(raw, convB, firstMessage.id));
+      await assert.rejects(mediaService.exportMessageAsset(raw, convA, adminAsset.id), "an asset identifier cannot substitute for an authorized message");
     });
 
     await t.test("tampered encrypted files fail generically without exposing storage paths, keys or source metadata", async () => {

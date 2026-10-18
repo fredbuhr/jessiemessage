@@ -91,7 +91,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, readinessHandler, backupHandler };
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
     "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
-    "/crm.js", "/crm-model.js", "/crm.css", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
+    "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
   let draining = false;
   let pendingRequests = 0;
   const requestWaiters = new Set();
@@ -322,7 +322,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     }
     let diagnosticClosing;
     const diagnostics = { close() {
-      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), backupHandler?.close()]).then((results) => {
+      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), backupHandler?.close(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.()]).then((results) => {
         if (results.some((result) => result.status === "rejected")) throw new Error("Private diagnostics could not close cleanly.");
       });
       return diagnosticClosing;
@@ -399,7 +399,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       // Chat history joins attachment metadata even when image transfer is off.
       // Verify those tables before accepting any private history requests.
       const { createMediaStore } = await import("./media/store.mjs");
-      let mediaStorage, mediaCapacity;
+      let mediaStorage, mediaCapacity, mediaService;
       if (mediaConfig.enabled) {
         const { createMediaStorage } = await import("./media/storage.mjs");
         mediaStorage = await createMediaStorage({ root: mediaConfig.root, key: mediaConfig.key });
@@ -414,8 +414,11 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         const crmStore = createCrmStore({ pool, chatStore });
         await crmStore.assertSchema();
         const crmService = await createCrmService({ store: crmStore, authStore: store, authService: service, key: crmConfig.key, clock });
-        crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin });
-        if (legacyHandlers) legacyHandlers.crmHandler = createCrmHandler(crmService, { origin: RECIPE_ORIGIN });
+        const { createConversationExporter } = await import("./chat/conversation-export.mjs");
+        const conversationExporter = createConversationExporter({ history: (token, id, options) => chatService.messages("admin", token, id, options),
+          photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportMessageAsset(token, id, message) : null, clock });
+        crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin, conversationExporter });
+        if (legacyHandlers) legacyHandlers.crmHandler = createCrmHandler(crmService, { origin: RECIPE_ORIGIN, conversationExporter });
       }
       if (mediaConfig.enabled) {
         const { createMediaCapacityStore } = await import("./media/capacity-store.mjs");
@@ -426,7 +429,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
           const error = new Error("Private media capacity must be initialized offline.");
           error.code = "MEDIA_CAPACITY_UNAVAILABLE"; throw error;
         }
-        const mediaService = await createMediaService({ store: mediaStore, chatService, authStore: store,
+        mediaService = await createMediaService({ store: mediaStore, chatService, authStore: store,
           storage: mediaStorage, key: mediaConfig.key, minimumFreeBytes: mediaConfig.minimumFreeBytes });
         mediaHandler = createMediaHandler(mediaService, { origin: mediaConfig.origin });
         if (legacyHandlers) legacyHandlers.mediaHandler = createMediaHandler(mediaService, { origin: RECIPE_ORIGIN });

@@ -192,6 +192,13 @@ export async function createMediaService({ store, chatService, authStore, storag
       await consumeBudget(actor.user.id, variant, request.now);
       return content(await store.getMessageAsset({ ...request, now: currentTime(), conversationId: conversation, messageId: message }), variant);
     }),
+    // Internal aggregate download: the conversation exporter owns the total
+    // byte/time/concurrency budget. Keep the ordinary per-photo display quota
+    // available for browsing; retain the same administrator and message ACL.
+    exportMessageAsset: (raw, conversationId, messageId) => guarded(async () => {
+      const conversation = id(conversationId), message = id(messageId), { request } = await context("admin", raw);
+      return content(await store.getMessageAsset({ ...request, now: currentTime(), conversationId: conversation, messageId: message }), "full");
+    }),
     gallery: (role, raw, conversationId, { before = null, limit = 50 } = {}) => guarded(async () => {
       if (before !== null) cursor(before); pageSize(limit);
       const conversation = id(conversationId); const { actor, request } = await context(role, raw);
