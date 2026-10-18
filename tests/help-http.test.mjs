@@ -205,3 +205,17 @@ test("help still clears the URL and preserves static French content without a tr
   assert.deepEqual(p.calls, [["replace", null, "", "/help"]]);
   assert.equal(p.document.title, "Jessie — Aide et confidentialité");
 });
+
+test("public help describes the confirmed private-space choices without promising an implemented account erasure", async () => {
+  const html = await readFile(new URL("../public/help.html", import.meta.url), "utf8");
+  const script = await readFile(new URL("../public/help.js", import.meta.url), "utf8");
+  assert.match(html, /Jessie, en France, est responsable de cet espace privé sur invitation/);
+  assert.match(html, /conserver la conversation jusqu’à la fermeture définitive du compte/);
+  assert.match(html, /sauf les messages et photos supprimés volontairement/);
+  assert.match(html, /Une déconnexion, une expiration ou une suspension de l’accès ne ferme pas définitivement le compte/);
+  assert.match(html, /La suppression du compte n’est pas disponible directement dans l’application/);
+  assert.match(html, /Ces copies sont traitées séparément/);
+  assert.doesNotMatch(html, /Les durées de conservation du compte, des échanges et des sauvegardes ne sont pas encore fixées/);
+  assert.match(script, /Jessie, in France/); assert.match(script, /until the account is permanently closed/);
+  assert.doesNotMatch(html, /exempt.{0,20}RGPD|GDPR.{0,20}exempt|suppression automatique immédiate/i);
+});

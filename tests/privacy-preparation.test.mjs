@@ -36,7 +36,10 @@ test("the preparation accepts partial answers, closed fields and bounded well-fo
 });
 test("the default notice is current, bilingual, private and does not invent completed decisions", async t => {
   const f = await fixture(t), service = await createPrivacyService({ directory: f.directory, key }, { files: f.files }), value = await service.read();
-  assert.equal(value.revision, 0); assert.equal(value.updatedAt, null); assert.deepEqual(value.answered, []);
+  assert.equal(value.revision, 0); assert.equal(value.updatedAt, null); assert.deepEqual(value.answered, ["D01", "D04"]);
+  assert.match(value.draft.answers.D01, /Jessie, en France/);
+  assert.match(value.draft.answers.D04, /fermeture définitive/);
+  assert.deepEqual(value.confirmed, { version: 1, responsibleName: "Jessie", countryCode: "FR", organization: null, space: "private_invitation", conversationRetention: "until_permanent_account_closure", permanentClosure: "not_implemented" });
   assert.equal(value.publication, "draft_only"); assert.equal(value.retention, "not_enabled");
   assert.match(value.draft.notice.fr, /notes, classement et rappels/); assert.match(value.draft.notice.en, /notes, categorisation and reminders/);
   assert.match(value.draft.notice.fr, /Télécharger ma conversation/); assert.match(value.draft.notice.en, /Download my conversation/);
@@ -104,6 +107,17 @@ test("all answers filled still mean draft preparation, never legal validation, p
   assert.equal(saved.revision, 1); assert.deepEqual(saved.answered, DECISIONS); assert.equal(saved.publication, "draft_only"); assert.equal(saved.retention, "not_enabled");
   const loaded = await service.read(); assert.deepEqual(loaded, saved);
   await assert.rejects(service.save({ revision: 1, draft: value, publish: true }, async () => {}), { code: "input" });
+});
+test("existing private drafts are preserved while confirmed product choices stay separate from editable preparation", async t => {
+  const f = await fixture(t), existing = prepared(); existing.draft.answers.D01 = "Older private operator note"; existing.draft.answers.D04 = "Older private retention note";
+  await f.files.save(existing, 0, async () => {});
+  const service = await createPrivacyService({ directory: f.directory, key }, { files: f.files }), state = await service.read();
+  assert.deepEqual(state.draft, existing.draft); assert.equal(state.revision, 1);
+  assert.equal(state.confirmed.responsibleName, "Jessie"); assert.equal(state.confirmed.organization, null); assert.equal(state.confirmed.countryCode, "FR");
+  assert.equal(state.confirmed.conversationRetention, "until_permanent_account_closure"); assert.equal(state.confirmed.permanentClosure, "not_implemented");
+  state.confirmed.responsibleName = "Client-side alteration";
+  assert.equal((await service.read()).confirmed.responsibleName, "Jessie");
+  await assert.rejects(service.save({ revision: 1, draft: state.draft, confirmed: state.confirmed }, async () => {}), { code: "input" });
 });
 let unavailable;
 try { if (process.platform !== "linux" || (await statfs("/proc/self/fd", { bigint: true })).type !== 0x9fa0n) unavailable = "Linux procfs unavailable"; } catch { unavailable = "Linux procfs unavailable"; }

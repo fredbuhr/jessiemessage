@@ -3,13 +3,14 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
+import { CONFIRMED_PRIVACY_CHOICES } from "../../server/privacy/choices.mjs";
 
 async function fixture() {
   const names = ["privacy.html", "privacy.js", "privacy.css", "i18n-privacy.js", "i18n.js", "i18n.css", "readiness-model.js", "brand/brand.css", "brand/icon-64.png", "favicon.ico"];
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   const requests = [], draft = { answers: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`D0${i + 1}`, ""])), notice: { fr: "Texte français — À COMPLÉTER D01", en: "English text — TO COMPLETE D01" } };
   let version = 0, changed = false, hidden = false, changeOnSave = false, delayedRead = null;
-  const value = () => ({ version: 1, revision: version, updatedAt: version ? Date.now() : null, publication: "draft_only", retention: "not_enabled", answered: [], draft });
+  const value = () => ({ version: 1, revision: version, updatedAt: version ? Date.now() : null, publication: "draft_only", retention: "not_enabled", answered: [], confirmed: { ...CONFIRMED_PRIVACY_CHOICES }, draft });
   const server = createServer(async (request, response) => {
     const path = new URL(request.url, "http://localhost").pathname; let text = ""; for await (const chunk of request) text += chunk;
     requests.push({ path, method: request.method, text, csrf: request.headers["x-csrf-token"] });
@@ -38,7 +39,7 @@ async function fixture() {
     async close() { server.closeAllConnections(); await new Promise(done => server.close(done)); } };
 }
 async function ready(page) { await waitUntil(() => page.execute("return !document.getElementById('privacy-content').hidden && document.querySelectorAll('#decision-groups textarea').length === 8"), "private preparation"); }
-async function edit(page, text) { await page.click("#decision-groups details:first-child > summary"); await page.type("#answer-D01", text); }
+async function edit(page, text) { await page.click("#privacy-preparation > summary"); await page.click("#decision-groups details:first-child > summary"); await page.type("#answer-D01", text); }
 const posts = source => source.requests.filter(item => item.path === "/api/admin/privacy" && item.method === "POST");
 
 test("real Chrome: private preparation at mobile and desktop widths, FR/EN, keyboard save and independent notice language", { timeout: 150000 }, async t => {
@@ -49,8 +50,10 @@ test("real Chrome: private preparation at mobile and desktop widths, FR/EN, keyb
       try {
         page = await driver.browser({ origin: source.origin, width }); await page.navigate("/__fixture"); await page.execute("sessionStorage.setItem('jessiemessage.language',arguments[0])", language); await page.navigate("/admin/privacy"); await ready(page);
         assert.equal(await page.execute("return document.querySelector('h1').textContent"), language === "fr" ? "Confidentialité et conservation" : "Privacy and retention");
-        assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && document.getElementById('save').getBoundingClientRect().height >= 44"), true);
+        assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && document.querySelector('#privacy-preparation > summary').getBoundingClientRect().height >= 44"), true);
         assert.equal(posts(source).length, 0); assert.equal(await page.execute("return document.getElementById('save').disabled"), true);
+        assert.equal(await page.execute("return !document.getElementById('privacy-preparation').open && document.getElementById('choice-responsible').textContent === 'Jessie — France'"), true);
+        assert.equal(await page.execute("return document.querySelector('.choices').textContent.includes(arguments[0])", language === "fr" ? "Jusqu’à la fermeture définitive du compte" : "Until the account is permanently closed"), true);
         await edit(page, "Private synthetic identity");
         await page.click("#preview-en"); assert.equal(await page.execute("return document.getElementById('notice-preview').textContent"), "English text — TO COMPLETE D01");
         await page.click("[data-jm-language]"); assert.equal(await page.execute("return document.getElementById('answer-D01').value"), "Private synthetic identity");
@@ -96,7 +99,7 @@ test("real Chrome: a replacement login during save discards the obsolete respons
 test("real Chrome: markup in drafts stays literal and never executes when previewing or changing UI language", { timeout: 60000 }, async () => {
   const driver = await startWebDriver(), source = await fixture(); let page;
   try {
-    page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/privacy"); await ready(page); await page.click("#notice-editor > summary");
+    page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/privacy"); await ready(page); await page.click("#privacy-preparation > summary"); await page.click("#notice-editor > summary");
     const markup = '<img src=x onerror="window.__unsafe=true">'; await page.type("#notice-fr", markup);
     assert.equal(await page.execute("return document.getElementById('notice-preview').textContent"), markup); assert.equal(await page.execute("return !window.__unsafe && !document.querySelector('#notice-preview img')"), true);
     await page.click("[data-jm-language]"); assert.equal(await page.execute("return document.getElementById('notice-fr').value"), markup);
