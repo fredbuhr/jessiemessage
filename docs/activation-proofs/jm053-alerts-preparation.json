@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "stage": "0.53",
+  "type": "backup_email_alerts_prepared",
+  "checkedAt": "2026-10-18T13:04:20.616173Z",
+  "sourceHead": "e1842a395925b19a50dcabbccfb7e9b9b03fcd8e",
+  "sourceTree": "ad44e230db9a1ec89902e616b1315496b4afe284",
+  "sourceDirectory": "/srv/customer/jessiemessage-operator/backup-alerts-e1842a39",
+  "runtimeHead": "0a1cafd85c3d8699be1961075b18e80e36bcd041",
+  "runtimeTree": "17db89aa165e23ca427d073f5a3fcc28387f5168",
+  "nativeTests": { "tests": 87, "pass": 87, "fail": 0, "skipped": 0 },
+  "syntaxSourceFiles": 431,
+  "preflight": { "status": "passed", "enabled": true, "hourUtc": 5, "minuteUtc": 15, "started": false, "backupStarted": false },
+  "mailConfigurationCheck": { "status": "configuration_valid", "sent": false, "inboxStatus": "not_checked" },
+  "rollbackSaved": true,
+  "rollbackFile": "/srv/customer/jessiemessage-private/manager-before-alerts-053.json",
+  "rollbackFileMode": "0600",
+  "launcher": {
+    "path": "/srv/customer/jessiemessage-private/start-primary-alerts-e1842a39.sh",
+    "mode": "0700",
+    "bytes": 843,
+    "sha256": "f951664a3e981765a23d0becb61865054c02a22f97ffe8859545c186c88503cb"
+  },
+  "ci": {
+    "runId": 39129817295,
+    "sourceHead": "e1842a395925b19a50dcabbccfb7e9b9b03fcd8e",
+    "allJobsPassed": true,
+    "jobs": [
+      { "id": 117682495085, "name": "verify", "tests": 2479, "pass": 2452, "fail": 0, "skipped": 27 },
+      { "id": 117682495095, "name": "MariaDB 10.11", "tests": 383, "pass": 383, "fail": 0, "skipped": 0 },
+      { "id": 117682495108, "name": "MariaDB 11.4", "tests": 383, "pass": 383, "fail": 0, "skipped": 0 },
+      { "id": 117682494896, "name": "Chrome keyboard and chat lifecycle", "tests": 101, "pass": 101, "fail": 0, "skipped": 0 },
+      { "id": 117682495008, "name": "Chrome HTTPS authentication with MariaDB", "tests": 1, "pass": 1, "fail": 0, "skipped": 0 }
+    ]
+  },
+  "migrationPerformed": false,
+  "keysChanged": false,
+  "independentCopyStatus": "not_checked",
+  "decryptionStatus": "not_checked"
+}

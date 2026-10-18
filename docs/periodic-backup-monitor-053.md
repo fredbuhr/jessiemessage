@@ -1,5 +1,7 @@
 # Étape 0.53 — surveillance périodique du journal de sauvegarde
 
+**Évolution du 18 octobre à 15:07 Europe/Paris :** le [superviseur avec alertes SMTP](backup-email-alerts-053.md), source `e1842a39`, conserve ce moniteur et lui ajoute une file privée indépendante. Deux tests sont acceptés par SMTP ; leur réception demeure non confirmée. Le présent relevé garde l'activation minute précédente `9df56feb` et son repli. Le [point de reprise](REPRISE.md) donne les commandes actuelles.
+
 Le superviseur de sauvegarde garde le même runtime applicatif 0.50, ses arguments, sa configuration et la capture quotidienne à 05:15 UTC. Un observateur indépendant du déroulement des captures lit le journal privé au démarrage puis avec un espacement cible d'une minute après chaque lecture. Le lecteur est borné à quinze secondes et n'ouvre ni connexion SQL ni transport de messages.
 
 ## Comportement

@@ -10,11 +10,12 @@ Ce fichier est le point d'entrée de reprise après la perte d'une discussion. L
 | Dernière source complète retrouvée | Branche `feat/recurring-private-checkpoints`, commit `dc02ec6795a7e8c3312d253797ad6382439f5735`, arbre `9454ed83059615d420f8182fac6382310577f91a` |
 | Branche de reprise | `feat/reprise-audit-backup-freshness`, issue de ce commit complet |
 | Runtime applicatif réellement actif | `0a1cafd85c3d8699be1961075b18e80e36bcd041`, arbre `17db89aa165e23ca427d073f5a3fcc28387f5168` — étape 0.50 |
-| Superviseur réellement actif | `9df56feb80b94051ede34f2e53cc7d7ff7e194ba`, arbre `8272fbd55841556556f9d78acfeb048767b2f1e9` — surveillance minute 0.53 |
+| Superviseur réellement actif | `e1842a395925b19a50dcabbccfb7e9b9b03fcd8e`, arbre `ad44e230db9a1ec89902e616b1315496b4afe284` — surveillance et file d'alertes SMTP 0.53 |
+| Branche complète courante | `feat/backup-email-alerts`, [PR #68](https://github.com/fredbuhr/jessiemessage/pull/68), issue de `feat/periodic-backup-monitor` ; documentation ultérieure distincte du commit exécuté |
 | Branche par défaut au moment de la reprise | `main` = `a688b30ef4e039a30de7bf05e98761845dcee8d4` : sous-ensemble de surveillance, pas l'application complète |
 | Données | Schéma 30, six configurations privées existantes, mêmes clés/comptes/sessions |
 
-**Ne pas déployer `main` comme si cette branche contenait l'application.** Ne pas réécrire la pile de PR pour reprendre. Créer une branche depuis la source complète ci-dessus, puis vérifier les nouveaux commits éventuels. Les preuves d'activation distinguent toujours le code applicatif, le code opérateur et la documentation ultérieure.
+**Ne pas déployer `main` comme si cette branche contenait l'application.** Ne pas réécrire la pile de PR pour reprendre. Créer une branche depuis la tête vérifiée de la branche complète courante, puis vérifier les nouveaux commits éventuels. Les preuves d'activation distinguent toujours le code applicatif, le code opérateur et la documentation ultérieure.
 
 ## Hébergement et accès existants
 
@@ -22,11 +23,11 @@ Ce fichier est le point d'entrée de reprise après la perte d'une discussion. L
 - [Tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard).
 - [Terminal SSH existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal).
 - Runtime : `/srv/customer/jessiemessage-operator/broadcast-direct-delivery-0a1cafd8`.
-- Superviseur : `/srv/customer/jessiemessage-operator/periodic-monitor-9df56feb` ; ancien 0.52 conservé pour le repli dans `recurring-checkpoints-9665d54c`.
+- Superviseur : `/srv/customer/jessiemessage-operator/backup-alerts-e1842a39` ; repli minute précédent conservé dans `periodic-monitor-9df56feb`, puis ancien 0.52 dans `recurring-checkpoints-9665d54c`.
 - Configuration : `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851`.
 - Sauvegardes : `/srv/customer/jessiemessage-private/recurring-backup-052` ; quotidien à **05:15 UTC**.
-- Run Manager : `bash /srv/customer/jessiemessage-private/start-primary-monitored-9df56feb.sh`.
-- Repli immédiat : commandes 0.52 dans `/srv/customer/jessiemessage-private/manager-before-monitor-053.json`, lanceur `start-primary-backups-checked-9665d54c.sh`. Le repli plus ancien sans superviseur reste dans `recurring-backup-052/manager-before-activation-052.json`. Utiliser le cycle Manager normal ; aucune restauration SQL.
+- Run Manager : `bash /srv/customer/jessiemessage-private/start-primary-alerts-e1842a39.sh`.
+- Repli immédiat : commandes minute 0.53 dans `/srv/customer/jessiemessage-private/manager-before-alerts-053.json`, lanceur `start-primary-monitored-9df56feb.sh`. Repli antérieur 0.52 dans `manager-before-monitor-053.json`, lanceur `start-primary-backups-checked-9665d54c.sh`. Le repli sans superviseur reste dans `recurring-backup-052/manager-before-activation-052.json`. Utiliser le cycle Manager normal ; aucune restauration SQL.
 
 Ne pas modifier les dossiers actifs pour y installer un nouvel outil : leur source et leur propreté Git sont épinglées. Préparer un checkout opérateur séparé. Ne pas lancer une capture `--offline` pendant que le runtime tourne. La clé privée GPG et sa phrase restent sur le PC du propriétaire ; aucune demande de secret dans la discussion.
 
@@ -53,4 +54,8 @@ Le [premier passage quotidien](activation-proofs/jm052-first-scheduled-20261018.
 
 ### Prochain lot à reprendre
 
-Raccorder les alertes techniques à l’adresse officielle déjà retenue pour le projet, **contact@jessiemessage.com**, puis éprouver panne et rétablissement avec des données synthétiques et consigner la réception réelle. Aucun message d’alerte n’a été envoyé dans le lot de surveillance minute. La copie automatique hors hébergement n’a pas encore de destination raccordée ; la clé privée et le déchiffrement restent personnels sur le PC. Ne pas refaire les validations acquises 0.46 ni la capture planifiée maintenant observée.
+Le [lot d'alertes SMTP](backup-email-alerts-053.md) est maintenant **activé à 15:07 Europe/Paris**, source opérateur `e1842a39` : cinq jobs CI, 87/87 tests natifs, préflights et cycle Manager réussis. Deux observations minute sont saines, zéro alerte en attente ; à 13:10:53.337 UTC, 38 contrôles HTTPS et seize empreintes passent. Aucun compte, secret, schéma, message client ou journal de capture n'est modifié.
+
+Deux courriels **[TEST]**, incident puis rétablissement, ont été acceptés par SMTP pour **contact@jessiemessage.com**. **Leur réception reste non confirmée** : la recherche IMAPS ciblée dans `INBOX` ne les retrouve pas à 13:17:07.909789 UTC. Le MX pointe vers Infomaniak ; aucune règle de boîte n'a été changée. Demander au propriétaire seulement s'il a reçu ces deux sujets, avant de clore la réception ; ne pas renvoyer les tests automatiquement ni fabriquer une preuve. Le canal surveille le journal local, pas une panne totale de l'hébergement.
+
+La copie automatique hors hébergement n'a pas encore de destination raccordée ; la clé privée et le déchiffrement restent personnels sur le PC. Continuer les préparatifs de copie indépendante et la consolidation 0.54 sans attendre une répétition des parcours déjà acquis. Ne pas refaire les validations 0.46 ni la capture planifiée maintenant observée. Les [preuves d'activation](activation-proofs/jm053-alerts-activation.json) et de [préparation/CI](activation-proofs/jm053-alerts-preparation.json) sont la référence actuelle.

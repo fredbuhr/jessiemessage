@@ -23,10 +23,20 @@ Une seule tentative est faite par observation minute. Après les échecs, l'atte
 
 `scripts/test-private-backup-alerts.mjs check --private-directory <configuration privée> --private-path-mode linux-dirfd` valide le chargement et la construction sans ouvrir de connexion SMTP ni envoyer de message.
 
-Le commandement explicite `send-test`, avec les mêmes arguments, envoie exactement deux courriels portant **[TEST]** et **EXERCICE SYNTHÉTIQUE** : un incident puis un rétablissement reliés par une référence. Il ne modifie pas la file de production, ne provoque aucune panne, n'ouvre pas SQL et ne capture aucune archive. Ses reçus gardent `inboxStatus: not_checked` tant que le propriétaire ou la boîte ne confirme pas la réception.
+La commande explicite `send-test`, avec les mêmes arguments, envoie exactement deux courriels portant **[TEST]** et **EXERCICE SYNTHÉTIQUE** : un incident puis un rétablissement reliés par une référence. Elle ne modifie pas la file de production, ne provoque aucune panne, n'ouvre pas SQL et ne capture aucune archive. Ses reçus gardent `inboxStatus: not_checked` tant que le propriétaire ou la boîte ne confirme pas la réception.
 
 ## Activation
 
 Préparer un checkout opérateur séparé et épingler son commit, son arbre et sa propreté. Passer syntaxe/build, les cinq jobs CI, les tests natifs et le préflight existant avant activation. Conserver exclusivement dans un fichier privé les commandes Run/Build précédentes et créer un nouveau lanceur 0700. Le repli est le superviseur minute `9df56feb` et son lanceur `start-primary-monitored-9df56feb.sh` ; aucune restauration SQL.
 
-Les références exactes et preuves réelles sont à ajouter après observation. À ce stade de préparation, aucun envoi ni changement du Manager n'est revendiqué.
+## Activation réelle du 18 octobre
+
+La source opérateur **`e1842a395925b19a50dcabbccfb7e9b9b03fcd8e`**, arbre **`ad44e230db9a1ec89902e616b1315496b4afe284`**, est installée séparément dans `/srv/customer/jessiemessage-operator/backup-alerts-e1842a39`. Les [cinq jobs de la CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39129817295) passent : **2 452 réussites générales / 27 wrappers SQL ignorés**, **383/383 sur chaque MariaDB**, **101/101 Chrome**, **1/1 authentification HTTPS**. Syntaxe de 431 fichiers et build réussis. Les **87/87 tests ciblés natifs**, sans saut, et les deux préflights passent sur l'hébergement.
+
+Le repli est sauvegardé exclusivement dans `/srv/customer/jessiemessage-private/manager-before-alerts-053.json`, mode 0600. Le lanceur `start-primary-alerts-e1842a39.sh`, mode 0700, 843 octets, est épinglé par commit/arbre/propreté. Le Manager enregistre son Run et le Build de la nouvelle source, puis réussit le cycle normal Build/redémarrage à **15:07 Europe/Paris**. Deux observations réelles à **13:07:51.090** et **13:08:51.121 UTC**, espacées de **60 031 ms**, sont `current / OK`, aucun incident et zéro alerte en attente. Le runtime applicatif reste 0.50.
+
+À **13:10:53.337 UTC**, **38/38 lectures HTTPS et seize empreintes exactes** passent sur les deux origines ; la route protégée de campagne est `/api/broadcast/admin/campaigns`. Le journal garde quatre enregistrements et son succès du matin : aucune nouvelle capture induite par ce déploiement.
+
+Les deux courriels **[TEST] Incident de sauvegarde — JessieMessage** et **[TEST] Sauvegarde rétablie — JessieMessage** sont **acceptés par SMTP** avant activation. Aucun message client ni campagne n'est envoyé. La réception reste **non confirmée** : la vérification IMAPS en lecture seule, ciblée sur leurs références de test dans `INBOX`, ne retrouve pas ces messages à **13:17:07.909789 UTC**. Aucun autre contenu de mail ni corps client n'est lu ; aucune règle de boîte n'est modifiée. Le MX public est `mta-gw.infomaniak.ch`, priorité 5. Ce constat ne prouve ni une perte ni une réception ailleurs ; demander une observation ciblée du propriétaire avant de clore la réception du canal. Ne pas renvoyer les tests sans nécessité.
+
+Les [preuves de préparation](activation-proofs/jm053-alerts-preparation.json), d'[activation](activation-proofs/jm053-alerts-activation.json) et la [capture du Manager](activation-proofs/jm053-alerts-activation-20261018.jpg) conservent ces distinctions. La copie indépendante et le déchiffrement PC restent ouverts ; la sonde externe n'a pas acquis de garantie de cadence ou de réception d'alerte.
