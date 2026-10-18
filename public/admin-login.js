@@ -4,7 +4,7 @@ const notificationReference = globalThis.JessieNotificationLink?.read() ?? null;
 const adminContinueTarget = (() => {
   if (!location.search) return null;
   const query = new URLSearchParams(location.search);
-  const allowed = new Set(["/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups"]);
+  const allowed = new Set(["/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/admin/privacy"]);
   return query.size === 1 && query.getAll("continue").length === 1 && allowed.has(query.get("continue")) ? query.get("continue") : null;
 })();
 

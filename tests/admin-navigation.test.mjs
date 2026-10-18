@@ -6,7 +6,7 @@ import { request as httpRequest } from "node:http";
 
 const token = Buffer.alloc(32, 17).toString("base64url"), csrf = Buffer.alloc(32, 18).toString("base64url");
 const origin = "https://jessiemessage.com";
-const paths = ["/admin", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups"];
+const paths = ["/admin", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/admin/privacy"];
 async function fixture(t, { legacy = false, backups = true } = {}) {
   const session = { user: { id: "1".repeat(32), role: "admin", pseudonym: "Synthetic" }, csrf, expiresAt: Date.now() + 86400000 };
   const authHandler = createAuthHandler({ login() {}, logout() {}, logoutAll() {}, async session(value) { return value === token ? session : null; } }, { origin });
@@ -15,7 +15,7 @@ async function fixture(t, { legacy = false, backups = true } = {}) {
     if (!paths.slice(1).includes(path)) return false;
     response.writeHead(401, { "Content-Type": "application/json" }); response.end('{"error":"authentication_required"}'); return true;
   };
-  const handlers = { authHandler, chatHandler: restricted, broadcastHandler: restricted, readinessHandler: restricted, ...(backups ? { backupHandler: restricted } : {}) };
+  const handlers = { privacyHandler: restricted, authHandler, chatHandler: restricted, broadcastHandler: restricted, readinessHandler: restricted, ...(backups ? { backupHandler: restricted } : {}) };
   const server = createAppServer({ ...handlers, ...(legacy ? { requestOrigin: origin, legacyHandlers: { authHandler, entryHandler: async () => false } } : {}) });
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
   t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });

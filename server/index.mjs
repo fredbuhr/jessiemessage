@@ -66,7 +66,7 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler,
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler, privacyHandler,
   entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null,
   legacyHandlers = null, transitionHandler = null } = {}) {
   const requestOriginAllowed = requestOrigin === null ? null : createRequestOriginGuard(requestOrigin);
@@ -84,13 +84,13 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   if (transitionHandler !== null && (typeof transitionHandler !== "function" || legacyChain === null)) throw new RequestOriginError();
   if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
-  const privateHandlers = [backupHandler, notificationsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
+  const privateHandlers = [privacyHandler, backupHandler, notificationsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
   const adminPages = new Map([["/admin", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"],
-    ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"]]);
-  const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, readinessHandler, backupHandler };
+    ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"], ["/admin/privacy", "privacyHandler"]]);
+  const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, readinessHandler, backupHandler, privacyHandler };
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
-    "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
+    "/admin/privacy", "/privacy.js", "/privacy.css", "/i18n-privacy.js", "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
     "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/client-archive.js", "/conversation-download.js", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
   let draining = false;
   let pendingRequests = 0;
@@ -285,10 +285,13 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     await store.assertSchema();
     const service = await createAuthService({ store, totpKey: config.totpKey, clock });
     const authHandler = createAuthHandler(service, { origin: config.origin, clock });
-    let backupHandler, crmHandler, chatHandler;
+    let backupHandler, privacyHandler, crmHandler, chatHandler;
     if (backupDirectory !== undefined) {
       const [{ createBackupCopyService }, { createBackupCopyHandler }] = await Promise.all([import("./backup/copy-service.mjs"), import("./backup/copy-http.mjs")]);
       backupHandler = createBackupCopyHandler(createBackupCopyService(backupDirectory), { origin: config.origin, actor: token => service.session(token), clock });
+      const [{ createPrivacyService }, { createPrivacyHandler }] = await Promise.all([import("./privacy/service.mjs"), import("./privacy/http.mjs")]);
+      privacyHandler = createPrivacyHandler(await createPrivacyService({ directory: backupDirectory, key: crmConfig.key, clock }),
+        { origin: config.origin, actor: token => service.session(token) });
     }
     const legacyHandlers = deviceTransition ? { authHandler: createAuthHandler(service, { origin: RECIPE_ORIGIN, clock }) } : null;
     const workerNames = [accessConfig.enabled ? "verification" : null, resetConfig.enabled ? "recovery" : null,
@@ -322,7 +325,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     }
     let diagnosticClosing;
     const diagnostics = { close() {
-      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), backupHandler?.close(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.(), chatHandler?.close?.(), legacyHandlers?.chatHandler?.close?.()]).then((results) => {
+      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), privacyHandler?.close(), backupHandler?.close(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.(), chatHandler?.close?.(), legacyHandlers?.chatHandler?.close?.()]).then((results) => {
         if (results.some((result) => result.status === "rejected")) throw new Error("Private diagnostics could not close cleanly.");
       });
       return diagnosticClosing;
@@ -456,7 +459,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       legacyHandlers.entryHandler = createEntryHandler({ adminSession: (token) => service.session(token),
         clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, clock });
     }
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler, operations, requestOrigin,
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler, privacyHandler, operations, requestOrigin,
       legacyHandlers, transitionHandler,
       entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled, deviceTransition, clock }) });
     const workers = [];
