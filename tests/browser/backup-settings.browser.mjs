@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 
 const names = ["backups.html", "backups.js", "backups.css", "readiness.css", "readiness-model.js", "i18n.js", "i18n-backups.js", "i18n.css", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "favicon.ico", "manifest.webmanifest"];
-async function fixture() {
+async function fixture(controlClock = false) {
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   const id = "1".repeat(32), csrf = "A".repeat(43), requests = []; let sessionChanged = false, changeOnKit = false;
   let destination = { id: "2".repeat(32), label: "PC personnel", kind: "computer", enabled: true, paired: false, pairedAt: null, pairingExpiresAt: null, lastSeenAt: null, lastReceipt: null };
@@ -16,6 +16,7 @@ async function fixture() {
     const send = (status, type, body) => { response.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" }); response.end(body); };
     const json = body => send(200, "application/json", JSON.stringify(body));
     if (path === "/__fixture") return send(200, "text/html", "<!doctype html><title>Local fixture</title>");
+    if (path === "/session-clock.js" && controlClock) return send(200, "text/javascript", "globalThis.JessieSessionClock={scheduleSessionCheck(expiry,callback){window.__sessionCheck=callback;return()=>{};}};");
     if (path === "/api/auth/session") return json({ user: { id, role: "admin", pseudonym: "Synthetic" }, csrf: sessionChanged ? "C".repeat(43) : csrf, expiresAt: Date.now() + 3600000 });
     if (path === "/api/admin/backups") return json({ version: 1, checkedAt: Date.now(), archiveCount: 2, latestArchive: { id: "capture-1792340000000-cccccccccccccccc", startedAt: 1792340000000 }, schedule: { enabled: true, hourUtc: 5, minuteUtc: 15 }, destinations: destination ? [destination] : [], decryptionStatus: "not_checked" });
     if (path.endsWith("/settings")) { destination = { ...destination, ...JSON.parse(text) }; return json({}); }
@@ -26,7 +27,7 @@ async function fixture() {
     send(404, "application/json", "{}");
   });
   await new Promise(yes => server.listen(0, "127.0.0.1", yes));
-  return { origin: `http://127.0.0.1:${server.address().port}`, requests, changeOnKit() { changeOnKit = true; },
+  return { origin: `http://127.0.0.1:${server.address().port}`, requests, changeOnKit() { changeOnKit = true; }, changeSession() { sessionChanged = true; destination.label = "Second session"; },
     async close() { server.closeAllConnections(); await new Promise(yes => server.close(yes)); } };
 }
 test("real Chrome: backup destinations, keyboard controls, translations and kit download at three widths", { timeout: 150000 }, async t => {
@@ -60,5 +61,15 @@ test("real Chrome: a login change during kit creation suppresses the download an
     await tabUntil(page, '[data-action="kit"]'); await page.key("\uE007");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden && document.getElementById('backup-status').textContent.length > 0 && !document.querySelector('[data-action=kit]').disabled"), "fresh session after rejected old response");
     assert.equal(await page.execute("return !!window.__downloaded"), false); assert.equal(source.requests.filter(r => r.path.endsWith("/windows-kit")).length, 1);
+  } finally { await page?.close(); await source.close(); await driver.close(); }
+});
+test("real Chrome: periodic proof replaces private settings after another login without a mutation", { timeout: 60000 }, async () => {
+  const driver = await startWebDriver(), source = await fixture(true); let page;
+  try {
+    page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/backups");
+    await waitUntil(() => page.execute("return !!window.__sessionCheck && !document.getElementById('backup-content').hidden"), "periodic session proof armed");
+    source.changeSession(); await page.execute("window.__sessionCheck()");
+    await waitUntil(() => page.execute("return document.querySelector('.destination h3')?.textContent === 'Second session'"), "settings from proved replacement login");
+    assert.equal(source.requests.some(request => request.method !== "GET"), false);
   } finally { await page?.close(); await source.close(); await driver.close(); }
 });

@@ -39,7 +39,10 @@ function arm() {
   cancelCheck = globalThis.JessieSessionClock.scheduleSessionCheck(state.session.expiresAt, async () => {
     const ticket = readinessTicket(state);
     try { await prove(ticket); arm(); }
-    catch (error) { if (!error.stale) { if (error.status === 401) signOut(); else { clear(); notice("Les sauvegardes sont momentanément indisponibles. Actualise la page.", true); } } }
+    catch (error) {
+      if (error.stale) { if (visible() && state.visible && !state.session) void bootstrap("La session a changé. Recommence l’action."); return; }
+      if (error.status === 401) signOut(); else { clear(); notice("Les sauvegardes sont momentanément indisponibles. Actualise la page.", true); }
+    }
   }, { maxDelayMs: 300000 });
 }
 function detail(label, value) { const row = node("div"); row.append(node("dt", label)); const text = node("dd"); text.textContent = value; row.append(text); return row; }
