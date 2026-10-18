@@ -28,7 +28,7 @@ function purge({ keepDraft = false } = {}) {
   for (const controller of controllers) controller.abort(); controllers.clear();
   record = null; remote = null; baseRevision = null; busy = false;
   el("privacy-content").hidden = true; el("decision-groups").replaceChildren();
-  for (const id of ["notice-fr", "notice-en", "notice-preview", "remote-preview", "progress", "save-state"]) {
+  for (const id of ["notice-fr", "notice-en", "notice-preview", "remote-preview", "progress", "save-state", "choice-responsible"]) {
     if (el(id).tagName === "TEXTAREA") el(id).value = ""; else el(id).textContent = "";
   }
   el("conflict").hidden = true; el("save").disabled = true; notice("");
@@ -55,10 +55,13 @@ async function prove(ticket) {
 function parsed(value) {
   if (value?.version !== 1 || !Number.isSafeInteger(value.revision) || value.revision < 0 || value.publication !== "draft_only" || value.retention !== "not_enabled"
     || value.updatedAt !== null && (!Number.isSafeInteger(value.updatedAt) || value.updatedAt < 1)
+    || value.confirmed?.version !== 1 || typeof value.confirmed.responsibleName !== "string" || !value.confirmed.responsibleName.length || value.confirmed.responsibleName.length > 100
+    || value.confirmed.countryCode !== "FR" || value.confirmed.organization !== null || value.confirmed.space !== "private_invitation"
+    || value.confirmed.conversationRetention !== "until_permanent_account_closure" || value.confirmed.permanentClosure !== "not_implemented"
     || !value.draft || !value.draft.answers || !value.draft.notice
     || decisions.some(([id]) => typeof value.draft.answers[id] !== "string" || value.draft.answers[id].length > 1024)
     || ["fr", "en"].some(lang => typeof value.draft.notice[lang] !== "string" || value.draft.notice[lang].length > 12288)) throw new Error("invalid_preparation");
-  return { revision: value.revision, updatedAt: value.updatedAt,
+  return { revision: value.revision, updatedAt: value.updatedAt, responsibleName: value.confirmed.responsibleName,
     draft: { answers: Object.fromEntries(decisions.map(([id]) => [id, value.draft.answers[id]])), notice: { fr: value.draft.notice.fr, en: value.draft.notice.en } } };
 }
 function preview() {
@@ -74,6 +77,7 @@ function controls() {
   el("refresh").disabled = busy;
 }
 function fill(draft) {
+  ui.text(el("choice-responsible"), "{name} — France", { name: record.responsibleName });
   const groups = [["Qui gère l’espace et les demandes", ["D01", "D08"]], ["Les échanges et leur conservation", ["D02", "D03", "D04"]], ["Les copies et l’effacement", ["D05", "D06", "D07"]]];
   el("decision-groups").replaceChildren(...groups.map(([title, ids]) => {
     const group = node("details"); group.append(node("summary", title));
@@ -119,7 +123,7 @@ async function bootstrap() {
     if (sameOwner) { baseRevision = saved.revision; fill(saved.draft); }
     else fill(record.draft);
     if (sameOwner && baseRevision !== record.revision && dirty()) showConflict(record);
-    else { baseRevision = record.revision; notice(sameOwner && dirty() ? "Tes modifications non enregistrées ont été conservées." : "Le brouillon est privé. Enregistre quand tu le souhaites."); }
+    else { baseRevision = record.revision; notice(sameOwner && dirty() ? "Tes modifications non enregistrées ont été conservées." : "Tes choix sont déjà renseignés."); }
     arm();
   } catch (error) { handle(error); }
 }

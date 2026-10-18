@@ -1,12 +1,12 @@
-# Notice de confidentialité — brouillon FR/EN 0.61
+# Notice de confidentialité — brouillon FR/EN 0.62
 
-**Document de préparation non publié.** Les champs `[À COMPLÉTER Dxx]` et `[TO COMPLETE Dxx]` se rapportent aux [décisions du lot 0.41](data-privacy-preparation.md). Les compléter de façon concordante avant une publication dans le produit ; ne pas servir ce fichier tel quel. Ce brouillon décrit la messagerie actuelle, les fiches privées et les communications individuelles. Il est relu dans la préparation privée 0.61 ; il reste à compléter avant publication.
+**Document de préparation non publié.** Les champs `[À COMPLÉTER Dxx]` et `[TO COMPLETE Dxx]` se rapportent aux [décisions du lot 0.41](data-privacy-preparation.md). Les compléter de façon concordante avant une publication dans le produit ; ne pas servir ce fichier tel quel. Ce brouillon décrit la messagerie actuelle, les fiches privées et les communications individuelles. Il est relu dans la préparation privée 0.62 ; il reste à compléter avant publication.
 
 ## Français — tes données dans JessieMessage
 
 ### Qui s’en occupe ?
 
-JessieMessage est un espace privé sur invitation pour échanger avec Jess. Le responsable de tes données est **[À COMPLÉTER D01 : nom ou structure, coordonnées et pays d’établissement]**. Pour toute question ou demande concernant tes données : **contact@jessiemessage.com**. Contact du délégué à la protection des données, s’il existe : **[À COMPLÉTER D01]**.
+JessieMessage est un espace privé sur invitation pour échanger avec Jess. Le responsable de tes données est **Jessie, en France**. Pour toute question ou demande concernant tes données : **contact@jessiemessage.com**. Contact du délégué à la protection des données, s’il existe : **[À COMPLÉTER D01]**.
 
 ### Quelles données et pour quoi faire ?
 
@@ -31,7 +31,7 @@ Les messages et photos sont chiffrés côté serveur, puis déchiffrés pour leu
 
 ### Combien de temps ?
 
-**[À COMPLÉTER D04 : durées ou critères par famille, point de départ et sort des données à la fin de l’accès ou lors d’une demande.]** L’expiration de ton accès ou la déconnexion ne supprime pas ton historique. Les sessions durent jusqu’à 180 jours renouvelés à l’usage, sous réserve d’une révocation, d’un changement d’identifiants ou de la suppression des cookies ; cette durée ne décrit pas la conservation de toutes les données de connexion.
+La règle retenue pour les conversations est leur conservation jusqu’à la fermeture définitive du compte, sauf suppression volontaire de messages ou photos. **[À COMPLÉTER D04–D06 : autres familles, mise en œuvre de l’effacement et copies.]** L’expiration de ton accès ou la déconnexion ne supprime pas ton historique. Les sessions durent jusqu’à 180 jours renouvelés à l’usage, sous réserve d’une révocation, d’un changement d’identifiants ou de la suppression des cookies ; cette durée ne décrit pas la conservation de toutes les données de connexion.
 
 Supprimer ton message retire son contenu de la conversation conservée dans la base active ; une trace de suppression reste. Une photo de bibliothèque, ses autres partages, les téléchargements des destinataires et les sauvegardes sont des copies distinctes. **[À COMPLÉTER D05–D06 : traitement retenu pour une demande d’effacement, copies, sauvegardes et restauration.]** Une demande reçue n’est pas une preuve d’effacement réalisé.
 
@@ -53,7 +53,7 @@ L’admission est décidée par Jess. **[À COMPLÉTER D02/D07 : confirmer l’a
 
 ### Who is responsible?
 
-JessieMessage is a private, invitation-only space for talking with Jess. The controller of your data is **[TO COMPLETE D01: name or organisation, contact details and country of establishment]**. Questions and data requests: **contact@jessiemessage.com**. Data protection officer’s contact details, if one has been appointed: **[TO COMPLETE D01]**.
+JessieMessage is a private, invitation-only space for talking with Jess. The controller of your data is **Jessie, in France**. Questions and data requests: **contact@jessiemessage.com**. Data protection officer’s contact details, if one has been appointed: **[TO COMPLETE D01]**.
 
 ### What data and why?
 
@@ -78,7 +78,7 @@ Messages and photos are encrypted on the server and decrypted for authorised dis
 
 ### For how long?
 
-**[TO COMPLETE D04: periods or criteria by data family, starting events and treatment after access ends or a request.]** Access expiry or signing out does not delete your history. Sessions last up to 180 days, renewed through use, subject to revocation, credential changes or cookie removal; this is not the retention period for all sign-in records.
+The chosen conversation policy is to retain it until the account is permanently closed, except for voluntarily deleted messages or photos. **[TO COMPLETE D04–D06: other data families, erasure implementation and copies.]** Access expiry or signing out does not delete your history. Sessions last up to 180 days, renewed through use, subject to revocation, credential changes or cookie removal; this is not the retention period for all sign-in records.
 
 Deleting your message removes its content from the conversation stored in the active database; a deletion marker remains. A library photo, its other shares, recipients’ downloads and backups are separate copies. **[TO COMPLETE D05–D06: treatment of erasure requests, copies, backups and restoration.]** Receiving a request is not evidence that erasure has been completed.
 

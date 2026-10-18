@@ -53,5 +53,18 @@ globalThis.JessieI18n?.register({
   "Enregistrement…": "Saving…",
   "Brouillon enregistré. Les textes restent privés.": "Draft saved. The texts stay private.",
   "La version enregistrée a été chargée.": "The saved version has been loaded.",
-  "Tes modifications sont prêtes. Enregistre pour les conserver.": "Your edits are ready. Save to keep them."
+  "Tes modifications sont prêtes. Enregistre pour les conserver.": "Your edits are ready. Save to keep them.",
+  "Les choix retenus pour ton espace privé, au même endroit.": "The choices for your private space, in one place.",
+  "Espace privé sur invitation": "Private invitation-only space",
+  "Tes choix confirmés": "Your confirmed choices",
+  "Responsable de l’espace": "Person responsible for the space",
+  "Conservation des conversations": "Conversation retention",
+  "Jusqu’à la fermeture définitive du compte": "Until the account is permanently closed",
+  "{name} — France": "{name} — France",
+  "Une déconnexion, une expiration ou une suspension d’accès conserve la conversation. Les messages et photos peuvent toujours être supprimés volontairement.": "Signing out, access expiry or suspension keeps the conversation. Messages and photos can still be voluntarily deleted.",
+  "L’effacement complet à la fermeture définitive reste à terminer. Les sauvegardes et fichiers déjà téléchargés sont des copies séparées.": "Complete erasure on permanent closure still needs to be finished. Backups and files already downloaded are separate copies.",
+  "Voir les informations pour les invités": "View the information for guests",
+  "Dossier de préparation détaillé": "Detailed preparation folder",
+  "Ce dossier facultatif conserve les notes et les brouillons privés. Enregistrer ne modifie pas les choix confirmés et ne déclenche aucun effacement.": "This optional folder keeps private notes and drafts. Saving does not change the confirmed choices or trigger erasure.",
+  "Tes choix sont déjà renseignés.": "Your choices are already recorded."
 });
