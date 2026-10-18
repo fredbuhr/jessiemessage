@@ -1,0 +1,368 @@
+{
+  "version": 1,
+  "stage": "0.56",
+  "release": "0.56.0",
+  "source": {
+    "head": "2faf32ce1bf22553d6dd62f053ebcdc76bdc9a5b",
+    "tree": "8bc8029e0b93166ee33ded9cdb6ab65647fb5b40",
+    "merge": "548f419b41c9ecb01797659ea2c97eeaddebd0d1",
+    "pullRequest": 71,
+    "releaseRef": "release/0.56.0"
+  },
+  "ci": {
+    "sourceRun": 39145729016,
+    "pullRequestRun": 39145732843,
+    "sourceWindowsRun": 39145728910,
+    "pullRequestWindowsRun": 39145732837,
+    "mainRun": 39147447171,
+    "mainWindowsRun": 39145940881,
+    "sourceJobs": [
+      {
+        "id": 117729046369,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success"
+      },
+      {
+        "id": 117729046494,
+        "name": "verify",
+        "conclusion": "success"
+      },
+      {
+        "id": 117729046503,
+        "name": "MariaDB 11.4",
+        "conclusion": "success"
+      },
+      {
+        "id": 117729046518,
+        "name": "MariaDB 10.11",
+        "conclusion": "success"
+      },
+      {
+        "id": 117729046561,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "conclusion": "success"
+      }
+    ],
+    "pullRequestJobs": [
+      {
+        "id": 117729057571,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "conclusion": "success"
+      },
+      {
+        "id": 117729057639,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success"
+      },
+      {
+        "id": 117729057675,
+        "name": "verify",
+        "conclusion": "success"
+      },
+      {
+        "id": 117729057724,
+        "name": "MariaDB 11.4",
+        "conclusion": "success"
+      },
+      {
+        "id": 117729057738,
+        "name": "MariaDB 10.11",
+        "conclusion": "success"
+      }
+    ],
+    "sourceResults": {
+      "tests": 2510,
+      "passed": 2483,
+      "skippedSqlWrappers": 27,
+      "failed": 0,
+      "mariaDb1011": 383,
+      "mariaDb114": 383,
+      "chrome": 110,
+      "httpsAuthentication": 1,
+      "syntaxFiles": 447
+    },
+    "windows": {
+      "sourceJob": 117729045635,
+      "pullRequestJob": 117729057725,
+      "mainJob": 117729675867,
+      "passed": true,
+      "nativeGpg": "2.5.20 portable, official installer pinned by SHA-256",
+      "protections": [
+        "AES256/MDC",
+        "AES256/OCB"
+      ],
+      "nativeWindowLayout": true,
+      "binaryStreamHash": true,
+      "asynchronousJob": true,
+      "noDecryptedFile": true,
+      "invalidInputAndCorruption": true,
+      "cancellationAndBounds": true,
+      "syntheticCiKeyOnly": true,
+      "validatedRuntimeHead": "2faf32ce1bf22553d6dd62f053ebcdc76bdc9a5b",
+      "mainSourceHead": "548f419b41c9ecb01797659ea2c97eeaddebd0d1"
+    },
+    "initialMainChrome": {
+      "run": 39145940894,
+      "job": 117729675872,
+      "conclusion": "cancelled",
+      "reason": "first Chrome session timed out at 25 seconds; fixture created before try was left open until job deadline"
+    },
+    "browserCleanup": {
+      "head": "966ed3777170ffa3ca60362f191954deeea787cb",
+      "tree": "13be35321b60c1f8c0bd0f7b732395bb8fda6a96",
+      "merge": "8bdb5e261fa5ddc14cd7df9f18de95849decf56b",
+      "pullRequest": 72,
+      "sourceRun": 39147068115,
+      "pullRequestRun": 39147073118,
+      "sourceJobs": [
+        {
+          "id": 117732954076,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "conclusion": "success"
+        },
+        {
+          "id": 117732954138,
+          "name": "verify",
+          "conclusion": "success"
+        },
+        {
+          "id": 117732954183,
+          "name": "MariaDB 11.4",
+          "conclusion": "success"
+        },
+        {
+          "id": 117732954203,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success"
+        },
+        {
+          "id": 117732954214,
+          "name": "MariaDB 10.11",
+          "conclusion": "success"
+        }
+      ],
+      "applicationFilesIdenticalToRuntime": true,
+      "localDriverTests": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      },
+      "pullRequestJobs": [
+        {
+          "id": 117735318722,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success"
+        },
+        {
+          "id": 117735319763,
+          "name": "MariaDB 10.11",
+          "conclusion": "success"
+        },
+        {
+          "id": 117735320300,
+          "name": "verify",
+          "conclusion": "success"
+        },
+        {
+          "id": 117735342352,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "conclusion": "success"
+        },
+        {
+          "id": 117735351391,
+          "name": "MariaDB 11.4",
+          "conclusion": "success"
+        }
+      ],
+      "initialPullRequestChrome": {
+        "job": 117734038589,
+        "case": "client pending device transition",
+        "failure": "WebDriver execute/sync HTTP 500",
+        "rerunRequested": true,
+        "rerunJob": 117735318722,
+        "conclusion": "success"
+      },
+      "pullRequestLatestAttempt": 2
+    },
+    "mainJobs": [
+      {
+        "id": 117734064980,
+        "name": "verify",
+        "conclusion": "success"
+      },
+      {
+        "id": 117734065125,
+        "name": "MariaDB 11.4",
+        "conclusion": "success"
+      },
+      {
+        "id": 117734065147,
+        "name": "Chrome HTTPS authentication with MariaDB",
+        "conclusion": "success"
+      },
+      {
+        "id": 117734065189,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success"
+      },
+      {
+        "id": 117734065286,
+        "name": "MariaDB 10.11",
+        "conclusion": "success"
+      }
+    ],
+    "mainSource": {
+      "head": "8bdb5e261fa5ddc14cd7df9f18de95849decf56b",
+      "tree": "13be35321b60c1f8c0bd0f7b732395bb8fda6a96",
+      "applicationFilesIdenticalToRuntime": true,
+      "testOnlyDifferences": [
+        "tests/browser/backup-settings.browser.mjs",
+        "tests/browser/webdriver.mjs"
+      ]
+    },
+    "mainResults": {
+      "chrome": 110,
+      "chromeFailed": 0,
+      "chromeSkipped": 0
+    }
+  },
+  "hosting": {
+    "checkout": "/srv/customer/jessiemessage-operator/backup-verification-056-2faf32ce",
+    "profile": "messaging-photos-notify-recovery-crm-broadcast",
+    "deployment": "primary-transition",
+    "schema": 30,
+    "privateConfigurationFiles": 6,
+    "nativeTests": {
+      "head": "2faf32ce1bf22553d6dd62f053ebcdc76bdc9a5b",
+      "tests": 163,
+      "passed": 163,
+      "skipped": 0,
+      "failed": 0
+    },
+    "preparationAt": "2026-10-18T16:38:15.858795Z",
+    "preflight": {
+      "status": "passed",
+      "started": false,
+      "backupStarted": false,
+      "enabled": true,
+      "hourUtc": 5,
+      "minuteUtc": 15
+    },
+    "kitPreflight": {
+      "checkedAt": "2026-10-18T16:40:26.929Z",
+      "bytes": 22529,
+      "protection": "mdc",
+      "sourceBytes": 402240,
+      "ciphertextBytes": 402792,
+      "copyCurrent": true
+    },
+    "sourcesClean": true,
+    "manager": {
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-backup-verification-056-2faf32ce.sh",
+      "launchStartedAt": "2026-10-18T16:59:31.136Z",
+      "dependenciesReinstalled": false,
+      "displayedLastModification": "18/10/2026 18:59 Europe/Paris",
+      "status": "active"
+    },
+    "observations": {
+      "source": "Manager console after last JessieMessage listening marker",
+      "firstSamples": [
+        {
+          "checkedAt": 1792342790577,
+          "state": "current",
+          "code": "OK",
+          "activeIncident": false,
+          "pendingAlerts": 0,
+          "lastSuccessAt": 1792300539807
+        },
+        {
+          "checkedAt": 1792342850635,
+          "state": "current",
+          "code": "OK",
+          "activeIncident": false,
+          "pendingAlerts": 0,
+          "lastSuccessAt": 1792300539807
+        }
+      ],
+      "intervalMilliseconds": 60058,
+      "additionalHealthySamplesThrough": 1792343270922
+    },
+    "https": {
+      "initialCheckedAt": "2026-10-18T17:03:19.420436Z",
+      "checkedAt": "2026-10-18T17:05:34.598593Z",
+      "checks": 66,
+      "passed": 66,
+      "exactResourceHashes": 22,
+      "recheckedRequests": 2,
+      "legacyVerificationKitGet": 404,
+      "legacyVerificationKitPost": 405,
+      "legacyPostUsesGenericMethodNotAllowed": true
+    },
+    "snapshot": {
+      "checkedAt": "2026-10-18T17:09:14.579Z",
+      "version": "0.56.0",
+      "clean": true,
+      "journalRecords": 4,
+      "lastSuccessAt": 1792300539807,
+      "activeIncident": false,
+      "pendingAlerts": 0,
+      "copyCurrent": true,
+      "lastSeenAt": 1792343156485,
+      "lastReceiptAt": 1792343156485,
+      "decryptionStatus": "not_checked"
+    }
+  },
+  "backups": {
+    "journalRecords": 4,
+    "lastAttemptAt": 1792300533262,
+    "lastSuccessAt": 1792300539807,
+    "archivesAvailable": 2,
+    "latestArchive": "capture-1792300533262-3ae62972be4d93f5",
+    "ciphertextSha256": "dbd63e6d1a7d91b0f9372a062a761d5e92a4b3abb9dd9a44ddbcdd330d983578",
+    "sourceSha256": "1f6ea60267f971574433b057b60f429be6d0fc530298c7c61119a29d7b770aae",
+    "pairedAt": 1792338586459,
+    "receiptsObserved": [
+      1792338647747,
+      1792339554244
+    ],
+    "receiptIntervalMs": 906497,
+    "independentCopyStatus": "current ciphertext acknowledged by owner PC collector",
+    "decryptionStatus": "not_checked",
+    "cloudSynchronizationStatus": "not_checked",
+    "captureTriggeredByDeployment": false,
+    "activeIncident": false,
+    "pendingAlerts": 0,
+    "lastSeenAt": 1792343156485,
+    "lastReceiptAt": 1792343156485
+  },
+  "rollback": {
+    "head": "088e6e1f1dc283a28ab81359f756d76eb0ac9d9b",
+    "tree": "2c9e81dc0b4c5e0e14d35c5caae051a87ac3fcdb",
+    "checkout": "/srv/customer/jessiemessage-operator/backup-copies-055-088e6e1f",
+    "privateManagerSnapshot": "/srv/customer/jessiemessage-private/manager-before-backup-verification-056.json",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-backup-copies-055-088e6e1f.sh",
+    "launcherBytes": 839,
+    "launcherSha256": "c8f220c202d775fa60febba9754c368e8fae6d1d53ed5d3d4b4b8d8aa1527632",
+    "performed": false,
+    "sqlRestoreRequired": false
+  },
+  "scope": {
+    "actualCustomerCampaignSent": false,
+    "testAlertResent": false,
+    "privateGpgKeyRead": false,
+    "agentCredentialCreated": false,
+    "ownerPcDecryptionPending": true,
+    "existingAcceptedJourneysRepeated": false,
+    "ownerPcInstallationPending": false
+  },
+  "preparedLauncher": {
+    "path": "/srv/customer/jessiemessage-private/start-primary-backup-verification-056-2faf32ce.sh",
+    "bytes": 851,
+    "sha256": "75596f26fcd861e401f07d99507d41608ca69db02f55887f9bd5ac5926918950"
+  },
+  "screenshot": {
+    "file": "jm056-activation-20261018.jpg",
+    "bytes": 90413,
+    "sha256": "35aa98c0644edf648270d01620ed7008efc943a812c0445e0ca4a09016efb819"
+  }
+}

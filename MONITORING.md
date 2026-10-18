@@ -1,6 +1,8 @@
 # Surveillance externe de JessieMessage — 0.51
 
-Le workflow `Private service monitor` fonctionne avec Node 24 et ses modules natifs, sans dépendance applicative ni secret. Il observe le service hébergé 0.55.0, source épinglée `088e6e1f`, et conserve son fonctionnement indépendant. Depuis la consolidation [0.54](docs/stable-release-054.md), main contient aussi l'application complète ; la sonde n'a pas besoin de démarrer cette application sur GitHub.
+Le workflow `Private service monitor` fonctionne avec Node 24 et ses modules natifs, sans dépendance applicative ni secret. Il observe le service hébergé 0.56.0, source épinglée `2faf32ce`, et conserve son fonctionnement indépendant. Depuis la consolidation [0.54](docs/stable-release-054.md), main contient aussi l'application complète ; la sonde n'a pas besoin de démarrer cette application sur GitHub.
+
+**État local après activation 0.56 :** échantillons de console après le dernier démarrage à 16:59:50.577 et 17:00:50.635 UTC (60 058 ms), current / OK, aucun incident ni alerte en attente ; 66 contrôles HTTPS et vingt-deux empreintes conformes. Le PC a un reçu courant de copie, le déchiffrement reste à constater avec [l’outil local 0.56](docs/backup-verification-056.md). Le moniteur conserve copyStatus: not_checked : il mesure la capture, les reçus du collecteur sont distincts. Dans l’état des alertes, lastObservedAt date la dernière transition persistée, pas chaque échantillon sain. [Reprise](docs/REPRISE.md).
 
 Deux lectures HTTPS anonymes fixes contrôlent `https://jessiemessage.com/api/health` et `https://jessiemessage.com/api/ready`. Les redirections sont refusées, le certificat est vérifié normalement, chaque requête et son corps sont bornés à cinq secondes et 1 024 octets. HTTP 200 seul ne suffit pas : le JSON attendu, `no-store` et l’absence de cookie sont contrôlés. Aucun accès authentifié, message, envoi de campagne, e-mail ou opération SQL directe.
 

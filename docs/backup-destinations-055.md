@@ -1,5 +1,7 @@
 # Destinations graphiques et collecteur Windows — 0.55
 
+**Suite 0.56 :** Mon PC est désormais raccordé et les reçus de la dernière copie sont observés avant et après activation. Le [vérificateur graphique du déchiffrement](backup-verification-056.md) est livré ; son résultat personnel reste attendu. Le relevé 0.55 ci-dessous conserve son état daté avant ce raccordement. [Reprise courante](REPRISE.md).
+
 Le propriétaire choisit son PC comme première destination et demande le 18 octobre 2026 de pouvoir changer ces paramètres par une interface graphique. Cette version ajoute **Administration → Sauvegardes**, sur l’origine principale uniquement. La capture quotidienne, son chiffrement, les six configurations, les trente tables, les comptes et les clés de récupération restent ceux de la version précédente.
 
 ## Utilisation

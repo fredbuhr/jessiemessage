@@ -1,5 +1,7 @@
 # Security and privacy launch gates
 
+**Backup recovery 0.56:** the primary administrator can download an offline verification kit with fresh session/Origin/CSRF checks and a second server session proof before delivery. Only closed capture hashes, sizes, fingerprint and fixed source enter the ZIP; no credential or private key. Native Windows GPG uses the existing local key and Pinentry, streams decrypted bytes directly to SHA-256, validates the primary fingerprint and authenticated AES-256 protection, and creates no clear output file or network receipt. Owner-PC ciphertext copy receipts are acquired; personal decryption remains pending. [Current procedure and evidence](backup-verification-056.md).
+
 **Current admission policy:** see [lot 0.26](manual-invitation-runtime.md). Client access is restricted to a consumed invitation, verified email and explicit approval by Jess, with current session, expiration and ownership checks. Manual admission does not populate an independent age proof. Historical version sections below describe their original scope, not a new identity-provider implementation requirement.
 
 
