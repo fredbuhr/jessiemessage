@@ -17,6 +17,7 @@ import { createChatHandler } from "../server/chat/http.mjs";
 import { createCrmStore } from "../server/crm/store.mjs";
 import { createCrmService } from "../server/crm/service.mjs";
 import { createCrmHandler } from "../server/crm/http.mjs";
+import { createConversationExporter } from "../server/chat/conversation-export.mjs";
 import { createAppServer } from "../server/index.mjs";
 import { createRecoveryCodes, hashPassword, makeTotpSecret, recoveryCodeDigest, sealTotpSecret, totpCode } from "../server/auth/crypto.mjs";
 
@@ -94,9 +95,10 @@ test("real HTTP private CRM, encrypted notes, scoped labels and current authoriz
     const accessService = await createAccessService({ store: accessStore, authStore, authService, totpKey, mailKey, origin, clock });
     const chatService = await createChatService({ store: chatStore, authStore, authService, accessService, key: messageKey, clock });
     const crmService = await createCrmService({ store: crmStore, authService, authStore, key: crmKey, clock });
+    const conversationExporter = createConversationExporter({ history: (token, id, options) => chatService.messages("admin", token, id, options), clock });
     server = createAppServer({ authHandler: createAuthHandler(authService, { origin }),
       accessHandler: createAccessHandler(accessService, { origin }), chatHandler: createChatHandler(chatService, { origin }),
-      crmHandler: createCrmHandler(crmService, { origin }) });
+      crmHandler: createCrmHandler(crmService, { origin, conversationExporter }) });
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     const base = `http://127.0.0.1:${server.address().port}`;
     async function request(path, { method = "GET", body, headers = {} } = {}) {
@@ -151,7 +153,7 @@ test("real HTTP private CRM, encrypted notes, scoped labels and current authoriz
       }
       const capability = await request(crm("capabilities"), { headers: headersFor(admin) });
       assert.equal(capability.status, 200);
-      assert.deepEqual(capability.body, { enabled: true, limits: { labelsPerKind: 100, labelsPerClient: 32, noteCharacters: 8000 } });
+      assert.deepEqual(capability.body, { enabled: true, limits: { labelsPerKind: 100, labelsPerClient: 32, noteCharacters: 8000 }, conversationExport: { enabled: true, photos: false, maxBytes: 33554432 } });
       assert.deepEqual(ids(await contacts()), [hex(clientA.conversationId), hex(clientB.conversationId)].sort());
       assert.deepEqual(ids(await contacts("", otherAdmin)), [hex(otherClient.conversationId)]);
       assert.equal((await request(profilePath(otherClient), { headers: headersFor(admin) })).status, 404);
@@ -160,7 +162,7 @@ test("real HTTP private CRM, encrypted notes, scoped labels and current authoriz
 
     await t.test("CRM source assets and APIs reject anonymous clients and forged administrator cookies", async () => {
       const forged = { Cookie: `__Host-jessie_session=${cookieToken(a.cookie)}` };
-      for (const path of ["/crm.js", "/crm-model.js", "/crm.css", crm("capabilities"), crm("contacts"), crm("labels"), profilePath()]) {
+      for (const path of ["/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", crm("capabilities"), crm("contacts"), crm("labels"), profilePath()]) {
         for (const headers of [{}, headersFor(a), forged]) {
           const denied = await request(path, { headers });
           assert.equal(denied.status, 401, path);
@@ -387,6 +389,20 @@ test("real HTTP private CRM, encrypted notes, scoped labels and current authoriz
         await connection.query("UPDATE crm_profiles SET notes_encrypted = ? WHERE admin_id = ? AND conversation_id = ?", [row.notes_encrypted, owner.id, clientA.conversationId]);
       }
       assert.equal((await request(profilePath(), { headers: headersFor(admin) })).body.notes, profileA.notes);
+    });
+
+    await t.test("conversation archive uses real scoped decryption without private CRM fields or read receipts", async () => {
+      for (const [session, client] of [[otherAdmin, clientA], [admin, otherClient], [a, clientA]]) {
+        const denied = await request(`${profilePath(client)}/export`, { method: "POST", headers: headersFor(session), body: { includePhotos: false } });
+        assert.equal(denied.status, session === a ? 401 : 404);
+      }
+      const receipts = await connection.query("SELECT user_id, last_read_sequence, updated_at FROM chat_receipts WHERE conversation_id = ? ORDER BY user_id", [clientA.conversationId]);
+      const response = await fetch(`${base}${profilePath()}/export`, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", ...headersFor(admin) }, body: JSON.stringify({ includePhotos: false }) });
+      assert.equal(response.status, 200); assert.equal(response.headers.get("content-type"), "application/zip");
+      const archive = Buffer.from(await response.arrayBuffer()); assert.equal(archive.readUInt32LE(), 0x04034b50);
+      assert.ok(archive.includes(Buffer.from("Synthetic incoming unread CRM filter text")));
+      for (const marker of [notesA, notesB, clientA.email, clientB.email, "NOTES_SEARCH_MUST_STAY_PRIVATE", "Private Alpha%_Alias", "bodyEncrypted", "broadcast_preferences", "campaignId", "clientMessageId"]) assert.equal(archive.includes(Buffer.from(marker)), false, marker);
+      assert.deepEqual(await connection.query("SELECT user_id, last_read_sequence, updated_at FROM chat_receipts WHERE conversation_id = ? ORDER BY user_id", [clientA.conversationId]), receipts);
     });
 
     await t.test("expired client access permits assigned private CRM edits but cannot authorize chat sends", async () => {

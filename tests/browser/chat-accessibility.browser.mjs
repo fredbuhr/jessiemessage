@@ -9,6 +9,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
+import { createConversationExporter } from "../../server/chat/conversation-export.mjs";
 
 const publicRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../public");
 const id = (n) => n.toString(16).padStart(32, "0");
@@ -52,7 +53,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -69,6 +70,25 @@ async function startFixtureServer() {
       response.setHeader("Cache-Control", "no-store");
       response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
       const sendJson = (status, value) => { response.writeHead(status, { "Content-Type": "application/json" }); response.end(JSON.stringify(value)); };
+      if (fixture.exportEnabled && url.pathname.startsWith("/api/admin/crm/")) {
+        if (url.pathname.endsWith("/capabilities")) { sendJson(200, { enabled: true, conversationExport: { enabled: true, photos: true, maxBytes: 33554432 } }); return; }
+        if (url.pathname.endsWith("/labels")) { sendJson(200, { labels: [], hasMore: false, nextCursor: null }); return; }
+        if (url.pathname.endsWith("/contacts")) { sendJson(200, { contacts: [conversation("admin")], hasMore: false, nextCursor: null }); return; }
+        if (url.pathname.endsWith("/export") && request.method === "POST") {
+          let raw = ""; for await (const chunk of request) raw += chunk;
+          const body = JSON.parse(raw); fixture.exportRequests ??= []; fixture.exportRequests.push(body);
+          if (fixture.holdExport) await new Promise(resolve => { fixture.releaseExport = resolve; });
+          if (response.destroyed) return;
+          if (fixture.replaceExportSession) fixture.csrf = "C".repeat(43);
+          const exporter = createConversationExporter({ history: async () => ({ conversation: conversation("admin"), messages: [message("1", "admin"), message("2", "admin"), message("3", "admin")], hasMoreBefore: false, nextBefore: null }),
+            photo: async () => ({ bytes: Buffer.from(jpeg), mime: "image/jpeg" }) });
+          const bytes = await exporter.create({ token: "synthetic", conversationId, expectedClientId: id(2), includePhotos: body.includePhotos });
+          response.writeHead(200, { "Content-Type": "application/zip", "Content-Length": String(bytes.length) }); response.end(bytes); return;
+        }
+        if (url.pathname === `/api/admin/crm/conversations/${conversationId}`) {
+          sendJson(200, { conversationId, client: { id: id(2), pseudonym: peerName, email: "synthetic@example.invalid", status: "active" }, access: { state: "active", expiresAt: null }, nickname: "", notes: "Existing private note", reminderAt: null, labels: [], version: "1", updatedAt: fixture.now }); return;
+        }
+      }
       if (request.method === "GET" && ["/messages", "/admin/messages"].includes(url.pathname)) {
         if (!fixture.signedIn) { response.writeHead(303, { Location: url.pathname === "/messages" ? "/access" : "/admin/login" }); response.end(); return; }
         response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); response.end(html); return;
@@ -89,7 +109,7 @@ async function startFixtureServer() {
         if (!fixture.signedIn) { sendJson(401, { error: "authentication_required" }); return; }
         const role = sessionRole ?? loginRole;
         sendJson(200, { user: { id: id(role === "admin" ? 1 : 2), role, pseudonym: role === "admin" ? "Jessie" : peerName },
-          csrf: "A".repeat(43), expiresAt: Date.now() + 3600000, ...(role === "client" ? { access: { state: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, expiresAt: null } } : {}) }); return;
+          csrf: fixture.csrf ?? "A".repeat(43), expiresAt: Date.now() + 3600000, ...(role === "client" ? { access: { state: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, expiresAt: null } } : {}) }); return;
       }
       if (/^\/api\/notifications\/(admin|client)\/open$/.test(url.pathname) && request.method === "POST") {
         let body = ""; for await (const chunk of request) body += chunk;
@@ -346,4 +366,56 @@ test("Chrome: a notification reaches its exact old message for each role, direct
       await noJavascriptErrors(page);
     } finally { await page.close(); }
   }
+});
+async function openConversationExport(page) {
+  await loaded(page, "/admin/messages");
+  await waitUntil(() => page.execute("return !!document.querySelector('.crm-fiche-button') && !!document.querySelector('.contact')"), "CRM initialized");
+  if (await page.execute("return document.querySelector('.crm-fiche-button').hidden")) await page.click(".contact");
+  await waitUntil(() => page.execute("return !document.querySelector('.crm-fiche-button').hidden"), "selected conversation profile");
+  await tabUntil(page, ".crm-fiche-button"); await page.key("\uE007");
+  await waitUntil(() => page.execute("return !!document.querySelector('.crm-dialog[open] .crm-export:not([hidden])')"), "download section of current profile");
+  await page.click(".crm-export > summary");
+  await page.execute("window.__exportDownloads=[];const original=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{if(blob.type==='application/zip')window.__exportDownloadBytes=blob.size;return original(blob);};document.addEventListener('click',e=>{const a=e.target.closest('a[download]');if(a){e.preventDefault();window.__exportDownloads.push(a.download);}})");
+}
+
+test("real Chrome: conversation archive from the actual chat controller, keyboard and translations", { timeout: 120000 }, async t => {
+  for (const width of [320, 1280]) for (const language of ["fr", "en"]) await t.test(`${language} ${width}px`, async () => {
+    resetFixture(); fixture.exportEnabled = true; const page = await browser(width);
+    try {
+      await openConversationExport(page);
+      if (language === "en") { await page.key("\uE00C"); await page.click("[data-jm-language]"); await page.click(".crm-fiche-button"); await waitUntil(() => page.execute("return !!document.querySelector('.crm-dialog[open] .crm-export:not([hidden])')"), "translated profile ready"); await page.click(".crm-export > summary"); }
+      await page.type('.crm-profile-form textarea[name="notes"]', "Unsent private change");
+      await tabUntil(page, ".crm-export button"); await page.key("\uE007");
+      await waitUntil(() => page.execute("return window.__exportDownloads.length === 1 && window.__exportDownloadBytes > 22"), "private ZIP starts downloading");
+      assert.equal(await page.execute("return window.__exportDownloads[0]"), `JessieMessage-conversation-${conversationId}.zip`);
+      assert.deepEqual(fixture.exportRequests, [{ includePhotos: true }]);
+      assert.equal(await page.execute("return document.querySelector('.crm-profile-form textarea[name=notes]').value.endsWith('Unsent private change')"), true, "export does not save or replace the CRM draft");
+      assert.equal(await page.execute("return document.querySelector('.crm-export .crm-status').textContent"), language === "fr" ? "Conversation téléchargée. Extrais le ZIP puis ouvre Conversation.html." : "Conversation downloaded. Extract the ZIP and open Conversation.html.");
+      assert.equal(await page.execute("const dialog=document.querySelector('.crm-dialog[open]');return dialog.scrollWidth<=dialog.clientWidth+1 && document.querySelector('.crm-export button').getBoundingClientRect().height>=44"), true);
+      assert.deepEqual(await page.execute("return window.__browserErrors"), []);
+    } finally { fixture.releaseExport?.(); await page.close(); }
+  });
+});
+
+test("real Chrome: another login during export suppresses the old file without replaying the request", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.exportEnabled = true; fixture.replaceExportSession = true; const page = await browser(375);
+  try {
+    await openConversationExport(page); await page.click(".crm-export button");
+    await waitUntil(() => page.execute("return !!document.querySelector('.crm-fiche-button') && document.querySelectorAll('.crm-dialog[open]').length === 0"), "replacement login clears the former profile");
+    assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
+    assert.equal(await page.execute("return document.body.textContent.includes('Conversation téléchargée')"), false);
+  } finally { fixture.releaseExport?.(); await page.close(); }
+});
+
+test("real Chrome: closing a profile cancels its download and cannot unlock or populate a new profile", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.exportEnabled = true; fixture.holdExport = true; const page = await browser(375);
+  try {
+    await openConversationExport(page); await page.click(".crm-export button");
+    await waitUntil(() => Boolean(fixture.releaseExport), "server holds the first export");
+    await page.key("\uE00C"); fixture.releaseExport();
+    await page.click(".crm-fiche-button");
+    await waitUntil(() => page.execute("return document.querySelector('.crm-dialog[open] .crm-export .crm-status').textContent === ''"), "a fresh profile has no old download status");
+    assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
+    assert.equal(await page.execute("return document.querySelector('.crm-export button').disabled"), false);
+  } finally { fixture.releaseExport?.(); await page.close(); }
 });

@@ -4,6 +4,7 @@ import { createServer, request as httpRequest } from "node:http";
 import { PassThrough } from "node:stream";
 import { AUTH_HEADERS, readJson } from "../server/auth/http.mjs";
 import { createCrmHandler } from "../server/crm/http.mjs";
+import { ConversationExportError } from "../server/chat/conversation-export.mjs";
 
 const origin = "https://jessiemessage.example";
 const token = Buffer.alloc(32, 7).toString("base64url"), clientToken = Buffer.alloc(32, 11).toString("base64url");
@@ -43,12 +44,12 @@ function fixtureService(calls, overrides = {}) {
   };
 }
 
-async function fixture(t, overrides = {}) {
-  const calls = [], service = fixtureService(calls, overrides), handler = createCrmHandler(service, { origin });
+async function fixture(t, overrides = {}, options = {}) {
+  const calls = [], service = fixtureService(calls, overrides), handler = createCrmHandler(service, { origin, ...options });
   const server = createServer(async (req, res) => { if (!await handler(req, res)) { res.writeHead(404); res.end("fallback"); } });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(async () => { server.closeAllConnections(); await new Promise((resolve) => server.close(resolve)); });
-  return { base: `http://127.0.0.1:${server.address().port}`, calls, service };
+  return { base: `http://127.0.0.1:${server.address().port}`, calls, service, handler };
 }
 const mutationHeaders = (extra = {}) => ({ Origin: origin, "Content-Type": "application/json", "X-CSRF-Token": csrf, Cookie: cookie, ...extra });
 const post = (base, endpoint, body, headers = mutationHeaders()) => fetch(`${base}${endpoint}`, { method: "POST", headers, body: typeof body === "string" ? body : JSON.stringify(body) });
@@ -392,4 +393,70 @@ test("readJson extended programmer ceiling remains bounded and default body budg
   const defaultRequest = new PassThrough(); defaultRequest.headers = {};
   const rejected = readJson(defaultRequest); defaultRequest.end(JSON.stringify({ notes: "x".repeat(4097) }));
   await assert.rejects(rejected, { httpStatus: 413, publicCode: "request_too_large" });
+});
+test("conversation download is explicit, scoped, bounded and re-proved before headers", async t => {
+  const archive = Buffer.alloc(40, 17); archive.writeUInt32LE(0x04034b50); const expected = Buffer.from(archive);
+  const exports = [], exporter = { photos: true, maxBytes: 1000, async create(input) { exports.push(input); return archive; } };
+  const f = await fixture(t, {}, { conversationExporter: exporter });
+  const capability = await fetch(`${f.base}${root}/capabilities`, { headers: { Cookie: cookie } });
+  assert.deepEqual((await capability.json()).conversationExport, { enabled: true, photos: true, maxBytes: 1000 });
+  const response = await post(f.base, `${profilePath}/export`, { includePhotos: true });
+  assert.equal(response.status, 200); privateHeaders(response);
+  assert.equal(response.headers.get("content-type"), "application/zip"); assert.equal(response.headers.get("content-length"), "40");
+  assert.equal(response.headers.get("set-cookie"), null); assert.match(response.headers.get("content-disposition"), /attachment; filename="JessieMessage-conversation-[a-f0-9]{32}\.zip"/);
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected); assert.equal(archive.every(byte => byte === 0), true, "server buffer is wiped after the response finishes");
+  assert.equal(exports.length, 1); assert.equal(exports[0].conversationId, conversationId); assert.equal(exports[0].expectedClientId, clientId); assert.equal(exports[0].includePhotos, true);
+  assert.equal(f.calls.filter(([method]) => method === "profile").length, 2);
+  assert.equal(f.calls.filter(([method]) => method === "actor").length, 3);
+});
+
+test("export endpoint rejects anonymous/client access, unsafe origins, queries, CSRF and extra fields before copying", async t => {
+  let copied = 0; const exporter = { photos: true, maxBytes: 1000, async create() { copied += 1; throw new Error("must not run"); } };
+  const f = await fixture(t, {}, { conversationExporter: exporter });
+  const cases = [
+    [{ includePhotos: true }, mutationHeaders({ Cookie: "" }), 401],
+    [{ includePhotos: true }, mutationHeaders({ Cookie: `__Host-jessie_client=${clientToken}` }), 401],
+    [{ includePhotos: true }, mutationHeaders({ Origin: "https://foreign.invalid" }), 403],
+    [{ includePhotos: true }, mutationHeaders({ "X-CSRF-Token": "incorrect" }), 403],
+    [{ includePhotos: true, email: "untrusted@example.invalid" }, mutationHeaders(), 400],
+    [{ includePhotos: "yes" }, mutationHeaders(), 400], [{}, mutationHeaders(), 400]
+  ];
+  for (const [body, headers, expected] of cases) {
+    const response = await post(f.base, `${profilePath}/export`, body, headers); assert.equal(response.status, expected);
+    if (expected === 401) assert.equal(response.headers.get("set-cookie"), null, "a stale download must never erase a newer browser login");
+  }
+  assert.equal((await fetch(`${f.base}${profilePath}/export`, { headers: { Cookie: cookie } })).status, 405);
+  assert.equal((await post(f.base, `${profilePath}/export?to=https://example.invalid`, { includePhotos: true })).status, 400);
+  f.service.profile = async () => { throw Object.assign(new Error("foreign conversation"), { code: "CRM_NOT_FOUND" }); };
+  assert.equal((await post(f.base, `${profilePath}/export`, { includePhotos: true })).status, 404); assert.equal(copied, 0);
+  const disabled = await fixture(t); assert.equal((await post(disabled.base, `${profilePath}/export`, { includePhotos: true })).status, 404);
+});
+
+test("late revocation, owner changes and altered profile binding cannot release an archive", async t => {
+  for (const kind of ["csrf", "identity", "revoked", "client"]) await t.test(kind, async st => {
+    let exported = false; const buffer = Buffer.alloc(40, 17); buffer.writeUInt32LE(0x04034b50);
+    const exporter = { photos: true, maxBytes: 1000, async create() { exported = true; return buffer; } };
+    const f = await fixture(st, {
+      async actor() { return exported && kind === "revoked" ? null : { ...actor(), ...(exported && kind === "csrf" ? { csrf: Buffer.alloc(32, 30).toString("base64url") } : {}),
+        ...(exported && kind === "identity" ? { user: { ...actor().user, id: "f".repeat(32) } } : {}) }; },
+      async profile() { return profile(exported && kind === "client" ? { client: { ...profile().client, id: "f".repeat(32) } } : {}); }
+    }, { conversationExporter: exporter });
+    const response = await post(f.base, `${profilePath}/export`, { includePhotos: true });
+    assert.equal(response.status, kind === "client" ? 409 : 401); assert.equal(response.headers.get("content-disposition"), null);
+    assert.equal(response.headers.get("set-cookie"), null); assert.equal(buffer.every(byte => byte === 0), true);
+  });
+});
+
+test("export limits and shutdown return fixed errors and cancel the pending read", async t => {
+  for (const [code, expected] of [["limit", 413], ["busy", 429], ["changed", 409], ["unavailable", 503]]) await t.test(code, async st => {
+    const f = await fixture(st, {}, { conversationExporter: { photos: false, maxBytes: 1000, async create() { throw new ConversationExportError(code); } } });
+    const response = await post(f.base, `${profilePath}/export`, { includePhotos: false }); assert.equal(response.status, expected);
+    assert.equal(response.headers.get("content-disposition"), null); if (code === "busy") assert.equal(response.headers.get("retry-after"), "30");
+    assert.equal((await post(f.base, `${profilePath}/export`, { includePhotos: true })).status, 400);
+  });
+  let entered, release; const ready = new Promise(resolve => { entered = resolve; }); let signal;
+  const held = new Promise(resolve => { release = resolve; });
+  const f = await fixture(t, {}, { conversationExporter: { photos: true, maxBytes: 1000, async create(input) { signal = input.signal; entered(); await held; throw new ConversationExportError("cancelled"); } } });
+  const pending = post(f.base, `${profilePath}/export`, { includePhotos: true }); await ready; f.handler.close(); assert.equal(signal.aborted, true); release();
+  assert.equal((await pending).status, 503);
 });

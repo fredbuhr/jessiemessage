@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { canonicalEmail } from "../auth/config.mjs";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { validateId, validateLabelIds, validateLabelName, validateNickname, validateNotes, validateReminder, validateSearch, validateVersion } from "./validation.mjs";
+import { ConversationExportError } from "../chat/conversation-export.mjs";
 
 const publicRoot = new URL("../../public/", import.meta.url);
 const COOKIE = "__Host-jessie_session";
@@ -12,6 +13,7 @@ const files = new Map([
   ["/crm.js", ["crm.js", "text/javascript; charset=utf-8"]],
   ["/crm-model.js", ["crm-model.js", "text/javascript; charset=utf-8"]],
   ["/crm.css", ["crm.css", "text/css; charset=utf-8"]],
+  ["/private-archive.js", ["private-archive.js", "text/javascript; charset=utf-8"]],
 ]);
 const unavailable = () => httpError(503, "crm_unavailable");
 const invalid = () => httpError(400, "invalid_request");
@@ -25,7 +27,7 @@ const sequence = (value) => typeof value === "string" && /^(?:0|[1-9][0-9]{0,19}
 function safeActor(value) {
   if (!value?.user || value.user.role !== "admin") throw Object.assign(new Error("CRM_UNAUTHORIZED"), { code: "CRM_UNAUTHORIZED" });
   if (!id(value.user.id) || !text(value.user.pseudonym) || !date(value.expiresAt) || !isToken(value.csrf)) throw unavailable();
-  return { csrf: value.csrf };
+  return { id: value.user.id, csrf: value.csrf };
 }
 
 function shape(body, keys) {
@@ -54,6 +56,8 @@ function routeFor(pathname) {
   if (pathname === "/api/admin/crm/contacts") return { kind: "contacts", methods: ["GET"] };
   let match = /^\/api\/admin\/crm\/labels\/([a-f0-9]{32})\/(rename|delete)$/.exec(pathname);
   if (match) return { kind: match[2], labelId: match[1], methods: ["POST"] };
+  match = /^\/api\/admin\/crm\/conversations\/([a-f0-9]{32})\/export$/.exec(pathname);
+  if (match) return { kind: "export", conversationId: match[1], methods: ["POST"] };
   match = /^\/api\/admin\/crm\/conversations\/([a-f0-9]{32})$/.exec(pathname);
   return match ? { kind: "profile", conversationId: match[1], methods: ["GET", "POST"] } : null;
 }
@@ -143,6 +147,11 @@ function safePage(result, field, options, rebuild) {
 }
 
 function mappedError(error) {
+  if (error instanceof ConversationExportError) {
+    const states = { input: [400, "invalid_request"], limit: [413, "conversation_export_limit"], busy: [429, "conversation_export_busy"], changed: [409, "conversation_export_changed"], unauthorized: [401, "authentication_required"], cancelled: [503, "conversation_export_interrupted"] };
+    const [status, code] = states[error.code] ?? [503, "conversation_export_unavailable"];
+    return { status, code, ...(status === 429 ? { retry: 30 } : {}) };
+  }
   if (Number.isInteger(error?.httpStatus) && [400, 403, 408, 413, 415, 503].includes(error.httpStatus)
     && ["invalid_request", "request_rejected", "csrf_failed", "request_timeout", "request_too_large", "json_required", "crm_unavailable"].includes(error.publicCode)) return { status: error.httpStatus, code: error.publicCode };
   if (["CRM_UNAUTHORIZED", "CHAT_UNAUTHORIZED", "AUTH_INVALID"].includes(error?.code)) return { status: 401, code: "authentication_required" };
@@ -160,17 +169,20 @@ function mappedError(error) {
 }
 
 /** Feature registration and a current administrator session protect every route and asset. */
-export function createCrmHandler(service, { origin }) {
+export function createCrmHandler(service, { origin, conversationExporter = null }) {
   const configured = new URL(origin);
   if (configured.protocol !== "https:" || configured.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   for (const method of ["actor", "listLabels", "createLabel", "renameLabel", "deleteLabel", "profile", "saveProfile", "contacts"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("A private CRM service is required");
   }
-  return async (request, response) => {
+  if (conversationExporter !== null && (typeof conversationExporter?.create !== "function" || typeof conversationExporter.photos !== "boolean"
+    || !Number.isSafeInteger(conversationExporter.maxBytes) || conversationExporter.maxBytes < 22 || conversationExporter.maxBytes > 32 * 1024 * 1024)) throw new TypeError("A bounded conversation exporter is required.");
+  const exports = new Set(); let closing = false;
+  const handler = async (request, response) => {
     let url;
     try { url = new URL(request.url ?? "/", "http://localhost"); } catch { return false; }
     const route = routeFor(url.pathname);
-    if (!route) return false;
+    if (!route || route.kind === "export" && conversationExporter === null) return false;
     const method = request.method ?? "GET";
     if (!route.methods.includes(method)) {
       reply(response, method, 405, { error: "method_not_allowed" }, { Allow: route.methods.join(", ") });
@@ -189,7 +201,35 @@ export function createCrmHandler(service, { origin }) {
         reply(response, method, 200, await readFile(new URL(name, publicRoot)), { "Content-Type": type });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, limits: { labelsPerKind: 100, labelsPerClient: 32, noteCharacters: 8000 } });
+        reply(response, method, 200, { enabled: true, limits: { labelsPerKind: 100, labelsPerClient: 32, noteCharacters: 8000 },
+          ...(conversationExporter ? { conversationExport: { enabled: true, photos: conversationExporter.photos, maxBytes: conversationExporter.maxBytes } } : {}) });
+      } else if (route.kind === "export") {
+        query(url, []);
+        const body = shape(await readJson(request, { maxBytes: 1024 }), ["includePhotos"]);
+        if (typeof body.includePhotos !== "boolean" || body.includePhotos && !conversationExporter.photos) throw invalid();
+        if (closing) throw unavailable();
+        const profile = safeProfile(await service.profile(token, route.conversationId), route.conversationId);
+        const controller = new AbortController(), abort = () => controller.abort(); let archive;
+        const abortTransfer = () => { if (response.headersSent && !response.writableFinished) response.destroy(); };
+        controller.signal.addEventListener("abort", abortTransfer);
+        exports.add(controller); request.once("aborted", abort); response.once("close", abort);
+        try {
+          if (request.aborted || response.destroyed || closing) controller.abort();
+          archive = await conversationExporter.create({ token, conversationId: route.conversationId, expectedClientId: profile.client.id, includePhotos: body.includePhotos, signal: controller.signal });
+          if (!Buffer.isBuffer(archive) || archive.length < 22 || archive.length > conversationExporter.maxBytes || archive.readUInt32LE() !== 0x04034b50) throw unavailable();
+          const current = safeActor(await service.actor(token));
+          if (!sameText(current.id, authenticated.id) || !sameText(current.csrf, authenticated.csrf)) throw Object.assign(new Error("CRM_UNAUTHORIZED"), { code: "CRM_UNAUTHORIZED" });
+          const finalProfile = safeProfile(await service.profile(token, route.conversationId), route.conversationId);
+          if (finalProfile.client.id !== profile.client.id) throw new ConversationExportError("changed");
+          if (controller.signal.aborted) throw new ConversationExportError("cancelled");
+          await new Promise((resolve, reject) => {
+            const done = () => { response.off("finish", done); response.off("close", done); resolve(); };
+            response.once("finish", done); response.once("close", done);
+            try { reply(response, method, 200, archive, { "Content-Type": "application/zip", "Content-Length": String(archive.length),
+              "Content-Disposition": `attachment; filename="JessieMessage-conversation-${route.conversationId}.zip"` }); }
+            catch (error) { response.off("finish", done); response.off("close", done); reject(error); }
+          });
+        } finally { archive?.fill?.(0); exports.delete(controller); controller.signal.removeEventListener("abort", abortTransfer); request.off("aborted", abort); response.off("close", abort); }
       } else if (route.kind === "labels" && method === "GET") {
         const parsed = query(url, ["kind", "afterId", "limit"], 100);
         const options = { kind: parsed.kind ?? null, afterId: parsed.afterId ?? null, limit: parsed.limit };
@@ -247,7 +287,9 @@ export function createCrmHandler(service, { origin }) {
       if (!response.headersSent && !response.destroyed) {
         const { status, code, retry } = mappedError(error);
         const headers = retry ? { "Retry-After": String(retry) } : {};
-        if (status === 401) headers["Set-Cookie"] = clearCookie(COOKIE);
+        // A long download can finish after another tab has logged in. Its old
+        // request cookie must not erase the browser's newer session cookie.
+        if (status === 401 && route.kind !== "export") headers["Set-Cookie"] = clearCookie(COOKIE);
         // Reject untrusted mutations before attaching any JSON body reader.
         if (method === "POST" || [400, 408, 413].includes(status)) { headers.Connection = "close"; request.resume(); }
         reply(response, method, status, { error: code }, headers);
@@ -255,4 +297,5 @@ export function createCrmHandler(service, { origin }) {
     }
     return true;
   };
+  return Object.assign(handler, { close() { closing = true; for (const controller of exports) controller.abort(); } });
 }

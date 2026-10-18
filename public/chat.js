@@ -227,17 +227,23 @@ function signOut() {
 }
 function snapshot(state = null) { return { generation, visibilityGeneration, selectionEpoch, id: state?.id, epoch: state?.epoch }; }
 function fresh(ticket, account = false) { return ticket.generation === generation && ticket.visibilityGeneration === visibilityGeneration && (account || (ticket.selectionEpoch === selectionEpoch && (!ticket.id || belongsTo(currentState(), ticket.id, ticket.epoch)))); }
-async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null, verifyOwner = true } = {}) {
+async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null, verifyOwner = true, archive = false } = {}) {
   const owner = sessionOwner; const ticket = snapshot(state); const controller = new AbortController(); controllers.add(controller);
   controller.accountScope = account;
   const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
-  const timeout = setTimeout(() => controller.abort(), rawBody ? 65000 : 15000);
+  const timeout = setTimeout(() => controller.abort(), rawBody || archive ? 65000 : 15000);
   const headers = mutation ? { "Content-Type": contentType ?? "application/json", "X-CSRF-Token": csrf ?? "" } : {};
   try {
     if (mutation && verifyOwner && owner) await confirmOwner(ticket, owner, account);
     if (!fresh(ticket, account)) throw staleResponse();
     const response = await fetch(path, { method: mutation ? "POST" : "GET", credentials: "same-origin", cache: "no-store", headers, body: mutation ? rawBody ?? JSON.stringify(body ?? {}) : undefined, signal: controller.signal });
-    let data; try { data = await response.json(); } catch { data = {}; }
+    let data;
+    if (archive && response.ok) {
+      try {
+        const { readPrivateArchive } = await import("/private-archive.js");
+        data = await readPrivateArchive(response, controller.signal);
+      } catch (error) { controller.abort(); throw error; }
+    } else { try { data = await response.json(); } catch { data = {}; } }
     if (!fresh(ticket, account)) throw staleResponse();
     if (verifyOwner && owner && path !== `${sessionBase}/session`) await confirmOwner(ticket, owner, account);
     if (!fresh(ticket, account)) throw staleResponse();
@@ -465,6 +471,7 @@ async function refreshCrmCapability() {
     const style = document.createElement("link"); style.id = "crm-style"; style.rel = "stylesheet"; style.href = "/crm.css"; document.head.append(style);
     crm = module.createCrmUI({
       request, inboxHead: document.querySelector(".inbox-head"), chatHead: document.querySelector(".chat-head"),
+      conversationExport: capability.conversationExport?.enabled === true ? capability.conversationExport : null,
       onError: (error) => handleError(error),
       onUnavailable(id) {
         states.delete(id); inbox.delete(id);

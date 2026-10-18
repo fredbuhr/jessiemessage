@@ -1,6 +1,16 @@
 (() => {
   "use strict";
   const messages = {
+  "Télécharger la conversation": "Download the conversation",
+  "Messages et photos partagées, sans notes privées, tags ni photos non envoyées.": "Messages and shared photos, without private notes, labels or unsent photos.",
+  "Inclure les photos partagées": "Include shared photos",
+  "Télécharger le ZIP": "Download the ZIP",
+  "Le fichier se lit sans connexion. Conserve-le dans un endroit privé.": "The file can be read offline. Keep it in a private location.",
+  "Préparation de la conversation…": "Preparing the conversation…",
+  "Conversation téléchargée. Extrais le ZIP puis ouvre Conversation.html.": "Conversation downloaded. Extract the ZIP and open Conversation.html.",
+  "La conversation dépasse la limite de téléchargement. Essaie sans les photos si elles sont incluses.": "The conversation exceeds the download limit. Try without photos if they are included.",
+  "Une préparation est déjà en cours ou vient de se terminer. Patiente trente secondes puis réessaie.": "An export is already being prepared or has just finished. Wait thirty seconds, then try again.",
+  "Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.": "The download is unavailable. Try again; no incomplete file is offered.",
     "JessieMessage — Diffusions privées": "JessieMessage — Private broadcasts",
     "Administration": "Administration", "Messages": "Messages", "Préparer le site": "Prepare the site", "Se déconnecter": "Sign out", "Contact": "Contact",
     "DANS LEUR CONVERSATION": "IN THEIR CONVERSATION", "Un message, à chacun.": "One message, to each person.",
