@@ -47,4 +47,6 @@ Un vrai sous-processus passe par le shim IPC et l’arrêt applicatif : requête
 
 Le scénario MariaDB supplémentaire crée uniquement des comptes fictifs dans une base loopback explicitement jetable. Il vérifie un POST confirmé sans modification SQL, un inventaire privilégié réel, le cycle IPC, les fichiers chiffrés retirés, les autres conversations inchangées et le blocage après réapparition SQL d’un compte fermé.
 
+Un trigger fictif bloque le précontrôle privilégié avant l’arrêt du processus. Sur MariaDB 10.11/11.4, son nom peut être visible au compte DML alors que sa définition et son propriétaire sont masqués ; le test n’assimile pas cette visibilité partielle à une inspection complète. Voir la [documentation MariaDB de TRIGGERS](https://mariadb.com/docs/server/reference/system-tables/information-schema/information-schema-tables/information-schema-triggers-table). Les données de ce scénario gardent une horloge fixe, y compris les colonnes mises à jour automatiquement par SQL.
+
 Les parcours Chrome couvrent les deux langues, 320/375/1280 px, clavier, confirmation distincte, annulation, masquage/BFCache, changement de session avant et après POST, perte de réponse, interruption réseau, lecture après redémarrage et pseudo contenant du balisage inerte. Aucune réception de mail ou de Push réel n’est utilisée comme preuve dans ce lot.

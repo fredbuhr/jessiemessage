@@ -30,7 +30,7 @@ globalThis.JessieI18n?.register({
   "Compte fermé · effacement des photos en cours": "Account closed · erasing photos",
   "Photos effacées · vérification finale": "Photos erased · final verification",
   "Effacement terminé dans l’application": "Erasure completed in the application",
-  "La vérification de session a changé. Actualise avant de reprendre.": "Session verification has changed. Refresh before continuing.",
+  "La vérification de session a changé. Actualise avant de reprendre.": "The session proof changed. Refresh before continuing.",
   "Réponse non confirmée. Actualise le suivi avant toute nouvelle demande.": "Response not confirmed. Refresh status before making another request.",
   "Le suivi est momentanément indisponible. Réessaie dans un moment.": "Status is temporarily unavailable. Try again shortly.",
   "Compte fermé": "Closed account",

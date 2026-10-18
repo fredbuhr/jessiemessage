@@ -26,7 +26,12 @@ async function fixture({ enabled = true, name = "Client fictif" } = {}) {
     if (path === endpoint && request.method === "GET") return json({ version: 1, client: phase === "completed" ? null : { id: clientId, pseudonym: changed ? "Replacement account view" : name, status: phase === "prepared" ? "deleted" : "active" }, closure: closure() });
     if (path === endpoint && request.method === "POST") {
       phase = "requested"; if (changeOnPost) changed = true;
-      if (dropPost) { response.destroy(); return; }
+      if (dropPost) {
+        // Lose an acknowledged partial response, rather than an empty reused
+        // socket which Chrome itself can retry below the fetch API.
+        response.writeHead(202, { "Content-Type": "application/json", "Cache-Control": "no-store", "Content-Length": "2048" });
+        response.flushHeaders(); response.write('{"version":1,'); setTimeout(() => response.destroy(), 25); return;
+      }
       return json({ version: 1, accepted: true, closure: closure() }, 202);
     }
     if (path === "/admin/closures") return send(200, "text/html", resources.get("/closures.html"));

@@ -215,7 +215,10 @@ test("durable account erasure removes the selected graph and actual encrypted fi
         await connection.query("CREATE TRIGGER closure_fixture_trigger BEFORE DELETE ON users FOR EACH ROW SET @closure_probe = 1");
         try {
           const dml = await pool.getConnection();
-          try { assert.equal((await dml.query("SELECT TRIGGER_NAME FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = ?", [options.database])).length, 0, "DML cannot prove an absent trigger inventory"); }
+          try {
+            const rows = await dml.query("SELECT TRIGGER_NAME AS name, ACTION_STATEMENT AS body, DEFINER AS owner FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = ?", [options.database]);
+            assert.equal(rows.length, 1); assert.equal(rows[0].body, null); assert.equal(rows[0].owner, null, "DML exposes a partial trigger record, not privileged executable inspection");
+          }
           finally { await dml.release(); }
           await assert.rejects(runManagedClosures({ runtime: managed.runtime, operations, directory: journalRoot, source: async () => {} }), { code: "BACKUP_INSPECTION_CONFIG" });
           assert.equal(managed.runtime.state().status, "running"); assert.equal(await databaseHash(), before);
@@ -237,7 +240,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       }
     });
     await t.test("a pending client without any conversation can be closed from its account card", async () => {
-      const uid = await user("client"); await connection.query("UPDATE users SET status = 'pending', email_verified_at = NULL, access_approved_at = NULL WHERE id = ?", [uid]);
+      const uid = await user("client"); await connection.query("UPDATE users SET status = 'pending', email_verified_at = NULL, access_approved_at = NULL, updated_at = ? WHERE id = ?", [created, uid]);
       const store = createErasureStore({ pool, database: options.database, capacity, broadcastKey });
       const service = createClosureService({ directory: journalRoot, key: journalKey, store, target: createClosureTargets(pool), clock: () => now });
       try {
