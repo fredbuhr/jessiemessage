@@ -23,7 +23,9 @@ async function fixture(t, source, overrides = {}) {
   const base = fileURLToPath(new URL("../../audit/", import.meta.url)); await mkdir(base, { recursive: true, mode: 0o700 });
   const directory = await mkdtemp(join(base, "jm-managed-runtime-")), file = join(directory, "child.mjs"), children = [], invocations = [];
   await writeFile(file, `process.on('message',()=>{});\n${source}`);
-  const internal = { startupMilliseconds: 500, stopMilliseconds: 80, requestMilliseconds: 30, retryMilliseconds: 5,
+  // A real cooperative child competes with the full test suite for CPU. Keep
+  // its grace period separate from the deliberately forced-stop scenario.
+  const internal = { startupMilliseconds: 500, stopMilliseconds: 400, requestMilliseconds: 30, retryMilliseconds: 5,
     fetchClient: ready,
     forkClient(path, args, settings) { invocations.push({ path, args, settings }); const child = fork(file, [], settings); children.push(child); return child; }, ...overrides };
   const runtime = createManagedRuntime(options(3000), internal);
@@ -52,7 +54,7 @@ test("managed child IPC, fixed arguments, inherited logs and local readiness are
 });
 
 test("forced termination produces no graceful-stop acknowledgement and waits for actual child close", async t => {
-  const f = await fixture(t, "process.on('SIGTERM',()=>{}); process.send({type:'runtime_started'});");
+  const f = await fixture(t, "process.on('SIGTERM',()=>{}); process.send({type:'runtime_started'});", { stopMilliseconds: 80 });
   await f.runtime.start(); await assert.rejects(f.runtime.stop(), { code: "MANAGED_RUNTIME_STOP" });
   assert.equal(f.children[0].signalCode, "SIGKILL"); assert.deepEqual(f.runtime.state(), { status: "stopped" });
 });
