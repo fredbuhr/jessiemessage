@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**État courant unique — 19 octobre 2026, contrôle final à 14:45–14:46 UTC (16:45–16:46 Europe/Paris). Étape 4/6 ; lot A terminé, lot B en attente du PC habituel.** La version 0.70.1 est fusionnée, déployée et vérifiée. Ne pas recommencer sa publication. Les fermetures réelles restent désactivées.
+**État courant unique — 19 octobre 2026, tentative PC non confirmée vers 15:00 UTC (17:00 Europe/Paris). Étape 4/6 ; lot A terminé, lot B : correction Windows 0.70.2 en validation.** Le service reste en 0.70.1. Le test Windows du correctif précédent ne couvrait pas le remplacement de scripts déjà présents. Ce cas échoue désormais de façon reproduite sous PowerShell 5.1 à `File.Replace`, avant initialisation. Ne pas réessayer l’ancien ZIP. Les fermetures réelles restent désactivées.
 
 Lire le [plan](PLAN-IMPLEMENTATION.md) et les [règles de reprise](../AGENTS.md). Les [preuves de clôture](activation-proofs/jm0701-activation.json), la [CI](verification-proofs/jm0701-ci.json) et le [relevé initial](activation-proofs/interruptions-20261019-baseline.json) distinguent les observations datées. L'[historique](REPRISE-HISTORIQUE-20261019.md) ne fournit pas les commandes courantes.
 
@@ -31,7 +31,9 @@ Le correctif conserve le raccordement du PC après une erreur de copie/réseau. 
 
 ## Prochaine action exacte — lot B
 
-**Sur le PC habituel : Administration → Sauvegardes → Mettre à jour le PC → extraire entièrement le ZIP → ouvrir `Activer-le-temoin.cmd`.** Le lanceur installe lui-même la mise à jour. Ne pas utiliser « Raccorder Windows » pour cette action. Conserver configuration DPAPI, archives, reçus, dossier `temoin` et marqueurs existants.
+**Avant une nouvelle tentative PC : terminer la validation et la publication du correctif 0.70.2 ([PR #92](https://github.com/fredbuhr/jessiemessage/pull/92)).** À 15:01:38 UTC, contrat et permission conservent leurs empreintes ci-dessus ; permission `ready`, révision 1, aucune tentative consommée. Le moniteur reste `current / OK`. Ne pas réinitialiser ces états.
+
+Après déploiement vérifié du kit corrigé : **Sur le PC habituel : Administration → Sauvegardes → Gérer cette destination → Mettre à jour le PC → extraire entièrement le ZIP → ouvrir `Activer-le-temoin.cmd`.** Le lanceur installe lui-même la mise à jour. Ne pas utiliser « Raccorder Windows » pour cette action. Conserver configuration DPAPI, archives, reçus, dossier `temoin` et marqueurs existants.
 
 Relever la fenêtre « Témoin initialisé sur ce PC » puis contrôler séparément l'observation fraîche acceptée sur le serveur. En cas de réponse perdue, relire les marqueurs PC et l'état serveur avant toute autre tentative. Une attente de cette action locale n'est ni une panne du service ni un échec du déploiement.
 

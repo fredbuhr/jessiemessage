@@ -73,6 +73,22 @@ try {
     Assert-True ((Get-FileHash -LiteralPath (Join-Path $jmUpgrade 'configuration.xml') -Algorithm SHA256).Hash -ceq $jmBefore) 'Update rewrote DPAPI pairing or folder.'
     Assert-True ((Read-JmConfiguration $jmUpgrade).Credential.GetNetworkCredential().Password -ceq ('A' * 43)) 'Update lost existing capability.'
     Assert-True (Test-Path -LiteralPath (Join-Path $jmUpgrade 'JessieMessage-temoin-067.ps1')) 'Updated witness library missing.'
+    # A real paired PC already has both scripts. The first update above only
+    # exercises creation; replacing existing files must preserve its state too.
+    $jmScripts = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent | Join-Path -ChildPath 'scripts'
+    foreach ($jmName in @('JessieMessage-temoin-067.ps1', 'JessieMessage-sauvegardes-055.ps1')) {
+        [IO.File]::WriteAllText((Join-Path $jmUpgrade $jmName), '# Previously installed synthetic version.')
+    }
+    $jmMarker = Join-Path $jmUpgrade 'witness-enrollment-attempt.json'
+    [IO.File]::WriteAllText($jmMarker, 'Existing initialization marker remains unchanged.')
+    $jmMarkerHash = (Get-FileHash -LiteralPath $jmMarker -Algorithm SHA256).Hash
+    Invoke-JmAgentUpdate $jmUpgrade $jmScripts $jmConfig.DestinationId
+    foreach ($jmName in @('JessieMessage-temoin-067.ps1', 'JessieMessage-sauvegardes-055.ps1')) {
+        Assert-True ((Get-FileHash -LiteralPath (Join-Path $jmUpgrade $jmName) -Algorithm SHA256).Hash -ceq (Get-FileHash -LiteralPath (Join-Path $jmScripts $jmName) -Algorithm SHA256).Hash) 'Existing script was not replaced by the update.'
+    }
+    Assert-True ($script:JmTasks.Count -eq 2) 'Existing-file update did not complete.'
+    Assert-True ((Get-FileHash -LiteralPath (Join-Path $jmUpgrade 'configuration.xml') -Algorithm SHA256).Hash -ceq $jmBefore) 'Existing-file update rewrote DPAPI configuration.'
+    Assert-True ((Get-FileHash -LiteralPath $jmMarker -Algorithm SHA256).Hash -ceq $jmMarkerHash) 'Existing-file update rewrote the initialization marker.'
     Assert-Fails { Invoke-JmAgentUpdate $jmUpgrade (Join-Path $jmRoot 'absent') $jmConfig.DestinationId }
     Assert-True ((Get-FileHash -LiteralPath (Join-Path $jmUpgrade 'configuration.xml') -Algorithm SHA256).Hash -ceq $jmBefore) 'Failed update rewrote configuration.'
     $script:JmOriginalApi = (Get-Item function:Invoke-JmWitnessApi).ScriptBlock

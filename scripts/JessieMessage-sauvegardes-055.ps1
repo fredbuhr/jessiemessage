@@ -234,7 +234,7 @@ function Install-JmAgentFiles {
             if (Test-Path -LiteralPath $jmTarget) {
                 $jmExisting = Get-Item -LiteralPath $jmTarget -Force
                 if ($jmExisting.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Fichier non valide.' }
-                [IO.File]::Replace($jmTemporary, $jmTarget, $null)
+                [IO.File]::Replace($jmTemporary, $jmTarget, [NullString]::Value)
             } else { [IO.File]::Move($jmTemporary, $jmTarget) }
         } finally { if (Test-Path -LiteralPath $jmTemporary) { Remove-Item -LiteralPath $jmTemporary -Force } }
     }
@@ -259,6 +259,7 @@ function Invoke-JmAgentUpdate {
     } finally { if ($null -ne $jmWitnessLock) { $jmWitnessLock.Dispose() }; $jmLock.Dispose() }
 }
 function Start-JmWitnessEnrollment {
+    $jmStage = 'lecture du kit'
     try {
         Add-Type -AssemblyName System.Windows.Forms
         $jmMetadata = Get-Item -LiteralPath (Join-Path $PSScriptRoot 'mise-a-jour.json') -Force
@@ -267,14 +268,16 @@ function Start-JmWitnessEnrollment {
         Assert-JmWitnessFields $jmUpdate @('version', 'destinationId', 'origin')
         if ($jmUpdate.version -cne 1 -or $jmUpdate.destinationId -isnot [string] -or $jmUpdate.destinationId -cnotmatch '^[a-f0-9]{32}$' -or $jmUpdate.origin -cne $script:JmOrigin) { throw 'Kit non valide.' }
         $jmDirectory = Join-Path $env:LOCALAPPDATA ('JessieMessage\Sauvegardes\' + $jmUpdate.destinationId)
+        $jmStage = 'mise a jour des fichiers et taches Windows'
         Invoke-JmAgentUpdate $jmDirectory $PSScriptRoot $jmUpdate.destinationId
+        $jmStage = 'initialisation du temoin'
         $jmResult = Invoke-JmWitnessEnrollment $jmDirectory $jmUpdate.destinationId
         Write-Output 'TEMOIN_INITIALISE'
         $null = [Windows.Forms.MessageBox]::Show('Temoin initialise sur ce PC. Le dossier et le raccordement sont conserves. La verification independante par le service reste distincte.', 'JessieMessage')
         # Enrollment has released both locks before the ordinary worker starts.
         Start-JmWitnessWorker $jmDirectory
     } catch {
-        $null = [Windows.Forms.MessageBox]::Show('Initialisation du temoin non confirmee. Les fichiers et le raccordement sont conserves. Ne pas supprimer le dossier du temoin ni raccorder de nouveau le PC.', 'JessieMessage')
+        $null = [Windows.Forms.MessageBox]::Show(('Initialisation du temoin non confirmee. Etape : ' + $jmStage + '. Les fichiers et le raccordement sont conserves. Ne pas supprimer le dossier du temoin ni raccorder de nouveau le PC.'), 'JessieMessage')
         Write-Output 'JESSIEMESSAGE_TEMOIN_INITIALISATION_NON_CONFIRMEE'; exit 1
     }
 }

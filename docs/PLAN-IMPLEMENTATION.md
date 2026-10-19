@@ -23,6 +23,8 @@ Le bilan distingue toujours **codé / fusionné / déployé / vérifié / en att
 
 ## B — Acquérir les preuves personnelles manquantes
 
+**Incident PC du 19 octobre, 17:00 Europe/Paris :** initialisation non confirmée ; permission serveur toujours `ready`, sans consommation. Le remplacement des scripts existants échoue sous PowerShell 5.1, cas absent de la fixture initiale. Correctif 0.70.2 en validation dans [#92](https://github.com/fredbuhr/jessiemessage/pull/92) ; attendre son kit corrigé avant une nouvelle tentative. Aucun réappariement ni effacement de marqueur.
+
 **Résultat :** trois preuves séparées pour le PC existant : initialisation locale, aller-retour indépendant frais accepté par le service et déchiffrement de l'archive courante. La copie chiffrée par reçu reste une quatrième preuve déjà acquise à sa date.
 
 - **Préconditions :** lot A déployé/vérifié ; PC habituel et configuration existante conservés. Lire l'état serveur et, après tout essai incertain, les marqueurs PC avant de reprendre.
