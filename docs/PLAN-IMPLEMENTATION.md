@@ -1,0 +1,76 @@
+# Plan d'implémentation de JessieMessage
+
+Point de départ : [état courant vérifié](REPRISE.md), étape 4/6 le 19 octobre 2026. Les six étapes historiques situent le projet ; les lots ci-dessous découpent leur fin en résultats vérifiables. Ce plan organise une reprise sûre après interruption ; il ne promet pas d'empêcher les coupures ChatGPT.
+
+## Règle commune à tous les lots
+
+Chaque réponse poursuit **un seul objectif borné avec un résultat et un critère de fin annoncés**. Il peut inclure code, tests, CI, fusion et déploiement du même correctif pour le terminer, avec un checkpoint après chaque opération distante. Ne pas ouvrir un nouveau lot fonctionnel avant clôture du précédent. Les dépendances ci-dessous sont techniques, pas de nouvelles demandes générales de permission.
+
+Avant le lot, lire REPRISE et contrôler le commit/arbre, les modifications locales, la PR/CI et le service concernés. Après toute opération distante, noter résultat durable et heure dans les preuves existantes ; remplacer l'état courant dans REPRISE avec la prochaine action exacte. En cas de coupure, lire d'abord ce résultat. **Absent/inconnu ne vaut ni échec ni succès** : ne pas rejouer une opération sensible pour retrouver son état.
+
+Le bilan distingue toujours **codé / fusionné / déployé / vérifié / en attente du PC**. Les preuves ne contiennent ni secret ni contenu client. Pas de nouveau mécanisme parallèle de déploiement, de journalisation ou de sauvegarde.
+
+## A — Corriger et publier les consignes du kit Windows
+
+**Résultat :** le kit de mise à jour/activation réutilise le raccordement existant et ne propose pas d'installation ou d'appariement comme première action. Correctif **0.70.1**, non déployé au relevé initial.
+
+- **Préconditions :** confirmer main et runtime 0.70.0 ; conserver la genèse, la permission `ready`, la configuration DPAPI et les marqueurs PC. Vérifier les deux consignes modifiées et leur concordance avec le vrai parcours.
+- **Phases :** terminer le correctif et sa vérification ciblée ; fusionner après CI du commit concerné ; déployer le candidat épinglé puis relire le kit réellement servi. Chaque phase se clôt par un checkpoint.
+- **Validation finale :** textes servis concordants et consignes préservant dossier/configuration/reçus ; service contrôlé, empreintes d'origine inchangées. Aucun raccordement, clé, mail ni initialisation personnelle rejoué. Les commandes natives utilisent l'environnement strict du lanceur, dont `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`.
+- **Reprise :** vérifier PR/CI, source exécutée et kit servi avant toute publication ou redémarrage supplémentaire. Si seul le code est fusionné, conserver « non déployé ».
+
+**Prochaine action technique : publier, valider puis déployer ce correctif des consignes avant de demander l'action PC.** Aucun autre lot ne doit masquer cet objectif.
+
+## B — Acquérir les preuves personnelles manquantes
+
+**Résultat :** trois preuves séparées pour le PC existant : initialisation locale, aller-retour indépendant frais accepté par le service et déchiffrement de l'archive courante. La copie chiffrée par reçu reste une quatrième preuve déjà acquise à sa date.
+
+- **Préconditions :** lot A déployé/vérifié ; PC habituel et configuration existante conservés. Lire l'état serveur et, après tout essai incertain, les marqueurs PC avant de reprendre.
+- **Phases :** action explicite du kit corrigé sur le PC ; observation fraîche du serveur/identité du registre ; vérification locale `Verifier.cmd` de l'archive courante avec le trousseau existant. Ce sont des constats séparés, jamais une réussite déduite d'une autre.
+- **Validation finale :** `TEMOIN_INITIALISE` local consigné sans secret, échange indépendant accepté et daté, archive courante identifiée par taille/empreinte et résultat `DECHIFFREMENT_VERIFIE`. Une attente PC reste « en attente », pas un échec du service.
+- **Reprise :** ne jamais réinitialiser permission, témoin ou appariement après une coupure ; vérifier `ready`/`spent`, tentative et marqueurs durables. Une réponse inconnue exige un diagnostic de récupération.
+
+## C — Raccorder la barrière fraîche et la réconciliation
+
+**Résultat :** démarrage et récupération réels contrôlent la continuité indépendante avant réouverture ; la restauration compare explicitement source et cible et préserve les fermetures plus récentes que l'archive.
+
+- **Préconditions :** preuve externe du lot B ; contrat original et empreinte physique contrôlés ; fermetures encore désactivées. Énoncer le comportement lorsque le PC est éteint sans rendre silencieusement la messagerie quotidienne dépendante de sa présence.
+- **Phases :** raccorder la barrière au processus réel ; raccorder la réconciliation source/cible ; valider puis déployer séparément. Ne pas créer un témoin de remplacement ou traiter un registre courant vide comme une provenance originale.
+- **Validation finale :** essais synthétiques du témoin absent/périmé, journal perdu, ancien registre vide, intention inachevée et compte réapparu ; récupération gardée en quarantaine dans ces cas ; reprise autorisée seulement sur preuve fraîche cohérente. Arrêt/reprise du vrai processus éprouvés.
+- **Reprise :** relire journal, maintenance, identité source/cible et marqueur de récupération. Une opération interrompue reste bloquante tant que son résultat durable n'est pas réconcilié ; aucune répétition destructive automatique.
+
+## D — Qualifier SQL et prouver un import courant isolé
+
+**Résultat :** inventaire SQL qualifié et restauration native de la capture courante sur une cible réellement isolée, couvrant les données et états opérationnels attendus.
+
+- **Préconditions :** déchiffrement du lot B et barrière/réconciliation du lot C ; cible distincte en base, racine et capacités, sans trafic réel. `recette.jessiemessage.com` n'est pas cette cible. Identifier un lecteur privilégié d'inventaire avant de conclure sur les objets exécutables ; l'identité DML seule ne suffit pas.
+- **Phases :** inspection qualifiée, import natif isolé, contrôle des données/photos/capsule/journaux et des restrictions de démarrage ; chaque opération a son reçu et son checkpoint.
+- **Validation finale :** objets SQL masqués ou inattendus refusés ; couverture courante précisément documentée, sans déclarer la base complète si elle ne l'est pas ; cible restaurée contrôlée et quarantaine respectée, production intacte. La restauration 0.46 reste un acquis historique distinct.
+- **Reprise :** relever l'état réel de l'import et les empreintes source/cible avant de relancer ; ne pas réimporter sur une cible incertaine ni connecter la cible restaurée au service réel.
+
+## E — Terminer fermeture, conservation et notice concordante
+
+**Résultat :** parcours de fermeture de la version de base exploitable avec conservation, copies et notice FR/EN correspondant au comportement effectivement livré.
+
+- **Préconditions :** lots C/D acquis avant activation des fermetures ; Jessie/France et conversation jusqu'à fermeture définitive déjà confirmés. Compléter seulement les décisions encore manquantes et leur traduction en code ; pas de nouveau questionnaire général.
+- **Phases :** raccorder le propriétaire de fermeture à l'exclusion de tous les producteurs et à l'inspection qualifiée ; définir/raccorder fin de vie des autres familles, journaux et copies ; aligner notice/aide ; tests de bout en bout sur comptes fictifs puis activation bornée et vérifiée.
+- **Validation finale :** reprise après interruption sans compte réapparu ni libération prématurée ; sauvegardes anciennes ne ressuscitant pas un compte fermé ; textes exacts sur fermeture, conservation et limites des copies ; aucun compte réel effacé pour valider le développement.
+- **Reprise :** journal d'intention et reçu final font foi. Ne jamais déduire une fermeture terminée d'une réponse HTTP perdue. Après une première fermeture réelle, ne pas revenir à un ancien runtime ignorant le registre.
+
+## F — Fiabiliser l'alerte externe de panne totale
+
+**Résultat :** surveillance indépendante du parent/hébergement avec cadence maximale explicitée et preuve de réception d'une alerte de panne totale puis de rétablissement.
+
+- **Préconditions :** relire sonde et workflow existants, passages réels et mode de notification. Ce lot peut être traité séparément de C–E ; il conserve leurs checkpoints et ne les avance pas implicitement.
+- **Phases :** corriger la cadence ou le canal existant selon les limites constatées ; éprouver une panne synthétique sans interrompre le service réel ; constater livraison et rétablissement.
+- **Validation finale :** relevés externes datés et borne de délai vérifiée, alerte indépendante reçue par le canal prévu. Les mails locaux déjà acceptés ne sont pas à refaire et ne prouvent pas une panne totale.
+- **Reprise :** vérifier passages et notifications déjà créés avant de les répéter ; préciser ce qui est seulement configuré et ce qui est réellement reçu.
+
+## G — Recette finale sur deux appareils et clôture de la base
+
+**Résultat :** version de base vérifiée sur les deux appareils habituels, guide et repli consolidés, limites restantes explicites.
+
+- **Préconditions :** lots A–F acquis avec leurs preuves ; les fonctions antérieurement acceptées restent acquises. Identifier un compte invité de test pour tout essai personnel de diffusion ; l'envoi réel n'est pas implicite dans l'autorisation générale de développement.
+- **Phases :** sessions simultanées et conflit de fiche ; ouverture notification vers le bon message et conversation ; parcours photos et export ; première diffusion personnelle ciblée lorsqu'elle est explicitement demandée ; diagnostic et repli documentaire.
+- **Validation finale :** aucun doublon/perte de brouillon ou déconnexion imprévue observé, message de diffusion individuel conforme, état de sauvegarde et récupération lisible ; code, runtime, CI, guide et liste des limites concordants.
+- **Reprise :** ne répéter que le parcours échoué ou non constaté. Publier le bilan des critères clos et ouverts ; les connexions directes à Drive et fonctions de confort restent une phase ultérieure.

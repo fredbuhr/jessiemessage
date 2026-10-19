@@ -1,5 +1,8 @@
 # Technical architecture — draft
 
+> État courant et prochaine action : [point de reprise](REPRISE.md). Les jalons datés ci-dessous décrivent leur relevé historique et ne remplacent pas cet état.
+
+
 ## Current runtime — 18 October 2026
 
 Application 0.56 (`2faf32ce`, schema 30) serves the primary and retained recipe origins with invitations, private text/photos, durable administrator/client sessions, Web Push, primary-only client recovery, private CRM and individually delivered campaigns. Recipients have no separate broadcast opt-in. The retained recipe shares the application's runtime and data; it is not an isolated staging database.

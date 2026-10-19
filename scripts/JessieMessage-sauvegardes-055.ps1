@@ -105,7 +105,7 @@ function Invoke-JmApi {
             if ($jmTotal -ne $jmResponse.ContentLength) { throw 'Transfert incomplet.' }
             $jmOutput.Flush($true)
         } else { return ([Text.Encoding]::UTF8.GetString($jmOutput.ToArray()) | ConvertFrom-Json) }
-    } catch { throw 'La connexion de sauvegarde a echoue. Reessayer ou raccorder de nouveau depuis le site.' }
+    } catch { throw 'La connexion de sauvegarde a echoue. Reessayer en conservant le raccordement existant. Cette erreur ne demande pas de raccorder de nouveau le PC.' }
     finally {
         if ($null -ne $jmOutput) { $jmOutput.Dispose() }
         if ($null -ne $jmInput) { $jmInput.Dispose() }
