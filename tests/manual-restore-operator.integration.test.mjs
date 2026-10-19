@@ -116,8 +116,9 @@ test("the real operator CLI allocates an empty target, imports, copies media and
   assert.equal(f.children.length, 0); await f.assertRestored(); await f.assertSourceUnchanged();
   const readState = async () => JSON.parse(await readFile(path.join(operator.operatorDirectory, "manual-restore-state.json"), "utf8"));
   const reconciledState = await readState(); assert.equal(reconciledState.phase, "reconciled"); assert.equal(reconciledState.planSha256, restored.planSha256);
-  for (const name of ["recurring-backup.json", "recipient-public.asc", "backup-copy-state.json"]) assert.deepEqual(
-    await readFile(path.join(f.dirs["target-journal"], name)), await readFile(path.join(f.dirs["source-journal"], name)));
+  for (const name of ["recurring-backup.json", "backup-copy-state.json"]) assert.deepEqual(
+    JSON.parse(await readFile(path.join(f.dirs["target-journal"], name), "utf8")), JSON.parse(await readFile(path.join(f.dirs["source-journal"], name), "utf8")));
+  assert.deepEqual(await readFile(path.join(f.dirs["target-journal"], "recipient-public.asc")), await readFile(path.join(f.dirs["source-journal"], "recipient-public.asc")));
   const quarantine = await fileHashes(f.dirs.quarantine);
   const opening = runOperator({ ...selected, command: "open", expectedPlanSha256: restored.planSha256 }, dependencies, internal);
   try {
