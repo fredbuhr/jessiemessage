@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fork } from "node:child_process";
+import { execFileSync, fork } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { createServer, request } from "node:http";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
@@ -22,6 +22,8 @@ import { createRegistryWitness } from "../server/backup/registry-witness.mjs";
 import { createErasureContinuity } from "../server/backup/registry-continuity.mjs";
 import { createErasureJournal } from "../server/data/erasure-journal.mjs";
 import { captureOperationalState, writeOperationalCheckpoint, assertNoOperationalRestore, OPERATIONAL_RESTORE_MARKER } from "../server/backup/operational-checkpoint.mjs";
+import { writeCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
+import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { main as restoreOperations } from "../scripts/restore-private-operations.mjs";
 import { WITNESS_ENROLLMENT_FILE, WITNESS_ENROLLMENT_ORIGIN } from "../server/backup/witness-enrollment.mjs";
@@ -70,6 +72,26 @@ async function waitForEvent(filename, event) {
     await new Promise(done => setTimeout(done, 20));
   }
   assert.fail(`The real runtime did not emit the synthetic ${event} observation`);
+}
+
+function nativeCli(filename, args, environment, children) {
+  const child = fork(filename, args, { cwd: repository, env: environment, execArgv: [], silent: true });
+  children.push(child); let stdout = "", stderr = "";
+  for (const [stream, receive] of [[child.stdout, value => { stdout += value; }], [child.stderr, value => { stderr += value; }]]) stream.on("data", bytes => {
+    receive(bytes.toString()); if (stdout.length + stderr.length > 32768) child.kill("SIGKILL");
+  });
+  const finished = new Promise((yes, no) => { child.once("error", no); child.once("close", (code, signal) => yes({ code, signal })); });
+  const reports = () => stdout.trim().split("\n").filter(Boolean).map(line => { try { return JSON.parse(line); } catch { return null; } }).filter(Boolean);
+  return { child, finished, reports, diagnostic: () => stderr };
+}
+async function waitForReport(process, predicate) {
+  const until = performance.now() + 20000;
+  while (performance.now() < until) {
+    const report = process.reports().find(predicate); if (report) return report;
+    if (process.child.exitCode !== null || process.child.signalCode !== null) assert.fail("The native recovery parent exited before its ready report");
+    await new Promise(done => setTimeout(done, 20));
+  }
+  assert.fail("The native recovery parent did not report ready");
 }
 
 for (const parentGateway of [false, true]) test(`witness maintenance drains and resumes the actual messaging runtime, SQL and media ${parentGateway ? "through the real parent gateway" : "directly"} without enabling closures (disposable MariaDB only)`, {
@@ -145,7 +167,7 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
   },
 }) });
 `, { flag: "wx", mode: 0o600 });
-  const children = [];
+  const children = [], recoveryProcesses = [];
   try {
     await clean(); await applyMigrations(connection, { database: db.database, migrations });
     const storage = await createMediaStorage({ root: dirs.media, key: Buffer.from(records.media.mediaKey, "base64url"), pathMode: "linux-dirfd" });
@@ -315,15 +337,20 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
       const witness = createRegistryWitness({ directory: pcDirectory, registryId: packet.registryId });
       assert.equal((await witness.initializeEmpty()).revision, 1);
       const challenges = new Set();
-      async function respondToWitnessRequest() {
+      let lastPcResponse;
+      async function respondToWitnessRequest({ provisioning = true, replay = false } = {}) {
         const poll = await localRequest(publicPort, "/api/backup-copy/witness/poll", { headers: nativeHeaders });
         assert.equal(poll.status, 200); const job = JSON.parse(poll.body);
-        assert.equal(job.pending, true); assert.equal(job.provisioning, true); assert.equal(job.destinationId, destinationId);
+        assert.equal(job.pending, true); assert.equal(job.provisioning, provisioning); assert.equal(job.destinationId, destinationId);
         assert.equal(job.request.registryId, packet.registryId); assert.equal(challenges.has(job.request.challenge), false); challenges.add(job.request.challenge);
-        const response = await witness.exchange(job.request);
+        const response = replay ? lastPcResponse : await witness.exchange(job.request);
+        assert.ok(response);
         const recorded = await localRequest(publicPort, "/api/backup-copy/witness/response", { method: "POST",
           headers: { ...nativeHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ version: 1, requestId: job.requestId, response }) });
+        if (replay) { assert.equal(recorded.status, 503); return job; }
+        lastPcResponse = response;
         assert.equal(recorded.status, 200); assert.deepEqual(JSON.parse(recorded.body), { version: 1, recorded: true });
+        return job;
       }
       const beforeVerify = children.length, checking = observer.tick();
       await respondToWitnessRequest(); await respondToWitnessRequest(); await respondToWitnessRequest();
@@ -367,9 +394,14 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
       for (const directory of [checkpointDirectory, targetMedia, laterSource]) await mkdir(directory, { mode: 0o700 });
       const crmKey = Buffer.from(records.crm.crmKey, "base64url"), recoveryBinding = contract.binding;
       const oldState = await withPrivateDirectory(dirs.operations, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding }));
-      const checkpointReceipt = { version: 10, profile: "messaging-photos-notify-recovery-crm-broadcast-application", createdAt: Date.now(),
-        manifest: { sha256: "d".repeat(64) }, sql: { sha256: "e".repeat(64) }, media: { files: [], bytes: 0 } };
+      const rawManifest = Buffer.from('{"synthetic":"operational-recovery-capsule"}\n');
+      await writeFile(path.join(checkpointDirectory, "manifest.json"), rawManifest, { mode: 0o600, flag: "wx" });
+      const checkpointReceipt = { format: "jessiemessage-private-checkpoint", version: 10,
+        profile: "messaging-photos-notify-recovery-crm-broadcast-application", coverage: { ...APPLICATION_COVERAGE }, createdAt: Date.now(),
+        schema: { tables: 30, migrations: 30 }, manifest: { file: "manifest.json", sha256: digest(rawManifest) },
+        sql: { file: "database.sql.gz", bytes: 1, sha256: "e".repeat(64), uncompressedBytes: 1, uncompressedSha256: "e".repeat(64) }, media: { files: [], bytes: 0 } };
       checkpointReceipt.operations = await withPrivateDirectory(checkpointDirectory, scope => writeOperationalCheckpoint(scope, oldState, checkpointReceipt, crmKey));
+      await withPrivateDirectory(checkpointDirectory, scope => writeCheckpointReceipt(scope, checkpointReceipt));
       const laterGate = createErasureContinuity({ key: crmKey, binding: recoveryBinding,
         readCurrent: () => withPrivateDirectory(laterSource, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding })),
         exchange: request => witness.exchange(request) });
@@ -387,8 +419,7 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
         "--checkpoint-directory", checkpointDirectory, "--destination-private-directory", quarantine,
         "--database", "synthetic_isolated_target", "--media-root", targetMedia,
         "--witness-operator-directory", dirs.operator, "--witness-contract-sha256", result.contractSha256];
-      const dependencies = { inheritedEnv: environment, execArgv: [], loadEnvironment: localEnv,
-        readReceipt: async () => structuredClone(checkpointReceipt), outputStream: { write() {} } };
+      const dependencies = { inheritedEnv: environment, execArgv: [], loadEnvironment: localEnv, outputStream: { write() {} } };
       const beforeRecoveryChildren = children.length, beforeRecoveryChallenges = challenges.size;
       const checkingRecovery = restoreOperations(args("check"), dependencies);
       await respondToWitnessRequest(); const checkedRecovery = await checkingRecovery;
@@ -405,17 +436,126 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
       await assert.rejects(withPrivateDirectory(quarantine, assertNoOperationalRestore), { code: "OPERATIONS_RECONCILIATION_REQUIRED" });
       assert.equal((await readdir(quarantine)).filter(name => name.startsWith("erasure-")).length, 1);
       assert.equal((await withPrivateDirectory(dirs.operations, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding }))).files.length, 0);
-      assert.equal(await sqlHash(), beforeSql); crmKey.fill(0);
+      assert.equal(await sqlHash(), beforeSql);
       assert.deepEqual(await localRequest(publicPort, "/api/ready"), { status: 200, body: '{"status":"ready"}' });
 
+      const originalAuthority = await readFile(statePath);
       await unlink(statePath); const beforeMissing = children.length;
       await assert.rejects(observer.check(), { code: "WITNESS_ENROLLMENT_MISSING" });
       assert.deepEqual(await readdir(enrollmentDirectory), [WITNESS_ENROLLMENT_ORIGIN]);
       assert.equal(children.length, beforeMissing, "missing authority is refused without silent initialization or runtime mutation");
+      // Restore only this disposable fixture's exact prior authority, then
+      // release the actual application parent before an explicit recovery
+      // process takes the public port. No production preparation is replayed.
+      await writeFile(statePath, originalAuthority, { mode: 0o600, flag: "wx" });
+      await observer.close(); observer = null;
+      await supervisor.close(); supervisor = null;
+      assert.equal(runtime.state().status, "closed");
+      const runtimeEventsBeforeRecovery = await readFile(events);
+      const laterFile = (await readdir(laterSource)).find(name => /^erasure-[a-f0-9]{64}\.json$/.test(name));
+      const completedBytes = await readFile(path.join(laterSource, laterFile));
+      await writeFile(path.join(dirs.operations, laterFile), completedBytes, { mode: 0o600, flag: "wx" });
+      const recoveryDriver = path.join(root, "actual-recovery-parent-ci.mjs");
+      // Only the disposable database's plaintext transport is adapted. The
+      // executable CLI/parser, source git pin, six-file loader, provenance,
+      // spent authority, HTTP server, Unix RPC and PC mailbox are real.
+      await writeFile(recoveryDriver, `
+import { main } from ${JSON.stringify(moduleUrl("scripts/start-recurring-private-messaging.mjs"))};
+import { createConfiguredWitnessRecovery } from ${JSON.stringify(moduleUrl("server/backup/witness-recovery-parent.mjs"))};
+import { withConfiguredWitnessOrigin } from ${JSON.stringify(moduleUrl("server/backup/witness-origin-context.mjs"))};
+import { loadRuntimeBroadcastEnvironment } from ${JSON.stringify(moduleUrl("server/config/runtime-broadcast.mjs"))};
+const cancellation = new AbortController();
+const stop = () => cancellation.abort(); process.once('SIGTERM', stop); process.once('SIGINT', stop);
+try {
+  await main(process.argv.slice(2), { environment: process.env, execArgv: [], signal: cancellation.signal,
+    makeWitnessRecovery: (options, settings) => createConfiguredWitnessRecovery(options, settings, {
+      withOrigin: (selected, context, work) => withConfiguredWitnessOrigin(selected, context, work, {
+        loadEnvironment: async (directory, configuration) => ({ ...await loadRuntimeBroadcastEnvironment(directory, configuration), JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL: '1' }),
+      }),
+    }),
+  });
+} catch { process.stderr.write('SYNTHETIC_RECOVERY_CLI_REFUSED\\n'); process.exitCode = 1; }
+finally { process.removeListener('SIGTERM', stop); process.removeListener('SIGINT', stop); }
+`, { mode: 0o600, flag: "wx" });
+      const gitHead = execFileSync("/usr/bin/git", ["-C", repository, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+      const gitTree = execFileSync("/usr/bin/git", ["-C", repository, "rev-parse", "HEAD^{tree}"], { encoding: "utf8" }).trim();
+      const recoveryEnvironment = { ...environment, PORT: String(publicPort) };
+      const parentArgs = (command, operationsDirectory = dirs.operations) => [command,
+        "--runtime-directory", repository, "--runtime-head", gitHead, "--runtime-tree", gitTree,
+        "--private-directory", dirs.private, "--operations-directory", operationsDirectory, "--private-path-mode", "linux-dirfd",
+        "--witness-operator-directory", dirs.operator, "--witness-contract-sha256", result.contractSha256];
+      const restoreFilename = fileURLToPath(new URL("../scripts/restore-private-operations.mjs", import.meta.url));
+      const beforeRecoveryPairing = await readFile(path.join(dirs.operations, "backup-copy-state.json"));
+      const beforeRecoveryContract = await readFile(path.join(dirs.operator, "contract", WITNESS_GENESIS_FILE));
+      const rejectedSource = path.join(root, "copied-untrusted-operations"); await mkdir(rejectedSource, { mode: 0o700 });
+      await writeFile(path.join(rejectedSource, "backup-copy-state.json"), beforeRecoveryPairing, { mode: 0o600, flag: "wx" });
+      await writeFile(path.join(rejectedSource, laterFile), completedBytes, { mode: 0o600, flag: "wx" });
+      const badProvenance = nativeCli(recoveryDriver, parentArgs("check-witness-recovery", rejectedSource), recoveryEnvironment, recoveryProcesses);
+      assert.deepEqual(await badProvenance.finished, { code: 1, signal: null }); assert.deepEqual(badProvenance.reports(), []);
+      assert.match(badProvenance.diagnostic(), /^SYNTHETIC_RECOVERY_CLI_REFUSED\n$/);
+
+      for (const localState of ["nonempty", "lost"]) {
+        if (localState === "lost") await unlink(path.join(dirs.operations, laterFile));
+        const precheck = nativeCli(recoveryDriver, parentArgs("check-witness-recovery"), recoveryEnvironment, recoveryProcesses);
+        assert.deepEqual(await precheck.finished, { code: 0, signal: null }, precheck.diagnostic());
+        assert.deepEqual(precheck.reports(), [{ version: 1, type: "witness_recovery_precheck", status: "passed", mode: "recovery_only", started: false,
+          closuresEnabled: false, externalWitnessConfirmed: false }]);
+        const parent = nativeCli(recoveryDriver, parentArgs("start-witness-recovery"), recoveryEnvironment, recoveryProcesses);
+        const started = await waitForReport(parent, value => value.type === "witness_recovery_parent" && value.status === "started");
+        assert.equal(started.mode, "recovery_only"); assert.equal(started.externalWitnessConfirmed, false); assert.equal(started.closuresEnabled, false);
+        const target = path.join(root, `native-recovery-quarantine-${localState}`);
+        const nativeArgs = command => args(command).map(value => value === quarantine ? target : value);
+        const beforeNativeChallenges = challenges.size;
+        try {
+          for (const route of ["/", "/api/ready", "/api/entry", "/api/auth/login", "/api/admin/closures/clients/" + "a".repeat(32), "/api/backup-copy/witness/enroll"])
+            assert.equal((await localRequest(publicPort, route)).status, 503, `recovery-only process must not serve ${route}`);
+          const check = nativeCli(restoreFilename, nativeArgs("check"), recoveryEnvironment, recoveryProcesses);
+          await respondToWitnessRequest({ provisioning: false });
+          assert.deepEqual(await check.finished, { code: 0, signal: null }, check.diagnostic());
+          const checked = check.reports()[0];
+          assert.equal(checked.completedReceipts, 1); assert.equal(checked.externalRegistryContinuityVerified, true);
+          assert.equal(checked.sqlRestored, false); assert.equal(checked.started, false); assert.equal(checked.reconciliationRequired, true);
+          const restoring = nativeCli(restoreFilename, [...nativeArgs("restore"), "--confirm-plan-sha256", checked.planSha256], recoveryEnvironment, recoveryProcesses);
+          for (let index = 0; index < 4; index++) await respondToWitnessRequest({ provisioning: false });
+          assert.deepEqual(await restoring.finished, { code: 0, signal: null }, restoring.diagnostic());
+          assert.equal(restoring.reports()[0].restored, true); assert.equal(challenges.size, beforeNativeChallenges + 5);
+          assert.deepEqual(await readFile(path.join(target, laterFile)), completedBytes);
+          await assert.rejects(withPrivateDirectory(target, assertNoOperationalRestore), { code: "OPERATIONS_RECONCILIATION_REQUIRED" });
+          assert.equal((await readFile(`/proc/${parent.child.pid}/task/${parent.child.pid}/children`, "utf8")).trim(), "", "recovery-only parent has no application/producer child");
+          assert.deepEqual(await readFile(events), runtimeEventsBeforeRecovery);
+          assert.equal(await sqlHash(), beforeSql);
+          assert.deepEqual(await readFile(statePath), originalAuthority);
+          assert.deepEqual(await readFile(path.join(dirs.operations, "backup-copy-state.json")), beforeRecoveryPairing);
+          assert.deepEqual(await readFile(path.join(dirs.operator, "contract", WITNESS_GENESIS_FILE)), beforeRecoveryContract);
+
+          const blockedTarget = path.join(root, `native-recovery-refused-${localState}`);
+          const blockedArgs = nativeArgs("check").map(value => value === target ? blockedTarget : value);
+          const blocked = nativeCli(restoreFilename, blockedArgs, recoveryEnvironment, recoveryProcesses);
+          if (localState === "nonempty") await respondToWitnessRequest({ provisioning: false, replay: true });
+          else {
+            const poll = await localRequest(publicPort, "/api/backup-copy/witness/poll", { headers: nativeHeaders });
+            assert.equal(poll.status, 200); const job = JSON.parse(poll.body); assert.equal(job.pending, true);
+            assert.equal(challenges.has(job.request.challenge), false); challenges.add(job.request.challenge);
+          }
+          assert.equal(blocked.child.exitCode, null, "neither a replay nor an offline peer becomes a fresh success");
+          blocked.child.kill("SIGTERM");
+          assert.deepEqual(await blocked.finished, { code: 1, signal: null }); assert.deepEqual(blocked.reports(), []);
+          await assert.rejects(readFile(path.join(blockedTarget, OPERATIONAL_RESTORE_MARKER)), { code: "ENOENT" });
+          assert.equal(await sqlHash(), beforeSql);
+        } finally {
+          if (parent.child.exitCode === null && parent.child.signalCode === null) parent.child.kill("SIGTERM");
+          assert.deepEqual(await parent.finished, { code: 0, signal: null }, parent.diagnostic());
+        }
+      }
+      assert.equal((await withPrivateDirectory(dirs.operations, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding }))).files.length, 0);
+      assert.equal(await sqlHash(), beforeSql); crmKey.fill(0);
     }
   } finally {
-    pendingBody?.destroy(); observer?.close(); await supervisor?.close(); await gateway?.close();
+    pendingBody?.destroy(); await observer?.close(); await supervisor?.close(); await gateway?.close();
     await runtime?.destroy(); for (const child of children) { if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL"); }
+    await Promise.all(recoveryProcesses.filter(child => child.exitCode === null && child.signalCode === null).map(child => new Promise(done => {
+      child.once("close", done); child.kill("SIGKILL");
+    })));
     await bootstrapPool?.end(); await clean(); await connection.end();
   }
 });

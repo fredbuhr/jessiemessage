@@ -6,15 +6,48 @@ import { createPeriodicBackupMonitor } from "../server/backup/periodic-monitor.m
 import { createBackupAlertWorker } from "../server/backup/alert-worker.mjs";
 import { createWitnessOriginOperations } from "../server/backup/witness-origin-operator.mjs";
 import { createConfiguredWitnessObserver } from "../server/backup/witness-observer.mjs";
+import { createConfiguredWitnessRecovery } from "../server/backup/witness-recovery-parent.mjs";
+import { createWitnessRecoveryServer } from "../server/backup/witness-recovery-server.mjs";
 
 export async function main(args = process.argv.slice(2), { environment = process.env, execArgv = process.execArgv,
   preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor,
   makeAlerts = createBackupAlertWorker, makeWitnessOrigin = createWitnessOriginOperations,
-  makeWitnessObserver = createConfiguredWitnessObserver, outputStream = process.stdout,
+  makeWitnessObserver = createConfiguredWitnessObserver, makeWitnessRecovery = createConfiguredWitnessRecovery,
+  makeRecoveryServer = createWitnessRecoveryServer, outputStream = process.stdout,
   signal } = {}) {
   const options = parseRecurringArguments(args);
   try { privateAuthenticationProcessOptions(environment, execArgv); } catch { throw new RecurringSupervisorError("ENVIRONMENT"); }
   if (signal?.aborted) throw new RecurringSupervisorError("ABORTED");
+  if (["check-witness-recovery", "start-witness-recovery"].includes(options.command)) {
+    const recovery = await makeWitnessRecovery(options, { environment, signal });
+    let listener;
+    const stop = () => {
+      try { void Promise.resolve(recovery.close()).catch(() => {}); } catch {}
+      try { void Promise.resolve(listener?.close()).catch(() => {}); } catch {}
+    };
+    signal?.addEventListener("abort", stop, { once: true });
+    try {
+      if (signal?.aborted) throw new RecurringSupervisorError("ABORTED");
+      const checked = await recovery.check();
+      if (signal?.aborted) throw new RecurringSupervisorError("ABORTED");
+      if (options.command === "check-witness-recovery") { outputStream.write(`${JSON.stringify(checked)}\n`); return checked; }
+      listener = makeRecoveryServer({ port: Number(environment.PORT ?? "3000"), control: recovery.handler });
+      // Reserve the public port before the shared private socket. An active
+      // application parent is never stopped or displaced by this command.
+      await listener.start();
+      if (signal?.aborted) throw new RecurringSupervisorError("ABORTED");
+      const started = await recovery.start();
+      if (signal?.aborted) throw new RecurringSupervisorError("ABORTED");
+      listener.assertReady();
+      outputStream.write(`${JSON.stringify(started)}\n`);
+      const result = await listener.finished;
+      if (result.failed) throw new RecurringSupervisorError("RUNTIME");
+      return { version: 1, type: "witness_recovery_parent", status: "stopped", mode: "recovery_only", closuresEnabled: false };
+    } finally {
+      signal?.removeEventListener("abort", stop);
+      try { await recovery.close(); } finally { await listener?.close(); }
+    }
+  }
   if (options.command === "check") {
     const configuration = await preflight(options, { environment, signal });
     const report = { version: 1, type: "recurring_supervisor_preflight", status: "passed", enabled: configuration.enabled,
@@ -96,8 +129,9 @@ export async function main(args = process.argv.slice(2), { environment = process
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const cancellation = new AbortController(); let deadline;
-  const operationDeadline = ["plan-witness", "check-witness", "check-witness-observer"].includes(process.argv[2])
-    ? setTimeout(() => { process.stderr.write("WITNESS_ORIGIN_TIMEOUT\n"); process.exit(1); }, 45000) : null;
+  const recoveryCommand = ["check-witness-recovery", "start-witness-recovery"].includes(process.argv[2]);
+  const operationDeadline = ["plan-witness", "check-witness", "check-witness-observer", "check-witness-recovery"].includes(process.argv[2])
+    ? setTimeout(() => { process.stderr.write(recoveryCommand ? "WITNESS_RECOVERY_TIMEOUT\n" : "WITNESS_ORIGIN_TIMEOUT\n"); process.exit(1); }, 45000) : null;
   const stop = () => {
     if (cancellation.signal.aborted) return;
     cancellation.abort();
@@ -106,7 +140,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   process.once("SIGTERM", stop); process.once("SIGINT", stop);
   try { await main(process.argv.slice(2), { signal: cancellation.signal }); }
   catch (error) {
-    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|MANAGED_RUNTIME|WITNESS_(?:ORIGIN|GENESIS|ENROLLMENT|OBSERVATION))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
-    process.stderr.write(`${code}: La sauvegarde récurrente n’est pas confirmée.\n`); process.exitCode = 1;
+    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|MANAGED_RUNTIME|WITNESS_(?:ORIGIN|GENESIS|ENROLLMENT|OBSERVATION|RECOVERY))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
+    process.stderr.write(`${code}: ${recoveryCommand ? "La récupération privée n’est pas confirmée." : "La sauvegarde récurrente n’est pas confirmée."}\n`); process.exitCode = 1;
   } finally { clearTimeout(operationDeadline); clearTimeout(deadline); process.removeListener("SIGTERM", stop); process.removeListener("SIGINT", stop); }
 }
