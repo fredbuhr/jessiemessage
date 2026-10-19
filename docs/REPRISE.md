@@ -1,6 +1,8 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — étape 4/6. V1 technique déployée/vérifiée en 0.79.0 sur le mutualisé existant, fermetures locales activées.** S1, S2a/S2b et S3 sont clos. Lire le [plan](PLAN-IMPLEMENTATION.md) et [AGENTS](../AGENTS.md). KISS permanent ; aucun nouveau serveur ni budget.
+**20 octobre 2026 Europe/Paris — livraison V1 terminée. Version technique 0.79.0 déployée/vérifiée sur le mutualisé existant, fermetures locales activées.** S1, S2a/S2b et S3 sont clos. Lire le [plan](PLAN-IMPLEMENTATION.md) et [AGENTS](../AGENTS.md). KISS permanent ; aucun nouveau serveur ni budget.
+
+Le compteur « étape 4/6 » appartenait au plan du 18 octobre (`2bec7c6a`), remplacé le 19 octobre par S1/S2/S3 (`bd606963`). Il ne décrit plus l'avancement courant. Les limites ci-dessous restent déclarées ; la clôture de la V1 ne vaut pas validation des garanties de l'ancien périmètre.
 
 ## Service courant et preuves
 

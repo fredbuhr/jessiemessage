@@ -1,6 +1,8 @@
 # Plan d'implémentation de JessieMessage
 
-**20 octobre 2026 — étape 4/6. V1 technique déployée et vérifiée en 0.79.0.** La messagerie reste sur le mutualisé actuel, sans nouveau serveur ni abonnement. KISS permanent. Lire l'[état courant](REPRISE.md) et les [preuves finales](verification-proofs/jm079-verification.json).
+**20 octobre 2026 — livraison V1 terminée. Version technique 0.79.0 déployée et vérifiée.** La messagerie reste sur le mutualisé actuel, sans nouveau serveur ni abonnement. KISS permanent. Lire l'[état courant](REPRISE.md) et les [preuves finales](verification-proofs/jm079-verification.json).
+
+Ce plan S1/S2/S3 remplace l'ancien découpage en six lots. Le compteur « 4/6 » conservé dans les précédents en-têtes était obsolète ; il n'indique pas deux lots actuels oubliés. Les anciennes exigences de cadence externe fiable, d'alerte de panne totale et de recette sur deux appareils habituels ne sont pas déclarées acquises : leur portée réelle reste dans les limites en fin de document.
 
 ## Portée V1
 
