@@ -560,6 +560,33 @@ finally { process.removeListener('SIGTERM', stop); process.removeListener('SIGIN
           assert.deepEqual(await readFile(path.join(dirs.operations, "backup-copy-state.json")), beforeRecoveryPairing);
           assert.deepEqual(await readFile(path.join(dirs.operator, "contract", WITNESS_GENESIS_FILE)), beforeRecoveryContract);
 
+          // C4 is a separate, read-only native process. A completed source
+          // receipt becomes a replay-from-start requirement for this exact
+          // quarantine; neither its phase nor cursor authorizes target SQL.
+          t.diagnostic(`C4 ${localState}: native reconciliation planning started`);
+          const planFilename = fileURLToPath(new URL("../scripts/plan-closure-reconciliation.mjs", import.meta.url));
+          const planArgs = nativeArgs("check").map(value => value === "--destination-private-directory" ? "--quarantine-private-directory" : value);
+          const beforePlanChallenges = challenges.size, beforePlanMarker = await readFile(path.join(target, OPERATIONAL_RESTORE_MARKER));
+          const planning = nativeCli(planFilename, planArgs, recoveryEnvironment, recoveryProcesses);
+          await Promise.all([
+            planning.finished.then(exited => assert.deepEqual(exited, { code: 0, signal: null }, planning.diagnostic())),
+            (async () => { for (let index = 0; index < 2; index++) await respondToWitnessRequest({ provisioning: false }); })(),
+          ]);
+          const planned = planning.reports()[0];
+          assert.equal(planned.status, "closure_reconciliation_planned"); assert.match(planned.planSha256, /^[a-f0-9]{64}$/);
+          assert.equal(planned.completedReceipts, 1); assert.equal(planned.replayFromStartReceipts, 1);
+          assert.equal(planned.sqlMutationAuthorized, false); assert.equal(planned.targetSqlInspected, false);
+          assert.equal(planned.targetAbsenceVerified, false); assert.equal(planned.targetMutated, false); assert.equal(planned.started, false);
+          assert.equal(challenges.size, beforePlanChallenges + 2);
+          assert.deepEqual(await readFile(path.join(target, OPERATIONAL_RESTORE_MARKER)), beforePlanMarker);
+          assert.deepEqual(await readFile(path.join(target, laterFile)), completedBytes);
+          await assert.rejects(withPrivateDirectory(target, assertNoOperationalRestore), { code: "OPERATIONS_RECONCILIATION_REQUIRED" });
+          assert.equal(await sqlHash(), beforeSql); assert.deepEqual(await readFile(events), runtimeEventsBeforeRecovery);
+          assert.deepEqual(await readFile(statePath), originalAuthority);
+          assert.deepEqual(await readFile(path.join(dirs.operations, "backup-copy-state.json")), beforeRecoveryPairing);
+          assert.deepEqual(await readFile(path.join(dirs.operator, "contract", WITNESS_GENESIS_FILE)), beforeRecoveryContract);
+          t.diagnostic(`C4 ${localState}: native reconciliation planning passed`);
+
           const blockedTarget = path.join(root, `native-recovery-refused-${localState}`);
           const blockedArgs = nativeArgs("check").map(value => value === target ? blockedTarget : value);
           t.diagnostic(`C3 ${localState}: replay or offline refusal started`);

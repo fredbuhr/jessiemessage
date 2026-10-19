@@ -1,0 +1,39 @@
+{
+  "format": "jessiemessage-release-verification",
+  "version": 1,
+  "release": "0.74.0",
+  "lot": "C4",
+  "status": "coded_ci_pending",
+  "runtimeDeployed": false,
+  "activeRuntime": "0.72.0",
+  "closuresEnabled": false,
+  "sourceBase": "8718e3f380d0490fa56d26ca685c08ecce548059",
+  "local": {
+    "syntaxSources": 538,
+    "generalTests": {
+      "passed": 2712,
+      "failed": 0,
+      "skipped": 203
+    },
+    "nativeVerification": "required_in_ci"
+  },
+  "scope": {
+    "readonlyPlanner": true,
+    "freshChallengesPerCheck": 2,
+    "originalSourceEnvelopesPreserved": true,
+    "allSourcePhasesReplayFromStart": true,
+    "targetSqlInspected": false,
+    "sqlMutationAuthorized": false,
+    "targetAbsenceVerified": false,
+    "capacityRebound": false,
+    "quarantineRetained": true,
+    "started": false
+  },
+  "completion": {
+    "continuityLotCComplete": false,
+    "lotDComplete": false,
+    "d1ImportRepeated": false,
+    "personalPcActionsRepeated": false
+  },
+  "next": "Target reconciliation execution with qualified SQL inspection, explicit capacity transition and separate restartable target progress; independent single-writer authority succession before startup."
+}
