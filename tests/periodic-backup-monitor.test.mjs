@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { createPeriodicBackupMonitor } from "../server/backup/periodic-monitor.mjs";
 import { evaluateCheckpointFreshness, validateBackupFreshnessReport, CHECKPOINT_MAXIMUM_AGE } from "../server/backup/freshness.mjs";
 import { main as supervise } from "../scripts/start-recurring-private-messaging.mjs";
+import { createBackupAlertWorker } from "../server/backup/alert-worker.mjs";
+import { emptyBackupAlertState } from "../server/backup/alert-state.mjs";
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 const marker = "private-address-SQL-key-must-never-appear";
@@ -42,6 +44,22 @@ test("periodic sampling starts once, reports fixed metadata and arms the next mi
   assert.equal([...f.timers.values()].filter(x => x.delay === 60000).length, 1);
   for (const forbidden of ["recipientSha256", "operationsDirectory", "records", "report"]) assert.equal(Object.hasOwn(first, forbidden), false);
   await f.monitor.close(); assert.equal(f.timers.size, 0);
+});
+
+test("an advancing clock produces an observation accepted by the real alert worker without SMTP", async () => {
+  let now = NOW;
+  const f = fixture({ clock: () => now++ });
+  const alerts = createBackupAlertWorker({ operationsDirectory: "/synthetic/operations", privateDirectory: "/synthetic/private" }, {
+    clock: () => now++, read: async () => emptyBackupAlertState(),
+    save: async () => assert.fail("No queue transition for a current backup"),
+    makeDelivery: () => assert.fail("No SMTP for a current backup"),
+  });
+  try {
+    const snapshot = await f.start();
+    const accepted = await alerts.observe(snapshot);
+    assert.equal(accepted.event, "observed"); assert.equal(accepted.code, "OK"); assert.equal(accepted.pending, 0);
+    assert.equal(snapshot.ageMilliseconds, snapshot.checkedAt - snapshot.lastSuccessAt);
+  } finally { await f.monitor.close(); await alerts.close(); }
 });
 
 test("one temporary failure clears silently while three failures open one incident", async () => {
