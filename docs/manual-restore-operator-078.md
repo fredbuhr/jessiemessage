@@ -1,6 +1,6 @@
 # Restauration manuelle : parcours opérateur — 0.78
 
-**Lot S2b en implémentation.** Ce guide décrit l'API prévue ; commandes et résultats doivent être relus contre le code final avant utilisation. Il ne constate ni CI réussie, ni restauration réelle, ni activation des fermetures. L'état du service déployé reste dans [REPRISE](REPRISE.md).
+**Lot S2b clos, fusionné/vérifié en CI candidat et main ; non déployé.** Ce guide décrit les commandes livrées. Il ne constate ni restauration de production ni activation des fermetures. Les résultats datés sont dans les [preuves 0.78](verification-proofs/jm078-verification.json). L'état du service déployé reste dans [REPRISE](REPRISE.md).
 
 Cette procédure ponctuelle conserve l'hébergement existant. Elle restaure une capture applicative sur une **nouvelle base et un nouveau dossier média**, traite les fermetures connues, puis exige une ouverture explicite. Le PC reste une destination de copie ; aucune confirmation PC par phase ni réinitialisation n'est demandée.
 
@@ -32,6 +32,28 @@ Créer `/private/operator/job.json` en **0600**, fichier régulier privé sans l
 | `importUser` | Identifiant SQL de l'opérateur d'import. |
 | `sqlSha256` | SHA-256 du SQL décompressé authentifié par le reçu. |
 | `registrySha256` | Empreinte de l'inventaire opérationnel récent explicitement choisi. |
+
+Pour relever les deux empreintes en lecture seule, depuis le checkout revu (adapter les trois chemins) :
+
+```sh
+node --input-type=module - /private/source-config /private/source-operations /private/checkpoint <<'JS'
+import { loadRuntimeBroadcastEnvironment } from './server/config/runtime-broadcast.mjs';
+import { clearRuntimeMessagingSecrets } from './server/config/runtime-messaging.mjs';
+import { withPrivateDirectory } from './server/files/private-directory.mjs';
+import { readCheckpointReceipt } from './server/backup/checkpoint-receipt.mjs';
+import { readOperationalCheckpoint, captureOperationalState, operationalStateHash } from './server/backup/operational-checkpoint.mjs';
+const [configuration, operations, checkpoint] = process.argv.slice(2);
+let env, key;
+try {
+  env = await loadRuntimeBroadcastEnvironment(configuration, { port: '3000', originProfile: 'primary', recovery: true });
+  key = Buffer.from(env.JESSIEMESSAGE_CRM_KEY, 'base64url');
+  const receipt = await withPrivateDirectory(checkpoint, scope => readCheckpointReceipt(scope));
+  const backup = await withPrivateDirectory(checkpoint, scope => readOperationalCheckpoint(scope, receipt, key));
+  const registry = await withPrivateDirectory(operations, scope => captureOperationalState(scope, { key, binding: backup.binding }));
+  console.log(JSON.stringify({ sqlSha256: receipt.sql.uncompressedSha256, registrySha256: operationalStateHash(registry) }));
+} finally { key?.fill(0); clearRuntimeMessagingSecrets(env); }
+JS
+```
 
 Ne pas utiliser un `HEAD` mobile ni reprendre une empreinte au hasard. Le registre est sélectionné et épinglé localement : cela ne prouve pas sa fraîcheur hors de l'hôte. Si sa complétude récente est incertaine, ne pas republier les anciens comptes ou conversations sans contrôle opérateur.
 
@@ -72,7 +94,7 @@ Le parcours contrôle la base vide et le SQL applicatif authentifié, importe le
 
 Le résultat conserve la cible **arrêtée et en quarantaine** et retourne `planSha256`. Conserver cette empreinte exacte et le résultat durable. Ni les fichiers/états source, ni l'ancien D1, ni l'autorité ou les états PC ne sont modifiés par cette opération.
 
-Après une interruption, relire le résultat durable et les journaux avant de reprendre. Ne pas relancer un import sur une base désormais remplie pour découvrir ce qui a réussi ; ne pas effacer la progression ou recréer `job.json` pour masquer une opération incertaine.
+Après une interruption, relire le résultat durable et les journaux avant de reprendre. `restore` reprend uniquement sa propre allocation enregistrée ; après réconciliation, il ne réimporte plus le SQL. Une coupure avant l’enregistrement de l’allocation laisse le dossier préservé et impose un contrôle opérateur. Ne pas relancer un import sur une base désormais remplie pour découvrir ce qui a réussi ; ne pas effacer la progression ou recréer `job.json` pour masquer une opération incertaine.
 
 ## 3. Ouvrir explicitement la cible vérifiée
 
@@ -84,7 +106,7 @@ node scripts/manual-restore.mjs open --operator-directory /private/operator --co
 
 `open` refait les vérifications sous maintenance. Une dérive du job, du registre, de la cible ou des résultats bloque l'ouverture. Seul le **nouveau marqueur manuel exact** de cette opération peut être retiré dans la même exclusion/drain ; le marqueur historique D1 n'est jamais levé par ce chemin.
 
-La commande lance ensuite le vrai parent quotidien `start-local-closures` sur les configurations et journaux cible. Elle **reste en cours d'exécution** : elle ne se termine pas simplement après avoir affiché une réussite. Ne pas lancer un second parent sur le même port. Pour l'arrêter, utiliser l'arrêt habituel par SIGTERM et attendre sa fin, en conservant les journaux et configurations. Une erreur ne constitue pas une autorisation de retirer le marqueur à la main.
+La commande lance ensuite le vrai parent quotidien `start-local-closures` sur les configurations et journaux cible. Elle **reste en cours d'exécution** : elle ne se termine pas simplement après avoir affiché une réussite. Ne pas lancer un second parent sur le même port. Pour l'arrêter, utiliser l'arrêt habituel par SIGTERM et attendre sa fin, en conservant les journaux et configurations. Une erreur ne constitue pas une autorisation de retirer le marqueur à la main. Un état durable `opening` ou `opened` refuse une nouvelle commande `open` : ne pas adopter un processus dont l’arrêt n’est pas établi. Après une ouverture réussie et un arrêt propre, le redémarrage habituel utilise `start-local-closures`, avec les mêmes configurations et opérations cible, sans réimport.
 
 ## Portée de la récupération
 

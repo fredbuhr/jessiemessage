@@ -33,9 +33,13 @@ Le code **0.77.0** réutilise le moteur d’effacement, les journaux et le super
 
 Le service courant reste **0.76.0**, fermetures désactivées. Aucun réappariement, import D1 ou changement du marqueur D1 n’a été effectué.
 
-### S2b — Raccord opérateur et réouverture explicite — suivant
+### S2b — Raccord opérateur et réouverture explicite — clos
 
-Exposer une procédure opérateur exécutable pour composer le moteur manuel avec la vraie maintenance, puis vérifier et publier explicitement la cible restaurée. Exercer ce parcours complet sur données synthétiques avant d’activer les fermetures sur le service courant. Garder tous les refus actuels et ne pas supprimer un marqueur pour contourner le démarrage.
+**0.78.0**, [PR #100](https://github.com/fredbuhr/jessiemessage/pull/100), merge `b724400689131449c2ad0bcea7ec92559943f692`, source `61ca15f669bfc34a2ff4840771a42a32ba41a665`. L'outil unique `manual-restore.mjs` réutilise import natif, médias, quarantaine, moteur manuel et parent quotidien. Cible neuve vide avant import ; journal opérateur CAS unique ; aucune réimportation après réconciliation. Confirmation explicite du plan, vérifications fraîches et réel IPC/ready avant succès ; perte d'accusé ou de reçu impose arrêt/drain et hold cible restauré. Réglages PC et préparation privée sélectionnée conservés ; originaux/D1 intacts. [Guide](manual-restore-operator-078.md), [preuves](verification-proofs/jm078-verification.json).
+
+Candidat : cinq contrôles réussis, **436/436 sur chaque MariaDB sans omission**, Chrome 157, HTTPS 1, suite générale 2 992 réussis / 35 wrappers SQL ignorés / zéro échec, syntaxe 557. Vrai dump/import et enfant applicatif dans l'exercice, CLI exercé jusqu'à `opened`, arrêt et redémarrage normaux vérifiés. Arbre main identique ; CI main 39338761055 également réussie, cinq contrôles et mêmes résultats sans omission SQL. Le correctif du premier candidat change seulement une assertion d'ordre des champs JSON du test.
+
+**Service toujours 0.76.0, fermetures désactivées.** Préservation et HTTPS revérifiés le 19 octobre à 22:58:22 UTC, sans déploiement ni manipulation PC/D1. Aucun nouveau lot de sauvegarde requis : suite S3 puis déploiement final et activation locale.
 
 Les exigences du lot S2 complet restent :
 
@@ -49,7 +53,7 @@ Les exigences du lot S2 complet restent :
 - Préserver les acquis D1 et son marqueur. Ne pas réimporter pour répéter la preuve ; le nouveau parcours doit gérer explicitement l'état restauré avant toute levée de quarantaine.
 - Vérifier avec données synthétiques fermeture normale, interruption et reprise, redémarrage après fermeture, ancienne archive contenant un compte fermé, registre manquant, photos et relations entre comptes.
 
-**Critère de fin :** fermeture locale et exercice de restauration manuelle vérifiés, sans données clientes effacées pour tester et sans prétendre avoir restauré la production.
+**Critère de fin :** fermeture locale et exercice complet de restauration manuelle vérifiés sur données synthétiques ; CI candidat et main acquises. Aucune donnée cliente effacée et aucune restauration de production revendiquée.
 
 ## S3 — Terminer les parcours utiles et la recette de la messagerie
 
@@ -59,4 +63,4 @@ Les exigences du lot S2 complet restent :
 - Expliquer les limites utiles : interruption pendant restauration ; messages postérieurs à la capture choisie potentiellement perdus ; copie externe parfois plus ancienne lorsque le PC reste éteint. Ne pas promettre vingt-quatre heures de perte maximale sans copie externe assez récente.
 - Recette finale sur deux appareils, guide court, état déployé exact et repli cohérents.
 
-**Prochaine action : S2b. S2a est clos, fusionné/vérifié et non déployé.** Ne pas relancer D2, un achat VPS, une demande de budget ou une initialisation PC comme préalable à cette V1.
+**Prochaine action : S3. S2b est clos, fusionné/vérifié en CI candidat et main, non déployé.** Ne pas relancer D2, un achat VPS, une demande de budget ou une initialisation PC comme préalable à cette V1.

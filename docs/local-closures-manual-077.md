@@ -30,9 +30,9 @@ Les comptes fermés depuis la capture sont traités sur la cible avec de nouveau
 
 Avant toute mutation, un marqueur bloquant est posé dans le futur dossier de journaux cible. Le résultat reste **en quarantaine, sans démarrage et avec réouverture manuelle requise**. Le marqueur de quarantaine d'origine est conservé. Le D1 réel et son marqueur ne sont pas modifiés.
 
-## Suite précise S2b
+## Suite S2b livrée en 0.78
 
-Raccorder ce moteur à une procédure opérateur exécutable, puis la publication explicite de la cible après une nouvelle vérification sous maintenance. Tester cette réouverture avec des données synthétiques avant d'activer les fermetures sur le service courant. Ne pas supprimer un marqueur pour faire passer le démarrage et ne pas réinitialiser le PC ou l'ancien témoin.
+Le [parcours opérateur 0.78](manual-restore-operator-078.md) raccorde ce moteur à l’import isolé et à la publication explicite après une nouvelle vérification sous maintenance. Les [preuves S2b](verification-proofs/jm078-verification.json) distinguent exercice synthétique et déploiement réel. Ne pas supprimer un marqueur pour faire passer le démarrage et ne pas réinitialiser le PC ou l'ancien témoin.
 
 ## Vérifications
 

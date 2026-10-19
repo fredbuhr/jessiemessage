@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "release": "0.78.0",
+  "scope": "S2b: executable manual operator, explicit rechecked publication and real drain/restart of an isolated restored application",
+  "status": "merged_verified_not_deployed",
+  "source": {
+    "commit": "61ca15f669bfc34a2ff4840771a42a32ba41a665",
+    "tree": "118e45dee79205294fd663c91a4a7d80e940d8e9",
+    "pr": "https://github.com/fredbuhr/jessiemessage/pull/100",
+    "merge": "b724400689131449c2ad0bcea7ec92559943f692"
+  },
+  "implementation": {
+    "operatorCommands": [
+      "check",
+      "restore",
+      "open"
+    ],
+    "singlePrivateOperatorJobAndCasState": true,
+    "pinnedSourceConfigurationsAndRecentRegistry": true,
+    "newSqlTargetInspectedEmptyBeforeAllocation": true,
+    "nativeApplicationImportReused": true,
+    "separateCopiedMediaRootRequired": true,
+    "noReimportAfterReconciliation": true,
+    "explicitPlanConfirmationRequired": true,
+    "freshReconciliationUnderMaintenance": true,
+    "defaultReconcilerRetainsTargetHold": true,
+    "explicitPublisherRemovesOnlyExactNewManualHold": true,
+    "originalQuarantineRetained": true,
+    "selectedPrivacyPreparationPreserved": true,
+    "pcCopySettingsPreserved": true,
+    "actualIpcAndHttpReadinessRequired": true,
+    "realChildDrainAndCaptureExclusion": true,
+    "uncertainOpeningRequiresOperatorReview": true,
+    "ordinaryDailyParentReused": true,
+    "freshPcWitnessRequired": false,
+    "historicalWitnessedContractsUnchanged": true,
+    "externalRegistryContinuityVerified": false,
+    "completeDatabase": false
+  },
+  "ci": {
+    "candidate": {
+      "run": 39338160483,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39338160483",
+      "jobs": "5/5 success",
+      "general": {
+        "tests": 3027,
+        "passed": 2992,
+        "failed": 0,
+        "sqlWrappersSkipped": 35
+      },
+      "mariadb10_11": {
+        "passed": 436,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 436,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": {
+        "passed": 157,
+        "failed": 0,
+        "skipped": 0
+      },
+      "httpsAuthentication": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "syntax": 557
+    },
+    "main": {
+      "run": 39338761055,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39338761055",
+      "jobs": "5/5 success",
+      "treeMatchesCandidate": true,
+      "general": {
+        "tests": 3027,
+        "passed": 2992,
+        "failed": 0,
+        "sqlWrappersSkipped": 35
+      },
+      "mariadb10_11": {
+        "passed": 436,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 436,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": {
+        "passed": 157,
+        "failed": 0,
+        "skipped": 0
+      },
+      "httpsAuthentication": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "syntax": 557
+    }
+  },
+  "nativeExercise": {
+    "isolatedDisposableLoopbackDatabasesOnly": true,
+    "realNativeSqlDumpAndImport": true,
+    "thirtyTableImportCompared": true,
+    "sixAnchoredTargetConfigurationFiles": true,
+    "sourceArchiveAndTargetMediaSeparated": true,
+    "closedAccountAbsentAndPeerRetained": true,
+    "oldTargetSessionsRevoked": true,
+    "wrongConfirmationPreservesQuarantines": true,
+    "lostReadyAcknowledgementActuallyDrained": true,
+    "lostCompletedJournalDuringStartupBlocked": true,
+    "exactTargetHoldRestoredAfterFailedOpening": true,
+    "actualConfiguredChildIpcAndHttpReady": true,
+    "anonymousClosuresApiStatus": 401,
+    "sigtermDrainAndOrdinaryLocalRestart": true,
+    "realOperatorCliAllocationThroughOpenedState": true,
+    "operatorStateAndCopySettingsChecked": true,
+    "repeatOpenRefused": true,
+    "sourceDataArchiveAndOriginalQuarantinePreserved": true,
+    "ciTransportAdaptation": "Disposable loopback SQL TLS only; production TLS/client guards unchanged."
+  },
+  "servicePreservation": {
+    "verifiedAt": "2026-10-19T22:58:22.417320+00:00",
+    "release": "0.76.0",
+    "source": "8abd205cc686f9a669511fd9d28b203ee4d4632a",
+    "sourceClean": true,
+    "launcherUnchanged": true,
+    "preservedFiles": 10,
+    "httpsProbesPassed": 4,
+    "httpsStatus": 200,
+    "privateClosuresApiAnonymous": 401,
+    "runtimeRestarted": false,
+    "closuresEnabled": false,
+    "pcActionRequired": false,
+    "d1ImportedAgain": false,
+    "d1QuarantineRemoved": false
+  },
+  "deployment": {
+    "s2bDeployed": false,
+    "serviceRelease": "0.76.0",
+    "closuresEnabled": false,
+    "realAccountErased": false,
+    "productionRestored": false,
+    "newInfrastructureRequired": false
+  },
+  "earlierCandidates": [
+    {
+      "source": "3c9c1e72ca8524a3558038b2c3061f99f8bc8724",
+      "tree": "4fb98ba954cdf3afa6dc31c6b2abd583a279c12f",
+      "run": 39337616018,
+      "result": "native_test_failed_json_member_order_assertion",
+      "eachNative": {
+        "tests": 436,
+        "passed": 435,
+        "failed": 1,
+        "skipped": 0
+      },
+      "fix": "Only the assertion changed: compare canonical JSON values; recipient public key remains compared byte-for-byte. Product unchanged."
+    }
+  ],
+  "limits": [
+    "Operator selects and takes responsibility for a complete recent local closure registry; no off-host freshness guarantee.",
+    "No autonomous recovery guarantee after simultaneous loss of host and uncopied closures.",
+    "Application table coverage only; executable SQL objects excluded and their exhaustive inventory unproven.",
+    "Native operator fixture injects CI transport/context adapters; private context and normal-parent orchestration are separately unit-tested.",
+    "The manual native fixtures do not directly exercise publication with a nonempty privacy-preparation envelope; its authentication, selection and guarded copy are separately checked.",
+    "No real production restoration, account erasure or activation is claimed."
+  ],
+  "remaining": [
+    "S3: final useful messaging acceptance on two devices, retention and monitor, short guide.",
+    "Final validated shared-host deployment and explicit activation of local closures."
+  ]
+}
