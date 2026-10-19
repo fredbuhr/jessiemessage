@@ -9,7 +9,12 @@ const clientCookie = "__Host-jessie_client";
 const clientForm = "return !!document.getElementById('client-login-form') && !document.getElementById('client-login-form').hidden && !document.querySelector('#client-login-form button[type=submit]').disabled";
 async function chatReady(page, role = "client") {
   const path = role === "admin" ? "/admin/messages" : "/messages";
-  await waitUntil(() => page.execute("return location.pathname === arguments[0] && !!document.getElementById('workspace') && !document.getElementById('workspace').hidden", path), "real authenticated messaging workspace", 20000);
+  try {
+    await waitUntil(() => page.execute("return location.pathname === arguments[0] && !!document.getElementById('workspace') && !document.getElementById('workspace').hidden", path), "real authenticated messaging workspace", 20000);
+  } catch (error) {
+    const state = await page.execute("return {path:location.pathname,visibility:document.visibilityState,workspacePresent:!!document.getElementById('workspace'),workspaceHidden:document.getElementById('workspace')?.hidden??null,status:document.getElementById('session-status')?.textContent.slice(0,180)??null}");
+    throw new Error(`${error.message}; fixture UI: ${JSON.stringify(state)}`);
+  }
 }
 async function loginClient(page, fixture, { notification = null } = {}) {
   await page.navigate(notification ? `/messages#notification=${notification}` : "/access");

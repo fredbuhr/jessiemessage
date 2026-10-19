@@ -295,6 +295,8 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
           VALUES (?, 'client', 'active', 'Synthetic browser client', ?, ?, ?, ?, ?, ?)`, [clientId, client.email, await hashPassword(client.password), at, at, at, at]);
         await connection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [clientId, at]);
         await consumeSyntheticInvitation(connection, clientId, now);
+        // Manual approval also creates the sole client/admin conversation.
+        await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [randomBytes(16), clientId, adminId, at]);
         await connection.commit();
       } catch (error) { await connection.rollback(); throw error; }
     }
