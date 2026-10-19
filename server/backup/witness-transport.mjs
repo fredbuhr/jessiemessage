@@ -103,5 +103,6 @@ export function createWitnessTransport({ destinationId, pairedAt, pairingFingerp
     return true;
   }
   function close() { closed = true; job?.finish(null); wake(); for (const request of transfers) request.destroy(); }
+  Object.defineProperty(handler, "close", { value: close });
   return Object.freeze({ exchange, handler, close });
 }

@@ -59,6 +59,7 @@ export function createParentGateway({ port, childPort, control, onFailure = () =
   function close() {
     if (closing) return closing;
     closed = true;
+    if (typeof control.close === "function") control.close();
     for (const request of pending) request.destroy();
     closing = new Promise(resolve => { server.close(() => resolve()); server.closeAllConnections(); });
     return closing;

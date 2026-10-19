@@ -96,4 +96,6 @@ test("parent channel and authenticated core proof survive an actual stopped chil
   }
   assert.equal((await proof).witnessRevision, 1);
   assert.equal((await wire(port, "/api/backup-copy/witness/poll")).value.pending, false);
+  const pending = transport.exchange({ version: 1, registryId: f.registryId, challenge: "f".repeat(64), snapshot: null });
+  const cancelled = assert.rejects(pending, { code: "ERASURE_WITNESS_TRANSPORT" }); await gateway.close(); await cancelled;
 });
