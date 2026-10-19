@@ -1,0 +1,304 @@
+{
+  "version": 1,
+  "release": "0.68.0",
+  "step": 4,
+  "totalSteps": 6,
+  "scope": "authenticated_original_witness_contract_code_only_and_resumption_audit",
+  "sourceHead": "ca6c3b35d3d44905313ab934eee82f2a92facb8a",
+  "sourceTree": "8a4e3dc25d40de4df4612bae8cdf6981ea70c4b2",
+  "pullRequest": 84,
+  "pullRequestUrl": "https://github.com/fredbuhr/jessiemessage/pull/84",
+  "mergeCommit": "29c51e2bd5c3b495fa838bcf937a3bce16c943a5",
+  "mergeTree": "8a4e3dc25d40de4df4612bae8cdf6981ea70c4b2",
+  "releaseRef": "release/0.68.0",
+  "ci": {
+    "source": {
+      "runId": 39242648869,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "ca6c3b35d3d44905313ab934eee82f2a92facb8a",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39242648869",
+      "completedAt": "2026-10-19T11:12:14Z",
+      "jobs": [
+        {
+          "id": 118026932842,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118026933053,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118026933102,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118026933114,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118026933223,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "pullRequest": {
+      "runId": 39242691753,
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "ca6c3b35d3d44905313ab934eee82f2a92facb8a",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39242691753",
+      "completedAt": "2026-10-19T11:12:34Z",
+      "jobs": [
+        {
+          "id": 118027064931,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118027065126,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118027065240,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118027065362,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118027065377,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "main": {
+      "runId": 39243129579,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "29c51e2bd5c3b495fa838bcf937a3bce16c943a5",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39243129579",
+      "completedAt": "2026-10-19T11:16:08Z",
+      "jobs": [
+        {
+          "id": 118028488551,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118028488841,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118028488860,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118028489064,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 118028489217,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "general": {
+      "tests": 2710,
+      "passed": 2682,
+      "skipped": 28,
+      "failed": 0
+    },
+    "mariaDb1011": {
+      "tests": 407,
+      "passed": 407,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariaDb114": {
+      "tests": 407,
+      "passed": 407,
+      "failed": 0,
+      "skipped": 0
+    },
+    "chrome": {
+      "tests": 157,
+      "passed": 157,
+      "failed": 0,
+      "skipped": 0
+    },
+    "httpsMfa": {
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "genesis": {
+      "tests": 18,
+      "passedInLinuxCi": 18,
+      "nativeAnchorsVerified": true
+    },
+    "syntaxSources": 506,
+    "buildPassed": true
+  },
+  "local": {
+    "tests": 2710,
+    "passed": 2521,
+    "skipped": 189,
+    "failed": 0,
+    "newGenesisTests": 18,
+    "newGenesisPassed": 16,
+    "newGenesisSkipped": 2,
+    "nativeProcfsAvailable": false,
+    "buildPassed": true,
+    "syntaxSources": 506
+  },
+  "genesis": {
+    "operatorOnlyComponent": true,
+    "cliOrHttpBindingInstalled": false,
+    "requiresOriginalPhysicalSourceIdentity": true,
+    "requiresQuiescentProducers": true,
+    "holdsSharedCaptureLock": true,
+    "authenticatesCompleteEmptyRegistry": true,
+    "operationalRestoreQuarantineBlocks": true,
+    "pinsExactExistingPcCapability": true,
+    "immutableExclusivePrivatePublication": true,
+    "preservesUncertainPublication": true,
+    "missingReadNeverInitializes": true,
+    "hmacSha256WithDistinctHkdfPurpose": true,
+    "requiresIndependentLauncherHashPin": true,
+    "notAnExternalWitnessAcknowledgement": true,
+    "realNtfsInitializationPerformed": false
+  },
+  "observedAuditProof": "../activation-proofs/reprise-audit-20261019.json",
+  "production": {
+    "hostingChangedThisLot": false,
+    "deployed": false,
+    "activeRelease": "0.65.0",
+    "activeHead": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+    "activeTree": "51717124bf15df3845a97e4f675c8549d59715c2",
+    "realClosuresEnabled": false,
+    "genesisContractInstalled": false,
+    "independentWitnessRoundTripObserved": false,
+    "personalCurrentDecryptionConfirmed": false,
+    "qualifiedSqlInspectionCompleted": false,
+    "currentIsolatedNativeRestoreCompleted": false,
+    "pcPairingChanged": false,
+    "realMailPushCampaignOrAccountActionPerformed": false
+  },
+  "windows": {
+    "changed": false,
+    "rerunThisLot": false,
+    "previousEvidence": "jm067-verification.json"
+  },
+  "remaining": [
+    "Operator binding that proves original provenance, actually quiesces producers and pins the contract outside restorable operational files.",
+    "Explicit authenticated initialization of the existing paired PC and a real independent witness round trip.",
+    "Managed parent/startup/recovery gate, with an explicit availability policy while the personal PC is off.",
+    "Controlled source/target reconciliation preserving original newer erasure receipts.",
+    "Current personal decryption confirmation, actual isolated native restore and qualified SQL inspection.",
+    "Independent external monitoring and final targeted personal acceptance in steps 5 and 6."
+  ],
+  "decodedJobEvidence": {
+    "118026932842": {
+      "tests": 2710,
+      "passed": 2682,
+      "failed": 0,
+      "skipped": 28
+    },
+    "118026933053": {
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "118026933102": {
+      "tests": 157,
+      "passed": 157,
+      "failed": 0,
+      "skipped": 0
+    },
+    "118026933114": {
+      "tests": 407,
+      "passed": 407,
+      "failed": 0,
+      "skipped": 0
+    },
+    "118026933223": {
+      "tests": 407,
+      "passed": 407,
+      "failed": 0,
+      "skipped": 0
+    },
+    "118027065377": {
+      "tests": 2710,
+      "passed": 2682,
+      "failed": 0,
+      "skipped": 28
+    },
+    "118028488551": {
+      "tests": 157,
+      "passed": 157,
+      "failed": 0,
+      "skipped": 0
+    },
+    "118028488841": {
+      "tests": 2710,
+      "passed": 2682,
+      "failed": 0,
+      "skipped": 28
+    },
+    "118028488860": {
+      "tests": 407,
+      "passed": 407,
+      "failed": 0,
+      "skipped": 0
+    },
+    "118028489064": {
+      "tests": 407,
+      "passed": 407,
+      "failed": 0,
+      "skipped": 0
+    },
+    "118028489217": {
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}

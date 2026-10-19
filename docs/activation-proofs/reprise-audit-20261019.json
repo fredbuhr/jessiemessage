@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "type": "jessiemessage_resumption_audit",
+  "date": "2026-10-19",
+  "resumedDiscussion": "Audit et reprise JessieMessage",
+  "step": 4,
+  "totalSteps": 6,
+  "recoveredSource": {
+    "head": "6b6cac2f7107b3237b71de8293e5938af316dc85",
+    "lastRecordedRelease": "0.67.0",
+    "lastSourceHead": "745a4beb00f61b84a30230a0ce80659484122f05",
+    "lastSourceTree": "cdd92048b9efb0e22eed6b1916f9867eea15b0ab",
+    "lastPullRequest": 83,
+    "conversationSearchAvailable": false,
+    "basis": "versioned handover, Git history, successful CI API reads and current hosting observations"
+  },
+  "activeRuntime": {
+    "release": "0.65.0",
+    "head": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+    "tree": "51717124bf15df3845a97e4f675c8549d59715c2",
+    "gitClean": true,
+    "launcherSha256": "8ac14501e02220a50bf004cabb3c9fa2ca260f0d90d4bd98b5cc73b8fc1169c3",
+    "launcherMatchedPreviousProof": true,
+    "managerChanged": false,
+    "restartedDuringAudit": false
+  },
+  "backup": {
+    "freshnessCheckedAt": 1792407443145,
+    "status": "current",
+    "code": "OK",
+    "lastAttemptStatus": "succeeded",
+    "lastAttemptCode": "OK",
+    "lastAttemptAt": 1792386945745,
+    "lastSuccessAt": 1792386952154,
+    "catalogCheckedAt": "2026-10-19T10:59:24.266Z",
+    "archiveCount": 4,
+    "scheduleEnabled": true,
+    "dailyUtc": "05:15",
+    "pcEnabled": true,
+    "pcPaired": true,
+    "currentPcReceiptMatchesArchiveIdBytesAndSha256": true,
+    "currentPcPresenceInferred": false,
+    "decryptionStatus": "not_checked",
+    "erasureJournals": 0,
+    "operationalRestoreMarkerPresent": false
+  },
+  "https": {
+    "checkedAt": "2026-10-19T11:06:52.217Z",
+    "checks": 63,
+    "passed": 63,
+    "failed": 0,
+    "publicSourceHashes": 44,
+    "primaryAndRecipeOrigins": true,
+    "tlsVerified": true,
+    "redirectsFollowed": false,
+    "authenticated": false,
+    "adminMessagesRedirect": {
+      "status": 303,
+      "location": "/admin/login"
+    },
+    "serverAndConfigurationFiles": 404,
+    "privateCachePolicyVerified": true,
+    "sessionGrantingCookiesAccepted": false,
+    "anonymousApiResponses": {
+      "primary": {
+        "crm": 401,
+        "backups": 401,
+        "privacy": 401,
+        "closures": 401
+      },
+      "recipe": {
+        "crm": 401,
+        "backups": 404,
+        "privacy": 404,
+        "closures": 404
+      }
+    }
+  },
+  "baselineLocal": {
+    "tests": 2692,
+    "passed": 2504,
+    "failed": 1,
+    "skipped": 187,
+    "failure": "managed-runtime declared-oversize readiness case; real cooperative child exceeded the test-only 80 ms stop allowance under full-suite load",
+    "isolatedManagedRuntimeTests": 23,
+    "isolatedManagedRuntimePassed": 23,
+    "correction": "400 ms cooperative test grace; forced-stop scenario remains explicitly 80 ms; production timeouts unchanged"
+  },
+  "continuedLocal": {
+    "release": "0.68.0",
+    "sourceHead": "ca6c3b35d3d44905313ab934eee82f2a92facb8a",
+    "sourceTree": "8a4e3dc25d40de4df4612bae8cdf6981ea70c4b2",
+    "tests": 2710,
+    "passed": 2521,
+    "failed": 0,
+    "skipped": 189,
+    "syntaxSources": 506,
+    "buildPassed": true,
+    "nativeProcfsAvailableLocally": false,
+    "newGenesisCases": 18,
+    "newGenesisCasesPassedLocally": 16,
+    "newGenesisNativeCasesSkippedLocally": 2
+  },
+  "exclusions": {
+    "realAccountErased": false,
+    "realMessageSent": false,
+    "testMailOrPushSent": false,
+    "operatorGenesisInstalled": false,
+    "personalPcWitnessInitialized": false,
+    "offHostWitnessProofObserved": false,
+    "personalCurrentDecryptionConfirmed": false,
+    "qualifiedSqlInspectionCompleted": false,
+    "currentIsolatedNativeRestoreCompleted": false,
+    "keysOrPairingChanged": false
+  },
+  "managerReadback": {
+    "state": "Actif",
+    "node": 24,
+    "port": 3000,
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-operational-backup-065-f53d6982.sh",
+    "buildPinsHeadTreeAndCleanCheckout": true,
+    "lastModifiedLocal": "2026-10-19 01:07",
+    "timezone": "Europe/Paris",
+    "precision": "minute",
+    "settingsChanged": false,
+    "monitorSampleCheckedAt": 1792408619925,
+    "monitorState": "current",
+    "monitorCode": "OK",
+    "activeIncident": false,
+    "pendingAlerts": 0
+  }
+}

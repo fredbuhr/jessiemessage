@@ -22,7 +22,7 @@ Le composant sait vérifier une identité originale fournie par l’opérateur ;
 
 ## Vérification
 
-Dix-huit cas couvrent notamment création/rerelecture réelles, verrou commun, course de deux préparations, registre déjà utilisé, quarantaine, remplacement de racine, altération du contrat, substitution de capacité à date identique, annulation, changement pendant la préparation et publication incertaine conservée. Seize passent localement ; deux contrôles natifs sont réservés à Linux CI faute de procfs dans le bac à sable. La CI doit réellement exécuter les ancrages protégés avant de considérer ces deux contrôles acquis.
+Dix-huit cas couvrent notamment création/rerelecture réelles, verrou commun, course de deux préparations, registre déjà utilisé, quarantaine, remplacement de racine, altération du contrat, substitution de capacité à date identique, annulation, changement pendant la préparation et publication incertaine conservée. Seize passent localement ; deux contrôles natifs sont ignorés localement faute de procfs. Les **dix-huit passent en Linux CI**, ancrages protégés réels inclus, dans les suites source, PR et main. Voir les [preuves exactes](verification-proofs/jm068-verification.json) ; cette preuve native du composant n’est pas une initialisation du PC personnel.
 
 L’audit de reprise a aussi isolé un test de processus trop sensible à la charge : son délai d’arrêt coopératif était de 80 ms. Le banc lui accorde désormais 400 ms ; le scénario d’arrêt forcé conserve explicitement 80 ms. Aucun délai de production n’est modifié. Le refus d’une readiness invalide et l’exigence d’une sortie réelle zéro restent testés.
 
