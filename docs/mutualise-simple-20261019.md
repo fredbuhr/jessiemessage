@@ -6,7 +6,7 @@
 
 Conserver le mutualisé, le runtime Node/MariaDB, les fonctions de messagerie, la sauvegarde applicative chiffrée et le copieur PC déjà fonctionnels. Prévoir une restauration manuelle en maintenance, avec contrôle des comptes fermés avant réouverture. Simplifier l'administration et découpler l'observateur indépendant du fonctionnement quotidien.
 
-Cette conclusion est un choix de portée appuyé sur le code et les essais existants, pas l'affirmation que la composition simplifiée est déjà déployée. Le service reste en 0.72.0, en observation, avec les fermetures désactivées. Le [plan S1–S3](PLAN-IMPLEMENTATION.md) décrit les adaptations restantes.
+Le lot S1 est désormais **déployé et vérifié en 0.76.0** : démarrage quotidien sans observateur indépendant et administration simplifiée. Les fermetures restent désactivées ; leur traitement local et la restauration manuelle restent au lot S2. Le [plan courant](PLAN-IMPLEMENTATION.md) et les [preuves S1](verification-proofs/jm076-verification.json) distinguent ces états.
 
 ## Ce que les vérifications établissent déjà
 
@@ -50,4 +50,4 @@ Les anciennes archives peuvent contenir des comptes supprimés depuis. Un regist
 
 Conserver maintenance réelle, transactions, reprise des intentions, intégrité des relations/photos, révocation des sessions et contrôle avant réouverture. Ne jamais remplacer les preuves manquantes de l'ancien mécanisme par `verified:true`, effacer le marqueur D1 ou réinitialiser le PC pour débloquer la nouvelle portée.
 
-Cette recherche n'a modifié ni la production, ni SQL, ni les clés, ni les copies PC ; aucun serveur n'a été commandé. Les changements présents sont documentaires.
+La recherche initiale n'avait modifié ni la production, ni SQL, ni les clés, ni les copies PC. Le lot S1 a ensuite été déployé : réutilisation du démarrage existant et simplification de l'administration, sans serveur commandé, nouvel abonnement, migration SQL ou nouvelle manipulation du PC.

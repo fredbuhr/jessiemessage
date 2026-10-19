@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "release": "0.76.0",
+  "scope": "S1: simple daily startup and backup administration on existing shared hosting",
+  "status": "merged_deployed_verified",
+  "source": {
+    "commit": "8abd205cc686f9a669511fd9d28b203ee4d4632a",
+    "tree": "400e798cc51434d548690d4821cae665f5d14716",
+    "merge": "014e8825410dd0694653cf9f78ccf44b794191db",
+    "pr": "https://github.com/fredbuhr/jessiemessage/pull/98"
+  },
+  "implementation": {
+    "existingStartModeReused": true,
+    "newRuntimeAbstraction": false,
+    "witnessComposed": false,
+    "closuresEnabled": false,
+    "encryptedCaptureAndPcCopierRetained": true,
+    "monitorAndAlertsRetained": true,
+    "localStartupGuardsRetained": true,
+    "backupDatesAndPcFolderHelpVisible": true,
+    "pausedDestinationKeepsMatchingReceiptDate": true,
+    "technicalToolsOptional": true,
+    "updateInstructions": "Mettre-a-jour.cmd"
+  },
+  "ci": {
+    "candidate": {
+      "run": 39326912066,
+      "jobs": "5/5 success"
+    },
+    "main": {
+      "run": 39327602706,
+      "jobs": "5/5 success",
+      "treeMatchesCandidate": true,
+      "general": {
+        "tests": 2941,
+        "passed": 2910,
+        "failed": 0,
+        "sqlWrappersSkipped": 31
+      },
+      "mariadb10_11": {
+        "passed": 418,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 418,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": {
+        "passed": 157,
+        "failed": 0,
+        "skipped": 0
+      },
+      "httpsAuthentication": "1/1 success",
+      "syntax": "543 sources"
+    }
+  },
+  "deployment": {
+    "verifiedAt": "2026-10-19T21:39:01.988174+00:00",
+    "checkout": "/srv/customer/jessiemessage-operator/simple-backups-076-8abd205c",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-simple-backups-076-8abd205c.sh",
+    "launcherMode": "0700",
+    "launcherSha256": "81302008fd2ace8a1a4450084ea8478aaf567684d225607b994401240f390482",
+    "log": "/srv/customer/jessiemessage-private/jm076-simple-backups.log",
+    "mode": "start",
+    "publicPort": 3000,
+    "sourceClean": true,
+    "dependenciesReinstalled": false,
+    "preflightStartedApplication": false,
+    "preflightStartedBackup": false,
+    "runtimeStartupReportsVerified": true,
+    "sshProcessInspection": "not_visible; no PID verification claimed",
+    "httpsHealthAndReady": "200 with expected bodies on both retained origins",
+    "privateBackupsApiAnonymous": 401,
+    "monitor": "current / OK",
+    "configurationFilesUnchanged": 6,
+    "authorityFilesUnchanged": 3,
+    "d1MarkerUnchanged": true,
+    "d1QuarantineRetained": true,
+    "pcActionRequired": false,
+    "sqlMigrationPerformed": false,
+    "nativeRestorePerformed": false,
+    "rollback": "/srv/customer/jessiemessage-private/manager-before-simple-backups-076.json",
+    "checkpoint": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
+    "checkpointSections": [
+      "activeService",
+      "developmentSimplification.s1"
+    ],
+    "authenticatedLiveUiViewed": false,
+    "uiValidation": "synthetic Chrome journeys; live cloud browser requires administrator login",
+    "managerBuildDisplayedAtParis": "2026-10-19 23:34",
+    "managerBuildStatus": "succeeded"
+  },
+  "remaining": [
+    "S2: local resumable closure composition and manual recovery",
+    "S3: remaining everyday journeys and final acceptance"
+  ],
+  "limits": [
+    "No autonomous host-loss recovery guarantee",
+    "Real account closures remain disabled",
+    "Historical witness files and PC state preserved; old Unix/PC recovery service inactive",
+    "No new personal decryption or native restore claimed by S1"
+  ]
+}

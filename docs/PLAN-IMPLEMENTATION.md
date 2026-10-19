@@ -8,20 +8,20 @@ V1 : messagerie privée, sauvegarde applicative chiffrée, copie PC existante et
 
 Les anciens contrats, gardes, preuves C1–C5, clés et états PC sont conservés. Aucun refus n'est transformé en succès en supprimant un marqueur ou en inventant une qualification SQL. L'[ancien plan complet](https://github.com/fredbuhr/jessiemessage/blob/6ef81692e01220cd3fd1d41a38c1b1d87568984d/docs/PLAN-IMPLEMENTATION.md) reste l'historique de ce périmètre plus exigeant.
 
-Acquis : service 0.72.0 en observation, fermetures désactivées ; copie PC et déchiffrement personnel vérifiés ; D1 importé et vérifié sur le mutualisé, trente tables, six clés et quatre fichiers photo chiffrés. D1 reste en quarantaine et n'est pas une restauration rouverte. Aucune bascule de production dans cette réorientation documentaire.
+Acquis : service **0.76.0 déployé/vérifié**, démarrage simple sans observateur, fermetures désactivées ; copie PC et déchiffrement personnel conservés ; D1 importé/vérifié sur le mutualisé, trente tables, six clés et quatre fichiers photo chiffrés. D1 reste en quarantaine et n'est pas une restauration rouverte. [Preuves S1](verification-proofs/jm076-verification.json).
 
 Un lot borné à la fois : code, contrôles pertinents, CI, fusion, déploiement et vérification du même résultat si nécessaire. Avant de répéter une opération interrompue, lire son résultat durable. Après chaque résultat, remplacer l'état courant dans REPRISE ; distinguer codé, fusionné, déployé et vérifié. Aucun secret ni contenu client dans Git.
 
-## S1 — Simplifier le fonctionnement quotidien et l'administration
+## S1 — Simplifier le fonctionnement quotidien et l'administration — clos
 
-**Résultat attendu :** la messagerie et sa sauvegarde quotidienne fonctionnent sans observateur indépendant obligatoire ; l'administration indique clairement la dernière capture, la dernière copie PC et les actions utiles.
+**Réalisé en 0.76.0 :** démarrage `start` existant sans observateur indépendant, capture chiffrée/copieur/moniteur/alertes conservés. Le PC reste une destination de copie ; aucune action personnelle supplémentaire n'a été demandée.
 
-- Conserver le superviseur, la capture applicative cohérente, le chiffrement, les clés, la cadence 05:15 UTC, le copieur PC et les alertes existants. Le PC est une destination de copie, pas une présence continue nécessaire à la messagerie. Pas de nouveau raccordement ni d'action GPG personnelle.
-- Le mode `start` sans observateur existe. Le serveur configuré conserve déjà sa barrière locale : intention en attente ou compte réapparu après fermeture bloquent le démarrage, même fermetures désactivées ; un journal terminé et vérifié est accepté. Réutiliser ce contrôle, sans en ajouter un autre. Garder les fermetures désactivées pendant S1. L'observateur courant exige un journal initial vide ; ne pas lui confier une première fermeture réelle.
-- Simplifier la page Sauvegardes autour de l'état, du dossier PC et d'une aide à la récupération. Réserver les contrôles techniques ponctuels aux détails. Réutiliser les outils fonctionnels plutôt que demander de nouvelles preuves déjà acquises.
-- Vérifier sur données synthétiques démarrage et capture avec journal valide non vide, messagerie PC éteint, copie différée et refus du marqueur D1 existant. Déployer ensuite le seul changement borné, avec repli documenté.
+- L'administration montre les dates de sauvegarde et de copie concordante, le raccourci du dossier PC et l'état de suspension. Suspendre conserve la preuve de copie déjà reçue. Changement d'appareil et outils ponctuels sont dans leurs détails ; les instructions de mise à jour indiquent `Mettre-a-jour.cmd`.
+- La barrière locale existante refuse toujours une intention non terminée, un compte réapparu et le marqueur de restauration. Le vrai serveur est disponible avec un journal terminé non vide, sans PC, fermetures désactivées. Aucun nouveau mécanisme de démarrage n'a été ajouté.
+- [PR #98](https://github.com/fredbuhr/jessiemessage/pull/98) fusionnée ; cinq contrôles candidat et cinq main réussis, dont 418 tests sur chaque MariaDB et 157 Chrome. Build normal du Manager réussi (dernière modification affichée : 23:34 Europe/Paris), sans réinstallation des dépendances.
+- À 21:39:01 UTC, lanceur/source propres et épinglés, rapports de démarrage et HTTPS santé/disponibilité sur les deux origines vérifiés. Six configurations, trois fichiers d'autorité et le marqueur D1 sont inchangés. Moniteur `current / OK` ; API privée toujours protégée. Le catalogue de processus SSH ne montre pas les processus Web : la preuve de démarrage utilise le lanceur, les rapports et HTTPS.
 
-**Critère de fin :** composition quotidienne vérifiée et administration compréhensible, sans toucher aux clés, à l'autorité historique ni à la quarantaine D1.
+**Critère de fin acquis. Prochain lot : S2.** Aucun nouveau raccordement, GPG, import D1 ou retrait de quarantaine pour répéter S1.
 
 ## S2 — Composer la fermeture locale et la restauration manuelle
 
@@ -45,4 +45,4 @@ Un lot borné à la fois : code, contrôles pertinents, CI, fusion, déploiement
 - Expliquer les limites utiles : interruption pendant restauration ; messages postérieurs à la capture choisie potentiellement perdus ; copie externe parfois plus ancienne lorsque le PC reste éteint. Ne pas promettre vingt-quatre heures de perte maximale sans copie externe assez récente.
 - Recette finale sur deux appareils, guide court, état déployé exact et repli cohérents.
 
-**Prochaine action : S1.** Ne pas relancer D2, un achat VPS, une demande de budget ou une initialisation PC comme préalable à cette V1.
+**Prochaine action : S2.** Ne pas relancer D2, un achat VPS, une demande de budget ou une initialisation PC comme préalable à cette V1.
