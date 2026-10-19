@@ -10,23 +10,23 @@ Avant le lot, lire REPRISE et contrôler le commit/arbre, les modifications loca
 
 Le bilan distingue toujours **codé / fusionné / déployé / vérifié / en attente du PC**. Les preuves ne contiennent ni secret ni contenu client. Pas de nouveau mécanisme parallèle de déploiement, de journalisation ou de sauvegarde.
 
-## A — Corriger et publier les consignes du kit Windows
+## A — Corriger et publier les consignes du kit Windows — clos
 
-**Résultat :** le kit de mise à jour/activation réutilise le raccordement existant et ne propose pas d'installation ou d'appariement comme première action. Correctif **0.70.1**, non déployé au relevé initial.
+**Résultat acquis le 19 octobre 2026 : 0.70.1 codée, fusionnée, déployée et vérifiée.** Le kit de mise à jour/activation réutilise le raccordement existant ; aucune initialisation personnelle n'est déduite de cette livraison.
 
-- **Préconditions :** confirmer main et runtime 0.70.0 ; conserver la genèse, la permission `ready`, la configuration DPAPI et les marqueurs PC. Vérifier les deux consignes modifiées et leur concordance avec le vrai parcours.
-- **Phases :** terminer le correctif et sa vérification ciblée ; fusionner après CI du commit concerné ; déployer le candidat épinglé puis relire le kit réellement servi. Chaque phase se clôt par un checkpoint.
-- **Validation finale :** textes servis concordants et consignes préservant dossier/configuration/reçus ; service contrôlé, empreintes d'origine inchangées. Aucun raccordement, clé, mail ni initialisation personnelle rejoué. Les commandes natives utilisent l'environnement strict du lanceur, dont `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`.
-- **Reprise :** vérifier PR/CI, source exécutée et kit servi avant toute publication ou redémarrage supplémentaire. Si seul le code est fusionné, conserver « non déployé ».
+- **Fusion et CI :** [PR #90](https://github.com/fredbuhr/jessiemessage/pull/90), merge `bfa77a2559cfd1ab02bd53cb419509e01fa26c7a` ; source `0fd6c30658f3b6434e8833743da564ea84a47878`, arbre `b35ad5ccabbb772c6163a52489b84fa1c3482b18`. Les six jobs main ont réussi : [application](https://github.com/fredbuhr/jessiemessage/actions/runs/39270343447) et [Windows](https://github.com/fredbuhr/jessiemessage/actions/runs/39270343496).
+- **Déploiement :** Manager actif, Build épinglé à cette source, checkout propre et Run `bash /srv/customer/jessiemessage-private/start-primary-witness-observer-0701-0fd6c306.sh` relu. Lanceur et démarrages effectifs confirmés ; `/api/health` et `/api/ready` répondent HTTPS 200. Empreintes du contrat et de la permission inchangées.
+- **Portée de la vérification du kit :** génération et deux tests de composition réussis sur l'hébergement depuis la source déployée ; téléchargement authentifié par l'interface non effectué, la session navigateur étant à reconnecter. Le parcours Windows personnel reste au lot B. Aucun raccordement, clé, mail ni initialisation personnelle rejoué.
+- **Reprise :** conserver cette source et les états existants ; ne pas republier ni redémarrer pour répéter un résultat déjà établi. Les commandes natives gardent l'environnement strict, dont `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`.
 
-**Prochaine action technique : publier, valider puis déployer ce correctif des consignes avant de demander l'action PC.** Aucun autre lot ne doit masquer cet objectif.
+**Prochaine action : lot B, sur le PC habituel, Administration → Sauvegardes → Mettre à jour le PC → extraire tout le ZIP → ouvrir `Activer-le-temoin.cmd`.** Ce lanceur installe lui-même la mise à jour ; ne pas utiliser « Raccorder Windows » pour cette étape. L'attente de ce constat personnel n'est pas un échec du service.
 
 ## B — Acquérir les preuves personnelles manquantes
 
 **Résultat :** trois preuves séparées pour le PC existant : initialisation locale, aller-retour indépendant frais accepté par le service et déchiffrement de l'archive courante. La copie chiffrée par reçu reste une quatrième preuve déjà acquise à sa date.
 
 - **Préconditions :** lot A déployé/vérifié ; PC habituel et configuration existante conservés. Lire l'état serveur et, après tout essai incertain, les marqueurs PC avant de reprendre.
-- **Phases :** action explicite du kit corrigé sur le PC ; observation fraîche du serveur/identité du registre ; vérification locale `Verifier.cmd` de l'archive courante avec le trousseau existant. Ce sont des constats séparés, jamais une réussite déduite d'une autre.
+- **Phases :** action PC indiquée ci-dessus et constat de la fenêtre « Témoin initialisé sur ce PC » ; observation fraîche du serveur/identité du registre ; vérification locale `Verifier.cmd` de l'archive courante avec le trousseau existant. Ce sont des constats séparés, jamais une réussite déduite d'une autre.
 - **Validation finale :** `TEMOIN_INITIALISE` local consigné sans secret, échange indépendant accepté et daté, archive courante identifiée par taille/empreinte et résultat `DECHIFFREMENT_VERIFIE`. Une attente PC reste « en attente », pas un échec du service.
 - **Reprise :** ne jamais réinitialiser permission, témoin ou appariement après une coupure ; vérifier `ready`/`spent`, tentative et marqueurs durables. Une réponse inconnue exige un diagnostic de récupération.
 
@@ -74,3 +74,5 @@ Le bilan distingue toujours **codé / fusionné / déployé / vérifié / en att
 - **Phases :** sessions simultanées et conflit de fiche ; ouverture notification vers le bon message et conversation ; parcours photos et export ; première diffusion personnelle ciblée lorsqu'elle est explicitement demandée ; diagnostic et repli documentaire.
 - **Validation finale :** aucun doublon/perte de brouillon ou déconnexion imprévue observé, message de diffusion individuel conforme, état de sauvegarde et récupération lisible ; code, runtime, CI, guide et liste des limites concordants.
 - **Reprise :** ne répéter que le parcours échoué ou non constaté. Publier le bilan des critères clos et ouverts ; les connexions directes à Drive et fonctions de confort restent une phase ultérieure.
+
+Amélioration ultérieure facultative : clarifier le message d'échec de `Start-JmBackup` en mode réglages, qui évoque encore un « nouveau kit ». Il ne réapparie rien automatiquement et n'est pas utilisé par les lanceurs de mise à jour/activation ; ce reliquat ne rouvre pas le lot A.

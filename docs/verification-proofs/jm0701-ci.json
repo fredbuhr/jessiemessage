@@ -1,0 +1,178 @@
+{
+  "sourceAndPullRequest": {
+    "checkedAt": "2026-10-19T14:35:10.466Z",
+    "source": "0fd6c30658f3b6434e8833743da564ea84a47878",
+    "tree": "b35ad5ccabbb772c6163a52489b84fa1c3482b18",
+    "pr": 90,
+    "runs": [
+      {
+        "id": 39269872566,
+        "name": "CI",
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "id": 118119031910,
+            "name": "MariaDB 11.4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118119031928,
+            "name": "Chrome HTTPS authentication with MariaDB",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118119031929,
+            "name": "verify",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118119032100,
+            "name": "MariaDB 10.11",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118119032181,
+            "name": "Chrome keyboard and chat lifecycle",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 39269872551,
+        "name": "Windows backup recovery instructions",
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "id": 118119033530,
+            "name": "Windows PowerShell 5.1 instructions",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 39269818890,
+        "name": "Windows backup recovery instructions",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "id": 118118846368,
+            "name": "Windows PowerShell 5.1 instructions",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 39269818581,
+        "name": "CI",
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "id": 118118845086,
+            "name": "MariaDB 10.11",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118118845437,
+            "name": "verify",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118118845456,
+            "name": "MariaDB 11.4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118118845484,
+            "name": "Chrome HTTPS authentication with MariaDB",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118118845501,
+            "name": "Chrome keyboard and chat lifecycle",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "mergedMain": {
+    "checkedAt": "2026-10-19T14:38:39.091Z",
+    "merge": "bfa77a2559cfd1ab02bd53cb419509e01fa26c7a",
+    "tree": "b35ad5ccabbb772c6163a52489b84fa1c3482b18",
+    "source": "0fd6c30658f3b6434e8833743da564ea84a47878",
+    "runs": [
+      {
+        "id": 39270343496,
+        "name": "Windows backup recovery instructions",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "id": 118120654207,
+            "name": "Windows PowerShell 5.1 instructions",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 39270343447,
+        "name": "CI",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "id": 118120653713,
+            "name": "verify",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118120654196,
+            "name": "MariaDB 10.11",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118120654212,
+            "name": "MariaDB 11.4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118120654294,
+            "name": "Chrome keyboard and chat lifecycle",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 118120654305,
+            "name": "Chrome HTTPS authentication with MariaDB",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  }
+}
