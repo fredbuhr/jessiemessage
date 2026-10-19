@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "release": "0.77.0",
+  "scope": "S2a: explicit local closure owner and quarantined manual restore reconciliation",
+  "status": "merged_verified_not_deployed",
+  "source": {
+    "commit": "7318f4e406f4bec826257a85521d0a259632b750",
+    "tree": "9e083fe6179507a1e317bd3f8f8b166920a60f02",
+    "pr": "https://github.com/fredbuhr/jessiemessage/pull/99",
+    "merge": "3b25b754b441005757e10a8c5743c517ae5c3e51"
+  },
+  "implementation": {
+    "existingErasureEngineReused": true,
+    "ordinaryStartUnchanged": true,
+    "explicitLocalCommands": [
+      "check-local-closures",
+      "start-local-closures"
+    ],
+    "freshPcWitnessRequired": false,
+    "historicalWitnessedContractsUnchanged": true,
+    "realChildDrainAndCaptureExclusion": true,
+    "localStartupAbsenceBarrier": true,
+    "manualRestoreOperatorPinnedRegistryRequired": true,
+    "targetJournalsStartFromRequested": true,
+    "oldSessionsRevoked": true,
+    "targetRemainsQuarantined": true,
+    "automaticReopening": false,
+    "completeDatabase": false
+  },
+  "ci": {
+    "candidate": {
+      "run": 39333535652,
+      "jobs": "5/5 success",
+      "general": {
+        "tests": 2973,
+        "passed": 2940,
+        "failed": 0,
+        "sqlWrappersSkipped": 33
+      },
+      "mariadb10_11": {
+        "passed": 429,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 429,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": {
+        "passed": 157,
+        "failed": 0,
+        "skipped": 0
+      },
+      "httpsAuthentication": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "syntax": 551
+    },
+    "main": {
+      "run": 39334173585,
+      "jobs": "5/5 success",
+      "general": {
+        "tests": 2973,
+        "passed": 2940,
+        "failed": 0,
+        "sqlWrappersSkipped": 33
+      },
+      "mariadb10_11": {
+        "passed": 429,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 429,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": {
+        "passed": 157,
+        "failed": 0,
+        "skipped": 0
+      },
+      "httpsAuthentication": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "syntax": 551,
+      "treeMatchesCandidate": true
+    }
+  },
+  "sharedReadOnlyPreflight": {
+    "verifiedAt": "2026-10-19T22:10:30.197740+00:00",
+    "status": "passed",
+    "scope": "local_application",
+    "pendingClosures": false,
+    "started": false,
+    "erased": false,
+    "externalContinuityVerified": false,
+    "preservedFiles": 10,
+    "erasureJournalsUnchanged": true,
+    "runtimeRestarted": false,
+    "serviceRelease": "0.76.0",
+    "source": "d823471bdf61fb3fe259c0ab85628097a1c1e8a5",
+    "tree": "2816bdf61db06dcab253c4f6c313c5b2e450bc47",
+    "productSourcesMatchFinalCandidate": true,
+    "onlyChangedPath": "tests/manual-restore.integration.test.mjs"
+  },
+  "deployment": {
+    "serviceRelease": "0.76.0",
+    "source": "8abd205cc686f9a669511fd9d28b203ee4d4632a",
+    "s2aDeployed": false,
+    "closuresEnabled": false,
+    "runtimeRestarted": false,
+    "pcActionRequired": false,
+    "d1ImportedAgain": false,
+    "d1QuarantineRemoved": false,
+    "realAccountErased": false
+  },
+  "remaining": [
+    "S2b: executable operator procedure and explicit rechecked publication of an isolated restored target",
+    "Validate S2b with synthetic data before activating real closures",
+    "S3: remaining everyday messaging journeys and final acceptance"
+  ],
+  "limits": [
+    "No autonomous host-loss recovery or off-host registry freshness guarantee",
+    "Operator remains responsible for selecting a complete recent registry",
+    "Manual restore reconciler does not perform the SQL import or publish the target",
+    "Real production restore, closure and authenticated UI activation are not claimed"
+  ],
+  "earlierCandidates": [
+    {
+      "source": "d823471bdf61fb3fe259c0ab85628097a1c1e8a5",
+      "run": 39332847675,
+      "result": "native_failed_wrong_expected_error_code",
+      "nativeTests": 429,
+      "nativePassed": 427,
+      "nativeFailed": 2,
+      "nativeSkipped": 0,
+      "fix": "Only the native test changed: expect neutral boundary and verify retained identity/uncredited capacity."
+    }
+  ],
+  "servicePreservation": {
+    "verifiedAt": "2026-10-19T22:22:05.831836+00:00",
+    "release": "0.76.0",
+    "source": "8abd205cc686f9a669511fd9d28b203ee4d4632a",
+    "launcherUnchanged": true,
+    "sourceClean": true,
+    "preservedFiles": 10,
+    "httpsProbesPassed": 4,
+    "httpsStatus": 200,
+    "privateClosuresApiAnonymous": 401,
+    "runtimeRestarted": false,
+    "closuresEnabled": false
+  }
+}

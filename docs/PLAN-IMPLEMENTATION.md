@@ -1,6 +1,6 @@
 # Plan d'implémentation de JessieMessage
 
-**19 octobre 2026 — étape 4/6.** Direction demandée : terminer la messagerie sur le mutualisé existant, sans nouveau serveur ni abonnement. La proposition VPS et l'attente d'un budget sont retirées. Lire l'[état courant](REPRISE.md) et les [solutions étudiées](mutualise-simple-20261019.md).
+**20 octobre 2026 — étape 4/6.** Direction demandée : terminer la messagerie sur le mutualisé existant, sans nouveau serveur ni abonnement. La proposition VPS et l'attente d'un budget sont retirées. Lire l'[état courant](REPRISE.md) et les [solutions étudiées](mutualise-simple-20261019.md).
 
 ## Portée et acquis
 
@@ -21,9 +21,23 @@ Un lot borné à la fois : code, contrôles pertinents, CI, fusion, déploiement
 - [PR #98](https://github.com/fredbuhr/jessiemessage/pull/98) fusionnée ; cinq contrôles candidat et cinq main réussis, dont 418 tests sur chaque MariaDB et 157 Chrome. Build normal du Manager réussi (dernière modification affichée : 23:34 Europe/Paris), sans réinstallation des dépendances.
 - À 21:39:01 UTC, lanceur/source propres et épinglés, rapports de démarrage et HTTPS santé/disponibilité sur les deux origines vérifiés. Six configurations, trois fichiers d'autorité et le marqueur D1 sont inchangés. Moniteur `current / OK` ; API privée toujours protégée. Le catalogue de processus SSH ne montre pas les processus Web : la preuve de démarrage utilise le lanceur, les rapports et HTTPS.
 
-**Critère de fin acquis. Prochain lot : S2.** Aucun nouveau raccordement, GPG, import D1 ou retrait de quarantaine pour répéter S1.
+**Critère de fin acquis. Suite : S2 ci-dessous.** Aucun nouveau raccordement, GPG, import D1 ou retrait de quarantaine pour répéter S1.
 
 ## S2 — Composer la fermeture locale et la restauration manuelle
+
+### S2a — Composition locale et réconciliation en quarantaine — clos
+
+Le code **0.77.0** réutilise le moteur d’effacement, les journaux et le superviseur existants. Seul `start-local-closures` compose le propriétaire local ; `start` reste inchangé. La preuve locale est distincte du contrat témoin historique. Le moteur de restauration exige un registre récent sélectionné par l’opérateur, crée de nouveaux journaux cible, révoque les sessions et laisse la cible en quarantaine, sans publication implicite. [Parcours](local-closures-manual-077.md), [preuves](verification-proofs/jm077-verification.json).
+
+[PR #99](https://github.com/fredbuhr/jessiemessage/pull/99) fusionnée, source `7318f4e406f4bec826257a85521d0a259632b750`, merge `3b25b754b441005757e10a8c5743c517ae5c3e51`. Cinq contrôles candidat réussis, dont **429/429 sur chaque MariaDB sans test ignoré**, Chrome 157 et authentification HTTPS 1. Suite générale : 2 940 réussis, 33 wrappers SQL ignorés, zéro échec ; syntaxe 551. CI main 39334173585 également réussie (5/5), avec les mêmes résultats et l’arbre identique au candidat. Préflight réel **en lecture seule** réussi le 19 octobre à 22:10:30 UTC, sans redémarrage ni effacement : dix fichiers sensibles/modes et les journaux sont inchangés. La source inspectée était `d823471bdf61fb3fe259c0ab85628097a1c1e8a5` : seul un test natif diffère du candidat final. Ce contrôle ne prouve pas un effacement réel ou une restauration publiée.
+
+Le service courant reste **0.76.0**, fermetures désactivées. Aucun réappariement, import D1 ou changement du marqueur D1 n’a été effectué.
+
+### S2b — Raccord opérateur et réouverture explicite — suivant
+
+Exposer une procédure opérateur exécutable pour composer le moteur manuel avec la vraie maintenance, puis vérifier et publier explicitement la cible restaurée. Exercer ce parcours complet sur données synthétiques avant d’activer les fermetures sur le service courant. Garder tous les refus actuels et ne pas supprimer un marqueur pour contourner le démarrage.
+
+Les exigences du lot S2 complet restent :
 
 **Résultat attendu :** fermer réellement un compte et pouvoir récupérer une sauvegarde avec intervention opérateur, sans confirmation PC à chaque phase.
 
@@ -45,4 +59,4 @@ Un lot borné à la fois : code, contrôles pertinents, CI, fusion, déploiement
 - Expliquer les limites utiles : interruption pendant restauration ; messages postérieurs à la capture choisie potentiellement perdus ; copie externe parfois plus ancienne lorsque le PC reste éteint. Ne pas promettre vingt-quatre heures de perte maximale sans copie externe assez récente.
 - Recette finale sur deux appareils, guide court, état déployé exact et repli cohérents.
 
-**Prochaine action : S2.** Ne pas relancer D2, un achat VPS, une demande de budget ou une initialisation PC comme préalable à cette V1.
+**Prochaine action : S2b. S2a est clos, fusionné/vérifié et non déployé.** Ne pas relancer D2, un achat VPS, une demande de budget ou une initialisation PC comme préalable à cette V1.
