@@ -74,21 +74,32 @@ async function waitForEvent(filename, event) {
   assert.fail(`The real runtime did not emit the synthetic ${event} observation`);
 }
 
-function nativeCli(filename, args, environment, children) {
+function nativeCli(filename, args, environment, children, { longLived = false } = {}) {
   const child = fork(filename, args, { cwd: repository, env: environment, execArgv: [], silent: true });
-  children.push(child); let stdout = "", stderr = "";
+  children.push(child); let stdout = "", stderr = "", timedOut = false;
+  const deadline = longLived ? null : setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, 45000);
   for (const [stream, receive] of [[child.stdout, value => { stdout += value; }], [child.stderr, value => { stderr += value; }]]) stream.on("data", bytes => {
     receive(bytes.toString()); if (stdout.length + stderr.length > 32768) child.kill("SIGKILL");
   });
-  const finished = new Promise((yes, no) => { child.once("error", no); child.once("close", (code, signal) => yes({ code, signal })); });
+  const finished = new Promise((yes, no) => {
+    child.once("error", error => { clearTimeout(deadline); no(error); });
+    child.once("close", (code, signal) => { clearTimeout(deadline); yes({ code, signal }); });
+  });
   const reports = () => stdout.trim().split("\n").filter(Boolean).map(line => { try { return JSON.parse(line); } catch { return null; } }).filter(Boolean);
-  return { child, finished, reports, diagnostic: () => stderr };
+  return { child, finished, reports, diagnostic: () => `${timedOut ? "Synthetic native CLI exceeded its 45-second deadline.\n" : ""}${stderr}` };
+}
+async function stopNativeCli(process) {
+  const kill = setTimeout(() => process.child.kill("SIGKILL"), 10000);
+  try {
+    if (process.child.exitCode === null && process.child.signalCode === null) process.child.kill("SIGTERM");
+    return await process.finished;
+  } finally { clearTimeout(kill); }
 }
 async function waitForReport(process, predicate) {
   const until = performance.now() + 20000;
   while (performance.now() < until) {
     const report = process.reports().find(predicate); if (report) return report;
-    if (process.child.exitCode !== null || process.child.signalCode !== null) assert.fail("The native recovery parent exited before its ready report");
+    if (process.child.exitCode !== null || process.child.signalCode !== null) assert.fail(`The native recovery parent exited before its ready report: ${process.diagnostic()}`);
     await new Promise(done => setTimeout(done, 20));
   }
   assert.fail("The native recovery parent did not report ready");
@@ -490,35 +501,45 @@ finally { process.removeListener('SIGTERM', stop); process.removeListener('SIGIN
       const rejectedSource = path.join(root, "copied-untrusted-operations"); await mkdir(rejectedSource, { mode: 0o700 });
       await writeFile(path.join(rejectedSource, "backup-copy-state.json"), beforeRecoveryPairing, { mode: 0o600, flag: "wx" });
       await writeFile(path.join(rejectedSource, laterFile), completedBytes, { mode: 0o600, flag: "wx" });
+      t.diagnostic("C3 native provenance refusal: started");
       const badProvenance = nativeCli(recoveryDriver, parentArgs("check-witness-recovery", rejectedSource), recoveryEnvironment, recoveryProcesses);
       assert.deepEqual(await badProvenance.finished, { code: 1, signal: null }); assert.deepEqual(badProvenance.reports(), []);
       assert.match(badProvenance.diagnostic(), /^SYNTHETIC_RECOVERY_CLI_REFUSED\n$/);
+      t.diagnostic("C3 native provenance refusal: passed");
 
       for (const localState of ["nonempty", "lost"]) {
         if (localState === "lost") await unlink(path.join(dirs.operations, laterFile));
+        t.diagnostic(`C3 ${localState}: precheck started`);
         const precheck = nativeCli(recoveryDriver, parentArgs("check-witness-recovery"), recoveryEnvironment, recoveryProcesses);
         assert.deepEqual(await precheck.finished, { code: 0, signal: null }, precheck.diagnostic());
         assert.deepEqual(precheck.reports(), [{ version: 1, type: "witness_recovery_precheck", status: "passed", mode: "recovery_only", started: false,
           closuresEnabled: false, externalWitnessConfirmed: false }]);
-        const parent = nativeCli(recoveryDriver, parentArgs("start-witness-recovery"), recoveryEnvironment, recoveryProcesses);
-        const started = await waitForReport(parent, value => value.type === "witness_recovery_parent" && value.status === "started");
-        assert.equal(started.mode, "recovery_only"); assert.equal(started.externalWitnessConfirmed, false); assert.equal(started.closuresEnabled, false);
+        t.diagnostic(`C3 ${localState}: precheck passed; parent starting`);
+        const parent = nativeCli(recoveryDriver, parentArgs("start-witness-recovery"), recoveryEnvironment, recoveryProcesses, { longLived: true });
+        let parentStarted = false;
         const target = path.join(root, `native-recovery-quarantine-${localState}`);
         const nativeArgs = command => args(command).map(value => value === quarantine ? target : value);
         const beforeNativeChallenges = challenges.size;
         try {
+          const started = await waitForReport(parent, value => value.type === "witness_recovery_parent" && value.status === "started");
+          parentStarted = true;
+          assert.equal(started.mode, "recovery_only"); assert.equal(started.externalWitnessConfirmed, false); assert.equal(started.closuresEnabled, false);
+          t.diagnostic(`C3 ${localState}: parent started`);
           for (const route of ["/", "/api/ready", "/api/entry", "/api/auth/login", "/api/admin/closures/clients/" + "a".repeat(32), "/api/backup-copy/witness/enroll"])
             assert.equal((await localRequest(publicPort, route)).status, 503, `recovery-only process must not serve ${route}`);
+          t.diagnostic(`C3 ${localState}: native recovery check started`);
           const check = nativeCli(restoreFilename, nativeArgs("check"), recoveryEnvironment, recoveryProcesses);
           await respondToWitnessRequest({ provisioning: false });
           assert.deepEqual(await check.finished, { code: 0, signal: null }, check.diagnostic());
           const checked = check.reports()[0];
           assert.equal(checked.completedReceipts, 1); assert.equal(checked.externalRegistryContinuityVerified, true);
           assert.equal(checked.sqlRestored, false); assert.equal(checked.started, false); assert.equal(checked.reconciliationRequired, true);
+          t.diagnostic(`C3 ${localState}: native recovery check passed; restore started`);
           const restoring = nativeCli(restoreFilename, [...nativeArgs("restore"), "--confirm-plan-sha256", checked.planSha256], recoveryEnvironment, recoveryProcesses);
           for (let index = 0; index < 4; index++) await respondToWitnessRequest({ provisioning: false });
           assert.deepEqual(await restoring.finished, { code: 0, signal: null }, restoring.diagnostic());
           assert.equal(restoring.reports()[0].restored, true); assert.equal(challenges.size, beforeNativeChallenges + 5);
+          t.diagnostic(`C3 ${localState}: restore passed`);
           assert.deepEqual(await readFile(path.join(target, laterFile)), completedBytes);
           await assert.rejects(withPrivateDirectory(target, assertNoOperationalRestore), { code: "OPERATIONS_RECONCILIATION_REQUIRED" });
           assert.equal((await readFile(`/proc/${parent.child.pid}/task/${parent.child.pid}/children`, "utf8")).trim(), "", "recovery-only parent has no application/producer child");
@@ -530,6 +551,7 @@ finally { process.removeListener('SIGTERM', stop); process.removeListener('SIGIN
 
           const blockedTarget = path.join(root, `native-recovery-refused-${localState}`);
           const blockedArgs = nativeArgs("check").map(value => value === target ? blockedTarget : value);
+          t.diagnostic(`C3 ${localState}: replay or offline refusal started`);
           const blocked = nativeCli(restoreFilename, blockedArgs, recoveryEnvironment, recoveryProcesses);
           if (localState === "nonempty") await respondToWitnessRequest({ provisioning: false, replay: true });
           else {
@@ -538,13 +560,15 @@ finally { process.removeListener('SIGTERM', stop); process.removeListener('SIGIN
             assert.equal(challenges.has(job.request.challenge), false); challenges.add(job.request.challenge);
           }
           assert.equal(blocked.child.exitCode, null, "neither a replay nor an offline peer becomes a fresh success");
-          blocked.child.kill("SIGTERM");
-          assert.deepEqual(await blocked.finished, { code: 1, signal: null }); assert.deepEqual(blocked.reports(), []);
+          assert.deepEqual(await stopNativeCli(blocked), { code: 1, signal: null }); assert.deepEqual(blocked.reports(), []);
           await assert.rejects(readFile(path.join(blockedTarget, OPERATIONAL_RESTORE_MARKER)), { code: "ENOENT" });
           assert.equal(await sqlHash(), beforeSql);
+          t.diagnostic(`C3 ${localState}: replay or offline refusal passed`);
         } finally {
-          if (parent.child.exitCode === null && parent.child.signalCode === null) parent.child.kill("SIGTERM");
-          assert.deepEqual(await parent.finished, { code: 0, signal: null }, parent.diagnostic());
+          t.diagnostic(`C3 ${localState}: parent stopping`);
+          const stopped = await stopNativeCli(parent);
+          if (parentStarted) assert.deepEqual(stopped, { code: 0, signal: null }, parent.diagnostic());
+          t.diagnostic(`C3 ${localState}: parent stopped`);
         }
       }
       assert.equal((await withPrivateDirectory(dirs.operations, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding }))).files.length, 0);
