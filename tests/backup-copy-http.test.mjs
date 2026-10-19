@@ -89,7 +89,8 @@ test("runtime shutdown immediately cancels an unfinished ciphertext stream so it
 
 test("updating an already paired PC preserves capability, pairing and receipts without embedding a secret", async t => {
   const f = await fixture(t), destination = await f.service.create({ label: "PC", kind: "computer" });
-  assert.equal((await f.post(`/api/admin/backups/destinations/${destination.id}/windows-update-kit`, {}, f.admin)).status, 401);
+  const unpaired = await f.post(`/api/admin/backups/destinations/${destination.id}/windows-update-kit`, {}, f.admin);
+  assert.equal(unpaired.status, 409); assert.equal(unpaired.headers.get("set-cookie"), null, "Destination state must not log out the administrator.");
   const kit = await f.service.preparePairing(destination.id), paired = await f.service.pair({ destinationId: destination.id, pairingCode: kit.pairingCode });
   await f.service.manifest(paired.token, generation);
   await f.service.acknowledge(paired.token, { captureId: f.archive.id, bytes: f.archive.bytes, sha256: f.archive.sha256, locationId: generation });

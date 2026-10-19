@@ -119,7 +119,7 @@ export function createBackupCopyService(directory, internal = {}) {
   }
   async function updateKit(id) {
     const item = target(await read(), id);
-    if (item.tokenHash === null) failCopy("unauthorized");
+    if (item.tokenHash === null) failCopy("changed");
     return { version: 1, destinationId: item.id, origin: "https://jessiemessage.com" };
   }
   return Object.freeze({ authorizeWitness, updateKit, summary, create, update, revoke, preparePairing, pair, manifest, acknowledge, transfer,
