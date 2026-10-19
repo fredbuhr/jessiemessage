@@ -2,23 +2,23 @@ import { resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { lstat } from "node:fs/promises";
 import { withPrivateDirectory } from "../files/private-directory.mjs";
-import { createMediaStorage } from "../media/storage.mjs";
+import { createMediaStorage, MediaStorageError } from "../media/storage.mjs";
 import { createAccountErasure } from "../data/erasure.mjs";
 import { createErasureStore } from "../data/erasure-store.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../data/erasure-journal.mjs";
 import { AccountErasureError, ERASURE_PHASES, erasureTime } from "../data/erasure-state.mjs";
 import { assertErasureSchema } from "../data/erasure-schema.mjs";
 import { assertBackupInspection, BackupInspectionError } from "./inspection.mjs";
-import { backupIdentity, assertCloneIdentity, manifestHash, readManifest, verifyBackupManifest } from "./manifest.mjs";
-import { createBackupSnapshotStore, captureBackupSnapshot, assertBackupSnapshot, verifyBackupStorage } from "./snapshot.mjs";
+import { backupIdentity, assertCloneIdentity, manifestHash, readManifest, verifyBackupManifest, BackupManifestError } from "./manifest.mjs";
+import { createBackupSnapshotStore, captureBackupSnapshot, assertBackupSnapshot, verifyBackupStorage, BackupSnapshotError } from "./snapshot.mjs";
 import { verifyPhotoNotificationRecoveryCrmBroadcastBackupData } from "./verify.mjs";
-import { createBackupRecoveryStore } from "./recovery-store.mjs";
+import { createBackupRecoveryStore, BackupRecoveryStoreError } from "./recovery-store.mjs";
 import { readCheckpointReceipt } from "./checkpoint-receipt.mjs";
 import { operationalStateHash, captureOperationalState, readOperationalCheckpoint, readOperationalQuarantine,
   OperationalCheckpointError } from "./operational-checkpoint.mjs";
 import { authenticateRegistrySnapshot, snapshotErasureRegistry } from "./registry-snapshot.mjs";
 import { planClosureReconciliation } from "./closure-reconciliation.mjs";
-import { createReconciliationProgress, deriveReconciliationJournalKey } from "./reconciliation-progress.mjs";
+import { createReconciliationProgress, deriveReconciliationJournalKey, ReconciliationProgressError } from "./reconciliation-progress.mjs";
 import { acquireRecurringLock } from "./recurring-checkpoint-files.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("../../", import.meta.url))), HEX = /^[a-f0-9]{64}$/;
@@ -67,7 +67,12 @@ export async function replayClosureReconciliation(input, internal = {}) {
     const active = () => { if (signal?.aborted) fail("CLOSURE_REPLAY_ABORTED"); };
     active();
     const scope = internal.withDirectory ?? withPrivateDirectory;
-    return await (internal.lock ?? acquireRecurringLock)(directories.progress, lease => maintenance.withQuiescedProducers(async assertQuiescent => {
+    // The shared lock normalizes unknown callback errors to its own I/O error.
+    // Preserve our closed-domain work error after successful lock cleanup;
+    // cleanup failure still takes precedence and can never become success.
+    let workError;
+    const result = await (internal.lock ?? acquireRecurringLock)(directories.progress, async lease => {
+      try { return await maintenance.withQuiescedProducers(async assertQuiescent => {
       if (typeof lease?.assertReady !== "function" || typeof assertQuiescent !== "function") fail("CLOSURE_REPLAY_EXCLUSION");
       const basic = async () => { active(); await lease.assertReady(); await assertQuiescent(); await sourceGuard(); active(); };
       const planned = await planClosureReconciliation({ ...parameters, assertReady: basic, signal });
@@ -224,9 +229,13 @@ export async function replayClosureReconciliation(input, internal = {}) {
       return { status: "closure_target_reconciled_quarantined", planSha256: expectedPlanSha256, reconciledReceipts: identities.length,
         targetAbsenceVerified: true, capacityRebound: true, quarantineRetained: true, reconciliationRequired: true,
         authorityTransferred: false, started: false };
-    }), { signal });
+      }); } catch (error) { workError = error; return null; }
+    }, { signal });
+    if (workError) throw workError;
+    return result;
   } catch (error) {
-    if (error instanceof OperationalCheckpointError || error instanceof AccountErasureError || error instanceof BackupInspectionError) throw error;
+    if ([OperationalCheckpointError, AccountErasureError, BackupInspectionError, BackupManifestError,
+      BackupSnapshotError, BackupRecoveryStoreError, ReconciliationProgressError, MediaStorageError].some(Type => error instanceof Type)) throw error;
     fail();
   } finally { progress?.close(); journalKey?.fill(0); }
 }
