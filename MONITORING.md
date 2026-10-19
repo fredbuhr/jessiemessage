@@ -1,6 +1,6 @@
 # Surveillance de JessieMessage
 
-**État au 20 octobre 2026 Europe/Paris : service 0.76.0 déployé, fermetures désactivées.** Le parent conserve la capture quotidienne, le moniteur local et ses alertes par courriel. La sonde GitHub reste indépendante de l'hébergement. Les commandes et pins du service courant sont dans [REPRISE](docs/REPRISE.md).
+**État au 20 octobre 2026 Europe/Paris : service 0.79.0 déployé, fermetures locales activées.** Le parent conserve la capture quotidienne, le moniteur local et ses alertes par courriel. La sonde GitHub reste indépendante de l'hébergement. Les commandes et pins du service courant sont dans [REPRISE](docs/REPRISE.md).
 
 ## Sonde externe : disponibilité du site
 
@@ -34,6 +34,7 @@ La file d'alertes distincte transmet les incidents/rétablissements à **contact
 - **18 octobre :** intervalles locaux observés de **60 008 ms**, puis **60 031 ms**, `current / OK` ([moniteur](docs/activation-proofs/jm053-periodic-activation.json), [alertes](docs/activation-proofs/jm053-alerts-activation.json)). Ces échantillons ne garantissent pas toutes les lectures futures.
 - **18 octobre, 15:54:05 Europe/Paris :** le propriétaire confirme les deux mails synthétiques incident/rétablissement reçus à `contact@jessiemessage.com` ([confirmation](docs/activation-proofs/jm053-alerts-owner-confirmation.json)). Aucun renvoi nécessaire ; ce reçu garde `externalOutageNotificationVerified:false`.
 - **19 octobre, 21:39:01.988174 UTC :** service **0.76.0**, moniteur `current / OK`, santé/disponibilité HTTPS 200 sur les deux origines ; moniteur et alertes conservés ([preuve S1](docs/verification-proofs/jm076-verification.json)).
+- **19 octobre, 23:45:34.085672 UTC (20 octobre 01:45 Europe/Paris) :** service **0.79.0**, vrai enfant/superviseur démarrés, moniteur **OK**, quatre contrôles HTTPS santé/disponibilité réussis sur les deux origines ; dix fichiers sensibles préservés. Aucun test de mail ni nouvel appariement ([preuves 0.79](docs/verification-proofs/jm079-verification.json)).
 - **19 octobre :** copie PC courante et déchiffrement personnel acquis, résultat `DECHIFFREMENT_VERIFIE` reçu à **16:34:19 UTC** ([preuve PC](docs/verification-proofs/jm0702-verification.json)). Aucun nouvel appariement ou test personnel à refaire pour vérifier la surveillance.
 
 Les activations 0.51–0.56 sont historiques ; elles ne donnent pas les commandes du service courant. Les derniers runs, leur cadence observée et les préférences du canal externe peuvent être relevés en lecture seule, sans créer un autre moniteur, modifier les notifications ou envoyer un mail de test.

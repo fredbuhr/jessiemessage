@@ -2,7 +2,7 @@
   "version": 1,
   "release": "0.79.0",
   "scope": "S3: independent messaging sessions on real HTTPS/SQL/media, actual closure availability and short operating guide",
-  "status": "merged_verified_not_deployed",
+  "status": "deployed_verified",
   "source": {
     "commit": "2342f749d59222104a3d6458c2617aa9f63ba69c",
     "tree": "39ac4fdabc55b7661742fbd6acc5763d65a42dab",
@@ -132,12 +132,13 @@
     "d1QuarantineRemoved": false
   },
   "deployment": {
-    "s3Deployed": false,
-    "serviceRelease": "0.76.0",
-    "closuresEnabled": false,
+    "s3Deployed": true,
+    "serviceRelease": "0.79.0",
+    "closuresEnabled": true,
     "realAccountErased": false,
     "productionRestored": false,
-    "pcPairingChanged": false
+    "pcPairingChanged": false,
+    "mode": "start-local-closures"
   },
   "localChecks": {
     "syntaxFiles": 558,
@@ -168,11 +169,10 @@
     "CRM conflicts, quick replies and exports retain their existing separate tests, outside the new integrated exercise.",
     "The observed GitHub schedule has gaps of hours; no five-minute detection guarantee. External outage alert receipt remains unverified.",
     "No archive rotation or general technical retention policy is introduced.",
-    "Earlier personal notifications, PC-copy, decryption and backup-mail acceptances remain valid in their recorded scope; no repeat is required to close this technical lot."
+    "Earlier personal notifications, PC-copy, decryption and backup-mail acceptances remain valid in their recorded scope; no repeat is required to close this technical lot.",
+    "A live authenticated administrator GET was not observed; activation follows the pinned composition and actual IPC/HTTP-ready startup. No real account was erased for validation."
   ],
-  "remaining": [
-    "Final validated shared-host deployment and local closure activation."
-  ],
+  "remaining": [],
   "deploymentPreparation": {
     "preparedAt": "2026-10-19T23:37:00.425105+00:00",
     "checkout": "/srv/customer/jessiemessage-operator/messaging-final-079-bc6103a7",
@@ -197,5 +197,90 @@
     "log": "/srv/customer/jessiemessage-private/jm079-local-closures.log",
     "preservedFiles": 10,
     "started": false
+  },
+  "deploymentVerification": {
+    "verifiedAt": "2026-10-19T23:45:34.085672+00:00",
+    "release": "0.79.0",
+    "source": "bc6103a73ce63752eda27a0bce83a7e53e409d09",
+    "tree": "39ac4fdabc55b7661742fbd6acc5763d65a42dab",
+    "sourceClean": true,
+    "launcherUnchanged": true,
+    "launcherMode": "0700",
+    "logMode": "0600",
+    "preservedFiles": 10,
+    "rollback076Preserved": true,
+    "mode": "start-local-closures",
+    "publicPort": 3000,
+    "gatewayEnabled": false,
+    "managerBuildDisplayParis": "20/10/2026 01:41",
+    "managerDependenciesReinstalled": false,
+    "actualChildStarted": true,
+    "actualSupervisorStarted": true,
+    "startupCaptureStarted": false,
+    "monitorCode": "OK",
+    "httpsProbes": [
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "bodyStatus": "ok",
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "bodyStatus": "ready",
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "bodyStatus": "ok",
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "bodyStatus": "ready",
+        "noStore": true,
+        "noCookie": true
+      }
+    ],
+    "privateApis": [
+      {
+        "path": "/api/admin/closures",
+        "anonymousStatus": 401
+      },
+      {
+        "path": "/api/admin/privacy",
+        "anonymousStatus": 401
+      },
+      {
+        "path": "/api/admin/backups",
+        "anonymousStatus": 401
+      }
+    ],
+    "closuresEnabled": true,
+    "closureActivationEvidence": "Pinned local-closure composition plus actual child IPC/HTTP ready startup; source chain independently reviewed.",
+    "authenticatedAdminGetObserved": false,
+    "privacyCapabilityFromComposition": "administrator_local",
+    "realAccountErasedByValidation": false,
+    "productionRestored": false,
+    "pcActionRequired": false,
+    "d1ImportedAgain": false,
+    "d1QuarantineRemoved": false,
+    "externalContinuityVerified": false
+  },
+  "browserSmoke": {
+    "url": "https://jessiemessage.com/app",
+    "entryOpened": true,
+    "neutralChoicesShown": true,
+    "authenticatedAdministratorObserved": false
   }
 }

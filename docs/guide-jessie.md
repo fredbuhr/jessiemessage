@@ -59,9 +59,9 @@ Le reçu confirme le fichier chiffré reçu, sans certifier une restauration de 
 
 ## Fermeture définitive et remise en service
 
-**En ligne : 0.76, fermeture définitive désactivée.** S2a/S2b sont codés, fusionnés et vérifiés en CI, sans déploiement. Voir l’[état courant](REPRISE.md).
+**En ligne : 0.79, fermeture définitive disponible dans l’administration.** Voir l’[état courant](REPRISE.md).
 
-**Après activation seulement**, l’administrateur pourra choisir **Fermer définitivement** dans la carte du client, vérifier le compte et la portée, cocher la confirmation et écrire **FERMER**. **Fermeture des comptes** affichera le suivi. L’action irréversible efface le compte, sa conversation, ses notes privées et les photos appartenant au client dans l’application. Le service peut être brièvement interrompu ; sauvegardes et téléchargements restent des copies séparées.
+L’administrateur peut choisir **Fermer définitivement** dans la carte du client, vérifier le compte et la portée, cocher la confirmation et écrire **FERMER**. **Fermeture des comptes** affichera le suivi. L’action irréversible efface le compte, sa conversation, ses notes privées et les photos appartenant au client dans l’application. Le service peut être brièvement interrompu ; sauvegardes et téléchargements restent des copies séparées.
 
 Une restauration se fait manuellement en maintenance, avec la personne chargée de l’exploitation et un contrôle des comptes fermés avant réouverture. Les messages postérieurs à la capture choisie peuvent être perdus ; PC éteint, la copie disponible peut être plus ancienne. [Parcours opérateur](manual-restore-operator-078.md).
 
