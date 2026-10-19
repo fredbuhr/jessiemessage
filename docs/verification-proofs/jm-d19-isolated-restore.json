@@ -229,5 +229,116 @@
     "protocolDeadlinesUnchanged": true,
     "resumeOuterLimitSeconds": 720,
     "nativeImportOuterLimitSeconds": 180
+  },
+  "strictQualificationAttempt": {
+    "status": "blocked_by_hosting_capabilities",
+    "checkedAt": "2026-10-19T20:33:06.807Z",
+    "receipt": "/srv/customer/jessiemessage-private/restore-d19-operator/d19-d2-sql-capabilities.json",
+    "tlsVerified": true,
+    "targetState": "application-schema",
+    "serverSeries": "10.11",
+    "eventScheduler": "OFF",
+    "routineSystemCatalog": {
+      "readable": false,
+      "reason": "access_denied"
+    },
+    "eventSystemCatalog": {
+      "readable": false,
+      "reason": "access_denied"
+    },
+    "strictSqlQualified": false,
+    "diagnosis": {
+      "databaseMatched": true,
+      "scope": "raw_underscore_pattern",
+      "privilegeProfile": "shared_admin",
+      "metadataVisibility": "unproven",
+      "objectInventory": "unproven",
+      "captureAllowed": false
+    },
+    "localMariaDbServerAvailable": false,
+    "localContainerRuntimeAvailable": false,
+    "sqlMutated": false,
+    "grantsChanged": false,
+    "serviceRestarted": false,
+    "quarantineRetained": true,
+    "started": false,
+    "codeChanged": false,
+    "strictGuardsChanged": false,
+    "nativeSqlRetested": false,
+    "reasons": [
+      "Missing EVENT and all schema-wide routine visibility privileges; private system catalogue reads are denied.",
+      "Scheduler OFF does not drain already-running event workers; OFF-only application execution guard rejected.",
+      "Raw underscore grants are patterns, not literal least-privilege scope.",
+      "No installed local MariaDB server or container runtime; a local target would require a new operator transport and would not qualify this hosted database."
+    ],
+    "sources": [
+      {
+        "url": "https://www.infomaniak.com/en/support/faq/821/use-views-triggers-stored-procedures-and-routines",
+        "scope": "Shared hosting restrictions, not an inventory attestation."
+      },
+      {
+        "url": "https://github.com/MariaDB/server/blob/9660806dc965244d67eb28707d5a19ed4e84852c/sql/event_scheduler.cc",
+        "scope": "Event_scheduler::stop does not terminate existing workers."
+      },
+      {
+        "url": "https://github.com/MariaDB/server/blob/9660806dc965244d67eb28707d5a19ed4e84852c/sql/sql_show.cc",
+        "scope": "ROUTINES/EVENTS visibility and TRIGGERS metadata filters."
+      }
+    ],
+    "next": "Select a genuinely qualified SQL reader or an administrable SQL target before any further real reconciliation; do not repeat this unchanged diagnostic or D1 import.",
+    "proposal": {
+      "status": "configuration_prepared_not_ordered",
+      "provider": "Infomaniak",
+      "product": "VPS Lite Linux",
+      "resources": {
+        "cpu": 1,
+        "ramGiB": 2,
+        "diskGiB": 20
+      },
+      "distribution": "Debian 12 bookworm 64-bit",
+      "purpose": "First isolated qualified SQL target; optional later SQL-only migration after validated recovery and authority succession. Existing web/mail hosting retained.",
+      "accountConfiguratorMonthlyEurExVat": 3.0,
+      "accountConfiguratorStage": "SSH key selection; no key generated/imported/selected",
+      "annualEurIncVatBudgetProposed": 50,
+      "budgetAccepted": false,
+      "finalCheckoutAmountVerified": false,
+      "ordered": false,
+      "migrated": false,
+      "rootAccessProvidedByProduct": true,
+      "managedByProvider": false,
+      "source": "https://www.infomaniak.com/fr/hebergement/vps-lite",
+      "conditions": [
+        "Provider public annual price requires twelve months prepaid; final euro price and French VAT must be verified in checkout within any accepted cap.",
+        "No provider snapshot or uptime SLA included in Lite; existing encrypted backup/witness and external monitoring remain necessary.",
+        "A qualified new target does not qualify D1 retrospectively.",
+        "No schema/account/runtime/authority/PC reconfiguration occurs before a concrete qualified target and separately validated cutover."
+      ]
+    },
+    "finalCheck": {
+      "checkedAt": "2026-10-19T20:44:20.719104+00:00",
+      "receipt": "/srv/customer/jessiemessage-private/restore-d19-operator/d19-d2-final-check.json",
+      "activeRuntime": "0.72.0",
+      "activeSource": "94fb7882cf74eb5f2ec165e67833ac2e7cdf13f3",
+      "activeTree": "c6d304e49209a1194d91c0992096e59ff3685b6e",
+      "checkoutClean": true,
+      "protectedConfigurationAndAuthorityUnchanged": true,
+      "https": {
+        "health": {
+          "http": 200,
+          "status": "ok"
+        },
+        "ready": {
+          "http": 200,
+          "status": "ready"
+        }
+      },
+      "strictSqlQualified": false,
+      "sqlMutated": false,
+      "grantsChanged": false,
+      "quarantineRetained": true,
+      "startedTarget": false,
+      "newServerOrdered": false,
+      "budgetAccepted": false
+    }
   }
 }
