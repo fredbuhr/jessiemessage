@@ -18,15 +18,16 @@ const witnessArgs = command => [...args(command), "--witness-operator-directory"
   ...(command === "plan-witness" ? ["--witness-destination", "a".repeat(32)] : ["--witness-plan-sha256", "c".repeat(64)])];
 const observerArgs = command => [...args(command), "--witness-operator-directory", "/srv/witness-origin", "--witness-contract-sha256", "d".repeat(64)];
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
+const syntheticStartupProof = async guard => { await guard(); return { verified: true, completedReceipts: 0, registrySha256: "e".repeat(64), witnessRevision: 1 }; };
 
 function fixture(overrides = {}) {
   const events = [], reports = [], notices = [];
-  let lastAttemptAt = null, lastSuccessAt = null, onUnexpectedExit;
-  const runtime = { async start() { events.push("start"); return { ready: true }; },
-    async stop() { events.push("stop"); return { exitCode: 0, signal: null }; }, async destroy() { events.push("destroy"); } };
+  let lastAttemptAt = null, lastSuccessAt = null, onUnexpectedExit, status = "stopped";
+  const runtime = { state: () => ({ status }), async start() { events.push("start"); status = "running"; return { ready: true }; },
+    async stop() { events.push("stop"); status = "stopped"; return { exitCode: 0, signal: null }; }, async destroy() { events.push("destroy"); status = "stopped"; } };
   const dependencies = { environment, clock: () => NOW, readConfiguration: async () => ({ ...configuration }),
     history: async () => ({ records: reports, lastAttemptAt, lastSuccessAt }),
-    lock: async (_directory, operation) => { events.push("lock"); return operation(); },
+    lock: async (_directory, operation) => { events.push("lock"); return operation({ async assertReady() {} }); },
     append: async (_directory, report) => { events.push(`record:${report.status}`); reports.push(report);
       lastAttemptAt = report.startedAt; if (report.status === "succeeded") lastSuccessAt = report.finishedAt; },
     preflight: async () => { events.push("preflight"); return { ...configuration }; }, source: async () => { events.push("source"); },
@@ -241,7 +242,7 @@ test("daily schedule catches the first installation but does not retry a recorde
 
 test("confirmed closure takes priority over capture, with one drain shared by concurrent ticks", async () => {
   let pending = false, status = "stopped", capability = null;
-  const events = [], operations = { async hasPending() { return pending; }, async preflight(guard) { await guard(); },
+  const events = [], operations = { verifyStartup: syntheticStartupProof, async hasPending() { return pending; }, async preflight(guard) { await guard(); },
     async run(guard) { await guard(); events.push("erase"); pending = false; return { completedReceipts: 1 }; } };
   const runtime = { state: () => ({ status }), async start() { events.push("start"); status = "running"; },
     async stop() { events.push("stop"); status = "stopped"; return { exitCode: 0, signal: null }; }, async destroy() { status = "stopped"; } };
@@ -259,17 +260,109 @@ test("a queued closure is resolved before the first managed listener after super
   let pending = true, status = "stopped"; const events = [];
   const runtime = { state: () => ({ status }), async start() { if (status !== "running") events.push("listen"); status = "running"; },
     async stop() { status = "stopped"; return { exitCode: 0, signal: null }; }, async destroy() { status = "stopped"; } };
-  const operations = { async hasPending() { return pending; }, async preflight(guard) { await guard(); },
+  const operations = { verifyStartup: syntheticStartupProof, async hasPending() { return pending; }, async preflight(guard) { await guard(); },
     async run(guard) { await guard(); assert.equal(status, "stopped"); events.push("erase"); pending = false; return { completedReceipts: 1 }; } };
   const f = fixture({ closureOperations: operations, makeRuntime: () => runtime, readConfiguration: async () => ({ ...configuration, enabled: false }),
     runClosures: args => runManagedClosures(args, { lock: (_directory, work) => work({ async assertReady() {} }) }) });
   await f.supervisor.start(); await f.supervisor.tick(); assert.deepEqual(events, ["erase", "listen"]); await f.supervisor.close();
 });
 
+test("an owner with no pending intent cannot open its first listener without a fresh startup proof", async () => {
+  let listened = false;
+  const operations = { async hasPending() { return false; }, async preflight() {}, async run() {},
+    async verifyStartup() { throw new Error("Synthetic absent witness, never a cached permission"); } };
+  const f = fixture({ closureOperations: operations, makeRuntime: () => ({ state: () => ({ status: "stopped" }),
+    async start() { listened = true; }, async stop() { return { exitCode: 0, signal: null }; }, async destroy() {} }),
+    lock: (_directory, work) => work({ async assertReady() {} }),
+    readConfiguration: async () => ({ ...configuration, enabled: false }) });
+  try { await assert.rejects(f.supervisor.start()); assert.equal(listened, false); }
+  finally { await f.supervisor.close(); }
+});
+
+test("every closure owner must implement the startup barrier before any runtime is constructed", () => {
+  assert.throws(() => fixture({ closureOperations: { async hasPending() { return false; }, async preflight() {}, async run() {} },
+    makeRuntime: () => assert.fail("A legacy owner cannot receive the closure capability") }), { code: "RECURRING_SUPERVISOR_CONFIGURATION" });
+});
+
+test("a closure owner verifies every capture reopen under the same exclusion, including after capture failure", async () => {
+  for (const mode of ["success", "capture_failure", "proof_failure"]) {
+    let held = false, proofs = 0;
+    const operations = { async hasPending() { return false; }, async preflight() {}, async run() { assert.fail("No destructive work"); },
+      async verifyStartup(guard) {
+        assert.equal(held, true); await guard(); proofs++;
+        if (mode === "proof_failure" && proofs === 2) throw new Error("Synthetic PC unavailable after capture");
+        return syntheticStartupProof(guard);
+      } };
+    const f = fixture({ closureOperations: operations,
+      lock: async (_directory, work) => {
+        assert.equal(held, false); held = true;
+        try { return await work({ async assertReady() { assert.equal(held, true); } }); }
+        finally { held = false; }
+      },
+      ...(mode === "capture_failure" ? { checkpoint: async () => { throw new Error("Synthetic capture failed"); } } : {}) });
+    try {
+      await f.supervisor.start(); const report = await f.supervisor.tick();
+      assert.equal(proofs, 2, "the initial proof is never reused after capture");
+      assert.equal(report.runtimeResumed, mode !== "proof_failure");
+      assert.equal(report.status, mode === "success" ? "succeeded" : "failed");
+      assert.equal(f.events.filter(value => value === "start").length, mode === "proof_failure" ? 1 : 2);
+      if (mode === "proof_failure") assert.deepEqual(await f.supervisor.finished, { failed: true });
+    } finally { await f.supervisor.close(); }
+  }
+});
+
+test("the first owner opening cannot bypass capture exclusion even when no intent is pending", async () => {
+  const f = fixture({ closureOperations: { verifyStartup: () => assert.fail("No verification without the lease"),
+    async hasPending() { return false; }, async preflight() {}, async run() {} },
+    lock: async () => { throw new Error("Synthetic capture lock already held"); } });
+  try { await assert.rejects(f.supervisor.start()); assert.equal(f.events.includes("start"), false); }
+  finally { await f.supervisor.close(); }
+});
+
+test("a failed first-owner lock cleanup destroys the opened child and parent gateway", async () => {
+  const gateway = [];
+  const f = fixture({ witnessControl: async () => true,
+    closureOperations: { verifyStartup: syntheticStartupProof, async hasPending() { return false; }, async preflight() {}, async run() {} },
+    lock: async (_directory, work) => { await work({ async assertReady() {} }); throw new Error("Synthetic startup lock cleanup failed"); },
+    makeGateway: () => ({ async start() { gateway.push("start"); }, async close() { gateway.push("close"); } }),
+    readConfiguration: async () => ({ ...configuration, enabled: false }) });
+  try {
+    await assert.rejects(f.supervisor.start());
+    assert.equal(f.events.filter(value => value === "start").length, 1);
+    assert.equal(f.events.filter(value => value === "destroy").length, 1);
+    assert.equal(f.runtime.state().status, "stopped"); assert.deepEqual(gateway, ["start", "close"]);
+  } finally { await f.supervisor.close(); }
+});
+
+test("capture lock rejection after owner stop ends the runtime; rejection before stop preserves it", async () => {
+  for (const afterCallback of [false, true]) {
+    let locks = 0;
+    const f = fixture({ closureOperations: { verifyStartup: syntheticStartupProof,
+      async hasPending() { return false; }, async preflight() {}, async run() {} },
+      lock: async (_directory, work) => {
+        locks++;
+        if (locks === 2 && !afterCallback) throw new Error("Synthetic capture lock already held");
+        const result = await work({ async assertReady() {} });
+        if (locks === 2) throw new Error("Synthetic capture lock cleanup failed after reopen");
+        return result;
+      } });
+    try {
+      await f.supervisor.start(); assert.equal(await f.supervisor.tick(), null);
+      if (afterCallback) {
+        assert.equal(f.reports.at(-1).runtimeResumed, true, "the callback reopened before its lease failed cleanup");
+        assert.deepEqual(await f.supervisor.finished, { failed: true });
+        assert.equal(f.runtime.state().status, "stopped");
+      } else {
+        assert.equal(f.events.includes("stop"), false); assert.equal(f.runtime.state().status, "running");
+      }
+    } finally { await f.supervisor.close(); }
+  }
+});
+
 test("corrupt intent discovery or uncertain erasure ends the supervisor instead of retrying or resuming", async () => {
   for (const phase of ["discovery", "erasure"]) {
     let pending = false;
-    const operations = { async hasPending() { if (pending && phase === "discovery") throw new Error("Synthetic private error"); return pending; }, async preflight() {}, async run() {} };
+    const operations = { verifyStartup: syntheticStartupProof, async hasPending() { if (pending && phase === "discovery") throw new Error("Synthetic private error"); return pending; }, async preflight() {}, async run() {} };
     const f = fixture({ closureOperations: operations, readConfiguration: async () => ({ ...configuration, enabled: false }),
       runClosures: async () => { throw new Error("Synthetic private error"); } });
     await f.supervisor.start(); await f.supervisor.tick(); pending = true; await f.supervisor.tick();
@@ -290,7 +383,7 @@ test("journal precedes stop; capture and encryption finish before a ready runtim
 test("a closure published during capture preflight or HTTP drain keeps producers stopped before any reopen", async () => {
   for (const phase of ["preflight", "drain", "capture_failure"]) {
     let pending = false;
-    const operations = { async hasPending() { return pending; }, async preflight() {}, async run() { assert.fail("No implicit destructive retry in the capture cycle"); } };
+    const operations = { verifyStartup: syntheticStartupProof, async hasPending() { return pending; }, async preflight() {}, async run() { assert.fail("No implicit destructive retry in the capture cycle"); } };
     const f = fixture({ closureOperations: operations,
       preflight: async () => { if (phase === "preflight") pending = true; return { ...configuration }; },
       ...(phase === "capture_failure" ? { checkpoint: async () => { pending = true; throw new Error("Synthetic capture failure"); } } : {}) });
@@ -433,8 +526,8 @@ test("optional parent control listener precedes the stopped-child closure gate a
   const f = fixture({ witnessControl: control, makeRuntime(value) { childOptions = value; return runtime; },
     makeGateway(value) { assert.equal(value.port, 3000); assert.equal(value.childPort, 3001); assert.equal(value.control, control);
       return { async start() { events.push("gateway-start"); assert.equal(stopped, true); }, async close() { events.push("gateway-close"); assert.equal(stopped, true); } }; },
-    closureOperations: { async hasPending() { return stopped; }, async preflight() {}, async run() {} },
-    runClosures: async () => { assert.deepEqual(events, ["gateway-start"]); assert.equal(stopped, true); events.push("initial-closure-gate"); },
+    closureOperations: { verifyStartup: syntheticStartupProof, async hasPending() { return stopped; }, async preflight() {}, async run() {} },
+    runClosures: async () => { assert.deepEqual(events, ["gateway-start"]); assert.equal(stopped, true); events.push("initial-closure-gate"); await runtime.start(); },
     readConfiguration: async () => ({ ...configuration, enabled: false }) });
   await f.supervisor.start(); await f.supervisor.tick(); await f.supervisor.close();
   assert.equal(childOptions.port, 3001); assert.equal(childOptions.environment.PORT, "3001"); assert.equal(childOptions.parentGateway, true);

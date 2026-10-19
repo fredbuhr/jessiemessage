@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "release": "0.71.0",
+  "scope": "C1: fresh authenticated closure-owner startup and reopen barrier; no closure activation or restoration",
+  "status": "candidate_ready_for_ci",
+  "personalProofLotB": {
+    "documentationCommit": "d8fa2f4e30ce8ef49ba74eee734113ab9f83c6c2",
+    "evidence": "user_screenshot_image(20261019-163401).png",
+    "result": "DECHIFFREMENT_VERIFIE",
+    "archiveId": "capture-1792386945745-204e0e8e073b6131",
+    "sqlRestore": false
+  },
+  "activeService": {
+    "release": "0.70.2",
+    "source": "d1720d8af17081ddcc7150e24d77128fcf8ff4fe",
+    "changed": false,
+    "closuresEnabled": false
+  },
+  "implementation": {
+    "requiredOwnerMethod": "verifyStartup",
+    "openings": [
+      "first start with no pending intent",
+      "resume after recurring capture",
+      "resume after managed closure processing"
+    ],
+    "existingExclusion": "recurring-backup.lock",
+    "readOnlyStartup": true,
+    "implicitDestructiveRetry": false,
+    "productionClosureOwnerComposed": false,
+    "identityCompleteness": "Unique checked identities equal complete authenticated witnessed receipt inventory",
+    "uncertainLockFinalization": "Stops an already reopened child; owner capture ends supervisor; no destructive retry"
+  },
+  "remaining": [
+    "Production composition of fresh recovery barrier",
+    "Explicit source/target reconciliation preserving newer closures",
+    "Isolated native restore and qualified SQL inventory",
+    "Closure activation prerequisites remain unmet"
+  ],
+  "local": {
+    "command": "node --test tests/managed-closures.test.mjs tests/recurring-supervisor.test.mjs tests/registry-continuity.test.mjs tests/witness-observer.test.mjs tests/witness-observation-maintenance.test.mjs",
+    "total": 98,
+    "passed": 96,
+    "failed": 0,
+    "skipped": 2,
+    "skippedScope": "Native procfs paths unavailable locally; required Linux CI must execute them.",
+    "sourceSyntax": "passed_3_changed_sources",
+    "wholeSourceSyntax": "passed_526_sources",
+    "diffCheck": "passed"
+  },
+  "review": {
+    "status": "targeted_findings_fixed_and_rechecked",
+    "cases": [
+      "Duplicate discovery identities cannot hide another witnessed account, within or across pages",
+      "Lock finalization failure after startup destroys child and gateway",
+      "Lock finalization failure after capture ends closure-owner supervisor",
+      "Lock finalization failure after managed closure restart stops the actual reopened child",
+      "Capture resume preserves ready:true adapter contract"
+    ],
+    "realManagedChildTests": true
+  },
+  "ci": "awaiting_candidate_run"
+}

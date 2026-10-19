@@ -11,7 +11,7 @@ import { createRecurringCheckpoint, nextDailyCheckpoint } from "./recurring-chec
 import { readRecurringConfiguration, readCheckpointHistory, acquireRecurringLock, appendCheckpointRecord } from "./recurring-checkpoint-files.mjs";
 import { inspectCheckpointRecipient, encryptCheckpointArchive } from "./checkpoint-encryption.mjs";
 import { createManagedRuntime } from "./managed-runtime.mjs";
-import { runManagedClosures } from "./managed-closures.mjs";
+import { runManagedClosures, resumeManagedClosureRuntime } from "./managed-closures.mjs";
 import { runManagedWitnessPreparation } from "./managed-witness.mjs";
 import { witnessOriginErrorCode } from "./witness-origin-diagnostics.mjs";
 import { runWitnessObservationMaintenance } from "./witness-observation-maintenance.mjs";
@@ -179,7 +179,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   if (!["start", "prepare-witness"].includes(options.command)) fail("CONFIGURATION");
   if (witnessControl !== null && typeof witnessControl !== "function") fail("CONFIGURATION");
   if (!Number.isSafeInteger(intervalMilliseconds) || intervalMilliseconds < 1 || intervalMilliseconds > 60000) fail("CONFIGURATION");
-  if (closureOperations !== null && ["hasPending", "preflight", "run"].some(name => typeof closureOperations?.[name] !== "function")) fail("CONFIGURATION");
+  if (closureOperations !== null && ["hasPending", "preflight", "run", "verifyStartup"].some(name => typeof closureOperations?.[name] !== "function")) fail("CONFIGURATION");
   if (witnessOriginOperations !== null && (options.command !== "prepare-witness" || closureOperations !== null || witnessControl !== null
     || typeof prepareWitness !== "function" || ["check", "prepare"].some(name => typeof witnessOriginOperations?.[name] !== "function"))
     || options.command === "prepare-witness" && witnessOriginOperations === null) fail("CONFIGURATION");
@@ -206,6 +206,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     if (closed || !started || observing) return Promise.resolve(null);
     if (ticking) return ticking;
     ticking = (async () => {
+      let ownerStopAttempted = false;
       try {
         let closurePending = false;
         if (closureOperations !== null) {
@@ -227,7 +228,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
         if (!configuration.enabled) return null;
         const previous = await history(options.operationsDirectory, { signal: cancellation.signal });
         if (!recurringCheckpointDue(clock(), configuration, previous)) return null;
-        return await lock(options.operationsDirectory, async () => {
+        return await lock(options.operationsDirectory, async lease => {
           const current = await readConfiguration(options.operationsDirectory, { signal: cancellation.signal });
           const checkedHistory = await history(options.operationsDirectory, { signal: cancellation.signal });
           if (!recurringCheckpointDue(clock(), current, checkedHistory)) return null;
@@ -240,7 +241,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
               if (report.status === "running") destination = `${options.operationsDirectory}/capture-${report.startedAt}-${randomBytes(8).toString("hex")}`;
               await append(options.operationsDirectory, report);
             },
-            stopRuntime: async ({ signal }) => { active(signal); stopAttempted = true; return runtime.stop(); },
+            stopRuntime: async ({ signal }) => { active(signal); stopAttempted = true; ownerStopAttempted = closureOperations !== null; return runtime.stop(); },
             capture: ({ signal }) => checkpoint("capture-application", options, destination, { signal, environment }),
             encrypt: ({ signal }) => encrypt({ checkpointDirectory: destination, recipientDirectory: options.operationsDirectory,
               recipientSha256: current.recipientSha256, signal }),
@@ -249,6 +250,12 @@ export function createRecurringSupervisor(options, { environment = process.env, 
               // An intent can arrive after the initial tick check, while the
               // preflight or HTTP drain is in progress. Keep producers stopped.
               if (closureOperations !== null && await closureOperations.hasPending()) fail("RUNTIME");
+              if (closureOperations !== null) {
+                if (typeof lease?.assertReady !== "function") fail("RUNTIME");
+                return resumeManagedClosureRuntime({ runtime, operations: closureOperations, signal, assertReady: async () => {
+                  active(signal); await source(options, { signal }); await lease.assertReady(); active(signal);
+                } });
+              }
               active(signal); return runtime.start();
             },
           });
@@ -257,7 +264,16 @@ export function createRecurringSupervisor(options, { environment = process.env, 
           if (!closed && stopAttempted && !report.runtimeResumed) { unexpected(); }
           return report;
         }, { signal: cancellation.signal });
-      } catch (error) { if (!closed) unavailable(error); return null; }
+      } catch (error) {
+        if (!closed) {
+          // A lock may reject during final descriptor/sync/unlink checks after
+          // the callback reopened the child. End this owner without awaiting
+          // close here: close itself waits for the current ticking operation.
+          if (ownerStopAttempted) unexpected();
+          else unavailable(error);
+        }
+        return null;
+      }
       finally { controller = null; }
     })().finally(() => { ticking = null; });
     return ticking;
@@ -292,13 +308,21 @@ export function createRecurringSupervisor(options, { environment = process.env, 
       await gateway?.start(); active(cancellation.signal);
       // A queued confirmed intent survives a parent/child restart. Resolve it
       // while the child is still stopped, before any listener or producer.
-      if (closureOperations !== null && await closureOperations.hasPending()) {
-        await runClosures({ runtime, operations: closureOperations, directory: options.operationsDirectory,
-          source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
-      }
       witnessPhase = "initial_start";
       if (witnessOriginOperations !== null) notice({ version: 1, type: "witness_origin_progress", phase: witnessPhase, event: "started" });
-      await runtime.start(); if (closed) fail("ABORTED");
+      if (closureOperations === null) await runtime.start();
+      else if (await closureOperations.hasPending()) {
+        // This owner already verifies and reopens under its own capture lock.
+        await runClosures({ runtime, operations: closureOperations, directory: options.operationsDirectory,
+          source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
+        if (runtime.state().status !== "running") fail("RUNTIME");
+      } else await lock(options.operationsDirectory, async lease => {
+        if (typeof lease?.assertReady !== "function") fail("RUNTIME");
+        await resumeManagedClosureRuntime({ runtime, operations: closureOperations, signal: cancellation.signal, assertReady: async () => {
+          active(cancellation.signal); await source(options, { signal: cancellation.signal }); await lease.assertReady(); active(cancellation.signal);
+        } });
+      }, { signal: cancellation.signal });
+      if (closed) fail("ABORTED");
       if (witnessOriginOperations !== null) {
         notice({ version: 1, type: "witness_origin_progress", phase: "initial_start", event: "passed" });
         witnessPhase = "maintenance";
@@ -313,8 +337,8 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     } catch (error) {
       if (witnessOriginOperations !== null) {
         notice({ version: 1, type: "witness_origin_progress", phase: witnessPhase, event: "failed", code: witnessOriginErrorCode(error) });
-        await runtime.destroy(); await gateway?.close();
       }
+      if (witnessOriginOperations !== null || closureOperations !== null) { await runtime.destroy(); await gateway?.close(); }
       throw error;
     } finally { starting = false; }
   }

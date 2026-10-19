@@ -22,6 +22,12 @@ Lire le [plan](PLAN-IMPLEMENTATION.md), les [règles de reprise](../AGENTS.md) e
 
 Deux tests locaux de composition du kit et la syntaxe de 526 sources réussissent. Aucun nouvel appariement, contrat, permission, clé, message réel, mail, import SQL ou effacement de compte pour ce correctif. Les 66 anciennes PR déjà intégrées restent closes.
 
+## C1 — Contrôle frais des ouvertures — candidat 0.71.0
+
+Le code vérifie maintenant chaque ouverture du mode doté d'un propriétaire de fermeture, sous le verrou de capture existant : premier démarrage sans intention en attente, reprise après capture et reprise après fermeture. La preuve indépendante fraîche est liée à tous les reçus uniques ; compte réapparu, journal perdu/incomplet, réponse rejouée, annulation ou échec final du verrou bloquent/arrêtent la reprise. Des essais avec un véritable enfant Node confirment l'arrêt et le refus HTTP.
+
+**Codé et vérifié localement, en attente de CI et de fusion ; non déployé et non activé.** Tests ciblés : 96 réussites, zéro échec, deux contrôles natifs procfs indisponibles localement à exécuter dans la CI Linux ; syntaxe des 526 sources et diff conformes. Le CLI courant fournit toujours `closureOperations:null`, et le runtime hébergé reste 0.70.2 en observation. Cette sous-étape ne clôt pas C : composition de production, barrière de récupération et réconciliation explicite source/cible restent à terminer. [Preuves C1](verification-proofs/jm071-verification.json).
+
 ## Paramètres et états à préserver
 
 - Checkout actif : `/srv/customer/jessiemessage-operator/windows-existing-pc-update-0702-d1720d8a` ; parent public 3000, enfant configuré en boucle locale 3001.
