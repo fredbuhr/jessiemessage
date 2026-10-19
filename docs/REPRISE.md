@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**État courant unique — 19 octobre 2026, 17:30:55 UTC (19:30:55 Europe/Paris). Étape 4/6 ; lots A/B clos. C2 (0.72.0) codé, fusionné, déployé et vérifié. Service en observation, `closuresEnabled:false`. Suite : C3, parent explicite de récupération après redémarrage non vide ; C reste ouvert.**
+**État courant unique — 19 octobre 2026, 17:48:44 UTC (Europe/Paris : UTC+2). Étape 4/6 ; lots A/B clos. C2 (0.72.0) déployé et vérifié. C3 (0.73.0), parent explicite de récupération après redémarrage non vide, en validation. Service 0.72.0 en observation, `closuresEnabled:false` ; C reste ouvert.**
 
 Lire le [plan](PLAN-IMPLEMENTATION.md), les [règles de reprise](../AGENTS.md), les [preuves C2](verification-proofs/jm072-verification.json) et le [parcours de récupération](witness-recovery-072.md). Les preuves [0.70.2](verification-proofs/jm0702-verification.json), [C1](verification-proofs/jm071-verification.json) et l'[historique](REPRISE-HISTORIQUE-20261019.md) conservent leur portée datée ; leurs anciens lanceurs ne sont plus les commandes courantes.
 
@@ -46,11 +46,11 @@ Aucun nouvel appariement, contrat, permission, clé, message réel, mail, import
 
 **Ne rejouer ni `plan-witness`, ni `prepare-witness`, ni `prepare-witness-enrollment`.** Ne pas réinitialiser les états, réapparier le PC ou régénérer une clé. Garder `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd` dans l'environnement des commandes natives. La messagerie quotidienne ne dépend pas de la présence continue du PC. `recette.jessiemessage.com` partage runtime et base du principal ; ce n'est pas une cible de restauration isolée.
 
-## Prochaine action exacte — C3
+## C3 — en validation, service courant conservé
 
-Construire et éprouver **un mode explicite de parent de récupération**, sous provenance originale et permission `spent`, démarrable après redémarrage avec un journal non vide ou perdu. Il expose uniquement le transport PC existant et le contrôle Unix `recover-only`, sans enfant applicatif, producteur, capture ou tick d'observation initial vide. Observation, initialisation et réservation gardent leurs préconditions actuelles. Aucune bascule du service réel vers ce mode pendant son développement.
+Le candidat 0.73.0 construit **un mode explicite de parent de récupération**, sous provenance originale et permission `spent`, démarrable après redémarrage avec un journal non vide ou perdu. Il expose uniquement le transport PC existant et le contrôle Unix `recover-only`, sans enfant applicatif, producteur, capture ou tick d'observation initial vide. Observation, initialisation et réservation gardent leurs préconditions actuelles. Aucune bascule du service réel vers ce mode pendant son développement.
 
-Critère de fin : vrai processus redémarré → vrai CLI `check/restore` → défi PC neuf → reçu terminé plus récent conservé en quarantaine, avec marqueur bloquant. PC absent, rejeu, dérive de provenance ou annulation refusent la récupération. L'absence effective des comptes dans la cible relève ensuite de la réconciliation et de l'essai SQL isolé de D ; ne pas annoncer C terminé à la seule présence du canal.
+[Parcours C3](witness-recovery-parent-073.md) et [preuves](verification-proofs/jm073-verification.json). Critère de fin : vrai processus redémarré → vrai CLI `check/restore` → défi PC neuf → reçu terminé plus récent conservé en quarantaine, avec marqueur bloquant. PC absent, rejeu, dérive de provenance ou annulation refusent la récupération. L'absence effective des comptes dans la cible relève ensuite de la réconciliation et de l'essai SQL isolé de D ; ne pas annoncer C terminé à la seule présence du canal.
 
 Garder `closuresEnabled:false`. Ne pas lancer `capture --offline` pendant le service. Conserver le superviseur et la cadence existants ; aucun nouveau mail de test ou questionnaire général. Jessie en France, sans structure ; conversations jusqu'à fermeture définitive, hors suppressions volontaires. Les mails déjà reçus restent acquis.
 

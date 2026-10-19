@@ -41,8 +41,9 @@ export function parseRecurringArguments(args) {
   if (!Array.isArray(args) || args.some(value => typeof value !== "string")) fail("USAGE");
   const witness = ["plan-witness", "check-witness", "prepare-witness"].includes(args[0]);
   const observer = ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"].includes(args[0]);
-  if (args.length !== (witness || observer ? 17 : 13) || !["check", "start", "plan-witness", "check-witness", "prepare-witness",
-    "prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"].includes(args[0])) fail("USAGE");
+  const recovery = ["check-witness-recovery", "start-witness-recovery"].includes(args[0]);
+  if (args.length !== (witness || observer || recovery ? 17 : 13) || !["check", "start", "plan-witness", "check-witness", "prepare-witness",
+    "prepare-witness-enrollment", "check-witness-observer", "start-witness-observer", "check-witness-recovery", "start-witness-recovery"].includes(args[0])) fail("USAGE");
   const names = new Map([["--runtime-directory", "runtimeDirectory"], ["--runtime-head", "runtimeHead"], ["--runtime-tree", "runtimeTree"],
     ["--private-directory", "privateDirectory"], ["--operations-directory", "operationsDirectory"], ["--private-path-mode", "privatePathMode"],
     ["--witness-operator-directory", "witnessOperatorDirectory"], ["--witness-destination", "witnessDestination"], ["--witness-plan-sha256", "witnessPlanSha256"],
@@ -60,13 +61,13 @@ export function parseRecurringArguments(args) {
     || inside(result.runtimeDirectory, result.privateDirectory) || inside(result.runtimeDirectory, result.operationsDirectory)
     || inside(result.privateDirectory, result.runtimeDirectory) || inside(result.operationsDirectory, result.runtimeDirectory)) fail("USAGE");
   const extras = ["witnessOperatorDirectory", "witnessDestination", "witnessPlanSha256", "witnessContractSha256"].filter(name => Object.hasOwn(result, name));
-  if (witness || observer) {
+  if (witness || observer || recovery) {
     if (extras.length !== 2 || !path(result.witnessOperatorDirectory)
       || [REPOSITORY, result.runtimeDirectory, result.privateDirectory, result.operationsDirectory].some(root => inside(root, result.witnessOperatorDirectory) || inside(result.witnessOperatorDirectory, root))
       || witness && result.witnessContractSha256 !== undefined
       || witness && args[0] === "plan-witness" && (!/^[a-f0-9]{32}$/.test(result.witnessDestination ?? "") || result.witnessPlanSha256 !== undefined)
       || witness && args[0] !== "plan-witness" && (!/^[a-f0-9]{64}$/.test(result.witnessPlanSha256 ?? "") || result.witnessDestination !== undefined)
-      || observer && (!/^[a-f0-9]{64}$/.test(result.witnessContractSha256 ?? "") || result.witnessDestination !== undefined || result.witnessPlanSha256 !== undefined)) fail("USAGE");
+      || (observer || recovery) && (!/^[a-f0-9]{64}$/.test(result.witnessContractSha256 ?? "") || result.witnessDestination !== undefined || result.witnessPlanSha256 !== undefined)) fail("USAGE");
   } else if (extras.length) fail("USAGE");
   return Object.freeze(result);
 }

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "release": "0.73.0",
+  "scope": "C3: explicit recovery-only parent after restart with nonempty or missing closure receipts",
+  "status": "candidate_validation_pending",
+  "activeService": {
+    "release": "0.72.0",
+    "changed": false,
+    "mode": "observe_only",
+    "closuresEnabled": false
+  },
+  "implementation": {
+    "originalProvenanceRequired": true,
+    "authenticatedSpentEnrollmentRequired": true,
+    "samePcTransport": true,
+    "recoverOnlyUnixControl": true,
+    "normalObserverEmptyGuardsUnchanged": true,
+    "childStarted": false,
+    "producersStarted": false,
+    "sqlImported": false,
+    "targetStarted": false,
+    "closureOwnerActivated": false,
+    "quarantineKept": true
+  },
+  "validation": {
+    "local": {
+      "combinedBeforeFinalCancellationTest": {
+        "tests": 118,
+        "passed": 108,
+        "failed": 0,
+        "nativeSkipped": 10
+      },
+      "finalFocused": {
+        "parentPassed": 17,
+        "cliPassed": 8,
+        "failed": 0
+      },
+      "httpNativePassed": 3,
+      "syntax": "passed_533_sources",
+      "diffCheck": "passed",
+      "independentReview": "approved; construction cancellation propagation fixed and assertion moved outside sanitized callback"
+    },
+    "nativeMariaDB": "pending",
+    "candidateCI": "pending",
+    "mainCI": "pending"
+  },
+  "remaining": [
+    "Qualified SQL inventory and isolated native import with target reconciliation to complete C",
+    "Full-host loss recovery procedure",
+    "Closure activation prerequisites remain unmet"
+  ],
+  "next": "D: qualified SQL inventory and isolated import to prove target reconciliation; keep closures disabled"
+}
