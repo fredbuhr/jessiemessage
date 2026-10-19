@@ -204,8 +204,12 @@ test("manual local restoration reconciles later closures on a distinct MariaDB/m
     await t.test("registry drift after an unlink refuses further work and preserves the target hold for manual retry", async () => {
       const input = await fixture(); let changed = false;
       const storage = { ...targetStorage, async remove(value) { await targetStorage.remove(value); changed = true; } };
-      await assert.rejects(reconcileManualRestore({ ...input, readRecentRegistry: async () => changed ? backup : recentRegistry, target: { ...input.target, storage } }), { code: "MANUAL_RESTORE_REGISTRY_CHANGED" });
-      assert.equal(changed, true); const hold = await readFile(path.join(input.journalDirectory, "operational-restore.json"));
+      // The erasure engine keeps guard failures behind its neutral boundary.
+      await assert.rejects(reconcileManualRestore({ ...input, readRecentRegistry: async () => changed ? backup : recentRegistry, target: { ...input.target, storage } }), { code: "MANUAL_RESTORE_UNAVAILABLE" });
+      assert.equal(changed, true);
+      assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS value FROM users WHERE id = ?", [client]))[0].value), 1, "the account is not finished after registry drift");
+      assert.equal(Number((await targetConnection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes), 1740, "the interrupted unlink is not credited before the registry is revalidated");
+      const hold = await readFile(path.join(input.journalDirectory, "operational-restore.json"));
       await assert.rejects(withPrivateDirectory(input.journalDirectory, assertNoOperationalRestore), { code: "OPERATIONS_RECONCILIATION_REQUIRED" });
       await reconcileManualRestore(input); assert.deepEqual(await readFile(path.join(input.journalDirectory, "operational-restore.json")), hold); await finalState(input);
     });
