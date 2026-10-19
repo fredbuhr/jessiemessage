@@ -76,7 +76,9 @@ test("real Chrome: copied backups show a simple overview and keep technical cont
     await waitUntil(() => page.execute("return document.getElementById('backup-overview-title').textContent === 'La dernière sauvegarde est copiée'"), "confirmed copy overview");
     assert.equal(await page.execute("return ['verification-panel','backup-technical'].every(id=>!document.getElementById(id).open) && !document.querySelector('.destination-settings').open"), true);
     assert.equal(await page.execute("return [...document.querySelectorAll('#backup-overview-details dd')].every(item=>item.getBoundingClientRect().height>0 && item.textContent.includes('2026')) && document.querySelector('.folder-help').getBoundingClientRect().height>0 && document.querySelector('.folder-help').textContent.includes('Bureau')"), true);
-    assert.equal(await page.execute("return document.getElementById('verify-archive').getBoundingClientRect().height === 0 && document.querySelector('[data-action=update-kit]').getBoundingClientRect().height === 0"), true);
+    // Chrome can retain descendant layout boxes inside a closed details.
+    // Check whether these optional tools are actually rendered to the user.
+    assert.equal(await page.execute("return [document.getElementById('verify-archive'), document.querySelector('[data-action=update-kit]')].every(button=>!button.checkVisibility({visibilityProperty:true,opacityProperty:true}))"), true);
     assert.equal(source.requests.some(item => item.method !== "GET"), false, "opening the simple page neither re-pairs nor checks decryption");
     const confirmedDate = await page.execute("return document.querySelector('#backup-overview-details > div:last-child dd').textContent");
     await page.click('.destination-settings > summary'); await tabUntil(page, '[data-action="toggle"]'); await page.key("\uE007");

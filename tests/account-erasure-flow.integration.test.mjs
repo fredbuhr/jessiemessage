@@ -12,7 +12,7 @@ import { openPayload, sealPayload, campaignFingerprint } from "../server/broadca
 import { createErasureStore } from "../server/data/erasure-store.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
 import { createAccountErasure } from "../server/data/erasure.mjs";
-import { createServer } from "node:http";
+import { createServer, request as httpRequest } from "node:http";
 import { createClosureService, createClosureTargets } from "../server/data/closure-service.mjs";
 import { createClosureHandler } from "../server/data/closure-http.mjs";
 import { createClosureOperations, verifyClosureStartup } from "../server/data/closure-operations.mjs";
@@ -228,18 +228,29 @@ test("durable account erasure removes the selected graph and actual encrypted fi
           configured = await createConfiguredServer(configuredEnv, { requestOrigin: "https://jessiemessage.com", deviceTransition: true,
             recovery: true, crm: true, broadcast: true, backupDirectory: journalRoot, accountClosures: false, clock: () => now });
           await new Promise(resolve => configured.server.listen(0, "127.0.0.1", resolve));
-          const base = `http://127.0.0.1:${configured.server.address().port}`, headers = { Host: "jessiemessage.com", "X-Forwarded-Proto": "https" };
+          // Match the existing dual-origin native tests: send the primary Host
+          // on the wire, rather than relying on fetch to preserve that header.
+          const request = (pathname, cookie) => new Promise((resolve, reject) => {
+            const req = httpRequest({ host: "127.0.0.1", port: configured.server.address().port, path: pathname, method: "GET", agent: false, setHost: false,
+              headers: { Host: "jessiemessage.com", ...(cookie ? { Cookie: cookie } : {}) } }, response => {
+              const chunks = []; response.on("data", chunk => chunks.push(chunk)); response.once("error", reject);
+              response.once("end", () => {
+                try { resolve({ status: response.statusCode, body: JSON.parse(Buffer.concat(chunks).toString("utf8")) }); }
+                catch (error) { reject(error); }
+              });
+            });
+            req.setTimeout(1000, () => req.destroy(new Error("Synthetic local HTTP request timed out")));
+            req.once("error", reject); req.end();
+          });
           let ready;
           for (let attempt = 0; attempt < 100; attempt++) {
-            const response = await fetch(`${base}/api/ready`, { headers, signal: AbortSignal.timeout(1000) });
-            ready = { status: response.status, body: await response.json() };
+            ready = await request("/api/ready");
             if (ready.status === 200) break;
             assert.equal(ready.status, 503); await new Promise(resolve => setTimeout(resolve, 25));
           }
           assert.deepEqual(ready, { status: 200, body: { status: "ready" } });
-          const authenticated = { ...headers, Cookie: `__Host-jessie_session=${rawToken}` };
-          const listed = await fetch(`${base}/api/admin/closures`, { headers: authenticated, signal: AbortSignal.timeout(1000) });
-          assert.equal(listed.status, 200); assert.deepEqual(await listed.json(), { version: 1, enabled: false, jobs: [], nextCursor: null });
+          const listed = await request("/api/admin/closures", `__Host-jessie_session=${rawToken}`);
+          assert.equal(listed.status, 200); assert.deepEqual(listed.body, { version: 1, enabled: false, jobs: [], nextCursor: null });
           assert.deepEqual(await readFile(path.join(journalRoot, receiptName)), receiptBytes);
           assert.deepEqual((await readdir(journalRoot)).sort(), [...namesBefore, receiptName].sort());
           assert.equal((await batch({ afterName: null, limit: 100 })).jobs[0].phase, "completed");
