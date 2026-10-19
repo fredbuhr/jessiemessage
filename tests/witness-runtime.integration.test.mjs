@@ -293,13 +293,16 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
       await assert.rejects(observer.check(), { code: "WITNESS_ENROLLMENT_MISSING" });
       assert.deepEqual(await readdir(enrollmentDirectory), [], "read-only startup never creates a missing enrollment authority");
       assert.equal(await sqlHash(), beforeSql);
+      // Gateway shutdown owns this observer even after the test clears its
+      // cleanup variable before starting a separate recovery-only process.
+      const controlledObserver = observer;
       const nativeControl = async (incoming, outgoing) => {
         if (incoming.url === controlPath) {
           outgoing.writeHead(200, { "Content-Type": "application/json" }); outgoing.end('{"synthetic":"control-ready"}'); return true;
         }
-        return observer.handler(incoming, outgoing);
+        return controlledObserver.handler(incoming, outgoing);
       };
-      Object.defineProperty(nativeControl, "close", { value: () => observer.close() });
+      Object.defineProperty(nativeControl, "close", { value: controlledObserver.close });
       supervisor = createRecurringSupervisor(observerOptions, {
         environment: { ...environment, PORT: String(publicPort) }, source,
         witnessControl: nativeControl,
