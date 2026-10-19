@@ -39,7 +39,7 @@ test("the default notice is current, bilingual, private and does not invent comp
   assert.equal(value.revision, 0); assert.equal(value.updatedAt, null); assert.deepEqual(value.answered, ["D01", "D04"]);
   assert.match(value.draft.answers.D01, /Jessie, en France/);
   assert.match(value.draft.answers.D04, /fermeture définitive/);
-  assert.deepEqual(value.confirmed, { version: 1, responsibleName: "Jessie", countryCode: "FR", organization: null, space: "private_invitation", conversationRetention: "until_permanent_account_closure", permanentClosure: "not_implemented" });
+  assert.deepEqual(value.confirmed, { version: 1, responsibleName: "Jessie", countryCode: "FR", organization: null, space: "private_invitation", conversationRetention: "until_permanent_account_closure", permanentClosure: "not_enabled" });
   assert.equal(value.publication, "draft_only"); assert.equal(value.retention, "not_enabled");
   assert.match(value.draft.notice.fr, /notes, classement et rappels/); assert.match(value.draft.notice.en, /notes, categorisation and reminders/);
   assert.match(value.draft.notice.fr, /Télécharger ma conversation/); assert.match(value.draft.notice.en, /Download my conversation/);
@@ -114,10 +114,31 @@ test("existing private drafts are preserved while confirmed product choices stay
   const service = await createPrivacyService({ directory: f.directory, key }, { files: f.files }), state = await service.read();
   assert.deepEqual(state.draft, existing.draft); assert.equal(state.revision, 1);
   assert.equal(state.confirmed.responsibleName, "Jessie"); assert.equal(state.confirmed.organization, null); assert.equal(state.confirmed.countryCode, "FR");
-  assert.equal(state.confirmed.conversationRetention, "until_permanent_account_closure"); assert.equal(state.confirmed.permanentClosure, "not_implemented");
+  assert.equal(state.confirmed.conversationRetention, "until_permanent_account_closure"); assert.equal(state.confirmed.permanentClosure, "not_enabled");
   state.confirmed.responsibleName = "Client-side alteration";
   assert.equal((await service.read()).confirmed.responsibleName, "Jessie");
   await assert.rejects(service.save({ revision: 1, draft: state.draft, confirmed: state.confirmed }, async () => {}), { code: "input" });
+});
+test("closure status follows the service capability on read and save, independently of editable drafts", async t => {
+  for (const accountClosures of [false, true]) await t.test(String(accountClosures), async step => {
+    const f = await fixture(step), service = await createPrivacyService({ directory: f.directory, key, accountClosures, clock: () => 1792350000000 }, { files: f.files });
+    const expected = accountClosures ? "administrator_local" : "not_enabled", initial = await service.read();
+    assert.equal(initial.confirmed.permanentClosure, expected);
+    initial.confirmed.permanentClosure = accountClosures ? "not_enabled" : "administrator_local";
+    initial.draft.answers.D05 = "Synthetic private closure note";
+    const saved = await service.save({ revision: initial.revision, draft: initial.draft }, async () => {});
+    assert.equal(saved.confirmed.permanentClosure, expected); assert.equal((await service.read()).confirmed.permanentClosure, expected);
+    await assert.rejects(service.save({ revision: saved.revision, draft: saved.draft, accountClosures: !accountClosures }, async () => {}), { code: "input" });
+    const persisted = await f.files.read();
+    assert.deepEqual(persisted.prepared, { updatedAt: 1792350000000, draft: saved.draft });
+    const otherMode = await createPrivacyService({ directory: f.directory, key, accountClosures: !accountClosures }, { files: f.files });
+    assert.equal((await otherMode.read()).confirmed.permanentClosure, accountClosures ? "not_enabled" : "administrator_local");
+    assert.deepEqual((await otherMode.read()).draft, saved.draft);
+  });
+});
+test("closure capability requires an explicit boolean when supplied", async () => {
+  for (const accountClosures of [null, 1, "true"])
+    await assert.rejects(createPrivacyService({ key, accountClosures }), { code: "input" });
 });
 let unavailable;
 try { if (process.platform !== "linux" || (await statfs("/proc/self/fd", { bigint: true })).type !== 0x9fa0n) unavailable = "Linux procfs unavailable"; } catch { unavailable = "Linux procfs unavailable"; }

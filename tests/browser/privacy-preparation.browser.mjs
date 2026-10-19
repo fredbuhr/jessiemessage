@@ -5,12 +5,13 @@ import { readFile } from "node:fs/promises";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 import { CONFIRMED_PRIVACY_CHOICES } from "../../server/privacy/choices.mjs";
 
-async function fixture() {
+async function fixture({ accountClosures = false } = {}) {
   const names = ["privacy.html", "privacy.js", "privacy.css", "i18n-privacy.js", "i18n.js", "i18n.css", "readiness-model.js", "brand/brand.css", "brand/icon-64.png", "favicon.ico"];
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   const requests = [], draft = { answers: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`D0${i + 1}`, ""])), notice: { fr: "Texte français — À COMPLÉTER D01", en: "English text — TO COMPLETE D01" } };
   let version = 0, changed = false, hidden = false, changeOnSave = false, delayedRead = null;
-  const value = () => ({ version: 1, revision: version, updatedAt: version ? Date.now() : null, publication: "draft_only", retention: "not_enabled", answered: [], confirmed: { ...CONFIRMED_PRIVACY_CHOICES }, draft });
+  const value = () => ({ version: 1, revision: version, updatedAt: version ? Date.now() : null, publication: "draft_only", retention: "not_enabled", answered: [],
+    confirmed: { ...CONFIRMED_PRIVACY_CHOICES, permanentClosure: accountClosures ? "administrator_local" : "not_enabled" }, draft });
   const server = createServer(async (request, response) => {
     const path = new URL(request.url, "http://localhost").pathname; let text = ""; for await (const chunk of request) text += chunk;
     requests.push({ path, method: request.method, text, csrf: request.headers["x-csrf-token"] });
@@ -41,6 +42,36 @@ async function fixture() {
 async function ready(page) { await waitUntil(() => page.execute("return !document.getElementById('privacy-content').hidden && document.querySelectorAll('#decision-groups textarea').length === 8"), "private preparation"); }
 async function edit(page, text) { await page.click("#privacy-preparation > summary"); await page.click("#decision-groups details:first-child > summary"); await page.type("#answer-D01", text); }
 const posts = source => source.requests.filter(item => item.path === "/api/admin/privacy" && item.method === "POST");
+
+test("real Chrome: the privacy summary states the actual closure capability in French and English", { timeout: 60000 }, async t => {
+  const driver = await startWebDriver();
+  const expected = {
+    disabled: {
+      fr: "La fermeture définitive n’est pas activée sur ce service. Les sauvegardes et fichiers déjà téléchargés sont des copies séparées.",
+      en: "Permanent account closure is not enabled on this service. Backups and files already downloaded are separate copies.",
+    },
+    enabled: {
+      fr: "La fermeture définitive s’effectue depuis « Fermetures de comptes » dans l’administration. Les sauvegardes et fichiers déjà téléchargés sont des copies séparées.",
+      en: "Permanent account closure is handled through “Account closures” in administration. Backups and files already downloaded are separate copies.",
+    },
+  };
+  try {
+    for (const accountClosures of [false, true]) await t.test(accountClosures ? "enabled" : "disabled", async () => {
+      const source = await fixture({ accountClosures }); let page;
+      try {
+        page = await driver.browser({ origin: source.origin, width: 375 });
+        await page.navigate("/__fixture"); await page.execute("sessionStorage.setItem('jessiemessage.language','fr')");
+        await page.navigate("/admin/privacy"); await ready(page);
+        const copy = expected[accountClosures ? "enabled" : "disabled"];
+        assert.equal(await page.execute("return document.getElementById('closure-status').textContent"), copy.fr);
+        await page.click("[data-jm-language]");
+        assert.equal(await page.execute("return document.getElementById('closure-status').textContent"), copy.en);
+        assert.equal(await page.execute("return document.documentElement.lang"), "en");
+        assert.equal(posts(source).length, 0, "Reading or translating the capability cannot save a preparation");
+      } finally { try { await page?.close(); } finally { await source.close(); } }
+    });
+  } finally { await driver.close(); }
+});
 
 test("real Chrome: private preparation at mobile and desktop widths, FR/EN, keyboard save and independent notice language", { timeout: 150000 }, async t => {
   const driver = await startWebDriver();

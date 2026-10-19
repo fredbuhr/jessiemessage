@@ -301,7 +301,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const [{ createBackupCopyService }, { createBackupCopyHandler }] = await Promise.all([import("./backup/copy-service.mjs"), import("./backup/copy-http.mjs")]);
       backupHandler = createBackupCopyHandler(createBackupCopyService(backupDirectory), { origin: config.origin, actor: token => service.session(token), clock });
       const [{ createPrivacyService }, { createPrivacyHandler }] = await Promise.all([import("./privacy/service.mjs"), import("./privacy/http.mjs")]);
-      privacyHandler = createPrivacyHandler(await createPrivacyService({ directory: backupDirectory, key: crmConfig.key, clock }),
+      privacyHandler = createPrivacyHandler(await createPrivacyService({ directory: backupDirectory, key: crmConfig.key, clock, accountClosures }),
         { origin: config.origin, actor: token => service.session(token) });
       const { createClosureHandler, disabledClosureService } = await import("./data/closure-http.mjs");
       closureHandler = createClosureHandler(disabledClosureService(), { origin: config.origin, actor: token => service.session(token) });
