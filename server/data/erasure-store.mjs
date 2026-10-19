@@ -113,6 +113,22 @@ export function createErasureStore({ pool, database, capacity, broadcastKey }) {
           pending.add(task); task.then(() => pending.delete(task), () => pending.delete(task)); return task;
         }
         const scope = Object.freeze({ binding,
+          // A receipt can concern an identity created and closed after the
+          // restored checkpoint. This read-only probe is specific to explicit
+          // source-to-target reconciliation; normal erasure still requires an
+          // existing client when it creates a new local intent.
+          inspectReconciliation: now => transaction(async () => {
+            const nowSql = erasureSqlDate(now), row = await user(false);
+            await capacityState();
+            if (row) {
+              if (row.created_at > nowSql || row.updated_at > nowSql) failErasure("ERASURE_CLOCK");
+              await facts(await conversation(), nowSql); return { present: true, clientId: clientHex };
+            }
+            await noContent(null, nowSql); await campaigns(null, nowSql, false);
+            for (const table of ["media_assets", "media_storage_objects"]) if ((await connection.query(`SELECT 1 AS present FROM ${table} WHERE owner_id = ? LIMIT 1`, [target])).length) failErasure("ERASURE_RESIDUAL");
+            if ((await connection.query("SELECT 1 AS present FROM client_auth_state WHERE user_id = ? LIMIT 1", [target])).length) failErasure("ERASURE_RESIDUAL");
+            return { present: false, absent: true, clientId: clientHex };
+          }),
           inspect: now => transaction(async () => {
             const nowSql = erasureSqlDate(now), row = await user();
             if (row.created_at > nowSql || row.updated_at > nowSql) failErasure("ERASURE_CLOCK");
