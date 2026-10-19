@@ -4,7 +4,7 @@
   "lot": "D1",
   "date": "2026-10-19",
   "status": "isolated_application_restore_verified",
-  "lastObservedAt": "2026-10-19T19:08:09.088933+00:00",
+  "lastObservedAt": "2026-10-19T19:08:09.886933+00:00",
   "operatorCode": {
     "release": "0.72.0",
     "source": "94fb7882cf74eb5f2ec165e67833ac2e7cdf13f3",
@@ -28,7 +28,7 @@
     "mode": "observe_only",
     "closuresEnabled": false,
     "switchPerformed": false,
-    "healthVerifiedAt": "2026-10-19T19:08:09.088933+00:00",
+    "healthVerifiedAt": "2026-10-19T19:08:09.886933+00:00",
     "health": {
       "http": 200,
       "status": "ok"
@@ -42,7 +42,7 @@
   },
   "targetProvisioning": {
     "status": "observed_in_manager",
-    "observedAt": "2026-10-19T18:48:20.569680+00:00",
+    "observedAt": "2026-10-19T18:48:20.596680+00:00",
     "database": "fb4hmr_jm_restore_20261019",
     "displayedBytes": 0,
     "linkedSites": 0,
