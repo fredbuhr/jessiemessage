@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "release": "0.70.0",
+  "stage": "4/6",
+  "checkedAt": "2026-10-19T13:36:02.552899+00:00",
+  "source": {
+    "head": "61878b174b239c8d009fedd9714701214dadbfbe",
+    "tree": "1efa835b44a6baeaa06b7e7e5ccf4351ece3e58c",
+    "merge": "1877870344191b19729d206805a715a221e3e9b4",
+    "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/88",
+    "clean": true,
+    "checkout": "/srv/customer/jessiemessage-operator/witness-enrollment-070-f4c7333f",
+    "dependencyEntriesIdenticalToActive065": true
+  },
+  "ci": {
+    "source": 39259576426,
+    "pullRequest": 39259587578,
+    "main": 39260235199,
+    "jobsPassedPerRun": 5,
+    "windowsSource": 39259576366,
+    "windowsPullRequest": 39259587465,
+    "windowsMain": 39260235066,
+    "windowsJobsPassedPerRun": 1,
+    "general": {
+      "passed": 2806,
+      "skipped": 30,
+      "failed": 0,
+      "total": 2836
+    },
+    "mariadb": {
+      "10.11": {
+        "passed": 410,
+        "skipped": 0,
+        "failed": 0
+      },
+      "11.4": {
+        "passed": 410,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    "chromePassed": 157,
+    "windowsWitnessAssertions": 85,
+    "syntaxSources": 526,
+    "buildPassed": true
+  },
+  "local": {
+    "passed": 2641,
+    "skipped": 195,
+    "failed": 0,
+    "total": 2836
+  },
+  "hostedNative": {
+    "passed": 138,
+    "skipped": 0,
+    "failed": 0
+  },
+  "runtime": {
+    "parentVersion": "0.70.0",
+    "childVersion": "0.70.0",
+    "gatewayPort": 3000,
+    "childLoopbackPort": 3001,
+    "schemaMigrations": 30,
+    "permanentRestartVerified": true,
+    "parentStarts": 2,
+    "authorityPreparations": 1,
+    "mode": "observe_only",
+    "closuresEnabled": false
+  },
+  "manager": {
+    "buildCompletedAtDisplayed": "2026-10-19 15:28 Europe/Paris (minute precision)",
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-witness-observer-070-61878b17.sh",
+    "runReadBackAfterSave": true,
+    "buildReadBackAfterSave": true,
+    "dependenciesReinstalled": false,
+    "siteReset": false,
+    "launcher": {
+      "bytes": 1131,
+      "mode": "0700",
+      "sha256": "cd888f05bab47253fe79783d5c05e5b2a16827cff8b3a1d2b43be85808f41bb6"
+    },
+    "previousParameters": {
+      "path": "/srv/customer/jessiemessage-private/manager-before-witness-enrollment-070.json",
+      "bytes": 461,
+      "mode": "0600",
+      "sha256": "e91932557d5d2bbea7ad1f9c90ce9ff38eb231eed038f583f1e2f4b4a88170c0"
+    }
+  },
+  "contract": {
+    "path": "/srv/customer/jessiemessage-private/witness-origin-069-6b84f6e1/contract/witness-genesis.json",
+    "bytes": 813,
+    "mode": "0600",
+    "sha256": "4fbdce199d70c1fd4b80f8ff249dae2666812b8ffc1c6912e8c50d1a042aaf10",
+    "unchanged": true,
+    "genesisReplayed": false
+  },
+  "enrollment": {
+    "phase": "ready",
+    "unchangedAfterPermanentRestart": true,
+    "authenticatedReadOnlyCheckPassed": true,
+    "files": [
+      {
+        "name": "witness-enrollment-origin.json",
+        "bytes": 968,
+        "mode": "0600",
+        "sha256": "817c6dca7735bb844d73066ebd3a711c46eb52cf5d5aabb5f4772171efc4b0c1"
+      },
+      {
+        "name": "witness-enrollment.json",
+        "bytes": 226,
+        "mode": "0600",
+        "sha256": "ac4c7287aaaa5abc758ddb4cc8b8fd86d433c6c8a187e048c7dc12a6dba4b728"
+      }
+    ]
+  },
+  "backups": {
+    "archiveCount": 4,
+    "schedule": {
+      "enabled": true,
+      "hourUtc": 5,
+      "minuteUtc": 15
+    },
+    "latestArchive": {
+      "id": "capture-1792386945745-204e0e8e073b6131",
+      "bytes": 402552,
+      "sha256": "c809dbfed6eabd2e8bde1a1d30a6cb11cbc99df720c0140935b3f2ae413690e5"
+    },
+    "currentComputerReceiptMatches": true,
+    "recheckedAfterPermanentRestart": true
+  },
+  "monitorSamples": [
+    {
+      "checkedAt": 1792416668320,
+      "state": "current",
+      "code": "OK",
+      "activeIncident": false
+    },
+    {
+      "checkedAt": 1792416728325,
+      "state": "current",
+      "code": "OK",
+      "activeIncident": false
+    },
+    {
+      "checkedAt": 1792416788330,
+      "state": "current",
+      "code": "OK",
+      "activeIncident": false
+    },
+    {
+      "checkedAt": 1792416848335,
+      "state": "current",
+      "code": "OK",
+      "activeIncident": false
+    },
+    {
+      "checkedAt": 1792416908346,
+      "state": "current",
+      "code": "OK",
+      "activeIncident": false
+    }
+  ],
+  "witnessObservation": {
+    "checkedAt": 1792416910012,
+    "state": "enrollment_required",
+    "mode": "observe_only",
+    "lastVerifiedAt": null,
+    "externalWitnessConfirmed": false,
+    "closuresEnabled": false
+  },
+  "https": {
+    "checkedAt": "2026-10-19T13:32:23.658793+00:00",
+    "nativeCheckedAt": "2026-10-19T13:32:24.862573+00:00",
+    "passed": 80,
+    "failed": 0,
+    "publicSourceHashes": 44,
+    "nativeRejections": 16,
+    "origins": [
+      "https://jessiemessage.com",
+      "https://recette.jessiemessage.com"
+    ],
+    "tlsVerified": true,
+    "redirectsFollowed": false,
+    "authenticated": false,
+    "realCapabilityUsed": false
+  },
+  "visualProof": "jm070-service-access.jpg",
+  "remaining": {
+    "personalWitnessInitialized": false,
+    "personalExternalRoundTripConfirmed": false,
+    "personalCurrentDecryptionConfirmed": false,
+    "currentIsolatedSqlImportConfirmed": false,
+    "accountClosuresEnabled": false
+  },
+  "nextPersonalAction": "Sur le PC déjà raccordé : Sauvegardes → Mettre à jour le PC → extraire le ZIP → Activer-le-temoin.cmd. Conserver les dossiers et la configuration ; aucun nouvel appariement ni export de clé.",
+  "hostedCheckpoint": {
+    "path": "/srv/customer/jessiemessage-private/jm070-activation.json",
+    "bytes": 2555,
+    "mode": "0600",
+    "sha256": "1a29475a28b745a0bff63dad3ecaeecae84dba3c8b4a488488eec772cd899685"
+  }
+}
