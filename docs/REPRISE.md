@@ -30,6 +30,10 @@ Le code vérifie maintenant chaque ouverture du mode doté d'un propriétaire de
 
 Service relu après fusion à **16:51:01 UTC** : HTTPS santé/disponibilité **200**, moniteur `current / OK`, aucun incident actif. Dernière observation du témoin à `1792428589841` : `not_confirmed`, dernière vérification complète `1792428436368`, fermetures désactivées. Les preuves personnelles B restent acquises à leur date ; une récupération doit demander sa propre preuve fraîche. Aucun redémarrage, nouvelle capture ou modification du runtime hébergé pour C1.
 
+## C2 — Canal et comparaison de récupération — 0.72.0 en validation
+
+Le vrai CLI est raccordé au transport PC du parent par un contrôle Unix privé, lecture seule, avec une nouvelle preuve à chaque frontière. La confirmation `planSha256` inclut source, cible, capsule, destinations et tête indépendante. La copie conserve les reçus source et le marqueur bloquant ; aucun import SQL ou démarrage cible. Les tests natifs de socket et le parcours complet restent à valider en CI avant fusion ou déploiement. Le service hébergé reste 0.70.2. [Parcours et limites](witness-recovery-072.md).
+
 ## Paramètres et états à préserver
 
 - Checkout actif : `/srv/customer/jessiemessage-operator/windows-existing-pc-update-0702-d1720d8a` ; parent public 3000, enfant configuré en boucle locale 3001.

@@ -113,7 +113,7 @@ test("explicit enrollment CLI waits for the first capture tick, attaches parent 
   const observer = { handler, async checkInitial() { events.push("check-initial"); }, async check() { assert.fail("Enrollment needs the initial check"); },
     attachMaintenance(work, failed) { events.push("attach"); assert.equal(work, maintain); assert.equal(failed, fail); },
     async initialize() { events.push("initialize"); return { version: 1, type: "witness_enrollment_prepared", closuresEnabled: false }; },
-    startObservation() { events.push("observe"); }, async close() { events.push("observer-close"); } };
+    async startRecoveryControl() { events.push("recovery-control"); }, startObservation() { events.push("observe"); }, async close() { events.push("observer-close"); } };
   const result = main(observerArgs("prepare-witness-enrollment"), { environment, execArgv: [],
     async makeWitnessObserver() { events.push("observer-construct"); return observer; },
     makeWitnessOrigin: () => assert.fail("Enrollment cannot recreate the original contract"),
@@ -129,7 +129,7 @@ test("explicit enrollment CLI waits for the first capture tick, attaches parent 
   await entered.promise;
   assert.deepEqual(events, ["observer-construct", "check-initial", "supervisor-construct", "attach", "start", "tick"]);
   release.resolve(); assert.equal((await result).status, "stopped");
-  assert.deepEqual(events.slice(6), ["tick-finished", "initialize", "observe", "alerts", "monitor", "monitor-start", "observer-close", "monitor-close", "supervisor-close", "alerts-close"]);
+  assert.deepEqual(events.slice(6), ["tick-finished", "initialize", "recovery-control", "observe", "alerts", "monitor", "monitor-start", "observer-close", "monitor-close", "supervisor-close", "alerts-close"]);
   assert.equal(JSON.parse(output).closuresEnabled, false);
 });
 
@@ -138,12 +138,12 @@ test("ordinary observer start never enrolls again and keeps its channel attached
   await main(observerArgs("start-witness-observer"), { environment, execArgv: [],
     async makeWitnessObserver() { return { handler, async check() { events.push("check"); }, async checkInitial() { assert.fail("No original enrollment on restart"); },
       async initialize() { assert.fail("Restart cannot initialize a witness"); }, attachMaintenance() { events.push("attach"); },
-      startObservation() { events.push("observe"); }, async close() { events.push("observer-close"); } }; },
+      async startRecoveryControl() { events.push("recovery-control"); }, startObservation() { events.push("observe"); }, async close() { events.push("observer-close"); } }; },
     makeSupervisor(selected, dependencies) { assert.equal(selected.command, "start"); assert.equal(dependencies.witnessControl, handler);
       return { withWitnessMaintenance() {}, failWitnessObservation() {}, async start() { events.push("start"); }, async tick() { events.push("tick"); },
         finished: Promise.resolve({ failed: false }), async close() { events.push("supervisor-close"); } }; },
     makeAlerts: () => ({ async close() {} }), makeMonitor: () => ({ async start() {}, async close() {} }), outputStream: { write() {} } });
-  assert.deepEqual(events, ["check", "attach", "start", "tick", "observe", "observer-close", "supervisor-close"]);
+  assert.deepEqual(events, ["check", "attach", "start", "tick", "recovery-control", "observe", "observer-close", "supervisor-close"]);
 });
 
 test("an observer failure before or during enrollment releases it and never starts unrelated workers", async () => {

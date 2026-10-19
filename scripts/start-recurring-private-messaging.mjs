@@ -46,7 +46,7 @@ export async function main(args = process.argv.slice(2), { environment = process
   const monitorUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_monitor","event":"unavailable","code":"MONITOR_UNAVAILABLE","notificationStatus":"not_sent"}\n'); } catch {} };
   const alertsUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_alert","event":"unavailable","code":"ALERT_UNAVAILABLE","notificationStatus":"not_confirmed","inboxStatus":"not_checked"}\n'); } catch {} };
   const abort = () => {
-    try { observer?.close(); } catch {}
+    try { void Promise.resolve(observer?.close()).catch(() => {}); } catch {}
     try { void Promise.resolve(monitor?.close()).catch(monitorUnavailable); } catch { monitorUnavailable(); }
     try { void Promise.resolve(alerts?.close()).catch(alertsUnavailable); } catch { alertsUnavailable(); }
     void supervisor.close();
@@ -65,7 +65,10 @@ export async function main(args = process.argv.slice(2), { environment = process
           return { version: 1, type: "recurring_supervisor", status: "stopped" };
         }
         if (options.command === "prepare-witness-enrollment") emit(await observer.initialize());
-        if (!signal?.aborted) observer.startObservation();
+        if (!signal?.aborted) {
+          await observer.startRecoveryControl();
+          if (!signal?.aborted) observer.startObservation();
+        }
       }
       try { alerts = makeAlerts({ operationsDirectory: options.operationsDirectory, privateDirectory: options.privateDirectory },
         { emit: report => outputStream.write(`${JSON.stringify(report)}\n`) }); } catch { alertsUnavailable(); }

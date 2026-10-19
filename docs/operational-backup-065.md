@@ -1,5 +1,6 @@
 # 0.65 — sauvegarde des réglages privés et contrôle de restauration
 
+> Interface historique 0.65 : les appels de récupération ci-dessous décrivent cette version. Le CLI courant exige désormais une preuve fraîche et une confirmation liée au plan ; voir [C2 — récupération 0.72](witness-recovery-072.md). Les preuves datées 0.65 restent inchangées.
 **Étape 4/6, volet logiciel.** La capture gérée inclut désormais la préparation privée et les journaux chiffrés de fermeture. La restauration de ces fichiers conserve leur contexte d’origine et passe par une quarantaine bloquée au démarrage. Ce lot ne fournit pas la continuité indépendante du registre et n’active pas les fermetures réelles. La version 0.65 est activée le 19 octobre à 01:07 Europe/Paris (minute affichée), avec les fermetures réelles désactivées. Lire les preuves ci-dessous ; un contrôle CI seul ne constituerait pas ce déploiement.
 
 ## Capture cohérente

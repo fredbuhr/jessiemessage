@@ -183,3 +183,19 @@ test("native first-use enrollment uses private anchors and refuses to recreate a
   assert.equal((await f.enrollment.reserve(request())).initialize, false);
   await unlink(f.stateFile); await assert.rejects(f.enrollment.reserve(request()), { code: "WITNESS_ENROLLMENT_MISSING" });
 });
+
+for (const native of [false, true]) test(`recovery authority is spent-only and read-only under provenance without relaxing empty-source enrollment (${native ? "native" : "fixture"})`, { skip: native ? unavailable : false }, async t => {
+  const f = await fixture(t, { native }); let provenance = true;
+  const recovery = f.make({ async assertProvenance() { if (!provenance) throw new Error("Synthetic changed provenance"); } }); t.after(() => recovery.close());
+  await assert.rejects(recovery.readRecoveryAuthority(), { code: "WITNESS_ENROLLMENT_MISSING" });
+  await f.enrollment.initialize();
+  await assert.rejects(recovery.readRecoveryAuthority(), { code: "WITNESS_ENROLLMENT_RECOVERY_REQUIRED" });
+  await f.enrollment.reserve(request()); const before = await readFile(f.stateFile);
+  f.setOriginal(false);
+  assert.deepEqual(await recovery.readRecoveryAuthority(), { ready: false, spent: true });
+  await assert.rejects(recovery.check()); await assert.rejects(recovery.reserve(request()));
+  assert.deepEqual(await readFile(f.stateFile), before);
+  provenance = false; await assert.rejects(recovery.readRecoveryAuthority());
+  provenance = true; await unlink(f.stateFile);
+  await assert.rejects(recovery.readRecoveryAuthority(), { code: "WITNESS_ENROLLMENT_MISSING" });
+});
