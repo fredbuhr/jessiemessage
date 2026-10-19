@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { reconcileManualRestore } from "../server/backup/manual-restore.mjs";
+import { reconcileManualRestore, publishManualRestore } from "../server/backup/manual-restore.mjs";
 import { erasureDirectory } from "./fixtures/erasure-files.mjs";
 
 async function fixture(t) {
@@ -33,4 +33,35 @@ test("a target journal cannot be hidden inside the imported media or its source 
     const f = await fixture(t); f.input.journalDirectory = path.join(directory === "media" ? f.input.target.rootPath : f.input[directory], "journal-child");
     await assert.rejects(reconcileManualRestore(f.input), { code: "MANUAL_RESTORE_DIRECTORY" }); await f.unchanged();
   }
+});
+
+for (const field of ["checkpointDirectory", "quarantineDirectory", "journalDirectory", "progressDirectory"]) {
+  for (const relationship of ["same", "inside", "around"]) {
+    test(`target media ${relationship} ${field} is refused before execution`, async t => {
+      const f = await fixture(t);
+      if (relationship === "same") f.input.target.rootPath = f.input[field];
+      if (relationship === "inside") f.input.target.rootPath = path.join(f.input[field], "media-child");
+      if (relationship === "around") { const child = path.join(f.input.target.rootPath, "metadata-child"); f.input[field] = child; }
+      await assert.rejects(reconcileManualRestore(f.input), { code: "MANUAL_RESTORE_DIRECTORY" }); await f.unchanged();
+    });
+  }
+}
+for (const options of [undefined, {}, { expectedPlanSha256: "bad" }, { expectedPlanSha256: "a".repeat(64), runtime: {} }]) {
+  test("publication requires explicit valid confirmation and a managed runtime", async t => {
+    const f = await fixture(t); await assert.rejects(publishManualRestore(f.input, options), { code: "MANUAL_RESTORE_INPUT" }); await f.unchanged();
+  });
+}
+test("publication refuses a running target before any file or SQL operation", async t => {
+  const f = await fixture(t); let started = 0, stopped = 0, made = 0;
+  await assert.rejects(publishManualRestore(f.input, { expectedPlanSha256: "a".repeat(64), runtime: {
+    state: () => ({ status: "running" }), start: async () => { started++; }, stop: async () => { stopped++; },
+  }, makeOperations: async () => { made++; } }), { code: "MANUAL_RESTORE_MAINTENANCE" });
+  assert.deepEqual({ started, stopped, made }, { started: 0, stopped: 0, made: 0 }); await f.unchanged();
+});
+test("publication does not invoke an option accessor or accept an arbitrary factory value", async t => {
+  const f = await fixture(t); let invoked = false;
+  const options = { get expectedPlanSha256() { invoked = true; throw new Error("Synthetic private value"); } };
+  await assert.rejects(publishManualRestore(f.input, options), { code: "MANUAL_RESTORE_INPUT" }); assert.equal(invoked, false);
+  await assert.rejects(publishManualRestore(f.input, { expectedPlanSha256: "a".repeat(64), runtime: { state() {}, start() {}, stop() {} }, makeOperations: true }), { code: "MANUAL_RESTORE_INPUT" });
+  await f.unchanged();
 });

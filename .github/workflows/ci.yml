@@ -142,6 +142,8 @@ jobs:
           node-version: "24"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
+      - name: Install native MariaDB checkpoint clients
+        run: sudo apt-get update && sudo apt-get install -y mariadb-client
       - name: Create disposable runtime and offline schema inspection accounts
         run: |
           docker exec -i -e MYSQL_PWD=ci-only-root-not-a-secret ${{ job.services.mariadb.id }} mariadb --user=root <<'SQL'
@@ -150,6 +152,8 @@ jobs:
           CREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret';
           GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_ci.* TO 'jessiemessage_runtime_test'@'%';
           GRANT SELECT, INSERT, UPDATE, DELETE ON jessiemessage_test_restore_ci.* TO 'jessiemessage_runtime_test'@'%';
+          CREATE USER 'jessiemessage_shared_restore_test'@'%' IDENTIFIED BY 'ci-shared-restore-only-not-a-secret' WITH MAX_USER_CONNECTIONS 38;
+          GRANT SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES ON `jessiemessage\_test\_restore\_ci`.* TO 'jessiemessage_shared_restore_test'@'%';
           CREATE USER 'jessiemessage_preflight_test'@'%' IDENTIFIED BY 'ci-preflight-only-not-a-secret';
           CREATE USER 'jessiemessage_shared_test'@'%' IDENTIFIED BY 'ci-shared-only-not-a-secret' WITH MAX_USER_CONNECTIONS 38;
           GRANT SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES, LOCK TABLES ON `jessiemessage\_test\_ci`.* TO 'jessiemessage_shared_test'@'%';
@@ -159,7 +163,7 @@ jobs:
           GRANT ALL PRIVILEGES ON `jessiemessage\_test\_restore\_ci`.* TO 'jessiemessage_backup_test'@'%';
           SQL
       - name: Exercise migrations and constraints on disposable database
-        run: timeout --signal=TERM --kill-after=10s 5m npm run test:db
+        run: timeout --signal=TERM --kill-after=10s 8m npm run test:db
         env:
           JESSIEMESSAGE_DB_TEST: "1"
           JESSIEMESSAGE_RESTORE_TEST_DATABASE: jessiemessage_test_restore_ci
@@ -179,5 +183,7 @@ jobs:
           JESSIEMESSAGE_PREFLIGHT_DB_PASSWORD: ci-preflight-only-not-a-secret
           JESSIEMESSAGE_SHARED_PREFLIGHT_DB_USER: jessiemessage_shared_test
           JESSIEMESSAGE_SHARED_PREFLIGHT_DB_PASSWORD: ci-shared-only-not-a-secret
+          JESSIEMESSAGE_SHARED_RESTORE_DB_USER: jessiemessage_shared_restore_test
+          JESSIEMESSAGE_SHARED_RESTORE_DB_PASSWORD: ci-shared-restore-only-not-a-secret
           # Disposable root fixture used only to demonstrate wildcard collisions.
           JESSIEMESSAGE_PATTERN_TEST_ROOT_PASSWORD: ci-only-root-not-a-secret
