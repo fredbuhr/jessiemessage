@@ -87,7 +87,7 @@
     "encryptedMediaFiles": 4,
     "receiptSha256": "1f9ce8a751e5db2d1f53188eb25254d1846ba7d12b441902b6f2ac6331de1b9f",
     "manifestSha256": "26564035b9a4cdc8951986209902854d5d66fe0e73e8f46a6560fd3f2f0918fb",
-    "operationalCapsuleSha256": "1d1f5c34f8c880addd80ea3e295aef76e93e9a2d1f723fd4bd6816b9a53d4cca"
+    "operationalCapsuleSha256": "1d1f5c34f8cb80ad0d80ea3e295aef76e93e9a2d1f723fd4bd6816b9a53d4cca"
   },
   "sourceCaptureReference": {
     "captureDate": "2026-10-19",
