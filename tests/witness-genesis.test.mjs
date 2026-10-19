@@ -4,7 +4,7 @@ import { constants } from "node:fs";
 import { chmod, link, lstat, mkdir, open, readFile, readdir, rename, statfs, symlink, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { prepareWitnessGenesis, readWitnessGenesis, WITNESS_GENESIS_FILE } from "../server/backup/witness-genesis.mjs";
+import { prepareWitnessGenesis, readWitnessGenesis, readWitnessGenesisObservation, WITNESS_GENESIS_FILE } from "../server/backup/witness-genesis.mjs";
 import { saveCopyState, readCopyState } from "../server/backup/copy-files.mjs";
 import { createErasureJournal } from "../server/data/erasure-journal.mjs";
 import { erasureDirectory } from "./fixtures/erasure-files.mjs";
@@ -45,7 +45,8 @@ async function fixture(t) {
   }
   const prepare = changes => prepareWitnessGenesis({ ...options, ...changes }, internal);
   return { root, options, directory, operationsDirectory, name, prepare, update,
-    async read(result, changes) { return readWitnessGenesis({ ...options, expectedContractSha256: result.contractSha256, ...changes }, internal); } };
+    async read(result, changes) { return readWitnessGenesis({ ...options, expectedContractSha256: result.contractSha256, ...changes }, internal); },
+    async observe(result, changes) { return readWitnessGenesisObservation({ ...options, expectedContractSha256: result.contractSha256, ...changes }, internal); } };
 }
 async function addIntent(f) {
   const journal = createErasureJournal({ directory: f.operationsDirectory, key, binding, clientId: "d".repeat(32) }, { withDirectory });
@@ -126,6 +127,49 @@ for (const mode of ["paused", "revoked", "repaired", "replaced_same_time"]) {
     await assert.rejects(g.prepare(), { code: "WITNESS_GENESIS_PAIRING" }); assert.deepEqual(await readdir(g.directory), []);
   });
 }
+
+test("explicit non-destructive observation authenticates the same paused PC without granting active genesis authority", async t => {
+  const f = await fixture(t), result = await f.prepare();
+  assert.deepEqual(await f.observe(result), result.contract); await f.update(item => item.enabled = false);
+  const contractBefore = await readFile(f.name), copyBefore = await readFile(path.join(f.operationsDirectory, "backup-copy-state.json"));
+  assert.deepEqual(await f.observe(result), result.contract);
+  await assert.rejects(f.read(result), { code: "WITNESS_GENESIS_PAIRING" });
+  assert.deepEqual(await readFile(f.name), contractBefore); assert.deepEqual(await readFile(path.join(f.operationsDirectory, "backup-copy-state.json")), copyBefore);
+  assert.deepEqual(await readdir(f.directory), [WITNESS_GENESIS_FILE]);
+  await f.update(item => item.enabled = true); assert.deepEqual(await f.read(result), result.contract);
+});
+
+test("observation never accepts revoked, replaced, re-paired or removed destinations even when copies are paused", async t => {
+  for (const mode of ["revoked", "re-paired", "replaced-token", "other-destination", "removed"]) await t.test(mode, async step => {
+    const f = await fixture(step), result = await f.prepare();
+    await f.update(item => {
+      item.enabled = false;
+      if (mode === "revoked") { item.tokenHash = null; item.pairedAt = null; }
+      if (mode === "re-paired") item.pairedAt++;
+      if (mode === "replaced-token") item.tokenHash = "e".repeat(64);
+      if (mode === "other-destination") item.id = "e".repeat(32);
+    });
+    if (mode === "removed") {
+      const state = await readCopyState(f.operationsDirectory, internal); state.destinations = [];
+      await saveCopyState(f.operationsDirectory, state, state.revision, internal);
+    }
+    const before = await readFile(f.name);
+    await assert.rejects(f.observe(result), { code: "WITNESS_GENESIS_PAIRING" }); assert.deepEqual(await readFile(f.name), before);
+  });
+});
+
+test("paused observation preserves contract authentication, exact pin and original source binding requirements", async t => {
+  const f = await fixture(t), result = await f.prepare(); await f.update(item => item.enabled = false);
+  for (const changes of [{ expectedContractSha256: "e".repeat(64) }, { key: Buffer.alloc(32, 8) },
+    { binding: { ...binding, database: "different_database" } }, { binding: { ...binding, rootFingerprint: "d".repeat(64) } }]) await assert.rejects(f.observe(result, changes));
+  const bytes = await readFile(f.name), altered = JSON.parse(bytes); altered.contract.createdAt++;
+  await writeFile(f.name, JSON.stringify(altered) + "\n");
+  await assert.rejects(f.observe({ contractSha256: sha(await readFile(f.name)) }), { code: "WITNESS_GENESIS_AUTHENTICATION" });
+  await writeFile(f.name, bytes);
+  await rename(f.operationsDirectory, path.join(f.root, "original-operations")); await mkdir(f.operationsDirectory, { mode: 0o700 });
+  await assert.rejects(f.observe(result), { code: "WITNESS_GENESIS_BINDING" });
+  await unlink(f.name); await assert.rejects(f.observe(result)); assert.deepEqual(await readdir(f.directory), []);
+});
 
 test("receipt refreshes do not invalidate pairing and later closures do not rerun genesis", async t => {
   const f = await fixture(t), result = await f.prepare();
@@ -208,6 +252,10 @@ test("Linux CI must exercise the production genesis directory anchors", { skip: 
 test("native protected anchors prepare/read the contract and reject a directory symlink", { skip: unavailable }, async t => {
   const f = await fixture(t), result = await prepareWitnessGenesis(f.options);
   assert.deepEqual(await readWitnessGenesis({ ...f.options, expectedContractSha256: result.contractSha256 }), result.contract);
+  await f.update(item => item.enabled = false);
+  assert.deepEqual(await readWitnessGenesisObservation({ ...f.options, expectedContractSha256: result.contractSha256 }), result.contract);
+  await assert.rejects(readWitnessGenesis({ ...f.options, expectedContractSha256: result.contractSha256 }), { code: "WITNESS_GENESIS_PAIRING" });
   const alias = path.join(f.root, "alias"); await symlink(f.directory, alias);
   await assert.rejects(readWitnessGenesis({ ...f.options, directory: alias, expectedContractSha256: result.contractSha256 }));
+  await assert.rejects(readWitnessGenesisObservation({ ...f.options, directory: alias, expectedContractSha256: result.contractSha256 }));
 });

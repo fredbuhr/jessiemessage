@@ -1,4 +1,4 @@
-param([switch]$Setup, [switch]$Settings, [switch]$Run, [switch]$Update, [switch]$Witness)
+param([switch]$Setup, [switch]$Settings, [switch]$Run, [switch]$Update, [switch]$Witness, [switch]$EnrollWitness)
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $script:JmOrigin = 'https://jessiemessage.com'
@@ -248,13 +248,35 @@ function Register-JmAgentTasks {
 function Invoke-JmAgentUpdate {
     param([string]$Directory, [string]$Source, [string]$DestinationId)
     Assert-JmDirectory $Directory
+    $jmWitnessLock = $null
     $jmLock = New-Object IO.FileStream((Join-Path $Directory 'agent.lock'), [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
     try {
+        $jmWitnessLock = New-Object IO.FileStream((Join-Path $Directory 'witness-agent.lock'), [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
         $jmConfig = Read-JmConfiguration $Directory
         if ($jmConfig.DestinationId -cne $DestinationId) { throw 'PC non raccorde.' }
         Install-JmAgentFiles $Directory $Source
         Register-JmAgentTasks $Directory $jmConfig.DestinationId
-    } finally { $jmLock.Dispose() }
+    } finally { if ($null -ne $jmWitnessLock) { $jmWitnessLock.Dispose() }; $jmLock.Dispose() }
+}
+function Start-JmWitnessEnrollment {
+    try {
+        Add-Type -AssemblyName System.Windows.Forms
+        $jmMetadata = Get-Item -LiteralPath (Join-Path $PSScriptRoot 'mise-a-jour.json') -Force
+        if ($jmMetadata.Length -gt 4096 -or ($jmMetadata.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Kit non valide.' }
+        $jmUpdate = Get-Content -LiteralPath $jmMetadata.FullName -Raw | ConvertFrom-Json
+        Assert-JmWitnessFields $jmUpdate @('version', 'destinationId', 'origin')
+        if ($jmUpdate.version -cne 1 -or $jmUpdate.destinationId -isnot [string] -or $jmUpdate.destinationId -cnotmatch '^[a-f0-9]{32}$' -or $jmUpdate.origin -cne $script:JmOrigin) { throw 'Kit non valide.' }
+        $jmDirectory = Join-Path $env:LOCALAPPDATA ('JessieMessage\Sauvegardes\' + $jmUpdate.destinationId)
+        Invoke-JmAgentUpdate $jmDirectory $PSScriptRoot $jmUpdate.destinationId
+        $jmResult = Invoke-JmWitnessEnrollment $jmDirectory $jmUpdate.destinationId
+        Write-Output 'TEMOIN_INITIALISE'
+        $null = [Windows.Forms.MessageBox]::Show('Temoin initialise sur ce PC. Le dossier et le raccordement sont conserves. La verification independante par le service reste distincte.', 'JessieMessage')
+        # Enrollment has released both locks before the ordinary worker starts.
+        Start-JmWitnessWorker $jmDirectory
+    } catch {
+        $null = [Windows.Forms.MessageBox]::Show('Initialisation du temoin non confirmee. Les fichiers et le raccordement sont conserves. Ne pas supprimer le dossier du temoin ni raccorder de nouveau le PC.', 'JessieMessage')
+        Write-Output 'JESSIEMESSAGE_TEMOIN_INITIALISATION_NON_CONFIRMEE'; exit 1
+    }
 }
 function Start-JmUpdate {
     $jmLock = $null
@@ -336,6 +358,6 @@ function Start-JmBackup {
 # scheduling, graphical dialogs or any access to a user's recovery key.
 . (Join-Path $PSScriptRoot 'JessieMessage-temoin-067.ps1')
 if ($MyInvocation.InvocationName -ne '.') {
-    if (@($Setup, $Settings, $Run, $Update, $Witness).Where({ $_ }).Count -ne 1) { throw 'Une seule operation est requise.' }
-    if ($Update) { Start-JmUpdate } elseif ($Witness) { Start-JmWitnessWorker $PSScriptRoot } else { Start-JmBackup }
+    if (@($Setup, $Settings, $Run, $Update, $Witness, $EnrollWitness).Where({ $_ }).Count -ne 1) { throw 'Une seule operation est requise.' }
+    if ($Update) { Start-JmUpdate } elseif ($EnrollWitness) { Start-JmWitnessEnrollment } elseif ($Witness) { Start-JmWitnessWorker $PSScriptRoot } else { Start-JmBackup }
 }

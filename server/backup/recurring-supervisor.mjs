@@ -14,6 +14,7 @@ import { createManagedRuntime } from "./managed-runtime.mjs";
 import { runManagedClosures } from "./managed-closures.mjs";
 import { runManagedWitnessPreparation } from "./managed-witness.mjs";
 import { witnessOriginErrorCode } from "./witness-origin-diagnostics.mjs";
+import { runWitnessObservationMaintenance } from "./witness-observation-maintenance.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const PROFILE = "photos-notify-recovery-crm-broadcast";
@@ -39,10 +40,13 @@ const knownCode = error => /^(?:RECURRING_(?:SUPERVISOR|FILES|CHECKPOINT)|CHECKP
 export function parseRecurringArguments(args) {
   if (!Array.isArray(args) || args.some(value => typeof value !== "string")) fail("USAGE");
   const witness = ["plan-witness", "check-witness", "prepare-witness"].includes(args[0]);
-  if (args.length !== (witness ? 17 : 13) || !["check", "start", "plan-witness", "check-witness", "prepare-witness"].includes(args[0])) fail("USAGE");
+  const observer = ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"].includes(args[0]);
+  if (args.length !== (witness || observer ? 17 : 13) || !["check", "start", "plan-witness", "check-witness", "prepare-witness",
+    "prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"].includes(args[0])) fail("USAGE");
   const names = new Map([["--runtime-directory", "runtimeDirectory"], ["--runtime-head", "runtimeHead"], ["--runtime-tree", "runtimeTree"],
     ["--private-directory", "privateDirectory"], ["--operations-directory", "operationsDirectory"], ["--private-path-mode", "privatePathMode"],
-    ["--witness-operator-directory", "witnessOperatorDirectory"], ["--witness-destination", "witnessDestination"], ["--witness-plan-sha256", "witnessPlanSha256"]]);
+    ["--witness-operator-directory", "witnessOperatorDirectory"], ["--witness-destination", "witnessDestination"], ["--witness-plan-sha256", "witnessPlanSha256"],
+    ["--witness-contract-sha256", "witnessContractSha256"]]);
   const result = { command: args[0] };
   for (let index = 1; index < args.length; index += 2) {
     const name = names.get(args[index]);
@@ -55,12 +59,14 @@ export function parseRecurringArguments(args) {
     || inside(result.operationsDirectory, result.privateDirectory) || inside(result.privateDirectory, result.operationsDirectory)
     || inside(result.runtimeDirectory, result.privateDirectory) || inside(result.runtimeDirectory, result.operationsDirectory)
     || inside(result.privateDirectory, result.runtimeDirectory) || inside(result.operationsDirectory, result.runtimeDirectory)) fail("USAGE");
-  const extras = ["witnessOperatorDirectory", "witnessDestination", "witnessPlanSha256"].filter(name => Object.hasOwn(result, name));
-  if (witness) {
+  const extras = ["witnessOperatorDirectory", "witnessDestination", "witnessPlanSha256", "witnessContractSha256"].filter(name => Object.hasOwn(result, name));
+  if (witness || observer) {
     if (extras.length !== 2 || !path(result.witnessOperatorDirectory)
       || [REPOSITORY, result.runtimeDirectory, result.privateDirectory, result.operationsDirectory].some(root => inside(root, result.witnessOperatorDirectory) || inside(result.witnessOperatorDirectory, root))
-      || args[0] === "plan-witness" && (!/^[a-f0-9]{32}$/.test(result.witnessDestination ?? "") || result.witnessPlanSha256 !== undefined)
-      || args[0] !== "plan-witness" && (!/^[a-f0-9]{64}$/.test(result.witnessPlanSha256 ?? "") || result.witnessDestination !== undefined)) fail("USAGE");
+      || witness && result.witnessContractSha256 !== undefined
+      || witness && args[0] === "plan-witness" && (!/^[a-f0-9]{32}$/.test(result.witnessDestination ?? "") || result.witnessPlanSha256 !== undefined)
+      || witness && args[0] !== "plan-witness" && (!/^[a-f0-9]{64}$/.test(result.witnessPlanSha256 ?? "") || result.witnessDestination !== undefined)
+      || observer && (!/^[a-f0-9]{64}$/.test(result.witnessContractSha256 ?? "") || result.witnessDestination !== undefined || result.witnessPlanSha256 !== undefined)) fail("USAGE");
   } else if (extras.length) fail("USAGE");
   return Object.freeze(result);
 }
@@ -179,7 +185,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     || options.command === "prepare-witness" && witnessOriginOperations === null) fail("CONFIGURATION");
   const processOptions = privateAuthenticationProcessOptions(environment, []);
   const cancellation = new AbortController();
-  let timer, closed = false, started = false, starting = false, ticking = null, closing = null, controller = null, lastNotice = null, fatal = false;
+  let timer, closed = false, started = false, starting = false, ticking = null, observing = null, closing = null, controller = null, lastNotice = null, fatal = false;
   let finish; const finished = new Promise(resolveFinished => { finish = resolveFinished; });
   const notice = value => { try { emit(value); } catch {} };
   const unavailable = error => {
@@ -197,7 +203,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     port: childPort, environment: witnessControl === null ? environment : { ...environment, PORT: String(childPort) }, onUnexpectedExit: unexpected, accountClosures: closureOperations !== null,
     ...(witnessControl === null ? {} : { parentGateway: true }) });
   function tick() {
-    if (closed || !started) return Promise.resolve(null);
+    if (closed || !started || observing) return Promise.resolve(null);
     if (ticking) return ticking;
     ticking = (async () => {
       try {
@@ -260,6 +266,17 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     if (closed) return;
     timer = schedule(() => { void tick().finally(arm); }, intervalMilliseconds);
   }
+  function withWitnessMaintenance(work, verifyResume) {
+    // This capability is handed only to the fixed non-destructive observer.
+    // It is never available alongside an erasure owner or a direct listener.
+    if (closed || !started || ticking || observing || closureOperations !== null || witnessControl === null
+      || typeof work !== "function" || typeof verifyResume !== "function") return Promise.reject(new RecurringSupervisorError("RUNTIME"));
+    observing = runWitnessObservationMaintenance({ runtime, directory: options.operationsDirectory,
+      source: () => source(options, { signal: cancellation.signal }), work, verifyResume, signal: cancellation.signal })
+      .catch(error => { if (!closed && runtime.state().status !== "running") unexpected(); throw error; })
+      .finally(() => { observing = null; });
+    return observing;
+  }
   async function start() {
     if (closed || started || starting) fail("RUNTIME");
     starting = true; let witnessPhase = "initial_precheck";
@@ -307,11 +324,13 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     closing = (async () => {
       await controller?.close();
       await ticking;
+      try { await observing; } catch {}
       await runtime.destroy();
       await gateway?.close();
       finish({ failed: fatal });
     })();
     return closing;
   }
-  return Object.freeze({ start, tick, close, finished, state: () => Object.freeze({ closed, started, backupRunning: controller?.state().status === "running" }) });
+  return Object.freeze({ start, tick, close, withWitnessMaintenance, failWitnessObservation: unexpected, finished,
+    state: () => Object.freeze({ closed, started, backupRunning: controller?.state().status === "running" }) });
 }

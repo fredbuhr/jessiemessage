@@ -12,6 +12,8 @@ on:
       - server/backup/copy-kit.mjs
       - tests/windows/backup-witness.ps1
       - tests/fixtures/witness-windows.mjs
+      - tests/fixtures/witness-enrollment-windows.mjs
+      - tests/copy-kit.test.mjs
       - tests/windows/backup-copy.ps1
       - tests/windows/backup-verification.ps1
       - .github/workflows/backup-recovery-instructions.yml
@@ -26,6 +28,8 @@ on:
       - server/backup/copy-kit.mjs
       - tests/windows/backup-witness.ps1
       - tests/fixtures/witness-windows.mjs
+      - tests/fixtures/witness-enrollment-windows.mjs
+      - tests/copy-kit.test.mjs
       - tests/windows/backup-copy.ps1
       - tests/windows/backup-verification.ps1
       - .github/workflows/backup-recovery-instructions.yml
@@ -89,7 +93,7 @@ jobs:
       - name: Generate Node witness fixtures
         shell: bash
         run: node tests/fixtures/witness-windows.mjs "$RUNNER_TEMP/jm-witness-fixture.json"
-      - name: Verify actual durable Windows witness and existing-PC upgrade
+      - name: Verify Windows witness, existing-PC enrollment and native HTTP
         shell: powershell
         run: |
           & ./tests/windows/backup-witness.ps1
@@ -118,7 +122,10 @@ jobs:
           }
           Write-Output 'Actual ZIP expanded by Windows; expired synthetic code only, installer not run.'
           Expand-Archive -LiteralPath synthetic-update.zip -DestinationPath synthetic-update
-          if (@(Get-ChildItem synthetic-update -File).Count -ne 5 -or (Test-Path synthetic-update/raccordement.json)) { throw 'Wrong update kit.' }
+          if (@(Get-ChildItem synthetic-update -File).Count -ne 6 -or (Test-Path synthetic-update/raccordement.json)) { throw 'Wrong update kit.' }
+          foreach ($jmFile in @('Mettre-a-jour.cmd', 'Activer-le-temoin.cmd', 'JessieMessage-temoin-067.ps1', 'JessieMessage-sauvegardes-055.ps1', 'mise-a-jour.json', 'LIRE-MOI.txt')) {
+            if (-not (Test-Path -LiteralPath (Join-Path synthetic-update $jmFile))) { throw 'Missing update kit file.' }
+          }
           Expand-Archive -LiteralPath synthetic-verification.zip -DestinationPath synthetic-verification
           if (@(Get-ChildItem synthetic-verification -File).Count -ne 4) { throw 'Incomplete verification kit.' }
           . ./scripts/JessieMessage-verifier-056.ps1

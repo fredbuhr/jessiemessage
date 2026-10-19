@@ -5,10 +5,12 @@ import { parseRecurringArguments, recurringPreflight, createRecurringSupervisor,
 import { createPeriodicBackupMonitor } from "../server/backup/periodic-monitor.mjs";
 import { createBackupAlertWorker } from "../server/backup/alert-worker.mjs";
 import { createWitnessOriginOperations } from "../server/backup/witness-origin-operator.mjs";
+import { createConfiguredWitnessObserver } from "../server/backup/witness-observer.mjs";
 
 export async function main(args = process.argv.slice(2), { environment = process.env, execArgv = process.execArgv,
   preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor,
-  makeAlerts = createBackupAlertWorker, makeWitnessOrigin = createWitnessOriginOperations, outputStream = process.stdout,
+  makeAlerts = createBackupAlertWorker, makeWitnessOrigin = createWitnessOriginOperations,
+  makeWitnessObserver = createConfiguredWitnessObserver, outputStream = process.stdout,
   signal } = {}) {
   const options = parseRecurringArguments(args);
   try { privateAuthenticationProcessOptions(environment, execArgv); } catch { throw new RecurringSupervisorError("ENVIRONMENT"); }
@@ -25,12 +27,26 @@ export async function main(args = process.argv.slice(2), { environment = process
     const report = await witnessOriginOperations[options.command === "plan-witness" ? "plan" : "check"]();
     outputStream.write(`${JSON.stringify(report)}\n`); return report;
   }
-  const supervisor = makeSupervisor(options, { environment, emit: report => outputStream.write(`${JSON.stringify(report)}\n`),
-    ...(witnessOriginOperations === null ? {} : { witnessOriginOperations }) });
+  const emit = report => outputStream.write(`${JSON.stringify(report)}\n`);
+  const observerMode = ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"].includes(options.command);
+  const observer = observerMode ? await makeWitnessObserver(options, { environment, signal, emit }) : null;
+  if (options.command === "check-witness-observer") {
+    try { const report = await observer.check(); emit(report); return report; }
+    finally { await observer.close(); }
+  }
+  let supervisor;
+  try {
+    if (observer !== null) await observer[options.command === "prepare-witness-enrollment" ? "checkInitial" : "check"]();
+    supervisor = makeSupervisor(observer === null ? options : { ...options, command: "start" }, { environment, emit,
+      ...(observer === null ? {} : { witnessControl: observer.handler }),
+      ...(witnessOriginOperations === null ? {} : { witnessOriginOperations }) });
+    if (observer !== null) observer.attachMaintenance(supervisor.withWitnessMaintenance, supervisor.failWitnessObservation);
+  } catch (error) { await observer?.close(); await supervisor?.close(); throw error; }
   let monitor, alerts;
   const monitorUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_monitor","event":"unavailable","code":"MONITOR_UNAVAILABLE","notificationStatus":"not_sent"}\n'); } catch {} };
   const alertsUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_alert","event":"unavailable","code":"ALERT_UNAVAILABLE","notificationStatus":"not_confirmed","inboxStatus":"not_checked"}\n'); } catch {} };
   const abort = () => {
+    try { observer?.close(); } catch {}
     try { void Promise.resolve(monitor?.close()).catch(monitorUnavailable); } catch { monitorUnavailable(); }
     try { void Promise.resolve(alerts?.close()).catch(alertsUnavailable); } catch { alertsUnavailable(); }
     void supervisor.close();
@@ -40,6 +56,17 @@ export async function main(args = process.argv.slice(2), { environment = process
     await supervisor.start();
     if (signal?.aborted) await supervisor.close();
     else {
+      if (observer !== null) {
+        // Wait for the startup capture decision before the explicit enrollment
+        // maintenance competes for the same capture lease.
+        await supervisor.tick();
+        if (signal?.aborted) {
+          await supervisor.close();
+          return { version: 1, type: "recurring_supervisor", status: "stopped" };
+        }
+        if (options.command === "prepare-witness-enrollment") emit(await observer.initialize());
+        if (!signal?.aborted) observer.startObservation();
+      }
       try { alerts = makeAlerts({ operationsDirectory: options.operationsDirectory, privateDirectory: options.privateDirectory },
         { emit: report => outputStream.write(`${JSON.stringify(report)}\n`) }); } catch { alertsUnavailable(); }
       try {
@@ -56,6 +83,7 @@ export async function main(args = process.argv.slice(2), { environment = process
     return { version: 1, type: "recurring_supervisor", status: "stopped" };
   } finally {
     signal?.removeEventListener("abort", abort);
+    await observer?.close();
     try { await monitor?.close(); } catch { monitorUnavailable(); }
     // Stop the application without waiting for mail delivery/cleanup.
     await supervisor.close();
@@ -65,7 +93,7 @@ export async function main(args = process.argv.slice(2), { environment = process
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const cancellation = new AbortController(); let deadline;
-  const operationDeadline = ["plan-witness", "check-witness"].includes(process.argv[2])
+  const operationDeadline = ["plan-witness", "check-witness", "check-witness-observer"].includes(process.argv[2])
     ? setTimeout(() => { process.stderr.write("WITNESS_ORIGIN_TIMEOUT\n"); process.exit(1); }, 45000) : null;
   const stop = () => {
     if (cancellation.signal.aborted) return;
@@ -75,7 +103,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   process.once("SIGTERM", stop); process.once("SIGINT", stop);
   try { await main(process.argv.slice(2), { signal: cancellation.signal }); }
   catch (error) {
-    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|MANAGED_RUNTIME|WITNESS_(?:ORIGIN|GENESIS))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
+    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|MANAGED_RUNTIME|WITNESS_(?:ORIGIN|GENESIS|ENROLLMENT|OBSERVATION))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
     process.stderr.write(`${code}: La sauvegarde récurrente n’est pas confirmée.\n`); process.exitCode = 1;
   } finally { clearTimeout(operationDeadline); clearTimeout(deadline); process.removeListener("SIGTERM", stop); process.removeListener("SIGINT", stop); }
 }

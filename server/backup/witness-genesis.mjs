@@ -101,10 +101,10 @@ async function inventory(scope) {
   for await (const entry of entries) if (++count > 1 || entry.name !== WITNESS_GENESIS_FILE) fail("UNSAFE");
   if (count !== 1) fail();
 }
-async function paired(scope, destinationId) {
+async function paired(scope, destinationId, requireActive = true) {
   const state = await readCopyState(scope.path, { withDirectory: (_directory, work) => work(scope) });
   const item = state.destinations.find(value => value.id === destinationId);
-  if (!item || !item.enabled || item.tokenHash === null || item.pairedAt === null) fail("PAIRING");
+  if (!item || requireActive && !item.enabled || item.tokenHash === null || item.pairedAt === null) fail("PAIRING");
   return destination({ destinationId: item.id, pairedAt: item.pairedAt, pairingFingerprint: item.tokenHash });
 }
 function freeze(value) {
@@ -181,7 +181,7 @@ export async function prepareWitnessGenesis(options, internal = {}) {
  * operational files. Missing/replaced contracts never create a default state.
  * This read authenticates enrollment metadata only; every destructive action
  * still needs the fresh off-host inventory from createErasureContinuity. */
-export async function readWitnessGenesis(options, internal = {}) {
+async function readGenesis(options, internal, requireActive) {
   return safe(async () => {
     const p = parameters(options), withDirectory = internal.withDirectory ?? withPrivateDirectory;
     let bytes;
@@ -195,7 +195,7 @@ export async function readWitnessGenesis(options, internal = {}) {
           || JSON.stringify(value.sourceIdentity) !== JSON.stringify(await physical(source))
           || JSON.stringify(await physical(trust)) === JSON.stringify(value.sourceIdentity)
           || value.initialSnapshotSha256 !== registryHash({ version: 1, registryId: value.registryId, files: [] })) fail("BINDING");
-        if (JSON.stringify(await paired(source, value.destination.destinationId)) !== JSON.stringify(value.destination)) fail("PAIRING");
+        if (JSON.stringify(await paired(source, value.destination.destinationId, requireActive)) !== JSON.stringify(value.destination)) fail("PAIRING");
         const confirmed = await read(trust);
         try { if (!confirmed.equals(bytes)) fail("CHANGED"); } finally { confirmed.fill(0); }
         active(options.signal); await source.assertReady(); await trust.assertReady(); return freeze(value);
@@ -203,3 +203,13 @@ export async function readWitnessGenesis(options, internal = {}) {
     } finally { p.key.fill(0); bytes?.fill(0); }
   });
 }
+
+/** Active capability remains mandatory for original preparation and any owner
+ * that can authorize initialization, continuity or erasure. */
+export function readWitnessGenesis(options, internal = {}) { return readGenesis(options, internal, true); }
+
+/** Non-destructive observation only: a paused copy destination retains its
+ * original identity. Pause grants no transport or enrollment authority; those
+ * endpoints must still authenticate the currently enabled native capability.
+ * Missing/replaced/repaired destinations, contracts and source roots fail. */
+export function readWitnessGenesisObservation(options, internal = {}) { return readGenesis(options, internal, false); }
