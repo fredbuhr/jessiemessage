@@ -1,4 +1,4 @@
-param([switch]$Setup, [switch]$Settings, [switch]$Run)
+param([switch]$Setup, [switch]$Settings, [switch]$Run, [switch]$Update, [switch]$Witness)
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $script:JmOrigin = 'https://jessiemessage.com'
@@ -203,15 +203,76 @@ function Select-JmFolder {
     finally { $jmForm.Dispose() }
 }
 function New-JmTaskDefinition {
-    param([string]$Script)
+    param([string]$Script, [switch]$WitnessTask)
     if ($Script.Contains('"')) { throw 'Chemin non valide.' }
     $jmIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $jmAction = New-ScheduledTaskAction -Execute (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe') -Argument ('-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + $Script + '" -Run')
-    $jmTimer = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 15)
+    $jmAction = New-ScheduledTaskAction -Execute (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe') -Argument ('-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + $Script + '" ' + $(if ($WitnessTask) { '-Witness' } else { '-Run' }))
+    $jmTimer = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes $(if ($WitnessTask) { 1 } else { 15 }))
     $jmLogon = New-ScheduledTaskTrigger -AtLogOn -User $jmIdentity.Name
     $jmPrincipal = New-ScheduledTaskPrincipal -UserId $jmIdentity.User.Value -LogonType Interactive -RunLevel Limited
-    $jmSettings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -RunOnlyIfNetworkAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 12)
+    $jmSettings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -RunOnlyIfNetworkAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes $(if ($WitnessTask) { 2 } else { 12 }))
     return (New-ScheduledTask -Action $jmAction -Trigger @($jmTimer, $jmLogon) -Principal $jmPrincipal -Settings $jmSettings -Description 'Copies des archives chiffrees JessieMessage, session Windows ouverte.')
+}
+function Install-JmAgentFiles {
+    param([string]$Directory, [string]$Source)
+    foreach ($jmName in @('JessieMessage-temoin-067.ps1', 'JessieMessage-sauvegardes-055.ps1')) {
+        $jmSource = Join-Path $Source $jmName
+        $jmItem = Get-Item -LiteralPath $jmSource -Force
+        if ($jmItem.Length -lt 1 -or $jmItem.Length -gt 131072 -or ($jmItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Mise a jour incomplete.' }
+        $jmTokens = $null; $jmErrors = $null
+        $null = [Management.Automation.Language.Parser]::ParseFile($jmSource, [ref]$jmTokens, [ref]$jmErrors)
+        if ($jmErrors.Count -ne 0) { throw 'Mise a jour non valide.' }
+    }
+    foreach ($jmName in @('JessieMessage-temoin-067.ps1', 'JessieMessage-sauvegardes-055.ps1')) {
+        $jmTarget = Join-Path $Directory $jmName
+        if ([IO.Path]::GetFullPath($jmTarget) -ceq [IO.Path]::GetFullPath((Join-Path $Source $jmName))) { continue }
+        $jmTemporary = Join-Path $Directory ([Guid]::NewGuid().ToString('N') + '.update')
+        try {
+            $jmBytes = [IO.File]::ReadAllBytes((Join-Path $Source $jmName))
+            $jmFile = New-Object IO.FileStream($jmTemporary, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+            try { $jmFile.Write($jmBytes, 0, $jmBytes.Length); $jmFile.Flush($true) } finally { $jmFile.Dispose() }
+            if (Test-Path -LiteralPath $jmTarget) {
+                $jmExisting = Get-Item -LiteralPath $jmTarget -Force
+                if ($jmExisting.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Fichier non valide.' }
+                [IO.File]::Replace($jmTemporary, $jmTarget, $null)
+            } else { [IO.File]::Move($jmTemporary, $jmTarget) }
+        } finally { if (Test-Path -LiteralPath $jmTemporary) { Remove-Item -LiteralPath $jmTemporary -Force } }
+    }
+}
+function Register-JmAgentTasks {
+    param([string]$Directory, [string]$DestinationId)
+    $jmInstalled = Join-Path $Directory 'JessieMessage-sauvegardes-055.ps1'
+    $null = Register-ScheduledTask -TaskName ('JessieMessage-Sauvegardes-' + $DestinationId) -InputObject (New-JmTaskDefinition $jmInstalled) -Force
+    $null = Register-ScheduledTask -TaskName ('JessieMessage-Temoin-' + $DestinationId) -InputObject (New-JmTaskDefinition $jmInstalled -WitnessTask) -Force
+}
+function Invoke-JmAgentUpdate {
+    param([string]$Directory, [string]$Source, [string]$DestinationId)
+    Assert-JmDirectory $Directory
+    $jmLock = New-Object IO.FileStream((Join-Path $Directory 'agent.lock'), [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
+    try {
+        $jmConfig = Read-JmConfiguration $Directory
+        if ($jmConfig.DestinationId -cne $DestinationId) { throw 'PC non raccorde.' }
+        Install-JmAgentFiles $Directory $Source
+        Register-JmAgentTasks $Directory $jmConfig.DestinationId
+    } finally { $jmLock.Dispose() }
+}
+function Start-JmUpdate {
+    $jmLock = $null
+    try {
+        Add-Type -AssemblyName System.Windows.Forms
+        $jmMetadata = Get-Item -LiteralPath (Join-Path $PSScriptRoot 'mise-a-jour.json') -Force
+        if ($jmMetadata.Length -gt 4096 -or ($jmMetadata.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Kit non valide.' }
+        $jmUpdate = Get-Content -LiteralPath $jmMetadata.FullName -Raw | ConvertFrom-Json
+        Assert-JmWitnessFields $jmUpdate @('version', 'destinationId', 'origin')
+        if ($jmUpdate.version -ne 1 -or $jmUpdate.destinationId -cnotmatch '^[a-f0-9]{32}$' -or $jmUpdate.origin -cne $script:JmOrigin) { throw 'Kit non valide.' }
+        $jmDirectory = Join-Path $env:LOCALAPPDATA ('JessieMessage\Sauvegardes\' + $jmUpdate.destinationId)
+        # No Save-JmConfiguration, pairing, token rotation or folder change.
+        Invoke-JmAgentUpdate $jmDirectory $PSScriptRoot $jmUpdate.destinationId
+        $null = [Windows.Forms.MessageBox]::Show('Mise a jour installee. Ton dossier et ton raccordement sont conserves. Les copies continuent automatiquement.', 'JessieMessage')
+    } catch {
+        $null = [Windows.Forms.MessageBox]::Show('Mise a jour non confirmee. Reessayer lorsque la copie en cours est terminee, sur le PC deja raccorde. Le dossier et les fichiers existants sont conserves.', 'JessieMessage')
+        Write-Output 'JESSIEMESSAGE_MISE_A_JOUR_NON_CONFIRMEE'; exit 1
+    } finally { if ($null -ne $jmLock) { $jmLock.Dispose() } }
 }
 function Start-JmBackup {
     $jmLock = $null
@@ -236,9 +297,8 @@ function Start-JmBackup {
             Save-JmConfiguration -Configuration $jmConfig -Directory $jmDirectory
             $jmConnected = $null; $jmPair = $null
             $jmInstalled = Join-Path $jmDirectory 'JessieMessage-sauvegardes-055.ps1'
-            Copy-Item -LiteralPath $script:JmScriptFile -Destination $jmInstalled -Force
-            $jmTask = New-JmTaskDefinition $jmInstalled
-            $null = Register-ScheduledTask -TaskName ('JessieMessage-Sauvegardes-' + $jmConfig.DestinationId) -InputObject $jmTask -Force
+            Install-JmAgentFiles $jmDirectory $PSScriptRoot
+            Register-JmAgentTasks $jmDirectory $jmConfig.DestinationId
             $jmShell = New-Object -ComObject WScript.Shell
             $jmShortcut = $jmShell.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Desktop')) ('JessieMessage - Sauvegardes-' + $jmConfig.DestinationId.Substring(0, 6) + '.lnk')))
             $jmShortcut.TargetPath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -274,4 +334,8 @@ function Start-JmBackup {
 
 # Dot sourcing loads functions for isolated Windows verification without network,
 # scheduling, graphical dialogs or any access to a user's recovery key.
-if ($MyInvocation.InvocationName -ne '.') { Start-JmBackup }
+. (Join-Path $PSScriptRoot 'JessieMessage-temoin-067.ps1')
+if ($MyInvocation.InvocationName -ne '.') {
+    if (@($Setup, $Settings, $Run, $Update, $Witness).Where({ $_ }).Count -ne 1) { throw 'Une seule operation est requise.' }
+    if ($Update) { Start-JmUpdate } elseif ($Witness) { Start-JmWitnessWorker $PSScriptRoot } else { Start-JmBackup }
+}

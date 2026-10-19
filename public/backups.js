@@ -69,6 +69,11 @@ function destination(item) {
   const settings = node("details", undefined, "destination-settings"); settings.append(node("summary", "Gérer cette destination"));
   settings.append(details);
   const actions = node("div", undefined, "backup-actions");
+  if (item.paired) {
+    const update = action("Mettre à jour le PC", () => void perform(`/api/admin/backups/destinations/${item.id}/windows-update-kit`, {}, "JessieMessage-mise-a-jour-Windows.zip"), "primary");
+    update.dataset.action = "update-kit"; settings.append(update);
+    settings.append(node("p", "Sur le PC déjà raccordé : extraire le ZIP, puis ouvrir Mettre-a-jour.cmd. Le dossier et l’autorisation existante sont conservés.", "small-copy"));
+  }
   const kit = action("Raccorder Windows", () => void perform(`/api/admin/backups/destinations/${item.id}/windows-kit`, {}, "JessieMessage-sauvegardes-Windows.zip"), "primary"); kit.dataset.action = "kit";
   const toggle = action(item.enabled ? "Suspendre les copies" : "Reprendre les copies", () => void perform(`/api/admin/backups/destinations/${item.id}/settings`, { label: item.label, kind: item.kind, enabled: !item.enabled }));
   toggle.dataset.action = "toggle"; actions.append(kit, toggle); settings.append(actions);

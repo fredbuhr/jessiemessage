@@ -6,12 +6,19 @@ const fail = () => { throw Object.assign(new Error("The managed private runtime 
 const path = value => typeof value === "string" && value.startsWith("/") && value !== "/" && resolve(value) === value
   && value.length <= 4096 && !/[\\\x00-\x1f\x7f]/.test(value);
 export function parseArguments(args) {
-  if (!Array.isArray(args) || ![6, 8, 10].includes(args.length) || args[0] !== "--runtime-directory" || args[2] !== "--private-directory"
-    || args[4] !== "--port" || !path(args[1]) || !path(args[3]) || !/^[1-9]\d{0,4}$/.test(args[5]) || Number(args[5]) > 65535
-    || args.length >= 8 && (args[6] !== "--operations-directory" || !path(args[7]))
-    || args.length === 10 && (args[8] !== "--account-closures" || args[9] !== "managed")) fail();
-  return { runtimeDirectory: args[1], privateDirectory: args[3], port: Number(args[5]), ...(args.length >= 8 ? { operationsDirectory: args[7] } : {}),
-    ...(args.length === 10 ? { accountClosures: true } : {}) };
+  if (!Array.isArray(args) || args.length < 6 || args.length > 12 || args.length % 2 || args[0] !== "--runtime-directory" || args[2] !== "--private-directory"
+    || args[4] !== "--port" || !path(args[1]) || !path(args[3]) || !/^[1-9]\d{0,4}$/.test(args[5]) || Number(args[5]) > 65535) fail();
+  const result = { runtimeDirectory: args[1], privateDirectory: args[3], port: Number(args[5]) };
+  const flags = ["--operations-directory", "--account-closures", "--parent-gateway"];
+  let previous = -1;
+  for (let index = 6; index < args.length; index += 2) {
+    const position = flags.indexOf(args[index]);
+    if (position <= previous || position < 0) fail(); previous = position;
+    if (position === 0) { if (!path(args[index + 1])) fail(); result.operationsDirectory = args[index + 1]; }
+    else { if (args[index + 1] !== "managed") fail(); result[position === 1 ? "accountClosures" : "parentGateway"] = true; }
+  }
+  if (result.accountClosures && !result.operationsDirectory) fail();
+  return result;
 }
 
 /** The loader seam is for subprocess fixtures; production only imports pinned local source. */
@@ -21,7 +28,7 @@ export async function run(options, { loadRuntime = async directory => {
   return { main, start };
 } } = {}) {
   const selected = parseArguments(["--runtime-directory", options?.runtimeDirectory, "--private-directory", options?.privateDirectory, "--port", String(options?.port),
-    ...(options?.operationsDirectory === undefined ? [] : ["--operations-directory", options.operationsDirectory]), ...(options?.accountClosures === true ? ["--account-closures", "managed"] : [])]);
+    ...(options?.operationsDirectory === undefined ? [] : ["--operations-directory", options.operationsDirectory]), ...(options?.accountClosures === true ? ["--account-closures", "managed"] : []), ...(options?.parentGateway === true ? ["--parent-gateway", "managed"] : [])]);
   if (typeof process.send !== "function" || process.connected !== true || typeof loadRuntime !== "function") fail();
   try { if (privateAuthenticationProcessOptions(process.env, process.execArgv).port !== String(selected.port)) fail(); } catch { fail(); }
   let closing = false, stopping = null, runtime = null, startupComplete;
@@ -55,7 +62,7 @@ export async function run(options, { loadRuntime = async directory => {
       async startServer(env, startupOptions) {
         if (closing) fail();
         runtime = await loaded.start(env, { ...startupOptions, ...(selected.operationsDirectory === undefined ? {} : { backupDirectory: selected.operationsDirectory }),
-          ...(selected.accountClosures ? { accountClosures: true } : {}) });
+          ...(selected.accountClosures ? { accountClosures: true } : {}), ...(selected.parentGateway ? { parentGateway: true } : {}) });
         if (typeof runtime?.drain !== "function" || closing) fail();
         return runtime;
       },

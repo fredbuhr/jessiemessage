@@ -1,3 +1,4 @@
+import { createParentGateway } from "./parent-gateway.mjs";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { statfs } from "node:fs/promises";
@@ -155,7 +156,8 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   readConfiguration = readRecurringConfiguration, history = readCheckpointHistory, lock = acquireRecurringLock,
   append = appendCheckpointRecord, preflight = recurringPreflight, source = assertRuntimeSource, checkpoint = checkpointProcess,
   encrypt = encryptCheckpointArchive, makeRuntime = createManagedRuntime, emit = () => {}, intervalMilliseconds = 60000,
-  schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures } = {}) {
+  schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures, witnessControl = null, makeGateway = createParentGateway } = {}) {
+  if (witnessControl !== null && typeof witnessControl !== "function") fail("CONFIGURATION");
   if (!Number.isSafeInteger(intervalMilliseconds) || intervalMilliseconds < 1 || intervalMilliseconds > 60000) fail("CONFIGURATION");
   if (closureOperations !== null && ["hasPending", "preflight", "run"].some(name => typeof closureOperations?.[name] !== "function")) fail("CONFIGURATION");
   const processOptions = privateAuthenticationProcessOptions(environment, []);
@@ -171,8 +173,12 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   const unexpected = () => {
     if (!closed) { fatal = true; unavailable(new RecurringSupervisorError("RUNTIME")); void close().catch(() => finish({ failed: true })); }
   };
+  const publicPort = Number(processOptions.port), childPort = witnessControl === null ? publicPort : publicPort + 1;
+  if (childPort > 65535) fail("CONFIGURATION");
+  const gateway = witnessControl === null ? null : makeGateway({ port: publicPort, childPort, control: witnessControl, onFailure: unexpected });
   const runtime = makeRuntime({ runtimeDirectory: options.runtimeDirectory, privateDirectory: options.privateDirectory, operationsDirectory: options.operationsDirectory,
-    port: Number(processOptions.port), environment, onUnexpectedExit: unexpected, accountClosures: closureOperations !== null });
+    port: childPort, environment: witnessControl === null ? environment : { ...environment, PORT: String(childPort) }, onUnexpectedExit: unexpected, accountClosures: closureOperations !== null,
+    ...(witnessControl === null ? {} : { parentGateway: true }) });
   function tick() {
     if (closed || !started) return Promise.resolve(null);
     if (ticking) return ticking;
@@ -242,6 +248,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     starting = true;
     try {
       await source(options, { signal: cancellation.signal }); active(cancellation.signal);
+      await gateway?.start(); active(cancellation.signal);
       // A queued confirmed intent survives a parent/child restart. Resolve it
       // while the child is still stopped, before any listener or producer.
       if (closureOperations !== null && await closureOperations.hasPending()) {
@@ -261,6 +268,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
       await controller?.close();
       await ticking;
       await runtime.destroy();
+      await gateway?.close();
       finish({ failed: fatal });
     })();
     return closing;

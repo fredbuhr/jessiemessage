@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { AUTH_HEADERS, checkMutation, clearCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionToken } from "../auth/http.mjs";
 import { BackupCopyError, copyFields } from "./copy-state.mjs";
-import { createCopyKit } from "./copy-kit.mjs";
+import { createCopyKit, createCopyUpdateKit } from "./copy-kit.mjs";
 import { createVerificationKit } from "./verification-kit.mjs";
 
 const assets = new Map([["/admin/backups", ["backups.html", "text/html; charset=utf-8"]],
@@ -14,7 +14,7 @@ function route(path) {
   if (path === "/api/admin/backups") return { kind: "summary", methods: ["GET"] };
   if (path === "/api/admin/backups/verification-kit") return { kind: "verification-kit", methods: ["POST"] };
   if (path === "/api/admin/backups/destinations") return { kind: "create", methods: ["POST"] };
-  const admin = /^\/api\/admin\/backups\/destinations\/([a-f0-9]{32})\/(settings|revoke|windows-kit)$/.exec(path);
+  const admin = /^\/api\/admin\/backups\/destinations\/([a-f0-9]{32})\/(settings|revoke|windows-kit|windows-update-kit)$/.exec(path);
   if (admin) return { kind: admin[2], id: admin[1], methods: ["POST"] };
   if (path === "/api/backup-copy/pair") return { kind: "pair", agent: true, methods: ["POST"] };
   if (path === "/api/backup-copy/manifest") return { kind: "manifest", agent: true, methods: ["GET"] };
@@ -42,7 +42,7 @@ function mapped(error, agent) {
   if (error?.httpStatus && [400, 401, 403, 408, 413, 415].includes(error.httpStatus)) return { status: error.httpStatus, code: error.publicCode };
   return { status: 503, code: agent ? "copy_unavailable" : "backups_unavailable" };
 }
-export function createBackupCopyHandler(service, { origin, actor, kit = createCopyKit, verificationKit = createVerificationKit, clock = Date.now }) {
+export function createBackupCopyHandler(service, { origin, actor, kit = createCopyKit, updateKit = createCopyUpdateKit, verificationKit = createVerificationKit, clock = Date.now }) {
   if (origin !== "https://jessiemessage.com" || typeof actor !== "function") throw new TypeError("Private primary backup administration required.");
   let activeTransfers = 0, windowStart = 0, requests = 0, closing = false;
   const transfers = new Set();
@@ -106,8 +106,13 @@ export function createBackupCopyHandler(service, { origin, actor, kit = createCo
           copyFields(body, []);
           if (selected.kind === "revoke") reply(response, method, 200, await service.revoke(selected.id));
           else {
-            const bytes = await kit(await service.preparePairing(selected.id));
-            reply(response, method, 200, bytes, { "Content-Type": "application/zip", "Content-Disposition": 'attachment; filename="JessieMessage-sauvegardes-Windows.zip"' });
+            const updating = selected.kind === "windows-update-kit";
+            const bytes = updating ? await updateKit(await service.updateKit(selected.id)) : await kit(await service.preparePairing(selected.id));
+            const session = await actor(token);
+            if (!session || session.user?.role !== "admin") throw httpError(401, "authentication_required");
+            const current = safeSession(session);
+            if (current.user.id !== adminProof.user.id || !sameText(current.csrf, adminProof.csrf)) throw httpError(401, "authentication_required");
+            reply(response, method, 200, bytes, { "Content-Type": "application/zip", "Content-Disposition": updating ? 'attachment; filename="JessieMessage-mise-a-jour-Windows.zip"' : 'attachment; filename="JessieMessage-sauvegardes-Windows.zip"' });
           }
         }
       }

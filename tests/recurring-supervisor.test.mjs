@@ -243,3 +243,20 @@ test("capture timeout and cancellation wait for actual close, escalating an igno
     assert.equal(settled, true);
   }
 });
+
+test("optional parent control listener precedes the stopped-child closure gate and survives captures", async () => {
+  let stopped = true, childOptions;
+  const events = [], control = async () => true;
+  const runtime = { state: () => ({ status: stopped ? "stopped" : "running" }),
+    async start() { stopped = false; events.push("child-start"); }, async stop() { stopped = true; events.push("child-stop"); return { exitCode: 0, signal: null }; },
+    async destroy() { stopped = true; events.push("child-destroy"); } };
+  const f = fixture({ witnessControl: control, makeRuntime(value) { childOptions = value; return runtime; },
+    makeGateway(value) { assert.equal(value.port, 3000); assert.equal(value.childPort, 3001); assert.equal(value.control, control);
+      return { async start() { events.push("gateway-start"); assert.equal(stopped, true); }, async close() { events.push("gateway-close"); assert.equal(stopped, true); } }; },
+    closureOperations: { async hasPending() { return stopped; }, async preflight() {}, async run() {} },
+    runClosures: async () => { assert.deepEqual(events, ["gateway-start"]); assert.equal(stopped, true); events.push("initial-closure-gate"); },
+    readConfiguration: async () => ({ ...configuration, enabled: false }) });
+  await f.supervisor.start(); await f.supervisor.tick(); await f.supervisor.close();
+  assert.equal(childOptions.port, 3001); assert.equal(childOptions.environment.PORT, "3001"); assert.equal(childOptions.parentGateway, true);
+  assert.equal(environment.PORT, "3000"); assert.deepEqual(events, ["gateway-start", "initial-closure-gate", "child-start", "child-destroy", "gateway-close"]);
+});

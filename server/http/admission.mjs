@@ -1,3 +1,4 @@
+import { peerAddress as verifiedPeerAddress } from "./peer-address.mjs";
 import { createHmac, randomBytes } from "node:crypto";
 import { isIP } from "node:net";
 import { sessionToken } from "../auth/http.mjs";
@@ -33,7 +34,7 @@ export class RequestAdmissionError extends Error {
 const busy = () => { throw new RequestAdmissionError("REQUEST_BUSY", BUSY_RETRY_SECONDS); };
 
 function peerAddress(request) {
-  const address = request?.socket?.remoteAddress;
+  const address = verifiedPeerAddress(request);
   if (typeof address !== "string" || address.length > 128 || !isIP(address)) return "unknown";
   // IPv4 clients on a dual-stack listener must retain their IPv4 bucket.
   const normalized = address.toLowerCase();

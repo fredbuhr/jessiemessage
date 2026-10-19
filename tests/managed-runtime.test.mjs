@@ -173,3 +173,16 @@ test("paths, ambient application secrets, port mismatch and callback configurati
     assert.throws(() => createManagedRuntime({ ...options(3000), ...changes }), { code: "MANAGED_RUNTIME_CONFIGURATION" });
   }
 });
+
+test("the parent gateway flag crosses IPC, pins child startup and stamps the private readiness probe", async t => {
+  const port = await freePort();
+  const source = shimFixture().replace("port:Number(process.env.PORT)},", "port:Number(process.env.PORT),parentGateway:true},")
+    .replace("async start(){const server", "async start(env,options){if(options.parentGateway!==true)throw new Error('missing gateway binding');const server")
+    .replace("request.headers.host==='jessiemessage.com'", "request.headers['x-jessie-parent-peer']==='127.0.0.1'&&request.headers.host==='jessiemessage.com'");
+  const f = await fixture(t, source), runtime = createManagedRuntime({ ...options(port), parentGateway: true }, { ...f.internal, startupMilliseconds: 1500, stopMilliseconds: 400, fetchClient: undefined });
+  t.after(() => runtime.destroy()); await runtime.start(); assert.deepEqual(f.invocations[0].args.slice(-2), ["--parent-gateway", "managed"]);
+  assert.equal(parseArguments(f.invocations[0].args).parentGateway, true); assert.deepEqual(await runtime.stop(), { exitCode: 0, signal: null });
+  for (const args of [["--parent-gateway", "true"], ["--parent-gateway", "managed", "--parent-gateway", "managed"]]) {
+    assert.throws(() => parseArguments(["--runtime-directory", "/synthetic-runtime", "--private-directory", "/synthetic-private", "--port", String(port), ...args]), { code: "PRIVATE_MESSAGING_CHILD" });
+  }
+});

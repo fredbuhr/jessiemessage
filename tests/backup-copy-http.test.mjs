@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, open, rm, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createBackupCopyHandler } from "../server/backup/copy-http.mjs";
 import { createBackupCopyService } from "../server/backup/copy-service.mjs";
-import { emptyCopyState, validateCopyState } from "../server/backup/copy-state.mjs";
+import { digestCopyToken, emptyCopyState, validateCopyState } from "../server/backup/copy-state.mjs";
 import { createAppServer } from "../server/index.mjs";
 
 const token = "A".repeat(43), csrf = Buffer.alloc(32, 2).toString("base64url"), origin = "https://jessiemessage.com", id = "1".repeat(32), generation = "2".repeat(32);
@@ -85,4 +85,23 @@ test("runtime shutdown immediately cancels an unfinished ciphertext stream so it
   const reader = response.body.getReader(); assert.equal((await reader.read()).done, false);
   f.handler.close(); await assert.rejects(reader.read());
   assert.equal((await f.get("/api/admin/backups", f.admin)).status, 503);
+});
+
+test("updating an already paired PC preserves capability, pairing and receipts without embedding a secret", async t => {
+  const f = await fixture(t), destination = await f.service.create({ label: "PC", kind: "computer" });
+  const unpaired = await f.post(`/api/admin/backups/destinations/${destination.id}/windows-update-kit`, {}, f.admin);
+  assert.equal(unpaired.status, 409); assert.equal(unpaired.headers.get("set-cookie"), null, "Destination state must not log out the administrator.");
+  const kit = await f.service.preparePairing(destination.id), paired = await f.service.pair({ destinationId: destination.id, pairingCode: kit.pairingCode });
+  await f.service.manifest(paired.token, generation);
+  await f.service.acknowledge(paired.token, { captureId: f.archive.id, bytes: f.archive.bytes, sha256: f.archive.sha256, locationId: generation });
+  const before = (await f.service.summary()).destinations;
+  const response = await f.post(`/api/admin/backups/destinations/${destination.id}/windows-update-kit`, {}, f.admin);
+  assert.equal(response.status, 200); const bytes = Buffer.from(await response.arrayBuffer());
+  for (const name of ["Mettre-a-jour.cmd", "mise-a-jour.json", "JessieMessage-temoin-067.ps1"]) assert.ok(bytes.includes(Buffer.from(name)));
+  for (const secret of [paired.token, kit.pairingCode, token, csrf, "raccordement.json\""]) assert.equal(bytes.includes(Buffer.from(secret)), false);
+  assert.deepEqual((await f.service.summary()).destinations, before);
+  assert.deepEqual(await f.service.authorizeWitness(paired.token), { destinationId: destination.id, pairedAt: before[0].pairedAt, pairingFingerprint: digestCopyToken(paired.token) });
+  await f.service.update(destination.id, { label: "PC", kind: "computer", enabled: false });
+  await assert.rejects(f.service.authorizeWitness(paired.token), { code: "paused" });
+  await f.service.revoke(destination.id); await assert.rejects(f.service.authorizeWitness(paired.token), { code: "unauthorized" });
 });

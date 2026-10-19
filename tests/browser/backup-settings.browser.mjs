@@ -22,7 +22,7 @@ async function fixture(controlClock = false, paired = false) {
     if (path === "/api/auth/session") return json({ user: { id, role: "admin", pseudonym: "Synthetic" }, csrf: sessionChanged ? "C".repeat(43) : csrf, expiresAt: Date.now() + 3600000 });
     if (path === "/api/admin/backups") return json({ version: 1, checkedAt: Date.now(), archiveCount: 2, latestArchive: { id: "capture-1792340000000-cccccccccccccccc", startedAt: 1792340000000, bytes: 1000, sha256: "a".repeat(64) }, schedule: { enabled: true, hourUtc: 5, minuteUtc: 15 }, destinations: destination ? [destination] : [], decryptionStatus: "not_checked" });
     if (path.endsWith("/settings")) { destination = { ...destination, ...JSON.parse(text) }; return json({}); }
-    if (path.endsWith("/windows-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic kit"); }
+    if (path.endsWith("/windows-kit") || path.endsWith("/windows-update-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic kit"); }
     if (path.endsWith("/verification-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic verification kit"); }
     if (path.endsWith("/revoke")) { destination = null; return json({ revoked: true }); }
     if (path === "/admin/backups") return send(200, "text/html", resources.get("/backups.html"));
@@ -77,16 +77,17 @@ test("real Chrome: copied backups show a simple overview and keep technical cont
     assert.equal(await page.execute("return document.querySelector('.copy-badge').textContent === 'Copie en attente' && !document.getElementById('backup-overview-copy').textContent.includes('Rien à faire')"), true);
   } finally { try { await page?.close(); } finally { try { await source?.close(); } finally { await driver.close(); } } }
 });
-test("real Chrome: a login change during either kit suppresses its download and never repeats the request", { timeout: 90000 }, async () => {
+test("real Chrome: a login change during any kit suppresses its download and never repeats the request", { timeout: 90000 }, async () => {
   const driver = await startWebDriver();
   try {
-    for (const [selector, suffix] of [['[data-action="kit"]', "/windows-kit"], ["#verify-archive", "/verification-kit"]]) {
-      const source = await fixture(); source.changeOnKit(); let page;
+    for (const [selector, suffix] of [['[data-action="kit"]', "/windows-kit"], ["#verify-archive", "/verification-kit"], ['[data-action="update-kit"]', "/windows-update-kit"]]) {
+      const source = await fixture(false, selector.includes("update-kit")); source.changeOnKit(); let page;
       try {
     page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/backups");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden"), "initial session");
     await page.execute("document.addEventListener('click',e=>{if(e.target.closest('a[download]')){e.preventDefault();window.__downloaded=true;}})");
     if (selector === '#verify-archive') await page.click('#verification-panel > summary');
+    if (selector.includes('update-kit')) { await page.click('#backup-technical > summary'); await page.click('.destination-settings > summary'); }
     await tabUntil(page, selector); await page.key("\uE007");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden && document.getElementById('backup-status').textContent.length > 0 && !document.querySelector('[data-action=kit]').disabled"), "fresh session after rejected old response");
     assert.equal(await page.execute("return !!window.__downloaded"), false); assert.equal(source.requests.filter(r => r.path.endsWith(suffix)).length, 1);
@@ -106,4 +107,27 @@ test("real Chrome: periodic proof replaces private settings after another login 
     try { await page?.close(); }
     finally { try { await source.close(); } finally { await driver.close(); } }
   }
+});
+
+test("real Chrome: updating a paired PC is explicit, translated and does not start a new pairing", { timeout: 90000 }, async () => {
+  const driver = await startWebDriver();
+  try {
+    for (const language of ["fr", "en"]) {
+      const source = await fixture(false, true); let page;
+      try {
+        page = await driver.browser({ origin: source.origin, width: 320 });
+        await page.navigate("/__fixture"); await page.execute("sessionStorage.setItem('jessiemessage.language',arguments[0])", language); await page.navigate("/admin/backups");
+        await waitUntil(() => page.execute("return !!document.querySelector('[data-action=update-kit]')"), "paired PC update control");
+        assert.equal(source.requests.some(r => r.method !== "GET"), false);
+        await page.execute("document.addEventListener('click',e=>{const a=e.target.closest('a[download]');if(a){e.preventDefault();window.__kitName=a.download;}})");
+        await page.click("#backup-technical > summary"); await page.click(".destination-settings > summary");
+        assert.equal(await page.execute("return document.querySelector('[data-action=update-kit]').textContent"), language === "fr" ? "Mettre à jour le PC" : "Update this PC");
+        await tabUntil(page, '[data-action="update-kit"]'); await page.key("\uE007");
+        await waitUntil(() => page.execute("return window.__kitName === 'JessieMessage-mise-a-jour-Windows.zip'"), "PC update ZIP");
+        assert.equal(source.requests.filter(r => r.path.endsWith("/windows-update-kit")).length, 1);
+        assert.equal(source.requests.some(r => r.path.endsWith("/windows-kit")), false);
+        assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"), true);
+      } finally { try { await page?.close(); } finally { await source.close(); } }
+    }
+  } finally { await driver.close(); }
 });

@@ -1,3 +1,4 @@
+import { peerAddress as requestPeerAddress } from "../http/peer-address.mjs";
 import { readFile } from "node:fs/promises";
 import { checkMutation, httpError, isToken, readJson, reply } from "../auth/http.mjs";
 
@@ -88,7 +89,7 @@ export function createResetHandler(service, { origin }) {
       } else if (pathname === "/api/access/recovery/capabilities") {
         reply(response, method, 200, { enabled: true, password: { minLength: 8, maxLength: 128 } });
       } else {
-        const peerAddress = request.socket.remoteAddress ?? "unknown";
+        const peerAddress = requestPeerAddress(request) ?? "unknown";
         const body = await readJson(request, { maxBytes: 4096 });
         if (pathname === "/api/access/recovery/request") {
           const result = await service.requestReset({ ...requestBody(body), peerAddress });
