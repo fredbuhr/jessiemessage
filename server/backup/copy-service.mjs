@@ -115,7 +115,7 @@ export function createBackupCopyService(directory, internal = {}) {
   async function authorizeWitness(token) {
     const item = agent(await read(), token);
     if (!item.enabled) failCopy("paused");
-    return { destinationId: item.id, pairedAt: item.pairedAt };
+    return { destinationId: item.id, pairedAt: item.pairedAt, pairingFingerprint: item.tokenHash };
   }
   async function updateKit(id) {
     const item = target(await read(), id);

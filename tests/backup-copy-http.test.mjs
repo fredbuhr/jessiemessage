@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, open, rm, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createBackupCopyHandler } from "../server/backup/copy-http.mjs";
 import { createBackupCopyService } from "../server/backup/copy-service.mjs";
-import { emptyCopyState, validateCopyState } from "../server/backup/copy-state.mjs";
+import { digestCopyToken, emptyCopyState, validateCopyState } from "../server/backup/copy-state.mjs";
 import { createAppServer } from "../server/index.mjs";
 
 const token = "A".repeat(43), csrf = Buffer.alloc(32, 2).toString("base64url"), origin = "https://jessiemessage.com", id = "1".repeat(32), generation = "2".repeat(32);
@@ -99,7 +99,7 @@ test("updating an already paired PC preserves capability, pairing and receipts w
   for (const name of ["Mettre-a-jour.cmd", "mise-a-jour.json", "JessieMessage-temoin-067.ps1"]) assert.ok(bytes.includes(Buffer.from(name)));
   for (const secret of [paired.token, kit.pairingCode, token, csrf, "raccordement.json\""]) assert.equal(bytes.includes(Buffer.from(secret)), false);
   assert.deepEqual((await f.service.summary()).destinations, before);
-  assert.deepEqual(await f.service.authorizeWitness(paired.token), { destinationId: destination.id, pairedAt: before[0].pairedAt });
+  assert.deepEqual(await f.service.authorizeWitness(paired.token), { destinationId: destination.id, pairedAt: before[0].pairedAt, pairingFingerprint: digestCopyToken(paired.token) });
   await f.service.update(destination.id, { label: "PC", kind: "computer", enabled: false });
   await assert.rejects(f.service.authorizeWitness(paired.token), { code: "paused" });
   await f.service.revoke(destination.id); await assert.rejects(f.service.authorizeWitness(paired.token), { code: "unauthorized" });

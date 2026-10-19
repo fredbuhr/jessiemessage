@@ -1,3 +1,4 @@
+# The native worker never receives the server-side pairing fingerprint or a CRM key.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot '../../scripts/JessieMessage-sauvegardes-055.ps1')

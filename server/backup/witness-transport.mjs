@@ -22,14 +22,14 @@ function requestShape(value, registryId) {
  * Nonces belong to the core protocol; the existing native bearer capability
  * authenticates the off-host peer. No success is retained across parent restart.
  */
-export function createWitnessTransport({ destinationId, pairedAt, registryId, authorize, provisioning = false, pollMilliseconds = 20000 }) {
-  if (!validId(destinationId) || !Number.isSafeInteger(pairedAt) || pairedAt < 1 || !REGISTRY_HEX.test(registryId)
+export function createWitnessTransport({ destinationId, pairedAt, pairingFingerprint, registryId, authorize, provisioning = false, pollMilliseconds = 20000 }) {
+  if (!validId(destinationId) || !Number.isSafeInteger(pairedAt) || pairedAt < 1 || typeof pairingFingerprint !== "string" || !REGISTRY_HEX.test(pairingFingerprint) || !REGISTRY_HEX.test(registryId)
     || typeof authorize !== "function" || typeof provisioning !== "boolean" || !Number.isSafeInteger(pollMilliseconds) || pollMilliseconds < 1 || pollMilliseconds > 20000) throw fail();
   const allowed = createRequestOriginGuard("https://jessiemessage.com"), waiters = new Set(), transfers = new Set();
   let job = null, closed = false, requests = 0, window = 0;
   async function identity(token) {
     const current = await authorize(token);
-    if (closed || current?.destinationId !== destinationId || current?.pairedAt !== pairedAt) throw fail();
+    if (closed || current?.destinationId !== destinationId || current?.pairedAt !== pairedAt || current?.pairingFingerprint !== pairingFingerprint) throw fail();
   }
   function wake() { for (const resolve of waiters) resolve(); waiters.clear(); }
   function exchange(value, { signal } = {}) {
@@ -52,7 +52,7 @@ export function createWitnessTransport({ destinationId, pairedAt, registryId, au
     if (typeof request.url !== "string" || !request.url.startsWith(ROOT)) return false;
     let cancellation;
     try {
-      if (!allowed(request)) { reply(response, 404, { error: "not_found" }); return true; }
+      if (!allowed(request) || request.headers["x-forwarded-proto"] !== "https") { reply(response, 404, { error: "not_found" }); return true; }
       const action = request.url.slice(ROOT.length);
       if (!["poll", "response"].includes(action)) { reply(response, 404, { error: "not_found" }); return true; }
       if (closed) throw fail();
