@@ -4,7 +4,10 @@ import { createHash } from "node:crypto";
 import { chmod, link, readFile, readdir, rename, statfs, symlink, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { witnessOriginFixture } from "./fixtures/witness-origin.mjs";
-import { WITNESS_ORIGIN_PLAN } from "../server/backup/witness-origin-operator.mjs";
+import { createWitnessOriginOperations, WITNESS_ORIGIN_PLAN } from "../server/backup/witness-origin-operator.mjs";
+import { withConfiguredWitnessOrigin } from "../server/backup/witness-origin-context.mjs";
+import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
+import { bundle, inheritedEnv } from "./fixtures/crm-private.mjs";
 import { createErasureJournal } from "../server/data/erasure-journal.mjs";
 import { runManagedWitnessPreparation } from "../server/backup/managed-witness.mjs";
 import { managedClosureFixture } from "./fixtures/managed-closure-runtime.mjs";
@@ -105,6 +108,49 @@ test("a capability changed during real drain keeps the process stopped without p
   await assert.rejects(runManagedWitnessPreparation({ runtime: app, operations: f.bind(plan), source: f.source }));
   assert.equal(app.state().status, "stopped"); assert.equal(app.events.includes("start"), false);
   assert.deepEqual(await readdir(path.join(f.dirs.operator, "contract")), []);
+});
+
+test("operator and managed preparation retain closed failures through the actual configured context boundary", async t => {
+  for (const mode of ["expired", "existing-genesis", "unknown-source-error"]) await t.test(mode, async step => {
+    const f = await witnessOriginFixture(step); let now = 1792410000000, failSource = false;
+    const dependencies = {
+      loadEnvironment: (_directory, options) => loadRuntimeBroadcastEnvironment(f.dirs.private, options, { readBundle: async () => bundle(f.dirs.media) }),
+      makeStorage: async () => ({ async fingerprint() { return Buffer.alloc(32, 8); } }),
+      createPool: async () => ({ async end() {} }),
+      makeCapacity: ({ capacity }) => ({ async assertSchema() {}, async status() { return { ...capacity, ready: true }; } }),
+    };
+    const source = async () => {
+      if (failSource) throw Object.assign(new Error("Synthetic private password and SQL cause"), { code: "WITNESS_ORIGIN_PRIVATE_SECRET", privatePath: "/synthetic/private-secret" });
+    };
+    const make = changes => createWitnessOriginOperations({ ...f.options, ...changes }, { environment: inheritedEnv }, {
+      withDirectory: f.withDirectory, source, clock: () => now,
+      withOrigin: (options, settings, work) => withConfiguredWitnessOrigin(options, settings, work, dependencies),
+    });
+    const plan = await make().plan(), operations = make({ command: "prepare-witness", witnessDestination: undefined, witnessPlanSha256: plan.planSha256 });
+    const app = runtime(f), contract = path.join(f.dirs.operator, "contract", "witness-genesis.json");
+    if (mode === "expired") now = plan.expiresAt;
+    if (mode === "unknown-source-error") failSource = true;
+    if (mode === "existing-genesis") {
+      const stop = app.stop; let first = true;
+      app.stop = async () => {
+        const receipt = await stop();
+        if (first) { first = false; await writeFile(contract, "existing-uncertain-genesis", { mode: 0o600, flag: "wx" }); }
+        return receipt;
+      };
+    }
+    const expected = mode === "expired" ? "WITNESS_ORIGIN_EXPIRED" : mode === "existing-genesis" ? "WITNESS_GENESIS_EXISTS" : "WITNESS_ORIGIN_CONTEXT";
+    await assert.rejects(runManagedWitnessPreparation({ runtime: app, operations, source }), error => {
+      assert.equal(error.code, expected); assert.deepEqual(Object.keys(error), ["code"]);
+      assert.doesNotMatch(`${error.message} ${JSON.stringify(error)}`, /Synthetic|password|SQL|private-secret/); return true;
+    });
+    assert.equal(app.events.includes("start"), false);
+    if (mode === "existing-genesis") {
+      assert.equal(app.state().status, "stopped"); assert.equal(await readFile(contract, "utf8"), "existing-uncertain-genesis");
+    } else {
+      assert.deepEqual(app.events, []); assert.deepEqual(await readdir(path.join(f.dirs.operator, "contract")), []);
+    }
+    assert.equal(hash(await readFile(path.join(f.dirs.operator, WITNESS_ORIGIN_PLAN))), plan.planSha256);
+  });
 });
 
 test("real IPC child drains request, producer, transports and pool before the actual contract, then resumes", { timeout: 15000 }, async t => {

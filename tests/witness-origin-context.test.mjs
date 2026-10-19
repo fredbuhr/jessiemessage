@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { withConfiguredWitnessOrigin } from "../server/backup/witness-origin-context.mjs";
 import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
+import { WitnessOriginError } from "../server/backup/witness-origin-operator.mjs";
+import { WitnessGenesisError } from "../server/backup/witness-genesis.mjs";
 import { bundle, inheritedEnv } from "./fixtures/crm-private.mjs";
 
 async function fixture(changes = {}) {
@@ -61,4 +63,40 @@ test("configuration drift, cancellation, callback or pool cleanup failure never 
   }
   const controller = new AbortController(); controller.abort();
   await assert.rejects(withConfiguredWitnessOrigin({}, { environment: inheritedEnv, signal: controller.signal }, () => assert.fail("Aborted")), { code: "WITNESS_ORIGIN_CONTEXT" });
+});
+
+test("closed origin/genesis callback codes survive the configured boundary without private error details", async () => {
+  for (const original of [new WitnessOriginError("EXPIRED"), new WitnessOriginError("CHANGED"), new WitnessGenesisError("BINDING"), new WitnessGenesisError("EXISTS"),
+    Object.assign(new Error("Synthetic private maintenance cause"), { code: "WITNESS_ORIGIN_MAINTENANCE" })]) {
+    const f = await fixture(); let scopedKey;
+    original.message = "Synthetic private password and SQL details";
+    original.cause = new Error("Synthetic private cause"); original.privatePath = "/synthetic/private-secret";
+    await assert.rejects(f.run(context => { scopedKey = context.key; throw original; }), error => {
+      assert.equal(error.code, original.code); assert.notEqual(error, original);
+      assert.deepEqual(Object.keys(error), ["code"]); assert.equal(error.cause, undefined);
+      assert.doesNotMatch(`${error.message} ${error.stack} ${JSON.stringify(error)}`, /private-secret|Synthetic|password|SQL/);
+      return true;
+    });
+    assert.equal(f.events.at(-1), "end"); assert.deepEqual(scopedKey, Buffer.alloc(32));
+    assert.ok(f.mediaKeys.every(value => value.equals(Buffer.alloc(32))));
+  }
+});
+
+test("only own allowlisted callback codes are retained; setup and cleanup errors stay neutral context failures", async () => {
+  let getterReads = 0;
+  const getterError = Object.defineProperty(new Error("Synthetic private getter"), "code", { get() { getterReads++; return "WITNESS_ORIGIN_EXPIRED"; } });
+  for (const original of [Object.assign(new Error("Synthetic private suffix"), { code: "WITNESS_ORIGIN_PRIVATE_SECRET" }),
+    Object.assign(new Error("Synthetic private SQL"), { code: "ER_ACCESS_DENIED_ERROR" }), getterError,
+    Object.create({ code: "WITNESS_GENESIS_BINDING" }), null]) {
+    const f = await fixture();
+    await assert.rejects(f.run(() => { throw original; }), error => {
+      assert.equal(error.code, "WITNESS_ORIGIN_CONTEXT"); assert.doesNotMatch(error.message, /Synthetic|private-secret|SQL/); return true;
+    });
+    assert.equal(f.events.at(-1), "end");
+  }
+  assert.equal(getterReads, 0);
+  const setup = await fixture({ loadEnvironment: async () => { throw new WitnessOriginError("EXPIRED"); } });
+  await assert.rejects(setup.run(() => assert.fail("No callback after failed setup")), { code: "WITNESS_ORIGIN_CONTEXT" });
+  const cleanup = await fixture({ createPool: async () => ({ async end() { throw new WitnessGenesisError("BINDING"); } }) });
+  await assert.rejects(cleanup.run(() => { throw new WitnessOriginError("EXPIRED"); }), { code: "WITNESS_ORIGIN_CONTEXT" });
 });

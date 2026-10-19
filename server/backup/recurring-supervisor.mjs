@@ -13,6 +13,7 @@ import { inspectCheckpointRecipient, encryptCheckpointArchive } from "./checkpoi
 import { createManagedRuntime } from "./managed-runtime.mjs";
 import { runManagedClosures } from "./managed-closures.mjs";
 import { runManagedWitnessPreparation } from "./managed-witness.mjs";
+import { witnessOriginErrorCode } from "./witness-origin-diagnostics.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const PROFILE = "photos-notify-recovery-crm-broadcast";
@@ -261,12 +262,16 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   }
   async function start() {
     if (closed || started || starting) fail("RUNTIME");
-    starting = true;
+    starting = true; let witnessPhase = "initial_precheck";
     try {
       await source(options, { signal: cancellation.signal }); active(cancellation.signal);
       // Initial-only operator preparation never runs from a normal startup,
       // timer, recovery or public request. Reject its plan before any listener.
-      if (witnessOriginOperations !== null) await witnessOriginOperations.check();
+      if (witnessOriginOperations !== null) {
+        notice({ version: 1, type: "witness_origin_progress", phase: "initial_precheck", event: "started" });
+        await witnessOriginOperations.check();
+        notice({ version: 1, type: "witness_origin_progress", phase: "initial_precheck", event: "passed" });
+      }
       await gateway?.start(); active(cancellation.signal);
       // A queued confirmed intent survives a parent/child restart. Resolve it
       // while the child is still stopped, before any listener or producer.
@@ -274,10 +279,14 @@ export function createRecurringSupervisor(options, { environment = process.env, 
         await runClosures({ runtime, operations: closureOperations, directory: options.operationsDirectory,
           source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
       }
+      witnessPhase = "initial_start";
+      if (witnessOriginOperations !== null) notice({ version: 1, type: "witness_origin_progress", phase: witnessPhase, event: "started" });
       await runtime.start(); if (closed) fail("ABORTED");
       if (witnessOriginOperations !== null) {
+        notice({ version: 1, type: "witness_origin_progress", phase: "initial_start", event: "passed" });
+        witnessPhase = "maintenance";
         const report = await prepareWitness({ runtime, operations: witnessOriginOperations,
-          source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
+          source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal, emit: notice });
         notice(report);
       }
       if (closed) fail("ABORTED"); started = true;
@@ -285,7 +294,10 @@ export function createRecurringSupervisor(options, { environment = process.env, 
       void tick().finally(arm);
       return { ready: true };
     } catch (error) {
-      if (witnessOriginOperations !== null) { await runtime.destroy(); await gateway?.close(); }
+      if (witnessOriginOperations !== null) {
+        notice({ version: 1, type: "witness_origin_progress", phase: witnessPhase, event: "failed", code: witnessOriginErrorCode(error) });
+        await runtime.destroy(); await gateway?.close();
+      }
       throw error;
     } finally { starting = false; }
   }

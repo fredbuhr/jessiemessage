@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "type": "witness_origin_hosted_repair",
+  "date": "2026-10-19",
+  "step": 4,
+  "totalSteps": 6,
+  "cause": {
+    "stage": "launcher_before_node",
+    "gitStatusBefore": "?? node_modules",
+    "oldIgnoreRule": "node_modules/",
+    "newIgnoreRule": "node_modules",
+    "deploymentMetadataRule": "/node_modules",
+    "dependencySymlinkTargetVerified": true,
+    "lockedDependencyEntriesIdenticalToActiveRuntime": true,
+    "trackedSourcesChangedOnHosting": false,
+    "bothOperatorSourcesCleanAfterRepair": true,
+    "localExcludeSha256": "a11db940600af978e4e5a7d984db31e9e6665d68fa4053f536f2a30568bf0ba1"
+  },
+  "activeRuntime": {
+    "applicationVersion": "0.65.0",
+    "applicationHead": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+    "applicationTree": "51717124bf15df3845a97e4f675c8549d59715c2",
+    "parentVersion": "0.69.1",
+    "parentHead": "2bfb6b790b9be0728f976818f95a0303effb5f47",
+    "parentTree": "e341b81887f9eb4345988c14f48ba6e37e7d4eda",
+    "normalRun": "bash /srv/customer/jessiemessage-private/start-primary-witness-origin-0691-2bfb6b79.sh",
+    "launcherBytes": 846,
+    "launcherMode": "0700",
+    "launcherSha256": "e4f11073d165432a77ea47a3f51ca1ca6773e5766672d42539d5d9a29b4c2252",
+    "normalRunPersistedAndReadBack": true,
+    "normalRestartConfirmed": true,
+    "closuresEnabled": false
+  },
+  "originContract": {
+    "prepared": true,
+    "createdAt": 1792413575614,
+    "contractBytes": 813,
+    "contractMode": "0600",
+    "contractSha256": "4fbdce199d70c1fd4b80f8ff249dae2666812b8ffc1c6912e8c50d1a042aaf10",
+    "authenticatedReadAt": 1792413743101,
+    "sourceBindingPhysicalIdentityAndExistingPairingVerified": true,
+    "realZeroExitAndRuntimeResumed": true,
+    "externalWitnessConfirmed": false,
+    "originalPlanReplaced": false,
+    "diagnosticSourceSha256": "be68705dbc984811c589abf06ce68d18a6425e0a5c4ee894ca2628af3d8da1d5",
+    "diagnosticLauncherSha256": "666f3385ae0fc4974e19f55b6b72f259d995ac62efcb2d006961de9acbdb0d16",
+    "closedDiagnosticLogSha256": "4b830ead1c94e845403780e812d1591f510b93a3a9b007ed335dea3f35dfc55c"
+  },
+  "https": {
+    "checkedAt": "2026-10-19T12:43:02.191024+00:00",
+    "checks": 64,
+    "passed": 64,
+    "failed": 0,
+    "publicSourceHashes": 44,
+    "tlsVerified": true,
+    "redirectsFollowed": false,
+    "authenticated": false
+  },
+  "backup": {
+    "checkedAt": 1792413867505,
+    "archiveCount": 4,
+    "enabled": true,
+    "dailyUtc": "05:15",
+    "pcStillPaired": true,
+    "currentPcReceiptMatchesArchiveIdBytesAndSha256": true,
+    "decryptionStatus": "not_checked",
+    "newCaptureTriggered": false
+  },
+  "localValidation": {
+    "tests": 2745,
+    "passed": 2553,
+    "failed": 0,
+    "skipped": 192,
+    "targetedRegressionsPassed": 52,
+    "targetedNativeUnavailable": 2,
+    "newSqlRuntimeIntegration": "pending_ci",
+    "sourceVersion": "0.69.2",
+    "sourceDeployed": false,
+    "publicGitPush": "blocked_by_automatic_approval_review_pending_explicit_user_authorization"
+  },
+  "next": "Publish the prepared source correction when explicitly authorized, validate CI including actual SQL runtime maintenance, then wire authenticated existing-PC witness enrollment against the already prepared original contract. Do not rerun plan/prepare, recreate the contract or repair a lost witness by resetting it."
+}

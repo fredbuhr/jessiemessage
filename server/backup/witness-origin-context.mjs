@@ -6,8 +6,9 @@ import { mediaConfiguration } from "../media/config.mjs";
 import { createMediaStorage } from "../media/storage.mjs";
 import { createMediaCapacityStore } from "../media/capacity-store.mjs";
 import { createRuntimePool } from "../db/runtime.mjs";
+import { witnessOriginFailure } from "./witness-origin-diagnostics.mjs";
 
-const fail = () => { throw Object.assign(new Error("The configured witness origin is unavailable."), { code: "WITNESS_ORIGIN_CONTEXT" }); };
+const fail = () => { throw witnessOriginFailure(null, "WITNESS_ORIGIN_CONTEXT"); };
 const fingerprint = (env, key) => createHmac("sha256", key).update("jessiemessage:witness-origin:configuration:v1:")
   .update(JSON.stringify(Object.fromEntries(Object.keys(env).sort().map(name => [name, env[name]])))).digest("hex");
 
@@ -16,7 +17,7 @@ const fingerprint = (env, key) => createHmac("sha256", key).update("jessiemessag
  * The callback owns no key after this scope. No configuration is printed. */
 export async function withConfiguredWitnessOrigin(options, { environment = process.env, signal } = {}, work, internal = {}) {
   const load = internal.loadEnvironment ?? loadRuntimeBroadcastEnvironment;
-  let env, key, media, pool, rootFingerprint;
+  let env, key, media, pool, rootFingerprint, callbackFailure;
   const active = () => { if (signal?.aborted) fail(); };
   try {
     const processOptions = privateAuthenticationProcessOptions(environment, []);
@@ -55,9 +56,15 @@ export async function withConfiguredWitnessOrigin(options, { environment = proce
       },
       checkCapacity,
     });
-    active(); const result = await work(context);
+    active(); let result;
+    try { result = await work(context); }
+    catch (error) {
+      // Preserve only the closed callback code, never its message, cause or
+      // properties. Configuration/SQL/media errors remain context failures.
+      callbackFailure = witnessOriginFailure(error, "WITNESS_ORIGIN_CONTEXT"); throw callbackFailure;
+    }
     await context.assertReady(); await checkCapacity(); active(); return result;
-  } catch { fail(); }
+  } catch (error) { if (callbackFailure !== undefined && error === callbackFailure) throw error; fail(); }
   finally {
     key?.fill(0); rootFingerprint?.fill(0); media?.key?.fill(0); clearRuntimeMessagingSecrets(env);
     try { await pool?.end(); } catch { fail(); }
