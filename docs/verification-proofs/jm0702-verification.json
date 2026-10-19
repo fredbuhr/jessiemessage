@@ -58,7 +58,89 @@
       "authenticatedUiDownload": "not_checked"
     }
   },
-  "personalExecution": "awaiting_fresh_0702_zip_on_existing_pc",
+  "personalExecution": {
+    "status": "local_initialized_and_server_witness_confirmed",
+    "localInitialization": {
+      "evidence": "user_screenshot_image(20261019-162033).png",
+      "console": "TEMOIN_INITIALISE",
+      "dialog": "Temoin initialise sur ce PC. Le dossier et le raccordement sont conserves. La verification independante par le service reste distincte.",
+      "pcFileHashesDirectlyRead": false
+    },
+    "serverWitness": {
+      "readAt": "2026-10-19T16:23:38.839193Z",
+      "log": "/srv/customer/jessiemessage-private/jm0702-witness-observer.log",
+      "checkedAt": 1792426995688,
+      "lastVerifiedAt": 1792426871839,
+      "state": "confirmed",
+      "mode": "observe_only",
+      "externalWitnessConfirmed": true,
+      "closuresEnabled": false
+    },
+    "authorityAfterInitialization": {
+      "contractSha256": "4fbdce199d70c1fd4b80f8ff249dae2666812b8ffc1c6912e8c50d1a042aaf10",
+      "contractBytes": 813,
+      "enrollmentOriginSha256": "817c6dca7735bb844d73066ebd3a711c46eb52cf5d5aabb5f4772171efc4b0c1",
+      "enrollmentOriginBytes": 968,
+      "contractAndOriginUnchanged": true,
+      "enrollmentState": {
+        "phase": "spent",
+        "revision": 2,
+        "bytes": 256,
+        "sha256": "445bc6c49bc0259284f2636f678e9073a833a2a4f60a992a6f87e5a3d1d7d35a"
+      },
+      "fileModesRechecked": false,
+      "genesisOrEnrollmentReplayedByAgent": false
+    },
+    "copySummary": {
+      "checkedAt": "2026-10-19T16:24:40.392Z",
+      "readOnly": true,
+      "archiveCount": 4,
+      "schedule": { "enabled": true, "hourUtc": 5, "minuteUtc": 15 },
+      "latestArchive": {
+        "id": "capture-1792386945745-204e0e8e073b6131",
+        "bytes": 402552,
+        "sha256": "c809dbfed6eabd2e8bde1a1d30a6cb11cbc99df720c0140935b3f2ae413690e5",
+        "filename": "JessieMessage-capture-1792386945745-204e0e8e073b6131.tar.gz.gpg"
+      },
+      "pc": {
+        "enabled": true,
+        "paired": true,
+        "lastSeenAt": 1792426862668,
+        "matchingReceipt": true,
+        "receivedAt": 1792426743461
+      },
+      "decryption": "awaiting_personal_DECHIFFREMENT_VERIFIE_for_this_archive",
+      "nativeIsolatedRestore": "not_confirmed"
+    },
+    "monitor": {
+      "checkedAt": 1792427012309,
+      "status": "current",
+      "code": "OK",
+      "consecutiveFailures": 0,
+      "activeIncident": false
+    },
+    "service": {
+      "checkedAt": "2026-10-19T16:25:12Z",
+      "health": "200 ok",
+      "readiness": "200 ready",
+      "runtimeChanged": false,
+      "restarted": false
+    },
+    "privateCheckpoint": {
+      "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
+      "savedAt": "2026-10-19T16:25:12.584872Z",
+      "bytes": 2410,
+      "mode": "0600"
+    },
+    "ciAndMergeReread": {
+      "pr": 92,
+      "merged": true,
+      "mainApplicationJobs": "5/5 success",
+      "mainWindowsJobs": "1/1 success"
+    },
+    "nextAction": "Owner PC: Sauvegardes > verification Windows > extract ZIP > Verifier.cmd > choose indicated encrypted archive > Verifier. Keep existing GPG key; phrase only in local GPG window.",
+    "lotB": "awaiting_personal_current_archive_decryption_only"
+  },
   "source": "d1720d8af17081ddcc7150e24d77128fcf8ff4fe",
   "tree": "8ffe6911cc9c5e1b18d609a239d9f9b2038e06cf",
   "merge": "dd9af4c172832f5e471e19596008886c0da5d79e",
