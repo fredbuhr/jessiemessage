@@ -2,7 +2,7 @@
   "version": 1,
   "release": "0.71.0",
   "scope": "C1: fresh authenticated closure-owner startup and reopen barrier; no closure activation or restoration",
-  "status": "candidate_ready_for_ci",
+  "status": "merged_and_verified_not_deployed_or_activated",
   "personalProofLotB": {
     "documentationCommit": "d8fa2f4e30ce8ef49ba74eee734113ab9f83c6c2",
     "evidence": "user_screenshot_image(20261019-163401).png",
@@ -14,7 +14,24 @@
     "release": "0.70.2",
     "source": "d1720d8af17081ddcc7150e24d77128fcf8ff4fe",
     "changed": false,
-    "closuresEnabled": false
+    "closuresEnabled": false,
+    "checkedAt": "2026-10-19T16:51:01.924791Z",
+    "health": "200 ok",
+    "readiness": "200 ready",
+    "monitor": {
+      "checkedAt": 1792428632456,
+      "state": "current",
+      "code": "OK",
+      "activeIncident": false
+    },
+    "witnessObservation": {
+      "checkedAt": 1792428589841,
+      "state": "not_confirmed",
+      "lastVerifiedAt": 1792428436368,
+      "externalWitnessConfirmed": false,
+      "closuresEnabled": false
+    },
+    "witnessScope": "Availability is a dated observation, not a permanent authorization. Personal lot B evidence remains historical; recovery must obtain a new fresh proof."
   },
   "implementation": {
     "requiredOwnerMethod": "verifyStartup",
@@ -58,5 +75,60 @@
     ],
     "realManagedChildTests": true
   },
-  "ci": "awaiting_candidate_run"
+  "ci": {
+    "candidate": {
+      "run": 39288164848,
+      "status": "5/5 success",
+      "jobs": [
+        118181550493,
+        118181550907,
+        118181550990,
+        118181551363,
+        118181551403
+      ],
+      "general": {
+        "tests": 2849,
+        "passed": 2819,
+        "failed": 0,
+        "skipped": 30
+      },
+      "nativeWitnessPaths": "passed",
+      "mariadb1011": {
+        "passed": 410,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb114": {
+        "passed": 410,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": {
+        "passed": 157,
+        "failed": 0,
+        "skipped": 0
+      },
+      "httpsAuthentication": "passed"
+    },
+    "main": {
+      "run": 39288850303,
+      "status": "5/5 success",
+      "jobs": [
+        118183900644,
+        118183900737,
+        118183900880,
+        118183900924,
+        118183901274
+      ],
+      "sameReviewedTree": "991122a92895508b7cae325c227b9abbaef75347"
+    }
+  },
+  "source": "8d93461cd1d22c62a33349a13bc6a05d080b09c8",
+  "tree": "991122a92895508b7cae325c227b9abbaef75347",
+  "pullRequest": 93,
+  "merge": "ec15e9f234bf22c798d046dbac162bc355cfd04d",
+  "deployed": false,
+  "activated": false,
+  "verifiedAt": "2026-10-19T16:53:26Z",
+  "nextAction": "C2: compose fresh independent recovery proof with explicit source/target reconciliation in the real restoration path; preserve newer receipts and quarantine. Keep closures disabled; no repeated PC proof requested."
 }

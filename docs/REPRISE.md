@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**État courant unique — 19 octobre 2026, 16:34:19 UTC (18:34:19 Europe/Paris). Étape 4/6 ; lots A et B clos. 0.70.2 livrée ; initialisation personnelle, échange indépendant du témoin et déchiffrement de l'archive courante confirmés. Prochain objectif : lot C, raccordement des contrôles de récupération et de réconciliation.** Les fermetures réelles restent désactivées.
+**État courant unique — 19 octobre 2026, 16:53:26 UTC (18:53:26 Europe/Paris). Étape 4/6 ; lots A et B clos. C1 (0.71.0) codé, fusionné et vérifié, non déployé et non activé ; service hébergé 0.70.2 en observation. Suite : C2, récupération et réconciliation source/cible.** Les fermetures réelles restent désactivées.
 
 Lire le [plan](PLAN-IMPLEMENTATION.md), les [règles de reprise](../AGENTS.md) et les [preuves 0.70.2](verification-proofs/jm0702-verification.json). Les preuves [0.70.1](activation-proofs/jm0701-activation.json), [0.70](activation-proofs/jm070-activation.json) et l'[historique](REPRISE-HISTORIQUE-20261019.md) conservent leur portée datée ; leurs anciens lanceurs ne sont pas les commandes courantes.
 
@@ -22,11 +22,13 @@ Lire le [plan](PLAN-IMPLEMENTATION.md), les [règles de reprise](../AGENTS.md) e
 
 Deux tests locaux de composition du kit et la syntaxe de 526 sources réussissent. Aucun nouvel appariement, contrat, permission, clé, message réel, mail, import SQL ou effacement de compte pour ce correctif. Les 66 anciennes PR déjà intégrées restent closes.
 
-## C1 — Contrôle frais des ouvertures — candidat 0.71.0
+## C1 — Contrôle frais des ouvertures — 0.71.0 fusionnée
 
 Le code vérifie maintenant chaque ouverture du mode doté d'un propriétaire de fermeture, sous le verrou de capture existant : premier démarrage sans intention en attente, reprise après capture et reprise après fermeture. La preuve indépendante fraîche est liée à tous les reçus uniques ; compte réapparu, journal perdu/incomplet, réponse rejouée, annulation ou échec final du verrou bloquent/arrêtent la reprise. Des essais avec un véritable enfant Node confirment l'arrêt et le refus HTTP.
 
-**Codé et vérifié localement, en attente de CI et de fusion ; non déployé et non activé.** Tests ciblés : 96 réussites, zéro échec, deux contrôles natifs procfs indisponibles localement à exécuter dans la CI Linux ; syntaxe des 526 sources et diff conformes. Le CLI courant fournit toujours `closureOperations:null`, et le runtime hébergé reste 0.70.2 en observation. Cette sous-étape ne clôt pas C : composition de production, barrière de récupération et réconciliation explicite source/cible restent à terminer. [Preuves C1](verification-proofs/jm071-verification.json).
+**Codé, fusionné et vérifié en CI candidat et main ; non déployé et non activé.** [PR #93](https://github.com/fredbuhr/jessiemessage/pull/93), source `8d93461cd1d22c62a33349a13bc6a05d080b09c8`, arbre `991122a92895508b7cae325c227b9abbaef75347`, merge `ec15e9f234bf22c798d046dbac162bc355cfd04d`. [CI candidat 39288164848](https://github.com/fredbuhr/jessiemessage/actions/runs/39288164848) : cinq jobs réussis ; 2 819 tests généraux réussis, 30 wrappers SQL ignorés dans ce job ; 410/410 sur chacune des deux MariaDB, 157/157 Chrome et répétition HTTPS réussie. Les deux contrôles natifs procfs indisponibles localement ont réussi en CI Linux. Syntaxe des 526 sources et diff conformes. [CI main 39288850303](https://github.com/fredbuhr/jessiemessage/actions/runs/39288850303) : les cinq jobs ont également réussi, au même arbre revu. Le CLI courant fournit toujours `closureOperations:null`, et le runtime hébergé reste 0.70.2 en observation. Cette sous-étape ne clôt pas C : composition de production, barrière de récupération et réconciliation explicite source/cible restent à terminer. [Preuves C1](verification-proofs/jm071-verification.json).
+
+Service relu après fusion à **16:51:01 UTC** : HTTPS santé/disponibilité **200**, moniteur `current / OK`, aucun incident actif. Dernière observation du témoin à `1792428589841` : `not_confirmed`, dernière vérification complète `1792428436368`, fermetures désactivées. Les preuves personnelles B restent acquises à leur date ; une récupération doit demander sa propre preuve fraîche. Aucun redémarrage, nouvelle capture ou modification du runtime hébergé pour C1.
 
 ## Paramètres et états à préserver
 
@@ -43,7 +45,7 @@ Le code vérifie maintenant chaque ouverture du mode doté d'un propriétaire de
 
 **Les trois preuves de B sont acquises et consignées.** Aucun nouveau contrôle personnel de cette archive n'est demandé. Le contrôle GPG s'est déroulé sur le PC avec le trousseau existant, sans transmission de clé ou de phrase.
 
-Commencer C par une lecture ciblée du vrai démarrage et du CLI de restauration, des contrôles de continuité déjà codés et des tests associés. Choisir une seule sous-étape bornée, la valider avant intégration et garder `closuresEnabled:false`. La messagerie quotidienne doit rester disponible lorsque le PC est éteint ; une récupération incertaine reste en quarantaine. La restauration native isolée relève de D.
+C1 est intégré et vérifié pour les ouvertures du mode doté d'un propriétaire de fermeture. Préparer C2 dans le vrai CLI `scripts/restore-private-operations.mjs` et sa composition : preuve indépendante fraîche, comparaison source/cible et préservation des reçus plus récents que la capture. Ce CLI maintient encore sa quarantaine et annonce `externalRegistryContinuityVerified:false`. Ne pas lever ce verrou ni activer le propriétaire tant que ces raccordements et les préconditions SQL ne sont pas acquis. Garder `closuresEnabled:false`. La messagerie quotidienne doit rester disponible lorsque le PC est éteint ; une récupération incertaine reste en quarantaine. La restauration native isolée relève de D.
 
 Conserver configuration DPAPI, archives, reçus, dossier `temoin` et marqueurs existants. Ne répéter ni activation, ni appariement, ni déchiffrement de cette archive pour retrouver un état déjà prouvé. Les preuves serveur sont datées : C doit demander sa propre fraîcheur au moment d'une récupération, sans transformer ce constat historique en autorisation permanente.
 
