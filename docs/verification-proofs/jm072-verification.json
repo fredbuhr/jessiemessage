@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "release": "0.72.0",
+  "scope": "C2: actual CLI recovery through existing PC transport and source/target-bound quarantine plan",
+  "status": "candidate_native_ci_pending",
+  "activeService": {
+    "release": "0.70.2",
+    "changed": false,
+    "closuresEnabled": false
+  },
+  "implementation": {
+    "transport": "Private Unix relay to the same parent PC mailbox; recover-only raw packets",
+    "proof": "Continuity gate owned by CLI generates and authenticates each new challenge",
+    "comparison": "Witness inventory must contain local and checkpoint receipts without rollback; privacy separate",
+    "confirmation": "--confirm-plan-sha256 binds source, target, capsule, paths, local state and witnessed head",
+    "publicationProbes": 4,
+    "quarantineKept": true,
+    "sqlImported": false,
+    "targetStarted": false,
+    "closureOwnerActivated": false
+  },
+  "nativeValidation": "Required in Linux CI; local Unix bind and procfs unavailable",
+  "remaining": [
+    "Recovery-only parent composition after nonempty-source restart",
+    "Qualified isolated native SQL restore and target reconciliation",
+    "Full-host loss recovery procedure",
+    "Closure activation prerequisites remain unmet"
+  ],
+  "local": {
+    "transportTargeted": {
+      "passed": 82,
+      "failed": 0,
+      "nativeSkipped": 9
+    },
+    "cliTargeted": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syntax": "passed_528_sources",
+    "diffCheck": "passed"
+  },
+  "nativeSocketExperiment": {
+    "environment": "Infomaniak SSH, isolated disposable directory only",
+    "node": "v24.15.0",
+    "operation": "Replace the fixture-owned bound socket pathname with a disposable regular fixture, then close listener",
+    "replacementPreserved": false,
+    "disposableDirectoryRemoved": true,
+    "liveServiceChanged": false,
+    "decision": "Retain standard Unix transport under explicit same-UID trust boundary; control contains only reserved transient IPC state. Preexisting collisions preserved and drift rejects proofs; listener owns its pathname after bind."
+  }
+}

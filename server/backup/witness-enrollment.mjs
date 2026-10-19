@@ -56,10 +56,11 @@ function regular(stats) {
 /** Explicit first use only. The separate immutable origin makes a missing or
  * interrupted mutable state an error; no check/reservation creates defaults.
  * The caller owns provenance and real process maintenance, not an offline flag. */
-export function createWitnessEnrollment({ directory, contract, contractSha256, key: suppliedKey, assertOriginal, withMaintenance }, internal = {}) {
+export function createWitnessEnrollment({ directory, contract, contractSha256, key: suppliedKey, assertOriginal, withMaintenance, assertProvenance = null }, internal = {}) {
   if (typeof directory !== "string" || directory === "/" || directory !== resolve(directory) || !directory.startsWith("/")
     || /[\\\x00-\x1f\x7f]/.test(directory) || !hex(contractSha256) || !Buffer.isBuffer(suppliedKey) || suppliedKey.length !== 32
-    || typeof assertOriginal !== "function" || typeof withMaintenance !== "function") fail("INPUT");
+    || typeof assertOriginal !== "function" || typeof withMaintenance !== "function"
+    || assertProvenance !== null && typeof assertProvenance !== "function") fail("INPUT");
   const original = selectedContract(contract), key = Buffer.from(hkdfSync("sha256", suppliedKey, Buffer.alloc(0),
     Buffer.from(`jessiemessage:witness-enrollment:https://jessiemessage.com:v1:${contractSha256}`), 32));
   const withDirectory = internal.withDirectory ?? withPrivateDirectory;
@@ -175,6 +176,17 @@ export function createWitnessEnrollment({ directory, contract, contractSha256, k
     },
     async check() {
       return exclusive(async () => { await source(); const result = await withDirectory(directory, async scope => status(await readState(scope))); await source(); return result; });
+    },
+    // Separate read-only authority for recovery. Initialization/reservation and
+    // their guards continue to require the original empty local registry.
+    async readRecoveryAuthority() {
+      return exclusive(async () => {
+        if (typeof assertProvenance !== "function") fail("INPUT");
+        active(); await assertProvenance();
+        const value = await withDirectory(directory, scope => readState(scope));
+        if (value.phase !== "spent" || value.revision !== 2) fail("RECOVERY_REQUIRED");
+        await assertProvenance(); active(); return status(value);
+      });
     },
     async reserve(value) {
       return exclusive(async () => {

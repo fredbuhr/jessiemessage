@@ -1,4 +1,4 @@
-import { opendir } from "node:fs/promises";
+import { mkdir, opendir } from "node:fs/promises";
 import { relative, sep } from "node:path";
 import { withPrivateDirectory } from "../files/private-directory.mjs";
 import { withConfiguredWitnessOrigin } from "./witness-origin-context.mjs";
@@ -11,6 +11,7 @@ import { registryHash, snapshotErasureRegistry } from "./registry-snapshot.mjs";
 import { assertRuntimeSource } from "./recurring-supervisor.mjs";
 import { createWitnessEnrollment, WitnessEnrollmentError } from "./witness-enrollment.mjs";
 import { createWitnessEnrollmentHandler } from "./witness-enrollment-http.mjs";
+import { createWitnessRecoveryControl, validateWitnessRecoveryEnvelope } from "./witness-recovery-control.mjs";
 
 const fail = () => { throw Object.assign(new Error("The original witness observer is unavailable."), { code: "WITNESS_OBSERVATION_UNAVAILABLE" }); };
 const inside = (a, b) => { const p = relative(b, a); return p === "" || p !== ".." && !p.startsWith(`..${sep}`) && !p.startsWith(sep); };
@@ -26,14 +27,14 @@ export async function createConfiguredWitnessObserver(options, { environment = p
   if (!/^[a-f0-9]{64}$/.test(options.witnessContractSha256 ?? "") || !Number.isSafeInteger(interval) || interval < 20 || interval > 60000) fail();
   const contractDirectory = `${options.witnessOperatorDirectory}/contract`, enrollmentDirectory = `${options.witnessOperatorDirectory}/enrollment`;
   const cancellation = new AbortController();
-  let closed = false, observing = false, verifiedThisConnection = false, attached = null, onFailure = null, timer = null, checking = null, gate, enrollment, transport, enrollmentHttp, contract, configurationFingerprint;
+  let closed = false, observing = false, verifiedThisConnection = false, attached = null, onFailure = null, timer = null, checking = null, recovering = false, controlStarting, recoveryControl, closing, gate, enrollment, transport, enrollmentHttp, contract, configurationFingerprint;
   let observed = { state: "not_confirmed", lastVerifiedAt: null, externalWitnessConfirmed: false };
   const active = () => { if (closed || signal?.aborted || cancellation.signal.aborted) fail(); };
   const notice = state => {
     observed = { ...observed, state, externalWitnessConfirmed: state === "confirmed" };
     try { emit({ version: 1, type: "witness_observation", mode: "observe_only", checkedAt: clock(), ...observed, closuresEnabled: false }); } catch {}
   };
-  async function bound(work) {
+  async function provenance(work) {
     active(); await source();
     return origin(options, { environment, signal: cancellation.signal }, async context => {
       active();
@@ -43,15 +44,20 @@ export async function createConfiguredWitnessObserver(options, { environment = p
         operationsDirectory: options.operationsDirectory, privateDirectory: options.privateDirectory, runtimeDirectory: options.runtimeDirectory,
         key: context.key, binding: context.binding, expectedContractSha256: options.witnessContractSha256, signal: cancellation.signal }, { withDirectory });
       if (contract !== undefined && JSON.stringify(current) !== JSON.stringify(contract)) fail();
+      await context.assertReady(); await source(); active();
+      const result = await work(context, current);
+      await context.assertReady(); await source(); active(); return result;
+    });
+  }
+  async function bound(work) {
+    return provenance(async (context, current) => {
       const state = await withDirectory(options.operationsDirectory, async scope => {
         const value = await (internal.captureState ?? captureOperationalState)(scope, { key: context.key, binding: context.binding, signal: cancellation.signal });
         const snapshot = snapshotErasureRegistry(value, context);
         if (snapshot.files.length !== 0 || registryHash(snapshot) !== current.initialSnapshotSha256) fail();
         await scope.assertReady(); return value;
       });
-      await context.assertReady(); await source(); active();
-      const result = await work(context, current, state);
-      await context.assertReady(); active(); return result;
+      return work(context, current, state);
     });
   }
   const invalid = () => { if (!closed) { notice("original_unavailable"); onFailure?.(); } };
@@ -60,7 +66,7 @@ export async function createConfiguredWitnessObserver(options, { environment = p
     active(); if (typeof attached !== "function") return Promise.reject(new Error("Witness supervisor not attached."));
     return attached(work, assertOriginal);
   };
-  const stop = () => close();
+  const stop = () => { try { void Promise.resolve(close()).catch(() => {}); } catch {} };
   try {
     let key, binding;
     try {
@@ -70,7 +76,7 @@ export async function createConfiguredWitnessObserver(options, { environment = p
       transport = (internal.makeTransport ?? createWitnessTransport)({ ...contract.destination, registryId: contract.registryId,
         authorize: copies.authorizeWitness, provisioning: true });
       enrollment = (internal.makeEnrollment ?? createWitnessEnrollment)({ directory: enrollmentDirectory, contract,
-        contractSha256: options.witnessContractSha256, key, assertOriginal, withMaintenance: maintain }, { withDirectory });
+        contractSha256: options.witnessContractSha256, key, assertOriginal, withMaintenance: maintain, assertProvenance: () => provenance(() => true) }, { withDirectory });
       gate = (internal.makeContinuity ?? createErasureContinuity)({ key, binding, readCurrent: () => bound((_context, _contract, state) => state),
         exchange: transport.exchange, timeoutMs: 30000 });
       enrollmentHttp = (internal.makeEnrollmentHandler ?? createWitnessEnrollmentHandler)({ enrollment, contract, authorize: copies.authorizeWitness });
@@ -96,7 +102,7 @@ export async function createConfiguredWitnessObserver(options, { environment = p
           contractSha256: options.witnessContractSha256, genesisReplayed: false, closuresEnabled: false, externalWitnessConfirmed: false };
       }
       async function tick() {
-        if (closed || checking) return checking;
+        if (closed || checking || recovering) return checking ?? null;
         checking = (async () => {
           try {
             let authority;
@@ -139,13 +145,51 @@ export async function createConfiguredWitnessObserver(options, { environment = p
         })().finally(() => { checking = null; });
         return checking;
       }
+      async function recoverExchange(value, { signal: requestSignal } = {}) {
+        active(); if (checking || recovering) fail();
+        const envelope = validateWitnessRecoveryEnvelope(value);
+        if (envelope.contractSha256 !== options.witnessContractSha256 || envelope.request.registryId !== contract.registryId
+          || JSON.stringify(envelope.binding) !== JSON.stringify(contract.binding)) fail();
+        recovering = true;
+        try {
+          await enrollment.readRecoveryAuthority();
+          return await provenance(async () => {
+            const result = await transport.exchange(envelope.request, {
+              signal: requestSignal === undefined ? cancellation.signal : AbortSignal.any([cancellation.signal, requestSignal]) });
+            await enrollment.readRecoveryAuthority();
+            active(); if (requestSignal?.aborted) fail(); return result;
+          });
+        } finally { recovering = false; }
+      }
+      async function startRecoveryControl() {
+        active(); if (controlStarting) return controlStarting;
+        controlStarting = (async () => {
+          try {
+            await withDirectory(options.witnessOperatorDirectory, async scope => {
+              await scope.assertReady();
+              try { await mkdir(scope.file("control"), { mode: 0o700 }); await scope.sync(); }
+              catch (error) { if (error.code !== "EEXIST") throw error; }
+              await scope.assertReady();
+            });
+            recoveryControl = await (internal.makeRecoveryControl ?? createWitnessRecoveryControl)({
+              directory: `${options.witnessOperatorDirectory}/control`, exchange: recoverExchange, signal: cancellation.signal });
+            active(); return true;
+          } catch {
+            try { await recoveryControl?.close(); } catch {}
+            // Local operator control availability never changes daily service.
+            try { emit({ version: 1, type: "witness_recovery_control", status: "unavailable", closuresEnabled: false }); } catch {}
+            return false;
+          }
+        })();
+        return controlStarting;
+      }
       function startObservation() {
         if (closed || observing || attached === null) fail();
         observing = true;
         const arm = () => { if (!closed) timer = setTimeout(() => { timer = null; void tick().finally(arm); }, interval); };
         void tick().finally(arm);
       }
-      return Object.freeze({ handler, check, checkInitial, initialize, tick, startObservation, close,
+      return Object.freeze({ handler, check, checkInitial, initialize, tick, startObservation, recoverExchange, startRecoveryControl, close,
         attachMaintenance(value, failure) {
           if (attached !== null || typeof value !== "function" || typeof failure !== "function" || closed) fail();
           attached = value; onFailure = failure;
@@ -155,8 +199,11 @@ export async function createConfiguredWitnessObserver(options, { environment = p
   } catch (error) { close(); throw error; }
 
   function close() {
+    if (closing) return closing;
     if (closed) return;
     closed = true; clearTimeout(timer); cancellation.abort(); gate?.close(); transport?.close(); enrollmentHttp?.close(); enrollment?.close();
     signal?.removeEventListener("abort", stop);
+    closing = Promise.resolve(recoveryControl?.close());
+    return closing;
   }
 }

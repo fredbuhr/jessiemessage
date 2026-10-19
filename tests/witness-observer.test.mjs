@@ -18,7 +18,7 @@ async function fixture(t, changes = {}) {
   for (const directory of Object.values(dirs)) await mkdir(directory, { mode: 0o700 });
   await mkdir(path.join(dirs.operator, "contract"), { mode: 0o700 }); await mkdir(path.join(dirs.operator, "enrollment"), { mode: 0o700 });
   const events = [], notices = [], keys = [], parameters = {};
-  let original = true, authority = { ready: true, spent: false }, enrollmentMissing = false, enrollmentFailure = null, offline = false, pendingProbe = null, enrollmentOptions;
+  let localUnavailable = false, original = true, authority = { ready: true, spent: false }, enrollmentMissing = false, enrollmentFailure = null, offline = false, pendingProbe = null, enrollmentOptions;
   const proof = { verified: true, registrySha256: emptyHash, witnessRevision: 1, receipts: 0 };
   const source = async () => { if (!original) throw new Error("Synthetic original runtime/source drift"); };
   const enrollmentHandler = async request => { events.push("enrollment-http"); return request.url === "/enrollment-fixture"; };
@@ -30,14 +30,16 @@ async function fixture(t, changes = {}) {
       finally { key.fill(0); }
     },
     readGenesis: async () => ({ ...contract, destination: { ...contract.destination }, binding: { ...binding }, sourceIdentity: { ...contract.sourceIdentity } }),
-    captureState: async () => ({ version: 1, binding: { ...binding }, files: [] }),
+    captureState: async () => { if (localUnavailable) throw new Error("Synthetic local registry unavailable"); return { version: 1, binding: { ...binding }, files: [] }; },
     makeCopyService: () => ({ authorizeWitness: async () => ({ ...contract.destination }) }),
+    makeRecoveryControl: async value => { parameters.control = value; return { close() { events.push("control-close"); } }; },
     makeTransport: value => { parameters.transport = value; return { exchange: async () => {},
       handler: async () => { events.push("transport-http"); return true; }, close: () => events.push("transport-close") }; },
     makeEnrollment: value => {
       enrollmentOptions = value; parameters.enrollment = value;
       return { async check() { if (enrollmentMissing) throw new Error("Synthetic missing enrollment state"); if (enrollmentFailure) throw enrollmentFailure; return { ...authority }; },
         async initialize() { return value.withMaintenance(async assertQuiescent => { await assertQuiescent(); await value.assertOriginal(); authority = { ready: true, spent: false }; return authority; }); },
+        async readRecoveryAuthority() { if (enrollmentMissing || !authority.spent) throw new Error("Synthetic unspent authority"); await value.assertProvenance(); return { ...authority }; },
         async reserve() { throw new Error("Unexpected HTTP fixture reserve"); }, close: () => events.push("enrollment-close") };
     },
     makeEnrollmentHandler: () => enrollmentHandler,
@@ -60,7 +62,7 @@ async function fixture(t, changes = {}) {
     await assertOriginal(); events.push("resume"); return result;
   }, () => events.push("fatal"));
   return { root, dirs, observer, notices, events, keys, parameters, proof, attach,
-    setOriginal(value) { original = value; }, setSpent(value) { authority = { ready: !value, spent: value }; },
+    setLocalUnavailable(value) { localUnavailable = value; }, setOriginal(value) { original = value; }, setSpent(value) { authority = { ready: !value, spent: value }; },
     setOffline(value) { offline = value; }, setMissing(value) { enrollmentMissing = value; },
     setEnrollmentFailure(value) { enrollmentFailure = value; },
     holdProbe() { pendingProbe = { ...deferred(), started: deferred() }; return pendingProbe; }, get enrollmentOptions() { return enrollmentOptions; } };
@@ -175,4 +177,40 @@ test("starting observation twice cannot install a second timer and closing remov
   assert.equal(timers.size, 1); assert.equal([...timers][0].milliseconds, 60000);
   assert.throws(() => f.observer.startObservation(), { code: "WITNESS_OBSERVATION_UNAVAILABLE" });
   assert.equal(timers.size, 1); f.observer.close(); assert.equal(timers.size, 0);
+});
+
+
+test("recovery forwards only a fresh pinned read under provenance while a lost local registry remains outside empty observation", async t => {
+  const packets = [];
+  const f = await fixture(t, { makeTransport: () => ({ async exchange(request, { signal }) {
+    assert.equal(signal.aborted, false); packets.push(request);
+    return { version: 1, registryId, challenge: request.challenge, revision: 2, sha256: "e".repeat(64), snapshot: { version: 1, registryId, files: [] } };
+  }, handler: async () => true, close() {} }) });
+  const envelope = { version: 1, contractSha256: "f".repeat(64), binding, request: { version: 1, registryId, challenge: "8".repeat(64), snapshot: null } };
+  await assert.rejects(f.observer.recoverExchange(envelope)); assert.equal(packets.length, 0);
+  f.setSpent(true); f.setLocalUnavailable(true);
+  assert.equal((await f.observer.recoverExchange(envelope)).challenge, envelope.request.challenge);
+  assert.deepEqual(packets, [envelope.request]); assert.equal(f.events.includes("stop"), false); assert.equal(f.events.includes("fatal"), false);
+  for (const changed of [{ ...envelope, contractSha256: "9".repeat(64) }, { ...envelope, binding: { ...binding, database: "wrong" } },
+    { ...envelope, request: { ...envelope.request, snapshot: { version: 1, registryId, files: [] } } }]) await assert.rejects(f.observer.recoverExchange(changed));
+  assert.equal(packets.length, 1); f.setOriginal(false); await assert.rejects(f.observer.recoverExchange(envelope));
+});
+
+test("recovery and timer observation cannot overlap or stop the daily runtime", async t => {
+  const entered = deferred(), release = deferred();
+  const f = await fixture(t, { makeTransport: () => ({ async exchange() { entered.resolve(); await release.promise; return {}; }, handler: async () => true, close() {} }) });
+  f.setSpent(true);
+  const envelope = { version: 1, contractSha256: "f".repeat(64), binding, request: { version: 1, registryId, challenge: "8".repeat(64), snapshot: null } };
+  const pending = f.observer.recoverExchange(envelope); await entered.promise;
+  assert.equal(await f.observer.tick(), null); await assert.rejects(f.observer.recoverExchange(envelope));
+  assert.equal(f.events.includes("recover"), false); assert.equal(f.events.includes("stop"), false); release.resolve(); await pending;
+  const held = f.holdProbe(); f.attach(); const checking = f.observer.tick(); await held.started.promise;
+  await assert.rejects(f.observer.recoverExchange(envelope)); held.resolve(); await checking;
+});
+
+test("recovery control is created only explicitly and a failure is neutral without affecting observation", async t => {
+  const f = await fixture(t, { makeRecoveryControl: async () => { throw new Error("Synthetic operator filesystem issue"); } });
+  assert.equal(f.events.includes("fatal"), false); assert.equal(await f.observer.startRecoveryControl(), false);
+  assert.deepEqual(f.notices.at(-1), { version: 1, type: "witness_recovery_control", status: "unavailable", closuresEnabled: false });
+  assert.equal((await f.observer.check()).status, "passed"); assert.equal(f.events.includes("fatal"), false); assert.equal(f.events.includes("stop"), false);
 });

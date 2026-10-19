@@ -19,6 +19,11 @@ import { createParentGateway } from "../server/backup/parent-gateway.mjs";
 import { createRecurringSupervisor } from "../server/backup/recurring-supervisor.mjs";
 import { createConfiguredWitnessObserver } from "../server/backup/witness-observer.mjs";
 import { createRegistryWitness } from "../server/backup/registry-witness.mjs";
+import { createErasureContinuity } from "../server/backup/registry-continuity.mjs";
+import { createErasureJournal } from "../server/data/erasure-journal.mjs";
+import { captureOperationalState, writeOperationalCheckpoint, assertNoOperationalRestore, OPERATIONAL_RESTORE_MARKER } from "../server/backup/operational-checkpoint.mjs";
+import { withPrivateDirectory } from "../server/files/private-directory.mjs";
+import { main as restoreOperations } from "../scripts/restore-private-operations.mjs";
 import { WITNESS_ENROLLMENT_FILE, WITNESS_ENROLLMENT_ORIGIN } from "../server/backup/witness-enrollment.mjs";
 import { runManagedWitnessPreparation } from "../server/backup/managed-witness.mjs";
 import { createWitnessOriginOperations } from "../server/backup/witness-origin-operator.mjs";
@@ -351,6 +356,57 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
       assert.equal(await sqlHash(), beforeSql);
       assert.deepEqual(await Promise.all(names.map(name => readFile(path.join(dirs.private, name)))), initialPrivate);
       assert.equal(digest(await readFile(path.join(dirs.operator, "contract", WITNESS_GENESIS_FILE))), result.contractSha256);
+
+      // The actual recovery CLI obtains fresh challenges through a real
+      // Unix operator socket, the existing HTTP mailbox and durable PC peer.
+      // Only the already-real six-file loader's disposable SQL transport and
+      // the synthetic checkpoint receipt metadata are adapted in this test.
+      assert.equal(await observer.startRecoveryControl(), true);
+      const checkpointDirectory = path.join(root, "old-checkpoint"), targetMedia = path.join(root, "recovery-media"),
+        laterSource = path.join(root, "later-synthetic-receipts"), quarantine = path.join(root, "recovery-quarantine");
+      for (const directory of [checkpointDirectory, targetMedia, laterSource]) await mkdir(directory, { mode: 0o700 });
+      const crmKey = Buffer.from(records.crm.crmKey, "base64url"), recoveryBinding = contract.binding;
+      const oldState = await withPrivateDirectory(dirs.operations, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding }));
+      const checkpointReceipt = { version: 10, profile: "messaging-photos-notify-recovery-crm-broadcast-application", createdAt: Date.now(),
+        manifest: { sha256: "d".repeat(64) }, sql: { sha256: "e".repeat(64) }, media: { files: [], bytes: 0 } };
+      checkpointReceipt.operations = await withPrivateDirectory(checkpointDirectory, scope => writeOperationalCheckpoint(scope, oldState, checkpointReceipt, crmKey));
+      const laterGate = createErasureContinuity({ key: crmKey, binding: recoveryBinding,
+        readCurrent: () => withPrivateDirectory(laterSource, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding })),
+        exchange: request => witness.exchange(request) });
+      const journal = createErasureJournal({ directory: laterSource, key: crmKey, binding: recoveryBinding, clientId: "a".repeat(32) });
+      try {
+        let revision = 0, record = { version: 1, clientId: "a".repeat(32), binding: recoveryBinding, phase: "requested", cursor: null, startedAt: Date.now(), updatedAt: Date.now() };
+        record.updatedAt = record.startedAt;
+        for (const phase of ["requested", "prepared", "files_erased", "completed"]) {
+          record = { ...record, phase, updatedAt: record.updatedAt + (phase === "requested" ? 0 : 1) };
+          revision = (await journal.save(record, revision, async () => {})).revision;
+          await laterGate.verify(async () => {});
+        }
+      } finally { journal.close(); laterGate.close(); }
+      const args = command => [command, "--private-directory", dirs.private, "--operations-directory", dirs.operations,
+        "--checkpoint-directory", checkpointDirectory, "--destination-private-directory", quarantine,
+        "--database", "synthetic_isolated_target", "--media-root", targetMedia,
+        "--witness-operator-directory", dirs.operator, "--witness-contract-sha256", result.contractSha256];
+      const dependencies = { inheritedEnv: environment, execArgv: [], loadEnvironment: localEnv,
+        readReceipt: async () => structuredClone(checkpointReceipt), outputStream: { write() {} } };
+      const beforeRecoveryChildren = children.length, beforeRecoveryChallenges = challenges.size;
+      const checkingRecovery = restoreOperations(args("check"), dependencies);
+      await respondToWitnessRequest(); const checkedRecovery = await checkingRecovery;
+      assert.equal(checkedRecovery.externalRegistryContinuityVerified, true); assert.equal(checkedRecovery.completedReceipts, 1);
+      assert.equal(checkedRecovery.started, false); assert.equal(checkedRecovery.reconciliationRequired, true);
+      const restoringRecovery = restoreOperations([...args("restore"), "--confirm-plan-sha256", checkedRecovery.planSha256], dependencies);
+      for (let index = 0; index < 4; index++) await respondToWitnessRequest();
+      const restoredRecovery = await restoringRecovery;
+      assert.equal(restoredRecovery.restored, true); assert.equal(restoredRecovery.completedReceipts, 1);
+      assert.equal(restoredRecovery.started, false); assert.equal(restoredRecovery.sqlRestored, false);
+      assert.equal(challenges.size, beforeRecoveryChallenges + 5);
+      assert.equal(children.length, beforeRecoveryChildren, "recovery reads never stop or restart the daily child");
+      assert.deepEqual(JSON.parse(await readFile(path.join(quarantine, OPERATIONAL_RESTORE_MARKER))).sourceBinding, recoveryBinding);
+      await assert.rejects(withPrivateDirectory(quarantine, assertNoOperationalRestore), { code: "OPERATIONS_RECONCILIATION_REQUIRED" });
+      assert.equal((await readdir(quarantine)).filter(name => name.startsWith("erasure-")).length, 1);
+      assert.equal((await withPrivateDirectory(dirs.operations, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding }))).files.length, 0);
+      assert.equal(await sqlHash(), beforeSql); crmKey.fill(0);
+      assert.deepEqual(await localRequest(publicPort, "/api/ready"), { status: 200, body: '{"status":"ready"}' });
 
       await unlink(statePath); const beforeMissing = children.length;
       await assert.rejects(observer.check(), { code: "WITNESS_ENROLLMENT_MISSING" });
