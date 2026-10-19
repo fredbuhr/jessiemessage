@@ -1,10 +1,10 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — étape 4/6. Service 0.76.0 inchangé ; S2b 0.78 clos, fusionné/vérifié en CI candidat et main ; non déployé.** V1 sur le mutualisé existant, sans infrastructure ni budget ajoutés. Lire le [plan](PLAN-IMPLEMENTATION.md) et [AGENTS](../AGENTS.md). KISS permanent ; proposition VPS écartée.
+**20 octobre 2026 Europe/Paris — étape 4/6. Service 0.76.0 inchangé ; S3 0.79 clos, fusionné/vérifié en CI candidat et main ; non déployé.** V1 sur le mutualisé existant, sans infrastructure ni budget ajoutés. Lire le [plan](PLAN-IMPLEMENTATION.md) et [AGENTS](../AGENTS.md). KISS permanent ; proposition VPS écartée.
 
 ## Objectif V1 et état réel
 
-V1 : copies chiffrées PC, **restauration manuelle en maintenance**, fermeture locale journalisée et contrôle avant réouverture. S2a en fournit les moteurs et S2b le parcours opérateur exécutable avec réouverture explicite. La recette finale de la messagerie reste à S3. Secours Infomaniak : sept jours, fichiers/base non simultanés ([FAQ 2217](https://www.infomaniak.com/fr/support/faq/2217)).
+V1 : messagerie privée, copies chiffrées PC, **restauration manuelle en maintenance**, fermeture locale journalisée et contrôle avant réouverture. S2a/S2b fournissent le parcours opérateur ; S3 qualifie les sessions indépendantes et les parcours utiles. S3 est clos techniquement ; le déploiement final reste à effectuer. Secours Infomaniak : sept jours, fichiers/base non simultanés ([FAQ 2217](https://www.infomaniak.com/fr/support/faq/2217)).
 
 Récupération autonome après perte de l'hôte, témoin par phase, succession de propriétaire et inventaire SQL exhaustif **hors prérequis V1**, sans garantie équivalente ni faux succès des anciens gardes.
 
@@ -32,6 +32,16 @@ Les exercices natifs vérifient vrai dump/import, publication du vrai enfant, pe
 
 Le **19 octobre à 22:58:22.417320 UTC** : checkout 0.76 propre/épinglé, lanceur 0700 inchangé, dix fichiers sensibles/modes préservés, santé/disponibilité HTTPS 200 sur les deux origines, API Fermetures 401 anonyme. Aucun redémarrage, effacement réel, test PC, réimport D1 ou retrait de son marqueur. Fermetures toujours désactivées en ligne ; activation au déploiement final après la recette.
 
+## S3 — clos, fusionné/vérifié en CI candidat et main ; non déployé
+
+**0.79.0 :** trois contextes Chrome indépendants utilisent le vrai serveur HTTPS, MariaDB et les médias : deux sessions du même client, texte/photo JPEG, brouillon conservé, notification vers la photo exacte et déconnexion d'un seul appareil. Aucun envoi SMTP/Push réel ; la visibilité DOM pilotée ne prouve pas l'arrière-plan d'un téléphone/PWA. Les acceptations personnelles déjà acquises restent valables ; aucun nouvel essai personnel n'est une condition de clôture technique. La page Confidentialité affiche la capacité réelle de fermeture, sans activation depuis un brouillon. [Compte rendu](messaging-acceptance-079.md), [preuves](verification-proofs/jm079-verification.json).
+
+[PR #101](https://github.com/fredbuhr/jessiemessage/pull/101) fusionnée : source `2342f749d59222104a3d6458c2617aa9f63ba69c`, arbre `39ac4fdabc55b7661742fbd6acc5763d65a42dab`, merge `bc6103a73ce63752eda27a0bce83a7e53e409d09`, arbre identique. [CI candidat 39341320771](https://github.com/fredbuhr/jessiemessage/actions/runs/39341320771) **5/5 réussis** : suite générale 2 996 réussis / 35 wrappers SQL ignorés / zéro échec ; **436/436 sur chaque MariaDB sans omission**, Chrome 160, recettes HTTPS 2, syntaxe 558 et aperçu construit. [CI main 39342025957](https://github.com/fredbuhr/jessiemessage/actions/runs/39342025957) également **5/5 réussis**, mêmes résultats et arbre identique au candidat. Le premier candidat omettait la conversation du compte synthétique : fixture corrigée, produit et délais inchangés.
+
+[Guide quotidien](guide-jessie.md), [conservation](data-retention-register.md) et [surveillance](../MONITORING.md) actualisés. Conversations jusqu'à fermeture définitive ; aucune rotation automatique des archives ajoutée. Douze contrôles externes réussis observés, mais intervalles de 1 h 54 à 7 h 12 ; aucune garantie de cinq minutes ni réception d'alerte externe attestée. Ce sont des limites déclarées, sans nouveau questionnaire, test de mail ou infrastructure.
+
+Le **19 octobre à 23:25:28.601764 UTC** : source/lanceur 0.76 propres et inchangés, dix fichiers sensibles en 0600 préservés, santé/disponibilité HTTPS 200 sur deux origines, API Fermetures 401 anonyme. Aucun redémarrage, test PC, effacement réel ou manipulation D1.
+
 ## Pins du service à conserver
 
 - Source `8abd205cc686f9a669511fd9d28b203ee4d4632a`, arbre `400e798cc51434d548690d4821cae665f5d14716` ; checkout `/srv/customer/jessiemessage-operator/simple-backups-076-8abd205c`.
@@ -56,10 +66,10 @@ Ne rejouer ni `plan-witness`, ni `prepare-witness`, ni `prepare-witness-enrollme
 - Sous `/srv/customer/jessiemessage-private/`, garder `restore-d19-checkpoint`, `restore-d19-quarantine` et les reçus **0600** de `restore-d19-operator`. Marqueur `operational-restore.json` toujours bloquant ; aucun rebind, effacement C5 ou ouverture D1 acquis. `recette.jessiemessage.com` partage runtime/base du principal : pas une cible isolée.
 - **D2 :** MariaDB 10.11, `shared_admin / raw_underscore_pattern`, métadonnées refusées ; qualification stricte **non acquise**. Scheduler `OFF` ≠ `DISABLED`, sans preuve d'arrêt des workers actifs ; hors prérequis V1, aucun contournement.
 
-Checkpoint existant `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json` : `activeService` et `developmentSimplification.s1=deployed_verified`, S2b clos/fusionné/vérifié en CI candidat et main ; suite S3. Repli conservé : ancien lanceur **0700** `/srv/customer/jessiemessage-private/start-primary-witness-observer-072-94fb7882.sh`, SHA-256 `94c6109b76352f24c9678e2ab85086fe5e7a6906350fd237b3a1751d1c61b495` ; ses pins 0.72 et anciens paramètres sont dans l'historique lié ci-dessous. Aucun journal parallèle de reprise.
+Checkpoint existant `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json` : `activeService` et `developmentSimplification.s1=deployed_verified`, S2a/S2b clos, S3 clos/fusionné/vérifié en CI candidat et main ; prochaine action : déploiement final. Repli conservé : ancien lanceur **0700** `/srv/customer/jessiemessage-private/start-primary-witness-observer-072-94fb7882.sh`, SHA-256 `94c6109b76352f24c9678e2ab85086fe5e7a6906350fd237b3a1751d1c61b495` ; ses pins 0.72 et anciens paramètres sont dans l'historique lié ci-dessous. Aucun journal parallèle de reprise.
 
 ## Historique et prochaine action
 
 [C2](witness-recovery-072.md) historique vérifié en 0.72, canal inactif ; [C3](witness-recovery-parent-073.md)/[C5](closure-target-replay-075.md) vérifiés en CI, sans activation réelle ; [C4](closure-reconciliation-074.md) vérifié en CI/lecture seule réelle. Code/états conservés. Anciens pins/propositions : [REPRISE 6ef8169](https://github.com/fredbuhr/jessiemessage/blob/6ef81692e01220cd3fd1d41a38c1b1d87568984d/docs/REPRISE.md).
 
-**Prochaine action : S3.** S2b est clos, fusionné/vérifié en CI candidat et main, non déployé ; ne pas refaire l'exercice, D1, D2 ou un préflight ancien pour répéter un acquis. S3 : recette utile sur deux appareils, rétention/moniteur et guide court, puis déploiement final validé avec activation des fermetures locales. Préserver PC/D1/autorité ; Jessie en France, conversations jusqu'à fermeture définitive, mails et copies PC acceptés. Aucun nouveau serveur, budget, questionnaire, mail de test ou appariement.
+**Prochaine action : déploiement final validé de 0.79 sur le mutualisé, avec activation des fermetures locales et vérification du service.** Ne pas rouvrir les lots de sauvegarde, D1/D2 ou une recette personnelle générale. Préserver PC/D1/autorité ; Jessie en France, conversations jusqu'à fermeture définitive, mails et copies PC acceptés. Aucun nouveau serveur, budget, questionnaire, mail de test ou appariement.

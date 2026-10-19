@@ -21,7 +21,7 @@ Lire d'abord `docs/REPRISE.md`, puis `docs/PLAN-IMPLEMENTATION.md`. Le premier d
 
 - La genèse et la permission du témoin existent déjà. Ne jamais rejouer `plan-witness`, `prepare-witness` ou `prepare-witness-enrollment` sur le service courant, ni supprimer/déplacer un état pour faire passer un contrôle.
 - Ne pas réapparier le PC, exporter/régénérer la clé privée ou supprimer sa configuration DPAPI, ses marqueurs ou son dossier `temoin`. Après une initialisation incertaine, inspecter les états PC et serveur avant toute action.
-- Service déployé/vérifié : **0.76.0**, mode `start` sans observateur/passerelle, `closuresEnabled:false`. S2b 0.78 est clos, fusionné/vérifié en CI candidat et main ; **non déployé**. Terminer S3 puis activer les fermetures lors du déploiement final validé. Le canal C2 Unix/PC reste historique/inactif et ses états sont conservés. Une copie reçue ne prouve ni déchiffrement ni restauration.
+- Service déployé/vérifié : **0.76.0**, mode `start` sans observateur/passerelle, `closuresEnabled:false`. S2a/S2b et S3 0.79 sont clos, fusionnés/vérifiés en CI candidat et main ; **non déployés**. Prochaine action : déployer 0.79 et activer les fermetures locales, puis vérifier le service. Ne pas rouvrir un lot de sauvegarde ni une recette personnelle générale. Le canal C2 Unix/PC reste historique/inactif et ses états sont conservés. Une copie reçue ne prouve ni déchiffrement ni restauration.
 - `recette.jessiemessage.com` partage le runtime et la base du site principal : ce n'est pas une cible isolée pour restaurer ou détruire des données.
 
 ## Un objectif terminé à la fois

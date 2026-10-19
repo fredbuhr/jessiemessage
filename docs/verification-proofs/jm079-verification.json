@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "release": "0.79.0",
+  "scope": "S3: independent messaging sessions on real HTTPS/SQL/media, actual closure availability and short operating guide",
+  "status": "merged_verified_not_deployed",
+  "source": {
+    "commit": "2342f749d59222104a3d6458c2617aa9f63ba69c",
+    "tree": "39ac4fdabc55b7661742fbd6acc5763d65a42dab",
+    "pr": "https://github.com/fredbuhr/jessiemessage/pull/101",
+    "merge": "bc6103a73ce63752eda27a0bce83a7e53e409d09"
+  },
+  "implementation": {
+    "closureCapabilityDerivedFromServerConfiguration": true,
+    "draftCannotEnableAccountClosures": true,
+    "privacyTextFrenchAndEnglish": true,
+    "existingSessionPolicyUnchanged": true,
+    "shortGuide": "docs/guide-jessie.md",
+    "retentionRegister": "docs/data-retention-register.md",
+    "archiveRotationAdded": false,
+    "newInfrastructureRequired": false
+  },
+  "ci": {
+    "candidate": {
+      "run": 39341320771,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39341320771",
+      "status": "completed",
+      "httpsAuthenticationAndMessaging": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "jobs": "5/5 success",
+      "general": {
+        "tests": 3031,
+        "passed": 2996,
+        "failed": 0,
+        "sqlWrappersSkipped": 35
+      },
+      "mariadb10_11": {
+        "passed": 436,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 436,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": {
+        "passed": 160,
+        "failed": 0,
+        "skipped": 0
+      },
+      "syntax": 558,
+      "offlinePreviewBuild": "success"
+    },
+    "main": {
+      "run": 39342025957,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39342025957",
+      "status": "completed",
+      "treeMatchesCandidate": true,
+      "jobs": "5/5 success",
+      "general": {
+        "tests": 3031,
+        "passed": 2996,
+        "failed": 0,
+        "sqlWrappersSkipped": 35
+      },
+      "mariadb10_11": {
+        "passed": 436,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 436,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": {
+        "passed": 160,
+        "failed": 0,
+        "skipped": 0
+      },
+      "httpsAuthenticationAndMessaging": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "syntax": 558,
+      "offlinePreviewBuild": "success"
+    }
+  },
+  "messagingExercise": {
+    "isolatedDisposableLoopbackOnly": true,
+    "actualConfiguredServerAndMariaDb": true,
+    "independentChromeSessions": 3,
+    "clientsForSameAccount": 2,
+    "administratorSessions": 1,
+    "nativeProtectedDistinctCookiesAndReload": true,
+    "realTextPollingOnBothClients": true,
+    "memoryDraftPreservedByIncomingTextAndPhoto": true,
+    "controlledDomVisibilityResume": true,
+    "nativeJpegUploadEncryptedStorageAndAuthorizedDecode": true,
+    "realOpaqueNotificationReferenceFromSql": true,
+    "sameDocumentReferencePreservesDraft": true,
+    "thisDeviceLogoutLeavesPeerSessionUsable": true,
+    "reauthenticationTargetsExactOlderPhoto": true,
+    "logoutDraftIsCleared": true,
+    "syntheticSubscriptionStoredThroughRealAuthenticatedApi": true,
+    "deliveryWorkersStoppedBeforeListen": true,
+    "realSmtpSent": false,
+    "realPushSent": false,
+    "physicalPhonesVerified": false,
+    "osBackgroundOrPwaVerified": false,
+    "registrationAndEmailVerificationExercised": false
+  },
+  "monitorObservation": "docs/verification-proofs/jm079-monitor-observation.json",
+  "servicePreservation": {
+    "verifiedAt": "2026-10-19T23:25:28.601764+00:00",
+    "release": "0.76.0",
+    "source": "8abd205cc686f9a669511fd9d28b203ee4d4632a",
+    "sourceClean": true,
+    "launcherUnchanged": true,
+    "preservedFiles": 10,
+    "httpsProbesPassed": 4,
+    "httpsStatus": 200,
+    "privateClosuresApiAnonymous": 401,
+    "runtimeRestarted": false,
+    "closuresEnabled": false,
+    "pcActionRequired": false,
+    "d1ImportedAgain": false,
+    "d1QuarantineRemoved": false
+  },
+  "deployment": {
+    "s3Deployed": false,
+    "serviceRelease": "0.76.0",
+    "closuresEnabled": false,
+    "realAccountErased": false,
+    "productionRestored": false,
+    "pcPairingChanged": false
+  },
+  "localChecks": {
+    "syntaxFiles": 558,
+    "focused": {
+      "tests": 40,
+      "passed": 38,
+      "failed": 0,
+      "procfsUnavailableSkipped": 2
+    },
+    "general": {
+      "status": "interrupted",
+      "exitCode": 130,
+      "reason": "No progress observed in a native-media test on the local restricted runtime; the full GitHub suite is the required general result."
+    }
+  },
+  "earlierCandidates": [
+    {
+      "source": "63cc976ca2b4055c78248dcb012d2c0a72b313a7",
+      "tree": "5fb33e0ac532e90f88ddfffeae229168cc13cfc2",
+      "run": 39341044067,
+      "result": "messaging_fixture_missing_conversation",
+      "fix": "Seed the conversation created by real manual approval. Add bounded fixed-UI diagnostics on a future failure. Product behavior and deadlines unchanged."
+    }
+  ],
+  "limits": [
+    "Three independent Chrome contexts are not physical iOS/Android/PWA or OS background observations.",
+    "The new scenario stores an inert subscription and resolves real references; it does not deliver provider Push or SMTP.",
+    "CRM conflicts, quick replies and exports retain their existing separate tests, outside the new integrated exercise.",
+    "The observed GitHub schedule has gaps of hours; no five-minute detection guarantee. External outage alert receipt remains unverified.",
+    "No archive rotation or general technical retention policy is introduced.",
+    "Earlier personal notifications, PC-copy, decryption and backup-mail acceptances remain valid in their recorded scope; no repeat is required to close this technical lot."
+  ],
+  "remaining": [
+    "Final validated shared-host deployment and local closure activation."
+  ],
+  "deploymentPreparation": {
+    "preparedAt": "2026-10-19T23:37:00.425105+00:00",
+    "checkout": "/srv/customer/jessiemessage-operator/messaging-final-079-bc6103a7",
+    "source": "bc6103a73ce63752eda27a0bce83a7e53e409d09",
+    "tree": "39ac4fdabc55b7661742fbd6acc5763d65a42dab",
+    "dependenciesReinstalled": false,
+    "dependenciesLockEqualExceptRelease": true,
+    "syntax": 558,
+    "preflight": {
+      "version": 1,
+      "type": "local_closure_precheck",
+      "status": "passed",
+      "scope": "local_application",
+      "pendingClosures": false,
+      "started": false,
+      "erased": false,
+      "externalContinuityVerified": false
+    },
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-messaging-079-bc6103a7.sh",
+    "launcherSha256": "4611fa20c46a5a56147a4d54ff319b5e93dd23396fd8fbc5e1bfcab5ebe68328",
+    "launcherMode": "0700",
+    "log": "/srv/customer/jessiemessage-private/jm079-local-closures.log",
+    "preservedFiles": 10,
+    "started": false
+  }
+}

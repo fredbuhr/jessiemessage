@@ -41,26 +41,20 @@ Candidat : cinq contrôles réussis, **436/436 sur chaque MariaDB sans omission*
 
 **Service toujours 0.76.0, fermetures désactivées.** Préservation et HTTPS revérifiés le 19 octobre à 22:58:22 UTC, sans déploiement ni manipulation PC/D1. Aucun nouveau lot de sauvegarde requis : suite S3 puis déploiement final et activation locale.
 
-Les exigences du lot S2 complet restent :
+Les critères S2 sont acquis sur données synthétiques : fermeture locale reprenable, registre minimal récent choisi par l'opérateur, import isolé des trente tables et médias, réconciliation des fermetures, révocation des sessions et publication explicite sous maintenance. Les preuves détaillées restent dans les comptes rendus S2a/S2b ; aucune restauration de production ni garantie autonome de fraîcheur externe n'est revendiquée. Aucun nouveau sous-lot de sauvegarde n'est requis avant le déploiement final.
 
-**Résultat attendu :** fermer réellement un compte et pouvoir récupérer une sauvegarde avec intervention opérateur, sans confirmation PC à chaque phase.
+## S3 — Parcours utiles et recette de la messagerie — clos techniquement
 
-- Réutiliser l'arrêt effectif de tous les producteurs et captures, les transactions, l'intention reprenable, les contrôles de graphe, les fichiers photo, le contrôle final d'absence et la barrière locale déjà appliquée au démarrage du serveur. Composer le traitement local et sa reprise sous maintenance. Ne pas injecter de faux `registrySha256` ou `witnessRevision` dans le contrat existant.
-- Conserver un registre minimal des fermetures (identifiant et date), exportable et copié de façon asynchrone. Sa conservation doit couvrir les archives encore restaurables. Aucune confirmation indépendante du PC n'est requise pour chaque fermeture du nouveau mode.
-- Définir un parcours de restauration manuelle distinct : maintenance de tous les producteurs → import isolé → vérification tables/photos/clés → traitement des comptes fermés après la capture → révocation des anciennes sessions → réouverture explicite. Conserver les contrôles réels d'identité de cible et de capacité nécessaires ; un reçu source ne vaut pas réussite cible.
-- Utiliser le profil applicatif existant : trente tables, médias chiffrés, objets exécutables exclus, `completeDatabase:false`. Le nouveau contrat fait confiance à l'administration de l'hébergeur et vérifie le schéma de l'application. Il ne prétend pas satisfaire l'ancien inventaire exhaustif des objets SQL invisibles.
-- Si le registre récent manque ou est incomplet, ne pas republier aveuglément les anciens comptes/conversations : les maintenir bloqués jusqu'au contrôle opérateur, ou réinviter sans republier l'historique incertain. Une perte simultanée de l'hôte et des fermetures non encore copiées n'offre pas de garantie automatique anti-retour arrière.
-- Préserver les acquis D1 et son marqueur. Ne pas réimporter pour répéter la preuve ; le nouveau parcours doit gérer explicitement l'état restauré avant toute levée de quarantaine.
-- Vérifier avec données synthétiques fermeture normale, interruption et reprise, redémarrage après fermeture, ancienne archive contenant un compte fermé, registre manquant, photos et relations entre comptes.
+**0.79.0**, [PR #101](https://github.com/fredbuhr/jessiemessage/pull/101), source `2342f749d59222104a3d6458c2617aa9f63ba69c`, merge `bc6103a73ce63752eda27a0bce83a7e53e409d09` ; arbre identique au candidat. [Compte rendu](messaging-acceptance-079.md), [preuves](verification-proofs/jm079-verification.json).
 
-**Critère de fin :** fermeture locale et exercice complet de restauration manuelle vérifiés sur données synthétiques ; CI candidat et main acquises. Aucune donnée cliente effacée et aucune restauration de production revendiquée.
+- Trois sessions Chrome indépendantes avec vrai HTTPS, MariaDB et médias : deux connexions du même client, texte/photo, brouillon, notification vers le message exact, déconnexion d'un seul appareil et reconnexion. Les conflits de fiches, réponses rapides et exports gardent leurs tests séparés existants. Aucune diffusion réelle de test demandée ni envoyée.
+- La page Confidentialité décrit la capacité de fermeture réellement activée, en français et en anglais ; un brouillon ne peut pas la modifier.
+- Le [guide court](guide-jessie.md) décrit les actions quotidiennes et les limites d'une restauration : maintenance, messages postérieurs à la capture potentiellement perdus, copie PC parfois plus ancienne. Pas de promesse de vingt-quatre heures de perte maximale.
+- Le [registre de conservation](data-retention-register.md) consigne les conversations jusqu'à fermeture définitive et les nettoyages techniques existants. Aucune rotation automatique des archives ni durée générale de trente jours ajoutée ; aucune purge effectuée.
+- La [surveillance externe existante](../MONITORING.md) est relevée en lecture seule : douze passages réussis, mais intervalles réels de plusieurs heures. Le canal d'alerte externe n'est pas attesté. Aucun nouveau mail, incident provoqué, service ou abonnement.
 
-## S3 — Terminer les parcours utiles et la recette de la messagerie
+[CI candidat 39341320771](https://github.com/fredbuhr/jessiemessage/actions/runs/39341320771) : **5/5 réussis**, 2 996 tests généraux réussis / 35 wrappers SQL ignorés / zéro échec ; **436/436 sur chaque MariaDB sans omission**, Chrome 160, recettes HTTPS 2, syntaxe 558, aperçu construit. [CI main 39342025957](https://github.com/fredbuhr/jessiemessage/actions/runs/39342025957) **5/5 réussis**, mêmes résultats, arbre identique au candidat.
 
-- Terminer les seuls parcours utilisateur encore non constatés : sessions sur deux appareils, brouillons et conflits, notifications vers le bon message, photos, export et diffusion ciblée de test lorsqu'elle est explicitement demandée.
-- Réutiliser la surveillance externe ; vérifier son délai réel et son canal sans rejouer les mails déjà acceptés.
-- Définir une rétention compréhensible avant toute purge. Le collecteur actuel ne supprime pas automatiquement toutes les anciennes archives : aucune durée de trente jours n'est présentée comme déjà appliquée. Ne supprimer aucune archive dans ce lot de documentation.
-- Expliquer les limites utiles : interruption pendant restauration ; messages postérieurs à la capture choisie potentiellement perdus ; copie externe parfois plus ancienne lorsque le PC reste éteint. Ne pas promettre vingt-quatre heures de perte maximale sans copie externe assez récente.
-- Recette finale sur deux appareils, guide court, état déployé exact et repli cohérents.
+**Critère de fin technique acquis :** CI candidat et main acquises, trois contextes Chrome indépendants et acceptations personnelles déjà acquises dans leur portée. Téléphones physiques, arrière-plan système/PWA et réception d'une alerte externe restent des limites déclarées, sans nouveau test personnel imposé pour fermer ce lot. Le service reste 0.76.0, fermetures désactivées.
 
-**Prochaine action : S3. S2b est clos, fusionné/vérifié en CI candidat et main, non déployé.** Ne pas relancer D2, un achat VPS, une demande de budget ou une initialisation PC comme préalable à cette V1.
+**Prochaine action : déploiement final de 0.79 et vérification du service avec activation des fermetures locales.** Préserver les copies PC, clés, autorité et D1 ; ne pas relancer une étude de sauvegarde, D2, un achat VPS ou une initialisation PC.
