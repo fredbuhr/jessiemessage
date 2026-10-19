@@ -25,7 +25,7 @@ C1 ([PR #93](https://github.com/fredbuhr/jessiemessage/pull/93)) impose une preu
 
 C2 raccorde le vrai CLI `scripts/restore-private-operations.mjs` au transport PC du parent. La confirmation `--confirm-plan-sha256` couvre capsule, source, cible, chemins, état local et tête indépendante. La comparaison conserve les reçus plus récents que la capture ; chaque frontière demande une preuve neuve. Un succès annonce `externalRegistryContinuityVerified:true`, **`reconciliationRequired:true`, `sqlRestored:false`, `started:false`**. Les octets et le rattachement source des enveloppes restent intacts. Le marqueur de quarantaine bloque toute ouverture de cible.
 
-**C n'est pas clos.** Construction, contrôle et tick de l'observateur restent limités au registre local initial vide. C3 fournit désormais un parent explicite de récupération après redémarrage avec journal source non vide ou perdu, sans changer ces gardes. La réconciliation SQL cible, l'import isolé et la procédure de perte totale de l'hôte restent à terminer.
+**C n'est pas clos.** Construction, contrôle et tick de l'observateur restent limités au registre local initial vide. C3 fournit désormais un parent explicite de récupération après redémarrage avec journal source non vide ou perdu, sans changer ces gardes. L'import applicatif isolé est acquis en D1. La réconciliation SQL cible, la qualification stricte et la procédure finale de perte totale de l'hôte restent à terminer.
 
 ## Preuves personnelles B — acquises, à conserver
 
