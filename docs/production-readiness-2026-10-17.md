@@ -1,6 +1,6 @@
 # JessieMessage — reste à faire avant un usage privé régulier
 
-**Suite de l’étape 4/6 :** [protocole logiciel 0.66](erasure-continuity-066.md) préparé, témoin durable et contrôle du journal réel avant mutation. Aucun transport hors hébergement ni effacement réel activé ; runtime 0.65 conservé. Les preuves de test du protocole ne remplacent pas les preuves d’exploitation manquantes.
+**Suite de l’étape 4/6 :** [protocole logiciel 0.66](erasure-continuity-066.md) fusionné et vérifié dans source/PR/main, témoin durable et contrôle du journal réel avant mutation. Aucun transport hors hébergement ni effacement réel activé ; runtime 0.65 conservé. Les preuves de test du protocole ne remplacent pas les preuves d’exploitation manquantes.
 
 **Étape 4/6 — volet logiciel 0.65 en service**, source `f53d6982`, [PR #81](https://github.com/fredbuhr/jessiemessage/pull/81) fusionnée ; [capsule et restauration en quarantaine](operational-backup-065.md). Cinq jobs CI source/PR/main réussis, 405/405 par MariaDB et 156/156 Chrome. Activation normale sans réinstallation, 126 contrôles natifs ciblés et 149 contrôles HTTPS, fermetures réelles toujours désactivées. La continuité indépendante et l’inventaire privilégié ne sont pas raccordés ; les preuves personnelles courantes restent distinctes. Capture 0.65 et réception PC conformes ; précontrôle natif de restauration passé, déchiffrement personnel et restauration réelle encore non confirmés. Les relevés antérieurs ci-dessous sont historiques.
 

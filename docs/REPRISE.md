@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**Étape 4/6 — protocole de continuité 0.66 préparé dans le code, sans activation.** [Témoin durable et preuve fraîche](erasure-continuity-066.md) : l’effaceur exige les inventaires chiffrés complets et leur conservation durable avant chaque mutation, avec rattachement au journal réel. Réponses anciennes, registres manquants ou reculés et accusés incertains bloquent. La récupération garde les reçus originaux plus récents que la copie SQL et reste en quarantaine. Le transport hors hébergement et le démarrage réel ne sont pas raccordés ; un témoin local de test ne constitue pas la continuité de production. **Runtime actif : 0.65**, paramètres et preuves ci-dessous conservés. Déchiffrement personnel courant toujours non confirmé, aucune clé déplacée, aucune fermeture réelle activée.
+**Étape 4/6 — protocole de continuité 0.66 livré dans le code, non activé.** Source `f80a7e9d82b2795e9b5c1ba3212ce32a70cced5d`, arbre `52ea804531a0d4bc53c6a7bfab2a4faa8e388f63`, [PR #82](https://github.com/fredbuhr/jessiemessage/pull/82), merge `588b9fb77f9371ba755333ebacb72ca3edff8297`, repère `release/0.66.0`. [Témoin durable et preuve fraîche](erasure-continuity-066.md), [preuves](verification-proofs/jm066-verification.json). Source/PR/main : cinq jobs réussis chacune. **407/407 par MariaDB, 156/156 Chrome, 2 657 réussites générales et 28 wrappers SQL ignorés**, 499 sources/build conformes. Le moteur exige le journal réel et les inventaires complets avant/après publication, tout en gardant maintenance et empreinte physique sous son verrou. Transport hors hébergement et démarrage réel non raccordés : la fixture locale ne prouve pas une continuité de production. **Runtime actif : 0.65** ; aucune fermeture réelle activée, aucune clé déplacée, déchiffrement personnel courant non confirmé.
 
 **Étape 4/6 — volet logiciel 0.65 activé le 19 octobre 2026 à 01:07 Europe/Paris**, précision à la minute affichée. Source `f53d6982d0fd54e50fe7af43e1d08a5758553703`, arbre `51717124bf15df3845a97e4f675c8549d59715c2`, [PR #81](https://github.com/fredbuhr/jessiemessage/pull/81), merge `1dcb5fa3155e90c6b6bf2faa7f404fa01f14e876`, repère `release/0.65.0`. Lire [périmètre et limites](operational-backup-065.md) et [preuves CI](verification-proofs/jm065-verification.json). Source/PR/main : cinq jobs réussis, **405/405 par MariaDB, 156/156 Chrome, 2 640 réussites générales et 28 wrappers SQL ignorés**, 494 sources/build conformes. Sur l’hébergement : 126 contrôles ciblés natifs et 149 contrôles HTTPS, aucune fermeture réelle activée. Les captures couvrent maintenant préparation privée et journaux ; toute récupération reste en quarantaine bloquée. Continuité indépendante, inspection SQL privilégiée et déchiffrement/restauration personnels courants encore requis. Les relevés 0.64/0.63/0.62 suivants sont historiques.
 
@@ -30,7 +30,7 @@ Côté client : **Télécharger ma conversation → Télécharger le ZIP**, phot
 
 Dans **Sauvegardes**, le résumé donne l’état des copies. Le dossier se change par le raccourci Windows déjà installé. Le PC doit être allumé, connecté et avec une session ouverte ; rien à réinstaller. Le contrôle ponctuel du déchiffrement reste séparé. Le changement graphique de destination et les connexions directes à Drive restent distincts d’une restauration prouvée.
 
-## Runtime actif et déploiement
+## Historique 0.62 — runtime et déploiement
 
 - HEAD exécuté/superviseur : `a15b5595b804f2eccf95c13be46152570a6ebc12` ; arbre `d653aeb733cdc2bc7bd87853f747fbdd3010141c`.
 - [PR #78 fusionnée](https://github.com/fredbuhr/jessiemessage/pull/78), merge `c241ef67cdb1955beb14f698d0f60d8dffb56490`, arbre identique ; repère `release/0.62.0`. Les commits documentaires suivants ne changent pas le runtime épinglé.
@@ -48,7 +48,7 @@ cd /srv/customer/jessiemessage-operator/privacy-choices-062-a15b5595 && test "$(
 
 [Manager Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) ; [terminal SSH](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal). Cycle normal de Build, sans réinstallation des dépendances ni réinitialisation du site. Run/Build enregistrés puis relus persistés avant lancement.
 
-## Validation et portée
+## Historique 0.62 — validation et portée
 
 [CI source 39166239884](https://github.com/fredbuhr/jessiemessage/actions/runs/39166239884), [PR 39166243635](https://github.com/fredbuhr/jessiemessage/actions/runs/39166243635) et [main 39166461333](https://github.com/fredbuhr/jessiemessage/actions/runs/39166461333) : cinq jobs réussis chacune. **2 565 réussites générales, 27 wrappers SQL ignorés sur 2 592 cas**, zéro échec ; **387/387** sur chaque MariaDB 10.11/11.4 ; **144/144 Chrome**, authentification HTTPS/MFA intégrée, syntaxe de 471 sources et build réussis. Localement : 2 412 réussites et 180 intégrations indisponibles ignorées, zéro échec.
 
@@ -58,7 +58,7 @@ Après le dernier message de démarrage : mesures **1792357854287 et 17923579143
 
 Le navigateur cloud reste anonyme. Les parcours administrateur positifs, conflits et changements de connexion sont éprouvés par les fixtures synthétiques Chrome/HTTP/natives. Aucun contenu client consulté/exporté ou message réel envoyé. Aucun fichier personnel de préparation au relevé.
 
-## Préparation privée et sauvegardes
+## Historique 0.62 — préparation et sauvegardes
 
 Les choix confirmés sont séparés des notes dans `server/privacy/choices.mjs`. L’API de préparation refuse leur mutation. D01/D04 sont préremplis uniquement pour une préparation nouvelle ; les anciens brouillons ne sont pas réécrits. Le futur `privacy-preparation.json` reste hors checkout, chiffré AES-256-GCM avec une sous-clé HKDF dérivée de la clé CRM existante. Aucune nouvelle clé, migration ni changement de format. Sa couverture par les sauvegardes et sa fin de vie restent à traiter avant de considérer une restauration applicative comme couvrante. `publication: draft_only` et `retention: not_enabled` qualifient la préparation, pas l’absence du critère de conversation désormais acquis.
 
@@ -66,7 +66,7 @@ Capture quotidienne **05:15 UTC**. Ne jamais lancer `capture --offline` pendant 
 
 PC raccordé et actif ; reçu courant par identifiant/taille/SHA-256 relu à 21:12:30.784796 UTC. Dernier reçu **21:05:50.750 UTC**, **antérieur** à l’activation 0.62 ; la copie courante reste acquise. Le moniteur de capture conserve séparément `copyStatus: not_checked`. Les deux mails [TEST] incident/rétablissement sont confirmés reçus à **15:54:05 Europe/Paris** ; ne pas les renvoyer.
 
-## Repli immédiat 0.61
+## Historique 0.62 — repli immédiat vers 0.61
 
 Run/Build précédents dans `/srv/customer/jessiemessage-private/manager-before-privacy-choices-062.json`, 0600. Reprendre ces paramètres puis le cycle normal :
 
@@ -87,6 +87,12 @@ Capture courante : `capture-1792365269393-ff5d9fa2282f06ec`, 402538 octets, SHA-
 
 La capsule et la quarantaine sont raccordées ; elles ne certifient pas une continuité externe après perte de tout le registre. Le script de récupération garde le marqueur et bloque toute ouverture. Restent continuité indépendante, inventaire SQL privilégié réel, réconciliation de restauration et déchiffrement/restauration personnels courants. Les preuves 0.46 restent acquises. N’activer aucune fermeture réelle avant ces préalables.
 
+## Suite logicielle 0.66 — témoin hors hébergement à raccorder
+
+Le protocole et ses barrières sont livrés dans le code, pas dans le runtime actif. Le callback booléen de continuité a été remplacé par `createErasureContinuity`. Le propriétaire contrôle le journal réel, exige des révisions consécutives et une intention initiale avant toute préparation ; il ne recapture pas le registre pendant son propre verrou d’écriture. Maintenance réelle et empreinte physique restent revérifiées sous le verrou, preuve complète avant et après. Une panne du témoin après arrêt ou après préparation SQL garde la reprise bloquée et ne libère pas les photos/capacités prématurément. Lire [le contrat et ses limites](erasure-continuity-066.md) avant tout raccordement.
+
+La fixture native conserve le témoin dans un autre dossier du runner, ce qui prouve le protocole mais pas son indépendance de production. Ne pas l’installer simplement dans un autre dossier de l’hébergement, ne pas réinitialiser un témoin perdu et ne pas relâcher les preuves SQL. Le transport authentifié et la conservation durable sur le PC habituel, la barrière fraîche au démarrage du vrai processus, la réconciliation source/cible et le propriétaire de production restent à fournir. Le collecteur Windows actuel et ses réglages ne changent pas dans ce lot.
+
 ## Historique 0.64 — préalables du raccordement de production
 
 Le parcours et le cycle d’arrêt sont livrés en 0.64. `createRecurringSupervisor` conserve `closureOperations:null` par défaut ; `start-recurring-private-messaging.mjs` ne fournit pas de propriétaire de production. Le parent transmet le drapeau interne au shim seulement lorsqu’un propriétaire est raccordé. Ne pas lancer ce drapeau seul ni proposer un déblocage par HTTP, variable d’environnement ou simple déclaration « offline ».
@@ -106,7 +112,7 @@ Les anciennes commandes `data … plan` restent des simulations non exécutables
 1. **Confidentialité/conservation — choix intégrés, textes définitifs encore ouverts** : Jessie/France et critère de conversation acquis. Ne pas ajouter de structure ni conclure à une exemption juridique parce que l’espace est privé. Traiter les autres familles, copies et conditions avec les fonctions correspondantes ; pas de nouveau questionnaire général à chaque reprise. La notice finale doit correspondre au comportement livré.
 2. **Moteur d’effacement — code livré en 0.63** : transactions et journal chiffré reprenables, compte/sessions/files, messages/photos du client, profil CRM et audiences partagées. Essais réels sur données fictives acquis ; aucun compte réel effacé. Le moteur reste hors du runtime tant que le parcours et l’exclusion de tous les producteurs ne sont pas raccordés.
 3. **Administration et conservation — code 0.64 livré, non activé** : confirmation FR/EN et suivi authentifiés, intention chiffrée minimale, cycle de drainage du processus et verrou des captures éprouvés. Le vrai serveur configuré bloque l’intention inachevée et le compte restauré. Ne pas invoquer directement le moteur sur le runtime en activité ; l’adaptateur de production attend les préalables de l’étape 4.
-4. **Sauvegarde/restauration courantes — en cours, volet logiciel 0.65 actif** : couverture de la préparation et du registre, capsule courante authentifiée, capture/reprise réelles, réception PC et précontrôle natif du format acquis. Confirmer le déchiffrement personnel sur le PC puis la restauration SQL native réellement isolée ; établir la continuité indépendante du registre, sa réconciliation et l’inventaire privilégié avant de raccorder le propriétaire d’effacement. Les acquis 0.46 (`COFFRE_DECHIFFRE_OK`, `COPIE_CRM30_OK`, import natif isolé) restent acquis sans être renommés en preuves de la capture 0.65. Ne jamais régénérer ni déplacer la clé privée.
+4. **Sauvegarde/restauration courantes — en cours, 0.65 actif et protocole 0.66 livré dans le code** : capsule opérationnelle, capture/reprise réelles, reçu PC et précontrôle natif acquis. Le protocole du témoin durable et ses barrières avant/après journal passent les essais, sans liaison hors hébergement réelle. Raccorder cette liaison et la barrière de démarrage, établir la réconciliation source/cible et l’inventaire SQL privilégié avant activation. Déchiffrement personnel courant et import natif réellement isolé encore non confirmés. Les acquis 0.46 restent acquis sans être renommés en preuves 0.65. Ne jamais régénérer ou déplacer la clé privée.
 5. **Surveillance externe** : cadence fiable indépendante de l’hébergement et réception d’une alerte de panne totale ; ne pas redemander les mails locaux déjà acceptés.
 6. **Recette finale** : contrôles ciblés de sécurité/fonctionnement, deux appareils habituels, premier essai personnel de diffusion, guide/repli consolidés. Les fonctions déjà acceptées restent acquises ; aucune campagne réelle envoyée sans instruction explicite.
 

@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "release": "0.66.0",
+  "step": 4,
+  "totalSteps": 6,
+  "scope": "software_protocol_only",
+  "sourceHead": "f80a7e9d82b2795e9b5c1ba3212ce32a70cced5d",
+  "sourceTree": "52ea804531a0d4bc53c6a7bfab2a4faa8e388f63",
+  "pullRequest": 82,
+  "pullRequestUrl": "https://github.com/fredbuhr/jessiemessage/pull/82",
+  "mergeCommit": "588b9fb77f9371ba755333ebacb72ca3edff8297",
+  "mergeTree": "52ea804531a0d4bc53c6a7bfab2a4faa8e388f63",
+  "releaseRef": "release/0.66.0",
+  "ci": {
+    "source": {
+      "runId": 39178505789,
+      "event": "push",
+      "headSha": "f80a7e9d82b2795e9b5c1ba3212ce32a70cced5d",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39178505789",
+      "jobs": [
+        {
+          "id": 117826086520,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826086611,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826086628,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826086685,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826086688,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "completedAt": "2026-10-18T23:57:44Z"
+    },
+    "pullRequest": {
+      "runId": 39178508891,
+      "event": "pull_request",
+      "headSha": "f80a7e9d82b2795e9b5c1ba3212ce32a70cced5d",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39178508891",
+      "jobs": [
+        {
+          "id": 117826096447,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826096463,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826096482,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826096500,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826096532,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "completedAt": "2026-10-18T23:57:35Z"
+    },
+    "main": {
+      "runId": 39178709712,
+      "event": "push",
+      "headSha": "588b9fb77f9371ba755333ebacb72ca3edff8297",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39178709712",
+      "jobs": [
+        {
+          "id": 117826705797,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826705812,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826705819,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826705837,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117826705981,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "completedAt": "2026-10-19T00:01:07Z"
+    }
+  },
+  "local": {
+    "finalGeneral": {
+      "total": 2685,
+      "passed": 2498,
+      "skippedUnavailableIntegrations": 187,
+      "failed": 0
+    },
+    "finalTargeted": {
+      "total": 42,
+      "passed": 40,
+      "skippedNativeChecks": 2,
+      "failed": 0
+    },
+    "finalRegistry": {
+      "total": 17,
+      "passed": 15,
+      "skippedNativeChecks": 2,
+      "failed": 0
+    },
+    "build": "passed",
+    "syntaxSources": 499,
+    "tmpDirectory": "workspace_owned",
+    "initialAttempt": {
+      "total": 2684,
+      "passed": 2494,
+      "skipped": 187,
+      "failed": 3,
+      "reason": "The container has no /tmp. The runner was corrected to use its workspace-owned TMPDIR; no export implementation was changed."
+    }
+  },
+  "correctedUnmergedAttempt": {
+    "sourceHead": "be619da1861e4ea0f5725b2770da26c9d24ea003",
+    "sourceTree": "384af44a370795f41414f4b6430b1868492ae3ee",
+    "sourceRun": 39178122274,
+    "pullRequestRun": 39178123113,
+    "mariaDbEach": {
+      "total": 407,
+      "passed": 404,
+      "failedIncludingParentTests": 3,
+      "skipped": 0
+    },
+    "reason": "Registry recapture during the engine's own journal writer lock blocked phase publication. The corrected engine retains actual maintenance and physical-root checks inside that lock, bracketed by fresh witness proofs and journal identity checks.",
+    "productionDeployed": false
+  },
+  "verifiedScenarios": [
+    "explicit empty genesis only; missing witness refuses initialization",
+    "canonical encrypted inventories persisted with fsync/CAS and immutable contiguous publication numbers",
+    "fresh random challenges reject replay, hash/identity mismatch and conflicting ciphertext",
+    "new journals require requested revision 1; no phase/revision jumps or retroactive certification",
+    "live journal identity/revision must match the complete witnessed inventory",
+    "real journal lock retains maintenance and physical-root authorization without locked recapture",
+    "native Linux descriptor anchoring exercised in CI",
+    "witness loss after actual managed process stop keeps disposable SQL unchanged and runtime stopped",
+    "lost prepared-journal acknowledgement keeps disposable media files and capacity charge intact",
+    "fresh witness recovery preserves newer original receipts after loss of local registry and keeps quarantine blocked"
+  ],
+  "deployment": {
+    "performed": false,
+    "activeRelease": "0.65.0",
+    "activeSource": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+    "reference": "docs/activation-proofs/jm065-activation.json",
+    "realClosuresEnabled": false,
+    "offHostWitnessTransportInstalled": false,
+    "productionWitnessContinuityProven": false,
+    "productionFreshStartupBindingInstalled": false,
+    "sourceToTargetReconciliationEnabled": false,
+    "privilegedSqlInspectionObserved": false,
+    "currentPersonalGpgDecryption": "not_confirmed",
+    "currentNativeIsolatedSqlRestore": "not_confirmed_precheck_only",
+    "gpgPrivateKeyMoved": false,
+    "windowsCollectorChanged": false,
+    "dependenciesChanged": false,
+    "schemaChanged": false,
+    "realCustomerDataDeleted": false,
+    "realMessagesOrMailSent": false
+  },
+  "observedCounts": {
+    "general": {
+      "total": 2685,
+      "passed": 2657,
+      "skippedSqlWrappers": 28,
+      "failed": 0
+    },
+    "mariaDb1011": {
+      "total": 407,
+      "passed": 407,
+      "skipped": 0,
+      "failed": 0
+    },
+    "mariaDb114": {
+      "total": 407,
+      "passed": 407,
+      "skipped": 0,
+      "failed": 0
+    },
+    "chrome": {
+      "total": 156,
+      "passed": 156,
+      "skipped": 0,
+      "failed": 0
+    },
+    "chromeHttpsMfa": {
+      "total": 1,
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    "syntaxSources": 499,
+    "source": "decoded source and main job logs"
+  },
+  "sourceAndMainTreesMatch": true,
+  "verifiedAt": "2026-10-19T00:02:56.428Z"
+}
