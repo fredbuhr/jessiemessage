@@ -3,7 +3,7 @@
   "version": 1,
   "release": "0.74.0",
   "lot": "C4",
-  "status": "coded_ci_pending",
+  "status": "merged_ci_and_live_operator_verified",
   "runtimeDeployed": false,
   "activeRuntime": "0.72.0",
   "closuresEnabled": false,
@@ -35,5 +35,101 @@
     "d1ImportRepeated": false,
     "personalPcActionsRepeated": false
   },
-  "next": "Target reconciliation execution with qualified SQL inspection, explicit capacity transition and separate restartable target progress; independent single-writer authority succession before startup."
+  "next": "Target reconciliation execution with qualified SQL inspection, explicit capacity transition and separate restartable target progress; independent single-writer authority succession before startup.",
+  "source": "04d4d8304774b9b6f908a86328591ce9eaeb79e1",
+  "tree": "bb5190df6cae2ed2f4b3853e447bfb9706924826",
+  "mergeCommit": "503f812cf98d9b4ed53638eaf0577fc6b7527ca6",
+  "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/96",
+  "lastObservedAt": "2026-10-19T19:45:11.232884+00:00",
+  "ci": {
+    "candidate": {
+      "runId": 39312688900,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39312688900",
+      "commit": "04d4d8304774b9b6f908a86328591ce9eaeb79e1",
+      "jobsPassed": 5
+    },
+    "main": {
+      "runId": 39313177453,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39313177453",
+      "commit": "503f812cf98d9b4ed53638eaf0577fc6b7527ca6",
+      "jobsPassed": 5
+    },
+    "generalTests": {
+      "passed": 2889,
+      "failed": 0,
+      "skipped": 30,
+      "skipScope": "SQL wrappers only; database jobs are separate and mandatory"
+    },
+    "databaseTestsPerVersion": {
+      "passed": 410,
+      "failed": 0,
+      "skipped": 0,
+      "versions": [
+        "10.11",
+        "11.4"
+      ]
+    },
+    "chrome": {
+      "passed": 157,
+      "failed": 0,
+      "skipped": 0
+    },
+    "httpsAuthentication": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syntaxSources": 538,
+    "nativeReconciliation": {
+      "realCli": true,
+      "realUnixControl": true,
+      "realRecoveryParent": true,
+      "syntheticDurablePcWitness": true,
+      "cases": [
+        "nonempty_source_journal",
+        "lost_source_journal"
+      ],
+      "freshChallengesPerCase": 2,
+      "originalCompletedEnvelopePreserved": true,
+      "sourceSqlUnchanged": true,
+      "authorityUnchanged": true,
+      "pairingUnchanged": true,
+      "markerRetained": true,
+      "targetSqlInspected": false
+    }
+  },
+  "liveOperator": {
+    "source": "04d4d8304774b9b6f908a86328591ce9eaeb79e1",
+    "tree": "bb5190df6cae2ed2f4b3853e447bfb9706924826",
+    "checkout": "/srv/customer/jessiemessage-operator/closure-reconciliation-074-04d4d830",
+    "node": "24.15.0",
+    "planCompletedAt": "2026-10-19T19:44:06.576432+00:00",
+    "finalCheckedAt": "2026-10-19T19:45:11.232884+00:00",
+    "planSha256": "427d0971aa215ffeb605ac03e842ff4ecb3cba75c10e00dc2a779b230bae3539",
+    "registrySha256": "3905960c2e101ebde41cb33ee25480ba747ede7e297fb63595ba478609a8f33c",
+    "witnessRevision": 1,
+    "receipts": 0,
+    "completedReceipts": 0,
+    "pendingReceipts": 0,
+    "protectedHashesUnchanged": true,
+    "d1FilesUnchanged": true,
+    "activeSourceUnchanged": true,
+    "startupGuard": "OPERATIONS_RECONCILIATION_REQUIRED",
+    "serviceHealth": {
+      "health": {
+        "http": 200,
+        "status": "ok"
+      },
+      "ready": {
+        "http": 200,
+        "status": "ready"
+      }
+    },
+    "privateStartedReceipt": "restore-d19-operator/d19-c4-plan-started.json",
+    "privatePlanReceipt": "restore-d19-operator/d19-c4-plan-response.json",
+    "privateFinalReceipt": "restore-d19-operator/d19-c4-final-check.json",
+    "singleCliAttempt": true,
+    "serviceDeployed": false,
+    "limitations": "Live original registry is empty; completed/post-capture receipts and journal loss are synthetic CI cases, not live client erasures."
+  }
 }
