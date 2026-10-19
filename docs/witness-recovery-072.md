@@ -1,5 +1,7 @@
 # Récupération attestée — 0.72.0 (C2)
 
+Portée historique de C2, toujours active sur le service 0.72.0. Le parent explicite après redémarrage non vide/perdu est désormais fourni par [C3, 0.73.0](witness-recovery-parent-073.md), fusionné en code sans bascule du service.
+
 Le CLI utilise le canal PC déjà raccordé du parent, via une socket Unix sous `<witness-operator-directory>/control`, dossier 0700 et socket 0600. Aucun nouvel accès HTTP public, nouvel appariement, clé ou publication de registre n'est ajouté. Le relais accepte uniquement une lecture ; le CLI crée son propre défi et authentifie les enveloppes originales avec `createErasureContinuity.recover()`.
 
 La tête distante doit contenir tous les reçus du journal local et de la sauvegarde, sans recul. Une perte des fichiers de journaux locaux n'efface donc pas les reçus récents du PC. La préparation privacy est comparée séparément. Les octets et le rattachement source des enveloppes restent intacts.

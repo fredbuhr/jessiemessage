@@ -2,12 +2,29 @@
   "version": 1,
   "release": "0.73.0",
   "scope": "C3: explicit recovery-only parent after restart with nonempty or missing closure receipts",
-  "status": "candidate_validation_pending",
+  "status": "merged_verified_not_deployed",
   "activeService": {
     "release": "0.72.0",
     "changed": false,
     "mode": "observe_only",
-    "closuresEnabled": false
+    "closuresEnabled": false,
+    "source": "94fb7882cf74eb5f2ec165e67833ac2e7cdf13f3",
+    "tree": "c6d304e49209a1194d91c0992096e59ff3685b6e",
+    "healthAt": "2026-10-19T18:23:14.077625+00:00",
+    "health": {
+      "http": 200,
+      "status": "ok"
+    },
+    "readiness": {
+      "http": 200,
+      "status": "ready"
+    },
+    "preservedStatesVerifiedAt": "2026-10-19T18:25:25.587392+00:00",
+    "runtimeHeadAndTreeUnchanged": true,
+    "runtimeCheckoutClean": true,
+    "launcherHashAnd0700Unchanged": true,
+    "originalContractAndEnrollmentHashesAnd0600Unchanged": true,
+    "existingC2CheckpointPreserved": true
   },
   "implementation": {
     "originalProvenanceRequired": true,
@@ -40,14 +57,173 @@
       "diffCheck": "passed",
       "independentReview": "approved; construction cancellation propagation fixed and assertion moved outside sanitized callback"
     },
-    "nativeMariaDB": "pending",
-    "candidateCI": "pending",
-    "mainCI": "pending"
+    "nativeMariaDB": {
+      "10.11": {
+        "tests": 410,
+        "passed": 410,
+        "failed": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "11.4": {
+        "tests": 410,
+        "passed": 410,
+        "failed": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "scenarios": {
+        "nativeParentSubprocess": true,
+        "actualRestoreCliSubprocess": true,
+        "defaultPrivateLoaderReceiptReaderUnixClient": true,
+        "freshNonemptyAndLostJournalCases": true,
+        "freshDistinctChallengesPerCase": 5,
+        "newerCompletedReceiptKeptByteForByte": true,
+        "blockedQuarantineMarkerKept": true,
+        "sourceSqlUnchanged": true,
+        "authorityAndPairingUnchanged": true,
+        "applicationChildStarted": false,
+        "producersStarted": false,
+        "copiedProvenanceRefused": true,
+        "replayRefused": true,
+        "offlineCancellationRefusedSuccess": true,
+        "cleanStops": true
+      }
+    },
+    "candidateCI": {
+      "runId": 39300959900,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39300959900",
+      "source": "fed209f3cc256afd83de139a19f8a3b92a301a5c",
+      "jobsPassed": 5,
+      "jobsFailed": 0,
+      "jobs": [
+        {
+          "id": 118226183381,
+          "name": "MariaDB 11.4",
+          "conclusion": "success"
+        },
+        {
+          "id": 118226183878,
+          "name": "MariaDB 10.11",
+          "conclusion": "success"
+        },
+        {
+          "id": 118226183904,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success"
+        },
+        {
+          "id": 118226184167,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "conclusion": "success"
+        },
+        {
+          "id": 118226184266,
+          "name": "verify",
+          "conclusion": "success"
+        }
+      ],
+      "general": {
+        "tests": 2898,
+        "passed": 2868,
+        "failed": 0,
+        "skippedSqlWrappers": 30
+      },
+      "syntaxSources": 533,
+      "nativeUnixAndProcfs": "passed"
+    },
+    "mainCI": {
+      "runId": 39302243763,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39302243763",
+      "source": "cf2b9f3843643a627d933217453a484013024fb9",
+      "status": "completed",
+      "conclusion": "success",
+      "jobsPassed": 5,
+      "jobsFailed": 0,
+      "tree": "6a59673806e27231c47b9aa7bcdc374ab54717ec",
+      "general": {
+        "tests": 2898,
+        "passed": 2868,
+        "failed": 0,
+        "skippedSqlWrappers": 30
+      },
+      "syntaxSources": 533,
+      "chrome": {
+        "passed": 157,
+        "failed": 0
+      },
+      "httpsAuthentication": {
+        "passed": 1,
+        "failed": 0
+      },
+      "nativeMariaDB": {
+        "10.11": {
+          "passed": 410,
+          "failed": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "11.4": {
+          "passed": 410,
+          "failed": 0,
+          "cancelled": 0,
+          "skipped": 0
+        }
+      },
+      "nativeC3Scenarios": "all passed on both MariaDB versions",
+      "jobs": [
+        {
+          "id": 118230145920,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success"
+        },
+        {
+          "id": 118230146228,
+          "name": "MariaDB 11.4",
+          "conclusion": "success"
+        },
+        {
+          "id": 118230146262,
+          "name": "verify",
+          "conclusion": "success"
+        },
+        {
+          "id": 118230146364,
+          "name": "MariaDB 10.11",
+          "conclusion": "success"
+        },
+        {
+          "id": 118230146555,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "priorAttempts": {
+      "runIds": [
+        39297466941,
+        39299135895,
+        39299705493,
+        39300620104
+      ],
+      "countedAsSuccess": false,
+      "failure": "Test shutdown callback read observer after observer=null, before reaching C3; captured original instance fixes cleanup. One earlier Chrome session creation also timed out; final candidate Chrome passed.",
+      "diagnosticsAndBounds": "TAP SQL output, 45-second subprocess deadline, 10-second forced shutdown fallback, five-minute SQL step and 15-minute SQL job limits; no force-exit test success."
+    }
   },
   "remaining": [
     "Qualified SQL inventory and isolated native import with target reconciliation to complete C",
     "Full-host loss recovery procedure",
     "Closure activation prerequisites remain unmet"
   ],
-  "next": "D: qualified SQL inventory and isolated import to prove target reconciliation; keep closures disabled"
+  "next": "D: qualified SQL inventory and isolated import to prove target reconciliation; keep closures disabled",
+  "source": {
+    "head": "fed209f3cc256afd83de139a19f8a3b92a301a5c",
+    "tree": "6a59673806e27231c47b9aa7bcdc374ab54717ec",
+    "merge": "cf2b9f3843643a627d933217453a484013024fb9",
+    "mergeTreeIdentical": true,
+    "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/95"
+  },
+  "lotCompleted": true,
+  "verifiedAt": "2026-10-19T18:29:16.346038+00:00"
 }
