@@ -4,7 +4,7 @@ import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 import { parseRecurringArguments, recurringCheckpointDue, createRecurringSupervisor, recurringPreflight, checkpointProcess } from "../server/backup/recurring-supervisor.mjs";
 import { main } from "../scripts/start-recurring-private-messaging.mjs";
-import { runManagedClosures } from "../server/backup/managed-closures.mjs";
+import { runManagedClosures, resumeManagedLocalClosureRuntime } from "../server/backup/managed-closures.mjs";
 import { witnessOriginFixture } from "./fixtures/witness-origin.mjs";
 import { readdir } from "node:fs/promises";
 
@@ -293,6 +293,40 @@ test("a queued closure is resolved before the first managed listener after super
   const f = fixture({ closureOperations: operations, makeRuntime: () => runtime, readConfiguration: async () => ({ ...configuration, enabled: false }),
     runClosures: args => runManagedClosures(args, { lock: (_directory, work) => work({ async assertReady() {} }) }) });
   await f.supervisor.start(); await f.supervisor.tick(); assert.deepEqual(events, ["erase", "listen"]); await f.supervisor.close();
+});
+
+test("an explicit local owner uses a fresh local startup check on initial opening and capture reopening", async () => {
+  let proofs = 0;
+  const operations = { async hasPending() { return false; }, async preflight() {}, async run() { assert.fail("No pending closure"); },
+    async verifyStartup(guard) { await guard(); proofs++; return { verified: true, completedReceipts: 1, scope: "local_application" }; } };
+  const f = fixture({ closureOperations: operations, resumeClosures: resumeManagedLocalClosureRuntime });
+  try {
+    await f.supervisor.start(); const report = await f.supervisor.tick();
+    assert.equal(report.status, "succeeded"); assert.equal(report.runtimeResumed, true);
+    assert.equal(proofs, 2); assert.equal(f.events.filter(event => event === "start").length, 2);
+  } finally { await f.supervisor.close(); }
+  const strict = fixture({ closureOperations: operations });
+  try { await assert.rejects(strict.supervisor.start(), { code: "ERASURE_MAINTENANCE" }); assert.equal(strict.events.includes("start"), false); }
+  finally { await strict.supervisor.close(); }
+});
+
+test("the selected local opening gate reaches both startup and recurring pending-closure maintenance", async () => {
+  let pending = true, runs = 0;
+  const operations = { async hasPending() { return pending; }, async preflight(guard) { await guard(); },
+    async run(guard) { await guard(); runs++; pending = false; return { completedReceipts: runs }; },
+    async verifyStartup(guard) { await guard(); return { verified: true, completedReceipts: runs, scope: "local_application" }; } };
+  const f = fixture({ closureOperations: operations, resumeClosures: resumeManagedLocalClosureRuntime,
+    readConfiguration: async () => ({ ...configuration, enabled: false }),
+    runClosures: parameters => {
+      assert.equal(parameters.resumeClosures, resumeManagedLocalClosureRuntime);
+      return runManagedClosures(parameters, { lock: (_directory, work) => work({ async assertReady() {} }) });
+    } });
+  try {
+    await f.supervisor.start(); assert.equal(runs, 1); assert.equal(f.runtime.state().status, "running");
+    await f.supervisor.tick(); pending = true; await f.supervisor.tick();
+    assert.equal(runs, 2); assert.equal(f.runtime.state().status, "running");
+    assert.equal(f.events.includes("capture"), false);
+  } finally { await f.supervisor.close(); }
 });
 
 test("an owner with no pending intent cannot open its first listener without a fresh startup proof", async () => {

@@ -19,6 +19,81 @@ export async function verifyClosureStartup({ store, batch, clock = Date.now, ass
   await assertReady(); return { verified: true, completedReceipts: count };
 }
 
+/** Local application maintenance. This owner makes no off-host freshness or
+ * rollback claim: restoration stays an explicit operator-controlled process. */
+export function createLocalClosureOperations({ store, storage, journalFor, batch, inspectApplicationSchema, clock = Date.now }) {
+  erasureBinding(store?.binding);
+  if ([store?.withLease, storage?.fingerprint, storage?.remove, journalFor, batch, inspectApplicationSchema, clock].some(fn => typeof fn !== "function")) failErasure("ERASURE_INPUT");
+  const guarded = (assertReady, signal) => {
+    if (typeof assertReady !== "function") failErasure("ERASURE_MAINTENANCE");
+    return async () => { if (signal?.aborted) failErasure("ERASURE_ABORTED"); await assertReady(); if (signal?.aborted) failErasure("ERASURE_ABORTED"); };
+  };
+  async function preflight(assertReady, { signal } = {}) {
+    const ready = guarded(assertReady, signal);
+    await ready(); if ((await inspectApplicationSchema())?.verified !== true) failErasure("ERASURE_PREFLIGHT"); await ready();
+  }
+  async function verifyStartup(assertQuiescent, { signal } = {}) {
+    const ready = guarded(assertQuiescent, signal), identities = new Set();
+    await preflight(ready);
+    const result = await verifyClosureStartup({ store, clock, assertReady: ready, batch: async page => {
+      const value = await batch(page);
+      for (const job of value.jobs) {
+        if (identities.has(job.clientId)) failErasure("ERASURE_CHANGED");
+        identities.add(job.clientId); const journal = journalFor(job.clientId, store.binding);
+        try {
+          const state = await journal.read();
+          if (state.record === null || state.record.phase !== job.phase || state.revision !== job.revision
+            || state.record.updatedAt !== job.updatedAt) failErasure("ERASURE_CHANGED");
+        } finally { journal.close(); }
+      }
+      return value;
+    } });
+    await ready(); return { ...result, scope: "local_application" };
+  }
+  return Object.freeze({
+    async hasPending() {
+      let afterName = null, count = 0;
+      do {
+        const page = await batch({ afterName, limit: 100 });
+        for (const job of page.jobs) { if (++count > 10000) failErasure("ERASURE_LIMIT"); if (job.phase !== "completed") return true; }
+        if (page.nextCursor !== null && (afterName !== null && page.nextCursor <= afterName || !/^erasure-[a-f0-9]{64}\.json$/.test(page.nextCursor))) failErasure("ERASURE_CHANGED");
+        afterName = page.nextCursor;
+      } while (afterName !== null);
+      return false;
+    },
+    preflight, verifyStartup,
+    async run(assertQuiescent, { signal } = {}) {
+      const ready = guarded(assertQuiescent, signal); await preflight(ready);
+      // Only previously recorded intents are run. A disappearing journal cannot
+      // turn discovery into a new deletion request after the process was drained.
+      const existingJournal = (clientId, binding) => {
+        const journal = journalFor(clientId, binding);
+        return { async read() { const state = await journal.read(); if (state.record === null) failErasure("ERASURE_CHANGED"); return state; },
+          save: (...args) => journal.save(...args), close: () => journal.close() };
+      };
+      const engine = createAccountErasure({ store, storage, journalFor: existingJournal, clock,
+        maintenance: { async withQuiescedProducers(work) { await ready(); return work(ready, ready); } } });
+      let afterName = null, passes = 0, completed = 0;
+      do {
+        await ready(); const page = await batch({ afterName, limit: 100 });
+        for (const job of page.jobs) {
+          let result;
+          do {
+            if (++passes > 10000) failErasure("ERASURE_LIMIT");
+            result = await engine.resume({ clientId: job.clientId, maxMedia: 100 });
+          } while (!result.completed);
+          completed++;
+        }
+        if (page.nextCursor !== null && (afterName !== null && page.nextCursor <= afterName || !/^erasure-[a-f0-9]{64}\.json$/.test(page.nextCursor))) failErasure("ERASURE_CHANGED");
+        afterName = page.nextCursor;
+      } while (afterName !== null);
+      const proof = await verifyStartup(ready);
+      if (proof.completedReceipts !== completed) failErasure("ERASURE_CHANGED");
+      return { completedReceipts: completed };
+    },
+  });
+}
+
 /** This component cannot activate itself. Production binding must supply both
  * a privileged executable-object inspection and preservation of the erasure
  * registry across restoration. A complete challenge/response inventory replaces
