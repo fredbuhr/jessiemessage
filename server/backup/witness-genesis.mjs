@@ -132,10 +132,11 @@ export async function prepareWitnessGenesis(options, internal = {}) {
     let bytes;
     try {
       const expected = identity(options.sourceIdentity), selected = destination(options.destination);
-      if (typeof options.assertQuiescent !== "function") fail("INPUT");
+      const maintenance = internal.withMaintenance ?? (work => work());
+      if (typeof options.assertQuiescent !== "function" || typeof maintenance !== "function") fail("INPUT");
       active(options.signal);
       return await withDirectory(p.directory, trust => withDirectory(p.operationsDirectory, source =>
-        leased(source, options, async lock => {
+        leased(source, options, lock => maintenance(async () => {
           const guard = async () => {
             active(options.signal); await options.assertQuiescent(); await lock.assertReady(); await trust.assertReady();
             if (JSON.stringify(await physical(source)) !== JSON.stringify(expected)
@@ -171,7 +172,7 @@ export async function prepareWitnessGenesis(options, internal = {}) {
           await guard();
           return Object.freeze({ prepared: true, contractSha256: hash(bytes), contract: freeze(value),
             externalWitnessConfirmed: false, closuresEnabled: false });
-        })));
+        }, lock.assertReady))));
     } finally { p.key.fill(0); bytes?.fill(0); }
   });
 }

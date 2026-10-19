@@ -5,6 +5,8 @@ import { PassThrough } from "node:stream";
 import { parseRecurringArguments, recurringCheckpointDue, createRecurringSupervisor, recurringPreflight, checkpointProcess } from "../server/backup/recurring-supervisor.mjs";
 import { main } from "../scripts/start-recurring-private-messaging.mjs";
 import { runManagedClosures } from "../server/backup/managed-closures.mjs";
+import { witnessOriginFixture } from "./fixtures/witness-origin.mjs";
+import { readdir } from "node:fs/promises";
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 const configuration = { version: 1, enabled: true, recipientSha256: "a".repeat(64), hourUtc: 5, minuteUtc: 15 };
@@ -12,6 +14,8 @@ const environment = { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd", PORT: "300
 const args = command => [command, "--runtime-directory", "/srv/app-reviewed", "--runtime-head", "a".repeat(40), "--runtime-tree", "b".repeat(40),
   "--private-directory", "/srv/private-runtime", "--operations-directory", "/srv/private-backups", "--private-path-mode", "linux-dirfd"];
 const options = parseRecurringArguments(args("start"));
+const witnessArgs = command => [...args(command), "--witness-operator-directory", "/srv/witness-origin",
+  ...(command === "plan-witness" ? ["--witness-destination", "a".repeat(32)] : ["--witness-plan-sha256", "c".repeat(64)])];
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
 
 function fixture(overrides = {}) {
@@ -39,6 +43,55 @@ test("fixed arguments require reviewed runtime identities and separate private r
     args("start").map(x => x === "/srv/private-backups" ? "/srv/private-runtime/nested" : x),
     args("start").map(x => x === "/srv/private-backups" ? "/srv/app-reviewed/backups" : x),
     args("start").map(x => x === "a".repeat(40) ? "short" : x)]) assert.throws(() => parseRecurringArguments(value), { code: "RECURRING_SUPERVISOR_USAGE" });
+});
+
+test("initial witness commands require explicit private operator storage and the correct plan identity", () => {
+  for (const command of ["plan-witness", "check-witness", "prepare-witness"]) assert.equal(parseRecurringArguments(witnessArgs(command)).command, command);
+  for (const command of ["plan-witness", "check-witness", "prepare-witness"]) assert.throws(() => parseRecurringArguments(args(command)));
+  for (const invalid of [[...args("start"), ...witnessArgs("check-witness").slice(13)],
+    witnessArgs("plan-witness").map(x => x === "--witness-destination" ? "--witness-plan-sha256" : x),
+    witnessArgs("check-witness").map(x => x === "/srv/witness-origin" ? "/srv/private-backups/witness" : x),
+    [...witnessArgs("prepare-witness"), "--offline", "true"]]) assert.throws(() => parseRecurringArguments(invalid));
+  assert.throws(() => createRecurringSupervisor(parseRecurringArguments(witnessArgs("prepare-witness")), { environment }), { code: "RECURRING_SUPERVISOR_CONFIGURATION" });
+  assert.throws(() => createRecurringSupervisor(parseRecurringArguments(witnessArgs("check-witness")), { environment }), { code: "RECURRING_SUPERVISOR_CONFIGURATION" });
+});
+
+test("plan and check CLI commands never construct a supervisor, listener, backup, monitor or mail worker", async () => {
+  for (const command of ["plan-witness", "check-witness"]) {
+    let output = "", called = "";
+    const operations = { async plan() { called = "plan"; return { type: "witness_origin_plan", started: false, prepared: false }; },
+      async check() { called = "check"; return { type: "witness_origin_precheck", started: false, prepared: false }; } };
+    const result = await main(witnessArgs(command), { environment, execArgv: [], makeWitnessOrigin: () => operations,
+      makeSupervisor: () => assert.fail("No managed process during planning/check"), makeMonitor: () => assert.fail("No monitor"), makeAlerts: () => assert.fail("No alert transport"),
+      outputStream: { write(value) { output += value; } } });
+    assert.equal(called, command === "plan-witness" ? "plan" : "check"); assert.equal(result.started, false); assert.equal(JSON.parse(output).prepared, false);
+  }
+});
+
+test("supervisor prepares the actual planned contract once, with its normal application and no erasure capability", async t => {
+  const f = await witnessOriginFixture(t), plan = await f.planner.plan(), events = [], notices = [];
+  let status = "stopped", capability;
+  const runtime = { state: () => ({ status }), async start() { events.push("start"); status = "running"; },
+    async stop() { assert.ok((await readdir(f.dirs.operations)).includes("recurring-backup.lock")); events.push("stop"); status = "stopped"; return { exitCode: 0, signal: null }; },
+    async destroy() { status = "stopped"; } };
+  const supervisor = createRecurringSupervisor({ ...f.options, command: "prepare-witness" }, { environment, source: f.source,
+    witnessOriginOperations: f.bind(plan), makeRuntime(value) { capability = value.accountClosures; return runtime; },
+    readConfiguration: async () => ({ ...configuration, enabled: false }), schedule: () => null, unschedule() {}, emit: value => notices.push(value) });
+  t.after(() => supervisor.close()); await supervisor.start(); await supervisor.tick(); await supervisor.tick();
+  assert.equal(capability, false); assert.deepEqual(events, ["start", "stop", "start"]);
+  assert.equal(notices.filter(x => x.type === "witness_origin_prepared").length, 1);
+  assert.equal(notices.find(x => x.type === "witness_origin_prepared").externalWitnessConfirmed, false);
+  for (const extra of [{ closureOperations: { hasPending() {}, preflight() {}, run() {} } }, { witnessControl: async () => true }]) {
+    assert.throws(() => createRecurringSupervisor({ ...f.options, command: "prepare-witness" }, { environment, witnessOriginOperations: f.bind(plan), ...extra }));
+  }
+});
+
+test("an unavailable original plan prevents the first listener and is never repaired by supervisor startup", async () => {
+  let starts = 0;
+  const supervisor = createRecurringSupervisor(parseRecurringArguments(witnessArgs("prepare-witness")), { environment, source: async () => {},
+    witnessOriginOperations: { async check() { throw new Error("Synthetic private plan lost"); }, async prepare() { assert.fail("No initialization after loss"); } },
+    makeRuntime: () => ({ async start() { starts++; }, async destroy() {} }), schedule: () => null, unschedule() {} });
+  await assert.rejects(supervisor.start()); assert.equal(starts, 0); await supervisor.close();
 });
 
 test("concurrent starts cannot create a second application or timer", async () => {

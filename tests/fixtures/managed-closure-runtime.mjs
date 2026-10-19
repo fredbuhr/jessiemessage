@@ -6,7 +6,7 @@ import { createManagedRuntime } from "../../server/backup/managed-runtime.mjs";
 
 /** Real IPC shim, HTTP listener, active request and producer drain. All data is
  * disposable and local; no application credentials or transport is loaded. */
-export async function managedClosureFixture(t, directory) {
+export async function managedClosureFixture(t, directory, { accountClosures = true } = {}) {
   const probe = createServer(); await new Promise(done => probe.listen(0, "127.0.0.1", done));
   const port = probe.address().port; await new Promise(done => probe.close(done));
   const file = path.join(directory, "synthetic-child.mjs"), marker = path.join(directory, "synthetic-events.txt");
@@ -23,7 +23,7 @@ const pending=new Set(); const record=text=>{const p=appendFile(marker,text+'\\n
 await run(parseArguments(process.argv.slice(2)),{loadRuntime:async()=>({
  async main(args, options){await options.startServer({PORT:String(port)},{});},
  async start(env, options){
-  if(options.accountClosures!==true)throw new Error('Missing managed closure capability');
+  if(Boolean(options.accountClosures)!==${accountClosures})throw new Error('Unexpected managed closure capability');
   let requestCount=0, waiting=[];
   const server=createServer((req,res)=>{
    if(req.url==='/api/ready'){res.writeHead(200,{'Content-Type':'application/json'});res.end('{"status":"ready"}');return;}
@@ -41,7 +41,7 @@ await run(parseArguments(process.argv.slice(2)),{loadRuntime:async()=>({
   const environment = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("JESSIEMESSAGE_")
     && !["NODE_OPTIONS", "NODE_PATH", "NODE_EXTRA_CA_CERTS", "NODE_TLS_REJECT_UNAUTHORIZED", "NODE_USE_SYSTEM_CA", "SSL_CERT_FILE", "SSL_CERT_DIR", "OPENSSL_CONF"].includes(name)));
   const children = [], runtime = createManagedRuntime({ runtimeDirectory: "/synthetic-reviewed-runtime", privateDirectory: "/synthetic-private-config",
-    operationsDirectory: directory, accountClosures: true, port, environment: { ...environment, PORT: String(port), JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" } },
+    operationsDirectory: directory, accountClosures, port, environment: { ...environment, PORT: String(port), JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" } },
   { startupMilliseconds: 4000, stopMilliseconds: 3500, forkClient(_shim, args, settings) { const child = fork(file, args, settings); children.push(child); return child; } });
   t.after(async () => { await runtime.destroy(); for (const child of children) { try { child.kill("SIGKILL"); } catch {} } });
   return { runtime, marker, children, origin: `http://127.0.0.1:${port}` };
