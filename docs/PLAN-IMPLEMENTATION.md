@@ -23,7 +23,7 @@ Le bilan distingue toujours **codé / fusionné / déployé / vérifié / en att
 
 ## B — Acquérir les preuves personnelles manquantes
 
-**Incident PC du 19 octobre, 17:00 Europe/Paris :** initialisation non confirmée ; permission serveur toujours `ready`, sans consommation. Le remplacement des scripts existants échoue sous PowerShell 5.1, cas absent de la fixture initiale. Correctif 0.70.2 en validation dans [#92](https://github.com/fredbuhr/jessiemessage/pull/92) ; attendre son kit corrigé avant une nouvelle tentative. Aucun réappariement ni effacement de marqueur.
+**Incident PC du 19 octobre corrigé :** le défaut de remplacement des scripts existants a été reproduit sous PowerShell 5.1 puis corrigé dans la **0.70.2**, [#92](https://github.com/fredbuhr/jessiemessage/pull/92) fusionnée. Six contrôles PR et six contrôles main réussis ; 90 assertions Windows. Déploiement et génération du ZIP corrigé vérifiés à 17:18:47 Europe/Paris ; permission serveur `ready` inchangée. **Nouvelle action PC : télécharger de nouveau le kit de mise à jour, extraire le ZIP dans un nouveau dossier, ouvrir `Activer-le-temoin.cmd`.** Aucun réappariement ni effacement de marqueur. [Preuves](verification-proofs/jm0702-verification.json).
 
 **Résultat :** trois preuves séparées pour le PC existant : initialisation locale, aller-retour indépendant frais accepté par le service et déchiffrement de l'archive courante. La copie chiffrée par reçu reste une quatrième preuve déjà acquise à sa date.
 

@@ -1,54 +1,50 @@
 # Reprendre JessieMessage
 
-**État courant unique — 19 octobre 2026, tentative PC non confirmée vers 15:00 UTC (17:00 Europe/Paris). Étape 4/6 ; lot A terminé, lot B : correction Windows 0.70.2 en validation.** Le service reste en 0.70.1. Le test Windows du correctif précédent ne couvrait pas le remplacement de scripts déjà présents. Ce cas échoue désormais de façon reproduite sous PowerShell 5.1 à `File.Replace`, avant initialisation. Ne pas réessayer l’ancien ZIP. Les fermetures réelles restent désactivées.
+**État courant unique — 19 octobre 2026, 15:18:47 UTC (17:18:47 Europe/Paris). Étape 4/6 ; correction Windows 0.70.2 livrée et vérifiée, lot B en attente d'une nouvelle exécution personnelle du kit corrigé.** Le lot A reste terminé. Les fermetures réelles restent désactivées.
 
-Lire le [plan](PLAN-IMPLEMENTATION.md) et les [règles de reprise](../AGENTS.md). Les [preuves de clôture](activation-proofs/jm0701-activation.json), la [CI](verification-proofs/jm0701-ci.json) et le [relevé initial](activation-proofs/interruptions-20261019-baseline.json) distinguent les observations datées. L'[historique](REPRISE-HISTORIQUE-20261019.md) ne fournit pas les commandes courantes.
+Lire le [plan](PLAN-IMPLEMENTATION.md), les [règles de reprise](../AGENTS.md) et les [preuves 0.70.2](verification-proofs/jm0702-verification.json). Les preuves [0.70.1](activation-proofs/jm0701-activation.json), [0.70](activation-proofs/jm070-activation.json) et l'[historique](REPRISE-HISTORIQUE-20261019.md) conservent leur portée datée ; leurs anciens lanceurs ne sont pas les commandes courantes.
 
-## Code et service vérifiés
+## Code, validation et service
 
-| État | Résultat |
+| État | Résultat vérifié |
 |---|---|
-| Code fonctionnel | **0.70.1**, source `0fd6c30658f3b6434e8833743da564ea84a47878`, arbre `b35ad5ccabbb772c6163a52489b84fa1c3482b18`. |
-| Fusion | [PR #90](https://github.com/fredbuhr/jessiemessage/pull/90), merge `bfa77a2559cfd1ab02bd53cb419509e01fa26c7a`. Les commits documentaires ultérieurs ne changent pas le runtime épinglé. |
-| CI du code fusionné | Six jobs réussis : [application/Linux/MariaDB/Chrome](https://github.com/fredbuhr/jessiemessage/actions/runs/39270343447) et [Windows](https://github.com/fredbuhr/jessiemessage/actions/runs/39270343496), relus par l'API pendant cette reprise. |
-| Hébergement | Manager **Actif**, Build et Run persistés sur cette source ; checkout propre. Journal du lanceur : enfant et superviseur démarrés, observations fraîches sans incident. Le terminal SSH ne voit pas leurs PID dans son espace de processus ; cette limite est conservée dans les preuves. |
-| Disponibilité | `/api/health` et `/api/ready` : HTTPS **200**, respectivement `ok` et `ready`, depuis l'hébergement à 14:43 UTC. |
-| Contrôle privé | `check-witness-observer` : **passed**, `observe_only`, `started:false`, `externalWitnessConfirmed:false`, `closuresEnabled:false`. Lecture seule, sans préparation ni redémarrage. |
-| Kit Windows | Deux tests de composition réussis sur l'hébergement depuis la source déployée. Téléchargement par la vraie interface non effectué : le navigateur demande une connexion administrateur. Aucun téléchargement authentifié n'est prétendu. |
+| Code fonctionnel actif | **0.70.2**, source `d1720d8af17081ddcc7150e24d77128fcf8ff4fe`, arbre `8ffe6911cc9c5e1b18d609a239d9f9b2038e06cf`. |
+| Fusion | [PR #92](https://github.com/fredbuhr/jessiemessage/pull/92), merge `dd9af4c172832f5e471e19596008886c0da5d79e`. Les commits documentaires suivants ne changent pas ce runtime épinglé. |
+| Reproduction du défaut | Nouveau test Windows sur l'ancien helper : échec réel à `File.Replace(..., $null)`, avant initialisation. [Run 39274989758](https://github.com/fredbuhr/jessiemessage/actions/runs/39274989758), job `118136838505`. L'ancienne fixture n'exerçait que la création des scripts dans un dossier neuf. |
+| Correctif Windows | `File.Replace` reçoit `[NullString]::Value`, comme le writer de configuration existant. La fenêtre d'échec indique maintenant sa phase sans révéler l'exception ou les secrets. |
+| CI du candidat | Six jobs réussis : [application](https://github.com/fredbuhr/jessiemessage/actions/runs/39275452683), [Windows](https://github.com/fredbuhr/jessiemessage/actions/runs/39275452944). **90 assertions Windows**, dont remplacement des deux scripts existants et préservation des octets DPAPI et du marqueur d'initialisation. |
+| CI du code fusionné | Six jobs également réussis : [application main](https://github.com/fredbuhr/jessiemessage/actions/runs/39276004608), [Windows main](https://github.com/fredbuhr/jessiemessage/actions/runs/39276004551), relus par l'API. |
+| Hébergement | Manager actif, Build terminé à 17:17 Europe/Paris, Run et Build enregistrés sur cette source, checkout propre. Journal du nouveau lanceur : enfant et superviseur démarrés ; moniteur `current / OK`, aucun incident. Le terminal SSH ne voit pas les PID applicatifs dans son espace de processus. |
+| Contrôle final | HTTPS `/api/health` et `/api/ready` : **200**, `ok` et `ready`, à 15:18:47 UTC. Contrôle authentifié `check-witness-observer` : **passed**, `observe_only`, `started:false`, témoin externe non confirmé et fermetures désactivées. |
+| Kit courant | ZIP généré depuis le checkout actif : **53 022 octets**, six fichiers, action `Activer-le-temoin.cmd`, aucune capacité de nouvel appariement. SHA-256 du script embarqué : `abfb5daac7a5815ffdbe9e8e26b59b50c647eefd24e2e32610c50f2a70ac1bb1`, conforme à la source corrigée. Le téléchargement authentifié dans le navigateur et l'exécution sur le PC personnel restent distincts et non confirmés. |
 
-Le correctif conserve le raccordement du PC après une erreur de copie/réseau. Les **66 anciennes PR déjà intégrées** ont été fermées au contrôle initial ; ne pas les réappliquer. Aucun nouveau raccordement, contrat, permission, clé, mail, restauration ou effacement réel pendant cette clôture.
+Deux tests locaux de composition du kit et la syntaxe de 526 sources réussissent. Aucun nouvel appariement, contrat, permission, clé, message réel, mail, import SQL ou effacement de compte pour ce correctif. Les 66 anciennes PR déjà intégrées restent closes.
 
 ## Paramètres et états à préserver
 
-- Checkout : `/srv/customer/jessiemessage-operator/interruption-reconciliation-0701-0fd6c306` ; parent public 3000, enfant configuré en boucle locale 3001.
-- Run permanent : `bash /srv/customer/jessiemessage-private/start-primary-witness-observer-0701-0fd6c306.sh` ; **1 152 octets, 0700**, SHA-256 `25894381fd826936cc8a2d8cd700900e7d58023bb2cc30e87071cd35a1b5fadc`.
-- Journal : `/srv/customer/jessiemessage-private/jm0701-witness-observer.log`. Derniers relevés lus : moniteur `current / OK`, aucun incident ; observation `enrollment_required`, témoin externe non confirmé et fermetures désactivées.
+- Checkout actif : `/srv/customer/jessiemessage-operator/windows-existing-pc-update-0702-d1720d8a` ; parent public 3000, enfant configuré en boucle locale 3001.
+- Run permanent : `bash /srv/customer/jessiemessage-private/start-primary-witness-observer-0702-d1720d8a.sh`, mode 0700 ; SHA-256 `c6a51eb48e35104936f57f81ddef43176a38888e03d037da9c1124f6e1a49370`.
+- Journal : `/srv/customer/jessiemessage-private/jm0702-witness-observer.log`. Moniteur lu à `1792423111896` : `current / OK`, zéro incident ; observation à `1792423122631` : `enrollment_required`, `externalWitnessConfirmed:false`, `closuresEnabled:false`.
 - Contrat : `/srv/customer/jessiemessage-private/witness-origin-069-6b84f6e1/contract/witness-genesis.json`, **813 octets, 0600**, SHA-256 `4fbdce199d70c1fd4b80f8ff249dae2666812b8ffc1c6912e8c50d1a042aaf10`, inchangé.
-- Permission dans `enrollment` : origine **968 octets, 0600**, SHA-256 `817c6dca7735bb844d73066ebd3a711c46eb52cf5d5aabb5f4772171efc4b0c1` ; état **226 octets, 0600**, SHA-256 `ac4c7287aaaa5abc758ddb4cc8b8fd86d433c6c8a187e048c7dc12a6dba4b728`, inchangés ; phase `ready` au relevé initial et précontrôle final réussi.
-- Repli précédent : `/srv/customer/jessiemessage-private/manager-before-interruption-correction-0701.json`, **428 octets, 0600**. Le checkpoint privé existant est `/srv/customer/jessiemessage-private/jm0701-interruption-correction.json`.
+- Permission dans `enrollment` : origine **968 octets, 0600**, SHA-256 `817c6dca7735bb844d73066ebd3a711c46eb52cf5d5aabb5f4772171efc4b0c1` ; état **226 octets, 0600**, SHA-256 `ac4c7287aaaa5abc758ddb4cc8b8fd86d433c6c8a187e048c7dc12a6dba4b728`, inchangés. Phase **ready**, révision 1 : la tentative PC non confirmée n'a pas consommé l'autorisation.
+- Repli : `/srv/customer/jessiemessage-private/manager-before-existing-pc-update-0702.json`, mode 0600. Checkpoint privé : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`.
 
-**Ne rejouer ni `plan-witness`, ni `prepare-witness`, ni `prepare-witness-enrollment`.** Ne pas supprimer les états, réapparier le PC ou régénérer une clé. Les commandes natives conservent `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`, en plus de l'option CLI. La messagerie quotidienne ne dépend pas de la présence continue du PC. `recette.jessiemessage.com` partage runtime et base du principal et n'est pas une cible de restauration isolée.
+**Ne rejouer ni `plan-witness`, ni `prepare-witness`, ni `prepare-witness-enrollment`.** Ne pas réinitialiser les états, réapparier le PC ou régénérer une clé. Garder `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd` dans l'environnement des commandes natives, en plus de l'option CLI. La messagerie quotidienne ne dépend pas de la présence continue du PC. `recette.jessiemessage.com` partage runtime et base du principal ; ce n'est pas une cible de restauration isolée.
 
 ## Prochaine action exacte — lot B
 
-**Avant une nouvelle tentative PC : terminer la validation et la publication du correctif 0.70.2 ([PR #92](https://github.com/fredbuhr/jessiemessage/pull/92)).** À 15:01:38 UTC, contrat et permission conservent leurs empreintes ci-dessus ; permission `ready`, révision 1, aucune tentative consommée. Le moniteur reste `current / OK`. Ne pas réinitialiser ces états.
+**Sur le PC habituel : fermer l'ancienne fenêtre d'échec, puis Administration → Sauvegardes → Gérer cette destination → Mettre à jour le PC. Télécharger à nouveau le ZIP, l'extraire entièrement dans un nouveau dossier, puis ouvrir `Activer-le-temoin.cmd`.** Le nouveau kit est nécessaire : l'ancien ZIP contient toujours le défaut. Le lanceur installe lui-même les scripts corrigés ; aucun autre lancement préalable n'est requis.
 
-Après déploiement vérifié du kit corrigé : **Sur le PC habituel : Administration → Sauvegardes → Gérer cette destination → Mettre à jour le PC → extraire entièrement le ZIP → ouvrir `Activer-le-temoin.cmd`.** Le lanceur installe lui-même la mise à jour. Ne pas utiliser « Raccorder Windows » pour cette action. Conserver configuration DPAPI, archives, reçus, dossier `temoin` et marqueurs existants.
+Conserver configuration DPAPI, archives, reçus, dossier `temoin` et marqueurs existants. Ne pas utiliser « Raccorder Windows » pour cette action. Si une ancienne page reste ouverte, Ctrl+F5 recharge son code ; le bouton « Actualiser la page » ne relit actuellement que les données.
 
-Relever la fenêtre « Témoin initialisé sur ce PC » puis contrôler séparément l'observation fraîche acceptée sur le serveur. En cas de réponse perdue, relire les marqueurs PC et l'état serveur avant toute autre tentative. Une attente de cette action locale n'est ni une panne du service ni un échec du déploiement.
+Relever la fenêtre « Témoin initialisé sur ce PC » puis contrôler séparément l'observation fraîche acceptée sur le serveur. En cas d'échec, sa nouvelle phase affichée sert au diagnostic. En cas de réponse perdue, relire marqueurs PC et état serveur avant toute autre tentative. Une preuve CI ne remplace pas ce constat sur le PC personnel.
 
-Le lot B demandera aussi la vérification locale de l'archive courante avec `Verifier.cmd` et le trousseau GPG existant. Ni la CI Windows, ni la génération du kit, ni le reçu de copie ne prouvent ce déchiffrement personnel. Ces opérations nécessitent le contexte Windows du PC ; elles ne peuvent pas être certifiées depuis le serveur.
+Le lot B demande aussi le déchiffrement de l'archive courante avec `Verifier.cmd` et le trousseau GPG existant. Ni la génération du kit, ni la CI Windows, ni le reçu de copie ne prouvent ce résultat personnel. Ce contexte Windows ne peut pas être certifié depuis le serveur.
 
-## Sauvegardes : acquis et limites distincts
+## Sauvegardes et suite
 
-Le relevé initial a confirmé l'archive `capture-1792386945745-204e0e8e073b6131`, **402 552 octets**, SHA-256 `c809dbfed6eabd2e8bde1a1d30a6cb11cbc99df720c0140935b3f2ae413690e5`, horaire **05:15 UTC**, et le reçu PC `1792419653468` concordant. Ce reçu daté n'a pas été relu pendant la clôture ; le moniteur final ne constitue pas un nouveau reçu. Déchiffrement courant, témoin externe frais et import natif isolé courant restent non confirmés. Les preuves personnelles antérieures du coffre et de la restauration 0.46 gardent leur portée historique.
+Le relevé initial a confirmé l'archive `capture-1792386945745-204e0e8e073b6131`, **402 552 octets**, SHA-256 `c809dbfed6eabd2e8bde1a1d30a6cb11cbc99df720c0140935b3f2ae413690e5`, horaire **05:15 UTC**, et reçu PC `1792419653468` concordant. Ce reçu daté n'a pas été relu pendant la clôture du correctif ; le moniteur final n'est pas un nouveau reçu. Déchiffrement courant, témoin externe frais et import natif isolé restent non confirmés. Les preuves antérieures du coffre et de la restauration 0.46 gardent leur portée historique.
 
-Ne pas lancer `capture --offline` pendant le service. Garder le superviseur existant. Les mails déjà confirmés reçus restent acquis.
+Ne pas lancer `capture --offline` pendant le service. Garder le superviseur existant. Les mails déjà confirmés reçus restent acquis. Invitations, messages/photos, notifications, récupération du mot de passe, fiches, diffusions individuelles, réponses rapides et exports sont conservés avec leurs limites documentées. Jessie en France, sans structure ; conversations jusqu'à fermeture définitive, hors suppressions volontaires. Ne pas redemander ces choix ou une permission générale de développement.
 
-## Suite du développement
-
-Invitations, messages/photos, notifications, récupération du mot de passe, fiches, diffusions individuelles, réponses rapides et exports restent acquis avec leurs limites documentées. Jessie en France, sans structure ; conversations jusqu'à fermeture définitive, hors suppressions volontaires. Ne pas redemander ces choix ou une permission générale de développement.
-
-Après B : barrière de récupération/réconciliation (C), inspection SQL/import isolé courant (D), fermeture/conservation/notice (E), alerte externe de panne totale (F), recette sur deux appareils (G). Le plan fixe les critères. Ne pas réouvrir A pour avancer ces lots.
-
-Une ancienne fenêtre d'erreur du raccourci Windows Paramètres parle encore de « nouveau kit ». Elle ne réapparie rien automatiquement et `Activer-le-temoin.cmd` utilise une autre fonction. Clarification facultative ultérieure, sans bloquer l'action PC actuelle.
+Après B : récupération/réconciliation (C), inspection SQL/import isolé (D), fermeture/conservation/notice (E), alerte externe de panne totale (F), recette sur deux appareils (G), selon le plan. Une ancienne fenêtre d'erreur du raccourci Paramètres parle encore de « nouveau kit » ; elle ne réapparie rien automatiquement et n'est pas utilisée par l'action d'activation actuelle. Clarification facultative ultérieure.

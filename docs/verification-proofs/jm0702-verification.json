@@ -17,14 +17,14 @@
   "fix": {
     "operation": "File.Replace(temporary, target, [NullString]::Value)",
     "diagnostics": "Failure dialog includes its bounded stage; no exception details or secrets shown.",
-    "nativeWindowsStatus": "pending"
+    "nativeWindowsStatus": "passed"
   },
   "local": {
     "kitComposition": {
       "passed": 2,
       "failed": 0
     },
-    "syntax": "running_not_yet_confirmed"
+    "syntax": "passed_526_sources"
   },
   "hostBefore": {
     "checkedAt": "2026-10-19T15:01:38Z",
@@ -36,6 +36,43 @@
     "enrollmentStateSha256": "ac4c7287aaaa5abc758ddb4cc8b8fd86d433c6c8a187e048c7dc12a6dba4b728",
     "monitor": "current_OK"
   },
-  "deployment": "pending",
-  "personalExecution": "previous_attempt_unconfirmed_do_not_repeat_old_zip"
+  "deployment": {
+    "status": "verified",
+    "checkedAt": "2026-10-19T15:18:47.972434Z",
+    "manager": "active",
+    "checkoutClean": true,
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-witness-observer-0702-d1720d8a.sh",
+    "launcherSha256": "c6a51eb48e35104936f57f81ddef43176a38888e03d037da9c1124f6e1a49370",
+    "health": "200 ok",
+    "readiness": "200 ready",
+    "privatePrecheck": "passed",
+    "authorityUnchanged": true,
+    "permissionPhase": "ready",
+    "externalWitnessConfirmed": false,
+    "closuresEnabled": false,
+    "deployedKit": {
+      "bytes": 53022,
+      "files": 6,
+      "agentSha256": "abfb5daac7a5815ffdbe9e8e26b59b50c647eefd24e2e32610c50f2a70ac1bb1",
+      "newPairingCapability": false,
+      "authenticatedUiDownload": "not_checked"
+    }
+  },
+  "personalExecution": "awaiting_fresh_0702_zip_on_existing_pc",
+  "source": "d1720d8af17081ddcc7150e24d77128fcf8ff4fe",
+  "tree": "8ffe6911cc9c5e1b18d609a239d9f9b2038e06cf",
+  "merge": "dd9af4c172832f5e471e19596008886c0da5d79e",
+  "ci": {
+    "candidateRuns": [
+      39275452683,
+      39275452944
+    ],
+    "candidateJobs": "6/6 success",
+    "mainRuns": [
+      39276004608,
+      39276004551
+    ],
+    "mainJobs": "6/6 success",
+    "windowsWitnessAssertions": 90
+  }
 }
