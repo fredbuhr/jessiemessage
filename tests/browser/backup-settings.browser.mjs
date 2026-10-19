@@ -82,11 +82,11 @@ test("real Chrome: copied backups show a simple overview and keep technical cont
     assert.equal(source.requests.some(item => item.method !== "GET"), false, "opening the simple page neither re-pairs nor checks decryption");
     const confirmedDate = await page.execute("return document.querySelector('#backup-overview-details > div:last-child dd').textContent");
     await page.click('.destination-settings > summary'); await tabUntil(page, '[data-action="toggle"]'); await page.key("\uE007");
-    await waitUntil(() => page.execute("return document.querySelector('.copy-badge').textContent === 'Copies suspendues'"), "pause future copies");
+    await waitUntil(() => page.execute("return document.querySelector('.copy-badge')?.textContent === 'Copies suspendues'"), "pause future copies");
     assert.equal(await page.execute("return document.querySelector('#backup-overview-details > div:last-child dd').textContent"), confirmedDate);
     assert.equal(await page.execute("return document.getElementById('backup-overview-copy').textContent.startsWith('Les copies sont suspendues.') && document.getElementById('backup-overview-title').textContent === 'La dernière sauvegarde est copiée'"), true);
     await page.click('.destination-settings > summary'); await tabUntil(page, '[data-action="toggle"]'); await page.key("\uE007");
-    await waitUntil(() => page.execute("return document.querySelector('.copy-badge').textContent === 'Dernière archive copiée'"), "resume future copies");
+    await waitUntil(() => page.execute("return document.querySelector('.copy-badge')?.textContent === 'Dernière archive copiée'"), "resume future copies");
     source.changeReceipt(); await page.click('#refresh');
     await waitUntil(() => page.execute("return document.getElementById('backup-overview-title').textContent === 'Copie sur le PC en attente'"), "mismatched receipt is not confirmed");
     assert.equal(await page.execute("return document.querySelector('.copy-badge').textContent === 'Copie en attente' && !document.getElementById('backup-overview-copy').textContent.includes('Rien à faire')"), true);
