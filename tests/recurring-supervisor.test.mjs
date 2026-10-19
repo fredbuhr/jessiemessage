@@ -16,6 +16,7 @@ const args = command => [command, "--runtime-directory", "/srv/app-reviewed", "-
 const options = parseRecurringArguments(args("start"));
 const witnessArgs = command => [...args(command), "--witness-operator-directory", "/srv/witness-origin",
   ...(command === "plan-witness" ? ["--witness-destination", "a".repeat(32)] : ["--witness-plan-sha256", "c".repeat(64)])];
+const observerArgs = command => [...args(command), "--witness-operator-directory", "/srv/witness-origin", "--witness-contract-sha256", "d".repeat(64)];
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
 
 function fixture(overrides = {}) {
@@ -66,6 +67,132 @@ test("plan and check CLI commands never construct a supervisor, listener, backup
       outputStream: { write(value) { output += value; } } });
     assert.equal(called, command === "plan-witness" ? "plan" : "check"); assert.equal(result.started, false); assert.equal(JSON.parse(output).prepared, false);
   }
+});
+
+test("observer CLI modes require the existing contract pin and independent private operator root", () => {
+  for (const command of ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"]) {
+    const parsed = parseRecurringArguments(observerArgs(command));
+    assert.equal(parsed.command, command); assert.equal(parsed.witnessContractSha256, "d".repeat(64));
+    assert.throws(() => parseRecurringArguments(args(command)), { code: "RECURRING_SUPERVISOR_USAGE" });
+    for (const invalid of [observerArgs(command).map(value => value === "d".repeat(64) ? "D".repeat(64) : value),
+      observerArgs(command).map(value => value === "--witness-contract-sha256" ? "--witness-plan-sha256" : value),
+      observerArgs(command).map(value => value === "--witness-contract-sha256" ? "--witness-destination" : value),
+      ...["/srv/private-backups/witness", "/srv/private-runtime/witness", "/srv/app-reviewed/witness", "/srv"].map(directory =>
+        observerArgs(command).map(value => value === "/srv/witness-origin" ? directory : value)),
+      [...observerArgs(command), "--offline", "true"]]) {
+      assert.throws(() => parseRecurringArguments(invalid), { code: "RECURRING_SUPERVISOR_USAGE" });
+    }
+  }
+  assert.throws(() => parseRecurringArguments(observerArgs("start")), { code: "RECURRING_SUPERVISOR_USAGE" });
+  assert.throws(() => parseRecurringArguments(observerArgs("prepare-witness")), { code: "RECURRING_SUPERVISOR_USAGE" });
+});
+
+test("observer check CLI reads the existing contract and always closes without a listener or background worker", async () => {
+  for (const rejected of [false, true]) {
+    const events = [], controller = new AbortController(); let output = "";
+    const observer = { async check() { events.push("check"); if (rejected) throw Object.assign(new Error("Synthetic inaccessible contract"), { code: "WITNESS_OBSERVATION_UNAVAILABLE" });
+      return { version: 1, type: "witness_observer_precheck", started: false, closuresEnabled: false }; }, async close() { events.push("close"); } };
+    const result = main(observerArgs("check-witness-observer"), { environment, execArgv: [], signal: controller.signal,
+      async makeWitnessObserver(options, settings) {
+        events.push("construct"); assert.equal(options.command, "check-witness-observer"); assert.equal(options.witnessContractSha256, "d".repeat(64));
+        assert.equal(settings.environment, environment); assert.equal(settings.signal, controller.signal); return observer;
+      }, makeSupervisor: () => assert.fail("Read-only check cannot construct a supervisor"),
+      makeWitnessOrigin: () => assert.fail("Existing contract cannot be prepared again"),
+      makeMonitor: () => assert.fail("Read-only check cannot start a monitor"), makeAlerts: () => assert.fail("Read-only check cannot start alerts"),
+      outputStream: { write(value) { output += value; } } });
+    if (rejected) { await assert.rejects(result, { code: "WITNESS_OBSERVATION_UNAVAILABLE" }); assert.equal(output, ""); }
+    else { assert.equal((await result).closuresEnabled, false); assert.equal(JSON.parse(output).started, false); }
+    assert.deepEqual(events, ["construct", "check", "close"]);
+  }
+});
+
+test("explicit enrollment CLI waits for the first capture tick, attaches parent maintenance and closes observer before parent", async () => {
+  const events = [], entered = deferred(), release = deferred(); let output = "";
+  const handler = async () => true, maintain = async () => {}, fail = () => {};
+  const observer = { handler, async checkInitial() { events.push("check-initial"); }, async check() { assert.fail("Enrollment needs the initial check"); },
+    attachMaintenance(work, failed) { events.push("attach"); assert.equal(work, maintain); assert.equal(failed, fail); },
+    async initialize() { events.push("initialize"); return { version: 1, type: "witness_enrollment_prepared", closuresEnabled: false }; },
+    startObservation() { events.push("observe"); }, async close() { events.push("observer-close"); } };
+  const result = main(observerArgs("prepare-witness-enrollment"), { environment, execArgv: [],
+    async makeWitnessObserver() { events.push("observer-construct"); return observer; },
+    makeWitnessOrigin: () => assert.fail("Enrollment cannot recreate the original contract"),
+    makeSupervisor(selected, dependencies) {
+      events.push("supervisor-construct"); assert.equal(selected.command, "start"); assert.equal(dependencies.witnessControl, handler);
+      assert.equal(Object.hasOwn(dependencies, "closureOperations"), false); assert.equal(Object.hasOwn(dependencies, "witnessOriginOperations"), false);
+      return { withWitnessMaintenance: maintain, failWitnessObservation: fail,
+        async start() { events.push("start"); }, async tick() { events.push("tick"); entered.resolve(); await release.promise; events.push("tick-finished"); },
+        finished: Promise.resolve({ failed: false }), async close() { events.push("supervisor-close"); } };
+    }, makeAlerts() { events.push("alerts"); return { async close() { events.push("alerts-close"); } }; },
+    makeMonitor() { events.push("monitor"); return { async start() { events.push("monitor-start"); }, async close() { events.push("monitor-close"); } }; },
+    outputStream: { write(value) { output += value; } } });
+  await entered.promise;
+  assert.deepEqual(events, ["observer-construct", "check-initial", "supervisor-construct", "attach", "start", "tick"]);
+  release.resolve(); assert.equal((await result).status, "stopped");
+  assert.deepEqual(events.slice(6), ["tick-finished", "initialize", "observe", "alerts", "monitor", "monitor-start", "observer-close", "monitor-close", "supervisor-close", "alerts-close"]);
+  assert.equal(JSON.parse(output).closuresEnabled, false);
+});
+
+test("ordinary observer start never enrolls again and keeps its channel attached to the normalized parent", async () => {
+  const events = [], handler = async () => true;
+  await main(observerArgs("start-witness-observer"), { environment, execArgv: [],
+    async makeWitnessObserver() { return { handler, async check() { events.push("check"); }, async checkInitial() { assert.fail("No original enrollment on restart"); },
+      async initialize() { assert.fail("Restart cannot initialize a witness"); }, attachMaintenance() { events.push("attach"); },
+      startObservation() { events.push("observe"); }, async close() { events.push("observer-close"); } }; },
+    makeSupervisor(selected, dependencies) { assert.equal(selected.command, "start"); assert.equal(dependencies.witnessControl, handler);
+      return { withWitnessMaintenance() {}, failWitnessObservation() {}, async start() { events.push("start"); }, async tick() { events.push("tick"); },
+        finished: Promise.resolve({ failed: false }), async close() { events.push("supervisor-close"); } }; },
+    makeAlerts: () => ({ async close() {} }), makeMonitor: () => ({ async start() {}, async close() {} }), outputStream: { write() {} } });
+  assert.deepEqual(events, ["check", "attach", "start", "tick", "observe", "observer-close", "supervisor-close"]);
+});
+
+test("an observer failure before or during enrollment releases it and never starts unrelated workers", async () => {
+  for (const stage of ["initial-check", "attach", "initialize"]) {
+    const events = [], failure = Object.assign(new Error("Synthetic enrollment failure"), { code: "WITNESS_ENROLLMENT_UNAVAILABLE" });
+    await assert.rejects(main(observerArgs("prepare-witness-enrollment"), { environment, execArgv: [],
+      async makeWitnessObserver() { return { handler: async () => true,
+        async checkInitial() { events.push("check"); if (stage === "initial-check") throw failure; },
+        attachMaintenance() { events.push("attach"); if (stage === "attach") throw failure; },
+        async initialize() { events.push("initialize"); throw failure; }, startObservation() { assert.fail("No observation after failed enrollment"); },
+        async close() { events.push("observer-close"); } }; },
+      makeSupervisor() { events.push("construct"); return { withWitnessMaintenance() {}, failWitnessObservation() {}, async start() { events.push("start"); },
+        async tick() { events.push("tick"); }, finished: Promise.resolve({ failed: false }), async close() { events.push("supervisor-close"); } }; },
+      makeMonitor: () => assert.fail("No monitor after failed enrollment"), makeAlerts: () => assert.fail("No alert worker after failed enrollment"), outputStream: { write() {} } }), failure);
+    assert.equal(events.at(-1), stage === "initial-check" ? "observer-close" : "supervisor-close");
+    if (stage !== "initial-check") assert.ok(events.indexOf("observer-close") < events.indexOf("supervisor-close"));
+    else assert.equal(events.includes("construct"), false);
+  }
+});
+
+test("aborting an observer CLI start closes its channel before the parent and cannot initialize", async () => {
+  const events = [], controller = new AbortController();
+  await main(observerArgs("prepare-witness-enrollment"), { environment, execArgv: [], signal: controller.signal,
+    async makeWitnessObserver() { return { handler: async () => true, async checkInitial() {}, attachMaintenance() {},
+      async initialize() { assert.fail("No initialization after cancellation"); }, startObservation() { assert.fail("No observation after cancellation"); },
+      close() { events.push("observer-close"); } }; },
+    makeSupervisor() { return { withWitnessMaintenance() {}, failWitnessObservation() {}, async start() { events.push("start"); controller.abort(); },
+      async tick() { assert.fail("No capture tick after cancellation"); }, finished: Promise.resolve({ failed: false }), async close() { events.push("supervisor-close"); } }; },
+    makeMonitor: () => assert.fail("No monitor after cancellation"), makeAlerts: () => assert.fail("No alerts after cancellation"), outputStream: { write() {} } });
+  assert.equal(events[0], "start"); assert.equal(events[1], "observer-close"); assert.equal(events[2], "supervisor-close");
+});
+
+test("cancellation during the startup capture tick cannot initialize an observer or start background workers", async () => {
+  const events = [], controller = new AbortController(), entered = deferred(), release = deferred();
+  const operation = main(observerArgs("prepare-witness-enrollment"), { environment, execArgv: [], signal: controller.signal,
+    async makeWitnessObserver() { return { handler: async () => true, async checkInitial() {}, attachMaintenance() {},
+      async initialize() { assert.fail("No initialization after cancellation during startup tick"); },
+      startObservation() { assert.fail("No observation after cancellation during startup tick"); },
+      close() { events.push("observer-close"); } }; },
+    makeSupervisor() { return { withWitnessMaintenance() {}, failWitnessObservation() {}, async start() { events.push("start"); },
+      async tick() { events.push("tick"); entered.resolve(); await release.promise; events.push("tick-finished"); },
+      finished: Promise.resolve({ failed: false }), async close() { events.push("supervisor-close"); } }; },
+    makeMonitor: () => { events.push("monitor"); assert.fail("No monitor after cancellation during startup tick"); },
+    makeAlerts: () => { events.push("alerts"); assert.fail("No alerts after cancellation during startup tick"); }, outputStream: { write() { events.push("output"); } } });
+  await entered.promise; controller.abort();
+  assert.deepEqual(events, ["start", "tick", "observer-close", "supervisor-close"]);
+  release.resolve(); assert.equal((await operation).status, "stopped");
+  assert.equal(events[4], "tick-finished");
+  assert.ok(events.indexOf("observer-close") < events.indexOf("supervisor-close"));
+  assert.equal(events.includes("monitor"), false); assert.equal(events.includes("alerts"), false); assert.equal(events.includes("output"), false);
 });
 
 test("supervisor prepares the actual planned contract once, with its normal application and no erasure capability", async t => {

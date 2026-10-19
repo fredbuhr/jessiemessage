@@ -206,18 +206,26 @@ function Invoke-JmWitnessExchange {
         return [ordered]@{ version = 1; registryId = $Request.registryId; challenge = $Request.challenge; revision = $jmHead.revision; sha256 = $jmHead.snapshotSha256; snapshot = $jmCurrent }
     } finally { if ($null -ne $jmLock) { $jmLock.Dispose() } }
 }
+function New-JmWitnessRequest {
+    param([string]$Action)
+    if ($Action -cnotin @('poll', 'response', 'enroll')) { throw 'Requete non valide.' }
+    return [Net.HttpWebRequest]::Create('https://jessiemessage.com/api/backup-copy/witness/' + $Action)
+}
 function Invoke-JmWitnessApi {
     param([string]$Action, [string]$Token, $Body = $null)
-    if ($Action -cnotin @('poll', 'response') -or $Token -cnotmatch '^[A-Za-z0-9_-]{43}$') { throw 'Requete non valide.' }
-    $jmRequest = [Net.HttpWebRequest]::Create('https://jessiemessage.com/api/backup-copy/witness/' + $Action)
-    $jmRequest.AllowAutoRedirect = $false; $jmRequest.Timeout = 30000; $jmRequest.ReadWriteTimeout = 30000; $jmRequest.KeepAlive = $false
+    if ($Action -cnotin @('poll', 'response', 'enroll') -or $Token -cnotmatch '^[A-Za-z0-9_-]{43}$') { throw 'Requete non valide.' }
+    $jmRequest = New-JmWitnessRequest $Action
+    # Enrollment includes the real server drain and readiness restart before
+    # its one-use answer. Keep the ordinary poll/response budget unchanged.
+    $jmTimeout = if ($Action -ceq 'enroll') { 90000 } else { 30000 }
+    $jmRequest.AllowAutoRedirect = $false; $jmRequest.Timeout = $jmTimeout; $jmRequest.ReadWriteTimeout = $jmTimeout; $jmRequest.KeepAlive = $false
     $jmRequest.Headers['X-Jessie-Backup'] = '1'; $jmRequest.Headers['Authorization'] = 'Bearer ' + $Token
     $jmResponse = $null; $jmStream = $null; $jmMemory = $null
     try {
-        if ($Action -ceq 'response') {
+        if ($Action -cne 'poll') {
             $jmRequest.Method = 'POST'; $jmRequest.ContentType = 'application/json; charset=utf-8'
             $jmBytes = [Text.Encoding]::UTF8.GetBytes((Get-JmWitnessJson $Body))
-            if ($jmBytes.Length -gt 67110912) { throw 'Reponse trop grande.' }
+            if ($jmBytes.Length -gt $(if ($Action -ceq 'enroll') { 4096 } else { 67110912 })) { throw 'Reponse trop grande.' }
             $jmRequest.ContentLength = $jmBytes.Length
             $jmOutput = $jmRequest.GetRequestStream()
             try { $jmOutput.Write($jmBytes, 0, $jmBytes.Length) } finally { $jmOutput.Dispose(); [Array]::Clear($jmBytes, 0, $jmBytes.Length) }
@@ -227,11 +235,85 @@ function Invoke-JmWitnessApi {
         $jmStream = $jmResponse.GetResponseStream(); $jmMemory = New-Object IO.MemoryStream
         $jmBuffer = New-Object byte[] 65536
         while (($jmCount = $jmStream.Read($jmBuffer, 0, $jmBuffer.Length)) -gt 0) {
-            if ($jmMemory.Length + $jmCount -gt 67110912) { throw 'Reponse trop grande.' }
+            if ($jmMemory.Length + $jmCount -gt $(if ($Action -ceq 'enroll') { 4096 } else { 67110912 })) { throw 'Reponse trop grande.' }
             $jmMemory.Write($jmBuffer, 0, $jmCount)
         }
         return (ConvertFrom-Json -InputObject ((New-Object Text.UTF8Encoding($false, $true)).GetString($jmMemory.ToArray())))
     } finally { if ($null -ne $jmMemory) { $jmMemory.Dispose() }; if ($null -ne $jmStream) { $jmStream.Dispose() }; if ($null -ne $jmResponse) { $jmResponse.Dispose() }; $jmRequest.Abort() }
+}
+function Write-JmWitnessEnrollment {
+    param([string]$Path, $Value)
+    [JessieMessageWitness067.Files]::WriteNew($Path, [Text.Encoding]::UTF8.GetBytes((Get-JmWitnessJson $Value) + "`n"))
+    $jmSaved = Read-JmWitnessJson $Path 4096
+    if ($jmSaved.Text -cne (Get-JmWitnessJson $Value) + "`n") { throw 'Initialisation non confirmee.' }
+}
+function Read-JmWitnessEnrollment {
+    param([string]$Path, [string[]]$Fields)
+    $jmSaved = Read-JmWitnessJson $Path 4096
+    Assert-JmWitnessFields $jmSaved.Value $Fields
+    if ($jmSaved.Text -cne (Get-JmWitnessJson $jmSaved.Value) + "`n") { throw 'Initialisation non valide.' }
+    return $jmSaved.Value
+}
+function Assert-JmWitnessEnrollmentReply {
+    param($Value, [string]$DestinationId, [string]$AttemptId)
+    Assert-JmWitnessFields $Value @('version', 'initialize', 'destinationId', 'attemptId', 'contractSha256', 'contractId', 'registryId', 'initialSnapshotSha256')
+    if (($Value.version -isnot [int] -and $Value.version -isnot [long]) -or $Value.version -cne 1 -or $Value.initialize -isnot [bool] -or
+        $Value.destinationId -isnot [string] -or $Value.destinationId -cne $DestinationId -or $Value.attemptId -isnot [string] -or $Value.attemptId -cne $AttemptId) { throw 'Initialisation non autorisee.' }
+    foreach ($jmName in @('contractSha256', 'contractId', 'registryId', 'initialSnapshotSha256')) {
+        if ($Value.$jmName -isnot [string] -or $Value.$jmName -cnotmatch '^[a-f0-9]{64}$') { throw 'Contrat non valide.' }
+    }
+    $jmEmpty = [ordered]@{ version = 1; registryId = $Value.registryId; files = @() }
+    if ((Get-JmWitnessHash $jmEmpty) -cne $Value.initialSnapshotSha256) { throw 'Origine non valide.' }
+}
+function Invoke-JmWitnessEnrollment {
+    param([string]$Directory, [string]$DestinationId)
+    Initialize-JmWitnessNative
+    Assert-JmWitnessDirectory $Directory
+    $jmAgentLock = $null; $jmWitnessLock = $null
+    try {
+        $jmAgentLock = New-Object IO.FileStream((Join-Path $Directory 'agent.lock'), [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
+        $jmWitnessLock = New-Object IO.FileStream((Join-Path $Directory 'witness-agent.lock'), [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
+        $jmConfig = Read-JmConfiguration $Directory
+        if ($jmConfig.DestinationId -cne $DestinationId) { throw 'PC non raccorde.' }
+        $jmAttemptFile = Join-Path $Directory 'witness-enrollment-attempt.json'
+        $jmPermitFile = Join-Path $Directory 'witness-enrollment-permit.json'
+        $jmStartedFile = Join-Path $Directory 'witness-enrollment-started.json'
+        $jmWitnessDirectory = Join-Path $Directory 'temoin'
+        if (-not (Test-Path -LiteralPath $jmAttemptFile)) {
+            # Do not create a new attempt over an existing or uncertain witness.
+            if ((Test-Path -LiteralPath $jmPermitFile) -or (Test-Path -LiteralPath $jmStartedFile) -or (Test-Path -LiteralPath $jmWitnessDirectory)) { throw 'Temoin existant ou incomplet.' }
+            Write-JmWitnessEnrollment $jmAttemptFile ([ordered]@{ version = 1; destinationId = $DestinationId; attemptId = [Guid]::NewGuid().ToString('N') })
+        }
+        $jmAttempt = Read-JmWitnessEnrollment $jmAttemptFile @('version', 'destinationId', 'attemptId')
+        if ($jmAttempt.version -cne 1 -or $jmAttempt.destinationId -cne $DestinationId -or $jmAttempt.attemptId -isnot [string] -or $jmAttempt.attemptId -cnotmatch '^[a-f0-9]{32}$') { throw 'Tentative non valide.' }
+        # Every invocation must return to the live authenticated service. A
+        # saved permit, an expired kit, or a missing head never authorizes init.
+        $jmReply = Invoke-JmWitnessApi enroll $jmConfig.Credential.GetNetworkCredential().Password ([ordered]@{ version = 1; destinationId = $DestinationId; attemptId = $jmAttempt.attemptId })
+        Assert-JmWitnessEnrollmentReply $jmReply $DestinationId $jmAttempt.attemptId
+        $jmBinding = [ordered]@{ version = 1; destinationId = $DestinationId; attemptId = $jmAttempt.attemptId; contractSha256 = $jmReply.contractSha256;
+            contractId = $jmReply.contractId; registryId = $jmReply.registryId; initialSnapshotSha256 = $jmReply.initialSnapshotSha256 }
+        $jmFields = @('version', 'destinationId', 'attemptId', 'contractSha256', 'contractId', 'registryId', 'initialSnapshotSha256')
+        if ($jmReply.initialize) {
+            if ((Test-Path -LiteralPath $jmPermitFile) -or (Test-Path -LiteralPath $jmStartedFile) -or (Test-Path -LiteralPath $jmWitnessDirectory)) { throw 'Nouvelle initialisation refusee.' }
+            Write-JmWitnessEnrollment $jmPermitFile $jmBinding
+            Write-JmWitnessEnrollment $jmStartedFile $jmBinding
+            Set-JmPrivateDirectory $jmWitnessDirectory
+            Initialize-JmWitness $jmWitnessDirectory $jmReply.registryId
+        } else {
+            foreach ($jmPath in @($jmPermitFile, $jmStartedFile)) {
+                $jmSaved = Read-JmWitnessEnrollment $jmPath $jmFields
+                if ((Get-JmWitnessJson $jmSaved) -cne (Get-JmWitnessJson $jmBinding)) { throw 'Contrat different ou initialisation incomplete.' }
+            }
+        }
+        # Verify the permanent first publication and the current complete head.
+        # This does not replace the server's independent fresh continuity proof.
+        Assert-JmWitnessDirectory $jmWitnessDirectory
+        $jmInitial = Read-JmWitnessSnapshot $jmWitnessDirectory 1 $jmReply.initialSnapshotSha256 $jmReply.registryId
+        if (@($jmInitial.files).Count -ne 0) { throw 'Origine non vide.' }
+        $jmCurrent = Invoke-JmWitnessExchange $jmWitnessDirectory ([pscustomobject]@{ version = 1; registryId = $jmReply.registryId; challenge = ('0' * 64); snapshot = $null })
+        if ($jmCurrent.registryId -cne $jmReply.registryId) { throw 'Temoin non confirme.' }
+        return [pscustomobject]@{ version = 1; initialized = $true; resumed = (-not $jmReply.initialize); registryId = $jmReply.registryId }
+    } finally { if ($null -ne $jmWitnessLock) { $jmWitnessLock.Dispose() }; if ($null -ne $jmAgentLock) { $jmAgentLock.Dispose() } }
 }
 function Start-JmWitnessWorker {
     param([string]$Directory)
