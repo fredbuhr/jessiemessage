@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { lstat, open, opendir } from "node:fs/promises";
+import { lstat, open, opendir, unlink } from "node:fs/promises";
 import { resolve, relative, sep } from "node:path";
 import { withPrivateDirectory } from "../files/private-directory.mjs";
 import { createMediaStorage } from "../media/storage.mjs";
@@ -16,6 +16,8 @@ import { createBackupRecoveryStore } from "./recovery-store.mjs";
 import { createErasureStore } from "../data/erasure-store.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../data/erasure-journal.mjs";
 import { createAccountErasure } from "../data/erasure.mjs";
+import { createLocalClosureOperations } from "../data/closure-operations.mjs";
+import { resumeManagedLocalClosureRuntime } from "./managed-closures.mjs";
 import { assertErasureSchema } from "../data/erasure-schema.mjs";
 import { ERASURE_PHASES, erasureTime, erasureSqlDate } from "../data/erasure-state.mjs";
 
@@ -29,32 +31,38 @@ const same = (a, b) => operationalStateHash(a) === operationalStateHash(b);
 const inside = (a, b) => { const s = relative(b, a); return s === "" || s !== ".." && !s.startsWith(`..${sep}`) && !s.startsWith(sep); };
 const path = value => typeof value === "string" && value.startsWith("/") && value !== "/" && resolve(value) === value && !/[\\\x00-\x1f\x7f]/.test(value);
 const healthy = report => { if (report?.complete !== true || report.healthy !== true) fail("DATA"); };
-async function held(scope, expected, create) {
+async function held(scope, expected, create, name = HOLD) {
   await scope.assertReady(); let file;
   try {
     if (create) {
-      try { file = await open(scope.file(HOLD), constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600); }
+      try { file = await open(scope.file(name), constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600); }
       catch (error) { if (error.code !== "EEXIST") throw error; }
       if (file) { await file.writeFile(expected); await file.sync(); await file.close(); file = null; await scope.sync(); }
     }
-    file = await open(scope.file(HOLD), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    file = await open(scope.file(name), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     const first = await file.stat({ bigint: true });
     if (!first.isFile() || first.uid !== BigInt(process.getuid()) || (first.mode & 0o7777n) !== 0o600n || first.nlink !== 1n || first.size !== BigInt(expected.length)) fail("HOLD");
     const bytes = Buffer.alloc(expected.length + 1);
     try {
-      const { bytesRead } = await file.read(bytes, 0, bytes.length, 0), last = await file.stat({ bigint: true }), visible = await lstat(scope.file(HOLD), { bigint: true });
+      const { bytesRead } = await file.read(bytes, 0, bytes.length, 0), last = await file.stat({ bigint: true }), visible = await lstat(scope.file(name), { bigint: true });
       if (bytesRead !== expected.length || !bytes.subarray(0, bytesRead).equals(expected)
         || ["dev", "ino", "mode", "uid", "nlink", "size", "mtimeNs", "ctimeNs"].some(name => first[name] !== last[name] || last[name] !== visible[name])) fail("HOLD");
     } finally { bytes.fill(0); }
-    await scope.assertReady();
+    await scope.assertReady(); return first;
   } finally { await file?.close(); }
+}
+async function releaseHold(scope, expected) {
+  const pinned = await held(scope, expected, false), visible = await lstat(scope.file(HOLD), { bigint: true });
+  if (["dev", "ino", "mode", "uid", "nlink", "size", "mtimeNs", "ctimeNs"].some(name => pinned[name] !== visible[name])) fail("HOLD");
+  await scope.assertReady(); await unlink(scope.file(HOLD)); await scope.sync(); await scope.assertReady();
+  try { await lstat(scope.file(HOLD)); fail("HOLD"); } catch (error) { if (error.code !== "ENOENT") throw error; }
 }
 
 /** Explicit manual/local policy. It trusts the operator's pinned recent local
  * registry, without claiming off-host freshness or exhaustive SQL inventory.
- * The target stays quarantined; this operation cannot publish or start it. */
-export async function reconcileManualRestore(input) {
-  let progress, keys;
+ * The default path stays quarantined; only explicit publication may open it. */
+async function runManualRestore(input, publication = null) {
+  let progress, keys, opening = false, owner, openingHold, openingDirectory;
   try {
     const { checkpointDirectory, quarantineDirectory, journalDirectory, progressDirectory, recentRegistry, expectedRegistrySha256,
       readRecentRegistry, target, maintenance, assertReady, clock = Date.now, signal } = input ?? {};
@@ -63,11 +71,12 @@ export async function reconcileManualRestore(input) {
       || typeof maintenance?.withQuiescedProducers !== "function" || typeof assertReady !== "function" || typeof clock !== "function"
       || typeof target?.pool?.getConnection !== "function" || typeof target?.inspectionPool?.getConnection !== "function"
       || target.pool === target.inspectionPool || !/^[a-zA-Z0-9_]{1,64}$/.test(target?.database ?? "")) fail("INPUT");
-    for (const directory of [journalDirectory, progressDirectory])
-      for (const other of [checkpointDirectory, quarantineDirectory, target.rootPath, directory === journalDirectory ? progressDirectory : journalDirectory])
-        if (inside(directory, other) || inside(other, directory)) fail("DIRECTORY");
-    const identities = await Promise.all([checkpointDirectory, quarantineDirectory, journalDirectory, progressDirectory, target.rootPath].map(name => lstat(name, { bigint: true })));
-    for (const index of [2, 3]) if (identities.some((value, other) => other !== index && value.dev === identities[index].dev && value.ino === identities[index].ino)) fail("DIRECTORY");
+    if (publication && publication.runtime.state()?.status !== "stopped") fail("MAINTENANCE");
+    const directories = [checkpointDirectory, quarantineDirectory, journalDirectory, progressDirectory, target.rootPath];
+    for (const index of [2, 3, 4]) for (let other = 0; other < directories.length; other++)
+      if (index !== other && (inside(directories[index], directories[other]) || inside(directories[other], directories[index]))) fail("DIRECTORY");
+    const identities = await Promise.all(directories.map(name => lstat(name, { bigint: true })));
+    for (const index of [2, 3, 4]) if (identities.some((value, other) => other !== index && value.dev === identities[index].dev && value.ino === identities[index].ino)) fail("DIRECTORY");
     keys = {}; for (const name of keyNames) { if (!Buffer.isBuffer(input.keys?.[name]) || input.keys[name].length !== 32) fail("INPUT"); keys[name] = Buffer.from(input.keys[name]); }
     const receipt = await withPrivateDirectory(checkpointDirectory, scope => readCheckpointReceipt(scope, { signal }));
     const manifest = await readManifest(`${checkpointDirectory}/manifest.json`, { pathMode: "linux-dirfd" }), payload = verifyBackupManifest({ manifest, keys });
@@ -93,15 +102,18 @@ export async function reconcileManualRestore(input) {
     const planSha256 = operationalStateHash({ version: 1, mode: "manual-local-v1", manifestSha256: receipt.manifest.sha256,
       receiptSha256: operationalStateHash(receipt), registrySha256: expectedRegistrySha256, mergedSha256: selected.mergedSha256,
       markerSha256: quarantine.markerSha256, sourceBinding, targetBinding, checkpointDirectory, quarantineDirectory, journalDirectory, progressDirectory });
+    if (publication && publication.expectedPlanSha256 !== planSha256) fail("PLAN_CHANGED");
+    const privacy = selected.state.files.find(file => file.name === "privacy-preparation.json");
+    const privacyBytes = privacy ? Buffer.from(privacy.content, "base64url") : null;
     const hold = Buffer.from(`${JSON.stringify({ version: 1, format: "manual-restore-hold", planSha256, sourceBinding, targetBinding, started: false })}\n`);
     const active = () => { if (signal?.aborted) fail("ABORTED"); };
     let workError;
     const result = await acquireRecurringLock(progressDirectory, async lease => {
       try { return await maintenance.withQuiescedProducers(async assertQuiescent => {
         if (typeof assertQuiescent !== "function") fail("MAINTENANCE");
-        let holdReady = false;
-        const guard = async () => {
-          active(); await lease.assertReady(); await assertQuiescent(); await assertReady();
+        let holdReady = false, holdReleased = false, privacyReady = false;
+        const resources = async () => {
+          active(); await lease.assertReady(); await assertReady();
           if (operationalStateHash(await readRecentRegistry()) !== expectedRegistrySha256) fail("REGISTRY_CHANGED");
           if (!same(await backupIdentity({ databaseName: target.database, rootPath: target.rootPath, storage: rootStorage, mediaKey: keys.mediaKey }), targetIdentity)
             || (await target.storage.fingerprint()).toString("hex") !== targetIdentity.rootFingerprint) fail("BINDING");
@@ -111,8 +123,14 @@ export async function reconcileManualRestore(input) {
           const actual = await withPrivateDirectory(quarantineDirectory, scope => readOperationalQuarantine(scope, { key: keys.crmKey, sourceBinding, targetBinding, signal }));
           if (actual.markerSha256 !== quarantine.markerSha256 || actual.stateSha256 !== quarantine.stateSha256) fail("QUARANTINE_CHANGED");
           if (holdReady) await withPrivateDirectory(journalDirectory, scope => held(scope, hold, false));
-          active(); await assertQuiescent();
+          if (holdReleased) await withPrivateDirectory(journalDirectory, async scope => { try { await lstat(scope.file(HOLD)); fail("HOLD"); } catch (error) { if (error.code !== "ENOENT") throw error; } });
+          if (privacyReady) await withPrivateDirectory(journalDirectory, async scope => {
+            if (privacyBytes) await held(scope, privacyBytes, false, "privacy-preparation.json");
+            else try { await lstat(scope.file("privacy-preparation.json")); fail("PRIVACY"); } catch (error) { if (error.code !== "ENOENT") throw error; }
+          });
+          active();
         };
+        const guard = async () => { if (publication && publication.runtime.state()?.status !== "stopped") fail("MAINTENANCE"); await assertQuiescent(); await resources(); await assertQuiescent(); };
         await guard();
         const withConnection = async (pool, work) => { const connection = await pool.getConnection(); try { return await work(connection); } finally { await connection.release(); } };
         await withConnection(target.inspectionPool, connection => assertApplicationTableInspection(connection, target.database));
@@ -125,8 +143,10 @@ export async function reconcileManualRestore(input) {
         const readJobs = async () => { const found = new Map(); let afterName = null; do { const page = await batch({ afterName, limit: 100 }); for (const job of page.jobs) { if (found.has(job.clientId) || !clientIds.has(job.clientId)) fail("PROGRESS"); found.set(job.clientId, job); } afterName = page.nextCursor; } while (afterName !== null); return found; };
         const discovered = await readJobs();
         if ((run.record === null || run.record.phase === "prepared") && discovered.size || run.record?.phase === "completed" && (discovered.size !== clientIds.size || [...discovered.values()].some(job => job.phase !== "completed"))) fail("PROGRESS");
-        if (run.record === null) await withPrivateDirectory(journalDirectory, async scope => { const dir = await opendir(scope.path); for await (const entry of dir) if (entry.name !== HOLD) fail("JOURNAL_NOT_EMPTY"); });
+        if (run.record === null) await withPrivateDirectory(journalDirectory, async scope => { const dir = await opendir(scope.path); for await (const entry of dir) if (entry.name !== HOLD && !(privacyBytes && entry.name === "privacy-preparation.json")) fail("JOURNAL_NOT_EMPTY"); });
         await withPrivateDirectory(journalDirectory, scope => held(scope, hold, true)); holdReady = true;
+        if (privacyBytes) await withPrivateDirectory(journalDirectory, scope => held(scope, privacyBytes, true, "privacy-preparation.json"));
+        privacyReady = true; await guard();
         const savePhase = async phase => { await guard(); run = await progress.save({ version: 1, planSha256, manifestSha256: receipt.manifest.sha256, targetBinding, phase }, run.revision, guard); };
         const snapshot = () => captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: target.pool, inspectionPool: target.inspectionPool, coverage: "application-tables" }), signal });
         const verify = async value => { healthy(await verifyBackupStorage({ snapshot: value, storage: target.storage, signal })); healthy(await verifyPhotoNotificationRecoveryCrmBroadcastBackupData({ pool: target.pool, storage: target.storage, keys, signal })); };
@@ -170,11 +190,57 @@ export async function reconcileManualRestore(input) {
         const finalJobs = await readJobs(); if (finalJobs.size !== clientIds.size || [...finalJobs.values()].some(job => job.phase !== "completed")) fail("PROGRESS");
         if (run.record.phase !== "completed") await savePhase("completed");
         await guard(); if (!same(await progress.read(), run)) fail("PROGRESS");
+        if (publication) {
+          openingDirectory = journalDirectory; openingHold = hold; opening = true;
+          await withPrivateDirectory(journalDirectory, scope => releaseHold(scope, hold)); holdReady = false; holdReleased = true;
+          const inspectApplicationSchema = async () => { await guard(); await withConnection(target.pool, connection => assertErasureSchema(connection, target.database)); await guard(); return { verified: true }; };
+          owner = publication.makeOperations ? await publication.makeOperations() : createLocalClosureOperations({ store, storage: target.storage, journalFor, batch, inspectApplicationSchema, clock });
+          const operations = owner?.operations ?? owner;
+          if (typeof operations?.verifyStartup !== "function" || owner?.operations && owner.close !== undefined && typeof owner.close !== "function") fail("PUBLICATION");
+          const completedJobsSha256 = operationalStateHash([...finalJobs]), completedProgressSha256 = operationalStateHash(run);
+          const publicationReady = async () => {
+            await resources();
+            if (operationalStateHash([...(await readJobs())]) !== completedJobsSha256
+              || operationalStateHash(await progress.read()) !== completedProgressSha256) fail("PROGRESS");
+          };
+          await resumeManagedLocalClosureRuntime({ runtime: publication.runtime, signal, assertReady: publicationReady,
+            operations: { async verifyStartup(assertStopped, settings) {
+              const proof = await operations.verifyStartup(assertStopped, settings);
+              if (proof?.completedReceipts !== clientIds.size) fail("PROGRESS"); return proof;
+            } } });
+          await publicationReady(); if (publication.runtime.state()?.status !== "running") fail("PUBLICATION");
+          if (owner?.operations && owner.close) await owner.close(); owner = null;
+          return { status: "manual_restore_published", mode: "manual_local", planSha256, reconciledReceipts: clientIds.size,
+            targetAbsenceVerified: true, sessionsRevoked: true, capacityRebound: true, quarantineRetained: true,
+            targetJournalQuarantined: false, privacyPreparationPreserved: Boolean(privacyBytes), manualReopenRequired: false,
+            externalRegistryContinuityVerified: false, completeDatabase: false, started: true, ready: true };
+        }
         return { status: "manual_restore_reconciled_quarantined", mode: "manual_local", planSha256, reconciledReceipts: clientIds.size, targetAbsenceVerified: true, sessionsRevoked: true,
           capacityRebound: true, quarantineRetained: true, targetJournalQuarantined: true, manualReopenRequired: true, externalRegistryContinuityVerified: false, completeDatabase: false, started: false };
       }); } catch (error) { workError = error; return null; }
     }, { signal });
     if (workError) throw workError; return result;
-  } catch (error) { if (error instanceof ManualRestoreError) throw error; fail("UNAVAILABLE"); }
+  } catch (error) {
+    if (opening) {
+      let stopped = false, restored = false;
+      try { const result = await publication.runtime.stop(); stopped = result?.exitCode === 0 && result.signal === null && publication.runtime.state()?.status === "stopped"; } catch {}
+      try { await withPrivateDirectory(openingDirectory, scope => held(scope, openingHold, true)); restored = true; } catch {}
+      try { if (owner?.operations && owner.close) await owner.close(); } catch {} owner = null;
+      if (!stopped) fail("PUBLICATION_STOP"); if (!restored) fail("PUBLICATION_HOLD");
+    }
+    if (error instanceof ManualRestoreError) throw error; fail("UNAVAILABLE");
+  }
   finally { progress?.close(); for (const key of Object.values(keys ?? {})) key.fill(0); }
+}
+
+/** Reconcile only: the target's manual hold remains startup-blocking. */
+export async function reconcileManualRestore(input) { return runManualRestore(input); }
+
+/** Explicit publication under the same real maintenance and progress lease.
+ * The caller owns the operator CAS phase and the managed runtime's lifetime. */
+export async function publishManualRestore(input, options) {
+  if (!options || Object.getPrototypeOf(options) !== Object.prototype || Reflect.ownKeys(options).some(name => !["expectedPlanSha256", "runtime", "makeOperations"].includes(name) || !Object.hasOwn(Object.getOwnPropertyDescriptor(options, name), "value"))
+    || !HEX.test(options.expectedPlanSha256 ?? "") || ["state", "stop", "start"].some(name => typeof options.runtime?.[name] !== "function")
+    || options.makeOperations !== undefined && typeof options.makeOperations !== "function") fail("INPUT");
+  return runManualRestore(input, options);
 }

@@ -1,6 +1,6 @@
 {
   "name": "jessiemessage",
-  "version": "0.77.0",
+  "version": "0.78.0",
   "private": true,
   "type": "module",
   "description": "Invite-only messaging PWA for Jessie (prototype, approved identity)",
@@ -14,7 +14,7 @@
     "build": "npm run check && node scripts/build-workbench.mjs",
     "test": "node --test tests/*.test.mjs",
     "db:migrate": "node scripts/migrate.mjs",
-    "test:db": "node --test --test-reporter=tap --test-concurrency=1 tests/migrations.integration.test.mjs tests/auth-store.integration.test.mjs tests/admin-recovery.integration.test.mjs tests/access-store.integration.test.mjs tests/mail-store.integration.test.mjs tests/access-flow.integration.test.mjs tests/chat-store.integration.test.mjs tests/chat-flow.integration.test.mjs tests/media-store.integration.test.mjs tests/media-flow.integration.test.mjs tests/crm-store.integration.test.mjs tests/crm-flow.integration.test.mjs tests/reset-store.integration.test.mjs tests/reset-flow.integration.test.mjs tests/readiness-flow.integration.test.mjs tests/broadcast-chat.integration.test.mjs tests/broadcast-store.integration.test.mjs tests/broadcast-flow.integration.test.mjs tests/backup-flow.integration.test.mjs tests/operations-flow.integration.test.mjs tests/data-flow.integration.test.mjs tests/data-deletion-flow.integration.test.mjs tests/account-erasure-flow.integration.test.mjs tests/preflight-flow.integration.test.mjs tests/notifications-store.integration.test.mjs tests/device-transition-runtime.integration.test.mjs tests/witness-runtime.integration.test.mjs tests/closure-reconciliation.integration.test.mjs tests/local-closures.integration.test.mjs tests/manual-restore.integration.test.mjs",
+    "test:db": "node --test --test-reporter=tap --test-concurrency=1 tests/migrations.integration.test.mjs tests/auth-store.integration.test.mjs tests/admin-recovery.integration.test.mjs tests/access-store.integration.test.mjs tests/mail-store.integration.test.mjs tests/access-flow.integration.test.mjs tests/chat-store.integration.test.mjs tests/chat-flow.integration.test.mjs tests/media-store.integration.test.mjs tests/media-flow.integration.test.mjs tests/crm-store.integration.test.mjs tests/crm-flow.integration.test.mjs tests/reset-store.integration.test.mjs tests/reset-flow.integration.test.mjs tests/readiness-flow.integration.test.mjs tests/broadcast-chat.integration.test.mjs tests/broadcast-store.integration.test.mjs tests/broadcast-flow.integration.test.mjs tests/backup-flow.integration.test.mjs tests/operations-flow.integration.test.mjs tests/data-flow.integration.test.mjs tests/data-deletion-flow.integration.test.mjs tests/account-erasure-flow.integration.test.mjs tests/preflight-flow.integration.test.mjs tests/notifications-store.integration.test.mjs tests/device-transition-runtime.integration.test.mjs tests/witness-runtime.integration.test.mjs tests/closure-reconciliation.integration.test.mjs tests/local-closures.integration.test.mjs tests/manual-restore.integration.test.mjs tests/manual-restore-operator.integration.test.mjs",
     "admin:bootstrap": "node scripts/admin-bootstrap.mjs",
     "admin:recover": "node scripts/admin-recover.mjs",
     "media:storage": "node scripts/media-storage.mjs",
