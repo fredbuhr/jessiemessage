@@ -2,10 +2,11 @@
   "version": 1,
   "release": "0.72.0",
   "scope": "C2: actual CLI recovery through existing PC transport and source/target-bound quarantine plan",
-  "status": "candidate_native_ci_pending",
+  "status": "merged_deployed_verified",
   "activeService": {
-    "release": "0.70.2",
-    "changed": false,
+    "release": "0.72.0",
+    "changed": true,
+    "mode": "observe_only",
     "closuresEnabled": false
   },
   "implementation": {
@@ -19,7 +20,7 @@
     "targetStarted": false,
     "closureOwnerActivated": false
   },
-  "nativeValidation": "Required in Linux CI; local Unix bind and procfs unavailable",
+  "nativeValidation": "Passed in candidate and main Linux CI, including Unix, procfs, preexisting collision preservation and post-bind path drift refusal",
   "remaining": [
     "Recovery-only parent composition after nonempty-source restart",
     "Qualified isolated native SQL restore and target reconciliation",
@@ -48,5 +49,122 @@
     "disposableDirectoryRemoved": true,
     "liveServiceChanged": false,
     "decision": "Retain standard Unix transport under explicit same-UID trust boundary; control contains only reserved transient IPC state. Preexisting collisions preserved and drift rejects proofs; listener owns its pathname after bind."
-  }
+  },
+  "source": {
+    "commit": "94fb7882cf74eb5f2ec165e67833ac2e7cdf13f3",
+    "tree": "c6d304e49209a1194d91c0992096e59ff3685b6e",
+    "merge": "6a829880543fe7280f3ca52dcbc0c5d702b37ac0",
+    "pr": "https://github.com/fredbuhr/jessiemessage/pull/94"
+  },
+  "ci": {
+    "candidate": {
+      "run": 39292971066,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39292971066",
+      "jobs": "5/5 success",
+      "general": {
+        "tests": 2869,
+        "passed": 2839,
+        "failed": 0,
+        "sqlWrappersSkipped": 30
+      },
+      "mariadb10_11": {
+        "passed": 410,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 410,
+        "failed": 0,
+        "skipped": 0
+      },
+      "chrome": "success",
+      "httpsAuthentication": "success"
+    },
+    "main": {
+      "run": 39293603482,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39293603482",
+      "jobs": "5/5 success",
+      "treeMatchesCandidate": true
+    },
+    "actualPath": {
+      "executedInBothMariaDBJobs": true,
+      "path": "actual CLI main -> default Unix client -> real parent -> HTTP PC polling -> durable witness -> quarantine",
+      "distinctChallenges": 5,
+      "receiptNewerThanBackupPreservedWithEmptyLocalJournal": true,
+      "sourceSqlHashUnchanged": true,
+      "childRestarted": false,
+      "quarantineMarkerBlocksRuntime": true,
+      "apiReady": 200
+    }
+  },
+  "deployment": {
+    "buildCompletedAtParis": "2026-10-19 19:29",
+    "checkout": "/srv/customer/jessiemessage-operator/witness-recovery-control-072-94fb7882",
+    "checkoutClean": true,
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-witness-observer-072-94fb7882.sh",
+    "launcherMode": "0700",
+    "launcherSha256": "94c6109b76352f24c9678e2ab85086fe5e7a6906350fd237b3a1751d1c61b495",
+    "log": "/srv/customer/jessiemessage-private/jm072-witness-recovery.log",
+    "dependenciesChanged": false,
+    "dependenciesReinstalled": false,
+    "childStarted": true,
+    "supervisorStarted": true,
+    "precheck": {
+      "checkedAt": "2026-10-19T17:23:18.056509Z",
+      "status": "passed",
+      "started": false,
+      "provesLivePc": false
+    },
+    "health": {
+      "checkedAt": "2026-10-19T17:29:36.481953Z",
+      "httpsHealth": 200,
+      "httpsReady": 200
+    },
+    "control": {
+      "directoryMode": "0700",
+      "socketMode": "0600",
+      "uid": 33,
+      "isSocket": true
+    },
+    "monitor": {
+      "readAt": "2026-10-19T17:30:55.301721Z",
+      "state": "current",
+      "code": "OK"
+    },
+    "liveRecovery": {
+      "checkedAt": "2026-10-19T17:30:06.642Z",
+      "status": "verified",
+      "newChallenge": true,
+      "originalResponseAuthenticated": true,
+      "path": "createErasureContinuity.recover -> default Unix client -> hosted parent -> existing PC",
+      "files": 0,
+      "witnessRevision": 1,
+      "reconciliationRequired": true,
+      "started": false,
+      "sqlImported": false,
+      "quarantineCreated": false,
+      "distinctFromPeriodicObservation": true
+    },
+    "authority": {
+      "unchanged": true,
+      "filesMode": "0600",
+      "contractSha256": "4fbdce199d70c1fd4b80f8ff249dae2666812b8ffc1c6912e8c50d1a042aaf10",
+      "enrollmentOriginSha256": "817c6dca7735bb844d73066ebd3a711c46eb52cf5d5aabb5f4772171efc4b0c1",
+      "enrollmentStateSha256": "445bc6c49bc0259284f2636f678e9073a833a2a4f60a992a6f87e5a3d1d7d35a",
+      "phase": "spent",
+      "revision": 2
+    },
+    "rollback": "/srv/customer/jessiemessage-private/manager-before-witness-recovery-072.json",
+    "privateCheckpoint": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
+    "checkpointSection": "developmentC2",
+    "checkpointReadback": "deployed_verified / 0600",
+    "periodicObservationAtReadback": {
+      "state": "not_confirmed",
+      "lastVerifiedAt": null,
+      "externalWitnessConfirmed": false,
+      "closuresEnabled": false,
+      "doesNotReplaceIndependentRecoveryProbe": true
+    }
+  },
+  "next": "C3: explicit recovery-only parent after nonempty-source restart; no production switch during implementation"
 }
