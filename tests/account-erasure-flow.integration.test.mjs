@@ -6,6 +6,7 @@ import path from "node:path";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
+import { tokenDigest } from "../server/auth/crypto.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { openPayload, sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
 import { createErasureStore } from "../server/data/erasure-store.mjs";
@@ -182,7 +183,6 @@ test("durable account erasure removes the selected graph and actual encrypted fi
     await connection.query("INSERT INTO media_storage_state (id, owner_bytes, total_bytes, root_fingerprint, held_bytes, initialized_at) VALUES (1, ?, ?, ?, 0, ?)", [capacity.ownerBytes, capacity.totalBytes, rootFingerprint, created]);
     admin = await user("admin"); adminSession = await session(admin, "admin");
     await t.test("confirmed HTTP intent survives a real managed drain, privileged inventory and SQL erasure; startup blocks a restored identity", async step => {
-      const f = await seed(), before = await databaseHash(), peerBefore = await peerSnapshot(f);
       const store = createErasureStore({ pool, database: options.database, capacity, broadcastKey });
       const batch = page => readErasureJournalBatch({ directory: journalRoot, key: journalKey, binding: store.binding, ...page });
       const journalFor = clientId => createErasureJournal({ directory: journalRoot, key: journalKey, binding: store.binding, clientId });
@@ -204,6 +204,66 @@ test("durable account erasure removes the selected graph and actual encrypted fi
           await configured.mailWorker.stop(); assert.equal(configured.server.listening, false);
         } finally { await configured.mailWorker.close(); await configured.diagnostics.close(); await configured.pool.end(); }
       }
+      await step.test("ordinary runtime becomes ready with a completed nonempty local journal and no PC while closures stay disabled and quarantine still blocks", async () => {
+        // Run before seed() populates synthetic outboxes: real workers can become
+        // idle/ready without any SMTP or Push job and without changing peer data.
+        const subject = hex(id()), actor = await user("admin"), actorSession = id(), rawToken = randomBytes(32).toString("base64url");
+        const namesBefore = (await readdir(journalRoot)).sort(); let receiptName, configured;
+        try {
+          await connection.query("INSERT INTO admin_mfa (user_id, secret_encrypted, version, last_totp_step, enabled_at) VALUES (?, 'synthetic-session-only-factor', 1, 1, ?)", [actor, created]);
+          await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [actorSession, actor, tokenDigest(rawToken), created, expiry]);
+          await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, 1)", [actorSession, sqlDate(now), sqlDate(now)]);
+          const writer = journalFor(subject);
+          try {
+            let current = await writer.read();
+            for (const phase of ["requested", "prepared", "files_erased", "completed"]) {
+              current = await writer.save(current.record ? { ...current.record, phase }
+                : { version: 1, clientId: subject, binding: store.binding, phase, cursor: null, startedAt: now, updatedAt: now }, current.revision, async () => {});
+            }
+          } finally { writer.close(); }
+          receiptName = (await readdir(journalRoot)).find(name => !namesBefore.includes(name));
+          assert.match(receiptName, /^erasure-[a-f0-9]{64}\.json$/);
+          const receiptBytes = await readFile(path.join(journalRoot, receiptName));
+          assert.equal((await batch({ afterName: null, limit: 100 })).jobs.length, 1);
+          configured = await createConfiguredServer(configuredEnv, { requestOrigin: "https://jessiemessage.com", deviceTransition: true,
+            recovery: true, crm: true, broadcast: true, backupDirectory: journalRoot, accountClosures: false, clock: () => now });
+          await new Promise(resolve => configured.server.listen(0, "127.0.0.1", resolve));
+          const base = `http://127.0.0.1:${configured.server.address().port}`, headers = { Host: "jessiemessage.com", "X-Forwarded-Proto": "https" };
+          let ready;
+          for (let attempt = 0; attempt < 100; attempt++) {
+            const response = await fetch(`${base}/api/ready`, { headers, signal: AbortSignal.timeout(1000) });
+            ready = { status: response.status, body: await response.json() };
+            if (ready.status === 200) break;
+            assert.equal(ready.status, 503); await new Promise(resolve => setTimeout(resolve, 25));
+          }
+          assert.deepEqual(ready, { status: 200, body: { status: "ready" } });
+          const authenticated = { ...headers, Cookie: `__Host-jessie_session=${rawToken}` };
+          const listed = await fetch(`${base}/api/admin/closures`, { headers: authenticated, signal: AbortSignal.timeout(1000) });
+          assert.equal(listed.status, 200); assert.deepEqual(await listed.json(), { version: 1, enabled: false, jobs: [], nextCursor: null });
+          assert.deepEqual(await readFile(path.join(journalRoot, receiptName)), receiptBytes);
+          assert.deepEqual((await readdir(journalRoot)).sort(), [...namesBefore, receiptName].sort());
+          assert.equal((await batch({ afterName: null, limit: 100 })).jobs[0].phase, "completed");
+          await configured.mailWorker.close(); configured.server.closeAllConnections();
+          await new Promise(resolve => configured.server.close(resolve)); await configured.diagnostics.close(); await configured.pool.end(); configured = null;
+          const marker = path.join(journalRoot, "operational-restore.json");
+          try {
+            await writeFile(marker, '{"version":1,"status":"reconciliation_required"}\n', { mode: 0o600, flag: "wx" });
+            await assert.rejects(configureWithoutListening(false), /Authentication startup failed/);
+            assert.deepEqual(await readFile(path.join(journalRoot, receiptName)), receiptBytes);
+          } finally { await unlink(marker); }
+        } finally {
+          if (configured) {
+            await configured.mailWorker.close(); configured.server.closeAllConnections();
+            await new Promise(resolve => configured.server.close(resolve)); await configured.diagnostics.close(); await configured.pool.end();
+          }
+          if (receiptName) await unlink(path.join(journalRoot, receiptName));
+          await connection.query("DELETE FROM auth_session_state WHERE session_id = ?", [actorSession]);
+          await connection.query("DELETE FROM sessions WHERE id = ?", [actorSession]);
+          await connection.query("DELETE FROM admin_mfa WHERE user_id = ?", [actor]);
+          await connection.query("DELETE FROM users WHERE id = ?", [actor]);
+        }
+      });
+      const f = await seed(), before = await databaseHash(), peerBefore = await peerSnapshot(f);
       await configureWithoutListening();
       await step.test("witness origin verifies the actual SQL capacity and media root without changing any table", async () => {
         const before = await databaseHash(); let scopedKey;

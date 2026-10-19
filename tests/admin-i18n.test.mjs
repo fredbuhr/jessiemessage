@@ -121,6 +121,17 @@ test("administrator HTML translations cover static labels, MFA help and native h
   assert.match(html, /button[^>]+data-jm-language/); assert.match(html, /mailto:contact@jessiemessage\.com/);
   assert.doesNotMatch(html, /(?:href|value)="[^"]*"\s+data-jm-i18n-(?:href|value)/);
 });
+test("backup settings translate the daily state and manual recovery limits without renaming local tools", async () => {
+  const [backupHtml, backupCatalogue] = await Promise.all(["backups.html", "i18n-backups.js"].map(name => readFile(new URL(`../public/${name}`, import.meta.url), "utf8")));
+  const translations = {};
+  vm.runInNewContext(backupCatalogue, { JessieI18n: { register(value) { Object.assign(translations, value); } } });
+  for (const [, source] of backupHtml.matchAll(/data-jm-i18n(?:-aria-label|-title|-placeholder)?="([^"]*)"/g)) assert.equal(typeof translations[source], "string", source);
+  for (const source of ["Dernière sauvegarde sur le site", "Dernière copie de cette sauvegarde", "Aucune copie confirmée", "Aucune sauvegarde disponible", "Copie sur le PC en attente", "Dossier sur le PC", "La sauvegarde quotidienne est suspendue.", "Mise à jour du PC et ancien témoin"])
+    assert.equal(typeof translations[source], "string", source);
+  assert.match(translations["Conserve les copies chiffrées sur ton PC et ton dossier de récupération GPG. La remise en service se fera manuellement, avec un contrôle avant réouverture. Ce parcours est encore en préparation."], /manual.*still being prepared/);
+  assert.match(translations["Pour voir ou changer le dossier, ouvre le raccourci JessieMessage - Sauvegardes sur le Bureau de ce PC. Le chemin reste sur le PC."], /JessieMessage - Sauvegardes/);
+  assert.match(translations["Mise à jour téléchargée. Extrais le ZIP puis ouvre Mettre-a-jour.cmd sur le PC déjà raccordé."], /Mettre-a-jour\.cmd/);
+});
 test("administrator language switches update static and loaded private UI in place while names, values and requests remain unchanged", async () => {
   const f = await harness(), clientList = f.nodes.get("clients-list"), invitationList = f.nodes.get("invitations-list");
   assert.equal(clientList.children.length, 2); assert.equal(invitationList.children.length, 4);

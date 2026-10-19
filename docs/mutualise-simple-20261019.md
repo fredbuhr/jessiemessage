@@ -12,7 +12,7 @@ Cette conclusion est un choix de portée appuyé sur le code et les essais exist
 
 - Un import applicatif réel a réussi sur le mutualisé le 19 octobre : trente tables/migrations, six clés et quatre fichiers photo chiffrés concordantes ; seconde vérification sans réimport. La cible D1 reste isolée et bloquée, sans réouverture ni changement d'identité de cible acquis.
 - Le profil `application-tables` existe et annonce honnêtement `completeDatabase:false` et les objets exécutables exclus. Le moteur local d'effacement utilise les transactions, un verrou et les contrôles du schéma ; il n'exige pas lui-même les privilèges d'inspection exhaustive exigés par le précédent protocole.
-- Le superviseur possède un mode `start` sans observateur. Il n'offre pas pour autant une barrière de fermeture locale : les intentions non terminées ne bloquent pas ce démarrage à elles seules. Une composition explicite reste à développer avant d'activer les fermetures.
+- Le superviseur possède un mode `start` sans observateur. Le serveur configuré garde sa barrière locale même fermetures désactivées : il refuse une intention non terminée ou un compte réapparu, et accepte un journal terminé dont les comptes sont absents. Réutiliser ce contrôle ; le traitement local reprenable reste à composer avant d'activer les fermetures.
 - Le diagnostic D2 reste vrai pour l'ancien contrat : métadonnées globales refusées et scheduler `OFF`, qualification stricte non acquise. Cela ne démontre pas que la messagerie ou une restauration applicative manuelle sont impossibles.
 
 ## Solution recommandée

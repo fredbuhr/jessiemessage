@@ -11,6 +11,7 @@ Lire d'abord `docs/REPRISE.md`, puis `docs/PLAN-IMPLEMENTATION.md`. Le premier d
 
 ## Portée V1 choisie : mutualisé et récupération manuelle
 
+- Appliquer **KISS à tout le développement** : réutiliser le parcours existant le plus simple qui répond au besoin, limiter les changements au résultat utile du lot et éviter nouvelles abstractions, infrastructures ou garanties non demandées.
 - La demande actuelle est une messagerie privée sur le mutualisé existant, **sans infrastructure ni budget ajoutés**. Ne pas réintroduire VPS, migration ou décision de budget comme prochaine action depuis un ancien document.
 - Conserver les copies chiffrées PC fonctionnelles ; le secours Infomaniak sur sept jours ne garantit pas une capture simultanée fichiers/base. La V1 prévoit une restauration applicative manuelle en maintenance et un contrôle des comptes fermés avant publication, avec fermeture locale journalisée à composer et vérifier.
 - La garantie de récupération autonome après perte complète de l'hôte, le témoin frais à chaque phase, la succession de propriétaire et l'inventaire SQL exhaustif ne sont plus des prérequis de cette V1. Ne pas rouvrir ces chantiers pour bloquer sa livraison, ni prétendre conserver leurs garanties.
