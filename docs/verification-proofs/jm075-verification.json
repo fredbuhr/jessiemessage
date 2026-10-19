@@ -1,0 +1,216 @@
+{
+  "format": "jessiemessage-release-verification",
+  "version": 1,
+  "release": "0.75.0",
+  "lot": "C5",
+  "status": "merged_ci_verified_not_deployed",
+  "source": "2f339daacfa52e6846bc8e1d3db9bf07d2a08f1b",
+  "tree": "a145bca19b4cf902799c24cfbc97cf8f5ae5f71f",
+  "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/97",
+  "candidateCi": 39317533983,
+  "pushCi": 39317526840,
+  "serviceDeployed": false,
+  "activeRuntime": "0.72.0",
+  "closuresEnabled": false,
+  "local": {
+    "syntaxSources": 543,
+    "generalTests": {
+      "passed": 2724,
+      "failed": 0,
+      "skipped": 204,
+      "source": "7359e8251e9a49860cc7c6cf88469d0dc6136cce",
+      "scope": "before_native_schema_correction; current full suite verified in CI"
+    },
+    "progressTests": {
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nativeTests": "required_in_ci_not_run_locally",
+    "pathRefusalTests": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "scope": {
+    "internalExecutorOnly": true,
+    "applyCliProvided": false,
+    "strictTargetSqlInspectionRequired": true,
+    "freshSourceProofBeforeMutations": true,
+    "sourceEnvelopesPreserved": true,
+    "targetProgressEncryptedAndEpochBound": true,
+    "completedRunStrictlyReadonly": true,
+    "pendingAllocationPreparationRequired": true,
+    "quarantineRetained": true,
+    "authorityTransferred": false,
+    "started": false
+  },
+  "liveD1": {
+    "mutationAttempted": false,
+    "sqlQualification": "unproven_shared_admin_raw_underscore_pattern",
+    "importRepeated": false,
+    "pcActionsRepeated": false
+  },
+  "completion": {
+    "continuityLotCComplete": false,
+    "lotDComplete": false
+  },
+  "next": "Qualify real target SQL inventory and compose authenticated preparation/replay; implement independent source-to-target authority succession before startup.",
+  "initialAttempts": [
+    {
+      "source": "7359e8251e9a49860cc7c6cf88469d0dc6136cce",
+      "candidateCi": 39316057935,
+      "native": "failed_early_schema_session_configuration",
+      "countedAsSuccess": false
+    },
+    {
+      "source": "dd240d564c8a4916ac0e8e6880a9646e7531a862",
+      "candidateCi": 39316922149,
+      "native": "diagnostic_confirmed_BACKUP_INSPECTION_CONFIG",
+      "countedAsSuccess": false
+    }
+  ],
+  "corrections": [
+    "Keep strict inventory facade readonly; run session-configuring erasure schema check on separate target runtime connection.",
+    "Reject progress path exactly equal to any protected directory; seven local no-write regressions passed.",
+    "Require precise errors and reached-branch evidence in native refusals and interruption tests."
+  ],
+  "candidateResults": {
+    "general": {
+      "passed": 2908,
+      "failed": 0,
+      "skipped": 31,
+      "total": 2939
+    },
+    "syntaxSources": 543,
+    "chrome": {
+      "passed": 157,
+      "failed": 0,
+      "skipped": 0
+    },
+    "httpsAuthentication": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb1011": {
+      "passed": 417,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb114": {
+      "passed": 417,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "candidateJobs": [
+    {
+      "name": "MariaDB 11.4",
+      "id": 118282795005,
+      "conclusion": "success"
+    },
+    {
+      "name": "MariaDB 10.11",
+      "id": 118282795360,
+      "conclusion": "success"
+    },
+    {
+      "name": "Chrome keyboard and chat lifecycle",
+      "id": 118282795413,
+      "conclusion": "success"
+    },
+    {
+      "name": "Chrome HTTPS authentication with MariaDB",
+      "id": 118282795440,
+      "conclusion": "success"
+    },
+    {
+      "name": "verify",
+      "id": 118282795578,
+      "conclusion": "success"
+    }
+  ],
+  "mergeCommit": "7d7bf1e85e0df977bb0db981072235c5c5f43853",
+  "mainCi": 39318211767,
+  "mergedTree": "a145bca19b4cf902799c24cfbc97cf8f5ae5f71f",
+  "sourceServiceCheck": {
+    "checkedAt": "2026-10-19T20:17:14.577713+00:00",
+    "receipt": "/srv/customer/jessiemessage-private/restore-d19-operator/d19-c5-source-service-check.json",
+    "activeRuntime": "0.72.0",
+    "source": "94fb7882cf74eb5f2ec165e67833ac2e7cdf13f3",
+    "tree": "c6d304e49209a1194d91c0992096e59ff3685b6e",
+    "checkoutClean": true,
+    "https": {
+      "health": {
+        "http": 200,
+        "status": "ok"
+      },
+      "ready": {
+        "http": 200,
+        "status": "ready"
+      }
+    },
+    "quarantineRetained": true
+  },
+  "verifiedAt": "2026-10-19T20:22:51Z",
+  "mainResults": {
+    "general": {
+      "passed": 2908,
+      "failed": 0,
+      "skipped": 31,
+      "total": 2939
+    },
+    "syntaxSources": 543,
+    "chrome": {
+      "passed": 157,
+      "failed": 0,
+      "skipped": 0
+    },
+    "httpsAuthentication": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb1011": {
+      "passed": 417,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb114": {
+      "passed": 417,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "mainJobs": [
+    {
+      "name": "Chrome keyboard and chat lifecycle",
+      "id": 118285124650,
+      "conclusion": "success"
+    },
+    {
+      "name": "verify",
+      "id": 118285125051,
+      "conclusion": "success"
+    },
+    {
+      "name": "Chrome HTTPS authentication with MariaDB",
+      "id": 118285125076,
+      "conclusion": "success"
+    },
+    {
+      "name": "MariaDB 10.11",
+      "id": 118285125138,
+      "conclusion": "success"
+    },
+    {
+      "name": "MariaDB 11.4",
+      "id": 118285125251,
+      "conclusion": "success"
+    }
+  ],
+  "candidateConclusion": "success",
+  "mainConclusion": "success"
+}
