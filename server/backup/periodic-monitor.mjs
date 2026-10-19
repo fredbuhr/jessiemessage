@@ -59,7 +59,10 @@ export function createPeriodicBackupMonitor({ operationsDirectory } = {}, { insp
       state = incident ? "incident" : "suspect";
     }
     snapshot = Object.freeze({ version: 1, type: "private_backup_monitor", event, checkedAt: now, state, code: sample.code,
-      consecutiveFailures: failures, activeIncident: incident, lastSuccessAt: sample.lastSuccessAt, ageMilliseconds: sample.ageMilliseconds,
+      consecutiveFailures: failures, activeIncident: incident, lastSuccessAt: sample.lastSuccessAt,
+      // The alert boundary checks this against the emitted checkedAt. A clock
+      // tick after reader validation must not leave the previous sample's age.
+      ageMilliseconds: sample.lastSuccessAt === null || now === null ? null : now - sample.lastSuccessAt,
       copyStatus: "not_checked", decryptionStatus: "not_checked", notificationStatus: "not_sent" });
     try { Promise.resolve(emit(snapshot)).catch(() => {}); } catch { /* Logging never controls the application. */ }
     return snapshot;
