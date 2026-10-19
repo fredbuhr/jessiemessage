@@ -257,8 +257,8 @@ function Read-JmWitnessEnrollment {
 function Assert-JmWitnessEnrollmentReply {
     param($Value, [string]$DestinationId, [string]$AttemptId)
     Assert-JmWitnessFields $Value @('version', 'initialize', 'destinationId', 'attemptId', 'contractSha256', 'contractId', 'registryId', 'initialSnapshotSha256')
-    if (($Value.version -isnot [int] -and $Value.version -isnot [long]) -or $Value.version -cne 1 -or $Value.initialize -isnot [bool]
-        -or $Value.destinationId -isnot [string] -or $Value.destinationId -cne $DestinationId -or $Value.attemptId -isnot [string] -or $Value.attemptId -cne $AttemptId) { throw 'Initialisation non autorisee.' }
+    if (($Value.version -isnot [int] -and $Value.version -isnot [long]) -or $Value.version -cne 1 -or $Value.initialize -isnot [bool] -or
+        $Value.destinationId -isnot [string] -or $Value.destinationId -cne $DestinationId -or $Value.attemptId -isnot [string] -or $Value.attemptId -cne $AttemptId) { throw 'Initialisation non autorisee.' }
     foreach ($jmName in @('contractSha256', 'contractId', 'registryId', 'initialSnapshotSha256')) {
         if ($Value.$jmName -isnot [string] -or $Value.$jmName -cnotmatch '^[a-f0-9]{64}$') { throw 'Contrat non valide.' }
     }
