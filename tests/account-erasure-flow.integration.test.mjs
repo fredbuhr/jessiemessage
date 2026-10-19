@@ -23,6 +23,7 @@ import { erasureDirectory } from "./fixtures/erasure-files.mjs";
 import { managedClosureFixture } from "./fixtures/managed-closure-runtime.mjs";
 import { registryWitnessFixture } from "./fixtures/registry-witness.mjs";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
+import { withConfiguredWitnessOrigin } from "../server/backup/witness-origin-context.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), hex = value => value.toString("hex");
@@ -204,6 +205,21 @@ test("durable account erasure removes the selected graph and actual encrypted fi
         } finally { await configured.mailWorker.close(); await configured.diagnostics.close(); await configured.pool.end(); }
       }
       await configureWithoutListening();
+      await step.test("witness origin verifies the actual SQL capacity and media root without changing any table", async () => {
+        const before = await databaseHash(); let scopedKey;
+        const verify = () => withConfiguredWitnessOrigin({ privateDirectory: "/synthetic-private-config" },
+          { environment: { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd", PORT: "3000" } }, async context => {
+            scopedKey = context.key; assert.deepEqual(context.binding, store.binding);
+            await context.assertReady(); await context.checkCapacity(); return { verified: true };
+          }, { loadEnvironment: async () => ({ ...configuredEnv }) });
+        assert.deepEqual(await verify(), { verified: true }); assert.deepEqual(scopedKey, Buffer.alloc(32));
+        assert.equal(await databaseHash(), before);
+        try {
+          await connection.query("UPDATE media_storage_state SET root_fingerprint = ? WHERE id = 1", [Buffer.alloc(32, 9)]);
+          await assert.rejects(verify(), { code: "WITNESS_ORIGIN_CONTEXT" });
+        } finally { await connection.query("UPDATE media_storage_state SET root_fingerprint = ? WHERE id = 1", [rootFingerprint]); }
+        assert.equal(await databaseHash(), before);
+      });
       await step.test("a restored operational quarantine blocks the actual configured runtime even with an empty registry", async () => {
         const marker = path.join(journalRoot, "operational-restore.json"), before = await databaseHash();
         try {

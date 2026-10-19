@@ -4,10 +4,11 @@ import { privateAuthenticationProcessOptions } from "../server/config/private-au
 import { parseRecurringArguments, recurringPreflight, createRecurringSupervisor, RecurringSupervisorError } from "../server/backup/recurring-supervisor.mjs";
 import { createPeriodicBackupMonitor } from "../server/backup/periodic-monitor.mjs";
 import { createBackupAlertWorker } from "../server/backup/alert-worker.mjs";
+import { createWitnessOriginOperations } from "../server/backup/witness-origin-operator.mjs";
 
 export async function main(args = process.argv.slice(2), { environment = process.env, execArgv = process.execArgv,
   preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor,
-  makeAlerts = createBackupAlertWorker, outputStream = process.stdout,
+  makeAlerts = createBackupAlertWorker, makeWitnessOrigin = createWitnessOriginOperations, outputStream = process.stdout,
   signal } = {}) {
   const options = parseRecurringArguments(args);
   try { privateAuthenticationProcessOptions(environment, execArgv); } catch { throw new RecurringSupervisorError("ENVIRONMENT"); }
@@ -18,7 +19,14 @@ export async function main(args = process.argv.slice(2), { environment = process
       hourUtc: configuration.hourUtc, minuteUtc: configuration.minuteUtc, started: false, backupStarted: false };
     outputStream.write(`${JSON.stringify(report)}\n`); return report;
   }
-  const supervisor = makeSupervisor(options, { environment, emit: report => outputStream.write(`${JSON.stringify(report)}\n`) });
+  const witnessOriginOperations = ["plan-witness", "check-witness", "prepare-witness"].includes(options.command)
+    ? makeWitnessOrigin(options, { environment, signal }) : null;
+  if (["plan-witness", "check-witness"].includes(options.command)) {
+    const report = await witnessOriginOperations[options.command === "plan-witness" ? "plan" : "check"]();
+    outputStream.write(`${JSON.stringify(report)}\n`); return report;
+  }
+  const supervisor = makeSupervisor(options, { environment, emit: report => outputStream.write(`${JSON.stringify(report)}\n`),
+    ...(witnessOriginOperations === null ? {} : { witnessOriginOperations }) });
   let monitor, alerts;
   const monitorUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_monitor","event":"unavailable","code":"MONITOR_UNAVAILABLE","notificationStatus":"not_sent"}\n'); } catch {} };
   const alertsUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_alert","event":"unavailable","code":"ALERT_UNAVAILABLE","notificationStatus":"not_confirmed","inboxStatus":"not_checked"}\n'); } catch {} };
@@ -57,6 +65,8 @@ export async function main(args = process.argv.slice(2), { environment = process
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const cancellation = new AbortController(); let deadline;
+  const operationDeadline = ["plan-witness", "check-witness"].includes(process.argv[2])
+    ? setTimeout(() => { process.stderr.write("WITNESS_ORIGIN_TIMEOUT\n"); process.exit(1); }, 45000) : null;
   const stop = () => {
     if (cancellation.signal.aborted) return;
     cancellation.abort();
@@ -65,7 +75,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   process.once("SIGTERM", stop); process.once("SIGINT", stop);
   try { await main(process.argv.slice(2), { signal: cancellation.signal }); }
   catch (error) {
-    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION)_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
+    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|WITNESS_(?:ORIGIN|GENESIS))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
     process.stderr.write(`${code}: La sauvegarde récurrente n’est pas confirmée.\n`); process.exitCode = 1;
-  } finally { clearTimeout(deadline); process.removeListener("SIGTERM", stop); process.removeListener("SIGINT", stop); }
+  } finally { clearTimeout(operationDeadline); clearTimeout(deadline); process.removeListener("SIGTERM", stop); process.removeListener("SIGINT", stop); }
 }

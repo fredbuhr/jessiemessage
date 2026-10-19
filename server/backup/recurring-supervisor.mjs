@@ -12,6 +12,7 @@ import { readRecurringConfiguration, readCheckpointHistory, acquireRecurringLock
 import { inspectCheckpointRecipient, encryptCheckpointArchive } from "./checkpoint-encryption.mjs";
 import { createManagedRuntime } from "./managed-runtime.mjs";
 import { runManagedClosures } from "./managed-closures.mjs";
+import { runManagedWitnessPreparation } from "./managed-witness.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const PROFILE = "photos-notify-recovery-crm-broadcast";
@@ -35,9 +36,12 @@ const knownCode = error => /^(?:RECURRING_(?:SUPERVISOR|FILES|CHECKPOINT)|CHECKP
   ? error.code : "RECURRING_SUPERVISOR_OPERATION";
 
 export function parseRecurringArguments(args) {
-  if (!Array.isArray(args) || args.length !== 13 || args.some(value => typeof value !== "string") || !["check", "start"].includes(args[0])) fail("USAGE");
+  if (!Array.isArray(args) || args.some(value => typeof value !== "string")) fail("USAGE");
+  const witness = ["plan-witness", "check-witness", "prepare-witness"].includes(args[0]);
+  if (args.length !== (witness ? 17 : 13) || !["check", "start", "plan-witness", "check-witness", "prepare-witness"].includes(args[0])) fail("USAGE");
   const names = new Map([["--runtime-directory", "runtimeDirectory"], ["--runtime-head", "runtimeHead"], ["--runtime-tree", "runtimeTree"],
-    ["--private-directory", "privateDirectory"], ["--operations-directory", "operationsDirectory"], ["--private-path-mode", "privatePathMode"]]);
+    ["--private-directory", "privateDirectory"], ["--operations-directory", "operationsDirectory"], ["--private-path-mode", "privatePathMode"],
+    ["--witness-operator-directory", "witnessOperatorDirectory"], ["--witness-destination", "witnessDestination"], ["--witness-plan-sha256", "witnessPlanSha256"]]);
   const result = { command: args[0] };
   for (let index = 1; index < args.length; index += 2) {
     const name = names.get(args[index]);
@@ -50,6 +54,13 @@ export function parseRecurringArguments(args) {
     || inside(result.operationsDirectory, result.privateDirectory) || inside(result.privateDirectory, result.operationsDirectory)
     || inside(result.runtimeDirectory, result.privateDirectory) || inside(result.runtimeDirectory, result.operationsDirectory)
     || inside(result.privateDirectory, result.runtimeDirectory) || inside(result.operationsDirectory, result.runtimeDirectory)) fail("USAGE");
+  const extras = ["witnessOperatorDirectory", "witnessDestination", "witnessPlanSha256"].filter(name => Object.hasOwn(result, name));
+  if (witness) {
+    if (extras.length !== 2 || !path(result.witnessOperatorDirectory)
+      || [REPOSITORY, result.runtimeDirectory, result.privateDirectory, result.operationsDirectory].some(root => inside(root, result.witnessOperatorDirectory) || inside(result.witnessOperatorDirectory, root))
+      || args[0] === "plan-witness" && (!/^[a-f0-9]{32}$/.test(result.witnessDestination ?? "") || result.witnessPlanSha256 !== undefined)
+      || args[0] !== "plan-witness" && (!/^[a-f0-9]{64}$/.test(result.witnessPlanSha256 ?? "") || result.witnessDestination !== undefined)) fail("USAGE");
+  } else if (extras.length) fail("USAGE");
   return Object.freeze(result);
 }
 
@@ -156,10 +167,15 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   readConfiguration = readRecurringConfiguration, history = readCheckpointHistory, lock = acquireRecurringLock,
   append = appendCheckpointRecord, preflight = recurringPreflight, source = assertRuntimeSource, checkpoint = checkpointProcess,
   encrypt = encryptCheckpointArchive, makeRuntime = createManagedRuntime, emit = () => {}, intervalMilliseconds = 60000,
-  schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures, witnessControl = null, makeGateway = createParentGateway } = {}) {
+  schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures, witnessControl = null, makeGateway = createParentGateway,
+  witnessOriginOperations = null, prepareWitness = runManagedWitnessPreparation } = {}) {
+  if (!["start", "prepare-witness"].includes(options.command)) fail("CONFIGURATION");
   if (witnessControl !== null && typeof witnessControl !== "function") fail("CONFIGURATION");
   if (!Number.isSafeInteger(intervalMilliseconds) || intervalMilliseconds < 1 || intervalMilliseconds > 60000) fail("CONFIGURATION");
   if (closureOperations !== null && ["hasPending", "preflight", "run"].some(name => typeof closureOperations?.[name] !== "function")) fail("CONFIGURATION");
+  if (witnessOriginOperations !== null && (options.command !== "prepare-witness" || closureOperations !== null || witnessControl !== null
+    || typeof prepareWitness !== "function" || ["check", "prepare"].some(name => typeof witnessOriginOperations?.[name] !== "function"))
+    || options.command === "prepare-witness" && witnessOriginOperations === null) fail("CONFIGURATION");
   const processOptions = privateAuthenticationProcessOptions(environment, []);
   const cancellation = new AbortController();
   let timer, closed = false, started = false, starting = false, ticking = null, closing = null, controller = null, lastNotice = null, fatal = false;
@@ -248,6 +264,9 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     starting = true;
     try {
       await source(options, { signal: cancellation.signal }); active(cancellation.signal);
+      // Initial-only operator preparation never runs from a normal startup,
+      // timer, recovery or public request. Reject its plan before any listener.
+      if (witnessOriginOperations !== null) await witnessOriginOperations.check();
       await gateway?.start(); active(cancellation.signal);
       // A queued confirmed intent survives a parent/child restart. Resolve it
       // while the child is still stopped, before any listener or producer.
@@ -255,10 +274,19 @@ export function createRecurringSupervisor(options, { environment = process.env, 
         await runClosures({ runtime, operations: closureOperations, directory: options.operationsDirectory,
           source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
       }
-      await runtime.start(); if (closed) fail("ABORTED"); started = true;
+      await runtime.start(); if (closed) fail("ABORTED");
+      if (witnessOriginOperations !== null) {
+        const report = await prepareWitness({ runtime, operations: witnessOriginOperations,
+          source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
+        notice(report);
+      }
+      if (closed) fail("ABORTED"); started = true;
       notice({ version: 1, type: "recurring_supervisor", status: "started", backupStarted: false });
       void tick().finally(arm);
       return { ready: true };
+    } catch (error) {
+      if (witnessOriginOperations !== null) { await runtime.destroy(); await gateway?.close(); }
+      throw error;
     } finally { starting = false; }
   }
   function close() {
