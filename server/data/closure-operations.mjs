@@ -35,6 +35,39 @@ export function createClosureOperations({ store, storage, journalFor, batch, ins
     await assertReady();
   }
   return Object.freeze({
+    /** A new challenge is mandatory on every managed opening, even when the
+     * local discovery is empty. Bind each checked identity to the witnessed
+     * journal; a different empty directory cannot borrow this gate's proof.
+     * This read-only barrier never repairs or replays an erasure. */
+    async verifyStartup(assertQuiescent, { signal } = {}) {
+      if (typeof assertQuiescent !== "function") failErasure("ERASURE_MAINTENANCE");
+      const initial = await continuity.verify(assertQuiescent, { signal });
+      const identities = new Set();
+      const unchanged = proof => {
+        if (proof.registrySha256 !== initial.registrySha256 || proof.witnessRevision !== initial.witnessRevision
+          || proof.receipts !== initial.receipts) failErasure("ERASURE_CHANGED");
+      };
+      const result = await verifyClosureStartup({ store, clock, assertReady: assertQuiescent,
+        batch: async page => {
+          const value = await batch(page);
+          for (const job of value.jobs) {
+            if (identities.has(job.clientId)) failErasure("ERASURE_CHANGED");
+            identities.add(job.clientId);
+            const journal = journalFor(job.clientId, store.binding);
+            try {
+              const state = await journal.read();
+              if (state.record === null || state.record.phase !== job.phase || state.revision !== job.revision
+                || state.record.updatedAt !== job.updatedAt) failErasure("ERASURE_CHANGED");
+              unchanged(await continuity.verifyJournal(job.clientId, state, assertQuiescent, { signal }));
+            } finally { journal.close(); }
+          }
+          return value;
+        } });
+      unchanged(await continuity.verify(assertQuiescent, { signal }));
+      if (result.completedReceipts !== initial.receipts) failErasure("ERASURE_CHANGED");
+      await assertQuiescent();
+      return { ...result, registrySha256: initial.registrySha256, witnessRevision: initial.witnessRevision };
+    },
     async hasPending() {
       let afterName = null, count = 0;
       do {
