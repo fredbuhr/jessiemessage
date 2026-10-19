@@ -51,6 +51,8 @@ Le défaut de remplacement des scripts existants a été reproduit sous PowerShe
 
 ## D — Qualifier SQL et prouver un import courant isolé
 
+**D1 acquis le 19 octobre :** nouvelle base et opérateur dédiés, connexion TLS/vide SQL et namespace observé, copie physique indépendante, inspection applicative source et précontrôle réussis. Vraie récupération PC en quarantaine à 19:04:10 UTC, puis import natif courant à 19:06:43 et seconde vérification du clone complet à 19:06:45 **sans réimport** : trente tables/migrations, six clés, quatre fichiers photo et capsule concordants. Marqueur bloquant conservé ; aucun rebind ni ouverture cible ; service source 0.72.0 sain et inchangé. Les CLI sont inchangés ; voir [parcours](isolated-checkpoint-20261019.md) et [preuves](verification-proofs/jm-d19-isolated-restore.json). Le profil demeure applicatif (`completeDatabase:false`) : **C/D restent ouverts** pour l’inventaire strict et le protocole final de réconciliation source → cible. Le prochain lot définit puis implémente ce protocole ; il ne répète pas D1 ni les preuves personnelles du PC.
+
 **Résultat :** inventaire SQL qualifié et restauration native de la capture courante sur une cible réellement isolée, couvrant les données et états opérationnels attendus.
 
 - **Préconditions :** déchiffrement du lot B et canal de récupération C1/C2/C3 acquis ; la réconciliation finale C est éprouvée avec cet import. Cible distincte en base, racine et capacités, sans trafic réel. `recette.jessiemessage.com` n'est pas cette cible. Identifier un lecteur privilégié d'inventaire avant de conclure sur les objets exécutables ; l'identité DML seule ne suffit pas.

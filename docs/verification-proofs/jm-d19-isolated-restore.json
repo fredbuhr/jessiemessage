@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "stage": "4/6",
+  "lot": "D1",
+  "date": "2026-10-19",
+  "status": "isolated_application_restore_verified",
+  "lastObservedAt": "2026-10-19T19:08:09.088933+00:00",
+  "operatorCode": {
+    "release": "0.72.0",
+    "source": "94fb7882cf74eb5f2ec165e67833ac2e7cdf13f3",
+    "tree": "c6d304e49209a1194d91c0992096e59ff3685b6e",
+    "existingImportResumeVerificationCliUnchanged": true,
+    "checkoutIdentityVerifiedAt": "2026-10-19T19:06:45.382Z",
+    "checkoutClean": true,
+    "recipeRevision1": {
+      "commit": "da64ae73249c83c51a23aa6085e5fe4beeb2a400",
+      "path": "docs/operator-recipes/isolated-checkpoint-20261019.mjs",
+      "sha256": "8c8827bb4af3a8c51e466fc447349c64b38e503cfae235b32be8c307374fe63e"
+    },
+    "recipeRevision2": {
+      "commit": "a38bed0a09408110453eafad0baa9facc7f5250b",
+      "path": "docs/operator-recipes/isolated-checkpoint-20261019-r2.mjs",
+      "sha256": "5d11aa77a9863fb5ee5f19ff0fd25a19a5c29eae3016a751f3ed74d100912481"
+    }
+  },
+  "activeService": {
+    "release": "0.72.0",
+    "mode": "observe_only",
+    "closuresEnabled": false,
+    "switchPerformed": false,
+    "healthVerifiedAt": "2026-10-19T19:08:09.088933+00:00",
+    "health": {
+      "http": 200,
+      "status": "ok"
+    },
+    "readiness": {
+      "http": 200,
+      "status": "ready"
+    },
+    "protectedSourceStateUnchanged": true,
+    "sourceSqlMutatedByRehearsal": false
+  },
+  "targetProvisioning": {
+    "status": "observed_in_manager",
+    "observedAt": "2026-10-19T18:48:20.569680+00:00",
+    "database": "fb4hmr_jm_restore_20261019",
+    "displayedBytes": 0,
+    "linkedSites": 0,
+    "user": "fb4hmr_jm_d19",
+    "managerUserLinkedOnlyToTarget": true,
+    "runtimeOrMigratorGrantAdded": false,
+    "sourcePasswordChanged": false,
+    "credentialRelativePath": "restore-d19-operator/import-operator.json",
+    "credentialMode": "0600",
+    "credentialTransferredMasked": true,
+    "secretPublished": false,
+    "sqlSelectedDatabaseVerified": true,
+    "sqlTlsVerified": true,
+    "sqlEffectivePrivilegesVerified": true,
+    "sqlEmptyCloneVerified": true,
+    "managerDisplayedZeroIsSqlEmptinessProof": false,
+    "effectiveScopeEvidence": "Fresh SHOW DATABASES excludes the source and all other customer databases; fixed target identity and private operator configuration matched. This is an observed namespace boundary, not complete executable metadata.",
+    "sqlAccessVerifiedAt": "2026-10-19T18:54:07.950Z",
+    "diagnosis": {
+      "databaseMatched": true,
+      "scope": "raw_underscore_pattern",
+      "privilegeProfile": "shared_admin",
+      "metadataVisibility": "unproven",
+      "objectInventory": "unproven",
+      "captureAllowed": false
+    }
+  },
+  "workingCopy": {
+    "checkpointRelativePath": "restore-d19-checkpoint",
+    "quarantineRelativePath": "restore-d19-quarantine",
+    "status": "copied_authenticated_verified",
+    "copiedAt": "2026-10-19T18:53:47.965Z",
+    "physicalRootsDistinctVerified": true,
+    "linksAndNestingRejectedVerified": true,
+    "checkpointFilesMatched": true,
+    "manifestAuthenticated": true,
+    "sqlAuthenticated": true,
+    "encryptedMediaMatched": true,
+    "operationalCapsuleMatched": true,
+    "quarantineMarkerPresent": true,
+    "receiptFormatAndManifestBindingVerified": true,
+    "encryptedMediaFiles": 4,
+    "receiptSha256": "1f9ce8a751e5db2d1f53188eb25254d1846ba7d12b441902b6f2ac6331de1b9f",
+    "manifestSha256": "26564035b9a4cdc8951986209902854d5d66fe0e73e8f46a6560fd3f2f0918fb",
+    "operationalCapsuleSha256": "1d1f5c34f8c880addd80ea3e295aef76e93e9a2d1f723fd4bd6816b9a53d4cca"
+  },
+  "sourceCaptureReference": {
+    "captureDate": "2026-10-19",
+    "operationsRootName": "recurring-backup-052",
+    "archiveName": "JessieMessage-capture-1792386945745-204e0e8e073b6131.tar.gz.gpg",
+    "profile": "messaging-photos-notify-recovery-crm-broadcast-application",
+    "manifestVersion": 10,
+    "expectedOperationalReceiptVersion": 10,
+    "archivePlainBytes": 402002,
+    "archiveEncryptedBytes": 402552,
+    "sqlGzipBytes": 16888,
+    "sqlRawBytes": 79500,
+    "archivePlainSha256": "1ba9592981aca7a94b8575a66c0a5cb501dd85458d17ac8cb4775da99781a7b3",
+    "archiveEncryptedSha256": "c809dbfed6eabd2e8bde1a1d30a6cb11cbc99df720c0140935b3f2ae413690e5",
+    "sqlGzipSha256": "333ab80998937bc4a00412f0060baa0c7370ff0036c93448a5e34f76234c0141",
+    "sqlRawSha256": "6825086ddb6efc3c1722667b114bf12f9787f31330f7d2fc00b7eb8cfb19fb9f",
+    "referenceReverifiedAt": "2026-10-19T19:06:45.382Z",
+    "newOfflineCapturePerformed": false,
+    "personalDecryptionLotBRepeatRequired": false
+  },
+  "coverage": {
+    "scope": "application-tables",
+    "tables": 30,
+    "keysUsedByVerification": 6,
+    "encryptedMedia": true,
+    "operationalCapsule": true,
+    "executableObjects": "excluded",
+    "executableInventory": "unproven",
+    "completeDatabase": false,
+    "keysIncludedInDataArchive": false
+  },
+  "qualifiedSqlInventory": {
+    "status": "blocked_reader_not_qualified",
+    "privilegedReaderIdentified": false,
+    "sourceExecutableObjectsAbsent": null,
+    "strictGateRelaxed": false,
+    "historicalMaintenanceDiagnosis": {
+      "date": "2026-10-17",
+      "scope": "raw_underscore_pattern",
+      "privilegeProfile": "shared_admin",
+      "metadataVisibility": "unproven"
+    },
+    "providerDocumentation": {
+      "url": "https://www.infomaniak.com/en/support/faq/821/use-views-triggers-stored-procedures-and-routines",
+      "checkedDate": "2026-10-19",
+      "provesSpecificDatabaseInventory": false
+    }
+  },
+  "nativeImport": {
+    "status": "verified",
+    "startedAt": "2026-10-19T19:06:41.387Z",
+    "completedAt": "2026-10-19T19:06:43.382Z",
+    "imported": true,
+    "action": "imported_empty_clone",
+    "receiptStatus": "application_checkpoint_restored_verified",
+    "targetTables": 30,
+    "targetMigrations": 30,
+    "applicationSnapshotMatched": true,
+    "checkpointFilesMatched": true,
+    "capacityRebound": false,
+    "sourceMutated": false
+  },
+  "operationalReconciliation": {
+    "status": "quarantine_restored_final_target_reconciliation_pending",
+    "capsuleVerified": true,
+    "journalsVerified": true,
+    "freshExternalContinuityVerified": true,
+    "sourceTargetReconciled": false,
+    "quarantineReleased": false,
+    "applicationTargetStarted": false,
+    "smtpOrWorkersStarted": false,
+    "closureOwnerActivated": false,
+    "freshProofScope": "Original PC continuity during operational quarantine creation, before isolated SQL import; not a target startup authorization.",
+    "quarantineRestoredAt": "2026-10-19T19:04:10.518Z",
+    "quarantineStatus": "operational_quarantine_restored",
+    "witnessRevision": 1,
+    "completedReceipts": 0,
+    "pendingReceipts": 0,
+    "files": 0,
+    "quarantineGuardRefusalVerifiedAt": "2026-10-19T19:06:45.382Z",
+    "guardCode": "OPERATIONS_RECONCILIATION_REQUIRED",
+    "nativeSqlVerificationExternalContinuityFlag": false,
+    "nativeSqlVerificationOperationalRestorationPending": true
+  },
+  "validation": {
+    "precheck": "passed_2026-10-19T18:54:08.255Z",
+    "nativeClientVerified": true,
+    "sqlFormatVerified": true,
+    "sourceEndCheck": "passed",
+    "publicProofContainsSecrets": false,
+    "sourceApplicationInspection": {
+      "status": "application_inspection_verified",
+      "applicationTablesVerified": true,
+      "tables": 30,
+      "migrations": 30,
+      "checkpointSaved": false,
+      "migrationPerformed": false,
+      "started": false,
+      "completeDatabase": false,
+      "executableInventory": "unproven"
+    },
+    "operatorRecipeSyntax": "passed locally and on hosting",
+    "operatorRecipeIndependentReview": "passed; revision2 closed diagnostic extraction also checked in10local cases",
+    "sourceConfigurationsAndOriginalAuthorityHashesUnchanged": true,
+    "targetRebound": false
+  },
+  "completion": {
+    "lotDComplete": false,
+    "continuityLotCComplete": false,
+    "remaining": [
+      "qualify the executable-object inventory without interpreting filtered metadata or provider documentation as absence proof",
+      "implement and rehearse final source-to-target closure reconciliation and explicit cutover before any target reopening or closure activation"
+    ],
+    "boundedD1Complete": true,
+    "next": "C4/D2: explicit target reconciliation and cutover protocol; preserve this verified clone and all quarantine markers. No repeated import, PC enrollment, key operation or personal GPG check."
+  },
+  "applicationRuntimeCodeChanged": false,
+  "datedOperatorRecipesAdded": true,
+  "secondVerification": {
+    "completedAt": "2026-10-19T19:06:45.264Z",
+    "status": "application_checkpoint_existing_clone_verified",
+    "action": "verified_existing_clone",
+    "imported": false,
+    "importedThisRun": false,
+    "applicationSnapshotMatched": true,
+    "checkpointFilesMatched": true
+  },
+  "recoveryAttempts": {
+    "firstCheckSucceededAt": "2026-10-19T18:54:46.393Z",
+    "firstPublicationSucceeded": false,
+    "destinationObservedAbsentAfterFirstAttempt": true,
+    "firstFailureCause": "unknown: the original helper discarded the CLI closed text error; no measured evidence establishes an overall timeout as the cause",
+    "singleInstrumentedResumeStartedAt": "2026-10-19T19:03:54.804Z",
+    "singleInstrumentedResumeCheckAt": "2026-10-19T19:04:02.702Z",
+    "singleInstrumentedResumeSucceededAt": "2026-10-19T19:04:10.518Z",
+    "previousResultsPreserved": true,
+    "previousRecoveryCliNotRunningBeforeResume": true,
+    "originalAuthorityReplayedOrRecreated": false,
+    "protocolDeadlinesUnchanged": true,
+    "resumeOuterLimitSeconds": 720,
+    "nativeImportOuterLimitSeconds": 180
+  }
+}
