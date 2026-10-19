@@ -399,6 +399,7 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
       // Unix operator socket, the existing HTTP mailbox and durable PC peer.
       // Only the already-real six-file loader's disposable SQL transport and
       // the synthetic checkpoint receipt metadata are adapted in this test.
+      t.diagnostic("C2 native recovery capsule: preparing");
       assert.equal(await observer.startRecoveryControl(), true);
       const checkpointDirectory = path.join(root, "old-checkpoint"), targetMedia = path.join(root, "recovery-media"),
         laterSource = path.join(root, "later-synthetic-receipts"), quarantine = path.join(root, "recovery-quarantine");
@@ -432,15 +433,18 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
         "--witness-operator-directory", dirs.operator, "--witness-contract-sha256", result.contractSha256];
       const dependencies = { inheritedEnv: environment, execArgv: [], loadEnvironment: localEnv, outputStream: { write() {} } };
       const beforeRecoveryChildren = children.length, beforeRecoveryChallenges = challenges.size;
-      const checkingRecovery = restoreOperations(args("check"), dependencies);
-      await respondToWitnessRequest(); const checkedRecovery = await checkingRecovery;
+      t.diagnostic("C2 native recovery capsule: check started");
+      const [checkedRecovery] = await Promise.all([restoreOperations(args("check"), dependencies), respondToWitnessRequest()]);
       assert.equal(checkedRecovery.externalRegistryContinuityVerified, true); assert.equal(checkedRecovery.completedReceipts, 1);
       assert.equal(checkedRecovery.started, false); assert.equal(checkedRecovery.reconciliationRequired, true);
-      const restoringRecovery = restoreOperations([...args("restore"), "--confirm-plan-sha256", checkedRecovery.planSha256], dependencies);
-      for (let index = 0; index < 4; index++) await respondToWitnessRequest();
-      const restoredRecovery = await restoringRecovery;
+      t.diagnostic("C2 native recovery capsule: check passed; restore started");
+      const [restoredRecovery] = await Promise.all([
+        restoreOperations([...args("restore"), "--confirm-plan-sha256", checkedRecovery.planSha256], dependencies),
+        (async () => { for (let index = 0; index < 4; index++) await respondToWitnessRequest(); })(),
+      ]);
       assert.equal(restoredRecovery.restored, true); assert.equal(restoredRecovery.completedReceipts, 1);
       assert.equal(restoredRecovery.started, false); assert.equal(restoredRecovery.sqlRestored, false);
+      t.diagnostic("C2 native recovery capsule: restore passed");
       assert.equal(challenges.size, beforeRecoveryChallenges + 5);
       assert.equal(children.length, beforeRecoveryChildren, "recovery reads never stop or restart the daily child");
       assert.deepEqual(JSON.parse(await readFile(path.join(quarantine, OPERATIONAL_RESTORE_MARKER))).sourceBinding, recoveryBinding);
@@ -529,15 +533,19 @@ finally { process.removeListener('SIGTERM', stop); process.removeListener('SIGIN
             assert.equal((await localRequest(publicPort, route)).status, 503, `recovery-only process must not serve ${route}`);
           t.diagnostic(`C3 ${localState}: native recovery check started`);
           const check = nativeCli(restoreFilename, nativeArgs("check"), recoveryEnvironment, recoveryProcesses);
-          await respondToWitnessRequest({ provisioning: false });
-          assert.deepEqual(await check.finished, { code: 0, signal: null }, check.diagnostic());
+          await Promise.all([
+            check.finished.then(exited => assert.deepEqual(exited, { code: 0, signal: null }, check.diagnostic())),
+            respondToWitnessRequest({ provisioning: false }),
+          ]);
           const checked = check.reports()[0];
           assert.equal(checked.completedReceipts, 1); assert.equal(checked.externalRegistryContinuityVerified, true);
           assert.equal(checked.sqlRestored, false); assert.equal(checked.started, false); assert.equal(checked.reconciliationRequired, true);
           t.diagnostic(`C3 ${localState}: native recovery check passed; restore started`);
           const restoring = nativeCli(restoreFilename, [...nativeArgs("restore"), "--confirm-plan-sha256", checked.planSha256], recoveryEnvironment, recoveryProcesses);
-          for (let index = 0; index < 4; index++) await respondToWitnessRequest({ provisioning: false });
-          assert.deepEqual(await restoring.finished, { code: 0, signal: null }, restoring.diagnostic());
+          await Promise.all([
+            restoring.finished.then(exited => assert.deepEqual(exited, { code: 0, signal: null }, restoring.diagnostic())),
+            (async () => { for (let index = 0; index < 4; index++) await respondToWitnessRequest({ provisioning: false }); })(),
+          ]);
           assert.equal(restoring.reports()[0].restored, true); assert.equal(challenges.size, beforeNativeChallenges + 5);
           t.diagnostic(`C3 ${localState}: restore passed`);
           assert.deepEqual(await readFile(path.join(target, laterFile)), completedBytes);
@@ -574,6 +582,11 @@ finally { process.removeListener('SIGTERM', stop); process.removeListener('SIGIN
       assert.equal((await withPrivateDirectory(dirs.operations, scope => captureOperationalState(scope, { key: crmKey, binding: recoveryBinding }))).files.length, 0);
       assert.equal(await sqlHash(), beforeSql); crmKey.fill(0);
     }
+  } catch (error) {
+    const safe = value => typeof value === "string" && /^[A-Za-z_]{1,80}$/.test(value) ? value : "unknown";
+    const frames = String(error?.stack ?? "").split("\n").map(line => line.match(/\/(?:tests|scripts)\/[A-Za-z0-9_./-]+:\d+:\d+/)?.[0]).filter(Boolean).slice(0, 3);
+    process.stderr.write(`SYNTHETIC_WITNESS_INTEGRATION_FAILED ${safe(error?.name)} ${safe(error?.code)} ${frames.join(" ")}\n`);
+    throw error;
   } finally {
     pendingBody?.destroy(); await observer?.close(); await supervisor?.close(); await gateway?.close();
     await runtime?.destroy(); for (const child of children) { if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL"); }
