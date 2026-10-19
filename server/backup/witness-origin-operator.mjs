@@ -12,6 +12,7 @@ import { assertRuntimeSource } from "./recurring-supervisor.mjs";
 import { registryFields, registryHash, snapshotErasureRegistry } from "./registry-snapshot.mjs";
 import { prepareWitnessGenesis, readWitnessGenesis } from "./witness-genesis.mjs";
 import { withConfiguredWitnessOrigin } from "./witness-origin-context.mjs";
+import { witnessOriginFailure } from "./witness-origin-diagnostics.mjs";
 
 export const WITNESS_ORIGIN_PLAN = "witness-origin-plan.json";
 const PURPOSE = "jessiemessage:witness-origin-plan:https://jessiemessage.com:v1", HOUR = 3600000;
@@ -30,7 +31,7 @@ export class WitnessOriginError extends Error {
   }
 }
 const fail = code => { throw new WitnessOriginError(code); };
-const safe = async work => { try { return await work(); } catch (error) { if (error instanceof WitnessOriginError) throw error; fail(); } };
+const safe = async work => { try { return await work(); } catch (error) { throw witnessOriginFailure(error); } };
 function fields(value, names) { try { registryFields(value, names); } catch { fail("INPUT"); } }
 function plan(value) {
   fields(value, ["version", "purpose", "createdAt", "expiresAt", "operatorDirectory", "runtime", "privateDirectory", "operationsDirectory", "observed"]);

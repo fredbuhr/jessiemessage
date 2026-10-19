@@ -69,3 +69,32 @@ test("a skipped or repeated maintenance callback and a failed ready restart neve
     if (mode !== "skipped") assert.equal(f.runtime.state().status, "stopped");
   }
 });
+
+test("private progress identifies each completed phase without forwarding runtime or SQL details", async () => {
+  const f = fixture(), progress = [];
+  await run(f, { emit: value => progress.push(value) });
+  assert.deepEqual(progress.map(({ phase, event }) => [phase, event]),
+    ["precheck", "lease", "stop", "publication", "resume", "cleanup"].flatMap(phase => [[phase, "started"], [phase, "passed"]]));
+  for (const value of progress) assert.deepEqual(Object.keys(value), ["version", "type", "phase", "event"]);
+  for (const phase of ["precheck", "stop", "publication", "resume", "cleanup"]) {
+    const g = fixture(), events = [], privateError = Object.assign(new Error("Synthetic password SQL /private/path"),
+      { code: phase === "precheck" ? "WITNESS_ORIGIN_EXPIRED" : phase === "resume" ? "MANAGED_RUNTIME_START" : "SQL_PRIVATE_SECRET", cause: "private" });
+    if (phase === "precheck") g.operations.check = async () => { throw privateError; };
+    if (phase === "stop") g.runtime.stop = async () => { throw privateError; };
+    if (phase === "publication") g.operations.prepare = ({ withMaintenance }) => withMaintenance(async () => { throw privateError; }, async () => {});
+    if (phase === "resume") g.runtime.start = async () => { throw privateError; };
+    if (phase === "cleanup") { const prepare = g.operations.prepare; g.operations.prepare = async args => { await prepare(args); throw privateError; }; }
+    await assert.rejects(run(g, { emit: value => events.push(value) }), error => {
+      assert.notEqual(error, privateError); assert.equal(error.cause, undefined);
+      assert.doesNotMatch(`${error.message} ${JSON.stringify(error)}`, /Synthetic|password|SQL|private/);
+      return true;
+    });
+    assert.equal(events.at(-1).phase, phase); assert.equal(events.at(-1).event, "failed");
+    assert.equal(events.at(-1).code, phase === "precheck" ? "WITNESS_ORIGIN_EXPIRED" : phase === "resume" ? "MANAGED_RUNTIME_START" : "WITNESS_ORIGIN_MAINTENANCE");
+    assert.doesNotMatch(JSON.stringify(events), /Synthetic|password|SQL|\/private|cause/);
+  }
+});
+
+test("an unavailable progress sink does not change the maintenance outcome", async () => {
+  const f = fixture(); assert.equal((await run(f, { emit() { throw new Error("Synthetic closed logger"); } })).prepared, true);
+});

@@ -75,7 +75,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   process.once("SIGTERM", stop); process.once("SIGINT", stop);
   try { await main(process.argv.slice(2), { signal: cancellation.signal }); }
   catch (error) {
-    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|WITNESS_(?:ORIGIN|GENESIS))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
+    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|MANAGED_RUNTIME|WITNESS_(?:ORIGIN|GENESIS))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
     process.stderr.write(`${code}: La sauvegarde récurrente n’est pas confirmée.\n`); process.exitCode = 1;
   } finally { clearTimeout(operationDeadline); clearTimeout(deadline); process.removeListener("SIGTERM", stop); process.removeListener("SIGINT", stop); }
 }
