@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**État courant unique — 19 octobre 2026, 16:25:12 UTC (18:25:12 Europe/Paris). Étape 4/6 ; 0.70.2 livrée, initialisation du PC personnel et échange indépendant du témoin confirmés. Le lot B attend uniquement la vérification personnelle du déchiffrement de l'archive courante.** Le lot A reste terminé. Les fermetures réelles restent désactivées.
+**État courant unique — 19 octobre 2026, 16:34:19 UTC (18:34:19 Europe/Paris). Étape 4/6 ; lots A et B clos. 0.70.2 livrée ; initialisation personnelle, échange indépendant du témoin et déchiffrement de l'archive courante confirmés. Prochain objectif : lot C, raccordement des contrôles de récupération et de réconciliation.** Les fermetures réelles restent désactivées.
 
 Lire le [plan](PLAN-IMPLEMENTATION.md), les [règles de reprise](../AGENTS.md) et les [preuves 0.70.2](verification-proofs/jm0702-verification.json). Les preuves [0.70.1](activation-proofs/jm0701-activation.json), [0.70](activation-proofs/jm070-activation.json) et l'[historique](REPRISE-HISTORIQUE-20261019.md) conservent leur portée datée ; leurs anciens lanceurs ne sont pas les commandes courantes.
 
@@ -18,6 +18,7 @@ Lire le [plan](PLAN-IMPLEMENTATION.md), les [règles de reprise](../AGENTS.md) e
 | Contrôle final | HTTPS `/api/health` et `/api/ready` : **200**, `ok` et `ready`, relus à 16:25:12 UTC. Le précontrôle authentifié du déploiement à 15:18:47 UTC reste acquis ; la nouvelle preuve du témoin vient du journal d'observation actif, ci-dessous. |
 | Kit courant et PC | ZIP généré depuis le checkout actif : **53 022 octets**, six fichiers, action `Activer-le-temoin.cmd`, aucune capacité de nouvel appariement. SHA-256 du script embarqué : `abfb5daac7a5815ffdbe9e8e26b59b50c647eefd24e2e32610c50f2a70ac1bb1`, conforme à la source corrigée. Capture personnelle `image(20261019-162033).png` : console `TEMOIN_INITIALISE` et fenêtre « Témoin initialisé sur ce PC », dossier et raccordement conservés. L'empreinte des fichiers sur le PC n'a pas été relue directement. |
 | Témoin indépendant | Journal actif relu à **16:23:38 UTC** : `confirmed`, `externalWitnessConfirmed:true`, `observe_only`, `closuresEnabled:false`. Dernière vérification complète `1792426871839` ; observation fraîche `1792426995688`. Cette preuve serveur est distincte de la fenêtre Windows. |
+| Déchiffrement personnel | Capture `image(20261019-163401).png`, reçue à **16:34:19 UTC** : fenêtre et statut **`DECHIFFREMENT_VERIFIE`**, contenu déchiffré identique à la capture pour `JessieMessage-capture-1792386945745-204e0e8e073b6131.tar.gz.gpg` (19 octobre, 07:15 heure du PC). Cette preuve clôt B pour cette archive ; elle ne certifie pas un import SQL ni les captures futures. |
 
 Deux tests locaux de composition du kit et la syntaxe de 526 sources réussissent. Aucun nouvel appariement, contrat, permission, clé, message réel, mail, import SQL ou effacement de compte pour ce correctif. Les 66 anciennes PR déjà intégrées restent closes.
 
@@ -32,19 +33,17 @@ Deux tests locaux de composition du kit et la syntaxe de 526 sources réussissen
 
 **Ne rejouer ni `plan-witness`, ni `prepare-witness`, ni `prepare-witness-enrollment`.** Ne pas réinitialiser les états, réapparier le PC ou régénérer une clé. Garder `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd` dans l'environnement des commandes natives, en plus de l'option CLI. La messagerie quotidienne ne dépend pas de la présence continue du PC. `recette.jessiemessage.com` partage runtime et base du principal ; ce n'est pas une cible de restauration isolée.
 
-## Prochaine action exacte — lot B
+## Prochaine action exacte — lot C
 
-**Sur le PC habituel : Administration → Sauvegardes → Vérification ponctuelle sur le PC → Télécharger la vérification Windows. Extraire entièrement le ZIP, ouvrir `Verifier.cmd`, choisir la copie chiffrée dont le nom est indiqué dans la fenêtre, puis cliquer « Vérifier ».** Le dossier de récupération GPG habituel est proposé ; conserver le trousseau existant. La phrase reste dans la fenêtre locale GPG.
+**Les trois preuves de B sont acquises et consignées.** Aucun nouveau contrôle personnel de cette archive n'est demandé. Le contrôle GPG s'est déroulé sur le PC avec le trousseau existant, sans transmission de clé ou de phrase.
 
-Conserver configuration DPAPI, archives, reçus, dossier `temoin` et marqueurs existants. **Ne plus relancer l'activation pour répéter la réussite constatée.** Aucun nouveau raccordement, clé ou kit d'activation n'est requis pour le déchiffrement. Si une ancienne page reste ouverte, Ctrl+F5 recharge son code ; le bouton « Actualiser la page » ne relit actuellement que les données.
+Commencer C par une lecture ciblée du vrai démarrage et du CLI de restauration, des contrôles de continuité déjà codés et des tests associés. Choisir une seule sous-étape bornée, la valider avant intégration et garder `closuresEnabled:false`. La messagerie quotidienne doit rester disponible lorsque le PC est éteint ; une récupération incertaine reste en quarantaine. La restauration native isolée relève de D.
 
-Le succès attendu est **`DECHIFFREMENT_VERIFIE`** pour l'archive courante. Cette vérification compare le contenu déchiffré en mémoire à la capture du site ; elle n'effectue pas un import SQL. Relever uniquement le résultat affiché et l'archive concernée, jamais la clé ni la phrase dans la discussion. En cas de réponse perdue, repartir de ces preuves et du checkpoint privé, sans réinitialiser le témoin.
-
-L'initialisation locale et l'aller-retour serveur sont acquis à leur date. Le lot B reste ouvert sur ce seul déchiffrement personnel : ni la CI, ni le reçu de copie, ni le témoin ne le prouvent. Ce contexte Windows ne peut pas être certifié depuis le serveur.
+Conserver configuration DPAPI, archives, reçus, dossier `temoin` et marqueurs existants. Ne répéter ni activation, ni appariement, ni déchiffrement de cette archive pour retrouver un état déjà prouvé. Les preuves serveur sont datées : C doit demander sa propre fraîcheur au moment d'une récupération, sans transformer ce constat historique en autorisation permanente.
 
 ## Sauvegardes et suite
 
-Le service de copie a été relu sans mutation à **16:24:40 UTC** : quatre archives, horaire **05:15 UTC**, archive courante `capture-1792386945745-204e0e8e073b6131`, **402 552 octets**, SHA-256 `c809dbfed6eabd2e8bde1a1d30a6cb11cbc99df720c0140935b3f2ae413690e5`. Nom proposé par le vérificateur : `JessieMessage-capture-1792386945745-204e0e8e073b6131.tar.gz.gpg`. PC raccordé et activé ; dernier reçu `1792426743461` concordant par identifiant/taille/empreinte ; dernier contact `1792426862668`. Déchiffrement courant et import natif isolé restent non confirmés. Les preuves antérieures du coffre et de la restauration 0.46 gardent leur portée historique.
+Le service de copie a été relu sans mutation à **16:24:40 UTC** : quatre archives, horaire **05:15 UTC**, archive courante `capture-1792386945745-204e0e8e073b6131`, **402 552 octets**, SHA-256 `c809dbfed6eabd2e8bde1a1d30a6cb11cbc99df720c0140935b3f2ae413690e5`. Nom proposé par le vérificateur : `JessieMessage-capture-1792386945745-204e0e8e073b6131.tar.gz.gpg`. PC raccordé et activé ; dernier reçu `1792426743461` concordant par identifiant/taille/empreinte ; dernier contact `1792426862668`. Déchiffrement de cette archive confirmé ensuite par la capture personnelle ; import natif isolé toujours non confirmé. Les preuves antérieures du coffre et de la restauration 0.46 gardent leur portée historique.
 
 Ne pas lancer `capture --offline` pendant le service. Garder le superviseur existant. Les mails déjà confirmés reçus restent acquis. Invitations, messages/photos, notifications, récupération du mot de passe, fiches, diffusions individuelles, réponses rapides et exports sont conservés avec leurs limites documentées. Jessie en France, sans structure ; conversations jusqu'à fermeture définitive, hors suppressions volontaires. Ne pas redemander ces choix ou une permission générale de développement.
 

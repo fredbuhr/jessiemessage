@@ -59,7 +59,7 @@
     }
   },
   "personalExecution": {
-    "status": "local_initialized_and_server_witness_confirmed",
+    "status": "local_initialized_server_witness_and_current_archive_decryption_confirmed",
     "localInitialization": {
       "evidence": "user_screenshot_image(20261019-162033).png",
       "console": "TEMOIN_INITIALISE",
@@ -95,7 +95,11 @@
       "checkedAt": "2026-10-19T16:24:40.392Z",
       "readOnly": true,
       "archiveCount": 4,
-      "schedule": { "enabled": true, "hourUtc": 5, "minuteUtc": 15 },
+      "schedule": {
+        "enabled": true,
+        "hourUtc": 5,
+        "minuteUtc": 15
+      },
       "latestArchive": {
         "id": "capture-1792386945745-204e0e8e073b6131",
         "bytes": 402552,
@@ -109,7 +113,14 @@
         "matchingReceipt": true,
         "receivedAt": 1792426743461
       },
-      "decryption": "awaiting_personal_DECHIFFREMENT_VERIFIE_for_this_archive",
+      "decryption": {
+        "status": "DECHIFFREMENT_VERIFIE",
+        "evidence": "user_screenshot_image(20261019-163401).png",
+        "receivedAt": "2026-10-19T16:34:19Z",
+        "archiveId": "capture-1792386945745-204e0e8e073b6131",
+        "displayedArchiveTime": "19/10/2026 07:15",
+        "scope": "Encrypted archive and decrypted in-memory content match the verification record; no SQL restore or future archive attestation."
+      },
       "nativeIsolatedRestore": "not_confirmed"
     },
     "monitor": {
@@ -138,8 +149,8 @@
       "mainApplicationJobs": "5/5 success",
       "mainWindowsJobs": "1/1 success"
     },
-    "nextAction": "Owner PC: Sauvegardes > verification Windows > extract ZIP > Verifier.cmd > choose indicated encrypted archive > Verifier. Keep existing GPG key; phrase only in local GPG window.",
-    "lotB": "awaiting_personal_current_archive_decryption_only"
+    "nextAction": "Lot C: connect fresh recovery continuity barrier and explicit source/target reconciliation; keep closures disabled and ordinary messaging available with PC offline.",
+    "lotB": "completed_for_identified_archive"
   },
   "source": "d1720d8af17081ddcc7150e24d77128fcf8ff4fe",
   "tree": "8ffe6911cc9c5e1b18d609a239d9f9b2038e06cf",
