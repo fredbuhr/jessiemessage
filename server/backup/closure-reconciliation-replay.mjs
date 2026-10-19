@@ -55,10 +55,11 @@ export async function replayClosureReconciliation(input, internal = {}) {
       || !keys || !Buffer.isBuffer(keys.crmKey) || !Buffer.isBuffer(parameters.key) || !keys.crmKey.equals(parameters.key)
       || !Buffer.isBuffer(keys.mediaKey) || !Buffer.isBuffer(keys.messageKey) || !Buffer.isBuffer(target.broadcastKey) || !target.broadcastKey.equals(keys.messageKey)
       || Object.values(directories).some(value => !path(value)) || !path(target.rootPath)) fail("CLOSURE_REPLAY_INPUT");
-    for (const directory of [...Object.values(directories).filter(value => value !== directories.progress), target.rootPath])
+    const otherDirectories = [...Object.entries(directories).filter(([name]) => name !== "progress").map(([, value]) => value), target.rootPath];
+    for (const directory of otherDirectories)
       if (inside(directory, directories.progress) || inside(directories.progress, directory)) fail("CLOSURE_REPLAY_INPUT");
     const progressIdentity = await lstat(directories.progress, { bigint: true });
-    for (const directory of [...Object.values(directories).filter(value => value !== directories.progress), target.rootPath]) {
+    for (const directory of otherDirectories) {
       const identity = await lstat(directory, { bigint: true });
       if (identity.dev === progressIdentity.dev && identity.ino === progressIdentity.ino) fail("CLOSURE_REPLAY_INPUT");
     }
@@ -109,6 +110,13 @@ export async function replayClosureReconciliation(input, internal = {}) {
         try {
           connection = await target.inspectionPool.getConnection();
           await assertBackupInspection(connection, targetBinding.database);
+        } finally { await connection?.release(); }
+        // Migration/schema validation configures its own SQL session. Keep the
+        // privileged inventory facade read-only, and use the target runtime
+        // connection for the same schema checks as the erasure store.
+        await resources(); connection = undefined;
+        try {
+          connection = await target.pool.getConnection();
           await assertErasureSchema(connection, targetBinding.database);
         } finally { await connection?.release(); }
         await resources();

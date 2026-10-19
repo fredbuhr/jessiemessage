@@ -190,7 +190,9 @@ test("native closure reconciliation replays a source receipt into a distinct Mar
     const { replayClosureReconciliation } = await import("../server/backup/closure-reconciliation-replay.mjs");
     await t.test("a completed high source cursor starts target work from the beginning; an absent identity is verified safely", async () => {
       const input = await fixture(), result = await replayClosureReconciliation(input);
+      assert.equal(result.status, "closure_target_reconciled_quarantined"); assert.equal(result.reconciledReceipts, 2);
       assert.equal(result.targetAbsenceVerified, true); assert.equal(result.started, false); assert.equal(result.quarantineRetained, true);
+      assert.equal(result.capacityRebound, true); assert.equal(result.reconciliationRequired, true); assert.equal(result.authorityTransferred, false);
       await absentAndPeers(); await unchanged();
       const repeated = await replayClosureReconciliation(input); assert.equal(repeated.targetAbsenceVerified, true); await unchanged();
       const progressFile = (await readdir(input.directories.progress)).find(name => /^erasure-[a-f0-9]{64}\.json$/.test(name));
@@ -216,28 +218,46 @@ test("native closure reconciliation replays a source receipt into a distinct Mar
     });
     await t.test("qualified executable inventory is mandatory before a SQL or file mutation", async () => {
       const input = await fixture(), beforeSql = await databaseHash(targetDatabase), beforeFiles = await files(targetRoot);
+      let limitedGrantsRead = 0;
       const inspectionPool = { async getConnection() {
         const connection = await targetInspector.getConnection();
-        return { ...connection, query: (sql, params) => sql === "SHOW GRANTS" ? Promise.resolve([{ grant: `GRANT SELECT, INSERT, UPDATE, DELETE ON \`${targetDatabase}\`.* TO 'synthetic'@'%'` }]) : connection.query(sql, params) };
+        return { ...connection, query: (sql, params) => {
+          if (sql === "SHOW GRANTS") { limitedGrantsRead++; return Promise.resolve([{ grant: `GRANT SELECT, INSERT, UPDATE, DELETE ON \`${targetDatabase}\`.* TO 'synthetic'@'%'` }]); }
+          return connection.query(sql, params);
+        } };
       } };
-      await assert.rejects(replayClosureReconciliation({ ...input, target: { ...input.target, inspectionPool } }));
+      await assert.rejects(replayClosureReconciliation({ ...input, target: { ...input.target, inspectionPool } }), { name: "BackupInspectionError", code: "BACKUP_INSPECTION_CONFIG" });
+      assert.equal(limitedGrantsRead, 1, "the deliberately insufficient grant was inspected before refusal");
       assert.equal(await databaseHash(targetDatabase), beforeSql); assert.deepEqual(await files(targetRoot), beforeFiles); await unchanged();
       await targetConnection.query("CREATE TRIGGER synthetic_reconciliation_hidden BEFORE DELETE ON users FOR EACH ROW SET @synthetic_reconciliation_probe = 1");
+      let triggersRead = 0;
+      const triggerInspector = { async getConnection() {
+        const connection = await targetInspector.getConnection();
+        return { ...connection, query: (sql, params) => {
+          if (sql.includes("COUNT(*) AS value FROM information_schema.TRIGGERS")) triggersRead++;
+          return connection.query(sql, params);
+        } };
+      } };
       try {
-        await assert.rejects(replayClosureReconciliation(input));
+        await assert.rejects(replayClosureReconciliation({ ...input, target: { ...input.target, inspectionPool: triggerInspector } }), { name: "BackupInspectionError", code: "BACKUP_INSPECTION_CONFIG" });
+        assert.equal(triggersRead, 1, "the actual trigger inventory was read before refusal");
         assert.equal(await databaseHash(targetDatabase), beforeSql); assert.deepEqual(await files(targetRoot), beforeFiles);
       } finally { await targetConnection.query("DROP TRIGGER synthetic_reconciliation_hidden"); }
       await unchanged();
     });
     await t.test("an unexpected source-plan context fails confirmation before SQL mutation", async () => {
       const input = await fixture(), beforeSql = await databaseHash(targetDatabase), beforeFiles = await files(targetRoot);
-      await assert.rejects(replayClosureReconciliation({ ...input, planParameters: { ...input.planParameters, contextSha256: hash("changed-source-context") } }));
+      let sqlAcquisitions = 0;
+      const inspectionPool = { async getConnection() { sqlAcquisitions++; return targetInspector.getConnection(); } };
+      await assert.rejects(replayClosureReconciliation({ ...input, planParameters: { ...input.planParameters, contextSha256: hash("changed-source-context") },
+        target: { ...input.target, inspectionPool } }), { name: "ClosureReplayError", code: "CLOSURE_REPLAY_CHANGED" });
+      assert.equal(sqlAcquisitions, 0, "confirmation refuses the changed plan before SQL inspection begins");
       assert.equal(await databaseHash(targetDatabase), beforeSql); assert.deepEqual(await files(targetRoot), beforeFiles); await unchanged();
     });
     await t.test("a file unlink acknowledged with an error resumes without losing peer files or double credit", async () => {
       const input = await fixture(); let interrupted = false;
       const storage = { ...targetStorage, async remove(value) { await targetStorage.remove(value); if (!interrupted) { interrupted = true; throw new Error("Synthetic interruption after durable unlink"); } } };
-      await assert.rejects(replayClosureReconciliation({ ...input, target: { ...input.target, storage } })); assert.equal(interrupted, true);
+      await assert.rejects(replayClosureReconciliation({ ...input, target: { ...input.target, storage } }), { name: "AccountErasureError", code: "ERASURE_UNAVAILABLE" }); assert.equal(interrupted, true);
       await replayClosureReconciliation(input); await absentAndPeers(); await unchanged();
     });
     await t.test("a lost finish commit acknowledgement resumes from target evidence and retains source authority", async () => {
@@ -247,7 +267,7 @@ test("native closure reconciliation replays a source receipt into a distinct Mar
         return { ...connection, async query(sql, params) { if (/DELETE FROM users WHERE id/.test(sql)) finishing = true; return connection.query(sql, params); },
           async commit() { await connection.commit(); if (finishing && !interrupted) { interrupted = true; throw new Error("Synthetic lost final commit acknowledgement"); } } };
       } };
-      await assert.rejects(replayClosureReconciliation({ ...input, target: { ...input.target, pool } })); assert.equal(interrupted, true);
+      await assert.rejects(replayClosureReconciliation({ ...input, target: { ...input.target, pool } }), { name: "AccountErasureError", code: "ERASURE_UNAVAILABLE" }); assert.equal(interrupted, true);
       await replayClosureReconciliation(input); await absentAndPeers(); await unchanged();
     });
   } finally {
