@@ -69,12 +69,12 @@ async function safe(work) {
   try { return await work(); }
   catch (error) { if (error instanceof OperationalCheckpointError) throw error; fail(); }
 }
-async function names(scope) {
+async function names(scope, allowRestoreMarker = false) {
   await scope.assertReady(); const result = []; let count = 0;
   const directory = await opendir(scope.path);
   for await (const entry of directory) {
     if (++count > 10000) fail("OPERATIONS_LIMIT");
-    if (entry.name === OPERATIONAL_RESTORE_MARKER) fail("OPERATIONS_RECONCILIATION_REQUIRED");
+    if (entry.name === OPERATIONAL_RESTORE_MARKER && !allowRestoreMarker) fail("OPERATIONS_RECONCILIATION_REQUIRED");
     if (entry.name === "privacy-preparation.lock" || /^erasure-.*\.lock$/.test(entry.name)) fail("OPERATIONS_BUSY");
     if (entry.name.startsWith("erasure-") && entry.name.endsWith(".json") && !NAME.test(entry.name)) fail("OPERATIONS_INPUT");
     if (NAME.test(entry.name)) result.push(entry.name);
@@ -108,21 +108,50 @@ export const operationalStateHash = value => hash(JSON.stringify(value));
 
 /** Two complete inventories and byte comparisons detect a publication during
  * capture. The caller must additionally hold real producer quiescence. */
+async function readState(scope, { key, binding, signal }, allowRestoreMarker = false) {
+  const selected = await names(scope, allowRestoreMarker), files = [];
+  for (const name of selected) {
+    const content = await readFile(scope, name, name === "privacy-preparation.json" ? 65536 : 4096, signal);
+    try { files.push({ name, content: content.toString("base64url") }); } finally { content.fill(0); }
+  }
+  const checked = state({ version: 1, binding, files }, key).value;
+  if (JSON.stringify(await names(scope, allowRestoreMarker)) !== JSON.stringify(selected)) fail("OPERATIONS_CHANGED");
+  for (const file of checked.files) {
+    const content = await readFile(scope, file.name, file.name === "privacy-preparation.json" ? 65536 : 4096, signal);
+    try { if (content.toString("base64url") !== file.content) fail("OPERATIONS_CHANGED"); } finally { content.fill(0); }
+  }
+  if (JSON.stringify(await names(scope, allowRestoreMarker)) !== JSON.stringify(selected)) fail("OPERATIONS_CHANGED");
+  active(signal); return checked;
+}
 export async function captureOperationalState(scope, { key, binding, signal }) {
+  return safe(() => readState(scope, { key, binding, signal }));
+}
+
+/** Inspect a complete quarantine without changing its source-bound envelopes or
+ * its startup-blocking marker. This read is never permission to open a runtime. */
+export async function readOperationalQuarantine(scope, { key, sourceBinding, targetBinding, signal }) {
   return safe(async () => {
-    const selected = await names(scope), files = [];
-    for (const name of selected) {
-      const content = await readFile(scope, name, name === "privacy-preparation.json" ? 65536 : 4096, signal);
-      try { files.push({ name, content: content.toString("base64url") }); } finally { content.fill(0); }
-    }
-    const checked = state({ version: 1, binding, files }, key).value;
-    if (JSON.stringify(await names(scope)) !== JSON.stringify(selected)) fail("OPERATIONS_CHANGED");
-    for (const file of checked.files) {
-      const content = await readFile(scope, file.name, file.name === "privacy-preparation.json" ? 65536 : 4096, signal);
-      try { if (content.toString("base64url") !== file.content) fail("OPERATIONS_CHANGED"); } finally { content.fill(0); }
-    }
-    if (JSON.stringify(await names(scope)) !== JSON.stringify(selected)) fail("OPERATIONS_CHANGED");
-    active(signal); return checked;
+    const source = erasureBinding(sourceBinding), target = erasureBinding(targetBinding);
+    let content, final;
+    try {
+      content = await readFile(scope, OPERATIONAL_RESTORE_MARKER, 4096, signal);
+      const text = new TextDecoder("utf-8", { fatal: true }).decode(content), value = JSON.parse(text);
+      fields(value, ["version", "status", "backupSha256", "currentSha256", "mergedSha256", "sourceBinding", "targetBinding"]);
+      if (value.version !== 1 || value.status !== "reconciliation_required"
+        || ![value.backupSha256, value.currentSha256, value.mergedSha256].every(value => typeof value === "string" && HEX.test(value))) fail("OPERATIONS_INPUT");
+      const marker = { version: 1, status: "reconciliation_required", backupSha256: value.backupSha256,
+        currentSha256: value.currentSha256, mergedSha256: value.mergedSha256,
+        sourceBinding: erasureBinding(value.sourceBinding), targetBinding: erasureBinding(value.targetBinding) };
+      if (`${JSON.stringify(marker)}\n` !== text) fail("OPERATIONS_INPUT");
+      if (JSON.stringify(marker.sourceBinding) !== JSON.stringify(source)
+        || JSON.stringify(marker.targetBinding) !== JSON.stringify(target)) fail("OPERATIONS_BINDING_CHANGED");
+      const current = await readState(scope, { key, binding: source, signal }, true), stateSha256 = operationalStateHash(current);
+      if (stateSha256 !== marker.mergedSha256) fail("OPERATIONS_CHANGED");
+      final = await readFile(scope, OPERATIONAL_RESTORE_MARKER, 4096, signal);
+      if (!final.equals(content)) fail("OPERATIONS_CHANGED");
+      await scope.assertReady(); active(signal);
+      return { marker, state: current, markerSha256: hash(content), stateSha256 };
+    } finally { content?.fill(0); final?.fill(0); }
   });
 }
 function context(receipt) {
