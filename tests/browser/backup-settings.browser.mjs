@@ -87,6 +87,7 @@ test("real Chrome: a login change during any kit suppresses its download and nev
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden"), "initial session");
     await page.execute("document.addEventListener('click',e=>{if(e.target.closest('a[download]')){e.preventDefault();window.__downloaded=true;}})");
     if (selector === '#verify-archive') await page.click('#verification-panel > summary');
+    if (selector.includes('update-kit')) { await page.click('#backup-technical > summary'); await page.click('.destination-settings > summary'); }
     await tabUntil(page, selector); await page.key("\uE007");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden && document.getElementById('backup-status').textContent.length > 0 && !document.querySelector('[data-action=kit]').disabled"), "fresh session after rejected old response");
     assert.equal(await page.execute("return !!window.__downloaded"), false); assert.equal(source.requests.filter(r => r.path.endsWith(suffix)).length, 1);
