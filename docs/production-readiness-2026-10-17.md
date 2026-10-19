@@ -1,5 +1,8 @@
 # JessieMessage — reste à faire avant un usage privé régulier
 
+> État courant et prochaine action : [point de reprise](REPRISE.md). Les jalons datés ci-dessous décrivent leur relevé historique et ne remplacent pas cet état.
+
+
 **Mise à jour 0.67 — étape 4/6 :** [canal du témoin PC et mise à jour Windows](pc-witness-067.md), [PR #83](https://github.com/fredbuhr/jessiemessage/pull/83) fusionnée. Suite générale, 407/407 par MariaDB, 157/157 Chrome, HTTPS/MFA et 25 assertions Windows natives réussis. Le service reste en **0.65**. Avant activation : contrat d’initialisation hors archives restaurables, initialisation explicite du PC existant, raccordement au démarrage et réconciliation source/cible ; disponibilité quand le PC est éteint à traiter. Inspection SQL qualifiée et déchiffrement/import personnels courants encore requis. Le kit conserve dossier et autorisation ; aucun réappariement ni mise à jour personnelle demandés tant que le nouveau parcours n’est pas déployé. [Point de reprise courant](REPRISE.md), [preuves](verification-proofs/jm067-verification.json). Les bilans suivants conservent l’historique.
 
 **Suite de l’étape 4/6 :** [protocole logiciel 0.66](erasure-continuity-066.md) fusionné et vérifié dans source/PR/main, témoin durable et contrôle du journal réel avant mutation. Aucun transport hors hébergement ni effacement réel activé ; runtime 0.65 conservé. Les preuves de test du protocole ne remplacent pas les preuves d’exploitation manquantes.

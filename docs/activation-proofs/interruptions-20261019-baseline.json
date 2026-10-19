@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "type": "interruption_reconciliation",
+  "recordedAt": "2026-10-19T14:29:07.671131+00:00",
+  "repository": {
+    "mainAtStart": "a18d6afd32d6a9f138e78b60273eb1ee9ba5cf81",
+    "documentaryPr89": "merged",
+    "prCleanup": "interruptions-20261019-pr-cleanup.json"
+  },
+  "hosting": {
+    "checkedAt": "2026-10-19T14:24:05.241815Z",
+    "version": "0.70.0",
+    "source": "61878b174b239c8d009fedd9714701214dadbfbe",
+    "tree": "1efa835b44a6baeaa06b7e7e5ccf4351ece3e58c",
+    "workingTree": "clean",
+    "managerState": "active",
+    "launcherSha256": "cd888f05bab47253fe79783d5c05e5b2a16827cff8b3a1d2b43be85808f41bb6",
+    "launcherBytes": 1131
+  },
+  "originalAuthority": {
+    "genesisSha256": "4fbdce199d70c1fd4b80f8ff249dae2666812b8ffc1c6912e8c50d1a042aaf10",
+    "originSha256": "817c6dca7735bb844d73066ebd3a711c46eb52cf5d5aabb5f4772171efc4b0c1",
+    "stateSha256": "ac4c7287aaaa5abc758ddb4cc8b8fd86d433c6c8a187e048c7dc12a6dba4b728",
+    "phase": "ready",
+    "unchangedSince070": true,
+    "authenticatedCheck": {
+      "type": "witness_observer_precheck",
+      "status": "passed",
+      "mode": "observe_only",
+      "started": false,
+      "externalWitnessConfirmed": false,
+      "closuresEnabled": false
+    }
+  },
+  "backups": {
+    "enabled": true,
+    "hourUtc": 5,
+    "minuteUtc": 15,
+    "archiveCount": 4,
+    "pcReceipt": {
+      "captureId": "capture-1792386945745-204e0e8e073b6131",
+      "bytes": 402552,
+      "sha256": "c809dbfed6eabd2e8bde1a1d30a6cb11cbc99df720c0140935b3f2ae413690e5",
+      "receivedAt": 1792419653468
+    }
+  },
+  "monitor": {
+    "code": "OK",
+    "samples": [
+      1792419728656,
+      1792419788662,
+      1792419848667
+    ],
+    "lastObservedAt": 1792419866721,
+    "externalWitnessConfirmed": false,
+    "closuresEnabled": false
+  },
+  "httpsFromHosting": {
+    "checkedAt": 1792420084903,
+    "status": "healthy",
+    "durationMilliseconds": 116,
+    "health": "pass",
+    "readiness": "pass"
+  },
+  "scratchHttps": {
+    "checkedAt": 1792419910515,
+    "status": "unavailable",
+    "confirmedFailure": false,
+    "codes": [
+      "request_timeout",
+      "request_timeout"
+    ],
+    "interpretation": "This scratch route timed out; hosting probe and independent GitHub monitor passed. Not evidence of service downtime."
+  },
+  "localTargetedTests": {
+    "passed": 103,
+    "skipped": 2,
+    "failed": 0,
+    "skippedReason": "native procfs unavailable"
+  },
+  "scope": {
+    "newGenesisPrepared": false,
+    "newEnrollmentPrepared": false,
+    "applicationRestarted": false,
+    "databaseImported": false,
+    "realMessageSent": false,
+    "accountClosed": false,
+    "pcPairingChanged": false
+  },
+  "pending": [
+    "Deploy 0.70.1 kit instructions after CI",
+    "Personal Windows witness activation and fresh independent roundtrip",
+    "Current personal decryption and isolated import",
+    "Recovery startup barrier and source-target reconciliation",
+    "Qualified SQL inspection",
+    "Production closures and aligned notice",
+    "Independent total-outage alert and final device acceptance"
+  ]
+}

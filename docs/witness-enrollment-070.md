@@ -78,14 +78,16 @@ jmWitnessArguments=(
 
 ```bash
 # Ponctuel, une fois, puis remplacer le Run par le démarrage normal.
-PORT=3000 node "$JM_PARENT_070_DIRECTORY/scripts/start-recurring-private-messaging.mjs" prepare-witness-enrollment "${jmWitnessArguments[@]}"
+JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd PORT=3000 node "$JM_PARENT_070_DIRECTORY/scripts/start-recurring-private-messaging.mjs" prepare-witness-enrollment "${jmWitnessArguments[@]}"
 
 # Contrôle de la permission existante, avant le Run permanent.
-PORT=3000 node "$JM_PARENT_070_DIRECTORY/scripts/start-recurring-private-messaging.mjs" check-witness-observer "${jmWitnessArguments[@]}"
+JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd PORT=3000 node "$JM_PARENT_070_DIRECTORY/scripts/start-recurring-private-messaging.mjs" check-witness-observer "${jmWitnessArguments[@]}"
 
 # Run permanent ; enregistrer et relire ses valeurs dans le Manager.
-PORT=3000 node "$JM_PARENT_070_DIRECTORY/scripts/start-recurring-private-messaging.mjs" start-witness-observer "${jmWitnessArguments[@]}"
+JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd PORT=3000 node "$JM_PARENT_070_DIRECTORY/scripts/start-recurring-private-messaging.mjs" start-witness-observer "${jmWitnessArguments[@]}"
 ```
+
+Le mode strict doit aussi etre fourni dans l'environnement : l'option `--private-path-mode` seule ne remplace pas `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`. Son absence provoque `RECURRING_SUPERVISOR_ENVIRONMENT` avant toute operation ; ne pas regenerer l'etat pour corriger ce refus.
 
 Ne pas conserver `prepare-witness-enrollment` comme Run permanent. Une seconde préparation refuse un état existant. Ne pas supprimer cet état pour contourner ce refus. Distinguer le résultat Build, le démarrage du parent, la préparation durable, le contrôle de readiness et les refus anonymes de la passerelle ; conserver les codes techniques neutres et journaux privés.
 
