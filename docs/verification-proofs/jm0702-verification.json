@@ -42,7 +42,7 @@
     "manager": "active",
     "checkoutClean": true,
     "launcher": "/srv/customer/jessiemessage-private/start-primary-witness-observer-0702-d1720d8a.sh",
-    "launcherSha256": "c6a51eb48e35104936f57f81ddef43176a38888e03d037da9c1124f6e1a49370",
+    "launcherSha256": "c6a51eb48e35104936f57f81ddef43176a38888e03d037da9c1124f6e1a49377",
     "health": "200 ok",
     "readiness": "200 ready",
     "privatePrecheck": "passed",

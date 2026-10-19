@@ -23,7 +23,7 @@ Deux tests locaux de composition du kit et la syntaxe de 526 sources réussissen
 ## Paramètres et états à préserver
 
 - Checkout actif : `/srv/customer/jessiemessage-operator/windows-existing-pc-update-0702-d1720d8a` ; parent public 3000, enfant configuré en boucle locale 3001.
-- Run permanent : `bash /srv/customer/jessiemessage-private/start-primary-witness-observer-0702-d1720d8a.sh`, mode 0700 ; SHA-256 `c6a51eb48e35104936f57f81ddef43176a38888e03d037da9c1124f6e1a49370`.
+- Run permanent : `bash /srv/customer/jessiemessage-private/start-primary-witness-observer-0702-d1720d8a.sh`, mode 0700 ; SHA-256 `c6a51eb48e35104936f57f81ddef43176a38888e03d037da9c1124f6e1a49377`.
 - Journal : `/srv/customer/jessiemessage-private/jm0702-witness-observer.log`. Moniteur lu à `1792423111896` : `current / OK`, zéro incident ; observation à `1792423122631` : `enrollment_required`, `externalWitnessConfirmed:false`, `closuresEnabled:false`.
 - Contrat : `/srv/customer/jessiemessage-private/witness-origin-069-6b84f6e1/contract/witness-genesis.json`, **813 octets, 0600**, SHA-256 `4fbdce199d70c1fd4b80f8ff249dae2666812b8ffc1c6912e8c50d1a042aaf10`, inchangé.
 - Permission dans `enrollment` : origine **968 octets, 0600**, SHA-256 `817c6dca7735bb844d73066ebd3a711c46eb52cf5d5aabb5f4772171efc4b0c1` ; état **226 octets, 0600**, SHA-256 `ac4c7287aaaa5abc758ddb4cc8b8fd86d433c6c8a187e048c7dc12a6dba4b728`, inchangés. Phase **ready**, révision 1 : la tentative PC non confirmée n'a pas consommé l'autorisation.
