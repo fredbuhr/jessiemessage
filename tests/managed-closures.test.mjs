@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
-import { runManagedClosures, resumeManagedClosureRuntime } from "../server/backup/managed-closures.mjs";
+import { runManagedClosures, resumeManagedClosureRuntime, resumeManagedLocalClosureRuntime } from "../server/backup/managed-closures.mjs";
 import { acquireRecurringLock } from "../server/backup/recurring-checkpoint-files.mjs";
 import { createClosureOperations, verifyClosureStartup } from "../server/data/closure-operations.mjs";
 import { AccountErasureError } from "../server/data/erasure-state.mjs";
@@ -58,6 +58,45 @@ test("successful maintenance orders preflight, actual stop, erasure and restart 
   const f = modeled();
   await runManagedClosures({ runtime: f.runtime, operations: f.operations, directory: "/synthetic", source: async () => {} }, { lock: f.lock });
   assert.deepEqual(f.events, ["lock", "preflight", "stop", "erase", "startup-proof", "start", "unlock"]);
+});
+
+test("local maintenance explicitly selects its application-only opening contract", async () => {
+  for (const explicit of [false, true]) {
+    const f = modeled();
+    f.operations.verifyStartup = async guard => { await guard(); f.events.push("startup-proof"); return { verified: true, completedReceipts: 1, scope: "local_application" }; };
+    const result = runManagedClosures({ runtime: f.runtime, operations: f.operations, directory: "/synthetic", source: async () => {},
+      ...(explicit ? { resumeClosures: resumeManagedLocalClosureRuntime } : {}) }, { lock: f.lock });
+    if (explicit) {
+      assert.deepEqual(await result, { completedReceipts: 1 });
+      assert.deepEqual(f.events, ["lock", "preflight", "stop", "erase", "startup-proof", "start", "unlock"]);
+    } else {
+      await assert.rejects(result, { code: "ERASURE_MAINTENANCE" });
+      assert.equal(f.runtime.state().status, "stopped"); assert.equal(f.events.includes("start"), false);
+    }
+  }
+});
+
+test("local opening refuses witnessed, mixed, malformed and accessor-based proofs before listening", async () => {
+  const local = { verified: true, completedReceipts: 1, scope: "local_application" };
+  for (const proof of [syntheticProof(), { ...local, registrySha256: "e".repeat(64) }, { ...local, scope: "complete_database" },
+    { ...local, completedReceipts: -1 }, { ...local, get verified() { assert.fail("Proof accessors cannot execute"); } }]) {
+    const f = modeled(); await f.runtime.stop(); f.events.length = 0;
+    f.operations.verifyStartup = async guard => { await guard(); return proof; };
+    await assert.rejects(resumeManagedLocalClosureRuntime({ runtime: f.runtime, operations: f.operations, assertReady: async () => {} }), { code: "ERASURE_MAINTENANCE" });
+    assert.deepEqual(f.events, []); assert.equal(f.runtime.state().status, "stopped");
+  }
+});
+
+test("local opening retains cancellation and uncertain-start cleanup under the shared maintenance gate", async () => {
+  for (const mode of ["abort_proof", "abort_open", "lost_open"]) {
+    const f = modeled(), controller = new AbortController(); await f.runtime.stop(); f.events.length = 0;
+    f.operations.verifyStartup = async guard => { await guard(); if (mode === "abort_proof") controller.abort();
+      return { verified: true, completedReceipts: 0, scope: "local_application" }; };
+    const start = f.runtime.start;
+    f.runtime.start = async () => { await start(); if (mode === "abort_open") controller.abort(); if (mode === "lost_open") throw new Error("Synthetic lost startup reply"); };
+    await assert.rejects(resumeManagedLocalClosureRuntime({ runtime: f.runtime, operations: f.operations, assertReady: async () => {}, signal: controller.signal }));
+    assert.equal(f.runtime.state().status, "stopped"); assert.equal(f.events.includes("start"), mode !== "abort_proof");
+  }
 });
 
 test("forced or nonzero exit never authorizes erasure or restart", async () => {

@@ -8,12 +8,14 @@ import { createWitnessOriginOperations } from "../server/backup/witness-origin-o
 import { createConfiguredWitnessObserver } from "../server/backup/witness-observer.mjs";
 import { createConfiguredWitnessRecovery } from "../server/backup/witness-recovery-parent.mjs";
 import { createWitnessRecoveryServer } from "../server/backup/witness-recovery-server.mjs";
+import { createConfiguredLocalClosures } from "../server/backup/local-closure-parent.mjs";
+import { resumeManagedLocalClosureRuntime } from "../server/backup/managed-closures.mjs";
 
 export async function main(args = process.argv.slice(2), { environment = process.env, execArgv = process.execArgv,
   preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor,
   makeAlerts = createBackupAlertWorker, makeWitnessOrigin = createWitnessOriginOperations,
   makeWitnessObserver = createConfiguredWitnessObserver, makeWitnessRecovery = createConfiguredWitnessRecovery,
-  makeRecoveryServer = createWitnessRecoveryServer, outputStream = process.stdout,
+  makeRecoveryServer = createWitnessRecoveryServer, makeLocalClosures = createConfiguredLocalClosures, outputStream = process.stdout,
   signal } = {}) {
   const options = parseRecurringArguments(args);
   try { privateAuthenticationProcessOptions(environment, execArgv); } catch { throw new RecurringSupervisorError("ENVIRONMENT"); }
@@ -54,6 +56,16 @@ export async function main(args = process.argv.slice(2), { environment = process
       hourUtc: configuration.hourUtc, minuteUtc: configuration.minuteUtc, started: false, backupStarted: false };
     outputStream.write(`${JSON.stringify(report)}\n`); return report;
   }
+  const localMode = ["check-local-closures", "start-local-closures"].includes(options.command);
+  let local;
+  if (localMode) {
+    await preflight(options, { environment, signal });
+    local = await makeLocalClosures(options, { environment, signal });
+    if (options.command === "check-local-closures") {
+      try { const report = await local.check(); outputStream.write(`${JSON.stringify(report)}\n`); return report; }
+      finally { await local.close(); }
+    }
+  }
   const witnessOriginOperations = ["plan-witness", "check-witness", "prepare-witness"].includes(options.command)
     ? makeWitnessOrigin(options, { environment, signal }) : null;
   if (["plan-witness", "check-witness"].includes(options.command)) {
@@ -70,11 +82,12 @@ export async function main(args = process.argv.slice(2), { environment = process
   let supervisor;
   try {
     if (observer !== null) await observer[options.command === "prepare-witness-enrollment" ? "checkInitial" : "check"]();
-    supervisor = makeSupervisor(observer === null ? options : { ...options, command: "start" }, { environment, emit,
+    supervisor = makeSupervisor(observer === null && !localMode ? options : { ...options, command: "start" }, { environment, emit,
       ...(observer === null ? {} : { witnessControl: observer.handler }),
+      ...(local === undefined ? {} : { closureOperations: local.operations, resumeClosures: resumeManagedLocalClosureRuntime }),
       ...(witnessOriginOperations === null ? {} : { witnessOriginOperations }) });
     if (observer !== null) observer.attachMaintenance(supervisor.withWitnessMaintenance, supervisor.failWitnessObservation);
-  } catch (error) { await observer?.close(); await supervisor?.close(); throw error; }
+  } catch (error) { try { await observer?.close(); await supervisor?.close(); } finally { await local?.close(); } throw error; }
   let monitor, alerts;
   const monitorUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_monitor","event":"unavailable","code":"MONITOR_UNAVAILABLE","notificationStatus":"not_sent"}\n'); } catch {} };
   const alertsUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_alert","event":"unavailable","code":"ALERT_UNAVAILABLE","notificationStatus":"not_confirmed","inboxStatus":"not_checked"}\n'); } catch {} };
@@ -122,15 +135,18 @@ export async function main(args = process.argv.slice(2), { environment = process
     await observer?.close();
     try { await monitor?.close(); } catch { monitorUnavailable(); }
     // Stop the application without waiting for mail delivery/cleanup.
-    await supervisor.close();
-    try { await alerts?.close(); } catch { alertsUnavailable(); }
+    try { await supervisor.close(); }
+    finally {
+      try { await alerts?.close(); } catch { alertsUnavailable(); }
+      await local?.close();
+    }
   }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const cancellation = new AbortController(); let deadline;
   const recoveryCommand = ["check-witness-recovery", "start-witness-recovery"].includes(process.argv[2]);
-  const operationDeadline = ["plan-witness", "check-witness", "check-witness-observer", "check-witness-recovery"].includes(process.argv[2])
+  const operationDeadline = ["plan-witness", "check-witness", "check-witness-observer", "check-witness-recovery", "check-local-closures"].includes(process.argv[2])
     ? setTimeout(() => { process.stderr.write(recoveryCommand ? "WITNESS_RECOVERY_TIMEOUT\n" : "WITNESS_ORIGIN_TIMEOUT\n"); process.exit(1); }, 45000) : null;
   const stop = () => {
     if (cancellation.signal.aborted) return;
@@ -140,7 +156,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   process.once("SIGTERM", stop); process.once("SIGINT", stop);
   try { await main(process.argv.slice(2), { signal: cancellation.signal }); }
   catch (error) {
-    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|MANAGED_RUNTIME|WITNESS_(?:ORIGIN|GENESIS|ENROLLMENT|OBSERVATION|RECOVERY))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
+    const code = /^(?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|MANAGED_RUNTIME|ERASURE|WITNESS_(?:ORIGIN|GENESIS|ENROLLMENT|OBSERVATION|RECOVERY))_[A-Z_]{1,40}$/.test(error?.code ?? "") ? error.code : "RECURRING_SUPERVISOR_OPERATION";
     process.stderr.write(`${code}: ${recoveryCommand ? "La récupération privée n’est pas confirmée." : "La sauvegarde récurrente n’est pas confirmée."}\n`); process.exitCode = 1;
   } finally { clearTimeout(operationDeadline); clearTimeout(deadline); process.removeListener("SIGTERM", stop); process.removeListener("SIGINT", stop); }
 }

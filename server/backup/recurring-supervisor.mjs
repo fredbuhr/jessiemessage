@@ -42,7 +42,7 @@ export function parseRecurringArguments(args) {
   const witness = ["plan-witness", "check-witness", "prepare-witness"].includes(args[0]);
   const observer = ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"].includes(args[0]);
   const recovery = ["check-witness-recovery", "start-witness-recovery"].includes(args[0]);
-  if (args.length !== (witness || observer || recovery ? 17 : 13) || !["check", "start", "plan-witness", "check-witness", "prepare-witness",
+  if (args.length !== (witness || observer || recovery ? 17 : 13) || !["check", "start", "check-local-closures", "start-local-closures", "plan-witness", "check-witness", "prepare-witness",
     "prepare-witness-enrollment", "check-witness-observer", "start-witness-observer", "check-witness-recovery", "start-witness-recovery"].includes(args[0])) fail("USAGE");
   const names = new Map([["--runtime-directory", "runtimeDirectory"], ["--runtime-head", "runtimeHead"], ["--runtime-tree", "runtimeTree"],
     ["--private-directory", "privateDirectory"], ["--operations-directory", "operationsDirectory"], ["--private-path-mode", "privatePathMode"],
@@ -175,12 +175,13 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   readConfiguration = readRecurringConfiguration, history = readCheckpointHistory, lock = acquireRecurringLock,
   append = appendCheckpointRecord, preflight = recurringPreflight, source = assertRuntimeSource, checkpoint = checkpointProcess,
   encrypt = encryptCheckpointArchive, makeRuntime = createManagedRuntime, emit = () => {}, intervalMilliseconds = 60000,
-  schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures, witnessControl = null, makeGateway = createParentGateway,
+  schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures, resumeClosures = resumeManagedClosureRuntime, witnessControl = null, makeGateway = createParentGateway,
   witnessOriginOperations = null, prepareWitness = runManagedWitnessPreparation } = {}) {
   if (!["start", "prepare-witness"].includes(options.command)) fail("CONFIGURATION");
   if (witnessControl !== null && typeof witnessControl !== "function") fail("CONFIGURATION");
   if (!Number.isSafeInteger(intervalMilliseconds) || intervalMilliseconds < 1 || intervalMilliseconds > 60000) fail("CONFIGURATION");
   if (closureOperations !== null && ["hasPending", "preflight", "run", "verifyStartup"].some(name => typeof closureOperations?.[name] !== "function")) fail("CONFIGURATION");
+  if (typeof resumeClosures !== "function") fail("CONFIGURATION");
   if (witnessOriginOperations !== null && (options.command !== "prepare-witness" || closureOperations !== null || witnessControl !== null
     || typeof prepareWitness !== "function" || ["check", "prepare"].some(name => typeof witnessOriginOperations?.[name] !== "function"))
     || options.command === "prepare-witness" && witnessOriginOperations === null) fail("CONFIGURATION");
@@ -217,7 +218,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
         if (closurePending) {
           try {
             const result = await runClosures({ runtime, operations: closureOperations, directory: options.operationsDirectory,
-              source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
+              source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal, resumeClosures });
             notice({ version: 1, type: "account_closures", status: "completed", completedReceipts: result.completedReceipts });
           } catch {
             // Never reopen producers after an uncertain destructive operation.
@@ -253,7 +254,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
               if (closureOperations !== null && await closureOperations.hasPending()) fail("RUNTIME");
               if (closureOperations !== null) {
                 if (typeof lease?.assertReady !== "function") fail("RUNTIME");
-                return resumeManagedClosureRuntime({ runtime, operations: closureOperations, signal, assertReady: async () => {
+                return resumeClosures({ runtime, operations: closureOperations, signal, assertReady: async () => {
                   active(signal); await source(options, { signal }); await lease.assertReady(); active(signal);
                 } });
               }
@@ -315,11 +316,11 @@ export function createRecurringSupervisor(options, { environment = process.env, 
       else if (await closureOperations.hasPending()) {
         // This owner already verifies and reopens under its own capture lock.
         await runClosures({ runtime, operations: closureOperations, directory: options.operationsDirectory,
-          source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal });
+          source: () => source(options, { signal: cancellation.signal }), signal: cancellation.signal, resumeClosures });
         if (runtime.state().status !== "running") fail("RUNTIME");
       } else await lock(options.operationsDirectory, async lease => {
         if (typeof lease?.assertReady !== "function") fail("RUNTIME");
-        await resumeManagedClosureRuntime({ runtime, operations: closureOperations, signal: cancellation.signal, assertReady: async () => {
+        await resumeClosures({ runtime, operations: closureOperations, signal: cancellation.signal, assertReady: async () => {
           active(cancellation.signal); await source(options, { signal: cancellation.signal }); await lease.assertReady(); active(cancellation.signal);
         } });
       }, { signal: cancellation.signal });

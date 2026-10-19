@@ -81,6 +81,10 @@ Stage 0.27 is accepted in recipe: the owner confirmed the isolated SQL import an
 
 Keep the [earlier audit](docs/AUDIT-REPRISE-2026-10-15.md) and [historical implementation log](docs/NEXT-STEPS.md) as dated evidence. They do not supersede the current note. Code merges and production activations are recorded separately in [the current handover](docs/REPRISE.md). No client data, credentials or personal portraits belong in this public repository.
 
+## 0.77 — composition locale, activation séparée
+
+Le lot S2a réutilise le moteur de fermeture existant sans témoin PC et ajoute la réconciliation manuelle d’une cible restaurée, toujours bloquée avant publication. `start` reste inchangé ; le service courant et les contrôles réellement acquis sont indiqués dans [REPRISE](docs/REPRISE.md). Le raccord opérateur et la réouverture explicite constituent le lot S2b. [Parcours et limites](docs/local-closures-manual-077.md).
+
 ## Try without a terminal
 
 Open the latest successful **CI** run on the development branch in GitHub Actions. Download **JessieMessage-apercu-…**, extract it and open **JessieMessage.html** in a browser.
