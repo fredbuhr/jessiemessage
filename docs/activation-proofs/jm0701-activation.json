@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "release": "0.70.1",
+  "lot": "A",
+  "status": "verified",
+  "checkedAt": "2026-10-19T14:46:00Z",
+  "source": "0fd6c30658f3b6434e8833743da564ea84a47878",
+  "tree": "b35ad5ccabbb772c6163a52489b84fa1c3482b18",
+  "pullRequest": 90,
+  "merge": "bfa77a2559cfd1ab02bd53cb419509e01fa26c7a",
+  "mainChecks": {
+    "status": "passed",
+    "jobs": 6,
+    "runs": [
+      39270343447,
+      39270343496
+    ]
+  },
+  "hosting": {
+    "managerState": "active",
+    "settingsReadBack": true,
+    "checkout": "/srv/customer/jessiemessage-operator/interruption-reconciliation-0701-0fd6c306",
+    "checkoutClean": true,
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-witness-observer-0701-0fd6c306.sh",
+    "launcherBytes": 1152,
+    "launcherMode": "0700",
+    "launcherSha256": "25894381fd826936cc8a2d8cd700900e7d58023bb2cc30e87071cd35a1b5fadc",
+    "log": "/srv/customer/jessiemessage-private/jm0701-witness-observer.log",
+    "startupEvidence": "Launcher log reports child status started and supervisor status started; exact launcher checks source/tree and clean checkout before executing.",
+    "directProcessInspection": "not_available_in_ssh_process_namespace"
+  },
+  "https": {
+    "checkedAt": "2026-10-19T14:43:04Z",
+    "origin": "https://jessiemessage.com",
+    "from": "hosting_ssh",
+    "health": {
+      "status": 200,
+      "body": {
+        "status": "ok"
+      }
+    },
+    "readiness": {
+      "status": 200,
+      "body": {
+        "status": "ready"
+      }
+    }
+  },
+  "privatePrecheck": {
+    "type": "witness_observer_precheck",
+    "status": "passed",
+    "mode": "observe_only",
+    "started": false,
+    "externalWitnessConfirmed": false,
+    "closuresEnabled": false
+  },
+  "authority": {
+    "unchanged": true,
+    "contract": {
+      "bytes": 813,
+      "mode": "0600",
+      "sha256": "4fbdce199d70c1fd4b80f8ff249dae2666812b8ffc1c6912e8c50d1a042aaf10"
+    },
+    "enrollmentOrigin": {
+      "bytes": 968,
+      "mode": "0600",
+      "sha256": "817c6dca7735bb844d73066ebd3a711c46eb52cf5d5aabb5f4772171efc4b0c1"
+    },
+    "enrollmentState": {
+      "bytes": 226,
+      "mode": "0600",
+      "sha256": "ac4c7287aaaa5abc758ddb4cc8b8fd86d433c6c8a187e048c7dc12a6dba4b728"
+    }
+  },
+  "monitor": {
+    "samples": [
+      1792420999204,
+      1792421059210
+    ],
+    "state": "current",
+    "code": "OK",
+    "activeIncident": false,
+    "witnessCheckedAt": 1792421061556,
+    "witnessState": "enrollment_required",
+    "externalWitnessConfirmed": false,
+    "closuresEnabled": false
+  },
+  "windowsKit": {
+    "testedFromDeployedCheckout": true,
+    "command": "node --test tests/copy-kit.test.mjs",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "authenticatedUiDownload": "not_checked_browser_requires_login",
+    "personalExecution": "awaiting_existing_pc"
+  },
+  "backupReceipt": {
+    "scope": "Previously verified baseline; not reread during this final closure",
+    "receivedAt": 1792419653468,
+    "currentDecryption": "not_confirmed",
+    "isolatedNativeImport": "not_confirmed"
+  },
+  "next": "Lot B: existing PC, Administration > Sauvegardes > Mettre a jour le PC > extract entire ZIP > Activer-le-temoin.cmd; observe local result and independent server result separately.",
+  "mutationsExcluded": [
+    "redeployment",
+    "restart",
+    "pairing",
+    "witness_initialization",
+    "permission_preparation",
+    "key_generation",
+    "real_message",
+    "mail",
+    "database_import",
+    "account_erasure"
+  ],
+  "verificationScope": "Final closure after the previously requested 0.70.1 deployment. Excluded mutations refer only to this final closure, not the earlier deployment."
+}
