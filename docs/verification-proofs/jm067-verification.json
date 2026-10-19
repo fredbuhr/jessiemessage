@@ -1,0 +1,347 @@
+{
+  "version": 1,
+  "release": "0.67.0",
+  "step": 4,
+  "totalSteps": 6,
+  "scope": "pc_witness_transport_and_windows_upgrade_code_only",
+  "sourceHead": "745a4beb00f61b84a30230a0ce80659484122f05",
+  "sourceTree": "cdd92048b9efb0e22eed6b1916f9867eea15b0ab",
+  "pullRequest": 83,
+  "pullRequestUrl": "https://github.com/fredbuhr/jessiemessage/pull/83",
+  "ci": {
+    "source": {
+      "runId": 39181691726,
+      "event": "push",
+      "headSha": "745a4beb00f61b84a30230a0ce80659484122f05",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39181691726",
+      "status": "completed",
+      "conclusion": "success",
+      "completedAt": "2026-10-19T00:41:21Z",
+      "jobs": [
+        {
+          "id": 117835672872,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117835673082,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117835673093,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117835673128,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117835673130,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "branch": "feat/pc-witness-067"
+    },
+    "pullRequest": {
+      "runId": 39181693889,
+      "event": "pull_request",
+      "headSha": "745a4beb00f61b84a30230a0ce80659484122f05",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39181693889",
+      "status": "completed",
+      "conclusion": "success",
+      "completedAt": "2026-10-19T00:41:00Z",
+      "jobs": [
+        {
+          "id": 117835607677,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117835607924,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117835607940,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117835607989,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117835608025,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "windowsPullRequest": {
+      "runId": 39181693890,
+      "event": "pull_request",
+      "headSha": "745a4beb00f61b84a30230a0ce80659484122f05",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39181693890",
+      "status": "completed",
+      "conclusion": "success",
+      "completedAt": "2026-10-19T00:39:12Z",
+      "jobs": [
+        {
+          "id": 117835607511,
+          "name": "Windows PowerShell 5.1 instructions",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "main": {
+      "runId": 39181920393,
+      "event": "push",
+      "headSha": "cbf378b1eba5e02c675ddb943438c54c29ddf1ee",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39181920393",
+      "status": "completed",
+      "conclusion": "success",
+      "completedAt": "2026-10-19T00:43:53Z",
+      "jobs": [
+        {
+          "id": 117836298400,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117836298562,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117836298600,
+          "name": "Chrome HTTPS authentication with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117836298639,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117836298669,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "windowsMain": {
+      "runId": 39181920403,
+      "event": "push",
+      "headSha": "cbf378b1eba5e02c675ddb943438c54c29ddf1ee",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39181920403",
+      "status": "completed",
+      "conclusion": "success",
+      "completedAt": "2026-10-19T00:42:24Z",
+      "jobs": [
+        {
+          "id": 117836298134,
+          "name": "Windows PowerShell 5.1 instructions",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "local": {
+    "general": {
+      "tests": 2692,
+      "passed": 2505,
+      "skipped": 187,
+      "failed": 0,
+      "head": "745a4beb00f61b84a30230a0ce80659484122f05",
+      "note": "Full local suite on the final release source."
+    },
+    "targetedFinalTransport": {
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "head": "b0670d87d6a289319b55ac9b25e9aa8a0b3dd632",
+      "note": "Transport unchanged by the later session-preservation correction."
+    },
+    "syntaxSources": 504,
+    "buildPassed": true,
+    "buildHead": "d1c5f3611f5fada1de5cf41b192ffe21481323d3"
+  },
+  "windows": {
+    "assertions": 25,
+    "realNtfsFiles": true,
+    "canonicalNodeInteroperability": true,
+    "realDpapiConfigurationUnchanged": true,
+    "hardlinksRefused": true,
+    "missingHeadNeverInitialized": true,
+    "partialPublicationRefused": true,
+    "consecutivePublicationRecovery": true,
+    "ordinaryCollectorVerified": true,
+    "zipNativeExpansion": true,
+    "syntheticGpgRecovery": true,
+    "realEndpointUsed": false,
+    "tasksRegisteredOnRunner": false,
+    "scriptSha256": {
+      "witness": "b3dfe99ebe4aff0dcd985eb60aebbd09bf39a38cd6e7f013e487f2ba1829f400",
+      "collector": "8b3789582d46e73cf860400147d9187c00a573da96cb489977ab9dd21bcd82f8",
+      "test": "60d3cc1155a091981b2976dded7f44331e0f84c5ba727adc1575c0c2287ce68d"
+    }
+  },
+  "transport": {
+    "fullAuthenticatedCoreGateOverActualHttp": true,
+    "actualStoppedChildListener": true,
+    "pinnedDestination": true,
+    "pinnedPairingTimestampAndExactTokenFingerprint": true,
+    "freshAuthorizationBeforeDeliveryAndAcceptance": true,
+    "revocationAndPauseBlock": true,
+    "originCookieFetchHeadersRefused": true,
+    "correlationReplayAbortAndCloseVerified": true,
+    "peerStampStrippedAtGateway": true,
+    "actualPeerUsedForAuthAndAdmission": true,
+    "multipleSetCookiesPreserved": true,
+    "defaultDirectListenerUnchanged": true,
+    "unpairedUpdatePreservesAdminSession": true
+  },
+  "production": {
+    "hostingChangedThisLot": false,
+    "deployed": false,
+    "activeReleaseLastVerified": "0.65.0",
+    "activeHeadLastVerified": "f53d6982d0fd54e50fe7af43e1d08a5758553703",
+    "activeTreeLastVerified": "51717124bf15df3845a97e4f675c8549d59715c2",
+    "previousRuntimeObservation": "2026-10-18T23:23:24.936Z",
+    "realClosuresEnabled": false,
+    "operatorGenesisContractInstalled": false,
+    "offHostWitnessRoundTripObserved": false,
+    "personalPcWitnessInstalled": false,
+    "personalDecryptionConfirmed": false,
+    "currentIsolatedNativeRestoreCompleted": false,
+    "qualifiedSqlInspectionCompleted": false
+  },
+  "remaining": [
+    "Install authenticated operator-owned genesis contract outside the restorable operational directory.",
+    "Explicitly initialize the existing PC against the original complete empty registry; never recreate missing witness state.",
+    "Bind transport and fresh managed startup gate to that contract.",
+    "Reconcile source and target while retaining the original journal identity.",
+    "Current personal decryption confirmation and actual isolated native restore.",
+    "Qualified SQL executable-object inspection before real closures.",
+    "Independent external monitoring and final personal acceptance in steps 5 and 6.",
+    "Define safe operating availability with the personal PC offline before enabling the production startup/recovery policy."
+  ],
+  "observedDevelopmentCorrections": [
+    "Local HTTP regression from a shadowed peer helper corrected before publishing any source commit.",
+    "Chrome session-change test opens the existing folded paired-PC controls explicitly.",
+    "Pairing fingerprint additionally pins capability replacements with identical timestamps.",
+    "Gateway close immediately cancels its mailbox and pending exchanges.",
+    "An unpaired destination update returns 409 without clearing the valid administrator cookie."
+  ],
+  "mergeCommit": "cbf378b1eba5e02c675ddb943438c54c29ddf1ee",
+  "mergeTree": "cdd92048b9efb0e22eed6b1916f9867eea15b0ab",
+  "releaseRef": "release/0.67.0",
+  "metrics": {
+    "general": {
+      "tests": 2692,
+      "passed": 2664,
+      "skipped": 28,
+      "failed": 0
+    },
+    "mariaDb1011": {
+      "tests": 407,
+      "passed": 407,
+      "failed": 0
+    },
+    "mariaDb114": {
+      "tests": 407,
+      "passed": 407,
+      "failed": 0
+    },
+    "chrome": {
+      "tests": 157,
+      "passed": 157,
+      "failed": 0
+    },
+    "httpsMfa": {
+      "tests": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "windowsWitnessAssertions": 25,
+    "syntaxSources": 504,
+    "buildPassed": true
+  },
+  "decodedJobEvidence": {
+    "117835673082": {
+      "tests": 407,
+      "pass": 407,
+      "fail": 0,
+      "skipped": 0
+    },
+    "117835673093": {
+      "tests": 407,
+      "pass": 407,
+      "fail": 0,
+      "skipped": 0
+    },
+    "117835673130": {
+      "tests": 157,
+      "pass": 157,
+      "fail": 0,
+      "skipped": 0
+    },
+    "117836298400": {
+      "tests": 407,
+      "pass": 407,
+      "fail": 0,
+      "skipped": 0
+    },
+    "117836298562": {
+      "tests": 157,
+      "pass": 157,
+      "fail": 0,
+      "skipped": 0
+    },
+    "117836298600": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0
+    },
+    "117836298639": {
+      "tests": 407,
+      "pass": 407,
+      "fail": 0,
+      "skipped": 0
+    },
+    "117836298669": {
+      "tests": 2692,
+      "pass": 2664,
+      "fail": 0,
+      "skipped": 28,
+      "syntaxSources": 504,
+      "buildPassed": true
+    },
+    "117836298134": {
+      "witnessAssertions": 25
+    }
+  }
+}
