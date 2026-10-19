@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "release": "0.70.2",
+  "scope": "Existing paired Windows PC update; no pairing or witness reset",
+  "pullRequest": 92,
+  "reproduction": {
+    "source": "d949e7648efb4aba254e1229416367966ce6d06b",
+    "run": 39274989758,
+    "job": 118136838505,
+    "status": "expected_failure",
+    "step": "Verify Windows witness, existing-PC enrollment and native HTTP",
+    "error": "Exception calling Replace with 3 arguments: The path is not of a legal form.",
+    "line": 237,
+    "operation": "Install-JmAgentFiles: File.Replace(temporary, target, $null)",
+    "fixture": "Both agent scripts already exist; existing DPAPI configuration and enrollment marker must remain intact."
+  },
+  "fix": {
+    "operation": "File.Replace(temporary, target, [NullString]::Value)",
+    "diagnostics": "Failure dialog includes its bounded stage; no exception details or secrets shown.",
+    "nativeWindowsStatus": "pending"
+  },
+  "local": {
+    "kitComposition": {
+      "passed": 2,
+      "failed": 0
+    },
+    "syntax": "running_not_yet_confirmed"
+  },
+  "hostBefore": {
+    "checkedAt": "2026-10-19T15:01:38Z",
+    "runtime": "0.70.1",
+    "authorityPhase": "ready",
+    "authorityRevision": 1,
+    "attemptPresent": false,
+    "contractAndEnrollmentOriginUnchanged": true,
+    "enrollmentStateSha256": "ac4c7287aaaa5abc758ddb4cc8b8fd86d433c6c8a187e048c7dc12a6dba4b728",
+    "monitor": "current_OK"
+  },
+  "deployment": "pending",
+  "personalExecution": "previous_attempt_unconfirmed_do_not_repeat_old_zip"
+}
