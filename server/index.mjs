@@ -1,3 +1,4 @@
+import { bindParentPeer } from "./http/peer-address.mjs";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -68,7 +69,8 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
 
 export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler,
   entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null,
-  legacyHandlers = null, transitionHandler = null } = {}) {
+  legacyHandlers = null, transitionHandler = null, parentGateway = false } = {}) {
+  if (typeof parentGateway !== "boolean") throw new RequestOriginError();
   const requestOriginAllowed = requestOrigin === null ? null : createRequestOriginGuard(requestOrigin);
   let legacyOriginAllowed = null, legacyChain = null;
   if (legacyHandlers !== null) {
@@ -97,6 +99,10 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   const requestWaiters = new Set();
   async function handleRequest(request, response) {
     const method = request.method ?? "GET";
+    if (parentGateway) {
+      try { bindParentPeer(request); }
+      catch { request.resume(); reply(response, method, 503, "application/json", '{"error":"service_unavailable"}', { Connection: "close" }); return; }
+    }
     let activeHandlers = handlers;
     let activeNotifications = notificationsHandler;
     if (draining) {
@@ -226,7 +232,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
 
 export async function createConfiguredServer(env = process.env, options = {}) {
   if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
-    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "backupDirectory", "accountClosures"].includes(name))
+    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "backupDirectory", "accountClosures", "parentGateway"].includes(name))
     || Object.values(Object.getOwnPropertyDescriptors(options)).some(property => !Object.hasOwn(property, "value"))) throw new RequestOriginError();
   const requestOrigin = Object.hasOwn(options, "requestOrigin") ? options.requestOrigin : null;
   const clock = Object.hasOwn(options, "clock") ? options.clock : Date.now;
@@ -235,8 +241,9 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const crm = Object.hasOwn(options, "crm") ? options.crm : false;
   const broadcast = Object.hasOwn(options, "broadcast") ? options.broadcast : false;
   const backupDirectory = Object.hasOwn(options, "backupDirectory") ? options.backupDirectory : undefined;
+  const parentGateway = Object.hasOwn(options, "parentGateway") ? options.parentGateway : false;
   const accountClosures = Object.hasOwn(options, "accountClosures") ? options.accountClosures : false;
-  if (typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof crm !== "boolean" || typeof clock !== "function"
+  if (typeof parentGateway !== "boolean" || parentGateway && requestOrigin !== PRIMARY_ORIGIN || typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof crm !== "boolean" || typeof clock !== "function"
     || typeof broadcast !== "boolean" || broadcast && !crm || typeof accountClosures !== "boolean" || accountClosures && backupDirectory === undefined
     || deviceTransition && requestOrigin !== PRIMARY_ORIGIN || recovery && !deviceTransition || crm && !recovery
     || backupDirectory !== undefined && (!broadcast || typeof backupDirectory !== "string" || !backupDirectory.startsWith("/")
@@ -270,7 +277,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       || ![config, accessConfig, chatConfig, mediaConfig, notificationsConfig].every(value => value.enabled === true)
       || crmConfig.enabled !== crm || resetConfig.enabled !== recovery || broadcastConfig.enabled !== broadcast) throw new RequestOriginError();
   }
-  if (!config.enabled) return { server: createAppServer({ requestOrigin }), pool: null };
+  if (!config.enabled) return { server: createAppServer({ requestOrigin, parentGateway }), pool: null };
   const { mailConfiguration } = await import("./mail/config.mjs");
   const mailConfig = mailConfiguration(env);
   const { createRuntimePool } = await import("./db/runtime.mjs");
@@ -338,7 +345,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     } };
     const observe = (name) => (event) => operations.observe(name, event);
     if (!accessConfig.enabled) {
-      const server = createAppServer({ authHandler, readinessHandler, operations, requestOrigin,
+      const server = createAppServer({ authHandler, readinessHandler, operations, requestOrigin, parentGateway,
         entryHandler: createEntryHandler({ adminSession: (token) => service.session(token) }) });
       server.once("listening", () => operations.start());
       return { server, pool, mailWorker: null, diagnostics };
@@ -482,7 +489,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       legacyHandlers.entryHandler = createEntryHandler({ adminSession: (token) => service.session(token),
         clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, clock });
     }
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin,
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin, parentGateway,
       legacyHandlers, transitionHandler,
       entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled, deviceTransition, clock }) });
     const workers = [];
@@ -576,7 +583,7 @@ export async function start(env = process.env, options = {}) {
       onClose = () => { if (!listening) rejectBinding(); };
       server.once("listening", onListening);
       server.once("close", onClose);
-      try { server.listen(port, "0.0.0.0"); }
+      try { server.listen(port, options.parentGateway === true ? "127.0.0.1" : "0.0.0.0"); }
       catch { rejectBinding(); }
     });
   } catch {

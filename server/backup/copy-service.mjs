@@ -112,6 +112,16 @@ export function createBackupCopyService(directory, internal = {}) {
       return consume(...args);
     }, options);
   }
-  return Object.freeze({ summary, create, update, revoke, preparePairing, pair, manifest, acknowledge, transfer,
+  async function authorizeWitness(token) {
+    const item = agent(await read(), token);
+    if (!item.enabled) failCopy("paused");
+    return { destinationId: item.id, pairedAt: item.pairedAt };
+  }
+  async function updateKit(id) {
+    const item = target(await read(), id);
+    if (item.tokenHash === null) failCopy("unauthorized");
+    return { version: 1, destinationId: item.id, origin: "https://jessiemessage.com" };
+  }
+  return Object.freeze({ authorizeWitness, updateKit, summary, create, update, revoke, preparePairing, pair, manifest, acknowledge, transfer,
     verification: id => catalog.verification(id) });
 }

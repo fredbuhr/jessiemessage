@@ -34,6 +34,8 @@ globalThis.JessieI18n?.register({
   "Active JavaScript pour gérer les sauvegardes.": "Enable JavaScript to manage backups.",
   "Pas encore reçu": "Not received yet",
   "Copies suspendues": "Copies paused",
+  "Mettre à jour le PC": "Update this PC",
+  "Sur le PC déjà raccordé : extraire le ZIP, puis ouvrir Mettre-a-jour.cmd. Le dossier et l’autorisation existante sont conservés.": "On the connected PC: extract the ZIP, then open Mettre-a-jour.cmd. Your folder and existing permission are preserved.",
   "À raccorder": "Awaiting connection",
   "Dernière archive copiée": "Latest archive copied",
   "Copie en attente": "Copy pending",

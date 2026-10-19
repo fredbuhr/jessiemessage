@@ -1,3 +1,4 @@
+import { peerAddress } from "../http/peer-address.mjs";
 import { ADMIN_SESSION_SECONDS, CLIENT_SESSION_SECONDS } from "./session-policy.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -198,7 +199,7 @@ export function createAuthHandler(service, { origin, clock = Date.now }) {
       if (method === "POST") checkMutation(request, origin, pathname);
       if (pathname === "/api/auth/login") {
         const body = loginPayload(await readJson(request));
-        const session = await service.login({ ...body, peerAddress: request.socket.remoteAddress ?? "unknown" });
+        const session = await service.login({ ...body, peerAddress: peerAddress(request) ?? "unknown" });
         const data = safeSession(session);
         reply(response, method, 200, data, { "Set-Cookie": sessionCookie(session.token, data.expiresAt, COOKIE_NAME, { role: "admin", now: clock() }) });
       } else if (pathname === "/api/auth/session" || pathname === "/api/auth/logout" || pathname === "/api/auth/logout-all" || pathname === "/api/auth/devices" || deviceId || pathname === "/admin") {

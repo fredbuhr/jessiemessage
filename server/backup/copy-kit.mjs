@@ -29,5 +29,15 @@ export async function createCopyKit(value) {
   const agent = await readFile(new URL("../../scripts/JessieMessage-sauvegardes-055.ps1", import.meta.url));
   const launcher = Buffer.from('@echo off\r\n"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "%~dp0JessieMessage-sauvegardes-055.ps1" -Setup\r\nif errorlevel 1 pause\r\n');
   const instructions = Buffer.from("JessieMessage - sauvegardes chiffrees\r\n\r\nExtraire tout le ZIP dans un dossier. Ouvrir Installer.cmd dans les 15 minutes suivant le telechargement.\r\nChoisir graphiquement un dossier pour les copies. Le PC doit etre allume, connecte a Internet et votre session Windows ouverte.\r\nLes copies sont recherchees toutes les 15 minutes et a l'ouverture de session. Aucun fichier n'est supprime automatiquement.\r\nLe raccourci JessieMessage - Sauvegardes permet de changer le dossier. Un dossier Drive synchronise est possible ; sa synchronisation cloud n'est pas verifiee par JessieMessage.\r\nPour changer d'ordinateur : administration > Sauvegardes > Raccorder Windows sur la destination. Le nouvel appareil remplacera son autorisation precedente lors du raccordement.\r\nLe droit de copie peut etre revoque depuis le site. Il ne permet ni connexion administrateur ni dechiffrement. Ne pas partager ce kit pendant ses 15 minutes de validite.\r\n");
-  return storedZip([["Installer.cmd", launcher], ["JessieMessage-sauvegardes-055.ps1", agent], ["raccordement.json", Buffer.from(`${JSON.stringify(pairing)}\n`)], ["LIRE-MOI.txt", instructions]]);
+  return storedZip([["Installer.cmd", launcher], ["JessieMessage-sauvegardes-055.ps1", agent], ["JessieMessage-temoin-067.ps1", await readFile(new URL("../../scripts/JessieMessage-temoin-067.ps1", import.meta.url))], ["raccordement.json", Buffer.from(`${JSON.stringify(pairing)}\n`)], ["LIRE-MOI.txt", instructions]]);
+}
+
+export async function createCopyUpdateKit(value) {
+  copyFields(value, ["version", "destinationId", "origin"]);
+  if (value.version !== 1 || !copyId(value.destinationId) || value.origin !== "https://jessiemessage.com") failCopy();
+  const launcher = Buffer.from('@echo off\r\n"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0JessieMessage-sauvegardes-055.ps1" -Update\r\nif errorlevel 1 pause\r\n');
+  return storedZip([["Mettre-a-jour.cmd", launcher], ["mise-a-jour.json", Buffer.from(`${JSON.stringify(value)}\n`)],
+    ["JessieMessage-sauvegardes-055.ps1", await readFile(new URL("../../scripts/JessieMessage-sauvegardes-055.ps1", import.meta.url))],
+    ["JessieMessage-temoin-067.ps1", await readFile(new URL("../../scripts/JessieMessage-temoin-067.ps1", import.meta.url))],
+    ["LIRE-MOI.txt", Buffer.from("JessieMessage - mise a jour du PC\r\n\r\nExtraire tout le ZIP et ouvrir Mettre-a-jour.cmd sur le PC deja raccorde.\r\nLe dossier choisi, les copies et l'autorisation enregistree sont conserves. Aucun nouveau raccordement ni cle privee n'est necessaire.\r\nSi une copie est en cours, attendre sa fin puis relancer. Les copies gardent leur rythme de 15 minutes.\r\nLe temoin reste inactif tant que son initialisation controlee n'a pas ete effectuee. Ce kit ne certifie ni dechiffrement ni restauration.\r\n")]]);
 }

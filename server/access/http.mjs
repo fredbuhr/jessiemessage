@@ -1,3 +1,4 @@
+import { peerAddress as requestPeerAddress } from "../http/peer-address.mjs";
 import { CLIENT_ADMISSION_POLICY } from "./admission.mjs";
 import { readFile } from "node:fs/promises";
 import { checkMutation, clearCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
@@ -156,7 +157,7 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
         const data = safeSession(session);
         if (method === "POST" && !sameText(request.headers["x-csrf-token"], data.csrf)) throw httpError(403, "request_rejected");
       }
-      const peerAddress = request.socket.remoteAddress ?? "unknown";
+      const peerAddress = requestPeerAddress(request) ?? "unknown";
       if (pathname === "/api/admin/access") reply(response, method, 200, { capabilities: { emailDelivery: "configured", admissionPolicy: CLIENT_ADMISSION_POLICY, ageAssurance: "not_integrated" } });
       else if (pathname === "/api/admin/invitations" && method === "GET") {
         reply(response, method, 200, safePage(await service.listInvitations(adminToken, page), "invitations", page, origin));

@@ -28,7 +28,7 @@ function localFetch(url, options) {
   });
 }
 
-async function readiness(fetchClient, port, signal, milliseconds) {
+async function readiness(fetchClient, port, signal, milliseconds, parentGateway) {
   const request = new AbortController();
   const abort = () => request.abort(); signal.addEventListener("abort", abort, { once: true });
   if (signal.aborted) request.abort();
@@ -41,7 +41,7 @@ async function readiness(fetchClient, port, signal, milliseconds) {
   const operation = (async () => {
     try {
       response = await fetchClient(`http://127.0.0.1:${port}/api/ready`, { method: "GET", redirect: "error", cache: "no-store", credentials: "omit",
-        headers: { Accept: "application/json", Host: "jessiemessage.com", "X-Forwarded-Proto": "https" }, signal: request.signal });
+        headers: { Accept: "application/json", Host: "jessiemessage.com", "X-Forwarded-Proto": "https", ...(parentGateway ? { "X-Jessie-Parent-Peer": "127.0.0.1" } : {}) }, signal: request.signal });
       if (request.signal.aborted) return false;
       if (response?.status !== 200 || response.redirected || typeof response.headers?.get !== "function"
         || response.headers.get("set-cookie") !== null || typeof response.body?.getReader !== "function") return false;
@@ -73,10 +73,10 @@ async function readiness(fetchClient, port, signal, milliseconds) {
 }
 
 /** A fixed IPC child, never an arbitrary command or shell. Internal seams are tests only. */
-export function createManagedRuntime({ runtimeDirectory, privateDirectory, operationsDirectory, port = 3000, environment, onUnexpectedExit, accountClosures = false } = {}, internal = {}) {
+export function createManagedRuntime({ runtimeDirectory, privateDirectory, operationsDirectory, port = 3000, environment, onUnexpectedExit, accountClosures = false, parentGateway = false } = {}, internal = {}) {
   const { forkClient = fork, fetchClient = localFetch, startupMilliseconds = 30000, stopMilliseconds = 20000,
     requestMilliseconds = 1000, retryMilliseconds = 100 } = internal;
-  if (typeof accountClosures !== "boolean" || accountClosures && operationsDirectory === undefined || !path(runtimeDirectory) || !path(privateDirectory) || operationsDirectory !== undefined && !path(operationsDirectory) || !Number.isSafeInteger(port) || port < 1 || port > 65535
+  if (typeof parentGateway !== "boolean" || typeof accountClosures !== "boolean" || accountClosures && operationsDirectory === undefined || !path(runtimeDirectory) || !path(privateDirectory) || operationsDirectory !== undefined && !path(operationsDirectory) || !Number.isSafeInteger(port) || port < 1 || port > 65535
     || typeof forkClient !== "function" || typeof fetchClient !== "function" || onUnexpectedExit !== undefined && typeof onUnexpectedExit !== "function"
     || [startupMilliseconds, stopMilliseconds, requestMilliseconds, retryMilliseconds].some(value => !Number.isSafeInteger(value) || value < 1 || value > 60000)) throw neutral("MANAGED_RUNTIME_CONFIGURATION");
   try {
@@ -118,7 +118,7 @@ export function createManagedRuntime({ runtimeDirectory, privateDirectory, opera
     let child;
     try {
       child = forkClient(CHILD, ["--runtime-directory", runtimeDirectory, "--private-directory", privateDirectory, "--port", String(port),
-        ...(operationsDirectory === undefined ? [] : ["--operations-directory", operationsDirectory]), ...(accountClosures ? ["--account-closures", "managed"] : [])],
+        ...(operationsDirectory === undefined ? [] : ["--operations-directory", operationsDirectory]), ...(accountClosures ? ["--account-closures", "managed"] : []), ...(parentGateway ? ["--parent-gateway", "managed"] : [])],
         { env: childEnvironment, execArgv: [], stdio: ["ignore", "inherit", "inherit", "ipc"], serialization: "json" });
     } catch { return Promise.reject(neutral("MANAGED_RUNTIME_START")); }
     const record = { child, status: "starting", cancel: new AbortController(), result: null, stopping: null, starting: null, closed: null };
@@ -154,7 +154,7 @@ export function createManagedRuntime({ runtimeDirectory, privateDirectory, opera
         if (!await Promise.race([message, expired, aborted])) throw new Error();
         while (!record.cancel.signal.aborted && !destroyed && performance.now() < until) {
           const remaining = Math.max(1, Math.floor(until - performance.now()));
-          if (await readiness(fetchClient, port, record.cancel.signal, Math.min(requestMilliseconds, remaining))) {
+          if (await readiness(fetchClient, port, record.cancel.signal, Math.min(requestMilliseconds, remaining), parentGateway)) {
             if (record.cancel.signal.aborted || record.result || destroyed) throw new Error();
             record.status = "running"; return Object.freeze({ ready: true });
           }
