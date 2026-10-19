@@ -70,6 +70,34 @@ test("plan and check CLI commands never construct a supervisor, listener, backup
   }
 });
 
+test("ordinary start composes daily backups, monitor and alerts without any witness or closure owner", async () => {
+  const events = [], observed = [], monitorReport = { version: 1, type: "synthetic_backup_monitor", status: "current" };
+  let output = "";
+  const forbidden = () => assert.fail("Ordinary messaging must not construct a witness, recovery listener or socket");
+  const result = await main(args("start"), { environment, execArgv: [],
+    makeWitnessOrigin: forbidden, makeWitnessObserver: forbidden, makeWitnessRecovery: forbidden, makeRecoveryServer: forbidden,
+    makeSupervisor(selected, dependencies) {
+      events.push("supervisor:created"); assert.deepEqual(selected, options);
+      assert.equal(Object.hasOwn(dependencies, "closureOperations"), false);
+      assert.equal(Object.hasOwn(dependencies, "witnessControl"), false);
+      assert.equal(Object.hasOwn(dependencies, "witnessOriginOperations"), false);
+      assert.deepEqual(dependencies.environment, environment);
+      return { async start() { events.push("supervisor:start"); }, finished: Promise.resolve({ failed: false }),
+        async close() { events.push("supervisor:close"); } };
+    },
+    makeAlerts(selected) {
+      events.push("alerts:created"); assert.deepEqual(selected, { operationsDirectory: options.operationsDirectory, privateDirectory: options.privateDirectory });
+      return { async observe(report) { events.push("alerts:observe"); observed.push(report); }, async close() { events.push("alerts:close"); } };
+    },
+    makeMonitor(selected, dependencies) {
+      events.push("monitor:created"); assert.deepEqual(selected, { operationsDirectory: options.operationsDirectory });
+      return { async start() { events.push("monitor:start"); dependencies.emit(monitorReport); }, async close() { events.push("monitor:close"); } };
+    }, outputStream: { write(value) { output += value; } } });
+  assert.deepEqual(result, { version: 1, type: "recurring_supervisor", status: "stopped" });
+  assert.deepEqual(events, ["supervisor:created", "supervisor:start", "alerts:created", "monitor:created", "monitor:start", "alerts:observe", "monitor:close", "supervisor:close", "alerts:close"]);
+  assert.deepEqual(observed, [monitorReport]); assert.deepEqual(JSON.parse(output), monitorReport);
+});
+
 test("observer CLI modes require the existing contract pin and independent private operator root", () => {
   for (const command of ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"]) {
     const parsed = parseRecurringArguments(observerArgs(command));
