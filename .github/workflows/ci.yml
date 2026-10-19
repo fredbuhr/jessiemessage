@@ -60,7 +60,7 @@ jobs:
         run: npm run test:browser
 
   auth-browser:
-    name: Chrome HTTPS authentication with MariaDB
+    name: Chrome HTTPS authentication and messaging with MariaDB
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
@@ -94,7 +94,7 @@ jobs:
           CREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret';
           GRANT SELECT, INSERT, UPDATE, DELETE ON `jessiemessage\_test\_auth\_browser\_ci`.* TO 'jessiemessage_runtime_test'@'%';
           SQL
-      - name: Rehearse real administrator authentication over loopback HTTPS
+      - name: Rehearse authentication and independent messaging sessions over loopback HTTPS
         run: npm run test:auth-browser
         env:
           JESSIEMESSAGE_DB_TEST: "1"

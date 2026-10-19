@@ -7,5 +7,5 @@ export const CONFIRMED_PRIVACY_CHOICES = Object.freeze({
   organization: null,
   space: "private_invitation",
   conversationRetention: "until_permanent_account_closure",
-  permanentClosure: "not_implemented",
+  permanentClosure: "not_enabled",
 });

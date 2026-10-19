@@ -28,7 +28,7 @@ function purge({ keepDraft = false } = {}) {
   for (const controller of controllers) controller.abort(); controllers.clear();
   record = null; remote = null; baseRevision = null; busy = false;
   el("privacy-content").hidden = true; el("decision-groups").replaceChildren();
-  for (const id of ["notice-fr", "notice-en", "notice-preview", "remote-preview", "progress", "save-state", "choice-responsible"]) {
+  for (const id of ["notice-fr", "notice-en", "notice-preview", "remote-preview", "progress", "save-state", "choice-responsible", "closure-status"]) {
     if (el(id).tagName === "TEXTAREA") el(id).value = ""; else el(id).textContent = "";
   }
   el("conflict").hidden = true; el("save").disabled = true; notice("");
@@ -57,11 +57,11 @@ function parsed(value) {
     || value.updatedAt !== null && (!Number.isSafeInteger(value.updatedAt) || value.updatedAt < 1)
     || value.confirmed?.version !== 1 || typeof value.confirmed.responsibleName !== "string" || !value.confirmed.responsibleName.length || value.confirmed.responsibleName.length > 100
     || value.confirmed.countryCode !== "FR" || value.confirmed.organization !== null || value.confirmed.space !== "private_invitation"
-    || value.confirmed.conversationRetention !== "until_permanent_account_closure" || value.confirmed.permanentClosure !== "not_implemented"
+    || value.confirmed.conversationRetention !== "until_permanent_account_closure" || !["not_enabled", "administrator_local"].includes(value.confirmed.permanentClosure)
     || !value.draft || !value.draft.answers || !value.draft.notice
     || decisions.some(([id]) => typeof value.draft.answers[id] !== "string" || value.draft.answers[id].length > 1024)
     || ["fr", "en"].some(lang => typeof value.draft.notice[lang] !== "string" || value.draft.notice[lang].length > 12288)) throw new Error("invalid_preparation");
-  return { revision: value.revision, updatedAt: value.updatedAt, responsibleName: value.confirmed.responsibleName,
+  return { revision: value.revision, updatedAt: value.updatedAt, responsibleName: value.confirmed.responsibleName, permanentClosure: value.confirmed.permanentClosure,
     draft: { answers: Object.fromEntries(decisions.map(([id]) => [id, value.draft.answers[id]])), notice: { fr: value.draft.notice.fr, en: value.draft.notice.en } } };
 }
 function preview() {
@@ -70,6 +70,9 @@ function preview() {
 }
 function controls() {
   const changed = Boolean(record && dirty()), count = record ? decisions.filter(([id]) => el(`answer-${id}`).value.trim()).length : 0;
+  if (record) ui.text(el("closure-status"), record.permanentClosure === "administrator_local"
+    ? "La fermeture définitive s’effectue depuis « Fermetures de comptes » dans l’administration. Les sauvegardes et fichiers déjà téléchargés sont des copies séparées."
+    : "La fermeture définitive n’est pas activée sur ce service. Les sauvegardes et fichiers déjà téléchargés sont des copies séparées.");
   ui.text(el("progress"), "{count} points renseignés sur 8", { count });
   ui.text(el("save-state"), changed ? "Modifications non enregistrées" : "Brouillon à jour");
   for (const item of el("privacy-form").querySelectorAll("textarea,button")) item.disabled = busy;

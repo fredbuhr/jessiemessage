@@ -1,6 +1,6 @@
 {
   "name": "jessiemessage",
-  "version": "0.78.0",
+  "version": "0.79.0",
   "private": true,
   "type": "module",
   "description": "Invite-only messaging PWA for Jessie (prototype, approved identity)",
@@ -22,7 +22,7 @@
     "data": "node scripts/data-export.mjs",
     "test:browser": "node --test tests/browser/*.browser.mjs",
     "preflight": "node scripts/preflight.mjs",
-    "test:auth-browser": "node --test tests/rehearsal/authentication.rehearsal.mjs",
+    "test:auth-browser": "node --test --test-concurrency=1 tests/rehearsal/authentication.rehearsal.mjs tests/rehearsal/messaging.rehearsal.mjs",
     "db:migrate:stdin": "node scripts/migrate-stdin.mjs"
   },
   "dependencies": {

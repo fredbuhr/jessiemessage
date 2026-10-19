@@ -12,10 +12,12 @@ async function defaultDraft() {
   answers.D04 = "Conversations conservées jusqu’à la fermeture définitive du compte. Une déconnexion, l’expiration ou la suspension de l’accès ne ferme pas définitivement le compte. Les suppressions volontaires de messages et de photos restent possibles. Le sort et la durée des sauvegardes sont distincts.";
   return validateDraft({ answers, notice: { fr, en } });
 }
-export async function createPrivacyService({ directory, key, clock = Date.now }, internal = {}) {
+export async function createPrivacyService({ directory, key, clock = Date.now, accountClosures = false }, internal = {}) {
+  if (typeof accountClosures !== "boolean") failPrivacy("input");
   const initial = await defaultDraft(), files = internal.files ?? createPrivacyFiles(directory, key);
+  const confirmed = { ...CONFIRMED_PRIVACY_CHOICES, permanentClosure: accountClosures ? "administrator_local" : "not_enabled" };
   const view = (revision, prepared) => ({ version: 1, revision, updatedAt: prepared?.updatedAt ?? null,
-    publication: "draft_only", retention: "not_enabled", confirmed: { ...CONFIRMED_PRIVACY_CHOICES },
+    publication: "draft_only", retention: "not_enabled", confirmed: { ...confirmed },
     answered: DECISIONS.filter(id => (prepared?.draft ?? initial).answers[id].trim()),
     draft: structuredClone(prepared?.draft ?? initial) });
   return Object.freeze({

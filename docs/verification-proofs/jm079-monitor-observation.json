@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "scope": "Read-only observation of existing GitHub scheduled monitoring",
+  "observedAt": "2026-10-19T23:15:37.195Z",
+  "requestedCron": "2-59/5 * * * *",
+  "latestPageOnly": true,
+  "samples": [
+    {
+      "run": 39339574058,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-19T23:07:26Z",
+      "startedAt": "2026-10-19T23:07:26Z",
+      "completedAt": "2026-10-19T23:07:47Z",
+      "source": "242b707708b2d71c4dd678c550ad5c5f60fb2db8",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39339574058"
+    },
+    {
+      "run": 39314116509,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-19T19:49:03Z",
+      "startedAt": "2026-10-19T19:49:03Z",
+      "completedAt": "2026-10-19T19:49:22Z",
+      "source": "473c9c0bef6019b97696aa1ae3c92c6919823ab1",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39314116509"
+    },
+    {
+      "run": 39265789281,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-19T14:05:19Z",
+      "startedAt": "2026-10-19T14:05:19Z",
+      "completedAt": "2026-10-19T14:05:42Z",
+      "source": "a18d6afd32d6a9f138e78b60273eb1ee9ba5cf81",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39265789281"
+    },
+    {
+      "run": 39212507441,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-19T06:53:07Z",
+      "startedAt": "2026-10-19T06:53:07Z",
+      "completedAt": "2026-10-19T06:53:25Z",
+      "source": "6b6cac2f7107b3237b71de8293e5938af316dc85",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39212507441"
+    },
+    {
+      "run": 39186682406,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-19T01:43:53Z",
+      "startedAt": "2026-10-19T01:43:53Z",
+      "completedAt": "2026-10-19T01:44:12Z",
+      "source": "6b6cac2f7107b3237b71de8293e5938af316dc85",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39186682406"
+    },
+    {
+      "run": 39177695264,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-18T23:43:16Z",
+      "startedAt": "2026-10-18T23:43:16Z",
+      "completedAt": "2026-10-18T23:43:38Z",
+      "source": "3584bd5bd88522d9a5679a2af403771b7416612b",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39177695264"
+    },
+    {
+      "run": 39169489502,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-18T21:48:58Z",
+      "startedAt": "2026-10-18T21:48:58Z",
+      "completedAt": "2026-10-18T21:49:17Z",
+      "source": "8b5a2f5b7f405aec473861d0b5f1706dca3165c2",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39169489502"
+    },
+    {
+      "run": 39159529998,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-18T19:36:22Z",
+      "startedAt": "2026-10-18T19:36:22Z",
+      "completedAt": "2026-10-18T19:36:44Z",
+      "source": "98e189a8927cdb647290b60f278d108330664315",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39159529998"
+    },
+    {
+      "run": 39150191245,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-18T17:34:11Z",
+      "startedAt": "2026-10-18T17:34:11Z",
+      "completedAt": "2026-10-18T17:34:28Z",
+      "source": "d40ea0c8a6bcd63e7a03ca60058f18c731519afa",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39150191245"
+    },
+    {
+      "run": 39137518161,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-18T14:46:47Z",
+      "startedAt": "2026-10-18T14:46:47Z",
+      "completedAt": "2026-10-18T14:47:12Z",
+      "source": "3c1c75c36178d5bb6df9b289e099e5690e61346c",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39137518161"
+    },
+    {
+      "run": 39123886814,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-18T11:35:58Z",
+      "startedAt": "2026-10-18T11:35:58Z",
+      "completedAt": "2026-10-18T11:36:14Z",
+      "source": "a688b30ef4e039a30de7bf05e98761845dcee8d4",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39123886814"
+    },
+    {
+      "run": 39104289229,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-18T06:30:38Z",
+      "startedAt": "2026-10-18T06:30:38Z",
+      "completedAt": "2026-10-18T06:30:57Z",
+      "source": "a688b30ef4e039a30de7bf05e98761845dcee8d4",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39104289229"
+    }
+  ],
+  "observedIntervalsSeconds": [
+    18320,
+    11449,
+    10044,
+    7331,
+    7956,
+    6858,
+    7237,
+    18554,
+    25932,
+    20624,
+    11903
+  ],
+  "minimumObservedIntervalSeconds": 6858,
+  "maximumObservedIntervalSeconds": 25932,
+  "latestProbe": {
+    "run": 39339574058,
+    "job": 118357524937,
+    "report": {
+      "version": 1,
+      "type": "private_service_check",
+      "status": "healthy",
+      "attempts": 1,
+      "confirmedFailure": false,
+      "lastProbe": {
+        "version": 1,
+        "type": "private_service_probe",
+        "status": "healthy",
+        "checkedAt": 1792451264330,
+        "durationMilliseconds": 759,
+        "checks": [
+          {
+            "name": "http",
+            "status": "pass",
+            "code": "ok"
+          },
+          {
+            "name": "readiness",
+            "status": "pass",
+            "code": "ok"
+          }
+        ]
+      }
+    }
+  },
+  "alertReceiptVerified": false,
+  "notificationPreferencesInspected": false,
+  "localBackupEmailAlreadyAccepted": true,
+  "newMailSent": 0,
+  "serviceStopped": false,
+  "productionConfigurationChanged": false,
+  "maxDetectionDelayGuaranteed": false
+}
