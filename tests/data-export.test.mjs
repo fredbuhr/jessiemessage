@@ -75,7 +75,7 @@ test("client export whitelists account, selected messages, preferences and activ
   f.state.ownMedia = [own, unused];
   assert.deepEqual(await f.run(), { messages: 5, mediaFiles: 3, libraryItems: 2, mediaBytes: 21, rows: 7 });
   const account = f.output.json.get("account.json");
-  assert.deepEqual(Object.keys(account), ["format", "version", "generatedAt", "user", "conversation", "preferences"]);
+  assert.deepEqual(Object.keys(account), ["format", "version", "generatedAt", "user", "conversation", "preferences", "ownProfile"]);
   assert.equal(account.format, "jessiemessage-client-content"); assert.equal(account.version, 1); assert.equal(account.user.email, f.account.email);
   assert.equal(account.conversation.peerName, "Jessie"); assert.deepEqual(account.preferences, { broadcasts: { enabled: true, updatedAt: "2026-10-15T09:59:40.123000Z" } });
   assert.equal(account.conversation.lastReadSequence, "2"); assert.equal(account.conversation.peerReadSequence, "0");
@@ -102,6 +102,17 @@ test("client content export never discloses Jessie’s read cursor supplied by a
   assert.deepEqual(f.output.json.get("account.json"), before);
   assert.equal(before.conversation.lastReadSequence, "2");
   assert.equal(before.conversation.peerReadSequence, "0");
+});
+test("client export preserves only the own profile reference and its version, separately from identity", async () => {
+  const f = fixture();
+  f.reader.ownProfile = { avatarMediaId: id(202), version: 7, createdAt: sql(NOW - 5000), updatedAt: sql(NOW - 1000), notes: "excluded" };
+  await f.run();
+  const output = f.output.json.get("account.json");
+  assert.deepEqual(output.ownProfile, { avatarMediaId: id(202).toString("hex"), version: 7,
+    createdAt: "2026-10-15T09:59:55.123000Z", updatedAt: "2026-10-15T09:59:59.123000Z" });
+  assert.equal(Object.hasOwn(output.user, "avatarMediaId"), false);
+  f.reader.ownProfile.version = 0;
+  await assert.rejects(f.run(), unavailable);
 });
 
 test("tombstoned received photos never decrypt or copy their retained media link, while owned unused library remains available", async () => {

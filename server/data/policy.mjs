@@ -28,6 +28,7 @@ const catalogue = [
   ["media_storage_objects", "subject", "Owned allocation count only; storage handles and unregistered files excluded."],
   ["push_subscriptions", "subject", "Owned device subscription count only; endpoints, browser keys, ciphertext and session identifiers excluded."],
   ["push_outbox", "subject", "Delivery count for owned device subscriptions or the selected conversation; no endpoint or provider response."],
+  ["user_profiles", "subject", "The client's own avatar reference, profile version and dates; no administrator or other client's profile."],
 ];
 
 function freeze(value) {

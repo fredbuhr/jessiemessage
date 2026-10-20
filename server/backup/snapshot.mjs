@@ -181,8 +181,8 @@ function validateSnapshot(snapshot) {
     if ("coverage" in snapshot) fail();
   } else {
     const coverage = Object.getOwnPropertyDescriptor(snapshot, "coverage");
-    if (!coverage?.enumerable || !Object.hasOwn(coverage, "value") || snapshot.counts.tables !== 30) fail();
-    try { validateApplicationCoverage(coverage.value); } catch { fail(); }
+    if (!coverage?.enumerable || !Object.hasOwn(coverage, "value")) fail();
+    try { if (validateApplicationCoverage(coverage.value).tables !== snapshot.counts.tables) fail(); } catch { fail(); }
   }
   const capacity = snapshot.capacity;
   if (!capacity || !integer(capacity.ownerBytes, 1) || !integer(capacity.totalBytes, capacity.ownerBytes) || !integer(capacity.heldBytes)

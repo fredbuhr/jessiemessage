@@ -33,7 +33,7 @@ async function fixture() {
         columnName, parentSchema: database, parent: match[3], parentColumn: parents[index] }));
     }
   }
-  assert.equal(rules.length, 40);
+  assert.equal(rules.length, 42);
   const queries = [];
   const connection = { async query(sql) {
     queries.push(sql);

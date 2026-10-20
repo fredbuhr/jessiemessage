@@ -95,6 +95,20 @@ export async function withClientData(input = {}, callback) {
     if (preferences.length > 1 || preferences.some((value) => ![0, 1, 0n, 1n].includes(value.enabled))) fail();
     const preference = Object.freeze(preferences.length ? { enabled: Number(preferences[0].enabled) === 1, updatedAt: date(preferences[0].updated_at) }
       : { enabled: false, updatedAt: null });
+    const profiles = array(await connection.query(`SELECT p.user_id, p.avatar_media_id, p.version, p.created_at, p.updated_at,
+      a.owner_id AS avatar_owner_id, a.owner_role AS avatar_owner_role
+      FROM user_profiles p LEFT JOIN media_assets a ON a.id = p.avatar_media_id WHERE p.user_id = ? LIMIT 2`, [target]), 2);
+    if (profiles.length > 1) fail();
+    let ownProfile = { avatarMediaId: null, version: 0, createdAt: null, updatedAt: null };
+    if (profiles.length) {
+      const profile = profiles[0];
+      if (!bytes(profile.user_id, 16).equals(target)) fail();
+      const avatarMediaId = profile.avatar_media_id === null ? null : bytes(profile.avatar_media_id, 16);
+      if (avatarMediaId !== null && (!bytes(profile.avatar_owner_id, 16).equals(target) || profile.avatar_owner_role !== "client")) fail();
+      ownProfile = { avatarMediaId, version: integer(profile.version, 4294967295), createdAt: date(profile.created_at), updatedAt: date(profile.updated_at) };
+      if (ownProfile.createdAt > ownProfile.updatedAt || ownProfile.updatedAt > nowSql) fail();
+    }
+    ownProfile = Object.freeze(ownProfile);
     function run(operation) {
       if (!active || busy) return Promise.reject(new DataStoreError());
       busy = true;
@@ -108,6 +122,7 @@ export async function withClientData(input = {}, callback) {
     }
     const inventorySources = {
       users: ["users WHERE id = ? AND role = 'client'", [target]],
+      user_profiles: ["user_profiles WHERE user_id = ?", [target]],
       invitations: ["invitations WHERE consumed_by_id = ?", [target]],
       sessions: ["sessions WHERE user_id = ?", [target]],
       conversations: ["conversations WHERE client_id = ?", [target]],
@@ -127,7 +142,7 @@ export async function withClientData(input = {}, callback) {
         .map((table) => [table, [`${table} WHERE conversation_id = ?`, [context.id]]])) : {}),
       ...(context ? { broadcast_recipients: ["broadcast_recipients WHERE client_id = ? AND conversation_id = ?", [target, context.id]] } : {}),
     };
-    const reader = Object.freeze({ account, conversation, preference,
+    const reader = Object.freeze({ account, conversation, preference, ownProfile,
       deletionFacts: () => run(() => readDeletionFacts({ connection, clientId: target, conversation: context, nowSql })),
       inventory: () => run(async () => {
         const result = [];

@@ -133,8 +133,7 @@ const envelope = (profile) => manifestBackupProfile(profile) ? { version: manife
 function snapshotScope(snapshot, profile) {
   plain(snapshot);
   if (manifestBackupProfile(profile)?.application) {
-    if (snapshot.version !== 2 || snapshot.counts?.tables !== 30) fail();
-    validateApplicationCoverage(snapshot.coverage);
+    if (snapshot.version !== 2 || validateApplicationCoverage(snapshot.coverage).tables !== snapshot.counts?.tables) fail();
   } else if (snapshot.version === 2 || Object.hasOwn(snapshot, "coverage")) {
     // Application-only snapshots cannot acquire the complete-backup envelope.
     fail();

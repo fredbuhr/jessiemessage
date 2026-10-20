@@ -23,7 +23,7 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 31);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool;
   async function cleanup() {
@@ -121,7 +121,7 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
         broadcastPending: 1, broadcastSending: 1, mediaReserved: 1, mediaRegistered: 1, mediaCleanupPending: 1, mediaReleased: 1,
         ownedMediaOutsideConversationLinks: 0, ownedMediaCampaignLinks: 0, sharedPeerMediaLinks: 2,
         foreignMessageBindings: 0, foreignReceiptBindings: 0, foreignBroadcastBindings: 0, foreignAdministratorSessionState: 0, foreignMediaJournalBindings: 0,
-        notificationSubscriptionsEnabled: 0, pushPending: 0, pushSending: 0, foreignPushBindings: 0 });
+        notificationSubscriptionsEnabled: 0, pushPending: 0, pushSending: 0, foreignPushBindings: 0, foreignProfileBindings: 0 });
       assert.doesNotMatch(JSON.stringify(result), /example\.invalid|private-|ciphertext|payload|token|storage_key/);
       assert.equal(await databaseHash(), before);
     });
@@ -137,6 +137,15 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
       assert.equal(result.foreignAdministratorSessionState, 1); assert.equal(result.foreignMediaJournalBindings, 0);
       assert.equal(result.broadcastPending, 1); assert.equal(result.mediaRegistered, 1);
       assert.equal(await databaseHash(), before);
+    });
+    await t.test("another client's avatar reference is flagged without reading that client's profile contents", async () => {
+      await connection.query(`INSERT INTO user_profiles (user_id, avatar_media_id, version, created_at, updated_at)
+        VALUES (?, ?, 1, ?, ?)`, [second, owned, created, created]);
+      try {
+        const before = await databaseHash();
+        assert.equal(counts(await facts()).foreignProfileBindings, 1);
+        assert.equal(await databaseHash(), before);
+      } finally { await connection.query("DELETE FROM user_profiles WHERE user_id = ?", [second]); }
     });
     await t.test("media reference checks identify a wrong owner and storage binding without reading encrypted files", async () => {
       await connection.query("UPDATE media_storage_objects SET owner_id = ? WHERE id = ?", [second, owned]);
@@ -204,7 +213,7 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
             makeStorage() { assert.fail("deletion planning never opens media storage"); }, exportContent() { assert.fail("deletion planning never decrypts or exports content"); },
             outputStream: { write(value) { stdout.push(value); } } });
         assert.deepEqual(Object.keys(result).sort(), ["command", "status", "inventoryCategories", "observations", "affectedCategories", "blockers"].sort());
-        assert.equal(result.command, "plan"); assert.equal(result.status, "complete"); assert.equal(result.inventoryCategories, 29); assert.equal(result.observations, 23);
+        assert.equal(result.command, "plan"); assert.equal(result.status, "complete"); assert.equal(result.inventoryCategories, 30); assert.equal(result.observations, 24);
         assert.ok(result.blockers > 0); assert.equal(poolClosures, 1); assert.deepEqual(stdout, [JSON.stringify(result) + "\n"]);
         assert.doesNotMatch(stdout.join(""), /example\.invalid|private-|ciphertext|payload|password|token|\/workspace|[a-f0-9]{32}/);
         const manifest = JSON.parse(await readFile(path.join(output, "COMPLETE.json"), "utf8"));

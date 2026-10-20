@@ -17,7 +17,7 @@ const id = () => randomBytes(16);
 const digest = () => randomBytes(32);
 const now = Date.UTC(2026, 9, 14, 12);
 const passwordHash = "synthetic-password-hash-not-a-real-credential";
-const allowedTables = ["push_outbox", "push_subscriptions", "media_storage_objects", "media_storage_state", "broadcast_recipients", "broadcast_campaigns", "broadcast_preferences", "password_reset_outbox", "client_password_resets", "crm_memberships", "crm_labels", "crm_profiles", "message_media", "media_assets", "chat_events", "chat_receipts", "messages", "mail_outbox", "client_session_state", "email_verifications", "client_auth_state", "auth_session_state", "admin_recovery_codes", "admin_mfa", "auth_rate_limits", "conversations", "sessions", "invitations", "users", "migration_probe", "schema_migrations"];
+const allowedTables = ["user_profiles", "push_outbox", "push_subscriptions", "media_storage_objects", "media_storage_state", "broadcast_recipients", "broadcast_campaigns", "broadcast_preferences", "password_reset_outbox", "client_password_resets", "crm_memberships", "crm_labels", "crm_profiles", "message_media", "media_assets", "chat_events", "chat_receipts", "messages", "mail_outbox", "client_session_state", "email_verifications", "client_auth_state", "auth_session_state", "admin_recovery_codes", "admin_mfa", "auth_rate_limits", "conversations", "sessions", "invitations", "users", "migration_probe", "schema_migrations"];
 
 test("real MariaDB administrator authentication persistence (synthetic disposable database only)", { skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.", timeout: 120000 }, async (t) => {
   const options = databaseOptions();

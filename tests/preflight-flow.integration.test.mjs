@@ -42,7 +42,7 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
   assert.ok(![options.user, preflightUser, process.env.JESSIEMESSAGE_RUNTIME_DB_USER].includes(sharedUser), "all fixture identities must be distinct");
   const sharedEnv = { ...process.env, JESSIEMESSAGE_RUNTIME_DB_USER: sharedUser,
     JESSIEMESSAGE_RUNTIME_DB_PASSWORD: sharedPassword, JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE: "infomaniak-shared" };
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 31);
   const appTables = createdMigrationTables(migrations);
   const allowedTables = [...appTables].reverse().concat("migration_probe", "preflight_ddl_probe", "schema_migrations");
   const connection = await connectDatabase();
@@ -121,7 +121,7 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
       let runtime;
       try {
         runtime = await pool.getConnection(); await runtime.beginTransaction();
-        assert.equal(Number((await runtime.query("SELECT COUNT(*) AS total FROM schema_migrations"))[0].total), 30);
+        assert.equal(Number((await runtime.query("SELECT COUNT(*) AS total FROM schema_migrations"))[0].total), 31);
         for (const sql of [
           "UPDATE schema_migrations SET attempts = attempts WHERE version = 1",
           "DELETE FROM schema_migrations WHERE version = 0",

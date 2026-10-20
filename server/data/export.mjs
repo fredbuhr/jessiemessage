@@ -70,6 +70,16 @@ function preference(value) {
   if (value.enabled && updatedAt === null) fail();
   return { enabled: value.enabled, updatedAt };
 }
+function ownProfile(value) {
+  if (value === undefined) return { avatarMediaId: null, version: 0, createdAt: null, updatedAt: null };
+  object(value);
+  const version = integer(value.version, 0, 4294967295);
+  const result = { avatarMediaId: value.avatarMediaId === null ? null : bytes(value.avatarMediaId).toString("hex"), version,
+    createdAt: date(value.createdAt, true), updatedAt: date(value.updatedAt, true) };
+  if (version === 0 ? result.avatarMediaId !== null || result.createdAt !== null || result.updatedAt !== null
+    : result.createdAt === null || result.updatedAt === null || result.createdAt > result.updatedAt) fail();
+  return result;
+}
 function mediaRecord(value, expectedOwnerId, expectedOwnerRole) {
   object(value);
   const result = { id: bytes(value.id), ownerId: bytes(value.ownerId), storageKey: bytes(value.storageKey, 32), digest: bytes(value.digest, 32),
@@ -110,7 +120,8 @@ export async function exportClientContent(options = {}) {
     const user = publicAccount(reader.account, clientId), selected = conversation(reader.conversation, clientId);
     const nowIso = new Date(now).toISOString().replace("Z", "000Z");
     if (user.createdAt > nowIso || selected !== null && selected.output.createdAt > nowIso) fail();
-    const broadcasts = preference(reader.preference);
+    const broadcasts = preference(reader.preference), profile = ownProfile(reader.ownProfile);
+    if (profile.updatedAt !== null && profile.updatedAt > nowIso) fail();
     const counts = { messages: 0, mediaFiles: 0, libraryItems: 0, mediaBytes: 0, rows: 0 };
     const copiedMedia = new Map(), messageIds = new Set();
     let textBytes = 0;
@@ -140,7 +151,7 @@ export async function exportClientContent(options = {}) {
     }
     await writer.empty("messages.jsonl"); await writer.empty("library.jsonl");
     await json("account.json", { format: "jessiemessage-client-content", version: 1, generatedAt: new Date(now).toISOString(), user,
-      conversation: selected?.output ?? null, preferences: { broadcasts } });
+      conversation: selected?.output ?? null, preferences: { broadcasts }, ownProfile: profile });
     let afterSequence = "0";
     while (true) {
       const current = page(await reader.messages({ afterSequence, limit: PAGE_SIZE }));
