@@ -4,7 +4,7 @@
   "release": "1.1.0",
   "source": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
   "tree": "0201cdbd1932fd9104c04a91d63561010e8ae0c2",
-  "status": "deployed_identity_verified_checkpoint_pending",
+  "status": "deployed_identity_verified_checkpoint_aligned",
   "identityEvidence": {
     "method": "authenticated_admin_readiness_user_report_after_requested_refresh",
     "url": "https://jessiemessage.com/admin/readiness",
@@ -121,13 +121,12 @@
   },
   "privateCheckpoint": {
     "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
-    "lastRecordedRelease": "1.0.0",
-    "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
-    "alignmentStatus": "pending",
+    "lastRecordedRelease": "1.1.0",
+    "source": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+    "alignmentStatus": "recorded",
     "runtimeRestartRequired": false,
-    "serverExecution": "not_yet_observed",
-    "intendedRollbackPath": "developmentSimplification.release110.rollback",
-    "priorRelease100Preserved": "required",
+    "serverExecution": "confirmed_by_user_ssh_receipt",
+    "priorRelease100Preserved": "confirmed_by_otherBlocksPreserved_receipt",
     "recorder": {
       "commit": "fbe6b05f037326700228223ff0d25453af49659d",
       "path": "ops/record-release110.py",
@@ -139,9 +138,20 @@
         "skipped": 0,
         "scope": "synthetic_metadata_files_only_pins_checks_mocked"
       },
-      "serverExecution": "not_yet_observed",
+      "serverExecution": "confirmed_by_user_ssh_receipt",
       "preservation": "complete_previous_1.0.0_active_service_in_release110_rollback_and_unchanged_release100_and_other_blocks"
-    }
+    },
+    "receiptProvenance": "user_ssh_output_of_pinned_recorder",
+    "receipt": {
+      "status": "release110_metadata_recorded",
+      "source": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+      "version": "1.1.0",
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackPreserved": true,
+      "otherBlocksPreserved": true
+    },
+    "rollbackPath": "developmentSimplification.release110.rollback"
   },
   "scope": {
     "messagingBusinessChange": true,
@@ -149,5 +159,6 @@
     "schemaMigration": false,
     "pcAction": false,
     "productionClientTestAction": false
-  }
+  },
+  "updatedAt": "2026-10-20T20:41:44.351435+00:00"
 }
