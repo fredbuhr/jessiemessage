@@ -1,8 +1,8 @@
 # Évolution 1 — Lecture privée, 1.1.0
 
-**20 octobre 2026 — code fusionné et publié en 1.1.0, CI PR/main réussies ; production toujours 1.0.0.** La [PR 110](https://github.com/fredbuhr/jessiemessage/pull/110) est fusionnée sur `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`. La [CI du commit de fusion](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) a réussi 5/5 jobs. Le [tag/release v1.1.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0) a été publié le 20 octobre à 20:21:26 UTC sur ce même commit et sa cible a été relue.
+**20 octobre 2026 — code fusionné et publié en 1.1.0, CI PR/main et préparation Infomaniak réussies ; activation 1.1.0 non constatée.** La [PR 110](https://github.com/fredbuhr/jessiemessage/pull/110) est fusionnée sur `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`. La [CI du commit de fusion](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) a réussi 5/5 jobs. Le [tag/release v1.1.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0) a été publié le 20 octobre à 20:21:26 UTC sur ce même commit et sa cible a été relue.
 
-Base de travail : `main` `e2c5397c64e0e68f959f77fcf417722871b5a677`, après la référence [v1.0.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0) livrée sur `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`. Le travail auparavant préparé sous le numéro provisoire 0.87 est reporté séparément en `1.1.0` ; ses anciens résultats ne qualifient pas cette livraison. L’[état courant](REPRISE.md) reste la référence du service réellement déployé. Aucun reçu de staging ni preuve d’activation 1.1.0 n’est consigné à ce stade.
+Base de travail : `main` `e2c5397c64e0e68f959f77fcf417722871b5a677`, après la référence [v1.0.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0) livrée sur `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`. Le travail auparavant préparé sous le numéro provisoire 0.87 est reporté séparément en `1.1.0` ; ses anciens résultats ne qualifient pas cette livraison. L’[état courant](REPRISE.md) reste la référence du service réellement déployé. Le reçu SSH utilisateur confirme maintenant le staging 1.1.0 ; aucune preuve d’activation 1.1.0 n’est consignée à ce stade. La dernière identité active connue et le checkpoint restent 1.0.0.
 
 ## Comportement attendu
 
@@ -37,13 +37,15 @@ La [CI de la PR 110, run 39489455741](https://github.com/fredbuhr/jessiemessage/
 
 La [CI main, run 39490336793](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793), contrôle le commit de fusion `84669ed570b59b10a1a94a164f24f0e60e6cb5a7` ; elle a réussi **5/5 jobs**, avec les mêmes scores constatés que ceux du tableau : général 3 116 réussis/35 ignorés, MariaDB 468/468 chacune, Chrome 165/165 et HTTPS 2/2, sans échec. Son arbre est identique à celui de la PR. Aucun score ancien n’est repris comme preuve actuelle ; les 35 tests ignorés restent non vérifiés par la suite générale. La CI ne prouve ni publication de release ni déploiement.
 
-La [publication automatisée](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a réussi et produit `published_verified`. Elle vérifie le commit, l’arbre, la version, la CI main et ses cinq jobs avant de créer le tag/release immuable, sans déplacer un tag existant. Aucun navigateur cloud ni jeton personnel n’a été nécessaire. Reste à déployer ce même commit sur le service existant avec repli vers `v1.0.0` ; aucun staging ou redémarrage 1.1.0 n’a encore été constaté. La livraison sera confirmée par une identité fraîche du processus et les contrôles adaptés. Aucun envoi, effacement de compte ou contenu client réel n’est nécessaire à cette qualification. Les autres évolutions de messagerie restent distinctes.
+La [publication automatisée](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a réussi et produit `published_verified`. Elle vérifie le commit, l’arbre, la version, la CI main et ses cinq jobs avant de créer le tag/release immuable, sans déplacer un tag existant. Aucun navigateur cloud ni jeton personnel n’a été nécessaire. Reste à déployer ce même commit sur le service existant avec repli vers `v1.0.0` ; le staging est confirmé par le reçu utilisateur ci-dessous, et le redémarrage 1.1.0 reste à constater. La livraison sera confirmée par une identité fraîche du processus et les contrôles adaptés. Aucun envoi, effacement de compte ou contenu client réel n’est nécessaire à cette qualification. Les autres évolutions de messagerie restent distinctes.
 
 ## Livraison 1.1.0 : reprise après staging
 
-Procédure préparée, sans activation constatée. Cible épinglée : commit `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`, préfixe `84669ed5`. L’exécution exige d’abord la CI main complète verte et le tag immuable `v1.1.0` et sa release sur ce commit exact. [REPRISE](REPRISE.md) conserve la production **1.0.0** jusqu’à la preuve de la nouvelle identité.
+Préparation réalisée, sans activation constatée. Cible épinglée : commit `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`, préfixe `84669ed5`. La CI main complète verte et le tag/release immuable `v1.1.0` sur ce commit exact sont acquis. [REPRISE](REPRISE.md) conserve la production **1.0.0** jusqu’à la preuve de la nouvelle identité.
 
 ### 1. Préparation seule
+
+**Déjà exécutée et confirmée par le reçu utilisateur ci-dessous. Ne pas répéter cette étape ; passer à l’activation Manager.**
 
 Dans le [terminal SSH existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), la préparation épinglée crée le checkout et les lanceurs, puis exécute uniquement `check-local-closures`. Le reçu attendu est `staged_precheck_passed`, sur les source/arbre ci-dessus, avec `pendingClosures:false`, `started:false`, `erased:false`, `managerChanged:false` et `runtimeStarted:false`. Si un champ diffère, conserver 1.0.0 en service et arrêter avant l’étape Manager, même si le statut annonce un précontrôle réussi. Ce reçu ne prouve pas une activation. Après une interruption, relire les fichiers et reçus existants avant de rejouer la préparation.
 
@@ -62,6 +64,22 @@ subprocess.run(
 )
 PY110
 ```
+
+### Préparation constatée — ne pas répéter
+
+Le retour du terminal SSH transmis par l’utilisateur confirme `staged_precheck_passed` sur `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`, version `1.1.0`. Ce reçu est rapporté par l’utilisateur ; son heure d’exécution n’a pas été transmise et n’est pas inventée.
+
+| Élément préparé | Valeur du reçu |
+| --- | --- |
+| Checkout | `/srv/customer/jessiemessage-operator/production-110-84669ed5` |
+| Lanceur | `/srv/customer/jessiemessage-private/start-primary-release110-84669ed5.sh`, 0700, SHA-256 `4d28485da98fb33acdf0f50e2f420a43893f4c0c5495c068b6a6854de9e1cc8b` |
+| Node | `v24.22.0`, SHA-256 `67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c` |
+| Journal normal | `/srv/customer/jessiemessage-private/jm110-node2422.log`, 0600 |
+| Journal de précontrôle | `/srv/customer/jessiemessage-private/jm110-preflight-84669ed5.log`, SHA-256 `cb5a9e6d1d1354abe8113cb12e7c6e3d636b5111041851ada88f85c5b845fea6` |
+| États | `pendingClosures:false`, `started:false`, `erased:false`, `managerChanged:false`, `runtimeStarted:false` |
+| Repli confirmé | `1.0.0`, lanceur `/srv/customer/jessiemessage-private/start-primary-release100-70b48aa8.sh`, Node `v24.22.0` |
+
+La préparation est acquise ; passer à l’activation Manager ci-dessous. Elle ne prouve ni Build ni identité active de la 1.1.0. La commande de préparation ci-dessus reste une trace de la procédure exécutée et ne doit pas être rejouée.
 
 ### 2. Activation par le Manager
 
