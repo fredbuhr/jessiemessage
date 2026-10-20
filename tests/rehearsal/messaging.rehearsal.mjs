@@ -61,33 +61,62 @@ async function sessionNotificationSubscription(page, subscription) {
   assert.deepEqual(result, { proof: 200, status: 200, enabled: true });
 }
 
+async function characterizeExternalSessionNavigation(page, fixture, role) {
+  const name = role === "admin" ? "__Host-jessie_session" : clientCookie;
+  const cookie = (await page.cookies()).find(value => value.name === name);
+  assert.ok(cookie, "the fixture has a native session cookie before navigating");
+  assert.deepEqual({ secure: cookie.secure, httpOnly: cookie.httpOnly, sameSite: cookie.sameSite }, { secure: true, httpOnly: true, sameSite: "Strict" });
+  assert.equal(await fixture.sessionRemainsActive(role, cookie.value), true);
+  const previous = fixture.sessionNavigations().length;
+  await page.navigate(fixture.externalApiNavigation(role));
+  await page.click("#c01-return");
+  const target = role === "admin" ? "/api/auth/session" : "/api/access/session";
+  await waitUntil(() => page.execute("return location.pathname===arguments[0]&&document.body.textContent.includes('authentication_required')", target), "native cross-site API navigation denied");
+  assert.deepEqual(fixture.sessionNavigations().slice(previous), [{ role, site: "cross-site", mode: "navigate", hasCookie: false, status: 401, clearsCookie: true }]);
+  assert.equal((await page.cookies()).some(value => value.name === name), false, "ORIGINAL C01: the 401 response deletes the real withheld Strict cookie");
+  assert.equal(await fixture.sessionRemainsActive(role, cookie.value), true, "cookie removal did not revoke the original SQL session");
+}
+
 test("real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login", { timeout: 240000 }, async t => {
   const driver = await startWebDriver();
   let fixture; const pages = [];
   try {
     fixture = await createAuthenticationFixture({ messaging: true });
     // Separate WebDriver sessions have independent native cookies and storage.
-    const first = await driver.browser({ origin: fixture.origin, width: 390, acceptInsecureCerts: true }); pages.push(first);
+    const first = await driver.browser({ origin: fixture.origin, siblingOrigins: [fixture.outsideOrigin], width: 390, acceptInsecureCerts: true }); pages.push(first);
     const second = await driver.browser({ origin: fixture.origin, width: 1280, acceptInsecureCerts: true }); pages.push(second);
     await loginClient(first, fixture); await loginClient(second, fixture);
-    const firstCookie = await protectedClientCookie(first), secondCookie = await protectedClientCookie(second);
+    let firstCookie = await protectedClientCookie(first); const secondCookie = await protectedClientCookie(second);
     assert.equal(firstCookie.value !== secondCookie.value, true, "the same client owns two distinct SQL sessions");
     for (const [page, cookie] of [[first, firstCookie], [second, secondCookie]]) {
       await page.navigate("/messages"); await chatReady(page);
       assert.equal((await protectedClientCookie(page)).value === cookie.value, true, "reloading preserves this browser's protected session");
       assert.equal(await sessionStatus(page), 200);
     }
+    await characterizeExternalSessionNavigation(first, fixture, "client");
+    await loginClient(first, fixture); firstCookie = await protectedClientCookie(first);
+    assert.equal(await sessionStatus(second), 200, "external navigation on A leaves B's session usable");
+    t.diagnostic("C01 original client: Chrome withheld the Strict cookie on a cross-site API navigation; 401 deleted it while the SQL session remained active.");
     // This is the real authenticated subscription endpoint with an inert test
     // endpoint. The fixture stops delivery workers before listening.
     await sessionNotificationSubscription(first, fixture.notificationSubscription);
     t.diagnostic("Two independent protected client sessions survive reload; a synthetic subscription is stored through the real HTTP/SQL service.");
 
-    const admin = await driver.browser({ origin: fixture.origin, width: 1280, acceptInsecureCerts: true }); pages.push(admin);
+    const admin = await driver.browser({ origin: fixture.origin, siblingOrigins: [fixture.outsideOrigin], width: 1280, acceptInsecureCerts: true }); pages.push(admin);
     await admin.navigate("/admin/login");
     await waitUntil(() => admin.execute("return !!document.getElementById('login-form')&&!document.getElementById('login-form').hidden&&!document.getElementById('login-button').disabled"), "real administrator login form");
     await admin.type("#email", fixture.email); await admin.type("#password", fixture.password); await admin.type("#factor", fixture.recoveryCodes[0]);
     await admin.click("#login-button");
     await waitUntil(() => admin.execute("return !!document.getElementById('connected')&&!document.getElementById('connected').hidden"), "real administrator recovery factor accepted");
+    await characterizeExternalSessionNavigation(admin, fixture, "admin");
+    t.diagnostic("C01 original admin: Chrome withheld the Strict cookie on a cross-site API navigation; 401 deleted it while the SQL session remained active.");
+    // Characterization only: restore the synthetic login for the independent
+    // messaging checks. This block goes away when C01 becomes a preservation regression.
+    await admin.navigate("/admin/login");
+    await waitUntil(() => admin.execute("return !!document.getElementById('login-form')&&!document.getElementById('login-form').hidden&&!document.getElementById('login-button').disabled"), "administrator fixture signs in again after C01");
+    await admin.type("#email", fixture.email); await admin.type("#password", fixture.password); await admin.type("#factor", fixture.recoveryCodes[1]);
+    await admin.click("#login-button");
+    await waitUntil(() => admin.execute("return !!document.getElementById('connected')&&!document.getElementById('connected').hidden"), "administrator fixture login restored");
     await admin.navigate("/admin/messages"); await chatReady(admin, "admin");
     await waitUntil(() => admin.execute("return !!document.querySelector('#conversations [data-conversation-id]')"), "the real client conversation is in the administrator inbox");
     await admin.click("#conversations [data-conversation-id]");
