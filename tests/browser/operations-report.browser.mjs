@@ -47,7 +47,20 @@ test("real Chrome: private diagnostic is translated, bounded and downloadable by
       try {
         await page.navigate("/__fixture"); await page.execute("sessionStorage.setItem('jessiemessage.language', arguments[0])", language);
         await page.navigate("/admin/readiness");
-        await waitUntil(() => page.execute("return !document.getElementById('readiness-content').hidden && !document.getElementById('download-operations').disabled && document.getElementById('operations-workers').children.length === 4"), "all four operations visible");
+        await waitUntil(() => page.execute("return !document.getElementById('readiness-content').hidden && !document.getElementById('download-operations').disabled && document.getElementById('operations-workers').children.length === 4"), "all four operations loaded");
+        assert.equal(await page.execute("return document.querySelector('h1').textContent"), language === "fr" ? "État du service" : "Service status");
+        assert.equal(await page.execute("return document.querySelector('#readiness-content > :first-child').getAttribute('aria-labelledby')"), "operations-title");
+        assert.equal(await page.execute("return document.getElementById('operations-title').textContent"), language === "fr" ? "Mesures du serveur" : "Server measurements");
+        assert.equal(await page.execute("return document.querySelector('a[href=\"/admin/messages\"]').textContent"), language === "fr" ? "Ouvrir la messagerie" : "Open messaging");
+        assert.deepEqual(await page.execute("return {measures:document.getElementById('operations-details').open,manual:document.getElementById('manual-checks').open,downloadVisible:document.getElementById('download-operations').checkVisibility()}"),
+          { measures: false, manual: false, downloadVisible: false });
+        const beforeOpen = source.snapshots();
+        await tabUntil(page, "#manual-checks > summary"); await page.key("\uE007");
+        assert.equal(await page.execute("return document.getElementById('manual-checks').open && document.querySelector('#manual-checks .remaining-list').checkVisibility()"), true);
+        assert.equal(await page.execute("return document.querySelector('#manual-checks > summary').textContent.trim()"), language === "fr" ? "Contrôles ponctuels" : "Occasional checks");
+        await tabUntil(page, "#operations-details > summary"); await page.key("\uE007");
+        assert.equal(await page.execute("return document.getElementById('operations-details').open && document.getElementById('download-operations').checkVisibility()"), true);
+        assert.equal(source.snapshots(), beforeOpen, "opening optional details needs no new server check");
         assert.equal(await page.execute("return document.getElementById('download-operations').textContent"), language === "fr" ? "Télécharger le diagnostic" : "Download diagnostic");
         assert.equal(await page.execute("const button = document.getElementById('download-operations'); return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && button.getBoundingClientRect().height >= 44 && button.scrollWidth <= button.clientWidth + 1"), true);
         await page.execute(`document.addEventListener('click', event => { const link = event.target.closest('a[download]'); if (!link) return; event.preventDefault(); window.__diagnostic = { name: link.download, text: decodeURIComponent(link.getAttribute('href').split(',').slice(1).join(',')) }; });`);
