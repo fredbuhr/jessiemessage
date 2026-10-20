@@ -11,13 +11,13 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 | Déploiement | Même commit lancé sur l’unique service Infomaniak, précontrôle et contrôles adaptés réussis, repli conservé, REPRISE actualisé après observation. | Réalisé : identité 1.0.0/70b48aa/Node 24.22 confirmée par relevé admin utilisateur après actualisation ; quatre GET publics conformes. R1/R2 SSH restent non concluants, sans attestation PID/socket. |
 | Alignement opérateur | Checkpoint privé décrit la même identité et conserve intégralement l’ancien service comme repli, sans redémarrage ni autre modification serveur. | Réalisé : reçu `release100_metadata_recorded` sur `70b48aa`, version 1.0.0, sans redémarrage ; repli et autres blocs préservés. |
 
-L’harmonisation est terminée. La numérotation est décrite dans le [README](../README.md#versions-et-livraisons). Une release ou un tag ne prouve pas un déploiement ; les versions préparées et actives restent distinctes. La reprise de l’évolution 1.1.0 est le prochain travail fonctionnel, distinct de cette clôture.
+L’harmonisation est terminée. La numérotation est décrite dans le [README](../README.md#versions-et-livraisons). Une release ou un tag ne prouve pas un déploiement ; les versions préparées et actives restent distinctes. La livraison de l’évolution 1.1.0 est le travail en cours, distinct de cette clôture.
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **1 — Lecture privée**, cible `1.1.0` | Jessie voit les lectures clients ; le client ne reçoit pas la lecture de Jessie, y compris par API/export. Badges propres et appareils conservés ; régressions serveur, SQL et interface validées. | Reportée sur la référence harmonisée dans `feature/private-read-receipts-1.1.0`, version 1.1.0 ; revues serveur/interface et tests locaux ciblés réussis. Restent PR/CI, fusion, publication et déploiement constaté. Production 1.0.0. |
+| **1 — Lecture privée**, cible `1.1.0` | Jessie voit les lectures clients ; le client ne reçoit pas la lecture de Jessie, y compris par API/export. Badges propres et appareils conservés ; régressions serveur, SQL et interface validées. | Codée, fusionnée par la PR 110 et publiée en `v1.1.0` sur `84669ed5` ; CI PR et commit de fusion 5/5 réussies, dont MariaDB 10.11/11.4 et Chrome natifs. Restent préparation Infomaniak, activation de ce commit exact, preuve admin fraîche puis alignement opérateur avec repli 1.0.0. Production toujours 1.0.0. [Bilan et procédure](private-read-receipts-110.md). |
 | **2 — Profil et expressions** | Profil, avatar et sélecteur emojis/stickers ; données persistantes, images légères et parcours mobile confortable. | Planifiée. |
 | **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |

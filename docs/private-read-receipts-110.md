@@ -1,6 +1,8 @@
 # Évolution 1 — Lecture privée, 1.1.0
 
-**20 octobre 2026 — préparation locale, non publiée/non déployée.** Base de travail : `main` `e2c5397c64e0e68f959f77fcf417722871b5a677`, après la référence [v1.0.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0) livrée sur `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`. Le travail de lecture privée auparavant préparé sous le numéro provisoire 0.87 est reporté séparément pour préparer `1.1.0`. Aucun résultat ancien ne qualifie ce nouveau candidat. L’[état courant](REPRISE.md) reste la référence du service réellement déployé ; la préparation de cette évolution ne modifie pas la production `1.0.0`.
+**20 octobre 2026 — code fusionné et publié en 1.1.0, CI PR/main réussies ; production toujours 1.0.0.** La [PR 110](https://github.com/fredbuhr/jessiemessage/pull/110) est fusionnée sur `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`. La [CI du commit de fusion](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) a réussi 5/5 jobs. Le [tag/release v1.1.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0) a été publié le 20 octobre à 20:21:26 UTC sur ce même commit et sa cible a été relue.
+
+Base de travail : `main` `e2c5397c64e0e68f959f77fcf417722871b5a677`, après la référence [v1.0.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0) livrée sur `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`. Le travail auparavant préparé sous le numéro provisoire 0.87 est reporté séparément en `1.1.0` ; ses anciens résultats ne qualifient pas cette livraison. L’[état courant](REPRISE.md) reste la référence du service réellement déployé. Aucun reçu de staging ni preuve d’activation 1.1.0 n’est consigné à ce stade.
 
 ## Comportement attendu
 
@@ -21,8 +23,101 @@ Aucune nouvelle infrastructure, dépendance, route, table ou migration SQL. Le s
 
 Les régressions portées avec le code couvrent les réponses client identiques avant/après lecture administrateur, le maintien des reçus visibles par Jessie, les lectures propres et badges persistés, les frontières HTTP, l’export personnel et l’interface client/administrateur en français et anglais. Les scénarios MariaDB contrôlent la persistance réelle ; le scénario Chrome vérifie aussi les mises à jour de métadonnées, le DOM et le focus.
 
-Revues indépendantes serveur et interface sans défaut concret relevé. Sous Node local 24.19.0 : **215 tests ciblés réussis, zéro échec/omission** — 78 backend, 59 interface et 78 de compatibilité exports ZIP/HTTP, médias, accessibilité et identité de version. Pour la dernière série, `TMPDIR` désigne un répertoire temporaire local accessible, car `/tmp` est absent de cet environnement ; le premier lancement avait échoué pour cette seule condition. Syntaxe des **570 sources** et build du code porté réussis. Les prérequis MariaDB et Chrome ne sont pas qualifiés localement ; leur exécution native reste à constater en CI sous Node 24.22.0.
+Revues indépendantes serveur et interface sans défaut concret relevé. Sous Node local 24.19.0 : **215 tests ciblés réussis, zéro échec/omission** — 78 backend, 59 interface et 78 de compatibilité exports ZIP/HTTP, médias, accessibilité et identité de version. Pour la dernière série, `TMPDIR` désigne un répertoire temporaire local accessible, car `/tmp` est absent de cet environnement ; le premier lancement avait échoué pour cette seule condition. Syntaxe des **570 sources** et build du code porté réussis. Les prérequis MariaDB et Chrome ne sont pas qualifiés localement ; leurs contrôles natifs sont ceux de la CI PR ci-dessous, sous Node 24.22.0.
 
-Les résultats du commit candidat restent à constater dans sa CI habituelle : suite générale, build/syntaxe, MariaDB 10.11 et 11.4, Chrome et authentification/messagerie HTTPS. Aucun score historique n’est repris comme preuve actuelle ; un test ignoré reste non vérifié. Les liens et résultats de cette exécution seront consignés après observation.
+La [CI de la PR 110, run 39489455741](https://github.com/fredbuhr/jessiemessage/actions/runs/39489455741) a réussi **5/5 jobs** :
 
-Après validation : fusionner, publier le tag immuable `v1.1.0` et sa release sur le commit exact validé, puis déployer ce même commit sur le service existant avec repli vers `v1.0.0`. La livraison sera confirmée par une identité fraîche du processus et les contrôles adaptés. Aucun envoi, effacement de compte ou contenu client réel n’est nécessaire à cette qualification. Les autres évolutions de messagerie restent distinctes.
+| Contrôle | Résultat constaté |
+| --- | --- |
+| Général | **3 151 tests : 3 116 réussis, zéro échec, 35 ignorés** ; build et syntaxe réussis. |
+| MariaDB 10.11 | **468/468**, aucune omission. |
+| MariaDB 11.4 | **468/468**, aucune omission. |
+| Chrome — clavier et cycle de conversation | **165/165**. |
+| Chrome — authentification et messagerie HTTPS/MariaDB | **2/2**. |
+
+La [CI main, run 39490336793](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793), contrôle le commit de fusion `84669ed570b59b10a1a94a164f24f0e60e6cb5a7` ; elle a réussi **5/5 jobs**, avec les mêmes scores constatés que ceux du tableau : général 3 116 réussis/35 ignorés, MariaDB 468/468 chacune, Chrome 165/165 et HTTPS 2/2, sans échec. Son arbre est identique à celui de la PR. Aucun score ancien n’est repris comme preuve actuelle ; les 35 tests ignorés restent non vérifiés par la suite générale. La CI ne prouve ni publication de release ni déploiement.
+
+La [publication automatisée](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a réussi et produit `published_verified`. Elle vérifie le commit, l’arbre, la version, la CI main et ses cinq jobs avant de créer le tag/release immuable, sans déplacer un tag existant. Aucun navigateur cloud ni jeton personnel n’a été nécessaire. Reste à déployer ce même commit sur le service existant avec repli vers `v1.0.0` ; aucun staging ou redémarrage 1.1.0 n’a encore été constaté. La livraison sera confirmée par une identité fraîche du processus et les contrôles adaptés. Aucun envoi, effacement de compte ou contenu client réel n’est nécessaire à cette qualification. Les autres évolutions de messagerie restent distinctes.
+
+## Livraison 1.1.0 : reprise après staging
+
+Procédure préparée, sans activation constatée. Cible épinglée : commit `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`, préfixe `84669ed5`. L’exécution exige d’abord la CI main complète verte et le tag immuable `v1.1.0` et sa release sur ce commit exact. [REPRISE](REPRISE.md) conserve la production **1.0.0** jusqu’à la preuve de la nouvelle identité.
+
+### 1. Préparation seule
+
+Dans le [terminal SSH existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), la préparation épinglée crée le checkout et les lanceurs, puis exécute uniquement `check-local-closures`. Le reçu attendu est `staged_precheck_passed`, sur les source/arbre ci-dessus, avec `pendingClosures:false`, `started:false`, `erased:false`, `managerChanged:false` et `runtimeStarted:false`. Si un champ diffère, conserver 1.0.0 en service et arrêter avant l’étape Manager, même si le statut annonce un précontrôle réussi. Ce reçu ne prouve pas une activation. Après une interruption, relire les fichiers et reçus existants avant de rejouer la préparation.
+
+Le [script publié](https://github.com/fredbuhr/jessiemessage/blob/002f883291df1785513173dfb18a29ff41b74fcd/ops/prepare-release110.sh) est épinglé par commit et SHA-256. Son algorithme a passé **4/4 cas synthétiques locaux** ; seuls les deux pins source/arbre ont ensuite été remplacés, avec vérification de syntaxe Bash/Python et relecture identique du fichier publié. Ces tests ne remplacent pas le reçu serveur.
+
+```sh
+python3 - <<'PY110'
+import hashlib, subprocess, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/002f883291df1785513173dfb18a29ff41b74fcd/ops/prepare-release110.sh"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "2eca0cbe20905cabb0256d23ac1409cb35fb0b3544154eb0b01912083e849517":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+subprocess.run(
+    ["bash", "-s", "--", "84669ed570b59b10a1a94a164f24f0e60e6cb5a7"],
+    input=code, check=True
+)
+PY110
+```
+
+### 2. Activation par le Manager
+
+Ouvrir les [réglages de l’application existante](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application). Conserver le service, le port 3000 et ses autres paramètres. Enregistrer ces deux champs :
+
+**Run**
+
+```sh
+bash /srv/customer/jessiemessage-private/start-primary-release110-84669ed5.sh
+```
+
+**Build**
+
+```sh
+cd /srv/customer/jessiemessage-operator/production-110-84669ed5 &&
+test "$(git rev-parse HEAD)" = 84669ed570b59b10a1a94a164f24f0e60e6cb5a7 &&
+test "$(git rev-parse 'HEAD^{tree}')" = 0201cdbd1932fd9104c04a91d63561010e8ae0c2 &&
+jm_build_status=$(git status --porcelain --untracked-files=normal) && test -z "$jm_build_status" &&
+test "$(sha256sum /srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node | cut -d ' ' -f 1)" = 67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c &&
+env -u NODE_OPTIONS -u NODE_PATH /srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node scripts/check-syntax.mjs
+```
+
+Relire les paramètres enregistrés, revenir au [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), puis lancer le cycle normal **Build**, avec **Non** pour la réinstallation des dépendances. Attendre le Build réussi et l’état **Actif** ; ce cycle redémarre le service avec le nouveau Run.
+
+### 3. Confirmer le processus répondant
+
+Dans [État du service](https://jessiemessage.com/admin/readiness), choisir **Actualiser la page → Détails techniques**, puis conserver ces quatre valeurs :
+
+| Champ | Valeur attendue |
+| --- | --- |
+| Version de l’application | `1.1.0` |
+| Commit au démarrage | `84669ed570b59b10a1a94a164f24f0e60e6cb5a7` |
+| Version Node.js | `v24.22.0` |
+| Relevé au démarrage | Texte fraîchement affiché après ce Build, conservé tel quel. |
+
+Cette lecture authentifiée identifie le processus HTTP répondant. Conserver le texte de date et son éventuel fuseau sans déduire une conversion absente. Les réponses publiques de santé/disponibilité complètent le contrôle de disponibilité ; elles ne prouvent pas la version. Mettre ensuite REPRISE et le checkpoint opérateur à jour avec les preuves observées et le repli conservé.
+
+### Repli immédiat : 1.0.0
+
+Conserver le checkout `production-100-70b48aa8`, source `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, arbre `485cade0aeeee41cb4c34f913cd98f6078c4636b`, et le lanceur privé SHA-256 `aa400abaa54033308acce7f4b28649b33d4ecc5f7098eec7b020c05631123248`. Pour un repli, remettre ces deux champs dans les mêmes réglages Manager, puis suivre le même cycle Build et vérifier l’identité `1.0.0` dans l’administration.
+
+**Run 1.0.0**
+
+```sh
+bash /srv/customer/jessiemessage-private/start-primary-release100-70b48aa8.sh
+```
+
+**Build 1.0.0**, repris de [REPRISE](REPRISE.md#build-de-la-référence-active) :
+
+```sh
+cd /srv/customer/jessiemessage-operator/production-100-70b48aa8 &&
+test "$(git rev-parse HEAD)" = 70b48aa845b70ca960724c8d37a6e94b3d5f47a8 &&
+test "$(git rev-parse 'HEAD^{tree}')" = 485cade0aeeee41cb4c34f913cd98f6078c4636b &&
+jm_build_status=$(git status --porcelain --untracked-files=normal) && test -z "$jm_build_status" &&
+test "$(sha256sum /srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node | cut -d ' ' -f 1)" = 67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c &&
+env -u NODE_OPTIONS -u NODE_PATH /srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node scripts/check-syntax.mjs
+```
+
+Aucune migration SQL n’accompagne cette livraison ni son repli. Les clés, configurations, médias, sessions, PC et états D1 restent conservés.
