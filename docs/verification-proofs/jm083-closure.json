@@ -1,0 +1,376 @@
+{
+  "format": "jessiemessage-audit-closure",
+  "version": 1,
+  "lot": 5,
+  "release": "0.83.0",
+  "status": "completed_with_open_items",
+  "runtime": {
+    "source": "682864cec3b8d0eb1c8a6dd92c4b9bd9dfc097b1",
+    "tree": "5eb0c133625b734c8aa92ce3f3642e281a51f380",
+    "launcherSha256": "a0c0486c02680fbb147c626afd0041ae718c38f27d926939e2b0cea5ae7df7b1",
+    "deploymentProof": "docs/verification-proofs/jm083-verification.json"
+  },
+  "documentationBaseline": "ff41942463dc60e60ab08339764116e9c3cf75d7",
+  "ci": {
+    "run": 39412009288,
+    "source": "682864cec3b8d0eb1c8a6dd92c4b9bd9dfc097b1",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "jobsPassed": 5,
+    "general": {
+      "tests": 3129,
+      "pass": 3094,
+      "fail": 0,
+      "skipped": 35
+    },
+    "chrome": {
+      "tests": 163,
+      "pass": 163,
+      "fail": 0,
+      "skipped": 0
+    },
+    "httpsSql": {
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    "nativeSql": [
+      {
+        "mariadb": "10.11",
+        "tests": 466,
+        "pass": 466,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "mariadb": "11.4",
+        "tests": 466,
+        "pass": 466,
+        "fail": 0,
+        "skipped": 0
+      }
+    ],
+    "syntaxFiles": 568,
+    "offlinePreviewBuilt": true,
+    "passedSuitesRerunInThisLot": false,
+    "overlappingTotalsNotAdded": true
+  },
+  "coverage": [
+    {
+      "journey": "authentication",
+      "tests": [
+        "tests/rehearsal/authentication.rehearsal.mjs"
+      ],
+      "environment": "native Chrome / real HTTPS / MariaDB"
+    },
+    {
+      "journey": "text_photo_two_client_sessions",
+      "tests": [
+        "tests/rehearsal/messaging.rehearsal.mjs"
+      ],
+      "environment": "three isolated native Chrome contexts / real HTTPS / MariaDB / media"
+    },
+    {
+      "journey": "notification_exact_message_after_login",
+      "tests": [
+        "tests/rehearsal/messaging.rehearsal.mjs",
+        "tests/browser/chat-accessibility.browser.mjs",
+        "tests/notifications-store.integration.test.mjs"
+      ],
+      "environment": "real reference and target message; outbound producers stopped before HTTPS fixture listen",
+      "providerPushOrOsClickObserved": false
+    },
+    {
+      "journey": "client_and_crm_conversation_export",
+      "tests": [
+        "tests/chat-flow.integration.test.mjs",
+        "tests/crm-flow.integration.test.mjs"
+      ],
+      "environment": "real HTTP endpoints / MariaDB / ZIP independently inspected",
+      "privateCrmNotesAndLabelsIncluded": false
+    },
+    {
+      "journey": "media_and_operator_exports",
+      "tests": [
+        "tests/media-flow.integration.test.mjs",
+        "tests/data-flow.integration.test.mjs"
+      ],
+      "environment": "direct real media readers/crypto/JPEG generator; private CLI / real files and permissions"
+    },
+    {
+      "journey": "export_user_interface",
+      "tests": [
+        "tests/browser/chat-accessibility.browser.mjs"
+      ],
+      "environment": "native Chrome FR/EN mobile/desktop; synthetic API; download click intercepted",
+      "singleChromeHttpsSqlExportScenario": false
+    }
+  ],
+  "findings": [
+    {
+      "id": "A01",
+      "status": "open_provider_node_patch",
+      "proof": "docs/verification-proofs/jm080-verification.json",
+      "scope": "v24.15.0 remains; corrected provider24 version not applied; exploitability not demonstrated"
+    },
+    {
+      "id": "A02",
+      "status": "corrected_verified",
+      "proof": "docs/verification-proofs/jm080-verification.json",
+      "scope": "atomic bounded rate budgets"
+    },
+    {
+      "id": "A03",
+      "status": "corrected_verified",
+      "proof": "docs/verification-proofs/jm080-verification.json",
+      "scope": "fresh time after SQL and media locks, terminal rollback"
+    },
+    {
+      "id": "A04",
+      "status": "corrected_verified",
+      "proof": "docs/verification-proofs/jm080-verification.json",
+      "scope": "fresh time after waits; generation and one-time usage retained"
+    },
+    {
+      "id": "A05",
+      "status": "corrected_verified_under_existing_limits",
+      "proof": "docs/verification-proofs/jm081-verification.json",
+      "scope": "1GiB ciphertext/50000 objects; independent SQL/metadata/time limits remain"
+    },
+    {
+      "id": "A06",
+      "status": "corrected_verified",
+      "proof": "docs/verification-proofs/jm082-verification.json",
+      "scope": "copy missing media only after full verification; preserve/refuse truncated or divergent files"
+    },
+    {
+      "id": "A07",
+      "status": "code_and_kit_delivered_personal_installation_not_observed",
+      "proof": "docs/verification-proofs/jm081-verification.json",
+      "scope": "native Windows PowerShell5.1 passed; copy receipts contain no installed collector version"
+    },
+    {
+      "id": "A08",
+      "status": "warning_and_dry_run_delivered_active_archival_deferred",
+      "proof": "docs/verification-proofs/jm081-verification.json",
+      "scope": "intervene at1500 receipts or3072 entries; hard limits2000/4096; no active purge"
+    },
+    {
+      "id": "A09",
+      "status": "corrected_verified",
+      "proof": "docs/verification-proofs/jm082-verification.json",
+      "scope": "forced stop failure propagated while cleanup continues"
+    },
+    {
+      "id": "A10",
+      "status": "corrected_verified",
+      "proof": "docs/verification-proofs/jm082-verification.json",
+      "scope": "seven FK validators; native foreign-schema refusals"
+    },
+    {
+      "id": "A11",
+      "status": "corrected_verified",
+      "proof": "docs/verification-proofs/jm083-verification.json",
+      "scope": "single host-only HSTS max-age31536000"
+    },
+    {
+      "id": "C01",
+      "status": "confirmed_corrected_verified",
+      "proof": "docs/verification-proofs/jm083-verification.json",
+      "scope": "nine modules; nativeChrome/HTTPS/SQL roles/cookies/session/reopen"
+    },
+    {
+      "id": "C02",
+      "status": "confirmed_bootstrap_loop_corrected_other_race_not_reproduced",
+      "proof": "docs/verification-proofs/jm083-verification.json",
+      "scope": "native fetch/Abort, controlled same-task visibility; old-finally race not reproduced with separate tasks; no physical tab or BFCache qualification"
+    }
+  ],
+  "openItems": [
+    "A01_provider_node_patch",
+    "A07_personal_pc_installation",
+    "A08_active_archive_executor"
+  ],
+  "liveVerification": {
+    "startedAt": "2026-10-20T11:47:30.022970+00:00",
+    "verifiedAt": "2026-10-20T11:47:30.413880+00:00",
+    "runtimeRelease": "0.83.0",
+    "runtimeSource": "682864cec3b8d0eb1c8a6dd92c4b9bd9dfc097b1",
+    "runtimeTree": "5eb0c133625b734c8aa92ce3f3642e281a51f380",
+    "sourceClean": true,
+    "launcherSha256": "a0c0486c02680fbb147c626afd0041ae718c38f27d926939e2b0cea5ae7df7b1",
+    "preservedSensitiveHashes": 10,
+    "pairedIdentityPreserved": true,
+    "pairedDestinations": 1,
+    "monitor": {
+      "code": "OK",
+      "checkedAt": 1792496812814
+    },
+    "node": "v24.15.0",
+    "httpChecks": [
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "jsonStatus": "ok",
+        "noStore": true,
+        "noCookie": true,
+        "singleHsts": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "jsonStatus": "ready",
+        "noStore": true,
+        "noCookie": true,
+        "singleHsts": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "jsonStatus": "ok",
+        "noStore": true,
+        "noCookie": true,
+        "singleHsts": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "jsonStatus": "ready",
+        "noStore": true,
+        "noCookie": true,
+        "singleHsts": true
+      }
+    ],
+    "operations": {
+      "freshness": {
+        "version": 1,
+        "type": "private_backup_freshness",
+        "scope": "capture-journal",
+        "status": "current",
+        "code": "OK",
+        "checkedAt": 1792496850078,
+        "maximumAgeMilliseconds": 93600000,
+        "lastAttemptAt": 1792473302541,
+        "lastSuccessAt": 1792473309366,
+        "ageMilliseconds": 23540712,
+        "lastAttemptStatus": "succeeded",
+        "lastAttemptCode": "OK",
+        "copyStatus": "not_checked",
+        "decryptionStatus": "not_checked"
+      },
+      "capacity": {
+        "records": 10,
+        "rootEntries": 23
+      },
+      "archiveCount": 5,
+      "schedule": {
+        "enabled": true,
+        "hourUtc": 5,
+        "minuteUtc": 15
+      },
+      "latestArchiveStartedAt": 1792473302541,
+      "latestArchiveBytes": 402250,
+      "lastAttempt": {
+        "version": 1,
+        "type": "recurring_checkpoint",
+        "status": "succeeded",
+        "phase": "finished",
+        "code": "OK",
+        "startedAt": 1792473302541,
+        "finishedAt": 1792473309366,
+        "runtimeResumed": true
+      },
+      "destinations": [
+        {
+          "enabled": true,
+          "lastSeenAt": 1792496166761,
+          "lastReceiptReceivedAt": 1792496166761,
+          "latestArchiveReceiptMatches": true
+        }
+      ],
+      "collectorVersionReported": false
+    },
+    "pcUpdateInstallationObserved": false,
+    "readOnly": true,
+    "productionRestoreOrRealMailOrAccountDeletion": false
+  },
+  "livePrivateReportCanonicalSha256": "6a36d0ffb9f52e5bafb01fbec6add2ebd2855688e33f34c43c2b4ca3550910a7",
+  "managerObservation": {
+    "selectedNodeMajor": 24,
+    "offeredMajors": [
+      25,
+      24,
+      23,
+      22,
+      21,
+      20
+    ],
+    "minorPatchSelectorObserved": false,
+    "settingsChanged": false,
+    "buildRunOrRestartRequested": false
+  },
+  "a08Thresholds": {
+    "warningReceipts": 1500,
+    "warningRootEntries": 3072,
+    "maximumReceipts": 2000,
+    "maximumRootEntries": 4096,
+    "activeArchivalImplemented": false
+  },
+  "primarySources": [
+    {
+      "url": "https://nodejs.org/en/blog/vulnerability/july-2026-security-releases",
+      "scope": "security updates available after hosted24.15.0"
+    },
+    {
+      "url": "https://nodejs.org/en/blog/release/v24.18.1",
+      "scope": "2026-07-29 security release24.18.1"
+    }
+  ],
+  "changes": {
+    "applicationCode": false,
+    "dependencies": false,
+    "infrastructure": false,
+    "migration": false,
+    "build": false,
+    "pcPairingRepeated": false,
+    "keysRegenerated": false,
+    "realMailSent": false,
+    "realAccountDeleted": false,
+    "productionRestored": false,
+    "d1Reused": false
+  },
+  "limits": {
+    "personalPcUpdateInstallationObserved": false,
+    "physicalPlatformsFullyQualified": false,
+    "osPushClickOrBackgroundPwaQualified": false,
+    "physicalTabOrBfcacheQualified": false,
+    "authenticatedPrivateProductionGetObserved": false,
+    "sshParentChildPidsObserved": false,
+    "completeDatabase": false,
+    "autonomousTotalHostRecovery": false,
+    "maximum24HourDataLossGuaranteed": false,
+    "wholeProductionReadinessUnconditionallyDeclared": false
+  },
+  "rollback": {
+    "release": "0.82.0",
+    "source": "bfc2a2217bfb6ff06dcae340fd9fc7b640609865",
+    "tree": "380b11faa02801a42eddf5bade4f66c45d901257",
+    "checkout": "/srv/customer/jessiemessage-operator/audit-lot3-082-bfc2a221",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-audit-lot3-082-bfc2a221.sh",
+    "launcherSha256": "138ee9d32e999eace6d48cfca62893d4e29ac73ec3ff409010ec175f993c9abb",
+    "checkpointField": "developmentSimplification.auditCorrections.rollback"
+  },
+  "review": {
+    "functionalCoverageIndependent": true,
+    "findingsIndependent": true,
+    "documentationIndependent": true,
+    "blockingUncoveredJourneyFound": false
+  },
+  "report": "docs/audit-closure-083.md"
+}
