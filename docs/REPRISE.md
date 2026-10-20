@@ -1,14 +1,12 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — 0.84.0 livrée et vérifiée : administration quotidienne, page État du service.** Mesures en premier, détails techniques repliés, contrôles ponctuels facultatifs, SMTP sans envoi et lien direct vers la messagerie. [Compte rendu](service-status-084.md), [preuves](verification-proofs/jm084-verification.json), [plan](PLAN-IMPLEMENTATION.md), [AGENTS](../AGENTS.md). Lot terminé, bilan de livraison ; aucun lot suivant automatique. À 14:29, l’utilisateur a explicitement différé le sujet Avast pour avancer : aucune action PC demandée aujourd’hui, aucun blocage du développement. Artefact PC inchangé.
+**20 octobre 2026 Europe/Paris — objectif 0.85 en qualification : fiabiliser l’envoi des messages après une confirmation HTTP perdue. Service actif inchangé : 0.84.0, repli 0.83.** [Lot 0.85](chat-send-ack-085.md), [plan](PLAN-IMPLEMENTATION.md). À 15:12, l’utilisateur demande de prioriser durablement le cœur de la messagerie : sauvegardes/PC différés, sans conditionner les lots messages ; gardes et états existants préservés. Aucun déploiement 0.85 acquis.
 
 L’ancien compteur « étape 4/6 » appartient au plan du 18 octobre, remplacé par S1/S2/S3 le 19. Le plan correctif courant comporte quatre lots puis une clôture : lots 1/2/3/4 serveur livrés en 0.80/0.81/0.82/0.83, lot 5 de consolidation terminé. Ce résultat ne signifie pas que tous les constats sont résolus ou que toute la production est certifiée. La livraison V1 n’atteste pas les garanties abandonnées de l’ancien périmètre. La clôture 5/5 reste un relevé historique avec réserves ; elle ne ferme pas le nouvel incident antivirus A07.
 
-## Lot 0.84 terminé — administration quotidienne
+## Objectif courant — 0.85 envoi confirmé par l’historique
 
-La page affiche **État du service**, les mesures d’abord, puis les fonctions configurées. Les détails techniques sont repliés ; les contrôles manuels sont proposés après un changement ou en cas de problème, sans répétition systématique des essais déjà réussis. La vérification SMTP facultative n’envoie aucun e-mail et un lien ouvre directement la messagerie. Le guide quotidien est aligné. Aucune nouvelle fonction métier, preuve d’acceptation humaine en base ou modification de l’artefact PC.
-
-Le lot est fusionné, qualifié en CI et déployé/vérifié. Les détails et limites sont dans le [compte rendu](service-status-084.md) ; les pins actifs et le repli immédiat sont ci-dessous. Le traitement Avast reste différé : il n’a été ni une tâche active ni un préalable à cette livraison.
+Base documentaire `ff449253e15a8f0eb6b57ec8f2f2f8ccc6dad822`. Cas reproduit en VM : un POST enregistré perd sa réponse, puis l’historique ou une notification confirme le même envoi ; le brouillon conservé permet alors un nouvel envoi en double. Corriger le nettoyage du seul brouillon correspondant et arrêter **Réessayer** dès cette confirmation, sans perdre un nouveau texte saisi. Qualification ciblée VM/Chrome puis CI et livraison ; garder le runtime 0.84 tant que les faits de livraison 0.85 ne sont pas acquis.
 
 ## Audit et corrections antérieures
 
@@ -88,4 +86,4 @@ La [surveillance](../MONITORING.md) garde ses limites : moniteur local/mails acc
 
 **Plan correctif clos, 5/5 lots, avec réserves ouvertes — relevé historique.** L’incident A07 reste ouvert mais son traitement est différé par l’utilisateur et n’a pas bloqué la livraison 0.84. Le [bilan final par constat](audit-closure-083.md) et les [preuves consolidées](verification-proofs/jm083-closure.json) distinguent corrigé/vérifié, livré mais installation PC non observée, exécuteur différé, dépendance hébergeur et sous-hypothèse non reproduite. Aucun nouveau lot fonctionnel n’est ouvert automatiquement.
 
-**Lot 0.84 terminé : livré et vérifié, bilan de livraison.** [Compte rendu](service-status-084.md), [preuves](verification-proofs/jm084-verification.json). Aucun lot suivant n’est ouvert automatiquement. Avast reste en attente sur instruction utilisateur, sans être résolu ; aucune action PC demandée aujourd’hui. A01 fournisseur et A08 restent distincts, sans nouvelle infrastructure ni purge. Préserver PC, clés, autorité et D1. [Historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md), [état avant 0.84](https://github.com/fredbuhr/jessiemessage/blob/5a6f07228cc01b1d21421dc57baaa36378991fa5/docs/REPRISE.md).
+**Prochaine action : terminer et qualifier le correctif messages 0.85**, puis le livrer avec repli conservé. Sauvegardes, Avast/PC et réserves A01/A07/A08 restent différés et ne conditionnent pas ce travail ; aucune action PC demandée. Aucun garde, clé, journal, marqueur ou état historique retiré. [Historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md).

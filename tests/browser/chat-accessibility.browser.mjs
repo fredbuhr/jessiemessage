@@ -22,7 +22,7 @@ let server, driver, baseUrl;
 let fixture;
 
 function resetFixture() {
-  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false, sent: [] };
+  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, eventHolds: [], read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false, sent: [], messageRequests: [] };
 }
 function media(role) {
   const prefix = `/api/media/${role}/conversations/${conversationId}/messages/${photoMessageId}`;
@@ -144,23 +144,40 @@ async function startFixtureServer() {
           if (suffix === "/conversations") { sendJson(200, { conversations: [conversation(role)], nextCursor: null, hasMore: false }); return; }
           if (suffix === `/conversations/${conversationId}/messages`) {
             const older = url.searchParams.has("before");
-            sendJson(200, { conversation: conversation(role), messages: (url.searchParams.has("after") ? [1, 2, 3] : older ? [1] : [2, 3]).map((n) => message(n, role)),
+            const numbers = url.searchParams.has("after") ? [1, 2, 3, ...(fixture.historyAcknowledgement ? fixture.sent.map(item => Number(item.sequence)) : [])] : older ? [1] : [2, 3];
+            sendJson(200, { conversation: conversation(role), messages: numbers.map((n) => message(n, role)),
               eventCursor: String(fixture.latest), hasMoreBefore: !older, nextBefore: older ? null : "2" }); return;
           }
           if (suffix === `/conversations/${conversationId}/events`) {
             fixture.eventRequests += 1;
+            // Delay the real HTTP response so history, rather than an event
+            // poll, is the first acknowledgement of the uncertain send.
+            if (fixture.holdEvents) {
+              await new Promise(resolve => { fixture.eventHolds.push(resolve); response.once("close", resolve); });
+              if (response.destroyed) return;
+            }
             const after = Number(url.searchParams.get("after"));
             sendJson(200, { conversation: conversation(role), events: fixture.events.filter((n) => n > after).map((n) => ({ sequence: String(n), kind: "message", message: message(n, role) })),
               nextCursor: String(fixture.latest), hasMore: false }); return;
           }
         }
-        if (feature === "chat" && request.method === "POST" && suffix === `/conversations/${conversationId}/messages`) {
+        if (request.method === "POST" && suffix === `/conversations/${conversationId}/messages`) {
           let body = ""; for await (const chunk of request) { body += chunk; if (body.length > 20000) throw new Error("oversized_fixture_request"); }
-          const parsed = JSON.parse(body); assert.match(parsed.clientMessageId, /^[a-f0-9]{32}$/); assert.equal(typeof parsed.body, "string");
+          const parsed = JSON.parse(body); assert.match(parsed.clientMessageId, /^[a-f0-9]{32}$/);
+          assert.equal(typeof (feature === "media" ? parsed.caption : parsed.body), "string");
+          if (feature === "media") assert.equal(parsed.mediaId, id(300));
+          fixture.messageRequests.push({ feature, role, ...parsed });
           fixture.latest += 1; fixture.events.push(fixture.latest);
-          const sent = { id: id(200 + fixture.latest), sequence: String(fixture.latest), sender: "me", body: parsed.body,
-            createdAt: Date.now(), deletedAt: null, clientMessageId: parsed.clientMessageId };
-          fixture.sent.push(sent); sendJson(201, { message: sent }); return;
+          const sent = { id: id(200 + fixture.latest), sequence: String(fixture.latest), sender: "me", body: feature === "media" ? parsed.caption : parsed.body,
+            createdAt: Date.now(), deletedAt: null, clientMessageId: parsed.clientMessageId, ...(feature === "media" ? { media: media(role) } : {}) };
+          fixture.sent.push(sent);
+          if (fixture.historyAcknowledgement) {
+            // Persistence precedes response loss. Selection aborts native
+            // fetch; neither fetch nor the application controller is replaced.
+            response.once("close", () => { fixture.sendResponseClosed = true; });
+            fixture.dropSendResponse = () => response.destroy(); return;
+          }
+          sendJson(201, { message: sent }); return;
         }
         if (feature === "chat" && request.method === "POST" && suffix === `/conversations/${conversationId}/messages/${id(202)}/delete`) {
           fixture.deleteRequests += 1;
@@ -177,7 +194,7 @@ async function startFixtureServer() {
           if (suffix === `/conversations/${conversationId}/gallery`) {
             sendJson(200, { items: [{ messageId: photoMessageId, createdAt: fixture.now + 3000, media: media(role) }], nextBefore: null, hasMore: false }); return;
           }
-          if (suffix === "/assets") { sendJson(200, { assets: [], nextCursor: null, hasMore: false }); return; }
+          if (suffix === "/assets") { sendJson(200, { assets: fixture.historyAcknowledgement ? [media(role)] : [], nextCursor: null, hasMore: false }); return; }
           if ([`/conversations/${conversationId}/messages/${photoMessageId}/thumb`, `/conversations/${conversationId}/messages/${photoMessageId}/full`].includes(suffix)) {
             response.writeHead(200, { "Content-Type": "image/jpeg" }); response.end(jpeg); return;
           }
@@ -389,6 +406,59 @@ test("Chrome: a notification reaches its exact old message for each role, direct
     } finally { await page.close(); }
   }
 });
+
+test("Chrome: notification history acknowledges a persisted send after native response loss, without duplicate text or photo caption", { timeout: 60000 }, async () => {
+  for (const role of ["client", "admin"]) for (const kind of ["text", "photo"]) {
+    resetFixture(); fixture.historyAcknowledgement = true; fixture.holdEvents = true;
+    const page = await browser(390), body = `Fictional ${role} ${kind} with an uncertain response`;
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await waitUntil(() => page.execute("return !document.querySelector('#message-body').disabled"), "conversation can send");
+      await page.type("#message-body", body);
+      if (kind === "photo") {
+        await page.click("#open-library");
+        await waitUntil(() => page.execute("return !!document.querySelector('#media-dialog[open] [data-media-action=choose]')"), "synthetic JPEG available in the real library dialog");
+        await page.click("[data-media-action=choose]");
+        await waitUntil(() => page.execute("const img=document.querySelector('#image-preview img');return !document.querySelector('#image-draft').hidden && !!img && img.complete && img.naturalWidth>0"), "selected JPEG preview decoded");
+      }
+      await page.click("#send");
+      await waitUntil(() => fixture.sent.length === 1 && Boolean(fixture.dropSendResponse), "server persisted the send and withheld its response");
+      const persisted = { ...fixture.sent[0] }, originalKey = fixture.messageRequests[0].clientMessageId;
+      assert.match(originalKey, /^[a-f0-9]{32}$/); assert.equal(persisted.clientMessageId, originalKey);
+      assert.equal(persisted.body, body);
+      assert.equal(await page.execute("return document.querySelector('#message-body').value"), body, "uncertain send retains its draft before proof");
+
+      // A real hash event opens an older, initially unloaded peer message.
+      // The selection aborts the held native fetch, then loads a snapshot
+      // containing our exact persisted client key with an advanced cursor.
+      await page.execute("location.hash=arguments[0]", `notification=${id(999)}`);
+      await waitUntil(() => page.execute("return location.hash==='' && !!document.querySelector('#messages [data-sequence=\"1\"].notification-target')"), "notification selected its exact message through fresh history");
+      await waitUntil(() => fixture.sendResponseClosed === true, "native abort closed the withheld POST response");
+      assert.equal(await page.execute("return document.querySelector('#message-body').value"), "", `${role}/${kind}: history acknowledgement clears the sent draft`);
+      assert.equal(await page.execute("return document.querySelector('#pending-controls').hidden && document.querySelector('#image-draft').hidden && document.querySelector('#send').disabled"), true);
+      assert.equal(await page.execute("return document.querySelectorAll('#messages [data-sequence=\"4\"]').length"), 1);
+      assert.equal(await page.execute("const row=document.querySelector('#messages [data-sequence=\"4\"]');return (row.querySelector('.photo-caption')??row.querySelector('.bubble')).textContent"), body);
+
+      // A queued retry click after its control disappeared must be harmless.
+      await page.execute("document.querySelector('#retry-send').click()");
+      assert.equal(await page.execute("return document.querySelector('#chat-status').classList.contains('is-error')"), false, "acknowledged text is not reported as an invalid retry");
+      const completedPolls = await page.execute("return performance.getEntriesByType('resource').filter(entry=>new URL(entry.name).pathname.endsWith('/events')).length");
+      const requestedPolls = fixture.eventRequests;
+      fixture.holdEvents = false; for (const release of fixture.eventHolds.splice(0)) release();
+      await waitUntil(async () => fixture.eventRequests > requestedPolls && await page.execute("return performance.getEntriesByType('resource').filter(entry=>new URL(entry.name).pathname.endsWith('/events')).length>arguments[0]", completedPolls), "normal event polling continues after the history acknowledgement");
+      assert.equal(await page.execute("return document.querySelector('#message-body').value === '' && document.querySelector('#pending-controls').hidden && !document.querySelector('#chat-status').classList.contains('is-error')"), true);
+      assert.equal(fixture.messageRequests.length, 1, "neither navigation nor the acknowledged retry sends another POST");
+      assert.equal(fixture.sent.length, 1); assert.equal(fixture.messageRequests[0].clientMessageId, originalKey);
+      await noJavascriptErrors(page);
+    } finally {
+      fixture.dropSendResponse?.(); fixture.holdEvents = false;
+      for (const release of fixture.eventHolds.splice(0)) release();
+      await page.close();
+    }
+  }
+});
+
 async function openConversationExport(page) {
   await loaded(page, "/admin/messages");
   await waitUntil(() => page.execute("return !!document.querySelector('.crm-fiche-button') && !!document.querySelector('.contact')"), "CRM initialized");

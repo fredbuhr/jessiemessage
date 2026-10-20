@@ -145,6 +145,114 @@ function harness({ currentSession = session(), visible = true, intercept = null,
 const contents = (element) => [element.textContent, element.value, ...element.children.map(contents)].join(" ");
 const posts = (f) => f.calls.filter((call) => call.options.method === "POST" && call.path.includes("/messages"));
 
+async function uncertainSendFixture({ role = "client", persist = true } = {}) {
+  let f, target;
+  const rows = Array.from({ length: 100 }, (_, index) => ({ id: id(2000 + index), sequence: String(index + 1), sender: "peer",
+    body: `Earlier message ${index + 1}`, createdAt: now, deletedAt: null, clientMessageId: null }));
+  const assetId = id(2500), reference = id(2600);
+  const media = (base) => ({ id: assetId, width: 1000, height: 800, thumbnailWidth: 400, thumbnailHeight: 320,
+    fullUrl: `${base}/full`, thumbnailUrl: `${base}/thumb` });
+  const append = (sender, body, clientMessageId = null, image = false) => {
+    const row = { id: id(2000 + rows.length), sequence: String(rows.length + 1), sender, body, createdAt: now, deletedAt: null, clientMessageId };
+    if (image) row.media = media(`/api/media/${role}/conversations/${f.conversation().id}/messages/${row.id}`);
+    rows.push(row); return row;
+  };
+  f = harness({ currentSession: session(1, "A".repeat(43), role), intercept: (path, options) => {
+    if (path === `/api/media/${role}/capabilities`) return response(200, { enabled: true });
+    if (path === `/api/media/${role}/assets` && options.method === "POST") return response(201, { asset: { ...media(`/api/media/${role}/assets/${assetId}`), sharedHere: false } });
+    if (path.endsWith("/thumb")) return photoResponse();
+    if (path === `/api/notifications/${role}/open`) return response(200, { conversationId: f.conversation().id, messageId: target.id, sequence: target.sequence });
+    const match = /\/conversations\/([a-f0-9]{32})\/(messages|events)/.exec(path);
+    if (!match) return undefined;
+    if (options.method === "POST") {
+      const input = JSON.parse(options.body);
+      if (persist) append("me", input.body ?? input.caption, input.clientMessageId, Boolean(input.mediaId));
+      throw new Error("Synthetic response lost after the send request");
+    }
+    const conversation = { ...f.conversation(), latestSequence: String(rows.length), latestEventSequence: String(rows.length) };
+    if (match[2] === "events") return response(200, { conversation, events: [], nextCursor: String(rows.length), hasMore: false });
+    const after = new URL(path, "https://example.invalid").searchParams.get("after");
+    const messages = after === null ? rows.slice(-50) : rows.filter(row => BigInt(row.sequence) > BigInt(after)).slice(0, 50);
+    return response(200, { conversation, messages, eventCursor: String(rows.length), hasMoreBefore: messages[0]?.sequence !== "1", nextBefore: messages[0]?.sequence ?? null,
+      hasMoreAfter: messages.at(-1)?.sequence !== String(rows.length), nextAfter: messages.at(-1)?.sequence ?? null });
+  } });
+  await flush();
+  if (role === "admin") {
+    const contact = f.element("conversations").children[0];
+    for (const handler of contact.events.get("click")) handler({}); await flush();
+  }
+  return Object.assign(f, { rows, append,
+    async openNotification(message) { target = message; await f.notification(reference, role); },
+    async uncertainSend(kind, body) {
+      if (kind === "photo") {
+        f.element("image-file").files = [new Blob(["Synthetic image"], { type: "image/jpeg" })];
+        for (const handler of f.element("image-file").events.get("change")) handler({});
+      }
+      await f.send(body);
+      assert.equal(f.inspect().states.get(f.inspect().selected).pending?.status, "retry");
+      assert.equal(posts(f).length, 1);
+    },
+  });
+}
+
+test("notification message-page acknowledgements clear an uncertain text or photo without repeating the send", async t => {
+  for (const kind of ["text", "photo"]) await t.test(kind, async () => {
+    const f = await uncertainSendFixture(), incoming = f.append("peer", "A newly notified reply");
+    await f.uncertainSend(kind, "Already recorded content");
+    const key = JSON.parse(posts(f)[0].options.body).clientMessageId;
+    await f.openNotification(incoming);
+    const state = f.inspect().states.get(f.inspect().selected);
+    assert.equal(state.pending, null); assert.equal(state.imageDraft, null);
+    assert.equal(state.draft, "", `${kind} was acknowledged by its exact message key`);
+    assert.equal(f.element("message-body").value, ""); assert.equal(f.element("send").disabled, true);
+    assert.equal(f.element("pending-controls").hidden, true);
+    assert.equal(state.messages.get("102").clientMessageId, key);
+    await f.click("retry-send"); await f.advance(3000);
+    assert.equal(posts(f).length, 1); assert.equal(f.rows.filter(row => row.clientMessageId === key).length, 1);
+    assert.doesNotMatch(f.element("chat-status").textContent, /4 096|1 000|Écris un message/);
+  });
+});
+
+test("retry from an old notification accepts the latest message-page acknowledgement for text and photo", async t => {
+  for (const kind of ["text", "photo"]) await t.test(kind, async () => {
+    const f = await uncertainSendFixture({ role: "admin" });
+    await f.uncertainSend(kind, "Already recorded administrator content");
+    const key = JSON.parse(posts(f)[0].options.body).clientMessageId;
+    await f.openNotification(f.rows[0]);
+    assert.equal(f.inspect().states.get(f.inspect().selected).hasMoreAfter, true);
+    assert.equal(f.inspect().states.get(f.inspect().selected).pending.clientMessageId, key);
+    await f.click("retry-send");
+    const state = f.inspect().states.get(f.inspect().selected);
+    assert.ok(f.calls.some(call => call.path.endsWith("/messages?limit=50") && state.messages.has("101")), "retry first loaded the current history");
+    assert.equal(state.pending, null); assert.equal(state.imageDraft, null); assert.equal(state.draft, "");
+    assert.equal(f.element("message-body").value, ""); assert.equal(f.element("send").disabled, true);
+    assert.equal(f.element("pending-controls").hidden, true);
+    assert.doesNotMatch(f.element("chat-status").textContent, /4 096|1 000|Écris un message/);
+    await f.advance(3000); assert.equal(posts(f).length, 1);
+    assert.equal(f.rows.filter(row => row.clientMessageId === key).length, 1);
+  });
+});
+
+test("message-page reads preserve an ordinary draft and an uncertain send with a different key", async () => {
+  for (const uncertain of [false, true]) {
+    const f = await uncertainSendFixture({ persist: false }), incoming = f.append("peer", "A notification to open");
+    if (uncertain) {
+      await f.uncertainSend("text", "Keep this private text");
+      f.append("me", "Keep this private text", "f".repeat(32));
+    } else {
+      f.element("message-body").value = "Keep this private text";
+      for (const handler of f.element("message-body").events.get("input")) handler({});
+    }
+    const key = uncertain ? JSON.parse(posts(f)[0].options.body).clientMessageId : null;
+    await f.openNotification(incoming);
+    const state = f.inspect().states.get(f.inspect().selected);
+    assert.equal(state.draft, "Keep this private text"); assert.equal(f.element("message-body").value, "Keep this private text");
+    assert.equal(state.pending?.clientMessageId ?? null, key);
+    assert.equal(f.element("message-body").disabled, uncertain); assert.equal(f.element("pending-controls").hidden, !uncertain);
+    assert.equal(posts(f).length, uncertain ? 1 : 0);
+  }
+});
+
 test("an authenticated notification opens its exact message and clears only its navigation reference", async () => {
   const reference = id(910), f = harness({ notification: reference, intercept: (path) => path === "/api/notifications/client/open"
     ? response(200, { conversationId: id(101), messageId: id(501), sequence: "1" }) : undefined });
