@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { newToken } from "../server/auth/crypto.mjs";
 import { SITE_CONTACT_EMAIL } from "../server/site.mjs";
 import { createReadinessService, ReadinessError } from "../server/readiness/service.mjs";
+import { getProcessRelease } from "../server/release.mjs";
 
 const now = 1750000000000;
 const adminId = "11".repeat(16);
@@ -122,7 +123,7 @@ test("malformed administrator proof is unavailable and private principal fields 
 
 test("readiness summary is a strict progress inventory without SMTP secrets or an invented delivery result", async () => {
   const f = await fixture(), summary = await f.service.summary(f.token);
-  assert.deepEqual(summary, { contactEmail: SITE_CONTACT_EMAIL,
+  assert.deepEqual(summary, { contactEmail: SITE_CONTACT_EMAIL, release: { ...getProcessRelease() },
     mail: { configured: true, sender: SITE_CONTACT_EMAIL, replyTo: SITE_CONTACT_EMAIL }, features: features(),
     checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
   const json = JSON.stringify(summary);

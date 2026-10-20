@@ -4,6 +4,7 @@ import { canonicalEmail } from "../auth/config.mjs";
 import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { SITE_CONTACT_EMAIL } from "../site.mjs";
 import { safeOperationsSnapshot } from "../operations/dto.mjs";
+import { safeRelease } from "../release.mjs";
 
 const COOKIE = "__Host-jessie_session";
 const MAX_DATE = 253402300799999;
@@ -49,6 +50,7 @@ function safeSummary(value) {
     features[key] = value.features[key];
   }
   return { contactEmail: SITE_CONTACT_EMAIL, mail: { configured: value.mail.configured, sender, replyTo }, features,
+    ...(value.release === undefined ? {} : { release: safeRelease(value.release) }),
     ...(value.operations === undefined ? {} : { operations: safeOperationsSnapshot(value.operations) }),
     checks: { admissionPolicy: CLIENT_ADMISSION_POLICY, ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
 }

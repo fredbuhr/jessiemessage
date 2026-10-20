@@ -5,6 +5,7 @@ import { tokenDigest } from "../auth/crypto.mjs";
 import { createVerificationTransport } from "../mail/transport.mjs";
 import { SITE_CONTACT_EMAIL } from "../site.mjs";
 import { safeOperationsSnapshot } from "../operations/dto.mjs";
+import { getProcessRelease } from "../release.mjs";
 
 const FEATURE_NAMES = ["clientAccess", "chat", "photos", "clientFiles", "passwordRecovery", "broadcasts", "notifications"];
 const MAX_DATE = 253402300799999;
@@ -35,6 +36,7 @@ export async function createReadinessService({ authService, authStore, mailConfi
   const configured = mailConfig.enabled;
   mailConfig = configured ? { ...mailConfig, key: Buffer.isBuffer(mailConfig.key) ? Buffer.from(mailConfig.key) : mailConfig.key, smtp: { ...mailConfig.smtp } } : { enabled: false };
   const featureSnapshot = Object.freeze(Object.fromEntries(FEATURE_NAMES.map((name) => [name, features[name]])));
+  const release = getProcessRelease();
   key = Buffer.from(key);
   let active = false, closed = false, closing, activeTransport, closeFailed = false;
   const diagnostics = new Set();
@@ -139,7 +141,7 @@ export async function createReadinessService({ authService, authStore, mailConfi
       if (closed) fail("READINESS_UNAVAILABLE");
       await actor(token);
       if (closed) fail("READINESS_UNAVAILABLE");
-      return { contactEmail: SITE_CONTACT_EMAIL, mail: { configured, sender, replyTo: sender }, features: { ...featureSnapshot },
+      return { contactEmail: SITE_CONTACT_EMAIL, release: { ...release }, mail: { configured, sender, replyTo: sender }, features: { ...featureSnapshot },
         ...(operations === null ? {} : { operations: safeOperationsSnapshot(operations.snapshot()) }),
         checks: { admissionPolicy: CLIENT_ADMISSION_POLICY, ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
     }),

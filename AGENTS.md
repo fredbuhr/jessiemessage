@@ -1,38 +1,42 @@
-# Reprise et livraison de JessieMessage
+# Travailler et livrer JessieMessage
 
-Lire d'abord `docs/REPRISE.md`, puis `docs/PLAN-IMPLEMENTATION.md`. Le premier donne l'état courant unique ; les documents versionnés et `docs/REPRISE-HISTORIQUE-20261019.md` conservent les faits datés, pas les commandes courantes.
+Lire d’abord `docs/REPRISE.md`, puis `docs/PLAN-IMPLEMENTATION.md`. REPRISE est l’unique référence de l’état actuellement déployé : version, commit/arbre, commandes, preuves et repli. Les bilans datés décrivent leur propre étape et ne donnent pas les commandes courantes.
 
 ## Avant de poursuivre
 
-- Relever la branche, le commit, l'arbre et les modifications locales. Vérifier dans GitHub le statut réel de la PR et la CI du commit concerné ; une réponse perdue ne prouve ni échec ni succès.
-- Avant de relancer une opération distante interrompue, lire son résultat durable : PR/merge, run CI, paramètres persistés, processus, journal ou reçu. Reprendre depuis cet état ; ne pas répéter l'action pour découvrir ce qu'elle a fait.
-- Distinguer explicitement **codé**, **fusionné**, **déployé**, **vérifié** et **en attente du PC**. Un état absent, inconnu, ancien ou un test ignoré n'est pas un succès.
-- Conserver les choix acquis : Jessie en France, conversations jusqu'à fermeture définitive ; copies PC et mails déjà acceptés. Ne pas relancer un audit complet, un test de mail ou un questionnaire général à chaque reprise.
+- Relever branche, commit, arbre et modifications locales. Vérifier le statut réel de la PR et la CI du commit concerné ; une réponse perdue ne prouve ni échec ni succès.
+- Avant de relancer une opération distante interrompue, lire son résultat durable : PR/merge, run CI, paramètres persistés, processus, journal ou reçu. Reprendre depuis cet état, sans répéter une mutation pour découvrir son résultat.
+- Distinguer **codé**, **fusionné**, **publié**, **déployé**, **vérifié** et **en attente du PC**. Un état absent, ancien ou un test ignoré n’est pas un succès.
+- Conserver les choix acquis : Jessie en France, conversations jusqu’à fermeture définitive, priorité au cœur de la messagerie. Ne pas relancer audit général, questionnaire, test mail ou parcours PC à chaque reprise.
 
-## Portée V1 choisie : mutualisé et récupération manuelle
+## Périmètre et simplicité
 
-- Appliquer **KISS à tout le développement** : réutiliser le parcours existant le plus simple qui répond au besoin, limiter les changements au résultat utile du lot et éviter nouvelles abstractions, infrastructures ou garanties non demandées.
-- Depuis la demande explicite « Corrige Node et termine la V1 » du 20 octobre, l’unique service Manager utilise le binaire officiel privé **24.22.0**, vérifié par SHA-256. Le binaire système fournisseur reste intact. Utiliser le chemin Node épinglé de REPRISE pour les commandes opérateur ; aucun gestionnaire de versions, second serveur, nouvelle infrastructure ou budget. À chaque mise à jour, vérifier la distribution officielle, qualifier et modifier le lanceur/version/hash et la CI ensemble.
-- La demande actuelle est une messagerie privée sur le mutualisé existant, **sans infrastructure ni budget ajoutés**. Ne pas réintroduire VPS, migration ou décision de budget comme prochaine action depuis un ancien document.
-- Priorité durable demandée par l’utilisateur le 20 octobre à **15:12** : avancer sur le **cœur de la messagerie**. Sauvegardes et PC sont différés et ne conditionnent pas les lots messages. Ne pas les rouvrir comme préalable ; préserver intégralement gardes, clés, journaux, marqueurs, autorité, D1 et artefact PC, sans fausse qualification ni action PC demandée.
-- Conserver les copies chiffrées PC fonctionnelles ; le secours Infomaniak sur sept jours ne garantit pas une capture simultanée fichiers/base. La V1 prévoit fermeture locale journalisée, restauration applicative manuelle en maintenance et contrôle des comptes fermés avant publication. S2a et S2b en fournissent le code et le parcours opérateur avec publication explicitement vérifiée ; ne pas ouvrir un nouveau sous-lot de sauvegarde comme préalable à S3.
-- La garantie de récupération autonome après perte complète de l'hôte, le témoin frais à chaque phase, la succession de propriétaire et l'inventaire SQL exhaustif ne sont plus des prérequis de cette V1. Ne pas rouvrir ces chantiers pour bloquer sa livraison, ni prétendre conserver leurs garanties.
-- Ce choix change la portée produit, **pas les preuves des anciens mécanismes**. Leurs gardes restent stricts tant qu'une nouvelle composition explicite n'est pas codée et testée ; ne jamais déclarer un contrôle vérifié par suppression du refus, requalification du scheduler `OFF`, effacement de marqueur ou réinitialisation d'état. Préserver C1–C5, les fichiers d'autorité et le PC existants.
+- Appliquer KISS : réutiliser le parcours existant le plus simple répondant au besoin, limiter le lot au résultat utile, éviter abstractions, infrastructure, budget ou garanties non demandés.
+- Garder l’unique service Node sur le mutualisé existant. Utiliser le Node officiel privé épinglé et les commandes de REPRISE ; laisser le binaire système fournisseur intact. Pour une mise à jour, qualifier distribution officielle, version/hash, lanceur et CI ensemble.
+- Sauvegardes/PC et exécuteur d’archivage différés ne conditionnent pas les évolutions de messagerie. Conserver leur état réel et leurs limites sans nouvelle manipulation PC demandée.
+- La récupération autonome après perte totale de l’hôte, le témoin frais à chaque phase, la succession et l’inventaire SQL exhaustif ne sont pas des prérequis V1. Ne pas rouvrir ces chantiers pour bloquer la livraison ni leur attribuer des garanties équivalentes.
+- Un changement de portée ne modifie pas les preuves historiques. Ne pas transformer un refus en succès par retrait d’un garde, faux état de scheduler, effacement de marqueur, réinitialisation d’autorité ou suppression de quarantaine. Préserver C1–C5 et les états identifiés dans REPRISE.
 
-## Préserver les états existants
+## Versions et livraison
 
-- La genèse et la permission du témoin existent déjà. Ne jamais rejouer `plan-witness`, `prepare-witness` ou `prepare-witness-enrollment` sur le service courant, ni supprimer/déplacer un état pour faire passer un contrôle.
-- Ne pas réapparier le PC, exporter/régénérer la clé privée ou supprimer sa configuration DPAPI, ses marqueurs ou son dossier `temoin`. Après une initialisation incertaine, inspecter les états PC et serveur avant toute action.
-- Service déployé/vérifié : **0.86.0**, runtime `c61d1eecfefe786254416652877ba82d30cf4c90`, arbre `78c8e46224503b0691b381bf07c5aefd51ca5c7f`, `start-local-closures`, port 3000 direct, `linux-dirfd`, Node applicatif **v24.22.0** réellement observé le 20 octobre à **14:41:34.716387 UTC / 16:41:34 Paris**. Lanceur `start-primary-node2422-c61d1eec.sh`, binaire privé et pins dans REPRISE. Dette A01 liée à 24.15 corrigée avec la version disponible au 20 octobre ; la mise à jour de sécurité annoncée pour le 21 octobre ou après reste une maintenance future non publiée. Repli opérationnel ancien 0.86/Node 24.15 rouvrant A01 ; repli applicatif 0.85 historique préservé. A07/A08 restent différés.
-- **V1 applicative et clôture 0.86 terminées**, PR #108, livré/vérifié le 20 octobre à **14:18:38.549451 UTC / 16:18:38 Europe/Paris**. Navigation FR/EN « État du service » cohérente ; reçu de démarrage existant enrichi de `nodeVersion`, sans nouvelle API ni garde modifié. CI candidat/main 5/5 ; général 3 101 réussites/35 wrappers ignorés, SQL 466 par MariaDB, Chrome 164, HTTPS/SQL 2, syntaxe 568. Vingt-six HTTPS conformes, dix empreintes/une identité PC préservées, moniteur OK. Bilan `docs/production-086.md`. Aucun GET privé authentifié de production ni état PC qualifié. Aucun autre manque fonctionnel nécessaire confirmé, aucun nouveau lot automatique ; Node officiel 24.22 est maintenant actif et qualifié, CI dédiée 5/5 sous cette version et 26 HTTPS conformes à 16:41:34 Paris ; dix empreintes et identité PC préservées. Bilan `docs/node-runtime-086.md`. Ne pas attribuer à cette mise à jour la correction annoncée pour le 21 octobre, encore non publiée.
+- `package.json` est la source de la version applicative ; garder les deux valeurs racine de `package-lock.json` identiques. Node, schéma SQL et versions de formats restent distincts.
+- Après la référence `1.0.0`, une correction compatible incrémente le correctif et une nouvelle fonction compatible le mineur. Une rupture de compatibilité incrémente le majeur. Les numéros ne dépendent pas des discussions ou du nombre de commits.
+- Une livraison publiée possède un tag immuable `vX.Y.Z` et une release sur le même commit validé. Déployer ce commit exact ; ne marquer « en production » qu’après vérification réelle. Ne pas déplacer les tags ni réétiqueter les livraisons historiques.
+- `main` peut avancer après livraison, notamment pour documenter les preuves. La référence de production reste le tag et le commit effectivement exécuté, consignés dans REPRISE. Un numéro attendu en configuration ne prouve pas le code actif.
+- Préserver les évolutions dans leurs branches ; ne pas intégrer un travail fonctionnel à une simple harmonisation de version. Employer « Évolution 1 — Lecture privée » pour distinguer ce travail des anciens lots correctifs.
 
-- `recette.jessiemessage.com` partage le runtime et la base du site principal : ce n'est pas une cible isolée pour restaurer ou détruire des données.
+## États et données à préserver
 
-## Un objectif terminé à la fois
+- La genèse et la permission du témoin existent déjà. Ne jamais rejouer `plan-witness`, `prepare-witness` ou `prepare-witness-enrollment` sur le service courant.
+- Ne pas réapparier le PC, exporter/régénérer sa clé privée, supprimer DPAPI, ses marqueurs ou son dossier `temoin`. Après une initialisation incertaine, inspecter PC et serveur avant toute action.
+- Conserver clés, fichiers d’autorité, états D1, reçus, journaux, quarantaines et captures déjà identifiés dans REPRISE. Le secours Infomaniak ne garantit pas une capture simultanée fichiers/base.
+- `recette.jessiemessage.com` partage le runtime et la base du principal : ce n’est pas une cible isolée pour restaurer, effacer ou tester une campagne de masse. Les essais restent synthétiques, sur cibles réellement isolées, distinctes de D1 préservé.
+- Aucun secret, contenu client, média privé, dump SQL ou journal de production dans Git. Les qualifications utilisent des données synthétiques ; une omission reste explicitement non vérifiée.
 
-- Choisir un seul objectif borné et son critère de fin avant d'agir. Il peut inclure code, tests, CI, fusion et déploiement du même correctif si nécessaire pour le terminer. Après ce résultat, mettre à jour le point de reprise et livrer le bilan ; ne pas ouvrir un nouveau lot fonctionnel avant clôture.
-- Enregistrer après chaque opération distante le commit/arbre, les liens PR/CI, l'état observé, l'heure, la prochaine action exacte et les limites. Les preuves vont dans les dossiers existants ; aucun secret ni contenu client dans Git.
-- Mettre à jour `docs/REPRISE.md` en remplaçant l'état courant, sans empiler d'anciens présents. Relier les preuves datées et tenir `docs/PLAN-IMPLEMENTATION.md` à jour.
-- S1/S2/S3 restent clos depuis 0.79. Le plan explicite des corrections de l’audit du 20 octobre comporte quatre lots puis une clôture ; les lots 1/2/3/4 serveur sont livrés en 0.80/0.81/0.82/0.83 ; plan correctif clos 5/5 avec réserves, sans nouveau lot automatique ; incident A07 différé par l’utilisateur sans bloquer le développement, rotation active A08 reste différée ; A01, dette 24.15, est corrigé par le Node applicatif 24.22, avec maintenance de sécurité annoncée pour le 21 octobre distincte. 0.86 et la clôture V1 sont terminées ; garder la priorité durable au cœur messagerie, sans réouverture des garanties historiques ni nouveau chantier automatique. Annoncer le lot réellement en cours. L’ancien « étape 4/6 » est historique ; ne jamais annoncer « 6/6 » comme validation des anciennes garanties.
-- Dire à quelle étape le travail commence et se termine. Ne pas prétendre empêcher ou diagnostiquer les coupures ChatGPT sans trace correspondante ; organiser une reprise sans répétition ni état ambigu.
-- L'utilisateur a déjà autorisé le développement, les corrections, fusions et déploiements du projet. Ne pas redemander une permission générale ; respecter les préconditions techniques et les actions personnelles nécessaires sur son PC. Cette autorisation ne demande aucun envoi réel ni effacement de compte réel.
+## Un résultat terminé à la fois
+
+- Définir un objectif borné et son critère de fin. Terminer code, vérifications adaptées, CI requise, fusion et livraison du même résultat avant d’ouvrir une autre évolution.
+- Ne pas relancer des suites déjà vertes sur le même code sans changement, échec ou préoccupation nouvelle. Compléter les parcours réellement non couverts ; ne pas compter un test ignoré comme une qualification native.
+- Enregistrer après chaque opération distante commit/arbre, liens PR/CI, état observé, heure, prochaine action exacte et limites. Remplacer l’état courant de REPRISE sans empiler d’anciens présents ; le plan ne contient que les étapes restantes et leurs critères.
+- Annoncer l’étape réellement en cours. Ne pas prétendre empêcher ou diagnostiquer une coupure ChatGPT sans trace correspondante ; organiser une reprise sans répétition ni état ambigu.
+- Les autorisations utilisateur persistantes couvrent les opérations nécessaires au projet dans leur périmètre. Ne pas redemander une permission générale déjà acquise ; respecter les préconditions techniques et les actions personnelles nécessaires. Un rejet d’approbation automatique n’est pas contourné. Le développement n’autorise aucun envoi ni effacement de compte réel de test.

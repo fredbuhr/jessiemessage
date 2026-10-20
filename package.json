@@ -1,9 +1,9 @@
 {
   "name": "jessiemessage",
-  "version": "0.86.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Invite-only messaging PWA for Jessie (prototype, approved identity)",
+  "description": "Private invite-only messaging PWA for Jessie",
   "engines": {
     "node": ">=24 <25"
   },
