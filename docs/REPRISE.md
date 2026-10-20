@@ -1,12 +1,12 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — objectif 0.85 en qualification : fiabiliser l’envoi des messages après une confirmation HTTP perdue. Service actif inchangé : 0.84.0, repli 0.83.** [Lot 0.85](chat-send-ack-085.md), [plan](PLAN-IMPLEMENTATION.md). À 15:12, l’utilisateur demande de prioriser durablement le cœur de la messagerie : sauvegardes/PC différés, sans conditionner les lots messages ; gardes et états existants préservés. Aucun déploiement 0.85 acquis.
+**20 octobre 2026 Europe/Paris — 0.85.0 livrée et vérifiée : confirmation d’envoi après perte de réponse HTTP. Repli immédiat 0.84.** [Bilan 0.85](chat-send-ack-085.md), [plan](PLAN-IMPLEMENTATION.md). Priorité durable au cœur de la messagerie ; sauvegardes/PC différés, sans préalable aux lots messages ni résolution annoncée. Aucun nouveau chantier après ce lot ; gardes et états existants préservés.
 
 L’ancien compteur « étape 4/6 » appartient au plan du 18 octobre, remplacé par S1/S2/S3 le 19. Le plan correctif courant comporte quatre lots puis une clôture : lots 1/2/3/4 serveur livrés en 0.80/0.81/0.82/0.83, lot 5 de consolidation terminé. Ce résultat ne signifie pas que tous les constats sont résolus ou que toute la production est certifiée. La livraison V1 n’atteste pas les garanties abandonnées de l’ancien périmètre. La clôture 5/5 reste un relevé historique avec réserves ; elle ne ferme pas le nouvel incident antivirus A07.
 
-## Objectif courant — 0.85 envoi confirmé par l’historique
+## Lot 0.85 terminé — confirmation d’envoi
 
-Base documentaire `ff449253e15a8f0eb6b57ec8f2f2f8ccc6dad822`. Cas reproduit en VM : un POST enregistré perd sa réponse, puis l’historique ou une notification confirme le même envoi ; le brouillon conservé permet alors un nouvel envoi en double. Corriger le nettoyage du seul brouillon correspondant et arrêter **Réessayer** dès cette confirmation, sans perdre un nouveau texte saisi. Qualification ciblée VM/Chrome puis CI et livraison ; garder le runtime 0.84 tant que les faits de livraison 0.85 ne sont pas acquis.
+Quand l’historique ou une notification confirme le même envoi déjà enregistré après une réponse HTTP perdue, le brouillon correspondant est nettoyé et **Réessayer** s’arrête. Un nouveau texte saisi reste conservé. Correctif qualifié en VM et Chrome natif, fusionné et déployé/vérifié ; [preuve et limites](chat-send-ack-085.md).
 
 ## Audit et corrections antérieures
 
@@ -25,11 +25,11 @@ Le budget média ne promet pas une croissance SQL illimitée : snapshot de 100 0
 
 Messagerie privée sur invitation, texte/photos, sessions indépendantes, CRM, export, notifications, copies chiffrées PC existantes (état courant bloqué/incertain après l’alerte Avast), fermetures locales et récupération manuelle en maintenance. Conversations jusqu’à fermeture définitive, hors suppressions volontaires. [Guide quotidien](guide-jessie.md), [recette V1](messaging-acceptance-079.md).
 
-[PR #106](https://github.com/fredbuhr/jessiemessage/pull/106) fusionnée : candidat `2443b036891268474316593e27ac92124d4b72e0`, merge/runtime **`5a6f07228cc01b1d21421dc57baaa36378991fa5`**, arbre commun **`7fa1b94fcc1b701ef48381655097fe82f17d55dd`**. Cinq jobs [candidat](https://github.com/fredbuhr/jessiemessage/actions/runs/39424086732) et [main](https://github.com/fredbuhr/jessiemessage/actions/runs/39424979746) réussis ; [push source](https://github.com/fredbuhr/jessiemessage/actions/runs/39424050185) également vert. **3 094 tests généraux réussis / 35 wrappers SQL ignorés sur 3 129 / zéro échec ; 466/466 sur chaque MariaDB 10.11 et 11.4 sans omission ; Chrome 163 ; HTTPS/SQL 2 ; syntaxe 568 ; aperçu construit.** Les six parcours readiness couvrent FR/EN à 320, 375 et 1280 px. Les 35 wrappers ignorés ne sont pas comptés comme des validations ; les jobs SQL et Chrome fournissent les preuves natives. Script Windows inchangé, aucune qualification du PC physique ajoutée.
+[PR #107](https://github.com/fredbuhr/jessiemessage/pull/107) fusionnée : candidat `900791007243eedb591a5657d1091dc6f0782e2b`, merge/runtime **`de335f6cfce6e362a5595f2418ed142b44376fe2`**, arbre commun **`0026c652e9cdf29cef6771b81cbd39da0b46fb7b`**. Cinq jobs [candidat](https://github.com/fredbuhr/jessiemessage/actions/runs/39430124726) et [main](https://github.com/fredbuhr/jessiemessage/actions/runs/39431127110) réussis ; [push source](https://github.com/fredbuhr/jessiemessage/actions/runs/39430118999) également vert. **3 101 tests généraux réussis / 35 wrappers SQL ignorés sur 3 136 / zéro échec ; 466/466 sur chaque MariaDB 10.11 et 11.4 sans omission ; Chrome 164 ; HTTPS/SQL 2 ; syntaxe 568 ; aperçu construit.** Quatre variantes natives client/admin × texte/photo échouaient sur le code précédent et passent avec le correctif ; ciblé local **46/46**. Les tests ignorés ne sont pas comptés comme des validations.
 
-Build normal du Manager réussi **20 octobre à 14:55 Europe/Paris**, Node affiché actif, sans réinstallation ni migration. À **12:58:46.176917 UTC / 14:58:46 Europe/Paris** : source/arbre/propreté, version 0.84, lanceur et modes vérifiés ; dix empreintes sensibles et l’identité PC préservées ; reçu de démarrage réel du superviseur, moniteur **OK**, `checkedAt:1792501094886`. **30 contrôles HTTPS** réussis, chacun sans cookie et avec un HSTS unique : quatre santé/disponibilité **200**, JSON exact et `no-store` ; seize chemins privés (huit **401** sur l’origine principale, quatre **401** et quatre **404** intentionnels sur recette) ; huit gardes readiness **401** pour la page et les ressources JS/CSS/modèle ; deux catalogues i18n **200**, publics intentionnellement et identiques au code épinglé. [Preuve Manager](verification-proofs/jm084-manager.jpg), [résultats datés](verification-proofs/jm084-verification.json).
+Build normal du Manager réussi **20 octobre à 15:40 Europe/Paris**, Node affiché actif. À **13:43:44.068382 UTC / 15:43:44 Europe/Paris** : source/arbre/propreté, version 0.85, lanceur et modes vérifiés ; dix empreintes sensibles et l’identité PC préservées ; reçu de démarrage réel observé, moniteur **OK**, `checkedAt:1792503821833`. **20 contrôles HTTPS** conformes sur les deux origines, chacun sans cookie et avec un HSTS unique : quatre santé/disponibilité **200**, JSON exact et `no-store` ; huit contrôles API auth/access/chat **401** ; huit ressources chat JS/modèle/CSS/réponses rapides **200**, volontairement publiques et identiques au code épinglé. [Preuve Manager](verification-proofs/jm085-manager.jpg), [bilan daté](chat-send-ack-085.md).
 
-Aucun GET privé authentifié de production observé. Les PID parent/enfant n’ont pas été observés depuis SSH ; le reçu de démarrage suit IPC et disponibilité HTTP réelle de l’enfant. Les parcours authentifiés et l’interface sont qualifiés sur données synthétiques en CI, sans certification de tous les appareils physiques. Aucun envoi réel, effacement de compte, arrêt forcé ni restauration de production pour valider. Node reste **24.15.0**, A01 inchangé.
+Aucun GET privé authentifié de production observé, aucun envoi réel ni restauration ajouté pour valider. Les parcours authentifiés sont synthétiques ; aucun appareil physique ou état courant des copies PC qualifié. Node reste **24.15.0**, A01 inchangé. Les [preuves 0.84](verification-proofs/jm084-verification.json) restent historiques.
 
 **Relevé historique de clôture 0.83, le 20 octobre à 11:47:30.413880 UTC / 13:47:30 Europe/Paris :** santé/disponibilité **200** sur les deux origines (quatre contrôles), moniteur **OK**, dix empreintes sensibles et l’identité de la destination PC préservées. Catalogue : **cinq archives, dix reçus, vingt-trois entrées** ; dernière capture quotidienne du **20 octobre 05:15 UTC** et dernier reçu PC concordants. Ce relevé précède les alertes Avast. Aucune version du copieur n’est reportée : le dernier reçu est historique, ne prouve ni l’installation du correctif A07 ni le fonctionnement actuel des copies. [Preuve datée](verification-proofs/jm083-closure.json).
 
@@ -41,20 +41,20 @@ A08 : surveiller **1 500 reçus ou 3 072 entrées** pour intervenir avant les li
 
 | Élément | Valeur courante |
 | --- | --- |
-| Code exécuté | `5a6f07228cc01b1d21421dc57baaa36378991fa5` |
-| Arbre | `7fa1b94fcc1b701ef48381655097fe82f17d55dd` |
-| Checkout | `/srv/customer/jessiemessage-operator/service-status-084-5a6f0722` |
-| Run Manager | `bash /srv/customer/jessiemessage-private/start-primary-service-status-084-5a6f0722.sh` |
-| Lanceur | 0700 ; SHA-256 `cd46bab672543250a958da266aa56b052177e8dfcc207aa93977274794c42c62` |
-| Journal | `/srv/customer/jessiemessage-private/jm084-service-status.log`, 0600 |
+| Code exécuté | `de335f6cfce6e362a5595f2418ed142b44376fe2` |
+| Arbre | `0026c652e9cdf29cef6771b81cbd39da0b46fb7b` |
+| Checkout | `/srv/customer/jessiemessage-operator/chat-send-ack-085-de335f6c` |
+| Run Manager | `bash /srv/customer/jessiemessage-private/start-primary-chat-send-ack-085-de335f6c.sh` |
+| Lanceur | 0700 ; SHA-256 `d0290fc1b8097459e4667cd2d78333aca8a61e201c63c46b0285132ef05d4ba6` |
+| Journal | `/srv/customer/jessiemessage-private/jm085-chat-send-ack.log`, 0600 |
 | Configuration | `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851` |
 | Opérations | `/srv/customer/jessiemessage-private/recurring-backup-052` |
 
 Mode **`start-local-closures`**, `closuresEnabled:true`, port **3000 direct**, sans observateur/passerelle. Garder `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`. Six configurations, clés, base, médias, sessions, destinataire GPG et cadence réutilisés. Ne pas lancer un second parent SSH ni `capture --offline` pendant le service.
 
-Précontrôle 0.84 à **12:47:48.561275 UTC** : `local_closure_precheck / passed`, `pendingClosures:false`, `started:false`, `erased:false`, `externalContinuityVerified:false`. Dépendances réutilisées après comparaison des lockfiles en excluant seulement les deux versions racine.
+Précontrôle 0.85 à **13:32:51.771707 UTC** : `local_closure_precheck / passed`, `pendingClosures:false`, `started:false`, `erased:false`, `externalContinuityVerified:false`. Dépendances réutilisées après comparaison des lockfiles en excluant seulement les deux versions racine.
 
-Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. `activeService.release=0.84.0` ; `developmentSimplification.serviceStatusUi.status=server_deployed_verified`. Le repli 0.83 complet et l’ancien repli 0.82 historique restent conservés dans ce même point privé ; aucun journal parallèle ajouté. S1/S2/S3, PC, autorité et D1 restent préservés.
+Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. `activeService.release=0.85.0` ; `developmentSimplification.chatSendAck.status=server_deployed_verified`. Repli 0.84 complet dans `.chatSendAck.rollback`, ancien 0.83 historique dans `.serviceStatusUi` ; aucun journal parallèle ajouté. S1/S2/S3, PC, autorité et D1 restent préservés.
 
 ## Incident PC A07 — traitement différé par l’utilisateur
 
@@ -82,8 +82,8 @@ La [surveillance](../MONITORING.md) garde ses limites : moniteur local/mails acc
 
 ## Repli et prochaine action
 
-**Repli immédiat : 0.83.0**, source `682864cec3b8d0eb1c8a6dd92c4b9bd9dfc097b1`, arbre `5eb0c133625b734c8aa92ce3f3642e281a51f380`, checkout `/srv/customer/jessiemessage-operator/audit-lot4-083-682864ce`. Run `bash /srv/customer/jessiemessage-private/start-primary-audit-lot4-083-682864ce.sh`, lanceur 0700, SHA-256 `a0c0486c02680fbb147c626afd0041ae718c38f27d926939e2b0cea5ae7df7b1`. Le repli complet est conservé dans le checkpoint privé unique. Aucun retour SQL ni suppression de journal. Replis 0.82/0.81/0.80/0.79/0.76 conservés historiquement ; une intention inachevée garde sa barrière.
+**Repli immédiat : 0.84.0**, source `5a6f07228cc01b1d21421dc57baaa36378991fa5`, arbre `7fa1b94fcc1b701ef48381655097fe82f17d55dd`, checkout `/srv/customer/jessiemessage-operator/service-status-084-5a6f0722`. Run `bash /srv/customer/jessiemessage-private/start-primary-service-status-084-5a6f0722.sh`, lanceur 0700, SHA-256 `cd46bab672543250a958da266aa56b052177e8dfcc207aa93977274794c42c62`, journal `/srv/customer/jessiemessage-private/jm084-service-status.log` 0600. Repli complet dans `.chatSendAck.rollback` du checkpoint privé unique. Aucun retour SQL ni suppression de journal. Replis 0.83/0.82/0.81/0.80/0.79/0.76 historiques préservés.
 
 **Plan correctif clos, 5/5 lots, avec réserves ouvertes — relevé historique.** L’incident A07 reste ouvert mais son traitement est différé par l’utilisateur et n’a pas bloqué la livraison 0.84. Le [bilan final par constat](audit-closure-083.md) et les [preuves consolidées](verification-proofs/jm083-closure.json) distinguent corrigé/vérifié, livré mais installation PC non observée, exécuteur différé, dépendance hébergeur et sous-hypothèse non reproduite. Aucun nouveau lot fonctionnel n’est ouvert automatiquement.
 
-**Prochaine action : terminer et qualifier le correctif messages 0.85**, puis le livrer avec repli conservé. Sauvegardes, Avast/PC et réserves A01/A07/A08 restent différés et ne conditionnent pas ce travail ; aucune action PC demandée. Aucun garde, clé, journal, marqueur ou état historique retiré. [Historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md).
+**Lot 0.85 terminé : livré et vérifié ; bilan [ici](chat-send-ack-085.md). Aucun nouveau chantier après ce lot.** La priorité durable reste le cœur messagerie ; sauvegardes et Avast/PC sont différés sans préalable aux lots messages. A01 fournisseur et A08 restent ouverts séparément, sans résolution annoncée. Aucune action PC demandée, aucun garde ni état historique retiré. [Historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md).
