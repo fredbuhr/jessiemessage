@@ -1,6 +1,6 @@
 # Évolution 2 — Profil et expressions, 1.2.0
 
-**21 octobre 2026 — code fusionné, qualifié et publié en 1.2.0 ; migration 0031 et précontrôles hébergés réussis ; identité active 1.2.0 confirmée par relevé admin utilisateur ; checkpoint encore en 1.1.0, alignement final en attente.** L’[état courant](REPRISE.md) distingue la production des candidats et consigne les références opérateur. Ce bilan décrit le périmètre et les critères de livraison du lot ; les preuves de son commit sont consignées ci-dessous.
+**21 octobre 2026 — code fusionné, qualifié et publié en 1.2.0 ; migration 0031 et précontrôles hébergés réussis ; identité active 1.2.0 confirmée par relevé admin utilisateur ; checkpoint aligné sans redémarrage ; lot clos.** L’[état courant](REPRISE.md) distingue la production des candidats et consigne les références opérateur. Ce bilan décrit le périmètre et les critères de livraison du lot ; les preuves de son commit sont consignées ci-dessous.
 
 ## Périmètre
 
@@ -18,7 +18,7 @@ Les profils nécessitent la migration **`0031`**, désormais appliquée sur l’
 1. **Réalisé en qualification synthétique** : passage 30→31 et fonctionnement de la 1.1.1 sur le schéma 31, y compris les contrôles d’exploitation concernés ; commit et release figés. Préparation hébergée et précontrôle après migration désormais confirmés.
 2. **Réalisé** : [PR 112](https://github.com/fredbuhr/jessiemessage/pull/112), [CI main exacte 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614), puis [tag/release 1.2.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0) sur `763b632185ce13eb875110c9107687b2d278ff67`, arbre `c7dce7bcdb99b298ffc43c9e31dd22ee87453926`.
 3. **Migration et précontrôles réalisés** : après arrêt attesté par l’opérateur, reçu `schema31_confirmed_before_prechecks`, migrateur `upgraded`, 31 migrations, une appliquée et 30 inchangées. Le reçu final `schema31_prechecks_passed` confirme les précontrôles 1.1.1/1.2.0, sans runtime démarré, changement Manager ou checkpoint. Les commandes exécutées restent conservées comme preuves ; ne pas les rejouer.
-4. **Activation réalisée** : Run/Build enregistrés et identité admin 1.2.0 confirmée, puis quatre GET publics conformes. **Reste uniquement l’alignement du checkpoint**, sans redémarrage, avec repli compatible et autres blocs conservés. Ne pas répéter l’activation ni le relevé admin.
+4. **Activation réalisée** : Run/Build enregistrés et identité admin 1.2.0 confirmée, puis quatre GET publics conformes. **Alignement final réalisé** : reçu `release120_metadata_recorded`, sans redémarrage, avec repli compatible, ancien état et autres blocs conservés. Le lot est clos ; ne pas répéter l’activation, le relevé admin ou l’enregistrement.
 
 **Après application de `0031`, ne pas revenir au code 1.1.0 ni 1.0.0.** Le repli applicatif prévu est la **1.1.1 préqualifiée sur ce schéma**. Un repli de code ne retire pas la migration et n’implique aucune restauration SQL automatique. L’identité active et le repli compatible sont consignés dans REPRISE.
 
@@ -28,26 +28,17 @@ Le relevé admin transmis par l’utilisateur confirme **1.2.0**, commit `763b63
 
 À `2026-10-20T22:24:58.673794+00:00`, les quatre GET HTTPS directs santé/disponibilité sur les deux origines sont conformes : HTTP 200, JSON exact `ok`/`ready`, `no-store`, aucun cookie, certificat vérifié et redirections refusées. Le premier essai réseau partiel reste conservé comme tentative, sans diagnostic de panne applicative. Ces GET attestent la disponibilité, pas la version. [Relevé structuré](verification-proofs/jm120-verification.json).
 
-## Alignement du checkpoint — en attente
+## Alignement du checkpoint — réalisé
 
-Le checkpoint est encore enregistré en **1.1.0** ; la production est déjà **1.2.0**. Le [writer publié](https://github.com/fredbuhr/jessiemessage/blob/5afd2ac70635579a0645b001bb30e590f95a0c18/ops/record-release120.py), SHA-256 `744943663e267e360c8692e8fcb48a40456faf4cb60283595a62e744d8debfda`, a réussi **8/8 tests synthétiques**, dont la reproduction du fichier empaqueté. Son exécution serveur reste à constater.
+Le reçu SSH transmis par l’utilisateur confirme le [writer exécuté](https://github.com/fredbuhr/jessiemessage/blob/5afd2ac70635579a0645b001bb30e590f95a0c18/ops/record-release120.py), SHA-256 `744943663e267e360c8692e8fcb48a40456faf4cb60283595a62e744d8debfda` :
 
-Il archive l’ancien `activeService` 1.1.0 intégral sous `release120.priorActiveService`, avec empreinte et `priorActiveServiceUsableRollback:false`. Le véritable repli est la 1.1.1 compatible schéma 31, avec ses source/arbre/lanceur vérifiés et précontrôle réussi, sans lui attribuer une identité HTTP de démarrage. Les autres blocs sont conservés. L’écriture est limitée aux métadonnées, sans redémarrage.
-
-Depuis le terminal SSH existant, la seule commande restante est :
-
-```sh
-python3 - <<'PY120RECORD'
-import hashlib, urllib.request
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/5afd2ac70635579a0645b001bb30e590f95a0c18/ops/record-release120.py"
-code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != "744943663e267e360c8692e8fcb48a40456faf4cb60283595a62e744d8debfda":
-    raise SystemExit("Empreinte incorrecte : arrêt.")
-exec(compile(code, "<enregistrement>", "exec"))
-PY120RECORD
+```json
+{"status":"release120_metadata_recorded","source":"763b632185ce13eb875110c9107687b2d278ff67","version":"1.2.0","metadataOnly":true,"noRestart":true,"rollbackPreserved":true,"rollbackRelease":"1.1.1","schemaMigrations":31,"priorActivePreserved":true,"otherBlocksPreserved":true}
 ```
 
-Le reçu attendu est `release120_metadata_recorded`, source `763b632185ce13eb875110c9107687b2d278ff67`, version `1.2.0`, `schemaMigrations:31`, `rollbackRelease:1.1.1`, `metadataOnly:true`, `noRestart:true`, `priorActivePreserved:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. Aucun reçu d’écriture 1.2.0 n’est encore acquis ; le lot n’est pas déclaré entièrement clos. Après une interruption, lire le reçu et l’état durable avant toute relance.
+Le checkpoint est aligné sur la **1.2.0** active et le schéma 31, sans redémarrage. L’ancien `activeService` 1.1.0 intégral est archivé sous `.developmentSimplification.release120.priorActiveService`, avec empreinte et `priorActiveServiceUsableRollback:false`. Le véritable repli est la 1.1.1 compatible schéma 31, avec ses source/arbre/lanceur vérifiés et précontrôle réussi, sans lui attribuer une identité HTTP de démarrage. Les blocs historiques et les autres données de suivi sont préservés.
+
+Les **8/8 tests synthétiques**, dont la reproduction du fichier empaqueté, qualifient le writer ; le reçu utilisateur établit séparément son exécution hébergée. **Le lot est clos.** Ne rejouer ni l’enregistrement, ni les opérations de déploiement déjà validées. La prochaine évolution planifiée concerne les diffusions à grande échelle.
 
 ## Validation et limites
 

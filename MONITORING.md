@@ -1,6 +1,6 @@
 # Surveillance de JessieMessage
 
-**État au 21 octobre 2026 Europe/Paris : service 1.2.0 actif, identité confirmée par relevé admin utilisateur ; quatre GET publics conformes au dernier contrôle.** Le parent conserve la capture quotidienne, le moniteur local et ses alertes par courriel. La sonde GitHub reste indépendante de l’hébergement. Les preuves ci-dessous restent datées ; elles ne constituent pas une nouvelle vérification des copies PC ou du moniteur local. Les pins et le checkpoint restant à aligner sont dans [REPRISE](docs/REPRISE.md).
+**État au 21 octobre 2026 Europe/Paris : service 1.2.0 actif, identité confirmée par relevé admin utilisateur ; quatre GET publics conformes au dernier contrôle.** Le parent conserve la capture quotidienne, le moniteur local et ses alertes par courriel. La sonde GitHub reste indépendante de l’hébergement. Les preuves ci-dessous restent datées ; elles ne constituent pas une nouvelle vérification des copies PC ou du moniteur local. Les pins, le checkpoint aligné et les preuves sont dans [REPRISE](docs/REPRISE.md).
 
 ## Sonde externe : disponibilité du site
 

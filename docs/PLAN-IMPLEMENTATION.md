@@ -2,13 +2,12 @@
 
 La V1 initiale est terminée dans le périmètre convenu. L’état réellement déployé, ses preuves et les commandes opérateur sont exclusivement dans **[REPRISE](REPRISE.md)**. Ce plan décrit le travail restant ; les anciens lots correctifs restent historiques.
 
-L’harmonisation 1.0.0 et la lecture privée 1.1.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
+Les livraisons 1.0.0, 1.1.0 et 1.2.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **2 — Profil et expressions**, `1.2.0` | Pseudonyme public, avatar privé et 180 emojis ; persistance, refus intercompte et parcours clavier/mobile validés. | Code fusionné et publié ; CI PR/main 5/5, migration 0031 et précontrôles hébergés réussis. **Production 1.2.0 identifiée** par relevé admin utilisateur sur `763b6321`, Node 24.22.0, affichage `21/10/2026 00:21:24` sans fuseau déduit ; quatre GET publics conformes. **Reste uniquement l’alignement du checkpoint**, sans redémarrage, avec repli compatible 1.1.1 précontrôlé et non démarré. Ne répéter ni migration, ni Build, ni activation. [État courant](REPRISE.md), [bilan](profile-expressions-120.md). |
 | **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
@@ -20,6 +19,7 @@ Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas
 
 ## Livraisons antérieures closes
 
+- [Profil et expressions 1.2.0](profile-expressions-120.md) : production identifiée, schéma 31, disponibilité et checkpoint alignés ; repli 1.1.1 compatible précontrôlé.
 - [Lecture privée 1.1.0](private-read-receipts-110.md) et [preuves d’harmonisation 1.0.0](REPRISE.md#validation-locale-de-100).
 - [Clôture V1 0.86](production-086.md) et [qualification Node associée](node-runtime-086.md).
 - [Envoi confirmé après perte de réponse HTTP, 0.85](chat-send-ack-085.md).

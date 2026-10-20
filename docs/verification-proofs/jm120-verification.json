@@ -140,7 +140,7 @@
     "schema31ApplicationReported": true,
     "schemaMigrations": 31,
     "compatibleFallback111Started": false,
-    "checkpoint120AlignmentReported": false,
+    "checkpoint120AlignmentReported": true,
     "realClientMessageOrErasureTests": false,
     "serviceState": "running_identity_verified_via_authenticated_admin_user_report",
     "identityEvidence": {
@@ -313,8 +313,8 @@
     "actionAtStage": "configure_manager_run_then_start_release120",
     "scope": "historical_schema_upgrade_and_prechecks_before_activation"
   },
-  "status": "deployed_identity_verified_checkpoint_pending",
-  "nextAction": "align_checkpoint120_metadata_only_without_restart",
+  "status": "deployed_verified_and_metadata_aligned",
+  "nextAction": "evolution3_planned_not_started",
   "publicHttp": {
     "provenance": "direct_agent_anonymous_https_observation",
     "method": "default_tls_certificate_verification_redirects_refused",
@@ -422,11 +422,19 @@
   },
   "privateCheckpoint": {
     "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
-    "lastRecordedRelease": "1.1.0",
-    "lastRecordedSource": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
-    "alignmentStatus": "pending",
+    "lastRecordedRelease": "1.2.0",
+    "lastRecordedSource": "763b632185ce13eb875110c9107687b2d278ff67",
+    "alignmentStatus": "recorded_via_user_receipt",
     "runtimeRestartRequired": false,
-    "release120AlignmentReported": false
+    "release120AlignmentReported": true,
+    "historicalBeforeAlignment": {
+      "lastRecordedRelease": "1.1.0",
+      "lastRecordedSource": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+      "alignmentStatus": "pending",
+      "release120AlignmentReported": false
+    },
+    "schemaMigrations": 31,
+    "compatibleRollbackRelease": "1.1.1"
   },
   "checkpointAlignment120": {
     "scriptCommit": "5afd2ac70635579a0645b001bb30e590f95a0c18",
@@ -441,8 +449,8 @@
       "passed": 8,
       "scope": "synthetic_metadata_files_including_packaged_reproduction"
     },
-    "executionReported": false,
-    "alignmentReported": false,
+    "executionReported": true,
+    "alignmentReported": true,
     "expectedReceipt": {
       "status": "release120_metadata_recorded",
       "source": "763b632185ce13eb875110c9107687b2d278ff67",
@@ -474,7 +482,35 @@
         "httpIdentityVerified": false
       },
       "otherHistoricalBlocksPreserved": true
+    },
+    "userReceipt": {
+      "status": "release120_metadata_recorded",
+      "source": "763b632185ce13eb875110c9107687b2d278ff67",
+      "version": "1.2.0",
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackPreserved": true,
+      "rollbackRelease": "1.1.1",
+      "schemaMigrations": 31,
+      "priorActivePreserved": true,
+      "otherBlocksPreserved": true
+    },
+    "currentStatus": "release120_metadata_recorded",
+    "preservationReported": {
+      "priorActiveServicePreserved": true,
+      "compatibleRollbackPreserved": true,
+      "otherHistoricalBlocksPreserved": true
     }
   },
-  "updatedAt": "2026-10-20T22:27:38.726732+00:00"
+  "updatedAt": "2026-10-20T22:27:38.726732+00:00",
+  "closure": {
+    "status": "closed",
+    "userDate": "2026-10-21",
+    "timezone": "Europe/Paris",
+    "applicationVersion": "1.2.0",
+    "source": "763b632185ce13eb875110c9107687b2d278ff67",
+    "restartsForMetadataAlignment": 0,
+    "nextEvolution": "3 — Diffusions à grande échelle",
+    "nextEvolutionStarted": false
+  }
 }

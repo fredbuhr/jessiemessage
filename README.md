@@ -14,7 +14,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
 
-**Version active : 1.2.0**, profil, avatar et catalogue de 180 emojis. L’identité admin et la disponibilité sont confirmées ; seul l’alignement du checkpoint opérateur reste à terminer, suivi dans REPRISE.
+**Version active : 1.2.0**, profil, avatar et catalogue de 180 emojis. Identité admin, disponibilité et suivi de livraison du serveur sont alignés ; le lot est clos. Les preuves et le repli compatible sont consignés dans REPRISE.
 
 ## Versions et livraisons
 
