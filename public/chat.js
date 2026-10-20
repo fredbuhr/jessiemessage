@@ -818,6 +818,16 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
   else ui.text(el("new-messages"), "Nouveaux messages ↓");
   if (focusedRow && !focused.isConnected && focusWasLost(focused)) focusMessage(focusedRow.article.dataset.sequence);
 }
+function mergeMessagePage(state, result) {
+  const pending = state.pending;
+  mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
+  // A history page can confirm an uncertain send just like an event. Clear
+  // its draft only when the exact clientMessageId has actually been found.
+  if (pending && !state.pending) {
+    state.draft = ""; el("message-body").value = "";
+    notice(pending.kind === "image" ? "Photo enregistrée." : "Message enregistré.");
+  }
+}
 async function selectConversation(id, { focus = false, target = null } = {}) {
   if (focus && !target && pendingNotification) { pendingNotification = null; history.replaceState(null, "", location.pathname); }
   if (id === selected && (!target || currentState()?.messages.get(target.sequence)?.id === target.messageId)) { if (focus) focusVisible(el("message-scroll")); return; }
@@ -840,7 +850,7 @@ async function selectConversation(id, { focus = false, target = null } = {}) {
     else {
       const anchor = target ? `&after=${(BigInt(target.sequence) - 1n).toString()}` : "";
       const result = await request(`${conversationPath(state)}/messages?limit=50${anchor}`, { state });
-      mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
+      mergeMessagePage(state, result);
       state.eventCursor = sequence(result.eventCursor); state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore;
       state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
       inbox.set(id, result.conversation);
@@ -856,7 +866,7 @@ async function loadNewer({ latest = false } = {}) {
   try {
     const result = await request(`${conversationPath(state)}/messages?limit=50${latest ? "" : `&after=${state.nextAfter}`}`, { state });
     if (latest) { state.messages = new Map(); state.eventCursor = sequence(result.eventCursor); state.notificationSequence = null; }
-    mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
+    mergeMessagePage(state, result);
     if (latest) { state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore; }
     state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
     renderMessages(state, { initial: latest });
@@ -901,7 +911,7 @@ async function loadOlder() {
   olderBusy = true; renderMeta(state);
   try {
     const result = await request(`${conversationPath(state)}/messages?before=${state.nextBefore}&limit=50`, { state });
-    mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
+    mergeMessagePage(state, result);
     state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore; renderMessages(state, { prepend: true });
   } catch (error) { await handleError(error, state); }
   finally { if (fresh(ticket)) {
@@ -954,8 +964,8 @@ async function poll() {
 }
 function newClientId() { return [...crypto.getRandomValues(new Uint8Array(16))].map((byte) => byte.toString(16).padStart(2, "0")).join(""); }
 async function sendMessage(retry = false) {
-  const state = currentState(); if (!state || sendBusy || !state.conversation?.canSend || (!retry && state.pending)) return;
-  if (state.hasMoreAfter && (!await loadNewer({ latest: true }) || state !== currentState())) return;
+  const state = currentState(); if (!state || sendBusy || !state.conversation?.canSend || (retry && !state.pending) || (!retry && state.pending)) return;
+  if (state.hasMoreAfter && (!await loadNewer({ latest: true }) || state !== currentState() || (retry && !state.pending))) return;
   if ((retry && state.pending?.kind === "image") || (!retry && state.imageDraft)) { await sendImage(retry); return; }
   const ticket = snapshot(state);
   const body = retry ? state.pending?.body : el("message-body").value;
