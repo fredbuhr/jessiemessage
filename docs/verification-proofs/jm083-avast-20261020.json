@@ -1,0 +1,100 @@
+{
+  "format": "jessiemessage-pc-antivirus-incident",
+  "version": 1,
+  "release": "0.83.0",
+  "status": "blocked_by_avast_user_reported",
+  "reportedAtParis": "2026-10-20T14:13:55+02:00",
+  "runtimeSource": "682864cec3b8d0eb1c8a6dd92c4b9bd9dfc097b1",
+  "documentationBaseline": "b758bd9f78e8fafdc2e36e5a28e52c883213c237",
+  "screenshots": [
+    {
+      "name": "image(20261020-121317).png",
+      "bytes": 71767,
+      "sha256": "e4b1ed76c3d47fac931b768e7d1247b23b2c1f7653c467df44f9dc560c3ecf7d",
+      "imagePublishedInGit": false
+    },
+    {
+      "name": "image(20261020-121330).png",
+      "bytes": 75926,
+      "sha256": "88aa4433a575a1cb81b80d48d47888ba8675501ade416e376ad44c78a2c98064",
+      "imagePublishedInGit": false
+    },
+    {
+      "name": "image(20261020-121338).png",
+      "bytes": 64803,
+      "sha256": "79b83a9d3df0ef9de8f323815861fc20929e6a1218a18659f90f38d0adc6ea79",
+      "imagePublishedInGit": false
+    }
+  ],
+  "observed": {
+    "vendor": "Avast",
+    "detection": "IDP.Generic",
+    "detectedBy": "Agent actions suspectes / Behavior Shield",
+    "process": "Windows PowerShell",
+    "file": "JessieMessage-sauvegardes-055.ps1",
+    "installedFileQuarantinedAtUtc": "2026-10-20T12:03:44.019Z",
+    "downloadedFileBlockedAtUtc": "2026-10-20T12:12:52.625Z",
+    "installedPath": "%LOCALAPPDATA%/JessieMessage/Sauvegardes/<destination>/JessieMessage-sauvegardes-055.ps1",
+    "downloadedPath": "Downloads/<extracted-update-kit>/JessieMessage-sauvegardes-055.ps1",
+    "quarantinedFileBytesRead": false,
+    "quarantinedFileHashAvailable": false,
+    "falsePositiveConfirmed": false,
+    "pcAgentCurrentlyExecutingObserved": false,
+    "pcCopyMayBeInterrupted": true,
+    "pcUpdateInstallationConfirmed": false
+  },
+  "expectedPayload": {
+    "collectorFile": "scripts/JessieMessage-sauvegardes-055.ps1",
+    "collectorSha256": "31b95cd516028a9be43430bddeb461631279d077ad916df767114cd29bc1e436",
+    "witnessLibraryFile": "scripts/JessieMessage-temoin-067.ps1",
+    "witnessLibrarySha256": "c0fbcbc64096b7a3d2e2766c00636ab332e62126b65298713aa17e4ae69c6bd4",
+    "personalMetadataOrCredentialsIncludedInReport": false,
+    "expectedHashIsNotAQuarantinedFileMeasurement": true
+  },
+  "liveServerCheck": {
+    "at": "2026-10-20T12:21:26.673706+00:00",
+    "release": "0.83.0",
+    "healthStatus": 200,
+    "readyStatus": 200,
+    "monitorCode": "OK",
+    "preservedSensitiveHashes": 10,
+    "pairedIdentityPreserved": true,
+    "pairedDestinations": 1,
+    "serverCollectorHashMatchesExpected": true,
+    "pcExecutionNotInferred": true
+  },
+  "review": {
+    "independentReviews": 2,
+    "causeOfAvastRuleIdentified": false,
+    "suspiciousBehaviourHypothesesOnly": [
+      "PowerShell invocation with process execution policy",
+      "self-copy into per-user application data",
+      "scheduled task registration"
+    ],
+    "nativeAvastExecutedInCi": false,
+    "installerCmdFullyQualifiedOnPersonalPc": false,
+    "updateReliabilityFindings": [
+      "scripts replaced one by one without global rollback",
+      "no final reread of installed payload before success",
+      "task registration can be partial",
+      "success message does not prove a continued copy process"
+    ],
+    "updateHardeningImplemented": false,
+    "payloadUnchangedForAnalysis": true
+  },
+  "actions": {
+    "applicationCodeChanged": false,
+    "newDeployment": false,
+    "vendorSubmissionSentByAgent": false,
+    "avProtectionDisabledOrExclusionAdded": false,
+    "quarantineRestored": false,
+    "filesRenamedOrObfuscatedToAvoidAv": false,
+    "pairingRepeated": false,
+    "keysRegenerated": false,
+    "productionRestored": false
+  },
+  "nextAction": "Submit only the flagged collector script from the personal Avast quarantine as a suspected false positive; keep protection and quarantine; inspect installed files and tasks before any resumption. Qualify bounded updater hardening before another user installation attempt.",
+  "officialVendorProcedure": "https://support.avast.com/en-us/article/use-antivirus-quarantine/",
+  "historicalPreAlertClosureProof": "docs/verification-proofs/jm083-closure.json",
+  "report": "docs/pc-antivirus-20261020.md"
+}
