@@ -173,10 +173,22 @@
     "actualValidatorAndMigratorWithInjectedSqlPassed": true,
     "privateFileReaderVerifiedLocally": false,
     "privateFileReaderOmission": "proc_self_fd_unavailable_in_sandbox",
-    "executionReported": false,
+    "executionReported": true,
     "readOnly": true,
     "migrates": false,
     "restarts": false,
-    "ddlPrivilegesVerified": false
+    "ddlPrivilegesVerified": false,
+    "confirmed": false,
+    "userReceipt": {
+      "status": "migration_status_not_confirmed",
+      "phase": "sql_connection",
+      "code": "SQL_AUTHENTICATION_REFUSED",
+      "readOnly": true,
+      "migrated": false,
+      "noRestart": true,
+      "diagnosticRevision": 2
+    },
+    "nextAction": "correct_migrator_authentication_then_repeat_read_only_status",
+    "credentialCorrectionReported": false
   }
 }
