@@ -1,6 +1,6 @@
 # Livraison de référence — JessieMessage 1.0.0
 
-**Identité de la version déployée confirmée par le relevé administrateur fourni par l’utilisateur le 20 octobre 2026.** L’alignement du checkpoint privé reste en attente ; l’harmonisation opérateur n’est donc pas entièrement close. L’état courant et la prochaine action restent dans [REPRISE](REPRISE.md).
+**Harmonisation terminée le 20 octobre 2026.** L’identité déployée est confirmée par le relevé administrateur utilisateur et le checkpoint privé est aligné, avec repli conservé et sans redémarrage supplémentaire. L’état courant et la prochaine action restent dans [REPRISE](REPRISE.md).
 
 ## Identité active constatée
 
@@ -32,7 +32,7 @@ Cette livraison harmonise métadonnées, documentation et identité affichée da
 
 Les contrôles SSH R1/R2 n’ont pas identifié de candidat applicatif : R2 a rapporté zéro candidat parmi douze processus propres lus, aucun illisible. Ils restent **non concluants**, sans attestation du PID, du socket ou de l’empreinte du binaire effectivement exécuté. La lecture admin ci-dessus est une preuve d’identité applicative distincte ; elle ne transforme pas ces contrôles en réussites. Les empreintes de staging ne valent pas une mesure du binaire du processus actif.
 
-Le checkpoint `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json` décrit encore l’ancienne référence 0.86. Le script d’alignement limité aux métadonnées est publié et testé **4/4**, mais **n’a pas encore été exécuté** sur le serveur ; sa référence et la prochaine action sont dans REPRISE. Ne pas déclarer l’harmonisation entièrement terminée avant son reçu vérifié. Aucun nouvel audit général, test PC, campagne réelle, effacement ou restauration n’est ajouté par ce bilan ; les réserves déjà documentées restent conservées.
+Le checkpoint `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json` est aligné sur 1.0.0 par le script épinglé dans REPRISE, testé **4/4** avant son exécution serveur. Le reçu transmis par l’utilisateur confirme `release100_metadata_recorded`, source `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, version `1.0.0`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. L’ancien `activeService` complet reste dans `.developmentSimplification.release100.rollback` ; les autres blocs sont conservés. L’alignement et l’harmonisation sont clos. Aucun nouvel audit général, test PC, campagne réelle, effacement ou restauration n’est ajouté par ce bilan ; les réserves déjà documentées restent conservées.
 
 ## Repli immédiat conservé
 

@@ -4,7 +4,7 @@
   "release": "1.0.0",
   "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
   "tree": "485cade0aeeee41cb4c34f913cd98f6078c4636b",
-  "status": "deployed_identity_confirmed_checkpoint_alignment_pending",
+  "status": "harmonization_complete",
   "identityEvidence": {
     "method": "authenticated_admin_readiness_user_report_after_refresh",
     "url": "https://jessiemessage.com/admin/readiness",
@@ -102,8 +102,8 @@
   },
   "privateCheckpoint": {
     "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
-    "lastRecordedRelease": "0.86.0",
-    "alignmentStatus": "pending_user_execution",
+    "lastRecordedRelease": "1.0.0",
+    "alignmentStatus": "recorded",
     "runtimeRestartRequired": false,
     "recorder": {
       "commit": "002f26450a39b0fc937745f008e563efdb21ba66",
@@ -115,14 +115,27 @@
         "skipped": 0,
         "scope": "synthetic_metadata_files_only"
       },
-      "serverExecution": "not_observed",
+      "serverExecution": "confirmed_by_user_ssh_receipt",
       "preservation": "complete_previous_active_service_in_release100_rollback_and_unchanged_other_blocks"
-    }
+    },
+    "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+    "receiptProvenance": "user_ssh_output_of_pinned_recorder",
+    "receipt": {
+      "status": "release100_metadata_recorded",
+      "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+      "version": "1.0.0",
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackPreserved": true,
+      "otherBlocksPreserved": true
+    },
+    "rollbackPath": "developmentSimplification.release100.rollback"
   },
   "scope": {
     "messagingBusinessChange": false,
     "dependencyUpdate": false,
     "schemaMigration": false,
     "pcAction": false
-  }
+  },
+  "updatedAt": "2026-10-20T19:52:31.568798+00:00"
 }

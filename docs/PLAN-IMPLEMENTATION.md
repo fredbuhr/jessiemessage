@@ -2,23 +2,22 @@
 
 La V1 initiale est terminée dans le périmètre convenu. L’état réellement déployé, ses preuves et les commandes opérateur sont exclusivement dans **[REPRISE](REPRISE.md)**. Ce plan décrit le travail restant ; les anciens lots correctifs restent historiques.
 
-## Harmonisation V1 → 1.0.0
+## Référence 1.0.0 harmonisée
 
 | Étape | Résultat et critère de fin | État |
 | --- | --- | --- |
 | Référence | Version applicative cohérente dans les métadonnées, documents avec rôles distincts, affichage admin de l’identité chargée par le processus. Aucun changement métier de messagerie ni migration SQL. | Code publié et fusionné par la PR 109 ; [résultats et limites des contrôles](REPRISE.md#validation-locale-de-100). |
 | Publication | Commit validé par la CI habituelle, tag immuable `v1.0.0` et release GitHub correspondant à ce commit. | Réalisée : CI du commit de fusion 5/5 verte, tag/release publiés et vérifiés sur `70b48aa`. |
 | Déploiement | Même commit lancé sur l’unique service Infomaniak, précontrôle et contrôles adaptés réussis, repli conservé, REPRISE actualisé après observation. | Réalisé : identité 1.0.0/70b48aa/Node 24.22 confirmée par relevé admin utilisateur après actualisation ; quatre GET publics conformes. R1/R2 SSH restent non concluants, sans attestation PID/socket. |
-| Alignement opérateur | Checkpoint privé décrit la même identité et conserve intégralement l’ancien service comme repli, sans redémarrage ni autre modification serveur. | Dernière étape : script de métadonnées publié et testé 4/4 ; reçu d’écriture encore attendu. |
-| Reprise de l’évolution | Travail de lecture privée conservé séparément et reporté sur la référence propre pour préparer `1.1.0`. | Après clôture de l’harmonisation. |
+| Alignement opérateur | Checkpoint privé décrit la même identité et conserve intégralement l’ancien service comme repli, sans redémarrage ni autre modification serveur. | Réalisé : reçu `release100_metadata_recorded` sur `70b48aa`, version 1.0.0, sans redémarrage ; repli et autres blocs préservés. |
 
-La numérotation est décrite dans le [README](../README.md#versions-et-livraisons). Une release ou un tag ne prouve pas un déploiement ; les versions préparées et actives restent distinctes.
+L’harmonisation est terminée. La numérotation est décrite dans le [README](../README.md#versions-et-livraisons). Une release ou un tag ne prouve pas un déploiement ; les versions préparées et actives restent distinctes. La reprise de l’évolution 1.1.0 est le prochain travail fonctionnel, distinct de cette clôture.
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **1 — Lecture privée**, cible `1.1.0` | Jessie voit les lectures clients ; le client ne reçoit pas la lecture de Jessie, y compris par API/export. Badges propres et appareils conservés ; régressions serveur, SQL et interface validées. | Préparée localement sur la V1 précédente ; non publiée/non déployée, à reporter après `1.0.0`. |
+| **1 — Lecture privée**, cible `1.1.0` | Jessie voit les lectures clients ; le client ne reçoit pas la lecture de Jessie, y compris par API/export. Badges propres et appareils conservés ; régressions serveur, SQL et interface validées. | Préparée localement sur la V1 précédente ; non publiée/non déployée. Prochaine étape : reporter ce travail conservé sur la référence 1.0.0 désormais harmonisée. |
 | **2 — Profil et expressions** | Profil, avatar et sélecteur emojis/stickers ; données persistantes, images légères et parcours mobile confortable. | Planifiée. |
 | **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |

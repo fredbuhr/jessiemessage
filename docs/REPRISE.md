@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — `1.0.0` déployée, identité confirmée par le relevé administrateur utilisateur ; alignement du checkpoint privé encore à exécuter.** La V1 initiale est terminée. Cette livraison en établit la référence explicite, sans intégrer l’évolution de lecture privée. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**20 octobre 2026 Europe/Paris — harmonisation terminée : `1.0.0` déployée, identité confirmée par le relevé administrateur utilisateur et checkpoint privé aligné.** La V1 initiale est terminée. Cette livraison en établit la référence explicite, sans intégrer l’évolution de lecture privée. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## État de livraison
 
@@ -15,12 +15,12 @@
 | Disponibilité | Quatre GET publics santé/disponibilité conformes sur les deux origines, recontrôlés après le relevé utilisateur. Ils ne prouvent pas la version. |
 | Portée | Métadonnées, documentation et identité de démarrage ; aucun changement métier de messagerie, de dépendances ou de schéma SQL. |
 | Preuves | [Bilan 1.0.0](production-100.md) et [relevé structuré](verification-proofs/jm100-verification.json). Lecture admin rapportée par l’utilisateur, pas de GET privé direct de l’agent. R1/R2 SSH restent non concluants. |
-| Checkpoint privé | Décrit encore 0.86.0 ; script d’alignement des métadonnées publié et testé, reçu d’exécution attendu. Sa mise à jour n’est pas un redéploiement. |
-| Évolution « Lecture privée » | Branche locale `feat/private-admin-read-receipts`, commit `84860a332cc3e9444f968851df808e804b9be962`, initialement 0.87.0 ; non publié/non déployé. À reporter sur la référence propre pour préparer 1.1.0 après cet alignement. |
+| Checkpoint privé | Aligné sur 1.0.0 / `70b48aa` : reçu utilisateur `release100_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. |
+| Évolution « Lecture privée » | Branche locale `feat/private-admin-read-receipts`, commit `84860a332cc3e9444f968851df808e804b9be962`, initialement 0.87.0 ; non publié/non déployé. Prochain travail distinct : reporter sur la référence propre pour préparer 1.1.0. |
 
-**Prochaine action :** aligner le checkpoint privé existant avec le script opérateur épinglé, puis enregistrer son reçu. Le relevé admin attendu a été reçu : ne pas redemander les quatre champs ni répéter staging, Build ou scripts PID. Le script ne doit modifier que le checkpoint, en conservant tout l’historique et le repli 0.86/Node 24.22. L’harmonisation opérateur sera close après cette écriture constatée.
+**Harmonisation close. Prochaine évolution prévue :** reporter le travail conservé de lecture privée sur la référence 1.0.0 pour préparer 1.1.0, puis suivre ses validations propres. Aucune nouvelle évolution fonctionnelle n’a été publiée ou déployée dans cette clôture. Le relevé admin et le reçu d’alignement sont acquis : ne pas les redemander ni répéter les scripts, le staging ou le Build pour clore cette livraison.
 
-[Script de métadonnées épinglé](https://github.com/fredbuhr/jessiemessage/blob/002f26450a39b0fc937745f008e563efdb21ba66/ops/record-release100.py), SHA-256 `167ec69db5f6b86e85a4b437fbb6073aa21b523ab34f102993c4f4ace4fe13dd` : vérifie source/arbre propres et pins du lanceur/Node sur disque, puis conserve l’ancien `activeService` intégral sous `.developmentSimplification.release100.rollback`. La nouvelle identité explicite la provenance admin utilisateur et ses limites ; les autres blocs restent égaux. Écriture temporaire 0600, synchronisation, remplacement atomique et relecture ; répétition valide sans écriture. Verrou coopératif et contrôle des octets/métadonnées avant remplacement, sans garantie CAS universelle. **4/4 tests ciblés** réussis sur fichiers synthétiques ; aucun accès au vrai checkpoint pendant ces tests. Attendre `release100_metadata_recorded` ou `release100_metadata_already_recorded`, `rollbackPreserved:true` et `otherBlocksPreserved:true` avant clôture.
+[Script de métadonnées exécuté](https://github.com/fredbuhr/jessiemessage/blob/002f26450a39b0fc937745f008e563efdb21ba66/ops/record-release100.py), SHA-256 `167ec69db5f6b86e85a4b437fbb6073aa21b523ab34f102993c4f4ace4fe13dd` : son reçu transmis par l’utilisateur confirme l’écriture 1.0.0 sur le commit exact, sans redémarrage, avec repli et autres blocs préservés. Le script vérifie source/arbre propres et pins du lanceur/Node sur disque, conserve l’ancien `activeService` intégral sous `.developmentSimplification.release100.rollback`, puis relit le JSON après remplacement atomique 0600. La nouvelle identité explicite la provenance admin utilisateur et ses limites. Verrou coopératif et contrôle préalable des octets/métadonnées, sans garantie CAS universelle. **4/4 tests ciblés** sur fichiers synthétiques précèdent cette exécution ; ils ne remplacent pas le reçu serveur.
 
 La [publication GitHub](https://github.com/fredbuhr/jessiemessage/actions/runs/39474081890) a été réalisée sans connexion web avec le jeton temporaire GitHub Actions. Le navigateur cloud est indisponible (`native credential state cannot be safely resumed`, y compris après réinitialisation) et aucun connecteur Infomaniak/SSH/SFTP utilisable n’a été trouvé. L’utilisateur exécute les commandes épinglées dans sa console SSH et utilise son navigateur habituel pour l’admin ; ne pas lui reproposer le navigateur cloud.
 
@@ -32,7 +32,7 @@ R1 a renvoyé `PROCESS_NOT_UNIQUE` ; R2 `PROCESS_NOT_FOUND`, zéro correspondanc
 
 ## Build de la référence active
 
-Commande documentée pour le service existant ; aucun Build à relancer pour enregistrer les métadonnées du checkpoint.
+Commande documentée pour le service existant ; aucun Build à relancer pour cette harmonisation terminée.
 
 ```sh
 cd /srv/customer/jessiemessage-operator/production-100-70b48aa8 &&
@@ -81,7 +81,7 @@ Mode **`start-local-closures`**, `closuresEnabled:true`, port **3000 direct**, s
 
 Précontrôles du nouveau Node à **14:32:58.849424 UTC** : plateforme/JPEG/fichiers privés `checks_passed`, vrai décodeur photo fork normalisant PNG vers JPEG/vignette avec le binaire exact ; `local_closure_precheck/passed`, `pendingClosures:false`, `started:false`, `erased:false`, `externalContinuityVerified:false`. Dépendances verrouillées existantes réutilisées. Le lanceur vérifie SHA-256 et version Node avant `exec` ; le Build utilise également son chemin absolu. Utiliser ce Node pour toute commande opérateur JavaScript ; ne pas remplacer le binaire système.
 
-Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. Dernier état enregistré `activeService.release=0.86.0`, `activeService.nodeAfterDeployment=v24.22.0` ; alignement 1.0.0 encore à exécuter. L’écriture doit conserver l’ancien `activeService` complet comme repli immédiat 0.86/Node 24.22 dans `.developmentSimplification.release100.rollback`. `.nodeRuntimeUpdate.rollback` reste le repli historique Node 24.15 et ne doit pas être réécrit ; anciens `.productionClosure`/`.chatSendAck`, S1/S2/S3, PC, autorité et D1 préservés. Les anciennes preuves ne deviennent pas des observations fraîches de 1.0.0.
+Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. État enregistré `activeService.release=1.0.0`, `activeService.source=70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, `activeService.nodeAfterDeployment=v24.22.0`, statut `identity_verified_via_admin_report`. `.developmentSimplification.release100.rollback` conserve l’ancien `activeService` complet comme repli immédiat 0.86/Node 24.22 ; reçu `rollbackPreserved:true`. `.nodeRuntimeUpdate.rollback` reste le repli historique Node 24.15 et n’a pas été réécrit ; anciens `.productionClosure`/`.chatSendAck`, S1/S2/S3, PC, autorité et D1 conservés dans les autres blocs (`otherBlocksPreserved:true`). Les anciennes preuves ne deviennent pas des observations fraîches de 1.0.0.
 
 ## Préserver PC, autorité et D1
 
