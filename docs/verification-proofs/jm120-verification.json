@@ -142,7 +142,7 @@
     "path": "ops/status-release120-migration.sh",
     "sha256": "9908575f0d2ffa1b76f9fa044168c372862afcb1fc54c51acfe1bb11dcff11ba",
     "syntheticTestsPassed": 8,
-    "executionReported": false,
+    "executionReported": true,
     "readOnly": true,
     "migrates": false,
     "restarts": false,
@@ -153,6 +153,30 @@
       "applied": 30,
       "pending": 1,
       "interrupted": false
+    },
+    "confirmed": false,
+    "reportedFailure": {
+      "code": "MIGRATION_STATUS_NOT_CONFIRMED",
+      "shellCode": "shell_check_line_63",
+      "rootCauseKnown": false,
+      "credentialsRecorded": false,
+      "ddlExecuted": false,
+      "restartExecuted": false
     }
+  },
+  "migrationStatusDiagnostic": {
+    "scriptCommit": "670b9efcd90cd97aaa8d21621e38bf770fb3d835",
+    "path": "ops/status-release120-migration-r2.sh",
+    "sha256": "d89e16a9340a9f1ab41ae4838c74f0d1891b9218c2969fc2b91204c8a19df542",
+    "revision": 2,
+    "syntheticTestsPassed": 13,
+    "actualValidatorAndMigratorWithInjectedSqlPassed": true,
+    "privateFileReaderVerifiedLocally": false,
+    "privateFileReaderOmission": "proc_self_fd_unavailable_in_sandbox",
+    "executionReported": false,
+    "readOnly": true,
+    "migrates": false,
+    "restarts": false,
+    "ddlPrivilegesVerified": false
   }
 }
