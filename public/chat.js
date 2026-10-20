@@ -1,7 +1,7 @@
 import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
 import { prepareImageUpload } from "/image-preparation.js";
 import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";
-import { emojiCategories, emojiOptions, insertEmoji } from "/emoji-catalog.js";
+import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";
 
 const ui = globalThis.JessieI18n ?? {
   register() {}, t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -37,6 +37,7 @@ let profileUI = null; let profileMount = null; let profileCapability = null;
 const avatarContainers = new Map(); const avatarVersions = new Map(); const avatarPaths = new Map();
 let emojiContext = null;
 let emojiCategory = "all";
+let emojiSkinTone = "default";
 let conversationDownload = null; let conversationDownloadCapability = null;
 let quickReplyContext = null, quickReplyLanguage = null;
 let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
@@ -206,6 +207,7 @@ function mountNotificationSettings() {
 }
 function clearPrivate() {
   quickReplyLanguage = null;
+  emojiSkinTone = "default";
   profileUI?.destroy(); profileUI = null; profileMount = null; profileCapability = null;
   avatarVersions.clear(); avatarPaths.clear(); el("open-profile").hidden = true;
   clearNotificationSettings();
@@ -1225,6 +1227,12 @@ function renderEmojis(rebuildCategories = false) {
   const language = ui.getLanguage() === "en" ? "en" : "fr";
   const focused = document.activeElement, focusedEmoji = focused?.dataset?.emojiId, focusedCategory = focused?.dataset?.emojiCategory;
   if (rebuildCategories) {
+    ui.forget(el("emoji-skin-tone")); el("emoji-skin-tone").replaceChildren();
+    for (const tone of emojiSkinTones(language)) {
+      const option = document.createElement("option"); option.value = tone.id;
+      ui.rawText(option, `${tone.text} ${tone.label}`); el("emoji-skin-tone").append(option);
+    }
+    el("emoji-skin-tone").value = emojiSkinTone;
     ui.forget(el("emoji-categories")); el("emoji-categories").replaceChildren();
     for (const category of emojiCategories(language)) {
       const button = document.createElement("button"); button.type = "button"; button.className = "emoji-category";
@@ -1234,7 +1242,8 @@ function renderEmojis(rebuildCategories = false) {
     }
   }
   for (const button of el("emoji-categories").children) button.setAttribute("aria-pressed", String(button.dataset.emojiCategory === emojiCategory));
-  const choices = emojiOptions(language, { category: emojiCategory, query: el("emoji-search").value });
+  const selectedSkinTone = emojiSkinTone;
+  const choices = emojiOptions(language, { category: emojiCategory, query: el("emoji-search").value, skinTone: selectedSkinTone });
   ui.forget(el("emoji-list")); el("emoji-list").replaceChildren();
   for (const choice of choices) {
     const button = document.createElement("button"); button.type = "button"; button.className = "emoji-choice";
@@ -1245,7 +1254,7 @@ function renderEmojis(rebuildCategories = false) {
       if (!context || !canUseEmojis() || !fresh(context.ticket) || context.owner !== sessionOwner.id || context.csrf !== csrf
         || context.draft !== el("message-body").value) { closeEmojis(); return; }
       try {
-        const result = insertEmoji(context.draft, choice.id, { start: context.start, end: context.end, image: Boolean(state.imageDraft) });
+        const result = insertEmoji(context.draft, choice.id, { start: context.start, end: context.end, image: Boolean(state.imageDraft), skinTone: selectedSkinTone });
         el("message-body").value = result.value; state.draft = result.value; closeEmojis(true, true); renderMeta(state);
         el("message-body").setSelectionRange?.(result.caret, result.caret);
         notice("Emoji ajouté au brouillon. Relis le message avant de l’envoyer.");
@@ -1270,6 +1279,11 @@ el("open-emojis").addEventListener("click", () => {
   el("emoji-dialog").showModal(); focusVisible(el("emoji-search"));
 });
 el("emoji-search").addEventListener("input", () => { if (emojiContext) renderEmojis(); });
+el("emoji-skin-tone").addEventListener("change", () => {
+  if (!emojiContext) return;
+  const tone = el("emoji-skin-tone").value;
+  if (emojiSkinTones("fr").some((option) => option.id === tone)) { emojiSkinTone = tone; renderEmojis(); }
+});
 el("emoji-list").addEventListener("keydown", (event) => {
   const buttons = [...el("emoji-list").children], index = buttons.indexOf(document.activeElement);
   if (index < 0 || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;

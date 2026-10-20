@@ -22,6 +22,10 @@ Ces parcours deviennent disponibles après l’activation de la version 1.2.0 ; 
 
 **Emojis.** Ouvre **Emojis** sous le brouillon : les 180 emojis sont accessibles par catégories et par recherche en français ou en anglais. Le choix s’insère à la position du curseur ; adapte le message puis choisis **Envoyer**. La sélection ne déclenche aucun envoi automatique.
 
+## À partir de 1.3.0 après activation
+
+Le [catalogue enrichi](emoji-inclusifs-130.md) ajoute **Doubles sens**, des gestes et des personnages adultes. Recherche les noms en français ou en anglais, par exemple « concombre », « courgette » ou « cucumber » pour 🥒. Dans **Couleur de peau**, choisis l’une des cinq carnations ou le rendu par défaut : la grille adapte les mains, doigts et personnages compatibles, y compris les peaux foncées. Le choix reste disponible pendant l’utilisation de la page et se réinitialise avec l’état du compte. Un emoji choisi s’ajoute toujours au brouillon ; vérifie le message avant **Envoyer**. La disponibilité dépend de l’activation confirmée dans [REPRISE](REPRISE.md).
+
 ## Échanger et partager une photo
 
 - Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne la conversation et vérifie le nom avant d’envoyer.

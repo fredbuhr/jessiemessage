@@ -41,6 +41,8 @@ La référence `1.0.0` harmonise la V1 existante. La [lecture privée, livrée e
 
 Le [lot `1.2.0` — Profil et expressions](profile-expressions-120.md) est publié : pseudonyme public et avatar côté client/administration, puis catalogue de 180 emojis Unicode avec catégories et recherche FR/EN. Son utilisation commence **après activation** sur le service. La publication et l’activation sont distinguées dans REPRISE, seul état courant. L’avatar utilise le stockage privé existant ; les emojis s’insèrent dans le brouillon sans envoi automatique. Aucun sticker graphique ni dépendance supplémentaire.
 
+La [cible `1.3.0` — Emojis enrichis et inclusifs](emoji-inclusifs-130.md) complète ce catalogue, ajoute des doubles sens et un choix de cinq carnations pour les gestes et personnages compatibles. Cette évolution en cours conserve le texte Unicode et l’envoi explicite, sans API externe, dépendance ou migration SQL supplémentaire. Elle n’inclut pas de bibliothèque Flirtmoji réhébergée sans droits spécifiques ; le partage individuel permis par leur FAQ est distinct. Elle devient disponible après activation vérifiée dans REPRISE.
+
 Vidéos, annonces, diffusions élargies et alertes de tâches restent des évolutions distinctes, ordonnées dans le [plan de travail](PLAN-IMPLEMENTATION.md). Une fonction codée ou publiée reste indisponible tant que son déploiement n’est pas vérifié.
 
 L’[ancienne fiche produit, relevé du 20 octobre 2026 avant entretien](https://github.com/fredbuhr/jessiemessage/blob/bbd733d85b49b892d78c7cd90509ced04a990939/docs/PRODUCT.md) est conservée dans Git. Ses fonctions annoncées comme futures et son ancien statut de livraison sont historiques.
