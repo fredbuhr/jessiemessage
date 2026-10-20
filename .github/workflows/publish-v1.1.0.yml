@@ -1,0 +1,101 @@
+name: Publish JessieMessage 1.1.0
+
+on:
+  push:
+    branches: ["release/publish-v1.1.0"]
+    paths: [".github/workflows/publish-v1.1.0.yml"]
+
+permissions: {}
+
+concurrency:
+  group: publish-jessiemessage-v1.1.0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Verify validated source and publish the pinned release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import base64, json, os, re, urllib.error, urllib.request
+
+          repo = "fredbuhr/jessiemessage"
+          target = "84669ed570b59b10a1a94a164f24f0e60e6cb5a7"
+          tree = "0201cdbd1932fd9104c04a91d63561010e8ae0c2"
+          tag = "v1.1.0"
+          ci = int("39490336793")
+          assert re.fullmatch(r"[0-9a-f]{40}", target) and re.fullmatch(r"[0-9a-f]{40}", tree)
+          assert ci > 0
+          assert os.environ["GITHUB_REPOSITORY"] == repo
+          assert os.environ["GITHUB_REF"] == "refs/heads/release/publish-v1.1.0"
+
+          def api(path, data=None, optional=False):
+              request = urllib.request.Request(
+                  "https://api.github.com/repos/" + repo + "/" + path,
+                  data=None if data is None else json.dumps(data).encode(),
+                  headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                           "Accept": "application/vnd.github+json",
+                           "Content-Type": "application/json",
+                           "X-GitHub-Api-Version": "2022-11-28"},
+                  method="GET" if data is None else "POST")
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as error:
+                  if optional and error.code == 404:
+                      return None
+                  raise SystemExit("GitHub operation refused: HTTP " + str(error.code))
+
+          run = api("actions/runs/" + str(ci))
+          assert run["head_sha"] == target and run["head_branch"] == "main"
+          assert run["event"] == "push" and run["path"] == ".github/workflows/ci.yml"
+          assert run["status"] == "completed" and run["conclusion"] == "success"
+          jobs = api("actions/runs/" + str(ci) + "/jobs?per_page=100")
+          expected = {"verify", "MariaDB 10.11", "MariaDB 11.4",
+                      "Chrome keyboard and chat lifecycle",
+                      "Chrome HTTPS authentication and messaging with MariaDB"}
+          assert jobs["total_count"] == 5 and len(jobs["jobs"]) == 5
+          assert {job["name"] for job in jobs["jobs"]} == expected
+          assert all(job["status"] == "completed" and job["conclusion"] == "success" for job in jobs["jobs"])
+          assert api("git/commits/" + target)["tree"]["sha"] == tree
+          package = api("contents/package.json?ref=" + target)
+          assert json.loads(base64.b64decode(package["content"]))["version"] == "1.1.0"
+
+          reference = api("git/ref/tags/" + tag, optional=True)
+          if reference is not None:
+              assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target, "Existing tag must never be moved"
+          existing = api("releases/tags/" + tag, optional=True)
+          if existing is not None:
+              assert reference is not None and existing["tag_name"] == tag
+              assert existing["draft"] is False and existing["prerelease"] is False
+              release = existing
+          else:
+              if reference is None:
+                  api("git/refs", {"ref": "refs/tags/" + tag, "sha": target})
+              reference = api("git/ref/tags/" + tag)
+              assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target
+              body = "\n".join([
+                  "Cette livraison ajoute les accusés de lecture privés pour Jessie.",
+                  "", "- Jessie conserve Envoyé puis Lu lorsque le client affiche son message dans une conversation visible.",
+                  "- Le client voit seulement Envoyé sur ses propres messages ; son API et son export personnel ne lui transmettent pas le point de lecture de l'administration.",
+                  "- Le champ API existant peerReadSequence reste stable à zéro côté client, avant comme après une lecture administrateur ; l'administration conserve le reçu réel du client.",
+                  "- Les lectures propres restent persistées pour les badges et la synchronisation entre appareils.",
+                  "- Aucune nouvelle route, infrastructure, dépendance ou migration SQL.",
+                  "", "Commit : `" + target + "`.",
+                  "Validation : [CI complète, 5/5 jobs](https://github.com/" + repo + "/actions/runs/" + str(ci) + ").",
+                  "", "La publication ne prouve pas un déploiement. L'état réellement déployé et le repli sont consignés dans [REPRISE](https://github.com/" + repo + "/blob/main/docs/REPRISE.md)."
+              ])
+              release = api("releases", {"tag_name": tag, "target_commitish": target,
+                            "name": "JessieMessage 1.1.0 — Lecture privée", "body": body,
+                            "draft": False, "prerelease": False, "make_latest": "true"})
+          reference = api("git/ref/tags/" + tag)
+          assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target
+          print(json.dumps({"status": "published_verified", "tag": tag, "commit": target,
+                            "tree": tree, "releaseUrl": release["html_url"], "ciRun": ci}))
