@@ -19,10 +19,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 24
+      - name: Use Node.js 24.22.0
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "24.22.0"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
       - name: Check JavaScript syntax
@@ -50,10 +50,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 24
+      - name: Use Node.js 24.22.0
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "24.22.0"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
       - name: Exercise real Chrome with synthetic local fixtures
@@ -82,10 +82,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 24
+      - name: Use Node.js 24.22.0
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "24.22.0"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
       - name: Create disposable DML-only runtime account
@@ -136,10 +136,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 24
+      - name: Use Node.js 24.22.0
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "24.22.0"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
       - name: Install native MariaDB checkpoint clients
