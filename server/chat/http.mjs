@@ -1,7 +1,7 @@
 import { createClientConversationExportHandler } from "./client-export-http.mjs";
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { readFile } from "node:fs/promises";
-import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { validateMessageBody } from "./crypto.mjs";
 
 const publicRoot = new URL("../../public/", import.meta.url);
@@ -184,8 +184,9 @@ export function createChatHandler(service, { origin, clientConversationExporter 
       const token = sessionToken(request, cookies[route.role]);
       const actor = token ? await service.actor(route.role, token) : null;
       if (!actor) {
-        if (route.kind === "page") reply(response, method, 303, "", { Location: route.role === "admin" ? "/admin/login" : "/access", "Set-Cookie": clearCookie(cookies[route.role]) });
-        else reply(response, method, 401, { error: "authentication_required" }, { "Set-Cookie": clearCookie(cookies[route.role]) });
+        const headers = method === "POST" || hasSessionCookie(request, cookies[route.role]) ? { "Set-Cookie": clearCookie(cookies[route.role]) } : {};
+        if (route.kind === "page") reply(response, method, 303, "", { Location: route.role === "admin" ? "/admin/login" : "/access", ...headers });
+        else reply(response, method, 401, { error: "authentication_required" }, headers);
         return true;
       }
       const authenticated = safeActor(actor, route.role);
@@ -261,7 +262,7 @@ export function createChatHandler(service, { origin, clientConversationExporter 
       if (!response.headersSent && !response.destroyed) {
         const { status, code, retry } = mappedError(error);
         const headers = retry ? { "Retry-After": String(retry) } : {};
-        if (status === 401 && route.role) headers["Set-Cookie"] = clearCookie(cookies[route.role]);
+        if (status === 401 && route.role && (method === "POST" || hasSessionCookie(request, cookies[route.role]))) headers["Set-Cookie"] = clearCookie(cookies[route.role]);
         if (route.kind === "page" && [401, 403].includes(status)) {
           reply(response, method, 303, "", { ...headers, Location: route.role === "admin" ? "/admin/login" : "/access" });
         } else {

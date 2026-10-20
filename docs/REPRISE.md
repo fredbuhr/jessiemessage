@@ -1,10 +1,12 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — lot 3 livré : 0.82.0 déployé et vérifié.** A06/A09/A10 corrigés ; lots 1/2 serveur conservés. Mise à jour personnelle du kit PC 0.81 toujours non observée. A08 : avertissement/dry-run livrés, exécuteur actif différé ; A01 dépendance hébergeur indépendante. S1/S2a/S2b/S3 restent clos. Lire le [plan](PLAN-IMPLEMENTATION.md), le [lot 3](audit-corrections-082.md), les [preuves](verification-proofs/jm082-verification.json) et [AGENTS](../AGENTS.md). KISS permanent, aucun nouveau serveur ni budget.
+**20 octobre 2026 Europe/Paris — lot 4 en qualification ; service 0.82.0 déployé et vérifié.** A06/A09/A10 corrigés ; lots 1/2 serveur conservés. Mise à jour personnelle du kit PC 0.81 toujours non observée. A08 : avertissement/dry-run livrés, exécuteur actif différé ; A01 dépendance hébergeur indépendante. S1/S2a/S2b/S3 restent clos. Lire le [plan](PLAN-IMPLEMENTATION.md), le [lot 3](audit-corrections-082.md), les [preuves](verification-proofs/jm082-verification.json) et [AGENTS](../AGENTS.md). KISS permanent, aucun nouveau serveur ni budget.
 
 L’ancien compteur « étape 4/6 » appartient au plan du 18 octobre, remplacé par S1/S2/S3 le 19. Le plan correctif courant comporte quatre lots puis une clôture : lots 1/2/3 serveur livrés en 0.80/0.81/0.82 ; lot 4 et bilan final à faire. La livraison V1 n’atteste pas les garanties abandonnées de l’ancien périmètre.
 
 ## Audit et corrections courantes
+
+**Lot 4 en cours :** caractérisation C01/C02 dans Chrome sur données synthétiques, correction des seuls comportements confirmés et entretien des entrées documentaires. [Compte rendu](audit-corrections-083.md), [preuves](verification-proofs/jm083-verification.json). Aucun déploiement 0.83 encore déclaré.
 
 L’[audit transversal](AUDIT-CODE-2026-10-20.md) porte sur `f629137`, code applicatif identique au runtime 0.79 de l’époque. [Preuves datées](verification-proofs/jm079-audit-20261020.json). Aucun P0/P1 ni accès intercompte démontré dans les surfaces examinées ; cela ne certifie pas leur absence. C01/C02 restent à confirmer au lot 4.
 

@@ -20,6 +20,7 @@ function clear() {
 }
 function signOut() { clear(); location.replace("/admin/login?continue=%2Fadmin%2Fbackups"); }
 async function request(path, { body, ticket = readinessTicket(state), zip = false } = {}) {
+  if (!visible() || !currentReadiness(state, ticket)) throw stale();
   const controller = new AbortController(); controllers.add(controller); const timer = setTimeout(() => controller.abort(), 20000);
   try {
     const response = await fetch(path, { method: body === undefined ? "GET" : "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal,
@@ -37,15 +38,20 @@ async function request(path, { body, ticket = readinessTicket(state), zip = fals
 }
 async function prove(ticket) {
   const session = await request("/api/auth/session", { ticket });
-  if (!acceptAdminSession(state, ticket, session)) { if (!state.visible) signOut(); throw stale(); }
+  if (!currentReadiness(state, ticket)) throw stale();
+  if (!acceptAdminSession(state, ticket, session)) {
+    if (!state.visible) signOut();
+    else if (visible()) void bootstrap("La session a changé. Recommence l’action.");
+    throw stale();
+  }
 }
 function arm() {
   cancelCheck?.();
   cancelCheck = globalThis.JessieSessionClock.scheduleSessionCheck(state.session.expiresAt, async () => {
     const ticket = readinessTicket(state);
-    try { await prove(ticket); arm(); }
+    try { await prove(ticket); if (currentReadiness(state, ticket)) arm(); }
     catch (error) {
-      if (error.stale) { if (visible() && state.visible && !state.session) void bootstrap("La session a changé. Recommence l’action."); return; }
+      if (error.stale || !currentReadiness(state, ticket)) return;
       if (error.status === 401) signOut(); else { clear(); notice("Les sauvegardes sont momentanément indisponibles. Actualise la page.", true); }
     }
   }, { maxDelayMs: 300000 });
@@ -136,11 +142,12 @@ async function bootstrap(message = "") {
   clear(); clearReadiness(state, { visible: true }); const ticket = readinessTicket(state); notice("Vérification de la connexion…");
   try {
     await prove(ticket); const value = await request("/api/admin/backups", { ticket }); await prove(ticket);
+    if (!currentReadiness(state, ticket)) throw stale();
     if (value?.version !== 1 || !Array.isArray(value.destinations) || value.destinations.length > 5 || !value.schedule
       || ![undefined, null, "HISTORY_CAPACITY_LOW"].includes(value.historyCode)) throw new Error("invalid_summary");
     summary = value; render(); arm(); notice(message);
   } catch (error) {
-    if (error.stale) { if (visible() && state.visible && !state.session) void bootstrap(); return; }
+    if (error.stale || !currentReadiness(state, ticket)) return;
     if (error.status === 401) { signOut(); return; }
     clear(); notice("Les sauvegardes sont momentanément indisponibles. Actualise la page.", true);
   }
@@ -152,6 +159,7 @@ async function perform(path, body, download = null) {
   notice("Enregistrement en cours…");
   try {
     await prove(ticket); const result = await request(path, { ticket, body, zip: download !== null }); await prove(ticket);
+    if (!currentReadiness(state, ticket)) throw stale();
     if (download) {
       const url = URL.createObjectURL(result); blobs.add(url); const link = document.createElement("a"); link.href = url; link.download = download;
       document.body.append(link); try { link.click(); } finally { link.remove(); }
@@ -164,10 +172,10 @@ async function perform(path, body, download = null) {
     }
     await bootstrap("Réglages enregistrés.");
   } catch (error) {
-    if (error.stale) { if (visible()) void bootstrap("La session a changé. Recommence l’action."); return; }
+    if (error.stale || !currentReadiness(state, ticket)) return;
     if (error.status === 401) { signOut(); return; }
     await bootstrap(error.status === 429 ? "Trop de demandes. Patiente une minute puis réessaie." : "L’action n’est pas confirmée. Vérifie l’état affiché avant de réessayer.");
-  } finally { busy = false; }
+  } finally { if (currentReadiness(state, ticket)) busy = false; }
 }
 el("refresh").addEventListener("click", () => { if (!busy) void bootstrap(); });
 el("verify-archive").addEventListener("click", () => {

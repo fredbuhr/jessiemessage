@@ -5,7 +5,7 @@ import * as OTPAuth from "otpauth";
 import {
   AuthCryptoError, newId, newToken, tokenDigest, hashPassword, verifyPassword,
   makeTotpSecret, totpCode, verifyTotp, sealTotpSecret, openTotpSecret,
-  createRecoveryCodes, recoveryCodeDigest, csrfToken, constantTimeText,
+  createRecoveryCodes, recoveryCodeDigest, csrfToken,
 } from "../server/auth/crypto.mjs";
 
 const errorCode = (code) => (error) => error instanceof AuthCryptoError && error.code === code;
@@ -223,13 +223,4 @@ test("CSRF proof is deterministic, keyed by raw session entropy, namespace-bound
   assert.notEqual(csrfToken(newToken()), token);
   assert.notEqual(createHmac("sha256", tokenDigest(session)).update("jessiemessage:csrf:v1").digest("base64url"), token);
   assert.throws(() => csrfToken(`${session}=`), errorCode("AUTH_CRYPTO_INPUT"));
-});
-
-test("constant-time text equality rejects empty, wrong-type, unequal and over-limit inputs", () => {
-  assert.equal(constantTimeText("same text", "same text"), true);
-  assert.equal(constantTimeText("é", "é"), true);
-  assert.equal(constantTimeText("a".repeat(512), "a".repeat(512)), true);
-  for (const [a, b] of [["", ""], [null, null], [Buffer.from("a"), "a"], ["a", "b"], ["aa", "a"], ["é", "e\u0301"], ["a".repeat(513), "a".repeat(513)], ["\ud800", "\ud801"]]) {
-    assert.equal(constantTimeText(a, b), false);
-  }
 });

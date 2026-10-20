@@ -141,14 +141,13 @@ test("administrator readiness with real SQL MFA, private HTTP and fake verificat
 
     await t.test("MFA login precedes private assets and metadata-only readiness; ordinary and forged client cookies are denied", async () => {
       const privatePaths = ["/admin/readiness", "/readiness.js", "/readiness-model.js", "/readiness.css", "/api/admin/readiness"];
-      for (const headers of [{}, { Cookie: `__Host-jessie_client=${client.token}` },
-        { Cookie: `__Host-jessie_session=${client.token}` }, { Cookie: `__Host-jessie_session=${newToken()}` }]) {
+      for (const [headers, cleared] of [[{}, false], [{ Cookie: `__Host-jessie_client=${client.token}` }, false],
+        [{ Cookie: `__Host-jessie_session=${client.token}` }, true], [{ Cookie: `__Host-jessie_session=${newToken()}` }, true]]) {
         for (const path of privatePaths) {
           const denied = await request(path, { headers });
           assert.equal(denied.status, 401, path);
           assert.deepEqual(denied.body, { error: "authentication_required" });
-          assert.match(denied.headers.get("set-cookie"), /^__Host-jessie_session=; /);
-          assert.equal(denied.headers.get("set-cookie").includes("__Host-jessie_client"), false);
+          assert.equal(denied.headers.get("set-cookie"), cleared ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
           assert.match(denied.headers.get("cache-control"), /no-store/);
         }
       }

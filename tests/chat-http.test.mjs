@@ -144,18 +144,36 @@ test("role cookies are distinct, canonical, unique and never fall back to the ot
   const { base, calls } = await fixture(t);
   for (const role of ["admin", "client"]) {
     const other = role === "admin" ? "client" : "admin";
-    for (const header of [undefined, cookie(other), `${cookie(role)}; ${cookie(role)}`, `${cookie(role)}; ${cookie(role).split("=")[0]}=wrong`, `${cookie(role)}=`, cookie(role).replace(tokens[role], "A".repeat(42) + "B")]) {
+    for (const [header, clears] of [[undefined, false], [cookie(other), false], [`${cookie(role).split("=")[0]}=`, true], [`${cookie(role)}; ${cookie(role)}`, true], [`${cookie(role)}; ${cookie(role).split("=")[0]}=wrong`, true], [`${cookie(role)}=`, true], [cookie(role).replace(tokens[role], "A".repeat(42) + "B"), true]]) {
       const before = calls.length;
       const response = await fetch(`${base}${path(role)}`, { headers: header ? { Cookie: header } : {} });
       assert.equal(response.status, 401);
       assert.deepEqual(await response.json(), { error: "authentication_required" });
-      assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict$`));
+      if (clears) assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict$`));
+      else assert.equal(response.headers.get("set-cookie"), null);
       assert.equal(calls.length, before);
     }
     const both = await fetch(`${base}${path(role)}`, { headers: { Cookie: `${cookie(other)}; ${cookie(role)}` } });
     assert.equal(both.status, 200);
     assert.deepEqual(calls.at(-2), ["actor", role, tokens[role]]);
   }
+});
+
+test("chat pages preserve absent cookies on GET and HEAD while invalid cookies and POST still clear", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const role of ["admin", "client"]) {
+    const page = role === "admin" ? "/admin/messages" : "/messages";
+    for (const method of ["GET", "HEAD"]) {
+      const missing = await fetch(`${base}${page}`, { method, redirect: "manual" });
+      assert.equal(missing.status, 303); assert.equal(missing.headers.get("set-cookie"), null);
+      assert.equal(missing.headers.get("location"), role === "admin" ? "/admin/login" : "/access");
+      const invalid = await fetch(`${base}${page}`, { method, redirect: "manual", headers: { Cookie: `${cookie(role).split("=")[0]}=invalid` } });
+      assert.equal(invalid.status, 303); assert.match(invalid.headers.get("set-cookie"), /Max-Age=0/);
+    }
+    const postMissing = await post(base, path(role), { clientMessageId, body: "Synthetic" }, mutationHeaders(role, { Cookie: "" }));
+    assert.equal(postMissing.status, 401); assert.match(postMissing.headers.get("set-cookie"), /Max-Age=0/);
+  }
+  assert.equal(calls.length, 0);
 });
 
 test("current actor authentication, role and client prerequisites fail closed", async (t) => {

@@ -44,7 +44,7 @@ async function fixture(controlClock = false, paired = false) {
     pauseSchedule() { scheduleEnabled = false; }, removeArchive() { latestArchive = null; }, setHistoryCode(value) { historyCode = value; },
     async close() { server.closeAllConnections(); await new Promise(yes => server.close(yes)); } };
 }
-test("real Chrome: native abort during a same-task synthetic visibility handoff (C02 characterization)", { timeout: 60000 }, async () => {
+test("real Chrome: an obsolete settings action cannot restart the new bootstrap after a same-task synthetic visibility handoff", { timeout: 60000 }, async () => {
   const driver = await startWebDriver(), source = await fixture(); let page;
   try {
     page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/backups");
@@ -66,8 +66,8 @@ test("real Chrome: native abort during a same-task synthetic visibility handoff 
       const timer=setTimeout(()=>finish(false),500);
       visibility('hidden');visibility('visible');
     `);
-    assert.deepEqual(observed, { restarts: 3, cutoff: true }, "old stale catches repeatedly restart the new bootstrap with native Chrome abort");
-    assert.equal(await page.execute("return document.getElementById('backup-content').hidden && document.getElementById('destinations').textContent === ''"), true);
+    assert.deepEqual(observed, { restarts: 1, cutoff: false }, "only the current visibility handoff can bootstrap the page");
+    await waitUntil(() => page.execute("return document.querySelector('.copy-badge')?.textContent === 'Copies suspendues' && !document.querySelector('[data-action=toggle]').disabled && document.getElementById('backup-status').textContent === ''"), "current bootstrap finishes without an obsolete session warning");
     assert.equal(source.requests.filter(request => request.method === "POST").length, 1, "an interrupted mutation is never replayed");
   } finally { try { await page?.close(); } finally { try { await source.close(); } finally { await driver.close(); } } }
 });

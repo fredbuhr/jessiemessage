@@ -225,7 +225,10 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     await chmod(keyPath, 0o600); await chmod(certPath, 0o600);
     const [tlsKey, certificate] = await Promise.all([readFile(keyPath), readFile(certPath)]);
     const navigationObservations = [];
-    const sessionPaths = { admin: "/api/auth/session", client: "/api/access/session" };
+    const navigationPaths = {
+      admin: { session: "/api/auth/session", conversation: "/api/chat/admin/conversations" },
+      client: { session: "/api/access/session", conversation: "/api/chat/client/conversation" },
+    };
     try {
       proxy = createHttpsServer({ key: tlsKey, cert: certificate, minVersion: "TLSv1.2" }, (request, response) => {
         if (!accepting || targetPort === null) {
@@ -233,16 +236,16 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
         }
         const requestUrl = new URL(request.url, origin);
         if (request.headers.host === new URL(outside).host) {
-          const role = requestUrl.searchParams.get("role");
-          if (request.method !== "GET" || requestUrl.pathname !== "/c01-navigation" || !Object.hasOwn(sessionPaths, role)) {
+          const role = requestUrl.searchParams.get("role"), kind = requestUrl.searchParams.get("kind");
+          if (request.method !== "GET" || requestUrl.pathname !== "/c01-navigation" || !Object.hasOwn(navigationPaths, role) || !Object.hasOwn(navigationPaths[role], kind)) {
             response.writeHead(404, { "Cache-Control": "no-store" }); response.end(); return;
           }
           // Only this inert page is served from localhost. The real application
           // stays on 127.0.0.1; Chrome must cross sites when following the link.
           response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-          response.end(`<!doctype html><title>Synthetic external navigation</title><a id="c01-return" href="${origin}${sessionPaths[role]}">Open session API</a>`); return;
+          response.end(`<!doctype html><title>Synthetic external navigation</title><a id="c01-return" href="${origin}${navigationPaths[role][kind]}">Open private API</a>`); return;
         }
-        const role = Object.keys(sessionPaths).find(value => sessionPaths[value] === requestUrl.pathname);
+        const role = Object.keys(navigationPaths).find(value => Object.values(navigationPaths[value]).includes(requestUrl.pathname));
         let observation;
         if (role && request.method === "GET" && request.headers["sec-fetch-mode"] === "navigate") {
           const name = role === "admin" ? "__Host-jessie_session=" : "__Host-jessie_client=";
@@ -379,7 +382,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     }
     return Object.freeze({ origin, email, password, currentTotp, isTotpFresh, invalidTotp, recoveryCodes: Object.freeze([...recoveryCodes]), expireSession, stop,
       ...(messaging ? { client, notificationSubscription, notificationReference, sessionRemainsActive, outsideOrigin: outside,
-        externalApiNavigation: role => { if (!Object.hasOwn(sessionPaths, role)) fail(); return `${outside}/c01-navigation?role=${role}`; },
+        externalApiNavigation: (role, kind) => { if (!Object.hasOwn(navigationPaths, role) || !Object.hasOwn(navigationPaths[role], kind)) fail(); return `${outside}/c01-navigation?role=${role}&kind=${kind}`; },
         sessionNavigations: () => navigationObservations.map(value => ({ ...value })) } : {}) });
   } catch (error) {
     let cleanupFailed = false;
