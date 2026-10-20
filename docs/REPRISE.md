@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — production `1.1.0` inchangée, identité et checkpoint alignés ; profil et expressions `1.2.0` en préparation, non livrés.** La compatibilité de repli 1.1.1 est en CI avant toute migration. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**20 octobre 2026 Europe/Paris — production `1.1.0` inchangée, identité et checkpoint alignés ; profil et expressions `1.2.0` publiés, préparation Infomaniak à exécuter.** Les releases 1.1.1 et 1.2.0 sont vérifiées ; ni staging ni migration 0031 ni activation 1.2.0 ne sont encore rapportés sur l’hébergement. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## État de livraison
 
@@ -17,14 +17,41 @@
 | Preuves | [Bilan 1.1.0](private-read-receipts-110.md) et [relevé structuré](verification-proofs/jm110-verification.json). Lecture admin rapportée par l’utilisateur, pas de GET privé direct de l’agent ; aucun test sur des contenus clients réels. |
 | Checkpoint privé | Aligné sur **1.1.0** / `84669ed5` : reçu utilisateur `release110_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. |
 | Repli immédiat | **1.0.0 / Node 24.22**, source `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, checkout et lanceur conservés ; détails ci-dessous et dans le bilan 1.1.0. |
-| Lot en préparation | **Profil et expressions**, cible `1.2.0` : candidat codé, non livré. Profil public dans les échanges privés, avatar et catalogue de 180 emojis Unicode ; [périmètre et limites](profile-expressions-120.md). SQL et Chrome du lot restent à qualifier en CI. |
-| Précondition de migration | [PR 111 de compatibilité 1.1.1](https://github.com/fredbuhr/jessiemessage/pull/111) ouverte, head `bc4478e5c067a2d20d30956132e5d4e3e2be607c`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1` ; CI du dernier commit en cours, sans qualification finale acquise. Aucun serveur modifié. La migration `0031` n’est pas appliquée. |
+| Nouvelle livraison | **[1.2.0 publiée](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0)** sur `763b632185ce13eb875110c9107687b2d278ff67`, arbre `c7dce7bcdb99b298ffc43c9e31dd22ee87453926` ; [PR 112](https://github.com/fredbuhr/jessiemessage/pull/112), [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614) 5/5 et [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500847054). Profil, avatar et 180 emojis ; [bilan](profile-expressions-120.md). **Non déployée.** |
+| Précondition de migration | [v1.1.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.1) publiée sur `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1` ; [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39499262875) 5/5 et [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500076798). Repli compatible avec le schéma 31, pas encore préparé ni exécuté sur l’hébergement. Aucun serveur modifié ; `0031` non appliquée. |
 
-**Étape en cours :** terminer la CI de compatibilité 1.1.1 et qualifier le passage 30→31 et ce repli sur le schéma 31, puis qualifier le code 1.2.0 et figer ses références de livraison. Les commandes de préparation seront épinglées après ces validations. **Ne pas migrer ni activer la 1.2.0 tant que le repli 1.1.1 n’est pas qualifié et préparé. Après `0031`, ne pas reprendre la 1.1.0.** Les pins ci-dessous décrivent toujours le service 1.1.0 actuel, pas un repli après la future migration.
+**Étape en cours :** exécuter uniquement la préparation épinglée ci-dessous, puis examiner son reçu avant de guider la migration et l’activation. **Ne pas migrer ni modifier le Run Manager à cette étape. Après `0031`, ne pas redémarrer la 1.1.0 ni la 1.0.0 : le repli sera la 1.1.1 compatible, préparée et précontrôlée.** Les pins historiques ci-dessous restent ceux du service 1.1.0 actuel ; ils ne sont pas un repli après la migration.
 
 Le lot 1.1.0 reste clos : reçu SSH utilisateur `release110_metadata_recorded` sur le commit actif, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. Le [script exécuté](https://github.com/fredbuhr/jessiemessage/blob/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py), SHA-256 `eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591`, conserve l’ancien `activeService` 1.0.0 intégral sous `.developmentSimplification.release110.rollback`, avec son empreinte, et préserve notamment `release100`. [Reçu et portée](private-read-receipts-110.md#alignement-du-checkpoint--réalisé). Ne rejouer ni enregistrement, ni staging, ni Build, ni preuve admin déjà transmise. Les chantiers PC/sauvegardes restent différés.
 
 La [publication GitHub](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a été réalisée avec le jeton temporaire GitHub Actions. Le navigateur cloud est indisponible (`native credential state cannot be safely resumed`) et aucun connecteur Infomaniak/SSH/SFTP utilisable n’a été trouvé. L’utilisateur exécute les commandes épinglées dans sa console SSH et utilise son navigateur habituel pour l’admin ; ne pas lui reproposer le navigateur cloud.
+
+## Préparation de 1.2.0 — à exécuter
+
+Le [script épinglé](https://github.com/fredbuhr/jessiemessage/blob/eaf702f69b56ba42a9c2c4fd144a33a18c3783d7/ops/prepare-release120.sh), SHA-256 `62aa7235bf8eb13b03af636770167fc8348b90c71ce9fb4a7691ac349e85fc29`, prépare les deux releases depuis le checkout/lanceur 1.1.0 connus. Il confirme commits, arbres, tags, ascendance et dépendances inchangées, puis crée deux worktrees, quatre lanceurs et leurs journaux privés. Il ne démarre aucun processus applicatif, ne lance ni migration ni précontrôle SQL, et ne modifie ni Manager ni checkpoint.
+
+```sh
+python3 - <<'JM_PREPARE'
+import hashlib, subprocess, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/eaf702f69b56ba42a9c2c4fd144a33a18c3783d7/ops/prepare-release120.sh"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "62aa7235bf8eb13b03af636770167fc8348b90c71ce9fb4a7691ac349e85fc29":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+subprocess.run(
+    ["bash", "-s", "--", "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+     "763b632185ce13eb875110c9107687b2d278ff67"],
+    input=code, check=True
+)
+JM_PREPARE
+```
+
+Attendre `status:"staged_awaiting_schema31"`, les deux sources exactes, `migrated:false`, `precheckPassed:false`, `noRestart:true` et `rollback111HostedQualified:false`. Ce reçu prouve la préparation des fichiers, pas l’identité du runtime ni le fonctionnement hébergé des deux nouvelles versions. Un fichier déjà présent impose une inspection ; ne pas effacer ni relancer à l’aveugle.
+
+Après ce reçu seulement : guider le passage 30→31 avec le migrateur existant et saisie personnelle masquée du mot de passe, vérifier l’historique et les précontrôles 1.1.1/1.2.0, puis activer le commit 1.2.0 dans le Manager. L’identité fraîche en administration et l’alignement du checkpoint restent des étapes distinctes. Aucun nouvel essai PC/Avast ni sauvegarde/restauration de production n’est ajouté.
+
+## Validation de 1.2.0
+
+[CI de PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39498749684) et [CI du commit livré](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614) réussies 5/5 : général **3 177 réussis, zéro échec, 36 ignorés** ; MariaDB **10.11 et 11.4 : 479/479 chacune sans omission** ; Chrome **168/168**, HTTPS/MariaDB **3/3**, syntaxe et build **583 sources**. Le nouveau parcours réel confirme les deux profils, avatars propres/peers, refus intercompte, retrait et anciens liens invalidés, absence d’envoi automatique et lectures admin toujours privées. Les omissions générales ne valent pas qualification native. [Relevé structuré](verification-proofs/jm120-verification.json).
 
 ## Preuve d’identité et limites
 

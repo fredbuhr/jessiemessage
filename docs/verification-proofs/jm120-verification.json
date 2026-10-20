@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "version": "1.2.0",
+    "commit": "763b632185ce13eb875110c9107687b2d278ff67",
+    "tree": "c7dce7bcdb99b298ffc43c9e31dd22ee87453926",
+    "tag": "v1.2.0",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0",
+    "publishedAt": "2026-10-20T21:30:07Z",
+    "publicationRun": 39500847054,
+    "tagTargetVerified": true
+  },
+  "ci": {
+    "pullRequest": 112,
+    "pullRequestRun": 39498749684,
+    "mainRun": 39500108614,
+    "jobsPassed": 5,
+    "jobsTotal": 5,
+    "nodeVersion": "v24.22.0",
+    "general": {
+      "tests": 3213,
+      "passed": 3177,
+      "failed": 0,
+      "skipped": 36
+    },
+    "mariadb10_11": {
+      "tests": 479,
+      "passed": 479,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb11_4": {
+      "tests": 479,
+      "passed": 479,
+      "failed": 0,
+      "skipped": 0
+    },
+    "chrome": {
+      "tests": 168,
+      "passed": 168,
+      "failed": 0,
+      "skipped": 0
+    },
+    "httpsChromeMariaDB": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syntaxSources": 583,
+    "buildPassed": true
+  },
+  "compatibleFallback": {
+    "version": "1.1.1",
+    "commit": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+    "tree": "94b2fec5383fd948df7605b63f65a4e23078c2a1",
+    "tag": "v1.1.1",
+    "mainRun": 39499262875,
+    "publicationRun": 39500076798,
+    "schemaMigrations": 31,
+    "hostedPreparationReported": false,
+    "hostedPrecheckReported": false
+  },
+  "preparation": {
+    "scriptCommit": "eaf702f69b56ba42a9c2c4fd144a33a18c3783d7",
+    "path": "ops/prepare-release120.sh",
+    "sha256": "62aa7235bf8eb13b03af636770167fc8348b90c71ce9fb4a7691ac349e85fc29",
+    "syntheticTestsPassed": 7,
+    "expectedStatus": "staged_awaiting_schema31",
+    "executionReported": false,
+    "migrates": false,
+    "restarts": false
+  },
+  "hosting": {
+    "activeVersionLastConfirmed": "1.1.0",
+    "activeCommitLastConfirmed": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+    "startupCaptureTextLastConfirmed": "20/10/2026 22:30:49",
+    "startupTimezoneSupplied": false,
+    "release120ActivationReported": false,
+    "schema31ApplicationReported": false,
+    "checkpoint110Preserved": true,
+    "pcAndD1Preserved": true,
+    "realClientMessageOrErasureTests": false
+  }
+}

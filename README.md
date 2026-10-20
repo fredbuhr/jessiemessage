@@ -9,7 +9,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Périmètre produit](docs/PRODUCT.md) | Fonctions disponibles, conservation et limites. |
 | [Guide quotidien](docs/guide-jessie.md) | Utilisation des messages, photos, fiches, notifications et exports. |
 | [Plan de travail](docs/PLAN-IMPLEMENTATION.md) | Harmonisation et évolutions restantes. |
-| [Profil et expressions, cible 1.2.0](docs/profile-expressions-120.md) | Périmètre du lot et préconditions de migration/repli. |
+| [Profil et expressions, 1.2.0](docs/profile-expressions-120.md) | Périmètre du lot et préconditions de migration/repli. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |

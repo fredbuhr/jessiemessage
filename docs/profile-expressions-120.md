@@ -1,6 +1,6 @@
-# Évolution 2 — Profil et expressions, cible 1.2.0
+# Évolution 2 — Profil et expressions, 1.2.0
 
-**20 octobre 2026 — candidat codé, qualification CI en attente, non livré.** L’[état courant](REPRISE.md) distingue la production des candidats et consigne les références opérateur. Ce bilan décrit le périmètre et les critères de livraison du lot ; les preuves propres à son commit seront ajoutées après observation.
+**20 octobre 2026 — code fusionné, qualifié et publié en 1.2.0 ; activation Infomaniak en attente.** L’[état courant](REPRISE.md) distingue la production des candidats et consigne les références opérateur. Ce bilan décrit le périmètre et les critères de livraison du lot ; les preuves de son commit sont consignées ci-dessous.
 
 ## Périmètre
 
@@ -13,17 +13,17 @@ Le service Node et l’hébergement mutualisé sont conservés ; aucune dépenda
 
 ## Migration et repli
 
-Les profils nécessitent la migration **`0031`**. La compatibilité de l’ancien code avec le schéma étendu doit être qualifiée avant de toucher la production : le repli visé est **1.1.1**, distinct de la 1.1.0 actuellement livrée. La [PR 111](https://github.com/fredbuhr/jessiemessage/pull/111) prépare ce correctif ; son résultat CI et sa livraison ne sont pas présumés acquis.
+Les profils nécessitent la migration **`0031`**. La compatibilité de l’ancien code avec le schéma étendu doit être qualifiée avant de toucher la production : le repli visé est **1.1.1**, distinct de la 1.1.0 actuellement livrée. La [release 1.1.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.1) est publiée sur `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, après CI complète du commit exact. Le [bilan de compatibilité](profile-schema-111.md) conserve sa portée ; aucun démarrage de ce repli sur l’hébergement n’est encore rapporté.
 
-1. Qualifier le passage du schéma 30 au schéma 31 et le fonctionnement de la 1.1.1 sur le schéma 31, y compris les contrôles d’exploitation concernés. Figer le commit et la release validés, préparer et vérifier leurs pins de repli.
-2. Terminer la CI du lot 1.2.0 : tests métier et interface, MariaDB 10.11/11.4, Chrome et parcours HTTPS, sur des données synthétiques isolées. Publier le tag/release sur le commit exact validé.
-3. Épingler ensuite les commandes de préparation et de migration, avec l’identité SQL de migration existante et une phase de maintenance maîtrisée. Aucune migration n’est exécutée au démarrage de l’application. Ces commandes restent à préparer après les validations ; ce bilan n’en fournit pas de version partielle.
+1. **Réalisé en qualification synthétique** : passage 30→31 et fonctionnement de la 1.1.1 sur le schéma 31, y compris les contrôles d’exploitation concernés ; commit et release figés. Préparation hébergée et précontrôle restent à faire.
+2. **Réalisé** : [PR 112](https://github.com/fredbuhr/jessiemessage/pull/112), [CI main exacte 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614), puis [tag/release 1.2.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0) sur `763b632185ce13eb875110c9107687b2d278ff67`, arbre `c7dce7bcdb99b298ffc43c9e31dd22ee87453926`.
+3. Épingler ensuite les commandes de préparation et de migration, avec l’identité SQL de migration existante et une phase de maintenance maîtrisée. Aucune migration n’est exécutée au démarrage de l’application. La commande de staging complète, épinglée et sans migration/redémarrage, est maintenant dans [REPRISE](REPRISE.md#préparation-de-120--à-exécuter). Les commandes de migration seront précisées après son reçu réel.
 4. Après la migration contrôlée, activer le commit 1.2.0 validé, vérifier l’identité fraîche dans l’administration et les contrôles adaptés, puis aligner REPRISE et le checkpoint en conservant le repli compatible et les autres blocs.
 
-**Après application de `0031`, ne pas revenir au code 1.1.0.** Le repli applicatif prévu est la **1.1.1 préqualifiée sur ce schéma**. Un repli de code ne retire pas la migration et n’implique aucune restauration SQL automatique. Avant toute migration, les références de production et de repli existantes restent celles de REPRISE.
+**Après application de `0031`, ne pas revenir au code 1.1.0 ni 1.0.0.** Le repli applicatif prévu est la **1.1.1 préqualifiée sur ce schéma**. Un repli de code ne retire pas la migration et n’implique aucune restauration SQL automatique. Avant toute migration, les références de production et de repli existantes restent celles de REPRISE.
 
 ## Validation et limites
 
-Les contrôles ciblés couvrent les requêtes du profil, les conflits de version, le maintien des brouillons, les réponses ou aperçus devenus obsolètes, le nettoyage des URL et l’accès clavier. Le catalogue est borné et son insertion n’envoie pas le message. Les contrôles intercomptes et la persistance réelle doivent être confirmés par les tests SQL et les parcours navigateur du lot.
+Les contrôles ciblés couvrent les requêtes du profil, les conflits de version, le maintien des brouillons, les réponses ou aperçus devenus obsolètes, le nettoyage des URL et l’accès clavier. Le catalogue est borné et son insertion n’envoie pas le message. La persistance réelle et les contrôles intercomptes sont confirmés par les tests SQL et le nouveau parcours HTTPS/Chrome ; le retrait invalide les anciennes URLs sans supprimer l’asset propre.
 
-Les résultats CI de compatibilité et de la 1.2.0 restent à consigner ; un test local ou ignoré ne vaut pas qualification MariaDB ou Chrome native. Aucun appareil physique, campagne réelle ou capacité de charge nouvelle n’est revendiqué. Les preuves de la 1.1.0, les clés, les sauvegardes/PC et les états D1 restent préservés.
+Les CI de PR et du commit exact livré réussissent 5/5 : général 3 177 réussis/36 ignorés/0 échec ; MariaDB 10.11 et 11.4 : 479/479 chacune sans omission ; Chrome 168/168 ; HTTPS/MariaDB 3/3 ; syntaxe/build 583 sources. La publication vérifiée du tag immuable est le [run 39500847054](https://github.com/fredbuhr/jessiemessage/actions/runs/39500847054). Un test local ou ignoré ne vaut pas qualification native ; ces résultats ne prouvent pas une activation hébergée. Aucun appareil physique, campagne réelle ou capacité de charge nouvelle n’est revendiqué. Les preuves de la 1.1.0, les clés, les sauvegardes/PC et les états D1 restent préservés.
