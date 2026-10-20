@@ -59,7 +59,7 @@
     "publicationRun": 39500076798,
     "schemaMigrations": 31,
     "hostedPreparationReported": true,
-    "hostedPrecheckReported": false
+    "hostedPrecheckReported": true
   },
   "preparation": {
     "scriptCommit": "eaf702f69b56ba42a9c2c4fd144a33a18c3783d7",
@@ -132,10 +132,15 @@
     "startupCaptureTextLastConfirmed": "20/10/2026 22:30:49",
     "startupTimezoneSupplied": false,
     "release120ActivationReported": false,
-    "schema31ApplicationReported": false,
+    "schema31ApplicationReported": true,
     "checkpoint110Preserved": true,
     "pcAndD1Preserved": true,
-    "realClientMessageOrErasureTests": false
+    "realClientMessageOrErasureTests": false,
+    "serviceState": "maintenance_operator_attested",
+    "serviceStopOperatorAttested": true,
+    "serviceStopIndependentlyVerified": false,
+    "lastIdentityPredatesMaintenance": true,
+    "checkpoint120AlignmentReported": false
   },
   "migrationStatusCheck": {
     "scriptCommit": "9ba7a9a38a22812d4739892ea4b58d4a9258bd08",
@@ -188,7 +193,7 @@
       "noRestart": true,
       "diagnosticRevision": 2
     },
-    "nextAction": "stop_manager_service_then_run_pinned_upgrade_and_prechecks",
+    "nextAction": "configure_manager_run_then_start_release120",
     "credentialCorrectionReported": false,
     "confirmedRefersTo": "initial_failed_attempt",
     "currentStatus": "checked",
@@ -219,10 +224,10 @@
     "syntheticTtyTestsPassed": 14,
     "actualMigratorAndPlanWithInjectedSqlPassed": true,
     "hostedSqlExecutedByQualification": false,
-    "executionReported": false,
-    "serviceStopReported": false,
-    "migrationReported": false,
-    "prechecksReported": false,
+    "executionReported": true,
+    "serviceStopReported": true,
+    "migrationReported": true,
+    "prechecksReported": true,
     "runtimeStarted": false,
     "managerChanged": false,
     "checkpointChanged": false,
@@ -230,6 +235,39 @@
     "targetVersion": "1.2.0",
     "targetSource": "763b632185ce13eb875110c9107687b2d278ff67",
     "currentUserDate": "2026-10-21",
-    "currentUserTimezone": "Europe/Paris"
+    "currentUserTimezone": "Europe/Paris",
+    "currentStatus": "schema31_prechecks_passed",
+    "serviceStopIndependentlyVerified": false,
+    "migrationReceipt": {
+      "status": "schema31_confirmed_before_prechecks",
+      "migration": {
+        "status": "upgraded",
+        "engineVerified": true,
+        "transportVerified": true,
+        "migrations": 31,
+        "applied": 1,
+        "unchanged": 30
+      },
+      "schemaMigrations": 31,
+      "upgradeAttempted": true,
+      "schema31Confirmed": true,
+      "runtimeStarted": false,
+      "serviceStopOperatorAttested": true,
+      "source": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a"
+    },
+    "prechecksReceipt": {
+      "status": "schema31_prechecks_passed",
+      "schemaMigrations": 31,
+      "schema31Confirmed": true,
+      "rollback111HostedQualified": true,
+      "release120PrecheckPassed": true,
+      "runtimeStarted": false,
+      "managerChanged": false,
+      "checkpointChanged": false,
+      "restart110Allowed": false,
+      "targetVersion": "1.2.0",
+      "targetSource": "763b632185ce13eb875110c9107687b2d278ff67"
+    },
+    "nextAction": "configure_manager_run_then_start_release120"
   }
 }
