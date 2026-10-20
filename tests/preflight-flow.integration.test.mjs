@@ -304,16 +304,16 @@ test("operator SQL preflight observes real MariaDB with runtime DML rights witho
       const before = await digest(), pool = await createRuntimePool(sharedEnv); let runtime;
       try {
         runtime = await pool.getConnection(); await runtime.beginTransaction();
-        const bucket = randomBytes(32);
+        const bucket = randomBytes(32), probeVersion = migrations.length + 1;
         assert.equal((await runtime.query("INSERT INTO auth_rate_limits (bucket_hash, window_started_at, attempts) VALUES (?, '2026-10-15 00:00:00', 1)", [bucket])).affectedRows, 1);
         assert.equal((await runtime.query("UPDATE auth_rate_limits SET attempts = 2 WHERE bucket_hash = ?", [bucket])).affectedRows, 1);
         assert.equal(Number((await runtime.query("SELECT attempts FROM auth_rate_limits WHERE bucket_hash = ?", [bucket]))[0].attempts), 2);
         assert.equal((await runtime.query("DELETE FROM auth_rate_limits WHERE bucket_hash = ?", [bucket])).affectedRows, 1);
         assert.equal((await runtime.query(`INSERT INTO schema_migrations (version, name, checksum, state, attempts, finished_at)
-          VALUES (31, 'synthetic_shared_probe', ?, 'applied', 1, '2026-10-15 00:00:00')`, ["0".repeat(64)])).affectedRows, 1);
-        assert.equal((await runtime.query("UPDATE schema_migrations SET attempts = 2 WHERE version = 31")).affectedRows, 1);
-        assert.equal(Number((await runtime.query("SELECT attempts FROM schema_migrations WHERE version = 31"))[0].attempts), 2);
-        assert.equal((await runtime.query("DELETE FROM schema_migrations WHERE version = 31")).affectedRows, 1);
+          VALUES (?, 'synthetic_shared_probe', ?, 'applied', 1, '2026-10-15 00:00:00')`, [probeVersion, "0".repeat(64)])).affectedRows, 1);
+        assert.equal((await runtime.query("UPDATE schema_migrations SET attempts = 2 WHERE version = ?", [probeVersion])).affectedRows, 1);
+        assert.equal(Number((await runtime.query("SELECT attempts FROM schema_migrations WHERE version = ?", [probeVersion]))[0].attempts), 2);
+        assert.equal((await runtime.query("DELETE FROM schema_migrations WHERE version = ?", [probeVersion])).affectedRows, 1);
       } finally {
         try { if (runtime) await runtime.rollback(); }
         finally { if (runtime) runtime.release(); await pool.end(); }
