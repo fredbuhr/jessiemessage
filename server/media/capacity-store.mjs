@@ -41,6 +41,9 @@ export async function pendingMediaBytes(connection) {
 export async function ownerMediaBytes(connection, ownerId) {
   return count((await connection.query("SELECT COALESCE(SUM(stored_bytes), 0) AS value FROM media_storage_objects WHERE owner_id = ? AND state <> 'released' FOR UPDATE", [ownerId]))[0].value);
 }
+export async function heldMediaObjects(connection) {
+  return count((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released' FOR UPDATE"))[0].value);
+}
 
 export function createMediaCapacityStore({ pool, capacity }) {
   if (!pool || typeof pool.getConnection !== "function") fail("MEDIA_INPUT");

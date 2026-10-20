@@ -122,7 +122,16 @@ function Test-JmArchive {
 }
 function Assert-JmArchive {
     param($Archive)
-    if ($Archive.id -cnotmatch '^capture-[1-9][0-9]{0,14}-[a-f0-9]{16}$' -or $Archive.sha256 -cnotmatch '^[a-f0-9]{64}$' -or
+    if ($null -eq $Archive -or $Archive -isnot [pscustomobject]) { throw 'Catalogue non valide.' }
+    $jmFields = @('id', 'startedAt', 'bytes', 'sha256', 'filename')
+    $jmNames = @($Archive.PSObject.Properties.Name)
+    if ($jmNames.Count -ne $jmFields.Count) { throw 'Catalogue non valide.' }
+    foreach ($jmField in $jmFields) { if (-not ($jmNames -ccontains $jmField)) { throw 'Catalogue non valide.' } }
+    if ($Archive.id -isnot [string] -or $Archive.sha256 -isnot [string] -or $Archive.filename -isnot [string] -or
+        ($Archive.startedAt -isnot [long] -and $Archive.startedAt -isnot [int]) -or
+        ($Archive.bytes -isnot [long] -and $Archive.bytes -isnot [int]) -or
+        $Archive.startedAt -lt 1 -or $Archive.startedAt -gt 253402300799999L -or
+        $Archive.id -cnotmatch '^capture-[1-9][0-9]{0,14}-[a-f0-9]{16}$' -or $Archive.sha256 -cnotmatch '^[a-f0-9]{64}$' -or
         $Archive.bytes -lt 1 -or $Archive.bytes -gt 2151677952L -or
         $Archive.filename -cne ('JessieMessage-' + $Archive.id + '.tar.gz.gpg')) { throw 'Catalogue non valide.' }
 }
@@ -145,28 +154,43 @@ function Copy-JmArchive {
     } finally { if (Test-Path -LiteralPath $jmPartial) { Remove-Item -LiteralPath $jmPartial -Force } }
 }
 function Invoke-JmCopies {
-    param($Configuration)
+    param($Configuration, [scriptblock]$Clock = { [DateTime]::UtcNow })
     Assert-JmDirectory $Configuration.Folder
-    $script:JmCopyDeadline = [DateTime]::UtcNow.AddMinutes(10)
+    $script:JmCopyDeadline = (& $Clock).AddMinutes(10)
     $jmToken = $Configuration.Credential.GetNetworkCredential().Password
     try {
         $jmManifest = Invoke-JmApi -Action manifest -Token $jmToken -LocationId $Configuration.LocationId
-        if ($jmManifest.version -ne 1 -or $jmManifest.paused -isnot [bool]) { throw 'Catalogue non valide.' }
-        if ($jmManifest.paused) { return 'Copies suspendues depuis le site.' }
+        if ($null -eq $jmManifest -or $jmManifest -isnot [pscustomobject]) { throw 'Catalogue non valide.' }
+        $jmFields = @($jmManifest.PSObject.Properties.Name)
+        if ($jmFields.Count -ne 3 -or -not ($jmFields -ccontains 'version') -or -not ($jmFields -ccontains 'paused') -or
+            -not ($jmFields -ccontains 'archives') -or ($jmManifest.version -isnot [int] -and $jmManifest.version -isnot [long]) -or
+            $jmManifest.version -ne 1 -or $jmManifest.paused -isnot [bool] -or
+            $jmManifest.archives -isnot [array]) { throw 'Catalogue non valide.' }
         $jmArchives = @($jmManifest.archives)
         if ($jmArchives.Count -gt 2000) { throw 'Catalogue trop grand.' }
-        $jmCount = 0; $jmPrevious = 0L; $jmDeadline = [DateTime]::UtcNow.AddMinutes(10); $jmLastVerified = $null; $jmMore = $false
+        if ($jmManifest.paused) {
+            if ($jmArchives.Count -ne 0) { throw 'Catalogue non valide.' }
+            return 'Copies suspendues depuis le site.'
+        }
+        # Validate the entire canonical catalogue before touching any archive.
+        # Processing order must not hide a duplicate or a malformed older row.
+        $jmPrevious = 0L
         foreach ($jmArchive in $jmArchives) {
             Assert-JmArchive $jmArchive
             if ($jmArchive.startedAt -le $jmPrevious -or $jmArchive.startedAt -ne [long]($jmArchive.id.Split('-')[1])) { throw 'Ordre du catalogue non valide.' }
             $jmPrevious = $jmArchive.startedAt
-            if ($jmCount -ge 20 -or [DateTime]::UtcNow -gt $jmDeadline) { $jmMore = $true; break }
-            if (Copy-JmArchive -Directory $Configuration.Folder -Archive $jmArchive -Token $jmToken) { $jmCount++ }
-            $jmLastVerified = $jmArchive
         }
-        if ($null -ne $jmLastVerified) {
-            $jmReceipt = Invoke-JmApi -Action receipt -Token $jmToken -Body @{ captureId = $jmLastVerified.id; bytes = $jmLastVerified.bytes; sha256 = $jmLastVerified.sha256; locationId = $Configuration.LocationId }
-            if ($jmReceipt.recorded -ne $true) { throw 'Le recu de copie n''est pas confirme.' }
+        # Verify and acknowledge the latest archive before older files can
+        # consume the pass. Keep a minute for the bounded receipt request.
+        $jmCount = 0; $jmDeadline = $script:JmCopyDeadline.AddMinutes(-1); $jmMore = $false
+        for ($jmIndex = $jmArchives.Count - 1; $jmIndex -ge 0; $jmIndex--) {
+            if ($jmCount -ge 20 -or (& $Clock) -gt $jmDeadline) { $jmMore = $true; break }
+            $jmArchive = $jmArchives[$jmIndex]
+            if (Copy-JmArchive -Directory $Configuration.Folder -Archive $jmArchive -Token $jmToken) { $jmCount++ }
+            if ($jmIndex -eq $jmArchives.Count - 1) {
+                $jmReceipt = Invoke-JmApi -Action receipt -Token $jmToken -Body @{ captureId = $jmArchive.id; bytes = $jmArchive.bytes; sha256 = $jmArchive.sha256; locationId = $Configuration.LocationId }
+                if ($jmReceipt.recorded -ne $true) { throw 'Le recu de copie n''est pas confirme.' }
+            }
         }
         if ($jmMore) { return 'La suite des copies sera reprise au prochain passage.' }
         return 'Copies chiffrees verifiees. Le dechiffrement reste une verification distincte.'

@@ -16,6 +16,7 @@ async function fixture(t, hangingTransfer = false) {
   const archive = { id: `capture-1792340000000-${"c".repeat(16)}`, startedAt: 1792340000000, bytes: 11, sha256: "d".repeat(64), filename: "fixture.tar.gz.gpg" };
   let stored = emptyCopyState(), transfers = 0;
   const service = createBackupCopyService("/synthetic", { read: async () => structuredClone(stored), save: async value => { stored = validateCopyState({ ...value, revision: value.revision + 1 }); },
+    readCapacity: async () => ({ records: 2, rootEntries: 8 }),
     catalog: { async list() { return { version: 1, schedule: { enabled: true, hourUtc: 5, minuteUtc: 15 }, archives: [archive] }; }, async transfer(_id, consume) { transfers++; const file = await open(filePath); try { return await consume(archive, hangingTransfer ? { createReadStream() { return new Readable({ read() { this.push(Buffer.from("x")); this._read = () => {}; } }); } } : file); } finally { await file.close(); } } } });
   const handler = createBackupCopyHandler(service, { origin, actor });
   const server = createServer(async (request, response) => { if (!await handler(request, response)) { response.writeHead(404); response.end(); } });

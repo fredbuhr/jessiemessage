@@ -1,0 +1,78 @@
+{
+  "format": "jessiemessage-audit-lot2-verification",
+  "version": 1,
+  "release": "0.81.0",
+  "status": "local_checks_passed_native_ci_pending",
+  "baseline": {
+    "source": "1a5611744f73ca25b1f1c55fd0344229fdb71bd7",
+    "runtime": "eb3e93c534bdfe5d426b1be42d6bebb093b548ce",
+    "tree": "60eeeb39bf22f0ac894e46b8d444b18a795a2167"
+  },
+  "liveMeasurement": {
+    "at": "2026-10-20T01:17:14.374869Z",
+    "mediaFiles": 4,
+    "mediaBytes": 380528,
+    "largestMediaFileBytes": 172548,
+    "unsafeEntries": 0,
+    "availableBytes": 246759292928,
+    "configuredOwnerBytes": "1073741824",
+    "configuredTotalBytes": "10737418240",
+    "minimumFreeBytes": "536870912",
+    "operationEntries": 20,
+    "checkpointReceipts": 8,
+    "captures": 4
+  },
+  "inventory": {
+    "at": "2026-10-20T01:18:58.858Z",
+    "complete": true,
+    "healthy": true,
+    "integrity": "structure_only",
+    "counts": {
+      "assets": 2,
+      "activeAssets": 2,
+      "deletedAssets": 0,
+      "journalObjects": 2,
+      "reserved": 0,
+      "cleanupPending": 0,
+      "released": 0,
+      "files": 4,
+      "knownPublished": 4,
+      "unknown": 0,
+      "staging": 0,
+      "missingActive": 0,
+      "missingDeleted": 0,
+      "blockingIssues": 0
+    },
+    "declaredBytes": 380528,
+    "observedEncryptedBytes": 380528,
+    "heldBytes": 380528,
+    "nonReleasedObjects": 2,
+    "nonReleasedStoredBytes": 380528
+  },
+  "preservation": {
+    "keysRegenerated": false,
+    "realMailSent": false,
+    "realAccountDeleted": false,
+    "productionRestored": false,
+    "pcPairingRepeated": false
+  },
+  "limits": {
+    "installedPcUpdated": false,
+    "a08ArchiveExecutorImplemented": false,
+    "nodeProviderPatchPending": true
+  },
+  "local": {
+    "node": "24.19.0",
+    "general": {
+      "tests": 3098,
+      "pass": 2884,
+      "skipped": 214,
+      "fail": 0,
+      "durationMilliseconds": 92415.545515
+    },
+    "syntaxFiles": 567,
+    "windowsPowerShellAvailable": false,
+    "mariadbAvailable": false,
+    "chromeAvailable": false
+  }
+}

@@ -8,6 +8,7 @@ import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 import { createMediaStore, MediaStoreError } from "../server/media/store.mjs";
 import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS } from "../server/media/backup-limits.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), digest = () => randomBytes(32);
@@ -75,6 +76,16 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       links: Number((await connection.query("SELECT COUNT(*) AS value FROM message_media WHERE conversation_id = ?", [fixture.conversationId]))[0].value),
       events: Number((await connection.query("SELECT COUNT(*) AS value FROM chat_events WHERE conversation_id = ?", [fixture.conversationId]))[0].value),
     });
+    async function removeSeed(owner, prefix) {
+      await connection.beginTransaction();
+      try {
+        await connection.query("SELECT id FROM media_storage_state WHERE id = 1 FOR UPDATE");
+        const held = Number((await connection.query("SELECT COALESCE(SUM(stored_bytes), 0) AS value FROM media_storage_objects WHERE owner_id = ? AND LEFT(id, 8) = ? AND state <> 'released' FOR UPDATE", [owner.id, prefix]))[0].value);
+        await connection.query("DELETE FROM media_storage_objects WHERE owner_id = ? AND LEFT(id, 8) = ?", [owner.id, prefix]);
+        await connection.query("UPDATE media_storage_state SET held_bytes = held_bytes - ? WHERE id = 1", [held]);
+        await connection.commit();
+      } catch (error) { await connection.rollback(); throw error; }
+    }
 
     await t.test("read-only schema checks reject dirty history, dimension type drift, lost ownership uniqueness and weaker CHECKs", async () => {
       assert.equal(await media.assertSchema(), true);
@@ -434,6 +445,82 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
           assert.equal(usage.heldBytes, before.heldBytes + bytes); assert.equal(usage.pendingBytes, before.pendingBytes + bytes);
         } finally { await connection.query("UPDATE media_storage_state SET owner_bytes = ?, total_bytes = ? WHERE id = 1", [capacity.ownerBytes, capacity.totalBytes]); }
       }
+    });
+
+    await t.test("the backup byte ceiling serializes the final encrypted allocation while preserving larger persisted quotas", async () => {
+      const fixture = await pair(), other = await pair(), canonical = asset({ fullBytes: 267, thumbnailBytes: 267 });
+      await register(fixture, "client", canonical);
+      const prefix = randomBytes(8), wide = { ...capacity, ownerBytes: 2 * BACKUP_MEDIA_MAX_BYTES, totalBytes: 10 * BACKUP_MEDIA_MAX_BYTES };
+      const before = await capacityStore.status(), bytes = 614, fill = BACKUP_MEDIA_MAX_BYTES - before.heldBytes - bytes;
+      const number = Math.ceil(fill / (10485760 + 81)), each = Math.floor(fill / number), remainder = fill % number;
+      const parameters = [], values = [];
+      for (let index = 0; index < number; index++) {
+        const stored = each + (index < remainder ? 1 : 0), identifier = Buffer.concat([prefix, Buffer.alloc(8)]);
+        identifier.writeBigUInt64BE(BigInt(index), 8);
+        values.push("(?, ?, 'client', ?, ?, ?, 1, ?, 'reserved', ?, ?)");
+        parameters.push(identifier, fixture.client.id, digest(), digest(), stored - 81, stored, sqlDate(now), sqlDate(now));
+      }
+      let seeded = false;
+      try {
+        await connection.beginTransaction();
+        await connection.query("SELECT id FROM media_storage_state WHERE id = 1 FOR UPDATE");
+        await connection.query(`INSERT INTO media_storage_objects (id, owner_id, owner_role, storage_key, content_digest, full_bytes, thumbnail_bytes, stored_bytes, state, created_at, updated_at) VALUES ${values.join(",")}`, parameters);
+        await connection.query("UPDATE media_storage_state SET owner_bytes = ?, total_bytes = ?, held_bytes = held_bytes + ? WHERE id = 1", [wide.ownerBytes, wide.totalBytes, fill]);
+        await connection.commit(); seeded = true;
+        const limited = createMediaStore({ pool, chatStore: chat, capacity: wide });
+        const proposals = [asset({ fullBytes: 267, thumbnailBytes: 267 }), asset({ fullBytes: 267, thumbnailBytes: 267 })];
+        const actors = [fixture, other], results = await Promise.allSettled(proposals.map((value, index) => limited.reserveAsset({ ...actor(actors[index]), asset: value })));
+        assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+        const rejected = results.findIndex((result) => result.status === "rejected"), accepted = 1 - rejected;
+        assert.equal(results[rejected].reason.code, "MEDIA_STORAGE_LIMIT");
+        assert.equal((await connection.query("SELECT id FROM media_storage_objects WHERE id = ?", [proposals[rejected].id])).length, 0);
+        const status = await createMediaCapacityStore({ pool, capacity: wide }).status();
+        assert.equal(status.heldBytes, BACKUP_MEDIA_MAX_BYTES); assert.equal(status.totalBytes, wide.totalBytes);
+        assert.equal((await limited.reserveAsset({ ...actor(actors[accepted]), asset: proposals[accepted] })).duplicate, false, "an existing uncertain allocation remains retryable at the ceiling");
+        assert.equal((await limited.reserveAsset({ ...actor(fixture), asset: { ...canonical, id: id(), storageKey: digest() } })).duplicate, true);
+        assert.deepEqual(await createMediaCapacityStore({ pool, capacity: wide }).status(), status);
+      } finally {
+        try { await connection.rollback(); } catch {}
+        if (seeded) await removeSeed(fixture.client, prefix);
+        await connection.query("UPDATE media_storage_state SET owner_bytes = ?, total_bytes = ? WHERE id = 1", [capacity.ownerBytes, capacity.totalBytes]);
+      }
+    });
+
+    await t.test("the backup object ceiling counts tiny reserved and cleanup objects until acknowledged release", async () => {
+      const fixture = await pair(), other = await pair(), prefix = randomBytes(8);
+      const current = Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released'"))[0].value);
+      const fill = BACKUP_MEDIA_MAX_OBJECTS - current - 1, digits = "(SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9)";
+      assert.ok(fill > 0 && fill < BACKUP_MEDIA_MAX_OBJECTS);
+      let seeded = false;
+      try {
+        await connection.beginTransaction();
+        await connection.query("SELECT id FROM media_storage_state WHERE id = 1 FOR UPDATE");
+        await connection.query(`INSERT INTO media_storage_objects (id, owner_id, owner_role, storage_key, content_digest, full_bytes, thumbnail_bytes, stored_bytes, state, created_at, updated_at)
+          SELECT UNHEX(CONCAT(?, LPAD(HEX(n), 16, '0'))), ?, 'client', UNHEX(SHA2(CONCAT(?, ':storage:', n), 256)), UNHEX(SHA2(CONCAT(?, ':digest:', n), 256)),
+            1, 1, 82, IF(MOD(n, 2) = 0, 'reserved', 'cleanup_pending'), ?, ?
+          FROM (SELECT a.n + 10*b.n + 100*c.n + 1000*d.n + 10000*e.n AS n FROM ${digits} a CROSS JOIN ${digits} b CROSS JOIN ${digits} c CROSS JOIN ${digits} d CROSS JOIN ${digits} e) numbers WHERE n < ?`,
+        [prefix.toString("hex"), fixture.client.id, prefix.toString("hex"), prefix.toString("hex"), sqlDate(now), sqlDate(now), fill]);
+        await connection.query("UPDATE media_storage_state SET held_bytes = held_bytes + ? WHERE id = 1", [fill * 82]);
+        await connection.commit(); seeded = true;
+        const proposals = [asset({ fullBytes: 1, thumbnailBytes: 1 }), asset({ fullBytes: 1, thumbnailBytes: 1 })];
+        const actors = [fixture, other], results = await Promise.allSettled(proposals.map((value, index) => media.reserveAsset({ ...actor(actors[index]), asset: value })));
+        assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+        const rejected = results.findIndex((result) => result.status === "rejected"), accepted = 1 - rejected;
+        assert.equal(results[rejected].reason.code, "MEDIA_STORAGE_LIMIT");
+        assert.equal((await connection.query("SELECT id FROM media_storage_objects WHERE id = ?", [proposals[rejected].id])).length, 0);
+        assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released'"))[0].value), BACKUP_MEDIA_MAX_OBJECTS);
+        const status = await capacityStore.status(); assert.ok(status.heldBytes < BACKUP_MEDIA_MAX_BYTES);
+        assert.equal((await media.reserveAsset({ ...actor(actors[accepted]), asset: proposals[accepted] })).duplicate, false);
+        assert.deepEqual(await capacityStore.status(), status);
+        const cleanupId = Buffer.concat([prefix, Buffer.alloc(8)]); cleanupId.writeBigUInt64BE(1n, 8);
+        const cleanup = (await connection.query("SELECT storage_key FROM media_storage_objects WHERE id = ?", [cleanupId]))[0];
+        await media.releaseStorageObject({ ...actor(fixture), objectId: cleanupId, storageKey: cleanup.storage_key });
+        await media.reserveAsset({ ...actor(other), asset: asset({ fullBytes: 1, thumbnailBytes: 1 }) });
+        const fullAgain = await capacityStore.status();
+        await media.releaseStorageObject({ ...actor(fixture), objectId: cleanupId, storageKey: cleanup.storage_key });
+        assert.deepEqual(await capacityStore.status(), fullAgain, "release replay cannot give back a second slot or byte charge");
+        await assert.rejects(media.reserveAsset({ ...actor(other), asset: asset({ fullBytes: 1, thumbnailBytes: 1 }) }), code("MEDIA_STORAGE_LIMIT"));
+      } finally { try { await connection.rollback(); } catch {} if (seeded) await removeSeed(fixture.client, prefix); }
     });
 
     await t.test("registration and cleanup transitions roll back journal and counters on metadata failure", async () => {

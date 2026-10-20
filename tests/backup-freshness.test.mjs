@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { chmod, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { resolve, join } from "node:path";
-import { evaluateCheckpointFreshness, CHECKPOINT_MAXIMUM_AGE } from "../server/backup/freshness.mjs";
+import { evaluateCheckpointFreshness, validateBackupFreshnessReport, CHECKPOINT_MAXIMUM_AGE } from "../server/backup/freshness.mjs";
 import { appendCheckpointRecord } from "../server/backup/recurring-checkpoint-files.mjs";
 import { main } from "../scripts/check-private-backups.mjs";
 
@@ -22,7 +22,42 @@ function history(records = []) {
 }
 const success = (at = NOW - 5000) => history([begin(at), end(at)]);
 const evaluate = (selected = success(), config = configuration(), now = NOW) => evaluateCheckpointFreshness({ configuration: config, history: selected, now });
-const dependencies = overrides => ({ readConfiguration: async () => configuration(), readHistory: async () => success(), clock: () => NOW, ...overrides });
+const dependencies = overrides => ({ readConfiguration: async () => configuration(), readHistory: async () => success(),
+  readCapacity: async () => ({ records: 2, rootEntries: 8 }), clock: () => NOW, ...overrides });
+
+test("history capacity warns at either 75-percent boundary and preserves every stronger diagnosis", () => {
+  const value = { configuration: configuration(), history: success(), now: NOW };
+  for (const capacity of [{ records: 1499, rootEntries: 3071 }, { records: 1500, rootEntries: 3071 }, { records: 1499, rootEntries: 3072 }]) {
+    const result = evaluateCheckpointFreshness(value, capacity), low = capacity.records >= 1500 || capacity.rootEntries >= 3072;
+    assert.equal(result.code, low ? "HISTORY_CAPACITY_LOW" : "OK"); assert.equal(result.status, low ? "attention" : "current");
+    assert.deepEqual(Object.keys(result), Object.keys(evaluate())); assert.equal(result.lastSuccessAt, value.history.lastSuccessAt);
+    assert.equal(result.copyStatus, "not_checked"); assert.equal(result.decryptionStatus, "not_checked");
+  }
+  const full = { records: 2000, rootEntries: 4096 };
+  for (const [selected, config, expected] of [
+    [success(), { ...configuration(), enabled: false }, "BACKUP_DISABLED"], [history(), configuration(), "NO_SUCCESS"],
+    [history([begin(NOW - 60000), ...success().records]), configuration(), "JOURNAL_INCOMPLETE"],
+    [history([begin(NOW - 5000)]), configuration(), "CAPTURE_RUNNING"], [history([begin(NOW - 600000)]), configuration(), "CAPTURE_STALLED"],
+    [history([begin(NOW - 5000), end(NOW - 5000, "failed")]), configuration(), "LAST_ATTEMPT_FAILED"],
+    [success(NOW - CHECKPOINT_MAXIMUM_AGE - 1000), configuration(), "BACKUP_STALE"],
+  ]) assert.equal(evaluateCheckpointFreshness({ configuration: config, history: selected, now: NOW }, full).code, expected);
+  assert.throws(() => evaluateCheckpointFreshness(value, { records: 2001, rootEntries: 4096 }), { code: "BACKUP_CHECK_INPUT" });
+  assert.throws(() => evaluateCheckpointFreshness(value, { records: 2, rootEntries: 4097 }), { code: "BACKUP_CHECK_INPUT" });
+  const warning = evaluateCheckpointFreshness(value, full);
+  assert.throws(() => validateBackupFreshnessReport({ ...warning, lastAttemptStatus: "running", lastAttemptCode: null }), { code: "BACKUP_CHECK_INPUT" });
+});
+
+test("a full valid legacy history can warn without adding fields to its three-key DTO", () => {
+  const records = Array.from({ length: 750 }, (_, index) => { const at = NOW - (750 - index) * 2000; return [begin(at), end(at)]; }).flat();
+  assert.equal(evaluate(history(records)).code, "HISTORY_CAPACITY_LOW");
+});
+
+test("the shared reader and CLI retain capacity attention and reject unavailable inventory", async () => {
+  const warning = await main(args, dependencies({ readCapacity: async () => ({ records: 2, rootEntries: 3072 }) }));
+  assert.equal(warning.exitCode, 1); assert.equal(warning.report.code, "HISTORY_CAPACITY_LOW");
+  const failed = await main(args, dependencies({ readCapacity: async () => { throw new Error(marker); } }));
+  assert.equal(failed.exitCode, 2); assert.equal(failed.report.code, "BACKUP_CHECK_UNAVAILABLE"); assert.equal(JSON.stringify(failed).includes(marker), false);
+});
 
 test("a fresh completed journal never certifies an independent copy or decryption", () => {
   const report = evaluate();

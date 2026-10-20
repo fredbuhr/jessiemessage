@@ -6,6 +6,7 @@ import path from "node:path";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { inspectMediaInventory } from "../server/media/inventory.mjs";
 import { createMediaInventoryStore } from "../server/media/inventory-store.mjs";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_FILES, BACKUP_MEDIA_MAX_OBJECTS } from "../server/media/backup-limits.mjs";
 
 const base = path.resolve(import.meta.dirname, "../../audit");
 const capacity = { ownerBytes: 128 * 1024 * 1024, totalBytes: 1024 * 1024 * 1024 };
@@ -46,9 +47,22 @@ test("inventory includes unreferenced legacy assets and emits only private struc
   assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.equal(report.canInitialize, true);
   assert.equal(report.integrity, "structure_only"); assert.equal(report.counts.assets, 1); assert.equal(report.counts.knownPublished, 2);
   assert.equal(report.bytes.declared, String(full.length + thumbnail.length + 80)); assert.deepEqual(report.issues, []);
+  assert.deepEqual(report.backupAdmission, { totalBytes: String(BACKUP_MEDIA_MAX_BYTES), maxObjects: BACKUP_MEDIA_MAX_OBJECTS, maxFiles: BACKUP_MEDIA_MAX_FILES });
   assert.deepEqual(f.reads.map(([kind]) => kind), ["assets", "objects", "assets", "objects"]);
   for (const [, options] of f.reads) assert.equal(options.limit, 100);
   for (const secret of [f.root, row.storageKey.toString("hex"), row.ownerId.toString("hex"), full.toString()]) assert.equal(JSON.stringify(report).includes(secret), false);
+});
+
+test("inventory reports the effective backup admission ceiling separately from unchanged persisted quotas", async (t) => {
+  const f = await fixture(t); f.state.totalBytes = 10 * BACKUP_MEDIA_MAX_BYTES;
+  const before = { ...f.state };
+  const report = await inspect(f, { capacity: { ...capacity, totalBytes: f.state.totalBytes } });
+  assert.equal(report.capacity.totalBytes, String(10 * BACKUP_MEDIA_MAX_BYTES));
+  assert.equal(report.backupAdmission.totalBytes, String(BACKUP_MEDIA_MAX_BYTES));
+  f.state.ownerBytes = 1024; f.state.totalBytes = 1024;
+  const smaller = await inspect(f, { capacity: { ownerBytes: f.state.ownerBytes, totalBytes: 1024 } });
+  assert.equal(smaller.backupAdmission.totalBytes, "1024");
+  Object.assign(f.state, before); assert.deepEqual(f.state, before);
 });
 
 test("active missing files block initialization while absent deleted legacy files stay charged and known", async (t) => {

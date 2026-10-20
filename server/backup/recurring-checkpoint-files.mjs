@@ -6,6 +6,8 @@ import { validateRecurringCheckpointReport } from "./recurring-checkpoint.mjs";
 
 const MAX_HISTORY = 2000;
 const MAX_ENTRIES = 4096;
+export const CHECKPOINT_HISTORY_CAPACITY = Object.freeze({ maximumRecords: MAX_HISTORY, maximumEntries: MAX_ENTRIES,
+  warningRecords: 1500, warningEntries: 3072 });
 const MAX_RECORD_BYTES = 4096;
 const RECORD_NAME = /^checkpoint-([0-9]{15})-[a-f0-9]{32}\.json$/;
 const SNAPSHOT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
@@ -19,6 +21,12 @@ export class RecurringCheckpointFilesError extends Error {
   }
 }
 const fail = suffix => { throw new RecurringCheckpointFilesError(`RECURRING_FILES_${suffix}`); };
+export function checkpointHistoryCapacityLow(value) {
+  const capacity = fields(value, ["records", "rootEntries"]);
+  if (!Number.isSafeInteger(capacity.records) || capacity.records < 0 || capacity.records > MAX_HISTORY
+    || !Number.isSafeInteger(capacity.rootEntries) || capacity.rootEntries < capacity.records || capacity.rootEntries > MAX_ENTRIES) fail("INPUT");
+  return capacity.records >= CHECKPOINT_HISTORY_CAPACITY.warningRecords || capacity.rootEntries >= CHECKPOINT_HISTORY_CAPACITY.warningEntries;
+}
 const cancelled = signal => { if (signal?.aborted) fail("ABORTED"); };
 const same = (left, right) => SNAPSHOT_FIELDS.every(field => left[field] === right[field]);
 const identity = (left, right) => left.dev === right.dev && left.ino === right.ino;
@@ -242,7 +250,18 @@ async function historyNames(scope, signal) {
     }
   } finally { await iterator?.close(); }
   await scope.assertReady(); cancelled(signal);
-  return names.sort();
+  return { names: names.sort(), rootEntries: seen };
+}
+
+/** Bounded, read-only headroom observation; capture and closure files stay untouched. */
+export async function readCheckpointHistoryCapacity(directory, selected = {}, internal = {}) {
+  return safe(async () => {
+    const { signal } = options(selected); cancelled(signal);
+    return (internal.withDirectory ?? withPrivateDirectory)(directory, async scope => {
+      const inventory = await historyNames(scope, signal);
+      return Object.freeze({ records: inventory.names.length, rootEntries: inventory.rootEntries });
+    });
+  });
 }
 
 /** Only validated records advance attempt/success dates; no implicit success. */
@@ -250,7 +269,7 @@ export async function readCheckpointHistory(directory, selected = {}, internal =
   return safe(async () => {
     const { signal, limit } = options(selected, true); cancelled(signal);
     return (internal.withDirectory ?? withPrivateDirectory)(directory, async scope => {
-      const names = await historyNames(scope, signal), records = [], states = [];
+      const { names } = await historyNames(scope, signal), records = [], states = [];
       let lastAttemptAt = null, lastSuccessAt = null;
       for (const name of names) {
         const bytes = await readStable(scope, name, MAX_RECORD_BYTES, signal, stats => states.push(stats));
@@ -268,7 +287,7 @@ export async function readCheckpointHistory(directory, selected = {}, internal =
         regular(current, MAX_RECORD_BYTES);
         if (!same(states[index], current)) fail("CHANGED");
       }
-      const after = await historyNames(scope, signal);
+      const { names: after } = await historyNames(scope, signal);
       if (names.length !== after.length || names.some((name, index) => name !== after[index])) fail("CHANGED");
       records.sort((left, right) => left.startedAt - right.startedAt || (left.finishedAt ?? left.startedAt) - (right.finishedAt ?? right.startedAt)
         || Number(left.status !== "running") - Number(right.status !== "running"));

@@ -1,11 +1,12 @@
 import { validateRecurringCheckpointReport } from "./recurring-checkpoint.mjs";
+import { CHECKPOINT_HISTORY_CAPACITY, checkpointHistoryCapacityLow } from "./recurring-checkpoint-files.mjs";
 
 export const CHECKPOINT_MAXIMUM_AGE = 26 * 60 * 60 * 1000;
 const MAXIMUM_CAPTURE_TIME = 10 * 60 * 1000;
 const MAX_DATE = 253402300799999;
 const instant = value => Number.isSafeInteger(value) && value >= 0 && value <= MAX_DATE;
 export const BACKUP_FRESHNESS_CODES = Object.freeze(["OK", "BACKUP_DISABLED", "JOURNAL_INCOMPLETE", "CAPTURE_RUNNING", "CAPTURE_STALLED",
-  "LAST_ATTEMPT_FAILED", "NO_SUCCESS", "BACKUP_STALE"]);
+  "LAST_ATTEMPT_FAILED", "NO_SUCCESS", "BACKUP_STALE", "HISTORY_CAPACITY_LOW"]);
 
 export class BackupFreshnessError extends Error {
   constructor() {
@@ -51,6 +52,7 @@ export function validateBackupFreshnessReport(value) {
       || item.lastAttemptStatus === "none" && item.lastSuccessAt !== null
       || item.code === "OK" && (item.lastAttemptStatus !== "succeeded" || item.ageMilliseconds >= CHECKPOINT_MAXIMUM_AGE)
       || item.code === "BACKUP_STALE" && (item.lastAttemptStatus !== "succeeded" || item.ageMilliseconds < CHECKPOINT_MAXIMUM_AGE)
+      || item.code === "HISTORY_CAPACITY_LOW" && (item.lastAttemptStatus !== "succeeded" || item.ageMilliseconds >= CHECKPOINT_MAXIMUM_AGE)
       || item.code === "NO_SUCCESS" && item.lastAttemptStatus !== "none"
       || item.code === "LAST_ATTEMPT_FAILED" && item.lastAttemptStatus !== "failed"
       || ["CAPTURE_RUNNING", "CAPTURE_STALLED"].includes(item.code) && (item.lastAttemptStatus !== "running"
@@ -61,7 +63,7 @@ export function validateBackupFreshnessReport(value) {
 }
 
 /** Journal freshness only: never infer an independent copy or a decryption. */
-export function evaluateCheckpointFreshness(value) {
+export function evaluateCheckpointFreshness(value, capacity) {
   try {
     const { configuration, history, now } = fields(value, ["configuration", "history", "now"]);
     const config = fields(configuration, ["version", "recipientSha256", "hourUtc", "minuteUtc", "enabled"]);
@@ -70,6 +72,7 @@ export function evaluateCheckpointFreshness(value) {
       || !Number.isInteger(config.hourUtc) || config.hourUtc < 0 || config.hourUtc > 23
       || !Number.isInteger(config.minuteUtc) || config.minuteUtc < 0 || config.minuteUtc > 59) throw new BackupFreshnessError();
     const source = fields(history, ["records", "lastAttemptAt", "lastSuccessAt"]);
+    const capacityLow = capacity === undefined ? false : checkpointHistoryCapacityLow(capacity);
     const attempts = new Map();
     let lastAttemptAt = null, lastSuccessAt = null;
     for (const report of records(source.records)) {
@@ -94,6 +97,7 @@ export function evaluateCheckpointFreshness(value) {
     else if (lastAttemptStatus === "failed") code = "LAST_ATTEMPT_FAILED";
     else if (lastSuccessAt === null) code = "NO_SUCCESS";
     else if (ageMilliseconds >= CHECKPOINT_MAXIMUM_AGE) code = "BACKUP_STALE";
+    else if (source.records.length >= CHECKPOINT_HISTORY_CAPACITY.warningRecords || capacityLow) code = "HISTORY_CAPACITY_LOW";
     return validateBackupFreshnessReport({ version: 1, type: "private_backup_freshness", scope: "capture-journal",
       status: code === "OK" ? "current" : "attention", code, checkedAt: now,
       maximumAgeMilliseconds: CHECKPOINT_MAXIMUM_AGE, lastAttemptAt, lastSuccessAt, ageMilliseconds,
