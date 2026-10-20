@@ -6,7 +6,7 @@ Les livraisons 1.0.0, 1.1.0 et 1.2.0 sont closes ; leurs bilans et preuves sont 
 
 ## Demande prioritaire du 21 octobre — cible 1.3.0
 
-[Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : compléter le catalogue Unicode, ajouter des doubles sens et proposer cinq carnations pour les gestes et personnages compatibles. Le choix s’insère au curseur sans envoi automatique ; recherche FR/EN, clavier, petit écran et limites de brouillon doivent être qualifiés. Développement et qualification en cours ; fusion, publication et activation non encore constatées. La production reste en 1.2.0. La redistribution d’une bibliothèque Flirtmoji n’est pas incluse sans droits spécifiques ; le partage individuel prévu par leur FAQ reste distinct.
+[Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : compléter le catalogue Unicode, ajouter des doubles sens et proposer cinq carnations pour les gestes et personnages compatibles. Le choix s’insère au curseur sans envoi automatique ; recherche FR/EN, clavier, petit écran et limites de brouillon doivent être qualifiés. Code fusionné par la PR 113 et publié en v1.3.0 ; CI du commit exact 5/5 réussie. Préparation Infomaniak, activation, relevé d’identité et suivi opérateur restent à confirmer dans REPRISE. La production reste en 1.2.0. La redistribution d’une bibliothèque Flirtmoji n’est pas incluse sans droits spécifiques ; le partage individuel prévu par leur FAQ reste distinct.
 
 ## Évolutions de messagerie demandées le 20 octobre
 

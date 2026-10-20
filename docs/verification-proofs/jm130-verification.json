@@ -1,0 +1,117 @@
+{
+  "version": "1.3.0",
+  "status": "published_awaiting_hosting_preparation",
+  "source": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+  "tree": "37b3b2e9358972c95581fc0bcf16896e4074d5f9",
+  "tag": "v1.3.0",
+  "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0",
+  "publishedAt": "2026-10-20T23:36:15Z",
+  "pullRequest": 113,
+  "catalogue": {
+    "choices": 268,
+    "added": 88,
+    "doubleMeanings": 42,
+    "people": 21,
+    "skinTones": 5,
+    "toneCompatibleChoices": 61,
+    "priorIdsPreserved": 180
+  },
+  "local": {
+    "node": "v24.19.0",
+    "targetedTests": {
+      "passed": 105,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syntaxSources": 583,
+    "build": "passed_second_attempt",
+    "initialSyntaxAttempt": {
+      "result": "failed",
+      "file": "public/help.js",
+      "fileChanged": false,
+      "cause": "not_established",
+      "isolatedCheck": "passed"
+    },
+    "chrome": "unavailable_locally",
+    "independentReview": "static_no_blocking_findings"
+  },
+  "ci": {
+    "pullRequest": {
+      "run": 39514681589,
+      "source": "5f07cf3bb3b675a8467d253fb32b36325bd60ec3",
+      "jobsPassed": 5
+    },
+    "main": {
+      "run": 39515366616,
+      "source": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+      "jobsPassed": 5
+    },
+    "counts": {
+      "general": {
+        "passed": 3181,
+        "failed": 0,
+        "skipped": 36
+      },
+      "chrome": {
+        "passed": 169,
+        "failed": 0,
+        "skipped": 0
+      },
+      "httpsMariaDB": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariaDB10_11": {
+        "passed": 479,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariaDB11_4": {
+        "passed": 479,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "syntaxSources": 583,
+    "node": "v24.22.0"
+  },
+  "publication": {
+    "run": 39516082828,
+    "workflowCommit": "6df9b0b6b02d9dba3fe3042ebce08615e477fe48",
+    "verifiedTagTarget": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+    "verified": true
+  },
+  "hosting": {
+    "activeVersion": "1.2.0",
+    "activeSource": "763b632185ce13eb875110c9107687b2d278ff67",
+    "preparationExecuted": false,
+    "precheckPassed": false,
+    "activationConfirmed": false,
+    "metadataRecorded": false,
+    "schemaMigrations": 31,
+    "requiresMigration": false,
+    "dependenciesChanged": false,
+    "plannedRollback": "1.2.0",
+    "earlierSchema31Fallback": "1.1.1"
+  },
+  "preparation": {
+    "commit": "3e327d29c653b8e82eeb393046ba6271790f0c35",
+    "file": "ops/prepare-release130.sh",
+    "sha256": "b38ad31c4838415632774877d9cd0529522cb5b617c70a970375379bc781af3b",
+    "syntheticTestsPassed": 15,
+    "fullHostedExecution": false,
+    "noRestart": true,
+    "noMigration": true,
+    "noManagerChange": true,
+    "noCheckpointChange": true
+  },
+  "flirtmoji": {
+    "commercialUseAssumed": false,
+    "catalogueEmbedded": false,
+    "manualPersonalSharingDocumented": true,
+    "catalogueRedistributionPermission": "not_established_from_public_terms",
+    "terms": "https://flirtmoji.co/pages/terms-of-service/",
+    "faq": "https://flirtmoji.co/pages/faq/"
+  }
+}
