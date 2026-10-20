@@ -221,8 +221,21 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       assert.equal(senderView.body.conversation.peerReadSequence, "2");
       assert.equal(senderView.body.conversation.lastReadSequence, "0");
       assert.equal(senderView.body.conversation.unreadCount, 1);
+      const clientPaths = ["/api/chat/client/conversation", pathFor("client"), pathFor("client", "events?after=2")];
+      const beforeAdminRead = [];
+      for (const path of clientPaths) beforeAdminRead.push((await request(path, { headers: headersFor(a) })).body);
       assert.equal((await request(pathFor("admin", "read"), { method: "POST", headers: headersFor(admin), body: { throughSequence: "1" } })).status, 200);
-      assert.equal((await request(pathFor("admin"), { headers: headersFor(admin) })).body.conversation.unreadCount, 0);
+      const adminRead = (await request(pathFor("admin"), { headers: headersFor(admin) })).body.conversation;
+      assert.equal(adminRead.unreadCount, 0);
+      assert.equal(adminRead.lastReadSequence, "1", "administrator read state remains available to its other devices");
+      for (const [index, path] of clientPaths.entries()) {
+        const response = await request(path, { headers: headersFor(a) });
+        assert.equal(response.status, 200);
+        assert.deepEqual(response.body, beforeAdminRead[index], "an administrator read changes no client-visible cursor, timestamp, receipt or event");
+        const conversation = response.body.conversation ?? response.body;
+        assert.equal(conversation.peerReadSequence, "0");
+        assert.equal(conversation.lastReadSequence, "2");
+      }
     });
 
     await t.test("client archive decrypts only its own conversation and leaves read acknowledgements unchanged", async () => {

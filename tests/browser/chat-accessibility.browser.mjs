@@ -40,9 +40,9 @@ function message(sequence, role) {
 }
 function conversation(role) {
   return { id: conversationId, client: role === "admin" ? { id: id(2), pseudonym: peerName } : null,
-    peerName: role === "admin" ? peerName : "Jessie", createdAt: fixture.now, closedAt: null,
+    peerName: fixture.peerName ?? (role === "admin" ? peerName : "Jessie"), createdAt: fixture.now, closedAt: null,
     lastActivityAt: fixture.now + fixture.latest * 1000, latestSequence: String(fixture.latest),
-    latestEventSequence: String(fixture.latest), lastReadSequence: fixture.read[role], peerReadSequence: "0", unreadCount: 0, canSend: true };
+    latestEventSequence: String(fixture.latest), lastReadSequence: fixture.read[role], peerReadSequence: fixture.peerReadSequence ?? "0", unreadCount: 0, canSend: true };
 }
 function receiveTwoMessages() {
   for (let count = 0; count < 2; count += 1) { fixture.latest += 1; fixture.events.push(fixture.latest); }
@@ -223,6 +223,33 @@ after(async () => {
   try { await driver?.close(); }
   finally { if (server) { server.closeAllConnections(); await new Promise((resolveClosed) => server.close(resolveClosed)); } }
 }, { timeout: 35000 });
+
+test("Chrome: only Jessie sees a read receipt after a metadata-only poll, with stable focus and French / English labels", { timeout: 45000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); const page = await browser(390);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await loadedPhoto(page);
+      await tabUntil(page, '#messages [data-sequence="2"] .delete-message');
+      await page.execute(`window.__receiptProbe = { article: document.querySelector('#messages [data-sequence="2"]'),
+        remove: document.activeElement, receipt: document.querySelector('#messages [data-sequence="2"] .message-meta span') };`);
+      assert.equal(await page.execute("return window.__receiptProbe.receipt.textContent"), "Envoyé");
+      // Deliberately supply a nonzero value to both roles to verify that even
+      // an old response cannot reveal Jessie's read state in the client UI.
+      fixture.peerReadSequence = "2"; fixture.peerName = "Updated receipt fixture"; const requests = fixture.eventRequests;
+      await waitUntil(() => fixture.eventRequests > requests, "metadata-only scheduled poll", 10000);
+      await waitUntil(() => page.execute("return document.getElementById('peer-name').textContent === 'Updated receipt fixture'"), "metadata-only snapshot adopted");
+      await waitUntil(() => page.execute("return window.__receiptProbe.receipt.textContent === arguments[0]", role === "admin" ? "Lu" : "Envoyé"), "role-specific receipt label");
+      assert.equal(await page.execute(`const p = window.__receiptProbe; return document.querySelector('#messages [data-sequence="2"]') === p.article
+        && document.activeElement === p.remove && p.article.querySelector('.message-meta span') === p.receipt`), true);
+      await page.click("[data-jm-language]");
+      assert.equal(await page.execute("return window.__receiptProbe.receipt.textContent"), role === "admin" ? "Read" : "Sent");
+      assert.equal(await page.execute("return document.querySelector('#messages [data-sequence=\"2\"]') === window.__receiptProbe.article"), true);
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
 
 test("Chrome desktop and 320px: actual Tab / Enter contact selection and return, French / English", { timeout: 60000 }, async () => {
   for (const width of [1280, 320]) {

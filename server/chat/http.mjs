@@ -57,7 +57,7 @@ function safeConversation(value, role, expectedId = null) {
   return {
     id: value.id, client, peerName: value.peerName, createdAt: value.createdAt, closedAt: value.closedAt,
     lastActivityAt: value.lastActivityAt, latestSequence: value.latestSequence, latestEventSequence: value.latestEventSequence,
-    lastReadSequence: value.lastReadSequence, peerReadSequence: value.peerReadSequence, unreadCount: value.unreadCount, canSend: value.canSend,
+    lastReadSequence: value.lastReadSequence, peerReadSequence: role === "admin" ? value.peerReadSequence : "0", unreadCount: value.unreadCount, canSend: value.canSend,
   };
 }
 

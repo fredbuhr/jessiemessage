@@ -267,7 +267,7 @@ export function createChatStore(pool, { clock, enqueueNotification } = {}) {
     return { id: conversation.id, clientId: client.id, clientPseudonym: client.pseudonym, peerPseudonym: peer.pseudonym,
       createdAt: timestamp(conversation.created_at), closedAt: dateOrNull(conversation.closed_at), lastActivityAt: dateOrNull(row.lastActivityAt),
       latestSequence: storedSequence(row.latestSequence), latestEventSequence: storedSequence(row.latestEventSequence),
-      lastReadSequence: storedSequence(row.lastReadSequence), peerReadSequence: storedSequence(row.peerReadSequence), unreadCount,
+      lastReadSequence: storedSequence(row.lastReadSequence), peerReadSequence: actor.role === "admin" ? storedSequence(row.peerReadSequence) : "0", unreadCount,
       canSend: conversation.closed_at === null && activeClient(client, now) };
   }
   async function nextEvent(connection, conversationId) {

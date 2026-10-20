@@ -59,7 +59,7 @@ test("data reader uses a single read-only snapshot, whitelists account data and 
     assert.ok(Object.isFrozen(reader)); assert.ok(Object.isFrozen(reader.account));
     assert.equal(reader.account.status, "revoked"); assert.equal(reader.account.role, "client");
     assert.deepEqual(reader.account.id, target);
-    assert.equal(reader.conversation.lastReadSequence, "1"); assert.equal(reader.conversation.peerReadSequence, "2");
+    assert.equal(reader.conversation.lastReadSequence, "1"); assert.equal(reader.conversation.peerReadSequence, "0");
     assert.deepEqual(reader.preference, { enabled: false, updatedAt: null });
     assert.doesNotMatch(JSON.stringify(reader.account), /password_hash|credential_version|encrypted/);
     return "finished";
@@ -68,9 +68,20 @@ test("data reader uses a single read-only snapshot, whitelists account data and 
   assert.deepEqual(f.counts(), { acquisitions: 1, commits: 1, rollbacks: 0, releases: 1 });
   assert.equal(f.calls[0].sql, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
   assert.equal(f.calls[1].sql, "START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT");
+  assert.doesNotMatch(f.calls.find(({ sql }) => /FROM conversations c/.test(sql)).sql, /peer_read_sequence|chat_receipts other/);
   const before = f.calls.length;
   await assert.rejects(held.messages(), unavailable); await assert.rejects(held.inventory(), unavailable); await assert.rejects(held.ownMedia(), unavailable);
   assert.equal(f.calls.length, before);
+});
+test("client data reader does not change when Jessie’s private read cursor advances", async () => {
+  const row = conversation(), f = fixture({ conversations: [row] });
+  const read = () => withClientData({ pool: f.pool, clientId: target, now }, (reader) => reader.conversation);
+  row.peer_read_sequence = "0";
+  const before = await read();
+  row.peer_read_sequence = "18446744073709551615";
+  assert.deepEqual(await read(), before);
+  assert.equal(before.lastReadSequence, "1");
+  assert.equal(before.peerReadSequence, "0");
 });
 test("data inventory uses capped scoped metadata queries and never reads administrator/global material", async () => {
   const f = fixture({ inventory: (sql) => /FROM sessions /.test(sql) ? Array.from({ length: 10001 }, () => ({ present: 1 })) : [{ present: 1 }] });

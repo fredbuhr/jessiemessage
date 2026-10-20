@@ -140,6 +140,27 @@ test("chat capability and conversation responses authenticate roles and whitelis
   assert.deepEqual(calls.find(([name]) => name === "list"), ["list", tokens.admin, { afterId: null, limit: 50 }]);
 });
 
+test("HTTP conversation, history and events redact administrator receipts even from an alternate service", async (t) => {
+  const leakingConversation = role => ({ ...conversation(role), lastReadSequence: "1", peerReadSequence: "1" });
+  const { base } = await fixture(t, {
+    clientConversation: async () => leakingConversation("client"),
+    listConversations: async () => ({ conversations: [leakingConversation("admin")], hasMore: false, nextCursor: null }),
+    messages: async role => ({ conversation: leakingConversation(role), messages: [message()], hasMoreBefore: false, hasMoreAfter: false, nextBefore: "1", nextAfter: "1", eventCursor: "1" }),
+    events: async role => ({ conversation: leakingConversation(role), events: [], nextCursor: "0", hasMore: false }),
+  });
+  for (const role of ["client", "admin"]) {
+    const endpoints = [role === "client" ? "/api/chat/client/conversation" : "/api/chat/admin/conversations", path(role), path(role, "events")];
+    for (const endpoint of endpoints) {
+      const response = await fetch(`${base}${endpoint}`, { headers: { Cookie: cookie(role) } });
+      assert.equal(response.status, 200); headersArePrivate(response);
+      const body = await response.json();
+      const value = body.conversations?.[0] ?? body.conversation ?? body;
+      assert.equal(value.peerReadSequence, role === "admin" ? "1" : "0");
+      assert.equal(value.lastReadSequence, "1");
+    }
+  }
+});
+
 test("role cookies are distinct, canonical, unique and never fall back to the other role", async (t) => {
   const { base, calls } = await fixture(t);
   for (const role of ["admin", "client"]) {

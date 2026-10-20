@@ -60,7 +60,9 @@ export async function createChatService({ store, authStore, authService, accessS
     return { id: row.id.toString("hex"), client: role === "admin" ? { id: row.clientId.toString("hex"), pseudonym: row.clientPseudonym } : null,
       peerName: row.peerPseudonym, createdAt: row.createdAt, closedAt: row.closedAt, lastActivityAt: row.lastActivityAt ?? row.createdAt,
       latestSequence: row.latestSequence, latestEventSequence: row.latestEventSequence, lastReadSequence: row.lastReadSequence,
-      peerReadSequence: row.peerReadSequence, unreadCount: row.unreadCount, canSend: row.canSend };
+      // Keep the wire shape stable for existing clients, without publishing
+      // the administrator's private read position on any client read path.
+      peerReadSequence: role === "admin" ? row.peerReadSequence : "0", unreadCount: row.unreadCount, canSend: row.canSend };
   }
   function messageDTO(row, session) {
     const mine = row.senderId.equals(idBytes(session.user.id));

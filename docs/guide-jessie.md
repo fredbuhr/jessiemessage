@@ -17,7 +17,7 @@ Dans [État du service](https://jessiemessage.com/admin/readiness), consulte les
 ## Échanger et partager une photo
 
 - Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne la conversation et vérifie le nom avant d’envoyer.
-- Écris ton texte, puis choisis **Envoyer**. **Envoyé** confirme l’enregistrement ; **Lu** indique la lecture par l’autre personne.
+- Écris ton texte, puis choisis **Envoyer**. **Envoyé** confirme l’enregistrement ; dans ton administration, **Lu** indique que le client a affiché le message dans sa conversation visible. Cela ne certifie pas une lecture attentive. À partir de **1.1.0**, le client voit seulement **Envoyé** sur ses propres messages, sans indication de ta lecture. La [version réellement active](REPRISE.md) détermine la disponibilité de cette évolution ; les accusés restent symétriques en 1.0.0.
 - Si la confirmation manque, utilise **Réessayer cet envoi** : ce bouton reprend le même message.
 - Avec **Ajouter une photo**, choisis l’image et vérifie l’aperçu et la légende avant **Envoyer**. **Retirer la photo** annule la sélection.
 - **Mes photos** ouvre ta bibliothèque ; **Photos**, en haut de la conversation, retrouve les images partagées dans cet échange.
@@ -51,7 +51,7 @@ Une alerte n’affiche ni nom, ni texte, ni photo du message. La désactivation 
 
 Dans **Fiche → Télécharger la conversation**, choisis d’inclure ou non les photos partagées, puis **Télécharger le ZIP**. Extrais-le et ouvre `Conversation.html` pour lire hors ligne ; `conversation.json` contient la version portable.
 
-L’export exclut les notes et surnoms privés, tags, groupes et photos non partagées. Il n’enregistre pas le brouillon de fiche. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
+L’export exclut les notes et surnoms privés, tags, groupes et photos non partagées. Il n’enregistre pas le brouillon de fiche. À partir de 1.1.0, l’export personnel du client ne contient pas non plus ton point de lecture ; les ZIP de conversation ne contiennent déjà aucun reçu de lecture. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
 
 ## Copies sur le PC
 
