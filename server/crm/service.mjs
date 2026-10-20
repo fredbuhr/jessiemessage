@@ -1,5 +1,6 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
+import { peerAvatarDTO } from "../chat/profile-avatar.mjs";
 import { canonicalEmail } from "../auth/config.mjs";
 import { openNotes, sealNotes } from "./crypto.mjs";
 import { validateId, validateLabelIds, validateLabelName, validateNickname, validateNotes, validateReminder, validateSearch, validateVersion } from "./validation.mjs";
@@ -48,6 +49,7 @@ function labelsDTO(rows, maximum) {
   const labels = rows.map(labelDTO); if (new Set(labels.map((item) => item.id)).size !== labels.length) fail("CRM_UNAVAILABLE"); return labels;
 }
 function contactDTO(row) {
+  const avatar = peerAvatarDTO(row.peerAvatarVersion, "admin", storedId(row.id));
   const access = accessDTO(row.access), version = storedVersion(row.version);
   if (stored(() => validateNickname(row.nickname)) !== row.nickname || typeof row.canSend !== "boolean"
     || !Number.isSafeInteger(row.unreadCount) || row.unreadCount < 0 || row.canSend && access.state !== "active") fail("CRM_UNAVAILABLE");
@@ -56,6 +58,7 @@ function contactDTO(row) {
   if (lastActivityAt < createdAt || closedAt !== null && (closedAt < createdAt || row.canSend)
     || BigInt(lastReadSequence) > BigInt(latestSequence) || BigInt(peerReadSequence) > BigInt(latestSequence)) fail("CRM_UNAVAILABLE");
   return { id: storedId(row.id), client: { id: storedId(row.clientId), pseudonym: storedText(row.clientPseudonym) }, peerName: storedText(row.peerPseudonym),
+    ...(avatar ? { peerAvatar: avatar } : {}),
     createdAt, closedAt, lastActivityAt, latestSequence, latestEventSequence: storedSequence(row.latestEventSequence), lastReadSequence, peerReadSequence,
     unreadCount: row.unreadCount, canSend: row.canSend,
     crm: { nickname: row.nickname, labels: labelsDTO(row.labels, 32), reminderAt: nullableDate(row.reminderAt), version }, access };

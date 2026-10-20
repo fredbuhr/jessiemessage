@@ -463,3 +463,15 @@ test("export limits and shutdown return fixed errors and cancel the pending read
   const pending = post(f.base, `${profilePath}/export`, { includePhotos: true }); await ready; f.handler.close(); assert.equal(signal.aborted, true); release();
   assert.equal((await pending).status, 503);
 });
+
+
+test("CRM contact avatars use the same bounded conversation URL as chat", async t => {
+  const { base, service } = await fixture(t);
+  const avatar = { version: "5", url: `/api/profile/admin/conversations/${conversationId}/avatar?v=5` };
+  service.contacts = async () => ({ contacts: [contact({ peerAvatar: { ...avatar, storageKey: "private-avatar-key" } })], nextCursor: null, hasMore: false });
+  const response = await get(base, `${root}/contacts`); assert.equal(response.status, 200); privateHeaders(response);
+  const body = await response.json(); assert.deepEqual(body.contacts[0].peerAvatar, avatar);
+  assert.doesNotMatch(JSON.stringify(body), /private-avatar-key|storageKey/);
+  service.contacts = async () => ({ contacts: [contact({ peerAvatar: { ...avatar, url: `/api/profile/client/conversations/${conversationId}/avatar?v=5` } })], nextCursor: null, hasMore: false });
+  assert.equal((await get(base, `${root}/contacts`)).status, 503);
+});

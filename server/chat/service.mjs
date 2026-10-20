@@ -2,6 +2,7 @@ import { createHmac, randomBytes } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
 import { decryptMessageBody, encryptMessageBody, messageFingerprint, validateMessageBody } from "./crypto.mjs";
 import { mediaDTO } from "../media/dto.mjs";
+import { peerAvatarDTO } from "./profile-avatar.mjs";
 
 export class ChatError extends Error {
   constructor(code, retryAfter) {
@@ -57,7 +58,9 @@ export async function createChatService({ store, authStore, authService, accessS
     return { session, request: { role, tokenHash: tokenDigest(token), conversationId: conversation, now: nowValue() } };
   }
   function conversationDTO(row, role) {
+    const avatar = peerAvatarDTO(row.peerAvatarVersion, role, row.id.toString("hex"));
     return { id: row.id.toString("hex"), client: role === "admin" ? { id: row.clientId.toString("hex"), pseudonym: row.clientPseudonym } : null,
+      ...(avatar ? { peerAvatar: avatar } : {}),
       peerName: row.peerPseudonym, createdAt: row.createdAt, closedAt: row.closedAt, lastActivityAt: row.lastActivityAt ?? row.createdAt,
       latestSequence: row.latestSequence, latestEventSequence: row.latestEventSequence, lastReadSequence: row.lastReadSequence,
       // Keep the wire shape stable for existing clients, without publishing

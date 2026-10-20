@@ -4,6 +4,7 @@ import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJ
 import { validateId, validateLabelIds, validateLabelName, validateNickname, validateNotes, validateReminder, validateSearch, validateVersion } from "./validation.mjs";
 import { createArchiveTransfer, conversationExportFailure } from "../chat/archive-transfer.mjs";
 import { ConversationExportError } from "../chat/conversation-export.mjs";
+import { safePeerAvatar } from "../chat/profile-avatar.mjs";
 
 const publicRoot = new URL("../../public/", import.meta.url);
 const COOKIE = "__Host-jessie_session";
@@ -124,7 +125,10 @@ function safeContact(value) {
   const labels = safeLabels(value.crm.labels, 32);
   if (value.canSend && access.state !== "active" || value.crm.version === "0"
     && (value.crm.nickname !== "" || value.crm.reminderAt !== null || labels.length !== 0)) throw unavailable();
+  let avatar;
+  try { avatar = safePeerAvatar(value.peerAvatar, "admin", value.id); } catch { throw unavailable(); }
   return { id: value.id, client: { id: value.client.id, pseudonym: value.client.pseudonym }, peerName: value.peerName,
+    ...(avatar ? { peerAvatar: avatar } : {}),
     createdAt: value.createdAt, closedAt: value.closedAt, lastActivityAt: value.lastActivityAt,
     latestSequence: value.latestSequence, latestEventSequence: value.latestEventSequence,
     lastReadSequence: value.lastReadSequence, peerReadSequence: value.peerReadSequence,

@@ -7,6 +7,7 @@ import { createdMigrationTables, applyMigrations, loadMigrations } from "../serv
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 import { createMediaStore, MediaStoreError } from "../server/media/store.mjs";
+import { createProfileStore } from "../server/profile/store.mjs";
 import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
 import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS } from "../server/media/backup-limits.mjs";
 
@@ -38,6 +39,7 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
     pool = await createRuntimePool(process.env);
     const capacity = { ownerBytes: 20000000, totalBytes: 80000000, rootFingerprint: digest() };
     const chat = createChatStore(pool), media = createMediaStore({ pool, chatStore: chat, capacity });
+    const profiles = createProfileStore({ pool, chatStore: chat });
     const capacityStore = createMediaCapacityStore({ pool, capacity });
     async function user(role) {
       const result = { id: id(), sessionId: id(), tokenHash: digest(), role, pseudonym: `Synthetic ${role} ${fixtureNumber++}` };
@@ -286,28 +288,35 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM message_media WHERE media_id = ?", [image.id]))[0].value), 2, "historical linkage survives tombstones");
     });
 
-    await t.test("a retained profile avatar blocks deletion until cleared; cleanup refunds its quota once", async () => {
+    await t.test("an active avatar blocks media deletion until its owner clears the profile; cleanup refunds the quota once", async () => {
       for (const role of ["client", "admin"]) {
         const fixture = await pair(), value = asset({ width: 256, height: 256, thumbnailWidth: 256, thumbnailHeight: 256 });
-        const before = await capacityStore.status();
+        const before = await capacityStore.status(), bytes = value.fullBytes + value.thumbnailBytes + 80;
         await register(fixture, role, value);
-        await connection.query(`INSERT INTO user_profiles (user_id, avatar_media_id, version, created_at, updated_at)
-          VALUES (?, ?, 1, ?, ?)`, [fixture[role].id, value.id, sqlDate(now), sqlDate(now)]);
-        const charged = await capacityStore.status(), bytes = value.fullBytes + value.thumbnailBytes + 80;
-        assert.equal(charged.heldBytes, before.heldBytes + bytes);
+        await profiles.saveProfile({ ...actor(fixture, role), expectedVersion: "0", pseudonym: fixture[role].pseudonym, avatarId: value.id });
         await assert.rejects(remove(fixture, role, value.id), code("MEDIA_IN_USE"));
-        assert.deepEqual(await capacityStore.status(), charged);
-        assert.equal((await media.getOwnedAsset({ ...actor(fixture, role), assetId: value.id })).deletedAt, null);
-        assert.ok((await connection.query("SELECT avatar_media_id FROM user_profiles WHERE user_id = ?", [fixture[role].id]))[0].avatar_media_id.equals(value.id));
-        // Synthetic compatibility fixture only: no profile API exists in 1.1.1.
-        await connection.query("UPDATE user_profiles SET avatar_media_id = NULL, version = 2 WHERE user_id = ?", [fixture[role].id]);
+        assert.equal((await connection.query("SELECT deleted_at FROM media_assets WHERE id = ?", [value.id]))[0].deleted_at, null);
+        assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes);
+        await profiles.saveProfile({ ...actor(fixture, role), expectedVersion: "1", pseudonym: fixture[role].pseudonym, avatarId: null });
         await remove(fixture, role, value.id);
-        const pending = await capacityStore.status();
-        assert.equal(pending.heldBytes, charged.heldBytes); assert.equal(pending.pendingBytes, charged.pendingBytes + bytes);
-        for (let attempt = 0; attempt < 2; attempt++)
-          await media.releaseStorageObject({ ...actor(fixture, role), objectId: value.id, storageKey: value.storageKey });
-        assert.deepEqual(await capacityStore.status(), before);
+        assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes, "soft deletion alone does not refund encrypted files");
+        await media.releaseStorageObject({ ...actor(fixture, role), objectId: value.id, storageKey: value.storageKey });
+        await media.releaseStorageObject({ ...actor(fixture, role), objectId: value.id, storageKey: value.storageKey });
+        assert.equal((await capacityStore.status()).heldBytes, before.heldBytes);
       }
+    });
+
+    await t.test("clearing an avatar does not make a photo still shared in a conversation deletable", async () => {
+      const fixture = await pair(), value = asset({ width: 256, height: 256, thumbnailWidth: 256, thumbnailHeight: 256 });
+      await register(fixture, "client", value);
+      await profiles.saveProfile({ ...actor(fixture), expectedVersion: "0", pseudonym: fixture.client.pseudonym, avatarId: value.id });
+      const sent = await send(fixture, "client", value.id);
+      await profiles.saveProfile({ ...actor(fixture), expectedVersion: "1", pseudonym: fixture.client.pseudonym, avatarId: null });
+      await assert.rejects(remove(fixture, "client", value.id), code("MEDIA_IN_USE"));
+      assert.ok((await delivered(fixture, "admin", sent.message.id)).id.equals(value.id));
+      await chat.deleteMessage({ ...request(fixture), messageId: sent.message.id });
+      await remove(fixture, "client", value.id);
+      await media.releaseStorageObject({ ...actor(fixture), objectId: value.id, storageKey: value.storageKey });
     });
 
     await t.test("removal releases owner deduplication without making a deleted asset reusable", async () => {

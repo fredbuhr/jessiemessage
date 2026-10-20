@@ -22,7 +22,14 @@ let server, driver, baseUrl;
 let fixture;
 
 function resetFixture() {
-  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, eventHolds: [], read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false, sent: [], messageRequests: [] };
+  fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, eventHolds: [], read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false, sent: [], messageRequests: [],
+    profileEnabled: false, profileAvatarsEnabled: true, profileRequests: [], avatarRequests: [], avatarUploads: [], profiles: {
+      client: { pseudonym: peerName, version: "1", avatarId: null }, admin: { pseudonym: "Jessie", version: "1", avatarId: null },
+    } };
+}
+function profile(role) {
+  const saved = fixture.profiles[role];
+  return { ...saved, avatarUrl: saved.avatarId === null ? null : `/api/profile/${role}/avatar?v=${saved.version}` };
 }
 function media(role) {
   const prefix = `/api/media/${role}/conversations/${conversationId}/messages/${photoMessageId}`;
@@ -39,10 +46,13 @@ function message(sequence, role) {
     ...(number === 3 ? { media: media(role) } : {}) };
 }
 function conversation(role) {
+  const peer = fixture.profiles[role === "client" ? "admin" : "client"];
   return { id: conversationId, client: role === "admin" ? { id: id(2), pseudonym: peerName } : null,
-    peerName: fixture.peerName ?? (role === "admin" ? peerName : "Jessie"), createdAt: fixture.now, closedAt: null,
+    peerName: fixture.peerName ?? peer.pseudonym, createdAt: fixture.now, closedAt: null,
     lastActivityAt: fixture.now + fixture.latest * 1000, latestSequence: String(fixture.latest),
-    latestEventSequence: String(fixture.latest), lastReadSequence: fixture.read[role], peerReadSequence: fixture.peerReadSequence ?? "0", unreadCount: 0, canSend: true };
+    latestEventSequence: String(fixture.latest), lastReadSequence: fixture.read[role], peerReadSequence: fixture.peerReadSequence ?? "0", unreadCount: 0, canSend: true,
+    ...(fixture.profileEnabled && fixture.profileAvatarsEnabled && peer.avatarId !== null
+      ? { peerAvatar: { version: peer.version, url: `/api/profile/${role}/conversations/${conversationId}/avatar?v=${peer.version}` } } : {}) };
 }
 function receiveTwoMessages() {
   for (let count = 0; count < 2; count += 1) { fixture.latest += 1; fixture.events.push(fixture.latest); }
@@ -50,12 +60,15 @@ function receiveTwoMessages() {
 
 const bootstrap = `"use strict";
 window.__browserErrors = [];
+window.__revokedBlobUrls = [];
+const nativeRevokeObjectURL = URL.revokeObjectURL.bind(URL);
+URL.revokeObjectURL = function (url) { window.__revokedBlobUrls.push(String(url)); return nativeRevokeObjectURL(url); };
 window.addEventListener("error", event => { window.__browserErrors.push(String(event.message).slice(0, 500)); });
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
 const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
-  "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
+  "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
 const contentTypes = { ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
@@ -123,6 +136,40 @@ async function startFixtureServer() {
         // creates a push subscription or sends a notification.
         sendJson(200, { enabled: true, vapidPublicKey: Buffer.from([4, ...Array(64).fill(1)]).toString("base64url") }); return;
       }
+      const ownProfile = /^\/api\/profile\/(admin|client)$/.exec(url.pathname);
+      if (fixture.profileEnabled && ownProfile) {
+        const role = ownProfile[1];
+        if (request.method === "GET") { sendJson(200, profile(role)); return; }
+        if (request.method === "POST") {
+          let raw = ""; for await (const chunk of request) { raw += chunk; if (raw.length > 4096) throw new Error("oversized_fixture_profile"); }
+          const input = JSON.parse(raw);
+          assert.equal(request.headers["x-csrf-token"], fixture.csrf ?? "A".repeat(43));
+          assert.deepEqual(Object.keys(input).sort(), ["avatarId", "expectedVersion", "pseudonym"]);
+          assert.equal(typeof input.pseudonym, "string"); assert.ok(input.pseudonym.length > 0 && input.pseudonym.length <= 64);
+          assert.ok(input.avatarId === null || /^[a-f0-9]{32}$/.test(input.avatarId));
+          fixture.profileRequests.push({ role, ...input });
+          if (input.expectedVersion !== fixture.profiles[role].version) { sendJson(409, { error: "profile_conflict" }); return; }
+          fixture.profiles[role] = { pseudonym: input.pseudonym, avatarId: input.avatarId, version: String(Number(input.expectedVersion) + 1) };
+          sendJson(200, profile(role)); return;
+        }
+      }
+      const avatar = /^\/api\/profile\/(admin|client)\/(avatar|conversations\/([a-f0-9]{32})\/avatar)$/.exec(url.pathname);
+      if (fixture.profileEnabled && fixture.profileAvatarsEnabled && avatar && request.method === "GET") {
+        const role = avatar[1], owner = avatar[3] ? role === "client" ? "admin" : "client" : role;
+        const saved = fixture.profiles[owner];
+        fixture.avatarRequests.push({ role, conversationId: avatar[3] ?? null, version: url.searchParams.get("v") });
+        if (avatar[3] && avatar[3] !== conversationId || saved.avatarId === null || url.searchParams.get("v") !== saved.version) {
+          sendJson(404, { error: "not_found" }); return;
+        }
+        response.writeHead(200, { "Content-Type": "image/jpeg", "Content-Length": String(jpeg.length) }); response.end(jpeg); return;
+      }
+      const avatarUpload = /^\/api\/media\/(admin|client)\/assets$/.exec(url.pathname);
+      if (fixture.profileEnabled && fixture.profileAvatarsEnabled && avatarUpload && request.method === "POST") {
+        let bytes = 0; for await (const chunk of request) { bytes += chunk.length; if (bytes > 262144) throw new Error("oversized_fixture_avatar"); }
+        assert.equal(request.headers["content-type"], "image/jpeg"); assert.ok(bytes > 0);
+        fixture.avatarUploads.push({ role: avatarUpload[1], bytes });
+        sendJson(201, { asset: { id: id(400 + fixture.avatarUploads.length) }, duplicate: false }); return;
+      }
       if (fixture.clientExportEnabled && url.pathname === `/api/chat/client/conversations/${conversationId}/export` && request.method === "POST") {
         let raw = ""; for await (const chunk of request) raw += chunk;
         const body = JSON.parse(raw); fixture.exportRequests ??= []; fixture.exportRequests.push(body);
@@ -138,7 +185,12 @@ async function startFixtureServer() {
       const match = /^\/api\/(chat|media)\/(admin|client)(\/.*)$/.exec(url.pathname);
       if (match) {
         const [, feature, role, suffix] = match;
-        if (request.method === "GET" && suffix === "/capabilities") { sendJson(200, { enabled: true, ...(fixture.clientExportEnabled && feature === "chat" && role === "client" ? { conversationExport: { enabled: true, photos: true, maxBytes: 32 * 1024 * 1024 } } : {}) }); return; }
+        if (request.method === "GET" && suffix === "/capabilities") {
+          if (feature === "media" && fixture.mediaDisabled) { sendJson(404, { error: "not_found" }); return; }
+          sendJson(200, { enabled: true,
+            ...(fixture.profileEnabled && feature === "chat" ? { profile: { enabled: true, avatars: fixture.profileAvatarsEnabled } } : {}),
+            ...(fixture.clientExportEnabled && feature === "chat" && role === "client" ? { conversationExport: { enabled: true, photos: true, maxBytes: 32 * 1024 * 1024 } } : {}) }); return;
+        }
         if (feature === "chat" && request.method === "GET") {
           if (suffix === "/conversation") { sendJson(200, { id: conversationId }); return; }
           if (suffix === "/conversations") { sendJson(200, { conversations: [conversation(role)], nextCursor: null, hasMore: false }); return; }
@@ -251,6 +303,40 @@ test("Chrome: only Jessie sees a read receipt after a metadata-only poll, with s
   }
 });
 
+test("Chrome 320px: keyboard emoji search inserts at the selection without photos or automatic sending, and Escape restores focus", { timeout: 60000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); fixture.mediaDisabled = true; const page = await browser(320);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await waitUntil(() => page.execute("return !document.getElementById('open-emojis').disabled"), "emoji selector enabled without photos");
+      await page.type("#message-body", "Hello friend");
+      await page.execute("document.getElementById('message-body').setSelectionRange(6, 12)");
+      await page.click("#open-emojis");
+      await waitUntil(() => page.execute("return document.getElementById('emoji-dialog').matches(':modal') && document.activeElement.id === 'emoji-search'"), "native emoji dialog and search focus");
+      await page.type("#emoji-search", "kiss");
+      await tabUntil(page, '#emoji-list [data-emoji-id="kiss-face"]');
+      await page.key("\uE014"); assert.notEqual(await page.execute("return document.activeElement.dataset.emojiId"), "kiss-face");
+      await page.key("\uE012"); assert.equal(await page.execute("return document.activeElement.dataset.emojiId"), "kiss-face");
+      await page.key("\uE007");
+      assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 😘");
+      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.id]"), [8, 8, "message-body"]);
+      assert.equal(fixture.messageRequests.length, 0);
+      await page.click("#open-emojis"); await page.key("\uE00C");
+      await waitUntil(() => page.execute("return !document.getElementById('emoji-dialog').open && document.activeElement.id === 'open-emojis'"), "Escape returns to the emoji opener");
+      await page.click("#open-emojis");
+      await page.execute("JessieI18n.setLanguage('en')");
+      assert.equal(await page.execute("return document.querySelector('.emoji-search span').textContent"), "Find an emoji");
+      const layout = await page.execute(`const dialog=document.getElementById('emoji-dialog'), rect=dialog.getBoundingClientRect();
+        return {fits:rect.left>=0 && rect.right<=innerWidth && dialog.scrollWidth<=dialog.clientWidth,
+          touch:[...document.querySelectorAll('#emoji-list button')].every(button=>{const b=button.getBoundingClientRect();return b.width>=44 && b.height>=44})};`);
+      assert.deepEqual(layout, { fits: true, touch: true });
+      await page.key("\uE00C"); assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 😘");
+      assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
 test("Chrome desktop and 320px: actual Tab / Enter contact selection and return, French / English", { timeout: 60000 }, async () => {
   for (const width of [1280, 320]) {
     resetFixture(); const page = await browser(width);
@@ -277,13 +363,14 @@ test("Chrome desktop and 320px: actual Tab / Enter contact selection and return,
   }
 });
 
-test("Chrome mobile: every account control stays visible and separate with Notifications, French / English, both roles", { timeout: 90000 }, async () => {
+test("Chrome mobile: all six account controls stay visible and separate with Profile and Notifications, French / English, both roles", { timeout: 90000 }, async () => {
   for (const width of [320, 360, 390]) for (const path of ["/messages", "/admin/messages"]) {
-    resetFixture(); fixture.notificationsEnabled = true;
+    resetFixture(); fixture.notificationsEnabled = true; fixture.profileEnabled = true;
     const page = await browser(width);
     try {
       await loaded(page, path);
       await waitUntil(() => page.execute("return !document.getElementById('open-notifications').hidden"), "real notification capability exposes the account control");
+      await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile capability mounts the real account editor");
       for (const language of ["fr", "en"]) {
         if (language === "en") await page.click("[data-jm-language]");
         assert.equal(await page.execute("return document.documentElement.lang"), language);
@@ -306,7 +393,7 @@ test("Chrome mobile: every account control stays visible and separate with Notif
         const context = `${path}, ${width}px, ${language}`;
         assert.equal(layout.width, width, context);
         assert.equal(layout.scrollWidth <= layout.width, true, `${context}: no horizontal page overflow`);
-        assert.deepEqual(layout.controls.map(control => control.name).sort(), ["account-link", "brand", "language", "logout", "open-notifications"], `${context}: all five header controls are present`);
+        assert.deepEqual(layout.controls.map(control => control.name).sort(), ["account-link", "brand", "language", "logout", "open-notifications", "open-profile"], `${context}: all six header controls are present`);
         for (const control of layout.controls) {
           assert.ok(control.left >= -1 && control.right <= layout.width + 1, `${context}: ${control.name} stays inside the viewport`);
           assert.ok(control.top >= 0 && control.bottom <= layout.height + 1, `${context}: ${control.name} stays vertically visible`);
@@ -320,6 +407,97 @@ test("Chrome mobile: every account control stays visible and separate with Notif
             `${context}: ${a.name} and ${b.name} do not overlap`);
         }
       }
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome 320px: both roles edit their public profile with the keyboard, translated labels and focus restored to the opener", { timeout: 60000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); fixture.profileEnabled = true;
+    const page = await browser(320), nextName = `Synthetic ${role} display name`;
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile control mounted");
+      if (role === "admin") await page.click(".contact");
+      assert.equal(await page.execute("return document.getElementById('peer-avatar').textContent"), role === "client" ? "J" : "A", "missing avatar uses the peer's initials");
+      await tabUntil(page, "#open-profile"); await page.key("\uE007");
+      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.activeElement.matches('.profile-pseudonym')"), "profile loaded with the name focused");
+      assert.equal(await page.execute("return document.querySelector('.profile-header h2').textContent"), "Mon profil");
+      assert.equal(await page.execute("return document.querySelector('.profile-avatar-preview img').hidden"), true);
+      await page.type(".profile-pseudonym", "Envoyer");
+      await page.execute("JessieI18n.setLanguage('en')");
+      assert.equal(await page.execute("return document.querySelector('.profile-header h2').textContent"), "My profile");
+      assert.equal(await page.execute("return document.querySelector('.profile-save').textContent"), "Save profile");
+      assert.equal(await page.execute("return document.querySelector('.profile-pseudonym').value"), "Envoyer", "the raw public name is not translated");
+      const layout = await page.execute(`const dialog=document.querySelector('.profile-dialog'), rect=dialog.getBoundingClientRect();
+        return {fits:rect.left>=0 && rect.right<=innerWidth && dialog.scrollWidth<=dialog.clientWidth,
+          touch:[...dialog.querySelectorAll('button,input')].filter(node=>!node.disabled && !node.closest('[hidden]'))
+            .every(node=>node.getBoundingClientRect().height>=44)};`);
+      assert.deepEqual(layout, { fits: true, touch: true });
+      await page.type(".profile-pseudonym", nextName);
+      await tabUntil(page, ".profile-save"); await page.key("\uE007");
+      await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open && document.activeElement.id==='open-profile'"), "saved profile closes and returns focus");
+      assert.deepEqual(fixture.profileRequests, [{ role, expectedVersion: "1", pseudonym: nextName, avatarId: null }]);
+      assert.equal(fixture.avatarUploads.length, 0); assert.equal(fixture.messageRequests.length, 0);
+      await page.key("\uE007");
+      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.querySelector('.profile-pseudonym').value===arguments[0]", nextName), "reopening reloads the saved public name");
+      await page.key("\uE00C");
+      await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open && document.activeElement.id==='open-profile'"), "Escape restores the profile opener");
+      assert.equal(fixture.profileRequests.length, 1); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome: real avatar crop, private preview cleanup on controlled hiding, explicit upload/save and peer initials after removal", { timeout: 90000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); fixture.profileEnabled = true;
+    const peerRole = role === "client" ? "admin" : "client", originalName = fixture.profiles[role].pseudonym;
+    fixture.profiles[role].avatarId = id(351); fixture.profiles[peerRole].avatarId = id(352);
+    const page = await browser(390);
+    const chooseSyntheticAvatar = async () => {
+      await page.execute(`const bytes=Uint8Array.from(atob(arguments[0]),char=>char.charCodeAt(0)), files=new DataTransfer();
+        files.items.add(new File([bytes],'synthetic-avatar.jpg',{type:'image/jpeg'}));
+        const input=document.querySelector('.profile-file');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));`, jpeg.toString("base64"));
+      await waitUntil(() => page.execute(`const image=document.querySelector('.profile-avatar-preview img');
+        return !document.querySelector('.profile-save').disabled && image?.complete && image.naturalWidth===256
+          && document.querySelector('.profile-status').textContent==='Avatar prêt. Enregistre le profil pour l’appliquer.'`), "actual browser JPEG decode and central 256px crop");
+    };
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile module mounted");
+      if (role === "admin") await page.click(".contact");
+      await waitUntil(() => page.execute("const img=document.querySelector('#peer-avatar img');return !!img && img.src.startsWith('blob:') && img.complete && img.naturalWidth>0"), "private peer avatar decoded from a bounded authenticated response");
+      await page.click("#open-profile");
+      await waitUntil(() => page.execute("const img=document.querySelector('.profile-avatar-preview img');return document.querySelector('.profile-dialog').matches(':modal') && !img.hidden && img.complete && img.naturalWidth>0"), "saved avatar appears as a private blob preview");
+      await page.type(".profile-pseudonym", "Unsaved private profile draft");
+      await chooseSyntheticAvatar();
+      const discardedPreview = await page.execute("return document.querySelector('.profile-avatar-preview img').src");
+      assert.match(discardedPreview, /^blob:/); assert.equal(fixture.avatarUploads.length, 0); assert.equal(fixture.profileRequests.length, 0);
+      await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>window.__profileHidden?'hidden':'visible'});window.__profileHidden=true;document.dispatchEvent(new Event('visibilitychange'))");
+      assert.equal(await page.execute("return !document.querySelector('.profile-dialog').open && document.querySelector('.profile-pseudonym').value==='' && !document.querySelector('.profile-avatar-preview img').getAttribute('src')"), true, "controlled hiding clears the private profile DOM");
+      assert.equal(await page.execute("return window.__revokedBlobUrls.includes(arguments[0])", discardedPreview), true, "discarded preview's actual object URL is revoked");
+      assert.equal(fixture.profileRequests.length, 0); assert.equal(fixture.avatarUploads.length, 0);
+      await page.execute("window.__profileHidden=false;document.dispatchEvent(new Event('visibilitychange'))");
+      await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden"), "same-session chat resumes after controlled visibility");
+      await page.click("#open-profile");
+      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.querySelector('.profile-pseudonym').value===arguments[0]", originalName), "reopening discards the unsaved profile draft");
+      await chooseSyntheticAvatar(); await page.click(".profile-save");
+      await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open"), "explicit save finishes the avatar upload");
+      assert.equal(fixture.avatarUploads.length, 1); assert.equal(fixture.avatarUploads[0].role, role);
+      assert.equal(fixture.profileRequests.length, 1); assert.equal(fixture.profileRequests[0].avatarId, id(401));
+      assert.equal(fixture.profileRequests[0].pseudonym, originalName); assert.equal(fixture.messageRequests.length, 0, "an avatar is never sent as a conversation message");
+      await page.click("#open-profile");
+      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && !document.querySelector('.profile-remove-avatar').disabled"), "saved avatar can be removed");
+      await page.click(".profile-remove-avatar"); assert.equal(fixture.profileRequests.length, 1, "removal remains a draft before save");
+      await page.click(".profile-save");
+      await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open"), "avatar removal saved");
+      assert.equal(fixture.profileRequests.length, 2); assert.equal(fixture.profileRequests[1].avatarId, null);
+      assert.equal(fixture.avatarUploads.length, 1); assert.equal(fixture.messageRequests.length, 0);
+      fixture.profiles[peerRole].avatarId = null; fixture.profiles[peerRole].version = "2";
+      await waitUntil(() => page.execute("return !document.querySelector('#peer-avatar img') && document.getElementById('peer-avatar').textContent===arguments[0]", role === "client" ? "J" : "A"), "a peer without an avatar returns to initials after a real scheduled poll", 15000);
+      assert.ok(fixture.avatarRequests.some(request => request.role === role && request.conversationId === conversationId));
+      assert.ok(fixture.avatarRequests.some(request => request.role === role && request.conversationId === null));
       await noJavascriptErrors(page);
     } finally { await page.close(); }
   }

@@ -12,7 +12,7 @@ const draft = "Brouillon fictif : ce texte doit rester ici.";
 const id = number => number.toString(16).padStart(32, "0");
 const conversationId = id(100);
 const files = ["help.html", "help.css", "help.js", "help-link.js", "recover.html", "recover.js", "recover-model.js", "recover.css", "admin-login.css",
-  "chat.html", "chat.js", "chat-model.js", "quick-replies.js", "chat.css", "session-clock.js", "image-preparation.js",
+  "chat.html", "chat.js", "chat-model.js", "quick-replies.js", "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js", "chat.css", "session-clock.js", "image-preparation.js",
   "i18n.js", "i18n.css", "i18n-access.js", "i18n-chat.js", "i18n-tools.js", "notifications.js", "notifications.css", "notification-link.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-32.png", "brand/icon-128.png"];
 const types = { js: "text/javascript; charset=utf-8", css: "text/css; charset=utf-8", html: "text/html; charset=utf-8", png: "image/png", ico: "image/x-icon", webmanifest: "application/manifest+json" };

@@ -47,6 +47,8 @@ const memberCountSql = `(SELECT COUNT(*) FROM crm_memberships mc JOIN conversati
 const contactProjection = `c.id, c.client_id, c.created_at, c.closed_at, u.pseudonym, u.status,
   u.email_verified_at, u.age_assured_at, u.access_approved_at, u.access_expires_at, ${invitationConsumptionProjection("u")},
   p.nickname, p.reminder_at, p.version,
+  (SELECT up.version FROM user_profiles up JOIN media_assets av ON av.id = up.avatar_media_id
+    WHERE up.user_id = u.id AND av.owner_id = u.id AND av.owner_role = u.role AND av.deleted_at IS NULL) AS peer_avatar_version,
   COALESCE((SELECT MAX(sequence_no) FROM messages WHERE conversation_id = c.id), 0) AS latest_sequence,
   COALESCE((SELECT MAX(event_sequence) FROM chat_events WHERE conversation_id = c.id), 0) AS latest_event_sequence,
   (SELECT MAX(occurred_at) FROM chat_events WHERE conversation_id = c.id) AS last_activity_at,
@@ -326,6 +328,7 @@ export function createCrmStore({ pool, chatStore }) {
           const unreadCount = Number(row.unread_count); if (!Number.isSafeInteger(unreadCount) || unreadCount < 0) state();
           const currentAccess = accessDto(row, now);
           return { id: row.id, clientId: row.client_id, clientPseudonym: row.pseudonym, peerPseudonym: row.pseudonym,
+            ...(row.peer_avatar_version == null ? {} : { peerAvatarVersion: storedVersion(row.peer_avatar_version) }),
             createdAt: timestamp(row.created_at), closedAt: nullableDate(row.closed_at), lastActivityAt: nullableDate(row.last_activity_at),
             latestSequence: sequence(row.latest_sequence), latestEventSequence: sequence(row.latest_event_sequence), lastReadSequence: sequence(row.last_read_sequence),
             peerReadSequence: sequence(row.peer_read_sequence), unreadCount, canSend: currentAccess.state === "active" && row.closed_at === null,

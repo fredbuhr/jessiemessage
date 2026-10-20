@@ -3,6 +3,7 @@ import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { readFile } from "node:fs/promises";
 import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { validateMessageBody } from "./crypto.mjs";
+import { safePeerAvatar } from "./profile-avatar.mjs";
 
 const publicRoot = new URL("../../public/", import.meta.url);
 const cookies = Object.freeze({ admin: "__Host-jessie_session", client: "__Host-jessie_client" });
@@ -54,7 +55,10 @@ function safeConversation(value, role, expectedId = null) {
     if (!value.client || !id(value.client.id) || !text(value.client.pseudonym)) throw unavailable();
     client = { id: value.client.id, pseudonym: value.client.pseudonym };
   } else if (value.client !== null) throw unavailable();
+  let avatar;
+  try { avatar = safePeerAvatar(value.peerAvatar, role, value.id); } catch { throw unavailable(); }
   return {
+    ...(avatar ? { peerAvatar: avatar } : {}),
     id: value.id, client, peerName: value.peerName, createdAt: value.createdAt, closedAt: value.closedAt,
     lastActivityAt: value.lastActivityAt, latestSequence: value.latestSequence, latestEventSequence: value.latestEventSequence,
     lastReadSequence: value.lastReadSequence, peerReadSequence: role === "admin" ? value.peerReadSequence : "0", unreadCount: value.unreadCount, canSend: value.canSend,
@@ -153,7 +157,8 @@ function mappedError(error) {
 }
 
 /** Routes exist only when the parent has explicitly enabled the chat feature. */
-export function createChatHandler(service, { origin, clientConversationExporter = null }) {
+export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false }) {
+  if (typeof profileEnabled !== "boolean" || typeof avatarsEnabled !== "boolean" || avatarsEnabled && !profileEnabled) throw new TypeError("Invalid profile capability");
   const configuredOrigin = new URL(origin);
   if (configuredOrigin.protocol !== "https:" || configuredOrigin.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   for (const method of ["actor", "listConversations", "clientConversation", "messages", "events", "send", "markRead", "delete"]) {
@@ -196,7 +201,7 @@ export function createChatHandler(service, { origin, clientConversationExporter 
         reply(response, method, 200, await readFile(new URL("chat.html", publicRoot)), { "Content-Type": "text/html; charset=utf-8" });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes } } : {}) });
+        reply(response, method, 200, { enabled: true, ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes } } : {}) });
       } else if (route.kind === "list") {
         const options = query(url, ["afterId", "limit"], 50);
         const afterId = options.afterId ?? null;
