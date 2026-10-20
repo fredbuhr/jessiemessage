@@ -14,6 +14,8 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
 
+**Version active : 1.2.0**, profil, avatar et catalogue de 180 emojis. L’identité admin et la disponibilité sont confirmées ; seul l’alignement du checkpoint opérateur reste à terminer, suivi dans REPRISE.
+
 ## Versions et livraisons
 
 La version applicative provient de [package.json](package.json), avec la même valeur dans les métadonnées racine de `package-lock.json`. `1.0.0` établit la référence de la V1 existante ; `1.0.1` désigne une correction compatible, `1.1.0` une évolution compatible et `2.0.0` une rupture de compatibilité. Les numéros ne suivent pas le nombre de discussions ou de commits. Node, le schéma SQL et les formats de données ont leurs propres versions.
@@ -41,7 +43,7 @@ Le build produit l’aperçu autonome, pas un déploiement. `npm run test:browse
 
 Les identités SQL d’exécution et de migration sont séparées ; aucune migration ne s’exécute au démarrage du serveur. Voir la [configuration de la base](docs/DATABASE.md). Pour le service existant, utiliser la composition et les pins de REPRISE plutôt qu’un démarrage de développement.
 
-La migration `0031` prévue pour les profils exige un repli **1.1.1 préqualifié sur les schémas avant et après migration**. Après son application, ne pas reprendre la 1.1.0 : le repli compatible et ses pins doivent être acquis avant toute migration de production. Les étapes et contrôles à terminer sont décrits dans le [bilan du lot](docs/profile-expressions-120.md#migration-et-repli).
+La migration `0031` des profils est appliquée : le service utilise le schéma 31. Son repli est la **1.1.1 préqualifiée sur ce schéma**, conservée sans démarrage rapporté. Ne reprendre ni la 1.1.0 ni la 1.0.0 après cette migration. Le [bilan du lot](docs/profile-expressions-120.md#migration-et-repli) conserve les références et preuves.
 
 ## Aperçu sans terminal
 

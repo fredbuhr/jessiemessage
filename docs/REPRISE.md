@@ -1,28 +1,26 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — maintenance : arrêt du service attesté par l’opérateur, migration 0031 appliquée et précontrôles 1.1.1/1.2.0 réussis ; démarrage 1.2.0 à effectuer.** La dernière identité HTTP connue est la 1.1.0, antérieure à la maintenance ; elle ne décrit pas un service actuellement démarré. Le checkpoint conserve encore cette référence historique. Le reçu utilisateur confirme désormais le schéma 31 et les deux précontrôles, sans démarrage de runtime ni activation 1.2.0. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — production `1.2.0`, identité confirmée par relevé admin utilisateur et disponibilité publique conforme ; checkpoint encore en 1.1.0, alignement final à réaliser sans redémarrage.** Le schéma 31 est appliqué ; la 1.1.1 compatible est précontrôlée et conservée comme repli, sans démarrage rapporté. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## État de livraison
 
 | Élément | État constaté |
 | --- | --- |
-| État du service | **Maintenance** : arrêt Manager attesté par l’opérateur lors du helper, sans vérification indépendante du Manager. Aucun démarrage 1.2.0 rapporté. Dernière identité HTTP connue **1.1.0**, historique. |
-| Dernier commit exécuté avant maintenance et arbre | `84669ed570b59b10a1a94a164f24f0e60e6cb5a7` / `0201cdbd1932fd9104c04a91d63561010e8ae0c2`. Le commit affiché correspond exactement au tag livré. |
-| Tag/release | [v1.1.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0), publiée le 20 octobre à 20:21:26 UTC ; cible relue identique. `main` peut avancer pour documenter les preuves. |
-| Dernier Node HTTP identifié avant maintenance | `v24.22.0`, valeur du processus dans le relevé admin. Node privé conservé ; binaire système fournisseur intact. |
-| Capture historique au démarrage affichée | `20/10/2026 22:30:49`, texte utilisateur conservé. Fuseau du navigateur non transmis ; aucune conversion UTC ou naissance OS déduite. |
-| Préparation et CI | Reçu utilisateur `staged_precheck_passed`, sans fermeture en attente, avant activation ; [CI du commit exact](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) 5/5 réussie. |
-| Disponibilité historique, avant maintenance | Quatre GET publics santé/disponibilité conformes sur les deux origines à `2026-10-20T20:33:21.102792+00:00` : HTTP 200, JSON attendu, `no-store`, aucun cookie. Ils ne prouvent pas la version. |
-| Portée | Jessie voit les reçus clients ; le client ne reçoit plus le curseur de lecture admin, API/export compris. Lectures propres et badges conservés. Aucune migration SQL ni dépendance nouvelle. |
-| Preuves | [Bilan 1.1.0](private-read-receipts-110.md) et [relevé structuré](verification-proofs/jm110-verification.json). Lecture admin rapportée par l’utilisateur, pas de GET privé direct de l’agent ; aucun test sur des contenus clients réels. |
-| Checkpoint privé, non encore aligné sur 1.2.0 | Référence historique **1.1.0** / `84669ed5` : reçu utilisateur `release110_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. |
-| Repli compatible après schéma 31 | **1.1.1 / Node 24.22**, source `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, précontrôle hébergé réussi, non démarrée. **1.1.0 et 1.0.0 ne doivent plus être redémarrées.** |
-| Nouvelle livraison | **[1.2.0 publiée](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0)** sur `763b632185ce13eb875110c9107687b2d278ff67`, arbre `c7dce7bcdb99b298ffc43c9e31dd22ee87453926` ; [PR 112](https://github.com/fredbuhr/jessiemessage/pull/112), [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614) 5/5 et [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500847054). Profil, avatar et 180 emojis ; [bilan](profile-expressions-120.md). **Précontrôlée, démarrage et identité HTTP en attente.** |
-| Schéma et repli 1.1.1 | Migration **0031 appliquée**, schéma 31 confirmé ; repli [v1.1.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.1) sur `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1`, **précontrôlé sur l’hébergement**, non démarré. [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39499262875) 5/5. |
+| Version active | **1.2.0**, confirmée par les quatre champs admin transmis par l’utilisateur après démarrage Manager. |
+| Commit actif et arbre du commit | `763b632185ce13eb875110c9107687b2d278ff67` / `c7dce7bcdb99b298ffc43c9e31dd22ee87453926`. Le commit affiché correspond au tag livré. |
+| Tag/release | [v1.2.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0), publiée le 20 octobre à 21:30:07 UTC ; cible relue identique. |
+| Node HTTP identifié | `v24.22.0`, valeur du processus dans le relevé admin utilisateur. |
+| Capture au démarrage affichée | `21/10/2026 00:21:24`, texte utilisateur conservé. Fuseau du navigateur non transmis ; aucune conversion UTC, epoch ou naissance OS déduite. |
+| Schéma et précontrôles | Migration 0031 appliquée ; reçus `schema31_confirmed_before_prechecks` et `schema31_prechecks_passed`. Précontrôles 1.1.1/1.2.0 réussis. |
+| CI et publication | [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614) 5/5, [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500847054), [PR 112](https://github.com/fredbuhr/jessiemessage/pull/112). |
+| Disponibilité | Quatre GET publics conformes sur les deux origines à `2026-10-20T22:24:58.673794+00:00` : HTTP 200, JSON exact `ok`/`ready`, `no-store`, aucun cookie, TLS vérifié et redirections refusées. Le premier essai réseau partiel est conservé ; ces GET ne prouvent pas la version. |
+| Portée et preuves | Profil, avatar et 180 emojis ; lecture privée conservée. [Bilan 1.2.0](profile-expressions-120.md), [preuves structurées](verification-proofs/jm120-verification.json). Identité admin rapportée par l’utilisateur, sans GET privé direct de l’agent ni attestation PID/socket/binaire. |
+| Checkpoint privé | Dernier état enregistré **1.1.0** / `84669ed5`, reçu `release110_metadata_recorded` ; écriture 1.2.0 non constatée. |
+| Repli compatible | **1.1.1 / Node 24.22**, source `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1`, précontrôlé sur l’hébergement et non démarré. **1.1.0 et 1.0.0 ne doivent plus être redémarrées sur le schéma 31.** |
 
-**Étape en cours :** configurer la commande Run du site Node existant sur `bash /srv/customer/jessiemessage-private/start-primary-release120-763b6321.sh`, puis démarrer la **1.2.0**. Les reçus utilisateur `schema31_confirmed_before_prechecks` et `schema31_prechecks_passed` confirment la migration 0031 et les deux précontrôles. L’arrêt est attesté par l’opérateur, pas vérifié indépendamment. Le helper n’a démarré aucun runtime ni modifié le Manager ou le checkpoint. **Ne rejouer ni staging ni migration ; ne redémarrer ni 1.1.0 ni 1.0.0.** Après le démarrage, obtenir une identité admin fraîche 1.2.0 puis aligner le checkpoint en conservant la 1.1.1 compatible.
+**Seule étape restante :** [aligner le checkpoint sur la 1.2.0](profile-expressions-120.md#alignement-du-checkpoint--en-attente), sans redémarrage, avec le writer publié `5afd2ac70635579a0645b001bb30e590f95a0c18`, chemin `ops/record-release120.py`, SHA-256 `744943663e267e360c8692e8fcb48a40456faf4cb60283595a62e744d8debfda`. Relecture identique et **8/8 tests synthétiques** acquises ; exécution serveur non constatée. L’ancien `activeService` 1.1.0 sera archivé sous `release120.priorActiveService`, intégralement et avec empreinte, `priorActiveServiceUsableRollback:false` ; le vrai repli enregistré sera la 1.1.1 compatible précontrôlée, sans identité HTTP de démarrage inventée. **Ne rejouer ni staging, ni migration, ni Build, ni Run, ni le relevé admin déjà transmis.** Le lot n’est pas encore clôturé.
 
-Le lot 1.1.0 reste clos : reçu SSH utilisateur `release110_metadata_recorded` sur le commit actif, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. Le [script exécuté](https://github.com/fredbuhr/jessiemessage/blob/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py), SHA-256 `eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591`, conserve l’ancien `activeService` 1.0.0 intégral sous `.developmentSimplification.release110.rollback`, avec son empreinte, et préserve notamment `release100`. [Reçu et portée](private-read-receipts-110.md#alignement-du-checkpoint--réalisé). Ne rejouer ni enregistrement, ni staging, ni Build, ni preuve admin déjà transmise. Les chantiers PC/sauvegardes restent différés.
+Le lot 1.1.0 reste clos : reçu SSH utilisateur `release110_metadata_recorded` sur le commit 1.1.0 historique, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. Le [script exécuté](https://github.com/fredbuhr/jessiemessage/blob/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py), SHA-256 `eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591`, conserve l’ancien `activeService` 1.0.0 intégral sous `.developmentSimplification.release110.rollback`, avec son empreinte, et préserve notamment `release100`. [Reçu et portée](private-read-receipts-110.md#alignement-du-checkpoint--réalisé). Ne rejouer ni enregistrement, ni staging, ni Build, ni preuve admin déjà transmise. Les chantiers PC/sauvegardes restent différés.
 
 La [publication GitHub](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a été réalisée avec le jeton temporaire GitHub Actions. Le navigateur cloud est indisponible (`native credential state cannot be safely resumed`) et aucun connecteur Infomaniak/SSH/SFTP utilisable n’a été trouvé. L’utilisateur exécute les commandes épinglées dans sa console SSH et utilise son navigateur habituel pour l’admin ; ne pas lui reproposer le navigateur cloud.
 
@@ -58,17 +56,11 @@ Le [helper exécuté](https://github.com/fredbuhr/jessiemessage/blob/292e05fbeae
 
 Le registre confirme désormais les 31 migrations appliquées et les deux précontrôles hébergés sont réussis. L’option `--service-stopped` et le reçu attestent l’arrêt déclaré par l’opérateur ; le helper ne contrôlait pas le Manager. Aucun démarrage de runtime, changement Manager ou alignement du checkpoint n’est effectué par ce script. Ses 14 tests synthétiques TTY et les CI DDL des releases restent des preuves de qualification distinctes. Les journaux privés et les précédents reçus sont préservés dans les [preuves](verification-proofs/jm120-verification.json). **Ne pas rejouer la commande de migration pour obtenir un autre résultat.**
 
-## Activation 1.2.0 — à effectuer maintenant
+## Activation 1.2.0 — confirmée
 
-Dans le Manager, ouvrir le site Node existant actuellement nommé `recette.jessiemessage.com` (runtime partagé avec le domaine principal). Remplacer sa commande **Run** par :
+Le Run `bash /srv/customer/jessiemessage-private/start-primary-release120-763b6321.sh` et le Build `bash /srv/customer/jessiemessage-private/check-primary-release120-763b6321.sh` ont été enregistrés ; le service a été démarré. Le relevé admin utilisateur confirme les quatre valeurs du tableau. **Ne répéter ni le Build, ni le Run, ni cette preuve admin.** Le texte de démarrage est conservé tel qu’affiché, sans fuseau supposé. L’agent n’a pas observé directement le GET privé ; aucune attestation PID/socket ou empreinte du binaire actif n’est ajoutée.
 
-```sh
-bash /srv/customer/jessiemessage-private/start-primary-release120-763b6321.sh
-```
-
-Renseigner aussi **Build** avec `bash /srv/customer/jessiemessage-private/check-primary-release120-763b6321.sh`. Ce précontrôle a déjà réussi ; si l’enregistrement propose de relancer le Build immédiatement, choisir **Non**, puis démarrer depuis le Manager. Garder le Node privé épinglé et le port 3000 ; ne pas lancer de second parent SSH. Aucune commande Build ou Run ne doit encore viser la 1.1.0. La 1.1.1 est le repli compatible précontrôlé, sans démarrage rapporté. **1.1.0 et 1.0.0 ne sont plus des replis utilisables après cette migration.**
-
-Après démarrage seulement, actualiser l’administration et relever version **1.2.0**, commit **`763b632185ce13eb875110c9107687b2d278ff67`**, Node **v24.22.0** et relevé au démarrage. Cette identité fraîche et les contrôles de disponibilité restent à obtenir, puis le checkpoint doit être aligné en préservant la 1.1.1 compatible et tous les autres blocs. Aucun démarrage, identité 1.2.0 ou alignement 1.2.0 n’est encore rapporté.
+La seconde observation HTTPS directe donne 4/4 contrôles publics conformes à `2026-10-20T22:24:58.673794+00:00`. Le premier essai comportait des erreurs réseau partielles ; il est conservé distinctement dans les preuves, sans les qualifier de panne applicative. Les contrôles publics attestent la disponibilité, pas l’identité. Seul l’alignement du checkpoint reste à réaliser.
 
 ## Validation de 1.2.0
 
@@ -80,7 +72,7 @@ La lecture admin fraîche, après **Actualiser la page**, renvoie le snapshot ca
 
 Les essais SSH historiques R1/R2 de la 1.0.0 ont renvoyé respectivement `PROCESS_NOT_UNIQUE` et `PROCESS_NOT_FOUND`, zéro correspondance stricte/canonique, douze processus propres lisibles, aucun illisible, aucun candidat. Ces vérifications restent non concluantes et ne sont pas transformées en succès. Le relevé admin est une preuve distincte de l’identité applicative, sans attestation de PID/socket, d’empreinte du binaire effectivement exécuté ou de fonctionnement PC/sauvegardes. La cause de l’absence de candidat SSH n’est pas établie et ne conditionne plus une identité déjà confirmée par HTTP admin.
 
-## Build de la cible 1.2.0
+## Build de la référence active 1.2.0
 
 Le runtime sert directement ses sources ; aucune compilation supplémentaire n’est nécessaire. Utiliser le lanceur de précontrôle existant pour le champ Build du Manager :
 
@@ -88,7 +80,7 @@ Le runtime sert directement ses sources ; aucune compilation supplémentaire n�
 bash /srv/customer/jessiemessage-private/check-primary-release120-763b6321.sh
 ```
 
-Ce contrôle est déjà réussi lors de la migration. À l’enregistrement des champs Manager, choisir **Non** si une relance immédiate de Build est proposée, puis démarrer avec le lanceur Run 1.2.0. L’ancien Build visant `production-110-84669ed5` est **historique** et ne doit plus être utilisé sur le schéma 31.
+Ce contrôle a réussi lors de la migration ; le champ est enregistré et le service démarré. Ne pas le relancer pour cet alignement de métadonnées. L’ancien Build visant `production-110-84669ed5` est **historique** et ne doit plus être utilisé sur le schéma 31.
 
 ## Validation de 1.1.0
 
@@ -112,13 +104,13 @@ A08 conserve avertissement et dry-run, sans exécuteur actif ni purge. Surveille
 
 Les conversations sont conservées jusqu’à fermeture définitive, hors suppressions volontaires. Fermeture locale journalisée et restauration opérateur en maintenance restent le périmètre convenu. Récupération autonome après perte complète de l’hôte, témoin frais à chaque phase, succession et inventaire SQL exhaustif restent hors prérequis V1 ; `completeDatabase:false`, objets exécutables exclus. Pas de garantie de capture simultanée fichiers/base ni de perte maximale de vingt-quatre heures. La [surveillance](../MONITORING.md) conserve ses limites : pas de délai maximal de détection ni de réception externe attesté.
 
-## Pins à utiliser pour l’activation
+## Pins de la référence active
 
-Ces pins désignent la cible précontrôlée ; son démarrage n’est pas encore rapporté.
+Ces pins désignent la 1.2.0 dont l’identité active est confirmée par relevé admin utilisateur.
 
-| Élément | Cible 1.2.0 |
+| Élément | Référence active 1.2.0 |
 | --- | --- |
-| Code à démarrer | `763b632185ce13eb875110c9107687b2d278ff67` |
+| Code identifié actif | `763b632185ce13eb875110c9107687b2d278ff67` |
 | Arbre du commit | `c7dce7bcdb99b298ffc43c9e31dd22ee87453926` |
 | Checkout | `/srv/customer/jessiemessage-operator/production-120-763b6321` |
 | Run Manager | `bash /srv/customer/jessiemessage-private/start-primary-release120-763b6321.sh` |
@@ -136,7 +128,7 @@ Mode **`start-local-closures`**, `closuresEnabled:true`, port **3000 direct**, s
 
 Précontrôles du nouveau Node à **14:32:58.849424 UTC** : plateforme/JPEG/fichiers privés `checks_passed`, vrai décodeur photo fork normalisant PNG vers JPEG/vignette avec le binaire exact ; `local_closure_precheck/passed`, `pendingClosures:false`, `started:false`, `erased:false`, `externalContinuityVerified:false`. Dépendances verrouillées existantes réutilisées. Le lanceur vérifie SHA-256 et version Node avant `exec` ; le Build utilise également son chemin absolu. Utiliser ce Node pour toute commande opérateur JavaScript ; ne pas remplacer le binaire système.
 
-Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. État enregistré **1.1.0** / `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, Node `v24.22.0`, statut `identity_verified_via_admin_report`. Reçu utilisateur `release110_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. L’ancien `activeService` 1.0.0 complet est conservé sous `.developmentSimplification.release110.rollback`, avec son empreinte. `.developmentSimplification.release100` reste intact et conserve le repli historique 0.86/Node 24.22. `.nodeRuntimeUpdate.rollback` reste le repli historique Node 24.15 ; anciens `.productionClosure`/`.chatSendAck`, S1/S2/S3, PC, autorité et D1 sont préservés dans les autres blocs. Les anciennes preuves ne deviennent pas des observations fraîches de 1.1.0.
+Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. Dernier état enregistré **1.1.0**, non encore aligné sur la 1.2.0 active / `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, Node `v24.22.0`, statut `identity_verified_via_admin_report`. Reçu utilisateur `release110_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. L’ancien `activeService` 1.0.0 complet est conservé sous `.developmentSimplification.release110.rollback`, avec son empreinte. `.developmentSimplification.release100` reste intact et conserve le repli historique 0.86/Node 24.22. `.nodeRuntimeUpdate.rollback` reste le repli historique Node 24.15 ; anciens `.productionClosure`/`.chatSendAck`, S1/S2/S3, PC, autorité et D1 sont préservés dans les autres blocs. Les anciennes preuves ne deviennent pas des observations fraîches de 1.1.0.
 
 ## Préserver PC, autorité et D1
 

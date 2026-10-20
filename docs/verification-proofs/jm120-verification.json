@@ -59,7 +59,9 @@
     "publicationRun": 39500076798,
     "schemaMigrations": 31,
     "hostedPreparationReported": true,
-    "hostedPrecheckReported": true
+    "hostedPrecheckReported": true,
+    "runtimeStarted": false,
+    "status": "hosted_prechecked_not_started"
   },
   "preparation": {
     "scriptCommit": "eaf702f69b56ba42a9c2c4fd144a33a18c3783d7",
@@ -124,23 +126,62 @@
       "rollback111HostedQualified": false,
       "expectedActiveServiceVersion": "1.1.0",
       "preservedLauncher": "/srv/customer/jessiemessage-private/start-primary-release110-84669ed5.sh"
-    }
+    },
+    "scope": "historical_preparation_before_schema_upgrade_and_activation"
   },
   "hosting": {
-    "activeVersionLastConfirmed": "1.1.0",
-    "activeCommitLastConfirmed": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
-    "startupCaptureTextLastConfirmed": "20/10/2026 22:30:49",
+    "activeVersionLastConfirmed": "1.2.0",
+    "activeCommitLastConfirmed": "763b632185ce13eb875110c9107687b2d278ff67",
+    "activeNodeVersionLastConfirmed": "v24.22.0",
+    "startupCaptureTextLastConfirmed": "21/10/2026 00:21:24",
     "startupTimezoneSupplied": false,
-    "release120ActivationReported": false,
+    "startupEpochInferred": false,
+    "release120ActivationReported": true,
     "schema31ApplicationReported": true,
-    "checkpoint110Preserved": true,
-    "pcAndD1Preserved": true,
+    "schemaMigrations": 31,
+    "compatibleFallback111Started": false,
+    "checkpoint120AlignmentReported": false,
     "realClientMessageOrErasureTests": false,
-    "serviceState": "maintenance_operator_attested",
-    "serviceStopOperatorAttested": true,
-    "serviceStopIndependentlyVerified": false,
-    "lastIdentityPredatesMaintenance": true,
-    "checkpoint120AlignmentReported": false
+    "serviceState": "running_identity_verified_via_authenticated_admin_user_report",
+    "identityEvidence": {
+      "method": "authenticated_admin_readiness_user_report_after_refresh",
+      "url": "https://jessiemessage.com/admin/readiness",
+      "api": "GET /api/admin/readiness",
+      "directPrivateToolObservation": false,
+      "values": {
+        "version": "1.2.0",
+        "commit": "763b632185ce13eb875110c9107687b2d278ff67",
+        "nodeVersion": "v24.22.0",
+        "startedAtDisplay": "21/10/2026 00:21:24"
+      },
+      "displayTimezone": "not_reported",
+      "startedAtEpochInferred": false,
+      "meaning": "startup_identity_of_the_http_process_answering_the_authenticated_read",
+      "notAttested": [
+        "pid",
+        "socket_owner",
+        "executed_binary_hash",
+        "runtime_private_configs",
+        "production_client_message_flow",
+        "pc_or_backup_delivery"
+      ]
+    },
+    "historicalBeforeActivation": {
+      "activeVersionLastConfirmed": "1.1.0",
+      "activeCommitLastConfirmed": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+      "startupCaptureTextLastConfirmed": "20/10/2026 22:30:49",
+      "startupTimezoneSupplied": false,
+      "release120ActivationReported": false,
+      "schema31ApplicationReported": true,
+      "checkpoint110Preserved": true,
+      "pcAndD1Preserved": true,
+      "realClientMessageOrErasureTests": false,
+      "serviceState": "maintenance_operator_attested",
+      "serviceStopOperatorAttested": true,
+      "serviceStopIndependentlyVerified": false,
+      "lastIdentityPredatesMaintenance": true,
+      "checkpoint120AlignmentReported": false
+    }
   },
   "migrationStatusCheck": {
     "scriptCommit": "9ba7a9a38a22812d4739892ea4b58d4a9258bd08",
@@ -193,7 +234,6 @@
       "noRestart": true,
       "diagnosticRevision": 2
     },
-    "nextAction": "configure_manager_run_then_start_release120",
     "credentialCorrectionReported": false,
     "confirmedRefersTo": "initial_failed_attempt",
     "currentStatus": "checked",
@@ -213,7 +253,9 @@
       "source": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
       "version": "1.1.1"
     },
-    "privateFileReaderVerifiedOnHosting": true
+    "privateFileReaderVerifiedOnHosting": true,
+    "actionAtStage": "configure_manager_run_then_start_release120",
+    "scope": "historical_read_only_diagnostic_before_schema_upgrade"
   },
   "schemaUpgradeAndPrechecks": {
     "scriptCommit": "292e05fbeae29dfbe706c345434244696e0976f0",
@@ -268,6 +310,171 @@
       "targetVersion": "1.2.0",
       "targetSource": "763b632185ce13eb875110c9107687b2d278ff67"
     },
-    "nextAction": "configure_manager_run_then_start_release120"
-  }
+    "actionAtStage": "configure_manager_run_then_start_release120",
+    "scope": "historical_schema_upgrade_and_prechecks_before_activation"
+  },
+  "status": "deployed_identity_verified_checkpoint_pending",
+  "nextAction": "align_checkpoint120_metadata_only_without_restart",
+  "publicHttp": {
+    "provenance": "direct_agent_anonymous_https_observation",
+    "method": "default_tls_certificate_verification_redirects_refused",
+    "authenticated": false,
+    "meaning": "availability_only_not_application_identity",
+    "expectedHttpStatus": 200,
+    "expectedBodies": {
+      "/api/health": {
+        "status": "ok"
+      },
+      "/api/ready": {
+        "status": "ready"
+      }
+    },
+    "expectedCacheControl": "no-store",
+    "expectedSetCookie": false,
+    "attempts": [
+      {
+        "observedAt": "2026-10-20T22:23:37.811264+00:00",
+        "checks": [
+          {
+            "origin": "https://jessiemessage.com",
+            "path": "/api/health",
+            "errorType": "URLError"
+          },
+          {
+            "origin": "https://jessiemessage.com",
+            "path": "/api/ready",
+            "errorType": "URLError"
+          },
+          {
+            "origin": "https://recette.jessiemessage.com",
+            "path": "/api/health",
+            "http": 200,
+            "body": {
+              "status": "ok"
+            },
+            "cacheControl": "no-store",
+            "setCookie": false
+          },
+          {
+            "origin": "https://recette.jessiemessage.com",
+            "path": "/api/ready",
+            "errorType": "URLError"
+          }
+        ],
+        "attempt": 1,
+        "outcome": "partial_transport_observation",
+        "applicationFailureEstablished": false,
+        "transportErrorRootCauseKnown": false
+      },
+      {
+        "observedAt": "2026-10-20T22:24:58.673794+00:00",
+        "checks": [
+          {
+            "origin": "https://jessiemessage.com",
+            "path": "/api/health",
+            "http": 200,
+            "body": {
+              "status": "ok"
+            },
+            "cacheControl": "no-store",
+            "setCookie": false
+          },
+          {
+            "origin": "https://jessiemessage.com",
+            "path": "/api/ready",
+            "http": 200,
+            "body": {
+              "status": "ready"
+            },
+            "cacheControl": "no-store",
+            "setCookie": false
+          },
+          {
+            "origin": "https://recette.jessiemessage.com",
+            "path": "/api/health",
+            "http": 200,
+            "body": {
+              "status": "ok"
+            },
+            "cacheControl": "no-store",
+            "setCookie": false
+          },
+          {
+            "origin": "https://recette.jessiemessage.com",
+            "path": "/api/ready",
+            "http": 200,
+            "body": {
+              "status": "ready"
+            },
+            "cacheControl": "no-store",
+            "setCookie": false
+          }
+        ],
+        "attempt": 2,
+        "outcome": "conformant",
+        "checksPassed": 4,
+        "checksTotal": 4
+      }
+    ],
+    "lastConformantAt": "2026-10-20T22:24:58.673794+00:00",
+    "lastChecksPassed": 4,
+    "lastChecksTotal": 4
+  },
+  "privateCheckpoint": {
+    "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
+    "lastRecordedRelease": "1.1.0",
+    "lastRecordedSource": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+    "alignmentStatus": "pending",
+    "runtimeRestartRequired": false,
+    "release120AlignmentReported": false
+  },
+  "checkpointAlignment120": {
+    "scriptCommit": "5afd2ac70635579a0645b001bb30e590f95a0c18",
+    "path": "ops/record-release120.py",
+    "sha256": "744943663e267e360c8692e8fcb48a40456faf4cb60283595a62e744d8debfda",
+    "publicationConfirmed": true,
+    "targetVersion": "1.2.0",
+    "targetSource": "763b632185ce13eb875110c9107687b2d278ff67",
+    "schemaMigrations": 31,
+    "identityEvidenceProvenance": "authenticated_admin_readiness_user_report",
+    "syntheticQualification": {
+      "passed": 8,
+      "scope": "synthetic_metadata_files_including_packaged_reproduction"
+    },
+    "executionReported": false,
+    "alignmentReported": false,
+    "expectedReceipt": {
+      "status": "release120_metadata_recorded",
+      "source": "763b632185ce13eb875110c9107687b2d278ff67",
+      "version": "1.2.0",
+      "schemaMigrations": 31,
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackRelease": "1.1.1",
+      "priorActivePreserved": true,
+      "rollbackPreserved": true,
+      "otherBlocksPreserved": true
+    },
+    "preservationExpected": {
+      "priorActiveService": {
+        "version": "1.1.0",
+        "path": "developmentSimplification.release120.priorActiveService",
+        "complete": true,
+        "hashRequired": true,
+        "usableRollback": false
+      },
+      "compatibleRollback": {
+        "version": "1.1.1",
+        "source": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+        "tree": "94b2fec5383fd948df7605b63f65a4e23078c2a1",
+        "launcher": "/srv/customer/jessiemessage-private/start-primary-release111-cfa7dd35.sh",
+        "launcherSha256": "8b73e7aeb2aae4da7d3e6d0a4f1257664b594fb9f914c34835cad9387842723c",
+        "hostedPrecheckReported": true,
+        "runtimeStarted": false,
+        "httpIdentityVerified": false
+      },
+      "otherHistoricalBlocksPreserved": true
+    }
+  },
+  "updatedAt": "2026-10-20T22:27:38.726732+00:00"
 }
