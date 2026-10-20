@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { canonicalEmail } from "../auth/config.mjs";
+import { createSessionClock } from "../auth/session-policy.mjs";
 import { loadMigrations, migrationStatus, MigrationError } from "../db/migrations.mjs";
 
 export class ResetStoreError extends Error {
@@ -161,17 +162,20 @@ const liveReset = (reset, user, auth, now) => Boolean(reset && reset.user_id.equ
   && storedVersion(reset.credential_version) === storedVersion(auth.credential_version)
   && Buffer.isBuffer(reset.email_hash) && reset.email_hash.equals(emailDigest(user.email)));
 
-export function createResetStore(pool) {
+export function createResetStore(pool, { clock } = {}) {
   if (!pool || typeof pool.getConnection !== "function") input();
+  const currentTime = createSessionClock(clock);
   async function lockedContext(connection, tokenHash, now) {
     const candidate = (await connection.query("SELECT user_id FROM client_password_resets WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
     if (!candidate) return null;
     const user = (await connection.query("SELECT id, role, status, email, email_verified_at, password_hash FROM users WHERE id = ? FOR UPDATE", [candidate.user_id]))[0];
     if (!user) return null;
     const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [user.id]))[0];
-    if (!eligible(user, auth, now)) return null;
     const reset = (await connection.query("SELECT * FROM client_password_resets WHERE token_hash = ? FOR UPDATE", [tokenHash]))[0];
-    return liveReset(reset, user, auth, now) ? { user, auth, reset } : null;
+    // The token lock may outlive its deadline. Share the post-lock instant with
+    // the credential writes instead of reviving the caller's earlier instant.
+    now = currentTime(now);
+    return eligible(user, auth, now) && liveReset(reset, user, auth, now) ? { user, auth, reset, now } : null;
   }
   async function cancelMail(connection, userId) {
     await connection.query(`UPDATE password_reset_outbox SET status = 'cancelled', lease_token = NULL, lease_until = NULL, last_error = NULL
@@ -187,7 +191,8 @@ export function createResetStore(pool) {
         const user = (await connection.query("SELECT id, role, status, email, email_verified_at, password_hash FROM users WHERE email = ? FOR UPDATE", [email]))[0];
         if (!user) return false;
         const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [user.id]))[0];
-        if (!eligible(user, auth, now) || user.email !== email) return false;
+        now = currentTime(now);
+        if (!eligible(user, auth, now) || user.email !== email || reset.expiresAt <= now) return false;
         await connection.query(`UPDATE client_password_resets SET revoked_at = GREATEST(created_at, ?)
           WHERE user_id = ? AND consumed_at IS NULL AND revoked_at IS NULL`, [sqlDate(now), user.id]);
         await cancelMail(connection, user.id);
@@ -211,6 +216,7 @@ export function createResetStore(pool) {
         const context = await lockedContext(connection, tokenHash, now);
         if (!context || !context.user.id.equals(expectedUserId) || storedVersion(context.auth.credential_version) !== expectedVersion) return false;
         const { user, reset } = context;
+        now = context.now;
         await connection.query("UPDATE users SET password_hash = ?, updated_at = GREATEST(updated_at, ?) WHERE id = ?", [passwordHash, sqlDate(now), user.id]);
         await connection.query("UPDATE client_auth_state SET credential_version = credential_version + 1 WHERE user_id = ?", [user.id]);
         await connection.query("UPDATE client_password_resets SET consumed_at = ? WHERE id = ?", [sqlDate(now), reset.id]);

@@ -45,12 +45,14 @@ export async function createResetService({ store, authStore, mailKey, clock = Da
   }
   async function limit(kind, account, peerAddress, now) {
     const network = typeof peerAddress === "string" && peerAddress.length <= 128 ? peerAddress : "unknown-peer";
-    const budgets = [["global", "all", 60, 60],
-      [`${kind}:network`, network, 900, kind === "request" ? 10 : 20],
-      [`${kind}:account`, account, kind === "request" ? 1800 : 900, kind === "request" ? 3 : 5]];
-    for (const [name, identity, windowSeconds, maximum] of budgets) {
-      const bucket = createHmac("sha256", rateKey).update(name).update("\0").update(identity).digest();
-      const result = await authStore.consumeRateLimit(bucket, { now, windowSeconds, limit: maximum });
+    const bucket = (name, identity) => createHmac("sha256", rateKey).update(name).update("\0").update(identity).digest();
+    const budgets = [
+      [bucket("global", "all"), { now, windowSeconds: 60, limit: 60,
+        network: { bucketHash: bucket(`${kind}:network`, network), windowSeconds: 900, limit: kind === "request" ? 10 : 20 } }],
+      [bucket(`${kind}:account`, account), { now, windowSeconds: kind === "request" ? 1800 : 900, limit: kind === "request" ? 3 : 5 }],
+    ];
+    for (const [hash, options] of budgets) {
+      const result = await authStore.consumeRateLimit(hash, options);
       if (!result || typeof result.allowed !== "boolean") fail("RESET_UNAVAILABLE");
       if (!result.allowed) {
         const retry = result.retryAfter;

@@ -148,27 +148,45 @@ export function createAuthStore(pool, { clock } = {}) {
       });
     },
 
-    async consumeRateLimit(bucketHash, { now, windowSeconds, limit }) {
+    async consumeRateLimit(bucketHash, { now, windowSeconds, limit, network }) {
       bytes(bucketHash, 32); instant(now);
-      if (!Number.isSafeInteger(windowSeconds) || windowSeconds < 1 || windowSeconds > 86400
-        || !Number.isSafeInteger(limit) || limit < 1 || limit > 1000000) invalid();
+      const validBudget = (seconds, maximum) => Number.isSafeInteger(seconds) && seconds >= 1 && seconds <= 86400
+        && Number.isSafeInteger(maximum) && maximum >= 1 && maximum <= 1000000;
+      if (!validBudget(windowSeconds, limit)) invalid();
+      if (network !== undefined) {
+        if (!network || typeof network !== "object" || Array.isArray(network)
+          || Object.keys(network).sort().join(",") !== "bucketHash,limit,windowSeconds"
+          || !validBudget(network.windowSeconds, network.limit)) invalid();
+        bytes(network.bucketHash, 32);
+        if (network.bucketHash.equals(bucketHash)) invalid();
+      }
       return withConnection(async (connection) => {
-        // The upsert holds the exclusive row lock before reading the count. This avoids
-        // a shared-to-exclusive lock upgrade when simultaneous requests hit one bucket.
-        await connection.query(`INSERT INTO auth_rate_limits (bucket_hash, window_started_at, attempts)
+        async function consume(hash, seconds, maximum) {
+          // The upsert avoids shared-to-exclusive upgrades for concurrent callers.
+          await connection.query(`INSERT INTO auth_rate_limits (bucket_hash, window_started_at, attempts)
           VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE
           attempts = CASE WHEN window_started_at <= DATE_SUB(?, INTERVAL ? SECOND)
             THEN 1 ELSE LEAST(attempts + 1, 4294967295) END,
           window_started_at = CASE WHEN window_started_at <= DATE_SUB(?, INTERVAL ? SECOND)
-            THEN ? ELSE window_started_at END`, [bucketHash, sqlDate(now), sqlDate(now), windowSeconds, sqlDate(now), windowSeconds, sqlDate(now)]);
-        const row = (await connection.query("SELECT window_started_at, attempts FROM auth_rate_limits WHERE bucket_hash = ? FOR UPDATE", [bucketHash]))[0];
-        const started = fromSqlDate(row.window_started_at);
-        const attempts = Number(row.attempts);
+            THEN ? ELSE window_started_at END`, [hash, sqlDate(now), sqlDate(now), seconds, sqlDate(now), seconds, sqlDate(now)]);
+          const row = (await connection.query("SELECT window_started_at, attempts FROM auth_rate_limits WHERE bucket_hash = ? FOR UPDATE", [hash]))[0];
+          const started = fromSqlDate(row.window_started_at), attempts = Number(row.attempts);
+          return { allowed: attempts <= maximum, retryAfter: Math.max(1, Math.ceil((started + seconds * 1000 - now) / 1000)) };
+        }
+        // Roll back both debits on a network refusal. Keeping this inside the
+        // aggregate's transaction prevents concurrent refusals spending its budget;
+        // refusing the aggregate before the network still bounds counter creation.
+        if (network) await connection.query("SAVEPOINT public_rate_budget");
+        let result = await consume(bucketHash, windowSeconds, limit);
+        if (network && result.allowed) {
+          result = await consume(network.bucketHash, network.windowSeconds, network.limit);
+          if (!result.allowed) await connection.query("ROLLBACK TO SAVEPOINT public_rate_budget");
+        }
         if (now >= nextRatePruneAt && now >= 86400000) {
           nextRatePruneAt = now + 300000;
           await connection.query("DELETE FROM auth_rate_limits WHERE window_started_at < ? LIMIT 2000", [sqlDate(now - 86400000)]);
         }
-        return { allowed: attempts <= limit, retryAfter: Math.max(1, Math.ceil((started + windowSeconds * 1000 - now) / 1000)) };
+        return result;
       }, true);
     },
 

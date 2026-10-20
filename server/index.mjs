@@ -99,6 +99,12 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   const requestWaiters = new Set();
   async function handleRequest(request, response) {
     const method = request.method ?? "GET";
+    // The hosting frontend terminates TLS for these configured HTTPS origins.
+    // Keep the policy at the outer boundary so private handlers and errors
+    // retain it too; forwarding headers never opt a neutral server into HSTS.
+    if (requestOriginAllowed?.(request) || legacyOriginAllowed?.(request)) {
+      response.setHeader("Strict-Transport-Security", "max-age=31536000");
+    }
     if (parentGateway) {
       try { bindParentPeer(request); }
       catch { request.resume(); reply(response, method, 503, "application/json", '{"error":"service_unavailable"}', { Connection: "close" }); return; }
@@ -372,7 +378,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const { createResetMailStore } = await import("./reset/mail-store.mjs");
       const { createResetService } = await import("./reset/service.mjs");
       const { createResetHandler } = await import("./reset/http.mjs");
-      const resetStore = createResetStore(pool);
+      const resetStore = createResetStore(pool, { clock });
       resetMailStore = createResetMailStore(pool);
       await resetStore.assertSchema();
       await resetMailStore.assertSchema();
@@ -472,7 +478,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         const { createBroadcastService } = await import("./broadcast/service.mjs");
         const { createBroadcastHandler } = await import("./broadcast/http.mjs");
         const { createBroadcastWorker } = await import("./broadcast/worker.mjs");
-        const broadcastStore = createBroadcastStore(pool, { chatStore, mediaEnabled: mediaConfig.enabled });
+        const broadcastStore = createBroadcastStore(pool, { chatStore, mediaEnabled: mediaConfig.enabled, clock });
         await broadcastStore.assertSchema();
         const broadcastService = await createBroadcastService({ store: broadcastStore, authStore: store, authService: service,
           key: chatConfig.key, mediaEnabled: mediaConfig.enabled, clock });

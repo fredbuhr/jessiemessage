@@ -51,8 +51,13 @@ export async function createAuthService({ store, totpKey, clock = Date.now }) {
     const accountKey = canonical ?? "invalid-email";
     const network = typeof peerAddress === "string" && peerAddress.length <= 128 ? peerAddress : "unknown-peer";
     const quotaTime = nowValue();
-    for (const [kind, value, windowSeconds, limit] of [["global", "login", 60, 120], ["network", network, 900, 20], ["account", accountKey, 900, 8]]) {
-      const result = await database(() => store.consumeRateLimit(bucket(kind, value), { now: quotaTime, windowSeconds, limit }));
+    const budgets = [
+      [bucket("global", "login"), { now: quotaTime, windowSeconds: 60, limit: 120,
+        network: { bucketHash: bucket("network", network), windowSeconds: 900, limit: 20 } }],
+      [bucket("account", accountKey), { now: quotaTime, windowSeconds: 900, limit: 8 }],
+    ];
+    for (const [hash, options] of budgets) {
+      const result = await database(() => store.consumeRateLimit(hash, options));
       if (!result.allowed) throw new AuthError("AUTH_RATE_LIMIT", result.retryAfter);
     }
     const record = canonical ? await database(() => store.getLoginRecord(canonical)) : null;

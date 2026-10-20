@@ -81,6 +81,18 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       return { accepted, session };
     }
     const lookup = (session, at = now, idleSeconds = 1800) => store.getClientSession(session.tokenHash, { now: at, idleSeconds });
+    function observeTokenLock(predicate, clock) {
+      let observed;
+      const requested = new Promise(resolve => { observed = resolve; });
+      const observedStore = createAccessStore({ getConnection: async () => {
+        const runtimeConnection = await pool.getConnection();
+        return { ...runtimeConnection, query: (...arguments_) => {
+          if (predicate(arguments_[0])) observed();
+          return runtimeConnection.query(...arguments_);
+        } };
+      } }, { clock });
+      return { store: observedStore, requested };
+    }
 
     await t.test("read-only schema checks reject pending history, nullable credential state and lost token uniqueness", async () => {
       assert.equal(await store.assertSchema(), true);
@@ -218,6 +230,36 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       } finally { await connection.query("UPDATE users SET status = 'active' WHERE id = ?", [admin.id]); }
     });
 
+    await t.test("registration refreshes invitation expiry after its real SQL lock and preserves all rows on refusal", async () => {
+      for (const elapsed of [1000, 999]) {
+        const invite = await invitation({ expiresAt: now + 1000 }), fixture = registration(invite);
+        let at = now, pending;
+        const observed = observeTokenLock(sql => sql.includes("FROM invitations WHERE token_hash = ? FOR UPDATE"), () => at);
+        await connection.beginTransaction();
+        try {
+          await connection.query("SELECT id FROM invitations WHERE id = ? FOR UPDATE", [invite.id]);
+          pending = observed.store.register(fixture);
+          await observed.requested;
+          at = now + elapsed;
+          await connection.commit();
+          assert.equal(await pending, elapsed < 1000);
+          const invitationRow = (await connection.query("SELECT consumed_at FROM invitations WHERE id = ?", [invite.id]))[0];
+          const users = await connection.query("SELECT created_at, updated_at FROM users WHERE id = ?", [fixture.user.id]);
+          const verifications = await connection.query("SELECT created_at, expires_at FROM email_verifications WHERE id = ?", [fixture.verification.id]);
+          const mail = await connection.query("SELECT created_at, available_at FROM mail_outbox WHERE id = ?", [fixture.mail.id]);
+          if (elapsed === 1000) {
+            assert.equal(invitationRow.consumed_at, null); assert.deepEqual(users, []); assert.deepEqual(verifications, []); assert.deepEqual(mail, []);
+          } else {
+            assert.equal(invitationRow.consumed_at, sqlDate(at));
+            assert.deepEqual({ ...users[0] }, { created_at: sqlDate(at), updated_at: sqlDate(at) });
+            assert.deepEqual({ ...verifications[0] }, { created_at: sqlDate(at), expires_at: sqlDate(fixture.verification.expiresAt) });
+            assert.deepEqual({ ...mail[0] }, { created_at: sqlDate(at), available_at: sqlDate(at) });
+            assert.equal(await observed.store.register(fixture), false);
+          }
+        } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
+      }
+    });
+
     await t.test("duplicate mailbox and failed mail insert roll back client, invitation consumption and verification together", async () => {
       const original = await registered();
       const duplicateInvite = await invitation();
@@ -253,6 +295,58 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [fixture.mail.id]))[0].status, "cancelled");
       const row = (await connection.query("SELECT status, age_assured_at, access_approved_at FROM users WHERE id = ?", [fixture.user.id]))[0];
       assert.equal(row.status, "pending"); assert.equal(row.age_assured_at, null); assert.equal(row.access_approved_at, null);
+    });
+
+    await t.test("email verification checks expiry after its real token lock before changing the mailbox or queued mail", async () => {
+      for (const elapsed of [1000, 999]) {
+        const fixture = await registered({ verification: { id: id(), tokenHash: digest(), expiresAt: now + 1000 } });
+        let at = now, pending;
+        const observed = observeTokenLock(sql => sql.includes("FROM email_verifications WHERE token_hash = ? FOR UPDATE"), () => at);
+        await connection.beginTransaction();
+        try {
+          await connection.query("SELECT id FROM email_verifications WHERE id = ? FOR UPDATE", [fixture.verification.id]);
+          pending = observed.store.verifyEmail(fixture.verification.tokenHash, { now });
+          await observed.requested;
+          at = now + elapsed;
+          await connection.commit();
+          assert.equal(await pending, elapsed < 1000);
+          const user = (await connection.query("SELECT email_verified_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+          const verification = (await connection.query("SELECT consumed_at, revoked_at FROM email_verifications WHERE id = ?", [fixture.verification.id]))[0];
+          const queued = (await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [fixture.mail.id]))[0];
+          assert.equal(user.email_verified_at, elapsed < 1000 ? sqlDate(at) : null);
+          assert.equal(verification.consumed_at, elapsed < 1000 ? sqlDate(at) : null); assert.equal(verification.revoked_at, null);
+          assert.equal(queued.status, elapsed < 1000 ? "cancelled" : "pending");
+          if (elapsed < 1000) assert.equal(await observed.store.verifyEmail(fixture.verification.tokenHash, { now }), false);
+        } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
+      }
+    });
+
+    await t.test("verification resend waits for credentials without replacing a still-live challenge with an expired one", async () => {
+      for (const elapsed of [1000, 999]) {
+        const fixture = await registered(), verification = { id: id(), tokenHash: digest(), expiresAt: now + 1000 },
+          mail = { id: id(), payloadEncrypted: "synthetic-encrypted-replacement" };
+        let at = now, pending;
+        const observed = observeTokenLock(sql => sql.startsWith("SELECT credential_version FROM client_auth_state"), () => at);
+        await connection.beginTransaction();
+        try {
+          await connection.query("SELECT user_id FROM client_auth_state WHERE user_id = ? FOR UPDATE", [fixture.user.id]);
+          pending = observed.store.reissueVerification({ userId: fixture.user.id, expectedPasswordHash: passwordHash, expectedVersion: 1, verification, mail, now });
+          await observed.requested;
+          at = now + elapsed;
+          await connection.commit();
+          assert.equal(await pending, elapsed < 1000);
+          const old = (await connection.query("SELECT consumed_at, revoked_at FROM email_verifications WHERE id = ?", [fixture.verification.id]))[0];
+          assert.equal(old.consumed_at, null); assert.equal(old.revoked_at, elapsed < 1000 ? sqlDate(at) : null);
+          assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [fixture.mail.id]))[0].status, elapsed < 1000 ? "cancelled" : "pending");
+          const fresh = await connection.query("SELECT created_at, expires_at FROM email_verifications WHERE id = ?", [verification.id]);
+          const queued = await connection.query("SELECT created_at, available_at, expires_at FROM mail_outbox WHERE id = ?", [mail.id]);
+          if (elapsed === 1000) { assert.deepEqual(fresh, []); assert.deepEqual(queued, []); }
+          else {
+            assert.deepEqual({ ...fresh[0] }, { created_at: sqlDate(at), expires_at: sqlDate(verification.expiresAt) });
+            assert.deepEqual({ ...queued[0] }, { created_at: sqlDate(at), available_at: sqlDate(at), expires_at: sqlDate(verification.expiresAt) });
+          }
+        } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
+      }
     });
 
     await t.test("manual approval requires verified email and the consumed invitation, preserves absent age evidence and creates one conversation atomically", async () => {
