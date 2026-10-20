@@ -1,12 +1,14 @@
 # Plan d'implémentation de JessieMessage
 
+**Clôture V1 0.86 en cours :** harmoniser la navigation FR/EN, mesurer la version Node réellement lancée, qualifier puis livrer avec repli 0.85. Aucun nouveau manque fonctionnel nécessaire confirmé ; A01 fournisseur reste ouvert jusqu’à preuve d’un correctif exécuté, sauvegardes/PC et rotation active différés. [Bilan de livraison](production-086.md).
+
 **20 octobre 2026 — lot 0.85 livré/vérifié à 15:43:44 Europe/Paris : confirmation d’envoi après perte de réponse HTTP. Service actif 0.85.0, repli immédiat 0.84.** [Bilan](chat-send-ack-085.md), [pins](REPRISE.md). Priorité durable au cœur messagerie ; sauvegardes/PC différés sans préalable, gardes et états préservés. Aucun nouveau chantier après ce lot.
 
 Ce plan S1/S2/S3 remplace l'ancien découpage en six lots. Le compteur « 4/6 » conservé dans les précédents en-têtes était obsolète ; il n'indique pas deux lots actuels oubliés. Les anciennes exigences de cadence externe fiable, d'alerte de panne totale et de recette sur deux appareils habituels ne sont pas déclarées acquises : leur portée réelle reste dans les limites en fin de document.
 
 ## Lot 0.85 terminé — fiabilité de l’envoi
 
-La confirmation du même envoi par historique/notification après perte de réponse HTTP nettoie le brouillon correspondant et arrête **Réessayer**, sans effacer un nouveau texte. **Critère de fin atteint :** ciblé local 46/46, quatre variantes natives client/admin × texte/photo en échec avant correction puis réussies ; PR #107 et CI candidat/main 5/5 (3 101 réussites générales/35 wrappers ignorés, 466/466 par MariaDB, Chrome 164, HTTPS/SQL 2, syntaxe 568/build). Livraison vérifiée à 13:43:44.068382 UTC, vingt contrôles HTTPS conformes, dix empreintes et identité PC préservées, moniteur OK. Pins et repli 0.84 dans REPRISE. Aucun GET privé authentifié de production ou état PC qualifié ; aucune tâche sauvegarde/PC ajoutée.
+La confirmation du même envoi par historique/notification après perte de réponse HTTP nettoie le brouillon correspondant et arrête **Réessayer**, sans effacer un nouveau texte. **Critère de fin atteint :** ciblé local 46/46, quatre variantes client/admin × texte/photo en échec dans le contrôleur VM avant correction puis réussies, également validées ensuite dans Chrome natif ; PR #107 et CI candidat/main 5/5 (3 101 réussites générales/35 wrappers ignorés, 466/466 par MariaDB, Chrome 164, HTTPS/SQL 2, syntaxe 568/build). Livraison vérifiée à 13:43:44.068382 UTC, vingt contrôles HTTPS conformes, dix empreintes et identité PC préservées, moniteur OK. Pins et repli 0.84 dans REPRISE. Aucun GET privé authentifié de production ou état PC qualifié ; aucune tâche sauvegarde/PC ajoutée.
 
 ## Plan correctif antérieur — 20 octobre, clos avec réserves
 

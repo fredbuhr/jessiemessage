@@ -234,11 +234,13 @@ test("Chrome desktop and 320px: actual Tab / Enter contact selection and return,
       assert.equal(await page.execute("return document.activeElement.id"), "message-scroll", "selecting a contact focuses the history, leaving the draft untouched");
       assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Écris ton message…");
       assert.equal(await page.execute("return document.getElementById('peer-name').textContent"), peerName);
+      assert.equal(await page.execute("return document.querySelector('#readiness-nav a[href=\"/admin/readiness\"]').textContent"), "État du service");
       assert.equal(await page.execute("return document.getElementById('message-announcement').textContent"), "", "loaded history is silent");
       await page.click("[data-jm-language]");
       assert.equal(await page.execute("return document.documentElement.lang"), "en");
       assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Write your message…");
       assert.equal(await page.execute("return document.getElementById('peer-name').textContent"), peerName, "private names are never translated");
+      assert.equal(await page.execute("return document.querySelector('#readiness-nav a[href=\"/admin/readiness\"]').textContent"), "Service status");
       await tabUntil(page, "#back-to-inbox"); await page.key("\uE007");
       assert.equal(await page.execute("return document.activeElement.dataset.conversationId"), conversationId, "return restores the contact recreated by the controller");
       assert.equal(await page.execute("return document.activeElement.querySelector('strong').textContent"), peerName);

@@ -494,6 +494,7 @@ test("missing or unsafe backup configuration leaves the application available an
 test("disabled configuration never reads history or stops the runtime", async () => {
   const f = fixture({ readConfiguration: async () => ({ ...configuration, enabled: false }), history: () => assert.fail("disabled history") });
   await f.supervisor.start(); assert.equal(await f.supervisor.tick(), null); assert.deepEqual(f.events, ["source", "start"]);
+  assert.deepEqual(f.notices, [{ version: 1, type: "recurring_supervisor", status: "started", backupStarted: false, nodeVersion: process.version }]);
   await f.supervisor.close();
 });
 

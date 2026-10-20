@@ -72,9 +72,13 @@ test("broadcast HTML marks interface leaves and loads the shared runtime/catalog
   assert.ok(html.indexOf('src="/i18n-tools.js"') < html.indexOf('src="/broadcast.js"'));
   assert.ok(html.indexOf('src="/session-clock.js"') < html.indexOf('src="/broadcast.js"'));
   assert.match(html, /data-jm-language/); assert.match(html, /data-jm-i18n-placeholder="Écris ton message…"/);
-  const h = harness(); h.visible(); h.switch("en");
+  const h = harness(), serviceLink = h.root.querySelectorAll("a").find(node => node.getAttribute("href") === "/admin/readiness");
+  assert.equal(serviceLink.textContent, "État du service");
+  h.visible(); h.switch("en");
+  assert.equal(serviceLink.textContent, "Service status"); assert.equal(serviceLink.getAttribute("href"), "/admin/readiness");
   assert.equal(h.ids.get("campaign-body").getAttribute("placeholder"), "Write your message…");
   assert.equal(h.ids.get("audience-title").textContent, "Recipients"); h.switch("fr");
+  assert.equal(serviceLink.textContent, "État du service");
   assert.equal(h.ids.get("audience-title").textContent, "Les destinataires"); assert.equal(h.calls.length, 0);
 });
 

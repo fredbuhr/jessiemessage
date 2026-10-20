@@ -72,7 +72,6 @@
     "Tes conversations privées sont accessibles.": "Your private conversations are available.",
     "Ton accès est prêt.": "Your access is ready.",
     "Ouvrir les conversations": "Open conversations",
-    "Préparer le site": "Prepare the site",
     "Confidentialité": "Privacy",
     "Sauvegardes": "Backups",
     "Inviter un client": "Invite a client",
