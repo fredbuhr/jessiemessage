@@ -4,6 +4,14 @@
 
 Le compteur « étape 4/6 » appartenait au plan du 18 octobre (`2bec7c6a`), remplacé le 19 octobre par S1/S2/S3 (`bd606963`). Il ne décrit plus l'avancement courant. Les limites ci-dessous restent déclarées ; la clôture de la V1 ne vaut pas validation des garanties de l'ancien périmètre.
 
+## Audit demandé le 20 octobre — terminé, corrections à faire
+
+L’[audit transversal](AUDIT-CODE-2026-10-20.md) demandé explicitement par le propriétaire examine sécurité, bugs, code mort, doublons et complexité sur `f629137`, code applicatif identique au runtime 0.79. [Synthèse machine](verification-proofs/jm079-audit-20261020.json). **Aucun correctif applicatif ni déploiement dans ce lot.** Aucun P0/P1 ou accès intercompte démontré ; des corrections ciblées restent nécessaires, avec leurs conditions et limites détaillées dans le rapport.
+
+Vérification locale : syntaxe 558 fichiers ; **2 813 tests réussis, 214 ignorés, zéro échec**, après sélection d’un TMPDIR accessible ; `npm audit` sans alerte connue. La CI native 0.79 ci-dessous est relue, pas réexécutée par cet audit. Lecture seule de l’hôte : Node **24.15.0**, quotas média **1 Gio/propriétaire et 10 Gio/global**, dix empreintes sensibles préservées. Les correctifs Node intégrés ne sont pas couverts par `npm audit`.
+
+**Premières corrections :** qualifier un Node 24 corrigé disponible sur l’hébergement (A01), isoler les budgets publics des réseaux déjà refusés (A02), actualiser les échéances après attente SQL (A03/A04). Ensuite, traiter le décalage de volume sauvegardable et la progression du copieur existant. Aucun besoin de nouveau serveur, budget, réappariement ou nouvelle architecture. Les candidats navigateur C01/C02 ne sont pas des failles confirmées.
+
 ## Service courant et preuves
 
 Messagerie privée sur invitation, texte/photos, sessions indépendantes, CRM, export, notifications, copies chiffrées PC existantes et récupération applicative manuelle en maintenance. Les conversations restent conservées jusqu'à fermeture définitive, hors suppressions volontaires. [Guide quotidien](guide-jessie.md), [recette et limites](messaging-acceptance-079.md), [preuves 0.79](verification-proofs/jm079-verification.json).
@@ -55,4 +63,4 @@ La [surveillance](../MONITORING.md) conserve ses limites : moniteur local et mai
 
 Repli immédiat conservé : **0.76.0**, source `8abd205cc686f9a669511fd9d28b203ee4d4632a`, arbre `400e798cc51434d548690d4821cae665f5d14716`, checkout `/srv/customer/jessiemessage-operator/simple-backups-076-8abd205c`. Run `bash /srv/customer/jessiemessage-private/start-primary-simple-backups-076-8abd205c.sh`, 0700, SHA-256 `81302008fd2ace8a1a4450084ea8478aaf567684d225607b994401240f390482`. Commandes Manager exactes conservées dans `s3.deploymentProgress.rollback` du checkpoint. Aucun retour SQL ni suppression de journal ; la barrière refusera une intention inachevée. L'ancien repli 0.72 reste historique et conservé.
 
-**Prochaine action : usage normal de la V1 privée et traitement des seuls incidents concrets.** Aucun nouveau lot technique, VPS, budget, questionnaire, mail de test ou appariement requis. Ne pas rouvrir les sauvegardes ou refaire D1/D2. Historique détaillé avant ce déploiement : [REPRISE feb0a6d](https://github.com/fredbuhr/jessiemessage/blob/feb0a6dafcd68662f908b129bfb952434308ebf1/docs/REPRISE.md), [historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md).
+**Prochaine action : premier lot borné de corrections de l’audit A01–A04**, avec régressions et qualification utile avant déploiement. La V1 privée reste livrée ; cet audit explicite ne rouvre pas S1/S2/S3, les anciennes garanties de sauvegarde ou D1/D2. Aucun VPS, budget, questionnaire, mail de test ou appariement requis. Historique détaillé avant ce déploiement : [REPRISE feb0a6d](https://github.com/fredbuhr/jessiemessage/blob/feb0a6dafcd68662f908b129bfb952434308ebf1/docs/REPRISE.md), [historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md).

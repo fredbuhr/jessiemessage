@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "type": "jm079_transversal_code_audit",
+  "dateUtc": "2026-10-20",
+  "status": "audit_completed_corrections_pending",
+  "report": "docs/AUDIT-CODE-2026-10-20.md",
+  "repository": "fredbuhr/jessiemessage",
+  "baseline": {
+    "branch": "main",
+    "commit": "f62913771cfd827b3f7f556b135be99aecbbb816",
+    "tree": "b6df729c1aeefef5acf865a076e1bfd8335afd9f",
+    "cleanAtStart": true,
+    "trackedFiles": 846,
+    "runtimeVersion": "0.79.0",
+    "runtimeCommit": "bc6103a73ce63752eda27a0bce83a7e53e409d09",
+    "runtimeTree": "39ac4fdabc55b7661742fbd6acc5763d65a42dab",
+    "codeDiffToRuntime": [],
+    "codeDiffScope": ["server", "public", "scripts", "package.json", "package-lock.json"]
+  },
+  "verification": {
+    "localNode": "v24.19.0",
+    "syntax": { "command": "npm run check", "exitCode": 0, "files": 558 },
+    "general": {
+      "command": "TMPDIR=<scratch-temp> node --test --test-concurrency=2 --test-timeout=90000 tests/*.test.mjs",
+      "exitCode": 0,
+      "tests": 3027,
+      "passed": 2813,
+      "failed": 0,
+      "skipped": 214,
+      "cancelled": 0,
+      "durationMilliseconds": 80346.077178,
+      "firstPassEnvironmentErrors": "Three ZIP export ENOENT errors because /tmp is absent; complete suite passed after selecting writable TMPDIR.",
+      "limits": ["No native MariaDB or Chrome available locally", "Required procfs directory anchors unavailable locally", "Environment-conditional subtests affect total counts"]
+    },
+    "previousNativeCi": {
+      "run": 39342025957,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39342025957",
+      "statusAndLogsReadDuringAudit": true,
+      "jobsSuccessful": 5,
+      "generalPassed": 2996,
+      "generalSkippedSqlWrappers": 35,
+      "mariadb1011": { "passed": 436, "skipped": 0, "failed": 0 },
+      "mariadb114": { "passed": 436, "skipped": 0, "failed": 0 },
+      "chromePassed": 160,
+      "realHttpsSqlAcceptancePassed": 2,
+      "offlineBuild": "passed",
+      "newAuditReproductionsCoveredByThisCi": false
+    },
+    "npmAudit": {
+      "command": "npm audit --omit=dev --json --fetch-retries=0 --fetch-timeout=20000",
+      "exitCode": 0,
+      "vulnerabilities": { "info": 0, "low": 0, "moderate": 0, "high": 0, "critical": 0, "total": 0 },
+      "dependencyMetadata": { "prod": 32, "dev": 0, "optional": 28, "peer": 0, "peerOptional": 0, "total": 59 },
+      "coversNodeBuiltinComponents": false
+    },
+    "directLockedDependencies": { "mariadb": "3.5.4", "nodemailer": "10.1.1", "otpauth": "9.5.2", "sharp": "0.35.5", "web-push": "3.6.7" },
+    "targetedSecretPatterns": {
+      "scope": "tracked working-tree text only",
+      "patterns": ["private PEM blocks", "private PGP blocks", "GitHub tokens", "AWS access key IDs"],
+      "onlyPrivateKeyPatternMatch": "synthetic TLS fixture in tests/smtp-socket.test.mjs",
+      "realSecretDemonstrated": false,
+      "fullEntropyBinaryAndGitHistoryScan": false
+    },
+    "liveReadOnly": {
+      "quotaAndNodeObservedAtUtc": "2026-10-20T00:09:41.359018Z",
+      "nodeBinary": "/usr/local/bin/node",
+      "nodeVersion": "v24.15.0",
+      "activeLauncherUsesThisBinary": true,
+      "mediaCapacityBytes": { "owner": 1073741824, "total": 10737418240, "minimumFree": 536870912 },
+      "currentMediaVolumeMeasured": false,
+      "preservedSensitiveFileHashes": { "matched": 10, "expected": 10 },
+      "http": [
+        { "path": "/api/health", "status": 200, "cacheControl": "no-store", "setCookie": false, "hsts": false, "csp": true, "nosniff": true },
+        { "path": "/api/ready", "status": 200, "cacheControl": "no-store", "setCookie": false, "hsts": false, "csp": true, "nosniff": true },
+        { "path": "/api/admin/backups", "status": 401, "cacheControl": "no-store", "setCookie": true, "hsts": false, "csp": true, "nosniff": true }
+      ],
+      "authenticatedPrivateGet": false,
+      "mutations": false,
+      "restarts": false
+    }
+  },
+  "inventory": {
+    "serverModules": 176,
+    "reachableFromServerIndex": 109,
+    "reachableFromServerAndCliRoots": 173,
+    "additionalForkChildEntry": "server/media/image-worker.mjs",
+    "historicallyRetainedModules": ["registry-witness", "closure-reconciliation-replay"],
+    "wholeServerModuleProvenDead": false,
+    "missingLocalImports": 0,
+    "publicFiles": 81,
+    "publicFilesMappedByRoutes": 79,
+    "intentionalPublicExceptions": ["public/icon.svg", "public/brand/asset-manifest.json"],
+    "assetReferencesChecked": 67,
+    "missingAssetReferenceTargets": 0,
+    "relativeDocumentationLinksChecked": 772,
+    "brokenRelativeDocumentationLinks": 0,
+    "exactClones": {
+      "scope": ["server", "public", "scripts"],
+      "extensions": [".mjs", ".js", ".ps1", ".sh"],
+      "filesScanned": 270,
+      "physicalLines": 39245,
+      "lineNormalization": "Exclude blank lines; strip leading/trailing line whitespace",
+      "minimumNonblankLines": 12,
+      "minimumCharacters": 450,
+      "coveredUniqueNonblankLines": 359,
+      "coveredLinesByFile": { "server/reset/store.mjs": 82, "server/broadcast/store.mjs": 82, "server/mail/crypto.mjs": 55, "server/reset/mail-crypto.mjs": 55, "server/crm/store.mjs": 46, "server/media/store.mjs": 39 },
+      "files": 6,
+      "measuredNonblankCodeLines": 38026,
+      "percentage": 0.94,
+      "semanticDuplicationMeasured": false
+    },
+    "exportWithOnlyTestConsumersInRepository": "server/auth/crypto.mjs:constantTimeText"
+  },
+  "findings": [
+    { "id": "A01", "priority": "P2", "kind": "runtime_patch_gap", "evidence": "Hosted Node 24.15.0 and launcher read; official June/July security releases are later", "exploitInActiveCompositionDemonstrated": false },
+    { "id": "A02", "priority": "P2", "kind": "availability", "evidence": "Real login service with quota double: 120 already network-denied calls exhaust global bucket; unrelated network denied", "productionTrafficSent": false, "existingSessionsAffected": false },
+    { "id": "A03", "priority": "P2", "kind": "stale_expiry_broadcast", "evidence": "Real store with synthetic SQL context: entry t, context t+2000, expiry t+1000 produces delivered:true; fresh-time counterexample refuses", "nativeSqlReproduction": false, "realMessageSent": false },
+    { "id": "A04", "priority": "P3", "kind": "stale_expiry_access_links", "evidence": "Reset store consumes token after synthetic SQL wait crosses expiry; invitation and email verification share static pattern", "validTokenStillRequired": true, "nativeSqlReproduction": false },
+    { "id": "A05", "priority": "P2", "kind": "backup_capacity_mismatch", "evidence": "103 sparse files of 10 MiB total 1080033280 bytes reject with CHECKPOINT_FILES_LIMIT; live total media quota is 10 GiB", "captureMediaLimitBytes": 1073741824, "liveLimitExceededObserved": false },
+    { "id": "A06", "priority": "P2", "kind": "partial_media_restore_resume", "evidence": "Interrupted isolated copy preserves partial output; targeted verification of that output refuses; CLI nonempty-target branch confirmed by code reading", "fullNativeSqlCliResumeReproduced": false, "jobPhaseAtInterruption": "allocated", "targetQuarantinePublishedAtInterruption": false, "unsafePublicationDemonstrated": false },
+    { "id": "A07", "priority": "P2", "kind": "windows_copy_progress", "evidence": "Static oldest-first restart, full hashing of existing archives, ten-minute budget can repeatedly exclude new archives", "actualPcTriggerMeasured": false },
+    { "id": "A08", "priority": "P2", "kind": "history_lifetime", "evidence": "History limit rejects 2001 receipts; normal attempt records running and terminal receipts", "maxReceipts": 2000, "maxDirectoryEntries": 4096, "approximateNormalDailyAttemptsToLimit": 1000, "currentSaturationObserved": false },
+    { "id": "A09", "priority": "P2", "kind": "shutdown_reporting", "evidence": "Real synthetic child ignores SIGTERM and receives SIGKILL; supervisor.finished reports failed:false", "destructiveStopGuardBypassDemonstrated": false },
+    { "id": "A10", "priority": "P3", "kind": "schema_hardening", "evidence": "Faithful synthetic migration/FK metadata with cross-schema parent accepted by local assertion", "operatorDdlDriftRequired": true, "normalClosedImportBypassDemonstrated": false },
+    { "id": "A11", "priority": "P3", "kind": "hsts_hardening", "evidence": "HSTS absent from three live HTTPS API responses and header constants", "interceptionDemonstrated": false }
+  ],
+  "unconfirmedBrowserCandidates": [
+    { "id": "C01", "priorityIfConfirmed": "P3", "kind": "strict_cookie_clear_on_external_api_navigation", "handlerReproduced": true, "nativeBrowserReproduced": false },
+    { "id": "C02", "priorityIfConfirmed": "P3", "kind": "stale_backup_mutation_completion", "vmHarnessReproduced": true, "harnessAllowsFetchIgnoringAbort": true, "nativeBrowserReproduced": false, "postReplayOrLeakDemonstrated": false }
+  ],
+  "officialRuntimeSources": [
+    "https://nodejs.org/en/blog/release/v24.15.0",
+    "https://nodejs.org/en/blog/vulnerability/june-2026-security-releases",
+    "https://nodejs.org/en/blog/vulnerability/july-2026-security-releases",
+    "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases"
+  ],
+  "outcome": {
+    "p0OrP1Demonstrated": false,
+    "crossAccountAccessDemonstrated": false,
+    "productionDataLossDemonstrated": false,
+    "applicationCodeChanged": false,
+    "deployedRuntimeChanged": false,
+    "historicV1DeliveryReopened": false,
+    "newInfrastructureRequired": false,
+    "nextAction": "Bounded first corrections: qualify patched Node 24, public rate-budget isolation, expiry checks after SQL waits."
+  }
+}

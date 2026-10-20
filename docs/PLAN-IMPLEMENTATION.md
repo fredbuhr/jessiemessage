@@ -40,4 +40,8 @@ Trois sessions Chrome indépendantes avec vrai HTTPS, MariaDB et médias : deux 
 
 Trois navigateurs ne prouvent pas toutes les plateformes physiques ni l'arrière-plan système/PWA. Le moniteur externe présente des intervalles réels de plusieurs heures ; aucune réception d'alerte externe ni durée maximale de détection attestée. Aucune rotation automatique des archives ou durée générale de trente jours ajoutée. Pas de promesse de vingt-quatre heures de perte maximale : une copie PC peut être plus ancienne et les messages postérieurs à la capture choisie peuvent être perdus.
 
-**Suite : usage normal de la V1 privée et correction des incidents concrets.** Aucun nouveau sous-lot de sauvegarde, étude VPS, budget, questionnaire, test de mail ou initialisation PC. Préserver PC, clés, autorité et quarantaine D1.
+## Audit explicite du 20 octobre — terminé
+
+L’[audit transversal du code](AUDIT-CODE-2026-10-20.md), demandé par le propriétaire après livraison, est terminé sur `f629137` ; [preuves](verification-proofs/jm079-audit-20261020.json). Les constats distinguent défauts reproduits, conditions non observées, durcissements et deux candidats navigateur. Aucun correctif applicatif ou changement de production dans ce lot. La clôture de S1/S2/S3 et leurs limites restent inchangées.
+
+**Suite : corrections bornées de l’audit, d’abord A01–A04** : runtime Node corrigé sur l’hébergement actuel, budgets publics et échéances après attente SQL ; puis fiabilité des copies et reprise existantes. Les critères et régressions attendus figurent dans le rapport. Aucun nouveau sous-lot d’architecture de sauvegarde, étude VPS, budget, questionnaire, test de mail ou initialisation PC. Préserver PC, clés, autorité et quarantaine D1.
