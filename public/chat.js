@@ -1214,7 +1214,7 @@ async function start({ session = null } = {}) {
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       if (role === "admin" && !document.getElementById("readiness-nav")) {
         const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; ui.attr(nav, "aria-label", "Administration");
-        const link = document.createElement("a"); link.href = "/admin/readiness"; ui.text(link, "Préparer le site"); nav.append(link); el("inbox-title").parentElement.append(nav);
+        const link = document.createElement("a"); link.href = "/admin/readiness"; ui.text(link, "État du service"); nav.append(link); el("inbox-title").parentElement.append(nav);
       }
       await refreshMediaCapability();
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();

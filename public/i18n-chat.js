@@ -113,7 +113,7 @@ globalThis.JessieI18n?.register({
   "Gérer les accès": "Manage access",
   "Mon accès": "My access",
   "Administration": "Administration",
-  "Préparer le site": "Prepare the site",
+  "État du service": "Service status",
   "La messagerie n’est pas encore activée. Consulte ton accès pour revenir plus tard.": "Messaging is not enabled yet. Check your access and come back later.",
   "La messagerie est indisponible. Recharge la page pour réessayer.": "Messaging is unavailable. Reload the page to try again.",
   "JessieMessage — Messages privés": "JessieMessage — Private messages",

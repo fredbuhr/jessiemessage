@@ -333,7 +333,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
         notice(report);
       }
       if (closed) fail("ABORTED"); started = true;
-      notice({ version: 1, type: "recurring_supervisor", status: "started", backupStarted: false });
+      notice({ version: 1, type: "recurring_supervisor", status: "started", backupStarted: false, nodeVersion: process.version });
       void tick().finally(arm);
       return { ready: true };
     } catch (error) {

@@ -297,16 +297,20 @@ test("hidden date parameters do not reappear on a language switch and a new owne
 
 test("unread counts and reminders translate while raw CRM names and labels keep their exact text", async () => {
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin") }); await flush();
+  const serviceLink = f.element("readiness-nav").querySelector("a");
+  assert.equal(serviceLink.href, "/admin/readiness"); assert.equal(serviceLink.textContent, "État du service");
   f.conversation().unreadCount = 1200;
   f.run(`crm = { displayName: (conversation) => conversation.peerName }; const contact = [...inbox.values()][0]; contact.unreadCount = 1200; contact.crm = { labels: [{name:"Envoyer"},{name:"Messages privés"}], reminderAt: Date.now() }; renderInbox();`);
   const button = f.element("conversations").children[0], count = button.querySelector(".unread"), details = button.querySelector(".crm-contact-meta"), name = button.querySelector("strong");
   button.focus(); const before = f.calls.length;
   assert.equal(count.textContent, (1200).toLocaleString("fr-FR")); assert.match(details.textContent, /Envoyer · Messages privés · Rappel à traiter/);
   f.language("en");
+  assert.equal(serviceLink.textContent, "Service status"); assert.equal(serviceLink.href, "/admin/readiness");
   assert.equal(f.element("conversations").children[0], button); assert.equal(f.document.activeElement, button);
   assert.equal(name.textContent, "Messages privés"); assert.equal(count.textContent, "1,200"); assert.equal(count.getAttribute("aria-label"), "1,200 unread messages");
   assert.equal(details.textContent, "Envoyer · Messages privés · Reminder due"); assert.equal(f.calls.length, before);
   f.language("fr"); assert.equal(count.getAttribute("aria-label"), `${(1200).toLocaleString("fr-FR")} messages non lus`);
+  assert.equal(serviceLink.textContent, "État du service");
   assert.equal(details.textContent, "Envoyer · Messages privés · Rappel à traiter");
 });
 

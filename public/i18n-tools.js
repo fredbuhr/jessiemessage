@@ -14,7 +14,7 @@
   "Une préparation est déjà en cours ou vient de se terminer. Patiente trente secondes puis réessaie.": "An export is already being prepared or has just finished. Wait thirty seconds, then try again.",
   "Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.": "The download is unavailable. Try again; no incomplete file is offered.",
     "JessieMessage — Diffusions privées": "JessieMessage — Private broadcasts",
-    "Administration": "Administration", "Messages": "Messages", "Préparer le site": "Prepare the site", "Se déconnecter": "Sign out", "Contact": "Contact",
+    "Administration": "Administration", "Messages": "Messages", "État du service": "Service status", "Se déconnecter": "Sign out", "Contact": "Contact",
     "DANS LEUR CONVERSATION": "IN THEIR CONVERSATION", "Un message, à chacun.": "One message, to each person.",
     "Choisis les destinataires. Chacun reçoit ton message dans sa conversation privée avec toi, sans mention de diffusion ni des autres destinataires.": "Choose recipients. Each receives your message in their private conversation with you, without a broadcast label or information about other recipients.",
     "Vérification de la connexion…": "Checking your connection…", "Actualiser la page": "Refresh the page", "1 · CHOISIR": "1 · CHOOSE", "Les destinataires": "Recipients",
