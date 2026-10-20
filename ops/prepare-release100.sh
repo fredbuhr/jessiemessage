@@ -30,7 +30,16 @@ jm_source() {
 }
 jm_source "$jm_old" "$jm_oldsha" "$jm_oldtree"
 [[ $(sha256sum "$jm_oldlauncher" | cut -d' ' -f1) == e54392621a7f63f7665f44c191783d467ccb214630e65449fb4ae57138cc9881 ]]
-[[ $(sha256sum "$jm_node" | cut -d' ' -f1) == 67ca5783f8bb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a6506751c ]]
+# La transcription documentaire du hash Node avait 65 caractères. La référence
+# effective reste celle du lanceur dont le SHA-256 exact est vérifié ci-dessus.
+jm_node_sha=$(python3 - "$jm_oldlauncher" <<'PY'
+import pathlib, re, sys
+pins = set(re.findall(r'\b[a-f0-9]{64}\b', pathlib.Path(sys.argv[1]).read_text()))
+if len(pins) != 1: raise SystemExit('STAGING_REFUSED: original Node pin is ambiguous')
+print(pins.pop())
+PY
+)
+[[ $(sha256sum "$jm_node" | cut -d' ' -f1) == "$jm_node_sha" ]]
 [[ $("$jm_node" --version) == v24.22.0 ]]
 # Refuser une répétition aveugle après interruption : inspecter l'état durable.
 for jm_path in "$jm_target" "$jm_launcher" "$jm_check" "$jm_log" "$jm_prelog"; do
@@ -98,6 +107,7 @@ for line in pathlib.Path(prelog).read_text().splitlines():
 if not (len(receipts) == 1 and receipts[0].get('status') == 'passed' and receipts[0].get('started') is False and receipts[0].get('erased') is False and isinstance(receipts[0].get('pendingClosures'), bool)):
     raise SystemExit('STAGING_REFUSED: precheck receipt not confirmed; inspect private log')
 print(json.dumps(dict(status='staged_precheck_passed', source=sha, tree=tree, version='1.0.0', checkout=target, launcher=launcher,
+    nodeBinarySha256=hashlib.sha256(pathlib.Path('/srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node').read_bytes()).hexdigest(), nodeVersion='v24.22.0',
     launcherSha256=hashlib.sha256(pathlib.Path(launcher).read_bytes()).hexdigest(), launcherMode='0700', log=log, logMode='0600',
     precheckLog=prelog, precheckLogSha256=hashlib.sha256(pathlib.Path(prelog).read_bytes()).hexdigest(),
     pendingClosures=receipts[0].get('pendingClosures'), started=False, erased=False, managerChanged=False, runtimeStarted=False), separators=(',', ':')))
