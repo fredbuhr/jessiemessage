@@ -11,7 +11,7 @@ const fail = () => { throw new ApplicationBackupScopeError(); };
 
 // This is deliberately weaker than complete-schema inspection: executable
 // objects are excluded, and no claim is made about their visible inventory.
-export const APPLICATION_COVERAGE = Object.freeze({ scope: "application-tables", tables: 30, encryptedMedia: true,
+export const APPLICATION_COVERAGE = Object.freeze({ scope: "application-tables", tables: 31, encryptedMedia: true,
   executableObjects: "excluded", executableInventory: "unproven", completeDatabase: false });
 
 export function validateApplicationCoverage(value) {
@@ -21,8 +21,9 @@ export function validateApplicationCoverage(value) {
     const fields = Object.getOwnPropertyDescriptors(value), names = Reflect.ownKeys(fields);
     if (names.length !== Object.keys(APPLICATION_COVERAGE).length || names.some(name => typeof name !== "string"
       || !Object.hasOwn(APPLICATION_COVERAGE, name) || !fields[name].enumerable
-      || !Object.hasOwn(fields[name], "value") || fields[name].value !== APPLICATION_COVERAGE[name])) fail();
-    return { ...APPLICATION_COVERAGE };
+      || !Object.hasOwn(fields[name], "value") || (name === "tables" ? ![30, 31].includes(fields[name].value) : fields[name].value !== APPLICATION_COVERAGE[name]))) fail();
+    // Archived authenticated coverage remains 30; it is never relabeled 31.
+    return { ...APPLICATION_COVERAGE, tables: fields.tables.value };
   } catch { fail(); }
 }
 
@@ -63,7 +64,7 @@ function rowValues(rows, count) {
   return result;
 }
 
-/** Inspect exactly the application's thirty physical InnoDB tables. This
+/** Inspect exactly the application's thirty-one physical InnoDB tables. This
  * intentionally does not query triggers, events or routines. */
 export async function assertApplicationTableInspection(connection, database) {
   try {
@@ -71,8 +72,8 @@ export async function assertApplicationTableInspection(connection, database) {
     const identity = rowValues(await connection.query("SELECT DATABASE() AS name"), 1);
     if (dataField(identity[0], "name") !== database) fail();
     const migrations = await loadMigrations(), names = [...createdMigrationTables(migrations), "schema_migrations"].sort();
-    if (migrations.length !== 30 || names.length !== 30 || new Set(names).size !== 30) fail();
-    const tables = rowValues(await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 31", [database]), 30);
+    if (migrations.length !== 31 || names.length !== 31 || new Set(names).size !== 31) fail();
+    const tables = rowValues(await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 32", [database]), 31);
     const actual = tables.map(row => {
       if (dataField(row, "kind") !== "BASE TABLE" || dataField(row, "engine") !== "InnoDB") fail();
       return dataField(row, "name");

@@ -41,7 +41,8 @@ async function checkpoint(directory, state, startedAt, suffix) {
   await writeFile(path.join(destination, "database.sql.gz"), gzip, { mode: 0o600 });
   const receipt = { format: "jessiemessage-private-checkpoint", version: 10,
     profile: "messaging-photos-notify-recovery-crm-broadcast-application",
-    coverage: APPLICATION_COVERAGE,
+    // Historical schema-30 capsules keep their original coverage after upgrade.
+    coverage: { ...APPLICATION_COVERAGE, tables: 30 },
     createdAt: startedAt + 1, schema: { tables: 30, migrations: 30 },
     sql: { file: "database.sql.gz", bytes: gzip.length, sha256: hash(gzip), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) },
     manifest: { file: "manifest.json", sha256: hash(manifest) }, media: { files: [], bytes: 0 } };
@@ -94,6 +95,8 @@ test("history archival dry-run preserves source bytes and later closure coverage
   }
   const oldState = await withErasureDirectory(archivedPath, async scope => {
     const receipt = await readCheckpointReceipt(scope);
+    assert.deepEqual(receipt.schema, { tables: 30, migrations: 30 });
+    assert.equal(receipt.coverage.tables, 30);
     return readOperationalCheckpoint(scope, receipt, key);
   });
   assert.equal(planOperationalRestore({ backup: oldState, current: before, targetBinding, key }).completedReceipts, 2);

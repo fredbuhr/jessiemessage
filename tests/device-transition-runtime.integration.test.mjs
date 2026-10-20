@@ -40,7 +40,7 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host));
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/);
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 31);
   const allowed = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let bootstrapPool, runtime, mediaRoot;
   async function closeRuntime() {

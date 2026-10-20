@@ -133,6 +133,8 @@ test("durable account erasure removes the selected graph and actual encrypted fi
     await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?), (?, ?, ?, ?)", [conv, first, admin, created, peerConv, peer, admin, created]);
     const sid = await session(first, "client"), peerSid = await session(peer, "client");
     const own = await asset(first, "client", "registered"), shared = await asset(admin, "admin", "registered"), peerAsset = await asset(peer, "client", "registered");
+    await connection.query(`INSERT INTO user_profiles (user_id, avatar_media_id, version, created_at, updated_at)
+      VALUES (?, ?, 1, ?, ?), (?, ?, 2, ?, ?)`, [first, own.id, created, created, peer, peerAsset.id, created, created]);
     const objects = [own]; for (const state of ["reserved", "cleanup_pending", "released"]) objects.push(await asset(first, "client", state));
     const ownMessage = await message(conv, first, "client", 1, own), adminMessage = await message(conv, admin, "admin", 2, shared);
     const peerMessage = await message(peerConv, peer, "client", 1, peerAsset), peerAdminMessage = await message(peerConv, admin, "admin", 2, shared);
@@ -154,7 +156,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
   async function peerSnapshot(f) {
     const groups = [];
     for (const [table, column, value] of [["users", "id", f.peer], ["users", "id", admin], ["sessions", "user_id", f.peer], ["sessions", "user_id", admin],
-      ["client_auth_state", "user_id", f.peer], ["client_session_state", "session_id", f.peerSid], ["invitations", "consumed_by_id", f.peer],
+      ["client_auth_state", "user_id", f.peer], ["user_profiles", "user_id", f.peer], ["client_session_state", "session_id", f.peerSid], ["invitations", "consumed_by_id", f.peer],
       ["email_verifications", "user_id", f.peer], ["client_password_resets", "user_id", f.peer], ["mail_outbox", "recipient_user_id", f.peer],
       ["password_reset_outbox", "recipient_user_id", f.peer], ["broadcast_preferences", "user_id", f.peer], ["push_subscriptions", "user_id", f.peer],
       ["media_assets", "owner_id", f.peer], ["media_storage_objects", "owner_id", f.peer], ["media_assets", "id", f.shared.id], ["media_storage_objects", "id", f.shared.id],
@@ -409,7 +411,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       const f = await seed(), before = await peerSnapshot(f), held = Number((await connection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes);
       const result = await engine().resume({ clientId: hex(f.first) }); assert.equal(result.completed, true); assert.equal(result.processedMedia, 4);
       assert.equal(await peerSnapshot(f), before); assert.equal(Number((await connection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes), held - 1740);
-      for (const [table, column, value] of [["users", "id", f.first], ["client_auth_state", "user_id", f.first], ["sessions", "user_id", f.first],
+      for (const [table, column, value] of [["users", "id", f.first], ["client_auth_state", "user_id", f.first], ["user_profiles", "user_id", f.first], ["sessions", "user_id", f.first],
         ["invitations", "consumed_by_id", f.first], ["media_assets", "owner_id", f.first], ["media_storage_objects", "owner_id", f.first], ["conversations", "id", f.conv], ["messages", "conversation_id", f.conv]])
         assert.equal((await connection.query(`SELECT 1 FROM ${table} WHERE ${column} = ?`, [value])).length, 0, table);
       for (const object of f.objects) assert.equal((await readdir(mediaRoot)).some(name => name.includes(hex(object.storageKey))), false, "remove even released and reserved files");
@@ -472,6 +474,14 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       const f = await seed(); await connection.query("UPDATE media_storage_objects SET storage_key = ? WHERE id = ?", [randomBytes(32), f.own.id]);
       const before = await databaseHash(); await assert.rejects(engine().resume({ clientId: hex(f.first) }), { code: "ERASURE_BINDINGS" }); assert.equal(await databaseHash(), before);
       await connection.query("UPDATE media_storage_objects SET storage_key = ? WHERE id = ?", [f.own.storageKey, f.own.id]);
+    });
+    await t.test("another client's avatar reference blocks erasure without changing either profile or media", async () => {
+      const f = await seed();
+      await connection.query("UPDATE user_profiles SET avatar_media_id = ? WHERE user_id = ?", [f.own.id, f.peer]);
+      const before = await databaseHash();
+      await assert.rejects(engine().resume({ clientId: hex(f.first) }), { code: "ERASURE_BINDINGS" });
+      assert.equal(await databaseHash(), before);
+      await connection.query("UPDATE user_profiles SET avatar_media_id = ? WHERE user_id = ?", [f.peerAsset.id, f.peer]);
     });
     await t.test("a corrupted shared audience rolls back the complete SQL phase", async () => {
       const f = await seed(), row = (await connection.query("SELECT payload_encrypted FROM broadcast_campaigns WHERE id = ?", [f.sharedCampaign.id]))[0];

@@ -27,7 +27,7 @@ test("offline client content reader isolates two real MariaDB clients in one rea
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 30);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 31);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   assert.deepEqual([...DATA_POLICY.map((entry) => entry.table)].sort(), allowedTables.filter((table) => !["schema_migrations", "migration_probe"].includes(table)).sort());
   const connection = await connectDatabase(); let pool;
@@ -65,6 +65,8 @@ test("offline client content reader isolates two real MariaDB clients in one rea
     }
     await asset(shared, admin, "admin"); await asset(unused, first, "client");
     await asset(tombstonedDeliveryAsset, first, "client"); await asset(otherLibrary, second, "client");
+    await connection.query(`INSERT INTO user_profiles (user_id, avatar_media_id, version, created_at, updated_at)
+      VALUES (?, ?, 3, ?, ?), (?, ?, 7, ?, ?)`, [first, unused, created, created, second, otherLibrary, created, created]);
     await connection.query(`INSERT INTO media_storage_state (id, owner_bytes, total_bytes, root_fingerprint, held_bytes, initialized_at)
       VALUES (1, 1048576, 2097152, ?, 2320, ?)`, [randomBytes(32), created]);
     async function message(conv, sender, role, seq, mediaId = null, isDeleted = false) {
@@ -100,6 +102,8 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         assert.equal(reader.account.email, "first@example.invalid"); assert.equal(reader.account.accessExpiresAt, sqlDate(now - 60000));
         assert.equal(reader.conversation.peerName, "Synthetic peer"); assert.equal(reader.conversation.lastReadSequence, "3");
         assert.equal(reader.conversation.peerReadSequence, "0"); assert.equal(reader.preference.enabled, true);
+        assert.ok(reader.ownProfile.avatarMediaId.equals(unused)); assert.equal(reader.ownProfile.version, 3);
+        assert.equal(Object.hasOwn(reader.account, "ownProfile"), false);
         const initial = await reader.messages({ limit: 2 });
         assert.equal(initial.hasMore, true); assert.equal(initial.nextCursor, "2");
         assert.ok(initial.rows[0].id.equals(visibleSharedMessage)); assert.ok(initial.rows[0].media.id.equals(shared));
@@ -113,7 +117,8 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         assert.equal(library.rows.some((row) => row.id.equals(shared) || row.id.equals(otherLibrary)), false);
         const inventory = await reader.inventory();
         const category = (name) => inventory.find((row) => row.table === name);
-        assert.equal(inventory.length, 29); assert.equal(category("messages").count, 4); assert.equal(category("media_assets").count, 2);
+        assert.equal(inventory.length, 30); assert.equal(category("messages").count, 4); assert.equal(category("media_assets").count, 2);
+        assert.equal(category("user_profiles").count, 1);
         assert.equal(category("crm_profiles").count, 1); assert.equal(category("crm_memberships").count, 1);
         assert.equal(category("crm_labels").count, null); assert.equal(category("admin_mfa").count, null);
         assert.doesNotMatch(JSON.stringify({ account: reader.account, conversation: reader.conversation, preference: reader.preference, inventory }), /second-secret|admin-secret|password-hash|administrator-only|other-client-private|private-label/);
@@ -265,6 +270,9 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         const libraryOutput = (await readFile(path.join(output, "library.jsonl"), "utf8")).trim().split("\n").map(JSON.parse);
         assert.equal(accountOutput.user.email, "first@example.invalid");
         assert.equal(accountOutput.user.createdAt, "2026-10-15T07:00:00.000000Z");
+        assert.deepEqual(accountOutput.ownProfile, { avatarMediaId: unused.toString("hex"), version: 3,
+          createdAt: "2026-10-15T07:00:00.000000Z", updatedAt: "2026-10-15T07:00:00.000000Z" });
+        assert.equal(JSON.stringify(accountOutput).includes(otherLibrary.toString("hex")), false);
         assert.equal(messagesOutput[0].createdAt, "2026-10-15T07:00:00.123456Z");
         assert.equal(messagesOutput[0].body, "Photo partagée autorisée");
         assert.equal(messagesOutput[0].media.file, `media/${shared.toString("hex")}.jpg`);
@@ -279,10 +287,10 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         assert.doesNotMatch(JSON.stringify({ accountOutput, messagesOutput, libraryOutput }), /second-secret|admin-secret|password|fingerprint|encrypted|storageKey|digest|administrator-only|other-client-private|private-label/);
         const inventoryOutput = path.join(exportParent, "client-inventory"); stdout.length = 0;
         const inventoryResult = await exportMain(argumentsFor("inventory", inventoryOutput), environment, dependencies);
-        assert.deepEqual(inventoryResult, { command: "inventory", status: "complete", inventoryCategories: 29 });
+        assert.deepEqual(inventoryResult, { command: "inventory", status: "complete", inventoryCategories: 30 });
         assert.deepEqual(stdout, [JSON.stringify(inventoryResult) + "\n"]); assert.equal(poolClosures, 2);
         const inventory = JSON.parse(await readFile(path.join(inventoryOutput, "inventory.json"), "utf8"));
-        assert.equal(inventory.categories.length, 29);
+        assert.equal(inventory.categories.length, 30);
         assert.deepEqual(inventory.categories.find((value) => value.table === "sessions"), { table: "sessions", scope: "subject", count: 10000, truncated: true });
         assert.equal(JSON.parse(await readFile(path.join(inventoryOutput, "COMPLETE.json"), "utf8")).status, "complete");
         assert.equal(await databaseHash(), beforeDatabase, "CLI changes no application or migration row");

@@ -38,7 +38,7 @@ test("native closure reconciliation replays a source receipt into a distinct Mar
   assert.match(targetDatabase, /^jessiemessage_test(?:_[a-z0-9]+)*$/); assert.notEqual(targetDatabase, options.database);
   const targetEnv = { ...process.env, JESSIEMESSAGE_DB_NAME: targetDatabase, JESSIEMESSAGE_MIGRATION_DATABASE: targetDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: targetDatabase };
   const migrations = await loadMigrations(), tables = createdMigrationTables(migrations), allowed = [...tables, "schema_migrations", "migration_probe"];
-  assert.equal(migrations.length, 30); assert.equal(tables.length, 29);
+  assert.equal(migrations.length, 31); assert.equal(tables.length, 30);
   const sourceConnection = await connectDatabase(), targetConnection = await connectDatabase(targetEnv);
   let sourcePool, targetPool, sourceInspector, targetInspector;
   const directory = await erasureDirectory(t), sourceRoot = path.join(directory, "source-media"), targetRoot = path.join(directory, "target-media"),
@@ -124,7 +124,7 @@ test("native closure reconciliation replays a source receipt into a distinct Mar
     }
     const checkpointReceipt = { format: "jessiemessage-private-checkpoint", version: 10,
       profile: "messaging-photos-notify-recovery-crm-broadcast-application", coverage: { ...APPLICATION_COVERAGE }, createdAt: now,
-      schema: { tables: 30, migrations: 30 }, sql: { file: "database.sql.gz", bytes: compressedSql.length, sha256: hash(compressedSql), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) },
+      schema: { tables: 31, migrations: 31 }, sql: { file: "database.sql.gz", bytes: compressedSql.length, sha256: hash(compressedSql), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) },
       manifest: { file: "manifest.json", sha256: manifestHash(manifest) }, media: { files: mediaFiles, bytes: mediaFiles.reduce((sum, file) => sum + file.bytes, 0) } };
     checkpointReceipt.operations = await withPrivateDirectory(checkpointRoot, scope => writeOperationalCheckpoint(scope, backup, checkpointReceipt, keys.crmKey));
     await withPrivateDirectory(checkpointRoot, scope => writeCheckpointReceipt(scope, checkpointReceipt));

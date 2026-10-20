@@ -90,7 +90,7 @@ export function createErasureStore({ pool, database, capacity, broadcastKey }) {
           await facts(context, nowSql);
           const checks = [["invitations", "consumed_by_id"], ["sessions", "user_id"], ["email_verifications", "user_id"], ["mail_outbox", "recipient_user_id"],
             ["client_password_resets", "user_id"], ["password_reset_outbox", "recipient_user_id"], ["broadcast_preferences", "user_id"],
-            ["push_subscriptions", "user_id"], ["broadcast_recipients", "client_id"], ["conversations", "client_id"], ["messages", "sender_id"], ["chat_receipts", "user_id"]];
+            ["push_subscriptions", "user_id"], ["broadcast_recipients", "client_id"], ["conversations", "client_id"], ["messages", "sender_id"], ["chat_receipts", "user_id"], ["user_profiles", "user_id"]];
           for (const [table, column] of checks) if ((await connection.query(`SELECT 1 AS present FROM ${table} WHERE ${column} = ? LIMIT 1`, [target])).length) failErasure("ERASURE_RESIDUAL");
         }
         function transaction(operation) {
@@ -155,6 +155,8 @@ export function createErasureStore({ pool, database, capacity, broadcastKey }) {
             await connection.query("DELETE FROM sessions WHERE user_id = ?", [target]);
             // Remove the consumed invitation as one row: never split its coupled fields or reopen its token.
             await connection.query("DELETE FROM invitations WHERE consumed_by_id = ?", [target]);
+            // Drop the selected user's avatar reference before media tombstones/files are removed.
+            await connection.query("DELETE FROM user_profiles WHERE user_id = ?", [target]);
             await connection.query(`UPDATE users SET status = 'deleted', password_hash = NULL, pseudonym = 'Compte fermé', email = ?,
               email_verified_at = NULL, age_assured_at = NULL, access_approved_at = NULL, access_expires_at = NULL, updated_at = ? WHERE id = ? AND role = 'client'`,
             [`closed-${clientHex}@jessiemessage.invalid`, nowSql, target]);

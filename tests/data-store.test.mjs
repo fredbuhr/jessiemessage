@@ -28,6 +28,7 @@ function fixture(plan = {}) {
       if (/FROM users u/.test(sql)) return plan.accounts ?? [account()];
       if (/FROM conversations c/.test(sql)) return plan.conversations ?? [conversation()];
       if (/SELECT enabled, updated_at/.test(sql)) return plan.preferences ?? [];
+      if (/FROM user_profiles p/.test(sql)) return plan.profiles ?? [];
       if (/SELECT 1 AS present/.test(sql)) return plan.inventory?.(sql, parameters) ?? [{ present: 1 }];
       if (/FROM messages m/.test(sql)) return plan.messages?.(sql, parameters) ?? [];
       if (/FROM media_assets a/.test(sql)) return plan.media?.(sql, parameters) ?? [];
@@ -42,8 +43,8 @@ function fixture(plan = {}) {
 }
 
 test("data policy covers each application table once and defers every retention decision", () => {
-  assert.equal(DATA_POLICY.length, 29);
-  assert.equal(new Set(DATA_POLICY.map((entry) => entry.table)).size, 29);
+  assert.equal(DATA_POLICY.length, 30);
+  assert.equal(new Set(DATA_POLICY.map((entry) => entry.table)).size, 30);
   assert.equal(DATA_POLICY_METADATA.retentionDecided, false);
   for (const entry of DATA_POLICY) { assert.equal(entry.retentionDays, null); assert.equal(entry.decisionRequired, true); assert.ok(Object.isFrozen(entry)); }
   assert.ok(Object.isFrozen(DATA_POLICY));
@@ -83,10 +84,23 @@ test("client data reader does not change when Jessie’s private read cursor adv
   assert.equal(before.lastReadSequence, "1");
   assert.equal(before.peerReadSequence, "0");
 });
+test("the own profile is separate from the account and rejects foreign avatar ownership", async () => {
+  const profile = { user_id: target, avatar_media_id: id(7), version: 3, created_at: d, updated_at: d,
+    avatar_owner_id: target, avatar_owner_role: "client" };
+  await withClientData({ pool: fixture({ profiles: [profile] }).pool, clientId: target, now }, reader => {
+    assert.deepEqual(reader.ownProfile, { avatarMediaId: id(7), version: 3, createdAt: d, updatedAt: d });
+    assert.equal(Object.hasOwn(reader.account, "avatarMediaId"), false);
+  });
+  await withClientData({ pool: fixture().pool, clientId: target, now }, reader =>
+    assert.deepEqual(reader.ownProfile, { avatarMediaId: null, version: 0, createdAt: null, updatedAt: null }));
+  for (const changed of [{ user_id: admin }, { avatar_owner_id: admin }, { avatar_owner_role: "admin" }, { version: 0 }]) {
+    await assert.rejects(withClientData({ pool: fixture({ profiles: [{ ...profile, ...changed }] }).pool, clientId: target, now }, () => {}), unavailable);
+  }
+});
 test("data inventory uses capped scoped metadata queries and never reads administrator/global material", async () => {
   const f = fixture({ inventory: (sql) => /FROM sessions /.test(sql) ? Array.from({ length: 10001 }, () => ({ present: 1 })) : [{ present: 1 }] });
   const inventory = await withClientData({ pool: f.pool, clientId: target, now }, (reader) => reader.inventory());
-  assert.equal(inventory.length, 29);
+  assert.equal(inventory.length, 30);
   assert.deepEqual(inventory.find((entry) => entry.table === "sessions"), { table: "sessions", scope: "subject", count: 10000, truncated: true });
   assert.deepEqual(inventory.find((entry) => entry.table === "crm_labels"), { table: "crm_labels", scope: "administrator", count: null, truncated: false });
   assert.equal(inventory.find((entry) => entry.table === "push_subscriptions").count, 1);

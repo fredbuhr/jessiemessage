@@ -15,11 +15,11 @@ test("deletion facts have a fixed order, capped reference counts and metadata-on
     const index = queries.length; queries.push({ sql, parameters }); return present(index === 0 ? 10001 : index === 1 ? 10000 : 1);
   } };
   const result = await readDeletionFacts({ connection, clientId, conversation: context, nowSql });
-  assert.ok(Object.isFrozen(DELETION_FACT_NAMES)); assert.equal(DELETION_FACT_NAMES.length, 23);
+  assert.ok(Object.isFrozen(DELETION_FACT_NAMES)); assert.equal(DELETION_FACT_NAMES.length, 24);
   assert.deepEqual(result.map((item) => item.name), DELETION_FACT_NAMES);
   assert.deepEqual(result[0], { name: "activeSessions", count: 10000, truncated: true });
   assert.deepEqual(result[1], { name: "verificationPending", count: 10000, truncated: false });
-  assert.equal(queries.length, 23);
+  assert.equal(queries.length, 24);
   for (const { sql, parameters } of queries) {
     assert.match(sql, /^SELECT 1 AS present /); assert.match(sql, /LIMIT 10001$/);
     assert.doesNotMatch(sql, /COUNT\s*\(|SELECT \*|payload|notes_encrypted|password_hash|token_hash|lease_token|FOR UPDATE|DELETE|INSERT|UPDATE/);
@@ -37,6 +37,9 @@ test("deletion facts have a fixed order, capped reference counts and metadata-on
   }
   assert.match(queries[22].sql, /o.subscription_generation > p.generation/);
   assert.match(queries[22].sql, /p.user_id <> s.user_id/);
+  assert.match(queries[23].sql, /FROM user_profiles p LEFT JOIN media_assets a ON a.id = p.avatar_media_id/);
+  assert.match(queries[23].sql, /p.user_id <> a.owner_id OR a.owner_role <> 'client'/);
+  assert.deepEqual(queries[23].parameters, [clientId, clientId]);
 });
 test("without a conversation all client-sender, receipt and recipient links are foreign", async () => {
   const queries = [];
@@ -78,10 +81,10 @@ test("deletion facts share the client reader's one read-only snapshot and reject
   const pool = { async getConnection() { acquisitions++; return connection; } };
   await withClientData({ pool, clientId, now }, async (reader) => {
     retained = reader; reader.account.id.fill(7); reader.conversation.id.fill(8);
-    const facts = await reader.deletionFacts(); assert.equal(facts.length, 23);
+    const facts = await reader.deletionFacts(); assert.equal(facts.length, 24);
   });
   assert.equal(acquisitions, 1); assert.equal(commits, 1); assert.equal(releases, 1);
-  assert.equal(queries.filter(({ sql }) => /^SELECT 1 AS present/.test(sql)).length, 23);
+  assert.equal(queries.filter(({ sql }) => /^SELECT 1 AS present/.test(sql)).length, 24);
   assert.equal(queries[1].sql, "START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT");
   const previous = queries.length; await assert.rejects(retained.deletionFacts(), unavailable); assert.equal(queries.length, previous);
   const bindings = queries.find(({ sql }) => /FROM broadcast_recipients WHERE client_id = \? AND conversation_id/.test(sql)).parameters;

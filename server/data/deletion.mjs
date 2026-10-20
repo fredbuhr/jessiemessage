@@ -54,7 +54,7 @@ function columnList(value) {
 }
 function schema(migrations) {
   validateMigrationPlan(migrations);
-  if (migrations.length !== 30 || createdMigrationTables(migrations).length !== TABLES.size || TABLES.size !== 29) fail();
+  if (migrations.length !== 31 || createdMigrationTables(migrations).length !== TABLES.size || TABLES.size !== 30) fail();
   const tables = new Map(), foreignKeys = [], constraintNames = new Set();
   for (const migration of migrations) {
     const sql = structuralSql(migration.sql), create = /^\s*CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(sql);
@@ -154,7 +154,7 @@ export function buildDeletionPlan(input = {}) {
     if (categoryCount("media_storage_objects") > 0 || present("mediaReserved", "mediaRegistered", "mediaCleanupPending", "mediaReleased")) blockers.push("media_protocol_required");
     if (present("ownedMediaOutsideConversationLinks", "ownedMediaCampaignLinks")) blockers.push("external_media_references");
     if (present("sharedPeerMediaLinks")) blockers.push("shared_peer_media_preserved");
-    if (present("foreignMessageBindings", "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings", "foreignPushBindings")) blockers.push("inconsistent_bindings");
+    if (present("foreignMessageBindings", "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings", "foreignPushBindings", "foreignProfileBindings")) blockers.push("inconsistent_bindings");
     if (categoryCount("broadcast_recipients") > 0) blockers.push("campaign_audience_review");
     return { format: "jessiemessage-deletion-simulation", version: 1, generatedAt: new Date(now).toISOString(),
       simulationOnly: true, executable: false, retentionDecided: false,

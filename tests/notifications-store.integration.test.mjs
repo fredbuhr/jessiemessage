@@ -283,8 +283,8 @@ test("real MariaDB private notification transactions (synthetic disposable datab
     });
 
     await t.test("the configured HTTP runtime uses schema thirty with notifications enabled or disabled and no external delivery", { timeout: 15000 }, async () => {
-      assert.equal(migrations.length, 30);
-      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations WHERE state = 'applied'"))[0].count), 30);
+      assert.equal(migrations.length, 31);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations WHERE state = 'applied'"))[0].count), 31);
       const fixture = await pair(), raw = { admin: newToken(), client: newToken() };
       for (const role of ["admin", "client"]) {
         fixture[role].tokenHash = tokenDigest(raw[role]);

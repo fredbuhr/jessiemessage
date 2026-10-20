@@ -46,7 +46,7 @@ function successfulSpawn(observed, inspect = async () => {}) {
 
 test("an explicit application dump passes exactly the sorted migration tables after the database with unchanged TLS and read-only native flags", async (t) => {
   const f = await fixture(t), observed = [], password = "synthetic private password";
-  assert.equal(tables.length, 30); assert.equal(new Set(tables).size, 30);
+  assert.equal(tables.length, 31); assert.equal(new Set(tables).size, 31);
   const spawnClient = successfulSpawn(observed, async (args) => {
     const filename = args[0].slice("--defaults-file=".length), stats = await lstat(filename);
     assert.equal(stats.mode & 0o7777, 0o600); assert.equal(stats.nlink, 1);
@@ -130,7 +130,7 @@ test("a frozen exact table list is accepted and a caller mutation after validati
   assert.deepEqual(await dumpCloneSql(scope, selected, configuration, "synthetic-password", {
     tables: supplied, spawnClient: successfulSpawn(observed),
   }), report);
-  assert.deepEqual(observed[0].args.slice(-30), tables);
+  assert.deepEqual(observed[0].args.slice(-31), tables);
   assert.deepEqual(await dumpCloneSql(f.scope, selected, configuration, "synthetic-password", {
     tables: Object.freeze([...tables]), spawnClient: successfulSpawn([]),
   }), report);

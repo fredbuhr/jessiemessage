@@ -12,7 +12,7 @@ import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { readManifest, verifyBackupManifest, backupIdentity, assertCloneIdentity } from "../server/backup/manifest.mjs";
 import { assertBackupInspection } from "../server/backup/inspection.mjs";
-import { APPLICATION_COVERAGE, validateApplicationCoverage, assertApplicationTableInspection } from "../server/backup/application-scope.mjs";
+import { validateApplicationCoverage, assertApplicationTableInspection } from "../server/backup/application-scope.mjs";
 import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData, verifyPhotoNotificationRecoveryCrmBackupData, verifyPhotoNotificationRecoveryCrmBroadcastBackupData } from "../server/backup/verify.mjs";
 import { connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
@@ -136,7 +136,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     if (application) {
       const migrations = await loadMigrations();
       dumpTables = [...createdMigrationTables(migrations), "schema_migrations"].sort();
-      if (migrations.length !== 30 || dumpTables.length !== 30 || new Set(dumpTables).size !== 30) fail("SCHEMA");
+      if (migrations.length !== 31 || dumpTables.length !== 31 || new Set(dumpTables).size !== 31) fail("SCHEMA");
     }
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("ENVIRONMENT"); }
@@ -175,7 +175,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           const manifest = await readBackupManifest(join(selected.checkpointDirectory, "manifest.json"), { pathMode: selected.privatePathMode });
           if (manifest?.version !== manifestVersion || manifest.profile !== profile) fail("CHECKPOINT");
           const payload = await verifyManifest({ manifest, keys });
-          if (!same(payload?.identity, sourceIdentity) || payload?.snapshot?.counts?.tables !== 30
+          if (!same(payload?.identity, sourceIdentity) || payload?.snapshot?.counts?.tables !== checkpoint.schema.tables
             || payload?.snapshot?.capacity?.rootFingerprint !== sourceIdentity.rootFingerprint) fail("CHECKPOINT");
           if (application) {
             try { validateApplicationCoverage(payload.snapshot.coverage); } catch { fail("CHECKPOINT"); }
@@ -207,14 +207,16 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           await assertIdentity(currentSource, currentTarget);
           await sourceScope.assertReady(); await checkpointScope.assertReady(); await mediaScope.assertReady(); active();
         }
-        const common = { ...(application ? { version: receiptVersion, profile, coverage: { ...APPLICATION_COVERAGE }, completeDatabase: false }
+        const common = { ...(application ? { version: receiptVersion, profile, coverage: { ...checkpoint.coverage }, completeDatabase: false }
           : recovery ? { version: receiptVersion, profile } : {}),
-          tables: 30, migrations: 30, backupBytes: backup.backupBytes, sqlBytes: backup.sqlBytes,
+          tables: checkpoint.schema.tables, migrations: checkpoint.schema.migrations, backupBytes: backup.backupBytes, sqlBytes: backup.sqlBytes,
           backupSha256: backup.backupSha256, sqlSha256: backup.sqlSha256, checkpointFilesMatched: true, independentMediaDirectory: true,
           httpStarted: false, smtpStarted: false, workersStarted: false, capacityRebound: false };
         if (operational) Object.assign(common, { operationsCovered: true, operationalFiles: operations.files.length,
           operations: { ...checkpoint.operations }, externalRegistryContinuityVerified: false, operationalRestorationPending: true });
         if (["check", "check-application"].includes(selected.command)) { await unchanged(); result = { status: "ready_for_input", ...common, databaseConnected: false }; return; }
+        // Historical schema30 remains readable above; current clone verification requires schema31.
+        if (checkpoint.schema.tables !== 31 || checkpoint.schema.migrations !== 31) fail("SCHEMA");
         try {
           password = await readSecret(inputStream);
           if (typeof password !== "string" || !password || !password.isWellFormed() || /[\x00-\x1f\x7f]/.test(password) || Buffer.byteLength(password, "utf8") > 4096) fail("PASSWORD");
@@ -232,7 +234,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         await connection.query("START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT"); active();
         await (application ? inspectApplicationPrivileges : inspectPrivileges)(connection, selected.database);
         const schema = await inspect(connection, selected.database);
-        if (schema?.tables !== 30 || schema.migrations !== 30) fail("SCHEMA");
+        if (schema?.tables !== 31 || schema.migrations !== 31) fail("SCHEMA");
         const pool = { getConnection: async () => ({ query(sql, parameters) {
           if (typeof sql !== "string" || !/^SELECT\s/.test(sql) || /\b(?:INTO|OUTFILE|DUMPFILE|FOR\s+UPDATE|LOCK\s+IN\s+SHARE)\b/i.test(sql)) fail("DATABASE");
           return connection.query(sql, parameters);

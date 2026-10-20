@@ -10,7 +10,7 @@ import { CheckpointReceiptError, readCheckpointReceipt, writeCheckpointReceipt }
 const metadata = Buffer.from('{"synthetic":"application-manifest"}');
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const receipt = () => ({ format: "jessiemessage-private-checkpoint", version: 2, profile: "messaging-photos-notify-application",
-  coverage: { ...APPLICATION_COVERAGE }, createdAt: 1792240000000, schema: { tables: 30, migrations: 30 },
+  coverage: { ...APPLICATION_COVERAGE }, createdAt: 1792240000000, schema: { tables: 31, migrations: 31 },
   sql: { file: "database.sql.gz", bytes: 120, sha256: "b".repeat(64), uncompressedBytes: 700, uncompressedSha256: "c".repeat(64) },
   manifest: { file: "manifest.json", sha256: hash(metadata) }, media: { files: [], bytes: 0 } });
 const invalid = (error) => error instanceof CheckpointReceiptError && error.code === "CHECKPOINT_RECEIPT_INVALID"
@@ -43,7 +43,8 @@ test("application receipts reject mismatched versions and profiles, overstated c
     (v) => { v.version = 1; }, (v) => { v.version = 3; }, (v) => { v.profile = "messaging-photos-notify"; },
     (v) => { delete v.coverage; }, (v) => { v.coverage.completeDatabase = true; },
     (v) => { v.coverage.executableInventory = "proven"; }, (v) => { v.coverage.executableObjects = "included"; },
-    (v) => { v.coverage.tables = 29; }, (v) => { v.coverage.encryptedMedia = false; },
+    (v) => { v.coverage.tables = 29; }, (v) => { v.coverage.tables = 32; }, (v) => { v.coverage.tables = 30; },
+    (v) => { v.coverage.encryptedMedia = false; },
     (v) => { v.coverage.scope = "database"; }, (v) => { v.coverage.extra = true; },
     (v) => { v.schema.tables = 29; }, (v) => { v.schema.migrations = 29; },
     (v) => { v.coverage = Object.assign(Object.create({ extra: true }), v.coverage); },
@@ -59,6 +60,14 @@ test("application receipts reject mismatched versions and profiles, overstated c
     enumerable: true, get() { accessed = true; return 2; } });
   await assert.rejects(writeCheckpointReceipt(f.scope, versionGetter), invalid);
   assert.equal(accessed, false); assert.deepEqual(await readdir(f.directory), ["manifest.json"]);
+});
+
+test("schema30 receipts remain canonical and readable without relabeling their coverage", async (t) => {
+  const f = await fixture(t), value = receipt();
+  value.coverage.tables = 30; value.schema = { tables: 30, migrations: 30 };
+  assert.deepEqual(await writeCheckpointReceipt(f.scope, value), value);
+  assert.equal(await readFile(f.filename, "utf8"), `${JSON.stringify(value)}\n`);
+  assert.deepEqual(await readCheckpointReceipt(f.scope), value);
 });
 
 test("application receipt reads refuse alternate coverage order, duplicate coverage keys and one-field downgrades", async (t) => {
@@ -79,7 +88,7 @@ test("application receipt reads refuse alternate coverage order, duplicate cover
 
 test("legacy v1 receipts remain byte-compatible and cannot silently acquire application coverage", async (t) => {
   const f = await fixture(t), value = receipt();
-  value.version = 1; value.profile = "messaging-photos-notify"; delete value.coverage;
+  value.version = 1; value.profile = "messaging-photos-notify"; value.schema = { tables: 30, migrations: 30 }; delete value.coverage;
   assert.deepEqual(await writeCheckpointReceipt(f.scope, value), value);
   assert.equal(await readFile(f.filename, "utf8"), `${JSON.stringify(value)}\n`);
   const altered = { ...value, coverage: { ...APPLICATION_COVERAGE } };

@@ -4,6 +4,7 @@ export const DELETION_FACT_NAMES = Object.freeze([
   "ownedMediaOutsideConversationLinks", "ownedMediaCampaignLinks", "sharedPeerMediaLinks", "foreignMessageBindings",
   "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings",
   "notificationSubscriptionsEnabled", "pushPending", "pushSending", "foreignPushBindings",
+  "foreignProfileBindings",
 ]);
 const CAP = 10000;
 const MAX_DATE = 253402300799999;
@@ -58,6 +59,9 @@ export async function readDeletionFacts(input = {}) {
               OR NOT ((p.role = 'admin' AND p.user_id = c.admin_id AND m.sender_role = 'client' AND m.sender_id = c.client_id)
                 OR (p.role = 'client' AND p.user_id = c.client_id AND m.sender_role = 'admin' AND m.sender_id = c.admin_id))) LIMIT 10001)
         ) anomalies`, [target, target, target, ...(context === null ? [] : [context.id])]],
+      foreignProfileBindings: [`FROM user_profiles p LEFT JOIN media_assets a ON a.id = p.avatar_media_id
+        WHERE p.avatar_media_id IS NOT NULL AND (p.user_id = ? OR a.owner_id = ?) AND
+          (a.id IS NULL OR p.user_id <> a.owner_id OR a.owner_role <> 'client')`, [target, target]],
       ownedMediaOutsideConversationLinks: [`FROM message_media mm JOIN media_assets a ON a.id = mm.media_id
         WHERE a.owner_id = ? AND a.owner_role = 'client' ${context === null ? "" : "AND mm.conversation_id <> ?"}`, [target, ...(context === null ? [] : [context.id])]],
       ownedMediaCampaignLinks: [`FROM broadcast_campaigns b JOIN media_assets a ON a.id = b.media_id

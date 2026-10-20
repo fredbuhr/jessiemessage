@@ -116,15 +116,15 @@ async function applicationDumpTables(options) {
   if (!Array.isArray(tables) || isProxy(tables) || Object.getPrototypeOf(tables) !== Array.prototype
     || Object.getOwnPropertySymbols(tables).length) fail("TEXT_CLONE_DUMP");
   const properties = Object.getOwnPropertyDescriptors(tables);
-  if (properties.length?.value !== 30 || Object.keys(properties).length !== 31) fail("TEXT_CLONE_DUMP");
+  if (properties.length?.value !== 31 || Object.keys(properties).length !== 32) fail("TEXT_CLONE_DUMP");
   const supplied = [];
-  for (let index = 0; index < 30; index++) {
+  for (let index = 0; index < 31; index++) {
     const item = properties[index];
     if (!item || !Object.hasOwn(item, "value") || typeof item.value !== "string") fail("TEXT_CLONE_DUMP");
     supplied.push(item.value);
   }
   const migrations = await loadMigrations(), expected = [...createdMigrationTables(migrations), "schema_migrations"].sort();
-  if (migrations.length !== 30 || expected.length !== 30 || new Set(expected).size !== 30
+  if (migrations.length !== 31 || expected.length !== 31 || new Set(expected).size !== 31
     || expected.some((name, index) => !/^[a-z][a-z0-9_]*$/.test(name) || supplied[index] !== name)) fail("TEXT_CLONE_DUMP");
   // Use the trusted migration inventory after validation, never the caller's
   // mutable array, across the asynchronous private-file and native-client work.
@@ -222,10 +222,10 @@ export async function inspectClone(connection, database) {
   const cipher = await connection.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'");
   if (cipher.length !== 1 || !cipher[0]?.Value || cipher[0]?.Variable_name !== "Ssl_cipher") fail("TEXT_CLONE_DATABASE");
   const migrations = await loadMigrations(), names = [...createdMigrationTables(migrations), "schema_migrations"];
-  const tables = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 31", [database]);
-  if (migrations.length !== 30 || names.length !== 30 || tables.length !== 30 || new Set(tables.map((row) => row.name)).size !== 30
+  const tables = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 32", [database]);
+  if (migrations.length !== 31 || names.length !== 31 || tables.length !== 31 || new Set(tables.map((row) => row.name)).size !== 31
     || tables.some((row) => !names.includes(row.name) || row.kind !== "BASE TABLE" || row.engine !== "InnoDB")) fail("TEXT_CLONE_SCHEMA");
-  const ledger = await connection.query("SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 31");
+  const ledger = await connection.query("SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 32");
   try {
     if (ledger.length !== migrations.length || inspectHistory(migrations, ledger).some((row) => row.state !== "applied")) fail("TEXT_CLONE_SCHEMA");
   } catch { fail("TEXT_CLONE_SCHEMA"); }

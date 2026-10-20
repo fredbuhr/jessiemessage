@@ -37,7 +37,7 @@ const neutral = code => error => {
   assert.equal(error.cause, undefined); return true;
 };
 
-async function fixture(t, { application = false, broadcast = false, crm = broadcast, recovery = crm, envelopeRecovery = recovery } = {}) {
+async function fixture(t, { application = false, broadcast = false, crm = broadcast, recovery = crm, envelopeRecovery = recovery, schemaCount = 31 } = {}) {
   const origin = recovery ? "https://jessiemessage.com" : "https://recette.jessiemessage.com";
   await mkdir(base, { recursive: true, mode: 0o700 });
   const directory = await mkdtemp(join(base, "private-checkpoint-verify-")); await chmod(directory, 0o700);
@@ -64,13 +64,13 @@ async function fixture(t, { application = false, broadcast = false, crm = broadc
   }
   const identity = await backupIdentity({ databaseName: "only_source", rootPath: sourceRoot, storage: sourceStorage, mediaKey: keys.mediaKey });
   const profile = `messaging-photos-notify${envelopeRecovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${application ? "-application" : ""}`;
-  const manifest = createBackupManifest({ snapshot: { ...(application ? { version: 2, coverage: { ...APPLICATION_COVERAGE } } : {}),
-    counts: { tables: 30, rows: 6 }, capacity: { rootFingerprint: identity.rootFingerprint } }, identity, keys, now: 1792200000000, profile });
+  const manifest = createBackupManifest({ snapshot: { ...(application ? { version: 2, coverage: { ...APPLICATION_COVERAGE, tables: schemaCount } } : {}),
+    counts: { tables: schemaCount, rows: 6 }, capacity: { rootFingerprint: identity.rootFingerprint } }, identity, keys, now: 1792200000000, profile });
   await writeManifest(join(checkpointDirectory, "manifest.json"), manifest, { pathMode: "strict" });
   const archive = gzipSync(sql); await writeFile(join(checkpointDirectory, "database.sql.gz"), archive, { mode: 0o600 });
   const receipt = { format: "jessiemessage-private-checkpoint", version: broadcast ? application ? 8 : 7 : crm ? application ? 6 : 5 : envelopeRecovery ? application ? 4 : 3 : application ? 2 : 1, profile,
-    ...(application ? { coverage: { ...APPLICATION_COVERAGE } } : {}), createdAt: 1792200000000,
-    schema: { tables: 30, migrations: 30 }, sql: { file: "database.sql.gz", bytes: archive.length, sha256: hash(archive), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) },
+    ...(application ? { coverage: { ...APPLICATION_COVERAGE, tables: schemaCount } } : {}), createdAt: 1792200000000,
+    schema: { tables: schemaCount, migrations: schemaCount }, sql: { file: "database.sql.gz", bytes: archive.length, sha256: hash(archive), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) },
     manifest: { file: "manifest.json", sha256: hash(await readFile(join(checkpointDirectory, "manifest.json"))) }, media: { files: mediaFiles, bytes: mediaFiles.reduce((total, file) => total + file.bytes, 0) } };
   await writeCheckpointReceipt(scopeFor(checkpointDirectory), receipt);
   const args = [application ? "verify-application" : "verify", "--private-directory", sourceDirectory, "--private-path-mode", "linux-dirfd", "--checkpoint-directory", checkpointDirectory,
@@ -148,10 +148,19 @@ async function fixture(t, { application = false, broadcast = false, crm = broadc
 test("private checkpoint check verifies real gzip, five-key manifest and copied photo files without password or SQL", async t => {
   const f = await fixture(t), report = await run({ ...f.selected, command: "check" }, f.dependencies);
   assert.equal(report.status, "ready_for_input"); assert.equal(report.databaseConnected, false);
-  assert.equal(report.tables, 30); assert.equal(report.migrations, 30); assert.equal(report.checkpointFilesMatched, true);
+  assert.equal(report.tables, 31); assert.equal(report.migrations, 31); assert.equal(report.checkpointFilesMatched, true);
   assert.equal(report.independentMediaDirectory, true); assert.equal(report.capacityRebound, false);
   assert.deepEqual(f.events, ["client"]); assert.deepEqual(f.connected, []);
   assert.equal(f.environments[0].JESSIEMESSAGE_RUNTIME_DB_PASSWORD, ""); assert.equal(f.environments[0].JESSIEMESSAGE_VAPID_PRIVATE_KEY, "");
+});
+
+test("historical schema30 application checks preserve their identity and refuse current clone verification before password or SQL", async t => {
+  const f = await fixture(t, { application: true, schemaCount: 30 });
+  const report = await run({ ...f.selected, command: "check-application" }, f.dependencies);
+  assert.equal(report.tables, 30); assert.equal(report.migrations, 30); assert.equal(report.coverage.tables, 30);
+  assert.equal(report.databaseConnected, false); assert.deepEqual(f.events, ["client"]);
+  await assert.rejects(run(f.selected, f.dependencies), neutral("SCHEMA"));
+  assert.deepEqual(f.events, ["client", "client"]); assert.deepEqual(f.connected, []);
 });
 
 test("operational receipts authenticate their capsule before password input and preserve the separate restoration prerequisite", async t => {

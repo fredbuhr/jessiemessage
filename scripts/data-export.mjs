@@ -39,7 +39,7 @@ function configuration(env, command) {
   return { databaseName, mediaRoot, messageKey: command === "export" ? key(env.JESSIEMESSAGE_MESSAGE_KEY) : null };
 }
 function inventoryDTO(value, policy) {
-  if (!Array.isArray(policy) || policy.length !== 29 || !Array.isArray(value) || value.length !== policy.length) fail("DATA_OPERATION");
+  if (!Array.isArray(policy) || policy.length !== 30 || !Array.isArray(value) || value.length !== policy.length) fail("DATA_OPERATION");
   const seen = new Set();
   return value.map((item) => {
     const category = policy.find((candidate) => candidate.table === item?.table);

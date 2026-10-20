@@ -11,7 +11,7 @@ const profile = "messaging-photos-notify-application";
 const names = ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"];
 const keys = () => Object.fromEntries(names.map((name) => [name, randomBytes(32)]));
 const snapshot = () => ({ version: 2, coverage: { ...APPLICATION_COVERAGE }, schemaDigest: "7".repeat(64), coreDigest: "8".repeat(64),
-  counts: { tables: 30, rows: 0 }, objects: [], assets: [] });
+  counts: { tables: 31, rows: 0 }, objects: [], assets: [] });
 const input = () => ({ profile, snapshot: snapshot(), now: 1792240000000, keys: keys(), identity: {
   databaseTag: "1".repeat(64), rootPathTag: "2".repeat(64), rootPhysicalTag: "3".repeat(64),
   rootFingerprint: "4".repeat(64), rootAncestors: ["5".repeat(64)] } });
@@ -41,7 +41,20 @@ test("application manifests use a distinct v4 envelope and authenticate the exac
   assert.equal(manifest.payload.snapshot.coverage.completeDatabase, false);
 });
 
-test("application manifests refuse absent, overstated or incomplete coverage and any non-schema30 snapshot", () => {
+test("authenticated schema30 application manifests retain their historical coverage without becoming schema31", () => {
+  const value = input(); value.snapshot.coverage.tables = 30; value.snapshot.counts.tables = 30;
+  const manifest = createBackupManifest(value);
+  assert.deepEqual(verifyBackupManifest({ manifest, keys: value.keys }).snapshot, value.snapshot);
+  assert.equal(manifest.payload.snapshot.coverage.tables, 30);
+  for (const count of [31, 32]) {
+    value.snapshot.counts.tables = count;
+    assert.throws(() => createBackupManifest(value), invalid);
+  }
+  value.snapshot.coverage.tables = 31; value.snapshot.counts.tables = 30;
+  assert.throws(() => createBackupManifest(value), invalid);
+});
+
+test("application manifests refuse absent, overstated or incomplete coverage and any unsupported or mismatched schema coverage", () => {
   const mutations = [
     (s) => { s.version = 1; }, (s) => { s.counts.tables = 29; }, (s) => { delete s.counts; },
     (s) => { delete s.coverage; }, (s) => { s.coverage.tables = 29; },
