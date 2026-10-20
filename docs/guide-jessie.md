@@ -10,6 +10,10 @@ Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/app) et l�
 - **Compte et appareils → Appareils connectés** permet de consulter les connexions et de déconnecter l’appareil choisi.
 - Suspension, expiration, révocation d’accès et déconnexion conservent la conversation ; elles ne ferment pas définitivement le compte.
 
+## Consulter l’état du service
+
+Dans [État du service](https://jessiemessage.com/admin/readiness), consulte les fonctions configurées et les mesures du serveur. **Vérifier la connexion e-mail** est facultatif : ce contrôle vérifie la connexion et l’authentification sans envoyer d’e-mail. Les **Contrôles ponctuels** servent après un changement ou en cas de problème ; les essais déjà réussis ne sont pas à répéter systématiquement.
+
 ## Échanger et partager une photo
 
 - Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne la conversation et vérifie le nom avant d’envoyer.
@@ -59,7 +63,7 @@ Le reçu confirme le fichier chiffré reçu, sans certifier une restauration de 
 
 ## Fermeture définitive et remise en service
 
-**En ligne : 0.79, fermeture définitive disponible dans l’administration.** Voir l’[état courant](REPRISE.md).
+Voir l’[état courant](REPRISE.md) pour le service déployé et ses limites.
 
 L’administrateur peut choisir **Fermer définitivement** dans la carte du client, vérifier le compte et la portée, cocher la confirmation et écrire **FERMER**. **Fermeture des comptes** affichera le suivi. L’action irréversible efface le compte, sa conversation, ses notes privées et les photos appartenant au client dans l’application. Le service peut être brièvement interrompu ; sauvegardes et téléchargements restent des copies séparées.
 

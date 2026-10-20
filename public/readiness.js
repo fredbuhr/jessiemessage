@@ -21,7 +21,7 @@ function clearDisplay() {
   el("readiness-content").hidden = true; el("logout").hidden = true; el("refresh").hidden = true;
   el("refresh").disabled = false;
   el("mail-sender").textContent = ""; el("mail-status").textContent = ""; el("feature-list").replaceChildren();
-  el("operations-details").hidden = true; el("operations-status").textContent = ""; el("operations-sample").textContent = "";
+  el("operations-details").hidden = true; el("operations-details").open = false; el("operations-status").textContent = ""; el("operations-sample").textContent = "";
   el("download-operations").hidden = true; el("download-operations").disabled = false;
   notice("", false, "operations-download-status");
   for (const id of ["operations-database", "operations-workers", "operations-queues"]) el(id).replaceChildren();
@@ -93,7 +93,7 @@ function render() {
   el("refresh").hidden = false; el("refresh").disabled = state.busy;
   ui.rawText(el("mail-sender"), summary.mail.sender);
   ui.text(el("mail-status"), summary.mail.configured
-    ? "L’envoi d’e-mails est configuré. Tu peux vérifier sa connexion avant de tester la réception."
+    ? "L’envoi d’e-mails est configuré. Tu peux vérifier sa connexion en cas de problème ou après un changement de réglages."
     : "L’envoi d’e-mails reste à configurer dans les réglages privés du serveur. La vérification sera disponible ensuite.");
   el("verify-smtp").hidden = !summary.mail.configured;
   el("verify-smtp").disabled = state.busy;
@@ -109,7 +109,7 @@ function render() {
   el("download-operations").hidden = !summary.operations;
   el("download-operations").disabled = state.busy || reportTask !== null;
   if (state.proof) {
-    notice("Connexion chiffrée et authentification réussies. La réception d’un e-mail reste à tester.", false, "smtp-status");
+    notice("Connexion chiffrée et authentification réussies. Aucun e-mail n’a été envoyé.", false, "smtp-status");
     ui.text(el("smtp-proof-date"), "Vérification de cette session : {date}.", { date: ui.dateParam(state.proof.checkedAt) });
     el("smtp-proof-date").hidden = false;
   } else { el("smtp-proof-date").textContent = ""; el("smtp-proof-date").hidden = true; }
@@ -134,7 +134,7 @@ async function checkSession(ticket) {
     if (error.stale) return;
     if (error.status === 401) { signOut(); return; }
     sessionPaused = true; el("readiness-content").hidden = true; el("refresh").hidden = false;
-    notice("La préparation du site est momentanément indisponible. Actualise la page pour réessayer.", true);
+    notice("L’état du service est momentanément indisponible. Actualise la page pour réessayer.", true);
     armExpiry(true);
   }
 }
@@ -160,7 +160,7 @@ async function bootstrap(message = "") {
   } catch (error) {
     if (error.stale) return;
     if (error.status === 401) { signOut(); return; }
-    clearDisplay(); notice(error.status === 429 ? "Trop de demandes. Patiente un moment avant d’actualiser." : "La préparation du site est momentanément indisponible. Actualise la page pour réessayer.", true);
+    clearDisplay(); notice(error.status === 429 ? "Trop de demandes. Patiente un moment avant d’actualiser." : "L’état du service est momentanément indisponible. Actualise la page pour réessayer.", true);
     el("refresh").hidden = false;
   }
 }

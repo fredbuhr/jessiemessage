@@ -1,0 +1,84 @@
+{
+  "format": "jessiemessage-service-status-verification",
+  "version": 1,
+  "release": "0.84.0",
+  "status": "implementation_ready_ci_pending",
+  "baseline": {
+    "source": "49246c84097b7417a58d92d6d6e84736dfdd9024",
+    "tree": "79ba1cd1ec49234253153e2e7f6a8b400da0c0c3",
+    "runtime": "682864cec3b8d0eb1c8a6dd92c4b9bd9dfc097b1",
+    "runtimeTree": "5eb0c133625b734c8aa92ce3f3642e281a51f380",
+    "runtimeRelease": "0.83.0"
+  },
+  "scope": {
+    "page": "/admin/readiness",
+    "serviceStatusFirst": true,
+    "directMessagingLink": true,
+    "technicalDetailsCollapsed": true,
+    "manualChecksOptionalCollapsed": true,
+    "smtpSuccessDoesNotCreatePendingReceiptTask": true,
+    "humanAcceptanceInvented": false,
+    "apiOrModelChanged": false,
+    "dependenciesChanged": false,
+    "infrastructureChanged": false,
+    "pcPayloadChanged": false,
+    "privateClearAlsoClosesTechnicalDetails": true
+  },
+  "local": {
+    "node": "24.19.0",
+    "targetedTests": {
+      "tests": 44,
+      "pass": 44,
+      "fail": 0,
+      "skipped": 0,
+      "suites": [
+        "readiness-i18n",
+        "readiness-model"
+      ]
+    },
+    "syntaxFiles": 568,
+    "offlinePreviewBuilt": true,
+    "nativeChromeExecuted": false
+  },
+  "browserQualification": {
+    "status": "pending_ci",
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "widths": [
+      320,
+      375,
+      1280
+    ],
+    "newTestCasesAdded": false,
+    "keyboardDisclosuresAndDownload": true,
+    "noAutomaticSmtpOrSnapshotOnDisclosure": true
+  },
+  "reviews": {
+    "controllerGuardsAndScopePassed": true,
+    "htmlCssI18nIndependentPassed": true,
+    "guidePassed": true
+  },
+  "preservation": {
+    "realMailSent": false,
+    "realAccountDeleted": false,
+    "productionRestored": false,
+    "pairingRepeated": false,
+    "keysRegenerated": false,
+    "antivirusProtectionChanged": false
+  },
+  "userSteering": {
+    "atParis": "2026-10-20T14:29:08+02:00",
+    "pcAntivirusIncidentDeferred": true,
+    "developmentDependsOnPcAction": false,
+    "pcIncidentResolved": false
+  },
+  "limits": {
+    "authenticatedProductionPageObserved": false,
+    "physicalPlatformsFullyQualified": false,
+    "providerNodePatchPending": true,
+    "archiveExecutorDeferred": true
+  },
+  "report": "docs/service-status-084.md"
+}

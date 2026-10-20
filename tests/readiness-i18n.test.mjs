@@ -19,7 +19,7 @@ for (const script of [helpLinks, catalogue]) vm.runInNewContext(script, catalogC
 class Element {
   constructor(tag = "div") {
     this.tagName = tag.toUpperCase(); this.children = []; this.parentElement = null; this.attributes = new Map(); this.dataset = {};
-    this.events = new Map(); this.value = ""; this.hidden = false; this.disabled = false; this._text = "";
+    this.events = new Map(); this.value = ""; this.hidden = false; this.disabled = false; this.open = false; this._text = "";
     const classes = new Set();
     this.classList = { add: (name) => classes.add(name), remove: (name) => classes.delete(name), contains: (name) => classes.has(name),
       toggle(name, force) { const include = force ?? !classes.has(name); if (include) classes.add(name); else classes.delete(name); return include; } };
@@ -30,10 +30,10 @@ class Element {
   get childElementCount() { return this.children.length; }
   append(...nodes) { for (const node of nodes) { node.parentElement = this; this.children.push(node); } }
   replaceChildren(...nodes) { for (const child of this.children) child.parentElement = null; this.children = []; this._text = ""; this.append(...nodes); }
-  setAttribute(name, value) { this.attributes.set(name, String(value)); if (name === "hidden") this.hidden = true; }
+  setAttribute(name, value) { this.attributes.set(name, String(value)); if (name === "hidden") this.hidden = true; if (name === "open") this.open = true; }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
   hasAttribute(name) { return this.attributes.has(name); }
-  removeAttribute(name) { this.attributes.delete(name); }
+  removeAttribute(name) { this.attributes.delete(name); if (name === "open") this.open = false; }
   addEventListener(name, handler) { if (!this.events.has(name)) this.events.set(name, []); this.events.get(name).push(handler); }
   remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(node => node !== this); this.parentElement = null; }
   matches(selector) { if (selector === "a[data-help-link]") return this.tagName === "A" && this.hasAttribute("data-help-link");
@@ -122,8 +122,12 @@ test("readiness static sources cover the whole page and preserve the scope of it
   assert.match(dictionaries["Cette vérification contrôle la connexion chiffrée et l’authentification. Elle n’envoie aucun e-mail et ne confirme pas la réception des invitations ou des liens de récupération."], /sends no email and does not confirm receipt/);
   assert.match(dictionaries["Instantané global de ce processus serveur. Les compteurs de traitement repartent à zéro à son redémarrage. Ces mesures ne certifient pas la mise en production ni la réception des messages."], /do not certify production readiness or message receipt/);
   assert.equal(dictionaries["Admission manuelle"], "Manual admission");
-  assert.match(dictionaries["Vérifier une inscription sur invitation, l’e-mail puis l’approbation manuelle par Jess."], /Jess’s manual approval/);
-  assert.doesNotMatch(html, /Contrôle de majorité|Activer et vérifier le parcours de contrôle/);
+  assert.match(dictionaries["Pour une inscription sur invitation, suivre la création du compte, la confirmation de l’e-mail puis l’approbation par Jessie."], /account creation, email confirmation.*Jessie’s approval/);
+  assert.equal(dictionaries["État du service"], "Service status");
+  assert.equal(dictionaries["Mesures du serveur"], "Server measurements");
+  assert.equal(dictionaries["Contrôles ponctuels"], "Occasional checks");
+  assert.match(dictionaries["Ces contrôles sont utiles après un changement ou en cas de problème. Les essais déjà réussis ne sont pas à refaire systématiquement."], /after a change.*problem.*do not need to be repeated routinely/);
+  assert.doesNotMatch(html, /Contrôle de majorité|Activer et vérifier le parcours de contrôle|Préparer le site|AVANT L’OUVERTURE|Les prochaines vérifications/);
   assert.ok(html.indexOf('src="/i18n.js"') < html.indexOf('src="/i18n-readiness.js"'));
   assert.ok(html.indexOf('src="/i18n-readiness.js"') < html.indexOf('src="/readiness.js"'));
   assert.ok(html.indexOf('src="/session-clock.js"') < html.indexOf('src="/readiness.js"'));
@@ -134,9 +138,21 @@ test("readiness static sources cover the whole page and preserve the scope of it
 test("readiness operations translate typed worker and queue dates/counts in place while the sender stays raw", async () => {
   const f = await harness(), workers = f.nodes.get("operations-workers"), queues = f.nodes.get("operations-queues");
   const worker = workers.children[0], queue = queues.children[0], countNode = worker.querySelectorAll("dd")[0]; const calls = f.calls.length;
+  assert.equal(f.container.querySelectorAll("h1")[0].textContent, "État du service");
+  assert.equal(f.nodes.get("readiness-content").children[0].getAttribute("aria-labelledby"), "operations-title");
+  const measures = f.nodes.get("operations-details"), manual = f.nodes.get("manual-checks");
+  assert.equal(measures.tagName, "DETAILS"); assert.equal(measures.hidden, false); assert.equal(measures.open, false);
+  assert.equal(manual.tagName, "DETAILS"); assert.equal(manual.open, false);
+  assert.equal(f.nodes.get("download-operations").closest("details"), measures);
+  assert.equal(workers.closest("details"), measures);
+  measures.open = true; manual.open = true;
   assert.equal(f.nodes.get("operations-status").textContent, "Signal de service : indisponible.");
   assert.equal(countNode.textContent, formatNumber(1234567, "fr")); assert.ok(queue.textContent.includes(`au moins ${formatNumber(1000, "fr")}`));
   f.language("en");
+  assert.equal(f.container.querySelectorAll("h1")[0].textContent, "Service status");
+  assert.equal(f.nodes.get("operations-title").textContent, "Server measurements");
+  assert.equal(manual.querySelectorAll("summary")[0].textContent.trim(), "Occasional checks");
+  assert.equal(measures.open, true); assert.equal(manual.open, true);
   assert.equal(f.document.documentElement.lang, "en"); assert.equal(f.nodes.get("mail-title").textContent, "Site emails");
   assert.equal(f.nodes.get("mail-sender").textContent, "private-sender@example.invalid"); assert.equal(f.nodes.get("operations-status").textContent, "Service signal: unavailable.");
   assert.equal(f.nodes.get("feature-list").children[0].textContent, "Invitation-only accessEnabled");
@@ -185,11 +201,11 @@ test("language switches during and after one explicit SMTP check preserve its pe
   await f.click("verify-smtp"); assert.equal(f.calls.length, calls); assert.equal(smtpCalls(f).length, 1);
   pending.resolve(response({ status: "verified", scope: "smtp_authentication", delivery: "not_checked", checkedAt: now + 5000 })); await flush();
   assert.equal(smtpCalls(f).length, 1); assert.equal(f.nodes.get("verify-smtp").disabled, false);
-  assert.equal(f.nodes.get("smtp-status").textContent, "Encrypted connection and authentication succeeded. Email receipt still needs testing.");
+  assert.equal(f.nodes.get("smtp-status").textContent, "Encrypted connection and authentication succeeded. No email was sent.");
   assert.equal(f.nodes.get("smtp-proof-date").textContent, `Verification for this session: ${formatDate(now + 5000, "en")}.`);
   const finalCalls = f.calls.length; f.language("fr");
   assert.equal(f.nodes.get("smtp-proof-date").textContent, `Vérification de cette session : ${formatDate(now + 5000, "fr")}.`);
-  assert.equal(f.nodes.get("smtp-status").textContent, "Connexion chiffrée et authentification réussies. La réception d’un e-mail reste à tester.");
+  assert.equal(f.nodes.get("smtp-status").textContent, "Connexion chiffrée et authentification réussies. Aucun e-mail n’a été envoyé.");
   assert.equal(f.calls.length, finalCalls); assert.equal(smtpCalls(f).length, 1);
   assert.equal(smtpCalls(f)[0].options.body, "{}"); assert.equal(smtpCalls(f)[0].options.headers["X-CSRF-Token"], "A".repeat(43));
 });
@@ -197,11 +213,13 @@ test("language switches during and after one explicit SMTP check preserve its pe
 for (const lifecycle of ["hide", "pagehide"]) test(`readiness ${lifecycle} clears private measurements and language changes cannot restore them`, async () => {
   const f = await harness({ language: "en" }); await f.click("verify-smtp");
   const detachedWorker = f.nodes.get("operations-workers").children[0]; assert.equal(f.nodes.get("smtp-proof-date").hidden, false);
+  f.nodes.get("operations-details").open = true;
   await f[lifecycle](); const calls = f.calls.length; f.language("fr"); f.language("en");
   assert.equal(f.nodes.get("readiness-content").hidden, true); assert.equal(f.nodes.get("mail-sender").textContent, "");
   for (const id of ["feature-list", "operations-database", "operations-workers", "operations-queues"]) assert.equal(f.nodes.get(id).children.length, 0, id);
   for (const id of ["mail-status", "operations-sample", "smtp-status", "smtp-proof-date", "session-status"]) assert.equal(f.nodes.get(id).textContent, "", id);
   assert.equal(f.nodes.get("smtp-proof-date").hidden, true); assert.equal(f.nodes.get("operations-details").hidden, true);
+  assert.equal(f.nodes.get("operations-details").open, false);
   assert.equal(detachedWorker.isConnected, false); assert.ok(!f.container.textContent.includes("private-sender@example.invalid"));
   assert.equal(f.calls.length, calls); assert.equal(smtpCalls(f).length, 1);
 });
