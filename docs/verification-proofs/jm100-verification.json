@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-20T19:38:03.664Z",
+  "release": "1.0.0",
+  "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+  "tree": "485cade0aeeee41cb4c34f913cd98f6078c4636b",
+  "status": "deployed_identity_confirmed_checkpoint_alignment_pending",
+  "identityEvidence": {
+    "method": "authenticated_admin_readiness_user_report_after_refresh",
+    "url": "https://jessiemessage.com/admin/readiness",
+    "api": "GET /api/admin/readiness",
+    "directPrivateToolObservation": false,
+    "values": {
+      "version": "1.0.0",
+      "commit": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+      "nodeVersion": "v24.22.0",
+      "startedAtDisplay": "20/10/2026 21:16:28"
+    },
+    "displayTimezone": "not_reported",
+    "startedAtEpochInferred": false,
+    "meaning": "startup_identity_of_the_http_process_answering_the_authenticated_read",
+    "notAttested": [
+      "pid",
+      "socket_owner",
+      "executed_binary_hash",
+      "pc_or_backup_delivery"
+    ]
+  },
+  "github": {
+    "tag": "v1.0.0",
+    "tagTarget": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0",
+    "releaseDraft": false,
+    "ciUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39471679954",
+    "ciHead": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+    "ciStatus": "completed",
+    "ciConclusion": "success"
+  },
+  "staging": {
+    "provenance": "user_ssh_receipt",
+    "status": "staged_precheck_passed",
+    "checkout": "/srv/customer/jessiemessage-operator/production-100-70b48aa8",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-release100-70b48aa8.sh",
+    "launcherSha256": "aa400abaa54033308acce7f4b28649b33d4ecc5f7098eec7b020c05631123248",
+    "nodeBinarySha256": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+    "pendingClosures": false,
+    "started": false,
+    "erased": false,
+    "managerChanged": false,
+    "runtimeStarted": false,
+    "scope": "preparation_only_before_activation"
+  },
+  "publicHttpChecks": [
+    {
+      "url": "https://jessiemessage.com/api/health",
+      "httpStatus": 200,
+      "body": {
+        "status": "ok"
+      },
+      "authenticated": false,
+      "meaning": "availability_only"
+    },
+    {
+      "url": "https://jessiemessage.com/api/ready",
+      "httpStatus": 200,
+      "body": {
+        "status": "ready"
+      },
+      "authenticated": false,
+      "meaning": "availability_only"
+    },
+    {
+      "url": "https://recette.jessiemessage.com/api/health",
+      "httpStatus": 200,
+      "body": {
+        "status": "ok"
+      },
+      "authenticated": false,
+      "meaning": "availability_only"
+    },
+    {
+      "url": "https://recette.jessiemessage.com/api/ready",
+      "httpStatus": 200,
+      "body": {
+        "status": "ready"
+      },
+      "authenticated": false,
+      "meaning": "availability_only"
+    }
+  ],
+  "processInspection": {
+    "status": "not_verified",
+    "firstCode": "PROCESS_NOT_UNIQUE",
+    "secondCode": "PROCESS_NOT_FOUND",
+    "strictMatchCount": 0,
+    "canonicalMatchCount": 0,
+    "processesRead": 12,
+    "processesUnreadable": 0,
+    "candidates": [],
+    "source": "user_ssh_verifier_r2_result",
+    "cause": "not_established"
+  },
+  "privateCheckpoint": {
+    "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
+    "lastRecordedRelease": "0.86.0",
+    "alignmentStatus": "pending_user_execution",
+    "runtimeRestartRequired": false,
+    "recorder": {
+      "commit": "002f26450a39b0fc937745f008e563efdb21ba66",
+      "path": "ops/record-release100.py",
+      "sha256": "167ec69db5f6b86e85a4b437fbb6073aa21b523ab34f102993c4f4ace4fe13dd",
+      "targetedTests": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "synthetic_metadata_files_only"
+      },
+      "serverExecution": "not_observed",
+      "preservation": "complete_previous_active_service_in_release100_rollback_and_unchanged_other_blocks"
+    }
+  },
+  "scope": {
+    "messagingBusinessChange": false,
+    "dependencyUpdate": false,
+    "schemaMigration": false,
+    "pcAction": false
+  }
+}
