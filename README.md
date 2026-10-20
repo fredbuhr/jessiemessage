@@ -2,18 +2,28 @@
 
 Messagerie privée sur invitation entre Jessie et chaque personne invitée : texte, photos, notifications, sessions indépendantes et outils d’administration. L’application utilise l’hébergement mutualisé existant, sans infrastructure ni budget ajoutés.
 
-**[REPRISE — état courant, version déployée, preuves, prochaine action et repli](docs/REPRISE.md)** est le point d’entrée unique pour poursuivre le projet. Les documents datés décrivent leur propre étape ; ils ne remplacent pas cet état.
+**[REPRISE — version réellement déployée, commit, preuves, prochaine action et repli](docs/REPRISE.md)** est l’unique référence de l’état courant. La V1 désigne le périmètre produit déjà livré ; la livraison `1.0.0` en harmonise la numérotation. Un travail préparé dans une branche ne devient disponible qu’après son déploiement vérifié.
 
-- [Périmètre produit](docs/PRODUCT.md) : fonctions livrées, conservation et limites de récupération.
-- [Guide quotidien](docs/guide-jessie.md) : messages, photos, fiches, notifications, exports et copies PC.
-- [Plan de travail](docs/PLAN-IMPLEMENTATION.md) : lots et critères de fin.
-- [Principes KISS et aperçu](docs/DESIGN-KISS.md) : simplicité de l’interface et du développement.
+| Document | Rôle |
+| --- | --- |
+| [Périmètre produit](docs/PRODUCT.md) | Fonctions disponibles, conservation et limites. |
+| [Guide quotidien](docs/guide-jessie.md) | Utilisation des messages, photos, fiches, notifications et exports. |
+| [Plan de travail](docs/PLAN-IMPLEMENTATION.md) | Harmonisation et évolutions restantes. |
+| [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
+| [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
+| [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
+
+## Versions et livraisons
+
+La version applicative provient de [package.json](package.json), avec la même valeur dans les métadonnées racine de `package-lock.json`. `1.0.0` établit la référence de la V1 existante ; `1.0.1` désigne une correction compatible, `1.1.0` une évolution compatible et `2.0.0` une rupture de compatibilité. Les numéros ne suivent pas le nombre de discussions ou de commits. Node, le schéma SQL et les formats de données ont leurs propres versions.
+
+Chaque livraison suit le même parcours : commit validé → tag immuable `vX.Y.Z` et release GitHub → déploiement de ce commit → contrôles → mise à jour de REPRISE. Une release publiée n’est pas une preuve de déploiement. `main` peut ensuite avancer pour la documentation ou une évolution ; le tag et le commit vérifié identifient toujours la version en production. Ne pas déplacer un tag publié ni renommer rétroactivement une ancienne livraison.
 
 ## Exploitation et récupération
 
-Les copies chiffrées continuent vers le PC déjà raccordé lorsqu’il est disponible. Le reçu d’une copie ne certifie ni son déchiffrement ni une restauration. Les fermetures définitives sont traitées localement ; une restauration applicative se prépare sur une cible isolée, en maintenance, avec contrôle des fermetures connues et réouverture explicite. Voir le [parcours opérateur](docs/manual-restore-operator-078.md).
+Les fermetures définitives sont traitées localement. Une restauration applicative se prépare sur une cible isolée, en maintenance, avec contrôle des fermetures connues et réouverture explicite. Voir le [parcours opérateur](docs/manual-restore-operator-078.md).
 
-La récupération autonome après perte complète de l’hôte, le témoin frais par phase, la succession et l’inventaire SQL exhaustif restent hors du périmètre V1. Les points ouverts A01 (Node fourni par l’hébergeur), A07 (installation personnelle du kit PC) et A08 (exécuteur d’archivage) restent distincts et sont suivis dans [REPRISE](docs/REPRISE.md).
+Le mécanisme de copies chiffrées vers le PC déjà raccordé est conservé ; son état réel, notamment après le signalement antivirus, est suivi dans REPRISE. Un reçu historique ne prouve pas son fonctionnement actuel, son déchiffrement ou une restauration. Le traitement PC/Avast et l’exécuteur d’archivage restent différés sans conditionner les évolutions de messagerie. La récupération autonome après perte complète de l’hôte, le témoin frais par phase, la succession et l’inventaire SQL exhaustif restent hors du périmètre V1.
 
 ## Développement et vérification
 
@@ -40,7 +50,7 @@ L’[identité approuvée](docs/IDENTITE-VALIDEE.md) et [Nuit V2](docs/NUIT-V2.m
 
 Ne jamais committer messages réels, données client, médias privés, secrets, journaux de production ou dumps SQL. Les tests utilisent des données synthétiques. L’invitation et l’admission manuelle ne constituent pas une preuve indépendante de majorité.
 
-Les anciens bilans du README restent dans [Git, état du 20 octobre 2026 avant cet entretien](https://github.com/fredbuhr/jessiemessage/blob/bbd733d85b49b892d78c7cd90509ced04a990939/README.md). L’[historique du 19 octobre](docs/REPRISE-HISTORIQUE-20261019.md), l’[ancien journal d’implémentation](docs/NEXT-STEPS.md) et les preuves datées sont conservés.
+La [clôture V1 0.86](docs/production-086.md), la [qualification Node associée](docs/node-runtime-086.md), l’[historique du 19 octobre](docs/REPRISE-HISTORIQUE-20261019.md), l’[ancien journal d’implémentation](docs/NEXT-STEPS.md) et leurs preuves restent datés. Leurs anciennes prochaines étapes ne remplacent pas REPRISE. Les [anciens bilans du README](https://github.com/fredbuhr/jessiemessage/blob/bbd733d85b49b892d78c7cd90509ced04a990939/README.md) restent dans Git.
 
 ## Licence
 

@@ -174,6 +174,18 @@ test("readiness operations translate typed worker and queue dates/counts in plac
   assert.ok(f.writes.every(([key, value]) => key === "jessiemessage.language" && ["fr", "en"].includes(value)));
 });
 
+test("startup release details remain raw, translate labels and disappear with private session state", async () => {
+  const input = summary(); input.release = { version: "1.0.0", commit: "b".repeat(40), nodeVersion: "v24.22.0", startedAt: now };
+  const f = await harness({ input });
+  const details = f.nodes.get("release-details"); assert.equal(details.hidden, false);
+  assert.ok(details.textContent.includes("Version de l’application1.0.0")); assert.ok(details.textContent.includes("Commit au démarrage" + "b".repeat(40)));
+  f.language("en"); assert.ok(details.textContent.includes("Application version1.0.0")); assert.ok(details.textContent.includes("Commit at startup" + "b".repeat(40)));
+  assert.ok(details.textContent.includes("Node.js versionv24.22.0")); assert.ok(details.textContent.includes(formatDate(now, "en")));
+  await f.hide(); assert.equal(details.hidden, true); assert.equal(details.childElementCount, 0);
+  const unknown = summary(); unknown.release = { ...input.release, version: null, commit: null };
+  const other = await harness({ input: unknown, language: "en" }); assert.match(other.nodes.get("release-details").textContent, /Unknown/);
+});
+
 test("readiness empty measurements translate nested null dates and empty workers/queues without inventing a healthy signal", async () => {
   const input = summary(); input.operations = { status: "unavailable", database: { state: "starting", checkedAt: null }, workers: [], queues: [], queuesCheckedAt: null };
   const f = await harness({ input, language: "en" }), calls = f.calls.length;
@@ -322,6 +334,22 @@ test("diagnostic download refreshes the aggregate snapshot and exports translate
     assert.equal(f.nodes.get("download-operations").disabled, false);
     assert.equal(f.container.querySelectorAll("a").some(node => node.download === file.download), false, "temporary download link is removed");
   }
+});
+
+test("fresh diagnostic snapshots replace release details after a backend rollback or unknown source identity", async () => {
+  const original = summary(); original.release = { version: "1.0.0", commit: "b".repeat(40), nodeVersion: "v24.22.0", startedAt: now };
+  const legacy = summary();
+  const partial = summary(); partial.release = { version: "1.0.1", commit: null, nodeVersion: "v24.22.0", startedAt: now + 1000 };
+  let reads = 0;
+  const f = await harness({ snapshot: () => response([original, legacy, partial][reads++]) });
+  const details = f.nodes.get("release-details");
+  assert.equal(details.hidden, false); assert.ok(details.textContent.includes("1.0.0")); assert.ok(details.textContent.includes("b".repeat(40)));
+  await f.click("download-operations");
+  assert.equal(f.downloads.length, 1); assert.equal(details.hidden, true); assert.equal(details.childElementCount, 0);
+  await f.click("download-operations");
+  assert.equal(f.downloads.length, 2); assert.equal(details.hidden, false);
+  assert.ok(details.textContent.includes("1.0.1")); assert.ok(details.textContent.includes("Non identifié"));
+  assert.equal(details.textContent.includes("b".repeat(40)), false); assert.equal(details.textContent.includes("1.0.0"), false);
 });
 
 test("diagnostic export refuses a changed login at the final proof", async () => {

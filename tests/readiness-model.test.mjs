@@ -146,6 +146,19 @@ test("operational measures remain optional and never complete delivery, age or d
   for (const input of [null, undefined, {}, [], false]) assert.throws(() => parseReadinessSummary(summary({ operations: input })), /invalid_readiness_operations/);
 });
 
+test("release metadata is optional, bounded, detached and cleared with the administrator state", () => {
+  const release = { version: "1.0.0", commit: "b".repeat(40), nodeVersion: "v24.22.0", startedAt: now, path: "/private/source" };
+  const state = connected(); const input = summary({ release });
+  assert.equal(acceptReadinessSummary(state, readinessTicket(state), input), true);
+  assert.deepEqual(state.summary.release, { version: "1.0.0", commit: "b".repeat(40), nodeVersion: "v24.22.0", startedAt: now });
+  release.version = "1.1.0"; assert.equal(state.summary.release.version, "1.0.0");
+  clearReadiness(state); assert.equal(state.summary, null);
+  assert.equal(Object.hasOwn(parseReadinessSummary(summary()), "release"), false);
+  for (const changes of [{ version: "1.0.0\n" }, { commit: "main" }, { nodeVersion: "v24.22.0\n" }, { startedAt: Infinity }]) {
+    assert.throws(() => parseReadinessSummary(summary({ release: { ...release, ...changes } })), /invalid_release_identity/);
+  }
+});
+
 test("operational measures retain only whitelisted aggregate fields and detach every nested reference", () => {
   const expected = operations(), input = operations();
   input.secret = "private-secret"; input.path = "/private/storage"; input.database.connectionString = "private-database";

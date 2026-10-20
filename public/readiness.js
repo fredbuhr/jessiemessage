@@ -22,6 +22,7 @@ function clearDisplay() {
   el("refresh").disabled = false;
   el("mail-sender").textContent = ""; el("mail-status").textContent = ""; el("feature-list").replaceChildren();
   el("operations-details").hidden = true; el("operations-details").open = false; el("operations-status").textContent = ""; el("operations-sample").textContent = "";
+  el("release-details").hidden = true; el("release-details").replaceChildren();
   el("download-operations").hidden = true; el("download-operations").disabled = false;
   notice("", false, "operations-download-status");
   for (const id of ["operations-database", "operations-workers", "operations-queues"]) el(id).replaceChildren();
@@ -106,6 +107,17 @@ function render() {
   }
   el("feature-list").replaceChildren(...rows);
   renderOperations(summary.operations);
+  el("release-details").hidden = true; el("release-details").replaceChildren();
+  if (summary.release) {
+    const release = summary.release;
+    el("operations-details").hidden = false;
+    el("release-details").hidden = false;
+    el("release-details").replaceChildren(
+      detail("Version de l’application", "{value}", { value: release.version ?? ui.messageParam("Non identifiée") }),
+      detail("Commit au démarrage", "{value}", { value: release.commit ?? ui.messageParam("Non identifié") }),
+      detail("Version Node.js", "{value}", { value: release.nodeVersion }),
+      detail("Relevé au démarrage", "{date}", { date: ui.dateParam(release.startedAt) }));
+  }
   el("download-operations").hidden = !summary.operations;
   el("download-operations").disabled = state.busy || reportTask !== null;
   if (state.proof) {

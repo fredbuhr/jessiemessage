@@ -24,7 +24,7 @@ async function fixture() {
       snapshots++;
       const workers = ["verification", "recovery", "broadcasts", "notifications"].map(name => ({ name, state: "idle", lastCompletedAt: now, lastErrorAt: null, consecutiveFailures: 0, processed: 2, failures: 0 }));
       const depth = count => ({ count, truncated: count === 1000 });
-      send(200, "application/json", JSON.stringify({ contactEmail: "contact@jessiemessage.com", mail: { configured: true, sender: "private-marker@example.invalid", replyTo: "private-marker@example.invalid" },
+      send(200, "application/json", JSON.stringify({ contactEmail: "contact@jessiemessage.com", release: { version: "1.0.0", commit: "b".repeat(40), nodeVersion: "v24.22.0", startedAt: now }, mail: { configured: true, sender: "private-marker@example.invalid", replyTo: "private-marker@example.invalid" },
         features: { clientAccess: true, chat: true, photos: true, clientFiles: false, passwordRecovery: true, broadcasts: false, notifications: true },
         checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" },
         operations: { status: "ready", database: { state: "ok", checkedAt: now }, workers, queuesCheckedAt: now,
@@ -61,6 +61,9 @@ test("real Chrome: private diagnostic is translated, bounded and downloadable by
         await tabUntil(page, "#operations-details > summary"); await page.key("\uE007");
         assert.equal(await page.execute("return document.getElementById('operations-details').open && document.getElementById('download-operations').checkVisibility()"), true);
         assert.equal(source.snapshots(), beforeOpen, "opening optional details needs no new server check");
+        const release = await page.execute("return document.getElementById('release-details').textContent");
+        assert.ok(release.includes(language === "fr" ? "Version de l’application1.0.0" : "Application version1.0.0"));
+        assert.ok(release.includes("b".repeat(40))); assert.ok(release.includes("v24.22.0"));
         assert.equal(await page.execute("return document.getElementById('download-operations').textContent"), language === "fr" ? "Télécharger le diagnostic" : "Download diagnostic");
         assert.equal(await page.execute("const button = document.getElementById('download-operations'); return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && button.getBoundingClientRect().height >= 44 && button.scrollWidth <= button.clientWidth + 1"), true);
         await page.execute(`document.addEventListener('click', event => { const link = event.target.closest('a[download]'); if (!link) return; event.preventDefault(); window.__diagnostic = { name: link.download, text: decodeURIComponent(link.getAttribute('href').split(',').slice(1).join(',')) }; });`);

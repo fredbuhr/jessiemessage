@@ -8,6 +8,7 @@ import { createShutdown } from "./lifecycle.mjs";
 import { createEntryHandler } from "./entry/http.mjs";
 import { createRequestOriginGuard, isOriginFormTarget, RequestOriginError } from "./http/request-origin.mjs";
 import { sessionToken } from "./auth/http.mjs";
+import { getProcessRelease } from "./release.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
 const PRIMARY_ORIGIN = "https://jessiemessage.com";
@@ -550,6 +551,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
 }
 
 export async function start(env = process.env, options = {}) {
+  const release = getProcessRelease();
   const rawPort = Number(env.PORT ?? 3000);
   const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3000;
   const { server, pool, mailWorker, diagnostics } = await createConfiguredServer(env, options);
@@ -584,6 +586,7 @@ export async function start(env = process.env, options = {}) {
       onListening = () => {
         listening = true;
         console.info(`JessieMessage listening on port ${port}`);
+        console.info(JSON.stringify({ version: 1, type: "application_started", release }));
         resolveBinding();
       };
       onClose = () => { if (!listening) rejectBinding(); };

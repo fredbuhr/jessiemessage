@@ -10,6 +10,15 @@ const email = (value) => typeof value === "string" && value.length <= 254 && /^[
 const nullableDate = (value) => value === null || date(value);
 const counter = (value) => Number.isSafeInteger(value) && value >= 0;
 
+export function parseRelease(input) {
+  if (!input || !(input.version === null || typeof input.version === "string" && input.version.length <= 64 && input.version.trim() === input.version
+    && /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/.test(input.version))
+    || !(input.commit === null || typeof input.commit === "string" && /^[a-f0-9]{40}$/.test(input.commit) && input.commit.length === 40)
+    || typeof input.nodeVersion !== "string" || input.nodeVersion.length > 64 || input.nodeVersion.trim() !== input.nodeVersion || !/^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/.test(input.nodeVersion)
+    || !date(input.startedAt)) throw new TypeError("invalid_release_identity");
+  return { version: input.version, commit: input.commit, nodeVersion: input.nodeVersion, startedAt: input.startedAt };
+}
+
 export function parseOperations(input) {
   const invalid = () => { throw new TypeError("invalid_readiness_operations"); };
   if (!input || !["ready", "unavailable"].includes(input.status) || typeof input.database?.state !== "string" || !Object.hasOwn(databaseStateNames, input.database.state)
@@ -107,6 +116,7 @@ export function parseReadinessSummary(input) {
   const summary = { contactEmail: CONTACT_EMAIL, mail: { configured: input.mail.configured, sender: input.mail.sender, replyTo: input.mail.sender }, features,
     checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } };
   if (Object.hasOwn(input, "operations")) summary.operations = parseOperations(input.operations);
+  if (Object.hasOwn(input, "release")) summary.release = parseRelease(input.release);
   return summary;
 }
 export function acceptReadinessSummary(state, ticket, input) {

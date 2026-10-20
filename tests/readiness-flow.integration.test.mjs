@@ -1,4 +1,5 @@
 import test from "node:test";
+import { getProcessRelease } from "../server/release.mjs";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
@@ -163,7 +164,7 @@ test("administrator readiness with real SQL MFA, private HTTP and fake verificat
       const before = new Set((await connection.query("SELECT HEX(bucket_hash) AS hash FROM auth_rate_limits")).map((row) => row.hash));
       const response = await summary();
       assert.equal(response.status, 200);
-      assert.deepEqual(response.body, { contactEmail: "contact@jessiemessage.com", mail: { configured: true,
+      assert.deepEqual(response.body, { contactEmail: "contact@jessiemessage.com", release: { ...getProcessRelease() }, mail: { configured: true,
         sender: "contact@jessiemessage.com", replyTo: "contact@jessiemessage.com" }, features,
       checks: { admissionPolicy: "manual_invitation", ageAssurance: "not_integrated", smtpDelivery: "not_checked", deviceAcceptance: "pending" } });
       const wire = JSON.stringify(response.body);

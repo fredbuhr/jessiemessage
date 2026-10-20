@@ -68,6 +68,19 @@ test("readiness summary whitelists public identity and feature inventory without
   assert.deepEqual(calls, [["actor", token], ["summary", token]]);
 });
 
+test("release identity stays behind administrator authorization and whitelists the startup observation", async (t) => {
+  const release = { version: "1.0.0", commit: "b".repeat(40), nodeVersion: "v24.22.0", startedAt: now };
+  const { base, service } = await fixture(t, { summary: async () => summary({ release: { ...release, path: "/private/source", privateKey: "private-key" } }) });
+  const response = await get(base); assert.equal(response.status, 200); privateHeaders(response);
+  const body = await response.json(); assert.deepEqual(body.release, release); assert.doesNotMatch(JSON.stringify(body), /private-/);
+  await errorBody(await get(base, root, {}), 401, "authentication_required");
+  await errorBody(await get(base, root, { Cookie: `__Host-jessie_client=${clientToken}` }), 401, "authentication_required");
+  for (const malformed of [{ ...release, commit: "main" }, { ...release, version: "1.0.0\n" }, { ...release, startedAt: -1 }]) {
+    service.summary = async () => summary({ release: malformed });
+    await errorBody(await get(base), 503, "readiness_unavailable");
+  }
+});
+
 test("SMTP verification accepts only an empty object and exposes authentication proof without transport details", async (t) => {
   const { base, calls } = await fixture(t);
   const response = await post(base); assert.equal(response.status, 200); privateHeaders(response);
