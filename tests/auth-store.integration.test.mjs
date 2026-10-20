@@ -246,6 +246,60 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
       assert.equal(Number((await connection.query("SELECT attempts FROM auth_rate_limits WHERE bucket_hash = ?", [parallelKey]))[0].attempts), 6);
     });
 
+    await t.test("a refused network preserves the shared quota for another network and across window rollover", async () => {
+      const aggregate = digest(), blocked = digest(), other = digest();
+      const consume = (network, at = now) => store.consumeRateLimit(aggregate, { now: at, windowSeconds: 60, limit: 3,
+        network: { bucketHash: network, windowSeconds: 900, limit: 1 } });
+      assert.equal((await consume(blocked)).allowed, true);
+      const snapshot = await connection.query("SELECT bucket_hash, window_started_at, attempts FROM auth_rate_limits WHERE bucket_hash IN (?, ?) ORDER BY bucket_hash", [aggregate, blocked]);
+      for (let index = 0; index < 8; index++) {
+        const refused = await consume(blocked);
+        assert.equal(refused.allowed, false); assert.equal(refused.retryAfter, 900);
+      }
+      assert.deepEqual(await connection.query("SELECT bucket_hash, window_started_at, attempts FROM auth_rate_limits WHERE bucket_hash IN (?, ?) ORDER BY bucket_hash", [aggregate, blocked]), snapshot);
+      assert.equal((await consume(other)).allowed, true);
+      const beforeRollover = await connection.query("SELECT window_started_at, attempts FROM auth_rate_limits WHERE bucket_hash = ?", [aggregate]);
+      const refused = await consume(blocked, now + 60000);
+      assert.equal(refused.allowed, false); assert.equal(refused.retryAfter, 840);
+      assert.deepEqual(await connection.query("SELECT window_started_at, attempts FROM auth_rate_limits WHERE bucket_hash = ?", [aggregate]), beforeRollover);
+      assert.equal((await consume(digest(), now + 60000)).allowed, true);
+      assert.equal(Number((await connection.query("SELECT attempts FROM auth_rate_limits WHERE bucket_hash = ?", [aggregate]))[0].attempts), 1);
+      assert.equal((await consume(blocked, now + 900000)).allowed, true);
+    });
+
+    await t.test("public quotas bound counter cardinality when addresses rotate after aggregate exhaustion", async () => {
+      const aggregate = digest(), networks = Array.from({ length: 30 }, digest);
+      for (let index = 0; index < networks.length; index++) {
+        const result = await store.consumeRateLimit(aggregate, { now, windowSeconds: 60, limit: 3,
+          network: { bucketHash: networks[index], windowSeconds: 900, limit: 2 } });
+        assert.equal(result.allowed, index < 3);
+      }
+      const rows = await connection.query(`SELECT bucket_hash FROM auth_rate_limits WHERE bucket_hash IN (${networks.map(() => "?").join(",")})`, networks);
+      assert.deepEqual(rows.map((row) => row.bucket_hash.toString("hex")).sort(), networks.slice(0, 3).map((hash) => hash.toString("hex")).sort());
+      const untouchedAggregate = digest(), exhaustedNetwork = digest();
+      await store.consumeRateLimit(exhaustedNetwork, { now, windowSeconds: 900, limit: 1 });
+      const refused = await store.consumeRateLimit(untouchedAggregate, { now, windowSeconds: 60, limit: 3,
+        network: { bucketHash: exhaustedNetwork, windowSeconds: 900, limit: 1 } });
+      assert.equal(refused.allowed, false);
+      assert.equal((await connection.query("SELECT bucket_hash FROM auth_rate_limits WHERE bucket_hash = ?", [untouchedAggregate])).length, 0);
+      assert.equal(Number((await connection.query("SELECT attempts FROM auth_rate_limits WHERE bucket_hash = ?", [exhaustedNetwork]))[0].attempts), 1);
+    });
+
+    await t.test("concurrent public requests cannot overspend a network or create rows beyond the shared ceiling", async () => {
+      const aggregate = digest(), network = digest(), another = digest();
+      const consume = (hash, shared = aggregate, limit = 10) => createAuthStore(pool).consumeRateLimit(shared, { now, windowSeconds: 60, limit,
+        network: { bucketHash: hash, windowSeconds: 900, limit: 3 } });
+      const results = await Promise.all(Array.from({ length: 6 }, () => consume(network)));
+      assert.equal(results.filter((result) => result.allowed).length, 3);
+      assert.equal(Number((await connection.query("SELECT attempts FROM auth_rate_limits WHERE bucket_hash = ?", [aggregate]))[0].attempts), 3);
+      assert.equal((await consume(another)).allowed, true);
+      const second = digest(), rotating = Array.from({ length: 6 }, digest);
+      const raced = await Promise.all(rotating.map((hash) => consume(hash, second, 3)));
+      assert.equal(raced.filter((result) => result.allowed).length, 3);
+      const rows = await connection.query(`SELECT bucket_hash FROM auth_rate_limits WHERE bucket_hash IN (${rotating.map(() => "?").join(",")})`, rotating);
+      assert.equal(rows.length, 3);
+    });
+
     await t.test("bounded limiter pruning removes only windows older than 24 hours and preserves current denials", async () => {
       const expired = digest();
       const current = digest();

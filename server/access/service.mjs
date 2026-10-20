@@ -103,10 +103,15 @@ export async function createAccessService({ store, authStore, authService, totpK
   async function limit(operation, account, peerAddress, maximum = 8) {
     const network = typeof peerAddress === "string" && peerAddress.length <= 128 ? peerAddress : "unknown-peer";
     const now = clock();
-    // One aggregate bucket bounds all public access operations before creating
-    // per-network/account rows or starting expensive password work.
-    for (const [kind, value, seconds, count] of [["global", "public-access", 60, 60], [`${operation}:network`, network, 900, 20], [`${operation}:account`, account, 900, maximum]]) {
-      const result = await database(() => authStore.consumeRateLimit(bucket(kind, value), { now, windowSeconds: seconds, limit: count }));
+    // The aggregate and network are consumed atomically: a network refusal
+    // preserves the aggregate, whose ceiling still bounds new counter rows.
+    const budgets = [
+      [bucket("global", "public-access"), { now, windowSeconds: 60, limit: 60,
+        network: { bucketHash: bucket(`${operation}:network`, network), windowSeconds: 900, limit: 20 } }],
+      [bucket(`${operation}:account`, account), { now, windowSeconds: 900, limit: maximum }],
+    ];
+    for (const [hash, options] of budgets) {
+      const result = await database(() => authStore.consumeRateLimit(hash, options));
       if (!result.allowed) throw new AuthError("AUTH_RATE_LIMIT", result.retryAfter);
     }
   }

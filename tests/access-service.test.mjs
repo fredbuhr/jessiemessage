@@ -109,6 +109,24 @@ test("the aggregate public quota blocks before account lookups and expensive pas
   state.allowed = false;
   await assert.rejects(service.login({ email: "client@example.invalid", password }), (error) => error.code === "AUTH_RATE_LIMIT" && error.retryAfter === 45);
   assert.equal(captured.length, 1); assert.equal(captured[0].hash.length, 32); assert.equal(captured[0].options.limit, 60);
+  assert.equal(captured[0].options.network.limit, 20);
+  assert.equal(captured[0].options.network.windowSeconds, 900);
+  assert.equal(captured[0].options.network.bucketHash.length, 32);
+  assert.notDeepEqual(captured[0].hash, captured[0].options.network.bucketHash);
+});
+test("public operations share the aggregate while keeping paired network and identity scopes", async () => {
+  await service.inspectInvitation({ token, peerAddress: "192.0.2.12" });
+  await service.inspectInvitation({ token, peerAddress: "192.0.2.13" });
+  assert.equal(captured.length, 4);
+  assert.deepEqual(captured[0].hash, captured[2].hash);
+  assert.notDeepEqual(captured[0].options.network.bucketHash, captured[2].options.network.bucketHash);
+  assert.deepEqual(captured[1].hash, captured[3].hash);
+  assert.equal(captured[1].options.limit, 20);
+  assert.equal(captured[1].options.network, undefined);
+  await assert.rejects(service.login({ email: "client@example.invalid", password: "wrong", peerAddress: "192.0.2.12" }), { code: "AUTH_INVALID" });
+  assert.deepEqual(captured[4].hash, captured[0].hash);
+  assert.notDeepEqual(captured[4].options.network.bucketHash, captured[0].options.network.bucketHash);
+  assert.equal(captured[5].options.limit, 8);
 });
 test("only a current administrator can obtain invitation links and stored lists cannot recreate them", async () => {
   state.admin = false;

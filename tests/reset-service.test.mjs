@@ -73,7 +73,7 @@ test("reset requests start the complete link lifetime after a suspended quota fi
   const pending = f.service.requestReset({ email: "client@example.invalid" });
   await entered.promise; f.state.now = current; resume.resolve();
   assert.deepEqual(await pending, { status: "accepted" });
-  assert.deepEqual(f.rates.map(({ options }) => options.now), [initialNow, initialNow, initialNow]);
+  assert.deepEqual(f.rates.map(({ options }) => options.now), [initialNow, initialNow]);
   assert.equal(f.calls.length, 1); assert.equal(f.calls[0].name, "requestReset");
   assert.equal(f.calls[0].options.now, current); assert.equal(f.calls[0].options.reset.expiresAt, current + 30 * 60000);
 });
@@ -85,7 +85,7 @@ test("a clock that becomes invalid or overflows link lifetime during quotas cann
     const pending = f.service.requestReset({ email: "client@example.invalid" });
     await entered.promise; f.state.now = current; resume.resolve();
     await assert.rejects(pending, hasCode("RESET_UNAVAILABLE"));
-    assert.equal(f.rates.length, 3); assert.equal(f.calls.length, 0);
+    assert.equal(f.rates.length, 2); assert.equal(f.calls.length, 0);
   }
 });
 
@@ -124,31 +124,31 @@ test("reset service rejects untrusted request shapes and malformed tokens or pas
 test("opaque persistent quotas have bounded global, network and normalized account or token scopes", async () => {
   const f = await fixture(), email = "private-client@example.invalid", peerAddress = "192.0.2.99";
   await f.service.requestReset({ email, peerAddress });
-  assert.equal(f.rates.length, 3);
+  assert.equal(f.rates.length, 2);
   assert.deepEqual(f.rates.map(({ options }) => options), [
-    { now: initialNow, windowSeconds: 60, limit: 60 },
-    { now: initialNow, windowSeconds: 900, limit: 10 },
+    { now: initialNow, windowSeconds: 60, limit: 60,
+      network: { bucketHash: f.rates[0].options.network.bucketHash, windowSeconds: 900, limit: 10 } },
     { now: initialNow, windowSeconds: 1800, limit: 3 },
   ]);
-  const requestBuckets = f.rates.map(({ bucket }) => Buffer.from(bucket));
+  const requestBuckets = [f.rates[0].bucket, f.rates[0].options.network.bucketHash, f.rates[1].bucket].map((value) => Buffer.from(value));
   f.state.record = null;
   await assert.rejects(f.service.resetPassword({ token: f.token, password, peerAddress }), hasCode("RESET_INVALID"));
-  assert.deepEqual(f.rates.slice(3).map(({ options }) => options), [
-    { now: initialNow, windowSeconds: 60, limit: 60 },
-    { now: initialNow, windowSeconds: 900, limit: 20 },
+  assert.deepEqual(f.rates.slice(2).map(({ options }) => options), [
+    { now: initialNow, windowSeconds: 60, limit: 60,
+      network: { bucketHash: f.rates[2].options.network.bucketHash, windowSeconds: 900, limit: 20 } },
     { now: initialNow, windowSeconds: 900, limit: 5 },
   ]);
-  assert.deepEqual(f.rates[3].bucket, requestBuckets[0]);
+  assert.deepEqual(f.rates[2].bucket, requestBuckets[0]);
   assert.equal(new Set(requestBuckets.map((bucket) => bucket.toString("hex"))).size, 3);
-  assert.notDeepEqual(f.rates[4].bucket, requestBuckets[1]);
-  for (const { bucket } of f.rates) {
+  assert.notDeepEqual(f.rates[2].options.network.bucketHash, requestBuckets[1]);
+  for (const bucket of f.rates.flatMap((item) => [item.bucket, ...(item.options.network ? [item.options.network.bucketHash] : [])])) {
     assert.ok(Buffer.isBuffer(bucket)); assert.equal(bucket.length, 32);
     for (const secret of [email, peerAddress, f.token]) assert.notDeepEqual(bucket, createHash("sha256").update(secret).digest());
   }
   const json = JSON.stringify(f.rates);
   for (const secret of [email, peerAddress, f.token, password]) assert.equal(json.includes(secret), false);
   await f.service.requestReset({ email: email.toUpperCase(), peerAddress });
-  assert.deepEqual(f.rates[8].bucket, requestBuckets[2]);
+  assert.deepEqual(f.rates[5].bucket, requestBuckets[2]);
   const other = await fixture();
   await other.service.requestReset({ email, peerAddress });
   assert.notDeepEqual(other.rates[0].bucket, requestBuckets[0]);

@@ -177,6 +177,63 @@ test("real MariaDB active-access eligibility, immutable targeted campaigns and a
       assert.equal((await store.deliver(second, { now: now + 1000, message: message(second) })).delivered, true);
     });
 
+    for (const stage of ["campaign", "recipient", "media"]) {
+      for (const outcome of ["lease", "campaign", "valid"]) {
+        await subtest(`delivery rechecks ${outcome} deadline after a real ${stage} row-lock wait`, async () => {
+          const fixture = await pair(), mediaId = await asset(fixture.admin);
+          const created = await create(fixture, campaign([fixture], { mediaId }));
+          const job = await store.claim({ now, leaseMilliseconds: outcome === "campaign" ? 120000 : 1000 });
+          if (outcome === "campaign") await connection.query("UPDATE broadcast_campaigns SET expires_at = ? WHERE id = ?", [sqlDate(now + 1000), created.campaign.id]);
+          let at = now, observed;
+          const waiting = new Promise((resolve) => { observed = resolve; });
+          const observedPool = { getConnection: async () => {
+            const runtimeConnection = await pool.getConnection();
+            return { ...runtimeConnection, query: (...arguments_) => {
+              const pending = runtimeConnection.query(...arguments_);
+              const sql = arguments_[0];
+              if (stage === "campaign" && sql.startsWith("SELECT * FROM broadcast_campaigns")
+                || stage === "recipient" && sql.startsWith("SELECT * FROM broadcast_recipients")
+                || stage === "media" && sql.startsWith("SELECT id, owner_id, owner_role, created_at, deleted_at FROM media_assets")) observed();
+              return pending;
+            } };
+          } };
+          const observedStore = createBroadcastStore(observedPool, { chatStore: createChatStore(observedPool, { clock: () => at }), mediaEnabled: true, clock: () => at });
+          await connection.beginTransaction();
+          let pending;
+          try {
+            if (stage === "campaign") await connection.query("SELECT id FROM broadcast_campaigns WHERE id = ? FOR UPDATE", [created.campaign.id]);
+            else if (stage === "recipient") await connection.query("SELECT campaign_id FROM broadcast_recipients WHERE campaign_id = ? AND conversation_id = ? FOR UPDATE", [created.campaign.id, fixture.conversationId]);
+            else await connection.query("SELECT id FROM media_assets WHERE id = ? FOR UPDATE", [mediaId]);
+            pending = observedStore.deliver(job, { now, message: message(job) });
+            await waiting; at = now + (outcome === "valid" ? 999 : 1000);
+            await connection.commit();
+            assert.equal((await pending).delivered, outcome === "valid");
+          } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
+          await assertMessages(fixture.conversationId, outcome === "valid" ? 1 : 0);
+          assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM chat_events WHERE conversation_id = ?", [fixture.conversationId]))[0].value), outcome === "valid" ? 1 : 0);
+        });
+      }
+    }
+
+    await subtest("an expiry reached inside the ordinary append rolls back message, event and recipient together", async () => {
+      const fixture = await pair(), created = await create(fixture), job = await store.claim({ now, leaseMilliseconds: 1000 });
+      let at = now;
+      const delayedPool = { getConnection: async () => {
+        const runtimeConnection = await pool.getConnection();
+        return { ...runtimeConnection, query: async (...arguments_) => {
+          const result = await runtimeConnection.query(...arguments_);
+          if (arguments_[0].startsWith("INSERT INTO chat_events")) at = now + 1000;
+          return result;
+        } };
+      } };
+      const delayedStore = createBroadcastStore(delayedPool, { chatStore: createChatStore(delayedPool, { clock: () => at }), clock: () => at });
+      assert.deepEqual(await delayedStore.deliver(job, { now, message: message(job) }), { delivered: false });
+      await assertMessages(fixture.conversationId, 0);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM chat_events WHERE conversation_id = ?", [fixture.conversationId]))[0].value), 0);
+      const detail = await get(fixture, created.campaign.id);
+      assert.equal(detail.recipients[0].state, "sending"); assert.equal(detail.recipients[0].messageId, null);
+    });
+
     await subtest("a historical preference changed after claim does not block ordinary delivery", async () => {
       const fixture = await pair(), created = await create(fixture), job = await store.claim({ now });
       await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 0, 1, ?, ?)", [fixture.client.id, sqlDate(now), sqlDate(now)]);

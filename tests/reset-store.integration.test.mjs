@@ -56,6 +56,29 @@ test("real MariaDB single-use client password recovery and private leased mail (
     await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, ?)", [result.id, date(createdAt), credentialVersion]);
     return result;
   }
+  function observedClockStore(matches) {
+    let at = now, notify;
+    const requested = new Promise(resolve => { notify = resolve; });
+    const observedStore = createResetStore({ getConnection: async () => {
+      const runtimeConnection = await pool.getConnection();
+      return { ...runtimeConnection, query: (...arguments_) => {
+        if (matches(arguments_[0])) notify();
+        return runtimeConnection.query(...arguments_);
+      } };
+    } }, { clock: () => at });
+    return { store: observedStore, requested, setTime(value) { at = value; } };
+  }
+  async function recoveryState(value) {
+    const account = (await connection.query("SELECT password_hash, updated_at FROM users WHERE id = ?", [value.id]))[0];
+    const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ?", [value.id]))[0];
+    const sessions = await connection.query("SELECT id, revoked_at FROM sessions WHERE user_id = ? ORDER BY id", [value.id]);
+    const resets = await connection.query(`SELECT id, created_at, expires_at, consumed_at, revoked_at
+      FROM client_password_resets WHERE user_id = ? ORDER BY id`, [value.id]);
+    const jobs = await connection.query(`SELECT id, status, attempts, available_at, expires_at, created_at, lease_token, lease_until, sent_at, last_error
+      FROM password_reset_outbox WHERE recipient_user_id = ? ORDER BY id`, [value.id]);
+    return { account: { ...account }, credentialVersion: Number(auth.credential_version),
+      sessions: sessions.map(row => ({ ...row })), resets: resets.map(row => ({ ...row })), jobs: jobs.map(row => ({ ...row })) };
+  }
   try {
     await reset(); await applyMigrations(connection, { database: options.database, migrations });
     pool = await createRuntimePool(process.env);
@@ -198,6 +221,108 @@ test("real MariaDB single-use client password recovery and private leased mail (
         assert.equal((await connection.query("SELECT password_hash FROM users WHERE id = ?", [value.id]))[0].password_hash, value.passwordHash, reason);
       }
     });
+
+    for (const operation of ["inspect", "consume"]) for (const elapsed of [999, 1000]) {
+      await t.test(`${operation} rechecks expiry after a real reset-token lock waits until +${elapsed}ms`, async () => {
+        await clear();
+        const value = await user(), input = request(value, { expiresAt: now + 1000 });
+        const existingSession = await session(value);
+        assert.equal(await store.requestReset(input), true);
+        const sibling = id();
+        await connection.query(`INSERT INTO client_password_resets (id, user_id, token_hash, credential_version, email_hash, created_at, expires_at)
+          VALUES (?, ?, ?, 1, ?, ?, ?)`, [sibling, value.id, digest(), createHash("sha256").update(value.email).digest(), date(now), date(now + 1000)]);
+        const before = await recoveryState(value);
+        const observed = observedClockStore(sql => sql === "SELECT * FROM client_password_resets WHERE token_hash = ? FOR UPDATE");
+        await connection.beginTransaction();
+        let pending;
+        try {
+          await connection.query("SELECT id FROM client_password_resets WHERE id = ? FOR UPDATE", [input.reset.id]);
+          pending = operation === "inspect" ? inspect(observed.store, input)
+            : consume(observed.store, value, input, { now });
+          await Promise.race([observed.requested, pending.then(() => { throw new Error("The reset-token lock was not reached."); })]);
+          observed.setTime(now + elapsed);
+          await connection.commit();
+          const result = await pending;
+          const after = await recoveryState(value);
+          if (elapsed === 1000) {
+            assert.equal(result, operation === "inspect" ? null : false);
+            assert.deepEqual(after, before, "an expired reset must not change credentials, sessions, tokens or mail");
+          } else if (operation === "inspect") {
+            assert.deepEqual(result, { userId: value.id, credentialVersion: 1 });
+            assert.deepEqual(after, before, "inspection must remain read-only before expiry");
+          } else {
+            assert.equal(result, true);
+            assert.equal(after.account.password_hash, "synthetic-replacement-password-hash");
+            assert.equal(after.account.updated_at, date(now + elapsed));
+            assert.equal(after.credentialVersion, 2);
+            assert.deepEqual(after.sessions, [{ id: existingSession.id, revoked_at: date(now + elapsed) }]);
+            const consumed = after.resets.find(row => row.id.equals(input.reset.id));
+            assert.equal(consumed.consumed_at, date(now + elapsed));
+            assert.equal(consumed.revoked_at, null);
+            assert.equal(after.resets.find(row => row.id.equals(sibling)).revoked_at, date(now + elapsed));
+            assert.equal(after.jobs[0].status, "cancelled");
+            assert.equal(await consume(observed.store, value, input, { now: now + elapsed }), false);
+            assert.equal(await inspect(observed.store, input, now + elapsed), null);
+            assert.deepEqual(await recoveryState(value), after, "replaying the consumed reset must not mutate it again");
+          }
+        } finally {
+          try { await connection.rollback(); } catch {}
+          if (pending) await pending.catch(() => {});
+        }
+      });
+    }
+
+    for (const elapsed of [999, 1000]) {
+      await t.test(`reset request rechecks its original deadline after a real credential lock waits until +${elapsed}ms`, async () => {
+        await clear();
+        const value = await user(), previous = request(value), next = request(value, { expiresAt: now + 1000 });
+        await session(value);
+        assert.equal(await store.requestReset(previous), true);
+        const before = await recoveryState(value);
+        const observed = observedClockStore(sql => sql === "SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE");
+        await connection.beginTransaction();
+        let pending;
+        try {
+          await connection.query("SELECT user_id FROM client_auth_state WHERE user_id = ? FOR UPDATE", [value.id]);
+          pending = observed.store.requestReset(next);
+          await Promise.race([observed.requested, pending.then(() => { throw new Error("The credential lock was not reached."); })]);
+          observed.setTime(now + elapsed);
+          await connection.commit();
+          const result = await pending;
+          const after = await recoveryState(value);
+          if (elapsed === 1000) {
+            assert.equal(result, false);
+            assert.deepEqual(after, before, "an expired proposal must preserve the old reset, mail, password and sessions");
+            assert.deepEqual(await inspect(store, previous, now + elapsed), { userId: value.id, credentialVersion: 1 });
+            assert.equal(await inspect(store, next, now + elapsed), null);
+          } else {
+            assert.equal(result, true);
+            assert.deepEqual(after.account, before.account);
+            assert.equal(after.credentialVersion, before.credentialVersion);
+            assert.deepEqual(after.sessions, before.sessions);
+            const oldReset = after.resets.find(row => row.id.equals(previous.reset.id));
+            assert.equal(oldReset.revoked_at, date(now + elapsed));
+            assert.equal(oldReset.consumed_at, null);
+            const newReset = after.resets.find(row => row.id.equals(next.reset.id));
+            assert.equal(newReset.created_at, date(now + elapsed));
+            assert.equal(newReset.expires_at, date(next.reset.expiresAt), "a lock wait must not extend the caller's original deadline");
+            assert.equal(newReset.consumed_at, null);
+            assert.equal(newReset.revoked_at, null);
+            assert.equal(after.jobs.find(row => row.id.equals(previous.mail.id)).status, "cancelled");
+            const newJob = after.jobs.find(row => row.id.equals(next.mail.id));
+            assert.equal(newJob.status, "pending");
+            assert.equal(newJob.created_at, date(now + elapsed));
+            assert.equal(newJob.available_at, date(now + elapsed));
+            assert.equal(newJob.expires_at, date(next.reset.expiresAt));
+            assert.equal(await inspect(store, previous, now + elapsed), null);
+            assert.deepEqual(await inspect(store, next, now + elapsed), { userId: value.id, credentialVersion: 1 });
+          }
+        } finally {
+          try { await connection.rollback(); } catch {}
+          if (pending) await pending.catch(() => {});
+        }
+      });
+    }
 
     await t.test("a login checked with the old password/version cannot survive a racing reset", async () => {
       await clear(); const value = await user(), input = request(value); await store.requestReset(input);

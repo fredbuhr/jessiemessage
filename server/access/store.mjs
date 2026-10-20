@@ -224,12 +224,15 @@ export function createAccessStore(pool, { clock } = {}) {
     async inspectInvitation(tokenHash, { now }) {
       bytes(tokenHash, 32); instant(now);
       return withConnection(async (connection) => {
+        now = sessionNow(now);
         const row = (await connection.query(`SELECT i.expires_at, i.access_days FROM invitations i
           JOIN users u ON u.id = i.created_by_id JOIN admin_mfa m ON m.user_id = u.id
           WHERE i.token_hash = ? AND i.consumed_at IS NULL AND i.revoked_at IS NULL
           AND i.created_at <= ? AND i.expires_at > ? AND u.role = 'admin' AND u.status = 'active'
           AND m.enabled_at IS NOT NULL AND m.enabled_at <= ? LIMIT 1`, [tokenHash, sqlDate(now), sqlDate(now), sqlDate(now)]))[0];
-        return row ? { expiresAt: fromSqlDate(row.expires_at), accessDays: row.access_days === null ? null : Number(row.access_days) } : null;
+        now = sessionNow(now);
+        return row && fromSqlDate(row.expires_at) > now
+          ? { expiresAt: fromSqlDate(row.expires_at), accessDays: row.access_days === null ? null : Number(row.access_days) } : null;
       });
     },
 
@@ -292,8 +295,10 @@ export function createAccessStore(pool, { clock } = {}) {
         if (!candidate || !await issuer(connection, candidate.created_by_id, now)) return false;
         const invitation = (await connection.query(`SELECT id, created_by_id, created_at, expires_at, consumed_at,
           revoked_at FROM invitations WHERE token_hash = ? FOR UPDATE`, [invitationHash]))[0];
+        now = sessionNow(now);
         if (!invitation || !invitation.created_by_id.equals(candidate.created_by_id) || invitation.consumed_at !== null
-          || invitation.revoked_at !== null || now < fromSqlDate(invitation.created_at) || now >= fromSqlDate(invitation.expires_at)) return false;
+          || invitation.revoked_at !== null || now < fromSqlDate(invitation.created_at) || now >= fromSqlDate(invitation.expires_at)
+          || verification.expiresAt <= now) return false;
         try {
           await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash, created_at, updated_at)
             VALUES (?, 'client', 'pending', ?, ?, ?, ?, ?)`, [user.id, user.pseudonym, user.email, user.passwordHash, sqlDate(now), sqlDate(now)]);
@@ -405,6 +410,7 @@ export function createAccessStore(pool, { clock } = {}) {
         if (!user || user.role !== "client" || user.status !== "pending" || user.email_verified_at !== null) return false;
         const verification = (await connection.query(`SELECT id, user_id, created_at, expires_at, consumed_at,
           revoked_at FROM email_verifications WHERE token_hash = ? FOR UPDATE`, [tokenHash]))[0];
+        now = sessionNow(now);
         if (!verification || !verification.user_id.equals(user.id) || verification.consumed_at !== null
           || verification.revoked_at !== null || now < fromSqlDate(verification.created_at) || now >= fromSqlDate(verification.expires_at)) return false;
         await connection.query("UPDATE users SET email_verified_at = ?, updated_at = ? WHERE id = ?", [sqlDate(now), sqlDate(now), user.id]);
@@ -424,6 +430,8 @@ export function createAccessStore(pool, { clock } = {}) {
         if (!user || user.role !== "client" || user.status !== "pending" || user.email_verified_at !== null || user.password_hash !== expectedPasswordHash) return false;
         const state = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [userId]))[0];
         if (!state || storedVersion(state.credential_version) !== expectedVersion) return false;
+        now = sessionNow(now);
+        if (verification.expiresAt <= now) return false;
         await connection.query("UPDATE email_verifications SET revoked_at = ? WHERE user_id = ? AND consumed_at IS NULL AND revoked_at IS NULL AND created_at <= ?", [sqlDate(now), userId, sqlDate(now)]);
         await cancelMail(connection, userId);
         await enqueue(connection, userId, verification, mail, now);

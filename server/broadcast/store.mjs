@@ -1,4 +1,5 @@
 import { manuallyAdmittedClient, invitationConsumptionProjection } from "../access/admission.mjs";
+import { createSessionClock } from "../auth/session-policy.mjs";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { ChatStoreError } from "../chat/store.mjs";
 import { loadMigrations, migrationStatus, MigrationError } from "../db/migrations.mjs";
@@ -202,9 +203,11 @@ export async function assertBroadcastSchema(pool) {
   });
 }
 
-export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } = {}) {
+export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, clock } = {}) {
   if (!pool || typeof pool.getConnection !== "function" || typeof mediaEnabled !== "boolean" || !chatStore
     || ["withActor", "withBroadcastDelivery"].some((name) => typeof chatStore[name] !== "function")) input();
+  const readTime = createSessionClock(clock);
+  const currentTime = (previous) => Math.max(instant(previous), readTime(previous));
   const withAdmin = (value, operation) => { request(value); return chatStore.withActor({ role: "admin", tokenHash: value.tokenHash, now: value.now }, operation); };
   async function campaignRow(connection, campaignId, adminId) {
     const row = (await connection.query("SELECT * FROM broadcast_campaigns WHERE id = ? AND admin_id = ? FOR UPDATE", [campaignId, adminId]))[0];
@@ -278,6 +281,13 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
     uint32(job.mfaVersion); if (job.mediaId !== null) bytes(job.mediaId);
     if (typeof job.allowRepeatMedia !== "boolean" || typeof job.payloadEncrypted !== "string") input();
   }
+  async function jobTime(connection, context, campaign, recipient, previous) {
+    const now = currentTime(previous);
+    if (timestamp(recipient.lease_until) <= now) return null;
+    if (!context.canSend || !activeClient(context.client, now)) { await terminal(connection, campaign.id, recipient.conversation_id, "access_inactive", now); return null; }
+    if (timestamp(campaign.expires_at) <= now) { await terminal(connection, campaign.id, recipient.conversation_id, "expired", now); return null; }
+    return now;
+  }
   // Every worker transaction starts with the same account/proof/conversation
   // locks as ordinary chat. Queue rows are never held while waiting for them.
   async function withJob(job, now, operation) {
@@ -286,21 +296,22 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
       async (connection, context, append) => {
         const campaign = (await connection.query("SELECT * FROM broadcast_campaigns WHERE id = ? AND admin_id = ? FOR UPDATE", [job.campaignId, job.adminId]))[0];
         if (!campaign || !live(campaign) || Number(campaign.mfa_version) !== job.mfaVersion) return false;
-        if (context.reason === "administrator_invalid") { await pause(connection, campaign.id, now); return false; }
+        if (context.reason === "administrator_invalid") { await pause(connection, campaign.id, currentTime(context.now)); return false; }
         const compatible = context.client?.id.equals(job.clientId) && context.conversation?.id.equals(job.conversationId)
           && context.conversation.admin_id.equals(job.adminId) && context.conversation.client_id.equals(job.clientId);
         const recipient = (await connection.query("SELECT * FROM broadcast_recipients WHERE campaign_id = ? AND conversation_id = ? FOR UPDATE", [campaign.id, job.conversationId]))[0];
+        now = currentTime(context.now);
         if (!recipient || recipient.state !== "sending" || !recipient.lease_token?.equals(job.leaseToken)
-          || timestamp(recipient.lease_until) <= now || !recipient.client_id.equals(job.clientId)
+          || !recipient.client_id.equals(job.clientId)
           || !recipient.proposed_message_id.equals(job.messageId) || !recipient.client_message_id.equals(job.clientMessageId)) return false;
         if (!compatible || context.conversation.closed_at !== null || timestamp(context.conversation.created_at) > now) {
           await terminal(connection, campaign.id, job.conversationId, "conversation_unavailable", now); return false;
         }
-        if (!context.canSend || !activeClient(context.client, now)) { await terminal(connection, campaign.id, job.conversationId, "access_inactive", now); return false; }
-        if (timestamp(campaign.expires_at) <= now) { await terminal(connection, campaign.id, job.conversationId, "expired", now); return false; }
+        const refresh = () => jobTime(connection, context, campaign, recipient, now);
+        now = await refresh(); if (now === null) return false;
         if (campaign.payload_encrypted !== job.payloadEncrypted || (Number(campaign.allow_repeat_media) === 1) !== job.allowRepeatMedia
           || (campaign.media_id === null ? job.mediaId !== null : !campaign.media_id.equals(job.mediaId))) state();
-        return operation(connection, context, append, campaign, recipient);
+        return operation(connection, { ...context, now }, append, campaign, recipient, refresh);
       });
   }
   return Object.freeze({
@@ -408,11 +419,12 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
           async (connection, context) => {
             const campaign = (await connection.query("SELECT * FROM broadcast_campaigns WHERE id = ? AND admin_id = ? FOR UPDATE", [candidate.campaign_id, candidate.admin_id]))[0];
             if (!campaign || !live(campaign) || Number(campaign.mfa_version) !== Number(candidate.mfa_version)) return null;
-            if (context.reason === "administrator_invalid") { await pause(connection, campaign.id, now); return null; }
+            if (context.reason === "administrator_invalid") { await pause(connection, campaign.id, currentTime(context.now)); return null; }
             const compatible = context.client?.id.equals(candidate.client_id) && context.conversation?.id.equals(candidate.conversation_id)
               && context.conversation.admin_id.equals(candidate.admin_id) && context.conversation.client_id.equals(candidate.client_id);
             const recipient = (await connection.query("SELECT * FROM broadcast_recipients WHERE campaign_id = ? AND conversation_id = ? FOR UPDATE", [campaign.id, candidate.conversation_id]))[0];
             if (!recipient || !recipient.client_id.equals(candidate.client_id)) return null;
+            now = currentTime(context.now);
             const expired = timestamp(campaign.expires_at) <= now;
             const ready = (recipient.state === "pending" && timestamp(recipient.available_at) <= now)
               || (recipient.state === "sending" && timestamp(recipient.lease_until) <= now) || (expired && ["pending", "sending"].includes(recipient.state));
@@ -423,6 +435,11 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
             else if (expired) reason = "expired";
             else if (!(await media(connection, campaign.admin_id, campaign.media_id, now))) reason = "media_unavailable";
             else if (Number(campaign.allow_repeat_media) !== 1 && await repeated(connection, candidate.conversation_id, campaign.media_id, recipient.proposed_message_id)) reason = "repeat_media";
+            // The media lock and repeat query can also wait. Keep every account,
+            // conversation and queue lock held while checking the final time.
+            now = currentTime(now);
+            if (reason === null && !activeClient(context.client, now)) reason = "access_inactive";
+            if (reason === null && timestamp(campaign.expires_at) <= now) reason = "expired";
             if (reason !== null) { await terminal(connection, campaign.id, candidate.conversation_id, reason, now); return null; }
             const leaseToken = randomBytes(16), leaseUntil = Math.min(now + leaseMilliseconds, timestamp(campaign.expires_at));
             await connection.query(`UPDATE broadcast_recipients SET state = 'sending', reason = NULL, lease_token = ?, lease_until = ?
@@ -441,30 +458,42 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false } =
       if (!message || !Buffer.isBuffer(message.id) || !message.id.equals(job.messageId)
         || !Buffer.isBuffer(message.clientMessageId) || !message.clientMessageId.equals(job.clientMessageId)
         || (job.mediaId === null ? (message.mediaId ?? null) !== null : !Buffer.isBuffer(message.mediaId) || !message.mediaId.equals(job.mediaId))) input();
-      const result = await withJob(job, now, async (connection, context, append, campaign, recipient) => {
-        if (!(await media(connection, campaign.admin_id, campaign.media_id, now))) { await terminal(connection, campaign.id, job.conversationId, "media_unavailable", now); return false; }
+      const expiredDuringDelivery = new BroadcastStoreError();
+      let result;
+      try { result = await withJob(job, now, async (connection, context, append, campaign, recipient, refresh) => {
+        if (!(await media(connection, campaign.admin_id, campaign.media_id, context.now))) { await terminal(connection, campaign.id, job.conversationId, "media_unavailable", currentTime(context.now)); return false; }
         if (Number(campaign.allow_repeat_media) !== 1 && await repeated(connection, job.conversationId, campaign.media_id, recipient.proposed_message_id)) {
-          await terminal(connection, campaign.id, job.conversationId, "repeat_media", now); return false;
+          await terminal(connection, campaign.id, job.conversationId, "repeat_media", currentTime(context.now)); return false;
         }
+        // Re-read after every potentially waiting media query, immediately
+        // before the ordinary append. Its owner/conversation locks are held.
+        now = await refresh(); if (now === null) return false;
         const sent = await append(message);
         if (!sent.message.id.equals(recipient.proposed_message_id)) state();
         await connection.query(`UPDATE broadcast_recipients SET state = 'delivered', reason = NULL, delivered_message_id = ?, delivered_at = ?,
           lease_token = NULL, lease_until = NULL WHERE campaign_id = ? AND conversation_id = ?`, [sent.message.id, sqlDate(now), campaign.id, job.conversationId]);
         await settle(connection, campaign.id, now);
+        // Any wait inside append or its following writes must roll back the
+        // message, event and notification together, rather than commit late.
+        const completedAt = currentTime(now);
+        if (timestamp(recipient.lease_until) <= completedAt || timestamp(campaign.expires_at) <= completedAt
+          || !activeClient(context.client, completedAt)) throw expiredDuringDelivery;
         return { delivered: true, duplicate: sent.duplicate };
-      });
+      }); } catch (error) { if (error !== expiredDuringDelivery) throw error; return { delivered: false }; }
       return result || { delivered: false };
     },
     async defer(job, { now, availableAt }) {
       instant(availableAt); if (availableAt < now) input();
-      return withJob(job, now, async (connection, _context, _append, campaign) => {
+      return withJob(job, now, async (connection, context, _append, campaign) => {
+        now = context.now;
         await connection.query(`UPDATE broadcast_recipients SET state = 'pending', reason = NULL, available_at = ?, lease_token = NULL, lease_until = NULL
           WHERE campaign_id = ? AND conversation_id = ?`, [sqlDate(Math.max(timestamp(campaign.created_at), availableAt)), campaign.id, job.conversationId]);
         await settle(connection, campaign.id, now); return true;
       });
     },
     async fail(job, { now }) {
-      return withJob(job, now, async (connection, _context, _append, campaign, recipient) => {
+      return withJob(job, now, async (connection, context, _append, campaign, recipient) => {
+        now = context.now;
         const attempts = count(recipient.attempts) + 1; if (attempts > 8) state();
         const failed = attempts >= 8, availableAt = now + Math.min(3600, 30 * 2 ** (attempts - 1)) * 1000; instant(availableAt);
         await connection.query(`UPDATE broadcast_recipients SET state = ?, reason = ?, attempts = ?, available_at = ?, lease_token = NULL, lease_until = NULL
