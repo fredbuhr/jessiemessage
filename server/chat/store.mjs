@@ -264,10 +264,23 @@ export function createChatStore(pool, { clock, enqueueNotification } = {}) {
     [conversation.id, conversation.id, conversation.id, conversation.id, actor.id, conversation.id, peer.id, conversation.id, actor.id, conversation.id, actor.id]))[0];
     const unreadCount = Number(row.unreadCount);
     if (!Number.isSafeInteger(unreadCount) || unreadCount < 0) state();
+    // A peer avatar is visible only through this already authorized private
+    // conversation. Profile changes never create message/activity events.
+    const peerAvatar = (await connection.query(`SELECT p.version FROM user_profiles p JOIN media_assets a ON a.id = p.avatar_media_id
+      WHERE p.user_id = ? AND a.owner_id = ? AND a.owner_role = ? AND a.deleted_at IS NULL
+        AND p.created_at <= ? AND p.updated_at <= ? AND a.created_at <= ?
+        AND a.width <= 512 AND a.height <= 512 AND a.full_bytes <= 262144 AND a.thumbnail_bytes <= 131072`,
+    [peer.id, peer.id, peer.role, sqlDate(now), sqlDate(now), sqlDate(now)]))[0];
+    let peerAvatarVersion;
+    if (peerAvatar) {
+      peerAvatarVersion = storedSequence(peerAvatar.version);
+      if (peerAvatarVersion === "0" || BigInt(peerAvatarVersion) > 4294967295n) state();
+    }
     return { id: conversation.id, clientId: client.id, clientPseudonym: client.pseudonym, peerPseudonym: peer.pseudonym,
       createdAt: timestamp(conversation.created_at), closedAt: dateOrNull(conversation.closed_at), lastActivityAt: dateOrNull(row.lastActivityAt),
       latestSequence: storedSequence(row.latestSequence), latestEventSequence: storedSequence(row.latestEventSequence),
       lastReadSequence: storedSequence(row.lastReadSequence), peerReadSequence: actor.role === "admin" ? storedSequence(row.peerReadSequence) : "0", unreadCount,
+      ...(peerAvatarVersion === undefined ? {} : { peerAvatarVersion }),
       canSend: conversation.closed_at === null && activeClient(client, now) };
   }
   async function nextEvent(connection, conversationId) {

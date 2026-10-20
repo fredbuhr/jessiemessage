@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { quickReplyOptions, appendQuickReply } from "../public/quick-replies.js";
+import { emojiCategories, emojiOptions, insertEmoji } from "../public/emoji-catalog.js";
 import { webcrypto } from "node:crypto";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
@@ -108,7 +109,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     return state.conversations.get(owner);
   };
   const storedMessages = (conv) => { if (!state.messages.has(conv.id)) state.messages.set(conv.id, [{ id: id(500 + Number.parseInt(conv.clientId, 16)), sequence: "1", sender: "peer", body: "Envoyer", createdAt: now, deletedAt: null, clientMessageId: null }]); return state.messages.get(conv.id); };
-  const context = vm.createContext({ __quickReplies: { quickReplyOptions, appendQuickReply }, document, window: { addEventListener: (name, handler) => addEvent(windowEvents, name, handler) }, navigator: { language: language === "fr" ? "fr-FR" : "en-US" },
+  const context = vm.createContext({ __emojis: { emojiCategories, emojiOptions, insertEmoji }, __quickReplies: { quickReplyOptions, appendQuickReply }, document, window: { addEventListener: (name, handler) => addEvent(windowEvents, name, handler) }, navigator: { language: language === "fr" ? "fr-FR" : "en-US" },
     sessionStorage: { getItem: () => null, setItem() {} },
     location: { pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Blob, crypto: webcrypto, queueMicrotask,
@@ -146,7 +147,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(catalogueSource, context, { filename: "public/i18n-chat.js" });
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('import { emojiCategories, emojiOptions, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,insertEmoji} = __emojis;').replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -186,7 +187,7 @@ test("chat HTML loads explicit catalogues before its controller and marks UI lea
     for (const attr of ["data-jm-i18n", "data-jm-i18n-placeholder", "data-jm-i18n-aria-label"]) {
       const source = node.getAttribute(attr); if (!source) continue;
       f.language("en"); const translated = f.context.JessieI18n.t(source);
-      if (!["Messages", "Photos", "Contact", "Notifications"].includes(source)) assert.notEqual(translated, source, source);
+      if (!["Messages", "Photos", "Contact", "Notifications", "Emojis"].includes(source)) assert.notEqual(translated, source, source);
     }
   }
 });
@@ -247,6 +248,23 @@ test("uncertain send IDs, retry state, raw text and errors survive language chan
   assert.match(f.element("chat-status").textContent, /^The connection was interrupted/);
   const settled = f.calls.length; f.language("fr"); f.language("en");
   assert.equal(state.pending.clientMessageId, key); assert.equal(state.pending.status, "retry"); assert.equal(contentPosts(f).length, 1); assert.equal(f.calls.length, settled);
+});
+
+test("emoji search and category labels change language without changing a draft or issuing a request", async () => {
+  const f = harness({ language: "en" }); await flush();
+  f.element("message-body").value = "Bisou, a private draft 😘"; const before = f.calls.length;
+  await f.click("open-emojis");
+  f.element("emoji-search").value = "bisou";
+  for (const handler of f.element("emoji-search").events.get("input")) handler({});
+  let kiss = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
+  assert.equal(kiss.getAttribute("aria-label"), "Blowing a kiss"); kiss.focus();
+  assert.equal(f.element("emoji-categories").children[0].textContent, "All");
+  f.language("fr");
+  kiss = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
+  assert.equal(kiss.getAttribute("aria-label"), "Bisou envoyé"); assert.equal(f.document.activeElement, kiss);
+  assert.equal(f.element("emoji-categories").children[0].textContent, "Tous");
+  assert.equal(f.element("emoji-search").value, "bisou"); assert.equal(f.element("message-body").value, "Bisou, a private draft 😘");
+  assert.equal(f.calls.length, before); assert.equal(contentPosts(f).length, 0);
 });
 
 test("photo rows, images, gallery cards and accessibility names translate in place without a refetch", async () => {
@@ -392,7 +410,7 @@ test("all controller message and photo error variants retain reactive translated
     ["errorText", { status: 403 }, "L’envoi n’est pas autorisé pour le moment."],
     ["errorText", {}, "La connexion est interrompue. Ton texte reste ici ; tu peux réessayer."],
     ["mediaErrorText", { status: 507, code: "storage_limit" }, "Le stockage des photos a atteint sa limite. Contacte Jessie."],
-    ["mediaErrorText", { status: 409, code: "media_in_use" }, "Cette photo est encore présente dans une conversation. Supprime d’abord tous tes messages qui la contiennent."],
+    ["mediaErrorText", { status: 409, code: "media_in_use" }, "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer."],
     ["mediaErrorText", { status: 404 }, "Cette photo n’est plus disponible."],
     ["mediaErrorText", { status: 415 }, "Photo refusée. Utilise une image JPEG, PNG ou WebP de 10 Mo maximum, avec une légende de 1 000 caractères maximum."],
     ["mediaErrorText", { status: 429 }, "Patiente un moment avant de réessayer cet envoi."],

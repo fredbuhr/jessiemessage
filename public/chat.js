@@ -1,6 +1,7 @@
 import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
 import { prepareImageUpload } from "/image-preparation.js";
 import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";
+import { emojiCategories, emojiOptions, insertEmoji } from "/emoji-catalog.js";
 
 const ui = globalThis.JessieI18n ?? {
   register() {}, t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -32,6 +33,10 @@ let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previ
 let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersion = 0; let lightboxItem = null;
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
+let profileUI = null; let profileMount = null; let profileCapability = null;
+const avatarContainers = new Map(); const avatarVersions = new Map(); const avatarPaths = new Map();
+let emojiContext = null;
+let emojiCategory = "all";
 let conversationDownload = null; let conversationDownloadCapability = null;
 let quickReplyContext = null, quickReplyLanguage = null;
 let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
@@ -135,16 +140,23 @@ function clearImages() {
   mediaVersion += 1;
   for (const record of imageRequests.values()) record.controller.abort(); imageRequests.clear();
   imageUrls.clear(); revokePreview(); closeLightbox(false); closeMedia(false);
+  for (const [container, record] of avatarContainers) {
+    if (container.isConnected) ui.rawText(container, record.initials);
+  }
+  avatarContainers.clear();
   for (const image of el("messages").querySelectorAll("img")) image.removeAttribute("src");
 }
 function clearChat() {
   conversationDownload?.suspend();
   closeQuickReplies();
+  closeEmojis();
   clearMessageAnnouncement(); messageRows.clear();
   clearImages();
   ui.forget(el("messages")); el("messages").replaceChildren(); ui.text(el("peer-name"), "Messages privés");
   ui.text(el("conversation-status"), "Choisis une conversation.");
   el("message-body").value = ""; el("message-body").disabled = true; el("send").disabled = true;
+  el("open-emojis").disabled = true;
+  ui.rawText(el("peer-avatar"), "");
   el("photo-tools").hidden = true; el("open-gallery").hidden = true; el("image-draft").hidden = true; el("image-file").value = "";
   for (const id of ["older-messages", "newer-messages", "new-messages", "empty-message", "pending-controls"]) if (el(id)) el(id).hidden = true;
   el("workspace").classList.remove("selected"); notice("");
@@ -168,6 +180,22 @@ async function mountConversationDownload(capability) {
     conversationDownload.update();
   } catch (error) { if (fresh(ticket, true) && getContext()) notice("Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.", true); }
 }
+async function mountProfile() {
+  if (profileCapability?.enabled !== true || !ready || !visible() || !sessionOwner || profileUI || profileMount) return;
+  const owner = sessionOwner, ticket = snapshot(), lifetime = generation;
+  const mounting = {}; profileMount = mounting;
+  try {
+    const { createProfileUI } = await import("/profile.js");
+    if (profileMount !== mounting || !fresh(ticket, true) || !ready || !visible() || !sameOwner(owner, sessionOwner) || loggingOut) return;
+    profileUI = createProfileUI({ role, button: el("open-profile"), request, fetchBinary: fetchProfileBinary,
+      avatarsEnabled: profileCapability.avatars === true,
+      isCurrent: () => generation === lifetime && sameOwner(owner, sessionOwner) && ready && visible() && !el("workspace").hidden && !loggingOut,
+      onError: error => handleError(error) });
+    el("open-profile").hidden = false;
+  } catch (error) {
+    if (fresh(ticket, true) && ready && visible()) el("open-profile").hidden = true;
+  } finally { if (profileMount === mounting) profileMount = null; }
+}
 function mountNotificationSettings() {
   if (notificationsPanel || !ready || !sessionOwner || !visible() || !globalThis.JessieNotifications) return;
   const ticket = snapshot(), owner = { id: sessionOwner.id, csrf: sessionOwner.csrf };
@@ -178,6 +206,8 @@ function mountNotificationSettings() {
 }
 function clearPrivate() {
   quickReplyLanguage = null;
+  profileUI?.destroy(); profileUI = null; profileMount = null; profileCapability = null;
+  avatarVersions.clear(); avatarPaths.clear(); el("open-profile").hidden = true;
   clearNotificationSettings();
   cancelConfirmation(); stopReconnect(); resumeTask = null; retryConnection(false);
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
@@ -227,7 +257,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {
@@ -390,6 +420,104 @@ function releaseImageSlot() {
     imageActive += 1; waiter.resolve(true); break;
   }
 }
+function validAvatarUrl(path, conversationId = null) {
+  if (typeof path !== "string" || conversationId !== null && !/^[0-9a-f]{32}$/.test(conversationId)) return false;
+  const suffix = conversationId === null ? "(?:avatar|conversations/[0-9a-f]{32}/avatar)" : `conversations/${conversationId}/avatar`;
+  const match = new RegExp(`^/api/profile/${role}/${suffix}\\?v=([1-9][0-9]{0,9})$`).exec(path);
+  return Boolean(match && BigInt(match[1]) <= 4294967295n);
+}
+async function fetchProfileBinary(path, { signal = null, maxBytes = 131072 } = {}) {
+  if (!validAvatarUrl(path) || !Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 262144) throw new Error("invalid_avatar_request");
+  const limit = Math.min(maxBytes, 131072), owner = sessionOwner, ticket = snapshot(), version = mediaVersion;
+  const controller = new AbortController(); controller.accountScope = true; controllers.add(controller);
+  const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
+  let acquired = false, reader = null, bytes = null;
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  const current = () => !controller.signal.aborted && fresh(ticket, true) && version === mediaVersion && sameOwner(owner, sessionOwner) && visible() && !loggingOut;
+  try {
+    await confirmOwner(ticket, owner, true);
+    if (!current()) throw staleResponse();
+    acquired = await acquireImageSlot(controller.signal); if (!acquired || !current()) throw staleResponse();
+    const response = await fetch(path, { credentials: "same-origin", cache: "no-store", signal: controller.signal });
+    if (!current()) throw staleResponse();
+    await confirmOwner(ticket, owner, true);
+    if (!current()) throw staleResponse();
+    if (!response.ok) {
+      if (response.status === 401 || role === "client" && response.status === 403) signOut();
+      throw Object.assign(new Error("avatar_unavailable"), { status: response.status });
+    }
+    if (response.headers.get("Content-Type")?.split(";")[0]?.trim().toLowerCase() !== "image/jpeg") throw new Error("invalid_avatar_response");
+    const declared = response.headers.get("Content-Length");
+    if (declared !== null && (!/^[1-9][0-9]*$/.test(declared) || !Number.isSafeInteger(Number(declared)) || Number(declared) > limit)) throw new Error("invalid_avatar_response");
+    reader = response.body?.getReader?.(); if (!reader) throw new Error("invalid_avatar_response");
+    bytes = new Uint8Array(limit); let size = 0;
+    while (true) {
+      const part = await reader.read();
+      if (!current()) throw staleResponse();
+      if (part.done) break;
+      if (!(part.value instanceof Uint8Array) || size + part.value.length > limit) throw new Error("invalid_avatar_response");
+      bytes.set(part.value, size); size += part.value.length;
+    }
+    if (size < 1 || declared !== null && Number(declared) !== size) throw new Error("invalid_avatar_response");
+    await confirmOwner(ticket, owner, true);
+    if (!current()) throw staleResponse();
+    return new Blob([bytes.subarray(0, size)], { type: "image/jpeg" });
+  } catch (error) {
+    controller.abort();
+    if (!fresh(ticket, true) || !sameOwner(owner, sessionOwner) || !visible() || loggingOut) throw staleResponse();
+    throw error;
+  } finally {
+    bytes?.fill(0);
+    try { await reader?.cancel(); } catch { /* The read may already be closed. */ }
+    clearTimeout(timeout); signal?.removeEventListener("abort", abort); controllers.delete(controller);
+    if (acquired) releaseImageSlot();
+  }
+}
+async function avatarImageUrl(path, conversationId) {
+  if (!visible() || !validAvatarUrl(path, conversationId)) throw staleResponse();
+  const owner = sessionOwner, ticket = snapshot(), version = mediaVersion;
+  if (imageUrls.get(path)) {
+    await confirmOwner(ticket, owner, true);
+    if (!fresh(ticket, true) || version !== mediaVersion || !sameOwner(owner, sessionOwner)) throw staleResponse();
+    const cached = imageUrls.get(path); if (cached) return cached;
+  }
+  const pending = imageRequests.get(path); if (pending) return pending.promise;
+  const controller = new AbortController(), record = { controller, promise: null };
+  record.promise = (async () => {
+    try {
+      const blob = await fetchProfileBinary(path, { signal: controller.signal });
+      if (controller.signal.aborted || !fresh(ticket, true) || version !== mediaVersion || !sameOwner(owner, sessionOwner) || !visible()) throw staleResponse();
+      const url = URL.createObjectURL(blob);
+      if (!imageUrls.put(path, url, blob.size)) throw new Error("invalid_avatar_response");
+      return url;
+    } finally { if (imageRequests.get(path) === record) imageRequests.delete(path); }
+  })();
+  imageRequests.set(path, record); return record.promise;
+}
+function renderPeerAvatar(container, conversation) {
+  const initials = String(conversation.peerName ?? "").trim().split(/\s+/u).slice(0, 2).map(part => [...part][0] ?? "").join("").toUpperCase() || "?";
+  if (!visible()) { avatarContainers.delete(container); ui.rawText(container, initials); return; }
+  let avatar = conversation.peerAvatar;
+  if (profileCapability?.avatars !== true || !avatar || !/^[1-9][0-9]{0,9}$/.test(avatar.version)
+    || BigInt(avatar.version) > 4294967295n || avatar.url !== `/api/profile/${role}/conversations/${conversation.id}/avatar?v=${avatar.version}`) avatar = null;
+  const previousVersion = avatarVersions.get(conversation.id);
+  if (avatar && previousVersion && BigInt(avatar.version) < BigInt(previousVersion)) avatar = null;
+  if (avatar) avatarVersions.set(conversation.id, avatar.version);
+  const path = avatar?.url ?? null, previousPath = avatarPaths.get(conversation.id);
+  if (previousPath && previousPath !== path) { imageUrls.remove(previousPath); imageRequests.get(previousPath)?.controller.abort(); }
+  avatarPaths.set(conversation.id, path);
+  const existing = avatarContainers.get(container);
+  if (existing && existing.path === path && existing.initials === initials && existing.version === mediaVersion && !existing.failed) return;
+  const record = { path, initials, version: mediaVersion, failed: false }; avatarContainers.set(container, record);
+  ui.rawText(container, initials);
+  if (!path) return;
+  void avatarImageUrl(path, conversation.id).then(url => {
+    if (!container.isConnected || !visible() || avatarContainers.get(container) !== record || record.version !== mediaVersion || avatarPaths.get(conversation.id) !== path) return;
+    const image = document.createElement("img"); image.alt = ""; image.width = 40; image.height = 40; image.decoding = "async";
+    image.addEventListener("error", () => { if (avatarContainers.get(container) === record) { record.failed = true; imageUrls.remove(path); ui.rawText(container, initials); } });
+    image.src = url; container.replaceChildren(image);
+  }).catch(() => { if (avatarContainers.get(container) === record) record.failed = true; });
+}
 function validMediaUrl(path, state) {
   if (typeof path !== "string" || /[\r\n]/.test(path)) return false;
   const id = "[0-9a-f]{32}";
@@ -526,7 +654,7 @@ function mediaErrorText(error) {
   if (error.code === "request_too_large") return "Cette photo dépasse 10 Mo. Choisis une version plus légère.";
   if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée. Essaie une autre photo.";
   if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite. Contacte Jessie.";
-  if (error.status === 409 && error.code === "media_in_use") return "Cette photo est encore présente dans une conversation. Supprime d’abord tous tes messages qui la contiennent.";
+  if (error.status === 409 && error.code === "media_in_use") return "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
   if (error.status === 415 || error.status === 400 || error.status === 413) return "Photo refusée. Utilise une image JPEG, PNG ou WebP de 10 Mo maximum, avec une légende de 1 000 caractères maximum.";
   if (error.status === 429) return "Patiente un moment avant de réessayer cet envoi.";
@@ -641,6 +769,7 @@ function renderInbox({ restoreFocus = true } = {}) {
   const container = el("conversations");
   const focused = [...container.children].find((button) => button.contains(document.activeElement));
   const focusedId = focused?.dataset.conversationId;
+  for (const avatar of container.querySelectorAll(".peer-avatar")) avatarContainers.delete(avatar);
   ui.forget(container); container.replaceChildren();
   for (const conversation of [...inbox.values()].sort((a, b) => (b.lastActivityAt ?? b.createdAt) - (a.lastActivityAt ?? a.createdAt) || a.id.localeCompare(b.id))) {
     const button = document.createElement("button"); button.type = "button"; button.className = "contact"; button.dataset.conversationId = conversation.id;
@@ -655,7 +784,8 @@ function renderInbox({ restoreFocus = true } = {}) {
       if (due) { const reminder = document.createElement("span"); ui.text(reminder, labels ? " · Rappel à traiter" : "Rappel à traiter"); details.append(reminder); }
       if (labels || due) text.append(details);
     }
-    button.append(text);
+    const avatar = document.createElement("span"); avatar.className = "peer-avatar"; avatar.setAttribute("aria-hidden", "true");
+    button.append(avatar, text); renderPeerAvatar(avatar, conversation);
     if (conversation.unreadCount > 0) { const count = document.createElement("span"); count.className = "unread"; ui.text(count, "{count}", { count: ui.numberParam(conversation.unreadCount) }); ui.attr(count, "aria-label", conversation.unreadCount === 1 ? "{count} message non lu" : "{count} messages non lus", { count: ui.numberParam(conversation.unreadCount) }); button.append(count); }
     button.addEventListener("click", () => { void selectConversation(conversation.id, { focus: true }); }); container.append(button);
   }
@@ -714,6 +844,7 @@ function renderMeta(state) {
   conversationDownload?.update();
   const conversation = state.conversation; if (!conversation) return;
   ui.rawText(el("peer-name"), crm?.displayName(inbox.get(state.id) ?? conversation) ?? conversation.peerName);
+  renderPeerAvatar(el("peer-avatar"), conversation);
   ui.text(el("conversation-status"), conversation.closedAt != null ? "Conversation fermée · historique disponible" : !conversation.canSend ? "Accès à l’envoi suspendu · historique disponible" : "Conversation privée");
   el("message-body").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image");
@@ -723,6 +854,8 @@ function renderMeta(state) {
   el("open-quick-replies").hidden = role !== "admin";
   el("open-quick-replies").disabled = !canUseQuickReplies();
   if (quickReplyContext && (!canUseQuickReplies() || !fresh(quickReplyContext.ticket))) closeQuickReplies();
+  el("open-emojis").disabled = !canUseEmojis();
+  if (emojiContext && (!canUseEmojis() || !fresh(emojiContext.ticket))) closeEmojis();
   for (const id of ["pick-image", "open-library"]) el(id).disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   renderImageDraft(state);
   el("pending-controls").hidden = state.pending?.status !== "retry";
@@ -858,7 +991,7 @@ async function selectConversation(id, { focus = false, target = null } = {}) {
     }
     if (!moreHistory) armMessageAnnouncement(state); schedulePolling(moreHistory ? 300 : retryDelay);
   } catch (error) { await handleError(error, state); }
-  finally { if (belongsTo(currentState(), state.id, state.epoch)) { selectionLoading = false; schedulePolling(moreHistory ? 300 : retryDelay); } }
+  finally { if (belongsTo(currentState(), state.id, state.epoch)) { selectionLoading = false; if (state.conversation) renderMeta(state); schedulePolling(moreHistory ? 300 : retryDelay); } }
 }
 async function loadNewer({ latest = false } = {}) {
   const state = currentState(); if (!state || newerBusy || !latest && (!state.hasMoreAfter || !state.nextAfter)) return;
@@ -1074,6 +1207,82 @@ function canUseQuickReplies() {
   return role === "admin" && ready && visible() && !loggingOut && !logoutBusy && !selectionLoading && !sendBusy
     && Boolean(sessionOwner && state?.conversation?.canSend && !state.pending);
 }
+function canUseEmojis() {
+  const state = currentState();
+  return ready && visible() && !loggingOut && !logoutBusy && !selectionLoading && !sendBusy
+    && Boolean(sessionOwner && state?.conversation?.canSend && !state.pending);
+}
+function closeEmojis(restoreFocus = false, compose = false) {
+  emojiContext = null; emojiCategory = "all";
+  if (el("emoji-dialog").open) el("emoji-dialog").close();
+  for (const id of ["emoji-categories", "emoji-list"]) { ui.forget(el(id)); el(id).replaceChildren(); }
+  el("emoji-search").value = ""; notice("", false, "emoji-status");
+  if (restoreFocus) focusVisible(el(compose ? "message-body" : "open-emojis"));
+}
+function renderEmojis(rebuildCategories = false) {
+  if (!emojiContext) return;
+  const capturedContext = emojiContext;
+  const language = ui.getLanguage() === "en" ? "en" : "fr";
+  const focused = document.activeElement, focusedEmoji = focused?.dataset?.emojiId, focusedCategory = focused?.dataset?.emojiCategory;
+  if (rebuildCategories) {
+    ui.forget(el("emoji-categories")); el("emoji-categories").replaceChildren();
+    for (const category of emojiCategories(language)) {
+      const button = document.createElement("button"); button.type = "button"; button.className = "emoji-category";
+      button.dataset.emojiCategory = category.id; ui.rawText(button, category.label);
+      button.addEventListener("click", () => { if (emojiContext === capturedContext && button.isConnected) { emojiCategory = category.id; renderEmojis(); } });
+      el("emoji-categories").append(button);
+    }
+  }
+  for (const button of el("emoji-categories").children) button.setAttribute("aria-pressed", String(button.dataset.emojiCategory === emojiCategory));
+  const choices = emojiOptions(language, { category: emojiCategory, query: el("emoji-search").value });
+  ui.forget(el("emoji-list")); el("emoji-list").replaceChildren();
+  for (const choice of choices) {
+    const button = document.createElement("button"); button.type = "button"; button.className = "emoji-choice";
+    button.dataset.emojiId = choice.id; button.setAttribute("aria-label", choice.label); button.title = choice.label; ui.rawText(button, choice.text);
+    button.addEventListener("click", () => {
+      const context = emojiContext, state = currentState();
+      if (context !== capturedContext || !button.isConnected) return;
+      if (!context || !canUseEmojis() || !fresh(context.ticket) || context.owner !== sessionOwner.id || context.csrf !== csrf
+        || context.draft !== el("message-body").value) { closeEmojis(); return; }
+      try {
+        const result = insertEmoji(context.draft, choice.id, { start: context.start, end: context.end, image: Boolean(state.imageDraft) });
+        el("message-body").value = result.value; state.draft = result.value; closeEmojis(true, true); renderMeta(state);
+        el("message-body").setSelectionRange?.(result.caret, result.caret);
+        notice("Emoji ajouté au brouillon. Relis le message avant de l’envoyer.");
+      } catch {
+        notice("Cet emoji ne peut pas être ajouté. Raccourcis le brouillon puis réessaie.", true, "emoji-status");
+      }
+    });
+    el("emoji-list").append(button);
+  }
+  notice(choices.length ? "" : "Aucun emoji ne correspond à ta recherche.", false, "emoji-status");
+  if (focusedEmoji) focusVisible([...el("emoji-list").children].find(button => button.dataset.emojiId === focusedEmoji) ?? el("emoji-search"));
+  else if (rebuildCategories && focusedCategory) focusVisible([...el("emoji-categories").children].find(button => button.dataset.emojiCategory === focusedCategory));
+}
+el("open-emojis").addEventListener("click", () => {
+  if (!canUseEmojis()) return;
+  closeQuickReplies();
+  const textarea = el("message-body"), draft = textarea.value;
+  const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : draft.length;
+  const end = Number.isInteger(textarea.selectionEnd) ? textarea.selectionEnd : start;
+  emojiContext = { ticket: snapshot(currentState()), owner: sessionOwner.id, csrf, draft, start, end };
+  emojiCategory = "all"; el("emoji-search").value = ""; renderEmojis(true);
+  el("emoji-dialog").showModal(); focusVisible(el("emoji-search"));
+});
+el("emoji-search").addEventListener("input", () => { if (emojiContext) renderEmojis(); });
+el("emoji-list").addEventListener("keydown", (event) => {
+  const buttons = [...el("emoji-list").children], index = buttons.indexOf(document.activeElement);
+  if (index < 0 || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+  const width = buttons[0]?.getBoundingClientRect().width;
+  const columns = Number.isFinite(width) && width > 0 ? Math.max(1, Math.round(el("emoji-list").clientWidth / (width + 6))) : 1;
+  const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : Math.min(buttons.length - 1,
+    Math.max(0, index + (event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : event.key === "ArrowUp" ? -columns : columns)));
+  event.preventDefault(); focusVisible(buttons[next]);
+});
+el("close-emojis").addEventListener("click", () => closeEmojis(true));
+el("open-profile").addEventListener("click", () => { closeEmojis(); closeQuickReplies(); });
+el("emoji-dialog").addEventListener("close", () => { if (emojiContext && !el("emoji-dialog").open) closeEmojis(true); });
+ui.onChange(() => { if (emojiContext) renderEmojis(true); });
 function closeQuickReplies(restoreFocus = false) {
   quickReplyContext = null;
   if (el("quick-replies-dialog").open) el("quick-replies-dialog").close();
@@ -1103,6 +1312,7 @@ function renderQuickReplies() {
 }
 el("open-quick-replies").addEventListener("click", () => {
   if (!canUseQuickReplies()) return;
+  closeEmojis();
   quickReplyContext = { ticket: snapshot(currentState()), owner: sessionOwner.id, csrf };
   quickReplyLanguage ??= ui.getLanguage() === "en" ? "en" : "fr";
   el("quick-reply-language").value = quickReplyLanguage; renderQuickReplies();
@@ -1184,6 +1394,9 @@ globalThis.navigator?.serviceWorker?.addEventListener("message", (event) => {
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
     closeQuickReplies();
+    closeEmojis();
+    profileMount = null;
+    profileUI?.suspend();
     clearNotificationSettings();
     cancelConfirmation(); stopReconnect(); resumeTask = null; clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend(); conversationDownload?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
@@ -1211,6 +1424,7 @@ async function start({ session = null } = {}) {
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       const capability = await request(`${chatBase}/capabilities`, { account: true });
       if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
+      profileCapability = capability.profile?.enabled === true ? capability.profile : null;
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       if (role === "admin" && !document.getElementById("readiness-nav")) {
         const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; ui.attr(nav, "aria-label", "Administration");
@@ -1230,6 +1444,8 @@ async function start({ session = null } = {}) {
       }
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false; notice("", false, "session-status");
+      if (currentState()?.conversation) renderMeta(currentState());
+      await mountProfile();
       conversationDownloadCapability = capability.conversationExport;
       await mountConversationDownload(conversationDownloadCapability);
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();

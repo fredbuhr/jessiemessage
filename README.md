@@ -9,6 +9,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Périmètre produit](docs/PRODUCT.md) | Fonctions disponibles, conservation et limites. |
 | [Guide quotidien](docs/guide-jessie.md) | Utilisation des messages, photos, fiches, notifications et exports. |
 | [Plan de travail](docs/PLAN-IMPLEMENTATION.md) | Harmonisation et évolutions restantes. |
+| [Profil et expressions, cible 1.2.0](docs/profile-expressions-120.md) | Périmètre du lot et préconditions de migration/repli. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
@@ -39,6 +40,8 @@ npm run build
 Le build produit l’aperçu autonome, pas un déploiement. `npm run test:browser` exerce l’interface ; `npm run test:db` et `npm run test:auth-browser` nécessitent leurs bases jetables, clients natifs et navigateurs configurés. La [CI](.github/workflows/ci.yml) décrit ces environnements synthétiques. Une omission locale reste distincte d’une validation native réussie.
 
 Les identités SQL d’exécution et de migration sont séparées ; aucune migration ne s’exécute au démarrage du serveur. Voir la [configuration de la base](docs/DATABASE.md). Pour le service existant, utiliser la composition et les pins de REPRISE plutôt qu’un démarrage de développement.
+
+La migration `0031` prévue pour les profils exige un repli **1.1.1 préqualifié sur les schémas avant et après migration**. Après son application, ne pas reprendre la 1.1.0 : le repli compatible et ses pins doivent être acquis avant toute migration de production. Les étapes et contrôles à terminer sont décrits dans le [bilan du lot](docs/profile-expressions-120.md#migration-et-repli).
 
 ## Aperçu sans terminal
 

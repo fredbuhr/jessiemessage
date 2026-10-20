@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { quickReplyOptions, appendQuickReply } from "../public/quick-replies.js";
+import { emojiCategories, emojiOptions, insertEmoji } from "../public/emoji-catalog.js";
 import { webcrypto } from "node:crypto";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
@@ -63,10 +64,11 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] ?? null; }
   getBoundingClientRect() { return { top: 0, bottom: 100, height: 100 }; }
   focus() { if (this.isConnected && this.registry?.document) this.registry.document.activeElement = this; }
+  setSelectionRange(start, end) { this.selectionStart = start; this.selectionEnd = end; }
   showModal() { this.open = true; }
   close() { this.open = false; for (const handler of this.events.get("close") ?? []) handler({}); }
 }
-function harness({ currentSession = session(), visible = true, intercept = null, prepare = async (file) => file, notification = null } = {}) {
+function harness({ currentSession = session(), visible = true, intercept = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const body = new Element("body", nodes);
@@ -89,9 +91,9 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   const worker = {}, workerEvents = new Map(), acknowledgements = [];
   const location = { origin: "https://example.invalid", pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", hash: notification ? `#notification=${notification}` : "", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } };
   const history = { replaceState(_state, _title, path) { const next = new URL(path, location.origin); location.pathname = next.pathname; location.hash = next.hash; } };
-  const context = vm.createContext({ __quickReplies: { quickReplyOptions, appendQuickReply }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
+  const context = vm.createContext({ __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, insertEmoji }, __quickReplies: { quickReplyOptions, appendQuickReply }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
     location, history, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
-    Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Blob, crypto: webcrypto, queueMicrotask,
+    Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Uint8Array, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
     setTimeout: (handler, delay) => { const value = ++timerId; timers.set(value, { handler, at: time + delay }); return value; }, clearTimeout: (value) => timers.delete(value),
     fetch: async (path, options = {}) => {
@@ -124,8 +126,8 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(notificationLinkSource, context, { filename: "public/notification-link.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
-    "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification});";
+  const executable = source.replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,insertEmoji} = __emojis;').replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+    "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification, fetchProfileBinary, avatarImageUrl, avatarContainers});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
     async notification(reference, role = currentSession?.user.role ?? "client") { workerEvents.get("message")({ origin: location.origin, source: worker,
@@ -144,6 +146,97 @@ function harness({ currentSession = session(), visible = true, intercept = null,
 }
 const contents = (element) => [element.textContent, element.value, ...element.children.map(contents)].join(" ");
 const posts = (f) => f.calls.filter((call) => call.options.method === "POST" && call.path.includes("/messages"));
+function avatarResponse({ chunks = [new Uint8Array([255, 216, 255, 217])], declared = null, type = "image/jpeg", read = null } = {}) {
+  let index = 0, cancelled = false;
+  return { ok: true, status: 200, headers: { get: name => name === "Content-Type" ? type : name === "Content-Length" ? declared : null },
+    body: { getReader: () => ({ read: async () => read ? read(index++) : index < chunks.length ? { value: chunks[index++], done: false } : { done: true }, cancel: async () => { cancelled = true; } }) },
+    get cancelled() { return cancelled; } };
+}
+
+test("the optional profile adapter belongs to the account and survives same-owner visibility resume without changing chat drafts", async t => {
+  for (const role of ["client", "admin"]) await t.test(role, async () => {
+    const adapters = []; let suspended = 0, destroyed = 0;
+    const f = harness({ currentSession: session(1, "A".repeat(43), role), profileFactory: adapter => { adapters.push(adapter); return { suspend() { suspended++; }, destroy() { destroyed++; } }; },
+      intercept: path => path === `/api/chat/${role}/capabilities` ? response(200, { enabled: true, profile: { enabled: true, avatars: false } })
+        : path === `/api/profile/${role}` ? response(200, { pseudonym: "Synthetic name", version: "1", avatarId: null, avatarUrl: null }) : undefined });
+    await flush();
+    assert.equal(adapters.length, 1); const adapter = adapters[0];
+    assert.equal(f.element("open-profile").hidden, false); assert.equal(adapter.role, role); assert.equal(adapter.avatarsEnabled, false); assert.equal(adapter.isCurrent(), true);
+    if (role === "admin") { for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); }
+    f.element("message-body").value = "Keep this private draft"; for (const handler of f.element("message-body").events.get("input")) handler({});
+    const first = f.calls.length; await adapter.request(`/api/profile/${role}`, { account: true });
+    assert.ok(f.calls.slice(first).some(call => call.path === `${role === "admin" ? "/api/auth" : "/api/access"}/session`));
+    await f.hide(); assert.equal(suspended, 1); assert.equal(adapter.isCurrent(), false);
+    await f.show(); assert.equal(adapter.isCurrent(), true); assert.equal(adapters.length, 1); assert.equal(f.element("message-body").value, "Keep this private draft");
+    await f.click("logout"); assert.equal(destroyed, 1); assert.equal(adapter.isCurrent(), false); assert.equal(f.element("open-profile").hidden, true); assert.equal(posts(f).length, 0);
+  });
+  let mounts = 0; const disabled = harness({ profileFactory: () => { mounts++; } }); await flush();
+  assert.equal(mounts, 0); assert.equal(disabled.element("open-profile").hidden, true);
+});
+
+test("avatar bytes accept only canonical role-scoped JPEG URLs and enforce the thumbnail size while streaming", async () => {
+  const results = []; const f = harness({ intercept: path => path.includes("/avatar?") ? results.shift() : undefined }); await flush();
+  const load = f.inspect().fetchProfileBinary, path = "/api/profile/client/avatar?v=1", first = f.calls.length;
+  for (const invalid of ["https://example.invalid" + path, path + "&extra=1", "/api/profile/admin/avatar?v=1", "/api/profile/client/avatar?v=01", "/api/profile/client/avatar?v=4294967296", "/api/profile/client/conversations/invalid/avatar?v=1"]) await assert.rejects(load(invalid), /invalid_avatar_request/);
+  await assert.rejects(load(path, { maxBytes: 262145 }), /invalid_avatar_request/); assert.equal(f.calls.length, first);
+  const valid = avatarResponse({ declared: "4" }); results.push(valid); const blob = await load(path);
+  assert.equal(blob.type, "image/jpeg"); assert.equal(blob.size, 4); assert.equal(valid.cancelled, true);
+  const oversized = avatarResponse({ chunks: [new Uint8Array(131072), new Uint8Array(1)] }); results.push(oversized);
+  await assert.rejects(load(path, { maxBytes: 262144 }), /invalid_avatar_response/); assert.equal(oversized.cancelled, true);
+  for (const result of [avatarResponse({ declared: "5" }), avatarResponse({ declared: "131073" }), avatarResponse({ type: "image/png" })]) {
+    results.push(result); await assert.rejects(load(path), /invalid_avatar_response/);
+  }
+  assert.equal(f.createdUrls.length, 0); assert.equal(posts(f).length, 0);
+});
+
+test("a delayed profile module from a hidden page cannot block mounting after visibility resumes", async () => {
+  const gate = pause(); let imports = 0, mounts = 0;
+  const module = { createProfileUI() { mounts++; return { suspend() {}, destroy() {} }; } };
+  const f = harness({ profileLoader: () => ++imports === 1 ? gate.promise : module,
+    intercept: path => path === "/api/chat/client/capabilities" ? response(200, { enabled: true, profile: { enabled: true, avatars: true } }) : undefined });
+  await flush(); assert.equal(imports, 1); assert.equal(mounts, 0); assert.equal(f.element("open-profile").hidden, true);
+  await f.hide(); await f.show(); assert.equal(imports, 2); assert.equal(mounts, 1); assert.equal(f.element("open-profile").hidden, false);
+  gate.resolve(module); await flush(); assert.equal(mounts, 1); assert.equal(f.element("open-profile").hidden, false);
+});
+
+test("an avatar cached hit proves the current owner and cannot reuse a blob after a cookie replacement", async () => {
+  const f = harness({ intercept: path => path.includes("/avatar?") ? avatarResponse() : undefined }); await flush();
+  const cid = f.conversation().id, path = `/api/profile/client/conversations/${cid}/avatar?v=1`, load = f.inspect().avatarImageUrl;
+  const url = await load(path, cid); assert.match(url, /^blob:/); const before = f.calls.length;
+  assert.equal(await load(path, cid), url);
+  assert.ok(f.calls.slice(before).some(call => call.path === "/api/access/session")); assert.equal(f.calls.slice(before).filter(call => call.path === path).length, 0);
+  f.state.currentSession = session(2, "B".repeat(43)); await assert.rejects(load(path, cid), error => error.stale === true); await flush();
+  assert.ok(f.revoked.includes(url)); assert.equal(f.createdUrls.length, 1); assert.equal(f.inspect().sessionOwner.id, id(2)); assert.equal(f.redirects.length, 0);
+});
+
+test("late unauthorized avatar headers and late bytes cannot sign out a new owner or create private blob URLs", async t => {
+  for (const phase of ["headers", "bytes", "hide"]) await t.test(phase, async () => {
+    const gate = pause(); let reads = 0;
+    const f = harness({ intercept: path => path.includes("/avatar?") ? phase === "headers" ? gate.promise : avatarResponse({ read: async () => ++reads === 1 ? gate.promise : { done: true } }) : undefined }); await flush();
+    const path = `/api/profile/client/conversations/${f.conversation().id}/avatar?v=1`;
+    const pending = f.inspect().avatarImageUrl(path, f.conversation().id); const rejected = assert.rejects(pending, error => error.stale === true); await flush();
+    if (phase === "hide") await f.hide(); else f.state.currentSession = session(2, "B".repeat(43));
+    gate.resolve(phase === "headers" ? response(401, { error: "authentication_required" }) : { value: new Uint8Array([255, 216, 255, 217]), done: false });
+    await rejected; await flush(); assert.equal(f.createdUrls.length, 0); assert.equal(f.redirects.length, 0);
+    if (phase !== "hide") assert.equal(f.inspect().sessionOwner.id, id(2));
+  });
+});
+
+test("peer avatars use guarded blobs and keep initials when absent, removed, stale or replaced while loading", async () => {
+  const gate = pause(); const f = harness({ intercept: path => path === "/api/chat/client/capabilities" ? response(200, { enabled: true, profile: { enabled: true, avatars: true } })
+    : path.includes("/avatar?v=1") ? gate.promise : path.includes("/avatar?v=2") ? avatarResponse() : undefined }); await flush();
+  const conv = f.conversation(), container = f.element("peer-avatar"), render = () => f.context.renderPeerAvatar(container, conv);
+  conv.peerName = "Synthetic Peer"; render(); assert.equal(container.textContent, "SP");
+  conv.peerAvatar = { version: "1", url: `/api/profile/client/conversations/${conv.id}/avatar?v=1` }; render(); await flush();
+  assert.equal(container.children.length, 0);
+  conv.peerAvatar = { version: "2", url: `/api/profile/client/conversations/${conv.id}/avatar?v=2` }; render(); await flush();
+  const image = container.querySelector("img"); assert.match(image.src, /^blob:/); assert.equal(f.createdUrls.length, 1);
+  gate.resolve(avatarResponse()); await flush(); assert.equal(container.querySelector("img"), image); assert.equal(f.createdUrls.length, 1);
+  delete conv.peerAvatar; render(); assert.equal(container.textContent, "SP"); assert.equal(container.children.length, 0); assert.ok(f.revoked.includes(image.src));
+  conv.peerAvatar = { version: "1", url: `/api/profile/client/conversations/${conv.id}/avatar?v=1` }; render(); await flush();
+  assert.equal(container.textContent, "SP"); assert.equal(container.children.length, 0);
+  await f.hide(); assert.equal(f.inspect().avatarContainers.size, 0); assert.equal(posts(f).length, 0);
+});
 
 async function uncertainSendFixture({ role = "client", persist = true } = {}) {
   let f, target;
@@ -388,6 +481,63 @@ test("quick replies reject clients, full drafts, suspended sending and stale cho
   for (const handler of button.events.get("click")) handler({}); await flush();
   assertOwner(f, 2, "B".repeat(43)); assert.equal(f.element("message-body").value, ""); assert.equal(f.element("quick-replies-list").children.length, 0); assert.equal(f.state.posts, 0);
 });
+for (const role of ["client", "admin"]) test(`${role}: emojis replace the selected draft text without media, network or automatic sending`, async () => {
+  const f = harness({ currentSession: session(1, "A".repeat(43), role) }); await flush();
+  if (role === "admin") {
+    for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
+  }
+  assert.equal(f.element("open-emojis").disabled, false);
+  assert.equal(f.element("pick-image").hidden, true, "emoji availability is independent from photos");
+  f.element("message-body").value = "Bonjour toi !"; f.element("message-body").setSelectionRange(8, 11);
+  const before = f.calls.length; await f.click("open-emojis");
+  assert.equal(f.element("emoji-dialog").open, true); assert.equal(f.document.activeElement, f.element("emoji-search"));
+  assert.ok(f.element("emoji-list").children.length >= 150);
+  const kiss = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
+  assert.ok(kiss.getAttribute("aria-label"));
+  for (const handler of kiss.events.get("click")) handler({}); await flush();
+  assert.equal(f.element("message-body").value, "Bonjour 😘 !");
+  assert.equal(f.element("message-body").selectionStart, 10); assert.equal(f.element("message-body").selectionEnd, 10);
+  assert.equal(f.inspect().states.get(f.inspect().selected).draft, "Bonjour 😘 !");
+  assert.equal(f.document.activeElement, f.element("message-body")); assert.equal(f.element("emoji-dialog").open, false);
+  assert.equal(f.element("emoji-list").children.length, 0); assert.equal(f.element("send").disabled, false);
+  assert.equal(f.calls.length, before); assert.equal(f.state.posts, 0);
+});
+
+test("emoji selection preserves full drafts and photo captions without truncation or a request", async () => {
+  for (const image of [false, true]) {
+    const f = harness({ intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+    if (image) {
+      f.element("image-file").files = [new Blob(["Synthetic image"], { type: "image/jpeg" })];
+      for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+      assert.ok(f.inspect().states.get(f.inspect().selected).imageDraft);
+    }
+    const draft = "x".repeat(image ? 999 : 4095); f.element("message-body").value = draft;
+    f.element("message-body").setSelectionRange(draft.length, draft.length);
+    const before = f.calls.length; await f.click("open-emojis");
+    const kiss = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
+    for (const handler of kiss.events.get("click")) handler({}); await flush();
+    assert.equal(f.element("message-body").value, draft); assert.equal(f.element("emoji-dialog").open, true);
+    assert.match(f.element("emoji-status").textContent, /Raccourcis le brouillon/);
+    assert.equal(f.calls.length, before); assert.equal(f.state.posts, 0);
+  }
+});
+
+test("emoji dialogs close and forget searches on hide or account change, and old choices cannot alter a new dialog", async () => {
+  const f = harness(); await flush(); await f.click("open-emojis");
+  const old = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
+  f.element("emoji-search").value = "A private search";
+  await f.hide();
+  assert.equal(f.element("emoji-dialog").open, false); assert.equal(f.element("emoji-list").children.length, 0);
+  assert.equal(f.element("emoji-search").value, "");
+  for (const handler of old.events.get("click")) handler({}); await flush(); assert.equal(f.element("message-body").value, "");
+  f.state.currentSession = session(2, "B".repeat(43)); await f.show(); await f.click("open-emojis");
+  assert.equal(f.element("emoji-dialog").open, true);
+  for (const handler of old.events.get("click")) handler({}); await flush();
+  assert.equal(f.element("emoji-dialog").open, true); assert.equal(f.element("message-body").value, "");
+  await f.click("close-emojis"); assert.equal(f.document.activeElement, f.element("open-emojis"));
+  assert.equal(f.element("emoji-categories").children.length, 0); assert.equal(f.state.posts, 0);
+});
+
 test("a new administrator session clears all loaded inbox and conversation caches before adopting the new owner", async () => {
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin") }); await flush(); assertOwner(f, 1);
   const firstButton = f.element("conversations").children[0]; for (const handler of firstButton.events.get("click")) handler({}); await flush();

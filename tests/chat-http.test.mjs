@@ -31,7 +31,7 @@ function deliveredMedia(role, overrides = {}) {
     contentDigest: "private-fingerprint", originalFilename: "private-filename", ...overrides };
 }
 
-async function fixture(t, overrides = {}) {
+async function fixture(t, overrides = {}, options = {}) {
   const calls = [];
   const service = {
     async actor(role, value) {
@@ -53,7 +53,7 @@ async function fixture(t, overrides = {}) {
     async delete(role, value, id, deletedId) { calls.push(["delete", role, value, id, deletedId]); return message({ body: null, deletedAt: now + 1 }); },
     ...overrides,
   };
-  const handler = createChatHandler(service, { origin });
+  const handler = createChatHandler(service, { origin, ...options });
   const server = createServer(async (req, res) => { if (!await handler(req, res)) { res.writeHead(404); res.end("fallback"); } });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(async () => { server.closeAllConnections(); await new Promise((resolve) => server.close(resolve)); });
@@ -491,5 +491,39 @@ test("authenticated pages share the safe UI shell and its explicit assets", asyn
     headersArePrivate(response);
     assert.match(response.headers.get("content-type"), type);
     assert.equal((await fetch(`${base}${endpoint}`, { method: "HEAD" })).status, 200);
+  }
+});
+
+
+test("profile capability is explicit and independent of photo availability", async t => {
+  for (const avatarsEnabled of [false, true]) {
+    const { base } = await fixture(t, {}, { profileEnabled: true, avatarsEnabled });
+    const response = await fetch(`${base}/api/chat/client/capabilities`, { headers: { Cookie: cookie("client") } });
+    assert.equal(response.status, 200); headersArePrivate(response);
+    assert.deepEqual((await response.json()).profile, { enabled: true, avatars: avatarsEnabled });
+  }
+});
+
+test("conversation avatar DTO preserves role and conversation ACL URLs without storage identifiers", async t => {
+  const { base, service } = await fixture(t);
+  for (const role of ["admin", "client"]) {
+    const avatar = { version: "4294967295", url: `/api/profile/${role}/conversations/${conversationId}/avatar?v=4294967295` };
+    service.messages = async () => ({ conversation: { ...conversation(role), peerReadSequence: "1", peerAvatar: { ...avatar, storageKey: "private-storage-key", fullUrl: "private-original-url" } }, messages: [], hasMoreBefore: false, hasMoreAfter: false, nextBefore: null, nextAfter: null, eventCursor: "1" });
+    const response = await fetch(`${base}${path(role)}`, { headers: { Cookie: cookie(role) } });
+    assert.equal(response.status, 200); headersArePrivate(response);
+    const body = await response.json(); assert.deepEqual(body.conversation.peerAvatar, avatar);
+    assert.equal(body.conversation.peerReadSequence, role === "admin" ? "1" : "0");
+    assert.doesNotMatch(JSON.stringify(body), /storageKey|private-storage-key|private-original-url/);
+    const rejected = [
+      { ...avatar, url: "https://other.example/avatar.jpg" },
+      { ...avatar, url: `/api/profile/${role === "admin" ? "client" : "admin"}/conversations/${conversationId}/avatar?v=4294967295` },
+      { ...avatar, url: `/api/profile/${role}/conversations/${"f".repeat(32)}/avatar?v=4294967295` },
+      { ...avatar, version: "0" }, { ...avatar, version: "4294967296" }, { ...avatar, version: "01" }, null,
+    ];
+    for (const peerAvatar of rejected) {
+      service.messages = async () => ({ conversation: { ...conversation(role), peerAvatar }, messages: [], hasMoreBefore: false, hasMoreAfter: false, nextBefore: null, nextAfter: null, eventCursor: "1" });
+      const refused = await fetch(`${base}${path(role)}`, { headers: { Cookie: cookie(role) } });
+      assert.equal(refused.status, 503);
+    }
   }
 });
