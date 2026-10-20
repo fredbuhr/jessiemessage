@@ -7,8 +7,8 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 | Étape | Résultat et critère de fin | État |
 | --- | --- | --- |
 | Référence | Version applicative cohérente dans les métadonnées, documents avec rôles distincts, affichage admin de l’identité chargée par le processus. Aucun changement métier de messagerie ni migration SQL. | Code publié et fusionné par la PR 109 ; [résultats et limites des contrôles](REPRISE.md#validation-locale-de-100). |
-| Publication | Commit validé par la CI habituelle, tag immuable `v1.0.0` et release GitHub correspondant à ce commit. | Partielle : CI PR 5/5 réussie et fusion réalisée ; CI main en cours. Tag/release en attente de connexion GitHub web, sur le commit de fusion après validation. |
-| Déploiement | Même commit lancé sur l’unique service Infomaniak, précontrôle et contrôles adaptés réussis, repli conservé, REPRISE actualisé après observation. | Non réalisé ; production inchangée. |
+| Publication | Commit validé par la CI habituelle, tag immuable `v1.0.0` et release GitHub correspondant à ce commit. | Réalisée : CI du commit de fusion 5/5 verte, tag/release publiés et vérifiés sur `70b48aa`. |
+| Déploiement | Même commit lancé sur l’unique service Infomaniak, précontrôle et contrôles adaptés réussis, repli conservé, REPRISE actualisé après observation. | Non réalisé ; première préparation refusée avant staging, script corrigé disponible. Accès navigateur cloud indisponible ; production inchangée. |
 | Reprise de l’évolution | Travail de lecture privée conservé séparément et reporté sur la référence propre pour préparer `1.1.0`. | Après clôture de l’harmonisation. |
 
 La numérotation est décrite dans le [README](../README.md#versions-et-livraisons). Une release ou un tag ne prouve pas un déploiement ; les versions préparées et actives restent distinctes.
