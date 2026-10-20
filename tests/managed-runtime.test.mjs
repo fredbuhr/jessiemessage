@@ -2,11 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { fork, execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { mkdir, mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createServer } from "node:net";
 import { createManagedRuntime } from "../server/backup/managed-runtime.mjs";
+import { createRecurringSupervisor } from "../server/backup/recurring-supervisor.mjs";
+import { main as recurringMain } from "../scripts/start-recurring-private-messaging.mjs";
 import { parseArguments } from "../scripts/private-messaging-child.mjs";
 
 const shim = fileURLToPath(new URL("../scripts/private-messaging-child.mjs", import.meta.url));
@@ -29,7 +31,10 @@ async function fixture(t, source, overrides = {}) {
     fetchClient: ready,
     forkClient(path, args, settings) { invocations.push({ path, args, settings }); const child = fork(file, [], settings); children.push(child); return child; }, ...overrides };
   const runtime = createManagedRuntime(options(3000), internal);
-  t.after(async () => { await runtime.destroy(); for (const child of children) try { child.kill("SIGKILL"); } catch {} await rm(directory, { recursive: true, force: true }); });
+  t.after(async () => {
+    try { await runtime.destroy(); } catch {}
+    finally { for (const child of children) try { child.kill("SIGKILL"); } catch {} await rm(directory, { recursive: true, force: true }); }
+  });
   return { runtime, children, invocations, internal, file };
 }
 const cooperative = `process.on('SIGTERM', () => { process.disconnect(); }); process.send({type:'runtime_started'});`;
@@ -63,6 +68,42 @@ test("a graceful handler exiting nonzero is still an unsafe capture boundary", a
   const f = await fixture(t, "process.on('SIGTERM',()=>process.exit(7)); process.send({type:'runtime_started'});");
   await f.runtime.start(); await assert.rejects(f.runtime.stop(), { code: "MANAGED_RUNTIME_STOP" }); assert.equal(f.children[0].exitCode, 7);
 });
+
+test("destroy preserves forced-stop failure and its idempotent rejected promise after actual child termination", async t => {
+  const f = await fixture(t, "process.on('SIGTERM',()=>{}); process.send({type:'runtime_started'});", { stopMilliseconds: 80 });
+  await f.runtime.start();
+  const closing = f.runtime.destroy(); assert.equal(f.runtime.destroy(), closing);
+  await assert.rejects(closing, { code: "MANAGED_RUNTIME_STOP" });
+  assert.equal(f.children[0].signalCode, "SIGKILL"); assert.deepEqual(f.runtime.state(), { status: "closed" });
+  await assert.rejects(f.runtime.destroy(), { code: "MANAGED_RUNTIME_STOP" });
+  await assert.rejects(f.runtime.start(), { code: "MANAGED_RUNTIME_CLOSED" });
+});
+
+for (const outcome of ["graceful", "forced", "failed_drain"]) {
+  test(`recurring CLI reports ${outcome} shutdown with an actual managed child`, async t => {
+    const failed = outcome !== "graceful", forced = outcome === "forced";
+    const f = await fixture(t, forced ? "process.on('SIGTERM',()=>{}); process.send({type:'runtime_started'});"
+      : failed ? "process.on('SIGTERM',()=>process.exit(7)); process.send({type:'runtime_started'});" : cooperative, { stopMilliseconds: forced ? 80 : 400 });
+    const cancellation = new AbortController(), events = [];
+    const arguments_ = ["start", "--runtime-directory", "/synthetic-runtime", "--runtime-head", "a".repeat(40), "--runtime-tree", "b".repeat(40),
+      "--private-directory", "/synthetic-private", "--operations-directory", "/synthetic-operations", "--private-path-mode", "linux-dirfd"];
+    let supervisor;
+    const operation = recurringMain(arguments_, { environment: environment(), execArgv: [], signal: cancellation.signal, outputStream: { write() {} },
+      makeSupervisor(selected, dependencies) {
+        supervisor = createRecurringSupervisor(selected, { ...dependencies, makeRuntime: () => f.runtime, source: async () => {},
+          readConfiguration: async () => ({ enabled: false }), schedule: () => null, unschedule() {} });
+        return supervisor;
+      },
+      makeAlerts: () => ({ async close() { events.push("alerts-closed"); } }),
+      makeMonitor: () => ({ start() { queueMicrotask(() => cancellation.abort()); }, async close() { events.push("monitor-closed"); } }) });
+    if (failed) await assert.rejects(operation, { code: "RECURRING_SUPERVISOR_RUNTIME" });
+    else assert.equal((await operation).status, "stopped");
+    assert.deepEqual(await supervisor.finished, { failed });
+    assert.ok(events.includes("alerts-closed")); assert.ok(events.includes("monitor-closed"));
+    assert.equal(f.children[0].signalCode, forced ? "SIGKILL" : null);
+    assert.equal(f.children[0].exitCode, forced ? null : failed ? 7 : 0);
+  });
+}
 
 test("local readiness never substitutes for the child's missing IPC startup receipt", async t => {
   let probes = 0;
@@ -100,9 +141,11 @@ test("a transient local readiness refusal can recover within the same bounded st
   assert.deepEqual(await f.runtime.start(), { ready: true }); assert.equal(attempts, 2);
 });
 
-test("destroy is idempotent and forbids later starts, including a start still awaiting IPC", async t => {
-  const f = await fixture(t, "process.on('SIGTERM',()=>process.disconnect());");
-  const starting = f.runtime.start(); starting.catch(() => {}); await sleep(30);
+test("destroy is idempotent and forbids later starts, including a start still awaiting readiness", async t => {
+  let probing;
+  const entered = new Promise(resolve => { probing = resolve; });
+  const f = await fixture(t, cooperative, { fetchClient: async () => { probing(); return new Promise(() => {}); } });
+  const starting = f.runtime.start(); starting.catch(() => {}); await entered;
   const stopping = f.runtime.destroy(); assert.equal(f.runtime.destroy(), stopping); await stopping;
   await assert.rejects(starting, { code: "MANAGED_RUNTIME_START" }); await assert.rejects(f.runtime.start(), { code: "MANAGED_RUNTIME_CLOSED" });
   assert.deepEqual(f.runtime.state(), { status: "closed" });
@@ -112,7 +155,7 @@ test("unexpected exit reports one fixed event while planned stop/destroy do not 
   const events = [];
   const f = await fixture(t, "process.on('SIGTERM',()=>process.exit(0)); process.send({type:'runtime_started'}); setTimeout(()=>process.exit(4),100);");
   const runtime = createManagedRuntime({ ...options(3000), onUnexpectedExit: value => { events.push(value); throw new Error("secret observer"); } }, f.internal);
-  t.after(() => runtime.destroy()); await runtime.start(); await waitForClose(f.children.at(-1));
+  t.after(() => runtime.destroy().catch(() => {})); await runtime.start(); await waitForClose(f.children.at(-1));
   assert.deepEqual(events, [{ type: "runtime_exited" }]); assert.equal(Object.isFrozen(events[0]), true);
   const plannedEvents = [], planned = createManagedRuntime({ ...options(3000), onUnexpectedExit: value => plannedEvents.push(value) }, { ...f.internal, forkClient(path, args, settings) {
     const child = fork(f.file, [], settings); f.children.push(child); return child;
@@ -124,12 +167,12 @@ async function freePort() {
   const server = createServer(); await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
   const port = server.address().port; await new Promise(resolve => server.close(resolve)); return port;
 }
-function shimFixture({ startupDelay = 0, drainDelay = 0 } = {}) {
+function shimFixture({ startupDelay = 0, drainDelay = 0, waitForStop = false, drainFailed = false } = {}) {
   return `import { run } from ${JSON.stringify(shimUrl)};
 import { createServer } from 'node:http';
 await run({runtimeDirectory:'/synthetic-runtime',privateDirectory:'/synthetic-private',port:Number(process.env.PORT)}, {async loadRuntime(){return {
-async main(args,dependencies){await new Promise(resolve=>setTimeout(resolve,${startupDelay}));await dependencies.startServer({},{});},
-async start(){const server=createServer((request,response)=>{response.setHeader('Cache-Control','no-store');response.end(JSON.stringify({status:request.headers.host==='jessiemessage.com'&&request.headers['x-forwarded-proto']==='https'?'ready':'wrong'}));});await new Promise(resolve=>server.listen(Number(process.env.PORT),'127.0.0.1',resolve));return {async drain(){await new Promise(resolve=>setTimeout(resolve,${drainDelay}));await new Promise(resolve=>server.close(resolve));return {failed:false,timedOut:false};}};}
+async main(args,dependencies){${waitForStop ? "await import('node:fs/promises').then(({writeFile})=>writeFile(new URL('./startup-waiting',import.meta.url),'ready'));await new Promise(resolve=>process.once('SIGTERM',resolve));" : `await new Promise(resolve=>setTimeout(resolve,${startupDelay}));`}await dependencies.startServer({},{});},
+async start(){const server=createServer((request,response)=>{response.setHeader('Cache-Control','no-store');response.end(JSON.stringify({status:request.headers.host==='jessiemessage.com'&&request.headers['x-forwarded-proto']==='https'?'ready':'wrong'}));});await new Promise(resolve=>server.listen(Number(process.env.PORT),'127.0.0.1',resolve));return {async drain(){await new Promise(resolve=>setTimeout(resolve,${drainDelay}));await new Promise(resolve=>server.close(resolve));return {failed:${drainFailed},timedOut:false};}};}
 };}});`;
 }
 
@@ -137,6 +180,14 @@ test("actual shim serves real readiness then exits zero after graceful IPC drain
   const port = await freePort(), f = await fixture(t, shimFixture());
   const runtime = createManagedRuntime(options(port), { ...f.internal, startupMilliseconds: 1500, stopMilliseconds: 400, fetchClient: undefined });
   t.after(() => runtime.destroy()); assert.deepEqual(await runtime.start(), { ready: true }); assert.deepEqual(await runtime.stop(), { exitCode: 0, signal: null });
+});
+
+test("actual shim exits one for a failed drain and destroy preserves that failure", async t => {
+  const port = await freePort(), f = await fixture(t, shimFixture({ drainFailed: true }));
+  const runtime = createManagedRuntime(options(port), { ...f.internal, startupMilliseconds: 1500, stopMilliseconds: 400, fetchClient: undefined });
+  t.after(() => runtime.destroy().catch(() => {})); await runtime.start();
+  await assert.rejects(runtime.destroy(), { code: "MANAGED_RUNTIME_STOP" });
+  assert.equal(f.children.at(-1).exitCode, 1); assert.equal(f.children.at(-1).signalCode, null);
 });
 
 test("actual shim drains and exits when its parent IPC disconnects, leaving no orphan listener", { timeout: 3000 }, async t => {
@@ -148,8 +199,14 @@ test("actual shim drains and exits when its parent IPC disconnects, leaving no o
 });
 
 test("actual shim cannot begin a listener after shutdown was requested during startup", async t => {
-  const port = await freePort(), f = await fixture(t, shimFixture({ startupDelay: 150 })), runtime = createManagedRuntime(options(port), { ...f.internal, startupMilliseconds: 1000, stopMilliseconds: 500, fetchClient: undefined });
-  t.after(() => runtime.destroy()); const starting = runtime.start(); starting.catch(() => {}); await sleep(50); await runtime.destroy();
+  const port = await freePort(), f = await fixture(t, shimFixture({ waitForStop: true })), runtime = createManagedRuntime(options(port), { ...f.internal, startupMilliseconds: 1500, stopMilliseconds: 500, fetchClient: undefined });
+  t.after(() => runtime.destroy()); const starting = runtime.start(); starting.catch(() => {});
+  const marker = new URL("./startup-waiting", pathToFileURL(f.file)), until = Date.now() + 1000;
+  while (true) {
+    try { await readFile(marker); break; }
+    catch (error) { if (error.code !== "ENOENT" || Date.now() >= until) throw error; await sleep(5); }
+  }
+  await runtime.destroy();
   await assert.rejects(starting, { code: "MANAGED_RUNTIME_START" }); await assert.rejects(fetch(`http://127.0.0.1:${port}/api/ready`));
 });
 

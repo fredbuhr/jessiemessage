@@ -1,6 +1,6 @@
 # Restauration manuelle : parcours opérateur — 0.78
 
-**Lot S2b clos, fusionné/vérifié en CI candidat et main ; non déployé.** Ce guide décrit les commandes livrées. Il ne constate ni restauration de production ni activation des fermetures. Les résultats datés sont dans les [preuves 0.78](verification-proofs/jm078-verification.json). L'état du service déployé reste dans [REPRISE](REPRISE.md).
+**Parcours introduit en 0.78, inclus dans le déploiement 0.79 ; reprise média corrigée en 0.82.** Ce guide décrit les commandes livrées. Il ne constate aucune restauration de production. Les résultats historiques sont dans les [preuves 0.78](verification-proofs/jm078-verification.json), la qualification du correctif dans le [lot 3](audit-corrections-082.md). L'état du service déployé reste dans [REPRISE](REPRISE.md).
 
 Cette procédure ponctuelle conserve l'hébergement existant. Elle restaure une capture applicative sur une **nouvelle base et un nouveau dossier média**, traite les fermetures connues, puis exige une ouverture explicite. Le PC reste une destination de copie ; aucune confirmation PC par phase ni réinitialisation n'est demandée.
 
@@ -95,6 +95,16 @@ Le parcours contrôle la base vide et le SQL applicatif authentifié, importe le
 Le résultat conserve la cible **arrêtée et en quarantaine** et retourne `planSha256`. Conserver cette empreinte exacte et le résultat durable. Ni les fichiers/états source, ni l'ancien D1, ni l'autorité ou les états PC ne sont modifiés par cette opération.
 
 Après une interruption, relire le résultat durable et les journaux avant de reprendre. `restore` reprend uniquement sa propre allocation enregistrée ; après réconciliation, il ne réimporte plus le SQL. Une coupure avant l’enregistrement de l’allocation laisse le dossier préservé et impose un contrôle opérateur. Ne pas relancer un import sur une base désormais remplie pour découvrir ce qui a réussi ; ne pas effacer la progression ou recréer `job.json` pour masquer une opération incertaine.
+
+Depuis 0.82, en phase `allocated`, la reprise vérifie d'abord toute la source et tous les fichiers cible présents contre le reçu, puis copie exclusivement les fichiers absents. Les fichiers complets déjà copiés restent en place. Un fichier tronqué, divergent, inconnu ou lié bloque la reprise : il est conservé, jamais écrasé. Un SQL partiellement importé reste également refusé ; seule une base vide ou la cible complète exactement vérifiée permet la suite.
+
+### Abandonner une cible incomplète sans l'altérer
+
+Si la reprise refuse une cible endommagée, conserver son dossier opérateur, `job.json`, progression, base, médias, journaux et marqueurs. Ne pas retoucher les empreintes ni réaffecter ce job à une autre cible. Cette procédure s'applique avant toute ouverture ; un état `opening` ou `opened` demande d'abord d'établir l'arrêt du processus.
+
+Préparer une **autre base vide**, un autre opérateur SQL et un nouveau dossier opérateur 0700, par exemple `/private/operator-neuf`, sans sous-dossier `target`. Préparer un autre dossier contenant les six configurations 0600 : mêmes clés, origine et source, mais nouvelle base et racine `/private/operator-neuf/target/media`. Créer un nouveau `job.json` fermé avec ces chemins et les pins exacts revus ; revalider la capture et le registre récent choisi, puis leurs empreintes. L'ancien job reste intact.
+
+Exécuter `check`, puis `restore` avec `--operator-directory /private/operator-neuf` et le mot de passe par stdin selon le lanceur ci-dessus. Après réussite, utiliser uniquement le nouveau `planSha256` pour `open`. Maintenance et exclusion des producteurs restent obligatoires. Aucune suppression de l'ancienne cible ou levée manuelle de quarantaine n'est nécessaire.
 
 ## 3. Ouvrir explicitement la cible vérifiée
 

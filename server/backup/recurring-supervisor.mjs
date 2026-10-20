@@ -340,20 +340,29 @@ export function createRecurringSupervisor(options, { environment = process.env, 
       if (witnessOriginOperations !== null) {
         notice({ version: 1, type: "witness_origin_progress", phase: witnessPhase, event: "failed", code: witnessOriginErrorCode(error) });
       }
-      if (witnessOriginOperations !== null || closureOperations !== null) { await runtime.destroy(); await gateway?.close(); }
+      if (witnessOriginOperations !== null || closureOperations !== null) {
+        try { await runtime.destroy(); } catch { fatal = true; }
+        try { await gateway?.close(); } catch { fatal = true; }
+      }
       throw error;
     } finally { starting = false; }
   }
   function close() {
     if (closing) return closing;
-    closed = true; unschedule(timer); cancellation.abort();
+    closed = true;
     closing = (async () => {
-      await controller?.close();
-      await ticking;
+      let cleanupFailed = false;
+      const attempt = async work => { try { await work(); } catch { cleanupFailed = true; fatal = true; } };
+      await attempt(() => unschedule(timer)); cancellation.abort();
+      await attempt(() => controller?.close());
+      await attempt(() => ticking);
+      // Cancelling witness maintenance intentionally rejects its work promise.
+      // A failed runtime drain is still observed independently by destroy().
       try { await observing; } catch {}
-      await runtime.destroy();
-      await gateway?.close();
+      await attempt(() => runtime.destroy());
+      await attempt(() => gateway?.close());
       finish({ failed: fatal });
+      if (cleanupFailed) fail("RUNTIME");
     })();
     return closing;
   }

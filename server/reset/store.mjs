@@ -112,7 +112,7 @@ export async function assertResetSchema(pool) {
     const actualIndexes = await connection.query(`SELECT TABLE_NAME AS tableName, INDEX_NAME AS indexName, COLUMN_NAME AS columnName,
       NON_UNIQUE AS nonUnique, SEQ_IN_INDEX AS positionValue, SUB_PART AS prefixLength FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = ?`, [database]);
     const actualKeys = await connection.query(`SELECT TABLE_NAME AS tableName, CONSTRAINT_NAME AS constraintName, COLUMN_NAME AS columnName,
-      REFERENCED_TABLE_NAME AS parentTable, REFERENCED_COLUMN_NAME AS parentColumn, ORDINAL_POSITION AS positionValue
+      REFERENCED_TABLE_SCHEMA AS parentSchema, REFERENCED_TABLE_NAME AS parentTable, REFERENCED_COLUMN_NAME AS parentColumn, ORDINAL_POSITION AS positionValue
       FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_NAME IS NOT NULL`, [database]);
     const rules = await connection.query(`SELECT TABLE_NAME AS tableName, CONSTRAINT_NAME AS constraintName, UPDATE_RULE AS updateRule,
       DELETE_RULE AS deleteRule FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ?`, [database]);
@@ -140,7 +140,7 @@ export async function assertResetSchema(pool) {
     }
     for (const [table, name, parent, children, parents] of foreignKeys) {
       const actual = actualKeys.filter((item) => item.tableName === table && item.constraintName === name).sort((a, b) => Number(a.positionValue) - Number(b.positionValue));
-      if (actual.length !== children.length || actual.some((item, index) => item.parentTable !== parent || item.columnName !== children[index] || item.parentColumn !== parents[index])
+      if (actual.length !== children.length || actual.some((item, index) => item.parentSchema !== database || item.parentTable !== parent || item.columnName !== children[index] || item.parentColumn !== parents[index])
         || !rules.some((item) => item.tableName === table && item.constraintName === name && item.updateRule === "RESTRICT" && item.deleteRule === "RESTRICT")) state();
     }
     await connection.query("SELECT id, user_id, token_hash, credential_version, email_hash, created_at, expires_at, consumed_at, revoked_at FROM client_password_resets WHERE 1 = 0");

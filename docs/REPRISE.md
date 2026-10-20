@@ -1,10 +1,12 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — lot 2 livré côté serveur : 0.81.0 déployé et vérifié.** A05 corrigé ; copieur A07 qualifié dans Windows et présent dans le kit, **installation sur le PC personnel en attente**. A08 : avertissement déployé et dry-run synthétique qualifié, exécuteur d’archivage actif toujours différé. A01 reste une dépendance hébergeur indépendante. S1, S2a/S2b et S3 restent clos. Lire le [plan](PLAN-IMPLEMENTATION.md), le [lot 2](audit-corrections-081.md), les [limites/procédure](backup-capacity-and-history-081.md) et [AGENTS](../AGENTS.md). KISS permanent ; aucun nouveau serveur ni budget.
+**20 octobre 2026 Europe/Paris — lot 3 en qualification ; service 0.81.0 déployé et vérifié.** A05 corrigé ; copieur A07 qualifié dans Windows et présent dans le kit, **installation sur le PC personnel en attente**. A08 : avertissement déployé et dry-run synthétique qualifié, exécuteur d’archivage actif toujours différé. A01 reste une dépendance hébergeur indépendante. S1, S2a/S2b et S3 restent clos. Lire le [plan](PLAN-IMPLEMENTATION.md), le [lot 2](audit-corrections-081.md), les [limites/procédure](backup-capacity-and-history-081.md) et [AGENTS](../AGENTS.md). KISS permanent ; aucun nouveau serveur ni budget.
 
 L’ancien compteur « étape 4/6 » appartient au plan du 18 octobre, remplacé par S1/S2/S3 le 19. Le plan correctif courant comporte quatre lots puis une clôture : lot 1 applicatif livré en 0.80 ; lot 2 serveur livré en 0.81 avec installation PC distincte ; lots 3/4 et bilan final à faire. La livraison V1 n’atteste pas les garanties abandonnées de l’ancien périmètre.
 
 ## Audit et corrections courantes
+
+**Lot 3 en cours :** A06/A09/A10 codés et relus ; tests complets puis CI native et déploiement à vérifier. [Compte rendu](audit-corrections-082.md), [preuves](verification-proofs/jm082-verification.json). Aucun succès de production 0.82 n’est encore déclaré.
 
 L’[audit transversal](AUDIT-CODE-2026-10-20.md) porte sur `f629137`, code applicatif identique au runtime 0.79 de l’époque. [Preuves datées](verification-proofs/jm079-audit-20261020.json). Aucun P0/P1 ni accès intercompte démontré dans les surfaces examinées ; cela ne certifie pas leur absence. C01/C02 restent à confirmer au lot 4.
 

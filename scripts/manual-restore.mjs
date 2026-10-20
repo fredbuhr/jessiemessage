@@ -7,7 +7,7 @@ import { createPrivateJsonStore } from "../server/files/private-json.mjs";
 import { loadManualOperatorContext } from "../server/backup/manual-operator-context.mjs";
 import { acquireRecurringLock, readRecurringConfiguration, readRecurringRecipientPublicKey } from "../server/backup/recurring-checkpoint-files.mjs";
 import { readCopyState } from "../server/backup/copy-files.mjs";
-import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
+import { resumeCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { readCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
 import { readOperationalCheckpoint, readOperationalQuarantine, restoreOperationalQuarantine } from "../server/backup/operational-checkpoint.mjs";
 import { backupIdentity } from "../server/backup/manifest.mjs";
@@ -187,10 +187,8 @@ export async function run(selected, { environment = process.env, signal, inputSt
         await resume({ ...context.importSelection, command: "resume" }, { inheritedEnv: environment, execArgv: [], readSecret: async () => password, signal });
         password = "";
         const receipt = await withPrivateDirectory(job.checkpointDirectory, scope => readCheckpointReceipt(scope, { signal }));
-        await withPrivateDirectory(paths.rootPath, async target => {
-          if ((await readdir(target.path)).length === 0) await withPrivateDirectory(`${job.checkpointDirectory}/media`, source => copyCheckpointMedia(source, target, { signal }));
-          await verifyCheckpointMedia(target, receipt.media, { signal });
-        });
+        await withPrivateDirectory(paths.rootPath, target => withPrivateDirectory(`${job.checkpointDirectory}/media`,
+          source => resumeCheckpointMedia(source, target, receipt.media, { signal })));
         await save("imported", null);
       }
       if (options.command === "open" && (state.phase !== "reconciled" || state.planSha256 !== options.expectedPlanSha256)) fail("PLAN_CONFIRMATION");

@@ -6,7 +6,7 @@ import { chmod, link, lstat, mkdir, mkdtemp, open, readFile, readdir, rename, rm
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { CheckpointFilesError, copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
+import { CheckpointFilesError, copyCheckpointMedia, resumeCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 
 const repository = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 const name = (number, variant = "full") => `${number.toString(16).padStart(64, "0")}.${variant}.enc`;
@@ -58,6 +58,10 @@ async function put(directory, basename, content = Buffer.from(privateMarker)) {
   await writeFile(path.join(directory, basename), content, { mode: 0o600, flag: "wx" });
   return content;
 }
+
+const inventoryOf = records => ({ files: records.map(([name, contents]) => ({ name, bytes: contents.length, sha256: digest(contents) })),
+  bytes: records.reduce((sum, [, contents]) => sum + contents.length, 0) });
+const fileState = stats => Object.fromEntries(["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"].map(key => [key, stats[key]]));
 
 async function hookOpen(callback, operation) {
   const original = fs.promises.open;
@@ -336,4 +340,113 @@ test("filesystem failures never expose a private name, path or underlying except
   await assert.rejects(copyCheckpointMedia(f.sourceScope, f.targetScope), unavailable);
   await assert.rejects(verifyCheckpointMedia(f.sourceScope, { files: [], bytes: 0 }), unavailable);
   assert.deepEqual(await readdir(f.target), []);
+});
+
+test("restore resumes an interrupted real-file copy by creating only missing files and retaining verified inodes", async t => {
+  const f = await fixture(t), controller = new AbortController();
+  const records = [[name(1), Buffer.alloc(150000, 21)], [name(2), Buffer.alloc(70000, 39)], [name(3, "thumb"), Buffer.alloc(55, 81)]];
+  for (const [basename, contents] of records) await put(f.source, basename, contents);
+  const expected = inventoryOf(records);
+  await hookOpen(async (original, args) => {
+    const handle = await original(...args);
+    if (String(args[0]) === path.join(f.target, name(1))) {
+      const sync = handle.sync.bind(handle);
+      handle.sync = async () => { await sync(); controller.abort(); };
+    }
+    return handle;
+  }, () => assert.rejects(resumeCheckpointMedia(f.sourceScope, f.targetScope, expected, { signal: controller.signal }), { code: "CHECKPOINT_FILES_ABORTED" }));
+  assert.deepEqual(await readdir(f.target), [name(1)]);
+  assert.deepEqual(await readFile(path.join(f.target, name(1))), records[0][1]);
+  const retained = fileState(await lstat(path.join(f.target, name(1)), { bigint: true })), created = [];
+  await hookOpen(async (original, args) => {
+    if (String(args[0]).startsWith(`${f.target}/`) && (args[1] & fs.constants.O_CREAT)) created.push(path.basename(String(args[0])));
+    return original(...args);
+  }, async () => assert.deepEqual(await resumeCheckpointMedia(f.sourceScope, f.targetScope, expected), expected));
+  assert.deepEqual(created, [name(2), name(3, "thumb")]);
+  assert.deepEqual(fileState(await lstat(path.join(f.target, name(1)), { bigint: true })), retained);
+  assert.deepEqual(await verifyCheckpointMedia(f.targetScope, expected), expected);
+  assert.deepEqual(await resumeCheckpointMedia(f.sourceScope, f.targetScope, expected), expected);
+});
+
+test("restore refuses truncated, divergent, unexpected or unsafe existing files before creating any missing file", async t => {
+  const defects = [
+    async f => put(f.target, name(1), Buffer.alloc(1, 31)),
+    async f => put(f.target, name(1), Buffer.alloc(100, 32)),
+    async f => put(f.target, name(4), Buffer.alloc(100, 31)),
+    async f => { await put(f.target, name(1), Buffer.alloc(100, 31)); await chmod(path.join(f.target, name(1)), 0o640); },
+    async f => { await put(f.target, name(1), Buffer.alloc(100, 31)); await link(path.join(f.target, name(1)), path.join(f.root, "retained-hardlink")); },
+    async f => { await symlink(path.join(f.source, name(1)), path.join(f.target, name(1))); },
+    async f => put(f.target, name(1), Buffer.alloc(0)),
+  ];
+  for (const defect of defects) {
+    const f = await fixture(t), records = [[name(1), Buffer.alloc(100, 31)], [name(2), Buffer.alloc(20, 41)]];
+    for (const [basename, contents] of records) await put(f.source, basename, contents);
+    await defect(f);
+    const before = await readdir(f.target), states = await Promise.all(before.map(async basename => fileState(await lstat(path.join(f.target, basename), { bigint: true }))));
+    await assert.rejects(resumeCheckpointMedia(f.sourceScope, f.targetScope, inventoryOf(records)), unavailable);
+    assert.deepEqual(await readdir(f.target), before);
+    assert.deepEqual(await Promise.all(before.map(async basename => fileState(await lstat(path.join(f.target, basename), { bigint: true })))), states);
+  }
+});
+
+test("restore preserves and refuses a file actually truncated by mid-write cancellation", async t => {
+  const f = await fixture(t), controller = new AbortController(), records = [[name(1), Buffer.alloc(150000, 31)], [name(2), Buffer.alloc(20, 41)]];
+  for (const [basename, contents] of records) await put(f.source, basename, contents);
+  const expected = inventoryOf(records);
+  await hookOpen(async (original, args) => {
+    const handle = await original(...args);
+    if (String(args[0]) === path.join(f.target, name(1)) && (args[1] & fs.constants.O_CREAT)) {
+      const write = handle.write.bind(handle);
+      handle.write = async (...parameters) => { const result = await write(...parameters); controller.abort(); return result; };
+    }
+    return handle;
+  }, () => assert.rejects(resumeCheckpointMedia(f.sourceScope, f.targetScope, expected, { signal: controller.signal }), { code: "CHECKPOINT_FILES_ABORTED" }));
+  const partial = await readFile(path.join(f.target, name(1))), retained = fileState(await lstat(path.join(f.target, name(1)), { bigint: true }));
+  assert.ok(partial.length > 0 && partial.length < records[0][1].length);
+  await assert.rejects(resumeCheckpointMedia(f.sourceScope, f.targetScope, expected), { code: "CHECKPOINT_FILES_CHANGED" });
+  assert.deepEqual(await readdir(f.target), [name(1)]); assert.deepEqual(await readFile(path.join(f.target, name(1))), partial);
+  assert.deepEqual(fileState(await lstat(path.join(f.target, name(1)), { bigint: true })), retained);
+});
+
+test("restore authenticates the complete source before adding files to a partial target", async t => {
+  const f = await fixture(t), records = [[name(1), Buffer.alloc(100, 31)], [name(2), Buffer.alloc(20, 41)]];
+  await put(f.source, name(1), records[0][1]); await put(f.source, name(2), Buffer.alloc(20, 42));
+  await put(f.target, name(1), records[0][1]);
+  await assert.rejects(resumeCheckpointMedia(f.sourceScope, f.targetScope, inventoryOf(records)), { code: "CHECKPOINT_FILES_CHANGED" });
+  assert.deepEqual(await readdir(f.target), [name(1)]);
+  await assert.rejects(resumeCheckpointMedia(f.sourceScope, f.sourceScope, inventoryOf(records)), { code: "CHECKPOINT_FILES_INPUT" });
+});
+
+test("restore refuses changes to a retained target inode while a missing file is copied", async t => {
+  const f = await fixture(t), records = [[name(1), Buffer.alloc(100, 31)], [name(2), Buffer.alloc(20, 41)]];
+  for (const [basename, contents] of records) await put(f.source, basename, contents);
+  await put(f.target, name(1), records[0][1]); let changed = false;
+  await hookOpen(async (original, args) => {
+    if (String(args[0]) === path.join(f.target, name(2)) && (args[1] & fs.constants.O_CREAT)) {
+      await rename(path.join(f.target, name(1)), path.join(f.root, "retained-original"));
+      await put(f.target, name(1), records[0][1]); changed = true;
+    }
+    return original(...args);
+  }, () => assert.rejects(resumeCheckpointMedia(f.sourceScope, f.targetScope, inventoryOf(records)), { code: "CHECKPOINT_FILES_CHANGED" }));
+  assert.equal(changed, true); assert.deepEqual(await readFile(path.join(f.root, "retained-original")), records[0][1]);
+});
+
+test("restore refuses source inode and root drift during a resumed copy", async t => {
+  for (const drift of ["source", "root"]) {
+    const f = await fixture(t), records = [[name(1), Buffer.alloc(100, 31)], [name(2), Buffer.alloc(20, 41)]];
+    for (const [basename, contents] of records) await put(f.source, basename, contents);
+    await put(f.target, name(1), records[0][1]);
+    const sync = f.targetScope.sync.bind(f.targetScope);
+    f.targetScope.sync = async () => {
+      await sync();
+      if (drift === "source") {
+        await rename(path.join(f.source, name(1)), path.join(f.root, "previous-source")); await put(f.source, name(1), records[0][1]);
+      } else {
+        const assertReady = f.targetScope.assertReady.bind(f.targetScope);
+        f.targetScope.assertReady = async () => { const stats = await assertReady(); return { ...stats, ino: stats.ino + 1n, isDirectory: () => true }; };
+      }
+    };
+    await assert.rejects(resumeCheckpointMedia(f.sourceScope, f.targetScope, inventoryOf(records)), { code: "CHECKPOINT_FILES_CHANGED" });
+    assert.deepEqual(await readdir(f.target), [name(1), name(2)]);
+  }
 });
