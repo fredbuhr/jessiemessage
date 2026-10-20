@@ -1,0 +1,62 @@
+{
+  "format": "jessiemessage-audit-lot3-verification",
+  "version": 1,
+  "release": "0.82.0",
+  "status": "local_qualified_ci_pending",
+  "baseline": {
+    "source": "ad7292a418da1e178b6488e3fde6f7da0b4245d1",
+    "tree": "3258101e28ff8f71ce9970e5eca88c272f6cce51",
+    "runtime": "4619c68f05e17accd2c98669377e6458fc4d1f14",
+    "runtimeTree": "f623a5817e90eb1416d094b71a5a410723d05f4f"
+  },
+  "liveBaseline": {
+    "at": "2026-10-20T09:57:27.970439Z",
+    "release": "0.81.0",
+    "preservedSensitiveHashes": 10,
+    "pairedIdentityMatchesLot2": true,
+    "pairedDestinations": 1,
+    "checkpointReceipts": 10,
+    "lastAttempt": {
+      "status": "succeeded",
+      "code": "OK",
+      "startedAt": 1792473302541,
+      "finishedAt": 1792473309366,
+      "runtimeResumed": true
+    },
+    "monitor": {
+      "code": "OK",
+      "checkedAt": 1792490234736
+    },
+    "httpsReadyBothOrigins": true
+  },
+  "preservation": {
+    "pcPairingRepeated": false,
+    "keysRegenerated": false,
+    "realMailSent": false,
+    "realAccountDeleted": false,
+    "productionRestored": false,
+    "d1Reused": false
+  },
+  "limits": {
+    "personalPcUpdateInstallationObserved": false,
+    "nodeProviderPatchPending": true,
+    "a08ArchiveExecutorImplemented": false
+  },
+  "local": {
+    "node": "24.19.0",
+    "general": {
+      "tests": 3116,
+      "pass": 2902,
+      "fail": 0,
+      "skipped": 214,
+      "durationMilliseconds": 104079.592861
+    },
+    "syntaxFiles": 568,
+    "independentReviews": [
+      "A06 code and operator documentation",
+      "A09 shutdown propagation",
+      "A10 schema validation"
+    ],
+    "nativeSqlLocalExecuted": false
+  }
+}

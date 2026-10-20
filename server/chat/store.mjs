@@ -414,13 +414,13 @@ export function createChatStore(pool, { clock, enqueueNotification } = {}) {
           if (actual.length !== expected.length || actual.some((item, index) => Number(item.nonUnique) !== 0 || item.columnName !== expected[index] || item.prefixLength !== null)) state();
         }
         const foreignKeys = await connection.query(`SELECT TABLE_NAME AS tableName, CONSTRAINT_NAME AS name, COLUMN_NAME AS columnName,
-          REFERENCED_TABLE_NAME AS parentTable, REFERENCED_COLUMN_NAME AS parentColumn, ORDINAL_POSITION AS positionValue
+          REFERENCED_TABLE_SCHEMA AS parentSchema, REFERENCED_TABLE_NAME AS parentTable, REFERENCED_COLUMN_NAME AS parentColumn, ORDINAL_POSITION AS positionValue
           FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_NAME IS NOT NULL`, [database]);
         const references = await connection.query(`SELECT TABLE_NAME AS tableName, CONSTRAINT_NAME AS name, UPDATE_RULE AS updateRule,
           DELETE_RULE AS deleteRule FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ?`, [database]);
         for (const [table, name, parent, children, parents] of schemaForeignKeys) {
           const actual = foreignKeys.filter((item) => item.tableName === table && item.name === name).sort((a, b) => Number(a.positionValue) - Number(b.positionValue));
-          if (actual.length !== children.length || actual.some((item, index) => item.parentTable !== parent || item.columnName !== children[index] || item.parentColumn !== parents[index])
+          if (actual.length !== children.length || actual.some((item, index) => item.parentSchema !== database || item.parentTable !== parent || item.columnName !== children[index] || item.parentColumn !== parents[index])
             || !references.some((item) => item.tableName === table && item.name === name && item.updateRule === "RESTRICT" && item.deleteRule === "RESTRICT")) state();
         }
         const constraints = await connection.query("SELECT TABLE_NAME AS tableName, CONSTRAINT_NAME AS name, CONSTRAINT_TYPE AS type FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ?", [database]);

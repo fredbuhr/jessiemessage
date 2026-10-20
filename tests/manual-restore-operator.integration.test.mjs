@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile, unlink, writeFile } from "node:fs/promises";
+import fs from "node:fs";
+import { syncBuiltinESMExports } from "node:module";
+import { lstat, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { reconcileManualRestore, publishManualRestore } from "../server/backup/manual-restore.mjs";
 import { assertNoOperationalRestore } from "../server/backup/operational-checkpoint.mjs";
@@ -9,6 +11,7 @@ import { resumeManagedLocalClosureRuntime } from "../server/backup/managed-closu
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createApplicationInspectionPool } from "../server/backup/application-scope.mjs";
+import { createMediaStorage } from "../server/media/storage.mjs";
 import { run as runOperator } from "../scripts/manual-restore.mjs";
 import { manualOperatorFixture, localRequest, fileHashes } from "./fixtures/manual-operator.mjs";
 
@@ -91,17 +94,23 @@ test("manual operator imports a real native archive, publishes the actual IPC ap
   });
 });
 
-test("the real operator CLI allocates an empty target, imports, copies media and settings, persists phases and opens the owned IPC service", {
+test("the operator CLI resumes interrupted media using native SQL once, then copies only missing files and opens the owned IPC service", {
   skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable databases and native MariaDB clients.", timeout: 240000,
 }, async t => {
   const f = await manualOperatorFixture(t), operator = await f.resetTargetForOperator(), reports = [];
-  let finish, published, capturesAllowed = false, resumes = 0, service;
+  let finish, published, capturesAllowed = false, resumes = 0, imports = 0, service, retained, mediaVerified = false;
   const finished = new Promise(done => { finish = done; }), publication = new Promise(done => { published = done; });
   const outputStream = { write(line) { const value = JSON.parse(line); reports.push(value); if (value.status === "manual_restore_published") published(value); } };
   const signal = new AbortController().signal;
   const dependencies = { environment: f.environment, signal, outputStream };
+  const mediaNames = (await readdir(path.join(f.dirs.checkpoint, "media"))).sort(), first = mediaNames[0], created = [];
+  const fileState = stats => Object.fromEntries(["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"].map(key => [key, stats[key]]));
   const internal = { loadContext: async () => operator.context, connect: operator.connect, inspect: operator.inspect, readSecret: operator.readSecret,
-    async resumeCheckpoint(selection, options) { resumes++; return operator.nativeResume(selection, options); },
+    async resumeCheckpoint(selection, options) { resumes++; const result = await operator.nativeResume(selection, options); if (result.imported) imports++; return result; },
+    async makeStorage(options) {
+      if (!mediaVerified) { assert.deepEqual(fileState(await lstat(path.join(f.dirs["target-media"], first), { bigint: true })), retained); mediaVerified = true; }
+      return createMediaStorage(options);
+    },
     createPool: createRuntimePool, createInspectionPool: createApplicationInspectionPool,
     makeService() {
       assert.equal(service, undefined);
@@ -111,10 +120,36 @@ test("the real operator CLI allocates an empty target, imports, copies media and
       return service;
     } };
   const selected = { operatorDirectory: operator.operatorDirectory };
-  const restored = await runOperator({ ...selected, command: "restore" }, dependencies, internal);
-  assert.equal(resumes, 1); assert.equal(restored.status, "manual_restore_reconciled_quarantined"); assert.equal(restored.started, false);
-  assert.equal(f.children.length, 0); await f.assertRestored(); await f.assertSourceUnchanged();
   const readState = async () => JSON.parse(await readFile(path.join(operator.operatorDirectory, "manual-restore-state.json"), "utf8"));
+  const originalOpen = fs.promises.open, cancellation = new AbortController(); let interrupted = false;
+  fs.promises.open = async (...args) => {
+    const handle = await originalOpen(...args), name = path.basename(String(args[0]));
+    if ((args[1] & fs.constants.O_CREAT) && mediaNames.includes(name)) {
+      created.push(name);
+      if (!interrupted) {
+        assert.equal(name, first); interrupted = true;
+        const sync = handle.sync.bind(handle);
+        handle.sync = async () => { await sync(); cancellation.abort(); };
+      }
+    }
+    return handle;
+  };
+  syncBuiltinESMExports();
+  let restored;
+  try {
+    await assert.rejects(runOperator({ ...selected, command: "restore" }, { ...dependencies, signal: cancellation.signal }, internal), { code: "MANUAL_OPERATOR_UNAVAILABLE" });
+    assert.equal(interrupted, true); assert.equal((await readState()).phase, "allocated"); assert.equal(imports, 1); assert.equal(resumes, 1);
+    assert.equal(f.children.length, 0); assert.deepEqual(await readdir(f.dirs.quarantine), []);
+    assert.deepEqual(await readdir(f.dirs["target-media"]), [first]);
+    assert.deepEqual(await readFile(path.join(f.dirs["target-media"], first)), await readFile(path.join(f.dirs.checkpoint, "media", first)));
+    retained = fileState(await lstat(path.join(f.dirs["target-media"], first), { bigint: true }));
+    await f.assertSourceUnchanged();
+    restored = await runOperator({ ...selected, command: "restore" }, dependencies, internal);
+  } finally { fs.promises.open = originalOpen; syncBuiltinESMExports(); }
+  assert.deepEqual(created, mediaNames, "the complete first file is retained, and only absent names are created on resume");
+  assert.equal(resumes, 2); assert.equal(imports, 1, "the second CLI pass verifies the actual SQL snapshot instead of importing again");
+  assert.equal(restored.status, "manual_restore_reconciled_quarantined"); assert.equal(restored.started, false);
+  assert.equal(f.children.length, 0); await f.assertRestored(); await f.assertSourceUnchanged();
   const reconciledState = await readState(); assert.equal(reconciledState.phase, "reconciled"); assert.equal(reconciledState.planSha256, restored.planSha256);
   for (const name of ["recurring-backup.json", "backup-copy-state.json"]) assert.deepEqual(
     JSON.parse(await readFile(path.join(f.dirs["target-journal"], name), "utf8")), JSON.parse(await readFile(path.join(f.dirs["source-journal"], name), "utf8")));
@@ -124,7 +159,7 @@ test("the real operator CLI allocates an empty target, imports, copies media and
   try {
     const report = await Promise.race([publication, opening.then(() => assert.fail("The service ended before publication"))]);
     assert.equal(report.ready, true); assert.equal(capturesAllowed, true); assert.equal((await readState()).phase, "opened");
-    assert.equal(resumes, 1, "opening never imports a reconciled database again"); assert.equal(f.children.length, 1);
+    assert.equal(resumes, 2, "opening never imports a reconciled database again"); assert.equal(imports, 1); assert.equal(f.children.length, 1);
     assert.deepEqual(await localRequest(f.port, "/api/ready"), { status: 200, body: '{"status":"ready"}' });
     await f.assertRestored(); await f.assertSourceUnchanged(); assert.deepEqual(await fileHashes(f.dirs.quarantine), quarantine);
     assert.deepEqual(await service.stop(), { exitCode: 0, signal: null });

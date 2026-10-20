@@ -224,8 +224,9 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
           const actual = await connection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [targetDatabase]); return actual.length === 0 ? "empty" : "partial"; },
         async nativeResume(selection, dependencies) {
           assert.equal(selection.command, "resume"); assert.equal(selection.database, targetDatabase); assert.equal(await dependencies.readSecret(), db.password);
-          assert.equal((await targetConnection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [targetDatabase])).length, 0);
-          await withPrivateDirectory(dirs.checkpoint, async scope => {
+          const existing = await targetConnection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [targetDatabase]);
+          assert.ok(existing.length === 0 || existing.length === allTables.length);
+          if (existing.length === 0) await withPrivateDirectory(dirs.checkpoint, async scope => {
             const bytes = await readApplicationSql(scope, { backupBytes: receipt.sql.bytes, backupSha256: receipt.sql.sha256, sqlBytes: receipt.sql.uncompressedBytes, sqlSha256: receipt.sql.uncompressedSha256 });
             try { await importNativeSql(scope, { database: targetDatabase, user: db.user }, { host: db.host, port: String(db.port) }, db.password, bytes, { spawnClient: localSqlClient }); }
             finally { bytes.fill(0); }
@@ -234,7 +235,7 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
           const currentStorage = await createMediaStorage({ root: dirs["target-media"], key: keys.mediaKey, pathMode: "linux-dirfd" });
           assertBackupSnapshot({ expected: snapshot, actual, mode: "recovery", targetFingerprint: hex(await currentStorage.fingerprint()) });
           assert.equal(await databaseHash(targetDatabase), original.sql);
-          return { imported: true, applicationSnapshotMatched: true, tables: 30, migrations: 30 };
+          return { imported: existing.length === 0, applicationSnapshotMatched: true, tables: 30, migrations: 30 };
         } };
     },
     async assertRestored() {

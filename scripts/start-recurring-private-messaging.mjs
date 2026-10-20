@@ -87,7 +87,10 @@ export async function main(args = process.argv.slice(2), { environment = process
       ...(local === undefined ? {} : { closureOperations: local.operations, resumeClosures: resumeManagedLocalClosureRuntime }),
       ...(witnessOriginOperations === null ? {} : { witnessOriginOperations }) });
     if (observer !== null) observer.attachMaintenance(supervisor.withWitnessMaintenance, supervisor.failWitnessObservation);
-  } catch (error) { try { await observer?.close(); await supervisor?.close(); } finally { await local?.close(); } throw error; }
+  } catch (error) {
+    try { await observer?.close(); } finally { try { await supervisor?.close(); } finally { await local?.close(); } }
+    throw error;
+  }
   let monitor, alerts;
   const monitorUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_monitor","event":"unavailable","code":"MONITOR_UNAVAILABLE","notificationStatus":"not_sent"}\n'); } catch {} };
   const alertsUnavailable = () => { try { outputStream.write('{"version":1,"type":"private_backup_alert","event":"unavailable","code":"ALERT_UNAVAILABLE","notificationStatus":"not_confirmed","inboxStatus":"not_checked"}\n'); } catch {} };
@@ -95,7 +98,7 @@ export async function main(args = process.argv.slice(2), { environment = process
     try { void Promise.resolve(observer?.close()).catch(() => {}); } catch {}
     try { void Promise.resolve(monitor?.close()).catch(monitorUnavailable); } catch { monitorUnavailable(); }
     try { void Promise.resolve(alerts?.close()).catch(alertsUnavailable); } catch { alertsUnavailable(); }
-    void supervisor.close();
+    try { void Promise.resolve(supervisor.close()).catch(() => {}); } catch {}
   };
   signal?.addEventListener("abort", abort, { once: true });
   try {
@@ -132,13 +135,15 @@ export async function main(args = process.argv.slice(2), { environment = process
     return { version: 1, type: "recurring_supervisor", status: "stopped" };
   } finally {
     signal?.removeEventListener("abort", abort);
-    await observer?.close();
-    try { await monitor?.close(); } catch { monitorUnavailable(); }
-    // Stop the application without waiting for mail delivery/cleanup.
-    try { await supervisor.close(); }
+    try { await observer?.close(); }
     finally {
-      try { await alerts?.close(); } catch { alertsUnavailable(); }
-      await local?.close();
+      try { await monitor?.close(); } catch { monitorUnavailable(); }
+      // Stop the application without waiting for mail delivery/cleanup.
+      try { await supervisor.close(); }
+      finally {
+        try { await alerts?.close(); } catch { alertsUnavailable(); }
+        await local?.close();
+      }
     }
   }
 }

@@ -10,7 +10,12 @@ import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, applyMigrations, loadMigrations } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { createChatStore } from "../server/chat/store.mjs";
+import { createAccessStore } from "../server/access/store.mjs";
 import { createMediaStore } from "../server/media/store.mjs";
+import { createCrmStore } from "../server/crm/store.mjs";
+import { assertResetSchema } from "../server/reset/store.mjs";
+import { assertBroadcastSchema } from "../server/broadcast/store.mjs";
+import { assertErasureSchema } from "../server/data/erasure-schema.mjs";
 import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { normalizeImage } from "../server/media/image.mjs";
@@ -332,22 +337,53 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       }
     });
 
-    await t.test("a lookalike foreign key pointing at the source schema is refused before any cleanup", async () => {
+    await t.test("lookalike foreign keys pointing at the source schema are refused by local validators before any cleanup", async subtest => {
       await clone();
-      await targetConnection.query("ALTER TABLE media_storage_objects DROP FOREIGN KEY media_storage_objects_owner_fk");
-      await targetConnection.query(`ALTER TABLE media_storage_objects ADD CONSTRAINT media_storage_objects_owner_fk
-        FOREIGN KEY (owner_id, owner_role) REFERENCES ${qualified(options.database, "users")} (id, role) ON UPDATE RESTRICT ON DELETE RESTRICT`);
-      try {
-        const parent = (await targetConnection.query(`SELECT REFERENCED_TABLE_SCHEMA AS parent_schema FROM information_schema.KEY_COLUMN_USAGE
-          WHERE CONSTRAINT_SCHEMA = ? AND TABLE_NAME = 'media_storage_objects' AND CONSTRAINT_NAME = 'media_storage_objects_owner_fk' LIMIT 1`, [restoreDatabase]))[0];
-        assert.equal(parent.parent_schema, options.database);
-        const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
-        await assert.rejects(run("restore"), backupError);
-        assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore); await sourceUnchanged();
-      } finally {
-        await targetConnection.query("ALTER TABLE media_storage_objects DROP FOREIGN KEY media_storage_objects_owner_fk");
-        await targetConnection.query(`ALTER TABLE media_storage_objects ADD CONSTRAINT media_storage_objects_owner_fk
-          FOREIGN KEY (owner_id, owner_role) REFERENCES users (id, role) ON UPDATE RESTRICT ON DELETE RESTRICT`);
+      const targetChat = createChatStore(targetPool), access = createAccessStore(targetPool);
+      const targetMedia = createMediaStore({ pool: targetPool, chatStore: targetChat });
+      const crm = createCrmStore({ pool: targetPool, chatStore: targetChat });
+      const before = await databaseHash(restoreDatabase), filesBefore = await filesUnder(targetRoot);
+      const cases = [
+        ["access", "email_verifications", "email_verification_user_fk", "user_id", "client_auth_state", "user_id", () => access.assertSchema(), "ACCESS_DATABASE_STATE"],
+        ["chat", "chat_receipts", "chat_receipts_user_fk", "user_id", "users", "id", () => targetChat.assertSchema(), "CHAT_DATABASE_STATE"],
+        ["media", "media_storage_objects", "media_storage_objects_owner_fk", "owner_id, owner_role", "users", "id, role", () => targetMedia.assertSchema(), "MEDIA_DATABASE_STATE"],
+        ["crm", "crm_profiles", "crm_profiles_admin_fk", "admin_id, admin_role", "users", "id, role", () => crm.assertSchema(), "CRM_DATABASE_STATE"],
+        ["reset", "client_password_resets", "client_password_reset_user_fk", "user_id", "client_auth_state", "user_id", () => assertResetSchema(targetPool), "RESET_DATABASE_STATE"],
+        ["broadcast", "broadcast_campaigns", "broadcast_campaigns_owner_fk", "admin_id, admin_role", "users", "id, role", () => assertBroadcastSchema(targetPool), "BROADCAST_DATABASE_STATE"],
+      ];
+      for (const [label, table, constraint, children, parent, parents, check, code] of cases) {
+        await subtest.test(`${label}: only the referenced schema changes`, async () => {
+          assert.equal(await check(), true); await assertErasureSchema(targetConnection, restoreDatabase);
+          const metadata = async () => (await targetConnection.query(`SELECT k.COLUMN_NAME AS child_column,
+            k.REFERENCED_TABLE_SCHEMA AS parent_schema, k.REFERENCED_TABLE_NAME AS parent_table,
+            k.REFERENCED_COLUMN_NAME AS parent_column, k.ORDINAL_POSITION AS position_value,
+            r.UPDATE_RULE AS update_rule, r.DELETE_RULE AS delete_rule
+            FROM information_schema.KEY_COLUMN_USAGE k JOIN information_schema.REFERENTIAL_CONSTRAINTS r
+              ON r.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA AND r.TABLE_NAME = k.TABLE_NAME AND r.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+            WHERE k.CONSTRAINT_SCHEMA = ? AND k.TABLE_NAME = ? AND k.CONSTRAINT_NAME = ? ORDER BY k.ORDINAL_POSITION`,
+          [restoreDatabase, table, constraint])).map(row => ({ ...row }));
+          const original = await metadata(); assert.ok(original.length > 0);
+          assert.ok(original.every(row => row.parent_schema === restoreDatabase));
+          const add = database => `ALTER TABLE ${qualified(restoreDatabase, table)} ADD CONSTRAINT \`${constraint}\`
+            FOREIGN KEY (${children}) REFERENCES ${qualified(database, parent)} (${parents}) ON UPDATE RESTRICT ON DELETE RESTRICT`;
+          const drop = `ALTER TABLE ${qualified(restoreDatabase, table)} DROP FOREIGN KEY \`${constraint}\``;
+          await targetConnection.query(drop); let crossSchema = false;
+          try {
+            await targetConnection.query(add(options.database)); crossSchema = true;
+            const changed = await metadata(); assert.ok(changed.every(row => row.parent_schema === options.database));
+            assert.deepEqual(changed.map(row => ({ ...row, parent_schema: restoreDatabase })), original);
+            await assert.rejects(check(), { code });
+            await assert.rejects(assertErasureSchema(targetConnection, restoreDatabase), { code: "ERASURE_SCHEMA" });
+            if (label === "media") await assert.rejects(run("restore"), backupError);
+            assert.equal(await databaseHash(restoreDatabase), before); assert.deepEqual(await filesUnder(targetRoot), filesBefore);
+            await sourceUnchanged();
+          } finally {
+            if (crossSchema) await targetConnection.query(drop);
+            await targetConnection.query(add(restoreDatabase));
+          }
+          assert.deepEqual(await metadata(), original); assert.equal(await check(), true);
+          await assertErasureSchema(targetConnection, restoreDatabase);
+        });
       }
     });
 

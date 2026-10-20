@@ -98,6 +98,19 @@ test("ordinary start composes daily backups, monitor and alerts without any witn
   assert.deepEqual(observed, [monitorReport]); assert.deepEqual(JSON.parse(output), monitorReport);
 });
 
+test("an observer cleanup failure still closes the monitor, supervisor and alert worker", async () => {
+  const events = [], expected = new Error("synthetic observer cleanup failure");
+  await assert.rejects(main(observerArgs("start-witness-observer"), { environment, execArgv: [], outputStream: { write() {} },
+    makeWitnessObserver: async () => ({ handler: async () => true, async check() {}, attachMaintenance() {},
+      async startRecoveryControl() {}, startObservation() {}, async close() { events.push("observer"); throw expected; } }),
+    makeSupervisor: () => ({ async start() {}, async tick() {}, finished: Promise.resolve({ failed: false }),
+      async close() { events.push("supervisor"); } }),
+    makeMonitor: () => ({ async start() {}, async close() { events.push("monitor"); } }),
+    makeAlerts: () => ({ async close() { events.push("alerts"); } }),
+  }), error => error === expected);
+  assert.deepEqual(events, ["observer", "monitor", "supervisor", "alerts"]);
+});
+
 test("observer CLI modes require the existing contract pin and independent private operator root", () => {
   for (const command of ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"]) {
     const parsed = parseRecurringArguments(observerArgs(command));
@@ -396,6 +409,19 @@ test("a failed first-owner lock cleanup destroys the opened child and parent gat
   } finally { await f.supervisor.close(); }
 });
 
+test("startup preserves its primary failure while a rejected destroy still closes the parent gateway", async () => {
+  const expected = new Error("synthetic startup lease failure"), gateway = [];
+  const f = fixture({ witnessControl: async () => true,
+    closureOperations: { verifyStartup: syntheticStartupProof, async hasPending() { return false; }, async preflight() {}, async run() {} },
+    lock: async (_directory, work) => { await work({ async assertReady() {} }); throw expected; },
+    makeGateway: () => ({ async start() {}, async close() { gateway.push("close"); } }) });
+  f.runtime.destroy = async () => { f.events.push("destroy"); throw new Error("synthetic drain failure"); };
+  await assert.rejects(f.supervisor.start(), error => error === expected);
+  assert.deepEqual(gateway, ["close"]);
+  await assert.rejects(f.supervisor.close(), { code: "RECURRING_SUPERVISOR_RUNTIME" });
+  assert.deepEqual(await f.supervisor.finished, { failed: true }); assert.deepEqual(gateway, ["close", "close"]);
+});
+
 test("capture lock rejection after owner stop ends the runtime; rejection before stop preserves it", async () => {
   for (const afterCallback of [false, true]) {
     let locks = 0;
@@ -510,6 +536,21 @@ test("unexpected runtime exit produces a failed supervisor outcome for the hosti
   await f.supervisor.start(); await f.supervisor.tick(); f.unexpected();
   assert.deepEqual(await f.supervisor.finished, { failed: true }); assert.equal(f.events.at(-1), "destroy");
 });
+
+for (const failing of ["timer", "runtime", "gateway"]) {
+  test(`shutdown reports ${failing} cleanup failure and still attempts every following cleanup`, async () => {
+    const cleanup = [];
+    const f = fixture({ witnessControl: async () => true, readConfiguration: async () => ({ ...configuration, enabled: false }),
+      unschedule() { cleanup.push("timer"); if (failing === "timer") throw new Error("synthetic timer cleanup"); },
+      makeGateway: () => ({ async start() {}, async close() { cleanup.push("gateway"); if (failing === "gateway") throw new Error("synthetic gateway cleanup"); } }) });
+    f.runtime.destroy = async () => { cleanup.push("runtime"); if (failing === "runtime") throw new Error("synthetic runtime cleanup"); };
+    await f.supervisor.start(); await f.supervisor.tick();
+    const closing = f.supervisor.close(); assert.equal(f.supervisor.close(), closing);
+    await assert.rejects(closing, { code: "RECURRING_SUPERVISOR_RUNTIME" });
+    assert.deepEqual(await f.supervisor.finished, { failed: true }); assert.deepEqual(cleanup, ["timer", "runtime", "gateway"]);
+    await assert.rejects(f.supervisor.close(), { code: "RECURRING_SUPERVISOR_RUNTIME" });
+  });
+}
 
 test("global shutdown during capture aborts the operation and never restarts an application", async () => {
   const entered = deferred();

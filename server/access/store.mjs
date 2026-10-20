@@ -164,7 +164,7 @@ export function createAccessStore(pool, { clock } = {}) {
           }
         }
         const foreignKeys = await connection.query(`SELECT TABLE_NAME AS tableName, CONSTRAINT_NAME AS constraintName,
-          COLUMN_NAME AS columnName, REFERENCED_TABLE_NAME AS parentTable, REFERENCED_COLUMN_NAME AS parentColumn,
+          COLUMN_NAME AS columnName, REFERENCED_TABLE_SCHEMA AS parentSchema, REFERENCED_TABLE_NAME AS parentTable, REFERENCED_COLUMN_NAME AS parentColumn,
           ORDINAL_POSITION AS positionValue FROM information_schema.KEY_COLUMN_USAGE
           WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_NAME IS NOT NULL`, [database]);
         const expectedForeignKeys = [
@@ -175,7 +175,7 @@ export function createAccessStore(pool, { clock } = {}) {
         for (const [table, name, parent, childColumns, parentColumns] of expectedForeignKeys) {
           const actual = foreignKeys.filter((item) => item.tableName === table && item.constraintName === name)
             .sort((left, right) => Number(left.positionValue) - Number(right.positionValue));
-          if (actual.length !== childColumns.length || actual.some((item, index) => item.parentTable !== parent
+          if (actual.length !== childColumns.length || actual.some((item, index) => item.parentSchema !== database || item.parentTable !== parent
             || item.columnName !== childColumns[index] || item.parentColumn !== parentColumns[index])) stateError();
         }
         const constraints = await connection.query(`SELECT TABLE_NAME AS tableName, CONSTRAINT_NAME AS constraintName,

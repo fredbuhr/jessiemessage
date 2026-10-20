@@ -173,7 +173,7 @@ export function createManagedRuntime({ runtimeDirectory, privateDirectory, opera
   function destroy() {
     if (destroying) return destroying;
     destroyed = true;
-    destroying = (async () => { try { await stop(); } catch {} })();
+    destroying = stop().then(() => {});
     return destroying;
   }
   return Object.freeze({ start, stop, destroy, state });

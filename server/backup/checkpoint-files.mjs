@@ -230,6 +230,41 @@ export async function copyCheckpointMedia(sourceScope, targetScope, options = {}
   }
 }
 
+/** Complete a private restore copy without overwriting any existing file. */
+export async function resumeCheckpointMedia(sourceScope, targetScope, inventory, options = {}) {
+  try {
+    const signal = selectedOptions(options), expected = closedInventory(inventory);
+    const sourceRoot = await ready(sourceScope, null, signal);
+    const targetRoot = await ready(targetScope, null, signal);
+    if (identity(sourceRoot, targetRoot)) fail("INPUT");
+    const source = await scan(sourceScope, sourceRoot, signal);
+    await verify(sourceScope, expected, sourceRoot, signal, source);
+    const existing = await scan(targetScope, targetRoot, signal);
+    const names = new Set(existing.entries.map(entry => entry.name));
+    const present = expected.files.filter(entry => names.has(entry.name));
+    const retained = closedInventory({ files: present, bytes: present.reduce((sum, entry) => sum + entry.bytes, 0) });
+    await verify(targetScope, retained, targetRoot, signal, existing);
+    for (let index = 0; index < source.entries.length; index += 1) {
+      const entry = source.entries[index];
+      if (names.has(entry.name)) continue;
+      const copied = await copyOne(sourceScope, sourceRoot, targetScope, targetRoot, entry, signal);
+      if (copied.sha256 !== expected.files[index].sha256) fail("CHANGED");
+    }
+    await targetScope.sync();
+    const copied = await scan(targetScope, targetRoot, signal);
+    const kept = copied.entries.filter(entry => names.has(entry.name));
+    sameScan(existing, { entries: kept, bytes: kept.reduce((sum, entry) => sum + entry.bytes, 0) });
+    await verify(targetScope, expected, targetRoot, signal, copied);
+    await verify(sourceScope, expected, sourceRoot, signal, source);
+    sameScan(copied, await scan(targetScope, targetRoot, signal));
+    await ready(targetScope, targetRoot, signal);
+    return expected;
+  } catch (error) {
+    if (error instanceof CheckpointFilesError) throw error;
+    throw new CheckpointFilesError();
+  }
+}
+
 /** Read-only verification of an exact private inventory; never decrypts images. */
 export async function verifyCheckpointMedia(scope, inventory, options = {}) {
   try {
