@@ -1,8 +1,8 @@
 # Évolution 1 — Lecture privée, 1.1.0
 
-**20 octobre 2026 — code fusionné et publié en 1.1.0, CI PR/main et préparation Infomaniak réussies ; activation 1.1.0 non constatée.** La [PR 110](https://github.com/fredbuhr/jessiemessage/pull/110) est fusionnée sur `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`. La [CI du commit de fusion](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) a réussi 5/5 jobs. Le [tag/release v1.1.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0) a été publié le 20 octobre à 20:21:26 UTC sur ce même commit et sa cible a été relue.
+**20 octobre 2026 — code fusionné et publié en 1.1.0, CI PR/main et préparation Infomaniak réussies ; identité active 1.1.0 confirmée par relevé admin utilisateur ; checkpoint opérateur à aligner.** La [PR 110](https://github.com/fredbuhr/jessiemessage/pull/110) est fusionnée sur `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`. La [CI du commit de fusion](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) a réussi 5/5 jobs. Le [tag/release v1.1.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0) a été publié le 20 octobre à 20:21:26 UTC sur ce même commit et sa cible a été relue.
 
-Base de travail : `main` `e2c5397c64e0e68f959f77fcf417722871b5a677`, après la référence [v1.0.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0) livrée sur `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`. Le travail auparavant préparé sous le numéro provisoire 0.87 est reporté séparément en `1.1.0` ; ses anciens résultats ne qualifient pas cette livraison. L’[état courant](REPRISE.md) reste la référence du service réellement déployé. Le reçu SSH utilisateur confirme maintenant le staging 1.1.0 ; aucune preuve d’activation 1.1.0 n’est consignée à ce stade. La dernière identité active connue et le checkpoint restent 1.0.0.
+Base de travail : `main` `e2c5397c64e0e68f959f77fcf417722871b5a677`, après la référence [v1.0.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0) livrée sur `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`. Le travail auparavant préparé sous le numéro provisoire 0.87 est reporté séparément en `1.1.0` ; ses anciens résultats ne qualifient pas cette livraison. L’[état courant](REPRISE.md) reste la référence du service réellement déployé. Le reçu SSH utilisateur confirme maintenant le staging 1.1.0 ; le relevé admin transmis ensuite confirme l’identité active 1.1.0 sur le commit publié. Le checkpoint reste enregistré en 1.0.0 jusqu’au reçu de son alignement.
 
 ## Comportement attendu
 
@@ -37,15 +37,15 @@ La [CI de la PR 110, run 39489455741](https://github.com/fredbuhr/jessiemessage/
 
 La [CI main, run 39490336793](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793), contrôle le commit de fusion `84669ed570b59b10a1a94a164f24f0e60e6cb5a7` ; elle a réussi **5/5 jobs**, avec les mêmes scores constatés que ceux du tableau : général 3 116 réussis/35 ignorés, MariaDB 468/468 chacune, Chrome 165/165 et HTTPS 2/2, sans échec. Son arbre est identique à celui de la PR. Aucun score ancien n’est repris comme preuve actuelle ; les 35 tests ignorés restent non vérifiés par la suite générale. La CI ne prouve ni publication de release ni déploiement.
 
-La [publication automatisée](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a réussi et produit `published_verified`. Elle vérifie le commit, l’arbre, la version, la CI main et ses cinq jobs avant de créer le tag/release immuable, sans déplacer un tag existant. Aucun navigateur cloud ni jeton personnel n’a été nécessaire. Reste à déployer ce même commit sur le service existant avec repli vers `v1.0.0` ; le staging est confirmé par le reçu utilisateur ci-dessous, et le redémarrage 1.1.0 reste à constater. La livraison sera confirmée par une identité fraîche du processus et les contrôles adaptés. Aucun envoi, effacement de compte ou contenu client réel n’est nécessaire à cette qualification. Les autres évolutions de messagerie restent distinctes.
+La [publication automatisée](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a réussi et produit `published_verified`. Elle vérifie le commit, l’arbre, la version, la CI main et ses cinq jobs avant de créer le tag/release immuable, sans déplacer un tag existant. Aucun navigateur cloud ni jeton personnel n’a été nécessaire. Ce même commit est maintenant identifié sur le service existant par le relevé admin utilisateur ci-dessous ; staging et quatre GET publics sont conformes, avec repli vers `v1.0.0` conservé. L’alignement du checkpoint reste à constater ; aucun nouveau déploiement n’est nécessaire. Aucun envoi, effacement de compte ou contenu client réel n’est nécessaire à cette qualification. Les autres évolutions de messagerie restent distinctes.
 
 ## Livraison 1.1.0 : reprise après staging
 
-Préparation réalisée, sans activation constatée. Cible épinglée : commit `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`, préfixe `84669ed5`. La CI main complète verte et le tag/release immuable `v1.1.0` sur ce commit exact sont acquis. [REPRISE](REPRISE.md) conserve la production **1.0.0** jusqu’à la preuve de la nouvelle identité.
+Préparation réalisée et identité active 1.1.0 confirmée. Cible épinglée : commit `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`, préfixe `84669ed5`. La CI main complète verte et le tag/release immuable `v1.1.0` sur ce commit exact sont acquis. [REPRISE](REPRISE.md) consigne désormais la production **1.1.0** ; l’ancien état 1.0.0 du checkpoint reste distinct jusqu’à son alignement.
 
 ### 1. Préparation seule
 
-**Déjà exécutée et confirmée par le reçu utilisateur ci-dessous. Ne pas répéter cette étape ; passer à l’activation Manager.**
+**Déjà exécutée et confirmée par le reçu utilisateur ci-dessous. Ne pas répéter cette étape ni le Build ; l’identité 1.1.0 est déjà confirmée.**
 
 Dans le [terminal SSH existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), la préparation épinglée crée le checkout et les lanceurs, puis exécute uniquement `check-local-closures`. Le reçu attendu est `staged_precheck_passed`, sur les source/arbre ci-dessus, avec `pendingClosures:false`, `started:false`, `erased:false`, `managerChanged:false` et `runtimeStarted:false`. Si un champ diffère, conserver 1.0.0 en service et arrêter avant l’étape Manager, même si le statut annonce un précontrôle réussi. Ce reçu ne prouve pas une activation. Après une interruption, relire les fichiers et reçus existants avant de rejouer la préparation.
 
@@ -79,9 +79,11 @@ Le retour du terminal SSH transmis par l’utilisateur confirme `staged_precheck
 | États | `pendingClosures:false`, `started:false`, `erased:false`, `managerChanged:false`, `runtimeStarted:false` |
 | Repli confirmé | `1.0.0`, lanceur `/srv/customer/jessiemessage-private/start-primary-release100-70b48aa8.sh`, Node `v24.22.0` |
 
-La préparation est acquise ; passer à l’activation Manager ci-dessous. Elle ne prouve ni Build ni identité active de la 1.1.0. La commande de préparation ci-dessus reste une trace de la procédure exécutée et ne doit pas être rejouée.
+La préparation est acquise ; son reçu décrit la phase avant démarrage. La preuve distincte de l’identité active obtenue ensuite est consignée plus bas. La commande de préparation ci-dessus reste une trace de la procédure exécutée et ne doit pas être rejouée.
 
 ### 2. Activation par le Manager
+
+**Procédure déjà suivie, identité active confirmée ci-dessous. Commandes conservées comme référence ; ne pas refaire le Build.**
 
 Ouvrir les [réglages de l’application existante](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application). Conserver le service, le port 3000 et ses autres paramètres. Enregistrer ces deux champs :
 
@@ -117,6 +119,40 @@ Dans [État du service](https://jessiemessage.com/admin/readiness), choisir **Ac
 
 Cette lecture authentifiée identifie le processus HTTP répondant. Conserver le texte de date et son éventuel fuseau sans déduire une conversion absente. Les réponses publiques de santé/disponibilité complètent le contrôle de disponibilité ; elles ne prouvent pas la version. Mettre ensuite REPRISE et le checkpoint opérateur à jour avec les preuves observées et le repli conservé.
 
+### Identité active et disponibilité constatées
+
+Après les étapes Manager et l’actualisation demandée, l’utilisateur a transmis les quatre champs suivants :
+
+| Champ | Relevé utilisateur |
+| --- | --- |
+| Version de l’application | `1.1.0` |
+| Commit au démarrage | `84669ed570b59b10a1a94a164f24f0e60e6cb5a7` |
+| Version Node.js | `v24.22.0` |
+| Relevé au démarrage | `20/10/2026 22:30:49` |
+
+Le texte affiché reste inchangé : fuseau du navigateur et epoch non fournis, aucune conversion inventée. Ce relevé authentifié confirme l’identité du processus HTTP répondant ; l’agent ne l’a pas lu directement. Aucun PID/socket ni hash du binaire effectivement exécuté n’est attesté, et les anciens essais SSH R1/R2 ne sont pas rejoués.
+
+À `2026-10-20T20:33:21.102792+00:00`, quatre GET anonymes directs (`/api/health`, `/api/ready` sur le domaine principal et l’alias recette) ont donné HTTP 200, le JSON exact `ok`/`ready`, `Cache-Control: no-store`, sans cookie ni redirection. L’outil web d’ouverture avait refusé ces URL ; les réponses ont ensuite été observées par les requêtes HTTPS directes bornées, avec vérification du certificat. Ces résultats prouvent la disponibilité, pas la version. [Relevé structuré](verification-proofs/jm110-verification.json).
+
+Le déploiement est identifié sur la référence publiée. Reste à écrire uniquement le checkpoint privé, en préservant l’ancien `activeService` 1.0.0 complet et tous les autres blocs. Aucun nouveau Build, test sur un client réel, opération PC ou manipulation des sauvegardes n’est demandé.
+
+### Alignement du checkpoint — seule étape restante
+
+Le [script épinglé](https://github.com/fredbuhr/jessiemessage/blob/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py), SHA-256 `eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591`, reprend le writer 1.0.0 avec les nouveaux pins. **4/4 tests ciblés** sur fichiers synthétiques réussissent : ancien `activeService` 1.0.0 complet sous `developmentSimplification.release110.rollback` avec empreinte, `release100` et autres blocs conservés, refus des divergences, idempotence, écriture atomique 0600 et relecture. Les vérifications de pins disque sont simulées dans ces tests ; leur constat sur l’hôte et le reçu serveur restent à obtenir. Le fichier publié a été relu identique au fichier local revu.
+
+Le script vérifie source/arbre propres, lanceur et Node épinglés avant d’écrire uniquement le checkpoint. Il ne redémarre pas le service. Verrou coopératif et comparaison d’octets/métadonnées avant remplacement, sans garantie CAS universelle. Après un résultat interrompu, inspecter le reçu et l’état durable avant toute autre opération. Le statut attendu est `release110_metadata_recorded` (ou `release110_metadata_already_recorded`) avec version `1.1.0`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`.
+
+```sh
+python3 - <<'PY110RECORD'
+import hashlib, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+exec(compile(code, "<enregistrement>", "exec"))
+PY110RECORD
+```
+
 ### Repli immédiat : 1.0.0
 
 Conserver le checkout `production-100-70b48aa8`, source `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, arbre `485cade0aeeee41cb4c34f913cd98f6078c4636b`, et le lanceur privé SHA-256 `aa400abaa54033308acce7f4b28649b33d4ecc5f7098eec7b020c05631123248`. Pour un repli, remettre ces deux champs dans les mêmes réglages Manager, puis suivre le même cycle Build et vérifier l’identité `1.0.0` dans l’administration.
@@ -127,7 +163,7 @@ Conserver le checkout `production-100-70b48aa8`, source `70b48aa845b70ca960724c8
 bash /srv/customer/jessiemessage-private/start-primary-release100-70b48aa8.sh
 ```
 
-**Build 1.0.0**, repris de [REPRISE](REPRISE.md#build-de-la-référence-active) :
+**Build 1.0.0**, conservé comme repli de cette livraison :
 
 ```sh
 cd /srv/customer/jessiemessage-operator/production-100-70b48aa8 &&

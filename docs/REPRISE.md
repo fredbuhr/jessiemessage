@@ -1,47 +1,49 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — production `1.0.0` harmonisée ; lecture privée `1.1.0` fusionnée, publiée et qualifiée, préparée sur Infomaniak, en attente d’activation.** L’identité active est confirmée par le relevé administrateur utilisateur et le checkpoint privé est aligné. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**20 octobre 2026 Europe/Paris — production `1.1.0`, lecture privée déployée et identité confirmée ; checkpoint opérateur encore enregistré en 1.0.0, alignement à terminer sans redémarrage.** Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## État de livraison
 
 | Élément | État constaté |
 | --- | --- |
-| Version active | **1.0.0**, confirmée par les quatre champs de l’administration transmis par l’utilisateur après actualisation. |
-| Commit actif et arbre du commit | `70b48aa845b70ca960724c8d37a6e94b3d5f47a8` / `485cade0aeeee41cb4c34f913cd98f6078c4636b`. Le commit affiché par le processus correspond exactement au tag livré. |
-| Tag/release | [v1.0.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0), publiée le 20 octobre à 20:22:02 Paris sur ce commit exact ; cible revérifiée. `main` peut avancer pour documenter les preuves. |
+| Version active | **1.1.0**, confirmée par les quatre champs de l’administration transmis par l’utilisateur après le cycle Manager guidé et l’actualisation demandée. |
+| Commit actif et arbre du commit | `84669ed570b59b10a1a94a164f24f0e60e6cb5a7` / `0201cdbd1932fd9104c04a91d63561010e8ae0c2`. Le commit affiché correspond exactement au tag livré. |
+| Tag/release | [v1.1.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0), publiée le 20 octobre à 20:21:26 UTC ; cible relue identique. `main` peut avancer pour documenter les preuves. |
 | Node actif | `v24.22.0`, valeur du processus dans le relevé admin. Node privé conservé ; binaire système fournisseur intact. |
-| Capture au démarrage affichée | `20/10/2026 21:16:28`, texte utilisateur conservé. Fuseau du navigateur non transmis ; aucune conversion UTC ou naissance OS déduite. |
-| Préparation et CI | `staged_precheck_passed`, sans fermeture en attente, avant activation ; [CI du commit exact](https://github.com/fredbuhr/jessiemessage/actions/runs/39471679954) 5/5 réussie. |
-| Disponibilité | Quatre GET publics santé/disponibilité conformes sur les deux origines, recontrôlés après le relevé utilisateur. Ils ne prouvent pas la version. |
-| Portée | Métadonnées, documentation et identité de démarrage ; aucun changement métier de messagerie, de dépendances ou de schéma SQL. |
-| Preuves | [Bilan 1.0.0](production-100.md) et [relevé structuré](verification-proofs/jm100-verification.json). Lecture admin rapportée par l’utilisateur, pas de GET privé direct de l’agent. R1/R2 SSH restent non concluants. |
-| Checkpoint privé | Aligné sur 1.0.0 / `70b48aa` : reçu utilisateur `release100_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. |
-| Évolution « Lecture privée » | [PR 110](https://github.com/fredbuhr/jessiemessage/pull/110) fusionnée, [v1.1.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0) publiée sur `84669ed570b59b10a1a94a164f24f0e60e6cb5a7`, arbre `0201cdbd1932fd9104c04a91d63561010e8ae0c2`. [CI exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) 5/5 réussie. Préparation SSH confirmée par reçu utilisateur `staged_precheck_passed`, `pendingClosures:false`, source/arbre exacts, Node 24.22.0 ; aucun Build/identité active 1.1.0 constaté. [Bilan et commandes de livraison](private-read-receipts-110.md). |
+| Capture au démarrage affichée | `20/10/2026 22:30:49`, texte utilisateur conservé. Fuseau du navigateur non transmis ; aucune conversion UTC ou naissance OS déduite. |
+| Préparation et CI | Reçu utilisateur `staged_precheck_passed`, sans fermeture en attente, avant activation ; [CI du commit exact](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) 5/5 réussie. |
+| Disponibilité | Quatre GET publics santé/disponibilité conformes sur les deux origines à `2026-10-20T20:33:21.102792+00:00` : HTTP 200, JSON attendu, `no-store`, aucun cookie. Ils ne prouvent pas la version. |
+| Portée | Jessie voit les reçus clients ; le client ne reçoit plus le curseur de lecture admin, API/export compris. Lectures propres et badges conservés. Aucune migration SQL ni dépendance nouvelle. |
+| Preuves | [Bilan 1.1.0](private-read-receipts-110.md) et [relevé structuré](verification-proofs/jm110-verification.json). Lecture admin rapportée par l’utilisateur, pas de GET privé direct de l’agent ; aucun test sur des contenus clients réels. |
+| Checkpoint privé | Dernier reçu acquis `release100_metadata_recorded` : encore **1.0.0** / `70b48aa`. L’identité de production est déjà **1.1.0** ; reste à aligner uniquement ce JSON. |
+| Repli immédiat | **1.0.0 / Node 24.22**, source `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, checkout et lanceur conservés ; détails ci-dessous et dans le bilan 1.1.0. |
 
-**Étape en cours :** activer la 1.1.0 dans le Manager existant avec les [Run/Build exacts](private-read-receipts-110.md#2-activation-par-le-manager), puis lire une identité fraîche dans l’administration après Actualiser la page. Le reçu SSH transmis par l’utilisateur confirme déjà la préparation : commit `84669ed5`, arbre ci-dessus, `pendingClosures:false`, `started:false`, `erased:false`, `managerChanged:false`, `runtimeStarted:false`. **Ne pas rejouer le staging.** Checkout `/srv/customer/jessiemessage-operator/production-110-84669ed5`, lanceur `/srv/customer/jessiemessage-private/start-primary-release110-84669ed5.sh` 0700, SHA-256 `4d28485da98fb33acdf0f50e2f420a43893f4c0c5495c068b6a6854de9e1cc8b` ; journal `jm110-node2422.log` 0600. Le script source et le reçu détaillé sont dans le bilan. La dernière identité active et le checkpoint restent **1.0.0**, conservée comme repli immédiat pour ce déploiement. Après preuve fraîche de 1.1.0, aligner le checkpoint en préservant l’ancien `activeService` complet et tous les autres blocs. Les preuves et la clôture 1.0.0 sont acquises : ne pas les redemander ni répéter ses scripts. Les autres évolutions restent séparées.
+**Étape en cours :** aligner uniquement le checkpoint privé sur la 1.1.0, en conservant l’ancien `activeService` 1.0.0 intégral sous `.developmentSimplification.release110.rollback` et tous les autres blocs, notamment `release100`. Le [script épinglé](https://github.com/fredbuhr/jessiemessage/blob/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py), SHA-256 `eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591`, est publié et relu identique ; 4/4 tests ciblés sur fichiers synthétiques réussis. [Commande SSH et portée](private-read-receipts-110.md#alignement-du-checkpoint--seule-étape-restante). Le reçu d’écriture serveur reste à obtenir. **Ne rejouer ni staging, ni Build, ni preuve admin déjà transmise.** Le script de métadonnées n’est pas une opération sur la messagerie, la base, le PC ou les sauvegardes. Les autres évolutions restent séparées.
 
-[Script de métadonnées exécuté](https://github.com/fredbuhr/jessiemessage/blob/002f26450a39b0fc937745f008e563efdb21ba66/ops/record-release100.py), SHA-256 `167ec69db5f6b86e85a4b437fbb6073aa21b523ab34f102993c4f4ace4fe13dd` : son reçu transmis par l’utilisateur confirme l’écriture 1.0.0 sur le commit exact, sans redémarrage, avec repli et autres blocs préservés. Le script vérifie source/arbre propres et pins du lanceur/Node sur disque, conserve l’ancien `activeService` intégral sous `.developmentSimplification.release100.rollback`, puis relit le JSON après remplacement atomique 0600. La nouvelle identité explicite la provenance admin utilisateur et ses limites. Verrou coopératif et contrôle préalable des octets/métadonnées, sans garantie CAS universelle. **4/4 tests ciblés** sur fichiers synthétiques précèdent cette exécution ; ils ne remplacent pas le reçu serveur.
-
-La [publication GitHub](https://github.com/fredbuhr/jessiemessage/actions/runs/39474081890) a été réalisée sans connexion web avec le jeton temporaire GitHub Actions. Le navigateur cloud est indisponible (`native credential state cannot be safely resumed`, y compris après réinitialisation) et aucun connecteur Infomaniak/SSH/SFTP utilisable n’a été trouvé. L’utilisateur exécute les commandes épinglées dans sa console SSH et utilise son navigateur habituel pour l’admin ; ne pas lui reproposer le navigateur cloud.
+La [publication GitHub](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a été réalisée avec le jeton temporaire GitHub Actions. Le navigateur cloud est indisponible (`native credential state cannot be safely resumed`) et aucun connecteur Infomaniak/SSH/SFTP utilisable n’a été trouvé. L’utilisateur exécute les commandes épinglées dans sa console SSH et utilise son navigateur habituel pour l’admin ; ne pas lui reproposer le navigateur cloud.
 
 ## Preuve d’identité et limites
 
 La lecture admin fraîche, après **Actualiser la page**, renvoie le snapshot capturé par le processus HTTP répondant : version lue dans son package, Git HEAD/propreté/racine vérifiés au démarrage, `process.version` et instant de capture. API et fetch utilisent `no-store` ; le service worker n’intercepte aucun fetch. Les quatre valeurs reçues sont celles du tableau ci-dessus.
 
-R1 a renvoyé `PROCESS_NOT_UNIQUE` ; R2 `PROCESS_NOT_FOUND`, zéro correspondance stricte/canonique, douze processus propres lisibles, aucun illisible, aucun candidat. Ces vérifications restent non concluantes et ne sont pas transformées en succès. Le relevé admin est une preuve distincte de l’identité applicative, sans attestation de PID/socket, d’empreinte du binaire effectivement exécuté ou de fonctionnement PC/sauvegardes. La cause de l’absence de candidat SSH n’est pas établie et ne conditionne plus une identité déjà confirmée par HTTP admin.
+Les essais SSH historiques R1/R2 de la 1.0.0 ont renvoyé respectivement `PROCESS_NOT_UNIQUE` et `PROCESS_NOT_FOUND`, zéro correspondance stricte/canonique, douze processus propres lisibles, aucun illisible, aucun candidat. Ces vérifications restent non concluantes et ne sont pas transformées en succès. Le relevé admin est une preuve distincte de l’identité applicative, sans attestation de PID/socket, d’empreinte du binaire effectivement exécuté ou de fonctionnement PC/sauvegardes. La cause de l’absence de candidat SSH n’est pas établie et ne conditionne plus une identité déjà confirmée par HTTP admin.
 
 ## Build de la référence active
 
-Commande documentée pour le service existant ; aucun Build à relancer pour cette harmonisation terminée.
+Commande de la référence 1.1.0 active ; aucun Build à relancer après l’identité déjà confirmée.
 
 ```sh
-cd /srv/customer/jessiemessage-operator/production-100-70b48aa8 &&
-test "$(git rev-parse HEAD)" = 70b48aa845b70ca960724c8d37a6e94b3d5f47a8 &&
-test "$(git rev-parse 'HEAD^{tree}')" = 485cade0aeeee41cb4c34f913cd98f6078c4636b &&
+cd /srv/customer/jessiemessage-operator/production-110-84669ed5 &&
+test "$(git rev-parse HEAD)" = 84669ed570b59b10a1a94a164f24f0e60e6cb5a7 &&
+test "$(git rev-parse 'HEAD^{tree}')" = 0201cdbd1932fd9104c04a91d63561010e8ae0c2 &&
 jm_build_status=$(git status --porcelain --untracked-files=normal) && test -z "$jm_build_status" &&
 test "$(sha256sum /srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node | cut -d ' ' -f 1)" = 67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c &&
 env -u NODE_OPTIONS -u NODE_PATH /srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node scripts/check-syntax.mjs
 ```
+
+## Validation de 1.1.0
+
+La [CI de la PR 110](https://github.com/fredbuhr/jessiemessage/actions/runs/39489455741) et celle du [commit exact livré](https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793) ont réussi 5/5 jobs : général **3 116 réussis, zéro échec, 35 ignorés** ; MariaDB **10.11 et 11.4 : 468/468 chacune sans omission** ; Chrome **165/165**, HTTPS/MariaDB **2/2**, syntaxe et build **570 sources**. Les omissions générales ne constituent pas une qualification native ; SQL et Chrome ont leurs jobs distincts. Ces suites ne sont pas relancées pour un simple enregistrement de preuves. Le [bilan](private-read-receipts-110.md) conserve les tests locaux et leurs limites ; l’identité déployée est la preuve admin utilisateur ci-dessus, distincte de la CI.
 
 ## Validation locale de 1.0.0
 
@@ -65,23 +67,23 @@ Les conversations sont conservées jusqu’à fermeture définitive, hors suppre
 
 | Élément | Valeur courante |
 | --- | --- |
-| Code exécuté | `70b48aa845b70ca960724c8d37a6e94b3d5f47a8` |
-| Arbre du commit | `485cade0aeeee41cb4c34f913cd98f6078c4636b` |
-| Checkout | `/srv/customer/jessiemessage-operator/production-100-70b48aa8` |
-| Run Manager | `bash /srv/customer/jessiemessage-private/start-primary-release100-70b48aa8.sh` |
-| Lanceur | 0700 ; SHA-256 au staging `aa400abaa54033308acce7f4b28649b33d4ecc5f7098eec7b020c05631123248` |
+| Code exécuté | `84669ed570b59b10a1a94a164f24f0e60e6cb5a7` |
+| Arbre du commit | `0201cdbd1932fd9104c04a91d63561010e8ae0c2` |
+| Checkout | `/srv/customer/jessiemessage-operator/production-110-84669ed5` |
+| Run Manager | `bash /srv/customer/jessiemessage-private/start-primary-release110-84669ed5.sh` |
+| Lanceur | 0700 ; SHA-256 au staging `4d28485da98fb33acdf0f50e2f420a43893f4c0c5495c068b6a6854de9e1cc8b` |
 | Node applicatif | `/srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node`, 0700 ; version 24.22.0 |
-| Binaire Node SHA-256 au staging | `67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c`. Remplace l’ancienne transcription invalide ; ce hash n’a pas été mesuré via le PID actif. |
-| Journal | `/srv/customer/jessiemessage-private/jm100-node2422.log`, 0600 |
+| Binaire Node SHA-256 au staging | `67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c`. Ce hash n’a pas été mesuré via le PID actif. |
+| Journal | `/srv/customer/jessiemessage-private/jm110-node2422.log`, 0600 |
 | Configuration | `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851` |
 | Opérations | `/srv/customer/jessiemessage-private/recurring-backup-052` |
-| Repli de la référence active 1.0.0 | 0.86/Node 24.22 : checkout `/srv/customer/jessiemessage-operator/production-086-c61d1eec`, source `c61d1eecfefe786254416652877ba82d30cf4c90`, arbre `78c8e46224503b0691b381bf07c5aefd51ca5c7f` ; Run `bash /srv/customer/jessiemessage-private/start-primary-node2422-c61d1eec.sh`, SHA-256 `e54392621a7f63f7665f44c191783d467ccb214630e65449fb4ae57138cc9881`. Build associé et détails dans le [bilan](production-100.md#repli-immédiat-conservé). |
+| Repli immédiat 1.0.0 | Source `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, arbre `485cade0aeeee41cb4c34f913cd98f6078c4636b`, checkout `/srv/customer/jessiemessage-operator/production-100-70b48aa8` ; Run `bash /srv/customer/jessiemessage-private/start-primary-release100-70b48aa8.sh`, lanceur SHA-256 `aa400abaa54033308acce7f4b28649b33d4ecc5f7098eec7b020c05631123248`. Même Node privé 24.22.0. [Build de repli](private-read-receipts-110.md#repli-immédiat--100). |
 
 Mode **`start-local-closures`**, `closuresEnabled:true`, port **3000 direct**, sans observateur/passerelle. Garder `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`. Six configurations, clés, base, médias, sessions, destinataire GPG et cadence réutilisés. Ne pas lancer un second parent SSH ni `capture --offline` pendant le service.
 
 Précontrôles du nouveau Node à **14:32:58.849424 UTC** : plateforme/JPEG/fichiers privés `checks_passed`, vrai décodeur photo fork normalisant PNG vers JPEG/vignette avec le binaire exact ; `local_closure_precheck/passed`, `pendingClosures:false`, `started:false`, `erased:false`, `externalContinuityVerified:false`. Dépendances verrouillées existantes réutilisées. Le lanceur vérifie SHA-256 et version Node avant `exec` ; le Build utilise également son chemin absolu. Utiliser ce Node pour toute commande opérateur JavaScript ; ne pas remplacer le binaire système.
 
-Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. État enregistré `activeService.release=1.0.0`, `activeService.source=70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, `activeService.nodeAfterDeployment=v24.22.0`, statut `identity_verified_via_admin_report`. `.developmentSimplification.release100.rollback` conserve l’ancien `activeService` complet comme repli immédiat 0.86/Node 24.22 ; reçu `rollbackPreserved:true`. `.nodeRuntimeUpdate.rollback` reste le repli historique Node 24.15 et n’a pas été réécrit ; anciens `.productionClosure`/`.chatSendAck`, S1/S2/S3, PC, autorité et D1 conservés dans les autres blocs (`otherBlocksPreserved:true`). Les anciennes preuves ne deviennent pas des observations fraîches de 1.0.0.
+Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. Dernier état enregistré **1.0.0** / `70b48aa`, statut `identity_verified_via_admin_report`. L’écriture 1.1.0 n’est pas encore constatée : elle doit conserver cet ancien `activeService` complet sous `.developmentSimplification.release110.rollback`, avec son empreinte, puis installer l’identité 1.1.0 et sa provenance admin utilisateur. `.developmentSimplification.release100` doit rester intact : il conserve le repli historique 0.86/Node 24.22. `.nodeRuntimeUpdate.rollback` reste le repli historique Node 24.15 ; anciens `.productionClosure`/`.chatSendAck`, S1/S2/S3, PC, autorité et D1 restent hors de cette écriture. Les anciennes preuves ne deviennent pas des observations fraîches de 1.1.0.
 
 ## Préserver PC, autorité et D1
 

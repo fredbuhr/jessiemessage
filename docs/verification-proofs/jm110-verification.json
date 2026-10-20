@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-20T20:36:05.906259+00:00",
+  "release": "1.1.0",
+  "source": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+  "tree": "0201cdbd1932fd9104c04a91d63561010e8ae0c2",
+  "status": "deployed_identity_verified_checkpoint_pending",
+  "identityEvidence": {
+    "method": "authenticated_admin_readiness_user_report_after_requested_refresh",
+    "url": "https://jessiemessage.com/admin/readiness",
+    "api": "GET /api/admin/readiness",
+    "directPrivateToolObservation": false,
+    "values": {
+      "version": "1.1.0",
+      "commit": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+      "nodeVersion": "v24.22.0",
+      "startedAtDisplay": "20/10/2026 22:30:49"
+    },
+    "displayTimezone": "not_reported",
+    "startedAtEpochInferred": false,
+    "meaning": "startup_identity_of_the_http_process_answering_the_authenticated_read",
+    "notAttested": [
+      "pid",
+      "socket_owner",
+      "executed_binary_hash",
+      "runtime_private_configs",
+      "production_client_message_flow",
+      "pc_or_backup_delivery"
+    ]
+  },
+  "github": {
+    "tag": "v1.1.0",
+    "tagTarget": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0",
+    "ciUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39490336793",
+    "ciHead": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+    "ciStatus": "completed",
+    "ciConclusion": "success",
+    "ciJobsPassed": 5
+  },
+  "staging": {
+    "provenance": "user_ssh_receipt",
+    "status": "staged_precheck_passed",
+    "checkout": "/srv/customer/jessiemessage-operator/production-110-84669ed5",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-release110-84669ed5.sh",
+    "launcherSha256": "4d28485da98fb33acdf0f50e2f420a43893f4c0c5495c068b6a6854de9e1cc8b",
+    "launcherMode": "0700",
+    "nodeBinarySha256": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+    "nodeVersion": "v24.22.0",
+    "log": "/srv/customer/jessiemessage-private/jm110-node2422.log",
+    "logMode": "0600",
+    "precheckLog": "/srv/customer/jessiemessage-private/jm110-preflight-84669ed5.log",
+    "precheckLogSha256": "cb5a9e6d1d1354abe8113cb12e7c6e3d636b5111041851ada88f85c5b845fea6",
+    "pendingClosures": false,
+    "started": false,
+    "erased": false,
+    "managerChanged": false,
+    "runtimeStarted": false,
+    "scope": "preparation_only_before_activation"
+  },
+  "publicHttpCheckedAt": "2026-10-20T20:33:21.102792+00:00",
+  "publicHttpChecks": [
+    {
+      "url": "https://jessiemessage.com/api/health",
+      "httpStatus": 200,
+      "body": {
+        "status": "ok"
+      },
+      "cacheControl": "no-store",
+      "setsCookie": false,
+      "authenticated": false,
+      "meaning": "availability_only",
+      "conformant": true
+    },
+    {
+      "url": "https://jessiemessage.com/api/ready",
+      "httpStatus": 200,
+      "body": {
+        "status": "ready"
+      },
+      "cacheControl": "no-store",
+      "setsCookie": false,
+      "authenticated": false,
+      "meaning": "availability_only",
+      "conformant": true
+    },
+    {
+      "url": "https://recette.jessiemessage.com/api/health",
+      "httpStatus": 200,
+      "body": {
+        "status": "ok"
+      },
+      "cacheControl": "no-store",
+      "setsCookie": false,
+      "authenticated": false,
+      "meaning": "availability_only",
+      "conformant": true
+    },
+    {
+      "url": "https://recette.jessiemessage.com/api/ready",
+      "httpStatus": 200,
+      "body": {
+        "status": "ready"
+      },
+      "cacheControl": "no-store",
+      "setsCookie": false,
+      "authenticated": false,
+      "meaning": "availability_only",
+      "conformant": true
+    }
+  ],
+  "publicCheckMethod": "direct_anonymous_https_no_redirect_certificate_verified_socket_timeout_5s_body_limit_1024bytes",
+  "rollback": {
+    "release": "1.0.0",
+    "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+    "tree": "485cade0aeeee41cb4c34f913cd98f6078c4636b",
+    "checkout": "/srv/customer/jessiemessage-operator/production-100-70b48aa8",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-release100-70b48aa8.sh",
+    "launcherSha256": "aa400abaa54033308acce7f4b28649b33d4ecc5f7098eec7b020c05631123248",
+    "nodeVersion": "v24.22.0"
+  },
+  "privateCheckpoint": {
+    "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
+    "lastRecordedRelease": "1.0.0",
+    "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+    "alignmentStatus": "pending",
+    "runtimeRestartRequired": false,
+    "serverExecution": "not_yet_observed",
+    "intendedRollbackPath": "developmentSimplification.release110.rollback",
+    "priorRelease100Preserved": "required",
+    "recorder": {
+      "commit": "fbe6b05f037326700228223ff0d25453af49659d",
+      "path": "ops/record-release110.py",
+      "sha256": "eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591",
+      "publishedFileMatchesLocal": true,
+      "targetedTests": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "synthetic_metadata_files_only_pins_checks_mocked"
+      },
+      "serverExecution": "not_yet_observed",
+      "preservation": "complete_previous_1.0.0_active_service_in_release110_rollback_and_unchanged_release100_and_other_blocks"
+    }
+  },
+  "scope": {
+    "messagingBusinessChange": true,
+    "dependencyUpdate": false,
+    "schemaMigration": false,
+    "pcAction": false,
+    "productionClientTestAction": false
+  }
+}
