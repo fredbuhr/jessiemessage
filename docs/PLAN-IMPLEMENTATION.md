@@ -1,12 +1,12 @@
 # Plan d'implémentation de JessieMessage
 
-**20 octobre 2026 — lot 3 en qualification ; serveur 0.81.0 déployé/vérifié ; mise à jour du PC existant en attente d’installation.** A05 corrigé ; A07 qualifié dans Windows et livré dans le kit. A08 : avertissement/dry-run livrés, exécuteur d’archivage actif différé ; A01 dépendance hébergeur indépendante. Lot 3 A06/A09/A10 codé et relu, CI/déploiement à vérifier ; lot 4 puis clôture à faire. Mutualisé actuel, KISS, aucun nouveau serveur ni abonnement. Lire [REPRISE](REPRISE.md), le [lot 2](audit-corrections-081.md) et les [preuves](verification-proofs/jm081-verification.json).
+**20 octobre 2026 — lot 3 livré : 0.82.0 déployé/vérifié, A06/A09/A10 corrigés.** Lots 1/2 préservés ; kit personnel A07 toujours en attente d’installation. A08 avertissement/dry-run livrés, exécuteur actif différé ; A01 dépendance hébergeur indépendante. Lot 4 puis clôture à faire. Mutualisé actuel, KISS, aucun nouveau serveur ni abonnement. Lire [REPRISE](REPRISE.md), le [lot 3](audit-corrections-082.md) et les [preuves](verification-proofs/jm082-verification.json).
 
 Ce plan S1/S2/S3 remplace l'ancien découpage en six lots. Le compteur « 4/6 » conservé dans les précédents en-têtes était obsolète ; il n'indique pas deux lots actuels oubliés. Les anciennes exigences de cadence externe fiable, d'alerte de panne totale et de recette sur deux appareils habituels ne sont pas déclarées acquises : leur portée réelle reste dans les limites en fin de document.
 
 ## Plan proposé des corrections — 20 octobre
 
-**Quatre lots correctifs, puis une clôture de livraison. Lot 1 applicatif livré/vérifié ; lot 2 serveur livré/vérifié, kit personnel à installer ; A01 ouvert, lots suivants à faire.** Ce découpage traite les constats de l’audit ; il n’ajoute aucune fonction produit et ne rouvre pas la livraison S1/S2/S3. Un lot peut demander plusieurs échanges ou PR : ce n’est pas une promesse de cinq messages ni une nouvelle échéance de production.
+**Quatre lots correctifs, puis une clôture de livraison. Lots 1/2/3 serveur livrés/vérifiés ; kit personnel A07 à installer ; A01 et exécuteur actif A08 ouverts séparément. Lot 4 puis clôture à faire.** Ce découpage traite les constats de l’audit ; il n’ajoute aucune fonction produit et ne rouvre pas S1/S2/S3. Un lot peut demander plusieurs échanges ou PR.
 
 | Ordre | Périmètre | Résultat attendu et critère de fin |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ Les déploiements suivent les lots terminés ; le lot 5 ne retarde pas tous les 
 
 A09 est indépendant des autres corrections de reprise et peut être livré plus tôt comme petit correctif autonome. A05 précède la qualification finale d’A07 si le volume ou le protocole de transfert change. Les tâches d’entretien et le traitement de durée de vie lointain ne retardent pas les corrections de fonctionnement courant.
 
-**Lots 1 et 2 serveur livrés :** 0.80 conserve A02/A03/A04/A11 ; PR #103 livre 0.81, CI candidat/main 6/6, 460/460 par MariaDB, Chrome 161, HTTPS/SQL 2, Windows natif, syntaxe 567. Déploiement vérifié à 03:48 Europe/Paris, dix empreintes et autorisation PC préservées. Kit A07 prêt, installation personnelle non observée. A08 rotation active et A01 Node 24.15.0 restent ouverts. Après bilan : lot 3, sans ouvrir automatiquement un nouveau lot dans la même livraison.
+**Lots 1/2/3 serveur livrés :** 0.80 conserve A02/A03/A04/A11 ; 0.81 corrige A05 et fournit le kit A07 ; PR #104 livre 0.82 (A06/A09/A10), CI candidat/main 5/5, 466/466 par MariaDB, Chrome 161, HTTPS/SQL 2, syntaxe 568. Déploiement vérifié à 12:25 Europe/Paris, dix empreintes et autorisation PC préservées. Installation personnelle A07, rotation active A08 et A01 Node 24.15.0 restent distincts et ouverts. Lot 3 terminé ; lot 4 après bilan, sans nouvelle architecture.
 
 ## Portée V1
 
@@ -74,4 +74,4 @@ Trois navigateurs ne prouvent pas toutes les plateformes physiques ni l'arrière
 
 L’[audit transversal du code](AUDIT-CODE-2026-10-20.md), demandé par le propriétaire après livraison, est terminé sur `f629137` ; [preuves](verification-proofs/jm079-audit-20261020.json). Les constats distinguent défauts reproduits, conditions non observées, durcissements et deux candidats navigateur. Aucun correctif applicatif ou changement de production dans ce lot. La clôture de S1/S2/S3 et leurs limites restent inchangées.
 
-**Lot 2 serveur livré/vérifié ; PC en attente d’installation du kit.** [Compte rendu](audit-corrections-081.md), [procédure et limites](backup-capacity-and-history-081.md). A02/A03/A04/A11 restent livrés en 0.80 ; A05 est corrigé en 0.81 ; A07 est qualifié dans Windows et présent dans le kit. A08 dispose d’un avertissement et d’un dry-run, sans exécuteur d’archivage actif. A01 reste une dépendance hébergeur indépendante. Après ce bilan, prochain lot de développement : lot 3 (A06/A09/A10). Aucun nouveau sous-lot d’architecture, VPS, budget, questionnaire, test de mail ou initialisation PC. Préserver PC, clés, autorité et D1.
+**Lot 3 livré/vérifié ; bilan terminé.** [Compte rendu](audit-corrections-082.md), [preuves](verification-proofs/jm082-verification.json). A06/A09/A10 corrigés et qualifiés sur synthétique, sans restauration de production. Lots 1/2 préservés ; kit A07 qualifié et disponible, installation personnelle non observée. A08 avertissement/dry-run livrés sans exécuteur actif, A01 dépendance hébergeur indépendante. Prochain lot : lot 4 (C01/C02 navigateur et entretien KISS), puis clôture. Aucun VPS, budget, questionnaire, mail de test ou initialisation PC. Préserver PC, clés, autorité et D1.

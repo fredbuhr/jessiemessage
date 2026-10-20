@@ -1,53 +1,51 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — lot 3 en qualification ; service 0.81.0 déployé et vérifié.** A05 corrigé ; copieur A07 qualifié dans Windows et présent dans le kit, **installation sur le PC personnel en attente**. A08 : avertissement déployé et dry-run synthétique qualifié, exécuteur d’archivage actif toujours différé. A01 reste une dépendance hébergeur indépendante. S1, S2a/S2b et S3 restent clos. Lire le [plan](PLAN-IMPLEMENTATION.md), le [lot 2](audit-corrections-081.md), les [limites/procédure](backup-capacity-and-history-081.md) et [AGENTS](../AGENTS.md). KISS permanent ; aucun nouveau serveur ni budget.
+**20 octobre 2026 Europe/Paris — lot 3 livré : 0.82.0 déployé et vérifié.** A06/A09/A10 corrigés ; lots 1/2 serveur conservés. Mise à jour personnelle du kit PC 0.81 toujours non observée. A08 : avertissement/dry-run livrés, exécuteur actif différé ; A01 dépendance hébergeur indépendante. S1/S2a/S2b/S3 restent clos. Lire le [plan](PLAN-IMPLEMENTATION.md), le [lot 3](audit-corrections-082.md), les [preuves](verification-proofs/jm082-verification.json) et [AGENTS](../AGENTS.md). KISS permanent, aucun nouveau serveur ni budget.
 
-L’ancien compteur « étape 4/6 » appartient au plan du 18 octobre, remplacé par S1/S2/S3 le 19. Le plan correctif courant comporte quatre lots puis une clôture : lot 1 applicatif livré en 0.80 ; lot 2 serveur livré en 0.81 avec installation PC distincte ; lots 3/4 et bilan final à faire. La livraison V1 n’atteste pas les garanties abandonnées de l’ancien périmètre.
+L’ancien compteur « étape 4/6 » appartient au plan du 18 octobre, remplacé par S1/S2/S3 le 19. Le plan correctif courant comporte quatre lots puis une clôture : lots 1/2/3 serveur livrés en 0.80/0.81/0.82 ; lot 4 et bilan final à faire. La livraison V1 n’atteste pas les garanties abandonnées de l’ancien périmètre.
 
 ## Audit et corrections courantes
 
-**Lot 3 en cours :** A06/A09/A10 codés et relus ; tests complets puis CI native et déploiement à vérifier. [Compte rendu](audit-corrections-082.md), [preuves](verification-proofs/jm082-verification.json). Aucun succès de production 0.82 n’est encore déclaré.
-
 L’[audit transversal](AUDIT-CODE-2026-10-20.md) porte sur `f629137`, code applicatif identique au runtime 0.79 de l’époque. [Preuves datées](verification-proofs/jm079-audit-20261020.json). Aucun P0/P1 ni accès intercompte démontré dans les surfaces examinées ; cela ne certifie pas leur absence. C01/C02 restent à confirmer au lot 4.
 
-**Lot 1 préservé :** A02/A03/A04/A11 livrés en 0.80, débits global/réseau atomiques, échéances revérifiées après verrous, rollback des diffusions expirées, HSTS hôte seul. [Compte rendu](audit-corrections-080.md), [preuves](verification-proofs/jm080-verification.json).
+- **Lot 1 :** A02/A03/A04/A11 livrés en 0.80, débits atomiques, échéances après verrous, rollback des diffusions expirées et HSTS hôte seul. [Compte rendu](audit-corrections-080.md).
+- **Lot 2 :** A05 borné à 1 Gio chiffré/50 000 objets non libérés sous verrou existant, sans réécrire les quotas. A07 vérifie/acquitte la dernière archive avant l’historique ; kit qualifié sous Windows, installation personnelle non observée. A08 avertit dès 1 500 reçus ou 3 072 entrées, dry-run synthétique qualifié ; aucun exécuteur actif. [Compte rendu](audit-corrections-081.md), [limites/procédure](backup-capacity-and-history-081.md).
+- **Lot 3 :** A06 reprend les médias absents après vérification complète, préserve/refuse tout fichier tronqué ou divergent, procédure vers une autre cible documentée. A09 remonte un arrêt forcé ou un drainage échoué en poursuivant le nettoyage. A10 compare exactement le schéma référencé dans sept validateurs FK. [Compte rendu](audit-corrections-082.md), [guide opérateur](manual-restore-operator-078.md).
 
-**Lot 2 serveur vérifié :** nouvelles réservations de photos bornées à 1 Gio chiffré et 50 000 objets non libérés sous le verrou SQL existant, sans réécrire les quotas persistés. Capture/reçu/admission partagent leurs limites. Le copieur valide tout le catalogue puis vérifie et acquitte la dernière archive avant les anciennes. Avertissement dès 1 500 reçus ou 3 072 entrées du dossier ; aucun effacement automatique. [Compte rendu et limites](audit-corrections-081.md), [preuves 0.81](verification-proofs/jm081-verification.json).
-
-Le budget média ne promet pas une croissance SQL illimitée : snapshot de 100 000 lignes cumulées, dump brut 64 Mio et autres limites existantes restent distincts. Le dry-run d’archivage qualifie sélection/copie et conservation du registre de fermetures courant/futur ; aucune transition active ni purge n’est implémentée. A08 reste ouvert pour cette partie.
-
-A01 reste ouvert : Manager limité au choix de branche majeure, branche 24 sélectionnée, binaire après livraison toujours **24.15.0**. Aucun runtime parallèle, changement de majeure ou d’offre. `npm audit` ne couvre pas les correctifs intégrés à Node.
+Le budget média ne promet pas une croissance SQL illimitée : snapshot de 100 000 lignes cumulées, dump brut 64 Mio et autres limites restent distincts. Le dry-run A08 conserve le registre des fermetures, sans transition active ni purge. A01 reste ouvert : Manager limité au choix de branche majeure, branche 24 sélectionnée, binaire toujours **24.15.0**. Aucun runtime parallèle, changement de majeure ou d’offre.
 
 ## Service courant et preuves
 
 Messagerie privée sur invitation, texte/photos, sessions indépendantes, CRM, export, notifications, copies chiffrées PC existantes, fermetures locales et récupération manuelle en maintenance. Conversations jusqu’à fermeture définitive, hors suppressions volontaires. [Guide quotidien](guide-jessie.md), [recette V1](messaging-acceptance-079.md).
 
-[PR #103](https://github.com/fredbuhr/jessiemessage/pull/103) fusionnée : candidat `f723b86f046bfe560c0cf1b267d89b946883e8ee`, merge **`4619c68f05e17accd2c98669377e6458fc4d1f14`**, arbre commun **`f623a5817e90eb1416d094b71a5a410723d05f4f`**. Six jobs candidat/main réussis : [CI candidat](https://github.com/fredbuhr/jessiemessage/actions/runs/39353610982), [Windows candidat](https://github.com/fredbuhr/jessiemessage/actions/runs/39353610976), [CI main](https://github.com/fredbuhr/jessiemessage/actions/runs/39354203686), [Windows main](https://github.com/fredbuhr/jessiemessage/actions/runs/39354203718). **3 067 tests généraux réussis / 35 wrappers SQL ignorés / zéro échec ; 460/460 sur chaque MariaDB 10.11 et 11.4 sans omission ; Chrome 161 ; HTTPS/SQL 2 ; PowerShell 5.1 natif ; syntaxe 567 ; aperçu construit.** Push source également vert. Local : 2 884 réussis, 214 ignorés, zéro échec ; ces omissions restent distinctes des preuves natives CI.
+[PR #104](https://github.com/fredbuhr/jessiemessage/pull/104) fusionnée : candidat `dc225b575401d60da35318d5f593f5ee383c3de2`, merge **`bfc2a2217bfb6ff06dcae340fd9fc7b640609865`**, arbre commun **`380b11faa02801a42eddf5bade4f66c45d901257`**. Cinq jobs [candidat](https://github.com/fredbuhr/jessiemessage/actions/runs/39405670555) et [main](https://github.com/fredbuhr/jessiemessage/actions/runs/39406423081) réussis ; [push source](https://github.com/fredbuhr/jessiemessage/actions/runs/39405664685) également vert. **3 085 tests généraux réussis / 35 wrappers SQL ignorés / zéro échec ; 466/466 sur chaque MariaDB 10.11 et 11.4 sans omission ; Chrome 161 ; HTTPS/SQL 2 ; syntaxe 568 ; aperçu construit.** Local : 2 902 réussis, 214 ignorés, zéro échec. Les omissions restent distinctes des preuves natives. Script Windows inchangé, qualification 0.81 conservée.
 
-Build normal du Manager réussi **20 octobre à 03:42 Europe/Paris**, sans réinstallation ni migration. À **01:48:32.150446 UTC / 03:48:32 Europe/Paris** : source/arbre/propreté, version/lanceur vérifiés ; dix empreintes sensibles et identité d’autorisation PC préservées ; reçu de démarrage du superviseur et moniteur **OK**. Santé/disponibilité HTTPS **200**, JSON attendu, `no-store`, sans cookie et HSTS unique sur les deux origines. Trois API privées et `/backups.js` **401 anonymes**, avec HSTS. Le fichier JS est protégé ; aucun GET administrateur authentifié observé. [Preuve Manager](verification-proofs/jm081-manager.jpg).
+A06 natif couvre import réel unique puis snapshot/empreintes et reprise des fichiers manquants, avec contexte/connecteurs injectés et loopback sans TLS ; il ne requalifie pas tout le contexte opérateur/TLS de production. Une vraie troncature reste refusée et conservée. A10 qualifie les six magasins et le garde d’effacement avec parents homonymes d’une autre base synthétique. A09 qualifie de vrais enfants, SIGTERM/SIGKILL et nettoyage après erreur.
 
-Diagnostic opérateur en lecture seule à **01:47:29.331 UTC** : inventaire complet/sain, deux photos, quatre fichiers, **380 528 octets**, aucune réservation, suppression en attente ou anomalie. Quotas SQL conservés 1 Gio/10 Gio ; budget effectif de nouvelle admission 1 Gio/50 000 objets. Catalogue : quatre archives, une destination raccordée, cadence 05:15 UTC, fraîcheur **OK**, aucun avertissement actuel. Kit de mise à jour généré en mémoire : six fichiers, 54 786 octets, copieur corrigé exact, aucun fichier d’appariement ; cela ne prouve pas son installation sur le PC.
+Build normal du Manager réussi **20 octobre à 12:22 Europe/Paris**, sans réinstallation ni migration. À **10:25:31.837903 UTC / 12:25:31 Europe/Paris** : source/arbre/propreté, version/lanceur vérifiés ; dix empreintes sensibles et identité d’autorisation PC préservées ; reçu de démarrage du superviseur et moniteur **OK**. Santé/disponibilité HTTPS **200**, JSON attendu, `no-store`, sans cookie et HSTS unique sur les deux origines. Trois API privées et `/backups.js` **401 anonymes**, avec HSTS. Aucun GET administrateur authentifié observé. [Preuve Manager](verification-proofs/jm082-manager.jpg).
 
-Les PID parent/enfant n’ont pas été observés depuis SSH. Le reçu du superviseur est émis après IPC et disponibilité HTTP réelle de l’enfant ; les pins et contrôles HTTPS frais complètent cette preuve. Aucun envoi réel, effacement de compte ni restauration de production pour valider.
+Les PID parent/enfant n’ont pas été observés depuis SSH. Le reçu du superviseur suit IPC et disponibilité HTTP réelle de l’enfant ; pins, composition locale, précontrôle et HTTPS frais complètent cette preuve. Aucun envoi réel, effacement de compte, arrêt forcé ni restauration de production pour valider.
+
+Sauvegarde quotidienne du **20 octobre 05:15 UTC** réussie avant livraison, runtime repris ; mesure en lecture seule à 09:57 UTC : dix reçus, une destination raccordée, moniteur OK. Diagnostic historique complet 0.81 (inventaire, catalogue, kit généré en mémoire) dans les [preuves 0.81](verification-proofs/jm081-verification.json) ; aucune installation PC déduite de ces mesures.
 
 ## Pins à utiliser
 
 | Élément | Valeur courante |
 | --- | --- |
-| Code exécuté | `4619c68f05e17accd2c98669377e6458fc4d1f14` |
-| Arbre | `f623a5817e90eb1416d094b71a5a410723d05f4f` |
-| Checkout | `/srv/customer/jessiemessage-operator/audit-lot2-081-4619c68f` |
-| Run Manager | `bash /srv/customer/jessiemessage-private/start-primary-audit-lot2-081-4619c68f.sh` |
-| Lanceur | 0700 ; SHA-256 `3a9eaa9689e95611a825890704d6462b7d20737dab03b2ea36125894c47fecde` |
-| Journal | `/srv/customer/jessiemessage-private/jm081-audit-lot2.log`, 0600 |
+| Code exécuté | `bfc2a2217bfb6ff06dcae340fd9fc7b640609865` |
+| Arbre | `380b11faa02801a42eddf5bade4f66c45d901257` |
+| Checkout | `/srv/customer/jessiemessage-operator/audit-lot3-082-bfc2a221` |
+| Run Manager | `bash /srv/customer/jessiemessage-private/start-primary-audit-lot3-082-bfc2a221.sh` |
+| Lanceur | 0700 ; SHA-256 `138ee9d32e999eace6d48cfca62893d4e29ac73ec3ff409010ec175f993c9abb` |
+| Journal | `/srv/customer/jessiemessage-private/jm082-audit-lot3.log`, 0600 |
 | Configuration | `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851` |
 | Opérations | `/srv/customer/jessiemessage-private/recurring-backup-052` |
 
-Mode **`start-local-closures`**, `closuresEnabled:true`, port **3000 direct**, sans observateur/passerelle. Garder `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`. Six configurations, clés, base, médias, sessions, destinataire GPG et cadence réutilisés. Ne pas lancer un second parent depuis SSH ni `capture --offline` pendant le service.
+Mode **`start-local-closures`**, `closuresEnabled:true`, port **3000 direct**, sans observateur/passerelle. Garder `JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd`. Six configurations, clés, base, médias, sessions, destinataire GPG et cadence réutilisés. Ne pas lancer un second parent SSH ni `capture --offline` pendant le service.
 
-Précontrôle 0.81 à **01:36:11.290382 UTC** : `local_closure_precheck / passed`, `pendingClosures:false`, `started:false`, `erased:false`, `externalContinuityVerified:false`. Dépendances réutilisées après comparaison des lockfiles en excluant seulement les deux versions racine.
+Précontrôle 0.82 à **10:14:19.614979 UTC** : `local_closure_precheck / passed`, `pendingClosures:false`, `started:false`, `erased:false`, `externalContinuityVerified:false`. Dépendances réutilisées après comparaison des lockfiles en excluant seulement les deux versions racine.
 
-Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. `activeService.release=0.81.0` ; `developmentSimplification.auditCorrections.lot=2`, statut `server_deployed_verified_pc_update_pending`. Le lot 1 complet est conservé sous `.auditCorrections.lot1`, le repli immédiat sous `.auditCorrections.rollback`. S1/S2/S3, PC, autorité et D1 restent préservés ; aucun journal parallèle.
+Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. `activeService.release=0.82.0` ; `developmentSimplification.auditCorrections.lot=3`, statut `server_deployed_verified`. Le lot 2 complet est conservé sous `.auditCorrections.lot2`, avec lot 1 et ancien historique ; repli immédiat sous `.auditCorrections.rollback`. S1/S2/S3, PC, autorité et D1 restent préservés ; aucun journal parallèle.
 
 ## Seule action personnelle du lot 2 en attente
 
@@ -73,6 +71,6 @@ La [surveillance](../MONITORING.md) garde ses limites : moniteur local/mails acc
 
 ## Repli et prochaine action
 
-**Repli immédiat : 0.80.0**, source `eb3e93c534bdfe5d426b1be42d6bebb093b548ce`, arbre `60eeeb39bf22f0ac894e46b8d444b18a795a2167`, checkout `/srv/customer/jessiemessage-operator/audit-lot1-080-eb3e93c5`. Run `bash /srv/customer/jessiemessage-private/start-primary-audit-lot1-080-eb3e93c5.sh`, lanceur 0700, SHA-256 `a8a73bfd7d4dc8dc0d901ae4c47ddc4fef94cb2ecfbecf80a759ffcb006f7e40`. Commandes exactes sous `.auditCorrections.rollback`. Aucun retour SQL ni suppression de journal. Replis 0.79 et 0.76 conservés historiquement ; une intention inachevée garde sa barrière.
+**Repli immédiat : 0.81.0**, source `4619c68f05e17accd2c98669377e6458fc4d1f14`, arbre `f623a5817e90eb1416d094b71a5a410723d05f4f`, checkout `/srv/customer/jessiemessage-operator/audit-lot2-081-4619c68f`. Run `bash /srv/customer/jessiemessage-private/start-primary-audit-lot2-081-4619c68f.sh`, lanceur 0700, SHA-256 `3a9eaa9689e95611a825890704d6462b7d20737dab03b2ea36125894c47fecde`. Commandes exactes sous `.auditCorrections.rollback`. Aucun retour SQL ni suppression de journal. Replis 0.80/0.79/0.76 conservés historiquement ; une intention inachevée garde sa barrière.
 
-**Lot 2 : bilan serveur terminé, kit personnel en attente d’installation.** Après ce bilan, prochain lot de développement : lot 3 (A06/A09/A10, restauration/arrêt/FK), sur cibles synthétiques seulement. A01 et l’exécuteur A08 restent ouverts séparément. Aucun VPS, budget, questionnaire, mail de test ou appariement. Préserver PC, clés, autorité et D1. [Historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md), [état avant 0.81](https://github.com/fredbuhr/jessiemessage/blob/4619c68f05e17accd2c98669377e6458fc4d1f14/docs/REPRISE.md).
+**Lot 3 terminé : bilan livré.** Prochain lot de développement : lot 4 (C01/C02 navigateur, documentation courante et entretien KISS), puis clôture de livraison. A01, installation personnelle A07 et exécuteur A08 restent ouverts séparément. Aucun VPS, budget, questionnaire, mail de test ou appariement. Préserver PC, clés, autorité et D1. [Historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md), [état avant 0.82](https://github.com/fredbuhr/jessiemessage/blob/bfc2a2217bfb6ff06dcae340fd9fc7b640609865/docs/REPRISE.md).

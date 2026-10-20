@@ -2,7 +2,7 @@
   "format": "jessiemessage-audit-lot3-verification",
   "version": 1,
   "release": "0.82.0",
-  "status": "local_qualified_ci_pending",
+  "status": "server_deployed_verified",
   "baseline": {
     "source": "ad7292a418da1e178b6488e3fde6f7da0b4245d1",
     "tree": "3258101e28ff8f71ce9970e5eca88c272f6cce51",
@@ -40,7 +40,11 @@
   "limits": {
     "personalPcUpdateInstallationObserved": false,
     "nodeProviderPatchPending": true,
-    "a08ArchiveExecutorImplemented": false
+    "a08ArchiveExecutorImplemented": false,
+    "nativeResumeFixture": "real SQL import once and snapshot/hash verification; injected context/connectors and loopback without TLS; full production operator/TLS path not requalified",
+    "windowsScriptChanged": false,
+    "windowsRequalifiedInThisLot": false,
+    "wholeProductionReadinessDeclared": false
   },
   "local": {
     "node": "24.19.0",
@@ -58,5 +62,245 @@
       "A10 schema validation"
     ],
     "nativeSqlLocalExecuted": false
+  },
+  "candidate": {
+    "pr": 104,
+    "source": "dc225b575401d60da35318d5f593f5ee383c3de2",
+    "tree": "380b11faa02801a42eddf5bade4f66c45d901257",
+    "ci": 39405670555,
+    "sourcePushCi": 39405664685,
+    "status": "passed",
+    "general": {
+      "tests": 3120,
+      "pass": 3085,
+      "fail": 0,
+      "skipped": 35
+    },
+    "syntaxFiles": 568,
+    "chrome": {
+      "tests": 161,
+      "pass": 161,
+      "fail": 0,
+      "skipped": 0
+    },
+    "httpsSql": {
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    "jobsPassed": 5,
+    "sourcePushPassed": true,
+    "nativeSql": [
+      {
+        "mariadb": "10.11",
+        "tests": 466,
+        "pass": 466,
+        "fail": 0,
+        "skipped": 0,
+        "interruptedMediaResumePassed": true,
+        "foreignSchemaCasesPassed": 6
+      },
+      {
+        "mariadb": "11.4",
+        "tests": 466,
+        "pass": 466,
+        "fail": 0,
+        "skipped": 0,
+        "interruptedMediaResumePassed": true,
+        "foreignSchemaCasesPassed": 6
+      }
+    ],
+    "offlinePreviewBuilt": true
+  },
+  "main": {
+    "source": "bfc2a2217bfb6ff06dcae340fd9fc7b640609865",
+    "tree": "380b11faa02801a42eddf5bade4f66c45d901257",
+    "ci": 39406423081,
+    "status": "passed",
+    "jobsPassed": 5,
+    "general": {
+      "tests": 3120,
+      "pass": 3085,
+      "fail": 0,
+      "skipped": 35
+    },
+    "nativeSql": [
+      {
+        "mariadb": "10.11",
+        "tests": 466,
+        "pass": 466,
+        "fail": 0,
+        "skipped": 0,
+        "interruptedMediaResumePassed": true,
+        "foreignSchemaCasesPassed": 6
+      },
+      {
+        "mariadb": "11.4",
+        "tests": 466,
+        "pass": 466,
+        "fail": 0,
+        "skipped": 0,
+        "interruptedMediaResumePassed": true,
+        "foreignSchemaCasesPassed": 6
+      }
+    ],
+    "chrome": {
+      "tests": 161,
+      "pass": 161,
+      "fail": 0,
+      "skipped": 0
+    },
+    "httpsSql": {
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    "syntaxFiles": 568,
+    "offlinePreviewBuilt": true
+  },
+  "preparation": {
+    "checkout": "/srv/customer/jessiemessage-operator/audit-lot3-082-bfc2a221",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-audit-lot3-082-bfc2a221.sh",
+    "launcherSha256": "138ee9d32e999eace6d48cfca62893d4e29ac73ec3ff409010ec175f993c9abb",
+    "launcherMode": "0700",
+    "log": "/srv/customer/jessiemessage-private/jm082-audit-lot3.log",
+    "logMode": "0600",
+    "preparedAt": "2026-10-20T10:15:57.210711+00:00",
+    "preflightAt": "2026-10-20T10:14:19.614979+00:00",
+    "preflight": {
+      "version": 1,
+      "type": "local_closure_precheck",
+      "status": "passed",
+      "scope": "local_application",
+      "pendingClosures": false,
+      "started": false,
+      "erased": false,
+      "externalContinuityVerified": false
+    },
+    "sameLockedDependencies": true,
+    "preservedSensitiveHashes": 10,
+    "pairedIdentityPreserved": true
+  },
+  "deployment": {
+    "checkout": "/srv/customer/jessiemessage-operator/audit-lot3-082-bfc2a221",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-audit-lot3-082-bfc2a221.sh",
+    "launcherSha256": "138ee9d32e999eace6d48cfca62893d4e29ac73ec3ff409010ec175f993c9abb",
+    "launcherMode": "0700",
+    "log": "/srv/customer/jessiemessage-private/jm082-audit-lot3.log",
+    "logMode": "0600",
+    "release": "0.82.0",
+    "source": "bfc2a2217bfb6ff06dcae340fd9fc7b640609865",
+    "tree": "380b11faa02801a42eddf5bade4f66c45d901257",
+    "status": "server_deployed_verified",
+    "applicationRequestedAt": "2026-10-20T10:20:36.068782+00:00",
+    "verifiedAt": "2026-10-20T10:25:31.837903+00:00",
+    "managerBuildMinuteParis": "2026-10-20 12:22",
+    "mode": "start-local-closures",
+    "closuresEnabled": true,
+    "closuresEnabledEvidence": "pinned start-local-closures composition, passed preflight and real startup receipt",
+    "port": 3000,
+    "preservedSensitiveHashes": 10,
+    "pairedDestinations": 1,
+    "pairedIdentityPreserved": true,
+    "supervisorStartedReceiptObserved": true,
+    "monitorCode": "OK",
+    "monitorCheckedAt": 1792491874734,
+    "nodeAfterDeployment": "v24.15.0",
+    "dependenciesReinstalled": false,
+    "schemaMigrationRun": false,
+    "gatewayOrObserverAdded": false,
+    "sshParentAndChildPidsObserved": false,
+    "authenticatedPrivateGetObserved": false,
+    "httpChecks": [
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "expectedJsonStatus": "ok",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "expectedJsonStatus": "ready",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "expectedJsonStatus": "ok",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "expectedJsonStatus": "ready",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/backups",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/privacy",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/closures",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/backups.js",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      }
+    ],
+    "managerScreenshot": "docs/verification-proofs/jm082-manager.jpg",
+    "managerScreenshotSha256": "72824dfdac5f22aecb92cbf133f06a5835d15c31976112e42856f2d6a65ad235"
+  },
+  "rollback": {
+    "release": "0.81.0",
+    "source": "4619c68f05e17accd2c98669377e6458fc4d1f14",
+    "tree": "f623a5817e90eb1416d094b71a5a410723d05f4f",
+    "checkout": "/srv/customer/jessiemessage-operator/audit-lot2-081-4619c68f",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-audit-lot2-081-4619c68f.sh",
+    "launcherSha256": "3a9eaa9689e95611a825890704d6462b7d20737dab03b2ea36125894c47fecde",
+    "checkpointField": "developmentSimplification.auditCorrections.rollback"
+  },
+  "findings": {
+    "A06": "corrected and qualified: verify all existing files, copy missing only; preserve/refuse truncated files, explicit new isolated job documented",
+    "A09": "corrected and qualified: forced or failed shutdown propagates failure while later cleanup continues",
+    "A10": "corrected and qualified: exact current referenced schema in seven local validators; six native cross-schema store cases plus erasure guard",
+    "A07": "unchanged from0.81: kit qualified and deployed, personal PC installation not observed",
+    "A08": "warning and dry-run delivered in0.81; active archival executor deferred",
+    "A01": "provider Node patch pending independently"
   }
 }
