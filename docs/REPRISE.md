@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — production `1.1.0` inchangée, identité et checkpoint alignés ; profil et expressions `1.2.0` publiés, préparation Infomaniak confirmée, contrôle SQL en attente de correction des identifiants du compte de migration.** Les releases 1.1.1 et 1.2.0 sont vérifiées ; le reçu utilisateur confirme le staging des deux versions, sans migration 0031 ni activation 1.2.0. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — production `1.1.0` inchangée, identité et checkpoint alignés ; profil et expressions `1.2.0` publiés, préparation Infomaniak et contrôle SQL confirmés ; arrêt Manager puis migration 0031 et précontrôles à réaliser.** Les releases 1.1.1 et 1.2.0 sont vérifiées ; le reçu utilisateur confirme le staging des deux versions, sans migration 0031 ni activation 1.2.0. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## État de livraison
 
@@ -20,7 +20,7 @@
 | Nouvelle livraison | **[1.2.0 publiée](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0)** sur `763b632185ce13eb875110c9107687b2d278ff67`, arbre `c7dce7bcdb99b298ffc43c9e31dd22ee87453926` ; [PR 112](https://github.com/fredbuhr/jessiemessage/pull/112), [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614) 5/5 et [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500847054). Profil, avatar et 180 emojis ; [bilan](profile-expressions-120.md). **Non déployée.** |
 | Précondition de migration | [v1.1.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.1) publiée sur `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1` ; [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39499262875) 5/5 et [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500076798). Repli compatible avec le schéma 31, **préparé** sur l’hébergement selon le reçu `staged_awaiting_schema31`, mais pas encore précontrôlé ni exécuté. Aucun changement de runtime ou de base ; `0031` non appliquée. |
 
-**Étape en cours :** corriger l’accès du compte SQL de migration, puis relancer le diagnostic r2 pendant que le service reste ouvert. Reçu r2 transmis : `migration_status_not_confirmed`, phase `sql_connection`, code `SQL_AUTHENTICATION_REFUSED`, `readOnly:true`, `migrated:false`, `noRestart:true`. Les imports, la lecture de configuration privée et le chargement du plan sont passés ; le serveur SQL a refusé l’authentification. Ce reçu ne distingue pas mot de passe incorrect et compte/accès refusé. Le premier helper ne fournissait qu’un message global. Aucune migration ni activation n’a été exécutée par ce contrôle. La commande de préparation est déjà exécutée : ne pas la rejouer. Attendu : 31 migrations prévues, 30 appliquées, une en attente et aucun état interrompu. Après ce contrôle, guider l’arrêt Manager avant la DDL, la migration et les précontrôles. **Dès que 0031 est marquée en cours, ne pas redémarrer 1.1.0/1.0.0 ; le repli 1.1.1 exige un schéma 31 entièrement conforme.**
+**Étape en cours :** arrêter le service Node existant dans le Manager, puis exécuter la [migration et les précontrôles épinglés](#migration-0031-et-précontrôles--à-exécuter-après-arrêt-manager). Le dernier reçu utilisateur du diagnostic r2 est `checked` : moteur et transport vérifiés, **31 migrations prévues, 30 appliquées, une en attente, aucun état interrompu**, `readOnly:true`, `migrated:false`, `noRestart:true`. Le contrôle SQL est terminé. L’arrêt Manager, la migration, les précontrôles et l’activation ne sont pas encore rapportés. Ne pas rejouer le staging. **Dès que 0031 est marquée en cours, ne pas redémarrer 1.1.0/1.0.0 ; le repli 1.1.1 exige un schéma 31 entièrement conforme.**
 
 Le lot 1.1.0 reste clos : reçu SSH utilisateur `release110_metadata_recorded` sur le commit actif, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. Le [script exécuté](https://github.com/fredbuhr/jessiemessage/blob/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py), SHA-256 `eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591`, conserve l’ancien `activeService` 1.0.0 intégral sous `.developmentSimplification.release110.rollback`, avec son empreinte, et préserve notamment `release100`. [Reçu et portée](private-read-receipts-110.md#alignement-du-checkpoint--réalisé). Ne rejouer ni enregistrement, ni staging, ni Build, ni preuve admin déjà transmise. Les chantiers PC/sauvegardes restent différés.
 
@@ -37,26 +37,42 @@ Reçu SSH transmis par l’utilisateur : `staged_awaiting_schema31`, deux source
 
 Lanceurs 0700, journaux 0600 vides. Les deux scripts `check-primary-release…` sont présents mais n’ont pas été exécutés. `rollback111Prepared:true` et `rollback111HostedQualified:false` : la préparation ne vaut pas qualification du runtime ou du schéma hébergé.
 
-## Contrôle SQL avant migration — authentification à corriger puis r2 à relancer
+## Contrôle SQL avant migration — validé
 
-Le premier [helper](https://github.com/fredbuhr/jessiemessage/blob/9ba7a9a38a22812d4739892ea4b58d4a9258bd08/ops/status-release120-migration.sh) a été exécuté : contrôle non confirmé, sans DDL ni redémarrage. Son message global ne distinguait pas lecture privée, connexion et historique ; ne pas le relancer pour découvrir la cause.
+Le [diagnostic r2 épinglé](https://github.com/fredbuhr/jessiemessage/blob/670b9efcd90cd97aaa8d21621e38bf770fb3d835/ops/status-release120-migration-r2.sh), SHA-256 `d89e16a9340a9f1ab41ae4838c74f0d1891b9218c2969fc2b91204c8a19df542`, a finalement renvoyé le reçu utilisateur attendu :
 
-Le [diagnostic r2 épinglé](https://github.com/fredbuhr/jessiemessage/blob/670b9efcd90cd97aaa8d21621e38bf770fb3d835/ops/status-release120-migration-r2.sh), SHA-256 `d89e16a9340a9f1ab41ae4838c74f0d1891b9218c2969fc2b91204c8a19df542`, conserve le lecteur privé, le plan et `run(status)` de 1.1.1. Son connecteur reprend `databaseOptions` et TLS vérifié ; seuls des codes d’erreur autorisés et une phase fixe sont renvoyés, jamais le message natif, SQL, mot de passe ou cible. L’écho du terminal est coupé avant le prompt secret, puis restauré. Syntaxe Bash/JS et **13 tests synthétiques** de diagnostic/TTY/confidentialité réussis ; le vrai validateur, lecteur de saisie, plan de 31 fichiers et migrateur passent aussi avec connexion/statut simulés et application DDL interdite. Le lecteur de fichier privé reste explicitement non vérifié dans ce sandbox dépourvu de `/proc/self/fd` ; ce manque local ne décrit pas l’hébergement.
-
-```sh
-python3 - <<'PY_STATUS'
-import hashlib, subprocess, urllib.request
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/670b9efcd90cd97aaa8d21621e38bf770fb3d835/ops/status-release120-migration-r2.sh"
-code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != "d89e16a9340a9f1ab41ae4838c74f0d1891b9218c2969fc2b91204c8a19df542":
-    raise SystemExit("Empreinte incorrecte : arrêt.")
-raise SystemExit(subprocess.run(["bash", "-s"], input=code).returncode)
-PY_STATUS
+```json
+{"status":"checked","engineVerified":true,"transportVerified":true,"migrations":31,"applied":30,"pending":1,"interrupted":false,"readOnly":true,"migrated":false,"noRestart":true,"diagnosticRevision":2,"source":"cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a","version":"1.1.1"}
 ```
 
-Le contrôle reprend host/port/base dans la configuration privée et demande seulement le nom puis le mot de passe du compte SQL de migration. Il ne crée ni table ni compte et ne redémarre rien. Ne transmettre au chat que le reçu neutre ; les identifiants restent dans la console personnelle. Ce contrôle confirme le moteur, TLS et l’historique, pas les droits DDL. Attendre `status:"checked"`, `migrations:31`, `applied:30`, `pending:1`, `interrupted:false`, `readOnly:true`, `migrated:false` et `noRestart:true`. Les champs source/version désignent l’outil 1.1.1, pas la version active du serveur. Le dernier reçu r2 est un refus d’authentification SQL. Vérifier le nom exact du compte de migration et son mot de passe conservé ; si nécessaire, redéfinir uniquement le mot de passe de ce compte dans le Manager (`Bases de données → Utilisateurs → ⋮ → Modifier → Modifier le mot de passe → Enregistrer`), puis relancer le même diagnostic. Le compte applicatif et sa configuration privée restent inchangés. Aucune correction d’accès ni réussite SQL n’a encore été rapportée. Un autre code exige une inspection avant arrêt ou migration.
+Ce reçu confirme la lecture privée hébergée, le moteur, TLS et l’historique, pas les droits DDL. Les champs source/version désignent l’outil 1.1.1, pas la version active du serveur. Les tentatives antérieures restent conservées dans les [preuves structurées](verification-proofs/jm120-verification.json) : premier helper non confirmé, puis refus d’authentification SQL du diagnostic r2. Elles ne sont pas réécrites en succès et n’ont exécuté aucune migration. Aucun identifiant ni mot de passe n’est consigné ici.
 
-Après le résultat attendu seulement : guider l’arrêt du service dans le Manager, puis `upgrade` avec le migrateur existant. La migration 0031 crée une table vide mais prend des verrous SQL ; le verrou migrateur seul n’exclut pas les écritures de l’application. Prévoir une coupure maîtrisée entre l’arrêt et l’activation. Après DDL, vérifier 31 migrations conformes puis les précontrôles 1.1.1/1.2.0 avant le Run 1.2.0. Toute migration interrompue ou erreur DDL exige une inspection, sans retour SQL automatique ni reprise de 1.1.0/1.0.0. Identité admin fraîche et alignement du checkpoint restent distincts. Aucun nouvel essai PC/Avast ni sauvegarde/restauration de production n’est ajouté.
+Le diagnostic r2 conserve le lecteur privé, le plan et `run(status)` de 1.1.1 ; son connecteur reprend `databaseOptions` et TLS vérifié. Syntaxe Bash/JS et 13 tests synthétiques de diagnostic/TTY/confidentialité réussis. Le vrai validateur, lecteur de saisie, plan de 31 fichiers et migrateur passent avec connexion/statut simulés. Le lecteur de fichier privé n’était pas vérifiable localement faute de `/proc/self/fd` dans ce sandbox ; le reçu hébergé réussi fournit désormais la preuve distincte de ce parcours sur l’hébergement.
+
+## Migration 0031 et précontrôles — à exécuter après arrêt Manager
+
+**Non exécuté à ce relevé :** ni arrêt Manager, ni migration 0031, ni précontrôle hébergé, ni activation 1.2.0 rapportés. Le [helper épinglé](https://github.com/fredbuhr/jessiemessage/blob/292e05fbeae29dfbe706c345434244696e0976f0/ops/upgrade-release120.sh), SHA-256 `f72170b16b0d095434a2d739b5fdb5b7724493fedf4f63d6c7dfd56f2aaa79f3`, est publié et qualifié par **14 tests synthétiques TTY**, avec le vrai `run` et le plan de 31 migrations, SQL simulé. La DDL réelle reste qualifiée par les CI inchangées des releases ; les tests de ce helper n’exécutent aucun SQL hébergé.
+
+1. Dans le Manager, ouvrir le **site Node actuellement nommé `recette.jessiemessage.com`**, qui partage le runtime et la base du principal, puis cliquer **Arrêter/Stop** et attendre l’état arrêté. Une courte coupure est nécessaire entre cet arrêt et l’activation. L’arrêt n’est pas réalisé par le helper.
+2. Après cet arrêt seulement, exécuter la commande ci-dessous dans la console SSH. `--service-stopped` est une **attestation de l’opérateur**, pas une vérification automatique du Manager. Le helper demande le compte SQL de migration existant et son mot de passe masqué ; ne transmettre que les JSON.
+
+```sh
+python3 - <<'PY_UPGRADE'
+import hashlib, subprocess, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/292e05fbeae29dfbe706c345434244696e0976f0/ops/upgrade-release120.sh"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "f72170b16b0d095434a2d739b5fdb5b7724493fedf4f63d6c7dfd56f2aaa79f3":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+raise SystemExit(subprocess.run(["bash", "-s", "--", "--service-stopped"], input=code).returncode)
+PY_UPGRADE
+```
+
+Le helper vérifie les deux sources/arbres Git propres, le Node privé 24.22.0, les quatre lanceurs et les métadonnées des journaux avant la saisie et la DDL. Il relit le statut, exige 31/30/1 sans interruption, puis appelle le migrateur existant `upgrade` pour la seule migration 0031. Si le schéma est déjà conforme à 31/31/0, il n’applique aucune nouvelle DDL. Toute autre histoire est refusée. Le statut final doit confirmer 31 migrations appliquées avant les précontrôles `check-primary-release111…` puis `check-primary-release120…`, bornés chacun à 60 secondes. Les journaux privés existants sont conservés, sans troncature ; leurs contenus restent privés. Aucun lanceur `start`, changement Manager ou écriture du checkpoint n’est effectué.
+
+Attendre le dernier reçu **`schema31_prechecks_passed`**, `schema31Confirmed:true`, `rollback111HostedQualified:true`, `release120PrecheckPassed:true`, `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false`. Le reçu intermédiaire `schema31_confirmed_before_prechecks` confirme le schéma avant les deux contrôles, pas leur réussite. Si une tentative de migration échoue, son état peut être partiellement engagé : inspecter le registre et la DDL avant toute reprise ; aucun retry aveugle, retour SQL automatique ou redémarrage 1.1.0/1.0.0. Un précontrôle refusé garde le service arrêté pour inspection.
+
+3. Après réception et revue du reçu final réussi seulement, remplacer la commande Run dans le Manager par `bash /srv/customer/jessiemessage-private/start-primary-release120-763b6321.sh`, puis démarrer la 1.2.0. L’arrêt et le démarrage restent deux opérations distinctes ; la 1.1.1 n’est pas démarrée avant la DDL.
+4. Vérifier ensuite l’identité admin fraîche de 1.2.0 sur `763b632185ce13eb875110c9107687b2d278ff67` et Node 24.22.0, puis aligner le checkpoint en conservant le repli compatible et tous les autres blocs. Ces étapes ne sont pas encore réalisées.
 
 ## Validation de 1.2.0
 

@@ -188,7 +188,48 @@
       "noRestart": true,
       "diagnosticRevision": 2
     },
-    "nextAction": "correct_migrator_authentication_then_repeat_read_only_status",
-    "credentialCorrectionReported": false
+    "nextAction": "stop_manager_service_then_run_pinned_upgrade_and_prechecks",
+    "credentialCorrectionReported": false,
+    "confirmedRefersTo": "initial_failed_attempt",
+    "currentStatus": "checked",
+    "successReported": true,
+    "successReceipt": {
+      "status": "checked",
+      "engineVerified": true,
+      "transportVerified": true,
+      "migrations": 31,
+      "applied": 30,
+      "pending": 1,
+      "interrupted": false,
+      "readOnly": true,
+      "migrated": false,
+      "noRestart": true,
+      "diagnosticRevision": 2,
+      "source": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+      "version": "1.1.1"
+    },
+    "privateFileReaderVerifiedOnHosting": true
+  },
+  "schemaUpgradeAndPrechecks": {
+    "scriptCommit": "292e05fbeae29dfbe706c345434244696e0976f0",
+    "path": "ops/upgrade-release120.sh",
+    "sha256": "f72170b16b0d095434a2d739b5fdb5b7724493fedf4f63d6c7dfd56f2aaa79f3",
+    "serviceStopFlag": "--service-stopped",
+    "serviceStopFlagMeaning": "operator_attestation_only",
+    "syntheticTtyTestsPassed": 14,
+    "actualMigratorAndPlanWithInjectedSqlPassed": true,
+    "hostedSqlExecutedByQualification": false,
+    "executionReported": false,
+    "serviceStopReported": false,
+    "migrationReported": false,
+    "prechecksReported": false,
+    "runtimeStarted": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "expectedFinalStatus": "schema31_prechecks_passed",
+    "targetVersion": "1.2.0",
+    "targetSource": "763b632185ce13eb875110c9107687b2d278ff67",
+    "currentUserDate": "2026-10-21",
+    "currentUserTimezone": "Europe/Paris"
   }
 }

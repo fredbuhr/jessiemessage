@@ -1,6 +1,6 @@
 # Évolution 2 — Profil et expressions, 1.2.0
 
-**20 octobre 2026 — code fusionné, qualifié et publié en 1.2.0 ; activation Infomaniak en attente.** L’[état courant](REPRISE.md) distingue la production des candidats et consigne les références opérateur. Ce bilan décrit le périmètre et les critères de livraison du lot ; les preuves de son commit sont consignées ci-dessous.
+**21 octobre 2026 — code fusionné, qualifié et publié en 1.2.0 ; staging et contrôle SQL confirmés, migration et activation Infomaniak en attente.** L’[état courant](REPRISE.md) distingue la production des candidats et consigne les références opérateur. Ce bilan décrit le périmètre et les critères de livraison du lot ; les preuves de son commit sont consignées ci-dessous.
 
 ## Périmètre
 
@@ -17,7 +17,7 @@ Les profils nécessitent la migration **`0031`**. La compatibilité de l’ancie
 
 1. **Réalisé en qualification synthétique** : passage 30→31 et fonctionnement de la 1.1.1 sur le schéma 31, y compris les contrôles d’exploitation concernés ; commit et release figés. Préparation hébergée confirmée ; précontrôle après migration encore à faire.
 2. **Réalisé** : [PR 112](https://github.com/fredbuhr/jessiemessage/pull/112), [CI main exacte 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614), puis [tag/release 1.2.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0) sur `763b632185ce13eb875110c9107687b2d278ff67`, arbre `c7dce7bcdb99b298ffc43c9e31dd22ee87453926`.
-3. Épingler ensuite les commandes de préparation et de migration, avec l’identité SQL de migration existante et une phase de maintenance maîtrisée. Aucune migration n’est exécutée au démarrage de l’application. Le staging épinglé est confirmé par reçu utilisateur, sans migration ni redémarrage ; [état et prochaine commande](REPRISE.md#contrôle-sql-avant-migration--à-exécuter). La migration sera guidée après contrôle SQL et arrêt Manager.
+3. **Préparation et contrôle SQL réalisés** : staging confirmé sans migration ni redémarrage ; reçu `checked`, moteur/TLS vérifiés, 31 migrations prévues, 30 appliquées, une en attente, aucun état interrompu. Le helper de migration et précontrôles est épinglé et qualifié ; [état et commande après arrêt Manager](REPRISE.md#migration-0031-et-précontrôles--à-exécuter-après-arrêt-manager). L’arrêt Manager, la migration 0031 et les deux précontrôles ne sont pas encore rapportés. Aucune migration n’est exécutée au démarrage de l’application.
 4. Après la migration contrôlée, activer le commit 1.2.0 validé, vérifier l’identité fraîche dans l’administration et les contrôles adaptés, puis aligner REPRISE et le checkpoint en conservant le repli compatible et les autres blocs.
 
 **Après application de `0031`, ne pas revenir au code 1.1.0 ni 1.0.0.** Le repli applicatif prévu est la **1.1.1 préqualifiée sur ce schéma**. Un repli de code ne retire pas la migration et n’implique aucune restauration SQL automatique. Avant toute migration, les références de production et de repli existantes restent celles de REPRISE.
