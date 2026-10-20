@@ -1,0 +1,260 @@
+{
+  "version": 1,
+  "release": "0.80.0",
+  "scope": "Audit lot 1: A02 public quotas, A03/A04 SQL expiry, A11 host-only HSTS; A01 independently pending provider patch",
+  "status": "application_deployed_verified_node_pending",
+  "source": {
+    "base": "d71d53df1abb44c7986f09cac872888bf7e3e021",
+    "branch": "fix/audit-lot1-security",
+    "candidate": "5edff7ca5899e564e6b96555528ec1887d08fbfe",
+    "candidateTree": "60eeeb39bf22f0ac894e46b8d444b18a795a2167",
+    "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/102",
+    "merged": "eb3e93c534bdfe5d426b1be42d6bebb093b548ce",
+    "mergedTree": "60eeeb39bf22f0ac894e46b8d444b18a795a2167"
+  },
+  "implementation": {
+    "A02": "Global/network debits paired atomically in the existing transaction; rollback to savepoint on network refusal; global ceiling bounds allocation; identity quotas unchanged",
+    "A03": "Shared clock after campaign/recipient/media waits; final transaction rollback on expired lease, campaign or recipient access during append",
+    "A04": "Shared clock injected into reset store; invitation/email/reset decisions and mutation timestamps refreshed after relevant locks without extending original expiry",
+    "A11": "One max-age=31536000 host-only HSTS policy at configured HTTPS authority boundary, retained on private/error/draining responses",
+    "schemaMigration": false,
+    "dependencyChanges": false,
+    "privateConfigurationChanges": false,
+    "accountOrMessageProductionMutation": false
+  },
+  "localChecks": {
+    "node": "v24.19.0",
+    "general": {
+      "tests": 3082,
+      "passed": 2868,
+      "failed": 0,
+      "skipped": 214,
+      "cancelled": 0,
+      "durationMilliseconds": 92528.766396
+    },
+    "command": "TMPDIR=<scratch-temp> node --test --test-concurrency=2 --test-timeout=90000 tests/*.test.mjs",
+    "syntaxFiles": 563,
+    "syntaxPassed": true,
+    "diffCheckPassed": true,
+    "newNativeSqlCasesRunLocally": false,
+    "targetedSuiteCountsAddedToGeneral": false
+  },
+  "ci": {
+    "pullRequestRun": 39348463757,
+    "pullRequestUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39348463757",
+    "pushRun": 39348448370,
+    "mainRun": 39349061528,
+    "general": {
+      "tests": 3086,
+      "passed": 3051,
+      "failed": 0,
+      "skipped": 35,
+      "cancelled": 0
+    },
+    "chrome": {
+      "passed": 160,
+      "failed": 0,
+      "skipped": 0
+    },
+    "httpsSqlMessaging": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syntaxFiles": 563,
+    "offlineBuild": "passed",
+    "mariadb1011": {
+      "tests": 458,
+      "passed": 458,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb114": {
+      "tests": 458,
+      "passed": 458,
+      "failed": 0,
+      "skipped": 0
+    },
+    "allRequiredJobsSucceeded": true,
+    "mainUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39349061528",
+    "candidateRequiredJobsSucceeded": true,
+    "candidateJobCount": 5,
+    "pushRequiredJobsSucceeded": true,
+    "pushJobCount": 5,
+    "mainJobCount": 5,
+    "mainRequiredJobsSucceeded": true,
+    "mainJobs": {
+      "httpsSql": 118388651994,
+      "mariadb114": 118388652240,
+      "chrome": 118388652253,
+      "general": 118388652272,
+      "mariadb1011": 118388652304
+    },
+    "candidateJobs": {
+      "chrome": 118386690586,
+      "httpsSql": 118386690727,
+      "general": 118386690762,
+      "mariadb1011": 118386690772,
+      "mariadb114": 118386690819
+    },
+    "mainCountsMatchCandidate": true
+  },
+  "nodeQualification": {
+    "id": "A01",
+    "status": "provider_patch_pending",
+    "observedAtUtc": "2026-10-20T00:28:46.040082Z",
+    "binary": "/usr/local/bin/node",
+    "version": "v24.15.0",
+    "managerSelectedBranch": "24",
+    "managerListedBranches": [
+      "25",
+      "24",
+      "23",
+      "22",
+      "21",
+      "20"
+    ],
+    "patchVersionSelectable": false,
+    "settingsSavedDuringInspection": false,
+    "alternateRuntimeInstalled": false
+  },
+  "servicePreservation": {
+    "baselineRelease": "0.79.0",
+    "source": "bc6103a73ce63752eda27a0bce83a7e53e409d09",
+    "tree": "39ac4fdabc55b7661742fbd6acc5763d65a42dab",
+    "mode": "start-local-closures",
+    "port": 3000,
+    "sensitiveFileHashesMatchedBefore": 10,
+    "pcRepairedOrRekeyed": false,
+    "authorityReinitialized": false,
+    "D1ReimportedOrRebound": false,
+    "sensitiveFileHashesMatchedAfter": 10
+  },
+  "deployment": {
+    "status": "application_deployed_verified",
+    "runtimeCommit": "eb3e93c534bdfe5d426b1be42d6bebb093b548ce",
+    "runtimeTree": "60eeeb39bf22f0ac894e46b8d444b18a795a2167",
+    "verifiedAtUtc": "2026-10-20T00:54:16.691594Z",
+    "checkout": "/srv/customer/jessiemessage-operator/audit-lot1-080-eb3e93c5",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-audit-lot1-080-eb3e93c5.sh",
+    "log": "/srv/customer/jessiemessage-private/jm080-audit-lot1.log",
+    "preparedAtUtc": "2026-10-20T00:42:08.258463Z",
+    "preflight": {
+      "type": "local_closure_precheck",
+      "status": "passed",
+      "pendingClosures": false,
+      "started": false,
+      "erased": false,
+      "externalContinuityVerified": false
+    },
+    "sensitiveHashesMatchedAfterPreparation": 10,
+    "dependenciesReusedAfterLockfileComparison": true,
+    "applicationRequestedAtUtc": "2026-10-20T00:48:15.531979Z",
+    "launcherSha256": "a8a73bfd7d4dc8dc0d901ae4c47ddc4fef94cb2ecfbecf80a759ffcb006f7e40",
+    "launcherMode": "0700",
+    "logMode": "0600",
+    "managerBuildMinuteParis": "2026-10-20 02:50",
+    "dependenciesReinstalled": false,
+    "schemaMigrationRun": false,
+    "mode": "start-local-closures",
+    "closuresEnabled": true,
+    "port": 3000,
+    "gatewayOrObserverAdded": false,
+    "supervisorStartedReceiptObserved": true,
+    "monitorCode": "OK",
+    "sshParentAndChildPidsObserved": false,
+    "authenticatedPrivateGetObserved": false,
+    "nodeAfterDeployment": "v24.15.0",
+    "httpChecks": [
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "expectedJsonStatus": "ok",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "expectedJsonStatus": "ready",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "expectedJsonStatus": "ok",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "expectedJsonStatus": "ready",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/backups",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/privacy",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/closures",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      }
+    ],
+    "rollback": {
+      "release": "0.79.0",
+      "source": "bc6103a73ce63752eda27a0bce83a7e53e409d09",
+      "tree": "39ac4fdabc55b7661742fbd6acc5763d65a42dab",
+      "checkout": "/srv/customer/jessiemessage-operator/messaging-final-079-bc6103a7",
+      "launcher": "/srv/customer/jessiemessage-private/start-primary-messaging-079-bc6103a7.sh",
+      "launcherSha256": "4611fa20c46a5a56147a4d54ff319b5e93dd23396fd8fbc5e1bfcab5ebe68328",
+      "checkpointField": "developmentSimplification.auditCorrections.rollback"
+    },
+    "managerScreenshot": "docs/verification-proofs/jm080-manager.jpg"
+  },
+  "limits": [
+    "Native SQL scenarios passed on MariaDB 10.11 and 11.4 in candidate and main CI; local skipped scenarios remain explicitly omitted locally.",
+    "No production load attack, real broadcast, account deletion or restoration performed",
+    "A01 remains open because no patched Node 24 version is directly selectable in the observed hosting controls",
+    "C01/C02 browser candidates and lots 2-4 remain outside this correction",
+    "Parent/child PIDs were not observed from the SSH console. Startup evidence is the managed supervisor receipt emitted only after child IPC/readiness, plus fresh HTTPS health/readiness and new HSTS responses."
+  ],
+  "browserSmoke": {
+    "url": "https://jessiemessage.com/app",
+    "status": "passed",
+    "observed": "Public entry renders client and administrator choices after access check",
+    "authenticatedPrivateJourney": false
+  },
+  "remaining": [
+    "A01: hosted Node stays 24.15.0; provider patch pending independently",
+    "Audit lots 2-4 and final overall closure",
+    "Browser candidates C01/C02 remain unconfirmed and scheduled for lot 4"
+  ]
+}

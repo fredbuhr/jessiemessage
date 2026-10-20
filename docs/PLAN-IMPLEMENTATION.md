@@ -1,12 +1,12 @@
 # Plan d'implémentation de JessieMessage
 
-**20 octobre 2026 — phase courante : lot 1 des corrections, candidat 0.80.0 codé en qualification.** La V1 technique 0.79.0 reste déployée et vérifiée ; aucun correctif de cet audit n’est encore déployé. La messagerie reste sur le mutualisé actuel, sans nouveau serveur ni abonnement. KISS permanent. Lire l'[état courant](REPRISE.md), le [lot 1](audit-corrections-080.md), l'[audit](AUDIT-CODE-2026-10-20.md) et les [preuves de livraison 0.79](verification-proofs/jm079-verification.json).
+**20 octobre 2026 — lot 1 applicatif livré : 0.80.0 déployé et vérifié.** A02/A03/A04/A11 corrigés ; A01 reste ouvert indépendamment, Node fourni toujours 24.15.0. Prochain travail : lot 2. La messagerie reste sur le mutualisé actuel, sans nouveau serveur ni abonnement. KISS permanent. Lire l'[état courant](REPRISE.md), le [lot 1](audit-corrections-080.md), l'[audit](AUDIT-CODE-2026-10-20.md) et les [preuves 0.80](verification-proofs/jm080-verification.json).
 
 Ce plan S1/S2/S3 remplace l'ancien découpage en six lots. Le compteur « 4/6 » conservé dans les précédents en-têtes était obsolète ; il n'indique pas deux lots actuels oubliés. Les anciennes exigences de cadence externe fiable, d'alerte de panne totale et de recette sur deux appareils habituels ne sont pas déclarées acquises : leur portée réelle reste dans les limites en fin de document.
 
 ## Plan proposé des corrections — 20 octobre
 
-**Quatre lots correctifs, puis une clôture de livraison. Lot 1 codé en qualification ; les suivants restent à faire.** Ce découpage traite les constats de l’audit ; il n’ajoute aucune fonction produit et ne rouvre pas la livraison S1/S2/S3. Un lot peut demander plusieurs échanges ou PR : ce n’est pas une promesse de cinq messages ni une nouvelle échéance de production.
+**Quatre lots correctifs, puis une clôture de livraison. Lot 1 applicatif livré/vérifié, A01 indépendant ouvert ; les suivants restent à faire.** Ce découpage traite les constats de l’audit ; il n’ajoute aucune fonction produit et ne rouvre pas la livraison S1/S2/S3. Un lot peut demander plusieurs échanges ou PR : ce n’est pas une promesse de cinq messages ni une nouvelle échéance de production.
 
 | Ordre | Périmètre | Résultat attendu et critère de fin |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ Les déploiements suivent les lots terminés ; le lot 5 ne retarde pas tous les 
 
 A09 est indépendant des autres corrections de reprise et peut être livré plus tôt comme petit correctif autonome. A05 précède la qualification finale d’A07 si le volume ou le protocole de transfert change. Les tâches d’entretien et le traitement de durée de vie lointain ne retardent pas les corrections de fonctionnement courant.
 
-**Lot 1 en cours : qualification du candidat 0.80.0 avant livraison.** A01 reste ouvert : Manager limité au choix de branche, 24 déjà sélectionnée, binaire fourni toujours 24.15.0 ; cela ne bloque pas A02–A04/A11. L’audit reste la preuve datée des constats, et REPRISE décrit l’état courant.
+**Lot 1 applicatif livré :** PR #102 fusionnée, CI candidat/main 5/5, 458/458 par MariaDB, Chrome 160, HTTPS/SQL 2 ; déploiement vérifié le 20 octobre à 02:54 Europe/Paris. A01 reste ouvert : Manager limité au choix de branche, 24 déjà sélectionnée, binaire fourni toujours 24.15.0. Prochaine action : lot 2, sans démarrage automatique d’un autre lot avant ce bilan. L’audit reste une preuve datée et REPRISE décrit l’état courant.
 
 ## Portée V1
 
@@ -60,7 +60,7 @@ Trois sessions Chrome indépendantes avec vrai HTTPS, MariaDB et médias : deux 
 
 [Guide court](guide-jessie.md), [conservation](data-retention-register.md) et [surveillance](../MONITORING.md) livrés. Aucun nouveau test personnel n'est requis pour clore le lot : les acceptations antérieures restent acquises dans leur portée.
 
-## Déploiement final — clos
+## Livraison initiale V1 0.79 — close, historique
 
 **0.79.0 en ligne**, mode `start-local-closures`, port 3000 direct, sans passerelle ni observateur. Préflight en lecture seule réussi, Build normal du Manager affiché **20 octobre 01:41 Europe/Paris**, dépendances réutilisées après comparaison du lockfile, aucune migration.
 
@@ -74,4 +74,4 @@ Trois navigateurs ne prouvent pas toutes les plateformes physiques ni l'arrière
 
 L’[audit transversal du code](AUDIT-CODE-2026-10-20.md), demandé par le propriétaire après livraison, est terminé sur `f629137` ; [preuves](verification-proofs/jm079-audit-20261020.json). Les constats distinguent défauts reproduits, conditions non observées, durcissements et deux candidats navigateur. Aucun correctif applicatif ou changement de production dans ce lot. La clôture de S1/S2/S3 et leurs limites restent inchangées.
 
-**Suite : corrections bornées de l’audit, d’abord A01–A04** : runtime Node corrigé sur l’hébergement actuel, budgets publics et échéances après attente SQL ; puis fiabilité des copies et reprise existantes. Les critères et régressions attendus figurent dans le rapport. Aucun nouveau sous-lot d’architecture de sauvegarde, étude VPS, budget, questionnaire, test de mail ou initialisation PC. Préserver PC, clés, autorité et quarantaine D1.
+**Suite : lot 2, fiabilité des copies et volumes.** A02/A03/A04/A11 sont livrés en 0.80 ; A01 reste une dépendance hébergeur indépendante. Les critères et régressions attendus figurent dans ce plan. Aucun nouveau sous-lot d’architecture de sauvegarde, étude VPS, budget, questionnaire, test de mail ou initialisation PC. Préserver PC, clés, autorité et quarantaine D1.
