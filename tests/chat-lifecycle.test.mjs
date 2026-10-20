@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { quickReplyOptions, appendQuickReply } from "../public/quick-replies.js";
-import { emojiCategories, emojiOptions, insertEmoji } from "../public/emoji-catalog.js";
+import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "../public/emoji-catalog.js";
 import { webcrypto } from "node:crypto";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
@@ -91,7 +91,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   const worker = {}, workerEvents = new Map(), acknowledgements = [];
   const location = { origin: "https://example.invalid", pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", hash: notification ? `#notification=${notification}` : "", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } };
   const history = { replaceState(_state, _title, path) { const next = new URL(path, location.origin); location.pathname = next.pathname; location.hash = next.hash; } };
-  const context = vm.createContext({ __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, insertEmoji }, __quickReplies: { quickReplyOptions, appendQuickReply }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
+  const context = vm.createContext({ __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions, appendQuickReply }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
     location, history, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Uint8Array, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
@@ -126,7 +126,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(notificationLinkSource, context, { filename: "public/notification-link.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,insertEmoji} = __emojis;').replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification, fetchProfileBinary, avatarImageUrl, avatarContainers});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -524,14 +524,23 @@ test("emoji selection preserves full drafts and photo captions without truncatio
 
 test("emoji dialogs close and forget searches on hide or account change, and old choices cannot alter a new dialog", async () => {
   const f = harness(); await flush(); await f.click("open-emojis");
+  f.element("emoji-skin-tone").value = "dark";
+  for (const handler of f.element("emoji-skin-tone").events.get("change")) handler({}); await flush();
+  assert.equal(f.element("emoji-list").children.find(button => button.dataset.emojiId === "thumbs-up").textContent, "👍🏿");
   const old = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
   f.element("emoji-search").value = "A private search";
   await f.hide();
   assert.equal(f.element("emoji-dialog").open, false); assert.equal(f.element("emoji-list").children.length, 0);
   assert.equal(f.element("emoji-search").value, "");
   for (const handler of old.events.get("click")) handler({}); await flush(); assert.equal(f.element("message-body").value, "");
+  await f.show(); await f.click("open-emojis");
+  assert.equal(f.element("emoji-skin-tone").value, "dark", "same-owner visibility resume retains the preference");
+  assert.equal(f.element("emoji-list").children.find(button => button.dataset.emojiId === "thumbs-up").textContent, "👍🏿");
+  await f.hide();
   f.state.currentSession = session(2, "B".repeat(43)); await f.show(); await f.click("open-emojis");
   assert.equal(f.element("emoji-dialog").open, true);
+  assert.equal(f.element("emoji-skin-tone").value, "default", "a different account starts with the neutral preference");
+  assert.equal(f.element("emoji-list").children.find(button => button.dataset.emojiId === "thumbs-up").textContent, "👍");
   for (const handler of old.events.get("click")) handler({}); await flush();
   assert.equal(f.element("emoji-dialog").open, true); assert.equal(f.element("message-body").value, "");
   await f.click("close-emojis"); assert.equal(f.document.activeElement, f.element("open-emojis"));

@@ -337,6 +337,46 @@ test("Chrome 320px: keyboard emoji search inserts at the selection without photo
   }
 });
 
+test("Chrome 320px: skin tone changes the preview and inserted text, survives reopening and translation without sending", { timeout: 60000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); fixture.mediaDisabled = true; const page = await browser(320);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await waitUntil(() => page.execute("return !document.getElementById('open-emojis').disabled"), "emoji selector enabled");
+      await page.type("#message-body", "Hello friend");
+      await page.execute("document.getElementById('message-body').setSelectionRange(6, 12)");
+      await page.click("#open-emojis");
+      assert.equal(await page.execute("return document.getElementById('emoji-skin-tone').value"), "default");
+      await tabUntil(page, "#emoji-skin-tone");
+      await page.key("\uE010"); await page.key("\uE004");
+      await waitUntil(() => page.execute("return document.getElementById('emoji-skin-tone').value === 'dark'"), "dark skin tone chosen with the keyboard");
+      await page.type("#emoji-search", "pouce");
+      assert.equal(await page.execute("return document.querySelector('[data-emoji-id=\"thumbs-up\"]').textContent"), "👍🏿");
+      await page.click('[data-emoji-id="thumbs-up"]');
+      assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 👍🏿");
+      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.id]"), [10, 10, "message-body"]);
+      assert.equal(fixture.messageRequests.length, 0);
+
+      await page.click("#open-emojis");
+      assert.equal(await page.execute("return document.getElementById('emoji-skin-tone').value"), "dark");
+      await page.execute("JessieI18n.setLanguage('en')");
+      const translated = await page.execute("const select=document.getElementById('emoji-skin-tone');return {value:select.value,label:document.querySelector('label[for=\"emoji-skin-tone\"] span').textContent,option:select.selectedOptions[0].textContent};");
+      assert.equal(translated.value, "dark"); assert.equal(translated.label, "Skin tone"); assert.match(translated.option, /dark/i);
+      await page.type("#emoji-search", "peace");
+      assert.equal(await page.execute("return document.querySelector('[data-emoji-id=\"peace\"]').textContent"), "✌🏿");
+      const layout = await page.execute(`const dialog=document.getElementById('emoji-dialog'), rect=dialog.getBoundingClientRect(), tone=document.getElementById('emoji-skin-tone').getBoundingClientRect();
+        return {fits:rect.left>=0 && rect.right<=innerWidth && dialog.scrollWidth<=dialog.clientWidth,
+          tone: tone.width>=44 && tone.height>=44,
+          touch:[...document.querySelectorAll('#emoji-list button')].every(button=>{const b=button.getBoundingClientRect();return b.width>=44 && b.height>=44})};`);
+      assert.deepEqual(layout, { fits: true, tone: true, touch: true });
+      await page.click('[data-emoji-id="peace"]');
+      assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 👍🏿✌🏿");
+      assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
 test("Chrome desktop and 320px: actual Tab / Enter contact selection and return, French / English", { timeout: 60000 }, async () => {
   for (const width of [1280, 320]) {
     resetFixture(); const page = await browser(width);

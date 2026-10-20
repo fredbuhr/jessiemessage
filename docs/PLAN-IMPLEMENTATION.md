@@ -4,11 +4,15 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 
 Les livraisons 1.0.0, 1.1.0 et 1.2.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
+## Demande prioritaire du 21 octobre — cible 1.3.0
+
+[Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : compléter le catalogue Unicode, ajouter des doubles sens et proposer cinq carnations pour les gestes et personnages compatibles. Le choix s’insère au curseur sans envoi automatique ; recherche FR/EN, clavier, petit écran et limites de brouillon doivent être qualifiés. Développement et qualification en cours ; fusion, publication et activation non encore constatées. La production reste en 1.2.0. La redistribution d’une bibliothèque Flirtmoji n’est pas incluse sans droits spécifiques ; le partage individuel prévu par leur FAQ reste distinct.
+
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée. |
+| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après la demande prioritaire d’emojis. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |

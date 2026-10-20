@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { quickReplyOptions, appendQuickReply } from "../public/quick-replies.js";
-import { emojiCategories, emojiOptions, insertEmoji } from "../public/emoji-catalog.js";
+import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "../public/emoji-catalog.js";
 import { webcrypto } from "node:crypto";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
@@ -109,7 +109,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     return state.conversations.get(owner);
   };
   const storedMessages = (conv) => { if (!state.messages.has(conv.id)) state.messages.set(conv.id, [{ id: id(500 + Number.parseInt(conv.clientId, 16)), sequence: "1", sender: "peer", body: "Envoyer", createdAt: now, deletedAt: null, clientMessageId: null }]); return state.messages.get(conv.id); };
-  const context = vm.createContext({ __emojis: { emojiCategories, emojiOptions, insertEmoji }, __quickReplies: { quickReplyOptions, appendQuickReply }, document, window: { addEventListener: (name, handler) => addEvent(windowEvents, name, handler) }, navigator: { language: language === "fr" ? "fr-FR" : "en-US" },
+  const context = vm.createContext({ __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions, appendQuickReply }, document, window: { addEventListener: (name, handler) => addEvent(windowEvents, name, handler) }, navigator: { language: language === "fr" ? "fr-FR" : "en-US" },
     sessionStorage: { getItem: () => null, setItem() {} },
     location: { pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Blob, crypto: webcrypto, queueMicrotask,
@@ -147,7 +147,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(catalogueSource, context, { filename: "public/i18n-chat.js" });
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { emojiCategories, emojiOptions, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,insertEmoji} = __emojis;').replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),

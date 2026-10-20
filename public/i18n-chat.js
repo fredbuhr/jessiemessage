@@ -4,6 +4,7 @@ globalThis.JessieI18n?.register({
   "Emojis": "Emojis",
   "Choisis un emoji. Il s’ajoute au brouillon, à la position du curseur.": "Choose an emoji. It is added to your draft at the cursor.",
   "Rechercher un emoji": "Find an emoji",
+  "Couleur de peau": "Skin tone",
   "Bisou, cœur, clin d’œil…": "Kiss, heart, wink…",
   "Catégories d’emojis": "Emoji categories",
   "Choisir un emoji": "Choose an emoji",

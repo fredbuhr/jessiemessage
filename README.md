@@ -10,11 +10,14 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Guide quotidien](docs/guide-jessie.md) | Utilisation des messages, photos, fiches, notifications et exports. |
 | [Plan de travail](docs/PLAN-IMPLEMENTATION.md) | Harmonisation et évolutions restantes. |
 | [Profil et expressions, 1.2.0](docs/profile-expressions-120.md) | Périmètre du lot et préconditions de migration/repli. |
+| [Emojis enrichis et inclusifs, cible 1.3.0](docs/emoji-inclusifs-130.md) | Catalogue Unicode, carnations et critères de livraison. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
 
 **Version active : 1.2.0**, profil, avatar et catalogue de 180 emojis. Identité admin, disponibilité et suivi de livraison du serveur sont alignés ; le lot est clos. Les preuves et le repli compatible sont consignés dans REPRISE.
+
+**Travail en cours : cible 1.3.0**, enrichissement Unicode et choix de carnations, sans migration ni service externe. Cette demande prioritaire précède les diffusions à grande échelle ; fusion, publication et activation ne sont pas encore constatées. [Périmètre et critères](docs/emoji-inclusifs-130.md).
 
 ## Versions et livraisons
 

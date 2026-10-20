@@ -4,6 +4,8 @@
 .emoji-dialog .dialog-head{margin-bottom:8px}.emoji-dialog .media-help{margin:8px 0 12px}
 .emoji-search{display:grid;gap:6px;font-size:12px;color:var(--muted)}
 .emoji-search input{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid #765c7c;border-radius:11px;background:#151019;color:var(--ink);font:inherit;font-size:16px}
+.emoji-skin-tone{display:grid;gap:6px;margin-top:10px;font-size:12px;color:var(--muted)}
+.emoji-skin-tone select{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid #765c7c;border-radius:11px;background:#151019;color:var(--ink);font:inherit;font-size:16px}
 .emoji-categories{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0}
 .emoji-category{min-width:44px;min-height:44px;padding:8px 10px;border:1px solid #62455b;border-radius:11px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px}
 .emoji-category[aria-pressed=true]{background:#493047;border-color:var(--champagne)}
