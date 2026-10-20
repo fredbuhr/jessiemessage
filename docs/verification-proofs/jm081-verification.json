@@ -2,7 +2,7 @@
   "format": "jessiemessage-audit-lot2-verification",
   "version": 1,
   "release": "0.81.0",
-  "status": "local_checks_passed_native_ci_pending",
+  "status": "server_deployed_verified_pc_update_pending",
   "baseline": {
     "source": "1a5611744f73ca25b1f1c55fd0344229fdb71bd7",
     "runtime": "eb3e93c534bdfe5d426b1be42d6bebb093b548ce",
@@ -74,5 +74,283 @@
     "windowsPowerShellAvailable": false,
     "mariadbAvailable": false,
     "chromeAvailable": false
-  }
+  },
+  "source": {
+    "candidate": "f723b86f046bfe560c0cf1b267d89b946883e8ee",
+    "merge": "4619c68f05e17accd2c98669377e6458fc4d1f14",
+    "tree": "f623a5817e90eb1416d094b71a5a410723d05f4f",
+    "pr": 103,
+    "prUrl": "https://github.com/fredbuhr/jessiemessage/pull/103"
+  },
+  "ci": {
+    "candidate": {
+      "generalRun": 39353610982,
+      "windowsRun": 39353610976,
+      "jobs": 6,
+      "passed": true,
+      "general": {
+        "tests": 3102,
+        "pass": 3067,
+        "skipped": 35,
+        "fail": 0
+      },
+      "mariadb10_11": {
+        "tests": 460,
+        "pass": 460,
+        "skipped": 0,
+        "fail": 0
+      },
+      "mariadb11_4": {
+        "tests": 460,
+        "pass": 460,
+        "skipped": 0,
+        "fail": 0
+      },
+      "chrome": {
+        "tests": 161,
+        "pass": 161,
+        "skipped": 0,
+        "fail": 0
+      },
+      "httpsSql": {
+        "tests": 2,
+        "pass": 2,
+        "skipped": 0,
+        "fail": 0
+      },
+      "syntaxFiles": 567,
+      "windowsPowerShell51": true,
+      "offlinePreviewBuilt": true
+    },
+    "main": {
+      "generalRun": 39354203686,
+      "windowsRun": 39354203718,
+      "jobs": 6,
+      "passed": true,
+      "general": {
+        "tests": 3102,
+        "pass": 3067,
+        "skipped": 35,
+        "fail": 0
+      },
+      "mariadb10_11": {
+        "tests": 460,
+        "pass": 460,
+        "skipped": 0,
+        "fail": 0
+      },
+      "mariadb11_4": {
+        "tests": 460,
+        "pass": 460,
+        "skipped": 0,
+        "fail": 0
+      },
+      "chrome": {
+        "tests": 161,
+        "pass": 161,
+        "skipped": 0,
+        "fail": 0
+      },
+      "httpsSql": {
+        "tests": 2,
+        "pass": 2,
+        "skipped": 0,
+        "fail": 0
+      },
+      "syntaxFiles": 567,
+      "windowsPowerShell51": true,
+      "offlinePreviewBuilt": true
+    },
+    "sourcePush": {
+      "generalRun": 39353624513,
+      "windowsRun": 39353624569,
+      "passed": true
+    }
+  },
+  "deployment": {
+    "status": "server_deployed_verified_pc_update_pending",
+    "runtimeCommit": "4619c68f05e17accd2c98669377e6458fc4d1f14",
+    "runtimeTree": "f623a5817e90eb1416d094b71a5a410723d05f4f",
+    "checkout": "/srv/customer/jessiemessage-operator/audit-lot2-081-4619c68f",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-audit-lot2-081-4619c68f.sh",
+    "launcherSha256": "3a9eaa9689e95611a825890704d6462b7d20737dab03b2ea36125894c47fecde",
+    "log": "/srv/customer/jessiemessage-private/jm081-audit-lot2.log",
+    "preparedAtUtc": "2026-10-20T01:36:11.290382Z",
+    "preflight": {
+      "version": 1,
+      "type": "local_closure_precheck",
+      "scope": "local-application",
+      "status": "passed",
+      "pendingClosures": false,
+      "started": false,
+      "erased": false,
+      "externalContinuityVerified": false
+    },
+    "preservedSensitiveHashes": 10,
+    "pairedDestinations": 1,
+    "dependenciesReusedAfterLockfileComparison": true,
+    "rollback": {
+      "release": "0.80.0",
+      "source": "eb3e93c534bdfe5d426b1be42d6bebb093b548ce",
+      "tree": "60eeeb39bf22f0ac894e46b8d444b18a795a2167",
+      "checkout": "/srv/customer/jessiemessage-operator/audit-lot1-080-eb3e93c5",
+      "launcher": "/srv/customer/jessiemessage-private/start-primary-audit-lot1-080-eb3e93c5.sh",
+      "launcherSha256": "a8a73bfd7d4dc8dc0d901ae4c47ddc4fef94cb2ecfbecf80a759ffcb006f7e40",
+      "checkpointField": "developmentSimplification.auditCorrections.rollback"
+    },
+    "applicationRequestedAtUtc": "2026-10-20T01:41:04.298067Z",
+    "dependenciesReinstalled": false,
+    "schemaMigrationRun": false,
+    "verifiedAtUtc": "2026-10-20T01:48:32.150446Z",
+    "managerBuildMinuteParis": "2026-10-20 03:42",
+    "launcherMode": "0700",
+    "logMode": "0600",
+    "mode": "start-local-closures",
+    "closuresEnabled": true,
+    "port": 3000,
+    "gatewayOrObserverAdded": false,
+    "supervisorStartedReceiptObserved": true,
+    "monitorCode": "OK",
+    "sshParentAndChildPidsObserved": false,
+    "pairedIdentityPreserved": true,
+    "authenticatedPrivateGetObserved": false,
+    "nodeAfterDeployment": "v24.15.0",
+    "managerScreenshot": "docs/verification-proofs/jm081-manager.jpg",
+    "httpChecks": [
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "expectedJsonStatus": "ok",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "expectedJsonStatus": "ready",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "expectedJsonStatus": "ok",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "expectedJsonStatus": "ready",
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1,
+        "noStore": true,
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/backups",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/privacy",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/closures",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/backups.js",
+        "status": 401,
+        "hsts": "max-age=31536000",
+        "hstsHeaderCount": 1
+      }
+    ]
+  },
+  "postDeploymentDiagnostics": {
+    "at": "2026-10-20T01:47:29.331Z",
+    "method": "read-only existing operator adapters; update kit generated in memory for the existing destination, not downloaded or installed on the personal PC",
+    "inventory": {
+      "complete": true,
+      "healthy": true,
+      "integrity": "structure_only",
+      "counts": {
+        "assets": 2,
+        "activeAssets": 2,
+        "deletedAssets": 0,
+        "journalObjects": 2,
+        "reserved": 0,
+        "cleanupPending": 0,
+        "released": 0,
+        "files": 4,
+        "knownPublished": 4,
+        "unknown": 0,
+        "staging": 0,
+        "missingActive": 0,
+        "missingDeleted": 0,
+        "blockingIssues": 0
+      },
+      "declaredBytes": "380528",
+      "observedEncryptedBytes": "380528",
+      "heldBytes": "380528",
+      "pendingBytes": "0",
+      "configuredOwnerBytes": "1073741824",
+      "configuredTotalBytes": "10737418240",
+      "backupAdmission": {
+        "totalBytes": "1073741824",
+        "maxObjects": 50000,
+        "maxFiles": 100000
+      }
+    },
+    "copySummary": {
+      "archiveCount": 4,
+      "historyCode": null,
+      "schedule": {
+        "enabled": true,
+        "hourUtc": 5,
+        "minuteUtc": 15
+      },
+      "pairedDestinations": 1
+    },
+    "updateKit": {
+      "generated": true,
+      "includesFixedCopier": true,
+      "entries": 6,
+      "pairingFile": false,
+      "bytes": 54786,
+      "installedOnPersonalPc": false
+    },
+    "freshnessCode": "OK"
+  },
+  "findings": {
+    "A05": "media admission corrected and server verified, conditional on existing independent SQL/metadata/time limits",
+    "A07": "code qualified by native Windows CI, fixed update kit deployed; personal PC installation pending",
+    "A08": "warning deployed and synthetic copying/closure-coverage dry-run qualified; active archive executor remains deferred/open",
+    "A01": "provider Node patch pending independently"
+  },
+  "verificationNotes": [
+    "Administrative JavaScript is a protected asset: anonymous401 is expected; no authenticated administrator GET was observed.",
+    "ZIP entry names were parsed to check the six files; occurrences of a filename within the script body do not mean the ZIP contains that file.",
+    "Supervisor startup receipt plus pinned source/launcher and fresh HTTPS establish runtime startup; parent/child PIDs were not directly observed."
+  ]
 }
