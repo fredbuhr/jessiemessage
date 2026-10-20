@@ -2,7 +2,7 @@
   "format": "jessiemessage-service-status-verification",
   "version": 1,
   "release": "0.84.0",
-  "status": "implementation_ready_ci_pending",
+  "status": "server_deployed_verified",
   "baseline": {
     "source": "49246c84097b7417a58d92d6d6e84736dfdd9024",
     "tree": "79ba1cd1ec49234253153e2e7f6a8b400da0c0c3",
@@ -41,7 +41,7 @@
     "nativeChromeExecuted": false
   },
   "browserQualification": {
-    "status": "pending_ci",
+    "status": "passed_candidate_and_main_ci",
     "languages": [
       "fr",
       "en"
@@ -66,7 +66,8 @@
     "productionRestored": false,
     "pairingRepeated": false,
     "keysRegenerated": false,
-    "antivirusProtectionChanged": false
+    "antivirusProtectionChanged": false,
+    "d1Reused": false
   },
   "userSteering": {
     "atParis": "2026-10-20T14:29:08+02:00",
@@ -78,7 +79,429 @@
     "authenticatedProductionPageObserved": false,
     "physicalPlatformsFullyQualified": false,
     "providerNodePatchPending": true,
-    "archiveExecutorDeferred": true
+    "archiveExecutorDeferred": true,
+    "productionPrivatePageCoveredByCiAndAnonymousGuardsOnly": true
   },
-  "report": "docs/service-status-084.md"
+  "report": "docs/service-status-084.md",
+  "liveBaseline": {
+    "at": "2026-10-20T12:41:39.012674+00:00",
+    "release": "0.83.0",
+    "preservedSensitiveHashes": 10,
+    "pairedIdentityPreserved": true,
+    "pairedDestinations": 1,
+    "httpsReadyBothOrigins": true,
+    "node": "24.15.0"
+  },
+  "candidate": {
+    "source": "2443b036891268474316593e27ac92124d4b72e0",
+    "tree": "7fa1b94fcc1b701ef48381655097fe82f17d55dd",
+    "pr": 106,
+    "ci": 39424086732,
+    "sourcePushCi": 39424050185,
+    "allJobsPassed": true,
+    "jobsPassed": 5,
+    "general": {
+      "tests": 3129,
+      "pass": 3094,
+      "fail": 0,
+      "skipped": 35
+    },
+    "chrome": {
+      "tests": 163,
+      "pass": 163,
+      "fail": 0,
+      "skipped": 0,
+      "readinessLanguageWidthCases": 6
+    },
+    "sql": {
+      "versions": [
+        "10.11",
+        "11.4"
+      ],
+      "testsPerVersion": 466,
+      "passPerVersion": 466,
+      "fail": 0,
+      "skipped": 0
+    },
+    "https": {
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    "jobs": {
+      "chrome": 118632096499,
+      "sql11_4": 118632096728,
+      "https": 118632096739,
+      "verify": 118632096751,
+      "sql10_11": 118632096818
+    }
+  },
+  "main": {
+    "source": "5a6f07228cc01b1d21421dc57baaa36378991fa5",
+    "tree": "7fa1b94fcc1b701ef48381655097fe82f17d55dd",
+    "candidateTreeIdentical": true,
+    "ci": 39424979746,
+    "status": "passed",
+    "jobsPassed": 5,
+    "general": {
+      "tests": 3129,
+      "pass": 3094,
+      "fail": 0,
+      "skipped": 35
+    },
+    "chrome": {
+      "tests": 163,
+      "pass": 163,
+      "fail": 0,
+      "skipped": 0,
+      "readinessLanguageWidthCases": 6
+    },
+    "sql": {
+      "versions": [
+        "10.11",
+        "11.4"
+      ],
+      "testsPerVersion": 466,
+      "passPerVersion": 466,
+      "fail": 0,
+      "skipped": 0
+    },
+    "https": {
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    "syntaxFiles": 568,
+    "offlinePreviewBuilt": true,
+    "jobs": {
+      "chrome": 118635139048,
+      "https": 118635139540,
+      "verify": 118635139543,
+      "sql11_4": 118635139614,
+      "sql10_11": 118635139720
+    }
+  },
+  "preparation": {
+    "checkout": "/srv/customer/jessiemessage-operator/service-status-084-5a6f0722",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-service-status-084-5a6f0722.sh",
+    "launcherSha256": "cd46bab672543250a958da266aa56b052177e8dfcc207aa93977274794c42c62",
+    "launcherMode": "0700",
+    "log": "/srv/customer/jessiemessage-private/jm084-service-status.log",
+    "logMode": "0600",
+    "preflightAt": "2026-10-20T12:47:48.561275+00:00",
+    "preflight": {
+      "version": 1,
+      "type": "local_closure_precheck",
+      "status": "passed",
+      "scope": "local_application",
+      "pendingClosures": false,
+      "started": false,
+      "erased": false,
+      "externalContinuityVerified": false
+    },
+    "sameLockedDependencies": true,
+    "applicationRequestedAt": "2026-10-20T12:54:41.737230+00:00"
+  },
+  "deployment": {
+    "checkout": "/srv/customer/jessiemessage-operator/service-status-084-5a6f0722",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-service-status-084-5a6f0722.sh",
+    "launcherSha256": "cd46bab672543250a958da266aa56b052177e8dfcc207aa93977274794c42c62",
+    "log": "/srv/customer/jessiemessage-private/jm084-service-status.log",
+    "launcherMode": "0700",
+    "logMode": "0600",
+    "applicationRequestedAt": "2026-10-20T12:54:41.737230+00:00",
+    "release": "0.84.0",
+    "source": "5a6f07228cc01b1d21421dc57baaa36378991fa5",
+    "tree": "7fa1b94fcc1b701ef48381655097fe82f17d55dd",
+    "status": "server_deployed_verified",
+    "verifiedAt": "2026-10-20T12:58:46.176917+00:00",
+    "managerBuildMinuteParis": "2026-10-20 14:55",
+    "mode": "start-local-closures",
+    "closuresEnabled": true,
+    "closuresEnabledEvidence": "pinned local composition, passed preflight and real supervisor started receipt",
+    "port": 3000,
+    "preservedSensitiveHashes": 10,
+    "pairedDestinations": 1,
+    "pairedIdentityPreserved": true,
+    "supervisorStartedReceiptObserved": true,
+    "monitorCode": "OK",
+    "monitorCheckedAt": 1792501094886,
+    "nodeAfterDeployment": "v24.15.0",
+    "dependenciesReinstalled": false,
+    "schemaMigrationRun": false,
+    "gatewayOrObserverAdded": false,
+    "sshParentAndChildPidsObserved": false,
+    "authenticatedPrivateGetObserved": false,
+    "httpChecks": [
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true,
+        "expectedJsonStatus": "ok",
+        "noStore": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true,
+        "expectedJsonStatus": "ready",
+        "noStore": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/auth/session",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/access/session",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/chat/admin/conversations",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/chat/client/conversation",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/backups",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/privacy",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/admin/closures",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/backups.js",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/admin/readiness",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/readiness.js",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/readiness.css",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/readiness-model.js",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/i18n-readiness.js",
+        "status": 200,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true,
+        "matchesPinnedPublicCatalogue": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/health",
+        "status": 200,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true,
+        "expectedJsonStatus": "ok",
+        "noStore": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/ready",
+        "status": 200,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true,
+        "expectedJsonStatus": "ready",
+        "noStore": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/auth/session",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/access/session",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/chat/admin/conversations",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/chat/client/conversation",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/admin/backups",
+        "status": 404,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/admin/privacy",
+        "status": 404,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/admin/closures",
+        "status": 404,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/backups.js",
+        "status": 404,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/admin/readiness",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/readiness.js",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/readiness.css",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/readiness-model.js",
+        "status": 401,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/i18n-readiness.js",
+        "status": 200,
+        "hstsHeaderCount": 1,
+        "hsts": "max-age=31536000",
+        "noCookie": true,
+        "matchesPinnedPublicCatalogue": true
+      }
+    ]
+  },
+  "managerProof": {
+    "path": "docs/verification-proofs/jm084-manager.jpg",
+    "bytes": 59986,
+    "sha256": "2d2e5211b470a7b3643fe50e982edcfe5881ff8578017255e149564e5c6fe3f8",
+    "buildMinuteParis": "2026-10-20 14:55"
+  },
+  "rollback": {
+    "release": "0.83.0",
+    "source": "682864cec3b8d0eb1c8a6dd92c4b9bd9dfc097b1",
+    "tree": "5eb0c133625b734c8aa92ce3f3642e281a51f380",
+    "checkout": "/srv/customer/jessiemessage-operator/audit-lot4-083-682864ce",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-audit-lot4-083-682864ce.sh",
+    "launcherSha256": "a0c0486c02680fbb147c626afd0041ae718c38f27d926939e2b0cea5ae7df7b1",
+    "log": "/srv/customer/jessiemessage-private/jm083-audit-lot4.log",
+    "earlierRollback082Preserved": true
+  },
+  "httpScopeNote": "The public i18n catalogue intentionally returns 200; private readiness HTML/controller/model/style return 401. The four primary-only backup/privacy/closure handlers intentionally return 404 on the recette alias."
 }
