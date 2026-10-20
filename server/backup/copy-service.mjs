@@ -2,6 +2,7 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 import { isToken } from "../auth/http.mjs";
 import { readCopyState, saveCopyState } from "./copy-files.mjs";
 import { createCopyCatalog } from "./copy-catalog.mjs";
+import { readCheckpointHistoryCapacity, checkpointHistoryCapacityLow } from "./recurring-checkpoint-files.mjs";
 import { copyFields, copyId, copyLabel, copyDate, digestCopyToken, failCopy } from "./copy-state.mjs";
 
 const matches = (token, digest) => isToken(token) && typeof digest === "string"
@@ -16,6 +17,7 @@ export function createBackupCopyService(directory, internal = {}) {
   const save = internal.save ?? ((state, revision) => saveCopyState(directory, state, revision));
   const catalog = internal.catalog ?? createCopyCatalog(directory);
   const clock = internal.clock ?? Date.now, random = internal.random ?? (bytes => randomBytes(bytes));
+  const readCapacity = internal.readCapacity ?? readCheckpointHistoryCapacity;
   let queue = Promise.resolve(), pending = 0;
   const now = () => { const value = clock(); if (!copyDate(value)) failCopy(); return value; };
   async function mutate(operation) {
@@ -36,8 +38,10 @@ export function createBackupCopyService(directory, internal = {}) {
   }
   async function summary() {
     const state = await read(), listing = await catalog.list();
+    const capacityLow = checkpointHistoryCapacityLow(await readCapacity(directory));
     return { version: 1, checkedAt: now(), schedule: listing.schedule, latestArchive: listing.archives.at(-1) ?? null,
-      archiveCount: listing.archives.length, destinations: state.destinations.map(publicDestination), decryptionStatus: "not_checked" };
+      archiveCount: listing.archives.length, destinations: state.destinations.map(publicDestination), decryptionStatus: "not_checked",
+      historyCode: capacityLow ? "HISTORY_CAPACITY_LOW" : null };
   }
   async function create(value) {
     const { label, kind } = copyFields(value, ["label", "kind"]);

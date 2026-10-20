@@ -6,6 +6,7 @@ import { chmod, link, lstat, mkdir, mkdtemp, open, readFile, readdir, rename, rm
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { RecurringCheckpointFilesError, acquireRecurringLock as realAcquireRecurringLock, appendCheckpointRecord as realAppendCheckpointRecord, readCheckpointHistory as realReadCheckpointHistory,
+  readCheckpointHistoryCapacity as realReadCapacity, CHECKPOINT_HISTORY_CAPACITY,
   readRecurringConfiguration as realReadRecurringConfiguration, readRecurringRecipientPublicKey as realReadRecurringRecipientPublicKey } from "../server/backup/recurring-checkpoint-files.mjs";
 
 // Real local scopes exercise safe file handling even when the sandbox omits
@@ -30,6 +31,7 @@ const readRecurringRecipientPublicKey = (directory, options) => realReadRecurrin
 const acquireRecurringLock = (directory, operation, options) => realAcquireRecurringLock(directory, operation, options, internal);
 const appendCheckpointRecord = (directory, value, options) => realAppendCheckpointRecord(directory, value, options, internal);
 const readCheckpointHistory = (directory, options) => realReadCheckpointHistory(directory, options, internal);
+const readCapacity = (directory, options) => realReadCapacity(directory, options, internal);
 
 const repository = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 const marker = "synthetic-private-information-must-not-leak";
@@ -264,7 +266,23 @@ test("history rejects more than 2000 records before reading or pruning any journ
   const root = await fixture(t), value = report();
   await Promise.all(Array.from({ length: 2001 }, (_, index) => put(root, `checkpoint-${String(value.startedAt).padStart(15, "0")}-${index.toString(16).padStart(32, "0")}.json`, value)));
   await assert.rejects(readCheckpointHistory(root), { code: "RECURRING_FILES_LIMIT" });
+  await assert.rejects(readCapacity(root), { code: "RECURRING_FILES_LIMIT" });
   assert.equal((await readdir(root)).length, 2001);
+});
+
+test("capacity counts every root entry without changing the legacy history or touching closure receipts", async t => {
+  const root = await fixture(t);
+  await appendCheckpointRecord(root, report()); await appendCheckpointRecord(root, report("succeeded"));
+  const closure = `erasure-${"a".repeat(64)}.json`, contents = "synthetic opaque closure receipt";
+  await put(root, closure, contents); await put(root, "recurring-backup.json", configuration());
+  await mkdir(path.join(root, "capture-1792278000000-cccccccccccccccc"), { mode: 0o700 });
+  const before = (await readdir(root)).sort();
+  assert.deepEqual(CHECKPOINT_HISTORY_CAPACITY, { maximumRecords: 2000, maximumEntries: 4096, warningRecords: 1500, warningEntries: 3072 });
+  assert.deepEqual(await readCapacity(root), { records: 2, rootEntries: 5 });
+  assert.deepEqual(Object.keys(await readCheckpointHistory(root)), ["records", "lastAttemptAt", "lastSuccessAt"]);
+  assert.deepEqual((await readdir(root)).sort(), before); assert.equal(await readFile(path.join(root, closure), "utf8"), contents);
+  const cancellation = new AbortController(); cancellation.abort();
+  await assert.rejects(readCapacity(root, { signal: cancellation.signal }), { code: "RECURRING_FILES_ABORTED" });
 });
 
 test("append refuses a collision and retains previously created journal bytes", async t => {

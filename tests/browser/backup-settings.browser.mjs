@@ -9,7 +9,7 @@ async function fixture(controlClock = false, paired = false) {
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   const id = "1".repeat(32), csrf = "A".repeat(43), requests = []; let sessionChanged = false, changeOnKit = false;
   let destination = { id: "2".repeat(32), label: "PC personnel", kind: "computer", enabled: true, paired: false, pairedAt: null, pairingExpiresAt: null, lastSeenAt: null, lastReceipt: null };
-  let latestArchive = { id: "capture-1792340000000-cccccccccccccccc", startedAt: 1792340000000, bytes: 1000, sha256: "a".repeat(64) }, scheduleEnabled = true;
+  let latestArchive = { id: "capture-1792340000000-cccccccccccccccc", startedAt: 1792340000000, bytes: 1000, sha256: "a".repeat(64) }, scheduleEnabled = true, historyCode = null;
   if (paired) destination = { ...destination, paired: true, pairedAt: 1792340000000, lastSeenAt: 1792340300000,
     lastReceipt: { captureId: "capture-1792340000000-cccccccccccccccc", bytes: 1000, sha256: "a".repeat(64), receivedAt: 1792340300000 } };
   const server = createServer(async (request, response) => {
@@ -21,7 +21,7 @@ async function fixture(controlClock = false, paired = false) {
     if (path === "/__fixture") return send(200, "text/html", "<!doctype html><title>Local fixture</title>");
     if (path === "/session-clock.js" && controlClock) return send(200, "text/javascript", "globalThis.JessieSessionClock={scheduleSessionCheck(expiry,callback){window.__sessionCheck=callback;return()=>{};}};");
     if (path === "/api/auth/session") return json({ user: { id, role: "admin", pseudonym: "Synthetic" }, csrf: sessionChanged ? "C".repeat(43) : csrf, expiresAt: Date.now() + 3600000 });
-    if (path === "/api/admin/backups") return json({ version: 1, checkedAt: Date.now(), archiveCount: latestArchive ? 2 : 0, latestArchive, schedule: { enabled: scheduleEnabled, hourUtc: 5, minuteUtc: 15 }, destinations: destination ? [destination] : [], decryptionStatus: "not_checked" });
+    if (path === "/api/admin/backups") return json({ version: 1, checkedAt: Date.now(), archiveCount: latestArchive ? 2 : 0, latestArchive, schedule: { enabled: scheduleEnabled, hourUtc: 5, minuteUtc: 15 }, destinations: destination ? [destination] : [], decryptionStatus: "not_checked", historyCode });
     if (path.endsWith("/settings")) { destination = { ...destination, ...JSON.parse(text) }; return json({}); }
     if (path.endsWith("/windows-kit") || path.endsWith("/windows-update-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic kit"); }
     if (path.endsWith("/verification-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic verification kit"); }
@@ -33,9 +33,28 @@ async function fixture(controlClock = false, paired = false) {
   await new Promise(yes => server.listen(0, "127.0.0.1", yes));
   return { origin: `http://127.0.0.1:${server.address().port}`, requests, changeOnKit() { changeOnKit = true; }, changeSession() { sessionChanged = true; destination.label = "Second session"; },
     changeReceipt() { destination.lastReceipt.bytes = 999; },
-    pauseSchedule() { scheduleEnabled = false; }, removeArchive() { latestArchive = null; },
+    pauseSchedule() { scheduleEnabled = false; }, removeArchive() { latestArchive = null; }, setHistoryCode(value) { historyCode = value; },
     async close() { server.closeAllConnections(); await new Promise(yes => server.close(yes)); } };
 }
+test("real Chrome: history capacity warning translates, clears below the threshold and stays private", { timeout: 60000 }, async () => {
+  const driver = await startWebDriver(), source = await fixture(false, true); let page;
+  try {
+    source.setHistoryCode("HISTORY_CAPACITY_LOW"); page = await driver.browser({ origin: source.origin, width: 320 });
+    await page.navigate("/__fixture"); await page.execute("sessionStorage.setItem('jessiemessage.language','fr')"); await page.navigate("/admin/backups");
+    await waitUntil(() => page.execute("return !document.getElementById('history-capacity-warning').hidden"), "history warning");
+    assert.equal(await page.execute("return document.getElementById('history-capacity-warning').textContent"), "L’historique des sauvegardes approche de sa limite. Prévois un archivage avec l’administrateur du service.");
+    await page.execute("JessieI18n.setLanguage('en')");
+    assert.equal(await page.execute("return document.getElementById('history-capacity-warning').textContent"), "Backup history is approaching its limit. Arrange archiving with the service administrator.");
+    assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"), true);
+    source.setHistoryCode(null); await page.click("#refresh");
+    await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden && document.getElementById('history-capacity-warning').hidden && document.getElementById('history-capacity-warning').textContent === ''"), "capacity below threshold");
+    source.setHistoryCode("HISTORY_CAPACITY_LOW"); await page.click("#refresh");
+    await waitUntil(() => page.execute("return !document.getElementById('history-capacity-warning').hidden"), "capacity warning returns");
+    await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'));JessieI18n.setLanguage('fr')");
+    assert.equal(await page.execute("return document.getElementById('backup-content').hidden && document.getElementById('history-capacity-warning').hidden && document.getElementById('history-capacity-warning').textContent === ''"), true);
+    assert.equal(source.requests.some(value => value.method !== "GET"), false);
+  } finally { try { await page?.close(); } finally { try { await source.close(); } finally { await driver.close(); } } }
+});
 test("real Chrome: backup destinations, keyboard controls, translations and kit download at three widths", { timeout: 150000 }, async t => {
   const driver = await startWebDriver();
   try {

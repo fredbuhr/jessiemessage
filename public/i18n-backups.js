@@ -1,4 +1,5 @@
 globalThis.JessieI18n?.register({
+  "L’historique des sauvegardes approche de sa limite. Prévois un archivage avec l’administrateur du service.": "Backup history is approaching its limit. Arrange archiving with the service administrator.",
   "JessieMessage — Sauvegardes": "JessieMessage — Backups",
   "Sauvegardes": "Backups",
   "Une sauvegarde sur le site, une copie sur ton PC. Consulte leurs dates et retrouve ton dossier.": "A backup on the site, a copy on your PC. Check their dates and find your folder.",

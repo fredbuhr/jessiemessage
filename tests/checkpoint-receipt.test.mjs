@@ -7,6 +7,7 @@ import { chmod, link, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, unl
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CheckpointReceiptError, hashCheckpointFile, readCheckpointReceipt, writeCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
+import { BACKUP_MEDIA_MAX_BYTES } from "../server/media/backup-limits.mjs";
 
 const MIB = 1024 * 1024, base = fileURLToPath(new URL("../../audit/", import.meta.url));
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -94,6 +95,22 @@ test("empty media inventories are allowed and every receipt binds the original r
   await unlink(f.filename);
   await assert.rejects(writeCheckpointReceipt(f.scope, f.value), neutral("CHECKPOINT_RECEIPT_INVALID"));
   await assert.rejects(lstat(f.filename), { code: "ENOENT" });
+});
+
+test("receipts accept the complete media admission budget and reject one additional encrypted byte", async (t) => {
+  const f = await fixture(t), limit = 10 * MIB, files = [];
+  let remaining = BACKUP_MEDIA_MAX_BYTES;
+  while (remaining > 0) {
+    const bytes = Math.min(remaining, limit);
+    files.push(file(files.length + 1, "full", bytes)); remaining -= bytes;
+  }
+  const value = { ...receipt(), media: { files, bytes: BACKUP_MEDIA_MAX_BYTES } };
+  assert.deepEqual(await writeCheckpointReceipt(f.scope, value), value);
+  assert.deepEqual(await readCheckpointReceipt(f.scope), value);
+  const over = await fixture(t), increased = structuredClone(value);
+  increased.media.files.at(-1).bytes++; increased.media.bytes++;
+  await assert.rejects(writeCheckpointReceipt(over.scope, increased), neutral("CHECKPOINT_RECEIPT_INVALID"));
+  assert.deepEqual(await readdir(over.directory), ["manifest.json"]);
 });
 
 test("fixed-name hashes use bounded erased buffers and permit an explicit archive budget up to two GiB", async (t) => {

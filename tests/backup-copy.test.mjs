@@ -7,9 +7,10 @@ import { createBackupCopyService } from "../server/backup/copy-service.mjs";
 const t0 = 1792340000000, location = "a".repeat(32), otherLocation = "b".repeat(32);
 const archive = (startedAt, text) => ({ id: `capture-${startedAt}-${"c".repeat(16)}`, startedAt, bytes: Buffer.byteLength(text), sha256: createHash("sha256").update(text).digest("hex"), filename: `JessieMessage-capture-${startedAt}-${"c".repeat(16)}.tar.gz.gpg` });
 const archives = [archive(t0 - 100000, "encrypted fixture older"), archive(t0 - 1000, "encrypted fixture latest")];
-function fixture() {
+function fixture({ capacity = { records: 2, rootEntries: 8 } } = {}) {
   let stored = emptyCopyState(), now = t0, transfers = 0;
   const service = createBackupCopyService("/synthetic", { clock: () => now,
+    readCapacity: async () => { if (capacity instanceof Error) throw capacity; return capacity; },
     read: async () => structuredClone(stored), save: async (state, revision) => { assert.equal(revision, stored.revision); stored = validateCopyState({ ...state, revision: revision + 1 }); },
     catalog: { async list() { return { version: 1, schedule: { enabled: true, hourUtc: 5, minuteUtc: 15 }, archives }; }, async transfer(id, consume) { transfers++; return consume(archives.find(item => item.id === id)); } },
   });
@@ -30,6 +31,13 @@ test("pairing is single use, expires, stores only digests and delegates no admin
   const next = await f.service.preparePairing(c.destination.id); f.advance(900000);
   await assert.rejects(f.service.pair({ destinationId: c.destination.id, pairingCode: next.pairingCode }), { code: "unauthorized" });
   const summary = await f.service.summary(); assert.doesNotMatch(JSON.stringify(summary), /Hash|token|pairingCode|locationId|csrf|private-directory/);
+});
+test("administrator summary projects only the capacity warning and leaves collector manifests unchanged", async () => {
+  const f = fixture({ capacity: { records: 2, rootEntries: 3072 } }), c = await connected(f), summary = await f.service.summary();
+  assert.equal(summary.historyCode, "HISTORY_CAPACITY_LOW"); assert.doesNotMatch(JSON.stringify(summary), /private-directory|report/);
+  assert.equal(Object.hasOwn(await f.service.manifest(c.token, location), "historyCode"), false);
+  assert.equal((await fixture().service.summary()).historyCode, null);
+  await assert.rejects(fixture({ capacity: new Error("synthetic inventory unavailable") }).service.summary());
 });
 test("new device pairing replaces old capability only when consumed, resetting copied state", async () => {
   const f = fixture(), c = await connected(f); await f.service.acknowledge(c.token, receipt());

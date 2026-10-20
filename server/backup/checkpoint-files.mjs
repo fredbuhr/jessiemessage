@@ -1,10 +1,11 @@
 import { constants } from "node:fs";
 import { lstat, open, opendir } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_FILES } from "../media/backup-limits.mjs";
 
 const PUBLISHED_NAME = /^[a-f0-9]{64}\.(?:full|thumb)\.enc$/;
-const MAX_FILES = 100000;
-const MAX_TOTAL_BYTES = 1024 * 1024 * 1024;
+const MAX_FILES = BACKUP_MEDIA_MAX_FILES;
+const MAX_TOTAL_BYTES = BACKUP_MEDIA_MAX_BYTES;
 const MAX_FILE_BYTES = 10 * 1024 * 1024 + 128;
 const CHUNK_BYTES = 64 * 1024;
 const SNAPSHOT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];

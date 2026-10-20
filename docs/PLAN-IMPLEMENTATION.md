@@ -1,12 +1,12 @@
 # Plan d'implémentation de JessieMessage
 
-**20 octobre 2026 — lot 1 applicatif livré : 0.80.0 déployé et vérifié.** A02/A03/A04/A11 corrigés ; A01 reste ouvert indépendamment, Node fourni toujours 24.15.0. Prochain travail : lot 2. La messagerie reste sur le mutualisé actuel, sans nouveau serveur ni abonnement. KISS permanent. Lire l'[état courant](REPRISE.md), le [lot 1](audit-corrections-080.md), l'[audit](AUDIT-CODE-2026-10-20.md) et les [preuves 0.80](verification-proofs/jm080-verification.json).
+**20 octobre 2026 — lot 1 applicatif livré : 0.80.0 déployé et vérifié.** A02/A03/A04/A11 corrigés ; A01 reste ouvert indépendamment, Node fourni toujours 24.15.0. Lot 2 en cours : implémentation et qualification, serveur encore 0.80. La messagerie reste sur le mutualisé actuel, sans nouveau serveur ni abonnement. KISS permanent. Lire l'[état courant](REPRISE.md), le [lot 1](audit-corrections-080.md), l'[audit](AUDIT-CODE-2026-10-20.md) et les [preuves 0.80](verification-proofs/jm080-verification.json).
 
 Ce plan S1/S2/S3 remplace l'ancien découpage en six lots. Le compteur « 4/6 » conservé dans les précédents en-têtes était obsolète ; il n'indique pas deux lots actuels oubliés. Les anciennes exigences de cadence externe fiable, d'alerte de panne totale et de recette sur deux appareils habituels ne sont pas déclarées acquises : leur portée réelle reste dans les limites en fin de document.
 
 ## Plan proposé des corrections — 20 octobre
 
-**Quatre lots correctifs, puis une clôture de livraison. Lot 1 applicatif livré/vérifié, A01 indépendant ouvert ; les suivants restent à faire.** Ce découpage traite les constats de l’audit ; il n’ajoute aucune fonction produit et ne rouvre pas la livraison S1/S2/S3. Un lot peut demander plusieurs échanges ou PR : ce n’est pas une promesse de cinq messages ni une nouvelle échéance de production.
+**Quatre lots correctifs, puis une clôture de livraison. Lot 1 applicatif livré/vérifié, A01 indépendant ouvert ; lot 2 en cours, suivants à faire.** Ce découpage traite les constats de l’audit ; il n’ajoute aucune fonction produit et ne rouvre pas la livraison S1/S2/S3. Un lot peut demander plusieurs échanges ou PR : ce n’est pas une promesse de cinq messages ni une nouvelle échéance de production.
 
 | Ordre | Périmètre | Résultat attendu et critère de fin |
 | --- | --- | --- |
@@ -74,4 +74,4 @@ Trois navigateurs ne prouvent pas toutes les plateformes physiques ni l'arrière
 
 L’[audit transversal du code](AUDIT-CODE-2026-10-20.md), demandé par le propriétaire après livraison, est terminé sur `f629137` ; [preuves](verification-proofs/jm079-audit-20261020.json). Les constats distinguent défauts reproduits, conditions non observées, durcissements et deux candidats navigateur. Aucun correctif applicatif ou changement de production dans ce lot. La clôture de S1/S2/S3 et leurs limites restent inchangées.
 
-**Suite : lot 2, fiabilité des copies et volumes.** A02/A03/A04/A11 sont livrés en 0.80 ; A01 reste une dépendance hébergeur indépendante. Les critères et régressions attendus figurent dans ce plan. Aucun nouveau sous-lot d’architecture de sauvegarde, étude VPS, budget, questionnaire, test de mail ou initialisation PC. Préserver PC, clés, autorité et quarantaine D1.
+**En cours : lot 2, fiabilité des copies et volumes.** [Compte rendu en cours](audit-corrections-081.md) ; livraison serveur et installation PC restent distinctes. A02/A03/A04/A11 sont livrés en 0.80 ; A01 reste une dépendance hébergeur indépendante. Les critères et régressions attendus figurent dans ce plan. Aucun nouveau sous-lot d’architecture de sauvegarde, étude VPS, budget, questionnaire, test de mail ou initialisation PC. Préserver PC, clés, autorité et quarantaine D1.

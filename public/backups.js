@@ -5,6 +5,7 @@ const controllers = new Set(), blobs = new Set(); let summary = null, busy = fal
 const visible = () => document.visibilityState === "visible";
 const kinds = { computer: "Ordinateur Windows", synced_folder: "Dossier synchronisé avec un drive", server: "Serveur ou partage réseau" };
 const node = (tag, text, className = "") => { const element = document.createElement(tag); if (text) ui.text(element, text); element.className = className; return element; };
+const historyWarning = el("history-capacity-warning");
 const notice = (text, error = false) => { ui.text(el("backup-status"), text); el("backup-status").classList.toggle("is-error", error); };
 const stale = () => Object.assign(new Error("stale"), { stale: true });
 function clear() {
@@ -15,6 +16,7 @@ function clear() {
   el("backup-overview-details").replaceChildren(); el("backup-schedule-note").textContent = "";
   el("verification-archive-name").replaceChildren(); el("pc-tools").replaceChildren(); el("pc-tools").hidden = true;
   el("backup-overview-title").textContent = ""; el("backup-overview-copy").textContent = ""; notice("");
+  historyWarning.hidden = true; ui.rawText(historyWarning, "");
 }
 function signOut() { clear(); location.replace("/admin/login?continue=%2Fadmin%2Fbackups"); }
 async function request(path, { body, ticket = readinessTicket(state), zip = false } = {}) {
@@ -115,6 +117,9 @@ function render() {
     detail("Dernière copie de cette sauvegarde", copied ? date(copies[0].lastReceipt.receivedAt) : ui.t("Aucune copie confirmée")));
   ui.text(el("backup-schedule-note"), summary.schedule.enabled ? "La sauvegarde quotidienne est activée." : "La sauvegarde quotidienne est suspendue.");
   el("backup-schedule-note").classList.toggle("is-warning", !summary.schedule.enabled);
+  historyWarning.hidden = summary.historyCode !== "HISTORY_CAPACITY_LOW";
+  if (!historyWarning.hidden) ui.text(historyWarning, "L’historique des sauvegardes approche de sa limite. Prévois un archivage avec l’administrateur du service.");
+  else ui.rawText(historyWarning, "");
   const schedule = summary.schedule, time = `${String(schedule.hourUtc).padStart(2, "0")}:${String(schedule.minuteUtc).padStart(2, "0")} UTC`;
   el("capture-details").replaceChildren(detail("Prochaine capture quotidienne", schedule.enabled ? time : ui.t("Suspendue")), detail("Dernière archive chiffrée", date(summary.latestArchive?.startedAt ?? null)), detail("Archives disponibles", String(summary.archiveCount)));
   el("verify-archive").disabled = !summary.latestArchive;
@@ -131,7 +136,8 @@ async function bootstrap(message = "") {
   clear(); clearReadiness(state, { visible: true }); const ticket = readinessTicket(state); notice("Vérification de la connexion…");
   try {
     await prove(ticket); const value = await request("/api/admin/backups", { ticket }); await prove(ticket);
-    if (value?.version !== 1 || !Array.isArray(value.destinations) || value.destinations.length > 5 || !value.schedule) throw new Error("invalid_summary");
+    if (value?.version !== 1 || !Array.isArray(value.destinations) || value.destinations.length > 5 || !value.schedule
+      || ![undefined, null, "HISTORY_CAPACITY_LOW"].includes(value.historyCode)) throw new Error("invalid_summary");
     summary = value; render(); arm(); notice(message);
   } catch (error) {
     if (error.stale) { if (visible() && state.visible && !state.session) void bootstrap(); return; }

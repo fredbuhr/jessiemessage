@@ -16,7 +16,8 @@ function report(kind = "current", now = NOW) {
   const done = { ...begin, status: "succeeded", phase: "finished", finishedAt: at + 1000, runtimeResumed: true };
   const records = kind === "waiting" ? [begin] : kind === "missing" ? [] : [begin, done];
   const result = evaluateCheckpointFreshness({ configuration: { ...config, enabled: kind !== "disabled" }, now,
-    history: { records, lastAttemptAt: records.length ? at : null, lastSuccessAt: records.length && kind !== "waiting" ? at + 1000 : null } });
+    history: { records, lastAttemptAt: records.length ? at : null, lastSuccessAt: records.length && kind !== "waiting" ? at + 1000 : null } },
+  kind === "capacity" ? { records: 2, rootEntries: 3072 } : undefined);
   return { report: result, exitCode: result.status === "current" ? 0 : 1 };
 }
 function fixture(overrides = {}) {
@@ -71,6 +72,28 @@ test("one temporary failure clears silently while three failures open one incide
   assert.equal((await f.pass("stale")).event, "sample");
   assert.equal(f.emitted.filter(x => x.event === "incident").length, 1);
   await f.monitor.close();
+});
+
+test("capacity attention reaches the real alert worker after three observations and recovers only on OK", async () => {
+  const f = fixture(), sent = []; let state = emptyBackupAlertState();
+  const alerts = createBackupAlertWorker({ operationsDirectory: "/synthetic/operations", privateDirectory: "/synthetic/private" }, {
+    clock: f.now, read: async () => structuredClone(state),
+    save: async (_directory, value, revision) => { assert.equal(revision, state.revision); state = { ...value, revision: revision + 1 }; return state; },
+    makeDelivery: async () => ({ send: async value => { sent.push(value); return true; }, close() {} }),
+  });
+  try {
+    await alerts.observe(await f.start());
+    for (let index = 0; index < 3; index++) {
+      const sample = await f.pass("capacity"); assert.equal(sample.code, "HISTORY_CAPACITY_LOW");
+      assert.equal(sample.state, index < 2 ? "suspect" : "incident"); await alerts.observe(sample);
+    }
+    assert.equal(sent.length, 1); assert.equal(sent[0].code, "HISTORY_CAPACITY_LOW");
+    await alerts.observe(await f.pass("capacity")); await alerts.observe(await f.pass("waiting"));
+    assert.equal(sent.length, 1); assert.equal(state.activeIncident.code, "HISTORY_CAPACITY_LOW");
+    const recovered = await f.pass("current"); assert.equal(recovered.event, "recovered"); await alerts.observe(recovered);
+    assert.deepEqual(sent.map(value => [value.event, value.code]), [["incident", "HISTORY_CAPACITY_LOW"], ["recovered", "OK"]]);
+    assert.equal(state.activeIncident, null);
+  } finally { await f.monitor.close(); await alerts.close(); }
 });
 
 test("a successful new observation emits one recovery; a running capture cannot close an incident", async () => {

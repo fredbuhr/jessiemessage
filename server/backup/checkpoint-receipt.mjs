@@ -3,9 +3,10 @@ import { lstat, open } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { APPLICATION_COVERAGE, validateApplicationCoverage } from "./application-scope.mjs";
 import { manifestBackupProfile, matchesCheckpointReceipt } from "./profiles.mjs";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_FILES } from "../media/backup-limits.mjs";
 
 const MIB = 1024 * 1024;
-const MAX_FILE = 64 * MIB, MAX_RECEIPT = 32 * MIB, MAX_MEDIA = 1024 * MIB, MAX_HASH = 2 * 1024 * MIB;
+const MAX_FILE = 64 * MIB, MAX_RECEIPT = 32 * MIB, MAX_MEDIA = BACKUP_MEDIA_MAX_BYTES, MAX_HASH = 2 * 1024 * MIB;
 const FILE_NAMES = new Set(["database.sql", "database.sql.gz", "manifest.json", "manifest-after.json", "receipt.json", "checkpoint.tar.gz", "operations.enc.json"]);
 const HEX = /^[a-f0-9]{64}$/;
 const MEDIA_NAME = /^[a-f0-9]{64}\.(?:full|thumb)\.enc$/;
@@ -49,7 +50,7 @@ function canonicalReceipt(value) {
     || sql.file !== "database.sql.gz" || !integer(sql.bytes, 1, 16 * MIB) || !digest(sql.sha256)
     || !integer(sql.uncompressedBytes, 1, MAX_FILE) || !digest(sql.uncompressedSha256)
     || manifest.file !== "manifest.json" || !digest(manifest.sha256)
-    || !integer(media.bytes, 0, MAX_MEDIA) || !Array.isArray(media.files) || media.files.length > 100000
+    || !integer(media.bytes, 0, MAX_MEDIA) || !Array.isArray(media.files) || media.files.length > BACKUP_MEDIA_MAX_FILES
     || Object.getPrototypeOf(media.files) !== Array.prototype) fail("CHECKPOINT_RECEIPT_INVALID");
   const fields = Object.getOwnPropertyDescriptors(media.files), names = Reflect.ownKeys(fields);
   if (names.length !== media.files.length + 1 || !Object.hasOwn(fields.length ?? {}, "value")) fail("CHECKPOINT_RECEIPT_INVALID");

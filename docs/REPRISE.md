@@ -2,7 +2,7 @@
 
 **20 octobre 2026 Europe/Paris — lot 1 applicatif de l’audit livré : 0.80.0 déployé et vérifié sur le mutualisé.** A02, A03, A04 et A11 corrigés ; A01 (correctifs Node fournis par l’hébergeur) reste ouvert indépendamment. S1, S2a/S2b et S3 restent clos. Lire le [plan](PLAN-IMPLEMENTATION.md), le [lot 1](audit-corrections-080.md) et [AGENTS](../AGENTS.md). KISS permanent ; aucun nouveau serveur ni budget.
 
-L’ancien compteur « étape 4/6 » appartenait au plan du 18 octobre, remplacé par S1/S2/S3 le 19. Il n’est pas l’avancement actuel. Le plan explicite des corrections de l’audit comporte quatre lots puis une clôture ; le lot 1 applicatif est livré, les suivants restent à faire. La livraison V1 n’atteste pas les garanties abandonnées de l’ancien périmètre.
+L’ancien compteur « étape 4/6 » appartenait au plan du 18 octobre, remplacé par S1/S2/S3 le 19. Il n’est pas l’avancement actuel. Le plan explicite des corrections de l’audit comporte quatre lots puis une clôture ; le lot 1 applicatif est livré, le lot 2 est en cours sur `fix/audit-lot2-copies-081` et les suivants restent à faire. La livraison V1 n’atteste pas les garanties abandonnées de l’ancien périmètre.
 
 ## Audit et correctifs courants
 
@@ -11,6 +11,8 @@ L’[audit transversal](AUDIT-CODE-2026-10-20.md) porte sur `f629137`, code appl
 **0.80 livre le lot 1 applicatif :** débits global/réseau atomiques en cas de refus réseau ; échéances des diffusions et liens revérifiées après attentes SQL ; rollback d’une diffusion expirant pendant ses écritures ; politique HSTS hôte seul à la frontière HTTP. Aucun schéma ni dépendance changé. [Compte rendu et limites](audit-corrections-080.md), [preuves 0.80](verification-proofs/jm080-verification.json).
 
 A01 reste ouvert : le Manager propose les branches majeures, sans choix de correctif précis ; la branche 24 est déjà sélectionnée et le binaire après déploiement reste **24.15.0**. Aucun runtime parallèle ni changement de version majeure/offre installé. `npm audit` ne couvre pas les correctifs intégrés à Node. La correction applicative ne masque pas cette dépendance hébergeur.
+
+Lot 2 en cours : admissions média bornées au budget de capture sans modifier les quotas persistés ; copieur Windows donnant priorité à la dernière archive ; avertissement avant saturation du journal et préparation d’archivage sans purge. [Compte rendu en cours](audit-corrections-081.md), [mesures et preuves](verification-proofs/jm081-verification.json). **Code en qualification, serveur encore 0.80 et PC personnel non mis à jour.**
 
 ## Service courant et preuves
 
@@ -63,4 +65,4 @@ La [surveillance](../MONITORING.md) garde ses limites : moniteur local/mails acc
 
 **Repli immédiat : 0.79.0**, source `bc6103a73ce63752eda27a0bce83a7e53e409d09`, arbre `39ac4fdabc55b7661742fbd6acc5763d65a42dab`, checkout `/srv/customer/jessiemessage-operator/messaging-final-079-bc6103a7`. Run `bash /srv/customer/jessiemessage-private/start-primary-messaging-079-bc6103a7.sh`, lanceur 0700, SHA-256 `4611fa20c46a5a56147a4d54ff319b5e93dd23396fd8fbc5e1bfcab5ebe68328`. Commandes Manager exactes dans `developmentSimplification.auditCorrections.rollback` du checkpoint. Aucun retour SQL ni suppression de journal ; une intention inachevée garde sa barrière. L’ancien repli 0.76 et ses fichiers restent conservés dans les preuves S3, avec 0.72 historique.
 
-**Prochaine action : lot 2, cohérence des volumes et progression des copies existantes**, après ce bilan de lot 1. A01 reste ouvert indépendamment. Aucun VPS, budget, questionnaire, mail de test ou appariement requis. Préserver PC, clés, autorité et D1. [Historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md) et [état avant livraison 0.80](https://github.com/fredbuhr/jessiemessage/blob/eb3e93c534bdfe5d426b1be42d6bebb093b548ce/docs/REPRISE.md).
+**Travail en cours : lot 2, cohérence des volumes et progression des copies existantes.** Terminer les régressions locales, CI générale/SQL/Chrome/Windows, puis livraison épinglée ; mise à jour du PC existant distincte. A01 reste ouvert indépendamment. Aucun VPS, budget, questionnaire, mail de test ou appariement requis. Préserver PC, clés, autorité et D1. [Historique du 19 octobre](REPRISE-HISTORIQUE-20261019.md) et [état avant livraison 0.80](https://github.com/fredbuhr/jessiemessage/blob/eb3e93c534bdfe5d426b1be42d6bebb093b548ce/docs/REPRISE.md).

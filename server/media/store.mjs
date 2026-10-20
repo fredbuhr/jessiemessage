@@ -1,6 +1,7 @@
 import { ChatStoreError } from "../chat/store.mjs";
 import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
-import { lockMediaCapacity, ownerMediaBytes, pendingMediaBytes, validateMediaCapacity } from "./capacity-store.mjs";
+import { heldMediaObjects, lockMediaCapacity, ownerMediaBytes, pendingMediaBytes, validateMediaCapacity } from "./capacity-store.mjs";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS } from "./backup-limits.mjs";
 
 // Chat transactions preserve this subclass while rolling back every callback
 // failure. No database exception, file key or message content escapes here.
@@ -192,7 +193,10 @@ export function createMediaStore({ pool, chatStore, capacity = null }) {
         if (existing && existing.state !== "reserved") input();
         const storedBytes = asset.fullBytes + asset.thumbnailBytes + 80;
         if (!existing) {
-          if (heldBytes > capacity.totalBytes - storedBytes || ownerHeld > capacity.ownerBytes - storedBytes) fail("MEDIA_STORAGE_LIMIT");
+          // Keep existing quota/root bindings and uncertain allocations intact.
+          // Only new allocations spend the checkpoint's byte and file budgets.
+          if (heldBytes > Math.min(capacity.totalBytes, BACKUP_MEDIA_MAX_BYTES) - storedBytes
+            || ownerHeld > capacity.ownerBytes - storedBytes || await heldMediaObjects(connection) >= BACKUP_MEDIA_MAX_OBJECTS) fail("MEDIA_STORAGE_LIMIT");
           await connection.query(`INSERT INTO media_storage_objects
             (id, owner_id, owner_role, storage_key, content_digest, full_bytes, thumbnail_bytes, stored_bytes, state, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reserved', ?, ?)`, [asset.id, context.actor.id, role, asset.storageKey, asset.digest,

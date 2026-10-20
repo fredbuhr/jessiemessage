@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_FILES, BACKUP_MEDIA_MAX_OBJECTS } from "./backup-limits.mjs";
 
 class InventoryStop extends Error { constructor(code) { super(code); this.code = code; } }
 const stop = (code) => { throw new InventoryStop(code); };
@@ -57,7 +58,7 @@ export async function inspectMediaInventory({ store, capacityStore, storage, cap
   const report = { version: 1, integrity: "structure_only", complete: true, healthy: false, canInitialize: false,
     counts: { assets: 0, activeAssets: 0, deletedAssets: 0, journalObjects: 0, reserved: 0, cleanupPending: 0, released: 0,
       files: 0, knownPublished: 0, unknown: 0, staging: 0, missingActive: 0, missingDeleted: 0, blockingIssues: 0 },
-    bytes: { declared: "0", observedEncrypted: "0", available: null }, capacity: null, issues: [], issuesTruncated: false };
+    bytes: { declared: "0", observedEncrypted: "0", available: null }, capacity: null, backupAdmission: null, issues: [], issuesTruncated: false };
   const issue = (code, row = null, variant = null, blocking = true) => {
     if (blocking) report.counts.blockingIssues++;
     if (report.issues.length >= maxIssues) { report.issuesTruncated = true; stop("issue_limit"); }
@@ -160,6 +161,8 @@ export async function inspectMediaInventory({ store, capacityStore, storage, cap
     const rootFingerprint = bytes(await storage.fingerprint(), 32);
     initialStatus = statusValue(await capacityStore.status());
     report.capacity = { ready: initialStatus.ready, heldBytes: String(initialStatus.heldBytes), pendingBytes: String(initialStatus.pendingBytes), ownerBytes: String(initialStatus.ownerBytes), totalBytes: String(initialStatus.totalBytes) };
+    report.backupAdmission = { totalBytes: String(initialStatus.totalBytes < BigInt(BACKUP_MEDIA_MAX_BYTES) ? initialStatus.totalBytes : BACKUP_MEDIA_MAX_BYTES),
+      maxObjects: BACKUP_MEDIA_MAX_OBJECTS, maxFiles: BACKUP_MEDIA_MAX_FILES };
     if (!initialStatus.rootFingerprint?.equals(rootFingerprint) || expectedCapacity && (initialStatus.ownerBytes !== expectedCapacity.ownerBytes || initialStatus.totalBytes !== expectedCapacity.totalBytes)) issue("capacity_binding_mismatch");
     const before = await sqlDigest(true);
     for await (const raw of storage.scanEntries({ maxEntries, signal })) {
