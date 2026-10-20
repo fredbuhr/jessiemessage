@@ -78,14 +78,15 @@ test("SMTP verification accepts only an empty object and exposes authentication 
 
 test("anonymous, client, duplicate and malformed cookies cannot access summary or invoke SMTP", async (t) => {
   const { base, calls } = await fixture(t);
-  for (const header of [null, `__Host-jessie_client=${clientToken}`, `__Host-jessie_session=${clientToken}`, `${cookie}; ${cookie}`,
-    `${cookie}; __Host-jessie_session=wrong`, `__Host-jessie_session=${"A".repeat(42)}B`, `${cookie}=`]) {
+  for (const [header, cleared] of [[null, false], [`__Host-jessie_client=${clientToken}`, false], ["unrelated=value", false],
+    ["__Host-jessie_session_extra=wrong", false], ["__Host-jessie_session=", true], [`__Host-jessie_session=${clientToken}`, true],
+    [`${cookie}; ${cookie}`, true], [`${cookie}; __Host-jessie_session=wrong`, true], [`__Host-jessie_session=${"A".repeat(42)}B`, true], [`${cookie}=`, true]]) {
     const response = await get(base, root, header ? { Cookie: header } : {});
     await errorBody(response, 401, "authentication_required");
-    assert.equal(response.headers.get("set-cookie"), "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict");
+    assert.equal(response.headers.get("set-cookie"), cleared ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
     const mutation = await post(base, smtp, {}, mutationHeaders({ Cookie: header ?? "" }));
     await errorBody(mutation, 401, "authentication_required");
-    assert.doesNotMatch(mutation.headers.get("set-cookie"), /jessie_client/);
+    assert.equal(mutation.headers.get("set-cookie"), "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict");
   }
   assert.equal(calls.some(([name]) => name !== "actor"), false);
   assert.equal((await get(base, root, { Cookie: `__Host-jessie_client=${clientToken}; ${cookie}` })).status, 200);
@@ -110,9 +111,10 @@ test("the current role is rechecked and malformed service sessions do not reach 
 test("all readiness pages and assets authenticate both GET and HEAD before opening their source", async (t) => {
   const { base, calls } = await fixture(t);
   for (const endpoint of assets) for (const method of ["GET", "HEAD"]) {
-    for (const headers of [{}, { Cookie: `__Host-jessie_client=${clientToken}` }, { Cookie: `__Host-jessie_session=${clientToken}` }]) {
+    for (const [headers, cleared] of [[{}, false], [{ Cookie: `__Host-jessie_client=${clientToken}` }, false], [{ Cookie: `__Host-jessie_session=${clientToken}` }, true]]) {
       const response = await fetch(`${base}${endpoint}`, { method, headers });
       assert.equal(response.status, 401); privateHeaders(response);
+      assert.equal(response.headers.get("set-cookie"), cleared ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
       if (method === "HEAD") assert.equal(await response.text(), "");
       else assert.deepEqual(await response.json(), { error: "authentication_required" });
     }
@@ -145,6 +147,7 @@ test("anonymous, Origin and CSRF failures finish before any JSON reader attaches
     const res = { headersSent: false, destroyed: false, writeHead(code, values) { responseStatus = code; responseHeaders = values; }, end(value) { body = value; } };
     assert.equal(await handler(req, res), true); assert.equal(responseStatus, status);
     assert.deepEqual(JSON.parse(body), { error }); assert.equal(responseHeaders.Connection, "close");
+    assert.equal(responseHeaders["Set-Cookie"], status === 401 ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : undefined);
     assert.equal(req.listenerCount("data"), 0); assert.equal(req.listenerCount("end"), 0); req.destroy();
   }
   assert.equal(calls.some(([name]) => name === "verifySmtp"), false);

@@ -94,14 +94,24 @@ test("capabilities, own library and upload DTOs authenticate both roles and hide
 test("media cookies never accept the other role, duplicate values, or noncanonical token entropy", async (t) => {
   const { base, calls } = await fixture(t);
   for (const role of ["admin", "client"]) {
-    for (const value of [null, cookie(role === "admin" ? "client" : "admin"), `${cookie(role)}; ${cookie(role)}`, cookie(role).replace(tokens[role], "A".repeat(42) + "B")]) {
+    for (const [value, clears] of [[null, false], [cookie(role === "admin" ? "client" : "admin"), false], [`${cookie(role).split("=")[0]}=`, true], [`${cookie(role)}; ${cookie(role)}`, true], [cookie(role).replace(tokens[role], "A".repeat(42) + "B"), true]]) {
       const before = calls.length;
       const response = await fetch(`${base}${assetsPath(role)}`, { headers: value ? { Cookie: value } : {} });
       assert.equal(response.status, 401); assert.deepEqual(await response.json(), { error: "authentication_required" });
-      assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict$`));
+      if (clears) assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict$`));
+      else assert.equal(response.headers.get("set-cookie"), null);
       assert.equal(calls.length, before);
     }
   }
+});
+
+test("unauthenticated media POST still clears the role cookie before admitting an upload", async (t) => {
+  const { base, calls, admissionRates } = await fixture(t);
+  for (const role of ["admin", "client"]) {
+    const response = await post(base, assetsPath(role), jpeg, uploadHeaders(role, { Cookie: "" }));
+    assert.equal(response.status, 401); assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=;.*Max-Age=0`));
+  }
+  assert.equal(calls.length, 0); assert.equal(admissionRates.length, 0);
 });
 
 test("binary uploads require Origin, safe fetch metadata, exact image MIME and fresh role CSRF", async (t) => {

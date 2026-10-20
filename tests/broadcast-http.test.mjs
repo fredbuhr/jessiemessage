@@ -107,9 +107,11 @@ test("each role rejects missing, duplicate, noncanonical and opposite role cooki
   for (const role of ["admin"]) {
     const own = role === "admin" ? cookie : clientCookie, opposite = role === "admin" ? clientCookie : cookie;
     const cookieName = role === "admin" ? "__Host-jessie_session" : "__Host-jessie_client";
-    for (const header of [null, opposite, `${cookieName}=${role === "admin" ? clientToken : token}`, `${own}; ${own}`, `${own}; ${cookieName}=wrong`, `${cookieName}=${"A".repeat(42)}B`]) {
+    for (const [header, cleared] of [[null, false], [opposite, false], ["unrelated=value", false], [`${cookieName}_extra=wrong`, false],
+      [`${cookieName}=`, true], [`${cookieName}=${role === "admin" ? clientToken : token}`, true], [`${own}; ${own}`, true],
+      [`${own}; ${cookieName}=wrong`, true], [`${cookieName}=${"A".repeat(42)}B`, true]]) {
       const response = await get(base, `${root}/${role}/session`, header ? { Cookie: header } : {});
-      assert.equal(response.headers.get("set-cookie"), `${cookieName}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict`);
+      assert.equal(response.headers.get("set-cookie"), cleared ? `${cookieName}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict` : null);
       await errorBody(response, 401, "authentication_required");
     }
     assert.equal((await get(base, `${root}/${role}/session`, { Cookie: `${cookie}; ${clientCookie}` })).status, 200);
@@ -135,9 +137,10 @@ test("all page and module GET/HEAD paths authenticate their own current role", a
   for (const path of ["/admin/broadcasts", "/broadcast.js", "/broadcast-model.js", "/broadcast.css"]) {
     const client = false;
     for (const method of ["GET", "HEAD"]) {
-      for (const headers of [{}, { Cookie: client ? cookie : clientCookie }]) {
+      for (const [headers, cleared] of [[{}, false], [{ Cookie: client ? cookie : clientCookie }, false], [{ Cookie: "__Host-jessie_session=wrong" }, true]]) {
         const response = await fetch(`${base}${path}`, { method, headers });
         assert.equal(response.status, 401); privateHeaders(response);
+        assert.equal(response.headers.get("set-cookie"), cleared ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
         if (method === "HEAD") assert.equal(await response.text(), "");
         else assert.deepEqual(await response.json(), { error: "authentication_required" });
       }
@@ -167,6 +170,7 @@ test("unauthenticated and CSRF-rejected POSTs never attach a JSON body reader", 
     let responseStatus, responseHeaders, body;
     const res = { headersSent: false, destroyed: false, writeHead(code, values) { responseStatus = code; responseHeaders = values; }, end(value) { body = value; } };
     assert.equal(await handler(req, res), true); assert.equal(responseStatus, status); assert.deepEqual(JSON.parse(body), { error });
+    assert.equal(responseHeaders["Set-Cookie"], status === 401 ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : undefined);
     assert.equal(req.listenerCount("data"), 0); assert.equal(req.listenerCount("end"), 0); assert.equal(responseHeaders.Connection, "close"); req.destroy();
   }
 });

@@ -29,10 +29,26 @@ async function fixture(t, hangingTransfer = false) {
 test("all backup UI assets and settings require a current administrator with no-store headers", async t => {
   const f = await fixture(t);
   for (const path of ["/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js", "/api/admin/backups"]) {
-    const anonymous = await f.get(path); assert.equal(anonymous.status, 401); assert.equal(anonymous.headers.get("cache-control"), "no-store"); assert.match(anonymous.headers.get("set-cookie"), /Max-Age=0/);
+    const anonymous = await f.get(path); assert.equal(anonymous.status, 401); assert.equal(anonymous.headers.get("cache-control"), "no-store"); assert.equal(anonymous.headers.get("set-cookie"), null);
     const response = await f.get(path, f.admin); assert.equal(response.status, 200); assert.equal(response.headers.get("cache-control"), "no-store");
     assert.equal(response.headers.get("access-control-allow-origin"), null); assert.equal(response.headers.get("set-cookie"), null); await response.arrayBuffer();
   }
+});
+test("backup reads preserve absent administrator cookies and clear invalid cookies without changing destinations", async t => {
+  const f = await fixture(t), path = "/api/admin/backups";
+  for (const value of ["preference=a", `__Host-jessie_client=${token}`]) {
+    const response = await f.get(path, { Cookie: value, "Sec-Fetch-Site": "cross-site" });
+    assert.equal(response.status, 401); assert.equal(response.headers.get("set-cookie"), null);
+  }
+  for (const value of ["__Host-jessie_session=", "__Host-jessie_session=invalid", `__Host-jessie_session=${token}; __Host-jessie_session=${token}`, `__Host-jessie_session=${Buffer.alloc(32, 7).toString("base64url")}`]) {
+    const response = await f.get(path, { Cookie: value });
+    assert.equal(response.status, 401); assert.match(response.headers.get("set-cookie"), /^__Host-jessie_session=;.*Max-Age=0/);
+  }
+  const mutation = await f.post("/api/admin/backups/destinations", { label: "Synthetic", kind: "computer" }, { Origin: origin });
+  assert.equal(mutation.status, 401); assert.match(mutation.headers.get("set-cookie"), /^__Host-jessie_session=;.*Max-Age=0/);
+  const agent = await f.get("/api/backup-copy/manifest", { "X-Jessie-Backup": "1" });
+  assert.equal(agent.status, 401); assert.equal(agent.headers.get("set-cookie"), null);
+  assert.equal((await f.service.summary()).destinations.length, 0);
 });
 test("origin, CSRF, bounded JSON and closed mutation fields are enforced before settings change", async t => {
   const f = await fixture(t), body = { label: "Mon PC", kind: "computer" }, path = "/api/admin/backups/destinations";

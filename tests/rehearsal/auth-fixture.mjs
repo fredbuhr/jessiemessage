@@ -17,7 +17,7 @@ import { createdMigrationTables, applyMigrations, loadMigrations, validateMigrat
 import { createConfiguredServer } from "../../server/index.mjs";
 import { createShutdown } from "../../server/lifecycle.mjs";
 import { createAuthStore } from "../../server/auth/store.mjs";
-import { createRecoveryCodes, hashPassword, makeTotpSecret, recoveryCodeDigest, sealTotpSecret, totpCode, verifyTotp } from "../../server/auth/crypto.mjs";
+import { createRecoveryCodes, hashPassword, makeTotpSecret, recoveryCodeDigest, sealTotpSecret, tokenDigest, totpCode, verifyTotp } from "../../server/auth/crypto.mjs";
 import { createMediaStorage } from "../../server/media/storage.mjs";
 import { createMediaCapacityStore } from "../../server/media/capacity-store.mjs";
 import { consumeSyntheticInvitation } from "../fixtures/manual-admission.mjs";
@@ -220,19 +220,49 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     const keyPath = join(certificateDirectory, "tls-key.pem"), certPath = join(certificateDirectory, "tls-cert.pem");
     // No shell is involved and neither output nor private material is logged.
     await run("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-sha256", "-nodes", "-days", "1",
-      "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1", "-keyout", keyPath, "-out", certPath],
+      "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1,DNS:localhost", "-keyout", keyPath, "-out", certPath],
     { timeout: 15000, maxBuffer: 65536, env: { PATH: process.env.PATH ?? "/usr/bin:/bin", OPENSSL_CONF: "/dev/null" } });
     await chmod(keyPath, 0o600); await chmod(certPath, 0o600);
     const [tlsKey, certificate] = await Promise.all([readFile(keyPath), readFile(certPath)]);
+    const navigationObservations = [];
+    const navigationPaths = {
+      admin: { session: "/api/auth/session", conversation: "/api/chat/admin/conversations" },
+      client: { session: "/api/access/session", conversation: "/api/chat/client/conversation" },
+    };
     try {
       proxy = createHttpsServer({ key: tlsKey, cert: certificate, minVersion: "TLSv1.2" }, (request, response) => {
         if (!accepting || targetPort === null) {
           response.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store" }); response.end('{"error":"fixture_unavailable"}'); request.resume(); return;
         }
+        const requestUrl = new URL(request.url, origin);
+        if (request.headers.host === new URL(outside).host) {
+          const role = requestUrl.searchParams.get("role"), kind = requestUrl.searchParams.get("kind");
+          if (request.method !== "GET" || requestUrl.pathname !== "/c01-navigation" || !Object.hasOwn(navigationPaths, role) || !Object.hasOwn(navigationPaths[role], kind)) {
+            response.writeHead(404, { "Cache-Control": "no-store" }); response.end(); return;
+          }
+          // Only this inert page is served from localhost. The real application
+          // stays on 127.0.0.1; Chrome must cross sites when following the link.
+          response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+          response.end(`<!doctype html><title>Synthetic external navigation</title><a id="c01-return" href="${origin}${navigationPaths[role][kind]}">Open private API</a>`); return;
+        }
+        const role = Object.keys(navigationPaths).find(value => Object.values(navigationPaths[value]).includes(requestUrl.pathname));
+        let observation;
+        if (role && request.method === "GET" && request.headers["sec-fetch-mode"] === "navigate") {
+          const name = role === "admin" ? "__Host-jessie_session=" : "__Host-jessie_client=";
+          if (navigationObservations.length < 8) navigationObservations.push(observation = { role,
+            site: request.headers["sec-fetch-site"], mode: request.headers["sec-fetch-mode"],
+            hasCookie: typeof request.headers.cookie === "string" && request.headers.cookie.split(";").some(value => value.trim().startsWith(name)),
+            status: null, clearsCookie: false });
+        }
         // The upstream destination is always our own loopback application.
         // Preserve Origin, native cookies and Set-Cookie without rewriting.
         const upstream = httpRequest({ host: "127.0.0.1", port: targetPort, path: request.url, method: request.method, headers: request.headers, agent: false }, (result) => {
           if (response.destroyed) { result.destroy(); return; }
+          if (observation) {
+            observation.status = result.statusCode;
+            const prefix = role === "admin" ? "__Host-jessie_session=;" : "__Host-jessie_client=;";
+            observation.clearsCookie = Array.isArray(result.headers["set-cookie"]) && result.headers["set-cookie"].some(value => value.startsWith(prefix) && /Max-Age=0(?:;|$)/.test(value));
+          }
           response.writeHead(result.statusCode ?? 503, result.headers);
           result.on("error", () => response.destroy()); result.pipe(response);
         });
@@ -250,7 +280,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     } finally { tlsKey.fill(0); }
     proxy.on("connection", (socket) => { sockets.add(socket); socket.on("close", () => sockets.delete(socket)); });
     proxy.on("clientError", (_error, socket) => socket.destroy());
-    const port = await listen(proxy), origin = `https://127.0.0.1:${port}`;
+    const port = await listen(proxy), origin = `https://127.0.0.1:${port}`, outside = `https://localhost:${port}`;
     const runtimeEnvironment = { ...env,
       JESSIEMESSAGE_ENABLE_AUTH: "1", JESSIEMESSAGE_SITE_ORIGIN: origin, JESSIEMESSAGE_MFA_KEY: key.toString("base64url"),
       JESSIEMESSAGE_ENABLE_ACCESS: "0", JESSIEMESSAGE_ENABLE_CHAT: "0", JESSIEMESSAGE_ENABLE_MEDIA: "0",
@@ -339,8 +369,21 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
         return Object.freeze({ notification: row.notification.toString("hex"), messageId: row.message_id.toString("hex"), sequence: String(row.sequence_no) });
       } catch { fail(); } finally { await runtime.release(); }
     }
+    async function sessionRemainsActive(role, rawToken) {
+      if (stopping || !messaging || !["admin", "client"].includes(role)) fail();
+      let digest, runtime;
+      try {
+        digest = tokenDigest(rawToken); runtime = await configured.pool.getConnection();
+        const rows = await runtime.query(`SELECT COUNT(*) AS amount FROM sessions WHERE token_hash = ? AND user_id = ?
+          AND revoked_at IS NULL AND created_at <= UTC_TIMESTAMP(6) AND expires_at > UTC_TIMESTAMP(6)`, [digest, role === "admin" ? adminId : clientId]);
+        return Number(rows[0]?.amount) === 1;
+      } catch { fail(); }
+      finally { digest?.fill(0); runtime?.release(); }
+    }
     return Object.freeze({ origin, email, password, currentTotp, isTotpFresh, invalidTotp, recoveryCodes: Object.freeze([...recoveryCodes]), expireSession, stop,
-      ...(messaging ? { client, notificationSubscription, notificationReference } : {}) });
+      ...(messaging ? { client, notificationSubscription, notificationReference, sessionRemainsActive, outsideOrigin: outside,
+        externalApiNavigation: (role, kind) => { if (!Object.hasOwn(navigationPaths, role) || !Object.hasOwn(navigationPaths[role], kind)) fail(); return `${outside}/c01-navigation?role=${role}&kind=${kind}`; },
+        sessionNavigations: () => navigationObservations.map(value => ({ ...value })) } : {}) });
   } catch (error) {
     let cleanupFailed = false;
     try { await stop(); } catch { cleanupFailed = true; }

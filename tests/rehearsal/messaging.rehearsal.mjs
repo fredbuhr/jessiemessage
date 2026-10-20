@@ -61,13 +61,35 @@ async function sessionNotificationSubscription(page, subscription) {
   assert.deepEqual(result, { proof: 200, status: 200, enabled: true });
 }
 
+async function preservesSessionAfterExternalNavigation(page, fixture, role) {
+  const name = role === "admin" ? "__Host-jessie_session" : clientCookie;
+  const cookie = (await page.cookies()).find(value => value.name === name);
+  assert.ok(cookie, "the fixture has a native session cookie before navigating");
+  assert.deepEqual({ secure: cookie.secure, httpOnly: cookie.httpOnly, sameSite: cookie.sameSite }, { secure: true, httpOnly: true, sameSite: "Strict" });
+  assert.equal(await fixture.sessionRemainsActive(role, cookie.value), true);
+  for (const kind of ["session", "conversation"]) {
+    const previous = fixture.sessionNavigations().length;
+    await page.navigate(fixture.externalApiNavigation(role, kind));
+    await page.click("#c01-return");
+    const target = kind === "session" ? role === "admin" ? "/api/auth/session" : "/api/access/session"
+      : role === "admin" ? "/api/chat/admin/conversations" : "/api/chat/client/conversation";
+    await waitUntil(() => page.execute("return location.pathname===arguments[0]&&document.body.textContent.includes('authentication_required')", target), "native cross-site API navigation denied");
+    assert.deepEqual(fixture.sessionNavigations().slice(previous), [{ role, site: "cross-site", mode: "navigate", hasCookie: false, status: 401, clearsCookie: false }]);
+    assert.equal((await page.cookies()).find(value => value.name === name)?.value === cookie.value, true, "the denied navigation preserves the exact withheld Strict cookie");
+  }
+  assert.equal(await fixture.sessionRemainsActive(role, cookie.value), true, "the original SQL session remains active");
+  await page.navigate(role === "admin" ? "/admin/messages" : "/messages");
+  await chatReady(page, role);
+  assert.equal((await page.cookies()).find(value => value.name === name)?.value === cookie.value, true, "the same session opens its authenticated workspace without a new login");
+}
+
 test("real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login", { timeout: 240000 }, async t => {
   const driver = await startWebDriver();
   let fixture; const pages = [];
   try {
     fixture = await createAuthenticationFixture({ messaging: true });
     // Separate WebDriver sessions have independent native cookies and storage.
-    const first = await driver.browser({ origin: fixture.origin, width: 390, acceptInsecureCerts: true }); pages.push(first);
+    const first = await driver.browser({ origin: fixture.origin, siblingOrigins: [fixture.outsideOrigin], width: 390, acceptInsecureCerts: true }); pages.push(first);
     const second = await driver.browser({ origin: fixture.origin, width: 1280, acceptInsecureCerts: true }); pages.push(second);
     await loginClient(first, fixture); await loginClient(second, fixture);
     const firstCookie = await protectedClientCookie(first), secondCookie = await protectedClientCookie(second);
@@ -77,18 +99,22 @@ test("real Chrome + MariaDB: independent client sessions, live text and JPEG, me
       assert.equal((await protectedClientCookie(page)).value === cookie.value, true, "reloading preserves this browser's protected session");
       assert.equal(await sessionStatus(page), 200);
     }
+    await preservesSessionAfterExternalNavigation(first, fixture, "client");
+    assert.equal(await sessionStatus(second), 200, "external navigation on A leaves B's session usable");
+    t.diagnostic("C01 client: Chrome withheld the Strict cookie on cross-site session and conversation API navigations; both 401 responses preserved it and the same SQL session reopened messaging without login.");
     // This is the real authenticated subscription endpoint with an inert test
     // endpoint. The fixture stops delivery workers before listening.
     await sessionNotificationSubscription(first, fixture.notificationSubscription);
     t.diagnostic("Two independent protected client sessions survive reload; a synthetic subscription is stored through the real HTTP/SQL service.");
 
-    const admin = await driver.browser({ origin: fixture.origin, width: 1280, acceptInsecureCerts: true }); pages.push(admin);
+    const admin = await driver.browser({ origin: fixture.origin, siblingOrigins: [fixture.outsideOrigin], width: 1280, acceptInsecureCerts: true }); pages.push(admin);
     await admin.navigate("/admin/login");
     await waitUntil(() => admin.execute("return !!document.getElementById('login-form')&&!document.getElementById('login-form').hidden&&!document.getElementById('login-button').disabled"), "real administrator login form");
     await admin.type("#email", fixture.email); await admin.type("#password", fixture.password); await admin.type("#factor", fixture.recoveryCodes[0]);
     await admin.click("#login-button");
     await waitUntil(() => admin.execute("return !!document.getElementById('connected')&&!document.getElementById('connected').hidden"), "real administrator recovery factor accepted");
-    await admin.navigate("/admin/messages"); await chatReady(admin, "admin");
+    await preservesSessionAfterExternalNavigation(admin, fixture, "admin");
+    t.diagnostic("C01 admin: Chrome withheld the Strict cookie on cross-site session and conversation API navigations; both 401 responses preserved it and the same SQL session reopened messaging without login.");
     await waitUntil(() => admin.execute("return !!document.querySelector('#conversations [data-conversation-id]')"), "the real client conversation is in the administrator inbox");
     await admin.click("#conversations [data-conversation-id]");
     await waitUntil(() => admin.execute("return !document.getElementById('message-body').disabled"), "the selected conversation can compose");

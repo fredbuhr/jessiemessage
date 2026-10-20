@@ -179,13 +179,38 @@ test("session endpoint returns the CSRF token only for a canonical authenticated
   assertHeaders(response);
   assert.deepEqual((await response.json()).user, user);
   const before = calls.length;
-  for (const header of [undefined, `${cookie}; ${cookie}`, `${cookie}; __Host-jessie_session=other`, `__Host-jessie_session=${"A".repeat(42)}B`, `__Host-jessie_session=${token}=`, `__Host-jessie_session="${token}"`, "__Host-jessie_session=short"]) {
-    const result = await fetch(`${base}/api/auth/session`, { headers: header ? { Cookie: header } : {} });
+  for (const header of ["__Host-jessie_session=", `${cookie}; ${cookie}`, `${cookie}; __Host-jessie_session=other`, `__Host-jessie_session=${"A".repeat(42)}B`, `__Host-jessie_session=${token}=`, `__Host-jessie_session="${token}"`, "__Host-jessie_session=short", `preference=${"x".repeat(8192)}; ${cookie}`]) {
+    const result = await fetch(`${base}/api/auth/session`, { headers: { Cookie: header } });
     assert.equal(result.status, 401);
     assert.deepEqual(await result.json(), { error: "authentication_required" });
     assert.match(result.headers.get("set-cookie"), /Max-Age=0; Secure; HttpOnly; SameSite=Strict/);
   }
   assert.equal(calls.length, before);
+});
+
+test("unauthenticated admin reads without their cookie deny access without changing cookies", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const header of [undefined, "preference=a", `__Host-jessie_client=${token}`, `other_${cookie}`, `__Host-jessie_session_extra=${token}`]) {
+    for (const [path, method] of [["/api/auth/session", "GET"], ["/api/auth/devices", "GET"], ["/admin", "GET"], ["/admin", "HEAD"]]) {
+      const response = await fetch(`${base}${path}`, { method, redirect: "manual",
+        headers: { "Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate", ...(header ? { Cookie: header } : {}) } });
+      assert.equal(response.status, path === "/admin" ? 303 : 401);
+      assert.equal(response.headers.get("set-cookie"), null);
+      if (path === "/admin") assert.equal(response.headers.get("location"), "/admin/login");
+      else assert.deepEqual(await response.json(), { error: "authentication_required" });
+    }
+  }
+  assert.equal(calls.length, 0);
+});
+
+test("admin reads still clear an invalid cookie when its SQL session is absent", async (t) => {
+  const { base, calls } = await fixture(t, { async session(value) { calls.push(["session", value]); return null; } });
+  for (const path of ["/api/auth/session", "/api/auth/devices", "/admin"]) {
+    const response = await fetch(`${base}${path}`, { headers: { Cookie: cookie }, redirect: "manual" });
+    assert.equal(response.status, path === "/admin" ? 303 : 401);
+    assert.match(response.headers.get("set-cookie"), /^__Host-jessie_session=;.*Max-Age=0; Secure; HttpOnly; SameSite=Strict$/);
+  }
+  assert.deepEqual(calls, Array.from({ length: 3 }, () => ["session", token]));
 });
 
 test("logout checks origin, session and CSRF before revoking or accepting a body", async (t) => {
@@ -213,10 +238,12 @@ test("logout checks origin, session and CSRF before revoking or accepting a body
 
 test("logout without a session returns 401 and clears the stale cookie", async (t) => {
   const { base, calls } = await fixture(t);
-  const response = await post(base, "/api/auth/logout", {}, mutationHeaders({ "X-CSRF-Token": csrf }));
-  assert.equal(response.status, 401);
+  for (const path of ["/api/auth/logout", "/api/auth/logout-all"]) {
+    const response = await post(base, path, {}, mutationHeaders({ "X-CSRF-Token": csrf }));
+    assert.equal(response.status, 401);
+    assert.match(response.headers.get("set-cookie"), /Max-Age=0/);
+  }
   assert.equal(calls.length, 0);
-  assert.match(response.headers.get("set-cookie"), /Max-Age=0/);
 });
 
 test("rate limiting and backend errors expose no credentials or exception detail", async (t) => {

@@ -62,6 +62,12 @@ export function sessionToken(request, cookieName = COOKIE_NAME) {
   return isToken(token) ? token : null;
 }
 
+export function hasSessionCookie(request, cookieName = COOKIE_NAME) {
+  // An invalid value is still present; Strict cookies withheld by Chrome are absent.
+  const header = request.headers.cookie;
+  return typeof header === "string" && header.split(";").some((entry) => entry.trim().startsWith(`${cookieName}=`));
+}
+
 export function sameText(left, right) {
   if (typeof left !== "string" || typeof right !== "string" || left.length > 256 || right.length > 256) return false;
   const a = Buffer.from(left);
@@ -206,8 +212,9 @@ export function createAuthHandler(service, { origin, clock = Date.now }) {
         const token = sessionToken(request);
         const session = token ? await service.session(token) : null;
         if (!session) {
-          if (pathname === "/admin") reply(response, method, 303, "", { Location: "/admin/login", "Set-Cookie": clearCookie() });
-          else reply(response, method, 401, { error: "authentication_required" }, { "Set-Cookie": clearCookie() });
+          const headers = method === "POST" || hasSessionCookie(request) ? { "Set-Cookie": clearCookie() } : {};
+          if (pathname === "/admin") reply(response, method, 303, "", { Location: "/admin/login", ...headers });
+          else reply(response, method, 401, { error: "authentication_required" }, headers);
           return true;
         }
         const data = safeSession(session);

@@ -257,12 +257,3 @@ export function csrfToken(rawSessionToken) {
   try { return createHmac("sha256", key).update(CSRF_NAMESPACE, "ascii").digest("base64url"); }
   finally { key.fill(0); }
 }
-
-export function constantTimeText(a, b) {
-  if (typeof a !== "string" || typeof b !== "string" || a.length < 1 || b.length < 1 || a.length > 512 || b.length > 512
-    || !a.isWellFormed() || !b.isWellFormed()) return false;
-  const left = Buffer.from(a, "utf8");
-  const right = Buffer.from(b, "utf8");
-  try { return left.length === right.length && timingSafeEqual(left, right); }
-  finally { left.fill(0); right.fill(0); }
-}

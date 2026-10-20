@@ -77,10 +77,20 @@ test("capabilities authenticate both roles and only expose the public VAPID key 
 
 test("role cookies reject other-role tokens, duplicates and noncanonical encodings before any service call", async (t) => {
   const { base, calls } = await fixture(t);
-  for (const role of ["admin", "client"]) for (const header of [undefined, cookie(role === "admin" ? "client" : "admin"), `${cookie(role)}; ${cookie(role)}`, `${cookie(role)}=`, `${role === "admin" ? "__Host-jessie_session" : "__Host-jessie_client"}=${"!".repeat(43)}`]) {
+  for (const role of ["admin", "client"]) for (const [header, clears] of [[undefined, false], [cookie(role === "admin" ? "client" : "admin"), false], [`${cookie(role).split("=")[0]}=`, true], [`${cookie(role)}; ${cookie(role)}`, true], [`${cookie(role)}=`, true], [`${role === "admin" ? "__Host-jessie_session" : "__Host-jessie_client"}=${"!".repeat(43)}`, true]]) {
     const response = await fetch(`${base}${path("capabilities", role)}`, { headers: header ? { Cookie: header } : {} });
     assert.equal(response.status, 401); assert.deepEqual(await response.json(), { error: "authentication_required" });
-    assert.ok(response.headers.get("set-cookie").startsWith(role === "admin" ? "__Host-jessie_session=" : "__Host-jessie_client="));
+    if (clears) assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=;.*Max-Age=0`));
+    else assert.equal(response.headers.get("set-cookie"), null);
+  }
+  assert.equal(calls.length, 0);
+});
+
+test("unauthenticated notification POST still clears only the requested role cookie", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const role of ["admin", "client"]) {
+    const response = await post(base, "status", { endpoint }, role, { Cookie: "" });
+    assert.equal(response.status, 401); assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=;.*Max-Age=0`));
   }
   assert.equal(calls.length, 0);
 });

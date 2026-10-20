@@ -1,0 +1,142 @@
+{
+  "format": "jessiemessage-audit-lot4-verification",
+  "version": 1,
+  "release": "0.83.0",
+  "status": "local_qualified_final_ci_pending",
+  "baseline": {
+    "source": "bbd733d85b49b892d78c7cd90509ced04a990939",
+    "tree": "5c2a8bb07a63e17de71869215978c75f149d9d7d",
+    "runtime": "bfc2a2217bfb6ff06dcae340fd9fc7b640609865",
+    "runtimeTree": "380b11faa02801a42eddf5bade4f66c45d901257"
+  },
+  "liveBaseline": {
+    "at": "2026-10-20T10:37:28.963458+00:00",
+    "release": "0.82.0",
+    "preservedSensitiveHashes": 10,
+    "pairedIdentityPreserved": true,
+    "pairedDestinations": 1,
+    "monitor": {
+      "code": "OK",
+      "checkedAt": 1792492959344
+    },
+    "httpsReadyBothOrigins": true,
+    "c01AnonymousBefore": {
+      "at": "2026-10-20T10:46:11.188329+00:00",
+      "origins": [
+        "https://jessiemessage.com",
+        "https://recette.jessiemessage.com"
+      ],
+      "paths": [
+        "/api/auth/session",
+        "/api/access/session"
+      ],
+      "checks": 4,
+      "status": 401,
+      "clearsAbsentCookie": true
+    }
+  },
+  "preservation": {
+    "pcPairingRepeated": false,
+    "keysRegenerated": false,
+    "realMailSent": false,
+    "realAccountDeleted": false,
+    "productionRestored": false,
+    "d1Reused": false
+  },
+  "limits": {
+    "personalPcUpdateInstallationObserved": false,
+    "nodeProviderPatchPending": true,
+    "a08ArchiveExecutorImplemented": false,
+    "nativeChromeLocalAvailable": false
+  },
+  "findings": {
+    "C01": "native Chrome confirmed original cookie loss for admin/client, without SQL session revocation",
+    "C02": "native bootstrap loop confirmed only under controlled same-task visibility; old finally releasing a later action not reproduced with native separated tasks",
+    "cleanup": "unused constantTimeText export and its sole test removed; private package, no runtime or CLI consumer found",
+    "documentation": "README, PRODUCT and DESIGN-KISS shortened, historical texts linked, REPRISE remains the sole current delivery record"
+  },
+  "characterization": {
+    "source": "a9ca4eb4eeaf1b6f5fac35464683882d0abf1370",
+    "tree": "c21118b5a16d24af6e1d28f2162b253695440d6e",
+    "ci": 39409824889,
+    "productionCodeChanged": false,
+    "c01": {
+      "status": "confirmed_native_chrome",
+      "job": 118584559514,
+      "jobPassed": true,
+      "roles": [
+        "admin",
+        "client"
+      ],
+      "httpsSqlTests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "secFetchSite": "cross-site",
+      "secFetchMode": "navigate",
+      "strictCookieSent": false,
+      "cookieDeletedBy401": true,
+      "sqlSessionRemainedActive": true
+    },
+    "c02": {
+      "status": "confirmed_native_chrome_under_controlled_same_task_visibility",
+      "job": 118584559329,
+      "jobPassed": true,
+      "chromeTests": 163,
+      "pass": 163,
+      "fail": 0,
+      "skipped": 0,
+      "nativeFetchAndAbortUnmodified": true,
+      "sameTaskVisibilityControlled": true,
+      "originalBootstrapRestarts": 3,
+      "observerCutoff": true,
+      "interruptedPostCount": 1,
+      "separateTaskNativeAbortPassed": true,
+      "oldFinallyReleasingLaterActionReproduced": false,
+      "physicalTabOrBfcacheObserved": false
+    },
+    "allJobsPassed": true,
+    "jobsPassed": 5
+  },
+  "implementation": {
+    "c01Modules": [
+      "auth/http",
+      "access/http",
+      "chat/http",
+      "media/http",
+      "backup/copy-http",
+      "notifications/http",
+      "crm/http",
+      "readiness/http",
+      "broadcast/http"
+    ],
+    "cookiePresenceExactAndRoleSpecific": true,
+    "getHeadAbsentCookieNotCleared": true,
+    "presentInvalidCookieClearPreserved": true,
+    "postExplicitClearPreserved": true,
+    "pcAgentExportAndTransitionUnchanged": true,
+    "c02UsesExistingEpochGuards": true,
+    "noObsoleteBootstrapOrBusyRelease": true,
+    "independentReviewsPassed": true,
+    "documentationLinesBefore": 295,
+    "documentationLinesAfter": 121,
+    "documentationRelativeLinksChecked": 27,
+    "unusedExportRemoved": "constantTimeText",
+    "newDependencies": false,
+    "newInfrastructure": false
+  },
+  "local": {
+    "node": "24.19.0",
+    "general": {
+      "tests": 3125,
+      "pass": 2911,
+      "fail": 0,
+      "skipped": 214,
+      "durationMilliseconds": 115713.699916
+    },
+    "syntaxFiles": 568,
+    "nativeChromeLocalExecuted": false,
+    "nativeSqlLocalExecuted": false,
+    "independentReviewsPassed": true
+  }
+}

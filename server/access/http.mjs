@@ -1,7 +1,7 @@
 import { peerAddress as requestPeerAddress } from "../http/peer-address.mjs";
 import { CLIENT_ADMISSION_POLICY } from "./admission.mjs";
 import { readFile } from "node:fs/promises";
-import { checkMutation, clearCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
+import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
 import { decodeAccessCursor, validateAccessPage } from "./pagination.mjs";
 
 const CLIENT_COOKIE = "__Host-jessie_client";
@@ -216,7 +216,11 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
       } else {
         const token = sessionToken(request, CLIENT_COOKIE);
         const session = token ? await service.session(token) : null;
-        if (!session) { reply(response, method, 401, { error: "authentication_required" }, { "Set-Cookie": clearCookie(CLIENT_COOKIE) }); return true; }
+        if (!session) {
+          const headers = method === "POST" || hasSessionCookie(request, CLIENT_COOKIE) ? { "Set-Cookie": clearCookie(CLIENT_COOKIE) } : {};
+          reply(response, method, 401, { error: "authentication_required" }, headers);
+          return true;
+        }
         const data = safeClientSession(session);
         if (pathname === "/api/access/session") reply(response, method, 200, data, { "Set-Cookie": sessionCookie(token, data.expiresAt, CLIENT_COOKIE, { role: "client", now: now() }) });
         else {

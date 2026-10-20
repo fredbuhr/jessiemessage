@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { validateCampaign, validateId, validatePreview } from "./validation.mjs";
 
 const publicRoot = new URL("../../public/", import.meta.url);
@@ -231,7 +231,7 @@ export function createBroadcastHandler(service, { origin, mediaEnabled = false }
       if (!response.headersSent && !response.destroyed) {
         const { status, code, retry } = mappedError(error);
         const headers = retry ? { "Retry-After": String(retry) } : {};
-        if (status === 401) headers["Set-Cookie"] = clearCookie(COOKIES[route.role]);
+        if (status === 401 && (method === "POST" || hasSessionCookie(request, COOKIES[route.role]))) headers["Set-Cookie"] = clearCookie(COOKIES[route.role]);
         if (method === "POST" || [400, 408, 413].includes(status)) { headers.Connection = "close"; request.resume(); }
         reply(response, method, status, { error: code }, headers);
       }

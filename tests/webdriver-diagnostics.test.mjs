@@ -71,3 +71,18 @@ test("browser navigation permits only its explicit fixed HTTPS loopback sibling 
   assert.equal(ordinary.url("/app"), "http://127.0.0.1:4444/app");
   assert.throws(() => ordinary.url("http://localhost:4444/app"));
 });
+
+test("cookie rehearsals permit only the explicit HTTPS 127.0.0.1/localhost pair on one port", () => {
+  for (const [primary, sibling] of [["https://127.0.0.1:4444", "https://localhost:4444"], ["https://localhost:4444", "https://127.0.0.1:4444"]]) {
+    const policy = createWebDriverNavigationPolicy(primary, [sibling]);
+    assert.equal(policy.url(`${sibling}/c01-navigation?role=client`), `${sibling}/c01-navigation?role=client`);
+    assert.equal(policy.transitionAlias, false);
+    assert.throws(() => createWebDriverNavigationPolicy(primary).url(sibling));
+    for (const foreign of ["https://jessiemessage.com", "https://other.localhost:4444", "https://[::1]:4444", "http://localhost:4444", "https://localhost:5555", "https://127.0.0.1:5555", `${sibling}/path`, `https://${secret}@localhost:4444`]) {
+      assert.throws(() => createWebDriverNavigationPolicy(primary, [foreign]));
+    }
+    assert.throws(() => createWebDriverNavigationPolicy(primary, [sibling, sibling]));
+    assert.throws(() => policy.url("https://jessiemessage.com/api/auth/session"));
+  }
+  assert.throws(() => createWebDriverNavigationPolicy("http://127.0.0.1:4444", ["https://localhost:4444"]));
+});

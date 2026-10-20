@@ -80,12 +80,13 @@ test("CRM capabilities require current administrator authentication and expose o
 
 test("CRM never accepts client cookies, forged admin cookies, duplicate cookies or noncanonical tokens", async (t) => {
   const { base, calls } = await fixture(t);
-  for (const header of [null, `__Host-jessie_client=${clientToken}`, `__Host-jessie_session=${clientToken}`, `${cookie}; ${cookie}`,
-    `${cookie}; __Host-jessie_session=wrong`, `__Host-jessie_session=${"A".repeat(42)}B`, `${cookie}=`]) {
+  for (const [header, cleared] of [[null, false], [`__Host-jessie_client=${clientToken}`, false], ["unrelated=value", false],
+    ["__Host-jessie_session_extra=wrong", false], ["__Host-jessie_session=", true], [`__Host-jessie_session=${clientToken}`, true],
+    [`${cookie}; ${cookie}`, true], [`${cookie}; __Host-jessie_session=wrong`, true], [`__Host-jessie_session=${"A".repeat(42)}B`, true], [`${cookie}=`, true]]) {
     const response = await get(base, `${root}/contacts`, header ? { Cookie: header } : {});
     assert.equal(response.status, 401); privateHeaders(response);
     assert.deepEqual(await response.json(), { error: "authentication_required" });
-    assert.equal(response.headers.get("set-cookie"), "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict");
+    assert.equal(response.headers.get("set-cookie"), cleared ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
   }
   assert.equal(calls.some(([name]) => name === "contacts"), false);
   const response = await get(base, `${root}/contacts`, { Cookie: `__Host-jessie_client=${clientToken}; ${cookie}` });
@@ -110,9 +111,10 @@ test("all private CRM assets authenticate GET and HEAD before reading any source
   const { base, calls } = await fixture(t);
   for (const endpoint of ["/crm.js", "/crm-model.js", "/crm.css"]) {
     for (const method of ["GET", "HEAD"]) {
-      for (const headers of [{}, { Cookie: `__Host-jessie_client=${clientToken}` }, { Cookie: `__Host-jessie_session=${clientToken}` }]) {
+      for (const [headers, cleared] of [[{}, false], [{ Cookie: `__Host-jessie_client=${clientToken}` }, false], [{ Cookie: `__Host-jessie_session=${clientToken}` }, true]]) {
         const response = await fetch(`${base}${endpoint}`, { method, headers });
         assert.equal(response.status, 401); privateHeaders(response);
+        assert.equal(response.headers.get("set-cookie"), cleared ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
         if (method === "HEAD") assert.equal(await response.text(), "");
         else assert.deepEqual(await response.json(), { error: "authentication_required" });
       }
@@ -143,6 +145,7 @@ test("anonymous mutations and CSRF failures finish before a JSON body reader is 
     const res = { headersSent: false, destroyed: false, writeHead(code, values) { responseStatus = code; responseHeaders = values; }, end(value) { body = value; } };
     assert.equal(await handler(req, res), true);
     assert.equal(responseStatus, status); assert.deepEqual(JSON.parse(body), { error });
+    assert.equal(responseHeaders["Set-Cookie"], status === 401 ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : undefined);
     assert.equal(req.listenerCount("data"), 0); assert.equal(req.listenerCount("end"), 0);
     assert.equal(responseHeaders.Connection, "close"); req.destroy();
   }

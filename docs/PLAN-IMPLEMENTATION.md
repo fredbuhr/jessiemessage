@@ -1,6 +1,6 @@
 # Plan d'implémentation de JessieMessage
 
-**20 octobre 2026 — lot 3 livré : 0.82.0 déployé/vérifié, A06/A09/A10 corrigés.** Lots 1/2 préservés ; kit personnel A07 toujours en attente d’installation. A08 avertissement/dry-run livrés, exécuteur actif différé ; A01 dépendance hébergeur indépendante. Lot 4 puis clôture à faire. Mutualisé actuel, KISS, aucun nouveau serveur ni abonnement. Lire [REPRISE](REPRISE.md), le [lot 3](audit-corrections-082.md) et les [preuves](verification-proofs/jm082-verification.json).
+**20 octobre 2026 — lot 4 en qualification ; serveur 0.82.0 déployé/vérifié, A06/A09/A10 corrigés.** Lots 1/2 préservés ; kit personnel A07 toujours en attente d’installation. A08 avertissement/dry-run livrés, exécuteur actif différé ; A01 dépendance hébergeur indépendante. Lot 4 en cours, puis clôture à faire. Mutualisé actuel, KISS, aucun nouveau serveur ni abonnement. Lire [REPRISE](REPRISE.md), le [lot 3](audit-corrections-082.md) et les [preuves](verification-proofs/jm082-verification.json).
 
 Ce plan S1/S2/S3 remplace l'ancien découpage en six lots. Le compteur « 4/6 » conservé dans les précédents en-têtes était obsolète ; il n'indique pas deux lots actuels oubliés. Les anciennes exigences de cadence externe fiable, d'alerte de panne totale et de recette sur deux appareils habituels ne sont pas déclarées acquises : leur portée réelle reste dans les limites en fin de document.
 

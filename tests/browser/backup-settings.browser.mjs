@@ -7,7 +7,7 @@ import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 const names = ["backups.html", "backups.js", "backups.css", "readiness.css", "readiness-model.js", "i18n.js", "i18n-backups.js", "i18n.css", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "favicon.ico", "manifest.webmanifest"];
 async function fixture(controlClock = false, paired = false) {
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
-  const id = "1".repeat(32), csrf = "A".repeat(43), requests = []; let sessionChanged = false, changeOnKit = false;
+  const id = "1".repeat(32), csrf = "A".repeat(43), requests = [], heldSettings = []; let sessionChanged = false, changeOnKit = false, holdSettings = false;
   let destination = { id: "2".repeat(32), label: "PC personnel", kind: "computer", enabled: true, paired: false, pairedAt: null, pairingExpiresAt: null, lastSeenAt: null, lastReceipt: null };
   let latestArchive = { id: "capture-1792340000000-cccccccccccccccc", startedAt: 1792340000000, bytes: 1000, sha256: "a".repeat(64) }, scheduleEnabled = true, historyCode = null;
   if (paired) destination = { ...destination, paired: true, pairedAt: 1792340000000, lastSeenAt: 1792340300000,
@@ -22,7 +22,15 @@ async function fixture(controlClock = false, paired = false) {
     if (path === "/session-clock.js" && controlClock) return send(200, "text/javascript", "globalThis.JessieSessionClock={scheduleSessionCheck(expiry,callback){window.__sessionCheck=callback;return()=>{};}};");
     if (path === "/api/auth/session") return json({ user: { id, role: "admin", pseudonym: "Synthetic" }, csrf: sessionChanged ? "C".repeat(43) : csrf, expiresAt: Date.now() + 3600000 });
     if (path === "/api/admin/backups") return json({ version: 1, checkedAt: Date.now(), archiveCount: latestArchive ? 2 : 0, latestArchive, schedule: { enabled: scheduleEnabled, hourUtc: 5, minuteUtc: 15 }, destinations: destination ? [destination] : [], decryptionStatus: "not_checked", historyCode });
-    if (path.endsWith("/settings")) { destination = { ...destination, ...JSON.parse(text) }; return json({}); }
+    if (path.endsWith("/settings")) {
+      destination = { ...destination, ...JSON.parse(text) };
+      if (holdSettings) {
+        holdSettings = false;
+        const held = { closed: false, release: () => json({}) }; heldSettings.push(held);
+        response.once("close", () => { held.closed = true; }); return;
+      }
+      return json({});
+    }
     if (path.endsWith("/windows-kit") || path.endsWith("/windows-update-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic kit"); }
     if (path.endsWith("/verification-kit")) { if (changeOnKit) sessionChanged = true; return send(200, "application/zip", "PK synthetic verification kit"); }
     if (path.endsWith("/revoke")) { destination = null; return json({ revoked: true }); }
@@ -31,11 +39,60 @@ async function fixture(controlClock = false, paired = false) {
     send(404, "application/json", "{}");
   });
   await new Promise(yes => server.listen(0, "127.0.0.1", yes));
-  return { origin: `http://127.0.0.1:${server.address().port}`, requests, changeOnKit() { changeOnKit = true; }, changeSession() { sessionChanged = true; destination.label = "Second session"; },
+  return { origin: `http://127.0.0.1:${server.address().port}`, requests, heldSettings, holdSettings() { holdSettings = true; }, changeOnKit() { changeOnKit = true; }, changeSession() { sessionChanged = true; destination.label = "Second session"; },
     changeReceipt() { destination.lastReceipt.bytes = 999; },
     pauseSchedule() { scheduleEnabled = false; }, removeArchive() { latestArchive = null; }, setHistoryCode(value) { historyCode = value; },
     async close() { server.closeAllConnections(); await new Promise(yes => server.close(yes)); } };
 }
+test("real Chrome: an obsolete settings action cannot restart the new bootstrap after a same-task synthetic visibility handoff", { timeout: 60000 }, async () => {
+  const driver = await startWebDriver(), source = await fixture(); let page;
+  try {
+    page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/backups");
+    await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden"), "initial backup settings");
+    source.holdSettings(); await page.click('[data-action="toggle"]');
+    await waitUntil(() => source.heldSettings.length === 1, "settings POST received before its response");
+    // Keep Chrome's fetch, AbortController and response bodies intact. Only the
+    // lifecycle events are controlled: this is not a physical tab/BFCache proof.
+    // Cut off after three restarts so a microtask loop cannot hang WebDriver.
+    const observed = await page.executeAsync(`
+      const done=arguments[arguments.length-1], status=document.getElementById('backup-status');
+      let restarts=0, finished=false;
+      const visibility=value=>{Object.defineProperty(document,'visibilityState',{configurable:true,value});document.dispatchEvent(new Event('visibilitychange'));};
+      const finish=cutoff=>{if(finished)return;finished=true;clearTimeout(timer);observer.disconnect();done({restarts,cutoff});};
+      const observer=new MutationObserver(()=>{
+        if(status.textContent==='Vérification de la connexion…' && ++restarts===3){visibility('hidden');finish(true);}
+      });
+      observer.observe(status,{childList:true,subtree:true,characterData:true});
+      const timer=setTimeout(()=>finish(false),500);
+      visibility('hidden');visibility('visible');
+    `);
+    assert.deepEqual(observed, { restarts: 1, cutoff: false }, "only the current visibility handoff can bootstrap the page");
+    await waitUntil(() => page.execute("return document.querySelector('.copy-badge')?.textContent === 'Copies suspendues' && !document.querySelector('[data-action=toggle]').disabled && document.getElementById('backup-status').textContent === ''"), "current bootstrap finishes without an obsolete session warning");
+    assert.equal(source.requests.filter(request => request.method === "POST").length, 1, "an interrupted mutation is never replayed");
+  } finally { try { await page?.close(); } finally { try { await source.close(); } finally { await driver.close(); } } }
+});
+test("real Chrome: a natively aborted settings response cannot release a later action or replay a POST", { timeout: 60000 }, async () => {
+  const driver = await startWebDriver(), source = await fixture(); let page;
+  try {
+    page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/backups");
+    await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden"), "initial backup settings");
+    source.holdSettings(); await page.click('[data-action="toggle"]');
+    await waitUntil(() => source.heldSettings.length === 1, "first settings POST received");
+    await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'))");
+    await waitUntil(() => source.heldSettings[0].closed, "Chrome abort closes the pending response");
+    await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'))");
+    await waitUntil(() => page.execute("return document.querySelector('.copy-badge')?.textContent === 'Copies suspendues' && !document.querySelector('[data-action=toggle]').disabled"), "fresh summary without replaying the first mutation");
+    source.holdSettings(); await page.click('[data-action="toggle"]');
+    await waitUntil(() => source.heldSettings.length === 2, "second settings POST received");
+    source.heldSettings[0].release();
+    await page.execute("document.querySelector('[data-action=toggle]').click();document.getElementById('refresh').click();JessieI18n.setLanguage('en')");
+    assert.equal(await page.execute("return !document.getElementById('backup-content').hidden && document.querySelector('[data-action=toggle]').disabled"), true);
+    assert.equal(source.requests.filter(request => request.method === "POST").length, 2, "the old response neither unlocks nor repeats the later mutation");
+    source.heldSettings[1].release();
+    await waitUntil(() => page.execute("return document.querySelector('.copy-badge')?.textContent === 'Awaiting connection' && !document.querySelector('[data-action=toggle]').disabled"), "later action finishes normally");
+    assert.equal(source.requests.filter(request => request.method === "POST").length, 2);
+  } finally { try { await page?.close(); } finally { try { await source.close(); } finally { await driver.close(); } } }
+});
 test("real Chrome: history capacity warning translates, clears below the threshold and stays private", { timeout: 60000 }, async () => {
   const driver = await startWebDriver(), source = await fixture(false, true); let page;
   try {

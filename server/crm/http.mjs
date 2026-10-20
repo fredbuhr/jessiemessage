@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { canonicalEmail } from "../auth/config.mjs";
-import { checkMutation, clearCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { validateId, validateLabelIds, validateLabelName, validateNickname, validateNotes, validateReminder, validateSearch, validateVersion } from "./validation.mjs";
 import { createArchiveTransfer, conversationExportFailure } from "../chat/archive-transfer.mjs";
 import { ConversationExportError } from "../chat/conversation-export.mjs";
@@ -268,7 +268,7 @@ export function createCrmHandler(service, { origin, conversationExporter = null 
         const headers = retry ? { "Retry-After": String(retry) } : {};
         // A long download can finish after another tab has logged in. Its old
         // request cookie must not erase the browser's newer session cookie.
-        if (status === 401 && route.kind !== "export") headers["Set-Cookie"] = clearCookie(COOKIE);
+        if (status === 401 && route.kind !== "export" && (method === "POST" || hasSessionCookie(request, COOKIE))) headers["Set-Cookie"] = clearCookie(COOKIE);
         // Reject untrusted mutations before attaching any JSON body reader.
         if (method === "POST" || [400, 408, 413].includes(status)) { headers.Connection = "close"; request.resume(); }
         reply(response, method, status, { error: code }, headers);

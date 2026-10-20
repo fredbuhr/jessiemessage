@@ -160,8 +160,9 @@ test("client login uses a separate secure cookie and returns a minimal restricte
 test("admin cookie cannot authenticate a client and client cookie cannot authenticate administration", async (t) => {
   const { base, calls } = await fixture(t);
   const clientResponse = await fetch(`${base}/api/access/session`, { headers: { Cookie: adminCookie } }); assert.equal(clientResponse.status, 401);
-  assert.match(clientResponse.headers.get("set-cookie"), /^__Host-jessie_client=;.*Max-Age=0/);
+  assert.equal(clientResponse.headers.get("set-cookie"), null);
   const adminResponse = await fetch(`${base}/api/admin/clients`, { headers: { Cookie: clientCookie } }); assert.equal(adminResponse.status, 401);
+  assert.equal(adminResponse.headers.get("set-cookie"), null);
   assert.equal(calls.length, 0);
   const both = await fetch(`${base}/api/access/session`, { headers: { Cookie: `${adminCookie}; ${clientCookie}` } }); assert.equal(both.status, 200);
   assert.deepEqual(calls[0], ["session", clientToken]);
@@ -169,8 +170,39 @@ test("admin cookie cannot authenticate a client and client cookie cannot authent
 
 test("client sessions reject duplicate or noncanonical cookies without looking up a session", async (t) => {
   const { base, calls } = await fixture(t);
-  for (const cookie of [`${clientCookie}; ${clientCookie}`, "__Host-jessie_client=bad", `__Host-jessie_client=${clientToken}=`, `__Host-jessie_client=${"A".repeat(42)}B`]) {
+  for (const cookie of ["__Host-jessie_client=", `${clientCookie}; ${clientCookie}`, "__Host-jessie_client=bad", `__Host-jessie_client=${clientToken}=`, `__Host-jessie_client=${"A".repeat(42)}B`, `preference=${"x".repeat(8192)}; ${clientCookie}`]) {
     const response = await fetch(`${base}/api/access/session`, { headers: { Cookie: cookie } }); assert.equal(response.status, 401);
+    assert.match(response.headers.get("set-cookie"), /^__Host-jessie_client=;.*Max-Age=0; Secure; HttpOnly; SameSite=Strict$/);
+  }
+  assert.equal(calls.length, 0);
+});
+
+test("unauthenticated client reads without their cookie deny access without changing cookies", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const cookie of [undefined, "preference=a", `other_${clientCookie}`, `__Host-jessie_client_extra=${clientToken}`]) {
+    const response = await fetch(`${base}/api/access/session`, {
+      headers: { "Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate", ...(cookie ? { Cookie: cookie } : {}) } });
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: "authentication_required" });
+    assert.equal(response.headers.get("set-cookie"), null);
+  }
+  assert.equal(calls.length, 0);
+});
+
+test("client reads still clear an invalid cookie when its SQL session is absent", async (t) => {
+  const { base, calls } = await fixture(t, { session: () => null });
+  const response = await fetch(`${base}/api/access/session`, { headers: { Cookie: clientCookie } });
+  assert.equal(response.status, 401);
+  assert.match(response.headers.get("set-cookie"), /^__Host-jessie_client=;.*Max-Age=0; Secure; HttpOnly; SameSite=Strict$/);
+  assert.deepEqual(calls, [["session", clientToken]]);
+});
+
+test("explicit client logout without a session still clears its cookie", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const path of ["logout", "logout-all"]) {
+    const response = await post(base, `/api/access/${path}`, {}, headers());
+    assert.equal(response.status, 401);
+    assert.match(response.headers.get("set-cookie"), /^__Host-jessie_client=;.*Max-Age=0/);
   }
   assert.equal(calls.length, 0);
 });
@@ -178,6 +210,8 @@ test("client sessions reject duplicate or noncanonical cookies without looking u
 test("client logout requires CSRF, an empty object and its client session before revocation", async (t) => {
   const { base, calls } = await fixture(t);
   for (const path of ["logout", "logout-all"]) {
+    const crossSite = await post(base, `/api/access/${path}`, {}, headers({ Cookie: clientCookie, "X-CSRF-Token": csrf, "Sec-Fetch-Site": "cross-site" })); assert.equal(crossSite.status, 403);
+    assert.equal(crossSite.headers.get("set-cookie"), null);
     const missing = await post(base, `/api/access/${path}`, {}, headers({ Cookie: clientCookie })); assert.equal(missing.status, 403);
     const forged = await post(base, `/api/access/${path}`, { role: "admin" }, headers({ Cookie: clientCookie, "X-CSRF-Token": csrf })); assert.equal(forged.status, 400);
     const response = await post(base, `/api/access/${path}`, {}, headers({ Cookie: clientCookie, "X-CSRF-Token": csrf })); assert.equal(response.status, 200); assert.deepEqual(await response.json(), { status: "signed_out" });

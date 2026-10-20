@@ -45,6 +45,7 @@ function localOrigin(value) {
 }
 
 const transitionHosts = new Set(["jessiemessage.localhost", "recette.jessiemessage.localhost"]);
+const crossSiteHosts = new Set(["127.0.0.1", "localhost"]);
 function browserOrigin(value) {
   const url = new URL(value);
   if (!transitionHosts.has(url.hostname)) return localOrigin(value);
@@ -54,17 +55,19 @@ function browserOrigin(value) {
   return url.origin;
 }
 
-// The sole cross-origin rehearsal is this fixed pair of HTTPS .localhost names.
-// Both resolve to loopback in Chrome; the WebDriver command transport continues
-// to accept numeric / localhost loopback only. No deployment origin is allowed.
+// Cross-origin rehearsals use one of two fixed HTTPS loopback pairs on one port:
+// the transition aliases or 127.0.0.1/localhost for native cross-site cookie tests.
+// The WebDriver command transport stays numeric/localhost HTTP loopback only.
 export function createWebDriverNavigationPolicy(origin, siblingOrigins = []) {
   const base = browserOrigin(origin), parsed = new URL(base);
   if (!Array.isArray(siblingOrigins) || siblingOrigins.length > 1) throw new Error("WebDriver requires a bounded sibling-origin allowlist");
   const origins = new Set([base]);
   for (const sibling of siblingOrigins) {
     const selected = browserOrigin(sibling), url = new URL(selected);
-    if (!transitionHosts.has(parsed.hostname) || !transitionHosts.has(url.hostname)
-      || parsed.hostname === url.hostname || url.port !== parsed.port) throw new Error("WebDriver sibling navigation requires the fixed HTTPS loopback pair on one port");
+    const fixedPair = transitionHosts.has(parsed.hostname) && transitionHosts.has(url.hostname)
+      || crossSiteHosts.has(parsed.hostname) && crossSiteHosts.has(url.hostname);
+    if (!fixedPair || parsed.protocol !== "https:" || url.protocol !== "https:"
+      || parsed.hostname === url.hostname || url.port !== parsed.port) throw new Error("WebDriver sibling navigation requires a fixed HTTPS loopback pair on one port");
     origins.add(selected);
   }
   return Object.freeze({ origin: base, transitionAlias: transitionHosts.has(parsed.hostname), url(path) {
