@@ -286,6 +286,30 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM message_media WHERE media_id = ?", [image.id]))[0].value), 2, "historical linkage survives tombstones");
     });
 
+    await t.test("a retained profile avatar blocks deletion until cleared; cleanup refunds its quota once", async () => {
+      for (const role of ["client", "admin"]) {
+        const fixture = await pair(), value = asset({ width: 256, height: 256, thumbnailWidth: 256, thumbnailHeight: 256 });
+        const before = await capacityStore.status();
+        await register(fixture, role, value);
+        await connection.query(`INSERT INTO user_profiles (user_id, avatar_media_id, version, created_at, updated_at)
+          VALUES (?, ?, 1, ?, ?)`, [fixture[role].id, value.id, sqlDate(now), sqlDate(now)]);
+        const charged = await capacityStore.status(), bytes = value.fullBytes + value.thumbnailBytes + 80;
+        assert.equal(charged.heldBytes, before.heldBytes + bytes);
+        await assert.rejects(remove(fixture, role, value.id), code("MEDIA_IN_USE"));
+        assert.deepEqual(await capacityStore.status(), charged);
+        assert.equal((await media.getOwnedAsset({ ...actor(fixture, role), assetId: value.id })).deletedAt, null);
+        assert.ok((await connection.query("SELECT avatar_media_id FROM user_profiles WHERE user_id = ?", [fixture[role].id]))[0].avatar_media_id.equals(value.id));
+        // Synthetic compatibility fixture only: no profile API exists in 1.1.1.
+        await connection.query("UPDATE user_profiles SET avatar_media_id = NULL, version = 2 WHERE user_id = ?", [fixture[role].id]);
+        await remove(fixture, role, value.id);
+        const pending = await capacityStore.status();
+        assert.equal(pending.heldBytes, charged.heldBytes); assert.equal(pending.pendingBytes, charged.pendingBytes + bytes);
+        for (let attempt = 0; attempt < 2; attempt++)
+          await media.releaseStorageObject({ ...actor(fixture, role), objectId: value.id, storageKey: value.storageKey });
+        assert.deepEqual(await capacityStore.status(), before);
+      }
+    });
+
     await t.test("removal releases owner deduplication without making a deleted asset reusable", async () => {
       const fixture = await pair(), value = asset(), original = (await register(fixture, "client", value)).asset;
       await remove(fixture, "client", original.id);

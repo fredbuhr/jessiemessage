@@ -264,6 +264,8 @@ export function createMediaStore({ pool, chatStore, capacity = null }) {
         const references = await connection.query(`SELECT 1 FROM message_media mm JOIN messages m
           ON m.id = mm.message_id AND m.conversation_id = mm.conversation_id WHERE mm.media_id = ? AND m.deleted_at IS NULL LIMIT 1`, [assetId]);
         if (references.length) fail("MEDIA_IN_USE");
+        const avatars = await connection.query("SELECT 1 FROM user_profiles WHERE avatar_media_id = ? LIMIT 1", [assetId]);
+        if (avatars.length) fail("MEDIA_IN_USE");
         await connection.query("UPDATE media_assets SET deleted_at = ?, active_digest = NULL WHERE id = ?", [sqlDate(now), assetId]);
         await connection.query("UPDATE media_storage_objects SET state = 'cleanup_pending', updated_at = ? WHERE id = ?", [sqlDate(now), object.id]);
         return rawAsset({ ...row, deleted_at: sqlDate(now) });
