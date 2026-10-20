@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — production `1.1.0` inchangée, identité et checkpoint alignés ; profil et expressions `1.2.0` publiés, préparation Infomaniak à exécuter.** Les releases 1.1.1 et 1.2.0 sont vérifiées ; ni staging ni migration 0031 ni activation 1.2.0 ne sont encore rapportés sur l’hébergement. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**20 octobre 2026 Europe/Paris — production `1.1.0` inchangée, identité et checkpoint alignés ; profil et expressions `1.2.0` publiés, préparation Infomaniak confirmée, contrôle SQL avant migration.** Les releases 1.1.1 et 1.2.0 sont vérifiées ; le reçu utilisateur confirme le staging des deux versions, sans migration 0031 ni activation 1.2.0. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## État de livraison
 
@@ -18,36 +18,43 @@
 | Checkpoint privé | Aligné sur **1.1.0** / `84669ed5` : reçu utilisateur `release110_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. |
 | Repli immédiat | **1.0.0 / Node 24.22**, source `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, checkout et lanceur conservés ; détails ci-dessous et dans le bilan 1.1.0. |
 | Nouvelle livraison | **[1.2.0 publiée](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0)** sur `763b632185ce13eb875110c9107687b2d278ff67`, arbre `c7dce7bcdb99b298ffc43c9e31dd22ee87453926` ; [PR 112](https://github.com/fredbuhr/jessiemessage/pull/112), [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39500108614) 5/5 et [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500847054). Profil, avatar et 180 emojis ; [bilan](profile-expressions-120.md). **Non déployée.** |
-| Précondition de migration | [v1.1.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.1) publiée sur `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1` ; [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39499262875) 5/5 et [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500076798). Repli compatible avec le schéma 31, pas encore préparé ni exécuté sur l’hébergement. Aucun serveur modifié ; `0031` non appliquée. |
+| Précondition de migration | [v1.1.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.1) publiée sur `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1` ; [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39499262875) 5/5 et [publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39500076798). Repli compatible avec le schéma 31, **préparé** sur l’hébergement selon le reçu `staged_awaiting_schema31`, mais pas encore précontrôlé ni exécuté. Aucun changement de runtime ou de base ; `0031` non appliquée. |
 
-**Étape en cours :** exécuter uniquement la préparation épinglée ci-dessous, puis examiner son reçu avant de guider la migration et l’activation. **Ne pas migrer ni modifier le Run Manager à cette étape. Après `0031`, ne pas redémarrer la 1.1.0 ni la 1.0.0 : le repli sera la 1.1.1 compatible, préparée et précontrôlée.** Les pins historiques ci-dessous restent ceux du service 1.1.0 actuel ; ils ne sont pas un repli après la migration.
+**Étape en cours :** contrôler l’historique avec le compte SQL de migration pendant que le service reste ouvert. La commande de préparation est déjà exécutée : ne pas la rejouer. Attendu : 31 migrations prévues, 30 appliquées, une en attente et aucun état interrompu. Après ce contrôle, guider l’arrêt Manager avant la DDL, la migration et les précontrôles. **Dès que 0031 est marquée en cours, ne pas redémarrer 1.1.0/1.0.0 ; le repli 1.1.1 exige un schéma 31 entièrement conforme.**
 
 Le lot 1.1.0 reste clos : reçu SSH utilisateur `release110_metadata_recorded` sur le commit actif, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. Le [script exécuté](https://github.com/fredbuhr/jessiemessage/blob/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py), SHA-256 `eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591`, conserve l’ancien `activeService` 1.0.0 intégral sous `.developmentSimplification.release110.rollback`, avec son empreinte, et préserve notamment `release100`. [Reçu et portée](private-read-receipts-110.md#alignement-du-checkpoint--réalisé). Ne rejouer ni enregistrement, ni staging, ni Build, ni preuve admin déjà transmise. Les chantiers PC/sauvegardes restent différés.
 
 La [publication GitHub](https://github.com/fredbuhr/jessiemessage/actions/runs/39491254060) a été réalisée avec le jeton temporaire GitHub Actions. Le navigateur cloud est indisponible (`native credential state cannot be safely resumed`) et aucun connecteur Infomaniak/SSH/SFTP utilisable n’a été trouvé. L’utilisateur exécute les commandes épinglées dans sa console SSH et utilise son navigateur habituel pour l’admin ; ne pas lui reproposer le navigateur cloud.
 
-## Préparation de 1.2.0 — à exécuter
+## Préparation de 1.2.0 — réalisée
 
-Le [script épinglé](https://github.com/fredbuhr/jessiemessage/blob/eaf702f69b56ba42a9c2c4fd144a33a18c3783d7/ops/prepare-release120.sh), SHA-256 `62aa7235bf8eb13b03af636770167fc8348b90c71ce9fb4a7691ac349e85fc29`, prépare les deux releases depuis le checkout/lanceur 1.1.0 connus. Il confirme commits, arbres, tags, ascendance et dépendances inchangées, puis crée deux worktrees, quatre lanceurs et leurs journaux privés. Il ne démarre aucun processus applicatif, ne lance ni migration ni précontrôle SQL, et ne modifie ni Manager ni checkpoint.
+Reçu SSH transmis par l’utilisateur : `staged_awaiting_schema31`, deux sources/arbres exacts, Node 24.22.0 et empreinte attendue, `started:false`, `migrated:false`, `precheckPassed:false`, `noRestart:true`, `managerChanged:false`, `checkpointChanged:false`. Le [script exécuté](https://github.com/fredbuhr/jessiemessage/blob/eaf702f69b56ba42a9c2c4fd144a33a18c3783d7/ops/prepare-release120.sh), SHA-256 `62aa7235bf8eb13b03af636770167fc8348b90c71ce9fb4a7691ac349e85fc29`, ne doit pas être rejoué. Le [relevé structuré](verification-proofs/jm120-verification.json) conserve les chemins, empreintes et limites du reçu.
+
+| Version préparée | Checkout | Lanceur et empreinte SHA-256 |
+| --- | --- | --- |
+| Repli 1.1.1 | `/srv/customer/jessiemessage-operator/production-111-cfa7dd35` | `/srv/customer/jessiemessage-private/start-primary-release111-cfa7dd35.sh` — `8b73e7aeb2aae4da7d3e6d0a4f1257664b594fb9f914c34835cad9387842723c` |
+| Cible 1.2.0 | `/srv/customer/jessiemessage-operator/production-120-763b6321` | `/srv/customer/jessiemessage-private/start-primary-release120-763b6321.sh` — `f846b72a252b69d881264da76b60025325b4e2262ef3a850f1f58ec61f5da84f` |
+
+Lanceurs 0700, journaux 0600 vides. Les deux scripts `check-primary-release…` sont présents mais n’ont pas été exécutés. `rollback111Prepared:true` et `rollback111HostedQualified:false` : la préparation ne vaut pas qualification du runtime ou du schéma hébergé.
+
+## Contrôle SQL avant migration — à exécuter
+
+Le [helper épinglé](https://github.com/fredbuhr/jessiemessage/blob/9ba7a9a38a22812d4739892ea4b58d4a9258bd08/ops/status-release120-migration.sh), SHA-256 `9908575f0d2ffa1b76f9fa044168c372862afcb1fc54c51acfe1bb11dcff11ba`, réutilise les lecteurs privés et le migrateur existants depuis le checkout 1.1.1. Syntaxe Bash/JS et huit tests synthétiques de saisie TTY/confidentialité réussis ; aucun SQL hébergé exécuté par cette qualification.
 
 ```sh
-python3 - <<'JM_PREPARE'
+python3 - <<'PY_STATUS'
 import hashlib, subprocess, urllib.request
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/eaf702f69b56ba42a9c2c4fd144a33a18c3783d7/ops/prepare-release120.sh"
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/9ba7a9a38a22812d4739892ea4b58d4a9258bd08/ops/status-release120-migration.sh"
 code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != "62aa7235bf8eb13b03af636770167fc8348b90c71ce9fb4a7691ac349e85fc29":
+if hashlib.sha256(code).hexdigest() != "9908575f0d2ffa1b76f9fa044168c372862afcb1fc54c51acfe1bb11dcff11ba":
     raise SystemExit("Empreinte incorrecte : arrêt.")
-subprocess.run(
-    ["bash", "-s", "--", "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
-     "763b632185ce13eb875110c9107687b2d278ff67"],
-    input=code, check=True
-)
-JM_PREPARE
+subprocess.run(["bash", "-s"], input=code, check=True)
+PY_STATUS
 ```
 
-Attendre `status:"staged_awaiting_schema31"`, les deux sources exactes, `migrated:false`, `precheckPassed:false`, `noRestart:true` et `rollback111HostedQualified:false`. Ce reçu prouve la préparation des fichiers, pas l’identité du runtime ni le fonctionnement hébergé des deux nouvelles versions. Un fichier déjà présent impose une inspection ; ne pas effacer ni relancer à l’aveugle.
+Le contrôle reprend host/port/base dans la configuration privée et demande seulement le nom puis le mot de passe du compte SQL de migration. Il ne crée ni table ni compte et ne redémarre rien. Ne transmettre au chat que le reçu neutre ; les identifiants restent dans la console personnelle. Ce contrôle confirme le moteur, TLS et l’historique, pas les droits DDL. Attendre `status:"checked"`, `migrations:31`, `applied:30`, `pending:1`, `interrupted:false`, `readOnly:true`, `migrated:false` et `noRestart:true`. Les champs source/version désignent l’outil 1.1.1, pas la version active du serveur.
 
-Après ce reçu seulement : guider le passage 30→31 avec le migrateur existant et saisie personnelle masquée du mot de passe, vérifier l’historique et les précontrôles 1.1.1/1.2.0, puis activer le commit 1.2.0 dans le Manager. L’identité fraîche en administration et l’alignement du checkpoint restent des étapes distinctes. Aucun nouvel essai PC/Avast ni sauvegarde/restauration de production n’est ajouté.
+Après le résultat attendu seulement : guider l’arrêt du service dans le Manager, puis `upgrade` avec le migrateur existant. La migration 0031 crée une table vide mais prend des verrous SQL ; le verrou migrateur seul n’exclut pas les écritures de l’application. Prévoir une coupure maîtrisée entre l’arrêt et l’activation. Après DDL, vérifier 31 migrations conformes puis les précontrôles 1.1.1/1.2.0 avant le Run 1.2.0. Toute migration interrompue ou erreur DDL exige une inspection, sans retour SQL automatique ni reprise de 1.1.0/1.0.0. Identité admin fraîche et alignement du checkpoint restent distincts. Aucun nouvel essai PC/Avast ni sauvegarde/restauration de production n’est ajouté.
 
 ## Validation de 1.2.0
 

@@ -58,7 +58,7 @@
     "mainRun": 39499262875,
     "publicationRun": 39500076798,
     "schemaMigrations": 31,
-    "hostedPreparationReported": false,
+    "hostedPreparationReported": true,
     "hostedPrecheckReported": false
   },
   "preparation": {
@@ -67,9 +67,64 @@
     "sha256": "62aa7235bf8eb13b03af636770167fc8348b90c71ce9fb4a7691ac349e85fc29",
     "syntheticTestsPassed": 7,
     "expectedStatus": "staged_awaiting_schema31",
-    "executionReported": false,
+    "executionReported": true,
     "migrates": false,
-    "restarts": false
+    "restarts": false,
+    "receiptObservedAt": "2026-10-20T21:39:51.508327+00:00",
+    "userReceipt": {
+      "status": "staged_awaiting_schema31",
+      "releases": [
+        {
+          "version": "1.1.1",
+          "source": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+          "tree": "94b2fec5383fd948df7605b63f65a4e23078c2a1",
+          "checkout": "/srv/customer/jessiemessage-operator/production-111-cfa7dd35",
+          "launcher": "/srv/customer/jessiemessage-private/start-primary-release111-cfa7dd35.sh",
+          "launcherSha256": "8b73e7aeb2aae4da7d3e6d0a4f1257664b594fb9f914c34835cad9387842723c",
+          "checkLauncher": "/srv/customer/jessiemessage-private/check-primary-release111-cfa7dd35.sh",
+          "checkLauncherSha256": "2c5132241e1d6ee852ae7ff72cf7c2d62e5cb564aad3670de726d1f2a749d1e1",
+          "log": "/srv/customer/jessiemessage-private/jm111-node2422.log",
+          "precheckLog": "/srv/customer/jessiemessage-private/jm111-preflight-cfa7dd35.log",
+          "launcherMode": "0700",
+          "logMode": "0600",
+          "logsEmpty": true,
+          "started": false,
+          "migrated": false,
+          "precheckPassed": false
+        },
+        {
+          "version": "1.2.0",
+          "source": "763b632185ce13eb875110c9107687b2d278ff67",
+          "tree": "c7dce7bcdb99b298ffc43c9e31dd22ee87453926",
+          "checkout": "/srv/customer/jessiemessage-operator/production-120-763b6321",
+          "launcher": "/srv/customer/jessiemessage-private/start-primary-release120-763b6321.sh",
+          "launcherSha256": "f846b72a252b69d881264da76b60025325b4e2262ef3a850f1f58ec61f5da84f",
+          "checkLauncher": "/srv/customer/jessiemessage-private/check-primary-release120-763b6321.sh",
+          "checkLauncherSha256": "b5e7a6ef89c3fca613944757699ecb26b80a53838234fb84302ef1466fff3810",
+          "log": "/srv/customer/jessiemessage-private/jm120-node2422.log",
+          "precheckLog": "/srv/customer/jessiemessage-private/jm120-preflight-763b6321.log",
+          "launcherMode": "0700",
+          "logMode": "0600",
+          "logsEmpty": true,
+          "started": false,
+          "migrated": false,
+          "precheckPassed": false
+        }
+      ],
+      "nodeVersion": "v24.22.0",
+      "nodeBinarySha256": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+      "started": false,
+      "migrated": false,
+      "precheckPassed": false,
+      "noRestart": true,
+      "managerChanged": false,
+      "runtimeStarted": false,
+      "checkpointChanged": false,
+      "rollback111Prepared": true,
+      "rollback111HostedQualified": false,
+      "expectedActiveServiceVersion": "1.1.0",
+      "preservedLauncher": "/srv/customer/jessiemessage-private/start-primary-release110-84669ed5.sh"
+    }
   },
   "hosting": {
     "activeVersionLastConfirmed": "1.1.0",
@@ -81,5 +136,23 @@
     "checkpoint110Preserved": true,
     "pcAndD1Preserved": true,
     "realClientMessageOrErasureTests": false
+  },
+  "migrationStatusCheck": {
+    "scriptCommit": "9ba7a9a38a22812d4739892ea4b58d4a9258bd08",
+    "path": "ops/status-release120-migration.sh",
+    "sha256": "9908575f0d2ffa1b76f9fa044168c372862afcb1fc54c51acfe1bb11dcff11ba",
+    "syntheticTestsPassed": 8,
+    "executionReported": false,
+    "readOnly": true,
+    "migrates": false,
+    "restarts": false,
+    "ddlPrivilegesVerified": false,
+    "expected": {
+      "status": "checked",
+      "migrations": 31,
+      "applied": 30,
+      "pending": 1,
+      "interrupted": false
+    }
   }
 }
