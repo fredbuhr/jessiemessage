@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — harmonisation terminée : `1.0.0` déployée, identité confirmée par le relevé administrateur utilisateur et checkpoint privé aligné.** La V1 initiale est terminée. Cette livraison en établit la référence explicite, sans intégrer l’évolution de lecture privée. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**20 octobre 2026 Europe/Paris — production `1.0.0` harmonisée ; lecture privée `1.1.0` préparée en branche, non publiée/non déployée.** L’identité active est confirmée par le relevé administrateur utilisateur et le checkpoint privé est aligné. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## État de livraison
 
@@ -16,9 +16,9 @@
 | Portée | Métadonnées, documentation et identité de démarrage ; aucun changement métier de messagerie, de dépendances ou de schéma SQL. |
 | Preuves | [Bilan 1.0.0](production-100.md) et [relevé structuré](verification-proofs/jm100-verification.json). Lecture admin rapportée par l’utilisateur, pas de GET privé direct de l’agent. R1/R2 SSH restent non concluants. |
 | Checkpoint privé | Aligné sur 1.0.0 / `70b48aa` : reçu utilisateur `release100_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. |
-| Évolution « Lecture privée » | Branche locale `feat/private-admin-read-receipts`, commit `84860a332cc3e9444f968851df808e804b9be962`, initialement 0.87.0 ; non publié/non déployé. Prochain travail distinct : reporter sur la référence propre pour préparer 1.1.0. |
+| Évolution « Lecture privée » | Travail conservé `84860a332cc3e9444f968851df808e804b9be962` reporté sur `main` `e2c5397c64e0e68f959f77fcf417722871b5a677`, branche `feature/private-read-receipts-1.1.0`, métadonnées 1.1.0 ; non publié/non déployé. [Périmètre et validation](private-read-receipts-110.md). |
 
-**Harmonisation close. Prochaine évolution prévue :** reporter le travail conservé de lecture privée sur la référence 1.0.0 pour préparer 1.1.0, puis suivre ses validations propres. Aucune nouvelle évolution fonctionnelle n’a été publiée ou déployée dans cette clôture. Le relevé admin et le reçu d’alignement sont acquis : ne pas les redemander ni répéter les scripts, le staging ou le Build pour clore cette livraison.
+**Étape en cours :** qualifier et publier la PR de lecture privée 1.1.0, attendre la CI requise puis fusionner et livrer le commit exact validé, avec repli 1.0.0. Les contrôles locaux et revues bornées sont dans son bilan ; SQL et Chrome doivent être exécutés en CI avant livraison. La production reste 1.0.0. Les preuves et le reçu de clôture 1.0.0 sont acquis : ne pas les redemander ni répéter ses scripts, son staging ou son Build. Les autres évolutions restent séparées.
 
 [Script de métadonnées exécuté](https://github.com/fredbuhr/jessiemessage/blob/002f26450a39b0fc937745f008e563efdb21ba66/ops/record-release100.py), SHA-256 `167ec69db5f6b86e85a4b437fbb6073aa21b523ab34f102993c4f4ace4fe13dd` : son reçu transmis par l’utilisateur confirme l’écriture 1.0.0 sur le commit exact, sans redémarrage, avec repli et autres blocs préservés. Le script vérifie source/arbre propres et pins du lanceur/Node sur disque, conserve l’ancien `activeService` intégral sous `.developmentSimplification.release100.rollback`, puis relit le JSON après remplacement atomique 0600. La nouvelle identité explicite la provenance admin utilisateur et ses limites. Verrou coopératif et contrôle préalable des octets/métadonnées, sans garantie CAS universelle. **4/4 tests ciblés** sur fichiers synthétiques précèdent cette exécution ; ils ne remplacent pas le reçu serveur.
 

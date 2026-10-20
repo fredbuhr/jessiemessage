@@ -282,6 +282,24 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       assert.equal((await read(fixture)).messages.find((item) => item.id.equals(own.message.id)).isMine, true);
     });
 
+    await t.test("administrator reads stay private without changing client events or activity; both own read positions persist", async () => {
+      const fixture = await pair();
+      await send(fixture); await send(fixture, "admin");
+      await store.markRead({ ...request(fixture), through: "2" });
+      const before = await store.readEvents(request(fixture));
+      assert.equal((await read(fixture, "admin")).conversation.peerReadSequence, "2");
+      await store.markRead({ ...request(fixture, "admin"), through: "1" });
+      assert.deepEqual(await store.readEvents(request(fixture)), before);
+      const client = (await read(fixture)).conversation;
+      assert.equal(client.peerReadSequence, "0");
+      assert.equal(client.lastReadSequence, "2");
+      const administrator = (await read(fixture, "admin")).conversation;
+      assert.equal(administrator.lastReadSequence, "1");
+      assert.equal(administrator.unreadCount, 0);
+      const receipt = (await connection.query("SELECT last_read_sequence FROM chat_receipts WHERE conversation_id = ? AND user_id = ?", [fixture.conversationId, fixture.admin.id]))[0];
+      assert.equal(String(receipt.last_read_sequence), "1");
+    });
+
     await t.test("only authors delete; repeated deletion and send retry return the same tombstone without restoring ciphertext", async () => {
       const fixture = await pair(), message = payload(), sent = await send(fixture, "client", message);
       await assert.rejects(store.deleteMessage({ ...request(fixture, "admin"), messageId: sent.message.id }), errorCode("CHAT_NOT_FOUND"));

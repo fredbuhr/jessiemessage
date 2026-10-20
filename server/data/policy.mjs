@@ -12,7 +12,7 @@ const catalogue = [
   ["client_session_state", "subject", "Count linked through the client's sessions."],
   ["mail_outbox", "subject", "Owned job count only; payload, destination and lease material excluded."],
   ["messages", "subject", "Visible conversation content and deletion tombstones."],
-  ["chat_receipts", "subject", "Conversation receipt counts; own and visible peer cursors only."],
+  ["chat_receipts", "subject", "Conversation receipt counts for offline operator inventory; client content includes only the client's own read cursor."],
   ["chat_events", "subject", "Conversation event count; no duplicate content export."],
   ["media_assets", "subject", "Owned library count; active owned or visible delivered images only in content export."],
   ["message_media", "subject", "Delivery count in the selected conversation; deleted deliveries give no image access."],
@@ -47,6 +47,6 @@ export const DATA_POLICY_METADATA = freeze({
     { table: "push_outbox", days: 30, meaning: "Notification worker removes only terminal accepted, skipped or failed jobs whose finished date is older than thirty days, at most one hundred rows per pass. Subscriptions and conversation messages are not purged by this cleanup." },
     { table: "auth_rate_limits", days: 1, meaning: "Rate-limit consumption opportunistically removes at most two thousand shared buckets whose window start is older than twenty-four hours, no more than once per five minutes per store instance. This is neither a scheduled erasure deadline nor client-attributable cleanup." },
   ],
-  exclusions: ["Credentials, tokens and hashes", "Notification endpoints, browser keys and encrypted subscriptions", "Administrator CRM content and labels", "Other client data and campaign audiences", "Shared counters and the migration ledger", "Deleted message bodies and revoked media deliveries"],
+  exclusions: ["Credentials, tokens and hashes", "Notification endpoints, browser keys and encrypted subscriptions", "Administrator CRM content, labels and read cursors", "Other client data and campaign audiences", "Shared counters and the migration ledger", "Deleted message bodies and revoked media deliveries"],
   limitations: ["Content export is not a declaration that every category of personal data has been exported.", "Offline mode is an operator declaration; SQL snapshots do not freeze external filesystem producers.", "Retention periods and backup handling require an explicit decision before any future purge."],
 });

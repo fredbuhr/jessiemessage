@@ -216,8 +216,21 @@ test("live chat switching preserves raw user phrases, drafts, focused controls a
   }
   assert.equal(f.calls.length, before); assert.equal(contentPosts(f).length, 1);
   f.conversation().peerReadSequence = "2"; await f.advance(3000);
+  assert.equal(messages(f).children.at(-1), article); assert.equal(receipt.textContent, "Sent");
+  f.language("fr"); assert.equal(receipt.textContent, "Envoyé"); assert.equal(f.document.activeElement, remove);
+});
+
+test("Jessie's read receipt updates and translates in place after a metadata-only poll", async () => {
+  const f = harness({ language: "en", currentSession: session(1, "A".repeat(43), "admin") }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
+  await f.send("A synthetic message from Jessie");
+  const article = messages(f).children.at(-1), remove = article.querySelector(".delete-message");
+  const receipt = article.querySelector(".message-meta").children[1];
+  assert.equal(receipt.textContent, "Sent"); remove.focus();
+  f.conversation().peerReadSequence = "2"; await f.advance(3000);
   assert.equal(messages(f).children.at(-1), article); assert.equal(receipt.textContent, "Read");
   f.language("fr"); assert.equal(receipt.textContent, "Lu"); assert.equal(f.document.activeElement, remove);
+  assert.equal(contentPosts(f).length, 1);
 });
 
 test("uncertain send IDs, retry state, raw text and errors survive language changes without another POST", async () => {

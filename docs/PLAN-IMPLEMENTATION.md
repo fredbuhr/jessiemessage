@@ -17,7 +17,7 @@ L’harmonisation est terminée. La numérotation est décrite dans le [README](
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **1 — Lecture privée**, cible `1.1.0` | Jessie voit les lectures clients ; le client ne reçoit pas la lecture de Jessie, y compris par API/export. Badges propres et appareils conservés ; régressions serveur, SQL et interface validées. | Préparée localement sur la V1 précédente ; non publiée/non déployée. Prochaine étape : reporter ce travail conservé sur la référence 1.0.0 désormais harmonisée. |
+| **1 — Lecture privée**, cible `1.1.0` | Jessie voit les lectures clients ; le client ne reçoit pas la lecture de Jessie, y compris par API/export. Badges propres et appareils conservés ; régressions serveur, SQL et interface validées. | Reportée sur la référence harmonisée dans `feature/private-read-receipts-1.1.0`, version 1.1.0 ; revues serveur/interface et tests locaux ciblés réussis. Restent PR/CI, fusion, publication et déploiement constaté. Production 1.0.0. |
 | **2 — Profil et expressions** | Profil, avatar et sélecteur emojis/stickers ; données persistantes, images légères et parcours mobile confortable. | Planifiée. |
 | **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |

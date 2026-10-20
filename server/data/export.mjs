@@ -57,7 +57,9 @@ function conversation(value, clientId) {
   const id = bytes(value.id), actualClient = bytes(value.clientId), adminId = bytes(value.adminId);
   if (!actualClient.equals(clientId) || actualClient.equals(adminId)) fail();
   const output = { peerName: text(value.peerName, 64), createdAt: date(value.createdAt), closedAt: date(value.closedAt, true),
-    lastReadSequence: sequence(value.lastReadSequence), peerReadSequence: sequence(value.peerReadSequence) };
+    // Client-content exports must not publish Jessie’s read state, including
+    // when a caller supplies a reader with a previously populated peer cursor.
+    lastReadSequence: sequence(value.lastReadSequence), peerReadSequence: "0" };
   if (output.closedAt !== null && output.closedAt < output.createdAt) fail();
   return { id, clientId: actualClient, adminId, output };
 }

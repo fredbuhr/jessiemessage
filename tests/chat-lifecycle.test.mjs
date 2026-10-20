@@ -564,21 +564,25 @@ test("empty event polls preserve a message and its focused delete control", asyn
 });
 
 function photoFixture(f, { sender = "me", messageId = id(800), sequence = "1" } = {}) {
-  const conv = f.conversation();
+  const conv = f.conversation(), role = f.state.currentSession.user.role;
   return { id: messageId, sequence, sender, body: "A private photo", createdAt: now, deletedAt: null, clientMessageId: null,
     media: { id: id(801), width: 1000, height: 800, thumbnailWidth: 400, thumbnailHeight: 320,
-      fullUrl: `/api/media/client/conversations/${conv.id}/messages/${messageId}/full`, thumbnailUrl: `/api/media/client/conversations/${conv.id}/messages/${messageId}/thumb` } };
+      fullUrl: `/api/media/${role}/conversations/${conv.id}/messages/${messageId}/full`, thumbnailUrl: `/api/media/${role}/conversations/${conv.id}/messages/${messageId}/thumb` } };
 }
 const photoResponse = () => ({ ok: true, status: 200, headers: { get: () => "image/jpeg" }, blob: async () => new Blob(["synthetic private photo"], { type: "image/jpeg" }) });
 
-test("a receipt-only poll updates the read receipt while preserving the photo and focused control", async () => {
+for (const role of ["client", "admin"]) test(`${role}: a receipt-only poll preserves the photo and focus while exposing reads only to Jessie`, async () => {
   let f;
-  f = harness({ intercept: (path) => {
-    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+  f = harness({ currentSession: session(1, "A".repeat(43), role), intercept: (path) => {
+    if (path === `/api/media/${role}/capabilities`) return response(200, { enabled: true });
     if (path.endsWith("/messages?limit=50")) return response(200, { conversation: f.conversation(), messages: [photoFixture(f)], eventCursor: "1", hasMoreBefore: false });
     if (path.endsWith("/thumb")) return photoResponse();
     return undefined;
   } }); await flush();
+  if (role === "admin") {
+    for (const handler of f.element("conversations").children[0].events.get("click")) handler({});
+    await flush();
+  }
   const article = f.element("messages").children[0], photo = article.querySelector(".photo-open"), image = photo.querySelector("img"), remove = article.querySelector(".delete-message");
   assert.ok(image); assert.match(contents(article), /Envoyé/); photo.focus();
   f.conversation().peerReadSequence = "1";
@@ -586,7 +590,8 @@ test("a receipt-only poll updates the read receipt while preserving the photo an
   assert.equal(f.element("messages").children[0], article);
   assert.equal(article.querySelector(".photo-open"), photo); assert.equal(photo.querySelector("img"), image);
   assert.equal(article.querySelector(".delete-message"), remove); assert.equal(f.document.activeElement, photo);
-  assert.match(contents(article), /Lu/); assert.doesNotMatch(contents(article), /Envoyé/);
+  const receipt = article.querySelector(".message-meta").children[1];
+  assert.equal(receipt.textContent, role === "admin" ? "Lu" : "Envoyé");
   assert.equal(f.calls.filter((call) => call.path.endsWith("/thumb")).length, 1);
   assert.equal(f.createdUrls.length, 1); assert.equal(f.revoked.length, 0);
 });

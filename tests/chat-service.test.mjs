@@ -165,6 +165,21 @@ test("message response allowlists pagination fields instead of exposing internal
   assert.equal(JSON.stringify(result).includes("internal-result@example.invalid"), false);
 });
 
+test("client conversation, history and event DTOs hide administrator reads while administrator DTOs retain client receipts", async () => {
+  const f = await fixture();
+  const clientResults = [await f.service.clientConversation(f.token),
+    (await f.service.messages("client", f.token, conversationHex)).conversation,
+    (await f.service.events("client", f.token, conversationHex)).conversation];
+  for (const value of clientResults) {
+    assert.equal(value.peerReadSequence, "0");
+    assert.equal(value.lastReadSequence, "9007199254740993", "the client's own read position still synchronizes between devices");
+  }
+  const adminResults = [(await f.service.listConversations(f.token)).conversations[0],
+    (await f.service.messages("admin", f.token, conversationHex)).conversation,
+    (await f.service.events("admin", f.token, conversationHex)).conversation];
+  for (const value of adminResults) assert.equal(value.peerReadSequence, "9007199254740992");
+});
+
 test("send persists encrypted exact text with fresh binding and resolves retries to the original stored identifier", async () => {
   const f = await fixture(); const clientMessageId = randomBytes(16).toString("hex"); const body = "  Exact text\nالعربية <b>literal</b>  ";
   await assert.rejects(f.service.send("admin", f.token, conversationHex, { clientMessageId, body, senderId: clientHex }), hasCode("CHAT_INPUT"));

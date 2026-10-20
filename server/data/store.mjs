@@ -75,11 +75,9 @@ export async function withClientData(input = {}, callback) {
       accessExpiresAt: date(row.access_expires_at, true) });
     if (account.createdAt > nowSql || account.updatedAt < account.createdAt) fail();
     const conversations = array(await connection.query(`SELECT c.id, c.client_id, c.admin_id, peer.pseudonym AS peer_name,
-      c.created_at, c.closed_at, COALESCE(own.last_read_sequence, 0) AS last_read_sequence,
-      COALESCE(other.last_read_sequence, 0) AS peer_read_sequence
+      c.created_at, c.closed_at, COALESCE(own.last_read_sequence, 0) AS last_read_sequence
       FROM conversations c JOIN users peer ON peer.id = c.admin_id AND peer.role = 'admin'
       LEFT JOIN chat_receipts own ON own.conversation_id = c.id AND own.user_id = c.client_id
-      LEFT JOIN chat_receipts other ON other.conversation_id = c.id AND other.user_id = c.admin_id
       WHERE c.client_id = ? LIMIT 2`, [target]), 2);
     if (conversations.length > 1) fail();
     let context = null, conversation = null;
@@ -89,7 +87,8 @@ export async function withClientData(input = {}, callback) {
       if (!context.clientId.equals(target) || context.adminId.equals(target)) fail();
       conversation = Object.freeze({ id: Buffer.from(context.id), clientId: Buffer.from(context.clientId), adminId: Buffer.from(context.adminId),
         peerName: text(value.peer_name, 64), createdAt: date(value.created_at), closedAt: date(value.closed_at, true),
-        lastReadSequence: sequence(value.last_read_sequence), peerReadSequence: sequence(value.peer_read_sequence) });
+        // Keep the established client export shape without reading Jessie’s private receipt.
+        lastReadSequence: sequence(value.last_read_sequence), peerReadSequence: "0" });
       if (conversation.createdAt > nowSql || conversation.closedAt !== null && conversation.closedAt < conversation.createdAt) fail();
     }
     const preferences = array(await connection.query("SELECT enabled, updated_at FROM broadcast_preferences WHERE user_id = ? LIMIT 2", [target]), 2);

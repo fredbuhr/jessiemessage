@@ -791,7 +791,7 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
     if (row.remove) { ui.text(row.remove, "Supprimer"); ui.attr(row.remove, "aria-label", "Supprimer mon message du {date}", { date: dateParameter(message.createdAt, true) }); }
     if (row.photoButton) { ui.attr(row.photoButton, "aria-label", "Agrandir la photo de ce message"); if (!mediaEnabled) ui.text(row.photoButton, "Photos indisponibles pour le moment"); }
     if (row.receipt) {
-      const receipt = compareSequence(state.conversation.peerReadSequence, message.sequence) >= 0 ? "Lu" : "Envoyé";
+      const receipt = role === "admin" && compareSequence(state.conversation.peerReadSequence, message.sequence) >= 0 ? "Lu" : "Envoyé";
       ui.text(row.receipt, receipt);
     }
     // Moving a live node also loses focus in some browsers. Insert only a new

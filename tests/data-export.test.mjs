@@ -78,6 +78,7 @@ test("client export whitelists account, selected messages, preferences and activ
   assert.deepEqual(Object.keys(account), ["format", "version", "generatedAt", "user", "conversation", "preferences"]);
   assert.equal(account.format, "jessiemessage-client-content"); assert.equal(account.version, 1); assert.equal(account.user.email, f.account.email);
   assert.equal(account.conversation.peerName, "Jessie"); assert.deepEqual(account.preferences, { broadcasts: { enabled: true, updatedAt: "2026-10-15T09:59:40.123000Z" } });
+  assert.equal(account.conversation.lastReadSequence, "2"); assert.equal(account.conversation.peerReadSequence, "0");
   const messages = f.output.lines.get("messages.jsonl");
   assert.equal(messages[0].body, "Mon texte exact\n<b>préservé</b>"); assert.equal(messages[0].sender, "me"); assert.equal(messages[1].sender, "peer");
   assert.equal(messages[2].body, "Photo reçue"); assert.equal(messages[3].body, ""); assert.equal(messages[4].body, null); assert.equal(messages[4].media, null);
@@ -89,6 +90,18 @@ test("client export whitelists account, selected messages, preferences and activ
   for (const value of [f.account.id, f.conversation.id, f.adminId, received.storageKey, own.storageKey]) assert.equal(JSON.stringify(account).includes(value.toString("hex")), false);
   assert.ok(f.state.deliveredBuffers.every((value) => value.every((byte) => byte === 0)), "temporary decrypted photo buffers are erased after awaited writes");
   assert.ok(f.output.media.values().next().value.some((byte) => byte !== 0));
+});
+
+test("client content export never discloses Jessie’s read cursor supplied by an alternate reader", async () => {
+  const f = fixture(); f.state.messages = [f.message(101, 1, "Client-visible content")];
+  f.conversation.peerReadSequence = "0";
+  await f.run();
+  const before = structuredClone(f.output.json.get("account.json"));
+  f.conversation.peerReadSequence = "18446744073709551615";
+  await f.run();
+  assert.deepEqual(f.output.json.get("account.json"), before);
+  assert.equal(before.conversation.lastReadSequence, "2");
+  assert.equal(before.conversation.peerReadSequence, "0");
 });
 
 test("tombstoned received photos never decrypt or copy their retained media link, while owned unused library remains available", async () => {

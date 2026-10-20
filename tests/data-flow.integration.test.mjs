@@ -99,7 +99,7 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         retained = reader;
         assert.equal(reader.account.email, "first@example.invalid"); assert.equal(reader.account.accessExpiresAt, sqlDate(now - 60000));
         assert.equal(reader.conversation.peerName, "Synthetic peer"); assert.equal(reader.conversation.lastReadSequence, "3");
-        assert.equal(reader.conversation.peerReadSequence, "4"); assert.equal(reader.preference.enabled, true);
+        assert.equal(reader.conversation.peerReadSequence, "0"); assert.equal(reader.preference.enabled, true);
         const initial = await reader.messages({ limit: 2 });
         assert.equal(initial.hasMore, true); assert.equal(initial.nextCursor, "2");
         assert.ok(initial.rows[0].id.equals(visibleSharedMessage)); assert.ok(initial.rows[0].media.id.equals(shared));
@@ -120,6 +120,15 @@ test("offline client content reader isolates two real MariaDB clients in one rea
       });
       await assert.rejects(retained.messages(), unavailable);
       await assert.rejects(withClientData({ pool, clientId: admin, now }, () => assert.fail("administrator must not be a client target")), unavailable);
+    });
+    await t.test("client data snapshot is unchanged when the administrator records a new read receipt", async () => {
+      await connection.query("DELETE FROM chat_receipts WHERE conversation_id = ? AND user_id = ?", [firstConv, admin]);
+      const read = () => withClientData({ pool, clientId: first, now }, (reader) => reader.conversation);
+      const before = await read();
+      await connection.query("INSERT INTO chat_receipts (conversation_id, user_id, last_read_sequence, updated_at) VALUES (?, ?, 4, ?)", [firstConv, admin, created]);
+      assert.deepEqual(await read(), before);
+      assert.equal(before.lastReadSequence, "3");
+      assert.equal(before.peerReadSequence, "0");
     });
     await t.test("one SQL snapshot excludes a concurrent new message while the following export sees it", async () => {
       let inserted;
