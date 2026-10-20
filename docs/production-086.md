@@ -1,6 +1,6 @@
 # Clôture V1 — livraison 0.86
 
-**V1 applicative terminée ; 0.86 livrée et vérifiée le 20 octobre 2026 à 14:18:38.549451 UTC / 16:18:38 Europe/Paris.** A01 reste ouvert avant une ouverture large : cette livraison n’est pas une certification générale sans réserve Node. Pins et repli dans [REPRISE](REPRISE.md).
+**V1 applicative terminée ; 0.86 livrée et vérifiée le 20 octobre 2026 à 14:18:38.549451 UTC / 16:18:38 Europe/Paris.** **Mise à niveau ultérieure vérifiée à 16:41:34 : le service tourne sous Node officiel 24.22.0**, même code et hébergement. La dette du runtime 24.15 est levée avec la version disponible au 20 octobre ; [preuves Node et prochaine maintenance](node-runtime-086.md). Pins et repli dans [REPRISE](REPRISE.md).
 
 ## Périmètre borné
 
@@ -16,7 +16,7 @@
 | Messagerie | Livrée : texte/photos, historique, galerie, brouillons et envoi confirmé après réponse HTTP perdue. |
 | Administration | Livrée : CRM, fiches privées, tags/groupes, conflits, diffusions individuelles et état du service. |
 | Notifications et exports | Livrés : notification neutre vers le message concerné, export client/administrateur avec photos partagées ; interfaces FR/EN et guide. |
-| A01 — Node fournisseur | **Ouvert : le nouveau reçu du parent Manager confirme v24.15.0.** Aucune option de correctif dans le Manager observé ; choisir la majeure 24 ne prouve pas un correctif appliqué. Aucune divergence avec SSH démontrée. |
+| A01 — Node fournisseur | **Ancienne dette 24.15 corrigée le 20 octobre à 16:41:34 : reçu réel Manager v24.22.0**, binaire officiel privé vérifié ; même application et service. Le correctif annoncé pour le 21 octobre reste une maintenance future non publiée. |
 | A07 — PC/Avast | Différé sur instruction utilisateur, non résolu et hors des préalables de cette clôture. Artefact et états existants préservés ; aucune action PC demandée. |
 | A08 — archivage | Exécuteur actif différé, sans nouvelle purge ; ne conditionne pas les lots messages. |
 
@@ -31,9 +31,9 @@ La priorité durable reste le cœur de la messagerie. Aucun autre manque fonctio
 | CI main | [Run](https://github.com/fredbuhr/jessiemessage/actions/runs/39436551982) 5/5 ; mêmes compteurs de validation, arbre identique au candidat. |
 | Précontrôle serveur | 20 octobre 14:09:41.791664 UTC : `local_closure_precheck/passed`, aucune fermeture en attente, aucun démarrage/effacement ; continuité externe non vérifiée. Dépendances réutilisées après égalité des lockfiles hors deux versions racine. |
 | Déploiement et contrôles | Build normal Manager réussi à 16:17 Europe/Paris, Node actif, sans réinstallation ni migration. Vérification à 16:18:38 : 26 HTTPS conformes sur deux origines — quatre santé/disponibilité 200 avec JSON exact et `no-store`, huit API auth/accès/chat 401, quatorze ressources publiques 200 identiques au code épinglé ; HSTS unique et aucun `Set-Cookie` sur les 26 réponses. Dix empreintes sensibles et identité PC préservées ; moniteur OK (`checkedAt:1792505912998`). |
-| Repli | 0.85 préservée ; pins et commandes dans REPRISE. |
+| Repli | 0.85 applicative préservée dans le checkpoint ; le repli opérationnel du Node est désormais l’ancien lanceur 0.86/Node 24.15, qui rouvrirait A01. Pins dans REPRISE. |
 
-Le reçu prouve la version du **parent** démarré par Manager. L’enfant fork réemploie normalement son exécutable ; aucune preuve de version propre à l’enfant n’a été ajoutée. Le [bulletin Node de juillet 2026](https://nodejs.org/en/blog/vulnerability/july-2026-security-releases) publie des correctifs ultérieurs ; la [FAQ Infomaniak 2535](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak) décrit le choix de version. A01 reste une dépendance fournisseur non résolue.
+Le reçu initial de 16:18 prouvait v24.15.0 pour le **parent** Manager ; celui de 16:41 confirme désormais v24.22.0, avec CI dédiée 5/5 et 26 HTTPS conformes. Le reçu prouve la version du **parent** démarré par Manager. L’enfant fork réemploie normalement son exécutable ; aucune preuve de version propre à l’enfant n’a été ajoutée. Le [bulletin Node de juillet 2026](https://nodejs.org/en/blog/vulnerability/july-2026-security-releases) publie des correctifs ultérieurs ; la [FAQ Infomaniak 2535](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak) décrit le choix de version. Le choix retenu depuis la demande explicite de correction Node utilise un binaire officiel épinglé pour l’unique service, sans modifier le Node système fournisseur. Les détails et la prochaine maintenance sont dans le bilan Node.
 
 [Preuve Manager](verification-proofs/jm086-manager.jpg) : JPEG 60 021 octets, SHA-256 `2d3ea2e82b92fcd464fe6f07c6012a8808aa3ee38e46d95af654af193b5612be`.
 
