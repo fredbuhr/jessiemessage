@@ -1,26 +1,29 @@
 # Reprendre JessieMessage
 
-**20 octobre 2026 Europe/Paris — harmonisation `1.0.0` préparée localement, non publiée/non déployée ; production toujours `0.86.0`.** La V1 initiale a été clôturée et déployée. `1.0.0` en établit une référence de livraison explicite, sans intégrer l’évolution de lecture privée. La publication est bloquée par l’approbation automatique. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**20 octobre 2026 Europe/Paris — code `1.0.0` publié et fusionné ; tag/release et déploiement non réalisés ; production toujours `0.86.0`.** La V1 initiale a été clôturée et déployée. `1.0.0` en établit une référence de livraison explicite, sans intégrer l’évolution de lecture privée. La CI de la PR a réussi ses cinq jobs ; celle du commit de fusion est en cours. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## État de livraison
 
-| Élément | État constaté avant l’harmonisation |
+| Élément | État constaté |
 | --- | --- |
 | Version applicative en production | `0.86.0` ; V1 clôturée le 20 octobre à 16:18:38 Paris. |
 | Commit et arbre exécutés | `c61d1eecfefe786254416652877ba82d30cf4c90` / `78c8e46224503b0691b381bf07c5aefd51ca5c7f`. |
-| Référence GitHub de départ | `main` `054291a6f346758fd0810241f2447be41a4c4933` ; seuls CI, documentation et preuves diffèrent du runtime, pas le code applicatif. |
-| Tag/release de production | Pas de livraison GitHub publiée matérialisant la clôture initiale ; à établir avec `v1.0.0` sur le commit validé. |
+| Référence GitHub de départ | `main` `054291a6f346758fd0810241f2447be41a4c4933` avant harmonisation ; seuls CI, documentation et preuves différaient du runtime, pas le code applicatif. |
+| Candidat de livraison `1.0.0` | Fusion `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, arbre `485cade0aeeee41cb4c34f913cd98f6078c4636b`, après la [PR 109](https://github.com/fredbuhr/jessiemessage/pull/109). L’arbre publié correspond exactement à la préparation locale. |
+| Tag/release de production | Pas de livraison GitHub publiée matérialisant la clôture initiale ; tag immuable `v1.0.0` et release à créer sur le commit de fusion ci-dessus après sa CI verte. Un futur commit de documentation ne change pas cette cible. |
 | Node applicatif | Officiel privé `24.22.0`, vérifié sur le service le 20 octobre à 16:41:34 Paris. Node système fournisseur intact. |
 | Schéma applicatif | Trente tables/migrations ; aucune migration prévue par l’harmonisation. |
 | Preuves de la référence existante | [Clôture 0.86](production-086.md), [qualification Node](node-runtime-086.md), CI Node [39439751937](https://github.com/fredbuhr/jessiemessage/actions/runs/39439751937) : 5/5 jobs réussis. |
-| État de `1.0.0` | Métadonnées, documentation et identité de démarrage préparées localement ; publication refusée par l’approbation automatique. CI, tag/release, déploiement et vérification propres à cette livraison restent à constater. |
+| État de `1.0.0` | Métadonnées, documentation et identité de démarrage publiées et fusionnées ; CI PR 5/5 réussie, [CI du commit de fusion](https://github.com/fredbuhr/jessiemessage/actions/runs/39471679954) en cours. Tag/release, déploiement et vérification du processus restent à réaliser. |
 | Évolution « Lecture privée » | Branche locale `feat/private-admin-read-receipts`, commit préparé `84860a332cc3e9444f968851df808e804b9be962`, initialement numéroté `0.87.0`, non publié/non déployé. À reporter après l’harmonisation pour préparer `1.1.0`. |
 
-**Prochaine action :** débloquer la publication par une voie autorisée, puis valider le commit en CI, créer le tag immuable `v1.0.0` et sa release, déployer ce commit sur le service existant avec repli, vérifier puis remplacer le présent état. L’utilisateur a demandé cette harmonisation, publication et livraison le 20 octobre à 18:13 Paris, mais l’approbation automatique a refusé sa publication ; aucun outil alternatif ni déploiement indirect n’est utilisé pour contourner ce refus. Le code reste local et la production inchangée. Ne pas intégrer l’évolution de lecture privée à `1.0.0`.
+**Prochaine action :** terminer la connexion GitHub web nécessaire à la création du tag/release, constater la CI verte du commit de fusion, puis créer `v1.0.0` et sa release sur ce commit. Ensuite seulement, déployer le même commit sur le service existant avec repli, vérifier le processus et remplacer le présent état. La connexion web n’est pas établie au dernier relevé ; aucune livraison ni modification du service n’a été effectuée. Ne pas intégrer l’évolution de lecture privée à `1.0.0`.
 
 ## Validation locale de 1.0.0
 
-Le build et le contrôle de syntaxe des **570 fichiers** réussissent. **135 tests ciblés** réussissent. La suite générale locale compte **3 141 tests : 2 924 réussis, trois échecs et 214 ignorés** ; les trois échecs sont des délais de `managed-runtime` observés sous concurrence dans cet environnement local. La relance isolée de `managed-runtime` et de l’identité de livraison réussit ensuite : **33/33, aucune omission**, sans modifier les délais ni les garde-fous. Cette relance ne transforme pas l’exécution générale en suite verte. Les prérequis natifs/SQL absents expliquent les omissions ; celles-ci ne valent pas validation. La CI de la livraison, dont MariaDB et Chrome, reste non exécutée tant que la publication est bloquée. Ces résultats ne remplacent pas les preuves de la version en production.
+Le build et le contrôle de syntaxe des **570 fichiers** réussissent. **135 tests ciblés** réussissent. La suite générale locale compte **3 141 tests : 2 924 réussis, trois échecs et 214 ignorés** ; les trois échecs sont des délais de `managed-runtime` observés sous concurrence dans cet environnement local. La relance isolée de `managed-runtime` et de l’identité de livraison réussit ensuite : **33/33, aucune omission**, sans modifier les délais ni les garde-fous. Cette relance ne transforme pas l’exécution générale en suite verte. Les prérequis natifs/SQL absents expliquent les omissions ; celles-ci ne valent pas validation. Ces résultats ne remplacent pas les preuves de la version en production.
+
+La [CI de la PR 109](https://github.com/fredbuhr/jessiemessage/actions/runs/39470754751), sur `4c1b5a382811796af44e637c203d721465918fe0`, a réussi **5/5 jobs** : général **3 110 réussites, zéro échec, 35 ignorés**, MariaDB **10.11 et 11.4 : 466/466 chacune sans omission**, Chrome **164/164**, HTTPS/MariaDB **2/2**, syntaxe et build **570 fichiers**. La [CI main du commit de fusion](https://github.com/fredbuhr/jessiemessage/actions/runs/39471679954) contrôle ensuite `70b48aa845b70ca960724c8d37a6e94b3d5f47a8`, d’arbre identique ; son résultat final reste à constater. Aucun de ces contrôles ne prouve le déploiement de `1.0.0`.
 
 ## Preuves et réserves à conserver
 
