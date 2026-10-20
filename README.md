@@ -17,7 +17,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 
 **Version active : 1.2.0**, profil, avatar et catalogue de 180 emojis. Identité admin, disponibilité et suivi de livraison du serveur sont alignés ; le lot est clos. Les preuves et le repli compatible sont consignés dans REPRISE.
 
-**1.3.0 publiée, activation en attente** : 268 choix Unicode et cinq carnations, sans migration ni service externe. [PR 113](https://github.com/fredbuhr/jessiemessage/pull/113) fusionnée, [CI du commit livré](https://github.com/fredbuhr/jessiemessage/actions/runs/39515366616) réussie 5/5, [tag/release immuable](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0). La production reste en 1.2.0 ; préparation Infomaniak, activation et identité 1.3.0 ne sont pas encore constatées. [Bilan et prochaine action](docs/emoji-inclusifs-130.md).
+**1.3.0 publiée, activation en attente** : 268 choix Unicode et cinq carnations, sans migration ni service externe. [PR 113](https://github.com/fredbuhr/jessiemessage/pull/113) fusionnée, [CI du commit livré](https://github.com/fredbuhr/jessiemessage/actions/runs/39515366616) réussie 5/5, [tag/release immuable](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0). La production reste en 1.2.0 ; préparation et précontrôle Infomaniak confirmés par reçu utilisateur ; activation et identité 1.3.0 encore en attente. [Bilan et prochaine action](docs/emoji-inclusifs-130.md).
 
 ## Versions et livraisons
 

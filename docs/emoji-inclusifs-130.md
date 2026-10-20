@@ -1,6 +1,6 @@
 # Emojis enrichis et inclusifs — 1.3.0
 
-**21 octobre 2026 — code fusionné, qualifié et publié en v1.3.0 ; préparation Infomaniak et activation encore en attente.** La production reste en **1.2.0**, dont l’utilisateur confirme le bon fonctionnement. [REPRISE](REPRISE.md) centralise les références et preuves de livraison.
+**21 octobre 2026 — code fusionné, qualifié et publié en v1.3.0 ; préparation et précontrôle Infomaniak confirmés ; activation encore en attente.** La production reste en **1.2.0**, dont l’utilisateur confirme le bon fonctionnement. [REPRISE](REPRISE.md) centralise les références et preuves de livraison.
 
 ## Périmètre
 
@@ -22,7 +22,7 @@ Aucune illustration Flirtmoji n’est récupérée ou intégrée à ce lot. Une 
 
 1. **Validé** : variantes Unicode, recherche bilingue, insertion au curseur et limites de brouillon, y compris les séquences de plusieurs caractères.
 2. **Validé en CI Chrome** : les deux rôles, choix de peau foncée, changement de langue, clavier et petits écrans, sans envoi automatique.
-3. **CI, fusion et publication consignées** ci-dessous. Préparation hébergée et activation restent à confirmer ; ne déclarer la 1.3.0 active qu’après vérification distincte du service.
+3. **CI, fusion et publication consignées** ci-dessous. Préparation hébergée confirmée ; activation reste à confirmer ; ne déclarer la 1.3.0 active qu’après vérification distincte du service.
 
 Les diffusions à grande échelle restent la prochaine évolution métier après cette demande d’enrichissement. Le lot 1.2.0 et ses preuves conservent leur périmètre historique de 180 emojis.
 
@@ -37,4 +37,4 @@ Les diffusions à grande échelle restent la prochaine évolution métier après
 - [Tag/release v1.3.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0) sur le commit exact, publiés le `2026-10-20T23:36:15Z` par le [workflow vérifié](https://github.com/fredbuhr/jessiemessage/actions/runs/39516082828). [Preuves structurées](verification-proofs/jm130-verification.json).
 - [Helper de préparation](https://github.com/fredbuhr/jessiemessage/blob/3e327d29c653b8e82eeb393046ba6271790f0c35/ops/prepare-release130.sh), SHA-256 `b38ad31c4838415632774877d9cd0529522cb5b617c70a970375379bc781af3b` : 15 tests synthétiques réussis sur les pins livrés, aucun staging réel exécuté par l’agent. Il conserve le repli 1.2.0 et ne modifie ni Manager ni suivi opérateur.
 
-Exécuter la préparation épinglée une fois puis lire son reçu avant d’enregistrer les nouveaux Run/Build du Manager. La production reste 1.2.0 tant que la nouvelle identité n’est pas confirmée. Aucun compte SQL de migration n’est requis ; les 31 migrations restent identiques. Ne rejouer aucune ancienne migration ou préparation 1.2.0.
+Le reçu utilisateur `staged_precheck_passed` confirme la préparation 1.3.0 et le précontrôle hébergé, sans démarrage, migration, changement Manager ou checkpoint. Le lanceur, son précontrôle, leurs empreintes et les journaux sont conservés intégralement dans les preuves structurées. Le repli 1.2.0 est préservé. Ne pas rejouer la préparation ; enregistrer les commandes Run/Build consignées dans REPRISE, puis redémarrer depuis le Manager et relever la nouvelle identité admin. La production reste 1.2.0 tant que la nouvelle identité n’est pas confirmée. Aucun compte SQL de migration n’est requis ; les 31 migrations restent identiques. Ne rejouer aucune ancienne migration ou préparation 1.2.0.
