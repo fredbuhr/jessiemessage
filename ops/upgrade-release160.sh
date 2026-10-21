@@ -1,6 +1,6 @@
 #!/bin/bash
-# TEMPLATE NON EXECUTABLE : quatre empreintes reelles des lanceurs heberges encore requises.
-# Ne pas fournir de commande avant epinglage du recu heberge et qualification/publication des sources.
+# Sources, arbres et empreintes des lanceurs epingles au recu de preparation heberge.
+# Un statut SQL conforme et un arret Manager atteste restent necessaires avant execution.
 # --service-stopped exige toujours un arret Manager effectivement atteste avant execution.
 # Les empreintes ne prouvent ni cet arret, ni le schema SQL actuellement applique.
 # Mise a niveau 0033 apres arret Manager atteste, puis precontroles sans Run.
@@ -31,10 +31,10 @@ jm_sha=71e62184d2d25a4242e0349c403027e1eeb6537c
 jm_tree=f769c99aa800486bd04065a308f1f4269841c215
 jm_sha160=9590741e7065067aee9d1ad5d1206739cc27eb6b
 jm_tree160=38e72545ab4fd6feb4a04e934b2eb8685f82b970
-jm_start151_sha=QUALIFICATION_REQUIRED_START151_SHA256
-jm_check151_sha=QUALIFICATION_REQUIRED_CHECK151_SHA256
-jm_start160_sha=QUALIFICATION_REQUIRED_START160_SHA256
-jm_check160_sha=QUALIFICATION_REQUIRED_CHECK160_SHA256
+jm_start151_sha=804142f4fd2116b99bce9240edfad3eaa8eecda9b57a04baf52586f6ff345274
+jm_check151_sha=165f2b472c94060085758b6a3d9e1817347b26ad5edae36e06bd610199a89ae4
+jm_start160_sha=39015e53147112981203b5172f11f52563311be7e92a92f2b78bf4dca744f1b4
+jm_check160_sha=13362ac14caa4795a4fbf3ee3fc50e94188938179c1cde119d6d968427a50971
 for jm_pin in "$jm_sha" "$jm_tree" "$jm_sha160" "$jm_tree160"; do [[ "$jm_pin" =~ ^[a-f0-9]{40}$ ]]; done
 for jm_pin in "$jm_start151_sha" "$jm_check151_sha" "$jm_start160_sha" "$jm_check160_sha"; do [[ "$jm_pin" =~ ^[a-f0-9]{64}$ ]]; done
 [[ "$jm_sha" != "$jm_sha160" ]]
