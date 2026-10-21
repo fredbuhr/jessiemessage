@@ -1,6 +1,6 @@
 {
   "version": "1.5.0",
-  "status": "code_qualified_published_hosted_prepared_sql31_confirmed_awaiting_stop_and_upgrade",
+  "status": "schema32_and_both_hosted_prechecks_confirmed_release150_activation_pending",
   "source": "abca467c45c9385371a9095ab359e78c99140370",
   "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
   "results": {
@@ -848,29 +848,40 @@
     "workflowUpdatedAt": "2026-10-21T15:05:37Z"
   },
   "hosting": {
-    "activeVersion": "1.4.0",
-    "activeSource": "56d4595059df9292fc54ba4d4e948eeb793bae96",
-    "activeNode": "v24.22.0",
-    "activeStartedAtDisplay": "21/10/2026 15:31:41",
-    "schemaMigrations": 31,
-    "currentRollbackRelease": "1.3.4",
+    "activeVersion": null,
+    "activeSource": null,
+    "activeNode": null,
+    "activeStartedAtDisplay": null,
+    "schemaMigrations": 32,
+    "currentRollbackRelease": "1.4.1",
     "activeMetadataReceipt": "release140_metadata_recorded",
     "preparationReported": true,
-    "migration32Confirmed": false,
+    "migration32Confirmed": true,
     "release150ActivationConfirmed": false,
     "directPrivateToolObservation": false,
     "stagingReceipt": "jm150-hosted-staging.json",
     "stagingStatus": "staged_awaiting_schema32",
     "sqlStatusChecked": true,
     "freshSqlStatusObserved": true,
-    "schemaMigrationsEvidence": "user_readonly_status32_known_31_applied_1_pending_not_interrupted",
+    "schemaMigrationsEvidence": "user_schema32_confirmed_before_prechecks_and_schema32_prechecks_passed",
     "rollback141Prepared": true,
-    "rollback141HostedQualified": false,
-    "release150PrecheckConfirmed": false,
-    "sqlStatusReceipt": "jm150-hosted-sql-status.json"
+    "rollback141HostedQualified": true,
+    "release150PrecheckConfirmed": true,
+    "sqlStatusReceipt": "jm150-hosted-sql-status.json",
+    "lastConfirmedActiveService": {
+      "activeVersion": "1.4.0",
+      "activeSource": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+      "activeNode": "v24.22.0",
+      "activeStartedAtDisplay": "21/10/2026 15:31:41"
+    },
+    "serviceStopOperatorAttested": true,
+    "migrationReceipt": "jm150-hosted-schema32.json",
+    "runtimeIdentity150Pending": true,
+    "checkpointMetadataVersion": "1.4.0",
+    "checkpointSchemaMigrations": 31
   },
   "notAttested": [
-    "hosted_service_stop_migration_prechecks_and_activation",
+    "release150_activation_and_metadata_alignment",
     "physical_phone_and_real_host_capacity",
     "current_pc_or_backup_delivery",
     "native_backup_restore_with_nonempty_announcement"
@@ -886,7 +897,7 @@
     "mergedAt": "2026-10-21T14:55:44Z"
   },
   "operatorDelivery": {
-    "status": "sql31_confirmed_awaiting_operator_stop_and_schema32_upgrade",
+    "status": "schema32_prechecks_passed_awaiting_activation150_identity",
     "helperCommit": "40027be898f1a82cd9c2aed7c4a313096d8db4d4",
     "helperTree": "c999e78badfea23ab4e4ff9df8266f2d66bb1fb7",
     "publishedBytesVerifiedAgainstLocal": true,
@@ -1067,15 +1078,63 @@
         "read_only_sql_status_verified",
         "service_stop_observed_and_operator_attested"
       ],
-      "technicalPreconditionsMet": false,
+      "technicalPreconditionsMet": true,
       "sqlStatusConfirmed": true,
-      "serviceStopObserved": false,
+      "serviceStopObserved": true,
       "serviceStopAttestationRequired": true,
-      "currentNextAction": true,
-      "executionReported": false
+      "currentNextAction": false,
+      "executionReported": true,
+      "serviceStopEvidence": "operator_attestation_in_upgrade_receipt",
+      "schema32Confirmed": true,
+      "receipt": "jm150-hosted-schema32.json",
+      "observedResult": {
+        "migration": {
+          "status": "schema32_confirmed_before_prechecks",
+          "migration": {
+            "status": "upgraded",
+            "engineVerified": true,
+            "transportVerified": true,
+            "migrations": 32,
+            "applied": 1,
+            "unchanged": 31
+          },
+          "schemaMigrations": 32,
+          "upgradeAttempted": true,
+          "schema32Confirmed": true,
+          "runtimeStarted": false,
+          "serviceStopOperatorAttested": true,
+          "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50"
+        },
+        "prechecks": {
+          "status": "schema32_prechecks_passed",
+          "schemaMigrations": 32,
+          "schema32Confirmed": true,
+          "rollback141HostedQualified": true,
+          "release150PrecheckPassed": true,
+          "runtimeStarted": false,
+          "managerChanged": false,
+          "checkpointChanged": false,
+          "restart140Allowed": false,
+          "targetVersion": "1.5.0",
+          "targetSource": "abca467c45c9385371a9095ab359e78c99140370"
+        }
+      }
     },
     "hostedReceipt": "jm150-hosted-staging.json",
-    "directPrivateServerObservation": false
+    "directPrivateServerObservation": false,
+    "activation": {
+      "currentNextAction": true,
+      "targetVersion": "1.5.0",
+      "targetSource": "abca467c45c9385371a9095ab359e78c99140370",
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-release150-abca467c.sh",
+      "build": "bash /srv/customer/jessiemessage-private/check-primary-release150-abca467c.sh",
+      "runBuildUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application",
+      "dashboardUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard",
+      "identityUrl": "https://jessiemessage.com/admin/readiness",
+      "executionReported": false,
+      "runtimeIdentityObserved": false,
+      "metadataAlignmentReported": false
+    }
   },
   "initialOperatorTemplate": {
     "status": "helpers_published_synthetically_qualified_hosted_staging_pending_upgrade_disabled",

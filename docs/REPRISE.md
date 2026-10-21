@@ -1,10 +1,10 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — production `1.4.0`, préparation et identité active confirmées par les reçus utilisateur.** Le relevé admin affiche `56d4595059df9292fc54ba4d4e948eeb793bae96` / `v24.22.0` / `21/10/2026 15:31:41`. Le repli compatible **1.3.4** est préparé et précontrôlé sur l’hébergement, sans démarrage. **L’enregistrement final est confirmé par `release140_metadata_recorded` : la livraison 1.4.0 est close.** Le checkpoint privé est aligné sur la 1.4.0 et son repli compatible 1.3.4 ; l’ancien état 1.3.3 et tous les autres blocs restent préservés. Le schéma 31 est inchangé. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — schéma 32 et précontrôles hébergés 1.4.1/1.5.0 confirmés ; activation 1.5.0 en attente du relevé admin.** Les reçus utilisateur confirment la migration 0032 et `schema32_prechecks_passed`, avec arrêt opérateur attesté et aucun runtime lancé par le helper. Le repli compatible est désormais **1.4.1**, préparé et précontrôlé sur le schéma 32, sans démarrage. La dernière identité HTTP fournie reste celle de la 1.4.0 (`56d4595059df9292fc54ba4d4e948eeb793bae96` / `v24.22.0` / `21/10/2026 15:31:41`), antérieure à cet arrêt ; elle ne prouve pas le service actuellement en cours d’activation. Le checkpoint privé conserve ses métadonnées 1.4.0/schéma 31 jusqu’au futur enregistrement, sans nouvelle écriture à cette étape. **Ne pas redémarrer 1.4.0 ou 1.3.4 sur le schéma 32.** Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## Travail courant — Évolution 4, annonces publiées
 
-Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Ils ajoutent un bandeau compact, une période de début/fin et l’envoi facultatif d’un vrai message privé via la file existante, avec la migration additive 0032. **Le reçu utilisateur `staged_awaiting_schema32` confirme la préparation des deux références sur Infomaniak, sans démarrage, SQL, migration ou précontrôle. La production et le checkpoint restent au dernier état confirmé : 1.4.0 close, Node 24.22.0, schéma 31 et repli 1.3.4. Le diagnostic SQL utilisateur confirme désormais 32 migrations connues, 31 appliquées et une en attente, sans interruption, moteur et transport vérifiés ; la migration 0032 n’est pas encore appliquée.**
+Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Préparation, migration additive 0032 et précontrôles hébergés des deux références sont maintenant confirmés par les reçus utilisateur. **Le schéma est 32 ; la 1.4.1 constitue le repli compatible précontrôlé. La seule étape actuelle est l’activation de la 1.5.0, puis le relevé de son identité réelle.** Le helper n’a démarré aucun runtime et n’a changé ni Manager ni checkpoint. Aucune activation 1.5.0 n’est encore attestée par une identité HTTP fournie.
 
 | Référence publiée | Source et arbre exacts | Qualification propre et publication |
 | --- | --- | --- |
@@ -25,34 +25,26 @@ Le [reçu SSH utilisateur complet](verification-proofs/jm150-hosted-staging.json
 
 Le reçu confirme les deux checkouts et leurs lanceurs, Node **v24.22.0** et son empreinte attendue, les journaux normaux et de précontrôle encore vides et le repli **1.4.1 préparé**. Il conserve `started:false`, `migrated:false`, `precheckPassed:false`, `sqlStatusChecked:false`, `noRestart:true`, `managerChanged:false`, `runtimeStarted:false`, `checkpointChanged:false` et `rollback141HostedQualified:false`. Ce reçu de préparation ne vérifiait pas le SQL ; le diagnostic distinct reçu ensuite confirme le schéma 31, avec une migration 0032 en attente. Le service 1.4.0, ses lanceurs et le checkpoint sont préservés. **Ne rejouer ni la préparation, ni une création de lanceurs ou de journaux ; ne tronquer aucun journal.**
 
-Les quatre empreintes du reçu ont été épinglées dans le [helper de migration publié](https://github.com/fredbuhr/jessiemessage/blob/c798f96b631464e51c7ce212c37ceeaa681af904/ops/upgrade-release150.sh), commit `c798f96b631464e51c7ce212c37ceeaa681af904`, SHA-256 **`0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c`**. Ses **32/32 tests synthétiques après épinglage réel** réussissent, sans SQL ou runtime hébergé. L’ancien template du commit `40027be898f1a82cd9c2aed7c4a313096d8db4d4` conserve ses placeholders dans l’historique ; il n’est plus le helper de migration courant. Le helper actuel est entièrement épinglé. Son statut SQL préalable est confirmé ; l’arrêt effectif du service doit encore être observé avant son exécution. Les empreintes et le statut SQL ne prouvent pas cet arrêt.
+Les quatre empreintes du reçu ont été épinglées dans le [helper de migration publié](https://github.com/fredbuhr/jessiemessage/blob/c798f96b631464e51c7ce212c37ceeaa681af904/ops/upgrade-release150.sh), commit `c798f96b631464e51c7ce212c37ceeaa681af904`, SHA-256 **`0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c`**. Ses **32/32 tests synthétiques après épinglage réel** réussissent, sans SQL ou runtime hébergé. L’ancien template du commit `40027be898f1a82cd9c2aed7c4a313096d8db4d4` conserve ses placeholders dans l’historique ; il n’est plus le helper de migration courant. Le helper actuel est entièrement épinglé. Son exécution et l’arrêt opérateur attesté sont désormais confirmés par les deux reçus suivants ; ne pas le rejouer.
 
 ### Statut SQL acquis
 
 Le [reçu SQL utilisateur complet](verification-proofs/jm150-hosted-sql-status.json) confirme `status:"checked"`, `engineVerified:true`, `transportVerified:true`, **32 migrations connues, 31 appliquées, une en attente et `interrupted:false`**. Il provient du [diagnostic publié](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh), SHA-256 `117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0`, source 1.4.1 `bf022233…`, révision de diagnostic 3. `readOnly:true`, `migrated:false` et `noRestart:true` distinguent cette lecture d’une migration. Aucune date d’exécution non fournie ni observation privée directe de l’agent n’est déduite. Le diagnostic préalable est acquis ; ne pas le rejouer pour découvrir son résultat.
 
-### Arrêt puis migration 0032 — seule étape actuelle
+### Migration et précontrôles acquis — ne pas rejouer
 
-Cette étape prévoit une interruption du service pendant la migration et les précontrôles. Toutes les références, les lanceurs et le helper sont déjà préparés et qualifiés. L’autorisation générale de l’utilisateur reste acquise ; la condition à satisfaire est technique : **observer l’arrêt effectif dans le Manager avant d’exécuter le bloc ci-dessous**.
+Les [deux reçus utilisateur complets](verification-proofs/jm150-hosted-schema32.json) confirment `schema32_confirmed_before_prechecks`, puis `schema32_prechecks_passed`. Une migration a été appliquée et 31 conservées ; moteur et transport sont vérifiés. Le premier reçu confirme `schemaMigrations:32`, `schema32Confirmed:true` et `serviceStopOperatorAttested:true`. Le second confirme les précontrôles hébergés **1.4.1 et 1.5.0**, `rollback141HostedQualified:true`, `release150PrecheckPassed:true`, cible `1.5.0` / `abca467c45c9385371a9095ab359e78c99140370`, ainsi que `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false` et `restart140Allowed:false`. L’arrêt est attesté par l’opérateur ; l’agent n’a pas lu le Manager ou les processus privés directement. Aucune date non fournie n’est déduite. **Ne rejouer ni staging, ni migration, ni précontrôle pour retrouver ce résultat ; ne tronquer aucun journal.**
 
-1. Ouvrir le [tableau de bord Node.js de l’application 239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), encore nommée **recette.jessiemessage.com**, qui dessert aussi **jessiemessage.com**.
-2. Dans le bloc Node.js de gestion de l’application, utiliser le bouton rouge **Stop** / arrêt, icône alimentation, à gauche de **Redémarrer**. Attendre puis actualiser jusqu’à l’état **Arrêtée**. Les [captures officielles Infomaniak](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak) montrent ce contrôle ; les [états documentés](https://www.infomaniak.com/fr/support/faq/2536/resoudre-un-probleme-de-site-nodejs) distinguent Arrêtée de la transition de redémarrage. Le libellé français exact du bouton reste non observé sur ce compte. Si le contrôle manque ou que cet arrêt n’est pas observé, ne pas exécuter le bloc ; transmettre l’état affiché. Une panne HTTP ou un processus invisible en SSH ne prouve pas l’arrêt.
-3. **Uniquement après avoir observé Arrêtée**, ouvrir la [console SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) et exécuter ce bloc. L’argument `--service-stopped` atteste l’arrêt observé par l’opérateur ; le helper ne lit pas le Manager.
+Le repli compatible **1.4.1** est préparé et précontrôlé, sans démarrage. Ses lanceurs sont **Run** `bash /srv/customer/jessiemessage-private/start-primary-release141-bf022233.sh` et **Build** `bash /srv/customer/jessiemessage-private/check-primary-release141-bf022233.sh` ; les empreintes exactes restent dans le reçu de staging. La 1.4.0 et la 1.3.4 restent préservées historiquement, mais ne doivent plus être redémarrées sur le schéma 32.
 
-```sh
-python3 - <<'PY_UPGRADE'
-import hashlib, subprocess, urllib.request
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/c798f96b631464e51c7ce212c37ceeaa681af904/ops/upgrade-release150.sh"
-code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != "0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c":
-    raise SystemExit("Empreinte incorrecte : arrêt.")
-subprocess.run(["bash", "-s", "--", "--service-stopped"], input=code, check=True)
-PY_UPGRADE
-```
+### Activation 1.5.0 — seule étape actuelle
 
-4. Saisir le compte SQL de migration existant déjà validé, puis son mot de passe dans la saisie masquée. Transmettre les deux JSON complets attendus : **`schema32_confirmed_before_prechecks`**, puis **`schema32_prechecks_passed`**. Le premier doit confirmer le passage au schéma 32 ; le second doit confirmer `rollback141HostedQualified:true` et `release150PrecheckPassed:true`. Ces résultats restent à observer. Le helper relit l’état SQL, applique uniquement la migration en attente puis contrôle la 1.4.1 et la 1.5.0 ; il ne lance aucun runtime.
+1. Ouvrir les [réglages Run/Build Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), application **239143**, encore nommée **recette.jessiemessage.com** et desservant aussi **jessiemessage.com**.
+2. Remplacer **Run** par `bash /srv/customer/jessiemessage-private/start-primary-release150-abca467c.sh` et **Build** par `bash /srv/customer/jessiemessage-private/check-primary-release150-abca467c.sh`. Enregistrer les réglages.
+3. Ouvrir le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et cliquer sur **Redémarrer**. Si le Manager présente **Lancer** pour le service arrêté, ce bouton lance la même commande Run enregistrée. Aucun démarrage intermédiaire de 1.4.1 n’est nécessaire.
+4. Ouvrir [État du service Jessie](https://jessiemessage.com/admin/readiness) et transmettre les quatre champs réels : version de l’application, commit au démarrage, version Node.js et relevé au démarrage. Valeurs attendues : **1.5.0**, **`abca467c45c9385371a9095ab359e78c99140370`**, **`v24.22.0`** ; le texte de date/heure doit être fourni réellement, sans le déduire.
 
-Après confirmation du schéma 32, **ne pas redémarrer la 1.4.0**. L’activation 1.5.0 ou, si nécessaire, le repli 1.4.1 utilisera leurs lanceurs compatibles. Garder le service arrêté jusqu’au résultat des précontrôles et aux consignes d’activation ; en cas d’échec, transmettre la sortie sans répétition aveugle ni troncature de journal. Aucune activation intermédiaire de 1.4.1 n’est requise. À ce stade, ni arrêt réel, ni migration, ni précontrôle hébergé, ni activation 1.5.0 ne sont encore attestés. Le checkpoint reste la 1.4.0 ; aucune manipulation PC, aucun audit général ni lot suivant n’est ouvert.
+Le futur writer de métadonnées attend cette identité et son relevé de démarrage avant finalisation et publication. Le checkpoint privé reste 1.4.0 ; son état antérieur intégral et les autres blocs seront préservés, avec 1.4.1 enregistré séparément comme repli compatible et 1.4.0 non utilisable sur le schéma 32. Aucune manipulation PC, aucun audit général ni lot suivant n’est ouvert.
 
 ## Livraison 1.4.0 — Évolution 3, diffusions à grande échelle closes
 
@@ -180,17 +172,17 @@ Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.
 
 | Élément | État constaté |
 | --- | --- |
-| Version active | **1.4.0**, confirmée par les quatre champs admin transmis par l’utilisateur. |
-| Commit actif et arbre du commit | `56d4595059df9292fc54ba4d4e948eeb793bae96` / `8129e76c9817e79c062a4437eadee4b7ce4d90a1`. Le commit affiché correspond au tag livré. |
-| Tag/release | [v1.4.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.4.0), publiée le `2026-10-21T13:09:34Z`, cible vérifiée. |
-| Node HTTP identifié | `v24.22.0`, valeur du processus dans le relevé admin utilisateur. |
-| Capture au démarrage affichée | `21/10/2026 15:31:41`, texte exact sans conversion UTC, epoch ou naissance OS déduite. |
-| Schéma et précontrôle | Schéma 31 inchangé ; précontrôles hébergés 1.3.4/1.4.0 réussis, sans migration. |
-| CI et publication | CI PR/main 5/5, source exacte `56d45950` ; liens et compteurs ci-dessus. |
-| Disponibilité | Le relevé admin utilisateur identifie le service répondant ; aucun nouveau contrôle public distinct n’est ajouté à cette étape. |
-| Portée et preuves | Diffusions globales, filtrées ou manuelles au-delà de cent, aperçu confirmé, traitement progressif et suivi paginé. [Bilan 1.4.0](broadcast-scale-140.md), [preuves structurées](verification-proofs/jm140-verification.json). |
-| Checkpoint privé | **1.4.0** / `56d45950`, schéma 31, reçu `release140_metadata_recorded` ; repli compatible 1.3.4, ancien état 1.3.3 intégral avec empreinte et autres blocs préservés. |
-| Repli compatible | **1.3.4 / Node 24.22**, préparée et précontrôlée sans démarrage ; identité et empreintes ci-dessous. Les anciennes références sont conservées, sans qualification pour les campagnes compactes. |
+| Version HTTP courante | Activation 1.5.0 en attente du relevé admin ; dernière identité HTTP 1.4.0 antérieure à l’arrêt de migration. |
+| Commit cible et arbre | `abca467c45c9385371a9095ab359e78c99140370` / `3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4`. |
+| Tag/release cible | [v1.5.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.0), cible vérifiée. |
+| Node préparé et précontrôlé | `v24.22.0`, binaire privé épinglé ; identité HTTP 1.5.0 encore attendue. |
+| Relevé de démarrage 1.5.0 | Non fourni ; aucune date n’est déduite. |
+| Schéma et précontrôles | Schéma 32 confirmé ; une migration appliquée, 31 conservées ; précontrôles 1.4.1 et 1.5.0 réussis. |
+| CI et publication | Qualifications propres PR/main 5/5 et publications des deux références, liens ci-dessus. |
+| Disponibilité | Aucun nouveau relevé HTTP 1.5.0 fourni ; l’arrêt était attesté pendant la migration. |
+| Portée et preuves | [Annonces 1.5.0](announcements-150.md), [preuves](verification-proofs/jm150-verification.json), [migration et précontrôles hébergés](verification-proofs/jm150-hosted-schema32.json). |
+| Checkpoint privé | Métadonnées antérieures 1.4.0/schéma 31, sans nouvelle écriture ; alignement 1.5.0 attendu après identité réelle. |
+| Repli compatible courant | **1.4.1 / Node 24.22**, préparée et précontrôlée sur le schéma 32, jamais démarrée. 1.4.0 et 1.3.4 ne doivent pas être redémarrées sur ce schéma. |
 
 ## État historique de la livraison 1.2.0 — clos
 
@@ -289,6 +281,8 @@ A08 conserve avertissement et dry-run, sans exécuteur actif ni purge. Surveille
 Les conversations sont conservées jusqu’à fermeture définitive, hors suppressions volontaires. Fermeture locale journalisée et restauration opérateur en maintenance restent le périmètre convenu. Récupération autonome après perte complète de l’hôte, témoin frais à chaque phase, succession et inventaire SQL exhaustif restent hors prérequis V1 ; `completeDatabase:false`, objets exécutables exclus. Pas de garantie de capture simultanée fichiers/base ni de perte maximale de vingt-quatre heures. La [surveillance](../MONITORING.md) conserve ses limites : pas de délai maximal de détection ni de réception externe attesté.
 
 ## Pins de la référence active 1.4.0
+
+**Encadré historique antérieur au passage au schéma 32. Les lanceurs 1.4.0/1.3.4 ci-dessous ne sont plus utilisables sur ce schéma ; les commandes actuelles sont dans [Activation 1.5.0](#activation-150--seule-étape-actuelle). Les empreintes et reçus historiques restent conservés.**
 
 L’identité active est confirmée par relevé admin utilisateur. Les modes et empreintes sur disque proviennent du reçu de préparation hébergée ; aucune empreinte mesurée via le PID actif n’est revendiquée.
 

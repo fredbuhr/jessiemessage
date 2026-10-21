@@ -1,0 +1,32 @@
+{
+  "migration": {
+    "status": "schema32_confirmed_before_prechecks",
+    "migration": {
+      "status": "upgraded",
+      "engineVerified": true,
+      "transportVerified": true,
+      "migrations": 32,
+      "applied": 1,
+      "unchanged": 31
+    },
+    "schemaMigrations": 32,
+    "upgradeAttempted": true,
+    "schema32Confirmed": true,
+    "runtimeStarted": false,
+    "serviceStopOperatorAttested": true,
+    "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50"
+  },
+  "prechecks": {
+    "status": "schema32_prechecks_passed",
+    "schemaMigrations": 32,
+    "schema32Confirmed": true,
+    "rollback141HostedQualified": true,
+    "release150PrecheckPassed": true,
+    "runtimeStarted": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "restart140Allowed": false,
+    "targetVersion": "1.5.0",
+    "targetSource": "abca467c45c9385371a9095ab359e78c99140370"
+  }
+}
