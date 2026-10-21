@@ -72,6 +72,9 @@ export function createConversationExporter({ history, role = "admin", photo = nu
           if (role === "admin" && conversation.client.id !== clientId || clientId !== expectedClientId) fail("changed");
           let previous = 0n;
           for (const message of page.messages) {
+            // A candidate video history requires the explicit streaming exporter.
+            // The legacy ZIP must never silently omit a live attachment.
+            if (message?.video !== undefined && message.video !== null) fail("changed");
             if (!message || !id(message.id) || seen.has(message.id) || !seq(message.sequence) || BigInt(message.sequence) <= previous
               || BigInt(message.sequence) > BigInt(upper) || before !== null && BigInt(message.sequence) >= BigInt(before)
               || !["me", "peer"].includes(message.sender) || !instant(message.createdAt)

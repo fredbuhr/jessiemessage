@@ -215,7 +215,7 @@ export function createChatHandler(service, { origin, clientConversationExporter 
         reply(response, method, 200, await readFile(new URL("chat.html", publicRoot)), { "Content-Type": "text/html; charset=utf-8" });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes } } : {}) });
+        reply(response, method, 200, { enabled: true, ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes, ...(clientConversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
       } else if (route.kind === "list") {
         const options = query(url, ["afterId", "limit"], 50);
         const afterId = options.afterId ?? null;
