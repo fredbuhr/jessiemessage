@@ -21,6 +21,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Annonces, livraison 1.5.0 historique close](docs/announcements-150.md) | Bandeau programmé et messages privés facultatifs ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés. |
 | [Compatibilité des tâches, 1.5.1 publiée](docs/tasks-compat-151.md) | Référence compatible avec le schéma 33, qualifiée, publiée, préparée, précontrôlée et enregistrée comme repli ; jamais démarrée. |
 | [Tâches et rappels, 1.6.0 active et close](docs/tasks-reminders-160.md) | Plusieurs tâches privées par client et vue commune ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés ; livraison close. |
+| [Transport vidéo, socle 1.7.0](docs/video-transport-170.md) | En qualification, dormant : fichiers privés chiffrés par blocs et transport HTTP partiel ; intégration produit au lot 7. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
