@@ -30,6 +30,7 @@ class Element {
   reset() { for (const field of this.querySelectorAll("input")) { field.value = field.defaultValue; field.checked = false; } }
   focus() { this.focused = true; }
   select() { this.selected = true; }
+  setSelectionRange(start, end, direction = "none") { this.selectionStart = start; this.selectionEnd = end; this.selectionDirection = direction; }
 }
 
 const clientRow = (index = 3, changes = {}) => ({ id: index.toString(16).padStart(32, "0"), pseudonym: `Client ${index}`, email: `client-${index}@example.invalid`,
@@ -187,6 +188,57 @@ test("initial visibility and pageshow notifications share one administrator boot
   assert.equal(f.calls.length, 1); assert.equal(f.element("connected").hidden, true);
   gate.resolve(response(200, session())); await flush();
   assert.equal(f.element("access-tools").hidden, false); assert.equal(f.calls.filter((call) => call.path === "/api/admin/clients?limit=50").length, 1);
+});
+
+test("an anonymous login keeps its in-memory fields across the authenticator app switch and proves the session before return", async () => {
+  const proof = pause(); let returning = false;
+  const f = harness({ currentSession: null, intercept: (path) => path === "/api/auth/session" && returning ? proof.promise : undefined });
+  await flush();
+  f.element("email").value = "admin@example.invalid"; f.element("password").value = "Synthetic app-switch password"; f.element("factor").value = "12";
+  await f.click("toggle-password"); assert.equal(f.element("password").type, "text");
+  f.element("password").setSelectionRange(2, 6);
+  await f.hide(); await f.event("visibilitychange");
+  assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("connected").hidden, true);
+  assert.equal(f.element("password").value, "Synthetic app-switch password"); assert.equal(f.element("password").type, "password");
+  assert.equal(f.element("toggle-password").getAttribute("aria-pressed"), "false");
+  assert.deepEqual([f.element("password").selectionStart, f.element("password").selectionEnd], [2, 6]);
+  returning = true; await f.show(); await f.event("pageshow", { persisted: false });
+  assert.equal(f.element("login-form").hidden, true); assert.equal(posts(f).length, 0);
+  proof.resolve(response(401, { error: "authentication_required" })); await flush();
+  assert.equal(f.element("login-form").hidden, false); assert.equal(f.element("email").value, "admin@example.invalid");
+  assert.equal(f.element("password").value, "Synthetic app-switch password"); assert.equal(f.element("factor").value, "12");
+  assert.equal(f.calls.filter((call) => call.path === "/api/auth/session").length, 2); assert.equal(posts(f).length, 0);
+});
+
+test("a page navigation clears an anonymous login even after a temporary background suspension", async () => {
+  for (const hiddenFirst of [false, true]) {
+    const f = harness({ currentSession: null }); await flush();
+    for (const id of ["email", "password", "factor"]) f.element(id).value = "Synthetic pending credential";
+    if (hiddenFirst) await f.hide();
+    await f.event("pagehide", { persisted: true }); privateCleared(f);
+    await f.show(); await f.event("pageshow", { persisted: true });
+    assert.equal(f.element("login-form").hidden, false); privateCleared(f); assert.equal(posts(f).length, 0);
+  }
+});
+
+test("session replacement and failed return proofs discard the temporarily retained login fields", async () => {
+  for (const result of [response(200, session("Replacement session")), response(503, { error: "unavailable" }), plainResponse(200, "Not JSON")]) {
+    let returning = false;
+    const f = harness({ currentSession: null, intercept: (path) => path === "/api/auth/session" && returning ? result : undefined }); await flush();
+    for (const id of ["email", "password", "factor"]) f.element(id).value = "Synthetic pending credential";
+    await f.hide(); returning = true; await f.show();
+    for (const id of ["email", "password", "factor"]) assert.equal(f.element(id).value, "");
+    assert.equal(posts(f).length, 0);
+  }
+});
+
+test("a rejected login after an authenticator return still clears its password and security code", async () => {
+  const f = harness({ currentSession: null, intercept: (path) => path === "/api/auth/login" ? response(401, { error: "authentication_failed" }) : undefined }); await flush();
+  f.element("email").value = "admin@example.invalid"; f.element("password").value = "Synthetic app-switch password";
+  await f.hide(); await f.show(); f.element("factor").value = "654321"; await f.submit("login-form");
+  assert.equal(posts(f).length, 1); assert.equal(JSON.parse(posts(f)[0].options.body).password, "Synthetic app-switch password");
+  assert.equal(f.element("password").value, ""); assert.equal(f.element("factor").value, ""); assert.equal(f.element("connected").hidden, true);
+  assert.equal(f.element("auth-status").textContent, "Les identifiants ou le code de sécurité sont incorrects.");
 });
 
 test("visibility hide and pagehide erase administrator identity, clients, invitation secret and credentials", async () => {

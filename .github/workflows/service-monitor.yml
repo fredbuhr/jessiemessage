@@ -37,7 +37,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "24.22.1"
       - name: Native Node tests, no hosting access
         run: node --test tests/external-probe.test.mjs tests/external-probe-cli.test.mjs
 
@@ -53,6 +53,6 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "24.22.1"
       - name: Check fixed primary endpoints, confirm persistent failures
         run: node scripts/check-private-service.mjs

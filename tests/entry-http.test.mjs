@@ -45,14 +45,14 @@ test("disabled features return a neutral available HTTP response without inspect
   assert.equal(response.status, 200); privateHeaders(response); assert.deepEqual(await response.json(), neutral);
 });
 
-test("anonymous enabled features show fixed signed-out choices without allocating any session SQL", async (t) => {
+test("anonymous entry offers only the client destination and never advertises administration or queries session SQL", async (t) => {
   let calls = 0;
   const lookup = () => { calls += 1; throw new Error("must not query private SQL"); };
   for (const enabled of ["client", "admin", "both"]) {
     const base = await listen(t, { clientSession: enabled === "admin" ? null : lookup, adminSession: enabled === "client" ? null : lookup });
     const response = await fetch(`${base}/api/entry`); assert.equal(response.status, 200); privateHeaders(response);
-    assert.deepEqual(await response.json(), { status: "available", client: enabled === "admin" ? null : { state: "signed_out", href: "/access" },
-      administrator: enabled === "client" ? null : { state: "signed_out", href: "/admin/login" } });
+    assert.deepEqual(await response.json(), { status: enabled === "admin" ? "unavailable" : "available", client: enabled === "admin" ? null : { state: "signed_out", href: "/access" },
+      administrator: null });
   }
   assert.equal(calls, 0);
 });
@@ -94,7 +94,7 @@ test("null session proof means signed out, without clearing either role cookie",
   const base = await listen(t, { clientSession: async () => null, adminSession: async () => null });
   const response = await fetch(`${base}/api/entry`, { headers: { Cookie: cookies() } });
   assert.equal(response.status, 200); privateHeaders(response);
-  assert.deepEqual(await response.json(), { status: "available", client: { state: "signed_out", href: "/access" }, administrator: { state: "signed_out", href: "/admin/login" } });
+  assert.deepEqual(await response.json(), { status: "available", client: { state: "signed_out", href: "/access" }, administrator: null });
 });
 
 test("missing, duplicate, noncanonical and oversized role cookies never invoke a session service", async (t) => {
@@ -104,7 +104,7 @@ test("missing, duplicate, noncanonical and oversized role cookies never invoke a
     `__Host-jessie_session=${ADMIN_TOKEN}; __Host-jessie_session=${ADMIN_TOKEN}`, "__Host-jessie_client=bad", `__Host-jessie_client=${"B".repeat(43)}`,
     `__Host-jessie_session=${ADMIN_TOKEN}=`, `private=${"x".repeat(8200)}; ${cookies()}`]) {
     const response = await fetch(`${base}/api/entry`, { headers: { Cookie } });
-    assert.equal(response.status, 200); assert.deepEqual(await response.json(), { status: "available", client: { state: "signed_out", href: "/access" }, administrator: { state: "signed_out", href: "/admin/login" } });
+    assert.equal(response.status, 200); assert.deepEqual(await response.json(), { status: "available", client: { state: "signed_out", href: "/access" }, administrator: null });
   }
   assert.equal(calls, 0);
 });
@@ -201,7 +201,7 @@ test("session and access expiry use the clock after both awaited lookups, includ
     now = NOW + (boundary === "access" ? 30000 : 60000); gate.resolve();
     const response = await pending; assert.equal(response.status, 200); const result = await response.json();
     assert.deepEqual(result.client, boundary === "access" ? { state: "expired", href: "/access" } : { state: "signed_out", href: "/access" });
-    assert.deepEqual(result.administrator, boundary === "access" ? { state: "connected", href: "/admin/messages" } : { state: "signed_out", href: "/admin/login" });
+    assert.deepEqual(result.administrator, boundary === "access" ? { state: "connected", href: "/admin/messages" } : null);
     assert.equal(clockCalls, 1);
   }
 });
@@ -222,7 +222,7 @@ test("primary transition offers role-specific resume links only while a role is 
     privateHeaders(response);
     assert.deepEqual(await response.json(), { status: "available",
       client: { state: connected ? "active" : "signed_out", href: connected ? "/messages" : "/connect-device/client" },
-      administrator: { state: connected ? "connected" : "signed_out", href: connected ? "/admin/messages" : "/connect-device/admin" } });
+      administrator: connected ? { state: "connected", href: "/admin/messages" } : null });
   }
   for (const deviceTransition of ["true", 1, null, {}]) assert.throws(() => createEntryHandler({ deviceTransition }), TypeError);
 });

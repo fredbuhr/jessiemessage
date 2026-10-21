@@ -19,14 +19,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 24.22.0
+      - name: Use Node.js 24.22.1
         uses: actions/setup-node@v4
         with:
-          node-version: "24.22.0"
+          node-version: "24.22.1"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
       - name: Check JavaScript syntax
         run: npm run check
+      - name: Verify private Node preparation with synthetic files
+        run: python3 ops/test-prepare-node24221.py
       - name: Run tests
         run: npm test
       - name: Build offline workbench
@@ -50,14 +52,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 24.22.0
+      - name: Use Node.js 24.22.1
         uses: actions/setup-node@v4
         with:
-          node-version: "24.22.0"
+          node-version: "24.22.1"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
       - name: Exercise real Chrome with synthetic local fixtures
         run: npm run test:browser
+      - name: Homepage rendering in French and English
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: homepage-render
+          retention-days: 7
+          if-no-files-found: error
+          path: artifacts/homepage/*.png
 
   auth-browser:
     name: Chrome HTTPS authentication and messaging with MariaDB
@@ -82,10 +92,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 24.22.0
+      - name: Use Node.js 24.22.1
         uses: actions/setup-node@v4
         with:
-          node-version: "24.22.0"
+          node-version: "24.22.1"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
       - name: Create disposable DML-only runtime account
@@ -136,10 +146,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 24.22.0
+      - name: Use Node.js 24.22.1
         uses: actions/setup-node@v4
         with:
-          node-version: "24.22.0"
+          node-version: "24.22.1"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
       - name: Install native MariaDB checkpoint clients

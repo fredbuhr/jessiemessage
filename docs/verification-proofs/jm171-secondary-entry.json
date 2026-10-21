@@ -1,0 +1,55 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-171-secondary-entry-review",
+  "provenance": "agent_observed_hosted_http_and_manager_and_browser_dom",
+  "main": {
+    "url": "https://jessiemessage.com/",
+    "status": 200,
+    "sourceHtmlSha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f",
+    "mockConversationPresent": false
+  },
+  "www": {
+    "url": "https://www.jessiemessage.com/",
+    "finalUrl": "https://jessiemessage.com/",
+    "status": 200,
+    "matchesMain171": true
+  },
+  "secondary": {
+    "url": "https://accueil.jessiemessage.com/",
+    "status": 200,
+    "htmlSha256": "202f8e6a0995abdb2ec2d2a158af95d78d93e179213b192ccf1f382d3d3f8759",
+    "oldMockConversationPresent": true,
+    "observedText": "Aperçu illustratif — aucun message personnel affiché."
+  },
+  "php": {
+    "managerSiteId": 1532641,
+    "managerDisplayedVersion": "8.4.26",
+    "providerCorrectionAttested": false,
+    "changesMade": false
+  },
+  "routing": {
+    "proposedChange": "Extend the existing fixed-origin 308 canonical redirect from www to www or accueil; preserve path and query.",
+    "before": "RewriteCond %{HTTP_HOST} ^www\\.jessiemessage\\.com(?::(?:80|443))?$ [NC]",
+    "after": "RewriteCond %{HTTP_HOST} ^(?:www|accueil)\\.jessiemessage\\.com(?::(?:80|443))?$ [NC]",
+    "applied": false,
+    "risk": "All requests to the secondary public host would redirect to the primary host.",
+    "firstPreparation": "Stopped on an assertion before any backup or write.",
+    "automaticReview": {
+      "status": "rejected_before_execution",
+      "reason": "This browser-mediated SSH action modifies live Apache routing for a public domain; the user only asked to resume, without explicitly authorizing this exact consequential configuration change.",
+      "requiredNextAction": "Obtain explicit user authorization for this exact redirect before modifying routing."
+    },
+    "readOnlyCheck": {
+      "observedAtUTC": "2026-10-21T23:12:55.967066+00:00",
+      "apacheConfigSha256": "daa58abe55ca39cfb2a931f2caa8d6fc5f19e01c872e32603abc9cea8d6eff63",
+      "wwwOnlyCanonicalRulePresent": true,
+      "accueilRulePresent": false,
+      "backupCreated": false
+    }
+  },
+  "applicationDeploymentBlocked": false,
+  "limits": [
+    "No PHP correction inferred from the Node deployment.",
+    "Secondary welcome remains distinct and contains the old illustration until an authorized correction is applied."
+  ]
+}

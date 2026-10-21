@@ -1,0 +1,184 @@
+{
+  "formatVersion": 1,
+  "type": "release-publication-log-review",
+  "repository": "fredbuhr/jessiemessage",
+  "version": "1.7.1",
+  "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+  "sourceTree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+  "operator": {
+    "commit": "245dc7c543665e303d47ed105f3620df4d711bd1",
+    "tree": "55685a7259c2a6faa3734d0f07b8fdcdb7058982",
+    "branch": "ops/publish-v1.7.1",
+    "workflowPath": ".github/workflows/publish-qualified.yml",
+    "remoteWorkflowSha256": "7993f7ede488ea97378d5538204ffdac97bd05765b9d6d754f238f05f6b7201b",
+    "localByteIdentical": true,
+    "releaseNameMatches": true,
+    "releaseBodyMatches": true,
+    "releaseBodySha256": "958484707e6c17406e2955d4197363f8565e2d72ad7dddeabe8159c439109d0b"
+  },
+  "publicationRun": {
+    "id": 39690093182,
+    "name": "Publish qualified JessieMessage release",
+    "event": "push",
+    "head_branch": "ops/publish-v1.7.1",
+    "head_sha": "245dc7c543665e303d47ed105f3620df4d711bd1",
+    "status": "completed",
+    "conclusion": "success",
+    "run_attempt": 1,
+    "created_at": "2026-10-21T22:56:53Z",
+    "updated_at": "2026-10-21T22:57:11Z",
+    "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39690093182",
+    "jobs": [
+      {
+        "id": 119533859532,
+        "name": "publish",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 39690093182,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Use qualified Node.js 24.22.1",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Verify the security and entry correction and publish its immutable tag",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Post Use qualified Node.js 24.22.1",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          }
+        ],
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39690093182/job/119533859532",
+        "logs": {
+          "read": true,
+          "complete": true,
+          "file": "/workspace/scratch/661996893e4c/jm171-publication/job-119533859532.log",
+          "bytes": 22756,
+          "sha256": "41a85d398068b91444d00400f158d66bbb54cfe723be74f271c060e55abd0c52",
+          "format": "Complete decoded UTF-8 job log; original BOM and line endings retained."
+        },
+        "nodeVersionsObserved": [
+          "v24.22.1"
+        ],
+        "publishedReceipt": {
+          "status": "published_verified",
+          "tag": "v1.7.1",
+          "commit": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+          "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+          "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.1",
+          "ciRun": 39689157058,
+          "nodeVersion": "24.22.1",
+          "schemaMigrations": 33,
+          "dormantTransport": true,
+          "deploymentPerformed": false
+        },
+        "errorAnnotations": [],
+        "warnings": [
+          "(node:1978) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.",
+          "(node:2014) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.",
+          "##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+        ]
+      }
+    ]
+  },
+  "tag": {
+    "ref": "refs/tags/v1.7.1",
+    "type": "commit",
+    "commit": "c2d7b3b31c6d0955892829f808dc4135d7d8debf"
+  },
+  "release": {
+    "id": 420135576,
+    "tag": "v1.7.1",
+    "target": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+    "name": "JessieMessage 1.7.1 — Sécurité Node et entrée privée",
+    "draft": false,
+    "prerelease": false,
+    "createdAt": "2026-10-21T22:48:37Z",
+    "publishedAt": "2026-10-21T22:57:08Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.1",
+    "body": "Correctif compatible de sécurité et d'entrée, sans activation vidéo.\n- Node.js officiel 24.22.1 épinglé pour la qualification et les helpers de préparation séparés.\n- L'entrée publique ne présente plus l'administration sans session admin existante valide ; l'URL directe de connexion reste disponible.\n- Les champs du login admin survivent en mémoire au changement d'application d'authentification, sans stockage persistant ; navigation et fin de connexion les effacent.\n- Accueil public remanié, sans faux aperçu de conversation ; vérifications synthétiques Chrome FR/EN et mobile.\n- Les tâches, rappels et échéances privées restent réservés à Jessie/admin ; aucun rendez-vous partagé n'est ajouté.\n- Les quatre modules du transport vidéo v1.7.0 restent dormants, sans import ni route vidéo dans le runtime normal ; le lot7 reste sur sa branche distincte.\n- Les 33 migrations sont identiques à la référence 1.6.0 ; schéma SQL33 inchangé, aucune migration ni activation hébergée par cette publication.\n- Les tests utilisent des données et services isolés ; aucun téléphone physique ni déploiement n'est déduit de la CI.\n\nCommit : `c2d7b3b31c6d0955892829f808dc4135d7d8debf`.\nValidation : [CI complète, 5/5 jobs](https://github.com/fredbuhr/jessiemessage/actions/runs/39689157058).\n\nLa publication ne prouve pas un déploiement. L'état réellement déployé et le repli sont consignés dans [REPRISE](https://github.com/fredbuhr/jessiemessage/blob/main/docs/REPRISE.md).",
+    "bodySha256": "958484707e6c17406e2955d4197363f8565e2d72ad7dddeabe8159c439109d0b"
+  },
+  "qualifiedCi": {
+    "id": 39689157058,
+    "path": ".github/workflows/ci.yml",
+    "headSha": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+    "headBranch": "main",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "completedAt": "2026-10-21T22:54:54Z",
+    "jobs": [
+      {
+        "id": 119530719948,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 119530720221,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 119530720373,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 119530720378,
+        "name": "Chrome HTTPS authentication and messaging with MariaDB",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 119530720441,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "checks": {
+    "tagAndReleaseTargetMatchSource": true,
+    "publicationFooterMatchesSourceAndTree": true,
+    "releaseNameAndBodyMatchPinnedWorkflow": true,
+    "operatorWorkflowByteIdenticalToReviewedLocal": true,
+    "allPublicationJobsSuccessful": true
+  },
+  "mutationsPerformed": false,
+  "rerunsRequested": false,
+  "deploymentPerformedByPublication": false,
+  "limits": [
+    "The publication creates and verifies GitHub release objects only; no staging, activation, Manager change or checkpoint update is inferred.",
+    "The source main CI, operator workflow commit and application tag source are distinct references and are recorded separately.",
+    "The operator workflow was independently fetched and found byte-identical to the reviewed pinned local workflow. The parent's separate verification of four additional operator files is not claimed as a new byte review here.",
+    "The publication's SQL33 and dormant video checks qualify source contents; they do not observe a deployed SQL schema or active runtime.",
+    "Only decoded UTF-8 log bytes are available from the connector; original BOM and line endings are retained.",
+    "This review used read-only GitHub calls and saved scratch evidence; no publication or rerun was requested."
+  ],
+  "observedAt": "2026-10-21T22:58:54.599509+00:00"
+}

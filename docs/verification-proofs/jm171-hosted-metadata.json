@@ -1,0 +1,72 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-1.7.1-hosted-metadata",
+  "provenance": "agent_observed_hosted_ssh_receipt_and_separate_checkpoint_readback",
+  "writer": {
+    "commit": "245dc7c543665e303d47ed105f3620df4d711bd1",
+    "path": "ops/record-release171.py",
+    "sha256": "bc0d4438e1bd6ade9dbe3ec53609b143b6ee1346df76846d1cbc188a1ac23202",
+    "reviewedLocalByteIdenticalToRemoteBlob": true,
+    "syntheticTests": {
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "receipt": {
+    "status": "release171_metadata_recorded",
+    "version": "1.7.1",
+    "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+    "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 33,
+    "provenance": "hosted_startup_log_and_public_http",
+    "publicReady": true,
+    "rollbackRelease": "1.6.0",
+    "rollbackNodeVersion": "v24.22.1",
+    "rollbackPrecheckedNotStarted": true,
+    "historicalRollback151Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true
+  },
+  "readback": {
+    "observedAtUTC": "2026-10-21T23:07:46.133646+00:00",
+    "checkpoint": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
+    "sha256": "a0a6b4b5cbd6ac206ea6e4502947ce97dcfecd5b8f7320d0f93d78e7b3f2cb76",
+    "activeRelease": "1.7.1",
+    "activeSource": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+    "activeTree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+    "activeNode": "v24.22.1",
+    "schemaMigrations": 33,
+    "status": "identity_observed_via_startup_log_and_public_http",
+    "rollbackStartLogEmpty": true
+  },
+  "rollback": {
+    "release": "1.6.0",
+    "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+    "node": "v24.22.1",
+    "prechecked": true,
+    "started": false,
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-release160-node24221-9590741e.sh",
+    "build": "bash /srv/customer/jessiemessage-private/check-primary-release160-node24221-9590741e.sh"
+  },
+  "preserved": [
+    "prior active 1.6.0 record",
+    "historical 1.5.1 rollback record",
+    "other private checkpoint blocks"
+  ],
+  "mutations": [
+    "metadata checkpoint transition only"
+  ],
+  "noServiceRestart": true,
+  "noSqlMutation": true,
+  "limits": [
+    "Public HTTP does not expose commit identity; identity is from the hosted startup record.",
+    "Admin session, physical-phone Authenticator and PWA lifecycle were not requalified on the host during this resume.",
+    "PID, socket, executed process binary hash and private runtime configs were not independently qualified.",
+    "PHP provider correction and backups/PC are separate and not attested by this receipt.",
+    "Startup log is an append-only live log; the SHA describes bytes at the observation, not a permanently frozen file."
+  ]
+}

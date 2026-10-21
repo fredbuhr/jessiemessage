@@ -1,0 +1,1349 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-1.7.1-verification",
+  "repository": "fredbuhr/jessiemessage",
+  "applicationVersionUnderQualification": "1.7.1",
+  "pullRequest": {
+    "number": 126,
+    "url": "https://github.com/fredbuhr/jessiemessage/pull/126"
+  },
+  "recordedAt": "2026-10-21T22:58:17.770898+00:00",
+  "qualifiedPr": {
+    "source": "fb28cf353e814e657e0c42ba98ef209e630d4060",
+    "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+    "run": 39688235543
+  },
+  "qualifiedMain": {
+    "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+    "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+    "run": 39689157058
+  },
+  "qualification": {
+    "prFinalJobsSucceeded": 5,
+    "mainJobsSucceeded": 5,
+    "attempts": 1,
+    "nodeVersion": "24.22.1",
+    "schemaMigrations": 33,
+    "independentPrAndMainLogs": true,
+    "logBodiesIncluded": false
+  },
+  "revisions": [
+    {
+      "kind": "initial",
+      "source": {
+        "commit": "2182ee9bea2622b6921cb57214e086b8cf92f55c",
+        "tree": "69fbdcb9c2a6572478b45844ec792e71e4f5b8ac",
+        "base": "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058"
+      },
+      "run": {
+        "id": 39685904861,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685904861",
+        "event": "pull_request",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
+        "createdAt": "2026-10-21T22:21:34Z",
+        "updatedAt": "2026-10-21T22:27:04Z"
+      },
+      "testedCheckout": {
+        "commit": "782a43aabcf4b9904b1ce1310ec430a3da06a656",
+        "tree": "69fbdcb9c2a6572478b45844ec792e71e4f5b8ac",
+        "parents": [
+          "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+          "2182ee9bea2622b6921cb57214e086b8cf92f55c"
+        ],
+        "treeEqualsSource": true,
+        "observedInBothLogs": true
+      },
+      "requiredJobsSucceeded": 3,
+      "requiredJobsCount": 5,
+      "fiveCompleteLogsReviewed": true,
+      "jobs": [
+        {
+          "id": 119519757040,
+          "name": "verify",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685904861/job/119519757040",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 3416,
+            "suites": 0,
+            "pass": 3377,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 39,
+            "todo": 0,
+            "duration_ms": 97685.536131
+          },
+          "log": {
+            "file": "jm171-pr126-verify-119519757040.log",
+            "bytes": 482837,
+            "sha256": "50027b64749d8ef5de3a44d7849ec24b5c0071ace4cda443349b35a9673fb195",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "pythonPreparationHelper": {
+            "tests": 13,
+            "pass": 13,
+            "fail": 0
+          },
+          "syntaxSources": 630,
+          "buildPassed": true
+        },
+        {
+          "id": 119519757106,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685904861/job/119519757106",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 45775.745182
+          },
+          "log": {
+            "file": "jm171-pr126-https-119519757106.log",
+            "bytes": 34172,
+            "sha256": "8578dc1c20304ad65734235267370c5619330469098933f0c5b18152a36783dc",
+            "completeDecodedLog": true,
+            "reviewed": true
+          }
+        },
+        {
+          "id": 119519756950,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685904861/job/119519756950",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 196,
+            "suites": 0,
+            "pass": 196,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 221003.533345
+          },
+          "log": {
+            "file": "chrome-119519756950.log",
+            "bytes": 41112,
+            "sha256": "b9fad508b5ce1607874f08a0b780a87219e7bb45e377098303293a04b22d116a",
+            "completeDecodedLog": true,
+            "reviewed": true
+          }
+        },
+        {
+          "id": 119519757042,
+          "name": "MariaDB 10.11",
+          "conclusion": "failure",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685904861/job/119519757042",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 505,
+            "suites": 0,
+            "pass": 501,
+            "fail": 4,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 291607.913572
+          },
+          "log": {
+            "file": "ci-39685904861-job-119519757042-mariadb-1011.log",
+            "bytes": 291891,
+            "sha256": "e5ffc28e2f953baceeb679547ba85c39b8453bf4ad8ed2ab86b6466f1679b709",
+            "completeDecodedLog": true,
+            "reviewed": true
+          }
+        },
+        {
+          "id": 119519757105,
+          "name": "MariaDB 11.4",
+          "conclusion": "failure",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685904861/job/119519757105",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 505,
+            "suites": 0,
+            "pass": 501,
+            "fail": 4,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 181636.708404
+          },
+          "log": {
+            "file": "ci-39685904861-job-119519757105-mariadb-114.log",
+            "bytes": 291978,
+            "sha256": "06b2854878cb93184468a8d57e59fbe789216240b3054f3db30d34ab339e7951",
+            "completeDecodedLog": true,
+            "reviewed": true
+          }
+        }
+      ],
+      "schemaMigrations": 33,
+      "failureCause": {
+        "classification": "stale integration expectations after intentional anonymous-entry contract change",
+        "operations": {
+          "source": "tests/operations-flow.integration.test.mjs:160",
+          "expected": {
+            "status": "available",
+            "client": null,
+            "administrator": {
+              "state": "signed_out",
+              "href": "/admin/login"
+            }
+          },
+          "actual": {
+            "status": "unavailable",
+            "client": null,
+            "administrator": null
+          }
+        },
+        "witness": {
+          "source": "tests/witness-runtime.integration.test.mjs:220",
+          "variants": [
+            "direct",
+            "parent gateway"
+          ],
+          "expectedAdministrator": {
+            "state": "signed_out",
+            "href": "/connect-device/admin"
+          },
+          "actualAdministrator": null
+        },
+        "additionalSqlFailure": false
+      }
+    },
+    {
+      "kind": "corrected",
+      "source": {
+        "commit": "fc4b63370be45d35dd73fb9241b5fad18cecd23b",
+        "tree": "9fae596b2aa6d252d8a4d30a0f97df6abf499c2d",
+        "base": "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058"
+      },
+      "run": {
+        "id": 39686640755,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640755",
+        "event": "pull_request",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "createdAt": "2026-10-21T22:27:38Z",
+        "updatedAt": "2026-10-21T22:34:22Z"
+      },
+      "testedCheckout": {
+        "commit": "8f957b954ceb9e43c243b89be18c83d2f5d0953f",
+        "tree": "9fae596b2aa6d252d8a4d30a0f97df6abf499c2d",
+        "parents": [
+          "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+          "fc4b63370be45d35dd73fb9241b5fad18cecd23b"
+        ],
+        "treeEqualsSource": true,
+        "observedInBothLogs": true
+      },
+      "requiredJobsSucceeded": 5,
+      "requiredJobsCount": 5,
+      "fiveCompleteLogsReviewed": true,
+      "jobs": [
+        {
+          "id": 119522270281,
+          "name": "verify",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640755/job/119522270281",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 3416,
+            "suites": 0,
+            "pass": 3377,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 39,
+            "todo": 0,
+            "duration_ms": 91911.961643
+          },
+          "log": {
+            "file": "jm171-pr126-r2-verify-119522270281.log",
+            "bytes": 482727,
+            "sha256": "5a8799ea6bbd82016aaf9bf9aaddb7fa80c826df1315ffe0fb7a7fa02d3650e0",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "pythonPreparationHelper": {
+            "tests": 13,
+            "pass": 13,
+            "fail": 0
+          },
+          "syntaxSources": 630,
+          "buildPassed": true
+        },
+        {
+          "id": 119522270113,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640755/job/119522270113",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 43761.914791
+          },
+          "log": {
+            "file": "jm171-pr126-r2-https-119522270113.log",
+            "bytes": 34012,
+            "sha256": "3ea4d5029b953db617e9ff37c686e1286e8154a12a1e58221affad19b69ff688",
+            "completeDecodedLog": true,
+            "reviewed": true
+          }
+        },
+        {
+          "id": 119522269816,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640755/job/119522269816",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 196,
+            "suites": 0,
+            "pass": 196,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 200711.062327
+          },
+          "log": {
+            "file": "chrome-119522269816.log",
+            "bytes": 41111,
+            "sha256": "7cdfe4c615b1b751f310f23c3142cbc9a43edf8a6bfd6c0b87d70eebbe6560b2",
+            "completeDecodedLog": true,
+            "reviewed": true
+          }
+        },
+        {
+          "id": 119522270043,
+          "name": "MariaDB 10.11",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640755/job/119522270043",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 505,
+            "suites": 0,
+            "pass": 505,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 337050.260144
+          },
+          "log": {
+            "file": "ci-39686640755-job-119522270043-mariadb-1011.log",
+            "bytes": 289295,
+            "sha256": "e7ec9d86bc3742f6e033f772f840b17aaabf405b94e8440dd2ffa89602a7d35f",
+            "completeDecodedLog": true,
+            "reviewed": true
+          }
+        },
+        {
+          "id": 119522270176,
+          "name": "MariaDB 11.4",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640755/job/119522270176",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 505,
+            "suites": 0,
+            "pass": 505,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 351759.089938
+          },
+          "log": {
+            "file": "ci-39686640755-job-119522270176-mariadb-114.log",
+            "bytes": 290767,
+            "sha256": "c1b17362523b11a2031093df40367c103cedb866e8d180d8a38cd210adb62039",
+            "completeDecodedLog": true,
+            "reviewed": true
+          }
+        }
+      ],
+      "schemaMigrations": 33,
+      "correctionReview": {
+        "sourceSha": "fc4b63370be45d35dd73fb9241b5fad18cecd23b",
+        "sourceTree": "9fae596b2aa6d252d8a4d30a0f97df6abf499c2d",
+        "files": [
+          "docs/PLAN-IMPLEMENTATION.md",
+          "tests/operations-flow.integration.test.mjs",
+          "tests/witness-runtime.integration.test.mjs"
+        ],
+        "productChanged": false,
+        "newContract": {
+          "authOnly": {
+            "status": "unavailable",
+            "client": null,
+            "administrator": null
+          },
+          "witnessTransition": {
+            "status": "available",
+            "client": {
+              "state": "signed_out",
+              "href": "/connect-device/client"
+            },
+            "administrator": null
+          }
+        },
+        "verification": "Read exact git show of fc4b633; only two integration expectations and plan receipt changed."
+      }
+    },
+    {
+      "kind": "portable_node_preparation",
+      "source": {
+        "commit": "fb28cf353e814e657e0c42ba98ef209e630d4060",
+        "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+        "base": "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058"
+      },
+      "run": {
+        "id": 39688235543,
+        "head_sha": "fb28cf353e814e657e0c42ba98ef209e630d4060",
+        "event": "pull_request",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T22:40:54Z",
+        "updated_at": "2026-10-21T22:47:29Z",
+        "run_started_at": "2026-10-21T22:40:54Z",
+        "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235543",
+        "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115"
+      },
+      "testedCheckout": {
+        "sha": "2af26eb928973e8376676ce5c1583b663cc51012",
+        "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+        "parents": [
+          "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+          "fb28cf353e814e657e0c42ba98ef209e630d4060"
+        ],
+        "treeMatchesSource": true
+      },
+      "requiredJobsSucceeded": 5,
+      "requiredJobsCount": 5,
+      "fiveCompleteLogsReviewed": true,
+      "jobs": [
+        {
+          "id": 119527640679,
+          "name": "verify",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235543/job/119527640679",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 3416,
+            "suites": 0,
+            "pass": 3377,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 39,
+            "todo": 0,
+            "duration_ms": 101486.916332
+          },
+          "log": {
+            "file": "jm171-pr126-r3-119527640679.log",
+            "bytes": 483320,
+            "sha256": "4050bca7c67ccbbb2f6ec57684494684f2c6691b91e966a873107d49676070a0",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:40:56Z",
+          "completed_at": "2026-10-21T22:43:22Z",
+          "pythonPreparationHelper": {
+            "tests": 15,
+            "pass": 15,
+            "fail": 0
+          },
+          "syntaxSources": 630,
+          "buildPassed": true
+        },
+        {
+          "id": 119527641043,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235543/job/119527641043",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 51765.148673
+          },
+          "log": {
+            "file": "jm171-pr126-r3-119527641043.log",
+            "bytes": 34067,
+            "sha256": "85e87a3e5a68afb4481795dd2d29aebf6c45bbc84e2be6fd729f31ea6345d22d",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:40:57Z",
+          "completed_at": "2026-10-21T22:42:15Z"
+        },
+        {
+          "id": 119527641063,
+          "name": "MariaDB 11.4",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235543/job/119527641063",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 505,
+            "suites": 0,
+            "pass": 505,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 357974.638101
+          },
+          "log": {
+            "file": "ci-39688235543-job-119527641063-mariadb-114.log",
+            "bytes": 290294,
+            "sha256": "5da1a82d8cfb8b1c8eba2624de0f978f96f26a491772808ed3711cc225f051a5",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:40:56Z",
+          "completed_at": "2026-10-21T22:47:28Z"
+        },
+        {
+          "id": 119527641065,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235543/job/119527641065",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 196,
+            "suites": 0,
+            "pass": 196,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 218294.489826
+          },
+          "log": {
+            "file": "job-119527641065.log",
+            "bytes": 41086,
+            "sha256": "c9cd142627916671dc1ff95f8296ccc46429a0fd52aa9da16f5cb231f4faac0a",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:40:57Z",
+          "completed_at": "2026-10-21T22:44:49Z"
+        },
+        {
+          "id": 119527641227,
+          "name": "MariaDB 10.11",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235543/job/119527641227",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 505,
+            "suites": 0,
+            "pass": 505,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 331351.338933
+          },
+          "log": {
+            "file": "ci-39688235543-job-119527641227-mariadb-1011.log",
+            "bytes": 289077,
+            "sha256": "c8e857846151288d870e06658ba7b99f280765f83ff07fc27e5b476c5147f90c",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:40:56Z",
+          "completed_at": "2026-10-21T22:47:01Z"
+        }
+      ],
+      "schemaMigrations": 33,
+      "changedFilesFromFc4": [
+        "ops/prepare-node24221.py",
+        "ops/test-prepare-node24221.py"
+      ],
+      "helperSha256": "21dc1f7e89625ecfa9d4b13951d3496ffbd600f97ed4dd393d95a689b8facaf7",
+      "qualificationDistinctFromEarlierTrees": true
+    },
+    {
+      "kind": "main",
+      "source": {
+        "commit": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115"
+      },
+      "run": {
+        "id": 39689157058,
+        "head_sha": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "event": "push",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T22:48:40Z",
+        "updated_at": "2026-10-21T22:54:54Z",
+        "run_started_at": "2026-10-21T22:48:40Z",
+        "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157058",
+        "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115"
+      },
+      "testedCheckout": {
+        "sha": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+        "parents": [
+          "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+          "fb28cf353e814e657e0c42ba98ef209e630d4060"
+        ]
+      },
+      "requiredJobsSucceeded": 5,
+      "requiredJobsCount": 5,
+      "fiveCompleteLogsReviewed": true,
+      "jobs": [
+        {
+          "id": 119530719948,
+          "name": "verify",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157058/job/119530719948",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 3416,
+            "suites": 0,
+            "pass": 3377,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 39,
+            "todo": 0,
+            "duration_ms": 102891.195309
+          },
+          "log": {
+            "file": "jm171-main-119530719948.log",
+            "bytes": 482224,
+            "sha256": "9c7f20806a17df0019f58c6671c0735193aab77605ad4aba76ee4499e4c01c38",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:48:42Z",
+          "completed_at": "2026-10-21T22:51:09Z",
+          "pythonPreparationHelper": {
+            "tests": 15,
+            "pass": 15,
+            "fail": 0
+          },
+          "syntaxSources": 630,
+          "buildPassed": true
+        },
+        {
+          "id": 119530720221,
+          "name": "MariaDB 11.4",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157058/job/119530720221",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 505,
+            "suites": 0,
+            "pass": 505,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 313864.414776
+          },
+          "log": {
+            "file": "ci-39689157058-job-119530720221-mariadb-114.log",
+            "bytes": 288645,
+            "sha256": "7dfb1c97d78101445ab9608a5c3402a1650a4e56264eb87f41173a06bc1ea5b8",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:48:43Z",
+          "completed_at": "2026-10-21T22:54:39Z",
+          "databaseEngine": "11.4.13-MariaDB-ubu2404",
+          "schemaMigrations": 33,
+          "anonymousContractAndWitnessChecksPassed": true
+        },
+        {
+          "id": 119530720373,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157058/job/119530720373",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 196,
+            "suites": 0,
+            "pass": 196,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 203488.321027
+          },
+          "log": {
+            "file": "job-119530720373.log",
+            "bytes": 40028,
+            "sha256": "f3a69ba930caa31a87742a65a33cf901a96191b812937543da90b59736c28f70",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:48:43Z",
+          "completed_at": "2026-10-21T22:52:21Z"
+        },
+        {
+          "id": 119530720378,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157058/job/119530720378",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 38878.184018
+          },
+          "log": {
+            "file": "jm171-main-119530720378.log",
+            "bytes": 32849,
+            "sha256": "048d63b9386cd57ed73fa67c36c1a10d7b73bb0378d0e74a5079d207ee3c64ee",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:48:43Z",
+          "completed_at": "2026-10-21T22:49:49Z"
+        },
+        {
+          "id": 119530720441,
+          "name": "MariaDB 10.11",
+          "conclusion": "success",
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157058/job/119530720441",
+          "nodeVersion": "24.22.1",
+          "counts": {
+            "tests": 505,
+            "suites": 0,
+            "pass": 505,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 334594.673228
+          },
+          "log": {
+            "file": "ci-39689157058-job-119530720441-mariadb-1011.log",
+            "bytes": 288164,
+            "sha256": "170ae706f8db76d1f79b868b33070af24abb14dab75f3f33ebd040e550fc39ef",
+            "completeDecodedLog": true,
+            "reviewed": true
+          },
+          "started_at": "2026-10-21T22:48:43Z",
+          "completed_at": "2026-10-21T22:54:53Z",
+          "databaseEngine": "10.11.19-MariaDB-ubu2204",
+          "schemaMigrations": 33,
+          "anonymousContractAndWitnessChecksPassed": true
+        }
+      ],
+      "schemaMigrations": 33,
+      "sameTreeAsQualifiedPr": true,
+      "qualificationUsesFreshMainLogs": true
+    }
+  ],
+  "sharedOmissions": {
+    "generalTests": 39,
+    "sqlWrappers": 37,
+    "procfsAbsenceBranches": 2,
+    "nativeSqlOmissionsOnSuccessfulRevisions": 0,
+    "initialSqlFailuresAreNotOmissions": true
+  },
+  "pythonPreparationHelper": {
+    "initialAndFc4": 13,
+    "prR3AndMain": 15,
+    "latestPassedCases": [
+      "test_archive_tamper_refuses_before_preparation",
+      "test_copy_fsync_failure_leaves_only_unactivated_candidate_and_reports_phase",
+      "test_copy_readback_detects_changed_bytes_before_launcher_creation",
+      "test_exclusive_candidate_preserves_a_raced_empty_directory",
+      "test_failure_after_node_publish_preserves_originals_and_refuses_blind_retry",
+      "test_hardlinked_input_and_root_in_checkout_refused",
+      "test_named_pipe_is_refused_without_waiting_for_a_writer",
+      "test_prepares_separate_node_and_exact_launcher_copies_without_running_them",
+      "test_private_permissions_symlink_and_existing_output_refused",
+      "test_repeat_refuses_without_truncating_logs",
+      "test_source_check_uses_exact_git_identity_without_contacting_remote",
+      "test_symlink_and_duplicate_binary_members_refused",
+      "test_untrusted_original_launcher_and_old_binary_refused",
+      "test_wrong_extracted_digest_refuses_and_cleans_staging",
+      "test_wrong_version_refuses_and_cleans_staging"
+    ],
+    "latestHelperSha256": "21dc1f7e89625ecfa9d4b13951d3496ffbd600f97ed4dd393d95a689b8facaf7"
+  },
+  "mobileMfa": {
+    "realChrome": true,
+    "realMariaDb": true,
+    "https": true,
+    "syntheticAccounts": true,
+    "visibilityTransition": "hidden -> visible plus pageshow; dispatched deterministically in the real browser",
+    "preservesEmailAndPasswordInMemory": true,
+    "passwordRemasked": true,
+    "passwordSelectionPreserved": true,
+    "factorFocusedWithoutPasswordRetype": true,
+    "localAndSessionStorageEmpty": true,
+    "realTotpLoginAccepted": true,
+    "totpReplayRejectedInFreshWindow": true,
+    "wrongMfaRejectedWithoutCookie": true,
+    "diagnostic": "Wrong MFA rejected; authenticator app-switch fields, real TOTP login and browser cookie protection verified.",
+    "physicalPhoneNotQualified": true,
+    "rehearsalSourceReadAtPriorQualifiedCommit": true,
+    "rehearsalSourceUnchangedByVerifiedCompare": true
+  },
+  "auxiliaryQualifications": [
+    {
+      "source": "2182ee9bea2622b6921cb57214e086b8cf92f55c",
+      "runs": [
+        {
+          "id": 39685905062,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685905062",
+          "event": "pull_request",
+          "source": "2182ee9bea2622b6921cb57214e086b8cf92f55c",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119519757830,
+              "name": "Probe failure and privacy tests",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685905062/job/119519757830",
+              "nodeVersion": "24.22.1",
+              "counts": {
+                "tests": 24,
+                "suites": 0,
+                "pass": 24,
+                "fail": 0,
+                "cancelled": 0,
+                "skipped": 0,
+                "todo": 0
+              },
+              "log": {
+                "file": "job-119519757830.log",
+                "bytes": 17313,
+                "sha256": "dde7ac32f63fb0d234bcac88516ae7adbd79b28b34b6462dda391a76fd82fff6",
+                "completeDecodedLog": true,
+                "reviewed": true
+              }
+            },
+            {
+              "id": 119519852822,
+              "name": "Anonymous HTTPS and readiness",
+              "conclusion": "skipped",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685905062/job/119519852822",
+              "logReviewed": false,
+              "reason": "PR policy; no hosted probe executed or inferred"
+            }
+          ]
+        },
+        {
+          "id": 39685905271,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685905271",
+          "event": "pull_request",
+          "source": "2182ee9bea2622b6921cb57214e086b8cf92f55c",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119519760379,
+              "name": "Windows PowerShell 5.1 instructions",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685905271/job/119519760379",
+              "nodeVersion": "24.22.1",
+              "counts": null,
+              "log": {
+                "file": "job-119519760379.log",
+                "bytes": 27217,
+                "sha256": "8602548f9d9d669c0308612956f1e9073b12d12c6174cd67fb8a659111499dcf",
+                "completeDecodedLog": true,
+                "reviewed": true
+              },
+              "witnessAssertions": 90
+            }
+          ]
+        },
+        {
+          "id": 39685874881,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685874881",
+          "event": "push",
+          "source": "2182ee9bea2622b6921cb57214e086b8cf92f55c",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119519654995,
+              "name": "Windows PowerShell 5.1 instructions",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685874881/job/119519654995",
+              "nodeVersion": "24.22.1",
+              "counts": null,
+              "log": {
+                "file": "job-119519654995.log",
+                "bytes": 26256,
+                "sha256": "f4230bb5a713763d54d20cf28e27174bd3be8f79478c2a0f14ff47e1063285cc",
+                "completeDecodedLog": true,
+                "reviewed": true
+              },
+              "witnessAssertions": 90
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": "fc4b63370be45d35dd73fb9241b5fad18cecd23b",
+      "runs": [
+        {
+          "id": 39686640758,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640758",
+          "event": "pull_request",
+          "source": "fc4b63370be45d35dd73fb9241b5fad18cecd23b",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119522270063,
+              "name": "Probe failure and privacy tests",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640758/job/119522270063",
+              "nodeVersion": "24.22.1",
+              "counts": {
+                "tests": 24,
+                "suites": 0,
+                "pass": 24,
+                "fail": 0,
+                "cancelled": 0,
+                "skipped": 0,
+                "todo": 0
+              },
+              "log": {
+                "file": "job-119522270063.log",
+                "bytes": 17311,
+                "sha256": "7c07a85af55699c60bfb98c25da2c94502cded539738c6bbc38e7124f7d9c7c9",
+                "completeDecodedLog": true,
+                "reviewed": true
+              }
+            },
+            {
+              "id": 119522360575,
+              "name": "Anonymous HTTPS and readiness",
+              "conclusion": "skipped",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640758/job/119522360575",
+              "logReviewed": false,
+              "reason": "PR policy; no hosted probe executed or inferred"
+            }
+          ]
+        },
+        {
+          "id": 39686640802,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640802",
+          "event": "pull_request",
+          "source": "fc4b63370be45d35dd73fb9241b5fad18cecd23b",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119522270178,
+              "name": "Windows PowerShell 5.1 instructions",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39686640802/job/119522270178",
+              "nodeVersion": "24.22.1",
+              "counts": null,
+              "log": {
+                "file": "job-119522270178.log",
+                "bytes": 27217,
+                "sha256": "5f6e0bebeb6ab02c1350e8102c6eb9d71a19c9cc8fa3c813686dcea7dda38f4f",
+                "completeDecodedLog": true,
+                "reviewed": true
+              },
+              "witnessAssertions": 90
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": "fb28cf353e814e657e0c42ba98ef209e630d4060",
+      "runs": [
+        {
+          "id": 39688235529,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235529",
+          "event": "pull_request",
+          "source": "fb28cf353e814e657e0c42ba98ef209e630d4060",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119527640328,
+              "name": "Probe failure and privacy tests",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235529/job/119527640328",
+              "nodeVersion": "24.22.1",
+              "counts": {
+                "tests": 24,
+                "suites": 0,
+                "pass": 24,
+                "fail": 0,
+                "cancelled": 0,
+                "skipped": 0,
+                "todo": 0
+              },
+              "log": {
+                "file": "job-119527640328.log",
+                "bytes": 17313,
+                "sha256": "3e10e6b11f2294f103811fd09a1725aebf45fc405d7fe87f00bbac8ecd25941a",
+                "completeDecodedLog": true,
+                "reviewed": true
+              },
+              "witnessAssertions": null
+            },
+            {
+              "id": 119527727415,
+              "name": "Anonymous HTTPS and readiness",
+              "conclusion": "skipped",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235529/job/119527727415",
+              "logReviewed": false,
+              "reason": "PR policy; no hosted probe executed or inferred"
+            }
+          ]
+        },
+        {
+          "id": 39688235518,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235518",
+          "event": "pull_request",
+          "source": "fb28cf353e814e657e0c42ba98ef209e630d4060",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119527641011,
+              "name": "Windows PowerShell 5.1 instructions",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39688235518/job/119527641011",
+              "nodeVersion": "24.22.1",
+              "counts": null,
+              "log": {
+                "file": "job-119527641011.log",
+                "bytes": 27218,
+                "sha256": "39ea6ffaeefccde5e8277ae21ec62c8cdef8f5f1eb01d3c0e4477106aebb7869",
+                "completeDecodedLog": true,
+                "reviewed": true
+              },
+              "witnessAssertions": 90
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+      "runs": [
+        {
+          "id": 39689157069,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157069",
+          "event": "push",
+          "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119530720293,
+              "name": "Probe failure and privacy tests",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157069/job/119530720293",
+              "nodeVersion": "24.22.1",
+              "counts": {
+                "tests": 24,
+                "suites": 0,
+                "pass": 24,
+                "fail": 0,
+                "cancelled": 0,
+                "skipped": 0,
+                "todo": 0
+              },
+              "log": {
+                "file": "job-119530720293.log",
+                "bytes": 16239,
+                "sha256": "9f3134ad1923194bec45c6946cabc54a24c2c20b8243629c164d22a29f0588c3",
+                "completeDecodedLog": true,
+                "reviewed": true
+              }
+            },
+            {
+              "id": 119530806876,
+              "name": "Anonymous HTTPS and readiness",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157069/job/119530806876",
+              "nodeVersion": "24.22.1",
+              "counts": null,
+              "log": {
+                "file": "job-119530806876.log",
+                "bytes": 13323,
+                "sha256": "a58202b95f94f978a87cc317da4eaa0ee0ce29ccfcba2dba4d51796c16d3bce3",
+                "completeDecodedLog": true,
+                "reviewed": true
+              },
+              "publicProbe": {
+                "version": 1,
+                "type": "private_service_check",
+                "status": "healthy",
+                "attempts": 1,
+                "confirmedFailure": false,
+                "lastProbe": {
+                  "version": 1,
+                  "type": "private_service_probe",
+                  "status": "healthy",
+                  "checkedAt": 1792622944381,
+                  "durationMilliseconds": 879,
+                  "checks": [
+                    {
+                      "name": "http",
+                      "status": "pass",
+                      "code": "ok"
+                    },
+                    {
+                      "name": "readiness",
+                      "status": "pass",
+                      "code": "ok"
+                    }
+                  ]
+                }
+              },
+              "runtimeIdentityObserved": false
+            }
+          ]
+        },
+        {
+          "id": 39689157060,
+          "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157060",
+          "event": "push",
+          "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+          "conclusion": "success",
+          "attempt": 1,
+          "jobs": [
+            {
+              "id": 119530720218,
+              "name": "Windows PowerShell 5.1 instructions",
+              "conclusion": "success",
+              "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39689157060/job/119530720218",
+              "nodeVersion": "24.22.1",
+              "counts": null,
+              "log": {
+                "file": "job-119530720218.log",
+                "bytes": 26133,
+                "sha256": "25741e256e60dc08db3f27cc96e7edb1bc4a4bb3462a4bd29269c551b4fad810",
+                "completeDecodedLog": true,
+                "reviewed": true
+              },
+              "witnessAssertions": 90,
+              "descriptiveSuccessFootersPassed": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "homepageVisualEvidence": {
+    "baselineSource": "2182ee9bea2622b6921cb57214e086b8cf92f55c",
+    "baselineRun": 39685904861,
+    "baselineRunUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39685904861",
+    "baselineScreenshotsAlreadyInspected": true,
+    "manifest": {
+      "file": "homepage-render-manifest.json",
+      "bytes": 2331,
+      "sha256": "c0010a2518a1e9c44708730206fa6e6e7e1ad02e24a1d60835f42f74ab8df411"
+    },
+    "archive": {
+      "file": "homepage-render-39685904861.zip",
+      "bytes": 2217366,
+      "sha256": "c167c76ba89d5c4848f2066a7967cc61d115bf14db7bc34e7b8ff1d7b918bda3"
+    },
+    "images": [
+      {
+        "file": "home-en-1280-bottom.png",
+        "bytes": 360559,
+        "sha256": "1a5a7cd0ab1061a5e04c626d1db23860c504b3e8f58ea86f8722bcbc8576eaa1",
+        "width": 1280,
+        "height": 757
+      },
+      {
+        "file": "home-en-1280-top.png",
+        "bytes": 408003,
+        "sha256": "35c192012e2935e230ab4fe62b7672a934e075118640ec03ce8160efd0786b36",
+        "width": 1280,
+        "height": 757
+      },
+      {
+        "file": "home-en-320-top.png",
+        "bytes": 138283,
+        "sha256": "45c9dcb776ab6a0a95606e8b8efd55627e1f3da10f1bd1b97bdec747c266b41b",
+        "width": 320,
+        "height": 844
+      },
+      {
+        "file": "home-en-390-top.png",
+        "bytes": 159026,
+        "sha256": "8989fe22e1f3160520e6614b0952e0ecca5b76b936f23052a885e8006bf81259",
+        "width": 390,
+        "height": 844
+      },
+      {
+        "file": "home-fr-1280-bottom.png",
+        "bytes": 396688,
+        "sha256": "ebbac0a0ad6916d2692c56426a2d58e04b059899d2cfa62ad3765c25c771f521",
+        "width": 1280,
+        "height": 757
+      },
+      {
+        "file": "home-fr-1280-top.png",
+        "bytes": 455233,
+        "sha256": "16574c22af7665c3ca0ece8e50237b6389d29007fae47d879ced3a97cc308fbf",
+        "width": 1280,
+        "height": 757
+      },
+      {
+        "file": "home-fr-320-top.png",
+        "bytes": 141059,
+        "sha256": "4d9c59446674333da0ad363aa9e1d14994914c170e69acfd666d9c60334638a9",
+        "width": 320,
+        "height": 844
+      },
+      {
+        "file": "home-fr-390-top.png",
+        "bytes": 161006,
+        "sha256": "566f1b281f132f453b66a298ebc475f02438ea23caf736e4895a349d87c6664c",
+        "width": 390,
+        "height": 844
+      }
+    ],
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "widths": [
+      320,
+      390,
+      1280
+    ],
+    "baselineFilesRehashed": true,
+    "publicAndBrowserSubtreesUnchangedThroughR3": true,
+    "comparisonFromInitialAndFc4ToR3Scopes": [
+      "public",
+      "tests/browser",
+      "tests/rehearsal",
+      ".github/workflows/ci.yml"
+    ],
+    "r3ChangedFiles": [
+      "ops/prepare-node24221.py",
+      "ops/test-prepare-node24221.py"
+    ],
+    "mainTreeEqualsR3Tree": true,
+    "freshMainChromeTestsPassed": 196,
+    "r3AndMainArtifactsIdentifiedWithoutNewVisualReview": {
+      "r3": [
+        {
+          "id": 12386723843,
+          "name": "homepage-render",
+          "size_in_bytes": 2217366,
+          "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12386723843",
+          "digest": "sha256:d10aa352eb0b08e5cefce0070e9325b84555894db323c22b26a58a310b5174c7"
+        }
+      ],
+      "main": [
+        {
+          "id": 12388540671,
+          "name": "homepage-render",
+          "size_in_bytes": 2217366,
+          "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12388540671",
+          "digest": "sha256:7046345cc8e5224a483c2de3d0aec6f7446114a51b089620aad8e6800904907f"
+        }
+      ]
+    },
+    "noNewScreenshotsOrVisualReviewFabricated": true
+  },
+  "sourceReceipts": [
+    {
+      "file": "jm171-pr126-qualification-aggregate.json",
+      "bytes": 25227,
+      "sha256": "ae5057091a431ced720881e2e59f4d4d03c7ac8de0c60c2da6e8c2cda017f843"
+    },
+    {
+      "file": "jm171-pr126-r3-qualification-final.json",
+      "bytes": 18858,
+      "sha256": "4bea2c79ee15290597456ea4a0d52b3166df8b8c1edfa673b263140014e4accc"
+    },
+    {
+      "file": "jm171-pr126-r3-verify-https-evidence.json",
+      "bytes": 14090,
+      "sha256": "b835ebe810f20991c8d2ba5d5f3b4a4d1e9cd477086d3d14bf9e936db854dc36"
+    },
+    {
+      "file": "ci-39688235543-mariadb-jobs-receipt.json",
+      "bytes": 22168,
+      "sha256": "29bc544e8d532cb6294f57e528e365b3e8a8ae4fdb279ddf0e23af09b7dc0811"
+    },
+    {
+      "file": "jm171-main-verify-https-evidence.json",
+      "bytes": 14295,
+      "sha256": "ea90b4ce27f3704ae0b5500c94e3811d167da9bdf8ed8e46fa72e69f7255528c"
+    },
+    {
+      "file": "ci-39689157058-mariadb-jobs-receipt.json",
+      "bytes": 21760,
+      "sha256": "236ec498a338a742e5453f087a8852c7ffc1f840614e07a0ca8e9fa0b7c544c2"
+    },
+    {
+      "file": "jm171-main-chrome-ci-receipt.json",
+      "bytes": 4904,
+      "sha256": "7e210f077a04edaa4b75495454cd52f899c496f9aa81c91d0584803606ebcf98"
+    },
+    {
+      "file": "jm171-main-auxiliary-ci-receipt.json",
+      "bytes": 15996,
+      "sha256": "5414e6ab8d99efd7effac981773675c47a5d649732970ca3128ab88d15f69298"
+    },
+    {
+      "file": "jm171-main-final-github-metadata.json",
+      "bytes": 2447,
+      "sha256": "d75423045270ea3b45335a7de936eaae9f8650e423d96c4992b302af48a0a34d"
+    }
+  ],
+  "limits": [
+    "This document qualifies source and CI only. Tag/release publication, private Node preparation, hosted prechecks, activation and checkpoint alignment are documented separately by root.",
+    "Anonymous HTTPS/readiness monitoring succeeded on main but disclosed no application runtime identity; it does not prove deployment of this source.",
+    "Browser, SQL and Windows tests use synthetic fixtures. No physical phone or owner PC qualification is inferred.",
+    "Log SHA-256 values describe complete decoded UTF-8 logs retained locally; raw archive or transport bytes are not claimed.",
+    "Initial fixture assertion failures remain failures; historical successful qualifications are not rewritten as the final source qualification."
+  ],
+  "operations": {
+    "scratchAggregationOnly": true,
+    "repositoryModified": false,
+    "rerunRequested": false,
+    "remoteMutationByAggregator": false,
+    "hostingActionByAggregator": false
+  }
+}
