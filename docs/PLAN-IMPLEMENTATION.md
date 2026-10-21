@@ -4,11 +4,11 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 
 Les livraisons 1.0.0, 1.1.0, 1.2.0 et 1.3.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
-## Correctif en cours — 1.3.2
+## Correctif 1.3.2 — publié, préparation et activation en attente
 
-[Voix de Jessie côté client et détails des messages](client-voice-message-details-132.md) : la nouvelle demande autorise la reformulation FR/EN à la première personne, l’allègement du passage sur la personne responsable dans l’aide et des messages compacts dont les dates, métadonnées et actions apparaissent à la sélection. Développement en cours, sans SQL, API serveur ni nouvelle dépendance. Le code, les vérifications, la CI, la fusion et la livraison restent à établir dans les [preuves 1.3.2](verification-proofs/jm132-verification.json) ; aucune étape future n’est déclarée acquise.
+[Voix de Jessie côté client et détails des messages](client-voice-message-details-132.md) : la reformulation FR/EN à la première personne, l’allègement du passage sur la personne responsable dans l’aide et les messages compacts sont codés, revus, fusionnés par la PR 115 et qualifiés par les CI PR et main **5/5**, sans SQL, API serveur ni nouvelle dépendance. Le [tag/release v1.3.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.2) est publié sur le commit exact `19455771…`. L’échec initial de verify main, le test isolé réussi sans modification et la relance réussie du seul job échoué restent dans les [preuves 1.3.2](verification-proofs/jm132-verification.json).
 
-Ce correctif ne demande aucune nouvelle opération utilisateur sur 1.3.1 pour commencer. Son critère de fin est une présentation FR/EN cohérente, des détails accessibles au toucher et au clavier sans déclencher d’action, les protections de message conservées et la livraison du commit exact vérifiée. La production reste 1.3.1 pendant ce travail.
+Restent la préparation hébergée, l’activation et la vérification du commit exact, puis l’alignement des métadonnées 1.3.2. La prochaine opération est le bloc unique de [REPRISE](REPRISE.md), qui termine d’abord l’alignement idempotent 1.3.1, puis prépare 1.3.2 sans redémarrage. Le helper publié est qualifié par 15/15 tests synthétiques autonomes, sa syntaxe Bash et ses octets bruts vérifiés ; aucun reçu serveur 1.3.2 ni d’alignement 1.3.1 n’est encore rapporté. L’activation reste conditionnée au reçu de préparation réussi ; la préparation doit conserver 1.3.1 comme repli, avec le schéma 31 et les dépendances inchangés. Le critère de fin conserve une présentation FR/EN cohérente, des détails accessibles au toucher et au clavier sans déclencher d’action et les protections de message. **La production reste 1.3.1** jusqu’à vérification de l’activation suivante.
 
 ## Livraison active 1.3.1 — suivi final en attente
 
@@ -31,7 +31,7 @@ Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas
 
 - [Emojis enrichis et inclusifs 1.3.0](emoji-inclusifs-130.md) : clôture confirmée par `release130_metadata_recorded`, preuves historiques préservées ; référence conservée comme repli de 1.3.1.
 - [Profil et expressions 1.2.0](profile-expressions-120.md) : production identifiée, schéma 31, disponibilité et checkpoint alignés ; repli 1.1.1 compatible précontrôlé.
-- [Lecture privée 1.1.0](private-read-receipts-110.md) et [preuves d’harmonisation 1.0.0](REPRISE.md#validation-locale-de-100).
+- [Lecture privée 1.1.0](private-read-receipts-110.md) et [preuves d’harmonisation 1.0.0](REPRISE.md#historique--validation-locale-de-100).
 - [Clôture V1 0.86](production-086.md) et [qualification Node associée](node-runtime-086.md).
 - [Envoi confirmé après perte de réponse HTTP, 0.85](chat-send-ack-085.md).
 - [Clôture des corrections de l’audit, 0.83](audit-closure-083.md), [audit daté](AUDIT-CODE-2026-10-20.md) et [corrections d’interface](audit-corrections-083.md).

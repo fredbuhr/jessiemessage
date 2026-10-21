@@ -1,14 +1,57 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — production `1.3.1`, préparation et identité confirmées par les reçus utilisateur ; disponibilité publique 4/4 conforme et interface mobile validée visuellement par l’utilisateur. Correctif `1.3.2` codé, contrôles locaux réussis ; CI, fusion et publication en attente ; alignement du checkpoint privé `1.3.1` encore en attente, sans bloquer ce travail.** Le schéma 31 est inchangé ; la 1.3.0 est conservée comme repli immédiat, avec les replis antérieurs 1.2.0/1.1.1 préservés. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [périmètre produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — production `1.3.1`, identité et présentation mobile confirmées par l’utilisateur. Le correctif `1.3.2` est fusionné, qualifié et publié ; préparation et activation hébergées en attente.** Le checkpoint privé 1.3.1 n’a pas encore son reçu rapporté ; le bloc opérateur unique ci-dessous traite cet alignement avant la préparation 1.3.2. Le schéma 31 est inchangé. Le repli de la production 1.3.1 reste 1.3.0 ; le repli prévu pour 1.3.2 est 1.3.1, avec les références antérieures préservées. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
-## Travail courant — correctif 1.3.2
+## Travail courant — correctif 1.3.2 publié, préparation en attente
 
-**Code prêt et contrôles locaux réussis ; CI, fusion, publication et activation 1.3.2 en attente.** La nouvelle demande porte sur la voix de Jessie à la première personne dans les textes côté client, en français et anglais, l’aide sur la personne responsable sans la mention « en France » ni la phrase sur les personnes autorisées à lire les échanges, et des messages plus compacts avec dates, métadonnées et actions affichées à la sélection. [Périmètre et critères](client-voice-message-details-132.md), [preuves en cours](verification-proofs/jm132-verification.json).
+**Fusionné, qualifié et publié, sans préparation ni activation hébergée rapportée.** Le correctif personnalise les textes client avec la voix de Jessie en français et en anglais, corrige les deux passages demandés dans l’aide et rapproche les messages. Dates, reçus et actions apparaissent pour un seul message sélectionné, au toucher ou au clavier. [Périmètre et critères](client-voice-message-details-132.md), [preuves](verification-proofs/jm132-verification.json).
 
-**Validation locale sous Node 24.19.0 :** interactions **151/151**, éditorial **57/57**, mail **23/23** et réinitialisation mail **9/9**, sans omission finale dans ces groupes ; les attentes de texte anciennes et leurs tentatives échouées restent dans les preuves. Build/workbench et syntaxe de **583 sources** réussis avant les derniers paragraphes de conservation/notifications, puis syntaxe JavaScript finale réussie. Revue indépendante statique finale sans blocage. Les deux nouveaux parcours Chrome attendent la CI ; aucun résultat CI ou numéro de PR 1.3.2 n’est encore attesté.
+La [PR 115](https://github.com/fredbuhr/jessiemessage/pull/115) est fusionnée sur `194557719780aed4c2d56dac2c9ec91e0f2886a9`, arbre `be9a1734ce80ed093b05636e4fa88e2512846fdb`. Le [tag/release v1.3.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.2), publié le `2026-10-21T01:47:46Z`, a été relu sur ce commit et cet arbre exacts. [Publication vérifiée](https://github.com/fredbuhr/jessiemessage/actions/runs/39529350587), source opérateur `61243a21f0ffb6b2cae3c532f61bf1e624b61777`.
 
-Le correctif réutilise l’interface existante, sans SQL, API serveur ni dépendance supplémentaire. La production reste **1.3.1** ; son reçu `release131_metadata_recorded` n’a pas été rapporté et sa clôture n’est pas revendiquée. La nouvelle demande autorise néanmoins ce correctif : aucune nouvelle opération utilisateur sur 1.3.1 n’est un préalable au développement. Les pins, CI et étapes de livraison 1.3.2 seront consignés après leurs résultats réels.
+**Validation locale :** interactions **151/151**, éditorial **57/57**, mail **23/23** et réinitialisation mail **9/9**, sans omission finale dans ces groupes, sous Node 24.19.0. Les anciennes attentes textuelles et leurs tentatives échouées restent consignées. Build/workbench et syntaxe de **583 sources** réussis avant les derniers paragraphes de conservation/notifications, puis syntaxe JavaScript finale réussie. Revue indépendante statique finale sans blocage. Chrome absent localement ; la qualification réelle est celle de la CI. Aucun essai physique de l’interface 1.3.2 n’est encore rapporté.
+
+**CI finales :** [PR 39527675066](https://github.com/fredbuhr/jessiemessage/actions/runs/39527675066) et [main exact 39528364838, tentative 2](https://github.com/fredbuhr/jessiemessage/actions/runs/39528364838) réussies **5/5** sous Node 24.22.0 : général **3 226 tests, 3 190 réussis, zéro échec, 36 ignorés** ; Chrome **173/173**, HTTPS **3/3**, MariaDB 10.11 et 11.4 **479/479 chacune sans omission**, syntaxe/build **583 sources**. Les omissions générales ne valent pas qualification native.
+
+**Historique conservé :** la première tentative main a terminé avec quatre jobs réussis et verify en échec (**3 189 réussis, un échec, 36 ignorés**). `tests/witness-transport.test.mjs:94` a rejeté un paquet invalide avec `ERASURE_CONTINUITY_INPUT`. Une course de fixture est probable : le test consomme un poll de 20 ms sans vérifier `pending:true`, après une préparation asynchrone. Le paquet exact n’étant pas journalisé, la cause n’est pas présentée comme prouvée. Le fichier inchangé réussit **4/4** isolément, puis le seul job verify est relancé une fois : **3 190 réussis, zéro échec, 36 ignorés**, test initial passé inchangé, syntaxe et build réussis. Les quatre résultats natifs de la première tentative sont conservés sans réexécution. Aucun code ni garde de continuité n’est changé pour obtenir ce résultat.
+
+**Prochaine action opérateur — un seul bloc de préparation :** ouvrir la [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller le bloc ci-dessous. La première étape termine l’alignement privé 1.3.1 avec le writer épinglé ; s’il est déjà enregistré à l’identique, il le constate sans réécriture. La seconde prépare la 1.3.2 et exécute son précontrôle. **Ces deux étapes ne redémarrent pas le service et n’exécutent aucune migration.** Aucun de leurs reçus n’est encore rapporté.
+
+Le [helper 1.3.2 épinglé](https://github.com/fredbuhr/jessiemessage/blob/60c6559e1ff508e1e4060d9b63b785d4d52d299d/ops/prepare-release132.sh), SHA-256 `915fd859b229462476429716c847148485c26718e6459b4ea17cd4e0df71cf82`, a ses **15 tests synthétiques autonomes**, sa syntaxe Bash et ses octets publiés vérifiés. Le writer 1.3.1 conserve ses **9 tests synthétiques**, dont l’idempotence, et ses pins déjà publiés. Le bloc contrôle les octets de chaque téléchargement avant l’action et s’arrête sur refus. Les préconditions CI main et publication 1.3.2 sont maintenant vérifiées.
+
+```sh
+python3 - <<'PY'
+import hashlib, subprocess, urllib.request
+
+steps = [
+    (
+        "https://raw.githubusercontent.com/fredbuhr/jessiemessage/c073cc59689b5f9cb2c303055dadcaf8f740fe90/ops/record-release131.py",
+        "941f5152fdb96db82d5e1a5b3440f723e122191875d1d26e2a54c98bf506f560",
+        ["python3", "-"]
+    ),
+    (
+        "https://raw.githubusercontent.com/fredbuhr/jessiemessage/60c6559e1ff508e1e4060d9b63b785d4d52d299d/ops/prepare-release132.sh",
+        "915fd859b229462476429716c847148485c26718e6459b4ea17cd4e0df71cf82",
+        ["bash", "-s", "--", "194557719780aed4c2d56dac2c9ec91e0f2886a9"]
+    )
+]
+for url, expected, args in steps:
+    code = urllib.request.urlopen(url, timeout=30).read()
+    if hashlib.sha256(code).hexdigest() != expected:
+        raise SystemExit("Empreinte incorrecte : arrêt.")
+    subprocess.run(args, input=code, check=True)
+PY
+```
+
+La préparation préserve le code et les lanceurs 1.3.1 ; elle ne change ni Manager, ni base, ni médias. Les autres replis 1.3.0/1.2.0/1.1.1 restent conservés. En cas d’arrêt, relever le résultat durable et le transmettre ; ne pas relancer aveuglément le staging ni changer le Manager. Le premier reçu doit être `release131_metadata_recorded` ou `release131_metadata_already_recorded`, puis le second `staged_precheck_passed` pour **1.3.2**, source `194557719780aed4c2d56dac2c9ec91e0f2886a9`, arbre `be9a1734ce80ed093b05636e4fa88e2512846fdb`, Node `v24.22.0` et schéma 31 inchangé.
+
+**Activation conditionnelle après ce précontrôle réussi :** ouvrir les [réglages Run/Build de l’application Node.js 239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), puis enregistrer :
+
+- Run : `bash /srv/customer/jessiemessage-private/start-primary-release132-19455771.sh`
+- Build : `bash /srv/customer/jessiemessage-private/check-primary-release132-19455771.sh`
+
+Revenir au [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et choisir **Redémarrer**. Ouvrir ensuite [État du service Jessie](https://jessiemessage.com/admin/readiness), **Actualiser → Détails techniques**, et relever version **1.3.2**, commit **194557719780aed4c2d56dac2c9ec91e0f2886a9**, Node **v24.22.0** et date affichée exacte. Attendre ce relevé avant de déclarer 1.3.2 active, puis son reçu d’enregistrement avant clôture. Les chemins prévus ne sont pas encore attestés préparés sur l’hébergement ; aucun lancement n’est effectué par la présente documentation.
+
+Le correctif n’ajoute ni API, ni dépendance, ni migration SQL ; les changements serveur portent seulement sur le texte de deux e-mails client. La production reste **1.3.1**. La validation visuelle de cette version ne constitue pas un essai de 1.3.2 ni une attestation explicite du clavier physique. Aucune autre évolution n’est ouverte automatiquement.
 
 ## Livraison active 1.3.1 — alignement final en attente
 

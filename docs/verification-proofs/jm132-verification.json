@@ -1,10 +1,10 @@
 {
   "version": "1.3.2",
-  "status": "code_ready_local_checks_passed_awaiting_ci",
+  "status": "published_awaiting_hosted_preparation",
   "branch": "fix/client-voice-message-details-132",
   "base": "eb5f1fac825422f315f40b8214c3e090852263b6",
-  "source": null,
-  "tree": null,
+  "source": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+  "tree": "be9a1734ce80ed093b05636e4fa88e2512846fdb",
   "scope": "first_person_jessie_client_copy_fr_en_and_compact_message_details_on_selection",
   "authorization": {
     "method": "new_user_request",
@@ -47,7 +47,7 @@
     "dependenciesChanged": false
   },
   "local": {
-    "status": "reported_checks_passed_awaiting_ci_browser_qualification",
+    "status": "reported_local_checks_passed",
     "node": "v24.19.0",
     "targetedTests": null,
     "build": "passed_before_final_retention_and_notification_copy",
@@ -122,7 +122,7 @@
         "command": "node --test tests/chat-lifecycle.test.mjs tests/chat-i18n.test.mjs tests/chat-accessibility.test.mjs tests/chat-accessibility-markup.test.mjs tests/profile-ui.test.mjs tests/client-export-ui.test.mjs tests/crm-lifecycle.test.mjs tests/tools-i18n.test.mjs tests/webdriver-diagnostics.test.mjs tests/webdriver-teardown.test.mjs"
       },
       "newChromePaths": 2,
-      "newChromeQualification": "awaiting_ci"
+      "newChromeQualification": "passed_in_pull_request_ci"
     }
   },
   "review": {
@@ -137,15 +137,249 @@
     "browserExecutionAttested": false
   },
   "ci": {
-    "status": "awaiting_exact_source_ci",
-    "pullRequest": null,
-    "main": null
+    "status": "pull_request_and_exact_main_passed_after_single_verification_retry",
+    "pullRequest": {
+      "run": 39527675066,
+      "source": "0f0270b083662824c651fe20e199ea9b679aaa3d",
+      "status": "completed",
+      "conclusion": "success",
+      "jobsPassed": 5,
+      "jobsTotal": 5,
+      "node": "v24.22.0",
+      "syntaxSources": 583,
+      "build": "passed",
+      "counts": {
+        "general": {
+          "tests": 3226,
+          "passed": 3190,
+          "failed": 0,
+          "skipped": 36
+        },
+        "chrome": {
+          "tests": 173,
+          "passed": 173,
+          "failed": 0,
+          "skipped": 0
+        },
+        "httpsMariaDB": {
+          "tests": 3,
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "mariaDB10_11": {
+          "tests": 479,
+          "passed": 479,
+          "failed": 0,
+          "skipped": 0
+        },
+        "mariaDB11_4": {
+          "tests": 479,
+          "passed": 479,
+          "failed": 0,
+          "skipped": 0
+        }
+      }
+    },
+    "main": {
+      "run": 39528364838,
+      "source": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+      "status": "completed",
+      "conclusion": "success",
+      "initialAttempt": {
+        "attempt": 1,
+        "verification": {
+          "job": 118988238517,
+          "conclusion": "failure",
+          "counts": {
+            "tests": 3226,
+            "passed": 3189,
+            "failed": 1,
+            "skipped": 36
+          },
+          "testFile": "tests/witness-transport.test.mjs",
+          "line": 94,
+          "test": "parent channel and authenticated core proof survive an actual stopped child listener",
+          "error": "ERASURE_CONTINUITY_INPUT",
+          "errorAt": "f.witness.exchange(packet.request)"
+        },
+        "chrome": {
+          "job": 118988238306,
+          "conclusion": "success",
+          "tests": 173,
+          "passed": 173,
+          "failed": 0,
+          "skipped": 0
+        },
+        "httpsMariaDB": {
+          "job": 118988238631,
+          "conclusion": "success",
+          "tests": 3,
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "mariaDB": {
+          "10_11": {
+            "job": 118988238505,
+            "conclusion": "success",
+            "tests": 479,
+            "passed": 479,
+            "failed": 0,
+            "skipped": 0
+          },
+          "11_4": {
+            "job": 118988238442,
+            "conclusion": "success",
+            "tests": 479,
+            "passed": 479,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        "analysis": {
+          "hypothesis": "fixture_poll_race_before_async_verification_enqueues_request",
+          "confidence": "probable_not_proven",
+          "observation": "test_consumes_one_20ms_poll_without_asserting_pending_true_or_status_while_gate_verify_reads_async_before_queueing",
+          "exactPacketLogged": false,
+          "strictInputGuardChanged": false,
+          "applicationOrTestCodeChanged": false
+        },
+        "isolatedUnchangedTest": {
+          "command": "node --test tests/witness-transport.test.mjs",
+          "node": "v24.19.0",
+          "tests": 4,
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 663.816677
+        },
+        "status": "completed",
+        "conclusion": "failure",
+        "jobsPassed": 4,
+        "jobsTotal": 5
+      },
+      "retry": {
+        "status": "completed",
+        "conclusion": "success",
+        "attempt": 2,
+        "scope": "failed_verification_job_only_once",
+        "source": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+        "requestedTimes": 1,
+        "initialJob": 118988238517,
+        "resultJob": 118990273646,
+        "codeChanged": false,
+        "counts": {
+          "tests": 3226,
+          "passed": 3190,
+          "failed": 0,
+          "skipped": 36
+        },
+        "durationMs": 95714.582688,
+        "initiallyFailingTestPassedUnchanged": true,
+        "initiallyFailingTestDurationMs": 71.679435,
+        "syntaxSources": 583,
+        "build": "passed",
+        "nativeResultsReusedWithoutRerunning": true
+      },
+      "attempt": 2,
+      "jobsPassed": 5,
+      "jobsTotal": 5,
+      "node": "v24.22.0",
+      "syntaxSources": 583,
+      "build": "passed",
+      "counts": {
+        "general": {
+          "tests": 3226,
+          "passed": 3190,
+          "failed": 0,
+          "skipped": 36
+        },
+        "chrome": {
+          "tests": 173,
+          "passed": 173,
+          "failed": 0,
+          "skipped": 0
+        },
+        "httpsMariaDB": {
+          "tests": 3,
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "mariaDB10_11": {
+          "tests": 479,
+          "passed": 479,
+          "failed": 0,
+          "skipped": 0
+        },
+        "mariaDB11_4": {
+          "tests": 479,
+          "passed": 479,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "jobs": [
+        {
+          "name": "verify",
+          "job": 118990273646,
+          "conclusion": "success",
+          "executedInAttempt": 2
+        },
+        {
+          "name": "Chrome keyboard and chat lifecycle",
+          "job": 118990274669,
+          "conclusion": "success",
+          "resultSourceJob": 118988238306,
+          "executedInAttempt": 1,
+          "resultReused": true
+        },
+        {
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "job": 118990275609,
+          "conclusion": "success",
+          "resultSourceJob": 118988238631,
+          "executedInAttempt": 1,
+          "resultReused": true
+        },
+        {
+          "name": "MariaDB 10.11",
+          "job": 118990274987,
+          "conclusion": "success",
+          "resultSourceJob": 118988238505,
+          "executedInAttempt": 1,
+          "resultReused": true
+        },
+        {
+          "name": "MariaDB 11.4",
+          "job": 118990322144,
+          "conclusion": "success",
+          "resultSourceJob": 118988238442,
+          "executedInAttempt": 1,
+          "resultReused": true
+        }
+      ]
+    }
   },
   "publication": {
-    "status": "not_reported",
-    "tag": null,
-    "releaseUrl": null,
-    "verified": false
+    "status": "published_verified",
+    "tag": "v1.3.2",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.2",
+    "publishedAt": "2026-10-21T01:47:46Z",
+    "run": 39529350587,
+    "workflowCommit": "61243a21f0ffb6b2cae3c532f61bf1e624b61777",
+    "runConclusion": "success",
+    "releasePublished": true,
+    "verifiedTagTarget": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+    "verifiedTree": "be9a1734ce80ed093b05636e4fa88e2512846fdb",
+    "verified": true,
+    "localWorkflowSyntaxValidation": {
+      "initial": "failed_indentation_before_remote_execution",
+      "correction": "release_body_indentation_aligned_with_release_creation_block",
+      "final": "passed",
+      "remotePublicationAttempts": 1
+    }
   },
   "hosting": {
     "activeVersion": "1.3.1",
@@ -157,7 +391,8 @@
     "metadata132Recorded": false,
     "release131MetadataReceipt": "not_reported",
     "release131Closed": false,
-    "preservedActiveRollback": "1.3.0"
+    "preservedActiveRollback": "1.3.0",
+    "plannedRollback132": "1.3.1"
   },
   "priorMobileUIEvidence": {
     "version": "1.3.1",
@@ -167,14 +402,55 @@
     "physicalPhoneKeyboard": "not_explicitly_attested"
   },
   "notAttested": [
-    "release132_new_chrome_paths",
-    "release132_final_ci",
-    "release132_merge",
-    "release132_tag_or_publication",
     "release132_hosted_precheck",
     "release132_activation",
     "release132_metadata_recording",
     "physical_phone_keyboard",
     "current_pc_or_backup_delivery"
-  ]
+  ],
+  "pullRequest": 115,
+  "preparation": {
+    "status": "ready_awaiting_operator_execution",
+    "sourcePinned": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+    "treePinned": "be9a1734ce80ed093b05636e4fa88e2512846fdb",
+    "commit": "60c6559e1ff508e1e4060d9b63b785d4d52d299d",
+    "file": "ops/prepare-release132.sh",
+    "sha256": "915fd859b229462476429716c847148485c26718e6459b4ea17cd4e0df71cf82",
+    "executionReported": false,
+    "hostedPrecheckPassed": false,
+    "plannedRollback": "1.3.1",
+    "checkout": "/srv/customer/jessiemessage-operator/production-132-19455771",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-release132-19455771.sh",
+    "checkLauncher": "/srv/customer/jessiemessage-private/check-primary-release132-19455771.sh",
+    "operatorActionAllowedOnlyAfter": "successful_exact_main_ci_and_verified_tag_release_v1.3.2",
+    "readyForOperator": true,
+    "combinedOperatorBlock": {
+      "status": "ready_for_operator",
+      "first": "idempotent_pinned_record_release131",
+      "then": "pinned_prepare_release132_for_exact_merged_source",
+      "restart": false,
+      "recorder131": {
+        "commit": "c073cc59689b5f9cb2c303055dadcaf8f740fe90",
+        "file": "ops/record-release131.py",
+        "sha256": "941f5152fdb96db82d5e1a5b3440f723e122191875d1d26e2a54c98bf506f560",
+        "syntheticTestsPassed": 9,
+        "executionReported": false
+      },
+      "pythonSyntax": "passed",
+      "hashesAndArgumentOrder": "verified",
+      "executedOnHosting": false,
+      "metadata131Receipt": "not_reported",
+      "preparation132Receipt": "not_reported",
+      "firstStepIdempotent": true,
+      "secondStepReplayRequired": false
+    },
+    "syntheticTestsPassed": 15,
+    "bashSyntax": "passed",
+    "rawPublishedBytesVerified": true,
+    "operatorPreconditionsVerified": [
+      "successful_exact_main_ci",
+      "verified_tag_release_v1.3.2"
+    ],
+    "receipt": null
+  }
 }

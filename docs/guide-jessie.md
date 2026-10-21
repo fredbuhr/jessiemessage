@@ -30,7 +30,13 @@ La version active identifiée dans [REPRISE](REPRISE.md) est **1.3.1**. La conve
 
 **Options** regroupe le compte, le profil, les notifications, la langue, Contact et Aide. Les photos de la conversation et son téléchargement y sont accessibles lorsqu’ils sont disponibles pour ton compte. Sous les messages, `+` propose l’ajout d’une photo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvre les emojis. La saisie et **Envoyer** restent directement accessibles. Choisir une photo, une réponse ou un emoji prépare toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain restent affichées quand nécessaires.
 
-Le retour utilisateur valide visuellement cette présentation mobile ; l’usage du clavier logiciel sur téléphone physique n’est pas explicitement attesté. Le [correctif 1.3.2 en cours](client-voice-message-details-132.md) prépare des textes côté client à la première personne de Jessie et des messages plus compacts, dont les dates, métadonnées et actions s’afficheront à la sélection. Ce comportement n’est pas encore annoncé disponible : les consignes ci-dessous restent celles de la version active.
+Le retour utilisateur valide visuellement cette présentation mobile ; l’usage du clavier logiciel sur téléphone physique n’est pas explicitement attesté. Le [correctif 1.3.2](client-voice-message-details-132.md) est fusionné, qualifié en CI et publié ; sa préparation hébergée et son activation restent en attente. Il apporte des textes côté client à la première personne de Jessie et des messages plus compacts. **Ce comportement n’est pas encore disponible en production.** Les étapes de préparation et d’activation sont dans [REPRISE](REPRISE.md) ; elles n’ont pas à être effectuées pour continuer à utiliser la version active.
+
+### Détails des messages — après activation vérifiée de 1.3.2
+
+Lorsque [REPRISE](REPRISE.md) confirmera la 1.3.2 active, touche ou clique sur le texte d’un message pour afficher sa date, ses métadonnées et les actions disponibles. Au clavier, rejoins le bouton **Détails du message du…** avec **Tab**, puis ouvre-le avec **Entrée** ou **Espace** ; le bouton `⋯` devient visible au focus. Pour masquer les détails, sélectionne de nouveau le message, choisis un autre message, clique en dehors ou utilise **Échap**. Une seule sélection reste ouverte à la fois.
+
+La sélection n’envoie rien et ne supprime rien. Les commandes **Supprimer** et les informations **Envoyé** ou **Lu** se consultent dans ces détails selon tes droits ; le client conserve uniquement **Envoyé** sur ses propres messages. Clique sur une photo pour l’agrandir ; sélectionner sa légende ouvre les détails. Les erreurs et **Réessayer cet envoi** restent directement visibles quand une reprise est nécessaire.
 
 ## Échanger et partager une photo
 

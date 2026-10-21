@@ -1,6 +1,6 @@
 # Voix de Jessie et détails des messages — correctif 1.3.2
 
-**21 octobre 2026 — code prêt et contrôles locaux rapportés réussis ; CI, fusion et publication en attente.** La production reste **1.3.1**, dont la présentation mobile a été validée visuellement par l’utilisateur ; le clavier logiciel sur téléphone physique n’a pas été explicitement attesté. Le reçu d’alignement des métadonnées 1.3.1 reste absent : sa clôture n’est pas revendiquée, mais cette attente ne bloque pas le correctif demandé. [État courant](REPRISE.md), [preuves 1.3.2](verification-proofs/jm132-verification.json).
+**21 octobre 2026 — correctif codé, revu, fusionné, qualifié en CI PR/main 5/5 et publié ; préparation hébergée et activation non encore réalisées.** La production reste **1.3.1**, source `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, sous Node **24.22.0**. Sa présentation mobile a été validée visuellement par l’utilisateur ; le clavier logiciel sur téléphone physique n’a pas été explicitement attesté. Le reçu d’alignement des métadonnées 1.3.1 reste absent : sa clôture n’est pas revendiquée, mais cette attente ne bloque pas le correctif demandé. [État courant et commande opérateur](REPRISE.md), [preuves 1.3.2](verification-proofs/jm132-verification.json).
 
 ## Résultat attendu
 
@@ -16,19 +16,41 @@ Les états d’erreur ou d’envoi incertain et leur reprise restent immédiatem
 
 Préserver les noms accessibles FR/EN, le focus visible et l’accès aux actions sans dépendre du survol. Le changement de conversation ou de compte nettoie la sélection ; les réponses périmées ne doivent pas restaurer les détails d’un autre échange. Les actions disponibles restent celles du rôle et du message sélectionné, avec les confirmations déjà prévues.
 
-## Qualification locale et livraison restante
+## Qualification locale
 
 **Contrôles mail synthétiques rapportés :** 23/23 tests mail réussis, zéro échec et zéro omission, sous Node 24.19.0 (204.890617 ms). Le contrôle de réinitialisation a d’abord obtenu 8/9, avec un échec sur l’ancien objet « JessieMessage » attendu ; après adaptation de deux assertions à la nouvelle copie, 9/9 réussissent sans omission (331.718626 ms). Ces résultats portent sur les textes mail et le parcours synthétique concerné, pas sur une qualification finale de toute l’interface. Aucun e-mail réel n’a été envoyé.
 
 **Textes et parcours client :** 57/57 tests éditoriaux réussis sans omission (414.379665 ms), après une première tentative à 56/57 (483.231897 ms) qui attendait encore « préparation » au lieu de « pas encore disponible ». Commande : `node --test tests/help-http.test.mjs tests/help-link.test.mjs tests/access-i18n.test.mjs tests/entry-lifecycle.test.mjs tests/notifications-ui.test.mjs`.
 
-**Interactions :** 151/151 tests ciblés réussis sans omission sous Node 24.19.0 (3909.89191 ms). Une première sélection de quatre fichiers avait obtenu 102/103 sans omission (1466.127791 ms) : l’assertion de traduction de la limite de stockage attendait encore « Contacte Jessie » ; elle a été adaptée au texte neutre demandé. Cet échec était une attente de copie, pas une défaillance constatée du traitement des photos. Deux nouveaux parcours Chrome restent à exécuter en CI ; les résultats locaux ne valent pas leur qualification.
+**Interactions :** 151/151 tests ciblés réussis sans omission sous Node 24.19.0 (3909.89191 ms). Une première sélection de quatre fichiers avait obtenu 102/103 sans omission (1466.127791 ms) : l’assertion de traduction de la limite de stockage attendait encore « Contacte Jessie » ; elle a été adaptée au texte neutre demandé. Cet échec était une attente de copie, pas une défaillance constatée du traitement des photos. Les deux nouveaux parcours Chrome ont depuis été qualifiés dans la CI de PR, distincte de ces résultats locaux.
 
 **Build et revue :** build/workbench local réussi avec contrôle de 583 sources, avant les derniers paragraphes éditoriaux sur la conservation et les notifications ; syntaxe JavaScript finale ensuite réussie. La revue indépendante finale, statique, couvre disposition, textes et mails et ne relève aucun blocage. Elle ne remplace ni la CI ni un essai sur appareil physique.
 
-1. Vérifier les textes client FR/EN concernés, la cohérence de la première personne et la suppression des deux formulations demandées dans l’aide, sans élargir le travail aux droits d’accès.
-2. Vérifier sur client et administration les messages texte, photo et légende : affichage compact, sélection, détails, sortie de sélection, accès au clavier et absence d’action automatique. Garder visibles les erreurs et la reprise nécessaire.
-3. Vérifier les petites largeurs et l’ordinateur, les traductions, la lecture privée et le nettoyage au changement de conversation. Distinguer essais automatisés, simulation de viewport et retour d’un téléphone physique.
-4. Consigner les résultats réels du code et des tests, puis qualifier la CI du commit exact avant fusion, tag/release et préparation hébergée. Préserver la version active et son repli jusqu’à la vérification de l’activation suivante.
+## CI de PR et fusion
 
-Le code et ces contrôles locaux sont prêts ; la qualification CI du commit exact, notamment les deux nouveaux parcours Chrome, reste en attente. Aucune fusion, tag/release, précontrôle hébergé, activation ou reçu de métadonnées 1.3.2 n’est attesté dans ce bilan. Les références seront ajoutées après observation ; aucune opération utilisateur sur l’ancienne livraison n’est requise pour poursuivre le développement.
+La [PR 115](https://github.com/fredbuhr/jessiemessage/pull/115) est fusionnée sur `194557719780aed4c2d56dac2c9ec91e0f2886a9`, arbre `be9a1734ce80ed093b05636e4fa88e2512846fdb`. Sa [CI de PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39527675066), source `0f0270b083662824c651fe20e199ea9b679aaa3d`, réussit **5/5 jobs** sous Node **24.22.0** : général **3 226 tests, 3 190 réussis, zéro échec et 36 ignorés** ; Chrome **173/173**, HTTPS/MariaDB **3/3**, MariaDB **10.11 et 11.4 : 479/479 chacune**, sans omission dans ces jobs natifs. Syntaxe/build : **583 sources**. Les omissions générales ne deviennent pas une qualification native.
+
+La [CI main du commit exact](https://github.com/fredbuhr/jessiemessage/actions/runs/39528364838) réussit désormais **5/5 jobs à la tentative 2**, sous Node **24.22.0** : général **3 226 tests, 3 190 réussis, zéro échec et 36 ignorés** ; Chrome **173/173**, HTTPS/MariaDB **3/3**, MariaDB **10.11 et 11.4 : 479/479 chacune**, sans omission dans les quatre jobs natifs ; syntaxe/build **583 sources**. Seul le job verify a été relancé, de `118988238517` à `118990273646` ; les quatre résultats natifs réussis de la première tentative sont conservés.
+
+**Échec initial conservé :** le premier job verify compte **3 226 tests, 3 189 réussis, un échec et 36 ignorés**. Le test `parent channel and authenticated core proof survive an actual stopped child listener`, dans `tests/witness-transport.test.mjs:94`, reçoit `ERASURE_CONTINUITY_INPUT` lors de `f.witness.exchange(packet.request)`.
+
+L’analyse de source relève un poll de 20 ms consommé sans vérifier `pending:true` ni le statut, alors que `gate.verify` effectue des lectures asynchrones avant mise en file : une course de fixture est **probable, sans cause prouvée**, car le paquet exact n’est pas journalisé. Le garde strict d’entrée n’est pas affaibli ; aucun code applicatif ni test n’a été modifié. Le fichier inchangé réussit isolément **4/4**, sans omission, sous Node 24.19.0 (663.816677 ms, `node --test tests/witness-transport.test.mjs`). Ce résultat local ne réécrit pas la tentative CI échouée.
+
+Le test repasse inchangé dans le job verify relancé. Ce succès qualifie le commit livré sans effacer l’échec initial ni établir la cause probable. Aucun garde n’a été modifié et aucun chantier PC n’a été rouvert.
+
+## Publication acquise et parcours opérateur restant
+
+Le [tag/release v1.3.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.2), publié le `2026-10-21T01:47:46Z`, a été vérifié sur la source `194557719780aed4c2d56dac2c9ec91e0f2886a9`, arbre `be9a1734ce80ed093b05636e4fa88e2512846fdb`. Le [run de publication 39529350587](https://github.com/fredbuhr/jessiemessage/actions/runs/39529350587) a réussi ; son workflow est issu du commit `61243a21f0ffb6b2cae3c532f61bf1e624b61777`.
+
+La prochaine opération utilisateur est le **bloc unique de [REPRISE](REPRISE.md)** : vérifier les deux scripts épinglés, exécuter d’abord le writer idempotent 1.3.1 (`c073cc59689b5f9cb2c303055dadcaf8f740fe90`, SHA-256 `941f5152fdb96db82d5e1a5b3440f723e122191875d1d26e2a54c98bf506f560`), puis préparer 1.3.2 sur la source et l’arbre exacts publiés. Le [helper 1.3.2](https://github.com/fredbuhr/jessiemessage/blob/60c6559e1ff508e1e4060d9b63b785d4d52d299d/ops/prepare-release132.sh) est publié : SHA-256 `915fd859b229462476429716c847148485c26718e6459b4ea17cd4e0df71cf82`, octets bruts vérifiés, **15/15** tests synthétiques et syntaxe Bash réussis. Ce bloc n’exécutera ni migration, ni changement Manager, ni redémarrage. La préparation 1.3.2 devra préserver la 1.3.1 comme repli immédiat ; le repli courant de la production 1.3.1 reste 1.3.0 et les replis antérieurs restent conservés. Le schéma 31 et les dépendances ne changent pas.
+
+Le writer 1.3.1 n’a pas encore de reçu rapporté : prévoir son exécution ne vaut pas preuve d’alignement ni clôture anticipée. Aucun reçu serveur de préparation ni d’activation 1.3.2 n’est rapporté. La suite Run/Build et activation 1.3.2 restera conditionnée au reçu de préparation réussi.
+
+## Critères qualifiés et étapes restantes
+
+1. Textes client FR/EN et deux formulations demandées dans l’aide vérifiés par les tests éditoriaux et la revue, sans changement des droits d’accès.
+2. Messages texte, photo et légende qualifiés en CI côté client et administration : sélection, détails, clavier, confirmations et reprise d’envoi.
+3. Petites largeurs, traductions, lecture privée et nettoyage des contextes qualifiés en Chrome. Ces résultats restent distincts d’un essai sur téléphone physique ; ne pas relancer les suites déjà réussies sur ce code inchangé.
+4. Restent le précontrôle hébergé, l’activation, le relevé d’identité et le retour sur l’interface 1.3.2. Préserver la version active et son repli jusqu’à cette vérification, puis enregistrer les métadonnées de la livraison.
+
+Le code est fusionné, qualifié par les CI PR/main et publié ; restent l’alignement privé 1.3.1, le précontrôle hébergé, l’activation et les métadonnées 1.3.2. Aucun résultat hébergé futur n’est attesté dans ce bilan. Les références seront ajoutées après observation ; la nouvelle demande a autorisé le développement sans attendre l’alignement de l’ancienne livraison.
