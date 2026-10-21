@@ -8,7 +8,6 @@ Node, launchers, logs, Manager settings and checkpoint are never modified.
 On failure inspect any partial preparation before retrying; nothing is replaced.
 """
 import argparse
-import ctypes
 import hashlib
 import json
 import os
@@ -113,13 +112,63 @@ def write_exclusive(path, content, mode):
 
 
 def publish_directory(root_fd, stage_name, target_name):
-    # Linux-only preparation: RENAME_NOREPLACE also refuses a raced empty directory.
-    rename = ctypes.CDLL(None, use_errno=True).renameat2
-    rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
-    rename.restype = ctypes.c_int
-    if rename(root_fd, os.fsencode(stage_name), root_fd, os.fsencode(target_name), 1) != 0:
-        code = ctypes.get_errno()
-        raise OSError(code, os.strerror(code))
+    # The mutualised filesystem refuses renameat2(RENAME_NOREPLACE). mkdir and
+    # O_EXCL reserve every destination without replacing an existing inode.
+    # A failure may leave an incomplete candidate; it is never activated, erased
+    # or silently reused. A later invocation refuses it for operator inspection.
+    descriptors = []
+    phase = 'open_staging'
+    try:
+        stage_fd = os.open(stage_name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+        descriptors.append(stage_fd)
+        stage_bin_fd = os.open('bin', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=stage_fd)
+        descriptors.append(stage_bin_fd)
+        source_fd = os.open('node', os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=stage_bin_fd)
+        with os.fdopen(source_fd, 'rb') as source:
+            value = os.fstat(source.fileno())
+            require(stat.S_ISREG(value.st_mode) and value.st_uid == os.getuid() and value.st_nlink == 1
+                    and stat.S_IMODE(value.st_mode) == 0o700 and value.st_size == NODE_BYTES,
+                    'publication_source_metadata')
+            require(digest_file(source) == NODE_SHA256, 'publication_source_checksum')
+            source.seek(0)
+            phase = 'create_candidate'
+            os.mkdir(target_name, mode=0o700, dir_fd=root_fd)
+            candidate_fd = os.open(target_name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+            descriptors.append(candidate_fd)
+            phase = 'create_bin'
+            os.mkdir('bin', mode=0o700, dir_fd=candidate_fd)
+            bin_fd = os.open('bin', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=candidate_fd)
+            descriptors.append(bin_fd)
+            phase = 'copy_node'
+            node_fd = os.open('node', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                              0o700, dir_fd=bin_fd)
+            with os.fdopen(node_fd, 'wb') as output:
+                copied = 0
+                while chunk := source.read(262144):
+                    copied += len(chunk)
+                    require(copied <= NODE_BYTES, 'publication_source_length')
+                    output.write(chunk)
+                require(copied == NODE_BYTES, 'publication_source_length')
+                output.flush()
+                phase = 'node_fsync'
+                os.fsync(output.fileno())
+            phase = 'node_readback'
+            copied_fd = os.open('node', os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=bin_fd)
+            with os.fdopen(copied_fd, 'rb') as copied_file:
+                value = os.fstat(copied_file.fileno())
+                require(stat.S_ISREG(value.st_mode) and value.st_uid == os.getuid() and value.st_nlink == 1
+                        and stat.S_IMODE(value.st_mode) == 0o700 and value.st_size == NODE_BYTES,
+                        'publication_node_metadata')
+                require(digest_file(copied_file) == NODE_SHA256, 'publication_node_checksum')
+            phase = 'bin_fsync'
+            os.fsync(bin_fd)
+            phase = 'candidate_fsync'
+            os.fsync(candidate_fd)
+    except OSError as error:
+        raise OSError(error.errno, 'candidate_publication:' + phase) from error
+    finally:
+        for fd in reversed(descriptors):
+            os.close(fd)
 
 
 def prepare(archive, private=PRIVATE, checkout=CHECKOUT):
@@ -176,6 +225,9 @@ def prepare(archive, private=PRIVATE, checkout=CHECKOUT):
                 unchanged_root()
                 publish_directory(root_fd, stage.name, RUNTIME)
                 os.fsync(root_fd)
+        env = {key: value for key, value in os.environ.items() if key not in ('NODE_OPTIONS', 'NODE_PATH')}
+        require(subprocess.check_output([str(private / RUNTIME / 'bin/node'), '--version'], env=env,
+                cwd='/', stdin=subprocess.DEVNULL, timeout=15, text=True).strip() == VERSION, 'published_node_version')
         for name, content, mode in plans:
             unchanged_root()
             write_exclusive(private / name, content, mode)

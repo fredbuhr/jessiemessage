@@ -100,6 +100,8 @@ class PreparationTests(unittest.TestCase):
         binary = self.private / MODULE.RUNTIME / 'bin/node'
         self.assertEqual(binary.read_bytes(), self.node)
         self.assertEqual(binary.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(binary.stat().st_nlink, 1)
+        self.assertEqual((binary.parent.stat().st_mode & 0o777, binary.parent.parent.stat().st_mode & 0o777), (0o700, 0o700))
         self.assertFalse((self.root.parent / 'outside').exists())
         for old_name, _, new_name, old_log, new_log, _ in MODULE.LAUNCHERS:
             expected = (self.private / old_name).read_text().replace(str(self.old_node), str(binary)).replace(old_log, new_log)
@@ -191,10 +193,12 @@ class PreparationTests(unittest.TestCase):
             self.prepare()
         self.assert_no_new_outputs()
 
-    def test_atomic_publish_does_not_replace_a_raced_empty_directory(self):
+    def test_exclusive_candidate_preserves_a_raced_empty_directory(self):
         stage = self.private / 'stage'
         target = self.private / 'target'
-        stage.mkdir()
+        (stage / 'bin').mkdir(parents=True, mode=0o700)
+        (stage / 'bin/node').write_bytes(self.node)
+        (stage / 'bin/node').chmod(0o700)
         target.mkdir()
         fd = os.open(self.private, os.O_RDONLY | os.O_DIRECTORY)
         try:
@@ -230,6 +234,47 @@ class PreparationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'existing_output'):
             self.prepare()
         self.assert_no_new_outputs()
+
+    def test_copy_fsync_failure_leaves_only_unactivated_candidate_and_reports_phase(self):
+        before = self.originals()
+        real_fsync = MODULE.os.fsync
+        calls = 0
+        def fsync(fd):
+            nonlocal calls
+            calls += 1
+            if calls == 4:
+                raise OSError(28, 'synthetic candidate disk failure')
+            return real_fsync(fd)
+        with patch.object(MODULE.os, 'fsync', side_effect=fsync):
+            with self.assertRaisesRegex(OSError, 'candidate_publication:node_fsync') as caught:
+                self.prepare()
+        self.assertEqual(caught.exception.errno, 28)
+        self.assertEqual((self.private / MODULE.RUNTIME / 'bin/node').read_bytes(), self.node)
+        for name, value in before.items():
+            self.assertEqual((self.private / name).read_bytes(), value)
+        self.assertFalse(any((self.private / value[index]).exists() for value in MODULE.LAUNCHERS for index in (2, 4)))
+        self.before = self.originals()
+        with self.assertRaisesRegex(RuntimeError, 'existing_output'):
+            self.prepare()
+        self.assert_no_new_outputs()
+
+    def test_copy_readback_detects_changed_bytes_before_launcher_creation(self):
+        before = self.originals()
+        real_fsync = MODULE.os.fsync
+        calls = 0
+        def fsync(fd):
+            nonlocal calls
+            calls += 1
+            if calls == 4:
+                os.pwrite(fd, b'X', 0)
+            return real_fsync(fd)
+        with patch.object(MODULE.os, 'fsync', side_effect=fsync):
+            with self.assertRaisesRegex(RuntimeError, 'publication_node_checksum'):
+                self.prepare()
+        for name, value in before.items():
+            self.assertEqual((self.private / name).read_bytes(), value)
+        self.assertFalse(any((self.private / value[index]).exists() for value in MODULE.LAUNCHERS for index in (2, 4)))
+        self.assertFalse(any(path.name.startswith('.node24221-') for path in self.private.iterdir()))
 
     def test_source_check_uses_exact_git_identity_without_contacting_remote(self):
         self.source_patch.stop()
