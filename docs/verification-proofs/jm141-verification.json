@@ -1,13 +1,13 @@
 {
   "version": "1.4.1",
-  "status": "local_verified_reviewed_own_pr_main_ci_pending",
+  "status": "code_qualified_and_published_hosting_pending",
   "branch": "feat/announcements-compat-141",
-  "source": null,
-  "tree": null,
+  "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+  "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
   "results": {
     "implementationReported": true,
-    "codeQualified": false,
-    "releasePublished": false,
+    "codeQualified": true,
+    "releasePublished": true,
     "deliveryComplete": false
   },
   "requirements": {
@@ -67,10 +67,674 @@
     "nativeAnnouncementSubcases": 9,
     "chromeAnnouncementTests": 5,
     "chromeContexts": 10,
-    "ownPrCi": null,
-    "ownMainCi": null
+    "ownPrCi": {
+      "kind": "corrected_pr_qualification",
+      "repository": "fredbuhr/jessiemessage",
+      "pullRequest": 119,
+      "branch": "feat/announcements-compat-141",
+      "head": "c28b296d4cfcf160f771561b1934058c9a9f0f55",
+      "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
+      "runId": 39619128778,
+      "attempt": 1,
+      "event": "pull_request",
+      "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39619128778",
+      "allFiveLogsRead": true,
+      "ciQualified": true,
+      "hostedDeploymentQualified": false,
+      "allChecksSuccessful": true,
+      "allJobsNode2422": true,
+      "prReadiness": {
+        "state": "open",
+        "head": "c28b296d4cfcf160f771561b1934058c9a9f0f55",
+        "base": "26424ac912bde74ae3d0c6896c96ee58cec250a6",
+        "merged": false,
+        "mergeable": true,
+        "mergeableState": "clean"
+      },
+      "previousFailedEvidence": "qual141-pr-initial.json",
+      "changesSinceInitial": "Only four synthetic test fixture files: three strict SQL cleanup allowlists add announcements, one browser test stops clicking the already-hidden close button after the language action.",
+      "rerunRequested": false,
+      "productionChanged": false,
+      "externalDeliveryUsed": false,
+      "jobs": [
+        {
+          "id": 119287524793,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 183,
+            "suites": 0,
+            "pass": 183,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 235905.33236
+          },
+          "announcements": {
+            "passedTests": 5,
+            "failedTests": 0,
+            "completedContexts": 10,
+            "skippedContexts": 0,
+            "results": [
+              "✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (17795.749081ms)",
+              "✔ Chrome: a lost acknowledgement retries exactly one publication, conflicts preserve drafts and account changes purge them (2593.529441ms)",
+              "✔ Chrome client mobile: the compact banner opens accessibly, expires locally and clears on an account change (8553.14033ms)",
+              "✔ Chrome compatibility: an absent announcement capability preserves the ordinary conversation (1338.405134ms)",
+              "✔ Chrome: an announcement that expires during its response is never displayed after the network proof (2484.357603ms)"
+            ],
+            "coverage": [
+              "Admin FR/EN 320/390 schedule, preview and acknowledged optional private campaign",
+              "Lost response retry preserves mutation identity, conflict draft, account purge",
+              "Client FR320/EN390 compact accessible banner and dialog",
+              "Local expiry with no subsequent API request",
+              "Compatibility capability absent",
+              "Response captured before expiry but received after expiry never appears"
+            ]
+          }
+        },
+        {
+          "id": 119287525155,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 49006.570098
+          }
+        },
+        {
+          "id": 119287525317,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 3304,
+            "suites": 0,
+            "pass": 3266,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 38,
+            "todo": 0,
+            "duration_ms": 104598.597744
+          },
+          "syntaxSources": 605,
+          "skipNote": "38 native tests explicitly omitted from the non-DB general suite; the separate native CI jobs run their registered suites with zero skips."
+        },
+        {
+          "id": 119287525382,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 496,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 319448.481755
+          },
+          "databaseVersion": "11.4.13-MariaDB-ubu2404",
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery",
+            "validated": [
+              "Time window, restart and expiry",
+              "Encrypted persisted text, owner isolation and access revalidation",
+              "Stable identical retries and optimistic conflict",
+              "Campaign and banner atomic rollback",
+              "Leased delivery resumes once with ordinary push deadline capped to announcement end",
+              "Replacement and withdrawal cancel only pending/sending old push alerts atomically; accepted alerts and delivered messages remain",
+              "Audience drift rolls back cancellation"
+            ]
+          },
+          "backup": {
+            "result": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+            "subtests": 18,
+            "nestedSubtests": 6
+          },
+          "erasure": {
+            "result": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+            "subtests": 18,
+            "nestedSubtests": 5,
+            "announcementAssertions": "Legacy and v2 last-recipient erasure detach campaign and preserve authenticated encrypted banner bytes."
+          },
+          "failures": []
+        },
+        {
+          "id": 119287525869,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 496,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 216914.434356
+          },
+          "databaseVersion": "10.11.19-MariaDB-ubu2204",
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery",
+            "validated": [
+              "Time window, restart and expiry",
+              "Encrypted persisted text, owner isolation and access revalidation",
+              "Stable identical retries and optimistic conflict",
+              "Campaign and banner atomic rollback",
+              "Leased delivery resumes once with ordinary push deadline capped to announcement end",
+              "Replacement and withdrawal cancel only pending/sending old push alerts atomically; accepted alerts and delivered messages remain",
+              "Audience drift rolls back cancellation"
+            ]
+          },
+          "backup": {
+            "result": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+            "subtests": 18,
+            "nestedSubtests": 6
+          },
+          "erasure": {
+            "result": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+            "subtests": 18,
+            "nestedSubtests": 5,
+            "announcementAssertions": "Legacy and v2 last-recipient erasure detach campaign and preserve authenticated encrypted banner bytes."
+          },
+          "failures": []
+        }
+      ]
+    },
+    "ownMainCi": {
+      "kind": "merged_main_qualification",
+      "repository": "fredbuhr/jessiemessage",
+      "releaseVersion": "1.4.1",
+      "mergedPullRequest": 119,
+      "branch": "main",
+      "head": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+      "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
+      "treeMatchesQualifiedPr": true,
+      "runId": 39620191652,
+      "attempt": 1,
+      "event": "push",
+      "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39620191652",
+      "allFiveOwnLogsRead": true,
+      "ciQualified": true,
+      "hostedDeploymentQualified": false,
+      "allChecksSuccessful": true,
+      "allJobsNode2422": true,
+      "prEvidence": "qual141-pr.json",
+      "previousFailedEvidence": "qual141-pr-initial.json",
+      "rerunRequested": false,
+      "productionChanged": false,
+      "externalDeliveryUsed": false,
+      "jobs": [
+        {
+          "id": 119291287555,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 183,
+            "suites": 0,
+            "pass": 183,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 217402.827471
+          },
+          "announcements": {
+            "passedTests": 5,
+            "failedTests": 0,
+            "completedContexts": 10,
+            "skippedContexts": 0,
+            "results": [
+              "✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (12065.805196ms)",
+              "✔ Chrome: a lost acknowledgement retries exactly one publication, conflicts preserve drafts and account changes purge them (2415.175179ms)",
+              "✔ Chrome client mobile: the compact banner opens accessibly, expires locally and clears on an account change (7830.904791ms)",
+              "✔ Chrome compatibility: an absent announcement capability preserves the ordinary conversation (888.236276ms)",
+              "✔ Chrome: an announcement that expires during its response is never displayed after the network proof (2313.267402ms)"
+            ],
+            "coverage": [
+              "Admin FR/EN 320/390 schedule, preview and acknowledged optional private campaign",
+              "Lost response retry preserves mutation identity, conflict draft, account purge",
+              "Client FR320/EN390 compact accessible banner and dialog",
+              "Local expiry with no subsequent API request",
+              "Compatibility capability absent",
+              "Response captured before expiry but received after expiry never appears"
+            ]
+          }
+        },
+        {
+          "id": 119291288048,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 496,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 275719.636262
+          },
+          "databaseVersion": "10.11.19-MariaDB-ubu2204",
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery",
+            "validated": [
+              "Time window, restart and expiry",
+              "Encrypted persisted text, owner isolation and access revalidation",
+              "Stable identical retries and optimistic conflict",
+              "Campaign and banner atomic rollback",
+              "Leased delivery resumes once with ordinary push deadline capped to announcement end",
+              "Replacement and withdrawal cancel only pending/sending old push alerts atomically; accepted alerts and delivered messages remain",
+              "Audience drift rolls back cancellation"
+            ]
+          },
+          "backup": {
+            "result": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+            "subtests": 18,
+            "nestedSubtests": 6
+          },
+          "erasure": {
+            "result": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+            "subtests": 18,
+            "nestedSubtests": 5,
+            "announcementAssertions": "Legacy and v2 last-recipient erasure detach campaign and preserve authenticated encrypted banner bytes."
+          },
+          "failures": []
+        },
+        {
+          "id": 119291288052,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 3304,
+            "suites": 0,
+            "pass": 3266,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 38,
+            "todo": 0,
+            "duration_ms": 99100.108743
+          },
+          "syntaxSources": 605,
+          "skipNote": "38 native tests explicitly omitted from the non-DB general suite; the separate native CI jobs run their registered suites with zero skips."
+        },
+        {
+          "id": 119291288135,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 40313.43956
+          }
+        },
+        {
+          "id": 119291288514,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 496,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 201182.720513
+          },
+          "databaseVersion": "11.4.13-MariaDB-ubu2404",
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery",
+            "validated": [
+              "Time window, restart and expiry",
+              "Encrypted persisted text, owner isolation and access revalidation",
+              "Stable identical retries and optimistic conflict",
+              "Campaign and banner atomic rollback",
+              "Leased delivery resumes once with ordinary push deadline capped to announcement end",
+              "Replacement and withdrawal cancel only pending/sending old push alerts atomically; accepted alerts and delivered messages remain",
+              "Audience drift rolls back cancellation"
+            ]
+          },
+          "backup": {
+            "result": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+            "subtests": 18,
+            "nestedSubtests": 6
+          },
+          "erasure": {
+            "result": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+            "subtests": 18,
+            "nestedSubtests": 5,
+            "announcementAssertions": "Legacy and v2 last-recipient erasure detach campaign and preserve authenticated encrypted banner bytes."
+          },
+          "failures": []
+        }
+      ]
+    },
+    "backupEvidenceScope": {
+      "genericSchema32BackupRestoreSuiteObserved": true,
+      "nativeGenericFixtureContainsNonemptyAnnouncement": false,
+      "announcementCryptoVerifierUnitTestsObserved": true,
+      "nativeNonemptyAnnouncementPersistenceAndTamperObserved": true,
+      "endToEndBackupRestoreOfNonemptyAnnouncementQualified": false,
+      "note": "Generic native backup/restore qualifies its schema32 synthetic fixture. It does not seed a nonempty announcement. Announcement crypto verification is unit-tested; native persistence and tamper refusal are separate announcement tests."
+    },
+    "initialPrCi": {
+      "kind": "initial_failed_pr_qualification",
+      "repository": "fredbuhr/jessiemessage",
+      "pullRequest": 119,
+      "branch": "feat/announcements-compat-141",
+      "head": "0736550fa9b220ad46ddfc0a3969df52ef80d6b1",
+      "tree": "2a7326347ae6047cdbb853fde7b62e07615bc6e9",
+      "runId": 39617941943,
+      "attempt": 1,
+      "event": "pull_request",
+      "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39617941943",
+      "allFiveLogsRead": true,
+      "qualified": false,
+      "rerunRequested": false,
+      "productionChanged": false,
+      "jobs": [
+        {
+          "id": 119283634390,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 3304,
+            "suites": 0,
+            "pass": 3266,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 38,
+            "todo": 0,
+            "duration_ms": 99834.635585
+          },
+          "syntaxSources": 605
+        },
+        {
+          "id": 119283634476,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 44658.578315
+          }
+        },
+        {
+          "id": 119283634482,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "failure",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 484,
+            "fail": 12,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 318692.263347
+          },
+          "databaseVersion": "11.4.13-MariaDB-ubu2404",
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery"
+          },
+          "backup": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+          "erasure": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+          "failures": [
+            "not ok 19 - real HTTP, password hashing, encrypted TOTP and MariaDB authenticate, revoke and reject replay together",
+            "not ok 20 - an ambiguous commit preserves setup material and never silently reinitializes the committed administrator",
+            "not ok 6 - real MariaDB administrator authentication persistence (synthetic disposable database only)",
+            "not ok 21 - real MariaDB encrypted verification mail persistence (synthetic disposable database only)",
+            "not ok 9 - 0028 upgrades the immutable 27-migration schema using an atomic CHECK replacement",
+            "not ok 10 - an interruption after committed 0028 blocks reruns until exact inspected recovery",
+            "not ok 11 - an interruption before 0028 keeps the old CHECK and permits only confirmed retry",
+            "not ok 12 - nonempty shared schema and malformed existing ledger are refused",
+            "not ok 13 - DDL may commit before a failure; dirty state blocks reruns and recovery requires exact inspection confirmation",
+            "not ok 14 - retry recovery preserves checksum and counts a fresh attempt after manually restoring the prior schema",
+            "not ok 15 - a simulated lost connection leaves a durable running marker even when recording failure is impossible",
+            "not ok 27 - real MariaDB migration and foundation constraints (synthetic disposable database only)"
+          ],
+          "diagnosis": {
+            "reason": "Strict disposable fixture cleanup allowlists omit the newly expected announcements table; cleanup refusal is preserved.",
+            "files": [
+              "tests/auth-store.integration.test.mjs",
+              "tests/mail-store.integration.test.mjs",
+              "tests/migrations.integration.test.mjs"
+            ]
+          }
+        },
+        {
+          "id": 119283634573,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "failure",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 484,
+            "fail": 12,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 218121.62621
+          },
+          "databaseVersion": "10.11.19-MariaDB-ubu2204",
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery"
+          },
+          "backup": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+          "erasure": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+          "failures": [
+            "not ok 19 - real HTTP, password hashing, encrypted TOTP and MariaDB authenticate, revoke and reject replay together",
+            "not ok 20 - an ambiguous commit preserves setup material and never silently reinitializes the committed administrator",
+            "not ok 6 - real MariaDB administrator authentication persistence (synthetic disposable database only)",
+            "not ok 21 - real MariaDB encrypted verification mail persistence (synthetic disposable database only)",
+            "not ok 9 - 0028 upgrades the immutable 27-migration schema using an atomic CHECK replacement",
+            "not ok 10 - an interruption after committed 0028 blocks reruns until exact inspected recovery",
+            "not ok 11 - an interruption before 0028 keeps the old CHECK and permits only confirmed retry",
+            "not ok 12 - nonempty shared schema and malformed existing ledger are refused",
+            "not ok 13 - DDL may commit before a failure; dirty state blocks reruns and recovery requires exact inspection confirmation",
+            "not ok 14 - retry recovery preserves checksum and counts a fresh attempt after manually restoring the prior schema",
+            "not ok 15 - a simulated lost connection leaves a durable running marker even when recording failure is impossible",
+            "not ok 27 - real MariaDB migration and foundation constraints (synthetic disposable database only)"
+          ],
+          "diagnosis": {
+            "reason": "Strict disposable fixture cleanup allowlists omit the newly expected announcements table; cleanup refusal is preserved.",
+            "files": [
+              "tests/auth-store.integration.test.mjs",
+              "tests/mail-store.integration.test.mjs",
+              "tests/migrations.integration.test.mjs"
+            ]
+          }
+        },
+        {
+          "id": 119283634801,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "failure",
+          "node": "v24.22.0",
+          "counts": {
+            "tests": 183,
+            "suites": 0,
+            "pass": 182,
+            "fail": 1,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 232182.670074
+          },
+          "announcements": {
+            "plannedTests": 5,
+            "passedTests": 4,
+            "failedTests": 1,
+            "plannedContexts": 10,
+            "completedContextsWithoutFailure": 8,
+            "failingContexts": 1,
+            "unexecutedContexts": 1,
+            "unexecutedContext": "Short-lived client announcement expiry context occurs after the failed EN client language switch.",
+            "results": [
+              "✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (31933.403013ms)",
+              "✔ Chrome: a lost acknowledgement retries exactly one publication, conflicts preserve drafts and account changes purge them (2795.288031ms)",
+              "✖ Chrome client mobile: the compact banner opens accessibly, expires locally and clears on an account change (3465.733325ms)",
+              "✔ Chrome compatibility: an absent announcement capability preserves the ordinary conversation (1061.347881ms)",
+              "✔ Chrome: an announcement that expires during its response is never displayed after the network proof (2296.825189ms)"
+            ],
+            "failure": {
+              "path": "tests/browser/announcements.browser.mjs",
+              "line": 170,
+              "column": 153,
+              "message": "WebDriver click HTTP400",
+              "selector": "#close-chat-menu",
+              "diagnosis": "Language button already closes the Options menu through the established delegated handler; the test attempts a click on its hidden close button."
+            }
+          }
+        }
+      ]
+    }
   },
-  "publication": null,
+  "publication": {
+    "status": "published_verified",
+    "tag": "v1.4.1",
+    "commit": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+    "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
+    "releaseId": 419688886,
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.4.1",
+    "ciRun": 39620191652,
+    "workflowCommit": "1d6458cf852a457e1723ed8f92d9689a17612af0",
+    "run": 39621225009,
+    "job": 119294843956,
+    "publishedAt": "2026-10-21T14:56:19Z",
+    "verified": true,
+    "workflowStatus": "completed",
+    "workflowConclusion": "success"
+  },
   "hosting": {
     "activeVersion": "1.4.0",
     "activeSource": "56d4595059df9292fc54ba4d4e948eeb793bae96",
@@ -85,11 +749,136 @@
     "directPrivateToolObservation": false
   },
   "notAttested": [
-    "own_native_mariadb_and_chrome_ci",
-    "release141_publication",
-    "release150_publication",
     "hosted_preparation_migration_and_activation",
     "physical_phone_and_real_host_capacity",
-    "current_pc_or_backup_delivery"
-  ]
+    "current_pc_or_backup_delivery",
+    "native_backup_restore_with_nonempty_announcement"
+  ],
+  "pullRequest": {
+    "number": 119,
+    "url": "https://github.com/fredbuhr/jessiemessage/pull/119",
+    "head": "c28b296d4cfcf160f771561b1934058c9a9f0f55",
+    "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
+    "merged": true,
+    "mergeCommit": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+    "mergedAt": "2026-10-21T14:49:04Z"
+  },
+  "operatorDelivery": {
+    "status": "helpers_published_synthetically_qualified_hosted_staging_pending_upgrade_disabled",
+    "helperCommit": "40027be898f1a82cd9c2aed7c4a313096d8db4d4",
+    "helperTree": "c999e78badfea23ab4e4ff9df8266f2d66bb1fb7",
+    "publishedBytesVerifiedAgainstLocal": true,
+    "sourcePins": [
+      {
+        "version": "1.4.1",
+        "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04"
+      },
+      {
+        "version": "1.5.0",
+        "source": "abca467c45c9385371a9095ab359e78c99140370",
+        "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4"
+      }
+    ],
+    "qualification": {
+      "checkedAt": "2026-10-21T15:06:14.040057+00:00",
+      "tests": [
+        {
+          "test": "test-release150-staging-synthetic.py",
+          "passed": 27,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "test": "test-release150-migration-synthetic.py",
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0
+        }
+      ],
+      "passed": 59,
+      "failed": 0,
+      "skipped": 0,
+      "checks": {
+        "bashSyntax": 3,
+        "embeddedPythonSyntax": 2,
+        "embeddedJavaScriptSyntax": 2,
+        "testPythonSyntax": 2,
+        "gitDiffCheck": true,
+        "newOpsWhitespaceCheck": 5,
+        "onlyExpectedOpsFiles": true
+      },
+      "method": "isolated_synthetic_fixtures_no_full_hosted_helper_sql_or_runtime_execution",
+      "independentStaticReview": "no_blocking_findings",
+      "additionalSyntheticTtySignals": {
+        "SIGINT": "echo_restored",
+        "SIGTERM": "echo_restored"
+      }
+    },
+    "staging": {
+      "path": "ops/prepare-release150.sh",
+      "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh",
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh",
+      "sha256": "ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021",
+      "expectedReceipt": "staged_awaiting_schema32",
+      "executionReported": false,
+      "sqlExecuted": false,
+      "prechecksExecuted": false,
+      "runtimeStarted": false,
+      "managerChanged": false,
+      "checkpointChanged": false
+    },
+    "migrationStatus": {
+      "path": "ops/status-release150-migration.sh",
+      "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh",
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh",
+      "sha256": "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0",
+      "readOnly": true,
+      "executionReported": false
+    },
+    "upgrade": {
+      "path": "ops/upgrade-release150.sh",
+      "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/upgrade-release150.sh",
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/upgrade-release150.sh",
+      "sha256": "ea34ff037ad3be287c4f2cd4354c521dd3b93b33326ef787f094f4274c9a0402",
+      "executable": false,
+      "missingHostedLauncherPins": [
+        "QUALIFICATION_REQUIRED_START141_SHA256",
+        "QUALIFICATION_REQUIRED_CHECK141_SHA256",
+        "QUALIFICATION_REQUIRED_START150_SHA256",
+        "QUALIFICATION_REQUIRED_CHECK150_SHA256"
+      ],
+      "serviceStopAttestationRequired": true,
+      "executionReported": false
+    },
+    "qualificationFiles": [
+      {
+        "path": "ops/prepare-release150.sh",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh",
+        "sha256": "ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021"
+      },
+      {
+        "path": "ops/status-release150-migration.sh",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh",
+        "sha256": "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0"
+      },
+      {
+        "path": "ops/upgrade-release150.sh",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/upgrade-release150.sh",
+        "sha256": "ea34ff037ad3be287c4f2cd4354c521dd3b93b33326ef787f094f4274c9a0402"
+      },
+      {
+        "path": "ops/test-release150-staging-synthetic.py",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/test-release150-staging-synthetic.py",
+        "sha256": "fd280dc4bab9ef969c596a6fe83e45bd559ab3c774e6f9f503f7d6bc60e408d4"
+      },
+      {
+        "path": "ops/test-release150-migration-synthetic.py",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/test-release150-migration-synthetic.py",
+        "sha256": "d4908a7ea869a6cf0e66461991836ca73e589d72ddde3d25956a0e7d3496eef6"
+      }
+    ],
+    "hostedReceipt": null,
+    "directPrivateServerObservation": false
+  }
 }

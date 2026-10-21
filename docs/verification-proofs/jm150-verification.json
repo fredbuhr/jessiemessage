@@ -1,12 +1,12 @@
 {
   "version": "1.5.0",
-  "status": "implementation_shared_with_compatibility141_activation_delta_and_own_ci_pending",
-  "source": null,
-  "tree": null,
+  "status": "code_qualified_and_published_hosting_pending",
+  "source": "abca467c45c9385371a9095ab359e78c99140370",
+  "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
   "results": {
     "implementationReported": true,
-    "codeQualified": false,
-    "releasePublished": false,
+    "codeQualified": true,
+    "releasePublished": true,
     "deliveryComplete": false
   },
   "requirements": {
@@ -24,10 +24,829 @@
     "qualifiesRelease150ExactCommit": false
   },
   "qualification": {
-    "ownPrCi": null,
-    "ownMainCi": null
+    "ownPrCi": {
+      "kind": "final_pr_qualification",
+      "repository": "fredbuhr/jessiemessage",
+      "pullRequest": 120,
+      "branch": "feat/announcements-150",
+      "head": "77f6037446a6f533a0864637f8b33dc4fbefe6e7",
+      "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+      "runId": 39619254595,
+      "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39619254595",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "createdAt": "2026-10-21T14:42:51Z",
+      "updatedAt": "2026-10-21T14:49:00Z",
+      "initialPullRequestBase": {
+        "ref": "feat/announcements-compat-141",
+        "sha": "c28b296d4cfcf160f771561b1934058c9a9f0f55",
+        "repo": {
+          "id": 1419524991,
+          "url": "https://api.github.com/repos/fredbuhr/jessiemessage",
+          "name": "jessiemessage"
+        }
+      },
+      "checkout": {
+        "commit": "3943f1688b035eeee8f1150b46f1ea7fe2784a5d",
+        "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+        "parents": [
+          "c28b296d4cfcf160f771561b1934058c9a9f0f55",
+          "77f6037446a6f533a0864637f8b33dc4fbefe6e7"
+        ],
+        "allFiveJobsSameCheckout": true,
+        "treeEqualsRequestedHeadTree": true
+      },
+      "retargetObservation": {
+        "latestApiBase": {
+          "ref": "main",
+          "sha": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+          "repo": {
+            "id": 1419524991,
+            "url": "https://api.github.com/repos/fredbuhr/jessiemessage",
+            "name": "jessiemessage"
+          }
+        },
+        "note": "GitHub run pull_requests metadata reflects the later PR retarget. All five actual checkout logs preserve the initial merge into c28b296d4cfcf160f771561b1934058c9a9f0f55.",
+        "newRunObservedForHead": false
+      },
+      "allFiveLogsRead": true,
+      "qualified": true,
+      "rerunRequested": false,
+      "productionChanged": false,
+      "pushRunMetadataOnly": {
+        "runId": 39619222255,
+        "status": "completed",
+        "conclusion": "success",
+        "logsRead": false
+      },
+      "jobs": [
+        {
+          "id": 119287968287,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 3304,
+            "suites": 0,
+            "pass": 3266,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 38,
+            "todo": 0,
+            "duration_ms": 99864.391098
+          },
+          "logsRead": true,
+          "checkoutCommit": "3943f1688b035eeee8f1150b46f1ea7fe2784a5d",
+          "failures": [],
+          "syntaxSources": 605,
+          "announcementEnvelopeBackupUnitResults": [
+            "✔ announcement backup verifies its own envelope and owner/deadline binding, including a legitimately detached campaign (31.291688ms)",
+            "✔ the SELECT-only SQL adapter reads encrypted announcements and refuses sub-millisecond deadline aliases (10.792374ms)"
+          ]
+        },
+        {
+          "id": 119287968316,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 48714.817956
+          },
+          "logsRead": true,
+          "checkoutCommit": "3943f1688b035eeee8f1150b46f1ea7fe2784a5d",
+          "failures": []
+        },
+        {
+          "id": 119287967863,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 496,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 325807.14563
+          },
+          "logsRead": true,
+          "checkoutCommit": "3943f1688b035eeee8f1150b46f1ea7fe2784a5d",
+          "failures": [],
+          "databaseVersion": "11.4.13-MariaDB-ubu2404",
+          "broadcastScaleDiagnostics": [
+            {
+              "qualification": "broadcast-scale",
+              "operation": "capture",
+              "audienceCount": 2500,
+              "elapsedMs": 222.7
+            },
+            {
+              "qualification": "broadcast-scale",
+              "mariaDbVersion": "11.4.13-MariaDB-ubu2404",
+              "audienceCount": 2500
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredLeases",
+              "plan": [
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_lease",
+                  "rows": 1
+                },
+                {
+                  "table": "c",
+                  "type": "eq_ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredPending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "pending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_ready",
+                  "rows": 2500
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "operation": "drain",
+              "audienceCount": 2500,
+              "elapsedMs": 31997.4
+            }
+          ],
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery"
+          },
+          "migration": {
+            "expectedSchemaMigrations": 32,
+            "assertedByExactTestSource": true,
+            "parentResult": "ok 27 - real MariaDB migration and foundation constraints (synthetic disposable database only)"
+          },
+          "backup": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+          "erasure": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+          "announcementErasureCoverage": {
+            "source": "tests/account-erasure-flow.integration.test.mjs",
+            "seededAnnouncement": true,
+            "assertsCampaignReferenceDetached": true,
+            "assertsCiphertextBytePreservation": true,
+            "assertsEnvelopeStillDecrypts": true,
+            "parentResult": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)"
+          }
+        },
+        {
+          "id": 119287968292,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 496,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 218367.117199
+          },
+          "logsRead": true,
+          "checkoutCommit": "3943f1688b035eeee8f1150b46f1ea7fe2784a5d",
+          "failures": [],
+          "databaseVersion": "10.11.19-MariaDB-ubu2204",
+          "broadcastScaleDiagnostics": [
+            {
+              "qualification": "broadcast-scale",
+              "operation": "capture",
+              "audienceCount": 2500,
+              "elapsedMs": 148.4
+            },
+            {
+              "qualification": "broadcast-scale",
+              "mariaDbVersion": "10.11.19-MariaDB-ubu2204",
+              "audienceCount": 2500
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredLeases",
+              "plan": [
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_lease",
+                  "rows": 1
+                },
+                {
+                  "table": "c",
+                  "type": "eq_ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredPending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "pending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_ready",
+                  "rows": 2500
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "operation": "drain",
+              "audienceCount": 2500,
+              "elapsedMs": 20957.4
+            }
+          ],
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery"
+          },
+          "migration": {
+            "expectedSchemaMigrations": 32,
+            "assertedByExactTestSource": true,
+            "parentResult": "ok 27 - real MariaDB migration and foundation constraints (synthetic disposable database only)"
+          },
+          "backup": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+          "erasure": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+          "announcementErasureCoverage": {
+            "source": "tests/account-erasure-flow.integration.test.mjs",
+            "seededAnnouncement": true,
+            "assertsCampaignReferenceDetached": true,
+            "assertsCiphertextBytePreservation": true,
+            "assertsEnvelopeStillDecrypts": true,
+            "parentResult": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)"
+          }
+        },
+        {
+          "id": 119287968363,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 183,
+            "suites": 0,
+            "pass": 183,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 226531.279206
+          },
+          "logsRead": true,
+          "checkoutCommit": "3943f1688b035eeee8f1150b46f1ea7fe2784a5d",
+          "failures": [],
+          "announcements": {
+            "plannedTests": 5,
+            "passedTests": 5,
+            "failedTests": 0,
+            "plannedContexts": 10,
+            "completedContextsWithoutFailure": 10,
+            "results": [
+              "✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (21714.854676ms)",
+              "✔ Chrome: a lost acknowledgement retries exactly one publication, conflicts preserve drafts and account changes purge them (2739.130574ms)",
+              "✔ Chrome client mobile: the compact banner opens accessibly, expires locally and clears on an account change (7716.111043ms)",
+              "✔ Chrome compatibility: an absent announcement capability preserves the ordinary conversation (1303.317121ms)",
+              "✔ Chrome: an announcement that expires during its response is never displayed after the network proof (2152.068139ms)"
+            ]
+          }
+        }
+      ],
+      "limitations": [
+        "General Verify skips remain omissions; native SQL and Chrome jobs have zero skips.",
+        "Native offline backup suite validates generic schema32 restoration. Announcement envelope verification has its own successful unit cases; no new claim of a nonempty announcement seeded in the native backup fixture is made.",
+        "No production send, physical-phone test, mutual-host throughput measurement or PC/backup delivery attestation."
+      ]
+    },
+    "ownMainCi": {
+      "kind": "final_main_qualification",
+      "repository": "fredbuhr/jessiemessage",
+      "version": "1.5.0",
+      "branch": "main",
+      "head": "abca467c45c9385371a9095ab359e78c99140370",
+      "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+      "parents": [
+        "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "77f6037446a6f533a0864637f8b33dc4fbefe6e7"
+      ],
+      "runId": 39621183160,
+      "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39621183160",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "createdAt": "2026-10-21T14:55:47Z",
+      "updatedAt": "2026-10-21T15:01:30Z",
+      "allFiveLogsRead": true,
+      "allFiveJobsSameCheckout": true,
+      "qualified": true,
+      "rerunRequested": false,
+      "productionChanged": false,
+      "sourcePullRequest": {
+        "number": 120,
+        "head": "77f6037446a6f533a0864637f8b33dc4fbefe6e7",
+        "qualifiedRunId": 39619254595,
+        "qualifiedTree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+        "mainTreeEqualsQualifiedPrTree": true
+      },
+      "jobs": [
+        {
+          "id": 119294688191,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 3304,
+            "suites": 0,
+            "pass": 3266,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 38,
+            "todo": 0,
+            "duration_ms": 95504.92369
+          },
+          "logsRead": true,
+          "checkoutCommit": "abca467c45c9385371a9095ab359e78c99140370",
+          "failures": [],
+          "syntaxSources": 605,
+          "announcementEnvelopeBackupUnitResults": [
+            "✔ announcement backup verifies its own envelope and owner/deadline binding, including a legitimately detached campaign (53.625053ms)",
+            "✔ the SELECT-only SQL adapter reads encrypted announcements and refuses sub-millisecond deadline aliases (9.238475ms)"
+          ]
+        },
+        {
+          "id": 119294688747,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 3,
+            "suites": 0,
+            "pass": 3,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 44557.105446
+          },
+          "logsRead": true,
+          "checkoutCommit": "abca467c45c9385371a9095ab359e78c99140370",
+          "failures": []
+        },
+        {
+          "id": 119294688965,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 496,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 272752.453473
+          },
+          "logsRead": true,
+          "checkoutCommit": "abca467c45c9385371a9095ab359e78c99140370",
+          "failures": [],
+          "databaseVersion": "11.4.13-MariaDB-ubu2404",
+          "broadcastScaleDiagnostics": [
+            {
+              "qualification": "broadcast-scale",
+              "operation": "capture",
+              "audienceCount": 2500,
+              "elapsedMs": 216.4
+            },
+            {
+              "qualification": "broadcast-scale",
+              "mariaDbVersion": "11.4.13-MariaDB-ubu2404",
+              "audienceCount": 2500
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredLeases",
+              "plan": [
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_lease",
+                  "rows": 1
+                },
+                {
+                  "table": "c",
+                  "type": "eq_ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredPending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "pending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_ready",
+                  "rows": 2500
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "operation": "drain",
+              "audienceCount": 2500,
+              "elapsedMs": 33207.8
+            }
+          ],
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery"
+          },
+          "migration": {
+            "expectedSchemaMigrations": 32,
+            "assertedByExactTestSource": true,
+            "parentResult": "ok 27 - real MariaDB migration and foundation constraints (synthetic disposable database only)"
+          },
+          "backup": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+          "erasure": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+          "announcementErasureCoverage": {
+            "source": "tests/account-erasure-flow.integration.test.mjs",
+            "seededAnnouncement": true,
+            "assertsCampaignReferenceDetached": true,
+            "assertsCiphertextBytePreservation": true,
+            "assertsEnvelopeStillDecrypts": true,
+            "parentResult": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)"
+          }
+        },
+        {
+          "id": 119294688845,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 496,
+            "suites": 0,
+            "pass": 496,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 288820.721829
+          },
+          "logsRead": true,
+          "checkoutCommit": "abca467c45c9385371a9095ab359e78c99140370",
+          "failures": [],
+          "databaseVersion": "10.11.19-MariaDB-ubu2204",
+          "broadcastScaleDiagnostics": [
+            {
+              "qualification": "broadcast-scale",
+              "operation": "capture",
+              "audienceCount": 2500,
+              "elapsedMs": 196.4
+            },
+            {
+              "qualification": "broadcast-scale",
+              "mariaDbVersion": "10.11.19-MariaDB-ubu2204",
+              "audienceCount": 2500
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredLeases",
+              "plan": [
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_lease",
+                  "rows": 1
+                },
+                {
+                  "table": "c",
+                  "type": "eq_ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredPending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "pending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_ready",
+                  "rows": 2500
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "operation": "drain",
+              "audienceCount": 2500,
+              "elapsedMs": 36041.6
+            }
+          ],
+          "announcements": {
+            "conclusion": "success",
+            "parent": 1,
+            "subtests": 9,
+            "subtestResults": [
+              "ok 1 - schema, empty state and account isolation do not materialize an announcement",
+              "ok 2 - the persisted banner appears only in its time window and never crosses the owner",
+              "ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it",
+              "ok 4 - a failed recipient insertion rolls back both announcement and optional campaign",
+              "ok 5 - a scheduled campaign resumes a lease exactly once and caps ordinary push expiry",
+              "ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "ok 7 - a restart after expiry sends no obsolete message or alert",
+              "ok 8 - replacement and removal stop pending delivery while preserving messages already sent",
+              "ok 9 - access is revalidated and altered encrypted announcements are refused"
+            ],
+            "parentResult": "ok 5 - real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery"
+          },
+          "migration": {
+            "expectedSchemaMigrations": 32,
+            "assertedByExactTestSource": true,
+            "parentResult": "ok 27 - real MariaDB migration and foundation constraints (synthetic disposable database only)"
+          },
+          "backup": "ok 7 - offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+          "erasure": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+          "announcementErasureCoverage": {
+            "source": "tests/account-erasure-flow.integration.test.mjs",
+            "seededAnnouncement": true,
+            "assertsCampaignReferenceDetached": true,
+            "assertsCiphertextBytePreservation": true,
+            "assertsEnvelopeStillDecrypts": true,
+            "parentResult": "ok 3 - durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)"
+          }
+        },
+        {
+          "id": 119294688867,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "node": "v24.22.0",
+          "node2422Observed": true,
+          "counts": {
+            "tests": 183,
+            "suites": 0,
+            "pass": 183,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "duration_ms": 201496.297884
+          },
+          "logsRead": true,
+          "checkoutCommit": "abca467c45c9385371a9095ab359e78c99140370",
+          "failures": [],
+          "announcements": {
+            "plannedTests": 5,
+            "passedTests": 5,
+            "failedTests": 0,
+            "plannedContexts": 10,
+            "completedContextsWithoutFailure": 10,
+            "results": [
+              "✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (29623.479517ms)",
+              "✔ Chrome: a lost acknowledgement retries exactly one publication, conflicts preserve drafts and account changes purge them (2307.386769ms)",
+              "✔ Chrome client mobile: the compact banner opens accessibly, expires locally and clears on an account change (7020.379093ms)",
+              "✔ Chrome compatibility: an absent announcement capability preserves the ordinary conversation (736.937038ms)",
+              "✔ Chrome: an announcement that expires during its response is never displayed after the network proof (2300.709045ms)"
+            ]
+          }
+        }
+      ],
+      "limitations": [
+        "General Verify skips remain omissions; native SQL and Chrome jobs have zero skips.",
+        "Native offline backup suite validates generic schema32 restoration. Announcement envelope verification has its own successful unit cases; no new claim of a nonempty announcement seeded in the native backup fixture is made.",
+        "No production send, physical-phone test, mutual-host throughput measurement or PC/backup delivery attestation."
+      ]
+    },
+    "backupEvidenceScope": {
+      "genericSchema32BackupRestoreSuiteObserved": true,
+      "nativeGenericFixtureContainsNonemptyAnnouncement": false,
+      "announcementCryptoVerifierUnitTestsObserved": true,
+      "nativeNonemptyAnnouncementPersistenceAndTamperObserved": true,
+      "endToEndBackupRestoreOfNonemptyAnnouncementQualified": false,
+      "note": "Generic native backup/restore qualifies its schema32 synthetic fixture. It does not seed a nonempty announcement. Announcement crypto verification is unit-tested; native persistence and tamper refusal are separate announcement tests."
+    },
+    "activationDelta": {
+      "baseVersion": "1.4.1",
+      "baseSource": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+      "files": [
+        "package.json",
+        "package-lock.json",
+        "server/index.mjs"
+      ],
+      "delta": "package versions 1.5.0 and normal-runtime announcements enabled",
+      "exactThreeFilesReportedByRoot": true,
+      "exactThreeFilesCompared": true
+    },
+    "compatibleRollbackPublication": {
+      "version": "1.4.1",
+      "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+      "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
+      "tag": "v1.4.1",
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.4.1",
+      "proof": "jm141-verification.json",
+      "hostingQualified": false
+    }
   },
-  "publication": null,
+  "publication": {
+    "status": "published_verified",
+    "tag": "v1.5.0",
+    "commit": "abca467c45c9385371a9095ab359e78c99140370",
+    "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+    "releaseId": 419695814,
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.0",
+    "ciRun": 39621183160,
+    "workflowCommit": "2e754f8aa60e74689669eab91cd48f0e73dba0e2",
+    "run": 39622193999,
+    "job": 119298305472,
+    "publishedAt": "2026-10-21T15:02:51Z",
+    "verified": true,
+    "workflowStatus": "completed",
+    "workflowConclusion": "success",
+    "workflowUpdatedAt": "2026-10-21T15:05:37Z"
+  },
   "hosting": {
     "activeVersion": "1.4.0",
     "activeSource": "56d4595059df9292fc54ba4d4e948eeb793bae96",
@@ -42,11 +861,137 @@
     "directPrivateToolObservation": false
   },
   "notAttested": [
-    "own_native_mariadb_and_chrome_ci",
-    "release141_publication",
-    "release150_publication",
     "hosted_preparation_migration_and_activation",
     "physical_phone_and_real_host_capacity",
-    "current_pc_or_backup_delivery"
-  ]
+    "current_pc_or_backup_delivery",
+    "native_backup_restore_with_nonempty_announcement"
+  ],
+  "branch": "feat/announcements-150",
+  "pullRequest": {
+    "number": 120,
+    "url": "https://github.com/fredbuhr/jessiemessage/pull/120",
+    "head": "77f6037446a6f533a0864637f8b33dc4fbefe6e7",
+    "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+    "merged": true,
+    "mergeCommit": "abca467c45c9385371a9095ab359e78c99140370",
+    "mergedAt": "2026-10-21T14:55:44Z"
+  },
+  "operatorDelivery": {
+    "status": "helpers_published_synthetically_qualified_hosted_staging_pending_upgrade_disabled",
+    "helperCommit": "40027be898f1a82cd9c2aed7c4a313096d8db4d4",
+    "helperTree": "c999e78badfea23ab4e4ff9df8266f2d66bb1fb7",
+    "publishedBytesVerifiedAgainstLocal": true,
+    "sourcePins": [
+      {
+        "version": "1.4.1",
+        "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04"
+      },
+      {
+        "version": "1.5.0",
+        "source": "abca467c45c9385371a9095ab359e78c99140370",
+        "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4"
+      }
+    ],
+    "qualification": {
+      "checkedAt": "2026-10-21T15:06:14.040057+00:00",
+      "tests": [
+        {
+          "test": "test-release150-staging-synthetic.py",
+          "passed": 27,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "test": "test-release150-migration-synthetic.py",
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0
+        }
+      ],
+      "passed": 59,
+      "failed": 0,
+      "skipped": 0,
+      "checks": {
+        "bashSyntax": 3,
+        "embeddedPythonSyntax": 2,
+        "embeddedJavaScriptSyntax": 2,
+        "testPythonSyntax": 2,
+        "gitDiffCheck": true,
+        "newOpsWhitespaceCheck": 5,
+        "onlyExpectedOpsFiles": true
+      },
+      "method": "isolated_synthetic_fixtures_no_full_hosted_helper_sql_or_runtime_execution",
+      "independentStaticReview": "no_blocking_findings",
+      "additionalSyntheticTtySignals": {
+        "SIGINT": "echo_restored",
+        "SIGTERM": "echo_restored"
+      }
+    },
+    "staging": {
+      "path": "ops/prepare-release150.sh",
+      "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh",
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh",
+      "sha256": "ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021",
+      "expectedReceipt": "staged_awaiting_schema32",
+      "executionReported": false,
+      "sqlExecuted": false,
+      "prechecksExecuted": false,
+      "runtimeStarted": false,
+      "managerChanged": false,
+      "checkpointChanged": false
+    },
+    "migrationStatus": {
+      "path": "ops/status-release150-migration.sh",
+      "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh",
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh",
+      "sha256": "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0",
+      "readOnly": true,
+      "executionReported": false
+    },
+    "upgrade": {
+      "path": "ops/upgrade-release150.sh",
+      "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/upgrade-release150.sh",
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/upgrade-release150.sh",
+      "sha256": "ea34ff037ad3be287c4f2cd4354c521dd3b93b33326ef787f094f4274c9a0402",
+      "executable": false,
+      "missingHostedLauncherPins": [
+        "QUALIFICATION_REQUIRED_START141_SHA256",
+        "QUALIFICATION_REQUIRED_CHECK141_SHA256",
+        "QUALIFICATION_REQUIRED_START150_SHA256",
+        "QUALIFICATION_REQUIRED_CHECK150_SHA256"
+      ],
+      "serviceStopAttestationRequired": true,
+      "executionReported": false
+    },
+    "qualificationFiles": [
+      {
+        "path": "ops/prepare-release150.sh",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh",
+        "sha256": "ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021"
+      },
+      {
+        "path": "ops/status-release150-migration.sh",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh",
+        "sha256": "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0"
+      },
+      {
+        "path": "ops/upgrade-release150.sh",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/upgrade-release150.sh",
+        "sha256": "ea34ff037ad3be287c4f2cd4354c521dd3b93b33326ef787f094f4274c9a0402"
+      },
+      {
+        "path": "ops/test-release150-staging-synthetic.py",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/test-release150-staging-synthetic.py",
+        "sha256": "fd280dc4bab9ef969c596a6fe83e45bd559ab3c774e6f9f503f7d6bc60e408d4"
+      },
+      {
+        "path": "ops/test-release150-migration-synthetic.py",
+        "url": "https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/test-release150-migration-synthetic.py",
+        "sha256": "d4908a7ea869a6cf0e66461991836ca73e589d72ddde3d25956a0e7d3496eef6"
+      }
+    ],
+    "hostedReceipt": null,
+    "directPrivateServerObservation": false
+  }
 }

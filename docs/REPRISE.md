@@ -2,9 +2,49 @@
 
 **21 octobre 2026 Europe/Paris — production `1.4.0`, préparation et identité active confirmées par les reçus utilisateur.** Le relevé admin affiche `56d4595059df9292fc54ba4d4e948eeb793bae96` / `v24.22.0` / `21/10/2026 15:31:41`. Le repli compatible **1.3.4** est préparé et précontrôlé sur l’hébergement, sans démarrage. **L’enregistrement final est confirmé par `release140_metadata_recorded` : la livraison 1.4.0 est close.** Le checkpoint privé est aligné sur la 1.4.0 et son repli compatible 1.3.4 ; l’ancien état 1.3.3 et tous les autres blocs restent préservés. Le schéma 31 est inchangé. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
-## Travail courant — Évolution 4, annonces en cours d’implémentation
+## Travail courant — Évolution 4, annonces publiées
 
-Le lot [Annonces 1.5.0](announcements-150.md) ajoute un bandeau compact, une période de début/fin et l’envoi facultatif d’un vrai message privé via la file existante. Une table additive 0032 est prévue ; le futur repli [1.4.1 compatible](announcements-compat-141.md) reconnaîtra ce schéma avec la création d’annonces désactivée dans son runtime normal. Les références ne sont encore ni qualifiées par leurs CI propres, ni publiées, préparées ou activées. **La production et le checkpoint restent la 1.4.0 close sur le schéma 31, avec repli 1.3.4** ; aucun travail hébergé n’est à refaire pour cette livraison. La revue statique finale, la compilation de 605 sources et la suite locale finale (3 083 réussis, zéro échec, 217 ignorés sur 3 300) sont acquises sous Node 24.19.0. Les [preuves 1.4.1](verification-proofs/jm141-verification.json) conservent la première passe échouée et ses corrections de fixtures ; MariaDB et Chrome, ainsi que les CI propres des deux références, restent à qualifier. Le plan ne rouvre ni PC, ni audit général, ni évolutions suivantes.
+Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Ils ajoutent un bandeau compact, une période de début/fin et l’envoi facultatif d’un vrai message privé via la file existante, avec la migration additive 0032. **Ils ne sont pas encore préparés ou déployés sur Infomaniak. La production et le checkpoint restent la 1.4.0 close, Node 24.22.0, schéma 31 et repli 1.3.4.**
+
+| Référence publiée | Source et arbre exacts | Qualification propre et publication |
+| --- | --- | --- |
+| [1.4.1 — compatibilité](announcements-compat-141.md) | `bf022233fcb76ee4db89e0c33c64b9498adb9d50` ; `a2f29930fe8ead853db6b6e8b76b613891ae4a04` | [PR 119](https://github.com/fredbuhr/jessiemessage/pull/119), [CI PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39619128778), [CI main](https://github.com/fredbuhr/jessiemessage/actions/runs/39620191652), [v1.4.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.4.1), [publication](https://github.com/fredbuhr/jessiemessage/actions/runs/39621225009). |
+| [1.5.0 — annonces](announcements-150.md) | `abca467c45c9385371a9095ab359e78c99140370` ; `3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4` | [PR 120](https://github.com/fredbuhr/jessiemessage/pull/120), [CI PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39619254595), [CI main](https://github.com/fredbuhr/jessiemessage/actions/runs/39621183160), [v1.5.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.0), [publication](https://github.com/fredbuhr/jessiemessage/actions/runs/39622193999). |
+
+Chacune des quatre CI finales réussit **5/5 à sa tentative 1**, avec ses cinq logs propres relus et Node **24.22.0** observé : général **3 304 tests, 3 266 réussis, zéro échec, 38 ignorés** ; syntaxe/build **605 sources** ; MariaDB **10.11 et 11.4, 496/496 chacune** ; Chrome **183/183** et HTTPS/MariaDB **3/3**, sans omission native. Les annonces couvrent neuf sous-cas SQL et cinq tests Chrome dans dix contextes. Les 38 omissions générales restent des omissions, distinctes des qualifications natives. Les [preuves 1.4.1](verification-proofs/jm141-verification.json) et [1.5.0](verification-proofs/jm150-verification.json) conservent les résultats propres de chaque exécution. La CI PR 1.5.0 avait testé le merge synthétique `3943f1688b035eeee8f1150b46f1ea7fe2784a5d` vers la branche de compatibilité, d’arbre identique au head ; le retarget ultérieur vers main n’est pas une nouvelle CI. La CI main propre vérifie bien le commit fusionné `abca467c…`.
+
+La première passe locale échouée et la [première CI PR 1.4.1 échouée](https://github.com/fredbuhr/jessiemessage/actions/runs/39617941943) restent dans les preuves. Cette CI avait les neuf sous-cas natifs d’annonces réussis, mais deux jobs SQL échoués sur les listes de nettoyage des fixtures et un clic Chrome sur un menu déjà fermé. Les quatre fixtures concernées ont été corrigées sans retirer les gardes produit ; aucun échec historique n’est converti en réussite.
+
+Les tags et releases ont été relus sur leurs commits exacts : **v1.4.1**, release `419688886`, publiée le `2026-10-21T14:56:19Z` depuis le workflow opérateur `1d6458cf852a457e1723ed8f92d9689a17612af0` ; **v1.5.0**, release `419695814`, publiée le `2026-10-21T15:02:51Z` depuis `2e754f8aa60e74689669eab91cd48f0e73dba0e2`. Ces commits opérateur ne sont pas les sources applicatives. Le delta applicatif entre 1.4.1 et 1.5.0 porte exactement sur `package.json`, `package-lock.json` et `server/index.mjs` : version et activation des annonces dans le runtime normal. Les documents et helpers opérateur sont livrés séparément après les releases.
+
+La suite native de sauvegarde/restauration valide son fixture générique au schéma 32, sans annonce non vide ; elle ne démontre pas une restauration complète d’annonce chiffrée non vide. Le vérificateur cryptographique est testé unitairement et la persistance/refus d’altération est vérifiée séparément en SQL natif. Aucun téléphone physique, débit réel du mutualisé ou fonctionnement courant du PC n’est attesté par ces CI synthétiques.
+
+### Préparation opérateur — seule étape actuelle
+
+Les cinq helpers/tests du commit opérateur **`40027be898f1a82cd9c2aed7c4a313096d8db4d4`** sont publiés et leurs octets relus à l’identique. Le [helper de préparation](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh) épingle les deux sources/arborescences qualifiées ci-dessus ; SHA-256 **`ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021`**. Ses [tests de staging](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/test-release150-staging-synthetic.py) réussissent **27/27** et les [tests de statut/migration](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/test-release150-migration-synthetic.py) **32/32**, soit **59/59 sans échec ni omission**. Syntaxes et revue indépendante sont réussies. Ces qualifications synthétiques n’ont exécuté aucun helper hébergé complet, aucune connexion SQL ni démarrage de runtime. Elles ne constituent pas un reçu Infomaniak.
+
+Ouvrir la [console SSH Node.js Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis copier ce bloc complet **une seule fois**. Il prépare les deux versions sans arrêter le service 1.4.0, sans SQL et sans précontrôle :
+
+```sh
+python3 - <<'PY'
+import hashlib, subprocess, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+subprocess.run(
+    ["bash", "-s", "--", "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+     "abca467c45c9385371a9095ab359e78c99140370"],
+    input=code, check=True
+)
+PY
+```
+
+Transmettre ensuite le JSON complet attendu **`staged_awaiting_schema32`**, notamment les quatre empreintes `launcherSha256`/`checkLauncherSha256` des deux références. Il doit distinguer la préparation d’un précontrôle : `started:false`, `migrated:false`, `precheckPassed:false`, `noRestart:true`, `managerChanged:false`, `runtimeStarted:false`, `checkpointChanged:false` et `rollback141HostedQualified:false`. Garder le service 1.4.0 et ses réglages Run/Build actuels pendant cette étape. Un résultat interrompu ou partiel doit être inspecté avant toute répétition ; aucun journal ne doit être tronqué.
+
+Le [diagnostic SQL en lecture seule](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh) est publié séparément, SHA-256 `117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0`, mais n’a pas été exécuté sur l’hébergement. Le [helper de migration](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/upgrade-release150.sh), SHA-256 `ea34ff037ad3be287c4f2cd4354c521dd3b93b33326ef787f094f4274c9a0402`, est **explicitement non exécutable** : ses quatre pins `START141_SHA256`, `CHECK141_SHA256`, `START150_SHA256`, `CHECK150_SHA256` restent `QUALIFICATION_REQUIRED` jusqu’au reçu de préparation utilisateur. Aucune commande de migration n’est donnée à cette étape.
+
+Après les étapes ultérieures de statut SQL et d’arrêt attesté, le schéma 32 puis les précontrôles 1.4.1/1.5.0 devront être confirmés avant activation. Le futur repli **1.4.1** reste à précontrôler sur ce schéma ; la **1.4.0 ne doit pas être redémarrée après cette migration**. Aucun staging, statut SQL, passage au schéma 32, précontrôle hébergé ou changement Run/Build n’est encore attesté. La production et le checkpoint restent la 1.4.0 close ; aucun travail PC, audit général ou évolution suivante n’est rouvert.
 
 ## Livraison 1.4.0 — Évolution 3, diffusions à grande échelle closes
 
