@@ -219,6 +219,7 @@ async function startFixtureServer() {
           assert.equal(typeof (feature === "media" ? parsed.caption : parsed.body), "string");
           if (feature === "media") assert.equal(parsed.mediaId, id(300));
           fixture.messageRequests.push({ feature, role, ...parsed });
+          if (fixture.failNextSend) { fixture.failNextSend = false; sendJson(503, { error: "temporarily_unavailable" }); return; }
           fixture.latest += 1; fixture.events.push(fixture.latest);
           const sent = { id: id(200 + fixture.latest), sequence: String(fixture.latest), sender: "me", body: feature === "media" ? parsed.caption : parsed.body,
             createdAt: Date.now(), deletedAt: null, clientMessageId: parsed.clientMessageId, ...(feature === "media" ? { media: media(role) } : {}) };
@@ -285,6 +286,12 @@ async function openComposerTools(page) {
 async function clickComposerAction(page, selector) {
   await openComposerTools(page); await page.click(selector);
 }
+async function openMessageDetails(page, sequence) {
+  const selector = `#messages [data-sequence="${sequence}"] .message-details-toggle`;
+  if (await page.execute("return document.querySelector(arguments[0]).getAttribute('aria-expanded')==='true'", selector)) return;
+  await tabUntil(page, selector); await page.key("\uE007");
+  await waitUntil(() => page.execute("return document.querySelector(arguments[0]).getAttribute('aria-expanded')==='true'", selector), "message details opened through the native keyboard control");
+}
 async function loaded(page, path) {
   await page.navigate(path);
   await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden"), "private workspace bootstrap");
@@ -307,6 +314,7 @@ test("Chrome: only Jessie sees a read receipt after a metadata-only poll, with s
       await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
       if (role === "admin") await page.click(".contact");
       await loadedPhoto(page);
+      await openMessageDetails(page, "2");
       await tabUntil(page, '#messages [data-sequence="2"] .delete-message');
       await page.execute(`window.__receiptProbe = { article: document.querySelector('#messages [data-sequence="2"]'),
         remove: document.activeElement, receipt: document.querySelector('#messages [data-sequence="2"] .message-meta span') };`);
@@ -320,9 +328,84 @@ test("Chrome: only Jessie sees a read receipt after a metadata-only poll, with s
       assert.equal(await page.execute(`const p = window.__receiptProbe; return document.querySelector('#messages [data-sequence="2"]') === p.article
         && document.activeElement === p.remove && p.article.querySelector('.message-meta span') === p.receipt`), true);
       await toggleChatLanguage(page);
+      await openMessageDetails(page, "2");
       assert.equal(await page.execute("return window.__receiptProbe.receipt.textContent"), role === "admin" ? "Read" : "Sent");
       assert.equal(await page.execute("return document.querySelector('#messages [data-sequence=\"2\"]') === window.__receiptProbe.article"), true);
       await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome mobile: compact messages reveal one accessible details area at a time without intercepting photos or native links", { timeout: 180000 }, async () => {
+  for (const width of [320, 360, 390]) for (const role of ["client", "admin"]) for (const language of ["fr", "en"]) {
+    resetFixture(); fixture.peerReadSequence = "2";
+    const page = await browser(width, 640), context = `${role} ${language} ${width}px`;
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await loadedPhoto(page);
+      if (language === "en") await toggleChatLanguage(page);
+      const resting = await page.execute(`const row=document.querySelector('#messages [data-sequence="2"]'), bubble=row.querySelector('.bubble');
+        return {visibleDetails:[...document.querySelectorAll('#messages .message-meta')].filter(node=>node.getClientRects().length>0).length,
+          selected:document.querySelectorAll('#messages .is-selected').length, gap:parseFloat(getComputedStyle(document.getElementById('messages')).rowGap),
+          bubbleHeight:bubble.getBoundingClientRect().height, placeholder:document.getElementById('message-body').placeholder};`);
+      assert.equal(resting.visibleDetails, 0, `${context}: dates, receipts and deletion reserve no permanent row`);
+      assert.equal(resting.selected, 0); assert.ok(resting.gap<=10, `${context}: compact message gap (${resting.gap}px)`);
+      assert.ok(resting.bubbleHeight<=48, `${context}: one-line text bubble stays compact (${resting.bubbleHeight}px)`);
+      assert.equal(resting.placeholder, role === "client" ? language === "fr" ? "Écris-moi…" : "Write to me…" : language === "fr" ? "Écris ton message…" : "Write your message…");
+
+      await openMessageDetails(page, "2");
+      const details = await page.execute(`const row=document.querySelector('#messages [data-sequence="2"]'),meta=row.querySelector('.message-meta'),toggle=row.querySelector('.message-details-toggle'),r=toggle.getBoundingClientRect();
+        return {selected:document.querySelectorAll('#messages .is-selected').length,visible:!meta.hidden,controls:toggle.getAttribute('aria-controls')===meta.id,
+          label:toggle.getAttribute('aria-label'),role:row.getAttribute('role'),width:r.width,height:r.height,below:meta.getBoundingClientRect().top>=row.querySelector('.bubble').getBoundingClientRect().bottom-1,
+          receipt:meta.querySelector('span').textContent,deleteVisible:row.querySelector('.delete-message').getClientRects().length>0};`);
+      assert.equal(details.selected, 1); assert.equal(details.visible && details.controls && details.below && details.deleteVisible, true, context);
+      assert.equal(details.role, "listitem"); assert.match(details.label, language === "fr" ? /^Détails du message/ : /^Details of message/);
+      assert.ok(details.width>=44 && details.height>=44, `${context}: focused details control is touch-sized`);
+      assert.equal(details.receipt, role === "admin" ? language === "fr" ? "Lu" : "Read" : language === "fr" ? "Envoyé" : "Sent", `${context}: only Jessie may see a read receipt`);
+      await page.click('#messages [data-sequence="2"] .bubble');
+      assert.equal(await page.execute("return document.querySelectorAll('#messages .is-selected').length"), 0, "another tap on the same message closes its details");
+      await openMessageDetails(page, "2"); await page.key("\uE00C");
+      assert.equal(await page.execute("return document.querySelectorAll('#messages .is-selected').length===0 && document.activeElement.matches('#messages [data-sequence=\"2\"] .message-details-toggle')"), true, `${context}: Escape restores the details button`);
+
+      await openMessageDetails(page, "2");
+      await page.click('#messages [data-sequence="3"] .photo-caption');
+      assert.equal(await page.execute("return document.querySelectorAll('#messages .is-selected').length===1 && document.querySelector('#messages [data-sequence=\"3\"]').classList.contains('is-selected') && document.querySelector('#messages [data-sequence=\"2\"] .message-meta').hidden"), true, `${context}: selection is unique`);
+      assert.equal(await page.execute("return document.querySelector('#messages [data-sequence=\"3\"] .delete-message')===null"), true, `${context}: a peer message has no delete permission`);
+      await page.click("#message-body");
+      assert.equal(await page.execute("return document.querySelectorAll('#messages .is-selected').length"), 0, `${context}: an outside click closes details`);
+      await page.click('#messages [data-sequence="3"] .photo-open');
+      await waitUntil(() => page.execute("return document.getElementById('lightbox').open"), "the photo keeps its own enlarge action");
+      assert.equal(await page.execute("return document.querySelectorAll('#messages .is-selected').length"), 0);
+      assert.equal(await page.execute("return document.getElementById('confirm-delete').open"), false); await page.key("\uE00C");
+
+      // Exercise the interactive-descendant guard with a native anchor. This
+      // fixture does not claim that plain message text is automatically linked.
+      await page.execute(`const link=document.createElement('a');link.id='synthetic-message-link';link.href='#synthetic-link';link.textContent='Synthetic link';document.querySelector('#messages [data-sequence="2"] .bubble').append(link);`);
+      await page.click("#synthetic-message-link");
+      assert.equal(await page.execute("return location.hash"), "#synthetic-link", `${context}: the native link keeps its navigation action`);
+      assert.equal(await page.execute("return document.querySelectorAll('#messages .is-selected').length===0 && !document.getElementById('confirm-delete').open && document.getElementById('chat-menu').hidden"), true, `${context}: a native link never opens details, deletion or account options`);
+      assert.equal(fixture.deleteRequests, 0); assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome: message details never hide an uncertain send, its error or the explicit retry action", { timeout: 60000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); fixture.failNextSend = true; const page = await browser(360, 640), draft = "Synthetic retry draft";
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await page.type("#message-body", draft); await page.click("#send");
+      await waitUntil(() => page.execute("return !document.getElementById('pending-controls').hidden && !document.getElementById('retry-send').disabled && document.getElementById('chat-status').classList.contains('is-error')"), "uncertain send keeps its error and retry outside message details");
+      const originalKey = fixture.messageRequests[0].clientMessageId;
+      await openMessageDetails(page, "2"); await page.key("\uE00C");
+      assert.equal(await page.execute("return document.getElementById('message-body').value===arguments[0] && !document.getElementById('pending-controls').hidden && document.getElementById('retry-send').getClientRects().length>0 && document.getElementById('chat-status').textContent.length>0", draft), true);
+      assert.equal(fixture.messageRequests.length, 1); assert.equal(fixture.deleteRequests, 0);
+      await page.click("#retry-send");
+      await waitUntil(async () => fixture.sent.length === 1 && await page.execute("return document.getElementById('pending-controls').hidden && document.getElementById('message-body').value===''") , "explicit retry confirms the original send");
+      assert.equal(fixture.messageRequests.length, 2); assert.equal(fixture.messageRequests[1].clientMessageId, originalKey);
+      assert.equal(fixture.sent.length, 1); await noJavascriptErrors(page);
     } finally { await page.close(); }
   }
 });
@@ -714,6 +797,7 @@ test("Chrome mobile: deleting a message has a keyboard-accessible confirmation w
   resetFixture(); const page = await browser(390);
   try {
     await loaded(page, "/messages");
+    await openMessageDetails(page, "2");
     await tabUntil(page, "#messages .delete-message");
     await page.execute("window.__deleteOpener = document.activeElement"); await page.key("\uE007");
     await waitUntil(() => page.execute("return document.getElementById('confirm-delete').matches(':modal')"), "native delete confirmation");

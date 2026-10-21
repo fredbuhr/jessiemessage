@@ -20,6 +20,13 @@ const session = (value = 1, csrf = "A".repeat(43), role = "client") => ({ user: 
 const response = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
 const pause = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
 const flush = async () => { for (let index = 0; index < 12; index++) await new Promise((resolve) => setImmediate(resolve)); };
+async function revealMessageDetails(article) {
+  if (!article.querySelector(".message-meta").hidden) return;
+  const toggle = article.querySelector(".message-details-toggle");
+  for (const handler of toggle.events.get("click")) handler({ currentTarget: toggle, target: toggle });
+  await flush();
+}
+
 class Element {
   constructor(tag = "div", registry = null) {
     this.tagName = tag; this.registry = registry; this.children = []; this.parentElement = null; this._connected = false; this.events = new Map();
@@ -315,13 +322,27 @@ test("deleting a focused message selects its tombstone, while another active con
     f = liveHarness({ intercept: (path) => path.endsWith("/delete") ? gate.promise : path.endsWith("/messages?limit=50") ? response(200, {
       conversation: f.conversation(), messages: [message(1, "me")], eventCursor: "1", hasMoreBefore: false,
     }) : undefined }); await flush();
-    const button = f.element("messages").children[0].querySelector(".delete-message"); button.focus();
+    const button = f.element("messages").children[0].querySelector(".delete-message"); await revealMessageDetails(button.parentElement.parentElement); button.focus();
     for (const handler of button.events.get("click")) handler({}); await flush(); await f.click("accept-delete"); if (move) f.element("message-body").focus();
     gate.resolve(response(200, { message: message(1, "me", { body: null, deletedAt: now }) })); await flush();
     if (move) assert.equal(f.document.activeElement, f.element("message-body"));
     else { assert.equal(f.document.activeElement, f.element("messages").children[0]); assert.equal(f.document.activeElement.getAttribute("tabindex"), "-1"); }
     assert.equal(announcement(f).textContent, "");
   }
+});
+
+test("native links and text selection inside a message do not toggle its details or begin a deletion", async () => {
+  const f = liveHarness(); await flush();
+  const row = f.element("messages").children[0], bubble = row.querySelector(".bubble"), meta = row.querySelector(".message-meta");
+  const link = f.document.createElement("a"); link.href = "https://example.invalid/synthetic"; bubble.append(link);
+  const click = async target => { for (const handler of bubble.events.get("click")) handler({ target, defaultPrevented: false, detail: 1 }); await flush(); };
+  await click(link); assert.equal(meta.hidden, true); assert.equal(row.classList.contains("is-selected"), false);
+  f.run("globalThis.getSelection = () => ({isCollapsed:false,anchorNode:document.getElementById('messages').children[0].querySelector('.bubble'),focusNode:null})");
+  await click(bubble); assert.equal(meta.hidden, true, "copying selected text leaves the details closed");
+  f.run("globalThis.getSelection = () => ({isCollapsed:true})");
+  await click(bubble); assert.equal(meta.hidden, false); assert.equal(row.classList.contains("is-selected"), true);
+  await click(bubble); assert.equal(meta.hidden, true, "a second ordinary click closes the same details");
+  assert.equal(f.calls.filter(call => call.path.endsWith("/delete")).length, 0);
 });
 
 test("history and new-message pagination controls hand focus to history only when their focused control disappears", async () => {

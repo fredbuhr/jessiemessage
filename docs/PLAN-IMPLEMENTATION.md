@@ -4,15 +4,21 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 
 Les livraisons 1.0.0, 1.1.0, 1.2.0 et 1.3.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
+## Correctif en cours — 1.3.2
+
+[Voix de Jessie côté client et détails des messages](client-voice-message-details-132.md) : la nouvelle demande autorise la reformulation FR/EN à la première personne, l’allègement du passage sur la personne responsable dans l’aide et des messages compacts dont les dates, métadonnées et actions apparaissent à la sélection. Développement en cours, sans SQL, API serveur ni nouvelle dépendance. Le code, les vérifications, la CI, la fusion et la livraison restent à établir dans les [preuves 1.3.2](verification-proofs/jm132-verification.json) ; aucune étape future n’est déclarée acquise.
+
+Ce correctif ne demande aucune nouvelle opération utilisateur sur 1.3.1 pour commencer. Son critère de fin est une présentation FR/EN cohérente, des détails accessibles au toucher et au clavier sans déclencher d’action, les protections de message conservées et la livraison du commit exact vérifiée. La production reste 1.3.1 pendant ce travail.
+
 ## Livraison active 1.3.1 — suivi final en attente
 
-[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : code fusionné, qualifié, publié, précontrôlé et actif en 1.3.1 selon le relevé admin utilisateur. Schéma 31 inchangé, sans migration ni nouvelle dépendance ; repli 1.3.0 préservé. **Seul l’alignement final des métadonnées opérateur attend son reçu ; le lot n’est pas déclaré clos.** Ne rejouer ni préparation, ni Build/Run, ni activation. Suivre uniquement la prochaine action épinglée de [REPRISE](REPRISE.md). Les parcours sur téléphone physique restent distincts des essais Chrome et du relevé d’identité.
+[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : code fusionné, qualifié, publié, précontrôlé et actif en 1.3.1 selon le relevé admin utilisateur. Schéma 31 inchangé, sans migration ni nouvelle dépendance ; repli 1.3.0 préservé. **Seul l’alignement final des métadonnées opérateur attend son reçu ; le lot n’est pas déclaré clos.** Ne rejouer ni préparation, ni Build/Run, ni activation. La trace de cet alignement est conservée dans [REPRISE](REPRISE.md) et ne bloque pas le correctif 1.3.2 demandé depuis. L’utilisateur valide visuellement la présentation mobile 1.3.1 ; cela ne vaut pas attestation explicite du clavier logiciel sur un téléphone physique.
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après la clôture du suivi final 1.3.1. |
+| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après le correctif 1.3.2. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |

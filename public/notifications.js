@@ -2,7 +2,7 @@
 (() => {
   const words = {
     "Notifications": "Notifications",
-    "Un petit signe quand un message arrive, même si Jessie est fermée.": "A little heads-up when a message arrives, even when Jessie is closed.",
+    "Un petit signe quand un message arrive, même si l’application est fermée.": "A little heads-up when a message arrives, even when the app is closed.",
     "Les alertes restent discrètes : aucun nom, texte ou photo du message n’apparaît.": "Alerts stay discreet: no name, message text or photo is shown.",
     "Ces réglages concernent uniquement cet appareil.": "These settings apply only to this device.",
     "Préparation des notifications…": "Preparing notifications…",
@@ -52,7 +52,7 @@
     const controllers = new Set(), base = `/api/notifications/${role}`, sessionPath = role === "admin" ? "/api/auth/session" : "/api/access/session";
     const card = document.createElement("section"); card.className = "notification-card";
     const heading = document.createElement("h2"); ui.text(heading, "Notifications"); card.append(heading);
-    for (const source of ["Un petit signe quand un message arrive, même si Jessie est fermée.", "Les alertes restent discrètes : aucun nom, texte ou photo du message n’apparaît.", "Ces réglages concernent uniquement cet appareil."]) {
+    for (const source of ["Un petit signe quand un message arrive, même si l’application est fermée.", "Les alertes restent discrètes : aucun nom, texte ou photo du message n’apparaît.", "Ces réglages concernent uniquement cet appareil."]) {
       const note = document.createElement("p"); note.className = "notification-note"; ui.text(note, source); card.append(note);
     }
     const status = document.createElement("p"); status.className = "notification-status"; status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite"); card.append(status);

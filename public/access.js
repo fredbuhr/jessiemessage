@@ -80,7 +80,7 @@ function signedOut(message = "") {
   verificationSection.hidden = !verificationToken;
   connected.hidden = true;
   element("resend-section").hidden = false;
-  accessI18n.text(element("access-title"), invitationToken ? "Bienvenue chez Jessie." : "Bienvenue.");
+  accessI18n.text(element("access-title"), invitationToken ? "Bienvenue dans mon espace." : "Bienvenue.");
   loginForm.reset(); clearPrivateAccessSummary();
   notice(message);
   updateRecoveryLink({ allowLoad: true });
@@ -108,9 +108,9 @@ function signedIn(session) {
   accessI18n.rawText(element("client-name"), session.user.pseudonym);
   const access = session.access;
   const stateMessage = access.state === "active" ? "On reprend notre conversation ?"
-    : access.state === "expired" ? "Ton accès est arrivé à son terme. Contacte Jessie pour le renouveler."
+    : access.state === "expired" ? "Ton accès est arrivé à son terme. Écris-moi pour le renouveler."
     : !access.emailVerified ? "Confirme ton e-mail pour continuer."
-    : "Tout est prêt. Jessie doit encore valider ton accès.";
+    : "Tout est prêt. Ton accès attend encore ma validation.";
   accessI18n.text(element("client-access-state"), stateMessage);
   const list = element("client-checks"); accessI18n.forget(list); list.replaceChildren(); list.hidden = true;
   element("client-validity").hidden = access.state !== "active" || access.expiresAt === null;

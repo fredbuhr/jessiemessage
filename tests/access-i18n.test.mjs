@@ -117,7 +117,7 @@ test("access and recovery catalogs cover every declared UI leaf and load before 
     for (const node of document.root.descendants()) for (const [name, source] of node.attributes) if (name.startsWith("data-jm-i18n")) assert.equal(typeof catalog[source], "string", source);
     for (const node of document.querySelectorAll("input")) assert.equal(node.hasAttribute("data-jm-i18n"), false, "credentials are not UI text sources");
   }
-  assert.match(catalog["Cette déclaration ne vérifie pas ta majorité. Ton accès nécessite la vérification de ton e-mail et l’approbation manuelle de Jess."], /does not verify your age/);
+  assert.match(catalog["Cette déclaration ne vérifie pas ta majorité. Ton accès nécessite la vérification de ton e-mail et ma validation manuelle."], /does not verify your age/);
 });
 
 for (const state of ["pending", "expired"]) test(`access ${state} switches live without another HTTP request or translating a UI-like pseudonym`, async () => {
@@ -230,7 +230,7 @@ test("pending access checks are visible, bounded and reveal approval without a m
   let current = user(); current.access.emailVerified = true;
   const f = controller("access", (path) => path === "/api/access/session" ? response(current) : capability());
   try {
-    await flush(); assert.match(f.get("client-access-state").textContent, /Jessie doit encore valider/);
+    await flush(); assert.match(f.get("client-access-state").textContent, /ma validation/);
     const originalStateNode = f.get("client-access-state");
     await f.tick(15000); assert.equal(f.get("client-access-state"), originalStateNode);
     current = user("active"); Object.assign(current.access, { emailVerified: true, approved: true });

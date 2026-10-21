@@ -209,13 +209,19 @@ test("help still clears the URL and preserves static French content without a tr
 test("public help describes the confirmed private-space choices without promising an implemented account erasure", async () => {
   const html = await readFile(new URL("../public/help.html", import.meta.url), "utf8");
   const script = await readFile(new URL("../public/help.js", import.meta.url), "utf8");
-  assert.match(html, /Jessie, en France, est responsable de cet espace privé sur invitation/);
-  assert.match(html, /conserver la conversation jusqu’à la fermeture définitive du compte/);
+  assert.match(html, /Jessie est responsable de cet espace privé sur invitation/);
+  assert.doesNotMatch(html, /Jessie, en France|Jessie et les personnes autorisées à gérer cet espace peuvent lire les échanges/);
+  assert.match(html, /Le service chiffre les messages et les photos sur le serveur/);
+  assert.match(html, /Il ne s’agit pas d’un chiffrement de bout en bout/);
+  assert.match(html, /Je conserve notre conversation jusqu’à la fermeture définitive de ton compte/);
   assert.match(html, /sauf les messages et photos supprimés volontairement/);
   assert.match(html, /Une déconnexion, une expiration ou une suspension de l’accès ne ferme pas définitivement le compte/);
   assert.match(html, /La suppression du compte n’est pas disponible directement dans l’application/);
   assert.match(html, /Ces copies sont traitées séparément/);
   assert.doesNotMatch(html, /Les durées de conservation du compte, des échanges et des sauvegardes ne sont pas encore fixées/);
-  assert.match(script, /Jessie, in France/); assert.match(script, /until the account is permanently closed/);
+  assert.match(script, /Jessie is responsible/); assert.match(script, /until your account is permanently closed/);
+  assert.doesNotMatch(script, /Jessie, in France|Jessie and the people authorised to manage this space can read the exchanges/);
+  assert.match(script, /The service encrypts messages and photos on the server/);
+  assert.match(script, /This is not end-to-end encryption/);
   assert.doesNotMatch(html, /exempt.{0,20}RGPD|GDPR.{0,20}exempt|suppression automatique immédiate/i);
 });

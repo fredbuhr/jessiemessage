@@ -62,8 +62,8 @@ test("reset SMTP message keeps its token in a fragment and uses a distinct stabl
     assert.ok(!captured[0].text.includes(`?reset=${token}`));
     assert.match(captured[0].text, /30 minutes/);
     assert.match(captured[0].text, /une seule fois/);
-    assert.equal(captured[0].subject, "Retrouver ton accès — JessieMessage");
-    assert.match(captured[0].text, /Pour retrouver ton espace JessieMessage/);
+    assert.equal(captured[0].subject, "Retrouver ton accès — Jessie");
+    assert.match(captured[0].text, /Pour retrouver ton accès à mon espace/);
     assert.match(captured[0].text, /Si tu n'as pas demandé ce lien, tu peux ignorer cet e-mail\./);
     assert.match(captured[0].text, /Ton mot de passe reste inchangé tant que tu n'en choisis pas un nouveau\./);
     assert.doesNotMatch(captured[0].text, /\b(?:vous|votre)\b/i);

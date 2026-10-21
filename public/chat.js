@@ -46,6 +46,7 @@ let pendingNotification = globalThis.JessieNotificationLink?.read() ?? null;
 let notificationTask = null;
 let newerBusy = false;
 let menuOpener = null;
+let selectedMessageSequence = null;
 // The live region contains only a cumulative count for this visible selection.
 // No message body, sender name, caption or persistent announcement log is kept.
 let messageAnnouncement = null;
@@ -157,6 +158,31 @@ function focusMessage(sequence) {
   if (article?.classList.contains("deleted")) { article.setAttribute("tabindex", "-1"); if (focusVisible(article)) return; }
   focusVisible(el("message-scroll"));
 }
+function showMessageDetails(row, expanded) {
+  row.article.classList.toggle("is-selected", expanded);
+  row.meta.hidden = !expanded;
+  row.detailsToggle.setAttribute("aria-expanded", String(expanded));
+}
+function clearMessageSelection(restoreFocus = false) {
+  const row = messageRows.get(selectedMessageSequence);
+  selectedMessageSequence = null;
+  if (!row) return;
+  showMessageDetails(row, false);
+  if (restoreFocus) focusVisible(row.detailsToggle);
+}
+function toggleMessageDetails(state, message, row) {
+  if (!visible() || !ready || loggingOut || !belongsTo(currentState(), state.id, state.epoch)
+    || messageRows.get(message.sequence) !== row || !row.article.isConnected) return;
+  const opening = selectedMessageSequence !== message.sequence;
+  const detailsHadFocus = messageRows.get(selectedMessageSequence)?.meta.contains(document.activeElement);
+  clearMessageSelection();
+  if (opening) { selectedMessageSequence = message.sequence; showMessageDetails(row, true); }
+  if (detailsHadFocus) focusVisible(row.detailsToggle);
+}
+function hasSelectedMessageText(article) {
+  const selection = globalThis.getSelection?.();
+  return Boolean(selection && !selection.isCollapsed && (article.contains(selection.anchorNode) || article.contains(selection.focusNode)));
+}
 function currentState() { return selected ? states.get(selected) : null; }
 function visible() { return document.visibilityState === "visible"; }
 function abortRequests(selectionOnly = false) { for (const controller of controllers) { if (selectionOnly && controller.accountScope) continue; controller.abort(); controllers.delete(controller); } }
@@ -198,6 +224,7 @@ function clearImages() {
   for (const image of el("messages").querySelectorAll("img")) image.removeAttribute("src");
 }
 function clearChat() {
+  clearMessageSelection();
   closeChatMenu(); closeComposerTools();
   conversationDownload?.suspend();
   closeQuickReplies();
@@ -646,7 +673,7 @@ function renderImageDraft(state) {
   const draft = state.imageDraft; const pending = state.pending?.kind === "image" ? state.pending : null; const hasImage = Boolean(draft || pending);
   el("image-draft").hidden = !hasImage;
   el("message-body").maxLength = hasImage ? 1000 : 4096; el("message-body").required = !hasImage;
-  ui.attr(el("message-body"), "placeholder", hasImage ? "Ajoute une légende (facultatif)…" : "Écris ton message…");
+  ui.attr(el("message-body"), "placeholder", hasImage ? "Ajoute une légende (facultatif)…" : role === "client" ? "Écris-moi…" : "Écris ton message…");
   ui.text(el("composer-help"), hasImage ? "Photo privée · légende facultative de 1 000 caractères maximum" : "Message privé · 4 096 caractères maximum");
   el("composer-help").classList.toggle("sr-only", !hasImage && el("message-body").value.length < 3896);
   el("cancel-image").disabled = Boolean(state.pending) || sendBusy;
@@ -710,7 +737,7 @@ function mediaErrorText(error) {
   if (error.code === "media_dimensions") return "Cette photo est trop grande. Choisis une version plus petite.";
   if (error.code === "request_too_large") return "Cette photo dépasse 10 Mo. Choisis une version plus légère.";
   if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée. Essaie une autre photo.";
-  if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite. Contacte Jessie.";
+  if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite.";
   if (error.status === 409 && error.code === "media_in_use") return "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
   if (error.status === 415 || error.status === 400 || error.status === 413) return "Photo refusée. Utilise une image JPEG, PNG ou WebP de 10 Mo maximum, avec une légende de 1 000 caractères maximum.";
@@ -943,7 +970,7 @@ function createMessageRow(state, message, contentKey) {
   const own = message.sender === "me"; const fromJessie = role === "admin" ? own : !own;
   const article = document.createElement("article"); article.className = `message ${own ? "own" : ""} ${fromJessie ? "from-jessie" : "from-client"}`; article.dataset.sequence = message.sequence; article.dataset.sender = message.sender; article.setAttribute("role", "listitem");
   const body = document.createElement(message.media && message.deletedAt == null ? "div" : "p"); body.className = "bubble"; article.classList.toggle("deleted", message.deletedAt != null);
-  const row = { article, contentKey, body, time: null, remove: null, photoButton: null, receipt: null, photo: null, mediaVersion: null };
+  const row = { article, contentKey, body, meta: null, detailsToggle: null, time: null, remove: null, photoButton: null, receipt: null, photo: null, mediaVersion: null };
   if (message.media && message.deletedAt == null) {
     body.classList.add("photo-message"); const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; photo.style.aspectRatio = `${message.media.thumbnailWidth}/${message.media.thumbnailHeight}`; ui.attr(photo, "aria-label", "Agrandir la photo de ce message");
     row.photoButton = photo;
@@ -954,7 +981,17 @@ function createMessageRow(state, message, contentKey) {
     body.append(photo); if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; ui.rawText(caption, message.body); body.append(caption); }
   } else if (message.deletedAt != null) ui.text(body, "Message supprimé"); else ui.rawText(body, message.body);
   article.append(body);
-  const meta = document.createElement("div"); meta.className = "message-meta";
+  const meta = document.createElement("div"); meta.className = "message-meta"; meta.id = `message-details-${message.sequence}`; meta.hidden = true; row.meta = meta;
+  const detailsToggle = document.createElement("button"); detailsToggle.type = "button"; detailsToggle.className = "message-details-toggle";
+  ui.rawText(detailsToggle, "⋯"); detailsToggle.setAttribute("aria-expanded", "false"); detailsToggle.setAttribute("aria-controls", meta.id);
+  ui.attr(detailsToggle, "aria-label", "Détails du message du {date}", { date: dateParameter(message.createdAt, true) });
+  detailsToggle.addEventListener("click", () => toggleMessageDetails(state, message, row)); row.detailsToggle = detailsToggle;
+  body.addEventListener("click", event => {
+    if (event.defaultPrevented || event.target.closest("a,button,input,textarea,select,label,video,audio")
+      || hasSelectedMessageText(article)) return;
+    toggleMessageDetails(state, message, row);
+  });
+  article.append(detailsToggle);
   const time = document.createElement("time"); time.dateTime = new Date(message.createdAt).toISOString(); ui.text(time, "{date}", { date: dateParameter(message.createdAt, true) }); row.time = time; meta.append(time);
   if (own && message.deletedAt == null) {
     row.receipt = document.createElement("span"); meta.append(row.receipt);
@@ -972,14 +1009,20 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
   pruneDeletedPhotos(state);
   const messages = orderedMessages(state); const container = el("messages"); const photos = [];
   const retained = new Set(messages.map((message) => message.sequence));
-  for (const [key, row] of messageRows) if (!retained.has(key)) { row.article.remove(); messageRows.delete(key); }
+  for (const [key, row] of messageRows) if (!retained.has(key)) {
+    if (selectedMessageSequence === key) clearMessageSelection();
+    row.article.remove(); messageRows.delete(key);
+  }
   for (const [index, message] of messages.entries()) {
     const contentKey = messageContentKey(message); let row = messageRows.get(message.sequence);
     if (!row || row.contentKey !== contentKey) {
+      if (selectedMessageSequence === message.sequence) clearMessageSelection();
       row?.article.remove();
       row = createMessageRow(state, message, contentKey); messageRows.set(message.sequence, row);
     }
     row.article.classList.toggle("notification-target", state.notificationSequence === message.sequence);
+    showMessageDetails(row, selectedMessageSequence === message.sequence);
+    ui.attr(row.detailsToggle, "aria-label", "Détails du message du {date}", { date: dateParameter(message.createdAt, true) });
     ui.text(row.time, "{date}", { date: dateParameter(message.createdAt, true) });
     if (message.deletedAt != null) ui.text(row.body, "Message supprimé");
     if (row.remove) { ui.text(row.remove, "Supprimer"); ui.attr(row.remove, "aria-label", "Supprimer mon message du {date}", { date: dateParameter(message.createdAt, true) }); }
@@ -1454,6 +1497,11 @@ document.addEventListener("keydown", event => {
   if (event.key !== "Escape" || document.querySelector("dialog[open]")) return;
   if (!el("chat-menu").hidden) { event.preventDefault(); closeChatMenu(true); }
   else if (!el("composer-tools").hidden) { event.preventDefault(); closeComposerTools(true); }
+  else if (selectedMessageSequence !== null) { event.preventDefault(); clearMessageSelection(true); }
+});
+document.addEventListener("click", event => {
+  const row = messageRows.get(selectedMessageSequence);
+  if (row && !row.article.contains(event.target) && !event.target.closest("dialog")) clearMessageSelection(row.meta.contains(document.activeElement));
 });
 document.addEventListener("pointerdown", event => {
   if (!el("chat-menu").hidden && !el("chat-menu").contains(event.target)
@@ -1502,6 +1550,7 @@ globalThis.navigator?.serviceWorker?.addEventListener("message", (event) => {
 });
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
+    clearMessageSelection();
     closeChatMenu(); closeComposerTools();
     closeQuickReplies();
     closeEmojis();

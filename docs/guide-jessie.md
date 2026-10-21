@@ -30,6 +30,8 @@ La version active identifiée dans [REPRISE](REPRISE.md) est **1.3.1**. La conve
 
 **Options** regroupe le compte, le profil, les notifications, la langue, Contact et Aide. Les photos de la conversation et son téléchargement y sont accessibles lorsqu’ils sont disponibles pour ton compte. Sous les messages, `+` propose l’ajout d’une photo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvre les emojis. La saisie et **Envoyer** restent directement accessibles. Choisir une photo, une réponse ou un emoji prépare toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain restent affichées quand nécessaires.
 
+Le retour utilisateur valide visuellement cette présentation mobile ; l’usage du clavier logiciel sur téléphone physique n’est pas explicitement attesté. Le [correctif 1.3.2 en cours](client-voice-message-details-132.md) prépare des textes côté client à la première personne de Jessie et des messages plus compacts, dont les dates, métadonnées et actions s’afficheront à la sélection. Ce comportement n’est pas encore annoncé disponible : les consignes ci-dessous restent celles de la version active.
+
 ## Échanger et partager une photo
 
 - Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne la conversation et vérifie le nom avant d’envoyer.

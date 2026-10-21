@@ -21,6 +21,13 @@ const session = (value = 1, csrf = "A".repeat(43), role = "client") => ({ user: 
 const response = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
 const pause = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
 const flush = async () => { for (let index = 0; index < 12; index++) await new Promise((resolve) => setImmediate(resolve)); };
+async function revealMessageDetails(article) {
+  if (!article.querySelector(".message-meta").hidden) return;
+  const toggle = article.querySelector(".message-details-toggle");
+  for (const handler of toggle.events.get("click")) handler({ currentTarget: toggle, target: toggle });
+  await flush();
+}
+
 class Element {
   constructor(tag = "div", registry = null) {
     this.tagName = tag; this.registry = registry; this.children = []; this.parentElement = null; this._connected = false; this.events = new Map();
@@ -202,7 +209,7 @@ test("live chat switching preserves raw user phrases, drafts, focused controls a
   const receipt = article.querySelector(".message-meta").children[1];
   assert.equal(receipt.textContent, "Sent"); assert.equal(time.textContent, dateText("en"));
   assert.equal(article.querySelector(".bubble").textContent, "Message supprimé");
-  f.element("message-body").value = "Draft: Envoyer"; remove.focus(); const before = f.calls.length;
+  f.element("message-body").value = "Draft: Envoyer"; await revealMessageDetails(article); remove.focus(); const before = f.calls.length;
   for (const language of ["fr", "en", "fr", "en"]) {
     f.language(language);
     assert.equal(messages(f).children.at(-1), article); assert.equal(article.querySelector(".delete-message"), remove);
@@ -227,7 +234,7 @@ test("Jessie's read receipt updates and translates in place after a metadata-onl
   await f.send("A synthetic message from Jessie");
   const article = messages(f).children.at(-1), remove = article.querySelector(".delete-message");
   const receipt = article.querySelector(".message-meta").children[1];
-  assert.equal(receipt.textContent, "Sent"); remove.focus();
+  assert.equal(receipt.textContent, "Sent"); await revealMessageDetails(article); remove.focus();
   f.conversation().peerReadSequence = "2"; await f.advance(3000);
   assert.equal(messages(f).children.at(-1), article); assert.equal(receipt.textContent, "Read");
   f.language("fr"); assert.equal(receipt.textContent, "Lu"); assert.equal(f.document.activeElement, remove);
@@ -409,7 +416,7 @@ test("all controller message and photo error variants retain reactive translated
     ["errorText", { status: 400 }, "Vérifie ton message : 1 à 4 096 caractères, avec du texte."],
     ["errorText", { status: 403 }, "L’envoi n’est pas autorisé pour le moment."],
     ["errorText", {}, "La connexion est interrompue. Ton texte reste ici ; tu peux réessayer."],
-    ["mediaErrorText", { status: 507, code: "storage_limit" }, "Le stockage des photos a atteint sa limite. Contacte Jessie."],
+    ["mediaErrorText", { status: 507, code: "storage_limit" }, "Le stockage des photos a atteint sa limite."],
     ["mediaErrorText", { status: 409, code: "media_in_use" }, "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer."],
     ["mediaErrorText", { status: 404 }, "Cette photo n’est plus disponible."],
     ["mediaErrorText", { status: 415 }, "Photo refusée. Utilise une image JPEG, PNG ou WebP de 10 Mo maximum, avec une légende de 1 000 caractères maximum."],

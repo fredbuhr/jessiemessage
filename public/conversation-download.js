@@ -12,7 +12,7 @@ export function createConversationDownload({ parent, capability, getContext, req
   label.append(photos, node("span", "Inclure les photos partagées"));
   const download = node("button", "Télécharger le ZIP", "button primary"); download.type = "button";
   const status = node("p", null, "media-help"); status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite");
-  dialog.append(head, node("p", "Les messages et les photos partagées avec Jessie.", "media-help"), label, download, status,
+  dialog.append(head, node("p", "Les messages et les photos que nous avons partagés.", "media-help"), label, download, status,
     node("p", "Le fichier se lit sans connexion. Conserve-le dans un endroit privé.", "media-help"));
   parent.append(entry); document.body.append(dialog);
   let cleared = false, epoch = 0, busy = false, controller = null, opened = null;

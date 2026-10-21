@@ -1,0 +1,180 @@
+{
+  "version": "1.3.2",
+  "status": "code_ready_local_checks_passed_awaiting_ci",
+  "branch": "fix/client-voice-message-details-132",
+  "base": "eb5f1fac825422f315f40b8214c3e090852263b6",
+  "source": null,
+  "tree": null,
+  "scope": "first_person_jessie_client_copy_fr_en_and_compact_message_details_on_selection",
+  "authorization": {
+    "method": "new_user_request",
+    "developmentAuthorized": true,
+    "blockedByRelease131MetadataReceipt": false
+  },
+  "requirements": {
+    "clientCopy": {
+      "languages": [
+        "fr",
+        "en"
+      ],
+      "voice": "first_person_jessie",
+      "helpResponsibleRemoveLocationFrance": true,
+      "helpRemoveAuthorizedReadersSentence": true,
+      "accessRightsChanged": false,
+      "exclusiveJessieAccessPromiseAdded": false,
+      "surfaces": [
+        "entry",
+        "index",
+        "access",
+        "help",
+        "download",
+        "client_chat",
+        "two_client_email_subject_text_signature"
+      ],
+      "mailBehaviorChanged": false
+    },
+    "messagePresentation": {
+      "compactAtRest": true,
+      "datesMetadataActionsOnSelection": true,
+      "touchAndKeyboardAccessRequired": true,
+      "selectionMustNotTriggerAction": true,
+      "uncertainSendAndRetryRemainAvailable": true,
+      "privateReadReceiptBoundaryPreserved": true,
+      "selectionCleanupOnConversationOrAccountChangeRequired": true
+    },
+    "serverApiChanged": false,
+    "requiresMigration": false,
+    "dependenciesChanged": false
+  },
+  "local": {
+    "status": "reported_checks_passed_awaiting_ci_browser_qualification",
+    "node": "v24.19.0",
+    "targetedTests": null,
+    "build": "passed_before_final_retention_and_notification_copy",
+    "physicalPhoneKeyboard": "not_observed",
+    "mailTests": {
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 204.890617,
+      "scope": "synthetic_mail_tests_only"
+    },
+    "resetMailTests": {
+      "initialAttempt": {
+        "tests": 9,
+        "passed": 8,
+        "failed": 1,
+        "reason": "assertion_expected_previous_JessieMessage_subject"
+      },
+      "correction": "two_copy_assertions_updated_for_requested_mail_subject",
+      "finalAttempt": {
+        "tests": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "durationMs": 331.718626
+      },
+      "scope": "synthetic_reset_mail_flow"
+    },
+    "realMailSent": false,
+    "syntaxSources": 583,
+    "workbenchBuild": "passed",
+    "lastEditorialSyntaxCheck": "passed",
+    "buildBeforeFinalEditorialParagraphs": true,
+    "editorialTests": {
+      "command": "node --test tests/help-http.test.mjs tests/help-link.test.mjs tests/access-i18n.test.mjs tests/entry-lifecycle.test.mjs tests/notifications-ui.test.mjs",
+      "initialAttempt": {
+        "tests": 57,
+        "passed": 56,
+        "failed": 1,
+        "skipped": 0,
+        "durationMs": 483.231897,
+        "reason": "assertion_expected_preparation_copy_instead_of_not_yet_available"
+      },
+      "correction": "expected_copy_updated_from_preparation_to_not_yet_available",
+      "finalAttempt": {
+        "tests": 57,
+        "passed": 57,
+        "failed": 0,
+        "skipped": 0,
+        "durationMs": 414.379665
+      }
+    },
+    "interactionTests": {
+      "initialTargetedAttempt": {
+        "tests": 103,
+        "passed": 102,
+        "failed": 1,
+        "reason": "storage_limit_copy_assertion_still_expected_Contacte_Jessie",
+        "skipped": 0,
+        "durationMs": 1466.127791,
+        "command": "node --test tests/chat-lifecycle.test.mjs tests/chat-i18n.test.mjs tests/chat-accessibility.test.mjs tests/chat-accessibility-markup.test.mjs",
+        "test": "all controller message and photo error variants retain reactive translated UI sources",
+        "assertion": "tests/chat-i18n.test.mjs:429"
+      },
+      "correction": "storage_limit_copy_assertion_updated_for_requested_neutral_text",
+      "finalTargetedAttempt": {
+        "tests": 151,
+        "passed": 151,
+        "failed": 0,
+        "skipped": 0,
+        "durationMs": 3909.89191,
+        "command": "node --test tests/chat-lifecycle.test.mjs tests/chat-i18n.test.mjs tests/chat-accessibility.test.mjs tests/chat-accessibility-markup.test.mjs tests/profile-ui.test.mjs tests/client-export-ui.test.mjs tests/crm-lifecycle.test.mjs tests/tools-i18n.test.mjs tests/webdriver-diagnostics.test.mjs tests/webdriver-teardown.test.mjs"
+      },
+      "newChromePaths": 2,
+      "newChromeQualification": "awaiting_ci"
+    }
+  },
+  "review": {
+    "status": "completed",
+    "method": "independent_static_diff_review",
+    "scope": [
+      "message_layout_and_selection",
+      "client_copy_fr_en",
+      "two_client_mails"
+    ],
+    "result": "no_blocking_findings",
+    "browserExecutionAttested": false
+  },
+  "ci": {
+    "status": "awaiting_exact_source_ci",
+    "pullRequest": null,
+    "main": null
+  },
+  "publication": {
+    "status": "not_reported",
+    "tag": null,
+    "releaseUrl": null,
+    "verified": false
+  },
+  "hosting": {
+    "activeVersion": "1.3.1",
+    "activeSource": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+    "schemaMigrations": 31,
+    "preparation132Reported": false,
+    "precheck132Passed": false,
+    "activation132Confirmed": false,
+    "metadata132Recorded": false,
+    "release131MetadataReceipt": "not_reported",
+    "release131Closed": false,
+    "preservedActiveRollback": "1.3.0"
+  },
+  "priorMobileUIEvidence": {
+    "version": "1.3.1",
+    "result": "user_reported_ok",
+    "scope": "visual_mobile_chat_presentation",
+    "directAgentObservation": false,
+    "physicalPhoneKeyboard": "not_explicitly_attested"
+  },
+  "notAttested": [
+    "release132_new_chrome_paths",
+    "release132_final_ci",
+    "release132_merge",
+    "release132_tag_or_publication",
+    "release132_hosted_precheck",
+    "release132_activation",
+    "release132_metadata_recording",
+    "physical_phone_keyboard",
+    "current_pc_or_backup_delivery"
+  ]
+}
