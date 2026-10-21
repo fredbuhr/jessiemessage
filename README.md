@@ -14,8 +14,8 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Messagerie mobile, 1.3.1 close et conservée en repli](docs/chat-mobile-131.md) | Barre de conversation unique, menus discrets et espace rendu aux messages ; lot clos et référence conservée. |
 | [Voix client et détails des messages, 1.3.2 publiée](docs/client-voice-message-details-132.md) | Socle qualifié et publié, jamais activé ; remplacé comme candidate par 1.3.3. |
 | [Détails des photos, correctif 1.3.3 actif](docs/photo-message-details-133.md) | Bouton de détails visible au toucher pour les photos, avec les métadonnées masquées au repos. |
-| [Compatibilité des diffusions, 1.3.4 en préparation](docs/broadcast-compat-134.md) | Futur repli capable de lire et traiter le format compact des grandes audiences. |
-| [Diffusions à grande échelle, cible 1.4.0](docs/broadcast-scale-140.md) | Audiences globales ou filtrées, prévisualisation liée à la confirmation et suivi paginé ; travail en cours. |
+| [Compatibilité des diffusions, 1.3.4 publiée](docs/broadcast-compat-134.md) | Code compatible qualifié et publié ; futur repli à précontrôler sur l’hébergement. |
+| [Diffusions à grande échelle, 1.4.0 publiée](docs/broadcast-scale-140.md) | Audiences globales ou filtrées, aperçu confirmé et suivi paginé ; déploiement restant. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
@@ -26,7 +26,7 @@ La [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116) est revue, fusio
 
 Le [correctif mobile 1.3.1](docs/chat-mobile-131.md) est désormais clos : le reçu `release131_metadata_already_recorded` confirme son alignement privé sans réécriture ni redémarrage. Cette référence devient le repli immédiat de 1.3.3 ; les replis antérieurs 1.3.0/1.2.0/1.1.1 restent préservés. Le socle [1.3.2](docs/client-voice-message-details-132.md), fusionné, qualifié et publié sur `19455771…`, n’a pas été activé séparément ; sa publication immuable et ses preuves historiques restent conservées.
 
-**Travail ouvert : Évolution 3 — Diffusions à grande échelle, cible 1.4.0.** Le [plan](docs/PLAN-IMPLEMENTATION.md) prévoit d’abord le snapshot de compatibilité 1.3.4, sans création élargie active dans son runtime normal, puis la cible 1.4.0. Les contrôles locaux du code 1.3.4 sont rapportés dans son [bilan](docs/broadcast-compat-134.md), avec les échecs et limites des tentatives globales ; les CI exactes, sources finales et publications restent à établir. Ce travail n’est pas encore disponible sur le service. Aucun changement SQL ou de dépendance n’est prévu, et aucune action opérateur n’est demandée pendant l’implémentation.
+**Travail courant : Évolution 3 — Diffusions à grande échelle.** Les versions [1.3.4 de compatibilité](docs/broadcast-compat-134.md) et [1.4.0](docs/broadcast-scale-140.md) sont fusionnées, qualifiées par leurs propres CI PR/main **5/5** et publiées sur leurs commits exacts. La création élargie reste désactivée dans le runtime normal de 1.3.4 et activée dans le code de 1.4.0. **Elles ne sont pas encore préparées ni activées sur l’hébergement.** Le helper commun publié, testé **28/28**, est prêt : la [première action SSH](docs/REPRISE.md#première-action-opérateur--préparer-les-deux-versions-en-ssh) prépare les deux références ; son JSON doit être transmis avant changement Run/Build ou redémarrage. Aucun changement SQL ou de dépendance n’est ajouté. Le [plan](docs/PLAN-IMPLEMENTATION.md) conserve seulement les étapes restantes du déploiement.
 
 ## Versions et livraisons
 

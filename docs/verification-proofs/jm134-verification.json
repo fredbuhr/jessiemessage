@@ -1,14 +1,14 @@
 {
   "version": "1.3.4",
-  "status": "implemented_awaiting_exact_native_ci",
+  "status": "code_qualified_published_awaiting_joint_hosted_preparation",
   "branch": "feat/broadcast-compat-134",
   "base": "689656942786e9a2800792506e9fc12787ff4c80",
-  "source": null,
-  "tree": null,
+  "source": "4538148660fbf1487807fb1518747d8f5753cd3b",
+  "tree": "248477f9c63064a57445e5b15023e58fdde8e02c",
   "scope": "read_process_inspect_redact_verify_legacy_and_compact_broadcasts_with_large_creation_disabled",
   "results": {
-    "codeQualified": false,
-    "releasePublished": false,
+    "codeQualified": true,
+    "releasePublished": true,
     "deliveryComplete": false,
     "implementationReported": true
   },
@@ -33,7 +33,7 @@
     }
   },
   "qualification": {
-    "status": "local_targeted_and_build_passed_global_attempts_incomplete_native_ci_pending",
+    "status": "exact_pull_request_and_main_ci_passed_native_results_observed",
     "local": {
       "node": "v24.19.0",
       "targetedTests": {
@@ -135,8 +135,719 @@
       "blockingFindings": false,
       "nativeQualification": false
     },
-    "pullRequestCi": null,
-    "mainCi": null,
+    "pullRequestCi": {
+      "initialAttempt": {
+        "run": 39599710909,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39599710909",
+        "head": "a6ed58cd5543ffa8bb229852d1ff0d0c87b3d603",
+        "tree": "b2cbc016c350fa95d6008346a3243d894520d6cb",
+        "status": "failed",
+        "passedJobs": 2,
+        "failedJobs": 3,
+        "jobs": {
+          "verify": {
+            "total": 3256,
+            "passed": 3218,
+            "failed": 1,
+            "skipped": 37,
+            "durationMs": 100851.695299,
+            "failure": "tools_i18n_fixture_missing_explicit_false_capability_flag"
+          },
+          "chrome": {
+            "total": 178,
+            "passed": 176,
+            "failed": 2,
+            "skipped": 0,
+            "durationMs": 186000.594968,
+            "failures": [
+              "uncertain_ack_fixture_socket_closed_before_headers_allowed_automatic_browser_retry",
+              "native_modal_test_observed_open_false_before_close_event_focus_restoration"
+            ]
+          },
+          "mariaDb1011": {
+            "job": 119220815124,
+            "total": 486,
+            "passed": 486,
+            "failed": 0,
+            "skipped": 0,
+            "durationMs": 205404.069886,
+            "largeAudienceFixture": {
+              "syntheticClients": 2500,
+              "subtestsPassed": 5,
+              "subtestsFailed": 0,
+              "durationMs": 22774.56,
+              "captureDurationMs": 141.3,
+              "drainDurationMs": 21513.1,
+              "compactErasurePassed": true,
+              "measurementScope": "synthetic_ci_with_injected_clock_not_host_throughput"
+            }
+          },
+          "mariaDb114": {
+            "job": 119220815126,
+            "total": 486,
+            "passed": 484,
+            "failed": 2,
+            "skipped": 0,
+            "durationMs": 326501.772244,
+            "largeAudienceFixture": {
+              "syntheticClients": 2500,
+              "firstFourSubtestsPassed": true,
+              "drainDurationMs": 36653.8,
+              "captureDurationMs": 230.8,
+              "failure": "inspection_connection_inactive_beyond_30_second_fixture_socket_timeout_during_worker_pool_drain_then_cleanup_used_same_closed_connection",
+              "correctionStatus": "fixture_reconnections_written_syntax_and_diff_checked_native_rerun_pending",
+              "productionTimeoutChanged": false
+            }
+          },
+          "https": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "skipped": 0,
+            "durationMs": 35011.473467
+          }
+        },
+        "corrections": {
+          "toolsI18n": {
+            "scope": "fixture_only_explicit_largeAudiencesEnabled_false",
+            "targetedPassed": 5,
+            "targetedFailed": 0,
+            "targetedDurationMs": 221.21
+          },
+          "chromeUncertainAck": {
+            "scope": "fixture_only_commit_then_native_incomplete_response_after_headers",
+            "observedInWorkingTree": true,
+            "newCiRequired": true
+          },
+          "chromeModalFocus": {
+            "scope": "test_waits_for_close_and_expected_focus_in_same_condition",
+            "observedInWorkingTree": true,
+            "applicationGuardsChanged": false,
+            "newCiRequired": true
+          },
+          "mariaDbInspection": {
+            "scope": "fixture_reconnect_inspection_after_drain_before_sql_assertions_and_after_worker_pool_stop_before_cleanup",
+            "status": "written_syntax_and_diff_checked_native_rerun_pending",
+            "productionTimeoutChanged": false,
+            "assertionsRelaxed": false,
+            "newCiRequired": true,
+            "sqlReplayed": false,
+            "assertionsReplayed": false
+          },
+          "review": {
+            "scope": "three_unit_and_browser_fixes_and_sql_fixture_reconnections",
+            "status": "parent_review_completed",
+            "productionChanges": false,
+            "nativeRerunReported": false
+          }
+        },
+        "globalQualification": false
+      },
+      "duplicatePushInitialAttempt": {
+        "run": 39599707734,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39599707734",
+        "head": "a6ed58cd5543ffa8bb229852d1ff0d0c87b3d603",
+        "jobs": {
+          "mariaDb1011": {
+            "job": 119220803417,
+            "total": 486,
+            "passed": 484,
+            "failed": 2,
+            "skipped": 0,
+            "durationMs": 316204.353146,
+            "drainDurationMs": 34028,
+            "failure": "same_fixture_inspection_and_cleanup_closed_connection"
+          },
+          "mariaDb114": {
+            "job": 119220803194,
+            "total": 486,
+            "passed": 484,
+            "failed": 2,
+            "skipped": 0,
+            "durationMs": 332836.010297,
+            "drainDurationMs": 37262,
+            "failure": "same_fixture_inspection_and_cleanup_closed_connection"
+          }
+        },
+        "otherJobCountersNotAttested": true,
+        "globalQualification": false
+      },
+      "correctedAttempt": {
+        "run": 39601982154,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39601982154",
+        "head": "706516a78366e019fc67ac38bdbdc8eb29ac01b2",
+        "tree": "248477f9c63064a57445e5b15023e58fdde8e02c",
+        "event": "pull_request",
+        "branch": "feat/broadcast-compat-134",
+        "status": "completed",
+        "conclusion": "success",
+        "attempt": 1,
+        "jobs": [
+          {
+            "id": 119228494493,
+            "name": "MariaDB 10.11",
+            "status": "completed",
+            "conclusion": "success",
+            "tests": 486,
+            "pass": 486,
+            "fail": 0,
+            "skipped": 0,
+            "duration_ms": 333478.10802,
+            "logsRead": true,
+            "node2422Observed": true,
+            "diagnostics": [
+              {
+                "qualification": "broadcast-scale",
+                "operation": "capture",
+                "audienceCount": 2500,
+                "elapsedMs": 254.5
+              },
+              {
+                "qualification": "broadcast-scale",
+                "mariaDbVersion": "10.11.19-MariaDB-ubu2204",
+                "audienceCount": 2500
+              },
+              {
+                "qualification": "broadcast-scale",
+                "candidateRead": "expiredLeases",
+                "plan": [
+                  {
+                    "table": "r",
+                    "type": "range",
+                    "key": "broadcast_recipients_lease",
+                    "rows": 1
+                  },
+                  {
+                    "table": "c",
+                    "type": "eq_ref",
+                    "key": "PRIMARY",
+                    "rows": 1
+                  }
+                ]
+              },
+              {
+                "qualification": "broadcast-scale",
+                "candidateRead": "expiredPending",
+                "plan": [
+                  {
+                    "table": "c",
+                    "type": "range",
+                    "key": "broadcast_campaigns_ready",
+                    "rows": 1
+                  },
+                  {
+                    "table": "r",
+                    "type": "ref",
+                    "key": "PRIMARY",
+                    "rows": 1
+                  }
+                ]
+              },
+              {
+                "qualification": "broadcast-scale",
+                "candidateRead": "pending",
+                "plan": [
+                  {
+                    "table": "c",
+                    "type": "range",
+                    "key": "broadcast_campaigns_ready",
+                    "rows": 1
+                  },
+                  {
+                    "table": "r",
+                    "type": "range",
+                    "key": "broadcast_recipients_ready",
+                    "rows": 2500
+                  }
+                ]
+              },
+              {
+                "qualification": "broadcast-scale",
+                "operation": "drain",
+                "audienceCount": 2500,
+                "elapsedMs": 36956.7
+              }
+            ],
+            "erasureV2Observed": true,
+            "browserScaleCases": []
+          },
+          {
+            "id": 119228494614,
+            "name": "MariaDB 11.4",
+            "status": "completed",
+            "conclusion": "success",
+            "tests": 486,
+            "pass": 486,
+            "fail": 0,
+            "skipped": 0,
+            "duration_ms": 349799.06662,
+            "logsRead": true,
+            "node2422Observed": true,
+            "diagnostics": [
+              {
+                "qualification": "broadcast-scale",
+                "operation": "capture",
+                "audienceCount": 2500,
+                "elapsedMs": 245
+              },
+              {
+                "qualification": "broadcast-scale",
+                "mariaDbVersion": "11.4.13-MariaDB-ubu2404",
+                "audienceCount": 2500
+              },
+              {
+                "qualification": "broadcast-scale",
+                "candidateRead": "expiredLeases",
+                "plan": [
+                  {
+                    "table": "r",
+                    "type": "range",
+                    "key": "broadcast_recipients_lease",
+                    "rows": 1
+                  },
+                  {
+                    "table": "c",
+                    "type": "eq_ref",
+                    "key": "PRIMARY",
+                    "rows": 1
+                  }
+                ]
+              },
+              {
+                "qualification": "broadcast-scale",
+                "candidateRead": "expiredPending",
+                "plan": [
+                  {
+                    "table": "c",
+                    "type": "range",
+                    "key": "broadcast_campaigns_ready",
+                    "rows": 1
+                  },
+                  {
+                    "table": "r",
+                    "type": "ref",
+                    "key": "PRIMARY",
+                    "rows": 1
+                  }
+                ]
+              },
+              {
+                "qualification": "broadcast-scale",
+                "candidateRead": "pending",
+                "plan": [
+                  {
+                    "table": "c",
+                    "type": "range",
+                    "key": "broadcast_campaigns_ready",
+                    "rows": 1
+                  },
+                  {
+                    "table": "r",
+                    "type": "range",
+                    "key": "broadcast_recipients_ready",
+                    "rows": 2500
+                  }
+                ]
+              },
+              {
+                "qualification": "broadcast-scale",
+                "operation": "drain",
+                "audienceCount": 2500,
+                "elapsedMs": 40052.4
+              }
+            ],
+            "erasureV2Observed": true,
+            "browserScaleCases": []
+          },
+          {
+            "id": 119228494681,
+            "name": "Chrome keyboard and chat lifecycle",
+            "status": "completed",
+            "conclusion": "success",
+            "tests": 178,
+            "pass": 178,
+            "fail": 0,
+            "skipped": 0,
+            "duration_ms": 197837.935179,
+            "logsRead": true,
+            "node2422Observed": true,
+            "diagnostics": [],
+            "erasureV2Observed": false,
+            "browserScaleCases": [
+              "✔ Chrome mobile FR/EN: all 2,500 and filtered 175 are explicitly reviewed with bounded DOM and paginated details (15567.953044ms)",
+              "✔ Chrome: manual selection exceeds 100 across contact pages while contacts and selected DOM stay at 50 (3124.090576ms)",
+              "✔ Chrome: lost confirmation freezes its exact audience, retry uses one ID, and changed account purges private data (2045.963077ms)",
+              "✔ Chrome: compatibility capability hides global creation while existing 2,500-recipient history stays paginated (1728.541136ms)"
+            ]
+          },
+          {
+            "id": 119228494719,
+            "name": "Chrome HTTPS authentication and messaging with MariaDB",
+            "status": "completed",
+            "conclusion": "success",
+            "tests": 3,
+            "pass": 3,
+            "fail": 0,
+            "skipped": 0,
+            "duration_ms": 38441.360728,
+            "logsRead": true,
+            "node2422Observed": true,
+            "diagnostics": [],
+            "erasureV2Observed": false,
+            "browserScaleCases": []
+          },
+          {
+            "id": 119228494744,
+            "name": "verify",
+            "status": "completed",
+            "conclusion": "success",
+            "tests": 3256,
+            "pass": 3219,
+            "fail": 0,
+            "skipped": 37,
+            "duration_ms": 99615.082877,
+            "logsRead": true,
+            "node2422Observed": true,
+            "diagnostics": [],
+            "erasureV2Observed": false,
+            "browserScaleCases": []
+          }
+        ]
+      },
+      "secondAttempt": {
+        "run": 39601025146,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39601025146",
+        "head": "23e555e2f46f9a5d37de9d2639a81f4a171798d5",
+        "tree": "81759639ef6cc298c10fb267db43056592206072",
+        "status": "failed",
+        "passedJobs": 4,
+        "failedJobs": 1,
+        "jobs": {
+          "verify": {
+            "job": 119225247477,
+            "total": 3256,
+            "passed": 3219,
+            "failed": 0,
+            "skipped": 37,
+            "durationMs": 82042.22,
+            "buildAndArtifactPassed": true
+          },
+          "chrome": {
+            "total": 178,
+            "passed": 178,
+            "failed": 0,
+            "skipped": 0,
+            "durationMs": 228658.237892,
+            "newBroadcastTests": 4,
+            "newBroadcastContexts": 7
+          },
+          "mariaDb1011": {
+            "job": 119225247920,
+            "total": 486,
+            "passed": 486,
+            "failed": 0,
+            "skipped": 0,
+            "durationMs": 330865.88,
+            "captureDurationMs": 253.2,
+            "drainDurationMs": 36824.8,
+            "largeFixtureAndCompactErasurePassed": true,
+            "expectedExplainIndexesObserved": true
+          },
+          "mariaDb114": {
+            "job": 119225246933,
+            "total": 486,
+            "passed": 486,
+            "failed": 0,
+            "skipped": 0,
+            "durationMs": 354306.42,
+            "captureDurationMs": 254.5,
+            "drainDurationMs": 39145.4,
+            "largeFixtureAndCompactErasurePassed": true,
+            "expectedExplainIndexesObserved": true
+          },
+          "https": {
+            "job": 119225247372,
+            "total": 2,
+            "passed": 1,
+            "failed": 1,
+            "skipped": 0,
+            "durationMs": 9560.494231,
+            "setupMessagingDurationMs": 825.175284,
+            "neutralCode": "AUTH_REHEARSAL_UNAVAILABLE",
+            "neutralFailureLine": 392
+          }
+        },
+        "sameHeadPushHttps": {
+          "run": 39601015557,
+          "total": 3,
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 46421.85
+        },
+        "fixtureCorrection": {
+          "scope": "auth_fixture_reuses_existing_canonical_notification_vapid_key_generator",
+          "concreteDefect": "minimal_private_scalar_encoding_can_be_31_bytes_while_config_requires_32",
+          "syntheticExperiment": {
+            "keys": 2048,
+            "short31ByteKeys": 9
+          },
+          "exactCiKeyObserved": false,
+          "failedCiCause": "probable_not_retroactively_proven",
+          "targetedPassed": 25,
+          "targetedFailed": 0,
+          "targetedDurationMs": 195.33135,
+          "deterministicScalarCasesBytes": [
+            1,
+            31
+          ],
+          "applicationGuardsRelaxed": false
+        },
+        "globalQualification": false
+      }
+    },
+    "mainCi": {
+      "run": 39603034994,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39603034994",
+      "head": "4538148660fbf1487807fb1518747d8f5753cd3b",
+      "tree": "248477f9c63064a57445e5b15023e58fdde8e02c",
+      "event": "push",
+      "branch": "main",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 119232100376,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "tests": 178,
+          "pass": 178,
+          "fail": 0,
+          "skipped": 0,
+          "duration_ms": 225439.028171,
+          "logsRead": true,
+          "node2422Observed": true,
+          "diagnostics": [],
+          "erasureV2Observed": false,
+          "browserScaleCases": [
+            "✔ Chrome mobile FR/EN: all 2,500 and filtered 175 are explicitly reviewed with bounded DOM and paginated details (19142.277801ms)",
+            "✔ Chrome: manual selection exceeds 100 across contact pages while contacts and selected DOM stay at 50 (3959.561615ms)",
+            "✔ Chrome: lost confirmation freezes its exact audience, retry uses one ID, and changed account purges private data (2266.804436ms)",
+            "✔ Chrome: compatibility capability hides global creation while existing 2,500-recipient history stays paginated (1896.825842ms)"
+          ]
+        },
+        {
+          "id": 119232100619,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "tests": 3256,
+          "pass": 3219,
+          "fail": 0,
+          "skipped": 37,
+          "duration_ms": 99638.962699,
+          "logsRead": true,
+          "node2422Observed": true,
+          "diagnostics": [],
+          "erasureV2Observed": false,
+          "browserScaleCases": []
+        },
+        {
+          "id": 119232100636,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "tests": 3,
+          "pass": 3,
+          "fail": 0,
+          "skipped": 0,
+          "duration_ms": 34121.417747,
+          "logsRead": true,
+          "node2422Observed": true,
+          "diagnostics": [],
+          "erasureV2Observed": false,
+          "browserScaleCases": []
+        },
+        {
+          "id": 119232100861,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "tests": 486,
+          "pass": 486,
+          "fail": 0,
+          "skipped": 0,
+          "duration_ms": 258402.899392,
+          "logsRead": true,
+          "node2422Observed": true,
+          "diagnostics": [
+            {
+              "qualification": "broadcast-scale",
+              "operation": "capture",
+              "audienceCount": 2500,
+              "elapsedMs": 174.2
+            },
+            {
+              "qualification": "broadcast-scale",
+              "mariaDbVersion": "11.4.13-MariaDB-ubu2404",
+              "audienceCount": 2500
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredLeases",
+              "plan": [
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_lease",
+                  "rows": 1
+                },
+                {
+                  "table": "c",
+                  "type": "eq_ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredPending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "pending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_ready",
+                  "rows": 2500
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "operation": "drain",
+              "audienceCount": 2500,
+              "elapsedMs": 31795.3
+            }
+          ],
+          "erasureV2Observed": true,
+          "browserScaleCases": []
+        },
+        {
+          "id": 119232101124,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "tests": 486,
+          "pass": 486,
+          "fail": 0,
+          "skipped": 0,
+          "duration_ms": 344869.32377,
+          "logsRead": true,
+          "node2422Observed": true,
+          "diagnostics": [
+            {
+              "qualification": "broadcast-scale",
+              "operation": "capture",
+              "audienceCount": 2500,
+              "elapsedMs": 267.6
+            },
+            {
+              "qualification": "broadcast-scale",
+              "mariaDbVersion": "10.11.19-MariaDB-ubu2204",
+              "audienceCount": 2500
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredLeases",
+              "plan": [
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_lease",
+                  "rows": 1
+                },
+                {
+                  "table": "c",
+                  "type": "eq_ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "expiredPending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "ref",
+                  "key": "PRIMARY",
+                  "rows": 1
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "candidateRead": "pending",
+              "plan": [
+                {
+                  "table": "c",
+                  "type": "range",
+                  "key": "broadcast_campaigns_ready",
+                  "rows": 1
+                },
+                {
+                  "table": "r",
+                  "type": "range",
+                  "key": "broadcast_recipients_ready",
+                  "rows": 2500
+                }
+              ]
+            },
+            {
+              "qualification": "broadcast-scale",
+              "operation": "drain",
+              "audienceCount": 2500,
+              "elapsedMs": 39512
+            }
+          ],
+          "erasureV2Observed": true,
+          "browserScaleCases": []
+        }
+      ]
+    },
     "criteria": [
       "legacy_campaign_read_and_delivery_preserved",
       "compact_campaign_row_proof_rejected_before_quota_when_tampered",
@@ -145,14 +856,29 @@
       "normal_runtime_new_audience_creation_disabled"
     ]
   },
-  "pullRequest": null,
+  "pullRequest": {
+    "number": 117,
+    "url": "https://github.com/fredbuhr/jessiemessage/pull/117",
+    "status": "merged",
+    "initialHead": "a6ed58cd5543ffa8bb229852d1ff0d0c87b3d603",
+    "initialTree": "b2cbc016c350fa95d6008346a3243d894520d6cb",
+    "merged": true,
+    "finalHead": "706516a78366e019fc67ac38bdbdc8eb29ac01b2",
+    "finalTree": "248477f9c63064a57445e5b15023e58fdde8e02c",
+    "mergeCommit": "4538148660fbf1487807fb1518747d8f5753cd3b"
+  },
   "publication": {
-    "status": "not_published",
-    "tag": null,
-    "releaseUrl": null,
-    "run": null,
-    "publishedAt": null,
-    "verified": false
+    "status": "published_verified",
+    "tag": "v1.3.4",
+    "commit": "4538148660fbf1487807fb1518747d8f5753cd3b",
+    "tree": "248477f9c63064a57445e5b15023e58fdde8e02c",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.4",
+    "ciRun": 39603034994,
+    "workflowCommit": "629ceb4adda684de747ab407c89812eeea561995",
+    "run": 39604027538,
+    "job": 119235507774,
+    "publishedAt": "2026-10-21T12:59:17Z",
+    "verified": true
   },
   "hosting": {
     "activeVersion": "1.3.3",
@@ -172,23 +898,71 @@
     "intermediateRuntimeIdentityRequired": false
   },
   "preparation": {
-    "status": "not_yet_ready",
-    "commit": null,
-    "file": null,
-    "sha256": null,
-    "sourcePinned": null,
-    "treePinned": null,
-    "readyForOperator": false,
-    "executionReported": false
+    "status": "published_joint_preparation_ready_not_executed",
+    "commit": "17a7749916e69fe2a2207c51dd948364fe129e3c",
+    "tree": "dec4108ad6caf7c03669274d2c75e260399b6eb4",
+    "file": "ops/prepare-release140.sh",
+    "sha256": "3de48f1570402abfeab871d4604e46cde2cca329e08cde8fbe5f29c3f30e7c4a",
+    "url": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/17a7749916e69fe2a2207c51dd948364fe129e3c/ops/prepare-release140.sh",
+    "source134Pinned": "4538148660fbf1487807fb1518747d8f5753cd3b",
+    "tree134Pinned": "248477f9c63064a57445e5b15023e58fdde8e02c",
+    "source140Pinned": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+    "tree140Pinned": "8129e76c9817e79c062a4437eadee4b7ce4d90a1",
+    "readyForOperator": true,
+    "readinessScope": "preparation_only_return_json_before_manager_run_build_or_activation",
+    "executionReported": false,
+    "bothReleasesPrepared": false,
+    "plannedIntermediate134Activation": false,
+    "intermediate134RuntimeIdentityRequired": false,
+    "standaloneVerification": {
+      "commit": "17a7749916e69fe2a2207c51dd948364fe129e3c",
+      "tree": "dec4108ad6caf7c03669274d2c75e260399b6eb4",
+      "helper": {
+        "file": "ops/prepare-release140.sh",
+        "sha256": "3de48f1570402abfeab871d4604e46cde2cca329e08cde8fbe5f29c3f30e7c4a",
+        "blob": "e9ab71e02809a606d9e6bf249d964b99ea6a6110"
+      },
+      "test": {
+        "file": "ops/test-release140-staging-synthetic.py",
+        "sha256": "4a9c28a749be62e756859bd1543c2e3400031a1deac3bc615b0f82dad55e2d2f",
+        "blob": "60eb39e3011e7d6311c94c40c912d3d356987eb4",
+        "passed": 28,
+        "failed": 0
+      },
+      "standaloneTwoFiles": true,
+      "readOnlyReview": "no_blocking_findings",
+      "source134": "4538148660fbf1487807fb1518747d8f5753cd3b",
+      "tree134": "248477f9c63064a57445e5b15023e58fdde8e02c",
+      "source140": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+      "tree140": "8129e76c9817e79c062a4437eadee4b7ce4d90a1",
+      "executionReported": false,
+      "publishedBytesVerified": true,
+      "appCodeUnchanged": true
+    },
+    "restartsService": false,
+    "changesManager": false,
+    "runsMigration": false,
+    "changesCheckpoint": false,
+    "plannedPaths": {
+      "release134": {
+        "checkout": "/srv/customer/jessiemessage-operator/production-134-45381486",
+        "launcher": "/srv/customer/jessiemessage-private/start-primary-release134-45381486.sh",
+        "checkLauncher": "/srv/customer/jessiemessage-private/check-primary-release134-45381486.sh"
+      },
+      "release140": {
+        "checkout": "/srv/customer/jessiemessage-operator/production-140-56d45950",
+        "launcher": "/srv/customer/jessiemessage-private/start-primary-release140-56d45950.sh",
+        "checkLauncher": "/srv/customer/jessiemessage-private/check-primary-release140-56d45950.sh"
+      },
+      "creationReported": false
+    },
+    "plannedRole": "prepare_compatible_rollback_without_intermediate_activation"
   },
   "notAttested": [
-    "release134_final_source_and_tree",
-    "release134_pull_request_and_exact_main_ci",
-    "release134_publication",
     "release134_hosted_precheck",
+    "release134_runtime_activation_not_required_for_planned_rollback",
     "physical_phone_and_mutual_host_capacity",
     "current_pc_or_backup_delivery",
-    "release134_complete_local_global_test_summary",
-    "release134_native_sql_and_chrome_results"
+    "release134_complete_local_global_test_summary"
   ]
 }

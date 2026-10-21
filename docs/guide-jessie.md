@@ -77,11 +77,11 @@ Dans **Fiche → Télécharger la conversation**, choisis d’inclure ou non les
 
 L’export exclut les notes et surnoms privés, tags, groupes et photos non partagées. Il n’enregistre pas le brouillon de fiche. À partir de 1.1.0, l’export personnel du client ne contient pas non plus ton point de lecture ; les ZIP de conversation ne contiennent déjà aucun reçu de lecture. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
 
-## Diffusions à grande échelle — parcours 1.4.0 en préparation
+## Diffusions à grande échelle — parcours 1.4.0 publié, non activé
 
-**Ce parcours n’est pas encore disponible dans la production 1.3.3.** La version réellement active est celle de [REPRISE](REPRISE.md). Le correctif de compatibilité 1.3.4 prévu avant 1.4.0 ne doit pas activer la création élargie ; les indications ci-dessous ne s’appliqueront qu’après activation vérifiée de 1.4.0.
+**Ce parcours n’est pas encore disponible dans la production 1.3.3.** La version réellement active est celle de [REPRISE](REPRISE.md). Le code 1.4.0 est qualifié et publié, mais son activation hébergée reste à faire. La 1.3.4 publiée conserve la création élargie désactivée ; les indications ci-dessous ne s’appliqueront qu’après activation vérifiée de 1.4.0.
 
-Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), le parcours préparé proposera une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprendra aussi les pages qui ne sont pas affichées. La prévisualisation devra annoncer le nombre réellement éligible et les éventuelles photos déjà reçues ; seuls les premiers noms seront affichés comme aperçu. Tu confirmeras explicitement le nombre avant de lancer l’envoi.
+Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), après activation de 1.4.0, tu pourras choisir une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprendra aussi les pages qui ne sont pas affichées. La prévisualisation devra annoncer le nombre réellement éligible et les éventuelles photos déjà reçues ; seuls les premiers noms seront affichés comme aperçu. Tu confirmeras explicitement le nombre avant de lancer l’envoi.
 
 Un changement d’audience, de filtres ou de photo demandera une nouvelle prévisualisation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi devra être revérifié. Après un résultat d’envoi incertain, la commande de reprise réutilisera la même demande. Le suivi présentera les compteurs et les destinataires par pages, pendant que les messages seront traités progressivement. Chaque client recevra son message dans sa conversation privée ; aucun salon collectif ne sera créé.
 
