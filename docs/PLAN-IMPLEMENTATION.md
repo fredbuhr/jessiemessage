@@ -10,9 +10,8 @@ Le code [1.3.4 de compatibilité](broadcast-compat-134.md) et [1.4.0 de grandes 
 
 Il reste uniquement pour ce lot :
 
-1. Exécuter le [helper SSH publié](REPRISE.md#première-action-opérateur--préparer-les-deux-versions-en-ssh) et constater le précontrôle des deux références exactes ; qualifier le futur repli 1.3.4 sur l’hébergement, sans activation intermédiaire.
-2. Après réception de ce JSON, configurer puis activer la 1.4.0 et vérifier son identité exacte dans l’administration.
-3. Enregistrer l’alignement privé et le repli compatible, puis constater la clôture sans rejouer les actions acquises.
+1. Suivre les [commandes Run/Build et l’activation de 1.4.0](REPRISE.md#prochaine-action-opérateur--activer-la-140), puis vérifier son identité exacte dans l’administration. Les précontrôles hébergés des deux références et du repli compatible 1.3.4 sont déjà confirmés par le reçu SSH ; aucune activation intermédiaire n’est requise.
+2. Enregistrer l’alignement privé et le repli compatible, puis constater la clôture sans rejouer les actions acquises.
 
 La production reste **1.3.3 close**, avec **1.3.1** comme repli effectif, tant que les preuves d’activation suivantes n’existent pas. Les instructions et pins courants sont uniquement dans [REPRISE](REPRISE.md). Les mesures synthétiques ne qualifient pas le débit réel du mutualisé ni tous les parcours sur téléphone physique.
 
@@ -20,7 +19,7 @@ La production reste **1.3.3 close**, avec **1.3.1** comme repli effectif, tant q
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Code 1.3.4/1.4.0 qualifié et publié ; préparation hébergée, activation et clôture restantes. |
+| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Code 1.3.4/1.4.0 qualifié et publié ; précontrôles hébergés confirmés, activation et clôture restantes. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |

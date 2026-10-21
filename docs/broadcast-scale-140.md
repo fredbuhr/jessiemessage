@@ -1,6 +1,6 @@
 # Diffusions à grande échelle — Évolution 3, version 1.4.0
 
-**21 octobre 2026 — code revu, fusionné, qualifié et publié ; préparation hébergée prête, non exécutée.** La production reste **1.3.3 close**, source `ca0d40648036d57fdee55b91d47d5d5a874a626e`, Node **v24.22.0**, schéma **31** et repli effectif **1.3.1**. [État courant et première action SSH](REPRISE.md#première-action-opérateur--préparer-les-deux-versions-en-ssh), [preuves 1.4.0](verification-proofs/jm140-verification.json), [plan restant](PLAN-IMPLEMENTATION.md).
+**21 octobre 2026 — code revu, fusionné, qualifié et publié ; préparation et précontrôles hébergés confirmés ; activation à constater.** La production reste **1.3.3 close**, source `ca0d40648036d57fdee55b91d47d5d5a874a626e`, Node **v24.22.0**, schéma **31** et repli effectif **1.3.1**. [État courant et activation](REPRISE.md#prochaine-action-opérateur--activer-la-140), [preuves 1.4.0](verification-proofs/jm140-verification.json), [plan restant](PLAN-IMPLEMENTATION.md).
 
 ## Fonction codée
 
@@ -28,6 +28,6 @@ Le [tag/release v1.4.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v
 
 ## Prochaine étape et limites
 
-Le [helper publié et sa commande SSH](REPRISE.md#première-action-opérateur--préparer-les-deux-versions-en-ssh) préparent ensemble **1.3.4 et 1.4.0**, depuis la 1.3.3 préservée. Il possède **28/28 tests synthétiques autonomes**, syntaxes valides, revue indépendante sans blocage et octets publiés vérifiés. Aucune exécution serveur n’est encore rapportée. Le JSON de précontrôle doit être transmis avant changement Run/Build ou redémarrage. Aucune activation intermédiaire de 1.3.4 n’est prévue ; ce futur repli doit d’abord être qualifié sur l’hébergement.
+Le [helper publié](REPRISE.md#préparation-hébergée-acquise) a préparé et précontrôlé ensemble **1.3.4 et 1.4.0**, depuis la 1.3.3 préservée. Ses **28/28 tests synthétiques autonomes**, syntaxes valides, revue indépendante et octets publiés vérifiés restent distincts du reçu SSH utilisateur : `staged_precheck_passed`, `bothPrechecksPassed:true` et `rollback134HostedQualified:true`. Le schéma 31 est inchangé ; aucun runtime, changement Manager ou checkpoint n’a été effectué pendant cette préparation. Aucune activation intermédiaire de 1.3.4 n’est requise. Les [commandes Run/Build et étapes d’activation](REPRISE.md#prochaine-action-opérateur--activer-la-140) constituent la prochaine action.
 
-La préparation, l’activation avec identité exacte puis l’enregistrement privé restent à constater avant clôture. Les mesures CI utilisent des données synthétiques et une horloge injectée ; elles ne qualifient ni le débit réel du mutualisé, ni un téléphone physique. Aucun essai de masse ne cible des comptes réels ; les états C1–C5, D1 et PC restent préservés.
+L’activation avec identité exacte puis l’enregistrement privé restent à constater avant clôture ; la préparation acquise ne doit pas être rejouée. Les mesures CI utilisent des données synthétiques et une horloge injectée ; elles ne qualifient ni le débit réel du mutualisé, ni un téléphone physique. Aucun essai de masse ne cible des comptes réels ; les états C1–C5, D1 et PC restent préservés.

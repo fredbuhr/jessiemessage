@@ -79,7 +79,7 @@ L’export exclut les notes et surnoms privés, tags, groupes et photos non part
 
 ## Diffusions à grande échelle — parcours 1.4.0 publié, non activé
 
-**Ce parcours n’est pas encore disponible dans la production 1.3.3.** La version réellement active est celle de [REPRISE](REPRISE.md). Le code 1.4.0 est qualifié et publié, mais son activation hébergée reste à faire. La 1.3.4 publiée conserve la création élargie désactivée ; les indications ci-dessous ne s’appliqueront qu’après activation vérifiée de 1.4.0.
+**Ce parcours n’est pas encore disponible dans la production 1.3.3.** La version réellement active est celle de [REPRISE](REPRISE.md). Le code 1.4.0 est qualifié, publié et précontrôlé sur Infomaniak, mais son activation hébergée reste à constater. La 1.3.4, précontrôlée comme repli compatible sans démarrage, conserve la création élargie désactivée ; les indications ci-dessous ne s’appliqueront qu’après activation vérifiée de 1.4.0.
 
 Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), après activation de 1.4.0, tu pourras choisir une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprendra aussi les pages qui ne sont pas affichées. La prévisualisation devra annoncer le nombre réellement éligible et les éventuelles photos déjà reçues ; seuls les premiers noms seront affichés comme aperçu. Tu confirmeras explicitement le nombre avant de lancer l’envoi.
 
