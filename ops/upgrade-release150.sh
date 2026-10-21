@@ -1,6 +1,7 @@
 #!/bin/bash
-# TEMPLATE NON EXECUTABLE : les quatre empreintes reelles des lanceurs heberges sont requises.
-# Ne pas utiliser comme consigne operateur avant qualification de ces quatre empreintes.
+# Sources, arbres et empreintes des lanceurs epingles au recu de preparation heberge.
+# --service-stopped exige toujours un arret Manager effectivement atteste avant execution.
+# Les empreintes ne prouvent ni cet arret, ni le schema SQL actuellement applique.
 # Mise a niveau 0032 apres arret Manager atteste, puis precontroles sans Run.
 set +x
 set +a
@@ -24,15 +25,15 @@ unset NODE_OPTIONS NODE_PATH NODE_EXTRA_CA_CERTS NODE_TLS_REJECT_UNAUTHORIZED NO
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
 export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0
 export JESSIEMESSAGE_PRIVATE_PATH_MODE=linux-dirfd
-# Refuser avant toute lecture locale/SQL tant que sources et lanceurs ne sont pas qualifies.
+# Verifier les sources, arbres et lanceurs epingles avant toute lecture SQL.
 jm_sha=bf022233fcb76ee4db89e0c33c64b9498adb9d50
 jm_tree=a2f29930fe8ead853db6b6e8b76b613891ae4a04
 jm_sha150=abca467c45c9385371a9095ab359e78c99140370
 jm_tree150=3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4
-jm_start141_sha=QUALIFICATION_REQUIRED_START141_SHA256
-jm_check141_sha=QUALIFICATION_REQUIRED_CHECK141_SHA256
-jm_start150_sha=QUALIFICATION_REQUIRED_START150_SHA256
-jm_check150_sha=QUALIFICATION_REQUIRED_CHECK150_SHA256
+jm_start141_sha=bf8a44e8560dd6f564f974d02349859e88fde539fe0cbe21dec9fa047917669d
+jm_check141_sha=1418da8240789d95cb494e65d01f97e2e319c491b6672d81984f1db013c724e7
+jm_start150_sha=3620b656f528f3ad031bb4ad5f709df5ced0a21ff4326b4e5a5c4cdc6994105b
+jm_check150_sha=e06b8356074a0980975f71d2d9cf88bf463a4f6fb583bb0b40346c005dc29770
 for jm_pin in "$jm_sha" "$jm_tree" "$jm_sha150" "$jm_tree150"; do [[ "$jm_pin" =~ ^[a-f0-9]{40}$ ]]; done
 for jm_pin in "$jm_start141_sha" "$jm_check141_sha" "$jm_start150_sha" "$jm_check150_sha"; do [[ "$jm_pin" =~ ^[a-f0-9]{64}$ ]]; done
 [[ "$jm_sha" != "$jm_sha150" ]]
