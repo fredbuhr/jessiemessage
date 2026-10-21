@@ -26,11 +26,11 @@ Le [catalogue enrichi en 1.3.0](emoji-inclusifs-130.md) ajoute **Doubles sens**,
 
 ## Conversation mobile depuis 1.3.1
 
-La version active identifiée dans [REPRISE](REPRISE.md) est **1.3.3**. La conversation mobile dispose d’une seule barre avec l’avatar, le nom et **Options** ; le retour aux conversations reste accessible dans l’administration.
+La version active identifiée dans [REPRISE](REPRISE.md) est **1.4.0**. La conversation mobile dispose d’une seule barre avec l’avatar, le nom et **Options** ; le retour aux conversations reste accessible dans l’administration.
 
 **Options** regroupe le compte, le profil, les notifications, la langue, Contact et Aide. Les photos de la conversation et son téléchargement y sont accessibles lorsqu’ils sont disponibles pour ton compte. Sous les messages, `+` propose l’ajout d’une photo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvre les emojis. La saisie et **Envoyer** restent directement accessibles. Choisir une photo, une réponse ou un emoji prépare toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain restent affichées quand nécessaires.
 
-La présentation mobile 1.3.1 a été validée visuellement par l’utilisateur. La 1.3.3 active conserve cette disposition, les textes côté client à la première personne de Jessie et les messages plus compacts du [socle 1.3.2](client-voice-message-details-132.md), avec un bouton de détails visible au toucher pour les photos. Le précontrôle hébergé, le relevé admin et le reçu final confirment la préparation, l’activation et l’enregistrement de cette livraison close dans [REPRISE](REPRISE.md). Tous les parcours sur téléphone physique et le clavier logiciel ne sont pas explicitement attestés.
+La présentation mobile 1.3.1 a été validée visuellement par l’utilisateur. La 1.3.3 a conservé cette disposition, les textes côté client à la première personne de Jessie et les messages plus compacts du [socle 1.3.2](client-voice-message-details-132.md), avec un bouton de détails visible au toucher pour les photos. Le précontrôle hébergé, le relevé admin et le reçu final confirment la préparation, l’activation et l’enregistrement de cette livraison désormais historique et close dans [REPRISE](REPRISE.md). Tous les parcours sur téléphone physique et le clavier logiciel ne sont pas explicitement attestés.
 
 ### Détails des messages depuis 1.3.3
 
@@ -77,13 +77,13 @@ Dans **Fiche → Télécharger la conversation**, choisis d’inclure ou non les
 
 L’export exclut les notes et surnoms privés, tags, groupes et photos non partagées. Il n’enregistre pas le brouillon de fiche. À partir de 1.1.0, l’export personnel du client ne contient pas non plus ton point de lecture ; les ZIP de conversation ne contiennent déjà aucun reçu de lecture. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
 
-## Diffusions à grande échelle — parcours 1.4.0 publié, non activé
+## Diffusions à grande échelle — parcours 1.4.0 actif
 
-**Ce parcours n’est pas encore disponible dans la production 1.3.3.** La version réellement active est celle de [REPRISE](REPRISE.md). Le code 1.4.0 est qualifié, publié et précontrôlé sur Infomaniak, mais son activation hébergée reste à constater. La 1.3.4, précontrôlée comme repli compatible sans démarrage, conserve la création élargie désactivée ; les indications ci-dessous ne s’appliqueront qu’après activation vérifiée de 1.4.0.
+La version **1.4.0 est active sur Infomaniak**, selon le relevé admin utilisateur ; son enregistrement privé final reste à effectuer dans [REPRISE](REPRISE.md). La 1.3.4, précontrôlée comme repli compatible sans démarrage, conserve la création élargie désactivée.
 
-Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), après activation de 1.4.0, tu pourras choisir une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprendra aussi les pages qui ne sont pas affichées. La prévisualisation devra annoncer le nombre réellement éligible et les éventuelles photos déjà reçues ; seuls les premiers noms seront affichés comme aperçu. Tu confirmeras explicitement le nombre avant de lancer l’envoi.
+Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprend aussi les pages qui ne sont pas affichées. La prévisualisation annonce le nombre réellement éligible et les éventuelles photos déjà reçues ; seuls les premiers noms s’affichent comme aperçu. Confirme explicitement le nombre avant de lancer l’envoi.
 
-Un changement d’audience, de filtres ou de photo demandera une nouvelle prévisualisation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi devra être revérifié. Après un résultat d’envoi incertain, la commande de reprise réutilisera la même demande. Le suivi présentera les compteurs et les destinataires par pages, pendant que les messages seront traités progressivement. Chaque client recevra son message dans sa conversation privée ; aucun salon collectif ne sera créé.
+Un changement d’audience, de filtres ou de photo demande une nouvelle prévisualisation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi doit être revérifié. Après un résultat d’envoi incertain, la commande de reprise réutilise la même demande. Le suivi présente les compteurs et les destinataires par pages, pendant que les messages sont traités progressivement. Chaque client reçoit son message dans sa conversation privée ; aucun salon collectif n’est créé.
 
 ## Copies sur le PC
 
