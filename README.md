@@ -18,6 +18,8 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Diffusions à grande échelle, 1.4.0 close](docs/broadcast-scale-140.md) | Audiences globales ou filtrées, aperçu confirmé et suivi paginé ; livraison close, avec repli compatible 1.3.4 enregistré. |
 | [Compatibilité du schéma des annonces, 1.4.1](docs/announcements-compat-141.md) | Référence publiée et préparée sur l’hébergement ; repli compatible schéma 32, précontrôle hébergé confirmé sans démarrage. |
 | [Annonces, 1.5.0 active et close](docs/announcements-150.md) | Bandeau programmé et messages privés facultatifs ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés. |
+| [Compatibilité des tâches, 1.5.1 publiée](docs/tasks-compat-151.md) | Référence compatible avec le schéma 33, qualifiée et publiée ; préparation et précontrôle hébergés non réalisés. |
+| [Tâches et rappels, 1.6.0 publiée](docs/tasks-reminders-160.md) | Plusieurs tâches privées par client et vue commune ; code qualifié et publié, préparation hébergée à effectuer. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
@@ -31,6 +33,8 @@ Le [correctif mobile 1.3.1](docs/chat-mobile-131.md) est désormais clos : le re
 **Évolution 3 — Diffusions à grande échelle : livraison 1.4.0 close.** Les versions [1.3.4 de compatibilité](docs/broadcast-compat-134.md) et [1.4.0](docs/broadcast-scale-140.md) sont fusionnées, qualifiées par leurs propres CI PR/main **5/5** et publiées sur leurs commits exacts. Les précontrôles hébergés et l’identité active de la **1.4.0** sont confirmés ; le reçu final confirme le checkpoint aligné et le repli **1.3.4** compatible enregistré, sans démarrage de cette dernière. La création élargie reste désactivée dans le runtime normal de 1.3.4. L’ancienne 1.3.3 reste préservée avec son empreinte, marquée non utilisable en repli immédiat pour les campagnes compactes. **Aucune nouvelle opération n’est requise pour ce lot.** Les [évolutions suivantes](docs/PLAN-IMPLEMENTATION.md) restent planifiées.
 
 **Version active : [1.5.0 — Annonces, livraison close](docs/announcements-150.md).** Le relevé utilisateur confirme 1.5.0 / `abca467c…` / Node 24.22.0 / `21/10/2026 17:58:07`, après migration au schéma 32 et précontrôles hébergés. Le [reçu final](docs/verification-proofs/jm150-hosted-metadata.json) confirme le checkpoint aligné sur 1.5.0/schéma 32, sans redémarrage, avec la [1.4.1 compatible](docs/announcements-compat-141.md) précontrôlée et enregistrée comme repli, jamais démarrée. L’ancien état 1.4.0 intégral et les autres blocs restent préservés. [Clôture et preuves](docs/REPRISE.md#alignement-final-acquis--livraison-150-close).
+
+**Travail courant : Évolution 5 — [Tâches et rappels 1.6.0](docs/tasks-reminders-160.md), code qualifié et publié.** Les références 1.5.1 de compatibilité et 1.6.0 sont fusionnées, qualifiées par leurs propres CI PR/main et publiées sur leurs commits exacts. La préparation hébergée reste à effectuer ; aucune migration 0033, activation ou métadonnée 1.6.0 n’est attestée. **La production reste la 1.5.0, schéma 32, avec son repli 1.4.1.** [Seule prochaine action : préparer les deux références](docs/REPRISE.md#prochaine-action--préparation-hébergée-uniquement).
 
 ## Versions et livraisons
 

@@ -26,7 +26,7 @@ Le [catalogue enrichi en 1.3.0](emoji-inclusifs-130.md) ajoute **Doubles sens**,
 
 ## Conversation mobile depuis 1.3.1
 
-La version active identifiée dans [REPRISE](REPRISE.md) est **1.4.0**. La conversation mobile dispose d’une seule barre avec l’avatar, le nom et **Options** ; le retour aux conversations reste accessible dans l’administration.
+La [version active identifiée dans REPRISE](REPRISE.md) conserve la disposition mobile livrée depuis 1.3.1. La conversation mobile dispose d’une seule barre avec l’avatar, le nom et **Options** ; le retour aux conversations reste accessible dans l’administration.
 
 **Options** regroupe le compte, le profil, les notifications, la langue, Contact et Aide. Les photos de la conversation et son téléchargement y sont accessibles lorsqu’ils sont disponibles pour ton compte. Sous les messages, `+` propose l’ajout d’une photo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvre les emojis. La saisie et **Envoyer** restent directement accessibles. Choisir une photo, une réponse ou un emoji prépare toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain restent affichées quand nécessaires.
 
@@ -61,6 +61,18 @@ Si **La fiche a été modifiée ailleurs** apparaît, ton brouillon reste visibl
 
 Le texte du message en cours et les modifications de fiche non enregistrées restent dans la page ouverte, sans synchronisation entre appareils. Enregistre tes notes et conserve ton texte avant de recharger, fermer ou te déconnecter. Après une coupure réseau, garde l’onglet ouvert et utilise **Réessayer la connexion**.
 
+## Tâches et rappels privés — après activation de la 1.6.0
+
+**Ce parcours demande la 1.6.0 activée.** Elle est publiée, mais pas encore déployée ; la [version courante et la préparation restante](REPRISE.md) font référence. Aucun nouveau réglage n’est à effectuer dans l’application 1.5.0 pour le faire apparaître.
+
+Depuis la conversation d’un client, ouvre **Options → Fiche → Tâches du client**, puis **Ajouter une tâche**. Écris ce que tu veux préparer ou envoyer, ajoute une échéance si utile, puis choisis **Enregistrer la tâche**. Tu peux garder plusieurs tâches pour le même client. Ces informations restent dans ton administration ; le client ne les voit pas.
+
+**Options → Mes tâches**, ou le lien **Mes tâches** dans Administration, rassemble les clients. Les filtres **À faire**, **À traiter maintenant** et **Terminées** retrouvent les tâches par pages ; **Autres tâches** affiche la suite. Le menu indique discrètement le nombre arrivé à échéance. **Reporter** ouvre la date à modifier ; **Terminer** et **Réouvrir** changent le statut sans créer une autre tâche.
+
+Si la confirmation manque, utilise **Vérifier et réessayer** pour reprendre la même demande. Si une autre personne a modifié la tâche depuis un autre appareil, compare la version enregistrée : **Reprendre cette version** la recharge, **Enregistrer mon brouillon** confirme explicitement le remplacement. **Fermer** conserve le brouillon dans la page ; **Abandonner le brouillon** permet de passer à autre chose. Enregistre-le avant de fermer la page ou de te déconnecter.
+
+Les rappels sont visibles lorsque l’application est ouverte et sont actualisés à son retour au premier plan. **Il n’y a pas de notification de tâche lorsque l’application est fermée**, et aucune alerte ni message n’est envoyé au client. L’ancienne date de suivi de la Fiche reste séparée de ces tâches et ne se transforme pas automatiquement en tâche.
+
 ## Notifications sur chaque appareil
 
 Ouvre **Options → Notifications** dans la messagerie, ou **Compte et appareils** dans Administration. Choisis **Activer sur cet appareil** et accepte la demande du navigateur sur chaque appareil souhaité.
@@ -75,11 +87,11 @@ Une alerte n’affiche ni nom, ni texte, ni photo du message. La désactivation 
 
 Dans **Fiche → Télécharger la conversation**, choisis d’inclure ou non les photos partagées, puis **Télécharger le ZIP**. Extrais-le et ouvre `Conversation.html` pour lire hors ligne ; `conversation.json` contient la version portable.
 
-L’export exclut les notes et surnoms privés, tags, groupes et photos non partagées. Il n’enregistre pas le brouillon de fiche. À partir de 1.1.0, l’export personnel du client ne contient pas non plus ton point de lecture ; les ZIP de conversation ne contiennent déjà aucun reçu de lecture. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
+L’export exclut les notes et surnoms privés, tags, groupes, tâches privées et photos non partagées. Il n’enregistre pas le brouillon de fiche. À partir de 1.1.0, l’export personnel du client ne contient pas non plus ton point de lecture ; les ZIP de conversation ne contiennent déjà aucun reçu de lecture. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
 
-## Diffusions à grande échelle — parcours 1.4.0 actif
+## Diffusions à grande échelle
 
-La version **1.4.0 est active sur Infomaniak** et sa livraison est close ; le relevé admin et le reçu d’enregistrement final sont conservés dans [REPRISE](REPRISE.md). La 1.3.4, précontrôlée comme repli compatible sans démarrage, conserve la création élargie désactivée.
+Ce parcours est disponible depuis la livraison 1.4.0 close et reste présent dans la version active indiquée par [REPRISE](REPRISE.md). Les références et replis historiques y conservent leurs preuves propres.
 
 Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprend aussi les pages qui ne sont pas affichées. La prévisualisation annonce le nombre réellement éligible et les éventuelles photos déjà reçues ; seuls les premiers noms s’affichent comme aperçu. Confirme explicitement le nombre avant de lancer l’envoi.
 

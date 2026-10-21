@@ -4,13 +4,13 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 
 Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.3.1, 1.3.3, 1.4.0 et 1.5.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
-La livraison **1.5.0 — Annonces** est close : code et CI qualifiés, versions publiées, migration et précontrôles hébergés, identité active et alignement privé confirmés. Le reçu `release150_metadata_recorded` confirme le schéma **32**, le repli compatible **1.4.1** précontrôlé et enregistré sans démarrage, l’ancien état 1.4.0 intégral et les autres blocs préservés. [Clôture et preuves](REPRISE.md#alignement-final-acquis--livraison-150-close). Les évolutions suivantes restent planifiées.
+La livraison **1.5.0 — Annonces** est close : code et CI qualifiés, versions publiées, migration et précontrôles hébergés, identité active et alignement privé confirmés. Le reçu `release150_metadata_recorded` confirme le schéma **32**, le repli compatible **1.4.1** précontrôlé et enregistré sans démarrage, l’ancien état 1.4.0 intégral et les autres blocs préservés. [Clôture et preuves](REPRISE.md#alignement-final-acquis--livraison-150-close). L’évolution 5 est qualifiée et publiée, en attente de préparation hébergée ; les évolutions 6 à 8 restent planifiées.
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes dans l’application et vue commune ; persistance et modifications simultanées maîtrisées. | [Développement en cours](tasks-reminders-160.md), branche `feat/tasks-reminders-160`. Production inchangée en 1.5.0 ; qualification, publication et livraison restent à faire. |
+| **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes dans l’application et vue commune ; persistance et modifications simultanées maîtrisées. | [Code qualifié, fusionné et publié en 1.6.0](tasks-reminders-160.md), avec [référence compatible 1.5.1 publiée](tasks-compat-151.md). Préparation hébergée à effectuer ; migration 0033, précontrôles, activation et alignement des métadonnées non attestés. Production inchangée en 1.5.0/schéma 32 ; le lot reste ouvert jusqu’à sa livraison vérifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |
 | **7 — Vidéos dans la messagerie** | Aperçu, lecteur, légende, galerie et diffusion ; export, suppression et fermeture de compte cohérents. | Planifiée. |
 | **8 — Validation et portabilité** | Parcours combinés, capacité du mutualisé mesurée et migration répétée sur données synthétiques. | Planifiée. |

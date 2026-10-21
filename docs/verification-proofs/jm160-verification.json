@@ -1,0 +1,1407 @@
+{
+  "version": "1.6.0",
+  "status": "code_qualified_merged_published_hosted_staging_pending",
+  "branch": "feat/tasks-reminders-160",
+  "baseCommit": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+  "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+  "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+  "results": {
+    "implementationReported": true,
+    "codeQualified": true,
+    "merged": true,
+    "releasePublished": true,
+    "deliveryComplete": false
+  },
+  "requirements": {
+    "schemaMigrations": 33,
+    "applicationTables": 32,
+    "tablesIncludingLedger": 33,
+    "foreignKeys": 46,
+    "newDependencies": false,
+    "newKeys": false,
+    "newWorker": false,
+    "closedAppTaskPush": false,
+    "migration33Sha256": "81d0d11577b6ada0f734c7497cbf44768033f1374bd830dec5e4abe9beda34af",
+    "normalRuntimeTasksEnabled": true
+  },
+  "compatibility": {
+    "release": "1.5.1",
+    "source": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+    "proof": "jm151-verification.json",
+    "deltaFromCompat": [
+      "package.json",
+      "package-lock.json",
+      "server/index.mjs"
+    ],
+    "meaning": "Version and normal runtime task activation only; dependencies and schema are identical."
+  },
+  "localDevelopmentBaseline": {
+    "proof": "jm151-verification.json#/local",
+    "exactFinalSourceQualification": false,
+    "meaning": "Earlier local development checks and incomplete full attempts are preserved in151 proof. The final160 source has its own PR/main CI below."
+  },
+  "ci": {
+    "initialFailedPr": {
+      "repository": "fredbuhr/jessiemessage",
+      "pullRequest": 122,
+      "head": "13d42ebb77c8b1951a17f47ca1488b45a03cabb8",
+      "headTree": "e7d8245bfc1ab0fd7e57fce6a1c9177ac0afb70c",
+      "base": "f910391b88aa03629bb42e5fe9f8e6b46361e077",
+      "baseRef": "feat/tasks-compat-151",
+      "mergeCheckout": {
+        "sha": "6bc6c8a3e4413c888ea8d5085b9d9eb919f878c6",
+        "tree": "e7d8245bfc1ab0fd7e57fce6a1c9177ac0afb70c",
+        "parents": [
+          "f910391b88aa03629bb42e5fe9f8e6b46361e077",
+          "13d42ebb77c8b1951a17f47ca1488b45a03cabb8"
+        ],
+        "headTreeIdentical": true
+      },
+      "run": {
+        "id": 39637600821,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39637600821",
+        "event": "pull_request",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      "jobs": [
+        {
+          "id": 119352282947,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T16:45:19Z",
+          "completedAt": "2026-10-21T16:46:26Z",
+          "logDecoded": true,
+          "logCharacters": 33605,
+          "nodeVersion": "v24.22.0",
+          "checkout": "6bc6c8a3e4413c888ea8d5085b9d9eb919f878c6",
+          "evidence": [
+            "2026-10-21T16:45:20.1996745Z Commit: 267fdb4e8bbec4ab5ea31367f3a00d5c480c7656",
+            "2026-10-21T16:45:21.0137609Z cb6bf1bb266d7997badbb2083974cdfec2e98c9e580f0c9eb731239acb26601e",
+            "2026-10-21T16:45:25.2890737Z Digest: sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e",
+            "2026-10-21T16:45:25.3269037Z 60592ec765610e60ba8f3394c80b631acf3ecf7e9afe19bde97108920ac53065",
+            "2026-10-21T16:45:25.3292604Z ##[command]/usr/bin/docker start 60592ec765610e60ba8f3394c80b631acf3ecf7e9afe19bde97108920ac53065",
+            "2026-10-21T16:45:25.6331357Z 60592ec765610e60ba8f3394c80b631acf3ecf7e9afe19bde97108920ac53065",
+            "2026-10-21T16:45:25.6539379Z ##[command]/usr/bin/docker port 60592ec765610e60ba8f3394c80b631acf3ecf7e9afe19bde97108920ac53065",
+            "2026-10-21T16:45:25.6781925Z ##[command]/usr/bin/docker inspect --format=\"{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}\" 60592ec765610e60ba8f3394c80b631acf3ecf7e9afe19bde97108920ac53065",
+            "2026-10-21T16:46:23.6981850Z ℹ tests 3",
+            "2026-10-21T16:46:23.6983226Z ℹ suites 0",
+            "2026-10-21T16:46:23.6983799Z ℹ pass 3",
+            "2026-10-21T16:46:23.6984824Z ℹ fail 0",
+            "2026-10-21T16:46:23.6985921Z ℹ cancelled 0",
+            "2026-10-21T16:46:23.6986391Z ℹ skipped 0",
+            "2026-10-21T16:46:23.6986787Z ℹ todo 0",
+            "2026-10-21T16:46:23.6987262Z ℹ duration_ms 47126.230057"
+          ],
+          "counts": {
+            "tests": 3,
+            "passed": 3,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "id": 119352283267,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "failure",
+          "startedAt": "2026-10-21T16:45:19Z",
+          "completedAt": "2026-10-21T16:51:47Z",
+          "logDecoded": true,
+          "logCharacters": 290270,
+          "nodeVersion": "v24.22.0",
+          "checkout": "6bc6c8a3e4413c888ea8d5085b9d9eb919f878c6",
+          "evidence": [
+            "2026-10-21T16:45:20.8910214Z Commit: 267fdb4e8bbec4ab5ea31367f3a00d5c480c7656",
+            "2026-10-21T16:45:23.8593219Z cbbc991293e6d12c1606e2ac76d15d3cf07fe51fade3eebc7078dc3fbeac1bc2",
+            "2026-10-21T16:45:29.0984553Z Digest: sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e",
+            "2026-10-21T16:45:29.1415549Z e2146361ea7f2de8525f1cf39a837e3cb74ee72a37cae4abcbc54e012b92708e",
+            "2026-10-21T16:45:29.1443985Z ##[command]/usr/bin/docker start e2146361ea7f2de8525f1cf39a837e3cb74ee72a37cae4abcbc54e012b92708e",
+            "2026-10-21T16:45:29.9639529Z e2146361ea7f2de8525f1cf39a837e3cb74ee72a37cae4abcbc54e012b92708e",
+            "2026-10-21T16:45:29.9858510Z ##[command]/usr/bin/docker port e2146361ea7f2de8525f1cf39a837e3cb74ee72a37cae4abcbc54e012b92708e",
+            "2026-10-21T16:45:30.0112689Z ##[command]/usr/bin/docker inspect --format=\"{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}\" e2146361ea7f2de8525f1cf39a837e3cb74ee72a37cae4abcbc54e012b92708e",
+            "2026-10-21T16:51:42.5542512Z # tests 505",
+            "2026-10-21T16:51:42.5542868Z # suites 0",
+            "2026-10-21T16:51:42.5543293Z # pass 503",
+            "2026-10-21T16:51:42.5543799Z # fail 2",
+            "2026-10-21T16:51:42.5544175Z # cancelled 0",
+            "2026-10-21T16:51:42.5544414Z # skipped 0",
+            "2026-10-21T16:51:42.5544631Z # todo 0",
+            "2026-10-21T16:51:42.5544859Z # duration_ms 339789.176691"
+          ],
+          "counts": {
+            "tests": 505,
+            "passed": 503,
+            "failed": 2,
+            "skipped": 0
+          },
+          "failures": [
+            [
+              "2026-10-21T16:50:23.3825744Z     not ok 17 - the configured HTTP runtime uses schema thirty with notifications enabled or disabled and no external delivery",
+              "2026-10-21T16:50:23.3826923Z       ---",
+              "2026-10-21T16:50:23.3827281Z       duration_ms: 2.495401",
+              "2026-10-21T16:50:23.3827807Z       type: 'test'",
+              "2026-10-21T16:50:23.3828530Z       location: '/home/runner/work/jessiemessage/jessiemessage/tests/notifications-store.integration.test.mjs:285:13'",
+              "2026-10-21T16:50:23.3829144Z       failureType: 'testCodeFailure'",
+              "2026-10-21T16:50:23.3829558Z       error: |-",
+              "2026-10-21T16:50:23.3829830Z         Expected values to be strictly equal:",
+              "2026-10-21T16:50:23.3830153Z         ",
+              "2026-10-21T16:50:23.3830333Z         33 !== 32",
+              "2026-10-21T16:50:23.3830520Z         ",
+              "2026-10-21T16:50:23.3830729Z       code: 'ERR_ASSERTION'",
+              "2026-10-21T16:50:23.3831546Z       name: 'AssertionError'",
+              "2026-10-21T16:50:23.3831801Z       expected: 32",
+              "2026-10-21T16:50:23.3832011Z       actual: 33",
+              "2026-10-21T16:50:23.3832519Z       operator: 'strictEqual'",
+              "2026-10-21T16:50:23.3832791Z       stack: |-",
+              "2026-10-21T16:50:23.3833529Z         TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/notifications-store.integration.test.mjs:287:14)",
+              "2026-10-21T16:50:23.3834880Z         process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+              "2026-10-21T16:50:23.3835529Z         async Test.run (node:internal/test_runner/test:1409:7)",
+              "2026-10-21T16:50:23.3836993Z         async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/notifications-store.integration.test.mjs:285:5)",
+              "2026-10-21T16:50:23.3838442Z         async Test.run (node:internal/test_runner/test:1409:7)",
+              "2026-10-21T16:50:23.3839433Z         async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)",
+              "2026-10-21T16:50:23.3840700Z       ...",
+              "2026-10-21T16:50:23.4328611Z     1..17",
+              "2026-10-21T16:50:23.4333332Z not ok 28 - real MariaDB private notification transactions (synthetic disposable database only)",
+              "2026-10-21T16:50:23.4334580Z   ---",
+              "2026-10-21T16:50:23.4335930Z   duration_ms: 1434.246752"
+            ],
+            [
+              "2026-10-21T16:50:23.4333332Z not ok 28 - real MariaDB private notification transactions (synthetic disposable database only)",
+              "2026-10-21T16:50:23.4334580Z   ---",
+              "2026-10-21T16:50:23.4335930Z   duration_ms: 1434.246752",
+              "2026-10-21T16:50:23.4336672Z   type: 'test'",
+              "2026-10-21T16:50:23.4337918Z   location: '/home/runner/work/jessiemessage/jessiemessage/tests/notifications-store.integration.test.mjs:25:1'",
+              "2026-10-21T16:50:23.4339264Z   failureType: 'subtestsFailed'",
+              "2026-10-21T16:50:23.4340004Z   error: '1 subtest failed'",
+              "2026-10-21T16:50:23.4340745Z   code: 'ERR_TEST_FAILURE'",
+              "2026-10-21T16:50:23.4341706Z   ...",
+              "2026-10-21T16:50:23.5873015Z # Subtest: configured neutral server exposes the installed entry without authentication, database or mail",
+              "2026-10-21T16:50:23.5876970Z ok 29 - configured neutral server exposes the installed entry without authentication, database or mail",
+              "2026-10-21T16:50:23.5878094Z   ---",
+              "2026-10-21T16:50:23.5878693Z   duration_ms: 60.862219",
+              "2026-10-21T16:50:23.5879225Z   type: 'test'",
+              "2026-10-21T16:50:23.5879679Z   ...",
+              "2026-10-21T16:50:23.8551777Z # Subtest: operational metadata samples real MariaDB queues with runtime DML rights and no queue mutation (synthetic disposable database only)",
+              "2026-10-21T16:50:23.8553961Z     # Subtest: empty queues and disabled features return bounded explicit metadata",
+              "2026-10-21T16:50:23.8555153Z     ok 1 - empty queues and disabled features return bounded explicit metadata",
+              "2026-10-21T16:50:23.8555913Z       ---",
+              "2026-10-21T16:50:23.8556355Z       duration_ms: 8.590782",
+              "2026-10-21T16:50:23.8556813Z       type: 'test'",
+              "2026-10-21T16:50:23.8557197Z       ...",
+              "2026-10-21T16:50:23.9337212Z     # Subtest: capped queue counts and microsecond due metadata contain no private content and perform no mutation",
+              "2026-10-21T16:50:23.9339006Z     ok 2 - capped queue counts and microsecond due metadata contain no private content and perform no mutation",
+              "2026-10-21T16:50:23.9339646Z       ---",
+              "2026-10-21T16:50:23.9339888Z       duration_ms: 30.835003",
+              "2026-10-21T16:50:23.9340205Z       type: 'test'",
+              "2026-10-21T16:50:23.9340469Z       ..."
+            ]
+          ],
+          "taskEvidence": [
+            "2026-10-21T16:46:24.9122659Z     ok 3 - complete removal preserves peer data, reused administrator photos and coherent shared campaign audiences",
+            "2026-10-21T16:46:53.1747292Z     ok 20 - recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:46:54.8647375Z     ok 21 - CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:46:56.6652623Z     ok 22 - broadcast, CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:50:38.4247738Z     ok 1 - schema and empty lists are current, private and do not create tasks",
+            "2026-10-21T16:50:38.4790657Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated",
+            "2026-10-21T16:50:38.5169100Z     ok 3 - owner and conversation isolation apply to reads, edits, summary and creation",
+            "2026-10-21T16:50:38.5798498Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task",
+            "2026-10-21T16:50:38.6017063Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner",
+            "2026-10-21T16:50:38.6434385Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely",
+            "2026-10-21T16:50:38.6632813Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases",
+            "2026-10-21T16:50:38.6830279Z     ok 8 - live SQL authorization rejects a revoked session despite a stale service session",
+            "2026-10-21T16:50:38.7303019Z ok 36 - real MariaDB private tasks persist, retry, page and serialize simultaneous administrators"
+          ]
+        },
+        {
+          "id": 119352283399,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T16:45:19Z",
+          "completedAt": "2026-10-21T16:49:14Z",
+          "logDecoded": true,
+          "logCharacters": 37848,
+          "nodeVersion": "v24.22.0",
+          "checkout": "6bc6c8a3e4413c888ea8d5085b9d9eb919f878c6",
+          "evidence": [
+            "2026-10-21T16:45:19.7421920Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d",
+            "2026-10-21T16:45:21.6118872Z HEAD is now at 6bc6c8a Merge 13d42ebb77c8b1951a17f47ca1488b45a03cabb8 into f910391b88aa03629bb42e5fe9f8e6b46361e077",
+            "2026-10-21T16:45:21.6196537Z 6bc6c8a3e4413c888ea8d5085b9d9eb919f878c6",
+            "2026-10-21T16:45:26.5239547Z node: v24.22.0",
+            "2026-10-21T16:49:12.2120767Z ℹ tests 189",
+            "2026-10-21T16:49:12.2121125Z ℹ suites 0",
+            "2026-10-21T16:49:12.2121473Z ℹ pass 189",
+            "2026-10-21T16:49:12.2121811Z ℹ fail 0",
+            "2026-10-21T16:49:12.2122156Z ℹ cancelled 0",
+            "2026-10-21T16:49:12.2122513Z ℹ skipped 0",
+            "2026-10-21T16:49:12.2122976Z ℹ todo 0",
+            "2026-10-21T16:49:12.2123372Z ℹ duration_ms 224143.364531"
+          ],
+          "counts": {
+            "tests": 189,
+            "passed": 189,
+            "failed": 0,
+            "skipped": 0
+          },
+          "taskTests": [
+            "2026-10-21T16:49:12.2113388Z ✔ Chrome mobile FR/EN: create, postpone, complete and reopen a private client task without overflow (4998.614298ms)",
+            "2026-10-21T16:49:12.2114462Z ✔ Chrome: a lost task acknowledgement retries one stable request and a conflict preserves the unsaved draft (1812.722356ms)",
+            "2026-10-21T16:49:12.2116344Z ✔ Chrome: hiding the page clears private task markup, same-owner resume preserves drafts and replacement accounts purge them (955.584725ms)",
+            "2026-10-21T16:49:12.2117696Z ✔ Chrome: the common task view spans clients and paginates without truncating the private work list (1588.732045ms)",
+            "2026-10-21T16:49:12.2118720Z ✔ Chrome: a CSRF refusal freezes an uncertain task until connection refresh and explicit retry (2387.776709ms)",
+            "2026-10-21T16:49:12.2119694Z ✔ Chrome: a list read begun before a save cannot restore the old private task after the mutation (1911.412114ms)"
+          ],
+          "taskContexts": {
+            "count": 7,
+            "basis": "Pinned tests/browser/tasks.browser.mjs: first test loops [320,fr] and [390,en], five subsequent one-context tests; all six passed."
+          }
+        },
+        {
+          "id": 119352283634,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "failure",
+          "startedAt": "2026-10-21T16:45:19Z",
+          "completedAt": "2026-10-21T16:51:14Z",
+          "logDecoded": true,
+          "logCharacters": 292098,
+          "nodeVersion": "v24.22.0",
+          "checkout": "6bc6c8a3e4413c888ea8d5085b9d9eb919f878c6",
+          "evidence": [
+            "2026-10-21T16:45:20.5780265Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d",
+            "2026-10-21T16:45:21.4875812Z 69408bbfa6e8b0f20ff488d606844447796cd3079e9856ca5fcedccb6c00f999",
+            "2026-10-21T16:45:28.6543998Z Digest: sha256:250e1609e93c0e6aecf64bfbab2d84d5e89d2481540fe77447ff6c855c3b1873",
+            "2026-10-21T16:45:28.6895178Z 7bc1806b55b120aa052ec1de88d5e280bc3de93ef75b415064f23df55e36425f",
+            "2026-10-21T16:45:28.6921018Z ##[command]/usr/bin/docker start 7bc1806b55b120aa052ec1de88d5e280bc3de93ef75b415064f23df55e36425f",
+            "2026-10-21T16:45:28.9003487Z 7bc1806b55b120aa052ec1de88d5e280bc3de93ef75b415064f23df55e36425f",
+            "2026-10-21T16:45:28.9186362Z ##[command]/usr/bin/docker port 7bc1806b55b120aa052ec1de88d5e280bc3de93ef75b415064f23df55e36425f",
+            "2026-10-21T16:45:28.9414090Z ##[command]/usr/bin/docker inspect --format=\"{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}\" 7bc1806b55b120aa052ec1de88d5e280bc3de93ef75b415064f23df55e36425f",
+            "2026-10-21T16:51:10.3913083Z # tests 505",
+            "2026-10-21T16:51:10.3913404Z # suites 0",
+            "2026-10-21T16:51:10.3913813Z # pass 503",
+            "2026-10-21T16:51:10.3914029Z # fail 2",
+            "2026-10-21T16:51:10.3914278Z # cancelled 0",
+            "2026-10-21T16:51:10.3914516Z # skipped 0",
+            "2026-10-21T16:51:10.4024649Z # todo 0",
+            "2026-10-21T16:51:10.4025005Z # duration_ms 312006.315216"
+          ],
+          "counts": {
+            "tests": 505,
+            "passed": 503,
+            "failed": 2,
+            "skipped": 0
+          },
+          "failures": [
+            [
+              "2026-10-21T16:50:00.4586322Z     not ok 17 - the configured HTTP runtime uses schema thirty with notifications enabled or disabled and no external delivery",
+              "2026-10-21T16:50:00.4589516Z       ---",
+              "2026-10-21T16:50:00.4589772Z       duration_ms: 1.857918",
+              "2026-10-21T16:50:00.4590029Z       type: 'test'",
+              "2026-10-21T16:50:00.4590585Z       location: '/home/runner/work/jessiemessage/jessiemessage/tests/notifications-store.integration.test.mjs:285:13'",
+              "2026-10-21T16:50:00.4591160Z       failureType: 'testCodeFailure'",
+              "2026-10-21T16:50:00.4591436Z       error: |-",
+              "2026-10-21T16:50:00.4591726Z         Expected values to be strictly equal:",
+              "2026-10-21T16:50:00.4592568Z         ",
+              "2026-10-21T16:50:00.4592822Z         33 !== 32",
+              "2026-10-21T16:50:00.4593058Z         ",
+              "2026-10-21T16:50:00.4593271Z       code: 'ERR_ASSERTION'",
+              "2026-10-21T16:50:00.4593637Z       name: 'AssertionError'",
+              "2026-10-21T16:50:00.4593920Z       expected: 32",
+              "2026-10-21T16:50:00.4594136Z       actual: 33",
+              "2026-10-21T16:50:00.4594389Z       operator: 'strictEqual'",
+              "2026-10-21T16:50:00.4594672Z       stack: |-",
+              "2026-10-21T16:50:00.4595305Z         TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/notifications-store.integration.test.mjs:287:14)",
+              "2026-10-21T16:50:00.4596124Z         process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+              "2026-10-21T16:50:00.4596663Z         async Test.run (node:internal/test_runner/test:1409:7)",
+              "2026-10-21T16:50:00.4597508Z         async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/notifications-store.integration.test.mjs:285:5)",
+              "2026-10-21T16:50:00.4598571Z         async Test.run (node:internal/test_runner/test:1409:7)",
+              "2026-10-21T16:50:00.4599414Z         async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)",
+              "2026-10-21T16:50:00.4599907Z       ...",
+              "2026-10-21T16:50:00.4951952Z     1..17",
+              "2026-10-21T16:50:00.4953472Z not ok 28 - real MariaDB private notification transactions (synthetic disposable database only)",
+              "2026-10-21T16:50:00.4954609Z   ---",
+              "2026-10-21T16:50:00.4955345Z   duration_ms: 1218.137666"
+            ],
+            [
+              "2026-10-21T16:50:00.4953472Z not ok 28 - real MariaDB private notification transactions (synthetic disposable database only)",
+              "2026-10-21T16:50:00.4954609Z   ---",
+              "2026-10-21T16:50:00.4955345Z   duration_ms: 1218.137666",
+              "2026-10-21T16:50:00.4955817Z   type: 'test'",
+              "2026-10-21T16:50:00.4956747Z   location: '/home/runner/work/jessiemessage/jessiemessage/tests/notifications-store.integration.test.mjs:25:1'",
+              "2026-10-21T16:50:00.4957777Z   failureType: 'subtestsFailed'",
+              "2026-10-21T16:50:00.4958286Z   error: '1 subtest failed'",
+              "2026-10-21T16:50:00.4958530Z   code: 'ERR_TEST_FAILURE'",
+              "2026-10-21T16:50:00.4958749Z   ...",
+              "2026-10-21T16:50:00.6264888Z # Subtest: configured neutral server exposes the installed entry without authentication, database or mail",
+              "2026-10-21T16:50:00.6266812Z ok 29 - configured neutral server exposes the installed entry without authentication, database or mail",
+              "2026-10-21T16:50:00.6267740Z   ---",
+              "2026-10-21T16:50:00.6268760Z   duration_ms: 52.756202",
+              "2026-10-21T16:50:00.6269217Z   type: 'test'",
+              "2026-10-21T16:50:00.6269532Z   ...",
+              "2026-10-21T16:50:00.8681503Z # Subtest: operational metadata samples real MariaDB queues with runtime DML rights and no queue mutation (synthetic disposable database only)",
+              "2026-10-21T16:50:00.8682667Z     # Subtest: empty queues and disabled features return bounded explicit metadata",
+              "2026-10-21T16:50:00.8683279Z     ok 1 - empty queues and disabled features return bounded explicit metadata",
+              "2026-10-21T16:50:00.8683639Z       ---",
+              "2026-10-21T16:50:00.8683839Z       duration_ms: 7.403549",
+              "2026-10-21T16:50:00.8684086Z       type: 'test'",
+              "2026-10-21T16:50:00.8684280Z       ...",
+              "2026-10-21T16:50:00.9439594Z     # Subtest: capped queue counts and microsecond due metadata contain no private content and perform no mutation",
+              "2026-10-21T16:50:00.9440942Z     ok 2 - capped queue counts and microsecond due metadata contain no private content and perform no mutation",
+              "2026-10-21T16:50:00.9441423Z       ---",
+              "2026-10-21T16:50:00.9441641Z       duration_ms: 29.374261",
+              "2026-10-21T16:50:00.9441881Z       type: 'test'",
+              "2026-10-21T16:50:00.9442084Z       ..."
+            ]
+          ],
+          "taskEvidence": [
+            "2026-10-21T16:46:17.3987631Z     ok 3 - complete removal preserves peer data, reused administrator photos and coherent shared campaign audiences",
+            "2026-10-21T16:46:41.8474522Z     ok 20 - recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:46:43.3926144Z     ok 21 - CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:46:45.0013586Z     ok 22 - broadcast, CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:50:13.2487709Z     ok 1 - schema and empty lists are current, private and do not create tasks",
+            "2026-10-21T16:50:13.2949430Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated",
+            "2026-10-21T16:50:13.3310531Z     ok 3 - owner and conversation isolation apply to reads, edits, summary and creation",
+            "2026-10-21T16:50:13.3806387Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task",
+            "2026-10-21T16:50:13.3972965Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner",
+            "2026-10-21T16:50:13.4360075Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely",
+            "2026-10-21T16:50:13.4533515Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases",
+            "2026-10-21T16:50:13.4680464Z     ok 8 - live SQL authorization rejects a revoked session despite a stale service session",
+            "2026-10-21T16:50:13.5110822Z ok 36 - real MariaDB private tasks persist, retry, page and serialize simultaneous administrators"
+          ]
+        },
+        {
+          "id": 119352283646,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T16:45:19Z",
+          "completedAt": "2026-10-21T16:47:48Z",
+          "logDecoded": true,
+          "logCharacters": 463566,
+          "nodeVersion": "v24.22.0",
+          "checkout": "6bc6c8a3e4413c888ea8d5085b9d9eb919f878c6",
+          "evidence": [
+            "2026-10-21T16:45:20.9971293Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d",
+            "2026-10-21T16:45:23.4011953Z HEAD is now at 6bc6c8a Merge 13d42ebb77c8b1951a17f47ca1488b45a03cabb8 into f910391b88aa03629bb42e5fe9f8e6b46361e077",
+            "2026-10-21T16:45:23.4090610Z 6bc6c8a3e4413c888ea8d5085b9d9eb919f878c6",
+            "2026-10-21T16:45:29.5778037Z node: v24.22.0",
+            "2026-10-21T16:47:45.2288391Z SHA256 digest of uploaded artifact zip is 1332faeeb2f230ee49191b2dc6329b0e6173013abc5ebb189ae291cf2a328cee",
+            "2026-10-21T16:47:28.2579223Z ℹ tests 3343",
+            "2026-10-21T16:47:28.2579435Z ℹ suites 0",
+            "2026-10-21T16:47:28.2579637Z ℹ pass 3304",
+            "2026-10-21T16:47:28.2579849Z ℹ fail 0",
+            "2026-10-21T16:47:28.2580057Z ℹ cancelled 0",
+            "2026-10-21T16:47:28.2580268Z ℹ skipped 39",
+            "2026-10-21T16:47:28.2580478Z ℹ todo 0",
+            "2026-10-21T16:47:28.2580712Z ℹ duration_ms 101373.303177"
+          ],
+          "counts": {
+            "tests": 3343,
+            "passed": 3304,
+            "failed": 0,
+            "skipped": 39
+          },
+          "syntaxSources": 619,
+          "omissions": [
+            "2026-10-21T16:45:47.0827113Z ﹣ real HTTP invitation, encrypted verification mail and gated client access (synthetic disposable database only) (1.329524ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:45:50.9740341Z ﹣ real MariaDB invitation and restricted client access persistence (synthetic disposable database only) (1.151201ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:45:50.9764062Z ﹣ durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only) (1.196546ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials.",
+            "2026-10-21T16:45:50.9848623Z ﹣ Linux descriptor bootstrap refuses unavailable proc descriptor paths before database initialization (0.188031ms) # Real proc descriptor paths are available",
+            "2026-10-21T16:45:50.9972586Z ﹣ real MariaDB controlled administrator recovery (synthetic disposable database only) (0.917254ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:45:51.0024458Z ﹣ real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery (1.569201ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:46:01.5937222Z ﹣ real MariaDB administrator authentication persistence (synthetic disposable database only) (1.0973ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:01.7077734Z ﹣ offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only) (1.032519ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T16:46:01.7567691Z ﹣ real MariaDB trusted broadcast/chat transactions (synthetic disposable database only) (1.263801ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:01.7602896Z ﹣ real HTTP targeted broadcasts require active access and retain durable ordinary chat delivery (synthetic disposable database only) (1.319946ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:01.7785229Z ﹣ real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages (1.258632ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:01.7836889Z ﹣ real MariaDB active-access eligibility, immutable targeted campaigns and atomic private delivery (synthetic disposable schema only) (1.15601ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:01.8172008Z ﹣ real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only) (1.370612ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:02.2184781Z ﹣ real MariaDB private text chat persistence (synthetic disposable database only) (1.763315ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:04.2519827Z ﹣ native closure reconciliation replays a source receipt into a distinct MariaDB/media clone and retains quarantine (0.823489ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T16:46:04.2615595Z ﹣ real HTTP private CRM, encrypted notes, scoped labels and current authorization (synthetic disposable database only) (1.121124ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:06.9402437Z ﹣ real MariaDB private CRM ownership, optimistic saves and inbox filters (synthetic disposable schema only) (1.101598ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:06.9455126Z ﹣ offline deletion facts and operator plan inspect real reference graphs without SQL or filesystem mutation (synthetic disposable database only) (1.053598ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:46:06.9540079Z ﹣ offline client content reader isolates two real MariaDB clients in one read-only snapshot (synthetic disposable database only) (1.010949ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:46:07.1134258Z ﹣ the real dual-origin runtime shares schema thirty, source sessions, encrypted notifications and invitation policy (synthetic disposable database only) (1.231631ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:46:09.8687512Z ﹣ local closures drain the real managed process and preserve durable SQL/photo absence without a PC (disposable MariaDB only) (1.140992ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials.",
+            "2026-10-21T16:46:09.8690400Z ﹣ real MariaDB encrypted verification mail persistence (synthetic disposable database only) (1.297265ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:16.5720011Z ﹣ manual operator imports a real native archive, publishes the actual IPC application and verifies drain and ordinary restart on an isolated target (0.874966ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases and native MariaDB clients.",
+            "2026-10-21T16:46:16.5724086Z ﹣ the operator CLI resumes interrupted media using native SQL once, then copies only missing files and opens the owned IPC service (0.147886ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable databases and native MariaDB clients.",
+            "2026-10-21T16:46:16.5743936Z ﹣ manual local restoration reconciles later closures on a distinct MariaDB/media clone without witness or exhaustive SQL inventory (1.143868ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T16:46:16.5808444Z ﹣ real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only) (0.797991ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:17.1870089Z ﹣ real MariaDB private media ownership and delivery (synthetic disposable database only) (1.21953ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:17.1943944Z ﹣ real MariaDB migration and foundation constraints (synthetic disposable database only) (0.851451ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:18.1276488Z ﹣ real MariaDB private notification transactions (synthetic disposable database only) (1.383927ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:19.3042141Z ﹣ operational metadata samples real MariaDB queues with runtime DML rights and no queue mutation (synthetic disposable database only) (0.355084ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:46:22.6177109Z ﹣ operator SQL preflight observes real MariaDB with runtime DML rights without mutation (synthetic disposable database only) (1.410545ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:46:22.6181491Z ﹣ explicit Linux dirfd selection fails closed when real procfs is absent (0.191478ms) # SKIP",
+            "2026-10-21T16:46:34.3462156Z ﹣ real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only) (1.318524ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:46:34.3496196Z ﹣ administrator readiness with real SQL MFA, private HTTP and fake verification-only SMTP (synthetic disposable database only) (1.432096ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:34.4165639Z ﹣ real HTTP client recovery, encrypted mail, single use and unchanged access gates (synthetic disposable database only) (1.11843ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:38.3328675Z ﹣ real MariaDB single-use client password recovery and private leased mail (synthetic disposable database only) (0.85074ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:46:40.5335778Z ﹣ real MariaDB private tasks persist, retry, page and serialize simultaneous administrators (1.296252ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:47:28.2554072Z ﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media directly without enabling closures (disposable MariaDB only) (0.884172ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials.",
+            "2026-10-21T16:47:28.2556580Z ﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media through the real parent gateway without enabling closures (disposable MariaDB only) (0.141143ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials."
+          ]
+        }
+      ],
+      "failureClassification": {
+        "file": "tests/notifications-store.integration.test.mjs",
+        "line": 287,
+        "expected": 32,
+        "actual": 33,
+        "kind": "outdated_fixture_schema_count",
+        "productGuardLowered": false
+      },
+      "nativeTaskCoverage": {
+        "expectedSubcases": 8,
+        "passed": true,
+        "nonemptyTaskRestore": true,
+        "nonemptyTaskPurge": true,
+        "notOverallNativeQualification": true
+      },
+      "notAttested": [
+        "production_delivery",
+        "physical_devices",
+        "real_host_capacity",
+        "current_pc_backup_delivery"
+      ]
+    },
+    "qualifiedPr": {
+      "repository": "fredbuhr/jessiemessage",
+      "pullRequest": 122,
+      "head": "c33e87656437e469f79531251ecce76b273fcfe8",
+      "headTree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+      "baseRef": "feat/tasks-compat-151",
+      "baseRefHead": "ae6d23e47c065a5cc9ef5f2e7359131e1f281d36",
+      "prApiBaseSnapshot": "f910391b88aa03629bb42e5fe9f8e6b46361e077",
+      "mergeCheckout": {
+        "sha": "eb6a4b29b64d7901bfecadbe944ed2555b610175",
+        "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+        "parents": [
+          "ae6d23e47c065a5cc9ef5f2e7359131e1f281d36",
+          "c33e87656437e469f79531251ecce76b273fcfe8"
+        ],
+        "headTreeIdentical": true,
+        "evidence": "All five decoded job logs show pull/122/merge eb6a4b2 from head c33e876 into base ae6d23e. PR JSON base snapshot was older f910391b; actual Git parents and logs establish checkout."
+      },
+      "run": {
+        "id": 39638697333,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39638697333",
+        "event": "pull_request",
+        "head": "c33e87656437e469f79531251ecce76b273fcfe8",
+        "status": "completed",
+        "conclusion": "success",
+        "attempt": 1,
+        "createdAt": "2026-10-21T16:52:34Z",
+        "updatedAt": "2026-10-21T16:59:06Z"
+      },
+      "results": {
+        "jobs": 5,
+        "passedJobs": 5,
+        "allFiveOwnLogsRead": true
+      },
+      "jobs": [
+        {
+          "id": 119356227054,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T16:52:38Z",
+          "completedAt": "2026-10-21T16:55:00Z",
+          "logDecoded": true,
+          "logCharacters": 463528,
+          "nodeVersion": "v24.22.0",
+          "checkout": "eb6a4b29b64d7901bfecadbe944ed2555b610175",
+          "counts": {
+            "tests": 3343,
+            "pass": 3304,
+            "fail": 0,
+            "skipped": 39
+          },
+          "evidence": [
+            "2026-10-21T16:52:41.3165069Z HEAD is now at eb6a4b2 Merge c33e87656437e469f79531251ecce76b273fcfe8 into ae6d23e47c065a5cc9ef5f2e7359131e1f281d36",
+            "2026-10-21T16:52:46.0542282Z node: v24.22.0",
+            "2026-10-21T16:54:41.5317134Z ℹ tests 3343",
+            "2026-10-21T16:54:41.5317498Z ℹ suites 0",
+            "2026-10-21T16:54:41.5317857Z ℹ pass 3304",
+            "2026-10-21T16:54:41.5318231Z ℹ fail 0",
+            "2026-10-21T16:54:41.5318583Z ℹ cancelled 0",
+            "2026-10-21T16:54:41.5318964Z ℹ skipped 39",
+            "2026-10-21T16:54:41.5319328Z ℹ todo 0",
+            "2026-10-21T16:54:41.5319774Z ℹ duration_ms 98837.544645"
+          ],
+          "syntaxSources": 619,
+          "syntaxEvidence": [
+            "2026-10-21T16:53:02.5373365Z Syntax verified: 619 JavaScript and shell source files.",
+            "2026-10-21T16:54:56.0965730Z Syntax verified: 619 JavaScript and shell source files.",
+            "2026-10-21T16:54:56.1485681Z Atelier Nuit créé avec les icônes approuvées : artifacts/JessieMessage.html"
+          ],
+          "omissions": [
+            "2026-10-21T16:53:02.8624593Z ﹣ real HTTP invitation, encrypted verification mail and gated client access (synthetic disposable database only) (1.146033ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:07.0260222Z ﹣ real MariaDB invitation and restricted client access persistence (synthetic disposable database only) (0.852083ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:07.0295967Z ﹣ durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only) (0.873724ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials.",
+            "2026-10-21T16:53:07.0408271Z ﹣ Linux descriptor bootstrap refuses unavailable proc descriptor paths before database initialization (0.236162ms) # Real proc descriptor paths are available",
+            "2026-10-21T16:53:07.0671996Z ﹣ real MariaDB controlled administrator recovery (synthetic disposable database only) (1.047809ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:07.0797747Z ﹣ real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery (1.098193ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:53:17.1967515Z ﹣ real MariaDB administrator authentication persistence (synthetic disposable database only) (1.157176ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:17.2187277Z ﹣ offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only) (1.060099ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T16:53:17.2527065Z ﹣ real MariaDB trusted broadcast/chat transactions (synthetic disposable database only) (1.041315ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:17.2551784Z ﹣ real HTTP targeted broadcasts require active access and retain durable ordinary chat delivery (synthetic disposable database only) (0.922116ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:17.2697725Z ﹣ real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages (1.194299ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:17.2746659Z ﹣ real MariaDB active-access eligibility, immutable targeted campaigns and atomic private delivery (synthetic disposable schema only) (0.957353ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:17.2958235Z ﹣ real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only) (1.039568ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:17.5049954Z ﹣ real MariaDB private text chat persistence (synthetic disposable database only) (0.867944ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:19.4663455Z ﹣ native closure reconciliation replays a source receipt into a distinct MariaDB/media clone and retains quarantine (1.19532ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T16:53:19.4705981Z ﹣ real HTTP private CRM, encrypted notes, scoped labels and current authorization (synthetic disposable database only) (1.087187ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:21.5240576Z ﹣ real MariaDB private CRM ownership, optimistic saves and inbox filters (synthetic disposable schema only) (1.351369ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:21.5316079Z ﹣ offline deletion facts and operator plan inspect real reference graphs without SQL or filesystem mutation (synthetic disposable database only) (0.799683ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:53:21.5759481Z ﹣ offline client content reader isolates two real MariaDB clients in one read-only snapshot (synthetic disposable database only) (1.204663ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:53:22.3817670Z ﹣ the real dual-origin runtime shares schema thirty, source sessions, encrypted notifications and invitation policy (synthetic disposable database only) (0.975794ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:53:24.7330200Z ﹣ local closures drain the real managed process and preserve durable SQL/photo absence without a PC (disposable MariaDB only) (1.181272ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials.",
+            "2026-10-21T16:53:24.7333709Z ﹣ real MariaDB encrypted verification mail persistence (synthetic disposable database only) (0.903069ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:31.3916235Z ﹣ manual operator imports a real native archive, publishes the actual IPC application and verifies drain and ordinary restart on an isolated target (1.116791ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases and native MariaDB clients.",
+            "2026-10-21T16:53:31.3920562Z ﹣ the operator CLI resumes interrupted media using native SQL once, then copies only missing files and opens the owned IPC service (0.14878ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable databases and native MariaDB clients.",
+            "2026-10-21T16:53:31.3947181Z ﹣ manual local restoration reconciles later closures on a distinct MariaDB/media clone without witness or exhaustive SQL inventory (0.836073ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T16:53:31.4027164Z ﹣ real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only) (0.810826ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:31.6160059Z ﹣ real MariaDB private media ownership and delivery (synthetic disposable database only) (0.858764ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:31.6208613Z ﹣ real MariaDB migration and foundation constraints (synthetic disposable database only) (0.96293ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:32.4038849Z ﹣ real MariaDB private notification transactions (synthetic disposable database only) (1.012232ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:33.7579775Z ﹣ operational metadata samples real MariaDB queues with runtime DML rights and no queue mutation (synthetic disposable database only) (0.515419ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:53:37.0841993Z ﹣ operator SQL preflight observes real MariaDB with runtime DML rights without mutation (synthetic disposable database only) (1.137298ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:53:37.0846776Z ﹣ explicit Linux dirfd selection fails closed when real procfs is absent (0.179417ms) # SKIP",
+            "2026-10-21T16:53:48.1164567Z ﹣ real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only) (0.780797ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:53:48.1199693Z ﹣ administrator readiness with real SQL MFA, private HTTP and fake verification-only SMTP (synthetic disposable database only) (0.898359ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:48.1823821Z ﹣ real HTTP client recovery, encrypted mail, single use and unchanged access gates (synthetic disposable database only) (1.112321ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:52.0578076Z ﹣ real MariaDB single-use client password recovery and private leased mail (synthetic disposable database only) (0.805264ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T16:53:53.8283866Z ﹣ real MariaDB private tasks persist, retry, page and serialize simultaneous administrators (0.817596ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T16:54:41.5271547Z ﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media directly without enabling closures (disposable MariaDB only) (0.937542ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials.",
+            "2026-10-21T16:54:41.5275651Z ﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media through the real parent gateway without enabling closures (disposable MariaDB only) (0.145694ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials."
+          ]
+        },
+        {
+          "id": 119356227665,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T16:52:38Z",
+          "completedAt": "2026-10-21T16:59:05Z",
+          "logDecoded": true,
+          "logCharacters": 289844,
+          "nodeVersion": "v24.22.0",
+          "checkout": "eb6a4b29b64d7901bfecadbe944ed2555b610175",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "evidence": [
+            "2026-10-21T16:52:56.0053268Z HEAD is now at eb6a4b2 Merge c33e87656437e469f79531251ecce76b273fcfe8 into ae6d23e47c065a5cc9ef5f2e7359131e1f281d36",
+            "2026-10-21T16:53:01.1719716Z node: v24.22.0",
+            "2026-10-21T16:59:01.1582466Z # tests 505",
+            "2026-10-21T16:59:01.1582824Z # suites 0",
+            "2026-10-21T16:59:01.1583151Z # pass 505",
+            "2026-10-21T16:59:01.1583477Z # fail 0",
+            "2026-10-21T16:59:01.1583841Z # cancelled 0",
+            "2026-10-21T16:59:01.1584451Z # skipped 0",
+            "2026-10-21T16:59:01.1584650Z # todo 0",
+            "2026-10-21T16:59:01.1584863Z # duration_ms 349360.749653"
+          ],
+          "taskEvidence": [
+            "2026-10-21T16:53:31.5433495Z     ok 3 - complete removal preserves peer data, reused administrator photos and coherent shared campaign audiences",
+            "2026-10-21T16:53:58.6837646Z     ok 20 - recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:54:00.3797722Z     ok 21 - CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:54:02.2000229Z     ok 22 - broadcast, CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:57:56.1794852Z     ok 1 - schema and empty lists are current, private and do not create tasks",
+            "2026-10-21T16:57:56.2359937Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated",
+            "2026-10-21T16:57:56.2781064Z     ok 3 - owner and conversation isolation apply to reads, edits, summary and creation",
+            "2026-10-21T16:57:56.3373382Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task",
+            "2026-10-21T16:57:56.3565744Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner",
+            "2026-10-21T16:57:56.3996354Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely",
+            "2026-10-21T16:57:56.4201261Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases",
+            "2026-10-21T16:57:56.4382608Z     ok 8 - live SQL authorization rejects a revoked session despite a stale service session",
+            "2026-10-21T16:57:56.4886975Z ok 36 - real MariaDB private tasks persist, retry, page and serialize simultaneous administrators"
+          ],
+          "serverVersionEvidence": [
+            "2026-10-21T16:59:01.6062837Z  Version: '10.11.19-MariaDB-ubu2204'  socket: '/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution"
+          ],
+          "notificationFixedEvidence": [
+            "2026-10-21T16:57:42.7455682Z     ok 17 - the configured HTTP runtime uses schema thirty-three with notifications enabled or disabled and no external delivery"
+          ]
+        },
+        {
+          "id": 119356227705,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T16:52:37Z",
+          "completedAt": "2026-10-21T16:56:47Z",
+          "logDecoded": true,
+          "logCharacters": 37367,
+          "nodeVersion": "v24.22.0",
+          "checkout": "eb6a4b29b64d7901bfecadbe944ed2555b610175",
+          "counts": {
+            "tests": 189,
+            "pass": 189,
+            "fail": 0,
+            "skipped": 0
+          },
+          "evidence": [
+            "2026-10-21T16:52:40.5832405Z HEAD is now at eb6a4b2 Merge c33e87656437e469f79531251ecce76b273fcfe8 into ae6d23e47c065a5cc9ef5f2e7359131e1f281d36",
+            "2026-10-21T16:52:43.9116114Z node: v24.22.0",
+            "2026-10-21T16:56:45.7188363Z ℹ tests 189",
+            "2026-10-21T16:56:45.7188708Z ℹ suites 0",
+            "2026-10-21T16:56:45.7189049Z ℹ pass 189",
+            "2026-10-21T16:56:45.7189379Z ℹ fail 0",
+            "2026-10-21T16:56:45.7189715Z ℹ cancelled 0",
+            "2026-10-21T16:56:45.7190093Z ℹ skipped 0",
+            "2026-10-21T16:56:45.7190429Z ℹ todo 0",
+            "2026-10-21T16:56:45.7190837Z ℹ duration_ms 238868.448814"
+          ],
+          "taskTests": [
+            "2026-10-21T16:56:45.7178207Z ✔ Chrome mobile FR/EN: create, postpone, complete and reopen a private client task without overflow (5358.006362ms)",
+            "2026-10-21T16:56:45.7180038Z ✔ Chrome: a lost task acknowledgement retries one stable request and a conflict preserves the unsaved draft (2498.006747ms)",
+            "2026-10-21T16:56:45.7182099Z ✔ Chrome: hiding the page clears private task markup, same-owner resume preserves drafts and replacement accounts purge them (1578.780003ms)",
+            "2026-10-21T16:56:45.7183993Z ✔ Chrome: the common task view spans clients and paginates without truncating the private work list (1703.955499ms)",
+            "2026-10-21T16:56:45.7185661Z ✔ Chrome: a CSRF refusal freezes an uncertain task until connection refresh and explicit retry (2372.507479ms)",
+            "2026-10-21T16:56:45.7187452Z ✔ Chrome: a list read begun before a save cannot restore the old private task after the mutation (1498.792951ms)"
+          ],
+          "taskContexts": {
+            "tests": 6,
+            "contexts": 7,
+            "basis": "Pinned browser source (unchanged by fixture fix): first test loops [320,fr] and [390,en], other five open one page each; all six log success."
+          }
+        },
+        {
+          "id": 119356227793,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T16:52:38Z",
+          "completedAt": "2026-10-21T16:58:16Z",
+          "logDecoded": true,
+          "logCharacters": 289110,
+          "nodeVersion": "v24.22.0",
+          "checkout": "eb6a4b29b64d7901bfecadbe944ed2555b610175",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "evidence": [
+            "2026-10-21T16:52:58.1101677Z HEAD is now at eb6a4b2 Merge c33e87656437e469f79531251ecce76b273fcfe8 into ae6d23e47c065a5cc9ef5f2e7359131e1f281d36",
+            "2026-10-21T16:52:58.6201348Z node: v24.22.0",
+            "2026-10-21T16:58:12.6710282Z # tests 505",
+            "2026-10-21T16:58:12.6710557Z # suites 0",
+            "2026-10-21T16:58:12.6710795Z # pass 505",
+            "2026-10-21T16:58:12.6710957Z # fail 0",
+            "2026-10-21T16:58:12.6711115Z # cancelled 0",
+            "2026-10-21T16:58:12.6711700Z # skipped 0",
+            "2026-10-21T16:58:12.6711862Z # todo 0",
+            "2026-10-21T16:58:12.6712039Z # duration_ms 301070.095814"
+          ],
+          "taskEvidence": [
+            "2026-10-21T16:53:29.3641971Z     ok 3 - complete removal preserves peer data, reused administrator photos and coherent shared campaign audiences",
+            "2026-10-21T16:53:58.2044612Z     ok 20 - recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:53:59.5001218Z     ok 21 - CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:54:01.5962825Z     ok 22 - broadcast, CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T16:57:24.7303916Z     ok 1 - schema and empty lists are current, private and do not create tasks",
+            "2026-10-21T16:57:24.8692225Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated",
+            "2026-10-21T16:57:24.8976796Z     ok 3 - owner and conversation isolation apply to reads, edits, summary and creation",
+            "2026-10-21T16:57:25.0113170Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task",
+            "2026-10-21T16:57:25.0232196Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner",
+            "2026-10-21T16:57:25.0533363Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely",
+            "2026-10-21T16:57:25.0665268Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases",
+            "2026-10-21T16:57:25.1011304Z     ok 8 - live SQL authorization rejects a revoked session despite a stale service session",
+            "2026-10-21T16:57:25.1469377Z ok 36 - real MariaDB private tasks persist, retry, page and serialize simultaneous administrators"
+          ],
+          "serverVersionEvidence": [
+            "2026-10-21T16:58:13.0186463Z  Version: '11.4.13-MariaDB-ubu2404'  socket: '/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution"
+          ],
+          "notificationFixedEvidence": [
+            "2026-10-21T16:57:09.0559206Z     ok 17 - the configured HTTP runtime uses schema thirty-three with notifications enabled or disabled and no external delivery"
+          ]
+        },
+        {
+          "id": 119356227795,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T16:52:38Z",
+          "completedAt": "2026-10-21T16:53:48Z",
+          "logDecoded": true,
+          "logCharacters": 33920,
+          "nodeVersion": "v24.22.0",
+          "checkout": "eb6a4b29b64d7901bfecadbe944ed2555b610175",
+          "counts": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0,
+            "skipped": 0
+          },
+          "evidence": [
+            "2026-10-21T16:52:51.7053514Z HEAD is now at eb6a4b2 Merge c33e87656437e469f79531251ecce76b273fcfe8 into ae6d23e47c065a5cc9ef5f2e7359131e1f281d36",
+            "2026-10-21T16:52:56.2618933Z node: v24.22.0",
+            "2026-10-21T16:53:45.4785861Z ℹ tests 3",
+            "2026-10-21T16:53:45.4786287Z ℹ suites 0",
+            "2026-10-21T16:53:45.4786615Z ℹ pass 3",
+            "2026-10-21T16:53:45.4786918Z ℹ fail 0",
+            "2026-10-21T16:53:45.4787843Z ℹ cancelled 0",
+            "2026-10-21T16:53:45.4788242Z ℹ skipped 0",
+            "2026-10-21T16:53:45.4788550Z ℹ todo 0",
+            "2026-10-21T16:53:45.4788923Z ℹ duration_ms 47675.922858"
+          ]
+        }
+      ],
+      "nativeTaskCoverage": {
+        "sqlSubcases": 8,
+        "sqlParentPassedOnBoth": true,
+        "nonemptyTaskRestore": {
+          "passedOnBoth": true,
+          "profiles": [
+            "photos-notify-recovery-crm",
+            "photos-notify-recovery-crm-broadcast"
+          ],
+          "source": "tests/backup-flow.integration.test.mjs",
+          "sourceRef": "c33e87656437e469f79531251ecce76b273fcfe8",
+          "basis": "Unchanged pinned fixture seeds title_encrypted, due_at, done and version; restored clone verifies owner/conversation, decrypted nonempty title and exact due date."
+        },
+        "nonemptyTaskPurge": {
+          "passedOnBoth": true,
+          "source": "tests/account-erasure-flow.integration.test.mjs",
+          "sourceRef": "c33e87656437e469f79531251ecce76b273fcfe8",
+          "basis": "Unchanged pinned fixture seeds selected and peer tasks; complete removal asserts selected absent and peer intact."
+        }
+      },
+      "initialFailedAttempt": {
+        "proof": "ci160-pr-initial.json",
+        "head": "13d42ebb77c8b1951a17f47ca1488b45a03cabb8",
+        "run": 39637600821,
+        "sqlCountsEach": {
+          "tests": 505,
+          "pass": 503,
+          "fail": 2,
+          "skipped": 0
+        },
+        "cause": "Outdated notification fixture applied migration count32, actual33; parent plus subcase failed."
+      },
+      "fixtureFix": {
+        "files": [
+          {
+            "path": "tests/notifications-store.integration.test.mjs",
+            "additions": 2,
+            "deletions": 2,
+            "patch": "@@ -282,9 +282,9 @@ test(\"real MariaDB private notification transactions (synthetic disposable datab\n       assert.equal(rows.length, 17);\n     });\n \n-    await t.test(\"the configured HTTP runtime uses schema thirty with notifications enabled or disabled and no external delivery\", { timeout: 15000 }, async () => {\n+    await t.test(\"the configured HTTP runtime uses schema thirty-three with notifications enabled or disabled and no external delivery\", { timeout: 15000 }, async () => {\n       assert.equal(migrations.length, 33);\n-      assert.equal(Number((await connection.query(\"SELECT COUNT(*) AS count FROM schema_migrations WHERE state = 'applied'\"))[0].count), 32);\n+      assert.equal(Number((await connection.query(\"SELECT COUNT(*) AS count FROM schema_migrations WHERE state = 'applied'\"))[0].count), 33);\n       const fixture = await pair(), raw = { admin: newToken(), client: newToken() };\n       for (const role of [\"admin\", \"client\"]) {\n         fixture[role].tokenHash = tokenDigest(raw[role]);"
+          }
+        ],
+        "productGuardLowered": false
+      },
+      "notAttested": [
+        "production_delivery",
+        "physical_devices",
+        "real_host_capacity",
+        "current_pc_backup_delivery"
+      ]
+    },
+    "qualifiedMain": {
+      "repository": "fredbuhr/jessiemessage",
+      "version": "1.6.0",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+      "parents": [
+        "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "c33e87656437e469f79531251ecce76b273fcfe8"
+      ],
+      "pullRequest": {
+        "number": 122,
+        "head": "c33e87656437e469f79531251ecce76b273fcfe8",
+        "mergeCommit": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "mergedAt": "2026-10-21T17:05:24Z",
+        "base": "main",
+        "retargetWasNotNewPrQualification": true,
+        "prProof": "ci160-pr.json",
+        "prQualifiedSyntheticMerge": "eb6a4b29b64d7901bfecadbe944ed2555b610175",
+        "prSyntheticTreeEqualsMainTree": true
+      },
+      "run": {
+        "id": 39640655562,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39640655562",
+        "event": "push",
+        "head": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "branch": "main",
+        "path": ".github/workflows/ci.yml",
+        "status": "completed",
+        "conclusion": "success",
+        "attempt": 1,
+        "createdAt": "2026-10-21T17:05:27Z",
+        "updatedAt": "2026-10-21T17:11:40Z"
+      },
+      "results": {
+        "jobs": 5,
+        "passedJobs": 5,
+        "allFiveOwnLogsRead": true
+      },
+      "jobs": [
+        {
+          "id": 119362963183,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T17:05:30Z",
+          "completedAt": "2026-10-21T17:08:45Z",
+          "logDecoded": true,
+          "logCharacters": 36285,
+          "nodeVersion": "v24.22.0",
+          "checkout": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+          "counts": {
+            "tests": 189,
+            "pass": 189,
+            "fail": 0,
+            "skipped": 0
+          },
+          "evidence": [
+            "2026-10-21T17:05:31.8976318Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9590741e7065067aee9d1ad5d1206739cc27eb6b:refs/remotes/origin/main",
+            "2026-10-21T17:05:34.3944999Z  * [new ref]         9590741e7065067aee9d1ad5d1206739cc27eb6b -> origin/main",
+            "2026-10-21T17:05:34.4746051Z Switched to a new branch 'main'",
+            "2026-10-21T17:05:34.4838929Z 9590741e7065067aee9d1ad5d1206739cc27eb6b",
+            "2026-10-21T17:05:34.9292566Z node: v24.22.0",
+            "2026-10-21T17:08:42.7625787Z ℹ tests 189",
+            "2026-10-21T17:08:42.7625906Z ℹ suites 0",
+            "2026-10-21T17:08:42.7626058Z ℹ pass 189",
+            "2026-10-21T17:08:42.7626196Z ℹ fail 0",
+            "2026-10-21T17:08:42.7626314Z ℹ cancelled 0",
+            "2026-10-21T17:08:42.7626461Z ℹ skipped 0",
+            "2026-10-21T17:08:42.7626592Z ℹ todo 0",
+            "2026-10-21T17:08:42.7626728Z ℹ duration_ms 186553.507365"
+          ],
+          "taskTests": [
+            "2026-10-21T17:08:42.7622154Z ✔ Chrome mobile FR/EN: create, postpone, complete and reopen a private client task without overflow (4820.871141ms)",
+            "2026-10-21T17:08:42.7622863Z ✔ Chrome: a lost task acknowledgement retries one stable request and a conflict preserves the unsaved draft (1614.564742ms)",
+            "2026-10-21T17:08:42.7623878Z ✔ Chrome: hiding the page clears private task markup, same-owner resume preserves drafts and replacement accounts purge them (703.205875ms)",
+            "2026-10-21T17:08:42.7624530Z ✔ Chrome: the common task view spans clients and paginates without truncating the private work list (1249.795051ms)",
+            "2026-10-21T17:08:42.7625017Z ✔ Chrome: a CSRF refusal freezes an uncertain task until connection refresh and explicit retry (1800.361259ms)",
+            "2026-10-21T17:08:42.7625506Z ✔ Chrome: a list read begun before a save cannot restore the old private task after the mutation (1688.307336ms)"
+          ],
+          "taskContexts": {
+            "tests": 6,
+            "contexts": 7,
+            "basis": "Pinned browser source (unchanged by fixture fix): first test loops [320,fr] and [390,en], other five open one page each; all six log success."
+          }
+        },
+        {
+          "id": 119362963464,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T17:05:30Z",
+          "completedAt": "2026-10-21T17:11:39Z",
+          "logDecoded": true,
+          "logCharacters": 288407,
+          "nodeVersion": "v24.22.0",
+          "checkout": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "evidence": [
+            "2026-10-21T17:06:02.0182864Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9590741e7065067aee9d1ad5d1206739cc27eb6b:refs/remotes/origin/main",
+            "2026-10-21T17:06:02.9834161Z  * [new ref]         9590741e7065067aee9d1ad5d1206739cc27eb6b -> origin/main",
+            "2026-10-21T17:06:03.0731540Z Switched to a new branch 'main'",
+            "2026-10-21T17:06:03.1018082Z 9590741e7065067aee9d1ad5d1206739cc27eb6b",
+            "2026-10-21T17:06:06.2636422Z node: v24.22.0",
+            "2026-10-21T17:09:34.6614673Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602573298}}",
+            "2026-10-21T17:09:38.2636597Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602576890}}",
+            "2026-10-21T17:09:41.8368028Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602580472}}",
+            "2026-10-21T17:09:44.5001530Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602583133}}",
+            "2026-10-21T17:09:54.1167604Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602592768}}",
+            "2026-10-21T17:10:49.7455215Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602648404}}",
+            "2026-10-21T17:10:52.2362032Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602650907}}",
+            "2026-10-21T17:10:54.7504645Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602653415}}",
+            "2026-10-21T17:10:57.2557503Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602655930}}",
+            "2026-10-21T17:10:59.6820145Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602658364}}",
+            "2026-10-21T17:11:02.4126254Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602661097}}",
+            "2026-10-21T17:11:05.6850576Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602664341}}",
+            "2026-10-21T17:11:09.6424751Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602668323}}",
+            "2026-10-21T17:11:37.2241161Z # tests 505",
+            "2026-10-21T17:11:37.2241440Z # suites 0",
+            "2026-10-21T17:11:37.2241603Z # pass 505",
+            "2026-10-21T17:11:37.2241757Z # fail 0",
+            "2026-10-21T17:11:37.2241911Z # cancelled 0",
+            "2026-10-21T17:11:37.2242457Z # skipped 0",
+            "2026-10-21T17:11:37.2242616Z # todo 0",
+            "2026-10-21T17:11:37.2242798Z # duration_ms 306163.335759"
+          ],
+          "taskEvidence": [
+            "2026-10-21T17:06:50.0094000Z     ok 3 - complete removal preserves peer data, reused administrator photos and coherent shared campaign audiences",
+            "2026-10-21T17:07:18.5077553Z     ok 20 - recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T17:07:19.8516755Z     ok 21 - CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T17:07:21.3107176Z     ok 22 - broadcast, CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T17:10:46.2561569Z     ok 1 - schema and empty lists are current, private and do not create tasks",
+            "2026-10-21T17:10:46.3859861Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated",
+            "2026-10-21T17:10:46.4919897Z     ok 3 - owner and conversation isolation apply to reads, edits, summary and creation",
+            "2026-10-21T17:10:46.6038390Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task",
+            "2026-10-21T17:10:46.6193715Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner",
+            "2026-10-21T17:10:46.6926979Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely",
+            "2026-10-21T17:10:46.7066780Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases",
+            "2026-10-21T17:10:46.7200018Z     ok 8 - live SQL authorization rejects a revoked session despite a stale service session",
+            "2026-10-21T17:10:46.9476474Z ok 36 - real MariaDB private tasks persist, retry, page and serialize simultaneous administrators"
+          ],
+          "serverVersionEvidence": [
+            "2026-10-21T17:11:37.5703077Z  Version: '11.4.13-MariaDB-ubu2404'  socket: '/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution"
+          ],
+          "notificationFixedEvidence": [
+            "2026-10-21T17:10:31.5556180Z     ok 17 - the configured HTTP runtime uses schema thirty-three with notifications enabled or disabled and no external delivery"
+          ]
+        },
+        {
+          "id": 119362963465,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T17:05:30Z",
+          "completedAt": "2026-10-21T17:11:09Z",
+          "logDecoded": true,
+          "logCharacters": 287514,
+          "nodeVersion": "v24.22.0",
+          "checkout": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "evidence": [
+            "2026-10-21T17:05:52.1704241Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9590741e7065067aee9d1ad5d1206739cc27eb6b:refs/remotes/origin/main",
+            "2026-10-21T17:05:54.2880843Z  * [new ref]         9590741e7065067aee9d1ad5d1206739cc27eb6b -> origin/main",
+            "2026-10-21T17:05:54.3814434Z Switched to a new branch 'main'",
+            "2026-10-21T17:05:54.3902728Z 9590741e7065067aee9d1ad5d1206739cc27eb6b",
+            "2026-10-21T17:05:57.7370779Z node: v24.22.0",
+            "2026-10-21T17:09:10.4340144Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602549112}}",
+            "2026-10-21T17:09:13.7927598Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602552472}}",
+            "2026-10-21T17:09:17.2350587Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602555905}}",
+            "2026-10-21T17:09:19.7761394Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602558450}}",
+            "2026-10-21T17:09:27.4266714Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602566088}}",
+            "2026-10-21T17:10:20.4959273Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602619181}}",
+            "2026-10-21T17:10:22.8845266Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602621584}}",
+            "2026-10-21T17:10:25.6880591Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602624345}}",
+            "2026-10-21T17:10:28.1386504Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602626824}}",
+            "2026-10-21T17:10:30.5007677Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602629191}}",
+            "2026-10-21T17:10:33.0161433Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602631712}}",
+            "2026-10-21T17:10:36.1159489Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602634825}}",
+            "2026-10-21T17:10:39.8040455Z # {\"version\":1,\"type\":\"application_started\",\"release\":{\"version\":\"1.6.0\",\"commit\":\"9590741e7065067aee9d1ad5d1206739cc27eb6b\",\"nodeVersion\":\"v24.22.0\",\"startedAt\":1792602638511}}",
+            "2026-10-21T17:11:04.9859640Z # tests 505",
+            "2026-10-21T17:11:04.9859875Z # suites 0",
+            "2026-10-21T17:11:04.9860229Z # pass 505",
+            "2026-10-21T17:11:04.9863098Z # fail 0",
+            "2026-10-21T17:11:04.9863595Z # cancelled 0",
+            "2026-10-21T17:11:04.9863949Z # skipped 0",
+            "2026-10-21T17:11:04.9864760Z # todo 0",
+            "2026-10-21T17:11:04.9865085Z # duration_ms 292691.990666"
+          ],
+          "taskEvidence": [
+            "2026-10-21T17:06:33.1668993Z     ok 3 - complete removal preserves peer data, reused administrator photos and coherent shared campaign audiences",
+            "2026-10-21T17:07:01.6449911Z     ok 20 - recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T17:07:02.8878723Z     ok 21 - CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T17:07:04.7088026Z     ok 22 - broadcast, CRM and recovery notification checkpoint captures populated SQL and restores its isolated application clone without sending mail or Push",
+            "2026-10-21T17:10:17.7805499Z     ok 1 - schema and empty lists are current, private and do not create tasks",
+            "2026-10-21T17:10:17.8181471Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated",
+            "2026-10-21T17:10:17.9043651Z     ok 3 - owner and conversation isolation apply to reads, edits, summary and creation",
+            "2026-10-21T17:10:17.9441784Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task",
+            "2026-10-21T17:10:17.9571354Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner",
+            "2026-10-21T17:10:17.9857881Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely",
+            "2026-10-21T17:10:18.0000911Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases",
+            "2026-10-21T17:10:18.0114937Z     ok 8 - live SQL authorization rejects a revoked session despite a stale service session",
+            "2026-10-21T17:10:18.0539177Z ok 36 - real MariaDB private tasks persist, retry, page and serialize simultaneous administrators"
+          ],
+          "serverVersionEvidence": [
+            "2026-10-21T17:11:05.3567731Z  Version: '10.11.19-MariaDB-ubu2204'  socket: '/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution"
+          ],
+          "notificationFixedEvidence": [
+            "2026-10-21T17:10:04.5373861Z     ok 17 - the configured HTTP runtime uses schema thirty-three with notifications enabled or disabled and no external delivery"
+          ]
+        },
+        {
+          "id": 119362963665,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T17:05:30Z",
+          "completedAt": "2026-10-21T17:07:41Z",
+          "logDecoded": true,
+          "logCharacters": 461897,
+          "nodeVersion": "v24.22.0",
+          "checkout": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+          "counts": {
+            "tests": 3343,
+            "pass": 3304,
+            "fail": 0,
+            "skipped": 39
+          },
+          "evidence": [
+            "2026-10-21T17:05:32.3966338Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9590741e7065067aee9d1ad5d1206739cc27eb6b:refs/remotes/origin/main",
+            "2026-10-21T17:05:33.5428537Z  * [new ref]         9590741e7065067aee9d1ad5d1206739cc27eb6b -> origin/main",
+            "2026-10-21T17:05:33.6371377Z Switched to a new branch 'main'",
+            "2026-10-21T17:05:33.6448795Z 9590741e7065067aee9d1ad5d1206739cc27eb6b",
+            "2026-10-21T17:05:34.2174904Z node: v24.22.0",
+            "2026-10-21T17:07:23.5598366Z ℹ tests 3343",
+            "2026-10-21T17:07:23.5598654Z ℹ suites 0",
+            "2026-10-21T17:07:23.5598949Z ℹ pass 3304",
+            "2026-10-21T17:07:23.5599217Z ℹ fail 0",
+            "2026-10-21T17:07:23.5599493Z ℹ cancelled 0",
+            "2026-10-21T17:07:23.5599763Z ℹ skipped 39",
+            "2026-10-21T17:07:23.5600029Z ℹ todo 0",
+            "2026-10-21T17:07:23.5600346Z ℹ duration_ms 93620.321915"
+          ],
+          "syntaxSources": 619,
+          "syntaxEvidence": [
+            "2026-10-21T17:05:35.8599717Z > jessiemessage@1.6.0 check",
+            "2026-10-21T17:05:49.7962855Z Syntax verified: 619 JavaScript and shell source files.",
+            "2026-10-21T17:05:49.9036141Z > jessiemessage@1.6.0 test",
+            "2026-10-21T17:07:23.6743306Z > jessiemessage@1.6.0 build",
+            "2026-10-21T17:07:23.7598458Z > jessiemessage@1.6.0 check",
+            "2026-10-21T17:07:37.9786692Z Syntax verified: 619 JavaScript and shell source files.",
+            "2026-10-21T17:07:38.0283907Z Atelier Nuit créé avec les icônes approuvées : artifacts/JessieMessage.html"
+          ],
+          "omissions": [
+            "2026-10-21T17:05:50.1027634Z ﹣ real HTTP invitation, encrypted verification mail and gated client access (synthetic disposable database only) (0.921426ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:05:54.2869121Z ﹣ real MariaDB invitation and restricted client access persistence (synthetic disposable database only) (0.870148ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:05:54.2950587Z ﹣ durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only) (1.076952ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials.",
+            "2026-10-21T17:05:54.3030806Z ﹣ Linux descriptor bootstrap refuses unavailable proc descriptor paths before database initialization (0.132177ms) # Real proc descriptor paths are available",
+            "2026-10-21T17:05:54.3121439Z ﹣ real MariaDB controlled administrator recovery (synthetic disposable database only) (0.692869ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:05:54.3162336Z ﹣ real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery (0.717094ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T17:06:03.9089919Z ﹣ real MariaDB administrator authentication persistence (synthetic disposable database only) (0.752096ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:03.9272407Z ﹣ offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only) (0.619491ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T17:06:03.9500870Z ﹣ real MariaDB trusted broadcast/chat transactions (synthetic disposable database only) (0.835803ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:03.9531709Z ﹣ real HTTP targeted broadcasts require active access and retain durable ordinary chat delivery (synthetic disposable database only) (0.899688ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:03.9639251Z ﹣ real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages (0.788507ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:03.9667713Z ﹣ real MariaDB active-access eligibility, immutable targeted campaigns and atomic private delivery (synthetic disposable schema only) (1.095436ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:03.9801546Z ﹣ real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only) (0.916863ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:04.2302554Z ﹣ real MariaDB private text chat persistence (synthetic disposable database only) (1.027079ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:05.3679106Z ﹣ native closure reconciliation replays a source receipt into a distinct MariaDB/media clone and retains quarantine (0.668429ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T17:06:05.8178613Z ﹣ real HTTP private CRM, encrypted notes, scoped labels and current authorization (synthetic disposable database only) (2.212731ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:07.4291287Z ﹣ real MariaDB private CRM ownership, optimistic saves and inbox filters (synthetic disposable schema only) (0.907685ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:07.4358895Z ﹣ offline deletion facts and operator plan inspect real reference graphs without SQL or filesystem mutation (synthetic disposable database only) (0.679249ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T17:06:07.5885252Z ﹣ offline client content reader isolates two real MariaDB clients in one read-only snapshot (synthetic disposable database only) (0.964668ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T17:06:07.9604002Z ﹣ the real dual-origin runtime shares schema thirty, source sessions, encrypted notifications and invitation policy (synthetic disposable database only) (0.794022ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T17:06:10.1014539Z ﹣ local closures drain the real managed process and preserve durable SQL/photo absence without a PC (disposable MariaDB only) (0.709586ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials.",
+            "2026-10-21T17:06:10.1016036Z ﹣ real MariaDB encrypted verification mail persistence (synthetic disposable database only) (0.909606ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:16.9573755Z ﹣ manual operator imports a real native archive, publishes the actual IPC application and verifies drain and ordinary restart on an isolated target (0.888552ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases and native MariaDB clients.",
+            "2026-10-21T17:06:16.9576648Z ﹣ the operator CLI resumes interrupted media using native SQL once, then copies only missing files and opens the owned IPC service (0.254539ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable databases and native MariaDB clients.",
+            "2026-10-21T17:06:16.9620204Z ﹣ manual local restoration reconciles later closures on a distinct MariaDB/media clone without witness or exhaustive SQL inventory (1.033002ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+            "2026-10-21T17:06:16.9700600Z ﹣ real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only) (0.670916ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:16.9880266Z ﹣ real MariaDB private media ownership and delivery (synthetic disposable database only) (0.846816ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:16.9908504Z ﹣ real MariaDB migration and foundation constraints (synthetic disposable database only) (0.630336ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:17.0023821Z ﹣ real MariaDB private notification transactions (synthetic disposable database only) (0.774864ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:18.2471882Z ﹣ operational metadata samples real MariaDB queues with runtime DML rights and no queue mutation (synthetic disposable database only) (0.500574ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T17:06:20.7806112Z ﹣ operator SQL preflight observes real MariaDB with runtime DML rights without mutation (synthetic disposable database only) (1.160597ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T17:06:20.7812352Z ﹣ explicit Linux dirfd selection fails closed when real procfs is absent (0.19252ms) # SKIP",
+            "2026-10-21T17:06:31.3467040Z ﹣ real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only) (0.875197ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T17:06:31.3488924Z ﹣ administrator readiness with real SQL MFA, private HTTP and fake verification-only SMTP (synthetic disposable database only) (0.740306ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:31.3900832Z ﹣ real HTTP client recovery, encrypted mail, single use and unchanged access gates (synthetic disposable database only) (1.154667ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:34.8215842Z ﹣ real MariaDB single-use client password recovery and private leased mail (synthetic disposable database only) (0.715884ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+            "2026-10-21T17:06:36.0976452Z ﹣ real MariaDB private tasks persist, retry, page and serialize simultaneous administrators (0.759391ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+            "2026-10-21T17:07:23.5570326Z ﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media directly without enabling closures (disposable MariaDB only) (0.622313ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials.",
+            "2026-10-21T17:07:23.5571997Z ﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media through the real parent gateway without enabling closures (disposable MariaDB only) (0.129201ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials."
+          ]
+        },
+        {
+          "id": 119362963721,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T17:05:30Z",
+          "completedAt": "2026-10-21T17:06:42Z",
+          "logDecoded": true,
+          "logCharacters": 33009,
+          "nodeVersion": "v24.22.0",
+          "checkout": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+          "counts": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0,
+            "skipped": 0
+          },
+          "evidence": [
+            "2026-10-21T17:05:50.3344544Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9590741e7065067aee9d1ad5d1206739cc27eb6b:refs/remotes/origin/main",
+            "2026-10-21T17:05:51.8149950Z  * [new ref]         9590741e7065067aee9d1ad5d1206739cc27eb6b -> origin/main",
+            "2026-10-21T17:05:51.8970325Z Switched to a new branch 'main'",
+            "2026-10-21T17:05:51.9031309Z 9590741e7065067aee9d1ad5d1206739cc27eb6b",
+            "2026-10-21T17:05:56.9291751Z node: v24.22.0",
+            "2026-10-21T17:06:39.5955925Z ℹ tests 3",
+            "2026-10-21T17:06:39.5956345Z ℹ suites 0",
+            "2026-10-21T17:06:39.5956786Z ℹ pass 3",
+            "2026-10-21T17:06:39.5957031Z ℹ fail 0",
+            "2026-10-21T17:06:39.5957533Z ℹ cancelled 0",
+            "2026-10-21T17:06:39.5957849Z ℹ skipped 0",
+            "2026-10-21T17:06:39.5958175Z ℹ todo 0",
+            "2026-10-21T17:06:39.5958556Z ℹ duration_ms 41338.077848"
+          ]
+        }
+      ],
+      "nativeTaskCoverage": {
+        "sqlSubcases": 8,
+        "sqlParentPassedOnBoth": true,
+        "nonemptyTaskRestore": {
+          "passedOnBoth": true,
+          "profiles": [
+            "photos-notify-recovery-crm",
+            "photos-notify-recovery-crm-broadcast"
+          ],
+          "source": "tests/backup-flow.integration.test.mjs",
+          "sourceRef": "c33e87656437e469f79531251ecce76b273fcfe8",
+          "basis": "Unchanged pinned fixture seeds title_encrypted, due_at, done and version; restored clone verifies owner/conversation, decrypted nonempty title and exact due date."
+        },
+        "nonemptyTaskPurge": {
+          "passedOnBoth": true,
+          "source": "tests/account-erasure-flow.integration.test.mjs",
+          "sourceRef": "c33e87656437e469f79531251ecce76b273fcfe8",
+          "basis": "Unchanged pinned fixture seeds selected and peer tasks; complete removal asserts selected absent and peer intact."
+        },
+        "mainTreeMatchesPinnedPrSources": true
+      },
+      "initialFailurePreserved": {
+        "proof": "ci160-pr-initial.json",
+        "kind": "outdated_fixture_migration_count",
+        "notConvertedToSuccess": true
+      },
+      "notAttested": [
+        "production_delivery",
+        "physical_devices",
+        "real_host_capacity",
+        "current_pc_backup_delivery"
+      ]
+    }
+  },
+  "publication": {
+    "kind": "release_publication_verification",
+    "repository": "fredbuhr/jessiemessage",
+    "version": "1.6.0",
+    "tag": "v1.6.0",
+    "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+    "published": true,
+    "deployed": false,
+    "hostedStateChanged": false,
+    "workflow": {
+      "commit": "44ae0e21856b0a22bdf724258396b42793e9c718",
+      "branch": "ops/publish-v1.6.0",
+      "path": ".github/workflows/publish-qualified.yml",
+      "event": "push",
+      "runId": 39642494041,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39642494041",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "createdAt": "2026-10-21T17:17:35Z",
+      "updatedAt": "2026-10-21T17:17:57Z",
+      "jobId": 119369356797,
+      "jobName": "publish",
+      "logsRead": true,
+      "logCharacters": 16039,
+      "nodeVersion": "v24.22.0"
+    },
+    "tagVerification": {
+      "ref": "refs/tags/v1.6.0",
+      "type": "commit",
+      "lightweight": true,
+      "commit": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "exactQualifiedSource": true,
+      "sourceTreeIndependentlyFetched": "38e72545ab4fd6feb4a04e934b2eb8685f82b970"
+    },
+    "release": {
+      "id": 419841377,
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.6.0",
+      "tag": "v1.6.0",
+      "targetCommitish": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "name": "JessieMessage 1.6.0 — Mes tâches et rappels",
+      "draft": false,
+      "prerelease": false,
+      "createdAt": "2026-10-21T17:05:23Z",
+      "publishedAt": "2026-10-21T17:17:53Z"
+    },
+    "publicationOutput": {
+      "status": "published_verified",
+      "tag": "v1.6.0",
+      "commit": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+      "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.6.0",
+      "ciRun": 39640655562
+    },
+    "guard": {
+      "mainRun": 39640655562,
+      "sourceMatches": true,
+      "mainBranch": true,
+      "pushEvent": true,
+      "workflowPath": ".github/workflows/ci.yml",
+      "mainCompletedSuccess": true,
+      "exactFiveNamedJobsCompletedSuccess": true,
+      "ownMainProof": "ci160-main.json",
+      "mainMetadataAndFiveJobsIndependentlyRead": true,
+      "mainLogsReadByAssignedQualificationAgent": true,
+      "treeMatches": true,
+      "versionsMatch": true,
+      "nodeRequirement": ">=24 <25",
+      "taskCreationEnabled": true,
+      "migration33Sha256": "81d0d11577b6ada0f734c7497cbf44768033f1374bd830dec5e4abe9beda34af",
+      "publicationLogGuardRead": true
+    },
+    "checks": {
+      "runMatchesRequestedWorkflowCommit": true,
+      "runPathMatches": true,
+      "runPushMatches": true,
+      "jobCompletedSuccess": true,
+      "publishedOutputMatchesTagAndRelease": true,
+      "releasePublicStable": true,
+      "releaseTargetMatchesSource": true,
+      "noFailureLines": true
+    },
+    "remoteMutations": false,
+    "testsRerun": false,
+    "limits": [
+      "Publication is verified separately from deployment. No server staging, migration, restart or checkpoint is claimed.",
+      "Task reminders are displayed while the application is open; no task webpush is claimed.",
+      "Own main CI logs were read by the assigned qualification agent; this publication reviewer independently rechecked run metadata and five job results, and read the complete publication log."
+    ]
+  },
+  "deliveryPreparation": {
+    "helperCommit": "1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a",
+    "helperTree": "05802a3835db1617241839e72a332dc258c3552c",
+    "helperParent": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "helperHashes": {
+      "ops/prepare-release160.sh": "705d2a959e3e67a6dcd93b8ffe78695cc4883873da329e4a97e453ba8e60e4b9",
+      "ops/status-release160-migration.sh": "95e201b4dc88ce446585c316b66f2804479f1c213d0dd027625e6bb1450b1a83",
+      "ops/upgrade-release160.sh": "7b24cc829a204ec1e1bccb081c85fe84919f81b98a5f190072173970b5f823c1",
+      "ops/test-release160-staging-synthetic.py": "047a2e163a45a4237648cdcc669ca7b00271f9fecbb704e3cdc3277fb1f3fc3c",
+      "ops/test-release160-migration-synthetic.py": "2fb6595e3cd3a96b2e73221d440058429c4a4f9095d18737cab4ceb8d44a817b"
+    },
+    "syntheticQualificationSnapshot": {
+      "status": "release160_ops_synthetic_qualified_sources_pinned_upgrade_disabled_publication_gate_pending",
+      "checkedAt": "2026-10-21T17:08:15.921399+00:00",
+      "baseline": {
+        "release": "1.5.0",
+        "source": "abca467c45c9385371a9095ab359e78c99140370",
+        "tree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+        "nodeVersion": "v24.22.0",
+        "nodeBinarySha256": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+        "schemaMigrations": 32
+      },
+      "targets": [
+        {
+          "version": "1.5.1",
+          "source": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+          "tree": "f769c99aa800486bd04065a308f1f4269841c215"
+        },
+        {
+          "version": "1.6.0",
+          "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+          "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970"
+        }
+      ],
+      "publicationGate": "Root must confirm own main160 CI and both published releases before publishing ops or operator staging instructions.",
+      "applicationCiOrReleaseCompletionClaimed": false,
+      "migration": {
+        "from": 32,
+        "to": 33,
+        "onlyNewFile": "0033_crm_tasks.sql",
+        "samePlanForBothTargetsRequired": true
+      },
+      "tests": [
+        {
+          "test": "test-release160-staging-synthetic.py",
+          "passed": 27,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "test": "test-release160-migration-synthetic.py",
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0
+        }
+      ],
+      "passed": 59,
+      "failed": 0,
+      "skipped": 0,
+      "checks": {
+        "standaloneFiveFilesExactPinnedCopy": true,
+        "bashSyntax": 3,
+        "embeddedPythonSyntax": 2,
+        "embeddedJavaScriptSyntax": 2,
+        "testPythonSyntax": 2,
+        "newOpsWhitespaceCheck": 5,
+        "gitDiffCheck": true,
+        "baselineMatchesClosed150Recorder": true,
+        "onlyExpectedOpsFiles": true,
+        "sourcePinsEverywhereInThreeHelpers": true,
+        "upgradeKeepsFourRealLauncherPinsPending": true
+      },
+      "files": {
+        "prepare-release160.sh": "705d2a959e3e67a6dcd93b8ffe78695cc4883873da329e4a97e453ba8e60e4b9",
+        "status-release160-migration.sh": "95e201b4dc88ce446585c316b66f2804479f1c213d0dd027625e6bb1450b1a83",
+        "upgrade-release160.sh": "7b24cc829a204ec1e1bccb081c85fe84919f81b98a5f190072173970b5f823c1",
+        "test-release160-staging-synthetic.py": "047a2e163a45a4237648cdcc669ca7b00271f9fecbb704e3cdc3277fb1f3fc3c",
+        "test-release160-migration-synthetic.py": "2fb6595e3cd3a96b2e73221d440058429c4a4f9095d18737cab4ceb8d44a817b"
+      },
+      "heldUpgradeAssignments": {
+        "jm_start151_sha": "QUALIFICATION_REQUIRED_START151_SHA256",
+        "jm_check151_sha": "QUALIFICATION_REQUIRED_CHECK151_SHA256",
+        "jm_start160_sha": "QUALIFICATION_REQUIRED_START160_SHA256",
+        "jm_check160_sha": "QUALIFICATION_REQUIRED_CHECK160_SHA256"
+      },
+      "upgradeExecutable": false,
+      "hostedOperationExecuted": false,
+      "sqlConnectionOpened": false,
+      "runtimeStarted": false,
+      "committed": false,
+      "published": false,
+      "log": "/workspace/scratch/96b2e1781a0b/release160-ops-synthetic-pinned.log"
+    },
+    "snapshotPhasePreserved": true,
+    "publicationGateNowSatisfied": true,
+    "helperBytesRereadAfterMainPublication": true,
+    "onlyNextOperatorAction": "prepare-release160.sh with exact published 1.5.1 and 1.6.0 source pins",
+    "expectedFirstReceipt": "staged_awaiting_schema33",
+    "preparationRunsSql": false,
+    "preparationStartsRuntime": false,
+    "preparationChangesManagerOrCheckpoint": false,
+    "upgradeTemplateExecutable": false,
+    "upgradeLauncherHashesPendingActualHostedStagingReceipt": 4,
+    "recordRelease160WriterCreated": false,
+    "futureRollbackVersion": "1.5.1",
+    "futureRollbackHostedPrepared": false,
+    "futureRollbackHostedQualified": false,
+    "schema33CompatibilityNote": "After migration33 the old 1.5.0/1.4.1 are not immediate rollback releases; qualify 1.5.1 first."
+  },
+  "hosting": {
+    "activeVersion": "1.5.0",
+    "activeSource": "abca467c45c9385371a9095ab359e78c99140370",
+    "activeTree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+    "nodeVersion": "v24.22.0",
+    "startupDisplayExact": "21/10/2026 17:58:07",
+    "schemaMigrations": 32,
+    "metadataReceipt": "jm150-hosted-metadata.json",
+    "currentRollback": "1.4.1",
+    "currentRollbackHostedPrechecked": true,
+    "currentRollbackRuntimeStarted": false,
+    "taskStagingReceiptReceived": false,
+    "taskMigrationApplied": false,
+    "taskPrechecksPassed": false,
+    "taskRuntimeActivated": false,
+    "taskMetadataRecorded": false,
+    "noHostedOperationReplayed": true,
+    "sourceOfHostingEvidence": "previous user receipts; no direct private server observation"
+  },
+  "notAttested": [
+    "production_tasks_staging_migration_activation_and_metadata",
+    "physical_phone",
+    "real_host_capacity",
+    "current_pc_or_backup_delivery"
+  ]
+}

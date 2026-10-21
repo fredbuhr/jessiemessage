@@ -6,7 +6,39 @@
 
 Ouvert à la demande de l’utilisateur après la clôture 1.5.0. La confirmation de synchronisation interrompue par une erreur interne du contrôle d’approbation est résolue : le fetch a réussi et l’index local a été comparé au commit GitHub `d985bf4e23abaeb3d275bf415f931e47bbb9ae68`, arbre `afd31c2444e7c2742e4fd643b5273b4d2dd37f41`, avant alignement de la branche locale. Aucun changement ni reçu n’a été perdu, aucune opération d’hébergement n’a été rejouée. Le mécanisme interne d’approbation n’a pas été modifié.
 
-Branche de travail : `feat/tasks-reminders-160`, issue de ce commit. Objectif borné : [plusieurs tâches privées par client, échéances, report, statut terminé et vue commune](tasks-reminders-160.md). Les rappels de ce lot apparaissent dans l’application ; aucune notification push de tâche lorsque l’application est fermée n’est promise. L’ancienne date de suivi du CRM est conservée. Migration additive 0033 prévue, sans nouvelle clé ni dépendance. Une référence compatible 1.5.1 sera qualifiée avant l’activation fonctionnelle 1.6.0. **Développement en cours, non qualifié et non déployé ; la production reste la 1.5.0 décrite ci-dessous.** Les vidéos et les opérations PC restent hors de ce lot.
+Le lot [Tâches et rappels 1.6.0](tasks-reminders-160.md) et sa [référence compatible 1.5.1](tasks-compat-151.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Plusieurs tâches privées par client, échéances, report, statut terminé et vue commune sont codés. Les rappels apparaissent dans l’application ; aucun push de tâche lorsque l’application est fermée. L’ancienne date de suivi CRM reste distincte. Le lot n’est pas clos : **aucune préparation hébergée, migration 0033, précontrôle, activation ou métadonnée 1.6.0 n’est encore attestée. La production reste la 1.5.0/schéma 32 décrite ci-dessous, avec son repli 1.4.1.** Les vidéos et les opérations PC restent hors de ce lot.
+
+| Référence publiée | Source et arbre exacts | Qualification propre et publication |
+| --- | --- | --- |
+| [1.5.1 — compatibilité](tasks-compat-151.md) | `71e62184d2d25a4242e0349c403027e1eeb6537c` ; `f769c99aa800486bd04065a308f1f4269841c215` | [PR 121](https://github.com/fredbuhr/jessiemessage/pull/121), [CI PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39638690632), [CI main](https://github.com/fredbuhr/jessiemessage/actions/runs/39639464133), [v1.5.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.1), [publication](https://github.com/fredbuhr/jessiemessage/actions/runs/39640634625). |
+| [1.6.0 — tâches et rappels](tasks-reminders-160.md) | `9590741e7065067aee9d1ad5d1206739cc27eb6b` ; `38e72545ab4fd6feb4a04e934b2eb8685f82b970` | [PR 122](https://github.com/fredbuhr/jessiemessage/pull/122), [CI PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39638697333), [CI main](https://github.com/fredbuhr/jessiemessage/actions/runs/39640655562), [v1.6.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.6.0), [publication](https://github.com/fredbuhr/jessiemessage/actions/runs/39642494041). |
+
+Chacune des quatre CI finales réussit **5/5**, avec ses cinq logs propres relus : **3 343 tests généraux, 3 304 réussis, zéro échec et 39 ignorés** (37 SQL et deux procfs), Chrome **189/189**, HTTPS/MariaDB **3/3**, MariaDB **10.11 et 11.4, 505/505 chacune**, sous Node **24.22.0**. Les tâches couvrent huit sous-cas SQL, six tests Chrome dans sept contextes, ainsi que la restauration et la purge de tâches non vides. Les omissions générales restent distinctes de la qualification native. Les [preuves 1.5.1](verification-proofs/jm151-verification.json) et [1.6.0](verification-proofs/jm160-verification.json) conservent les détails de chaque exécution. Ces CI synthétiques ne mesurent ni un téléphone physique, ni le débit réel du mutualisé, ni le fonctionnement courant du PC.
+
+Les tags et releases sont vérifiés sur leurs commits exacts : **v1.5.1**, release `419827910`, publiée le `2026-10-21T17:05:36Z` ; **v1.6.0**, release `419841377`, publiée le `2026-10-21T17:17:53Z`. La publication 1.6.0 provient du commit opérateur `44ae0e21856b0a22bdf724258396b42793e9c718`, distinct de la source applicative. Les helpers opérateur sont livrés séparément sur `1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a`, arbre `05802a3835db1617241839e72a332dc258c3552c`, et leurs cinq fichiers publiés ont été relus à l’identique des octets locaux. Leurs **59/59 tests synthétiques** et la revue indépendante sont réussis ; aucune exécution hébergée n’est déduite de ces contrôles.
+
+### Prochaine action — préparation hébergée uniquement
+
+Ouvrir la [console SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis copier ce bloc complet. Il prépare les sources publiées 1.5.1 et 1.6.0, les lanceurs et les journaux séparés. Il conserve la production 1.5.0 et ses lanceurs ; il ne lance ni SQL, ni précontrôle, ni serveur, et ne modifie ni le Manager ni le checkpoint.
+
+```sh
+python3 - <<'PY_STAGE'
+import hashlib, subprocess, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a/ops/prepare-release160.sh"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "705d2a959e3e67a6dcd93b8ffe78695cc4883873da329e4a97e453ba8e60e4b9":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+subprocess.run(
+    ["bash", "-s", "--", "71e62184d2d25a4242e0349c403027e1eeb6537c",
+     "9590741e7065067aee9d1ad5d1206739cc27eb6b"],
+    input=code, check=True
+)
+PY_STAGE
+```
+
+Transmettre le JSON complet **`staged_awaiting_schema33`**. Il doit encore distinguer `started:false`, `migrated:false`, `precheckPassed:false`, `sqlStatusChecked:false`, `schemaMigrationsExpected:33`, `rollback151Prepared:true` et `rollback151HostedQualified:false` : cette préparation ne prouve pas le schéma SQL appliqué. En cas de refus ou d’interruption, transmettre le résultat avant toute répétition ; le helper refuse les sorties déjà présentes et ne tronque aucun journal.
+
+**Attendre ce reçu avant toute autre consigne.** Aucun arrêt, SQL, upgrade, changement Run/Build, redémarrage ou writer 1.6.0 n’est à exécuter maintenant. Le helper de migration conserve quatre empreintes de lanceurs à épingler sur le reçu réel ; ce template n’est pas une commande opérateur utilisable.
 
 ## Dernière livraison close — Évolution 4, annonces 1.5.0
 
