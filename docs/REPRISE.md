@@ -1,12 +1,12 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — livraison 1.5.0 close, production identifiée et métadonnées alignées.** Le relevé affiche `1.5.0` / `abca467c45c9385371a9095ab359e78c99140370` / `v24.22.0` / **`21/10/2026 17:58:07`**. Ce texte de démarrage est conservé exactement, sans conversion de fuseau ou d’epoch déduite. Le schéma **32**, les précontrôles 1.4.1/1.5.0 et le repli **1.4.1** préparé et précontrôlé sans démarrage sont acquis. Le [reçu final utilisateur](verification-proofs/jm150-hosted-metadata.json) confirme le checkpoint aligné sur 1.5.0/schéma 32 et le repli 1.4.1 enregistré, sans redémarrage. **Ne pas redémarrer 1.4.0 ou 1.3.4 sur le schéma 32.** Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — schéma SQL 33 confirmé, service arrêté ; activation 1.6.0 attendue.** L’arrêt est attesté par l’opérateur dans les [reçus de migration et précontrôles](verification-proofs/jm160-hosted-schema33.json). Une migration 0033 a été appliquée, 32 conservées, et les deux CHECK 1.5.1/1.6.0 sont réussis. Le repli **1.5.1 est préparé et précontrôlé sur le schéma 33, jamais démarré**. La dernière version HTTP identifiée avant cet arrêt était la **1.5.0**, commit `abca467c45c9385371a9095ab359e78c99140370`, Node `v24.22.0`, démarrage affiché exactement **`21/10/2026 17:58:07`** ; ce relevé demeure historique, sans conversion de fuseau ou d’epoch déduite. Aucune identité HTTP 1.6.0 n’est encore reçue. Le checkpoint conserve les métadonnées 1.5.0 et les anciens replis ; il n’a pas été réécrit par le helper. **Ne pas redémarrer 1.5.0 ou 1.4.1 sur le schéma 33.** Ce fichier reste l’unique état courant. Les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## Travail courant — Évolution 5, tâches et rappels privés
 
 Ouvert à la demande de l’utilisateur après la clôture 1.5.0. La confirmation de synchronisation interrompue par une erreur interne du contrôle d’approbation est résolue : le fetch a réussi et l’index local a été comparé au commit GitHub `d985bf4e23abaeb3d275bf415f931e47bbb9ae68`, arbre `afd31c2444e7c2742e4fd643b5273b4d2dd37f41`, avant alignement de la branche locale. Aucun changement ni reçu n’a été perdu, aucune opération d’hébergement n’a été rejouée. Le mécanisme interne d’approbation n’a pas été modifié.
 
-Le lot [Tâches et rappels 1.6.0](tasks-reminders-160.md) et sa [référence compatible 1.5.1](tasks-compat-151.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Plusieurs tâches privées par client, échéances, report, statut terminé et vue commune sont codés. Les rappels apparaissent dans l’application ; aucun push de tâche lorsque l’application est fermée. L’ancienne date de suivi CRM reste distincte. Les [reçus de préparation hébergée](verification-proofs/jm160-hosted-staging.json) et de [statut SQL préalable](verification-proofs/jm160-hosted-sql-status.json) confirment les deux références préparées et le schéma 32 avec une migration 0033 en attente. Le lot n’est pas clos : **aucun arrêt de service, migration 0033, précontrôle, activation ou métadonnée 1.6.0 n’est encore attesté. La production reste la 1.5.0/schéma 32 décrite ci-dessous, avec son repli 1.4.1.** Les vidéos et les opérations PC restent hors de ce lot.
+Le lot [Tâches et rappels 1.6.0](tasks-reminders-160.md) et sa [référence compatible 1.5.1](tasks-compat-151.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Plusieurs tâches privées par client, échéances, report, statut terminé et vue commune sont codés. Les rappels apparaissent dans l’application ; aucun push de tâche lorsque l’application est fermée. L’ancienne date de suivi CRM reste distincte. Les reçus de préparation et de statut SQL préalable restent conservés séparément. Les [deux reçus de migration et précontrôles](verification-proofs/jm160-hosted-schema33.json) confirment désormais le schéma 33, l’arrêt du service attesté et le repli 1.5.1 précontrôlé sans démarrage. Le lot n’est pas clos : **le service reste arrêté ; activation 1.6.0, identité HTTP et métadonnées 1.6.0 sont encore attendues.** Les vidéos et les opérations PC restent hors de ce lot.
 
 | Référence publiée | Source et arbre exacts | Qualification propre et publication |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Le [reçu SSH utilisateur complet](verification-proofs/jm160-hosted-staging.json
 
 Il confirme Node **v24.22.0**, empreinte attendue **`67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c`**, les deux checkouts, leurs lanceurs distincts et les journaux normaux et de précontrôle encore vides. L’inventaire des fichiers est **32 migrations de référence, 33 attendues**, identique entre 1.5.1 et 1.6.0 et exclusivement additif ; `sqlStatusChecked:false` ne confirme pas encore le schéma SQL appliqué. Les chemins, modes et empreintes complets restent dans le reçu.
 
-Le repli **1.5.1 est préparé**, mais **pas encore précontrôlé ni démarré** : `rollback151Prepared:true`, `rollback151HostedQualified:false` et `rollback151RuntimeStarted:false`. Les valeurs `started:false`, `migrated:false`, `precheckPassed:false`, `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false` et `noRestart:true` décrivent cette préparation seule. **La production 1.5.0, ses lanceurs et ses métadonnées restent préservés. Ne rejouer ni préparation, ni création de lanceurs ou de journaux ; ne tronquer aucun journal.**
+Lors de cette préparation, le repli **1.5.1 était préparé**, mais **pas encore précontrôlé ni démarré** : `rollback151Prepared:true`, `rollback151HostedQualified:false` et `rollback151RuntimeStarted:false`. Les valeurs `started:false`, `migrated:false`, `precheckPassed:false`, `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false` et `noRestart:true` décrivent cette préparation seule. **Les fichiers de la 1.5.0, ses lanceurs et ses métadonnées restent préservés. Ne rejouer ni préparation, ni création de lanceurs ou de journaux ; ne tronquer aucun journal.**
 
 Les quatre empreintes réelles du reçu sont désormais épinglées :
 
@@ -32,36 +32,50 @@ Les quatre empreintes réelles du reçu sont désormais épinglées :
 | **1.5.1** | `804142f4fd2116b99bce9240edfad3eaa8eecda9b57a04baf52586f6ff345274` | `165f2b472c94060085758b6a3d9e1817347b26ad5edae36e06bd610199a89ae4` |
 | **1.6.0** | `39015e53147112981203b5172f11f52563311be7e92a92f2b78bf4dca744f1b4` | `13362ac14caa4795a4fbf3ee3fc50e94188938179c1cde119d6d968427a50971` |
 
-Le [helper de migration épinglé](https://github.com/fredbuhr/jessiemessage/blob/e85cfe36ee3dfd62edf64d043461a7ebc727ba2d/ops/upgrade-release160.sh), commit **`e85cfe36ee3dfd62edf64d043461a7ebc727ba2d`**, SHA-256 **`9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5`**, a ses **32/32 tests synthétiques de statut/migration repris après épinglage réel**, sans exécution SQL ou runtime hébergée. Ses octets publiés ont été relus à l’identique des fichiers locaux. L’ancien template à quatre placeholders du commit `1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a` reste conservé historiquement ; il est remplacé comme helper de migration courant. **Le statut SQL préalable est acquis ; l’arrêt effectif du service reste à faire et à confirmer avant d’exécuter ce helper.**
+Le [helper de migration épinglé](https://github.com/fredbuhr/jessiemessage/blob/e85cfe36ee3dfd62edf64d043461a7ebc727ba2d/ops/upgrade-release160.sh), commit **`e85cfe36ee3dfd62edf64d043461a7ebc727ba2d`**, SHA-256 **`9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5`**, a ses **32/32 tests synthétiques de statut/migration repris après épinglage réel**, sans exécution SQL ou runtime hébergée. Ses octets publiés ont été relus à l’identique des fichiers locaux. L’ancien template à quatre placeholders du commit `1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a` reste conservé historiquement ; il est remplacé comme helper de migration courant. **L’exécution de ce helper, l’arrêt opérateur attesté, la migration et les précontrôles sont désormais acquis par les deux reçus suivants ; ne pas le rejouer.**
 
 ### Statut SQL acquis — ne pas rejouer
 
 Le [reçu SQL utilisateur complet](verification-proofs/jm160-hosted-sql-status.json) confirme `status:"checked"`, `engineVerified:true`, `transportVerified:true`, **33 migrations connues, 32 appliquées, une en attente et `interrupted:false`**. Il provient du [diagnostic publié](https://github.com/fredbuhr/jessiemessage/blob/1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a/ops/status-release160-migration.sh), SHA-256 **`95e201b4dc88ce446585c316b66f2804479f1c213d0dd027625e6bb1450b1a83`**, source 1.5.1 `71e62184d2d25a4242e0349c403027e1eeb6537c`, révision de diagnostic 3. `readOnly:true`, `migrated:false` et `noRestart:true` distinguent cette lecture d’une migration. Aucune date d’exécution non fournie ni observation privée directe de l’agent n’est déduite. **Ne pas rejouer ce diagnostic pour retrouver son résultat acquis.**
 
-### Prochaine action — arrêt confirmé puis migration et précontrôles
+### Migration et précontrôles acquis — ne pas rejouer
 
-**L’arrêt du service n’est pas encore attesté.** Les opérations suivantes se font dans cet ordre :
+Les [deux reçus utilisateur complets](verification-proofs/jm160-hosted-schema33.json) confirment **`schema33_confirmed_before_prechecks`**, puis **`schema33_prechecks_passed`**. Une migration a été appliquée et 32 conservées ; moteur et transport sont vérifiés. Le premier confirme `schemaMigrations:33`, `schema33Confirmed:true`, `serviceStopOperatorAttested:true`, `runtimeStarted:false` et la source 1.5.1 exacte `71e62184d2d25a4242e0349c403027e1eeb6537c`. Le second confirme `rollback151HostedQualified:true`, `release160PrecheckPassed:true`, cible **1.6.0 / `9590741e7065067aee9d1ad5d1206739cc27eb6b`**, `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false` et `restart150Allowed:false`.
 
-1. Ouvrir le [tableau de bord Node.js Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard). L’application y est encore nommée **recette.jessiemessage.com** et dessert aussi le domaine principal **jessiemessage.com** ; le site PHP accueil.jessiemessage.com est distinct.
-2. Utiliser l’action **Arrêter / Stop**, puis attendre le statut **Arrêté / Arrêtée** (par exemple **Node.js Arrêté**). Ne pas modifier les commandes Run ou Build à cette étape.
-3. **Uniquement une fois l’arrêt effectivement confirmé dans le Manager**, ouvrir la [console SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) et copier le bloc ci-dessous. L’option `--service-stopped` atteste cet arrêt réel ; elle ne l’effectue pas et ne doit pas être utilisée avant lui.
+L’arrêt est attesté par l’opérateur ; l’agent n’a pas observé les processus ou le Manager privés directement. Aucune date non fournie n’est déduite. Le repli **1.5.1** est préparé et précontrôlé, jamais démarré. **Ne rejouer ni préparation, ni diagnostic SQL, ni migration, ni précontrôles pour retrouver ces résultats ; ne tronquer aucun journal.** Les anciennes versions 1.5.0/1.4.1 restent préservées historiquement, mais ne doivent pas être redémarrées sur le schéma 33.
 
-```sh
-python3 - <<'PY_UPGRADE'
-import hashlib, subprocess, urllib.request
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/e85cfe36ee3dfd62edf64d043461a7ebc727ba2d/ops/upgrade-release160.sh"
-code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != "9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5":
-    raise SystemExit("Empreinte incorrecte : arrêt.")
-subprocess.run(["bash", "-s", "--", "--service-stopped"], input=code, check=True)
-PY_UPGRADE
-```
+### Prochaine action — activer la 1.6.0 puis relever son identité
 
-À l’invite, utiliser le compte de migration existant communiqué dans les instructions opérateur, puis saisir son mot de passe dans la console à l’invite masquée ; ne pas le coller dans la discussion. Le helper vérifie les pins, lit le statut SQL, applique la seule migration 0033 si nécessaire, confirme ensuite le schéma 33 et lance les deux **CHECK 1.5.1/1.6.0**, sans aucun Run, changement Manager ou écriture de checkpoint.
+1. Ouvrir les [réglages de l’application Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), toujours nommée **recette.jessiemessage.com** dans le Manager et desservant aussi **jessiemessage.com**. Le site PHP accueil.jessiemessage.com est distinct.
+2. Remplacer le champ **Run** par :
 
-Transmettre les **deux JSON complets**, s’ils sont produits : **`schema33_confirmed_before_prechecks`**, puis **`schema33_prechecks_passed`**. Le second devra notamment confirmer `schema33Confirmed:true`, `rollback151HostedQualified:true`, `release160PrecheckPassed:true`, `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false` et `restart150Allowed:false`. **Ces résultats ne sont pas encore acquis.** En cas de refus ou de sortie partielle, transmettre le résultat sans relance aveugle.
+   ```sh
+   bash /srv/customer/jessiemessage-private/start-primary-release160-9590741e.sh
+   ```
 
-**Laisser l’application arrêtée après la commande et attendre l’examen des reçus.** Aucun changement Run/Build, Build supplémentaire, redémarrage ou activation 1.6.0 n’est à faire maintenant. Après passage au schéma 33, **ne pas redémarrer la 1.5.0 ni la 1.4.1** ; leurs fichiers et métadonnées historiques restent préservés, mais ils ne sont pas le repli prévu pour ce schéma.
+3. Remplacer le champ **Build** existant par la commande suivante, en conservant son activation si elle est déjà cochée :
+
+   ```sh
+   bash /srv/customer/jessiemessage-private/check-primary-release160-9590741e.sh
+   ```
+
+4. Choisir **Enregistrer**. Conserver les réglages Node, port et répertoire de travail.
+5. Ouvrir le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), puis choisir **Démarrer** ou **Redémarrer**, selon le libellé proposé.
+
+**Ne pas lancer Build manuellement après le démarrage.** Notre commande Build est le CHECK déjà réussi sur l’hébergement ; elle est enregistrée pour les prochains usages du Manager. Si le Manager l’exécute automatiquement, ce contrôle ne démarre pas de second serveur.
+
+Ouvrir ensuite [État du service Jessie](https://jessiemessage.com/admin/readiness) et transmettre les quatre champs affichés :
+
+| Champ | Valeur à constater |
+| --- | --- |
+| Version de l’application | `1.6.0` |
+| Commit au démarrage | `9590741e7065067aee9d1ad5d1206739cc27eb6b` |
+| Version Node.js | `v24.22.0` |
+| Relevé au démarrage | Copier le texte exact affiché ; aucune heure n’est présumée. |
+
+**L’activation n’est pas encore attestée et aucun writer 1.6.0 n’est à exécuter avant ce relevé.** Les deux précontrôles sont acquis ; aucune nouvelle commande SSH de migration ou de Build n’est nécessaire pour les confirmer.
+
+Les rubriques suivantes conservent leurs états historiques ; leurs anciennes mentions de version courante ne remplacent pas l’état schéma 33/service arrêté ci-dessus.
 
 ## Dernière livraison close — Évolution 4, annonces 1.5.0
 

@@ -1,6 +1,6 @@
 # Tâches et rappels privés — Évolution 5, version 1.6.0
 
-**Code qualifié, fusionné, publié et préparé sur l’hébergement ; diagnostic SQL préalable acquis.** La production reste la **1.5.0/schéma 32**, avec son repli 1.4.1. Aucune migration 0033 ni activation 1.6.0 n’est attestée. [REPRISE](REPRISE.md) conserve l’état courant et la seule prochaine action.
+**Code qualifié, fusionné et publié ; migration et précontrôles hébergés sur le schéma 33 confirmés.** Le service est arrêté, avec le repli **1.5.1 préparé et précontrôlé, jamais démarré**. L’activation et l’identité HTTP 1.6.0 ne sont pas encore attestées. La dernière version HTTP identifiée avant l’arrêt reste historiquement la 1.5.0 ; son checkpoint est préservé sans réécriture. [REPRISE](REPRISE.md) conserve l’état courant et la seule prochaine action.
 
 ## Parcours retenu
 
@@ -14,7 +14,7 @@ Les rappels sont visibles dans l’application et sont actualisés à son retour
 
 Une table additive `crm_tasks`, migration **0033**, conserve les tâches liées à l’administrateur et à la conversation. Leur texte est chiffré avec un domaine propre à partir de la clé CRM existante. Aucun nouveau fournisseur, worker, secret ou paquet n’est ajouté. Les versions, l’identité stable de création et l’empreinte de demande évitent les doublons après une réponse perdue et les écrasements entre deux appareils. Un conflit conserve le brouillon et demande un choix explicite après comparaison.
 
-La [1.5.1 compatible](tasks-compat-151.md) reconnaît le schéma 33 et les tâches chiffrées, avec les tâches désactivées dans le runtime normal. La 1.6.0 les active. La production 1.5.0 et son repli 1.4.1 restent préservés ; leur usage après migration ne doit pas être présumé compatible. La 1.5.1 est préparée, sans qualification hébergée ni démarrage : ses précontrôles devront être constatés séparément.
+La [1.5.1 compatible](tasks-compat-151.md) reconnaît le schéma 33 et les tâches chiffrées, avec les tâches désactivées dans le runtime normal. La 1.6.0 les active. La production 1.5.0 et son repli 1.4.1 restent préservés ; leur usage après migration ne doit pas être présumé compatible. La 1.5.1 est désormais préparée et précontrôlée sur le schéma 33, sans démarrage.
 
 ## Référence et qualification propres
 
@@ -28,14 +28,18 @@ Le [tag et la release v1.6.0](https://github.com/fredbuhr/jessiemessage/releases
 
 Le [reçu SSH utilisateur complet](verification-proofs/jm160-hosted-staging.json) confirme **`staged_awaiting_schema33`** pour les deux sources et arbres publiés, Node **v24.22.0** et son empreinte attendue, les lanceurs et journaux distincts. L’inventaire des migrations est additif : 32 fichiers de référence, 33 attendus ; **`sqlStatusChecked:false` ne confirme pas le schéma SQL appliqué**. Aucune date d’exécution non fournie n’est déduite.
 
-Le repli 1.5.1 est préparé, sans précontrôle hébergé ni démarrage. `started:false`, `migrated:false`, `precheckPassed:false`, `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false` et `noRestart:true` décrivent ce staging. Les chemins, modes et empreintes complets restent dans le reçu. La production 1.5.0, ses lanceurs et son checkpoint sont préservés. **Ne pas rejouer la préparation ni tronquer les journaux.**
+Lors du staging, le repli 1.5.1 était préparé, sans précontrôle hébergé ni démarrage. `started:false`, `migrated:false`, `precheckPassed:false`, `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false` et `noRestart:true` décrivent ce staging. Les chemins, modes et empreintes complets restent dans le reçu. La production 1.5.0, ses lanceurs et son checkpoint sont préservés. **Ne pas rejouer la préparation ni tronquer les journaux.**
 
 Les [helpers opérateur initiaux publiés](https://github.com/fredbuhr/jessiemessage/tree/1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a/ops) conservent **59/59 tests synthétiques**, une revue indépendante et leurs octets publiés vérifiés. Ces tests restent distincts du reçu de staging et ne constituent pas une migration ou une activation hébergée.
 
-Les quatre empreintes de lanceurs réelles du reçu sont épinglées dans le [helper de migration courant](https://github.com/fredbuhr/jessiemessage/blob/e85cfe36ee3dfd62edf64d043461a7ebc727ba2d/ops/upgrade-release160.sh), SHA-256 **`9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5`**. Les mêmes 32 cas synthétiques de statut/migration ont réussi après cet épinglage ; ses octets publiés ont été vérifiés. L’ancien template initial reste historique. Le diagnostic SQL préalable est acquis ; l’arrêt effectif du service, la migration et les précontrôles hébergés ne sont pas encore attestés. Le helper épinglé ne s’exécute qu’après confirmation de cet arrêt.
+Les quatre empreintes de lanceurs réelles du reçu sont épinglées dans le [helper de migration courant](https://github.com/fredbuhr/jessiemessage/blob/e85cfe36ee3dfd62edf64d043461a7ebc727ba2d/ops/upgrade-release160.sh), SHA-256 **`9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5`**. Les mêmes 32 cas synthétiques de statut/migration ont réussi après cet épinglage ; ses octets publiés ont été vérifiés. L’ancien template initial reste historique. Son exécution est désormais confirmée par les reçus de migration et précontrôles. Ne pas le rejouer.
 
 ## Statut SQL préalable acquis
 
 Le [reçu SQL utilisateur complet](verification-proofs/jm160-hosted-sql-status.json) confirme **33 migrations connues, 32 appliquées et une en attente**, moteur et transport vérifiés, `interrupted:false`, `readOnly:true`, `migrated:false` et `noRestart:true`. Il provient de la source 1.5.1 exacte ci-dessus, révision de diagnostic 3. Aucune date d’exécution non fournie n’est déduite. **Ne pas rejouer ce diagnostic.**
 
-La [prochaine étape de REPRISE](REPRISE.md#prochaine-action--arrêt-confirmé-puis-migration-et-précontrôles) consiste à arrêter le service dans le Manager, attendre son arrêt confirmé, puis exécuter le helper de migration épinglé et ses deux précontrôles. Aucun arrêt, upgrade, précontrôle ou activation n’est encore attesté. Après la commande, conserver le service arrêté et transmettre les reçus avant tout changement Run/Build ou redémarrage. Le lot reste ouvert jusqu’à sa livraison vérifiée.
+## Migration et précontrôles hébergés acquis
+
+Les [deux reçus utilisateur complets](verification-proofs/jm160-hosted-schema33.json) confirment `schema33_confirmed_before_prechecks`, puis `schema33_prechecks_passed` : une migration appliquée, 32 conservées, schéma 33 confirmé, arrêt de service attesté par l’opérateur, repli 1.5.1 et cible 1.6.0 précontrôlés. Le helper n’a démarré aucun runtime, modifié ni Manager ni checkpoint. Aucune date non fournie ou observation privée directe de l’agent n’est déduite. **Ne rejouer ni staging, diagnostic, migration ou précontrôles ; ne tronquer aucun journal.**
+
+La [prochaine étape de REPRISE](REPRISE.md#prochaine-action--activer-la-160-puis-relever-son-identité) règle Run/Build pour la 1.6.0, puis démarre l’application et relève ses quatre champs d’identité. Aucun Build manuel supplémentaire n’est nécessaire ; les CHECK sont acquis. L’activation et les métadonnées 1.6.0 restent attendues, sans writer avant l’identité HTTP. Ne pas redémarrer 1.5.0 ou 1.4.1 sur le schéma 33. Le lot reste ouvert jusqu’à sa livraison vérifiée.

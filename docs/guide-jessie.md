@@ -63,7 +63,7 @@ Le texte du message en cours et les modifications de fiche non enregistrées res
 
 ## Tâches et rappels privés — après activation de la 1.6.0
 
-**Ce parcours demande la 1.6.0 activée.** Elle est publiée et préparée sur l’hébergement, mais pas encore activée. Le diagnostic SQL préalable est acquis ; [REPRISE détaille les étapes de livraison restantes](REPRISE.md#prochaine-action--arrêt-confirmé-puis-migration-et-précontrôles). Aucun nouveau réglage n’est à effectuer dans l’application 1.5.0 pour le faire apparaître.
+**Ce parcours demande la 1.6.0 activée.** Elle est publiée, migrée au schéma 33 et précontrôlée, mais pas encore activée ; l’application est actuellement arrêtée. [REPRISE détaille son activation et le relevé d’identité attendu](REPRISE.md#prochaine-action--activer-la-160-puis-relever-son-identité). Aucun nouveau réglage n’est à effectuer dans l’application 1.5.0 pour le faire apparaître.
 
 Depuis la conversation d’un client, ouvre **Options → Fiche → Tâches du client**, puis **Ajouter une tâche**. Écris ce que tu veux préparer ou envoyer, ajoute une échéance si utile, puis choisis **Enregistrer la tâche**. Tu peux garder plusieurs tâches pour le même client. Ces informations restent dans ton administration ; le client ne les voit pas.
 

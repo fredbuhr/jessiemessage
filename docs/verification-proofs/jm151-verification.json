@@ -1,6 +1,6 @@
 {
   "version": "1.5.1",
-  "status": "code_qualified_merged_published_hosted_staged_sql_status_confirmed_migration_pending",
+  "status": "schema33_migrated_prechecked_runtime_activation_pending",
   "branch": "feat/tasks-compat-151",
   "baseCommit": "d985bf4e23abaeb3d275bf415f931e47bbb9ae68",
   "results": {
@@ -10,7 +10,10 @@
     "releasePublished": true,
     "deliveryComplete": false,
     "hostedStagingReceiptValidated": true,
-    "hostedSqlStatusConfirmed": true
+    "hostedSqlStatusConfirmed": true,
+    "schema33Confirmed": true,
+    "hostedPrechecksPassed": true,
+    "runtimeActivated": false
   },
   "requirements": {
     "schemaMigrations": 33,
@@ -87,30 +90,50 @@
     "scope": "Historical local development evidence under Node24.19; local native SQL/Chrome were not run. Exact final sources are qualified separately by own CI."
   },
   "hosting": {
-    "activeVersion": "1.5.0",
-    "activeSource": "abca467c45c9385371a9095ab359e78c99140370",
-    "activeTree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+    "activeVersion": null,
+    "activeSource": null,
+    "activeTree": null,
     "nodeVersion": "v24.22.0",
-    "startupDisplayExact": "21/10/2026 17:58:07",
-    "schemaMigrations": 32,
+    "startupDisplayExact": null,
+    "schemaMigrations": 33,
     "metadataReceipt": "jm150-hosted-metadata.json",
-    "currentRollback": "1.4.1",
+    "currentRollback": "1.5.1",
     "currentRollbackHostedPrechecked": true,
     "currentRollbackRuntimeStarted": false,
     "taskStagingReceiptReceived": true,
-    "taskMigrationApplied": false,
-    "taskPrechecksPassed": false,
+    "taskMigrationApplied": true,
+    "taskPrechecksPassed": true,
     "taskRuntimeActivated": false,
     "taskMetadataRecorded": false,
     "noHostedOperationReplayed": true,
     "sourceOfHostingEvidence": "previous user receipts; no direct private server observation",
     "taskSqlStatusChecked": true,
     "taskStagingReceipt": "jm160-hosted-staging.json",
-    "schemaSource": "user-supplied read-only SQL status:33 known,32 applied,1 pending,not interrupted",
-    "taskSqlStatusReceipt": "jm160-hosted-sql-status.json"
+    "schemaSource": "user supplied schema33 migration and two hosted precheck receipts",
+    "taskSqlStatusReceipt": "jm160-hosted-sql-status.json",
+    "currentServiceState": "stopped:operator attestation before migration;no new runtime started",
+    "currentRuntimeIdentityConfirmed": false,
+    "serviceStopOperatorAttested": true,
+    "taskSchemaReceipt": "jm160-hosted-schema33.json",
+    "lastObservedActiveService": {
+      "activeVersion": "1.5.0",
+      "activeSource": "abca467c45c9385371a9095ab359e78c99140370",
+      "activeTree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+      "startupDisplayExact": "21/10/2026 17:58:07",
+      "schemaMigrationsAtObservation": 32
+    },
+    "metadataState": "checkpoint remains last recorded release150/schema32;schema33 helper did not change it",
+    "activationTarget": {
+      "version": "1.6.0",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+      "nodeVersion": "v24.22.0",
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-release160-9590741e.sh",
+      "build": "bash /srv/customer/jessiemessage-private/check-primary-release160-9590741e.sh"
+    }
   },
   "notAttested": [
-    "production_tasks_service_stop_schema33_prechecks_activation_and_metadata",
+    "production_tasks_runtime_identity_activation_metadata",
     "physical_phone",
     "real_host_capacity",
     "current_pc_or_backup_delivery"
@@ -1142,7 +1165,7 @@
     "snapshotPhasePreserved": true,
     "publicationGateNowSatisfied": true,
     "helperBytesRereadAfterMainPublication": true,
-    "onlyNextOperatorAction": "Stop the Node application in Manager and observe stopped state, then execute pinned upgrade-release160.sh with --service-stopped; wait both schema/precheck receipts before Run/Build or restart",
+    "onlyNextOperatorAction": "Save exact release160 Run and Build commands in existing Manager app, then start/restart once and report four readiness identity values;manual Build not required because both hosted CHECKs already passed",
     "expectedFirstReceipt": "staged_awaiting_schema33",
     "preparationRunsSql": false,
     "preparationStartsRuntime": false,
@@ -1151,13 +1174,10 @@
     "recordRelease160WriterCreated": false,
     "futureRollbackVersion": "1.5.1",
     "futureRollbackHostedPrepared": true,
-    "futureRollbackHostedQualified": false,
+    "futureRollbackHostedQualified": true,
     "schema33CompatibilityNote": "After migration33 the old 1.5.0/1.4.1 are not immediate rollback releases; qualify 1.5.1 first.",
     "firstReceiptReceived": true,
-    "expectedNextReceipt": [
-      "schema33_confirmed_before_prechecks",
-      "schema33_prechecks_passed"
-    ],
+    "expectedNextReceipt": "user-supplied application version, full commit,Node version and exact startup display",
     "upgradeSourcePinsComplete": true
   },
   "hostedStaging": {
@@ -1245,14 +1265,17 @@
     "publishedBytesVerified": true,
     "launcherPinsPending": 0,
     "sqlStatusReceived": true,
-    "serviceStopOperatorAttested": false,
-    "executionPreconditionsSatisfied": false,
+    "serviceStopOperatorAttested": true,
+    "executionPreconditionsSatisfied": true,
     "upgradeInvocationProvided": true,
     "runtimeStarted": false,
-    "schema33Applied": false,
-    "notAHostedMigrationReceipt": true,
+    "schema33Applied": true,
     "invocationConditionalOnActualManagerStop": true,
-    "managerStopAutomaticallyVerifiedByHelper": false
+    "managerStopAutomaticallyVerifiedByHelper": false,
+    "executionCompleted": true,
+    "hostedPrechecksPassed": true,
+    "executionReceipt": "jm160-hosted-schema33.json",
+    "qualificationSnapshotIsNotHostedMigrationReceipt": true
   },
   "hostedSqlStatus": {
     "receipt": "jm160-hosted-sql-status.json",
@@ -1270,5 +1293,49 @@
     "migrated": false,
     "noRestart": true,
     "doNotRepeatStatusToDiscoverResult": true
+  },
+  "hostingBeforeSchema33": {
+    "activeVersion": "1.5.0",
+    "activeSource": "abca467c45c9385371a9095ab359e78c99140370",
+    "activeTree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+    "nodeVersion": "v24.22.0",
+    "startupDisplayExact": "21/10/2026 17:58:07",
+    "schemaMigrations": 32,
+    "metadataReceipt": "jm150-hosted-metadata.json",
+    "currentRollback": "1.4.1",
+    "currentRollbackHostedPrechecked": true,
+    "currentRollbackRuntimeStarted": false,
+    "taskStagingReceiptReceived": true,
+    "taskMigrationApplied": false,
+    "taskPrechecksPassed": false,
+    "taskRuntimeActivated": false,
+    "taskMetadataRecorded": false,
+    "noHostedOperationReplayed": true,
+    "sourceOfHostingEvidence": "previous user receipts; no direct private server observation",
+    "taskSqlStatusChecked": true,
+    "taskStagingReceipt": "jm160-hosted-staging.json",
+    "schemaSource": "user-supplied read-only SQL status:33 known,32 applied,1 pending,not interrupted",
+    "taskSqlStatusReceipt": "jm160-hosted-sql-status.json"
+  },
+  "hostedSchema33": {
+    "receipt": "jm160-hosted-schema33.json",
+    "sourceOfEvidence": "two complete user supplied SSH receipts;no direct private server observation",
+    "executionTimestampNotProvided": true,
+    "helperCommit": "e85cfe36ee3dfd62edf64d043461a7ebc727ba2d",
+    "helperSha256": "9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5",
+    "applied": 1,
+    "unchanged": 32,
+    "schemaMigrations": 33,
+    "serviceStopOperatorAttested": true,
+    "rollback151HostedQualified": true,
+    "release160PrecheckPassed": true,
+    "runtimeStarted": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "restart150Allowed": false,
+    "restart141Allowed": false,
+    "rollback151RuntimeStarted": false,
+    "doNotReplayMigrationOrPrechecks": true,
+    "manualBuildRequired": false
   }
 }
