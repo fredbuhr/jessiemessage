@@ -1,0 +1,142 @@
+name: Publish qualified JessieMessage release
+
+on:
+  push:
+    branches: ["ops/publish-v1.5.1"]
+    paths: [".github/workflows/publish-qualified.yml"]
+
+permissions: {}
+
+concurrency:
+  group: publish-jessiemessage-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Use qualified Node.js 24.22.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.22.0"
+      - name: Verify qualified source and publish its immutable tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import base64, hashlib, json, os, re, subprocess, urllib.error, urllib.request
+
+          repo = "fredbuhr/jessiemessage"
+          version = "1.5.1"
+          target = "71e62184d2d25a4242e0349c403027e1eeb6537c"
+          tree = "f769c99aa800486bd04065a308f1f4269841c215"
+          ci_text = "39639464133"
+          assert re.fullmatch(r"[1-9][0-9]*", ci_text)
+          ci = int(ci_text)
+          assert version == "1.5.1"
+          tag = "v" + version
+          assert re.fullmatch(r"[0-9a-f]{40}", target) and re.fullmatch(r"[0-9a-f]{40}", tree)
+          assert ci > 0
+          migration_sha256 = "81d0d11577b6ada0f734c7497cbf44768033f1374bd830dec5e4abe9beda34af"
+          assert re.fullmatch(r"[0-9a-f]{64}", migration_sha256)
+          assert os.environ["GITHUB_REPOSITORY"] == repo
+          assert os.environ["GITHUB_REF"] == "refs/heads/ops/publish-" + tag
+          assert subprocess.check_output(["node", "--version"], text=True, timeout=5).strip() == "v24.22.0"
+
+          def api(path, data=None, optional=False):
+              request = urllib.request.Request(
+                  "https://api.github.com/repos/" + repo + "/" + path,
+                  data=None if data is None else json.dumps(data).encode(),
+                  headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                           "Accept": "application/vnd.github+json",
+                           "Content-Type": "application/json",
+                           "X-GitHub-Api-Version": "2022-11-28"},
+                  method="GET" if data is None else "POST")
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as error:
+                  if optional and error.code == 404:
+                      return None
+                  raise SystemExit("GitHub operation refused: HTTP " + str(error.code))
+
+          def source_file(path):
+              value = api("contents/" + path + "?ref=" + target)
+              assert value["type"] == "file" and value["encoding"] == "base64"
+              return base64.b64decode(value["content"]).decode("utf-8")
+
+          run = api("actions/runs/" + str(ci))
+          assert run["head_sha"] == target and run["head_branch"] == "main"
+          assert run["event"] == "push" and run["path"] == ".github/workflows/ci.yml"
+          assert run["status"] == "completed" and run["conclusion"] == "success"
+          jobs = api("actions/runs/" + str(ci) + "/jobs?per_page=100")
+          expected = {"verify", "MariaDB 10.11", "MariaDB 11.4",
+                      "Chrome keyboard and chat lifecycle",
+                      "Chrome HTTPS authentication and messaging with MariaDB"}
+          assert jobs["total_count"] == 5 and len(jobs["jobs"]) == 5
+          assert {job["name"] for job in jobs["jobs"]} == expected
+          assert all(job["status"] == "completed" and job["conclusion"] == "success" for job in jobs["jobs"])
+          assert api("git/commits/" + target)["tree"]["sha"] == tree
+          # Documentation or the next qualified release may have advanced main.
+          comparison = api("compare/" + target + "...main")
+          assert comparison["merge_base_commit"]["sha"] == target and comparison["status"] in {"identical", "ahead"}
+          package = json.loads(source_file("package.json"))
+          lock = json.loads(source_file("package-lock.json"))
+          assert package["name"] == lock["name"] == lock["packages"][""]["name"] == "jessiemessage"
+          assert package["version"] == lock["version"] == lock["packages"][""]["version"] == version
+          assert package["engines"]["node"] == lock["packages"][""]["engines"]["node"] == ">=24 <25"
+          workflow = source_file(".github/workflows/ci.yml")
+          assert len(re.findall(r"(?m)^\s+uses: actions/setup-node@v4\s*$", workflow)) == 4
+          assert len(re.findall(r'(?m)^\s+node-version: "24\.22\.0"\s*$', workflow)) == 4
+
+          runtime_source = source_file("server/index.mjs")
+          assert runtime_source.count("largeAudiencesEnabled: true") == 1
+          flags = re.findall(r"(?m)^const ANNOUNCEMENTS_ENABLED = (true|false);$", runtime_source)
+          assert flags == ["true"]
+          assert "broadcast && ANNOUNCEMENTS_ENABLED" in runtime_source
+          task_flags = re.findall(r"(?m)^const TASKS_ENABLED = (true|false);$", runtime_source)
+          assert task_flags == ["false"]
+          assert "crm && TASKS_ENABLED" in runtime_source
+          migration_files = api("contents/db/migrations?ref=" + target)
+          assert isinstance(migration_files, list) and len(migration_files) == 33
+          assert all(item["type"] == "file" for item in migration_files)
+          versions = sorted(int(re.fullmatch(r"([0-9]{4})_[a-z0-9_]+\.sql", item["name"]).group(1)) for item in migration_files)
+          assert versions == list(range(1, 34))
+          migration_source = source_file("db/migrations/0033_crm_tasks.sql")
+          assert hashlib.sha256(migration_source.encode("utf-8")).hexdigest() == migration_sha256
+          assert migration_source.lstrip().startswith("CREATE TABLE crm_tasks (")
+          erasure_source = source_file("server/data/erasure-schema.mjs")
+          assert "migrations.length !== 33" in erasure_source and "tables.length !== 32" in erasure_source
+          coverage_source = source_file("server/backup/application-scope.mjs")
+          assert re.search(r"APPLICATION_COVERAGE\s*=.*tables:\s*33\b", coverage_source)
+          assert "migrations.length !== 33" in coverage_source
+
+          reference = api("git/ref/tags/" + tag, optional=True)
+          if reference is not None:
+              assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target, "Existing tag must never be moved"
+          existing = api("releases/tags/" + tag, optional=True)
+          if existing is not None:
+              assert reference is not None and existing["tag_name"] == tag
+              assert existing["draft"] is False and existing["prerelease"] is False
+              release = existing
+          else:
+              if reference is None:
+                  api("git/refs", {"ref": "refs/tags/" + tag, "sha": target})
+              reference = api("git/ref/tags/" + tag)
+              assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target
+              name = "JessieMessage 1.5.1 — Compatibilité des tâches"
+              details = ["Socle compatible avec le schéma SQL 33 et les tâches privées.","- Texte des tâches chiffré avec la clé CRM existante ; sauvegarde, restauration et fermeture des comptes adaptées.","- La création des tâches reste désactivée dans le service normal de cette version.","- Les annonces et les diffusions à grande échelle restent activées.","- Cette publication ne confirme aucune migration, préparation ni activation sur l’hébergement."]
+              body = "\n".join(details + ["", "Commit : `" + target + "`.",
+                  "Validation : [CI complète, 5/5 jobs](https://github.com/" + repo + "/actions/runs/" + str(ci) + ").",
+                  "", "La publication ne prouve pas un déploiement. L’état réellement déployé et le repli sont consignés dans [REPRISE](https://github.com/" + repo + "/blob/main/docs/REPRISE.md)."])
+              release = api("releases", {"tag_name": tag, "target_commitish": target,
+                            "name": name, "body": body, "draft": False, "prerelease": False, "make_latest": "false"})
+          reference = api("git/ref/tags/" + tag)
+          assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target
+          assert release["tag_name"] == tag and release["draft"] is False and release["prerelease"] is False
+          print(json.dumps({"status": "published_verified", "tag": tag, "commit": target,
+                            "tree": tree, "releaseUrl": release["html_url"], "ciRun": ci}))
