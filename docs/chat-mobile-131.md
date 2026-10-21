@@ -1,6 +1,6 @@
 # Conversation au centre sur mobile — correctif 1.3.1
 
-**21 octobre 2026 — version 1.3.1 active selon le relevé admin utilisateur, après précontrôle hébergé confirmé ; alignement final des métadonnées opérateur en attente.** Code fusionné, qualifié et publié, avec CI finale de PR et du commit exact réussies 5/5. Le schéma 31 reste inchangé, sans migration ni nouvelle dépendance, et le repli 1.3.0 est préservé. Le lot n’est pas déclaré clos tant que le reçu d’alignement n’est pas reçu. La version active et les seules commandes opérateur courantes sont dans [REPRISE](REPRISE.md) ; les diffusions restent planifiées. Le correctif 1.3.2 demandé depuis est autorisé malgré ce suivi encore en attente.
+**21 octobre 2026 — livraison historique 1.3.1 close : code fusionné, qualifié, publié, précontrôlé, activé puis alignement privé confirmé par le reçu utilisateur `release131_metadata_already_recorded`.** La production est depuis passée en **1.3.3** et la 1.3.1 reste son repli immédiat. Le schéma 31 est inchangé, sans migration ni nouvelle dépendance, et le repli antérieur 1.3.0 est préservé. La date initiale de l’enregistrement privé 1.3.1 n’est pas rapportée. La version active et les seules commandes opérateur courantes sont dans [REPRISE](REPRISE.md) ; les diffusions restent planifiées.
 
 ## Périmètre du correctif
 
@@ -44,7 +44,19 @@ Le reçu utilisateur `staged_precheck_passed` confirme la préparation et le pr�
 
 Le relevé admin utilisateur reçu ensuite confirme **1.3.1**, commit `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, Node **v24.22.0**, relevé au démarrage **`21/10/2026 03:04:01`**. Ce texte est conservé tel qu’affiché, sans fuseau du navigateur supposé ni conversion UTC déduite. Cette identité rapportée par l’utilisateur est distincte de la CI et du précontrôle ; elle ne constitue pas un essai complet de l’interface sur téléphone. L’agent ne revendique aucun GET privé direct ni attestation PID/socket/binaire.
 
-**Ne rejouer ni préparation, ni Build/Run, ni activation ou redémarrage.** Il n’y a ni migration ni changement de dépendances. L’alignement final des métadonnées opérateur attend encore son reçu : aucune clôture du lot 1.3.1 n’est annoncée. L’état de cet alignement reste dans [REPRISE](REPRISE.md), sans bloquer le correctif 1.3.2 nouvellement demandé.
+**Ne rejouer ni préparation, ni Build/Run, ni activation ou redémarrage.** Il n’y a ni migration ni changement de dépendances. Le relevé 1.3.1 ci-dessus reste historique et n’est pas remplacé par celui de la production 1.3.3.
+
+## Alignement privé confirmé — lot clos
+
+Lors de la préparation de 1.3.3, l’utilisateur a exécuté le [writer 1.3.1 épinglé](https://github.com/fredbuhr/jessiemessage/blob/c073cc59689b5f9cb2c303055dadcaf8f740fe90/ops/record-release131.py), SHA-256 `941f5152fdb96db82d5e1a5b3440f723e122191875d1d26e2a54c98bf506f560`. Il a répondu :
+
+```json
+{"status":"release131_metadata_already_recorded","source":"baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8","version":"1.3.1","metadataOnly":true,"noRestart":true,"rollbackPreserved":true,"rollbackRelease":"1.3.0","schemaMigrations":31,"priorActivePreserved":true,"otherBlocksPreserved":true}
+```
+
+Ce reçu confirme que l’état privé 1.3.1 était déjà enregistré à l’identique ; cette invocation ne l’a pas réécrit. La date de l’enregistrement initial n’est pas fournie et n’est pas inventée. L’ancien `activeService` 1.3.0 intégral et ses empreintes, le repli utilisable 1.3.0, les autres blocs et les replis antérieurs sont conservés. Le writer n’exécute ni migration, ni Build, ni redémarrage ; ses **9 tests synthétiques autonomes**, sa revue indépendante et ses octets publiés vérifiés restent des preuves distinctes du reçu hébergé.
+
+**La livraison 1.3.1 est close ; ne rejouer aucune opération pour cette clôture.** La version active est désormais 1.3.3 et la 1.3.1 reste son repli immédiat. [État courant](REPRISE.md), [preuve structurée historique](verification-proofs/jm131-verification.json).
 
 ## Références officielles consultées
 

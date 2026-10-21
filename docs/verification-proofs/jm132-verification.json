@@ -8,9 +8,12 @@
     "historicalResultsPreserved": true,
     "historicalPreparationPlanNoLongerCurrent": true,
     "intermediatePreparation132Required": false,
-    "currentOperatorAction": "see_current_runbook_for_published_release133_preparation",
+    "currentOperatorAction": "see_current_runbook_for_release133_metadata_recording_only",
     "currentRunbook": "../REPRISE.md",
-    "nextPreparation": "idempotent_record_release131_then_prepare_release133_after_qualification_and_publication"
+    "nextPreparation": null,
+    "replacementPreparationReported": true,
+    "replacementActivationConfirmed": true,
+    "replacementMetadataRecordingReported": false
   },
   "branch": "fix/client-voice-message-details-132",
   "base": "eb5f1fac825422f315f40b8214c3e090852263b6",

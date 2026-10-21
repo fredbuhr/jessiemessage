@@ -1,10 +1,10 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — production `1.3.1`, identité et présentation mobile confirmées par l’utilisateur. La `1.3.2` est fusionnée, qualifiée et publiée, mais n’a été ni préparée ni activée ; le correctif minimal `1.3.3` la remplace comme prochaine candidate.** Le checkpoint privé 1.3.1 n’a pas encore son reçu rapporté. La 1.3.3 est désormais fusionnée, qualifiée et publiée ; le bloc unique ci-dessous termine l’alignement privé 1.3.1 avant sa préparation, sans redémarrage. Le schéma 31 est inchangé. Le repli de la production 1.3.1 reste 1.3.0 ; le repli prévu pour 1.3.3 est 1.3.1, avec les références antérieures préservées. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — production `1.3.3`, préparation et identité active confirmées par les reçus utilisateur.** Le relevé admin affiche `ca0d40648036d57fdee55b91d47d5d5a874a626e` / `v24.22.0` / `21/10/2026 13:20:11`. La 1.3.1 est close selon `release131_metadata_already_recorded` et constitue le repli immédiat ; 1.3.0/1.2.0/1.1.1 et les autres blocs restent préservés. **Seul l’enregistrement final des métadonnées 1.3.3 reste en attente**, sans redémarrage ni migration. Le schéma 31 est inchangé. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
-## Travail courant — correctif 1.3.3 publié, préparation en attente
+## Travail courant — correctif 1.3.3 actif, enregistrement final en attente
 
-**Code revu, fusionné, qualifié par les CI PR/main 5/5 et publié ; aucune préparation ni activation hébergée n’est rapportée.** Le correctif conserve le socle 1.3.2 et rend le petit bouton natif `⋯` constamment visible à côté des seules photos, afin de trouver les détails d’une photo sans légende au toucher. Il n’ajoute ni hauteur aux messages, ni date, statut ou action de suppression au repos. Le périmètre est CSS, version et qualification Chrome ; aucun changement JavaScript, API, SQL ou dépendance. [Périmètre et critères](photo-message-details-133.md), [preuves 1.3.3](verification-proofs/jm133-verification.json).
+**Code revu, fusionné, qualifié par les CI PR/main 5/5, publié, précontrôlé et identifié actif.** La livraison conserve les textes client FR/EN à la première personne de Jessie et les messages compacts du socle 1.3.2, dont les dates, statuts et actions sont masqués jusqu’à la sélection. Le complément 1.3.3 rend le petit bouton natif `⋯` visible à côté des seules photos, même sans légende, sans hauteur ajoutée. Ce complément CSS ne change ni le JavaScript applicatif, ni les API, le SQL ou les dépendances. [Périmètre et critères](photo-message-details-133.md), [preuves 1.3.3](verification-proofs/jm133-verification.json).
 
 La [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116), head `76f781f0c18311649a3b6c7e57df48530dfb8955` sur la branche `fix/photo-message-details-133` issue de `76b80e33fba5f4cbcebcf73193944077e631af50`, est fusionnée sur **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, arbre **`b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`** identique à celui de la PR. Le socle [1.3.2 qualifié et publié](client-voice-message-details-132.md) reste immuable et ses résultats ne sont pas réattribués à 1.3.3.
 
@@ -12,44 +12,26 @@ La [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116), head `76f781f0c
 
 **Publication vérifiée :** [tag/release v1.3.3](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3), publié le `2026-10-21T02:22:03Z`, relu sur la source `ca0d40648036d57fdee55b91d47d5d5a874a626e` et l’arbre `b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`. Le [run de publication 39532598912](https://github.com/fredbuhr/jessiemessage/actions/runs/39532598912) a réussi, depuis le commit opérateur `95fe1326aea86487ac2db15ccd58f60353cfd2ee`. Cette publication n’atteste pas un déploiement.
 
-**Helper publié et qualifié, sans exécution hébergée :** [préparation 1.3.3](https://github.com/fredbuhr/jessiemessage/blob/ffa6d51ff767d571e9031e1f00bfa207c33d5c41/ops/prepare-release133.sh), commit `ffa6d51ff767d571e9031e1f00bfa207c33d5c41`, SHA-256 `deae2f94c4032b862a2911c4493e76eedf25ee7f013a804a6e841a74f396ca77`. Ses [tests synthétiques](https://github.com/fredbuhr/jessiemessage/blob/ffa6d51ff767d571e9031e1f00bfa207c33d5c41/ops/test-release133-staging-synthetic.py), SHA-256 `1b9e17496c521fcae375918844c2bdf3e4f8563f73fe3a30c2bcf0d562ae970b`, réussissent **15/15** ; syntaxe Bash et Python embarqué valides. Les deux fichiers bruts publiés ont été relus et comparés aux octets locaux. Ce résultat qualifie le helper, pas une préparation de l’hébergement.
+**Helper publié, qualifié puis exécuté sur l’hébergement :** [préparation 1.3.3](https://github.com/fredbuhr/jessiemessage/blob/ffa6d51ff767d571e9031e1f00bfa207c33d5c41/ops/prepare-release133.sh), commit `ffa6d51ff767d571e9031e1f00bfa207c33d5c41`, SHA-256 `deae2f94c4032b862a2911c4493e76eedf25ee7f013a804a6e841a74f396ca77`. Ses [tests synthétiques](https://github.com/fredbuhr/jessiemessage/blob/ffa6d51ff767d571e9031e1f00bfa207c33d5c41/ops/test-release133-staging-synthetic.py), SHA-256 `1b9e17496c521fcae375918844c2bdf3e4f8563f73fe3a30c2bcf0d562ae970b`, réussissent **15/15** ; syntaxe Bash et Python embarqué valides. Les deux fichiers bruts publiés ont été relus et comparés aux octets locaux. Ces résultats synthétiques qualifient le helper ; le reçu utilisateur distinct ci-dessous confirme désormais son exécution hébergée.
 
-**Prochaine action opérateur — un seul bloc de préparation :** ouvrir la [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller le bloc ci-dessous. Il termine d’abord l’alignement privé 1.3.1 avec le writer épinglé et idempotent ; si l’état est déjà enregistré à l’identique, il le constate sans réécriture. Il prépare ensuite directement 1.3.3 sur la source et l’arbre exacts publiés et exécute son précontrôle, avec 1.3.1 comme repli. **Le bloc ne redémarre pas le service et n’exécute aucune migration.** Il ne prépare pas 1.3.2. Les CI main et la publication 1.3.3 sont maintenant vérifiées ; aucun des reçus hébergés attendus n’est encore rapporté.
+**Préparation hébergée acquise :** le reçu SSH utilisateur `staged_precheck_passed` confirme la version **1.3.3**, la source et l’arbre exacts publiés, le binaire Node attendu et `v24.22.0`, le schéma **31** inchangé, `pendingClosures:false` et le repli **1.3.1** préservé. Les chemins, modes et empreintes complets sont dans les [preuves](verification-proofs/jm133-verification.json). `started:false`, `migrated:false`, `runtimeStarted:false`, `managerChanged:false`, `checkpointChanged:false` et `noRestart:true` décrivent le moment de cette préparation, pas l’état après activation. Le journal était vide au staging ; ne pas le tronquer ni rejouer le helper.
+
+**Activation acquise :** le relevé admin utilisateur affiche **1.3.3**, commit **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, Node **`v24.22.0`** et relevé au démarrage **`21/10/2026 13:20:11`**. Ce texte est conservé exactement, sans conversion UTC ou epoch déduite. Il identifie le processus HTTP répondant ; l’agent n’a pas observé le GET privé directement et ne revendique ni attestation PID/socket ni empreinte du binaire via le processus actif. Ce relevé ne certifie pas tous les parcours physiques de messagerie. **Ne demander ni préparation, ni Build/Run, ni redémarrage, ni nouveau relevé pour cette activation déjà acquise.**
+
+**Prochaine action — enregistrement des métadonnées 1.3.3 uniquement :** ouvrir la [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller ce bloc. Le [writer épinglé](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/record-release133.py), SHA-256 `d4cc3ad08aee634bdc1aa0a417c332c95407f460f4be30d0609d03cf66716cce`, et ses [tests](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/test-record-release133.py), SHA-256 `897187a800c0938cdaa206b8343ed6afed107ae5717ee36f477f3a02d8e7205d`, sont publiés ; leurs octets bruts ont été relus identiques. **9/9 tests synthétiques autonomes réussis en 0,375 s**, syntaxe Python valide et revue indépendante sans blocage. Les fonctions et gardes reprennent le writer 1.3.1 qualifié ; l’ancien état actif attendu est exactement sa référence 1.3.1. Ces tests n’attestent pas une exécution sur l’hébergement.
 
 ```sh
 python3 - <<'PY'
-import hashlib, subprocess, urllib.request
-
-steps = [
-    (
-        "https://raw.githubusercontent.com/fredbuhr/jessiemessage/c073cc59689b5f9cb2c303055dadcaf8f740fe90/ops/record-release131.py",
-        "941f5152fdb96db82d5e1a5b3440f723e122191875d1d26e2a54c98bf506f560",
-        ["python3", "-"]
-    ),
-    (
-        "https://raw.githubusercontent.com/fredbuhr/jessiemessage/ffa6d51ff767d571e9031e1f00bfa207c33d5c41/ops/prepare-release133.sh",
-        "deae2f94c4032b862a2911c4493e76eedf25ee7f013a804a6e841a74f396ca77",
-        ["bash", "-s", "--", "ca0d40648036d57fdee55b91d47d5d5a874a626e"]
-    )
-]
-for url, expected, args in steps:
-    code = urllib.request.urlopen(url, timeout=30).read()
-    if hashlib.sha256(code).hexdigest() != expected:
-        raise SystemExit("Empreinte incorrecte : arrêt.")
-    subprocess.run(args, input=code, check=True)
+import hashlib, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/416d271dac67610fb7614e0089edf48399958ea4/ops/record-release133.py"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "d4cc3ad08aee634bdc1aa0a417c332c95407f460f4be30d0609d03cf66716cce":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+exec(compile(code, "<enregistrement>", "exec"))
 PY
 ```
 
-Le bloc vérifie les octets téléchargés avant chaque action et s’arrête sur refus. La préparation préserve le code et les lanceurs 1.3.1 ; elle ne change ni Manager, ni base, ni médias. Les replis 1.3.0/1.2.0/1.1.1 restent conservés. En cas d’arrêt, relever le résultat durable et le transmettre avant toute reprise ; ne pas relancer aveuglément le staging. Le premier reçu attendu est `release131_metadata_recorded` ou `release131_metadata_already_recorded`, puis `staged_precheck_passed` pour **1.3.3**, source **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, arbre **`b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`**, Node **`v24.22.0`** et schéma **31** inchangé.
-
-**Activation conditionnelle — seulement après ce reçu de préparation réussi :** ouvrir les [réglages Run/Build de l’application Node.js 239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application). L’application est nommée **recette.jessiemessage.com** dans le Manager et dessert aussi **jessiemessage.com** ; le site PHP **accueil.jessiemessage.com** est distinct. Enregistrer :
-
-- Run : `/bin/bash /srv/customer/jessiemessage-private/start-primary-release133-ca0d4064.sh`
-- Build : `/bin/bash /srv/customer/jessiemessage-private/check-primary-release133-ca0d4064.sh`
-
-Revenir au [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), puis choisir **Redémarrer**. Ouvrir [État du service Jessie](https://jessiemessage.com/admin/readiness), **Actualiser → Détails techniques**, et relever version **1.3.3**, commit **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, Node **`v24.22.0`** et date affichée exacte. Attendre ce relevé avant de déclarer 1.3.3 active, puis son reçu d’enregistrement avant clôture. Ces chemins sont prévus mais ne sont pas encore attestés préparés sur l’hébergement ; aucun lancement n’est effectué par cette documentation.
-
-La production reste **1.3.1**. Sa validation visuelle ne constitue pas un essai de 1.3.2/1.3.3 ni une attestation explicite du clavier logiciel sur téléphone physique. Le reçu `release131_metadata_recorded` ou `release131_metadata_already_recorded` n’a pas été rapporté et la clôture 1.3.1 n’est pas revendiquée. Aucune autre évolution ni manipulation PC n’est ouverte.
+Le writer vérifie les sources, lanceurs, modes et binaire préparés avant l’écriture atomique du seul checkpoint privé. Il préserve intégralement l’état précédent 1.3.1 et ses extensions, le repli 1.3.1 et tous les autres blocs/replis 1.3.0/1.2.0/1.1.1. S’il constate déjà le même enregistrement, il renvoie le reçu idempotent sans réécriture. **Aucune migration, Build ou redémarrage.** Le reçu attendu est `release133_metadata_recorded` ou `release133_metadata_already_recorded`, source `ca0d40648036d57fdee55b91d47d5d5a874a626e`, version `1.3.3`, schéma 31, repli `1.3.1`, avec `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `priorActivePreserved:true` et `otherBlocksPreserved:true`. Aucun de ces reçus 1.3.3 n’est encore rapporté ; la clôture reste en attente. L’alignement 1.3.1 est acquis par `release131_metadata_already_recorded`, sans exécution séparée à refaire. Aucune autre évolution ni manipulation PC n’est ouverte.
 
 <details>
 <summary>Candidate historique 1.3.2 — qualifiée et publiée, jamais préparée ni activée, remplacée par 1.3.3</summary>
@@ -64,13 +46,13 @@ La [PR 115](https://github.com/fredbuhr/jessiemessage/pull/115) est fusionnée s
 
 **Historique conservé :** la première tentative main a terminé avec quatre jobs réussis et verify en échec (**3 189 réussis, un échec, 36 ignorés**). `tests/witness-transport.test.mjs:94` a rejeté un paquet invalide avec `ERASURE_CONTINUITY_INPUT`. Une course de fixture est probable : le test consomme un poll de 20 ms sans vérifier `pending:true`, après une préparation asynchrone. Le paquet exact n’étant pas journalisé, la cause n’est pas présentée comme prouvée. Le fichier inchangé réussit **4/4** isolément, puis le seul job verify est relancé une fois : **3 190 réussis, zéro échec, 36 ignorés**, test initial passé inchangé, syntaxe et build réussis. Les quatre résultats natifs de la première tentative sont conservés sans réexécution. Aucun code ni garde de continuité n’est changé pour obtenir ce résultat.
 
-Le [helper de préparation 1.3.2](https://github.com/fredbuhr/jessiemessage/blob/60c6559e1ff508e1e4060d9b63b785d4d52d299d/ops/prepare-release132.sh), SHA-256 `915fd859b229462476429716c847148485c26718e6459b4ea17cd4e0df71cf82`, est publié : **15 tests synthétiques autonomes**, syntaxe Bash et octets publiés vérifiés. Cette qualification est conservée mais aucune exécution hébergée n’a été rapportée. L’ancien bloc writer 1.3.1 puis préparation 1.3.2 et les chemins Run/Build prévus ne sont plus la prochaine action ; aucune activation 1.3.2 n’a eu lieu. Le prochain bloc visera directement 1.3.3 après ses propres qualifications.
+Le [helper de préparation 1.3.2](https://github.com/fredbuhr/jessiemessage/blob/60c6559e1ff508e1e4060d9b63b785d4d52d299d/ops/prepare-release132.sh), SHA-256 `915fd859b229462476429716c847148485c26718e6459b4ea17cd4e0df71cf82`, est publié : **15 tests synthétiques autonomes**, syntaxe Bash et octets publiés vérifiés. Cette qualification est conservée mais aucune exécution hébergée n’a été rapportée. L’ancien bloc writer 1.3.1 puis préparation 1.3.2 et les chemins Run/Build prévus ne sont plus la prochaine action ; aucune activation 1.3.2 n’a eu lieu. La préparation et l’activation 1.3.3 sont désormais acquises, selon les preuves de la section courante ; aucun staging intermédiaire 1.3.2 n’a eu lieu.
 
 </details>
 
-## Livraison active 1.3.1 — alignement final en attente
+## État historique de la livraison 1.3.1 — clos, repli immédiat
 
-**Codée, qualifiée, fusionnée, publiée, précontrôlée et active ; métadonnées non encore enregistrées.** La [PR 114](https://github.com/fredbuhr/jessiemessage/pull/114) a été fusionnée au commit `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, arbre `adcdf8e8e2aa202163da665aa0df8344abf7a194`. Le [tag/release v1.3.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.1), publié le `2026-10-21T00:56:35Z`, a été relu sur ce commit exact ; [publication](https://github.com/fredbuhr/jessiemessage/actions/runs/39524324490) réussie, source opérateur `a774e28090c61e79287e0f5ed987d678d1d48a55`. Le correctif recentre l’écran mobile sur la conversation, regroupe les actions secondaires dans Options et compacte la saisie, sans changement de transport, droits, dépendances ou SQL. [Périmètre](chat-mobile-131.md) et [preuves 1.3.1](verification-proofs/jm131-verification.json).
+**Codée, qualifiée, fusionnée, publiée, précontrôlée, activée puis confirmée alignée dans le checkpoint privé ; lot historique clos et repli immédiat de 1.3.3.** La [PR 114](https://github.com/fredbuhr/jessiemessage/pull/114) a été fusionnée au commit `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, arbre `adcdf8e8e2aa202163da665aa0df8344abf7a194`. Le [tag/release v1.3.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.1), publié le `2026-10-21T00:56:35Z`, a été relu sur ce commit exact ; [publication](https://github.com/fredbuhr/jessiemessage/actions/runs/39524324490) réussie, source opérateur `a774e28090c61e79287e0f5ed987d678d1d48a55`. Le correctif recentre l’écran mobile sur la conversation, regroupe les actions secondaires dans Options et compacte la saisie, sans changement de transport, droits, dépendances ou SQL. [Périmètre](chat-mobile-131.md) et [preuves 1.3.1](verification-proofs/jm131-verification.json).
 
 **Activation acquise :** l’utilisateur a transmis `1.3.1` / `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8` / `v24.22.0` et le relevé au démarrage `21/10/2026 03:04:01`. Cet affichage est conservé exactement, sans conversion UTC ou epoch déduite. Le relevé admin identifie le processus HTTP répondant ; l’agent n’a pas observé directement de lecture privée ni attesté PID/socket/empreinte du binaire actif. L’utilisateur a depuis confirmé que la présentation mobile 1.3.1 convient ; ce retour visuel est rapporté par lui, sans attestation explicite du clavier logiciel sur téléphone physique. **Ne plus demander préparation, Build/Run, redémarrage ou nouveau relevé admin pour cette activation.**
 
@@ -82,13 +64,13 @@ Le [helper de préparation 1.3.2](https://github.com/fredbuhr/jessiemessage/blob
 - **CI finales :** [PR, run 39522976601](https://github.com/fredbuhr/jessiemessage/actions/runs/39522976601) et [main exact, run 39523643149](https://github.com/fredbuhr/jessiemessage/actions/runs/39523643149) réussis **5/5**. Main sous Node 24.22.0 ; mêmes compteurs : général **3 223 tests, 3 187 réussis, zéro échec, 36 ignorés** ; Chrome **171/171**, HTTPS/MariaDB **3/3**, MariaDB **10.11 et 11.4 : 479/479 chacune sans omission**. Les omissions générales ne valent pas qualification native.
 - **Historique conservé :** [première CI](https://github.com/fredbuhr/jessiemessage/actions/runs/39521871297), Chrome 170/171, échec du composeur vide agrandi par le placeholder à 320 px ; calcul corrigé. [Deuxième CI](https://github.com/fredbuhr/jessiemessage/actions/runs/39522459820), Chrome 170/171 : dispositions nouvelles réussies, assertion profil avant fin du chargement de la conversation ; synchronisation sur saisie activée ajoutée sans changer l’avatar attendu ni le délai. Ces deux échecs restent dans les preuves et ne sont pas réécrits en succès ; les CI finales qualifient le code après ces ajustements.
 
-<details>
-<summary>Alignement privé 1.3.1 : reçu non rapporté, writer conservé pour la préparation future de 1.3.3</summary>
+**Alignement privé acquis :** le [writer 1.3.1 épinglé](https://github.com/fredbuhr/jessiemessage/blob/c073cc59689b5f9cb2c303055dadcaf8f740fe90/ops/record-release131.py), SHA-256 `941f5152fdb96db82d5e1a5b3440f723e122191875d1d26e2a54c98bf506f560`, a été exécuté comme première étape du bloc préparant 1.3.3. Le reçu utilisateur confirme que l’état 1.3.1 existait déjà à l’identique ; le writer idempotent l’a constaté sans réécriture. La date de l’enregistrement initial n’est pas déduite.
 
-**Writer publié, exécution non rapportée :** [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal). Ce writer épinglé sera la première étape du futur bloc unique de préparation 1.3.3 ; aucune exécution séparée n’est demandée maintenant. Le [writer 1.3.1 épinglé](https://github.com/fredbuhr/jessiemessage/blob/c073cc59689b5f9cb2c303055dadcaf8f740fe90/ops/record-release131.py), SHA-256 `941f5152fdb96db82d5e1a5b3440f723e122191875d1d26e2a54c98bf506f560`, et [ses tests](https://github.com/fredbuhr/jessiemessage/blob/c073cc59689b5f9cb2c303055dadcaf8f740fe90/ops/test-record-release131.py) sont publiés ; octets bruts relus identiques. **9 tests synthétiques autonomes réussis et revue indépendante sans blocage.** Il vérifie les sources et lanceurs préparés avant l’écriture atomique du JSON privé et préserve l’ancien `activeService` 1.3.0 intégral avec empreinte et repli 1.3.0, ainsi que les autres blocs et replis 1.2.0/1.1.1. Il n’exécute ni migration, ni Build, ni redémarrage.
-Aucun reçu `release131_metadata_recorded` n’a encore été rapporté ; l’alignement privé reste donc en attente et la clôture du lot n’est pas revendiquée. L’agent n’a pas exécuté ce writer sur l’hébergement. Cette trace ne bloque pas le correctif 1.3.3 ; son alignement sera terminé dans le futur bloc unique, avant la préparation de la nouvelle candidate.
+```json
+{"status":"release131_metadata_already_recorded","source":"baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8","version":"1.3.1","metadataOnly":true,"noRestart":true,"rollbackPreserved":true,"rollbackRelease":"1.3.0","schemaMigrations":31,"priorActivePreserved":true,"otherBlocksPreserved":true}
+```
 
-</details>
+Ses [9 tests synthétiques](https://github.com/fredbuhr/jessiemessage/blob/c073cc59689b5f9cb2c303055dadcaf8f740fe90/ops/test-record-release131.py), la revue indépendante et les octets bruts publiés vérifiés restent distincts de ce reçu. Le writer conserve l’ancien `activeService` 1.3.0 intégral avec empreinte et repli 1.3.0, ainsi que les autres blocs et replis 1.2.0/1.1.1. Il n’exécute ni migration, ni Build, ni redémarrage. **Le lot 1.3.1 est clos ; ne rejouer ni writer, ni staging, ni activation pour le clore.** La 1.3.3 est depuis identifiée active et utilise cette référence comme repli immédiat.
 
 ## État historique de la livraison 1.3.0 — clos
 
@@ -106,7 +88,7 @@ Aucun reçu `release131_metadata_recorded` n’a encore été rapporté ; l’al
 
 Ses **9 tests synthétiques** précèdent cette exécution et restent distincts du reçu serveur. L’ancien `activeService` 1.2.0 intégral et ses empreintes sont conservés comme état antérieur et repli utilisable sous `.developmentSimplification.release130` ; les autres blocs, dont le secours 1.1.1 et les historiques, sont préservés. L’alignement n’a exécuté ni migration, ni Build, ni redémarrage. L’agent n’a pas d’accès SSH utilisable et n’a pas observé directement le checkpoint privé. **Ne rejouer ni writer, ni staging, ni Build/Run, ni redémarrage, ni relevé admin pour clore la 1.3.0 : cette clôture est acquise.**
 
-**Évolution distincte activée depuis :** le [correctif messagerie mobile 1.3.1](chat-mobile-131.md) est actif ; seul son alignement de métadonnées reste attendu, selon la section courante ci-dessus. Aucune nouvelle opération utilisateur n’est attendue pour la 1.3.0 close.
+**Évolutions distinctes acquises depuis :** le [correctif messagerie mobile 1.3.1](chat-mobile-131.md) est clos et conservé en repli ; le [correctif 1.3.3](photo-message-details-133.md) est actif, avec son seul enregistrement final en attente selon la section courante. Aucune nouvelle opération utilisateur n’est attendue pour la 1.3.0 close.
 
 ## État de livraison courant
 
@@ -114,17 +96,17 @@ Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.
 
 | Élément | État constaté |
 | --- | --- |
-| Version active | **1.3.1**, confirmée par les quatre champs admin transmis par l’utilisateur. |
-| Commit actif et arbre du commit | `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8` / `adcdf8e8e2aa202163da665aa0df8344abf7a194`. Le commit affiché correspond au tag livré. |
-| Tag/release | [v1.3.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.1), publiée le `2026-10-21T00:56:35Z`, cible vérifiée. |
+| Version active | **1.3.3**, confirmée par les quatre champs admin transmis par l’utilisateur. |
+| Commit actif et arbre du commit | `ca0d40648036d57fdee55b91d47d5d5a874a626e` / `b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`. Le commit affiché correspond au tag livré. |
+| Tag/release | [v1.3.3](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3), publiée le `2026-10-21T02:22:03Z`, cible vérifiée. |
 | Node HTTP identifié | `v24.22.0`, valeur du processus dans le relevé admin utilisateur. |
-| Capture au démarrage affichée | `21/10/2026 03:04:01`, texte exact sans fuseau transmis ; aucune conversion UTC, epoch ou naissance OS déduite. |
+| Capture au démarrage affichée | `21/10/2026 13:20:11`, texte exact sans conversion UTC, epoch ou naissance OS déduite. |
 | Schéma et précontrôle | Schéma 31 inchangé ; `staged_precheck_passed` hébergé, sans migration. |
-| CI et publication | CI PR/main 5/5, source exacte `baf91e0e` ; liens et compteurs ci-dessus. |
-| Disponibilité | **4/4** GET publics conformes sur les deux origines à `2026-10-21T01:06:20.433928+00:00` ; disponibilité distincte de l’identité. |
-| Portée et preuves | Interface mobile centrée sur la conversation ; fonctions existantes conservées. [Bilan 1.3.1](chat-mobile-131.md), [preuves structurées](verification-proofs/jm131-verification.json). |
-| Checkpoint privé | Dernier enregistrement confirmé **1.3.0** / `afd0e98c`, schéma 31 ; alignement 1.3.1 encore en attente, sans nouveau reçu. |
-| Replis conservés | **1.3.0 / Node 24.22** immédiat ; **1.2.0** antérieur et **1.1.1** compatible schéma 31 comme secours précontrôlé. **1.1.0 et 1.0.0 ne doivent plus être redémarrées sur le schéma 31.** |
+| CI et publication | CI PR/main 5/5, source exacte `ca0d4064` ; liens et compteurs ci-dessus. |
+| Disponibilité | Le relevé admin utilisateur identifie le service répondant ; aucun nouveau contrôle public distinct n’est ajouté à cette étape. |
+| Portée et preuves | Voix de Jessie, messages compacts et détails à la sélection ; bouton de détails visible à côté des photos. [Bilan 1.3.3](photo-message-details-133.md), [preuves structurées](verification-proofs/jm133-verification.json). |
+| Checkpoint privé | Dernier enregistrement confirmé **1.3.1** / `baf91e0e`, schéma 31, reçu `release131_metadata_already_recorded` ; seul alignement 1.3.3 en attente. |
+| Replis conservés | **1.3.1 / Node 24.22** immédiat ; **1.3.0**, **1.2.0** antérieurs et **1.1.1** compatible schéma 31 comme secours précontrôlé. **1.1.0 et 1.0.0 ne doivent plus être redémarrées sur le schéma 31.** |
 
 ## État historique de la livraison 1.2.0 — clos
 
@@ -198,7 +180,7 @@ Les essais SSH historiques R1/R2 de la 1.0.0 ont renvoyé respectivement `PROCES
 
 ## Build historique de 1.2.0 — repli
 
-Le Run/Build 1.2.0 reste conservé comme repli antérieur ; il ne désigne plus la production active. Les pins actifs 1.3.1 sont ci-dessous ; le repli immédiat est la 1.3.0. Aucun précontrôle supplémentaire n’est demandé pour ces clôtures historiques.
+Le Run/Build 1.2.0 reste conservé comme repli antérieur ; il ne désigne plus la production active. Les pins actifs 1.3.3 sont ci-dessous ; le repli immédiat est la 1.3.1. Aucun précontrôle supplémentaire n’est demandé pour ces clôtures historiques.
 
 ## Historique — validation de 1.1.0
 
@@ -222,25 +204,26 @@ A08 conserve avertissement et dry-run, sans exécuteur actif ni purge. Surveille
 
 Les conversations sont conservées jusqu’à fermeture définitive, hors suppressions volontaires. Fermeture locale journalisée et restauration opérateur en maintenance restent le périmètre convenu. Récupération autonome après perte complète de l’hôte, témoin frais à chaque phase, succession et inventaire SQL exhaustif restent hors prérequis V1 ; `completeDatabase:false`, objets exécutables exclus. Pas de garantie de capture simultanée fichiers/base ni de perte maximale de vingt-quatre heures. La [surveillance](../MONITORING.md) conserve ses limites : pas de délai maximal de détection ni de réception externe attesté.
 
-## Pins de la référence active 1.3.1
+## Pins de la référence active 1.3.3
 
 L’identité active est confirmée par relevé admin utilisateur. Les modes et empreintes sur disque proviennent du reçu de préparation hébergée ; aucune empreinte mesurée via le PID actif n’est revendiquée.
 
-| Élément | Référence active 1.3.1 |
+| Élément | Référence active 1.3.3 |
 | --- | --- |
-| Code identifié actif | `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8` |
-| Arbre du commit | `adcdf8e8e2aa202163da665aa0df8344abf7a194` |
-| Checkout | `/srv/customer/jessiemessage-operator/production-131-baf91e0e` |
-| Run Manager | `bash /srv/customer/jessiemessage-private/start-primary-release131-baf91e0e.sh` ; déjà activé, ne pas relancer pour les métadonnées. |
-| Build Manager | `bash /srv/customer/jessiemessage-private/check-primary-release131-baf91e0e.sh` ; précontrôlé, ne pas relancer pour les métadonnées. |
-| Lanceur | 0700 au staging ; SHA-256 `0c481fc45f9038897b1c897e75148a0fa9bcc19a92c098ba05183761ad755572` |
-| Précontrôle | SHA-256 du lanceur `e1ee74f6ecc39db15719c3eccbf85445fc494a7b1831a6f85749f069460f37d9` |
-| Node applicatif | `/srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node`, 0700 au staging ; version active `v24.22.0`. |
+| Code identifié actif | `ca0d40648036d57fdee55b91d47d5d5a874a626e` |
+| Arbre du commit | `b1fe882ede0450cbf135d2ff8cb19e780d18a0e5` |
+| Checkout | `/srv/customer/jessiemessage-operator/production-133-ca0d4064` |
+| Run Manager | `/bin/bash /srv/customer/jessiemessage-private/start-primary-release133-ca0d4064.sh` ; activation acquise, ne pas relancer pour les métadonnées. |
+| Build Manager | `/bin/bash /srv/customer/jessiemessage-private/check-primary-release133-ca0d4064.sh` ; précontrôle acquis, ne pas relancer pour les métadonnées. |
+| Lanceur | 0700 au staging ; SHA-256 `88aad7a731cc58a4367e808c9f4156b47c6f647f71b10f4b2e0fb65d093cea89` |
+| Précontrôle | SHA-256 du lanceur `80bfd6dbeebacc4f550baf95d76921e85b3e196814b12554333c80561d155623` ; journal `/srv/customer/jessiemessage-private/jm133-preflight-ca0d4064.log`, SHA-256 `cb5a9e6d1d1354abe8113cb12e7c6e3d636b5111041851ada88f85c5b845fea6`. |
+| Node applicatif | `/srv/customer/jessiemessage-private/runtime-node-v24.22.0/bin/node`, version active `v24.22.0`. |
 | Binaire Node SHA-256 au staging | `67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c` ; aucune empreinte via PID actif. |
-| Journal | `/srv/customer/jessiemessage-private/jm131-node2422.log`, 0600 au staging ; son empreinte vide était antérieure à l’activation. Ne pas le tronquer. |
+| Journal | `/srv/customer/jessiemessage-private/jm133-node2422.log`, 0600 et vide au staging (SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`) ; cette empreinte précède l’activation. Ne pas le tronquer. |
 | Configuration | `/srv/customer/jessiemessage-private/primary-origin-candidate-4a355851` |
 | Opérations | `/srv/customer/jessiemessage-private/recurring-backup-052` |
-| Repli immédiat 1.3.0 | Source `afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b`, arbre `37b3b2e9358972c95581fc0bcf16896e4074d5f9`, checkout `/srv/customer/jessiemessage-operator/production-130-afd0e98c` ; Run `bash /srv/customer/jessiemessage-private/start-primary-release130-afd0e98c.sh`, SHA-256 `7bc16887caa01e0644ef200f9ab099049963af9fa1f6db0ad7a1c37bec7232d5` ; Build `bash /srv/customer/jessiemessage-private/check-primary-release130-afd0e98c.sh`. |
+| Repli immédiat 1.3.1 | Source `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, arbre `adcdf8e8e2aa202163da665aa0df8344abf7a194`, checkout `/srv/customer/jessiemessage-operator/production-131-baf91e0e` ; Run `bash /srv/customer/jessiemessage-private/start-primary-release131-baf91e0e.sh`, SHA-256 `0c481fc45f9038897b1c897e75148a0fa9bcc19a92c098ba05183761ad755572` ; Build `bash /srv/customer/jessiemessage-private/check-primary-release131-baf91e0e.sh`, SHA-256 `e1ee74f6ecc39db15719c3eccbf85445fc494a7b1831a6f85749f069460f37d9`. |
+| Repli antérieur 1.3.0 | Source `afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b`, arbre `37b3b2e9358972c95581fc0bcf16896e4074d5f9`, checkout `/srv/customer/jessiemessage-operator/production-130-afd0e98c` ; Run `bash /srv/customer/jessiemessage-private/start-primary-release130-afd0e98c.sh`, SHA-256 `7bc16887caa01e0644ef200f9ab099049963af9fa1f6db0ad7a1c37bec7232d5` ; Build `bash /srv/customer/jessiemessage-private/check-primary-release130-afd0e98c.sh`. |
 | Repli antérieur 1.2.0 | Source `763b632185ce13eb875110c9107687b2d278ff67`, arbre `c7dce7bcdb99b298ffc43c9e31dd22ee87453926`, checkout `/srv/customer/jessiemessage-operator/production-120-763b6321` ; Run `bash /srv/customer/jessiemessage-private/start-primary-release120-763b6321.sh`, SHA-256 `f846b72a252b69d881264da76b60025325b4e2262ef3a850f1f58ec61f5da84f` ; Build `bash /srv/customer/jessiemessage-private/check-primary-release120-763b6321.sh`. |
 | Secours compatible 1.1.1 | Source `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1`, checkout `/srv/customer/jessiemessage-operator/production-111-cfa7dd35` ; lanceur `/srv/customer/jessiemessage-private/start-primary-release111-cfa7dd35.sh`, SHA-256 `8b73e7aeb2aae4da7d3e6d0a4f1257664b594fb9f914c34835cad9387842723c`. Précontrôle hébergé réussi, non démarré. |
 
@@ -249,7 +232,7 @@ Mode **`start-local-closures`**, `closuresEnabled:true`, port **3000 direct**, s
 
 Précontrôles du nouveau Node à **14:32:58.849424 UTC** : plateforme/JPEG/fichiers privés `checks_passed`, vrai décodeur photo fork normalisant PNG vers JPEG/vignette avec le binaire exact ; `local_closure_precheck/passed`, `pendingClosures:false`, `started:false`, `erased:false`, `externalContinuityVerified:false`. Dépendances verrouillées existantes réutilisées. Le lanceur vérifie SHA-256 et version Node avant `exec` ; le Build utilise également son chemin absolu. Utiliser ce Node pour toute commande opérateur JavaScript ; ne pas remplacer le binaire système.
 
-Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. **Dernier état enregistré confirmé : 1.3.0** / `afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b`, schéma 31, Node `v24.22.0`, reçu utilisateur `release130_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackRelease:1.2.0`, `priorActivePreserved:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. L’ancien `activeService` 1.2.0 intégral et son empreinte sont conservés comme état antérieur et repli sous `.developmentSimplification.release130`. `.developmentSimplification.release120` et son secours compatible 1.1.1, les blocs `release110`/`release100`, `.nodeRuntimeUpdate.rollback`, `.productionClosure`/`.chatSendAck`, S1/S2/S3, PC, autorité et D1 restent préservés. Cet enregistrement 1.3.0 est clos ; ne pas rejouer son writer. Le nouveau runtime 1.3.1 est actif mais son alignement privé reste en attente du reçu dédié. Aucun nouveau fonctionnement PC ou sauvegarde n’est attesté.
+Checkpoint unique **0600** : `/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json`. **Dernier état enregistré confirmé : 1.3.1** / `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, schéma 31, Node `v24.22.0`, reçu utilisateur `release131_metadata_already_recorded`, `metadataOnly:true`, `noRestart:true`, `rollbackRelease:1.3.0`, `priorActivePreserved:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. Le writer idempotent a constaté l’état existant sans le réécrire ; aucune date d’enregistrement initial n’est déduite. L’ancien `activeService` 1.3.0 intégral et son empreinte restent conservés sous `.developmentSimplification.release131`, avec le repli 1.3.0. Les blocs `release130`/`release120`, leur secours compatible 1.1.1, `release110`/`release100`, `.nodeRuntimeUpdate.rollback`, `.productionClosure`/`.chatSendAck`, S1/S2/S3, PC, autorité et D1 restent préservés. Le runtime 1.3.3 est depuis identifié actif mais son seul alignement privé attend le reçu dédié. Aucun nouveau fonctionnement PC ou sauvegarde n’est attesté.
 
 ## Préserver PC, autorité et D1
 

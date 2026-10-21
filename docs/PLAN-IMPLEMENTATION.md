@@ -2,21 +2,15 @@
 
 La V1 initiale est terminée dans le périmètre convenu. L’état réellement déployé, ses preuves et les commandes opérateur sont exclusivement dans **[REPRISE](REPRISE.md)**. Ce plan décrit le travail restant ; les anciens lots correctifs restent historiques.
 
-Les livraisons 1.0.0, 1.1.0, 1.2.0 et 1.3.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
+Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0 et 1.3.1 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
-## Correctif 1.3.3 — publié, préparation et activation en attente
+## Correctif 1.3.3 — actif, enregistrement final en attente
 
-[Détails des photos au toucher](photo-message-details-133.md) : le code revu de la [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116) conserve le socle 1.3.2 et rend le petit bouton natif `⋯` visible à côté des seules photos, pour découvrir les détails d’une photo sans légende. Le message garde sa hauteur et masque toujours date, statut et suppression au repos. Ce correctif minimal porte sur le CSS, la version et sa qualification Chrome, sans changement JavaScript, API, SQL ou dépendance. **Les CI PR et main sont réussies 5/5 à la première tentative et le code est fusionné** sur `ca0d4064…`, arbre identique à la PR. Le [tag/release v1.3.3](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3) est publié sur ce commit exact, sans préparation ni activation hébergée rapportée. [Preuves 1.3.3](verification-proofs/jm133-verification.json).
+[Détails des photos au toucher](photo-message-details-133.md) : la [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116) conserve les textes client de Jessie et les détails des messages à la sélection de 1.3.2 ; le bouton natif `⋯` est visible à côté des seules photos, même sans légende, sans hauteur ajoutée. Les CI PR/main **5/5** et le [tag/release v1.3.3](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3) qualifient le commit `ca0d4064…`. Le reçu de préparation hébergée et le relevé admin utilisateur confirment désormais **1.3.3 active**, Node 24.22.0, schéma 31 inchangé et repli immédiat 1.3.1 préservé. [Preuves 1.3.3](verification-proofs/jm133-verification.json).
 
-Restent la préparation et l’activation vérifiée avec alignement des métadonnées 1.3.3. Les nouveaux contrôles Chrome couvrent le toucher sur les photos sans légende ; les parcours clavier FR/EN existants restent préservés. Le critère de fin est un accès découvrable aux détails des photos, avec ou sans légende, au toucher et au clavier, sans action automatique ni métadonnées au repos et sans perte de compacité.
+**Reste uniquement l’enregistrement des métadonnées 1.3.3**, sans migration, Build/Run ni redémarrage. Sa prochaine action est exclusivement dans [REPRISE](REPRISE.md). La clôture de cette livraison attend le reçu final ; aucune préparation ou preuve d’activation supplémentaire n’est demandée. Les essais Chrome sont automatisés ; tous les parcours physiques sur téléphone ne sont pas attestés.
 
-La prochaine opération est le bloc unique de [REPRISE](REPRISE.md), qui termine d’abord l’alignement idempotent 1.3.1, puis prépare directement 1.3.3 sans redémarrage ; aucun staging 1.3.2 intermédiaire n’est prévu. Le helper publié est épinglé et qualifié par 15/15 tests synthétiques, sa syntaxe Bash/Python et ses octets bruts vérifiés ; il n’a pas été exécuté sur l’hébergement. L’activation sera conditionnée au reçu de préparation réussi, avec 1.3.1 comme repli et le schéma 31 inchangé. **La production reste 1.3.1** et son alignement privé n’a toujours pas de reçu rapporté.
-
-Le socle [1.3.2 — voix de Jessie et détails des messages](client-voice-message-details-132.md) est fusionné, qualifié en CI PR/main **5/5** et [publié](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.2) sur `19455771…`, sans préparation ni activation. Il devient une candidate historique remplacée par 1.3.3 ; sa publication et ses preuves, dont l’échec initial de verify main et la relance ciblée réussie, sont conservées. Ses résultats ne qualifient pas à eux seuls le nouveau correctif.
-
-## Livraison active 1.3.1 — suivi final en attente
-
-[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : code fusionné, qualifié, publié, précontrôlé et actif en 1.3.1 selon le relevé admin utilisateur. Schéma 31 inchangé, sans migration ni nouvelle dépendance ; repli 1.3.0 préservé. **Seul l’alignement final des métadonnées opérateur attend son reçu ; le lot n’est pas déclaré clos.** Ne rejouer ni préparation, ni Build/Run, ni activation. La trace de cet alignement est conservée dans [REPRISE](REPRISE.md) et ne bloque pas les correctifs demandés depuis. L’utilisateur valide visuellement la présentation mobile 1.3.1 ; cela ne vaut pas attestation explicite du clavier logiciel sur un téléphone physique.
+La 1.3.1 est close selon le reçu `release131_metadata_already_recorded` : son alignement existait déjà et le writer idempotent l’a constaté sans réécriture. La date de l’enregistrement initial n’est pas déduite. Le socle [1.3.2](client-voice-message-details-132.md) est historique, qualifié et publié mais jamais activé séparément ; ses résultats et son tag restent conservés. Aucun nouveau lot n’est ouvert par cet alignement.
 
 ## Évolutions de messagerie demandées le 20 octobre
 
@@ -33,6 +27,7 @@ Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas
 
 ## Livraisons antérieures closes
 
+- [Messagerie mobile 1.3.1](chat-mobile-131.md) : préparation et activation acquises ; alignement privé confirmé par `release131_metadata_already_recorded`, repli immédiat de 1.3.3.
 - [Emojis enrichis et inclusifs 1.3.0](emoji-inclusifs-130.md) : clôture confirmée par `release130_metadata_recorded`, preuves historiques préservées ; référence conservée comme repli de 1.3.1.
 - [Profil et expressions 1.2.0](profile-expressions-120.md) : production identifiée, schéma 31, disponibilité et checkpoint alignés ; repli 1.1.1 compatible précontrôlé.
 - [Lecture privée 1.1.0](private-read-receipts-110.md) et [preuves d’harmonisation 1.0.0](REPRISE.md#historique--validation-locale-de-100).
