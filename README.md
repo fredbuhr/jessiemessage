@@ -16,8 +16,8 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Détails des photos, correctif 1.3.3 clos](docs/photo-message-details-133.md) | Bouton de détails visible au toucher pour les photos, avec les métadonnées masquées au repos. |
 | [Compatibilité des diffusions, 1.3.4 publiée](docs/broadcast-compat-134.md) | Code compatible qualifié et publié ; repli précontrôlé sur l’hébergement, sans démarrage. |
 | [Diffusions à grande échelle, 1.4.0 active](docs/broadcast-scale-140.md) | Audiences globales ou filtrées, aperçu confirmé et suivi paginé ; livraison close, avec repli compatible 1.3.4 enregistré. |
-| [Compatibilité du schéma des annonces, 1.4.1](docs/announcements-compat-141.md) | Référence fusionnée, qualifiée par ses propres CI PR/main et publiée ; futur repli compatible schéma 32. |
-| [Annonces, 1.5.0](docs/announcements-150.md) | Bandeau programmé et messages privés facultatifs ; code qualifié et publié, aucun déploiement attesté. |
+| [Compatibilité du schéma des annonces, 1.4.1](docs/announcements-compat-141.md) | Référence publiée et préparée sur l’hébergement ; futur repli compatible schéma 32, précontrôle encore à réaliser. |
+| [Annonces, 1.5.0](docs/announcements-150.md) | Bandeau programmé et messages privés facultatifs ; référence publiée et préparée, migration et activation non attestées. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
@@ -30,7 +30,7 @@ Le [correctif mobile 1.3.1](docs/chat-mobile-131.md) est désormais clos : le re
 
 **Évolution 3 — Diffusions à grande échelle : livraison 1.4.0 close.** Les versions [1.3.4 de compatibilité](docs/broadcast-compat-134.md) et [1.4.0](docs/broadcast-scale-140.md) sont fusionnées, qualifiées par leurs propres CI PR/main **5/5** et publiées sur leurs commits exacts. Les précontrôles hébergés et l’identité active de la **1.4.0** sont confirmés ; le reçu final confirme le checkpoint aligné et le repli **1.3.4** compatible enregistré, sans démarrage de cette dernière. La création élargie reste désactivée dans le runtime normal de 1.3.4. L’ancienne 1.3.3 reste préservée avec son empreinte, marquée non utilisable en repli immédiat pour les campagnes compactes. **Aucune nouvelle opération n’est requise pour ce lot.** Les [évolutions suivantes](docs/PLAN-IMPLEMENTATION.md) restent planifiées.
 
-**Travail courant : Évolution 4 — [Annonces 1.5.0](docs/announcements-150.md), code publié et préparation hébergée attendue.** Les références [1.4.1 compatible](docs/announcements-compat-141.md) et [1.5.0](docs/announcements-150.md) sont fusionnées, qualifiées chacune par ses propres CI PR/main 5/5 et publiées sur leurs commits exacts. Le bandeau compact, la programmation, l’expiration et l’envoi privé facultatif réutilisent la file existante. Aucune préparation, migration 0032 ou activation hébergée n’est attestée ; la production et le checkpoint restent la 1.4.0 close, Node 24.22.0, schéma 31 et repli 1.3.4. [Références et prochaine action](docs/REPRISE.md#travail-courant--évolution-4-annonces-publiées).
+**Travail courant : Évolution 4 — [Annonces 1.5.0](docs/announcements-150.md), préparation hébergée confirmée.** Le reçu utilisateur `staged_awaiting_schema32` confirme les deux références [1.4.1](docs/announcements-compat-141.md) et [1.5.0](docs/announcements-150.md), leurs lanceurs et Node 24.22.0, sans SQL, migration, précontrôle ou démarrage. La prochaine étape est uniquement le diagnostic SQL en lecture seule. Le dernier état de production/checkpoint confirmé reste la 1.4.0 close, schéma 31 et repli 1.3.4 ; le staging n’est pas un nouveau relevé SQL. [Références et commande actuelle](docs/REPRISE.md#lecture-sql-en-lecture-seule--seule-étape-actuelle).
 
 ## Versions et livraisons
 

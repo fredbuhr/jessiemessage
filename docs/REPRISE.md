@@ -4,7 +4,7 @@
 
 ## Travail courant — Évolution 4, annonces publiées
 
-Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Ils ajoutent un bandeau compact, une période de début/fin et l’envoi facultatif d’un vrai message privé via la file existante, avec la migration additive 0032. **Ils ne sont pas encore préparés ou déployés sur Infomaniak. La production et le checkpoint restent la 1.4.0 close, Node 24.22.0, schéma 31 et repli 1.3.4.**
+Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Ils ajoutent un bandeau compact, une période de début/fin et l’envoi facultatif d’un vrai message privé via la file existante, avec la migration additive 0032. **Le reçu utilisateur `staged_awaiting_schema32` confirme la préparation des deux références sur Infomaniak, sans démarrage, SQL, migration ou précontrôle. La production et le checkpoint restent au dernier état confirmé : 1.4.0 close, Node 24.22.0, schéma 31 et repli 1.3.4. Aucun nouveau statut SQL n’a encore été lu.**
 
 | Référence publiée | Source et arbre exacts | Qualification propre et publication |
 | --- | --- | --- |
@@ -19,32 +19,34 @@ Les tags et releases ont été relus sur leurs commits exacts : **v1.4.1**, rele
 
 La suite native de sauvegarde/restauration valide son fixture générique au schéma 32, sans annonce non vide ; elle ne démontre pas une restauration complète d’annonce chiffrée non vide. Le vérificateur cryptographique est testé unitairement et la persistance/refus d’altération est vérifiée séparément en SQL natif. Aucun téléphone physique, débit réel du mutualisé ou fonctionnement courant du PC n’est attesté par ces CI synthétiques.
 
-### Préparation opérateur — seule étape actuelle
+### Préparation hébergée acquise — ne pas rejouer
 
-Les cinq helpers/tests du commit opérateur **`40027be898f1a82cd9c2aed7c4a313096d8db4d4`** sont publiés et leurs octets relus à l’identique. Le [helper de préparation](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh) épingle les deux sources/arborescences qualifiées ci-dessus ; SHA-256 **`ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021`**. Ses [tests de staging](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/test-release150-staging-synthetic.py) réussissent **27/27** et les [tests de statut/migration](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/test-release150-migration-synthetic.py) **32/32**, soit **59/59 sans échec ni omission**. Syntaxes et revue indépendante sont réussies. Ces qualifications synthétiques n’ont exécuté aucun helper hébergé complet, aucune connexion SQL ni démarrage de runtime. Elles ne constituent pas un reçu Infomaniak.
+Le [reçu SSH utilisateur complet](verification-proofs/jm150-hosted-staging.json) confirme **`staged_awaiting_schema32`** pour les sources/arbres exacts 1.4.1 et 1.5.0 ci-dessus. Il provient du [helper de préparation publié](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh), SHA-256 `ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021`. Ses 27 tests de staging et les 32 tests du statut/migration, soit **59/59**, qualifient les helpers synthétiques ; le reçu utilisateur distinct confirme cette préparation hébergée. Aucune date d’exécution non fournie n’est déduite.
 
-Ouvrir la [console SSH Node.js Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis copier ce bloc complet **une seule fois**. Il prépare les deux versions sans arrêter le service 1.4.0, sans SQL et sans précontrôle :
+Le reçu confirme les deux checkouts et leurs lanceurs, Node **v24.22.0** et son empreinte attendue, les journaux normaux et de précontrôle encore vides et le repli **1.4.1 préparé**. Il conserve `started:false`, `migrated:false`, `precheckPassed:false`, `sqlStatusChecked:false`, `noRestart:true`, `managerChanged:false`, `runtimeStarted:false`, `checkpointChanged:false` et `rollback141HostedQualified:false`. Le schéma **32 est attendu par les fichiers**, pas confirmé en SQL ; le dernier schéma constaté reste 31. Le service 1.4.0, ses lanceurs et le checkpoint sont préservés. **Ne rejouer ni la préparation, ni une création de lanceurs ou de journaux ; ne tronquer aucun journal.**
+
+Les quatre empreintes du reçu ont été épinglées dans le [helper de migration publié](https://github.com/fredbuhr/jessiemessage/blob/c798f96b631464e51c7ce212c37ceeaa681af904/ops/upgrade-release150.sh), commit `c798f96b631464e51c7ce212c37ceeaa681af904`, SHA-256 **`0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c`**. Ses **32/32 tests synthétiques après épinglage réel** réussissent, sans SQL ou runtime hébergé. L’ancien template du commit `40027be898f1a82cd9c2aed7c4a313096d8db4d4` conserve ses placeholders dans l’historique ; il n’est plus le helper de migration courant. Le helper actuel est entièrement épinglé, mais ses préconditions techniques de statut SQL confirmé et d’arrêt de service observé ne sont pas encore réunies. **Aucune commande de migration ou de redémarrage n’est à exécuter à cette étape.**
+
+### Lecture SQL en lecture seule — seule étape actuelle
+
+Ouvrir la [console SSH Node.js Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis copier ce bloc complet. Il vérifie l’empreinte du [diagnostic SQL en lecture seule](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh) avant exécution ; il ne migre pas et ne redémarre pas le service :
 
 ```sh
 python3 - <<'PY'
 import hashlib, subprocess, urllib.request
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh"
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh"
 code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != "ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021":
+if hashlib.sha256(code).hexdigest() != "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0":
     raise SystemExit("Empreinte incorrecte : arrêt.")
-subprocess.run(
-    ["bash", "-s", "--", "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
-     "abca467c45c9385371a9095ab359e78c99140370"],
-    input=code, check=True
-)
+subprocess.run(["bash", "-s"], input=code, check=True)
 PY
 ```
 
-Transmettre ensuite le JSON complet attendu **`staged_awaiting_schema32`**, notamment les quatre empreintes `launcherSha256`/`checkLauncherSha256` des deux références. Il doit distinguer la préparation d’un précontrôle : `started:false`, `migrated:false`, `precheckPassed:false`, `noRestart:true`, `managerChanged:false`, `runtimeStarted:false`, `checkpointChanged:false` et `rollback141HostedQualified:false`. Garder le service 1.4.0 et ses réglages Run/Build actuels pendant cette étape. Un résultat interrompu ou partiel doit être inspecté avant toute répétition ; aucun journal ne doit être tronqué.
+À l’invite **`Identite SQL du compte de migration existant`**, saisir le compte de migration existant déjà validé. À l’invite suivante, saisir son mot de passe existant dans la console ; la saisie est masquée. Ne pas copier ce mot de passe dans la conversation. Transmettre uniquement le JSON du diagnostic.
 
-Le [diagnostic SQL en lecture seule](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh) est publié séparément, SHA-256 `117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0`, mais n’a pas été exécuté sur l’hébergement. Le [helper de migration](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/upgrade-release150.sh), SHA-256 `ea34ff037ad3be287c4f2cd4354c521dd3b93b33326ef787f094f4274c9a0402`, est **explicitement non exécutable** : ses quatre pins `START141_SHA256`, `CHECK141_SHA256`, `START150_SHA256`, `CHECK150_SHA256` restent `QUALIFICATION_REQUIRED` jusqu’au reçu de préparation utilisateur. Aucune commande de migration n’est donnée à cette étape.
+Le résultat attendu, sans le présumer, est `status:"checked"`, `migrations:32`, `applied:31`, `pending:1`, `interrupted:false`, avec les contrôles moteur/TLS réussis. Ces nombres décrivent le plan connu et le schéma précédemment confirmé ; seul le nouveau diagnostic établira l’état SQL actuel. Garder le service 1.4.0 et les réglages Run/Build actuels pendant cette lecture.
 
-Après les étapes ultérieures de statut SQL et d’arrêt attesté, le schéma 32 puis les précontrôles 1.4.1/1.5.0 devront être confirmés avant activation. Le futur repli **1.4.1** reste à précontrôler sur ce schéma ; la **1.4.0 ne doit pas être redémarrée après cette migration**. Aucun staging, statut SQL, passage au schéma 32, précontrôle hébergé ou changement Run/Build n’est encore attesté. La production et le checkpoint restent la 1.4.0 close ; aucun travail PC, audit général ou évolution suivante n’est rouvert.
+Migration 0032, précontrôles 1.4.1/1.5.0 et activation restent à constater ensuite. Le futur repli **1.4.1** n’est pas encore précontrôlé sur le schéma 32 ; la **1.4.0 ne doit pas être redémarrée après cette migration**. Aucune nouvelle écriture du checkpoint, manipulation PC, audit général ou évolution suivante n’est ouverte.
 
 ## Livraison 1.4.0 — Évolution 3, diffusions à grande échelle closes
 
