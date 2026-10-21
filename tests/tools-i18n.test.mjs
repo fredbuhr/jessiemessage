@@ -151,7 +151,7 @@ test("broadcast feature checks cannot postpone cookie renewal and offline recove
   const executable = files["broadcast.js"].replace(/^import \{([^\n]+)\} from "\/broadcast-model\.js";/, "const {$1} = model;");
   h.run(`(() => {${executable}\nglobalThis.tools = {state,armExpiry,verifySession};})();`); h.visible();
   h.context.admin = admin;
-  h.run(`tools.state.visible=true;tools.state.session={id:admin.user.id,csrf:admin.csrf,expiresAt:admin.expiresAt,mediaEnabled:true};tools.state.draft.body="Brouillon privé";tools.armExpiry();`);
+  h.run(`tools.state.visible=true;tools.state.session={id:admin.user.id,csrf:admin.csrf,expiresAt:admin.expiresAt,mediaEnabled:true,largeAudiencesEnabled:false};tools.state.draft.body="Brouillon privé";tools.armExpiry();`);
   // Repeated feature proofs re-arm the timer but keep the earlier cookie due
   // date. Even a server-side sliding expiry must not restart that five minutes.
   const firstDelay = [...h.timers.values()][0].delay;

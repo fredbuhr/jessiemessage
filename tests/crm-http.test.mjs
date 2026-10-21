@@ -389,7 +389,7 @@ test("CRM exact routes enforce methods, do not expose client aliases and API HEA
 });
 
 test("readJson extended programmer ceiling remains bounded and default body budget stays 4096", async () => {
-  for (const maxBytes of [0, -1, 65537, Infinity, NaN, "65536", 1.5]) assert.throws(() => readJson({ headers: {} }, { maxBytes }), TypeError);
+  for (const maxBytes of [0, -1, 1048577, Infinity, NaN, "65536", 1.5]) assert.throws(() => readJson({ headers: {} }, { maxBytes }), TypeError);
   const request = new PassThrough(); request.headers = {};
   const body = readJson(request, { maxBytes: 65536 }); request.end(JSON.stringify({ notes: "界".repeat(8000) }));
   assert.equal((await body).notes.length, 8000);

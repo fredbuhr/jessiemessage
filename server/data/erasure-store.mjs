@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { campaignFingerprint, openPayload, sealPayload } from "../broadcast/crypto.mjs";
+import { campaignFingerprint, openPayload, sealPayload, createAudienceDigest, verifyRecipientProof } from "../broadcast/crypto.mjs";
 import { lockMediaCapacity, validateMediaCapacity } from "../media/capacity-store.mjs";
 import { readDeletionFacts } from "./deletion-store.mjs";
 import { assertErasureSchema } from "./erasure-schema.mjs";
@@ -59,12 +59,57 @@ export function createErasureStore({ pool, database, capacity, broadcastKey }) {
         async function campaigns(context, nowSql, redact) {
           const rows = await connection.query("SELECT * FROM broadcast_campaigns ORDER BY id LIMIT 10001 FOR UPDATE");
           if (rows.length > 10000) failErasure("ERASURE_LIMIT");
+          async function compactCampaign(row, payload, associated) {
+            const complete = createAudienceDigest(), remaining = createAudienceDigest();
+            let afterId = null, selected = false, pending = false;
+            while (true) {
+              const page = await connection.query(`SELECT r.*, c.client_id AS actual_client, c.admin_id AS actual_admin FROM broadcast_recipients r
+                JOIN conversations c ON c.id = r.conversation_id WHERE r.campaign_id = ?
+                ${afterId === null ? "" : "AND r.conversation_id > ?"} ORDER BY r.conversation_id ASC LIMIT 100 FOR UPDATE`,
+              [row.id, ...(afterId === null ? [] : [afterId])]);
+              if (!Array.isArray(page) || page.length > 100) failErasure("ERASURE_CAMPAIGN");
+              for (const recipient of page) {
+                const conversationId = bytes(recipient.conversation_id), clientId = bytes(recipient.client_id);
+                if (afterId !== null && Buffer.compare(afterId, conversationId) >= 0
+                  || !clientId.equals(bytes(recipient.actual_client)) || !associated.adminId.equals(bytes(recipient.actual_admin))
+                  || !states.includes(recipient.state) || terminal(row) && ["pending", "sending"].includes(recipient.state)
+                  || !verifyRecipientProof(broadcastKey, { ...associated, conversationId, clientId, messageId: bytes(recipient.proposed_message_id) }, recipient.client_message_id))
+                  failErasure("ERASURE_CAMPAIGN");
+                afterId = conversationId;
+                complete.update(conversationId, clientId);
+                if (complete.count > payload.audience.count) failErasure("ERASURE_CAMPAIGN");
+                if (clientId.equals(target)) {
+                  if (selected || context === null || !conversationId.equals(context.id)) failErasure("ERASURE_BINDINGS");
+                  selected = true;
+                } else {
+                  remaining.update(conversationId, clientId);
+                  if (["pending", "sending"].includes(recipient.state)) pending = true;
+                }
+              }
+              if (page.length < 100) break;
+            }
+            if (complete.count !== payload.audience.count || complete.digest() !== payload.audience.digest) failErasure("ERASURE_CAMPAIGN");
+            if (!selected || !redact) return;
+            // Validate the complete immutable snapshot before deleting one row.
+            // The prior create fingerprint changes, preserving the old retry
+            // conflict rather than recreating a permanently erased recipient.
+            const removed = await connection.query("DELETE FROM broadcast_recipients WHERE campaign_id = ? AND client_id = ? AND conversation_id = ?", [row.id, target, context.id]);
+            if (Number(removed.affectedRows) !== 1) failErasure("ERASURE_CAMPAIGN");
+            if (remaining.count === 0) await connection.query("DELETE FROM broadcast_campaigns WHERE id = ?", [row.id]);
+            else {
+              const next = { ...payload, audience: { ...payload.audience, count: remaining.count, digest: remaining.digest() } };
+              const status = !terminal(row) && !pending ? "completed" : row.status;
+              await connection.query("UPDATE broadcast_campaigns SET payload_encrypted = ?, request_fingerprint = ?, status = ?, updated_at = ? WHERE id = ?",
+                [sealPayload(next, broadcastKey, associated), campaignFingerprint(next, broadcastKey, associated), status, nowSql, row.id]);
+            }
+          }
           for (const row of rows) {
             const associated = { campaignId: bytes(row.id), adminId: bytes(row.admin_id) };
             const payload = openPayload(row.payload_encrypted, broadcastKey, associated);
             if (!timingSafeEqual(bytes(row.request_fingerprint, 32), campaignFingerprint(payload, broadcastKey, associated))
               || payload.mediaId !== (row.media_id === null ? null : hex(row.media_id)) || payload.allowRepeatMedia !== (Number(row.allow_repeat_media) === 1)
               || row.updated_at > nowSql) failErasure("ERASURE_CAMPAIGN");
+            if (payload.version === 2) { await compactCampaign(row, payload, associated); continue; }
             const recipients = await connection.query(`SELECT r.*, c.client_id AS actual_client, c.admin_id AS actual_admin FROM broadcast_recipients r
               JOIN conversations c ON c.id = r.conversation_id WHERE r.campaign_id = ? ORDER BY r.conversation_id FOR UPDATE`, [row.id]);
             if (JSON.stringify(recipients.map(r => hex(r.conversation_id))) !== JSON.stringify(payload.conversationIds)

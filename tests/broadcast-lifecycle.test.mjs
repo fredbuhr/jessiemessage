@@ -28,20 +28,22 @@ const deferred = () => { let resolve; const promise = new Promise((done) => { re
 const flush = async () => { for (let index = 0; index < 12; index += 1) await new Promise((resolve) => setImmediate(resolve)); };
 
 class FakeNode {
-  constructor(tag = "div") { this.tagName = tag; this.children = []; this.hidden = false; this.disabled = false; this.checked = false; this.value = ""; this.listeners = new Map(); this.classList = { toggle() {} }; }
+  constructor(tag = "div") { this.attributes = new Map(); this.tagName = tag; this.children = []; this.hidden = false; this.disabled = false; this.checked = false; this.value = ""; this.listeners = new Map(); this.classList = { toggle() {} }; }
   set textContent(value) { this.text = value; this.children = []; }
   get textContent() { return this.text ?? ""; }
   append(...nodes) { this.children.push(...nodes); }
   replaceChildren(...nodes) { this.children = nodes; }
-  setAttribute() {}
+  setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
+  focus() { if (this.ownerDocument) this.ownerDocument.activeElement = this; }
   reset() {}
   addEventListener(name, callback) { this.listeners.set(name, callback); }
   querySelectorAll(tag) { return this.children.flatMap((node) => node instanceof FakeNode ? [...(node.tagName === tag ? [node] : []), ...node.querySelectorAll(tag)] : []); }
 }
-function fixture(handler = () => null) {
-  const nodes = new Map(), calls = [], timers = new Map(), documentEvents = new Map(), windowEvents = new Map(); let timerId = 0; let owner = actor();
-  const node = (name) => { if (!nodes.has(name)) nodes.set(name, new FakeNode()); return nodes.get(name); };
-  const document = { visibilityState: "hidden", getElementById: node, createElement: (tag) => new FakeNode(tag), addEventListener(name, callback) { documentEvents.set(name, callback); } };
+function fixture(handler = () => null, initialOwner = actor()) {
+  const nodes = new Map(), calls = [], timers = new Map(), documentEvents = new Map(), windowEvents = new Map(); let timerId = 0; let owner = initialOwner;
+  const node = (name) => { if (!nodes.has(name)) nodes.set(name, Object.assign(new FakeNode(), { ownerDocument: document })); return nodes.get(name); };
+  const document = { visibilityState: "hidden", getElementById: node, createElement: (tag) => Object.assign(new FakeNode(tag), { ownerDocument: document }), addEventListener(name, callback) { documentEvents.set(name, callback); } };
   const context = createContext({ ...model, document, window: { addEventListener(name, callback) { windowEvents.set(name, callback); } }, location: { replace() {} },
     AbortController, URL, URLSearchParams, TextEncoder, Date, console, crypto: webcrypto,
     setTimeout(callback, delay) { const timer = ++timerId; timers.set(timer, { callback, delay }); return timer; }, clearTimeout(timer) { timers.delete(timer); },
@@ -54,10 +56,15 @@ function fixture(handler = () => null) {
       if (path.startsWith("/api/broadcast/admin/campaigns?")) return response({ campaigns: [], nextCursor: null, hasMore: false });
       if (path.startsWith("/api/admin/crm/contacts?")) return response({ contacts: [], nextCursor: null, hasMore: false });
       if (path.startsWith("/api/admin/crm/labels?")) return response({ labels: [], nextCursor: null, hasMore: false });
+      const recipientMatch = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})\/recipients\?/.exec(path);
+      if (recipientMatch) {
+        const saved = context.controller?.campaigns.get(recipientMatch[1]);
+        if (saved) return response({ campaignId: saved.id, recipients: detail(saved).recipients, nextCursor: null, hasMore: false });
+      }
       return response({ error: "not_found" }, 404);
     } });
   new Script(sessionClock).runInContext(context);
-  new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, scheduleHistory, busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
+  new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, scheduleHistory, renderSelection, renderControls, loadRecipientPage, rememberCampaign, detailState: () => ({ recipientPage, recipientAfter, recipientEpoch, detailElements }), busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
   const ui = context.controller;
   document.visibilityState = "visible";
   model.acceptBroadcastSession(ui.state, model.clearBroadcast(ui.state, { visible: true }), owner);
@@ -75,7 +82,7 @@ function compose(ui) {
 }
 
 test("actual broadcast controller binds every private JSON response to the current account and CSRF proof", async (t) => {
-  for (const path of ["/api/broadcast/admin/activity", "/api/broadcast/admin/campaigns?limit=20", `/api/broadcast/admin/campaigns/${id(10)}`,
+  for (const path of ["/api/broadcast/admin/activity", "/api/broadcast/admin/campaigns?limit=20", `/api/broadcast/admin/campaigns/${id(10)}/summary`,
     "/api/admin/crm/contacts?limit=50", "/api/admin/crm/labels?limit=100", "/api/media/admin/assets?limit=20", "/api/broadcast/admin/preview"]) {
     await t.test(path, async () => {
       let switched = false;
@@ -157,7 +164,7 @@ test("activity refresh updates an old live campaign outside page one and discove
   const f = fixture((path) => {
     if (path === "/api/broadcast/admin/activity") return response({ campaigns: newest.id === id(21)
       ? [newest, campaign(500, { status: "completed", createdAt: now, updatedAt: now + 1, counts: counts("delivered") })] : [newest] });
-    if (path === `/api/broadcast/admin/campaigns/${old.id}`) return response(detail(ended));
+    if (path === `/api/broadcast/admin/campaigns/${old.id}/summary`) return response(detail(ended));
     if (path === "/api/broadcast/admin/campaigns?limit=20") return response({ campaigns: oldPage, nextCursor: id(20), hasMore: true });
     if (path === `/api/broadcast/admin/campaigns?limit=20&afterId=${id(20)}`) return response({ campaigns: [ended, newest], nextCursor: null, hasMore: false });
     return null;
@@ -178,7 +185,7 @@ test("activity refresh updates an old live campaign outside page one and discove
 
 test("stale local live rows are resolved in bounded progressing batches instead of rejecting an eleven-row cache", async () => {
   const f = fixture((path) => {
-    const match = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})$/.exec(path);
+    const match = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})\/summary$/.exec(path);
     if (match) return response(detail(campaign(Number.parseInt(match[1], 16), { status: "completed", updatedAt: now, counts: counts("delivered") })));
     return null;
   });
@@ -186,7 +193,7 @@ test("stale local live rows are resolved in bounded progressing batches instead 
     for (let index = 10; index < 22; index += 1) f.ui.campaigns.set(id(index), campaign(index));
     await f.ui.loadHistory();
     assert.equal([...f.ui.campaigns.values()].filter((item) => item.status === "queued").length, 2);
-    assert.equal(f.calls.filter((call) => /^\/api\/broadcast\/admin\/campaigns\/[^?]+$/.test(call.path)).length, 10);
+    assert.equal(f.calls.filter((call) => /^\/api\/broadcast\/admin\/campaigns\/[a-f0-9]{32}\/summary$/.test(call.path)).length, 10);
     await f.ui.loadHistory(); assert.equal([...f.ui.campaigns.values()].filter((item) => item.status === "queued").length, 0);
   } finally { f.close(); }
 });
@@ -216,7 +223,7 @@ test("late history data cannot restore queued counters after cancellation", asyn
   const f = fixture((path) => {
     if (path === "/api/broadcast/admin/activity") return activity.promise;
     if (path.endsWith("/cancel")) { cancelledOnServer = true; return response(cancelled); }
-    if (path === `/api/broadcast/admin/campaigns/${queued.id}`) return response(detail(cancelledOnServer ? cancelled : queued));
+    if (path === `/api/broadcast/admin/campaigns/${queued.id}/summary`) return response(detail(cancelledOnServer ? cancelled : queued));
     if (path.includes("campaigns?")) return response({ campaigns: [queued], nextCursor: null, hasMore: false });
     return null;
   });
@@ -249,7 +256,7 @@ test("real hide/show handlers clear an in-flight confirmation and its old finall
       const input = JSON.parse(options.body); const value = campaign(40 + sent.length, { ...input }); sent.push(value); stored.set(value.id, value);
       return sent.length === 1 ? old.promise : fresh.promise;
     }
-    const match = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})$/.exec(path);
+    const match = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})\/summary$/.exec(path);
     if (match && stored.has(match[1])) return response(detail(stored.get(match[1])));
     return null;
   });
@@ -292,7 +299,7 @@ test("a rate-limited history poll respects Retry-After before scheduling another
 });
 
 test("a rate-limited selected detail also delays the next periodic history read", async () => {
-  const f = fixture((path) => path === `/api/broadcast/admin/campaigns/${id(10)}`
+  const f = fixture((path) => path === `/api/broadcast/admin/campaigns/${id(10)}/summary`
     ? response({ error: "try_again_later" }, 429, { "retry-after": "120" }) : null);
   try {
     await f.ui.loadHistory(); await f.ui.showCampaign(id(10)); f.ui.scheduleHistory();
@@ -302,7 +309,7 @@ test("a rate-limited selected detail also delays the next periodic history read"
 });
 
 test("a manual detail rate limit also postpones a history timer which was already scheduled", async () => {
-  const f = fixture((path) => path === `/api/broadcast/admin/campaigns/${id(10)}`
+  const f = fixture((path) => path === `/api/broadcast/admin/campaigns/${id(10)}/summary`
     ? response({ error: "try_again_later" }, 429, { "retry-after": "120" }) : null);
   try {
     await f.ui.loadHistory(); f.ui.scheduleHistory();
@@ -310,5 +317,121 @@ test("a manual detail rate limit also postpones a history timer which was alread
     await f.poll();
     assert.equal(f.calls.length, before, "the existing timer checks the new retry deadline before any read");
     assert.equal([...f.timers.values()].filter((timer) => timer.delay >= 119000 && timer.delay <= 120000).length, 1);
+  } finally { f.close(); }
+});
+
+const manyCounts = (total, delivered = 0) => ({ total, pending: total - delivered, sending: 0, delivered, skipped: 0, cancelled: 0, failed: 0 });
+const recipientRows = (start, length) => Array.from({ length }, (_, index) => ({ conversationId: id(start + index), client: { id: id(start + index + 5000), pseudonym: `Synthetic client ${start + index}` }, state: "pending", reason: null, messageId: null, deliveredAt: null }));
+const recipientPage = (campaignId, rows, hasMore = false) => ({ campaignId, recipients: rows, hasMore, nextCursor: hasMore ? rows.at(-1).conversationId : null });
+const largeActor = () => ({ ...actor(), largeAudiencesEnabled: true });
+
+test("global2500 preview and a lost POST response retain one immutable confirmation while scope controls stay frozen", async () => {
+  let stored = null, first = true; const posts = [];
+  const f = fixture((path, options) => {
+    if (path === "/api/broadcast/admin/preview") return response({ recipients: recipientRows(1, 50).map(row => ({ conversationId: row.conversationId, client: row.client, eligible: true, reason: null, repeatMedia: false })), totalCount: 2500, eligibleCount: 2500, excludedCount: 0, repeatCount: 0, previewToken: "v1.opaque.signature" });
+    if (path === "/api/broadcast/admin/campaigns" && options.method === "POST") {
+      posts.push(options.body); const input = JSON.parse(options.body);
+      stored ??= campaign(60, { ...input, formatVersion: 2, audienceMode: "all", counts: manyCounts(2500) });
+      if (first) { first = false; throw new Error("synthetic lost response"); }
+      return response({ campaign: stored, duplicate: true });
+    }
+    if (path === `/api/broadcast/admin/campaigns/${id(60)}/summary`) return response(stored);
+    if (path.startsWith(`/api/broadcast/admin/campaigns/${id(60)}/recipients?`)) return response(recipientPage(id(60), recipientRows(1, 50), true));
+    return null;
+  }, largeActor());
+  try {
+    model.updateAudience(f.ui.state, { mode: "all" }); model.updateComposition(f.ui.state, { title: "Synthetic global", body: "Private synthetic body" });
+    await f.ui.preview(); assert.equal(f.node("preview-list").children.length, 50); assert.equal(f.ui.state.preview.eligibleCount, 2500);
+    assert.equal(model.canConfirmBroadcast(f.ui.state), false); f.ui.state.acknowledged = true;
+    await f.ui.send(); assert.equal(f.ui.state.pending.status, "uncertain"); assert.equal(f.node("audience-mode").disabled, true); assert.equal(f.node("composition").disabled, true);
+    assert.equal(model.updateAudience(f.ui.state, { mode: "filtered" }), false); await f.ui.send(true);
+    assert.equal(posts.length, 2); assert.equal(posts[0], posts[1]); assert.equal(JSON.parse(posts[0]).audience.mode, "all"); assert.equal(Object.hasOwn(JSON.parse(posts[0]), "conversationIds"), false);
+    assert.equal(f.ui.state.pending, null); assert.equal(f.ui.state.audienceMode, "selected"); assert.equal(f.ui.campaigns.get(id(60)).counts.total, 2500);
+  } finally { f.close(); }
+});
+
+test("contact pages replace50 rows, retain explicit choices and preserve checkbox focus", async () => {
+  const f = fixture(path => {
+    if (path.startsWith("/api/admin/crm/contacts?")) {
+      const after = new URL(path, "https://synthetic.invalid").searchParams.get("afterId"), start = after ? 51 : 1;
+      return response({ contacts: recipientRows(start, 50).map(row => ({ id: row.conversationId, client: row.client, crm: { nickname: "" }, canSend: true })), hasMore: !after, nextCursor: after ? null : id(50) });
+    }
+    return null;
+  }, largeActor());
+  try {
+    await f.ui.loadContacts(); const checkbox = f.node("contacts").children[0].children[0]; checkbox.checked = true; checkbox.focus(); checkbox.listeners.get("change")();
+    assert.equal(f.document.activeElement.getAttribute("data-conversation-id"), id(1));
+    await f.ui.loadContacts(true); assert.equal(f.ui.state.contacts.size, 50); assert.equal(f.node("contacts").children.length, 50); assert.equal(f.ui.state.contacts.has(id(1)), false); assert.equal(f.ui.state.selected.has(id(1)), true);
+    await f.ui.loadContacts(true, true); assert.equal(f.node("contacts").children[0].children[0].checked, true);
+    for (let value = 2; value <= 2500; value += 1) f.ui.state.selected.set(id(value), { id: id(value), pseudonym: `Synthetic ${value}` });
+    f.ui.renderSelection(); assert.equal(f.node("selected").children.length, 50); assert.equal(f.node("selected-more").hidden, false);
+    f.node("selected-more").listeners.get("click")(); assert.equal(f.node("selected").children.length, 50); assert.equal(f.node("selected-previous").hidden, false);
+  } finally { f.close(); }
+});
+
+test("periodic summary polling keeps recipient rows and never refetches their page", async () => {
+  let saved = campaign(70, { formatVersion: 2, audienceMode: "all", counts: manyCounts(2500) });
+  const f = fixture(path => {
+    if (path === `/api/broadcast/admin/campaigns/${id(70)}/summary`) return response(saved);
+    if (path.startsWith(`/api/broadcast/admin/campaigns/${id(70)}/recipients?`)) return response(recipientPage(id(70), recipientRows(1, 50), true));
+    if (path === "/api/broadcast/admin/activity") return response({ campaigns: [saved] });
+    return null;
+  }, largeActor());
+  try {
+    await f.ui.showCampaign(id(70)); const rows = [...f.ui.detailState().detailElements.list.children];
+    saved = { ...saved, status: "running", updatedAt: now + 1, counts: manyCounts(2500, 1) };
+    f.ui.scheduleHistory(); await f.poll();
+    assert.equal(f.ui.campaigns.get(id(70)).counts.delivered, 1);
+    assert.equal(f.calls.filter(call => call.path.includes("/recipients?")).length, 1);
+    assert.deepEqual(f.ui.detailState().detailElements.list.children, rows);
+  } finally { f.close(); }
+});
+
+test("redaction invalidates an in-flight recipient page and a late snapshot cannot restore its removed client", async () => {
+  const oldPage = deferred(); let requestCount = 0;
+  let saved = campaign(80, { formatVersion: 2, audienceMode: "all", counts: manyCounts(101) });
+  const f = fixture(path => {
+    if (path === `/api/broadcast/admin/campaigns/${id(80)}/summary`) return response(saved);
+    if (path.startsWith(`/api/broadcast/admin/campaigns/${id(80)}/recipients?`)) {
+      requestCount += 1; if (path.includes("afterId")) return oldPage.promise;
+      return response(recipientPage(id(80), recipientRows(1, 50), true));
+    }
+    return null;
+  }, largeActor());
+  try {
+    await f.ui.showCampaign(id(80)); const loading = f.ui.loadRecipientPage("next"); await flush();
+    saved = { ...saved, counts: manyCounts(100) }; f.ui.rememberCampaign(model.parseCampaign(saved)); await flush();
+    oldPage.resolve(response(recipientPage(id(80), recipientRows(51, 50), true))); await loading; await flush();
+    assert.equal(requestCount, 3); assert.equal(f.ui.detailState().recipientAfter, null);
+    assert.equal(f.ui.detailState().recipientPage.recipients[0].conversationId, id(1));
+    assert.equal(f.ui.detailState().recipientPage.recipients.some(row => row.conversationId === id(60)), false);
+    f.ui.rememberCampaign(model.parseCampaign({ ...saved, updatedAt: now + 1000, counts: manyCounts(101) }));
+    assert.equal(f.ui.campaigns.get(id(80)).counts.total, 100);
+  } finally { f.close(); }
+});
+
+test("a removed campaign summary404 purges its selected page without any legacy-detail fallback", async () => {
+  let missing = false; const saved = campaign(90);
+  const f = fixture(path => path === `/api/broadcast/admin/campaigns/${id(90)}/summary` ? response(missing ? { error: "not_found" } : saved, missing ? 404 : 200) : null);
+  try {
+    f.ui.renderControls(); assert.equal(f.node("audience-options").hidden, true);
+    await f.ui.showCampaign(id(90)); assert.ok(f.ui.detailState().recipientPage);
+    missing = true; await f.ui.showCampaign(id(90), true);
+    assert.equal(f.ui.detailState().recipientPage, null); assert.equal(f.ui.campaigns.has(id(90)), false);
+    assert.equal(f.calls.some(call => call.path === `/api/broadcast/admin/campaigns/${id(90)}`), false);
+  } finally { f.close(); }
+});
+
+test("an edited filter clears the real confirmation even when canonical criteria stay identical", () => {
+  const f = fixture(() => null, largeActor());
+  try {
+    model.updateAudience(f.ui.state, { filters: { q: "", tagId: null, groupId: null, access: "all", unread: false, reminder: "all" } });
+    f.ui.state.contacts.set(id(99), { id: id(99), client: { id: id(98), pseudonym: "Synthetic client" }, nickname: "", canSend: true });
+    model.selectRecipient(f.ui.state, id(99), true); model.updateComposition(f.ui.state, { title: "Synthetic confirmed draft", body: "Synthetic body" });
+    model.acceptPreview(f.ui.state, model.previewTicket(f.ui.state), { recipients: [{ conversationId: id(99), client: { id: id(98), pseudonym: "Synthetic client" }, eligible: true, reason: null, repeatMedia: false }], totalCount: 1, eligibleCount: 1, excludedCount: 0, repeatCount: 0, previewToken: "v1.opaque.signature" });
+    f.ui.state.acknowledged = true; f.node("acknowledge").checked = true; f.ui.renderControls(); assert.equal(f.node("confirm").disabled, false);
+    f.node("search").value = " "; f.node("filters").listeners.get("input")();
+    assert.equal(f.ui.state.audienceFilters.q, ""); assert.equal(f.node("acknowledge").checked, false);
+    assert.equal(f.ui.state.acknowledged, false); assert.equal(f.node("confirm").disabled, true); assert.equal(model.canConfirmBroadcast(f.ui.state), false);
   } finally { f.close(); }
 });

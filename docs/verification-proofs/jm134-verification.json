@@ -1,0 +1,194 @@
+{
+  "version": "1.3.4",
+  "status": "implemented_awaiting_exact_native_ci",
+  "branch": "feat/broadcast-compat-134",
+  "base": "689656942786e9a2800792506e9fc12787ff4c80",
+  "source": null,
+  "tree": null,
+  "scope": "read_process_inspect_redact_verify_legacy_and_compact_broadcasts_with_large_creation_disabled",
+  "results": {
+    "codeQualified": false,
+    "releasePublished": false,
+    "deliveryComplete": false,
+    "implementationReported": true
+  },
+  "requirements": {
+    "legacyPayloadPreserved": true,
+    "compactPayloadVersion": 2,
+    "recipientBindingRequired": true,
+    "paginatedHistoryRequired": true,
+    "streamedRedactionAndVerificationRequired": true,
+    "normalRuntimeLargeAudiencesEnabled": false,
+    "legacyManualCreationMaximum": 100,
+    "requiresMigration": false,
+    "schemaMigrationsExpected": 31,
+    "dependenciesChangedPlanned": false,
+    "backupAndPcScope": "format_compatibility_only_no_workflow_reopening",
+    "requestReaderCompatibility": {
+      "configuredUpperBoundBytes": 1048576,
+      "defaultBytes": 4096,
+      "legacyRouteBudgetsPreserved": true,
+      "cancelBudgetBytes": 32768,
+      "largePreviewCreateBudgetOnlyWhenEnabled": true
+    }
+  },
+  "qualification": {
+    "status": "local_targeted_and_build_passed_global_attempts_incomplete_native_ci_pending",
+    "local": {
+      "node": "v24.19.0",
+      "targetedTests": {
+        "cryptoCompatibility": {
+          "passed": 112,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 4556.024
+        },
+        "backend": {
+          "passed": 75,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 777.698957
+        },
+        "frontendFinal": {
+          "passed": 59,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 308.96
+        },
+        "chatAndCrmHttpCompatibility": {
+          "command": "node --test tests/chat-http.test.mjs tests/crm-http.test.mjs",
+          "passed": 63,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 573.426906
+        }
+      },
+      "globalAttempts": [
+        {
+          "command": "npm test",
+          "exitCode": 1,
+          "status": "failed_incomplete_summary",
+          "total": null,
+          "passed": null,
+          "failed": null,
+          "skipped": null
+        },
+        {
+          "command": "node --test --test-reporter=tap --test-concurrency=2 tests/*.test.mjs",
+          "exitCode": 1,
+          "status": "failed_incomplete_summary",
+          "total": null,
+          "passed": null,
+          "failed": null,
+          "skipped": null,
+          "observedFailures": [
+            {
+              "scope": "conversation-export",
+              "count": 3,
+              "code": "ENOENT",
+              "operation": "mkdtemp",
+              "pathPattern": "/tmp/jm-conversation-zip-*"
+            }
+          ],
+          "environmentObservation": "tmp_directory_absent_in_sandbox"
+        }
+      ],
+      "globalSuitePassed": false,
+      "applicationGuardChangedToPassGlobalAttempts": false,
+      "build": {
+        "command": "npm run build",
+        "exitCode": 0,
+        "status": "passed",
+        "syntaxCommand": "npm run check",
+        "syntaxSources": 587,
+        "sourceKinds": [
+          "JavaScript",
+          "shell"
+        ],
+        "offlineWorkbenchCreated": true
+      },
+      "nativeFixtures": {
+        "syntax": "reported_valid",
+        "executedLocally": false,
+        "database": {
+          "syntheticClients": 2500,
+          "parentTestsWritten": 1,
+          "subtestsWritten": 5,
+          "explainQueriesWritten": 3,
+          "plansObserved": false,
+          "captureAndDrainDurationsObserved": false
+        },
+        "chrome": {
+          "testsWritten": 4,
+          "contextsWritten": 7,
+          "executed": false
+        }
+      }
+    },
+    "review": {
+      "status": "completed",
+      "method": "two_independent_static_reviews",
+      "scopes": [
+        "crypto_compatibility",
+        "backend_api_and_ui"
+      ],
+      "blockingFindings": false,
+      "nativeQualification": false
+    },
+    "pullRequestCi": null,
+    "mainCi": null,
+    "criteria": [
+      "legacy_campaign_read_and_delivery_preserved",
+      "compact_campaign_row_proof_rejected_before_quota_when_tampered",
+      "owned_summary_and_recipient_pages_bounded",
+      "compact_redaction_and_verification_streamed_with_existing_guards",
+      "normal_runtime_new_audience_creation_disabled"
+    ]
+  },
+  "pullRequest": null,
+  "publication": {
+    "status": "not_published",
+    "tag": null,
+    "releaseUrl": null,
+    "run": null,
+    "publishedAt": null,
+    "verified": false
+  },
+  "hosting": {
+    "activeVersion": "1.3.3",
+    "activeSource": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+    "activeTree": "b1fe882ede0450cbf135d2ff8cb19e780d18a0e5",
+    "activeNode": "v24.22.0",
+    "activeStartedAtDisplay": "21/10/2026 13:20:11",
+    "activeMetadataReceipt": "release133_metadata_recorded",
+    "activeReleaseClosed": true,
+    "schemaMigrations": 31,
+    "currentRollbackRelease": "1.3.1",
+    "directPrivateToolObservation": false,
+    "release134PreparationReported": false,
+    "rollback134HostedQualified": false,
+    "release134ActivationReported": false,
+    "plannedRole": "compatible_rollback_for_release140_not_intermediate_activation",
+    "intermediateRuntimeIdentityRequired": false
+  },
+  "preparation": {
+    "status": "not_yet_ready",
+    "commit": null,
+    "file": null,
+    "sha256": null,
+    "sourcePinned": null,
+    "treePinned": null,
+    "readyForOperator": false,
+    "executionReported": false
+  },
+  "notAttested": [
+    "release134_final_source_and_tree",
+    "release134_pull_request_and_exact_main_ci",
+    "release134_publication",
+    "release134_hosted_precheck",
+    "physical_phone_and_mutual_host_capacity",
+    "current_pc_or_backup_delivery",
+    "release134_complete_local_global_test_summary",
+    "release134_native_sql_and_chrome_results"
+  ]
+}

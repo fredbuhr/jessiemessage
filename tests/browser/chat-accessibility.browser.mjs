@@ -803,12 +803,12 @@ test("Chrome mobile: native modal Escape restores photo / gallery focus; private
     assert.equal(await page.execute("return document.getElementById('lightbox').contains(document.activeElement)"), true, "native modal contains focus");
     assert.equal(await page.execute("return document.querySelector('#lightbox img').src.startsWith('blob:')"), true);
     await page.key("\uE00C");
-    await waitUntil(() => page.execute("return !document.getElementById('lightbox').open"), "Escape closes native modal");
+    await waitUntil(() => page.execute("return !document.getElementById('lightbox').open && document.activeElement === window.__photoOpener"), "Escape closes native modal and its close event restores photo focus");
     assert.equal(await page.execute("return document.activeElement === window.__photoOpener"), true, "Escape restores the same photo control");
     await clickOptionsAction(page, "#open-gallery");
     await waitUntil(() => page.execute("const dialog = document.getElementById('media-dialog'); const image = dialog.querySelector('img'); return dialog.open && dialog.matches(':modal') && !!image && image.complete && image.naturalWidth > 0"), "native conversation gallery");
     await page.key("\uE00C");
-    await waitUntil(() => page.execute("return !document.getElementById('media-dialog').open"), "Escape closes conversation gallery");
+    await waitUntil(() => page.execute("return !document.getElementById('media-dialog').open && document.activeElement.id === 'open-conversation-menu'"), "Escape closes conversation gallery and its close event restores menu focus");
     assert.equal(await page.execute("return document.activeElement.id"), "open-conversation-menu");
     const persistence = await page.executeAsync(`const done = arguments[arguments.length - 1];
       Promise.all([caches.keys(), navigator.serviceWorker.getRegistrations()]).then(([cacheKeys, registrations]) => {

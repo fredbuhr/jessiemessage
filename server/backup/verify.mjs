@@ -5,7 +5,7 @@ import { openVerificationPayload } from "../mail/crypto.mjs";
 import { openResetPayload } from "../reset/mail-crypto.mjs";
 import { decryptMessageBody, messageFingerprint, validateMessageBody } from "../chat/crypto.mjs";
 import { openNotes } from "../crm/crypto.mjs";
-import { openPayload, campaignFingerprint } from "../broadcast/crypto.mjs";
+import { openPayload, campaignFingerprint, createAudienceDigest, verifyRecipientProof } from "../broadcast/crypto.mjs";
 import { openSubscription, endpointDigest } from "../notifications/crypto.mjs";
 import { createBackupCryptoStore } from "./crypto-store.mjs";
 
@@ -178,6 +178,25 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
           || typeof row.allowRepeatMedia !== "boolean" || payload.allowRepeatMedia !== row.allowRepeatMedia
           || !(row.mediaId === null || Buffer.isBuffer(row.mediaId) && row.mediaId.length === 16)
           || payload.mediaId !== (row.mediaId?.toString("hex") ?? null)) throw new RowFailure("binding_mismatch");
+        if (payload.version === 2) {
+          if (typeof row.recipientPages !== "function") invalid();
+          const digest = createAudienceDigest();
+          for await (const page of row.recipientPages()) {
+            checkSignal();
+            if (!Array.isArray(page) || page.length < 1 || page.length > 100) invalid();
+            for (const recipient of page) {
+              checkSignal(); countRow(); report.counts.broadcastRecipients++;
+              const conversationId = bytes(recipient?.conversationId, 16), clientId = bytes(recipient.clientId, 16);
+              if (!clientId.equals(bytes(recipient.actualClientId, 16)) || !binding.adminId.equals(bytes(recipient.actualAdminId, 16))
+                || !verifyRecipientProof(secrets.messageKey, { ...binding, conversationId, clientId, messageId: bytes(recipient.messageId, 16) }, recipient.proof))
+                throw new RowFailure("binding_mismatch");
+              digest.update(conversationId, clientId);
+              if (digest.count > payload.audience.count) throw new RowFailure("binding_mismatch");
+            }
+          }
+          if (digest.count !== payload.audience.count || digest.digest() !== payload.audience.digest) throw new RowFailure("binding_mismatch");
+          return;
+        }
         if (!Array.isArray(row.conversationIds) || row.conversationIds.length < 1 || row.conversationIds.length > 100) invalid();
         let previous = null;
         for (let index = 0; index < row.conversationIds.length; index++) {

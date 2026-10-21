@@ -1,4 +1,5 @@
 import { validateMessageBody } from "../chat/crypto.mjs";
+import { validateSearch } from "../crm/validation.mjs";
 
 const MAX_VERSION = 18446744073709551615n;
 const TITLE_CONTROLS = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u;
@@ -37,8 +38,8 @@ export function validateVersion(value) {
   return value;
 }
 
-function conversationIds(input) {
-  if (!Array.isArray(input) || input.length < 1 || input.length > 100) invalid();
+function conversationIds(input, maximum = 100) {
+  if (!Array.isArray(input) || input.length < 1 || input.length > maximum) invalid();
   // Array.from visits sparse slots rather than silently omitting them.
   const values = Array.from(input, (hex) => ({ hex, id: validateId(hex) }));
   if (new Set(values.map(({ hex }) => hex)).size !== values.length) invalid();
@@ -46,7 +47,38 @@ function conversationIds(input) {
     .map(({ id }) => id);
 }
 
+/** The manual selector is transport-bounded, rather than a campaign ceiling.
+ * All/filtered selectors remain compact regardless of audience cardinality. */
+export function validateAudience(input) {
+  if (input === null || typeof input !== "object" || Array.isArray(input)) invalid();
+  const mode = Object.getOwnPropertyDescriptor(input, "mode");
+  if (!mode || !Object.hasOwn(mode, "value")) invalid();
+  if (mode.value === "all") { exactObject(input, ["mode"]); return { mode: "all" }; }
+  if (mode.value === "selected") {
+    exactObject(input, ["mode", "conversationIds"]);
+    // An ID needs at least 35 JSON bytes. Reject impossible 1 MiB requests
+    // before allocating the canonical copy, including direct service callers.
+    return { mode: "selected", conversationIds: conversationIds(input.conversationIds,
+      Math.floor((1048576 - 1) / 35)).map(value => value.toString("hex")) };
+  }
+  if (mode.value !== "filtered") invalid();
+  exactObject(input, ["mode", "filters"]);
+  const filters = input.filters;
+  exactObject(filters, ["q", "tagId", "groupId", "access", "unread", "reminder"]);
+  let q;
+  try { q = validateSearch(filters.q); } catch { invalid(); }
+  if (!["all", "active", "pending", "expired", "revoked", "suspended", "deleted"].includes(filters.access)
+    || typeof filters.unread !== "boolean" || !["all", "due", "upcoming", "none"].includes(filters.reminder)) invalid();
+  const tagId = filters.tagId === null ? null : validateId(filters.tagId).toString("hex");
+  const groupId = filters.groupId === null ? null : validateId(filters.groupId).toString("hex");
+  return { mode: "filtered", filters: { q, tagId, groupId, access: filters.access, unread: filters.unread, reminder: filters.reminder } };
+}
+
 export function validatePreview(input) {
+  if (input && typeof input === "object" && Object.hasOwn(input, "audience")) {
+    exactObject(input, ["audience", "mediaId"]);
+    return { audience: validateAudience(input.audience), mediaId: input.mediaId === null ? null : validateId(input.mediaId) };
+  }
   exactObject(input, ["conversationIds", "mediaId"]);
   return {
     conversationIds: conversationIds(input.conversationIds),
@@ -54,7 +86,7 @@ export function validatePreview(input) {
   };
 }
 
-function payloadValues(input) {
+function contentValues(input) {
   const { title, body, mediaId, allowRepeatMedia } = input;
   if (typeof title !== "string" || title.length < 1 || title.length > 80 || !title.isWellFormed()
     || Buffer.byteLength(title, "utf8") > 320 || title.trim().length === 0
@@ -65,10 +97,21 @@ function payloadValues(input) {
   if (media === null || body !== "") {
     try { validateMessageBody(body); } catch { invalid(); }
   }
-  return { title, body, mediaId: media, allowRepeatMedia, conversationIds: conversationIds(input.conversationIds) };
+  return { title, body, mediaId: media, allowRepeatMedia };
+}
+
+function payloadValues(input) {
+  return { ...contentValues(input), conversationIds: conversationIds(input.conversationIds) };
 }
 
 export function validateCampaign(input) {
+  if (input && typeof input === "object" && Object.hasOwn(input, "audience")) {
+    exactObject(input, ["clientCampaignId", "title", "body", "mediaId", "allowRepeatMedia", "audience", "previewToken"]);
+    if (typeof input.previewToken !== "string" || input.previewToken.length < 1 || input.previewToken.length > 4096
+      || /[^\x21-\x7e]/u.test(input.previewToken)) invalid();
+    return { clientCampaignId: validateId(input.clientCampaignId), ...contentValues(input),
+      audience: validateAudience(input.audience), previewToken: input.previewToken };
+  }
   exactObject(input, ["clientCampaignId", ...PAYLOAD_FIELDS]);
   return { clientCampaignId: validateId(input.clientCampaignId), ...payloadValues(input) };
 }
@@ -76,6 +119,18 @@ export function validateCampaign(input) {
 // The encrypted payload has no caller retry ID. Keep one validation path for
 // API input and authenticated database plaintext, returning a canonical DTO.
 export function validatePayload(input) {
+  if (input && typeof input === "object" && Object.hasOwn(input, "version")) {
+    exactObject(input, ["version", "title", "body", "mediaId", "allowRepeatMedia", "audience"]);
+    if (input.version !== 2) invalid();
+    const value = contentValues(input), audience = input.audience;
+    exactObject(audience, ["mode", "count", "digest", "selectorHash"]);
+    if (!["all", "filtered", "selected"].includes(audience.mode) || !Number.isSafeInteger(audience.count) || audience.count < 1
+      || typeof audience.digest !== "string" || !/^[a-f0-9]{64}$/u.test(audience.digest)
+      || typeof audience.selectorHash !== "string" || !/^[a-f0-9]{64}$/u.test(audience.selectorHash)) invalid();
+    return { version: 2, title: value.title, body: value.body, mediaId: value.mediaId?.toString("hex") ?? null,
+      allowRepeatMedia: value.allowRepeatMedia,
+      audience: { mode: audience.mode, count: audience.count, digest: audience.digest, selectorHash: audience.selectorHash } };
+  }
   exactObject(input, PAYLOAD_FIELDS);
   const value = payloadValues(input);
   return { title: value.title, body: value.body, mediaId: value.mediaId?.toString("hex") ?? null,

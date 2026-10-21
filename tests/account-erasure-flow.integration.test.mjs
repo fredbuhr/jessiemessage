@@ -8,7 +8,8 @@ import { createdMigrationTables, applyMigrations, loadMigrations } from "../serv
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { tokenDigest } from "../server/auth/crypto.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
-import { openPayload, sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
+import { openPayload, sealPayload, campaignFingerprint, createAudienceDigest, recipientProof, verifyRecipientProof } from "../server/broadcast/crypto.mjs";
+import { createBroadcastStore } from "../server/broadcast/store.mjs";
 import { createErasureStore } from "../server/data/erasure-store.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
 import { createAccountErasure } from "../server/data/erasure.mjs";
@@ -152,6 +153,21 @@ test("durable account erasure removes the selected graph and actual encrypted fi
     const onlyCampaign = await campaign([{ client: first, conv, message: adminMessage }], "completed");
     const deliveredCampaign = await campaign([{ client: first, conv, message: adminMessage }, { client: peer, conv: peerConv, message: peerAdminMessage }], "completed");
     return { first, peer, conv, peerConv, sid, peerSid, own, shared, peerAsset, objects, ownMessage, sharedCampaign, onlyCampaign, deliveredCampaign };
+  }
+  async function compactCampaign(campaign) {
+    const members = await connection.query("SELECT * FROM broadcast_recipients WHERE campaign_id = ? ORDER BY conversation_id", [campaign.id]);
+    const digest = createAudienceDigest(), associated = { campaignId: campaign.id, adminId: admin };
+    for (const row of members) {
+      digest.update(row.conversation_id, row.client_id);
+      const proof = recipientProof(broadcastKey, { ...associated, conversationId: row.conversation_id, clientId: row.client_id, messageId: row.proposed_message_id });
+      await connection.query("UPDATE broadcast_recipients SET client_message_id = ? WHERE campaign_id = ? AND conversation_id = ?", [proof, campaign.id, row.conversation_id]);
+      if (row.state === "delivered") await connection.query("UPDATE messages SET client_message_id = ? WHERE id = ?", [proof, row.proposed_message_id]);
+    }
+    const payload = { version: 2, title: campaign.payload.title, body: campaign.payload.body, mediaId: null, allowRepeatMedia: false,
+      audience: { mode: "selected", count: members.length, digest: digest.digest(), selectorHash: createHash("sha256").update(JSON.stringify(campaign.payload.conversationIds)).digest("hex") } };
+    const encrypted = sealPayload(payload, broadcastKey, associated), fingerprint = campaignFingerprint(payload, broadcastKey, associated);
+    await connection.query("UPDATE broadcast_campaigns SET payload_encrypted = ?, request_fingerprint = ? WHERE id = ?", [encrypted, fingerprint, campaign.id]);
+    return { ...campaign, payload, encrypted, fingerprint, members };
   }
   async function peerSnapshot(f) {
     const groups = [];
@@ -433,6 +449,52 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       assert.equal((await connection.query("SELECT password_hash FROM users WHERE id = ?", [f.first]))[0].password_hash, null);
       assert.equal((await journal(f)).record.phase, "prepared"); assert.equal((await engine().resume({ clientId: hex(f.first) })).completed, true);
       assert.equal(await peerSnapshot(f), before);
+    });
+    await t.test("compact v2 audience erasure preserves peer proofs, rebinds the reduced snapshot and rejects a stale create retry", async () => {
+      const f = await seed();
+      const shared = await compactCampaign(f.sharedCampaign), delivered = await compactCampaign(f.deliveredCampaign);
+      await compactCampaign(f.onlyCampaign);
+      const before = await peerSnapshot(f);
+      const member = shared.members[0], proof = recipientProof(broadcastKey, { campaignId: shared.id, adminId: admin,
+        conversationId: member.conversation_id, clientId: member.client_id, messageId: member.proposed_message_id });
+      const damaged = Buffer.from(proof); damaged[0] ^= 1;
+      await connection.query("UPDATE broadcast_recipients SET client_message_id = ? WHERE campaign_id = ? AND conversation_id = ?", [damaged, shared.id, member.conversation_id]);
+      try {
+        const corruptState = await databaseHash();
+        await assert.rejects(engine().resume({ clientId: hex(f.first) }), { code: "ERASURE_CAMPAIGN" });
+        assert.equal(await databaseHash(), corruptState, "Unauthenticated queue membership rolls back the entire SQL phase");
+        assert.equal((await journal(f)).record.phase, "requested");
+      } finally {
+        await connection.query("UPDATE broadcast_recipients SET client_message_id = ? WHERE campaign_id = ? AND conversation_id = ?", [proof, shared.id, member.conversation_id]);
+      }
+      assert.equal((await engine().resume({ clientId: hex(f.first) })).completed, true);
+      assert.equal(await peerSnapshot(f), before, "Other client content and per-member proofs are unchanged");
+      assert.equal((await connection.query("SELECT 1 FROM broadcast_campaigns WHERE id = ?", [f.onlyCampaign.id])).length, 0);
+      for (const campaign of [shared, delivered]) {
+        const row = (await connection.query("SELECT * FROM broadcast_campaigns WHERE id = ?", [campaign.id]))[0];
+        const members = await connection.query("SELECT * FROM broadcast_recipients WHERE campaign_id = ? ORDER BY conversation_id", [campaign.id]);
+        assert.equal(members.length, 1); assert.deepEqual(members[0].client_id, f.peer);
+        const associated = { campaignId: campaign.id, adminId: admin }, payload = openPayload(row.payload_encrypted, broadcastKey, associated);
+        const digest = createAudienceDigest(); digest.update(members[0].conversation_id, members[0].client_id);
+        assert.equal(payload.version, 2); assert.equal(payload.audience.count, 1); assert.equal(payload.audience.digest, digest.digest());
+        assert.deepEqual(row.request_fingerprint, campaignFingerprint(payload, broadcastKey, associated));
+        assert.notDeepEqual(row.request_fingerprint, campaign.fingerprint);
+        assert.equal(verifyRecipientProof(broadcastKey, { ...associated, conversationId: members[0].conversation_id,
+          clientId: members[0].client_id, messageId: members[0].proposed_message_id }, members[0].client_message_id), true);
+      }
+      // Exercise the store's real persisted idempotency comparison. This
+      // callback supplies only the already synthetic owner; no HTTP/session or
+      // production authorization is bypassed by the application under test.
+      const store = createBroadcastStore(pool, { clock: () => now, chatStore: {
+        withActor: async (_request, work) => work(connection, { actor: { id: admin }, now, mfaVersion: 1 }),
+        withBroadcastDelivery: async () => { throw Error("no worker in this fixture"); },
+      } });
+      await assert.rejects(store.create({ tokenHash: randomBytes(32), now, campaign: { id: id(),
+        clientCampaignId: shared.clientCampaignId, requestFingerprint: shared.fingerprint, payloadEncrypted: shared.encrypted,
+        mediaId: null, allowRepeatMedia: false,
+        recipients: shared.members.map(row => ({ conversationId: row.conversation_id, messageId: id(), clientMessageId: id() })) } }),
+      { code: "BROADCAST_CONFLICT" });
+      assert.equal((await connection.query("SELECT 1 FROM broadcast_recipients WHERE client_id = ?", [f.first])).length, 0);
     });
     for (const phase of ["prepare", "release", "finish"]) await t.test(`real SQL ${phase} commit with a lost acknowledgement stops and resumes idempotently`, async () => {
       const f = await seed(); let injected = false;

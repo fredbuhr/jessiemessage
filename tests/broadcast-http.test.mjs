@@ -411,3 +411,109 @@ test("historical opted-out terminal recipients remain readable without becoming 
   const result = await response.json(); noInternals(result);
   assert.equal(result.status, "completed"); assert.equal(result.recipients[0].reason, "opted_out"); assert.equal(result.counts.pending, 0);
 });
+
+const largeIds = Array.from({ length: 2500 }, (_, index) => (index + 1).toString(16).padStart(32, "0"));
+const largeRecipients = () => largeIds.slice(0, 50).map(conversationId => recipient({ conversationId }));
+const largeCampaign = (changes = {}) => campaign({ formatVersion: 2, audienceMode: "all",
+  counts: { total: 2500, pending: 2500, sending: 0, delivered: 0, skipped: 0, cancelled: 0, failed: 0 },
+  recipients: largeRecipients(), hasMore: true, nextCursor: largeIds[49], ...changes });
+const largePreview = (changes = {}) => ({ recipients: largeRecipients().map(({ conversationId, client }) => ({ conversationId, client,
+  eligible: true, reason: null, repeatMedia: false, preferenceVersion: "private-version" })),
+  totalCount: 2500, eligibleCount: 2500, excludedCount: 0, repeatCount: 0, previewToken: "v1.preview.proof", privateKey: "private-key", ...changes });
+const largeInput = (changes = {}) => {
+  const { conversationIds: _unused, ...body } = input();
+  return { ...body, audience: { mode: "all" }, previewToken: "v1.preview.proof", ...changes };
+};
+
+test("large audience capability is explicit and compatibility refuses creation while retaining paginated reads", async (t) => {
+  assert.throws(() => createBroadcastHandler(fixtureService([], { largeAudiencesEnabled: "true" }), { origin }));
+  const f = await fixture(t, { largeAudiencesEnabled: false, summary: async () => largeCampaign(),
+    recipients: async (_token, id, options) => ({ campaignId: id, recipients: largeRecipients(), hasMore: true, nextCursor: largeIds[49] }) });
+  assert.equal(Object.hasOwn(await (await get(f.base, `${root}/admin/session`)).json(), "largeAudiencesEnabled"), false);
+  await errorBody(await post(f.base, `${root}/admin/preview`, { audience: { mode: "all" }, mediaId: null }), 400, "invalid_request");
+  await errorBody(await post(f.base, campaigns, largeInput()), 400, "invalid_request");
+  assert.equal((await get(f.base, `${detailPath}/summary`)).status, 200);
+  assert.equal((await get(f.base, `${detailPath}/recipients`)).status, 200);
+  assert.equal(f.calls.some(([name]) => ["preview", "create"].includes(name)), false);
+  const enabled = await fixture(t, { largeAudiencesEnabled: true });
+  assert.equal((await (await get(enabled.base, `${root}/admin/session`)).json()).largeAudiencesEnabled, true);
+});
+
+test("large previews expose a bounded sample and checked global counters without private fields", async (t) => {
+  assert.equal(largePreview().recipients.length, 50);
+  const f = await fixture(t, { largeAudiencesEnabled: true, preview: async () => largePreview() });
+  const body = { audience: { mode: "all" }, mediaId: null }, response = await post(f.base, `${root}/admin/preview`, body);
+  assert.equal(response.status, 200); privateHeaders(response);
+  const value = await response.json(); noInternals(value);
+  assert.equal(value.recipients.length, 50); assert.equal(value.totalCount, 2500); assert.equal(value.previewToken, "v1.preview.proof");
+  for (const malformed of [largePreview({ recipients: largePreview().recipients.slice(1) }), largePreview({ eligibleCount: 2499 }),
+    largePreview({ repeatCount: 1 }), largePreview({ previewToken: "private token" }),
+    largePreview({ totalCount: Number.MAX_SAFE_INTEGER + 1 }), largePreview({ recipients: largePreview().recipients.toReversed() })]) {
+    f.service.preview = async () => malformed;
+    await errorBody(await post(f.base, `${root}/admin/preview`, body), 503, "broadcast_unavailable");
+  }
+});
+
+test("manual audiences of thousands fit the larger transport only when explicitly enabled", async (t) => {
+  assert.equal(largeCampaign().counts.total, 2500);
+  const body = largeInput({ audience: { mode: "selected", conversationIds: largeIds } });
+  assert.ok(Buffer.byteLength(JSON.stringify(body)) > 32768);
+  const f = await fixture(t, { largeAudiencesEnabled: true, create: async (_token, input) => ({ campaign: largeCampaign({ audienceMode: input.audience.mode }), duplicate: false }) });
+  const response = await post(f.base, campaigns, body);
+  assert.equal(response.status, 201); const result = await response.json(); noInternals(result);
+  assert.equal(result.campaign.counts.total, 2500); assert.equal(result.campaign.audienceMode, "selected");
+  assert.equal(Object.hasOwn(result.campaign, "recipients"), false);
+  const compat = await fixture(t);
+  await errorBody(await post(compat.base, campaigns, body), 413, "request_too_large");
+  const wire = JSON.stringify(largeInput()), padding = " ".repeat(1048576 - Buffer.byteLength(wire));
+  assert.equal((await post(f.base, campaigns, padding + wire)).status, 201);
+  await errorBody(await post(f.base, campaigns, " " + padding + wire), 413, "request_too_large");
+});
+
+test("summary and recipient routes are private, strict and serialize only one bounded page", async (t) => {
+  const f = await fixture(t, { summary: async (value, id) => { f.calls.push(["summary", value, id]); return largeCampaign(); },
+    recipients: async (value, id, options) => { f.calls.push(["recipients", value, id, options]);
+      const start = options.afterId === null ? 0 : largeIds.indexOf(options.afterId) + 1;
+      const recipients = largeIds.slice(start, start + options.limit).map(conversationId => recipient({ conversationId, proposedMessageId: "private-message" }));
+      return { campaignId: id, recipients, hasMore: true, nextCursor: recipients.at(-1).conversationId, leaseToken: "private-lease" }; } });
+  const summary = await get(f.base, `${detailPath}/summary`);
+  assert.equal(summary.status, 200); const value = await summary.json(); noInternals(value);
+  assert.equal(value.counts.total, 2500); assert.equal(Object.hasOwn(value, "recipients"), false);
+  assert.deepEqual(f.calls.at(-1), ["summary", token, campaignId]);
+  const response = await get(f.base, `${detailPath}/recipients?afterId=${largeIds[49]}&limit=2`);
+  assert.equal(response.status, 200); const page = await response.json(); noInternals(page);
+  assert.deepEqual(Object.keys(page).sort(), ["campaignId", "hasMore", "nextCursor", "recipients"]);
+  assert.equal(page.recipients.length, 2); assert.equal(page.nextCursor, largeIds[51]);
+  assert.equal(Object.hasOwn(page.recipients[0], "proposedMessageId"), false);
+  assert.deepEqual(f.calls.at(-1), ["recipients", token, campaignId, { afterId: largeIds[49], limit: 2 }]);
+  for (const path of [`${detailPath}/summary`, `${detailPath}/recipients`]) {
+    await errorBody(await get(f.base, path, { Cookie: clientCookie }), 401, "authentication_required");
+    assert.equal((await post(f.base, path, {})).status, 405);
+  }
+  for (const suffix of ["?limit=51", "?limit=01", "?limit=2&limit=2", "?afterId=", "?afterId=" + "A".repeat(32), "?q=secret"]) {
+    await errorBody(await get(f.base, `${detailPath}/recipients${suffix}`), 400, "invalid_request");
+  }
+  await errorBody(await get(f.base, `${detailPath}/summary?limit=1`), 400, "invalid_request");
+  f.service.recipients = async () => { throw Object.assign(new Error("private-owner"), { code: "BROADCAST_NOT_FOUND" }); };
+  await errorBody(await get(f.base, `${detailPath}/recipients`), 404, "not_found");
+});
+
+test("large legacy detail remains bounded and rejects malformed page identities and counters", async (t) => {
+  const f = await fixture(t, { get: async () => largeCampaign(), recipients: async () => ({ campaignId, recipients: largeRecipients(), hasMore: true, nextCursor: largeIds[49] }) });
+  const response = await get(f.base, detailPath); assert.equal(response.status, 200);
+  const value = await response.json(); noInternals(value);
+  assert.equal(value.recipients.length, 50); assert.equal(value.hasMore, true); assert.equal(value.nextCursor, largeIds[49]);
+  for (const malformed of [largeCampaign({ formatVersion: 3 }), largeCampaign({ audienceMode: "other" }),
+    largeCampaign({ counts: { ...largeCampaign().counts, total: Number.MAX_SAFE_INTEGER + 1, pending: Number.MAX_SAFE_INTEGER + 1 } }),
+    largeCampaign({ recipients: largeRecipients().slice(1) }), largeCampaign({ hasMore: false, nextCursor: null }),
+    largeCampaign({ nextCursor: largeIds[48] })]) {
+    f.service.get = async () => malformed;
+    await errorBody(await get(f.base, detailPath), 503, "broadcast_unavailable");
+  }
+  for (const malformed of [{ campaignId: retryId, recipients: largeRecipients(), hasMore: true, nextCursor: largeIds[49] },
+    { campaignId, recipients: largeRecipients().toReversed(), hasMore: true, nextCursor: largeIds[0] },
+    { campaignId, recipients: largeRecipients(), hasMore: false, nextCursor: largeIds[49] }]) {
+    f.service.recipients = async () => malformed;
+    await errorBody(await get(f.base, `${detailPath}/recipients`), 503, "broadcast_unavailable");
+  }
+});

@@ -4,11 +4,19 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 
 Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.3.1 et 1.3.3 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
+## Évolution 3 — Diffusions à grande échelle, en cours
+
+Le lot [1.4.0](broadcast-scale-140.md) est ouvert après la clôture 1.3.3. Il doit permettre de choisir tous les clients, tous les résultats des filtres ou une sélection manuelle dépassant cent, avec un nombre réel prévisualisé puis confirmé. La file existante conserve la reprise après interruption et les identifiants stables ; le suivi et les destinataires sont paginés. Les envois restent des messages privés individuels.
+
+La livraison comporte deux snapshots successifs : [1.3.4, compatibilité et futur repli](broadcast-compat-134.md), puis 1.4.0 avec la création élargie activée. Le premier doit pouvoir lire et traiter les nouveaux formats sans activer leur création dans son runtime normal. Aucun changement SQL ou de dépendance n’est prévu. Le code de compatibilité 1.3.4, ses groupes locaux ciblés, ses deux revues statiques et son build sont rapportés, avec les deux tentatives globales locales échouées et incomplètes conservées dans le bilan. Restent les qualifications natives et les CI des commits exacts, la fusion et la publication des deux livraisons, puis leur préparation hébergée et l’activation vérifiée de 1.4.0. Aucun résultat manquant n’est déduit du socle 1.3.3.
+
+Le critère de fin est une campagne de plusieurs milliers de destinataires synthétiques, un aperçu confirmé qui ne s’élargit pas silencieusement, une création atomique, une reprise sans doublon et un affichage borné. Le repli doit être compatible avec les nouvelles campagnes. Les essais de téléphone physique et la capacité réelle du mutualisé gardent leurs limites ; la production reste 1.3.3 tant qu’un relevé d’activation ne prouve pas la suite. Les seules actions opérateur courantes sont dans [REPRISE](REPRISE.md) ; aucune commande n’est demandée maintenant.
+
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée ; prochain lot non ouvert. |
+| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | En cours ; compatibilité 1.3.4 puis cible 1.4.0, qualifications et livraison à établir. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |

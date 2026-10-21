@@ -21,6 +21,7 @@ import { createRecoveryCodes, hashPassword, makeTotpSecret, recoveryCodeDigest, 
 import { createMediaStorage } from "../../server/media/storage.mjs";
 import { createMediaCapacityStore } from "../../server/media/capacity-store.mjs";
 import { consumeSyntheticInvitation } from "../fixtures/manual-admission.mjs";
+import { generateNotificationVapidKeys } from "../../scripts/prepare-runtime-notifications.mjs";
 
 const run = promisify(execFile);
 const LOOPBACK = new Set(["127.0.0.1", "::1", "localhost"]);
@@ -289,9 +290,9 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     };
     let notificationSubscription;
     if (messaging) {
-      const vapid = createECDH("prime256v1"); vapid.generateKeys();
+      const vapid = generateNotificationVapidKeys();
       const subscription = createECDH("prime256v1"); subscription.generateKeys();
-      if ([key, ...Object.values(domainKeys)].some(value => value.equals(vapid.getPrivateKey()))) fail();
+      if ([key, ...Object.values(domainKeys)].some(value => value.equals(vapid.privateKey))) fail();
       Object.assign(runtimeEnvironment, Object.fromEntries(["ACCESS", "CHAT", "MEDIA", "NOTIFICATIONS", "CRM", "MAIL_DELIVERY"].map(name => [`JESSIEMESSAGE_ENABLE_${name}`, "1"])),
         Object.fromEntries(Object.entries(domainKeys).map(([name, value]) => [`JESSIEMESSAGE_${name}_KEY`, value.toString("base64url")])), {
           JESSIEMESSAGE_MEDIA_ROOT: mediaRoot, JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: String(16 * 1024 * 1024),
@@ -299,7 +300,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
           JESSIEMESSAGE_SMTP_HOST: "smtp.rehearsal.example.invalid", JESSIEMESSAGE_SMTP_PORT: "587",
           JESSIEMESSAGE_SMTP_USER: "synthetic-rehearsal", JESSIEMESSAGE_SMTP_PASSWORD: "synthetic-rehearsal-only",
           JESSIEMESSAGE_SMTP_FROM: "rehearsal@example.invalid", JESSIEMESSAGE_VAPID_SUBJECT: "mailto:contact@jessiemessage.com",
-          JESSIEMESSAGE_VAPID_PUBLIC_KEY: vapid.getPublicKey().toString("base64url"), JESSIEMESSAGE_VAPID_PRIVATE_KEY: vapid.getPrivateKey().toString("base64url"),
+          JESSIEMESSAGE_VAPID_PUBLIC_KEY: vapid.publicKey.toString("base64url"), JESSIEMESSAGE_VAPID_PRIVATE_KEY: vapid.privateKey.toString("base64url"),
         });
       notificationSubscription = Object.freeze({ endpoint: `https://fcm.googleapis.com/wp/synthetic-rehearsal-${randomBytes(16).toString("hex")}`, expirationTime: null,
         keys: Object.freeze({ p256dh: subscription.getPublicKey().toString("base64url"), auth: randomBytes(16).toString("base64url") }) });
