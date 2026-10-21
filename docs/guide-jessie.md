@@ -79,7 +79,7 @@ L’export exclut les notes et surnoms privés, tags, groupes et photos non part
 
 ## Diffusions à grande échelle — parcours 1.4.0 actif
 
-La version **1.4.0 est active sur Infomaniak**, selon le relevé admin utilisateur ; son enregistrement privé final reste à effectuer dans [REPRISE](REPRISE.md). La 1.3.4, précontrôlée comme repli compatible sans démarrage, conserve la création élargie désactivée.
+La version **1.4.0 est active sur Infomaniak** et sa livraison est close ; le relevé admin et le reçu d’enregistrement final sont conservés dans [REPRISE](REPRISE.md). La 1.3.4, précontrôlée comme repli compatible sans démarrage, conserve la création élargie désactivée.
 
 Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprend aussi les pages qui ne sont pas affichées. La prévisualisation annonce le nombre réellement éligible et les éventuelles photos déjà reçues ; seuls les premiers noms s’affichent comme aperçu. Confirme explicitement le nombre avant de lancer l’envoi.
 

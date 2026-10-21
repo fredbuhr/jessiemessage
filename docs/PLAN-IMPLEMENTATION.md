@@ -2,23 +2,14 @@
 
 La V1 initiale est terminée dans le périmètre convenu. L’état réellement déployé, ses preuves et les commandes opérateur sont exclusivement dans **[REPRISE](REPRISE.md)**. Ce plan décrit le travail restant ; les anciens lots correctifs restent historiques.
 
-Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.3.1 et 1.3.3 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
+Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.3.1, 1.3.3 et 1.4.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
-## Évolution 3 — Diffusions à grande échelle actives, alignement final à terminer
-
-Le code [1.3.4 de compatibilité](broadcast-compat-134.md) et [1.4.0 de grandes audiences](broadcast-scale-140.md) est revu, fusionné, qualifié par ses propres CI PR/main **5/5** et publié. La qualification native sur 2 500 clients et les parcours Chrome dédiés sont acquis ; les échecs initiaux restent dans les preuves. Aucun changement SQL ou de dépendance n’est ajouté.
-
-Les précontrôles hébergés des deux références exactes et du repli compatible 1.3.4 sont confirmés. Le relevé admin utilisateur confirme la **1.4.0 active**, source `56d4595059df9292fc54ba4d4e948eeb793bae96`, Node `v24.22.0`, démarrage affiché `21/10/2026 15:31:41`. La 1.3.4 n’a pas été démarrée et ne nécessite aucune activation intermédiaire.
-
-Il reste uniquement à [enregistrer l’alignement privé et le repli compatible](REPRISE.md#prochaine-action-opérateur--enregistrer-les-métadonnées-140), puis constater le reçu de clôture. Le checkpoint confirmé reste en 1.3.3 ; aucune préparation, modification Run/Build, migration, relance du service ou nouvelle lecture d’identité n’est nécessaire pour la 1.4.0 déjà active.
-
-Les instructions et pins courants sont uniquement dans [REPRISE](REPRISE.md). Les mesures synthétiques ne qualifient pas le débit réel du mutualisé ni tous les parcours sur téléphone physique.
+La livraison **1.4.0 — Diffusions à grande échelle** est close : code et CI qualifiés, versions publiées, précontrôles hébergés, identité active et alignement privé confirmés. Le reçu `release140_metadata_recorded` conserve le repli compatible **1.3.4** précontrôlé sans démarrage, l’ancien état 1.3.3 intégral et les autres blocs. Aucune opération n’est à rejouer pour ce lot ; [preuves et références](REPRISE.md#alignement-final-acquis--livraison-140-close).
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Code 1.3.4/1.4.0 qualifié et publié ; précontrôles et identité active 1.4.0 confirmés, alignement final et clôture restants. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |
@@ -27,8 +18,9 @@ Les instructions et pins courants sont uniquement dans [REPRISE](REPRISE.md). Le
 
 Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas ouvertes automatiquement ; la qualification d’appareils réels et des notifications conserve ses limites. Sauvegardes/PC et archivage différés restent hors de ce parcours. Les essais de masse ou de restauration exigent une cible synthétique isolée ; l’alias recette partage la production.
 
-## Livraisons antérieures closes
+## Livraisons closes
 
+- [Diffusions à grande échelle 1.4.0](broadcast-scale-140.md) : audiences globales, filtrées ou manuelles sans plafond métier de cent, aperçu confirmé et suivi paginé ; qualification sur 2 500 destinataires synthétiques, précontrôles et identité active confirmés. Clôture acquise par `release140_metadata_recorded`, schéma 31 inchangé ; [repli compatible 1.3.4](broadcast-compat-134.md) précontrôlé et enregistré sans démarrage. L’ancien état 1.3.3 et tous les autres blocs sont préservés. [Preuves](verification-proofs/jm140-verification.json).
 - [Voix de Jessie, messages compacts et détails des photos 1.3.3](photo-message-details-133.md) : code qualifié et publié, préparation et activation confirmées ; clôture acquise par `release133_metadata_recorded`, schéma 31 inchangé et repli immédiat 1.3.1 préservé. [Preuves](verification-proofs/jm133-verification.json). Aucune manipulation supplémentaire n’est requise pour cette livraison.
 - [Messagerie mobile 1.3.1](chat-mobile-131.md) : préparation et activation acquises ; alignement privé confirmé par `release131_metadata_already_recorded`, repli immédiat de 1.3.3.
 - [Emojis enrichis et inclusifs 1.3.0](emoji-inclusifs-130.md) : clôture confirmée par `release130_metadata_recorded`, preuves historiques préservées ; référence conservée comme repli de 1.3.1.
