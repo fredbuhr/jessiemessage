@@ -1,0 +1,476 @@
+{
+  "formatVersion": 1,
+  "date": "2026-10-21",
+  "subject": "CI qualification and resumable development checkpoints",
+  "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/124",
+  "base": {
+    "source": "593cb77c3b6945c566eef1bbb9beb8c10f8cec4c",
+    "tree": "c616978604b3b29da9e2673edd2b381bf39dd903"
+  },
+  "qualifiedSource": {
+    "head": "3bb9a1fdeef06e4c9d9bcd2db38b20f14c3a8434",
+    "mergedMain": "bfb112a55cd43f864bd870f8e6bd9ca798d8be58",
+    "tree": "1e4427da08b62f6c133ff69c07796ffe9959712b"
+  },
+  "staticValidation": {
+    "checkedSource": "3bb9a1fdeef06e4c9d9bcd2db38b20f14c3a8434",
+    "tree": "1e4427da08b62f6c133ff69c07796ffe9959712b",
+    "base": "593cb77c3b6945c566eef1bbb9beb8c10f8cec4c",
+    "workflowYamlParsed": true,
+    "jobsByteIdenticalToBase": true,
+    "permissionsUnchanged": true,
+    "qualifiedJobCount": 5,
+    "nodePin": "24.22.0",
+    "appVersionUnchanged": "1.7.0",
+    "localLinksChecked": 147,
+    "productionEvidenceTablePreserved": true,
+    "independentReviews": 2,
+    "blockingReviewFindings": 0,
+    "platformInterruptionRootCause": "unconfirmed",
+    "deploymentPerformed": false,
+    "pcOperationPerformed": false,
+    "browserTestSyntaxChecked": true,
+    "browserLoadingGateAdded": true,
+    "localChromeAvailable": false
+  },
+  "ci": {
+    "historicalFailedPr": {
+      "source": "1ec0ce298a2650f61daadbc330cf8552f4f028f3",
+      "tree": "efcd88b1a8660a4b69ba041c3ffb59dde878e3d1",
+      "run": {
+        "id": 39662257579,
+        "event": "pull_request",
+        "head_sha": "1ec0ce298a2650f61daadbc330cf8552f4f028f3",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39662257579",
+        "createdAt": "2026-10-21T19:30:37Z",
+        "startedAt": "2026-10-21T19:30:37Z",
+        "updatedAt": "2026-10-21T19:36:35Z"
+      },
+      "jobs": [
+        {
+          "id": 119438057215,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "failure",
+          "startedAt": "2026-10-21T19:30:40Z",
+          "completedAt": "2026-10-21T19:33:50Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 189,
+            "pass": 188,
+            "fail": 1,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "2bdc569b4483d0213a1699108a46dcd2427e7a871bac8080786c1aeb0f54ac9f",
+          "logBytes": 38761,
+          "failure": {
+            "test": "tests/browser/chat-accessibility.browser.mjs:1095",
+            "location": "tests/browser/chat-accessibility.browser.mjs:1101",
+            "message": "WebDriver POST /session/:session/element/:element/clear: command failed (HTTP 400)",
+            "type": "preexisting_fixture_readiness_race",
+            "analysis": "The test waited for quick replies not disabled, which could already hold while the textarea was still disabled. Correction is pending; this run remains failed."
+          }
+        },
+        {
+          "id": 119438057352,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:30:40Z",
+          "completedAt": "2026-10-21T19:36:35Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "cec6d86ba966f1d3dbdc3831af51393b690a9fd323a4c1c5e5c33f5a41046922",
+          "logBytes": 288678
+        },
+        {
+          "id": 119438057388,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:30:39Z",
+          "completedAt": "2026-10-21T19:35:54Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "1175cea25eda151fee3abfd09b60e6f33a810f78a10266f9be9780712e41b63e",
+          "logBytes": 289112
+        },
+        {
+          "id": 119438057534,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:30:40Z",
+          "completedAt": "2026-10-21T19:32:04Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "088042add667670b74e184db1ba2a0036ea16ed66bbeca9ac6a6a9129213c308",
+          "logBytes": 33942
+        },
+        {
+          "id": 119438058203,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:30:40Z",
+          "completedAt": "2026-10-21T19:33:08Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 3412,
+            "pass": 3373,
+            "fail": 0,
+            "skipped": 39
+          },
+          "logsRead": true,
+          "logSha256": "60c6dabc9bcf1d9e36bf14b8be3ebe140450fe2e9074571f1322eeb4f0e67654",
+          "logBytes": 479524,
+          "syntaxSources": 629,
+          "buildSuccess": true
+        }
+      ],
+      "triggerVerification": {
+        "totalRunsForHead": 1,
+        "ciPullRequestRuns": 1,
+        "ciBranchPushRuns": 0,
+        "observedRuns": [
+          {
+            "id": 39662257579,
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "failure"
+          }
+        ]
+      },
+      "noRerun": true,
+      "historicalFailure": true,
+      "logRepresentation": "SHA-256 of saved UTF-8 connector text; full logs are separate scratch files.",
+      "limitations": [
+        "CI qualification only; no production action.",
+        "The failing browser fixture was not waived or retried in this run.",
+        "39 general omissions remain omissions."
+      ]
+    },
+    "qualifiedPr": {
+      "source": "3bb9a1fdeef06e4c9d9bcd2db38b20f14c3a8434",
+      "tree": "1e4427da08b62f6c133ff69c07796ffe9959712b",
+      "run": {
+        "id": 39663229686,
+        "event": "pull_request",
+        "head_sha": "3bb9a1fdeef06e4c9d9bcd2db38b20f14c3a8434",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39663229686",
+        "createdAt": "2026-10-21T19:37:15Z",
+        "startedAt": "2026-10-21T19:37:15Z",
+        "updatedAt": "2026-10-21T19:43:47Z"
+      },
+      "jobs": [
+        {
+          "id": 119441403936,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:37:18Z",
+          "completedAt": "2026-10-21T19:40:41Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 189,
+            "pass": 189,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "7fee01ece4fb7530633c123ce970ed09edef1828446f4a90f8819e96f6461c98",
+          "logBytes": 37793,
+          "correctedFixture": {
+            "name": "Chrome: clients have no quick replies; Escape, full drafts and returning to the inbox never send",
+            "passed": true
+          }
+        },
+        {
+          "id": 119441404302,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:37:18Z",
+          "completedAt": "2026-10-21T19:43:46Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "75690529f26c0ad1af268bc8224f4841dd68e9f4f62eb9cdfd7e592151dbb708",
+          "logBytes": 290353
+        },
+        {
+          "id": 119441404376,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:37:18Z",
+          "completedAt": "2026-10-21T19:43:28Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "55c7c1c44d5acd77453d262b1824ee50638893298c3ca26a15b822ef84e21172",
+          "logBytes": 288676
+        },
+        {
+          "id": 119441404427,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:37:18Z",
+          "completedAt": "2026-10-21T19:38:24Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "4a9a2a41f3beb31709a0bf679ef7e50b4a8fe5c7bac5c91da7811a4026ca45c1",
+          "logBytes": 33525
+        },
+        {
+          "id": 119441404443,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:37:18Z",
+          "completedAt": "2026-10-21T19:39:19Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 3412,
+            "pass": 3373,
+            "fail": 0,
+            "skipped": 39
+          },
+          "logsRead": true,
+          "logSha256": "aa91009ca2489cc0d2895cb04379534ca7a27d1e09643bfaa7f1636540dd672b",
+          "logBytes": 478702,
+          "syntaxSources": 629,
+          "buildSuccess": true
+        }
+      ],
+      "triggerVerification": {
+        "totalRunsForHead": 1,
+        "ciPullRequestRuns": 1,
+        "ciBranchPushRuns": 0,
+        "observedRuns": [
+          {
+            "id": 39663229686,
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      "noRerun": true,
+      "priorFailure": "jm-interruptions-pr-ci-first-failure.json",
+      "logRepresentation": "SHA-256 of saved UTF-8 connector text; full logs are separate scratch files.",
+      "limitations": [
+        "CI qualification only; no production action.",
+        "The first CI failure is preserved separately and was corrected by a new commit.",
+        "39 general omissions remain omissions."
+      ]
+    },
+    "qualifiedMain": {
+      "source": "bfb112a55cd43f864bd870f8e6bd9ca798d8be58",
+      "tree": "1e4427da08b62f6c133ff69c07796ffe9959712b",
+      "run": {
+        "id": 39664237535,
+        "event": "push",
+        "head_sha": "bfb112a55cd43f864bd870f8e6bd9ca798d8be58",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39664237535",
+        "createdAt": "2026-10-21T19:44:19Z",
+        "startedAt": "2026-10-21T19:44:19Z",
+        "updatedAt": "2026-10-21T19:51:02Z"
+      },
+      "jobs": [
+        {
+          "id": 119444910617,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:44:21Z",
+          "completedAt": "2026-10-21T19:48:08Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 189,
+            "pass": 189,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "68135a8e7f407ce9d060a4eadb95d1e59c51835e58653cde051deedaf49a2985",
+          "logBytes": 37206,
+          "correctedFixture": {
+            "name": "Chrome: clients have no quick replies; Escape, full drafts and returning to the inbox never send",
+            "passed": true
+          }
+        },
+        {
+          "id": 119444911000,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:44:21Z",
+          "completedAt": "2026-10-21T19:51:01Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "38bf9a8be9c7fa76b00bc423ec3f753eb488955a96c956b2a79e92837bcc4632",
+          "logBytes": 289579
+        },
+        {
+          "id": 119444911034,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:44:21Z",
+          "completedAt": "2026-10-21T19:45:29Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "789c6e30d1e9af2402b0ca9da2ad348920e9b965253bb99f70bc3464c64b59f4",
+          "logBytes": 32871
+        },
+        {
+          "id": 119444911038,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:44:21Z",
+          "completedAt": "2026-10-21T19:49:48Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 505,
+            "pass": 505,
+            "fail": 0,
+            "skipped": 0
+          },
+          "logsRead": true,
+          "logSha256": "128cc6aeb2d8dca972a36aa7c4a009e5e21450df2b2eabdf790728b32d31499d",
+          "logBytes": 287464
+        },
+        {
+          "id": 119444911074,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-21T19:44:21Z",
+          "completedAt": "2026-10-21T19:46:48Z",
+          "nodeVersion": "v24.22.0",
+          "counts": {
+            "tests": 3412,
+            "pass": 3373,
+            "fail": 0,
+            "skipped": 39
+          },
+          "logsRead": true,
+          "logSha256": "edc60ed3c0c42e04b0e700c6532f94c910958d9bb59eff0d787281bc7f1d93de",
+          "logBytes": 477933,
+          "syntaxSources": 629,
+          "buildSuccess": true
+        }
+      ],
+      "triggerVerification": {
+        "totalRunsForHead": 1,
+        "ciMainPushRuns": 1,
+        "observedRuns": [
+          {
+            "id": 39664237535,
+            "event": "push",
+            "branch": "main",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      "noRerun": true,
+      "relatedProofs": {
+        "correctedPr": "jm-interruptions-pr-ci.json",
+        "priorFailure": "jm-interruptions-pr-ci-first-failure.json"
+      },
+      "logRepresentation": "SHA-256 of saved UTF-8 connector text; full logs are separate scratch files.",
+      "limitations": [
+        "CI qualification only; no production action.",
+        "The first PR CI failure is preserved separately and was corrected by a new commit.",
+        "39 general omissions remain omissions."
+      ]
+    }
+  },
+  "appVersion": "1.7.0",
+  "applicationRuntimeChanged": false,
+  "versionBumped": false,
+  "tagOrReleaseCreated": false,
+  "deploymentPerformed": false,
+  "pcOperationPerformed": false,
+  "productionReference": {
+    "version": "1.6.0",
+    "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "schemaMigrations": 33,
+    "rollbackVersion": "1.5.1",
+    "basis": "Previously supplied user receipts in REPRISE; no new private host observation"
+  },
+  "plannedDevelopmentStages": {
+    "lot7": 6,
+    "lot8": 3,
+    "productWorkStarted": false
+  },
+  "platformInterruptionRootCause": "unconfirmed: no internal ChatGPT, browser or network telemetry",
+  "limitations": [
+    "CI uses isolated synthetic data, not production hosting.",
+    "General omissions remain unqualified by that general job.",
+    "The initial Chrome failure is retained and was not waived or rerun.",
+    "The loading race is established in code and exercised with a held response; no DOM capture exists for the initial failure instant.",
+    "Checkpointing reduces recovery work; it does not guarantee ChatGPT availability."
+  ],
+  "status": "qualified_merged"
+}
