@@ -89,6 +89,16 @@ async function seedLanguage(page, language) {
   await page.navigate("/__fixture");
   await page.execute("sessionStorage.setItem('jessiemessage.language', arguments[0])", language);
 }
+
+async function openChatOptions(page) {
+  const opener = await page.execute(`return ['open-conversation-menu', 'open-account-menu'].find(id => {
+    const node = document.getElementById(id); return node && !node.hidden && !node.disabled && node.getClientRects().length > 0;
+  });`);
+  assert.ok(opener, "the current chat has a visible options button");
+  await page.click(`#${opener}`);
+  await waitUntil(() => page.execute("return document.getElementById('chat-menu').hidden === false"), "chat options opened through the visible button");
+  return opener;
+}
 async function readyHelp(page, language) {
   const title = language === "fr" ? "Jessie — Aide et confidentialité" : "Jessie — Help and privacy";
   await waitUntil(() => page.execute("return location.pathname === '/help' && !location.hash && !location.search && document.documentElement.lang === arguments[0] && document.title === arguments[1] && !!globalThis.JessieI18n && !!document.querySelector('main h1')", language, title), "fully initialised real Help page with its URL cleaned");
@@ -191,15 +201,21 @@ test("real Chrome: practical Help is translated, accessible and never collects p
           await page.navigate(`/recover#reset=${syntheticToken}`);
           await waitUntil(() => page.execute("return document.getElementById('recovery-reset-form')?.hidden === false"), "real recovery form with its token only in memory");
         }
+        const menuOpener = source === "chat" ? await openChatOptions(page) : null;
         await page.click("[data-jm-language]");
+        if (source === "chat") {
+          assert.equal(await page.execute("return document.getElementById('chat-menu').hidden"), true, "a language choice closes chat options");
+          assert.equal(await page.execute("return document.activeElement.id"), menuOpener, "the hidden language action returns focus to the visible options button");
+          await openChatOptions(page);
+        }
         assert.equal(await page.execute("return document.querySelector('[data-help-link]').getAttribute('href')"), "/help#lang=en", "a late language choice updates the Help link");
         const link = await page.execute("const link = document.querySelector('[data-help-link]'); return { target: link.target, rel: [...link.relList], title: link.textContent, label: link.getAttribute('aria-label') };");
         assert.equal(link.target, "_blank"); assert.equal(link.rel.includes("noopener") && link.rel.includes("noreferrer"), true);
         assert.equal(link.title, "Help and privacy"); assert.equal(link.label, "Help and privacy (new tab)");
-        assert.equal(await page.execute(`const width = document.documentElement.clientWidth; const footer = document.querySelector('footer');
+        assert.equal(await page.execute(`const width = document.documentElement.clientWidth; const footer = arguments[0] === 'chat' ? document.getElementById('chat-footer') : document.querySelector('footer');
           return document.documentElement.scrollWidth <= width + 1 && footer.getBoundingClientRect().height >= 44
-            && [...footer.querySelectorAll('a')].every(node => { const rect = node.getBoundingClientRect(); return rect.height >= 44 && rect.left >= -1 && rect.right <= width + 1 && node.scrollWidth <= node.clientWidth + 1; });`), true,
-          "the real source footer stays readable with 44px links and no horizontal overflow");
+            && [...footer.querySelectorAll('a')].every(node => { const rect = node.getBoundingClientRect(); return rect.height >= 44 && rect.left >= -1 && rect.right <= width + 1 && node.scrollWidth <= node.clientWidth + 1; });`, source), true,
+          "the source's Help and Contact links stay readable with 44px links and no horizontal overflow");
         await page.click("[data-help-link]");
         await waitUntil(() => fixture.requests.some(request => request.path === "/help"), "native Help navigation in another tab");
         assert.equal(await page.execute("return location.pathname"), source === "chat" ? "/messages" : "/recover", "the source tab never navigates away");

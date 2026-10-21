@@ -8,9 +8,9 @@ Les livraisons 1.0.0, 1.1.0 et 1.2.0 sont closes ; leurs bilans et preuves sont 
 
 [Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : code qualifié, fusionné, publié et actif en 1.3.0, identité admin rapportée par l’utilisateur et disponibilité publique 4/4 conforme. **Le reçu utilisateur `release130_metadata_recorded` confirme l’alignement final du checkpoint : lot clos**, sans redémarrage, avec état antérieur/repli 1.2.0 et autres blocs préservés. Les neuf tests synthétiques du helper restent distincts de cette exécution. Ne rejouer ni writer, ni préparation, ni activation, ni Build/Run, ni relevé admin pour cette clôture. [REPRISE](REPRISE.md) conserve les preuves. La redistribution d’une bibliothèque Flirtmoji reste distincte de ce catalogue Unicode.
 
-## Prochaine étape autorisée — correctif prioritaire 1.3.1
+## Travail en cours — correctif prioritaire 1.3.1
 
-[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : une seule barre active avec avatar, nom, menu et retour administrateur si nécessaire ; Contact, Aide et export dans un menu discret ; composeur compact avec émojis et pièces jointes. Corriger la présentation, les menus, le focus et le partage de hauteur sans modifier le transport des messages, les droits ou la base. Qualifier les deux rôles en FR/EN, le clavier et les petits écrans, y compris une faible hauteur visible. **Autorisé, non implémenté ; à ouvrir sur la référence 1.3.0 désormais close.**
+[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : une seule barre active avec avatar, nom, **Options** et retour administrateur si nécessaire ; Contact, Aide et export dans le menu discret ; composeur `+` / `☺` / saisie / envoi. Présentation, menus, focus et hauteur visible sont en cours de correction, sans changement de transport, droits, API, dépendances ou SQL. **Implémentation et tests en cours sur `fix/chat-mobile-131` ; qualification, fusion, publication et déploiement non encore acquis.** Terminer les parcours client/admin FR/EN, le clavier, les petites tailles, le viewport réduit et le zoom avant livraison. La production reste en 1.3.0 close.
 
 ## Évolutions de messagerie demandées le 20 octobre
 

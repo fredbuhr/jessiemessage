@@ -37,14 +37,14 @@ class Element {
   get isConnected() { return this.tagName === "body" || !!this.parentElement?.isConnected; }
 }
 
-async function harness(t, intercept = () => undefined) {
+async function harness(t, intercept = () => undefined, adapterOptions = {}) {
   const body = new Element("body"), inboxHead = new Element("header"), chatHead = new Element("header"); body.append(inboxHead, chatHead);
   const calls = [], errors = []; let labels = [label()];
   const document = { body, createElement: tag => new Element(tag) };
   const context = vm.createContext({ document, Date, URLSearchParams, AbortController, setTimeout, clearTimeout });
   vm.runInContext(model.replace(/^export\s+/gm, ""), context);
   vm.runInContext(controller.replace(/^import[^\n]+\n/, "").replace(/^export\s+/gm, ""), context);
-  const ui = context.createCrmUI({ inboxHead, chatHead, onContacts() {}, onError: error => errors.push(error),
+  const ui = context.createCrmUI({ inboxHead, chatHead, ...adapterOptions, onContacts() {}, onError: error => errors.push(error),
     async request(path, options) {
       const call = { path, options }; calls.push(call); const result = intercept(call, calls);
       if (result !== undefined) return result;
@@ -58,7 +58,7 @@ async function harness(t, intercept = () => undefined) {
   const manager = body.querySelectorAll(".crm-label-dialog")[0];
   const form = manager.querySelectorAll("form")[0], name = form.querySelectorAll("input")[0], create = form.querySelectorAll("button")[0];
   const emit = async (element, event) => { for (const fn of element.events.get(event) ?? []) fn({ preventDefault() {} }); await flush(); };
-  return { ui, calls, errors, manager, form, name, create, body,
+  return { ui, calls, errors, manager, form, name, create, body, emit,
     async open() { const opener = body.querySelectorAll("button").find(button => button.textContent === "Tags et groupes"); await emit(opener, "click"); },
     async submit(value) { name.value = value; await emit(form, "submit"); },
     async settle() { await flush(); },
@@ -71,6 +71,35 @@ test("CRM label creation renders a literal name and preserves the normal success
   const f = await harness(t); await f.open(); await f.submit("<script>fixture</script>");
   assert.equal(f.creates().length, 1); assert.equal(f.name.value, ""); assert.equal(f.create.disabled, false);
   assert.equal(f.status(), "Étiquette créée."); assert.equal(f.body.querySelectorAll("script").length, 0); assert.deepEqual(f.errors, []);
+});
+
+test("CRM profile closure resolves a visible return target after its menu entry is hidden, with the original opener as the optional-adapter fallback", async t => {
+  for (const contextualFocus of [false, true]) await t.test(contextualFocus ? "current visible options button" : "original profile opener", async t => {
+    const conversationId = id(100);
+    const profile = { conversationId, client: { id: id(2), pseudonym: "Synthetic client", email: "synthetic@example.invalid", status: "active" },
+      access: { state: "active", expiresAt: null }, nickname: "", notes: "", reminderAt: null, labels: [], version: "1", updatedAt: 1 };
+    let currentTarget, focusRequests = 0;
+    const f = await harness(t, call => call.path.endsWith(`/conversations/${conversationId}`) ? structuredClone(profile) : undefined,
+      contextualFocus ? { getReturnFocus() { focusRequests++; return currentTarget; } } : {});
+    const firstMenuButton = new Element("button"), currentMenuButton = new Element("button"), menu = new Element("section");
+    f.body.append(firstMenuButton, currentMenuButton, menu); currentTarget = firstMenuButton;
+    f.ui.selectConversation(conversationId);
+    const opener = f.body.querySelectorAll(".crm-fiche-button")[0];
+    if (contextualFocus) menu.append(opener);
+    await f.emit(opener, "click");
+    const dialog = f.body.querySelectorAll(".crm-dialog").find(element => !element.className.includes("crm-label-dialog"));
+    assert.equal(dialog.open, true); assert.equal(focusRequests, 0, "the return target is resolved only when focus must be restored");
+    if (contextualFocus) { menu.hidden = true; firstMenuButton.hidden = true; currentTarget = currentMenuButton; }
+    const calls = f.calls.length;
+    await f.emit(dialog.querySelectorAll("button").find(button => button.textContent === "Fermer"), "click");
+    assert.equal(dialog.open, false); assert.equal(f.calls.length, calls, "closing the profile neither exports nor sends a request");
+    if (contextualFocus) {
+      assert.equal(focusRequests, 1); assert.equal(currentMenuButton.hidden, false); assert.equal(currentMenuButton.isConnected, true);
+      assert.equal(currentMenuButton.focused, true, "the current visible options button receives focus");
+      assert.notEqual(firstMenuButton.focused, true); assert.notEqual(opener.focused, true, "the hidden menu entry cannot receive restored focus");
+    } else assert.equal(opener.focused, true, "existing standalone CRM adapters preserve their original behavior");
+    assert.deepEqual(f.errors, []);
+  });
 });
 
 test("CRM ignores an old authentication failure after resuming and opening a new label manager", async t => {

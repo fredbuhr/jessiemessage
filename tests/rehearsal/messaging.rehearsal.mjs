@@ -92,13 +92,25 @@ function assertAvatarJpeg(value) {
   assert.ok(value.bytes > 0 && value.bytes <= 131072);
   assert.equal(value.width, value.height); assert.ok(value.width > 0 && value.width <= 256);
 }
+async function openChatOptions(page) {
+  const opener = await page.execute(`return ['open-conversation-menu', 'open-account-menu'].find(id => {
+    const node=document.getElementById(id);return node&&!node.hidden&&!node.disabled&&node.getClientRects().length>0;
+  });`);
+  assert.ok(opener, "the authenticated workspace exposes a visible options button");
+  await page.click(`#${opener}`);
+  await waitUntil(() => page.execute("return document.getElementById('chat-menu').hidden === false"), "chat options opened through the ordinary controller");
+  return opener;
+}
 async function openProfile(page) {
   await waitUntil(() => page.execute("const button=document.getElementById('open-profile');return !!button&&!button.hidden&&!button.disabled"), "profile button enabled by the real capability");
+  const menuOpener = await openChatOptions(page);
   await page.click("#open-profile");
   await waitUntil(() => page.execute("return document.querySelector('.profile-dialog')?.open&&!document.querySelector('.profile-pseudonym').disabled"), "the profile is fetched through the authenticated SQL service");
+  assert.equal(await page.execute("return document.getElementById('chat-menu').hidden"), true, "the profile replaces chat options");
+  return menuOpener;
 }
 async function saveProfile(page, { pseudonym = null, avatar = false, remove = false } = {}) {
-  await openProfile(page);
+  const menuOpener = await openProfile(page);
   if (pseudonym !== null) await page.type(".profile-pseudonym", pseudonym);
   if (avatar) {
     assert.equal(await selectSyntheticJpeg(page, ".profile-file"), true);
@@ -107,6 +119,7 @@ async function saveProfile(page, { pseudonym = null, avatar = false, remove = fa
   if (remove) await page.click(".profile-remove-avatar");
   await page.click(".profile-save");
   await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open&&!document.querySelector('.profile-feedback').hidden"), "the profile mutation is confirmed before closing its editor");
+  assert.equal(await page.execute("return document.activeElement.id"), menuOpener, "profile completion returns focus to the visible options button");
 }
 async function conversation(page, role, id = null) {
   const result = await browserJson(page, role, role === "client" ? "/api/chat/client/conversation" : "/api/chat/admin/conversations?limit=50");
@@ -238,7 +251,7 @@ test("real Chrome + MariaDB: independent client sessions, live text and JPEG, me
     await first.execute("location.hash='notification='+arguments[0]", target.notification);
     await waitUntil(() => first.execute("return location.hash===''&&document.querySelector('#messages .notification-target')?.dataset.sequence===arguments[0]", photoSequence), "the real notification reference focuses its exact photo without navigation");
     assert.equal(await first.execute("return document.getElementById('message-body').value"), draft);
-    await first.click("#logout");
+    await openChatOptions(first); await first.click("#logout");
     await waitUntil(() => first.execute(clientForm), "this-device logout returns to client sign-in");
     assert.equal((await first.cookies()).some(cookie => cookie.name === clientCookie), false);
     assert.equal(await sessionStatus(first), 401); assert.equal(await sessionStatus(second), 200, "logging out device A leaves device B's SQL session valid");

@@ -1,7 +1,7 @@
 const ui = globalThis.JessieI18n;
 
 /** Mounted only for an active client, with the chat's existing identity proof. */
-export function createConversationDownload({ parent, capability, getContext, request, onError }) {
+export function createConversationDownload({ parent, capability, getContext, request, onError, getReturnFocus }) {
   const node = (tag, text, className) => { const value = document.createElement(tag); if (text) ui.text(value, text); if (className) value.className = className; return value; };
   const entry = node("button", "Télécharger ma conversation", "text-button conversation-download-entry"); entry.type = "button"; entry.hidden = true;
   const dialog = node("dialog", null, "media-dialog conversation-download"); dialog.setAttribute("aria-labelledby", "conversation-download-title");
@@ -24,7 +24,10 @@ export function createConversationDownload({ parent, capability, getContext, req
     download.disabled = false; photos.disabled = false; ui.rawText(status, "");
     for (const url of urls.keys()) revoke(url);
     if (dialog.open) dialog.close();
-    if (focus && entry.isConnected && !entry.hidden) entry.focus();
+    if (focus) {
+      const target = typeof getReturnFocus === "function" ? getReturnFocus() : entry;
+      if (target?.isConnected && !target.hidden) target.focus();
+    }
   }
   entry.addEventListener("click", () => {
     const context = getContext(); if (!context || cleared) return;

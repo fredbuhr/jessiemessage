@@ -245,7 +245,11 @@ export function createCrmUI(adapter) {
     for (const url of exportUrls) URL.revokeObjectURL(url); exportUrls.clear();
     profileOpen = false; invalidateDetail(state); detailRequest += 1; detailBusy = false; if (profileDialog.open) profileDialog.close();
     profileFields.hidden = true; profileFields.disabled = false; ui.text(profileTitle, "Fiche client"); nickname.value = ""; notes.value = ""; reminder.value = ""; replace(memberships); replace(clientInfo); replace(conflict); conflict.hidden = true; status(profileStatus, "");
-    if (restore && profileReturnFocus?.isConnected) profileReturnFocus.focus(); profileReturnFocus = null;
+    if (restore) {
+      const target = typeof adapter.getReturnFocus === "function" ? adapter.getReturnFocus() : profileReturnFocus;
+      if (target?.isConnected) target.focus();
+    }
+    profileReturnFocus = null;
   }
   profileDialog.addEventListener("close", () => { if (profileOpen) closeProfile(); });
   async function downloadConversation() {

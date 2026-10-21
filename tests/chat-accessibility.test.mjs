@@ -395,7 +395,7 @@ test("closing a media dialog whose original opener became disabled uses a visibl
   f.run("currentState().conversation.canSend = false; renderMeta(currentState());");
   assert.equal(f.element("open-library").disabled, true); f.element("close-media").focus();
   f.element("media-dialog").close(); await flush();
-  assert.equal(f.document.activeElement, f.element("open-gallery")); assert.equal(f.document.activeElement.disabled, false);
+  assert.equal(f.document.activeElement.id, "open-conversation-menu"); assert.equal(f.document.activeElement.disabled, false);
 });
 
 test("deleting an expanded received photo closes it with a visible logical focus target and no new-message announcement", async () => {
@@ -410,7 +410,7 @@ test("deleting an expanded received photo closes it with a visible logical focus
   assert.equal(f.element("lightbox").open, true);
   f.push([event(2, message(1, "peer", { body: null, deletedAt: now }), "delete")]); await f.fetchEvents();
   assert.equal(f.element("lightbox").open, false); assert.equal(opener.isConnected, false);
-  assert.ok([f.element("open-gallery"), f.element("message-scroll"), f.element("messages").children[0]].includes(f.document.activeElement));
+  assert.ok([f.element("open-conversation-menu"), f.element("message-scroll"), f.element("messages").children[0]].includes(f.document.activeElement));
   assert.notEqual(f.document.activeElement, f.document.body); assert.equal(announcement(f).textContent, "");
 });
 
@@ -423,14 +423,36 @@ test("removing a focused image draft returns to the composer without changing it
   assert.equal(f.element("message-body").value, "Keep this synthetic caption"); assert.equal(messagePosts(f).length, before);
 });
 
+test("a wrapping placeholder never expands an empty composer, while typed content grows within its height budget and clearing resets it", async () => {
+  const f = harness({ mobile: true }); await flush();
+  const textarea = f.element("message-body"), before = f.calls.length;
+  const input = async (value, measuredHeight) => {
+    textarea.value = value; textarea.scrollHeight = measuredHeight;
+    for (const handler of textarea.events.get("input")) handler({}); await flush();
+    assert.equal(textarea.value, value, "resizing never rewrites the draft");
+  };
+  await input("", 220);
+  assert.equal(textarea.style.height, "44px", "the placeholder's scrollHeight does not size an empty draft");
+  assert.equal(textarea.style.overflowY, "hidden");
+  await input("A synthetic typed draft", 70);
+  assert.equal(textarea.style.height, "70px"); assert.equal(textarea.style.overflowY, "auto");
+  await input("A synthetic multiline draft\n".repeat(12), 280);
+  assert.equal(textarea.style.height, "112px", "long drafts scroll inside the bounded composer");
+  assert.equal(textarea.style.overflowY, "auto");
+  await input("", 280);
+  assert.equal(textarea.style.height, "44px", "clearing the draft restores the initial single row");
+  assert.equal(textarea.style.overflowY, "hidden");
+  assert.equal(f.calls.length, before); assert.equal(messagePosts(f).length, 0);
+});
+
 test("a completed button-initiated send restores composer focus only if the user has not moved elsewhere", async () => {
   for (const move of [false, true]) {
     const gate = pause(); const f = liveHarness({ intercept: (path, options) => path.endsWith("/messages") && options.method === "POST" ? gate.promise : undefined }); await flush();
     f.element("send").focus(); await f.send("Synthetic sent text");
     const pending = f.inspect().states.get(f.inspect().selected).pending;
-    if (move) f.element("logout").focus();
+    if (move) f.element("open-conversation-menu").focus();
     gate.resolve(response(201, { message: message(11, "me", { body: "Synthetic sent text", clientMessageId: pending.clientMessageId }) })); await flush();
-    assert.equal(f.document.activeElement, move ? f.element("logout") : f.element("message-body"));
+    assert.equal(f.document.activeElement.id, move ? "open-conversation-menu" : "message-body");
     assert.equal(f.element("message-body").value, ""); assert.equal(messagePosts(f).length, 1); assert.equal(announcement(f).textContent, "");
   }
 });

@@ -24,6 +24,12 @@ Ces parcours sont disponibles dans la version active ; [REPRISE](REPRISE.md) res
 
 Le [catalogue enrichi en 1.3.0](emoji-inclusifs-130.md) ajoute **Doubles sens**, des gestes et des personnages adultes. Recherche les noms en français ou en anglais, par exemple « concombre », « courgette » ou « cucumber » pour 🥒. Dans **Couleur de peau**, choisis l’une des cinq carnations ou le rendu par défaut : la grille adapte les mains, doigts et personnages compatibles, y compris les peaux foncées. Le choix reste disponible pendant l’utilisation de la page et se réinitialise avec l’état du compte. Un emoji choisi s’ajoute toujours au brouillon ; vérifie le message avant **Envoyer**.
 
+## À partir de 1.3.1 après activation
+
+Ce parcours est en cours de développement et n’est pas encore disponible sur la version active 1.3.0. Après activation confirmée dans [REPRISE](REPRISE.md), la conversation mobile disposera d’une seule barre avec l’avatar, le nom et **Options** ; le retour aux conversations restera accessible dans l’administration.
+
+**Options** regroupera le compte, le profil, les notifications, la langue, Contact et Aide. Les photos de la conversation et son téléchargement y seront accessibles lorsqu’ils sont disponibles pour ton compte. Sous les messages, `+` proposera l’ajout d’une photo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvrira les emojis. La saisie et **Envoyer** resteront directement accessibles. Choisir une photo, une réponse ou un emoji préparera toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain resteront affichées quand nécessaires.
+
 ## Échanger et partager une photo
 
 - Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne la conversation et vérifie le nom avant d’envoyer.
