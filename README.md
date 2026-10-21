@@ -22,6 +22,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Compatibilité des tâches, 1.5.1 publiée](docs/tasks-compat-151.md) | Référence compatible avec le schéma 33, qualifiée, publiée, préparée, précontrôlée et enregistrée comme repli ; jamais démarrée. |
 | [Tâches et rappels, 1.6.0 active et close](docs/tasks-reminders-160.md) | Plusieurs tâches privées par client et vue commune ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés ; livraison close. |
 | [Transport vidéo, socle 1.7.0](docs/video-transport-170.md) | Fusionné, qualifié et publié, dormant : transport privé par blocs ; intégration produit au lot 7, production 1.6.0 conservée. |
+| [Bilan et plan de production du 22 octobre](docs/PLAN-PRODUCTION-20261022.md) | Sécurité Node/PHP, entrée privée, auth mobile et accueil ; onze itérations jusqu’à la version vidéo complète. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |

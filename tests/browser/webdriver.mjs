@@ -81,7 +81,7 @@ function commandRoute(path) {
   if (path === "/status" || path === "/session") return path;
   const match = typeof path === "string" && /^\/session\/[^/?#]+(\/.*)?$/.exec(path);
   const suffix = match?.[1] ?? "";
-  if (match && ["", "/timeouts", "/element", "/url", "/cookie", "/actions", "/execute/sync", "/execute/async"].includes(suffix)) return `/session/:session${suffix}`;
+  if (match && ["", "/timeouts", "/element", "/url", "/cookie", "/actions", "/execute/sync", "/execute/async", "/screenshot"].includes(suffix)) return `/session/:session${suffix}`;
   const element = /^\/element\/[^/?#]+\/(click|clear|value)$/.exec(suffix);
   if (match && element) return `/session/:session/element/:element/${element[1]}`;
   throw new Error("Unsupported WebDriver command");
@@ -228,6 +228,7 @@ export async function startWebDriver() {
           await request("POST", `${endpoint}/element/${element}/value`, { text });
         },
         cookies: () => request("GET", `${endpoint}/cookie`),
+        screenshot: () => request("GET", `${endpoint}/screenshot`),
         key: (key) => request("POST", `${endpoint}/actions`, { actions: [{ type: "key", id: "keyboard", actions: [{ type: "keyDown", value: key }, { type: "keyUp", value: key }] }] }),
         close: closeSession
       };

@@ -40,6 +40,7 @@ let busy = false;
 let generation = 0;
 let suspended = document.visibilityState !== "visible";
 let needsSession = true;
+let resumeAnonymousLogin = false;
 let nextSessionNotice = "";
 let proofRecoveryAvailable = true;
 const controllers = new Set();
@@ -63,6 +64,7 @@ function invalidate() {
 function current(ticket) { return ticket === generation && !suspended && document.visibilityState === "visible"; }
 function stale() { return Object.assign(new Error("stale_response"), { stale: true }); }
 function clearCredentials() {
+  resumeAnonymousLogin = false;
   form.reset();
   resetPasswordVisibility();
   for (const id of ["email", "password", "factor"]) document.getElementById(id).value = "";
@@ -90,7 +92,8 @@ function notice(message, error = false) {
   status.classList.toggle("is-error", error);
 }
 
-function signedOut(message = "") {
+function signedOut(message = "", { preserveCredentials = false } = {}) {
+  resumeAnonymousLogin = false;
   invalidate();
   clearAccess();
   document.getElementById("admin-chat-link").hidden = true;
@@ -101,7 +104,7 @@ function signedOut(message = "") {
   connected.hidden = true;
   adminUI.text(title, "Ton espace Jessie.");
   intro.hidden = false;
-  clearCredentials();
+  if (!preserveCredentials) clearCredentials();
   adminUI.rawText(document.getElementById("connected-name"), "");
   document.getElementById("session-retry").hidden = true;
   notice(message);
@@ -337,7 +340,7 @@ async function refreshSession() {
     if (message) notice(message, true);
   } catch (error) {
     if (error.stale) return;
-    if (error.status === 401) signedOut(message);
+    if (error.status === 401) signedOut(message, { preserveCredentials: resumeAnonymousLogin });
     else sessionUnavailable(message || "La connexion est interrompue. Réessaie dès que le réseau revient.");
   } finally {
     if (epoch === sessionCheckEpoch) checkingSession = false;
@@ -346,14 +349,20 @@ async function refreshSession() {
 }
 document.getElementById("session-retry").addEventListener("click", () => { if (!checkingSession) { needsSession = true; void refreshSession(); } });
 window.addEventListener("online", () => { if (!suspended) { needsSession = true; void refreshSession(); } });
-function suspend() {
+function suspend({ preserveLogin = false } = {}) {
+  // Only an idle, already anonymous login survives an app switch in this DOM.
+  // Private sessions, pending operations and actual navigations still clear it.
+  const keepCredentials = preserveLogin && (resumeAnonymousLogin || !suspended && !form.hidden && connected.hidden
+    && !busy && !needsSession && !checkingSession && csrf === null && principalId === null);
+  resumeAnonymousLogin = keepCredentials;
   suspended = true;
   needsSession = true;
   invalidate();
   clearAccess();
   csrf = null;
   principalId = null;
-  clearCredentials();
+  if (keepCredentials) resetPasswordVisibility();
+  else clearCredentials();
   form.hidden = true;
   connected.hidden = true;
   adminUI.rawText(document.getElementById("connected-name"), "");
@@ -376,7 +385,7 @@ function resume() {
 }
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") resume();
-  else suspend();
+  else suspend({ preserveLogin: true });
 });
 window.addEventListener("pagehide", suspend);
 window.addEventListener("pageshow", () => resume());
@@ -614,7 +623,9 @@ for (const kind of ["invitations", "clients"]) {
 }
 
 function resetPasswordVisibility() {
-  document.getElementById("password").type = "password";
+  const password = document.getElementById("password"), start = password.selectionStart, end = password.selectionEnd, direction = password.selectionDirection;
+  password.type = "password";
+  if (Number.isInteger(start) && Number.isInteger(end)) password.setSelectionRange(start, end, direction ?? "none");
   document.getElementById("toggle-password").setAttribute("aria-pressed", "false");
   adminUI.text(document.getElementById("toggle-password"), "Afficher le mot de passe");
 }
