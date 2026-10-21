@@ -1,0 +1,66 @@
+{
+  "format": "jessiemessage-node24221-hosted-preparation",
+  "version": 1,
+  "provenance": "agent_observed_hosted_ssh_terminal",
+  "observedAtUTC": "2026-10-21T22:49:50.930949+00:00",
+  "helperSource": "fb28cf353e814e657e0c42ba98ef209e630d4060",
+  "helperSha256": "21dc1f7e89625ecfa9d4b13951d3496ffbd600f97ed4dd393d95a689b8facaf7",
+  "initialFailure": {
+    "helperSource": "fc4b63370be45d35dd73fb9241b5fad18cecd23b",
+    "helperSha256": "405574906b190900c0b29c6c42f86c0f69d96ab9235d5e518f062f53de6cdcc2",
+    "error": "EINVAL",
+    "phase": "directory_publication_renameat2_RENAME_NOREPLACE",
+    "diagnosis": "Archive, staging checksum, version and fsync passed; a deliberate stop immediately before publication confirmed the failing boundary. No final candidate existed after cleanup.",
+    "serviceChanged": false
+  },
+  "preparation": {
+    "status": "node24221_prepared_not_started",
+    "applicationVersion": "1.6.0",
+    "nodeVersion": "v24.22.1",
+    "nodeBinarySha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+    "receipt": "/srv/customer/jessiemessage-private/jm160-node24221-preparation.json",
+    "receiptSha256": "9094a8a78560454cf84b52838ddeb9ca83e81d10e4f226e65a4b9c4bde682db9c",
+    "runtimeStarted": false,
+    "managerChanged": false,
+    "checkpointChanged": false
+  },
+  "rollbackPrecheck": {
+    "status": "rollback160_node24221_hosted_precheck_passed_not_started",
+    "observedAtUTC": "2026-10-21T22:49:50.930949+00:00",
+    "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+    "nodeVersion": "v24.22.1",
+    "precheck": {
+      "version": 1,
+      "type": "local_closure_precheck",
+      "status": "passed",
+      "scope": "local_application",
+      "pendingClosures": false,
+      "started": false,
+      "erased": false,
+      "externalContinuityVerified": false
+    },
+    "precheckLogSha256": "cb5a9e6d1d1354abe8113cb12e7c6e3d636b5111041851ada88f85c5b845fea6",
+    "runtimeStarted": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "launchers": {
+      "startSha256": "62219aeb00034131d7f427bf20aa609fdb2b9c5a1a48a896b33ca24713224535",
+      "checkSha256": "ffe3327ee1786a452ffda09b0ba03dff2e3b8722f9025c04815138ab7e5aa6fe"
+    }
+  },
+  "productionAtObservation": {
+    "release": "1.6.0",
+    "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+    "nodeVersion": "v24.22.0",
+    "schemaMigrations": 33
+  },
+  "limitations": [
+    "preparation_is_not_activation",
+    "rollback160_node24221_not_started",
+    "manager_and_checkpoint_unchanged",
+    "no_php_patch_verification_in_this_receipt",
+    "pc_not_qualified"
+  ]
+}

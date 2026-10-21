@@ -1,0 +1,67 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-1.7.1-hosted-identity",
+  "provenance": "agent_observed_hosted_ssh_startup_log_and_public_http",
+  "observedAtUTC": "2026-10-21T23:07:03.746509+00:00",
+  "release": {
+    "version": "1.7.1",
+    "commit": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+    "nodeVersion": "v24.22.1",
+    "startedAt": 1792623724937
+  },
+  "sourceTree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+  "startedAtParis": "2026-10-22T01:02:04.937+02:00",
+  "startupLog": "/srv/customer/jessiemessage-private/jm171-node24221.log",
+  "startupLogSha256AtObservation": "e3915f263000e221addf2bdb79c6bad5eb428825d4b99c413f96a8735dde40e6",
+  "startupRecords": 1,
+  "privateObservationReceipt": {
+    "path": "/srv/customer/jessiemessage-private/jm171-hosted-observation-final.json",
+    "sha256": "6bf072ced6cec9567e5ab232fdf5e5bf171ed4bf0c07c00d8551637ce3ac656b"
+  },
+  "publicHttp": {
+    "health": {
+      "url": "https://jessiemessage.com/api/health",
+      "status": 200,
+      "body": {
+        "status": "ok"
+      }
+    },
+    "ready": {
+      "url": "https://jessiemessage.com/api/ready",
+      "status": 200,
+      "body": {
+        "status": "ready"
+      }
+    },
+    "home": {
+      "url": "https://jessiemessage.com/",
+      "status": 200,
+      "sha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f"
+    },
+    "entry": {
+      "url": "https://jessiemessage.com/api/entry",
+      "status": 200,
+      "administrator": null
+    }
+  },
+  "publicHomeMatchesQualifiedSource": true,
+  "managerObserved": {
+    "application": "recette.jessiemessage.com",
+    "serviceId": 239143,
+    "run": "bash /srv/customer/jessiemessage-private/start-primary-release171-c2d7b3b3.sh",
+    "build": "bash /srv/customer/jessiemessage-private/check-primary-release171-c2d7b3b3.sh",
+    "port": 3000,
+    "providerMajorVersionSelector": "24"
+  },
+  "schemaMigrations": 33,
+  "migrationsPerformedForRelease": false,
+  "videoActivated": false,
+  "restartPerformedDuringResume": false,
+  "limits": [
+    "Public HTTP does not expose commit identity; identity is from the hosted startup record.",
+    "Admin session, physical-phone Authenticator and PWA lifecycle were not requalified on the host during this resume.",
+    "PID, socket, executed process binary hash and private runtime configs were not independently qualified.",
+    "PHP provider correction and backups/PC are separate and not attested by this receipt.",
+    "Startup log is an append-only live log; the SHA describes bytes at the observation, not a permanently frozen file."
+  ]
+}
