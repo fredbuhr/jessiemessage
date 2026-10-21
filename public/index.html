@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <meta name="apple-mobile-web-app-title" content="Jessie" />
     <meta name="application-name" content="JessieMessage" />
-    <meta name="description" content="Mon espace privé pour garder le contact, accessible sur invitation." />
+    <meta name="description" content="Retrouve nos messages et nos photos dans mon espace privé, accessible sur invitation." />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" />
     <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
@@ -17,12 +17,13 @@
     <link rel="stylesheet" href="/styles.css" />
     <link rel="stylesheet" href="/i18n.css" />
     <link rel="stylesheet" href="/brand/brand.css" />
-    <title>JessieMessage — Espace privé</title>
+    <title>Jessie — Mon espace privé</title>
     <script src="/i18n.js" defer></script>
     <script src="/help-link.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#main" data-i18n="skip">Aller au contenu</a>
     <div class="page">
       <header class="topbar">
         <a class="brand" href="/" aria-label="JessieMessage">
@@ -32,45 +33,29 @@
         <button id="language-switch" class="language" type="button" data-jm-language aria-label="Switch to English">EN</button>
       </header>
 
-      <main class="main">
+      <main id="main" class="main" tabindex="-1">
         <section class="intro" aria-labelledby="hero-title">
-          <div class="eyebrow" data-i18n="badge">ESPACE PRIVÉ</div>
-          <h1 id="hero-title" data-i18n="title">Un espace pour garder le contact avec moi.</h1>
-          <p class="subtitle" data-i18n="subtitle">
-            Bienvenue dans mon espace privé, accessible uniquement sur invitation.
-          </p>
-          <div class="notice" role="status">
-            <span class="notice-dot" aria-hidden="true"></span>
-            <span data-i18n="notice">L’accès est réservé aux personnes que j’invite.</span>
+          <p class="eyebrow" data-i18n="badge">Le coin de Jessie</p>
+          <h1 id="hero-title" data-i18n="title">On garde le contact ?</h1>
+          <p class="subtitle" data-i18n="subtitle">Un petit mot, une photo, le plaisir de se retrouver.</p>
+          <p class="intro-copy" data-i18n="intro">Mon espace privé pour retrouver nos échanges, tout simplement.</p>
+          <div class="entry-action">
+            <a class="entry-link" href="/app" data-i18n="open">Ouvrir ma conversation</a>
+            <p class="access-note" data-i18n="access">Accès sur invitation, réservé aux adultes.</p>
           </div>
-          <a class="entry-link" href="/app" data-i18n="open">Ouvrir mon espace</a>
-        </section>
-
-        <section class="preview" aria-label="Application preview">
-          <div class="preview-header">
-            <span class="avatar" aria-hidden="true"><img src="/brand/icon-64.png" width="44" height="44" alt="" /></span>
-            <span class="preview-details">
-              <strong>Jessie</strong>
-              <small data-i18n="conversation">Conversation privée</small>
-            </span>
-            <span class="preview-lock" aria-hidden="true">●</span>
+          <div class="invitation-note">
+            <p data-i18n="invitation">Une nouvelle invitation ? Ouvre directement le lien que je t’ai envoyé.</p>
           </div>
-          <div class="preview-body">
-            <div class="bubble bubble-other" data-i18n="bubble1">Bienvenue dans mon espace !</div>
-            <div class="bubble bubble-own" data-i18n="bubble2">À bientôt 👋</div>
-          </div>
-          <div class="preview-footer">
-            <span data-i18n="composer">Conversation sur invitation</span>
-            <span aria-hidden="true">➤</span>
-          </div>
-          <div class="preview-cover" data-i18n="preview">Aperçu illustratif — aucun message personnel affiché.</div>
+          <p class="signoff" data-i18n="signoff">À bientôt, Jessie</p>
         </section>
       </main>
 
       <footer class="footer">
-        <p data-i18n="footer">JessieMessage · Accès privé sur invitation · Aucun paiement sur ce site</p>
-        <a href="mailto:contact@jessiemessage.com" data-i18n="contact">Contact</a>
-        <a href="/help" target="_blank" rel="noopener noreferrer" data-help-link data-jm-i18n="Aide et confidentialité" aria-label="Aide et confidentialité (nouvel onglet)" data-jm-i18n-aria-label="Aide et confidentialité (nouvel onglet)">Aide et confidentialité</a>
+        <p data-i18n="footer">JessieMessage · Espace privé sur invitation</p>
+        <nav class="footer-links" aria-label="Informations" data-i18n-aria="information">
+          <a href="mailto:contact@jessiemessage.com" data-i18n="contact">Contact</a>
+          <a href="/help" target="_blank" rel="noopener noreferrer" data-help-link data-jm-i18n="Aide et confidentialité" aria-label="Aide et confidentialité (nouvel onglet)" data-jm-i18n-aria-label="Aide et confidentialité (nouvel onglet)">Aide et confidentialité</a>
+        </nav>
       </footer>
     </div>
   </body>

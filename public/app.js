@@ -1,31 +1,33 @@
 const translations = {
   fr: {
-    badge: "ESPACE PRIVÉ",
-    title: "Un espace pour garder le contact avec moi.",
-    subtitle: "Bienvenue dans mon espace privé, accessible uniquement sur invitation.",
-    notice: "L’accès est réservé aux personnes que j’invite.",
-    conversation: "Conversation privée",
-    bubble1: "Bienvenue dans mon espace !",
-    bubble2: "À bientôt 👋",
-    composer: "Conversation sur invitation",
-    preview: "Aperçu illustratif — aucun message personnel affiché.",
-    footer: "JessieMessage · Accès privé sur invitation · Aucun paiement sur ce site",
-    open: "Ouvrir mon espace",
-    contact: "Contact"
+    badge: "Le coin de Jessie",
+    title: "On garde le contact ?",
+    subtitle: "Un petit mot, une photo, le plaisir de se retrouver.",
+    intro: "Mon espace privé pour retrouver nos échanges, tout simplement.",
+    access: "Accès sur invitation, réservé aux adultes.",
+    invitation: "Une nouvelle invitation ? Ouvre directement le lien que je t’ai envoyé.",
+    signoff: "À bientôt, Jessie",
+    footer: "JessieMessage · Espace privé sur invitation",
+    open: "Ouvrir ma conversation",
+    contact: "Contact",
+    skip: "Aller au contenu",
+    information: "Informations",
+    description: "Retrouve nos messages et nos photos dans mon espace privé, accessible sur invitation."
   },
   en: {
-    badge: "PRIVATE SPACE",
-    title: "A place to stay in touch with me.",
-    subtitle: "Welcome to my private space, available by invitation only.",
-    notice: "Access is reserved for people I invite.",
-    conversation: "Private conversation",
-    bubble1: "Welcome to my space!",
-    bubble2: "See you soon 👋",
-    composer: "Conversation by invitation",
-    preview: "Illustrative preview — no personal messages displayed.",
-    footer: "JessieMessage · Invitation-only access · No payments on this site",
-    open: "Open my space",
-    contact: "Contact"
+    badge: "Jessie’s corner",
+    title: "Shall we stay in touch?",
+    subtitle: "A little note, a photo, a lovely reason to catch up.",
+    intro: "My private space to pick up our conversation, nice and simple.",
+    access: "For invited adults only.",
+    invitation: "A new invitation? Open the link I sent you directly.",
+    signoff: "See you soon, Jessie",
+    footer: "JessieMessage · Private space by invitation",
+    open: "Open my conversation",
+    contact: "Contact",
+    skip: "Skip to content",
+    information: "Information",
+    description: "Find our messages and photos in my private space, available by invitation."
   }
 };
 
@@ -39,9 +41,14 @@ function renderLanguage() {
     const translation = translations[language][element.dataset.i18n];
     if (translation) element.textContent = translation;
   }
+  for (const element of document.querySelectorAll("[data-i18n-aria]")) {
+    const translation = translations[language][element.dataset.i18nAria];
+    if (translation) element.setAttribute("aria-label", translation);
+  }
+  document.querySelector('meta[name="description"]')?.setAttribute("content", translations[language].description);
   switcher.textContent = language === "fr" ? "EN" : "FR";
   switcher.setAttribute("aria-label", language === "fr" ? "Switch to English" : "Passer en français");
-  document.title = language === "fr" ? "JessieMessage — Espace privé" : "JessieMessage — Private space";
+  document.title = language === "fr" ? "Jessie — Mon espace privé" : "Jessie — My private space";
 }
 
 if (sharedLanguage) sharedLanguage.onChange((next) => { language = next; renderLanguage(); });

@@ -76,15 +76,15 @@ async function sessionCookie(page) {
 }
 async function entry(page, state) {
   await page.navigate("/app");
-  const destination = state === "connected" ? "/admin" : "/admin/login";
-  await waitUntil(() => page.execute("const link = document.getElementById('administrator-link'); return !!link && !link.hidden && link.getAttribute('href') === arguments[0]", destination), `neutral opening shows administrator ${state} choice`);
+  if (state === "connected") await waitUntil(() => page.execute("const link = document.getElementById('administrator-link'); return !!link && !link.hidden && link.getAttribute('href') === '/admin'"), "neutral opening shows the connected administrator choice");
+  else await waitUntil(() => page.execute("const card = document.getElementById('administrator-card'); return !!card && card.hidden && document.getElementById('entry-status').textContent.includes('pas encore disponible')"), "anonymous opening conceals administrator access");
   assert.equal(await page.execute("return location.protocol"), "https:", "the actual browser is using HTTPS, not localhost HTTP cookie exceptions");
   assert.equal(await page.execute("return document.getElementById('client-card').hidden"), true, "the fixture has no client access service");
 }
 async function signedOutEntry(origin) {
   const result = await fixtureRequest(origin, "/api/entry");
   assert.equal(result.status, 200);
-  assert.deepEqual(result.data, { status: "available", client: null, administrator: { state: "signed_out", href: "/admin/login" } });
+  assert.deepEqual(result.data, { status: "unavailable", client: null, administrator: null });
 }
 
 test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocation, expiry and recovery replay", { timeout: 150000 }, async (t) => {
@@ -101,14 +101,25 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     assert.equal(privatePage.status, 303); assert.equal(privatePage.headers.location, "/admin/login");
     await signedOutEntry(fixture.origin);
     await entry(page, "signed_out");
-    await page.click("#administrator-link"); await loginForm(page);
+    await page.navigate("/admin/login"); await loginForm(page);
     assert.equal(await page.execute("return location.pathname"), "/admin/login");
     t.diagnostic("Anonymous API / protected page and HTTPS neutral opening verified.");
 
     await submitLogin(page, fixture, fixture.invalidTotp()); await rejectedLogin(page);
     assert.equal((await fixtureRequest(fixture.origin, "/api/auth/session")).status, 401);
+    await loginForm(page); await page.type("#email", fixture.email); await page.type("#password", fixture.password);
+    await page.click("#toggle-password");
+    await page.execute("const password=document.getElementById('password');password.focus();password.setSelectionRange(2,6);Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'))");
+    assert.equal(await page.execute("return document.getElementById('login-form').hidden && document.getElementById('password').type === 'password' && document.getElementById('toggle-password').getAttribute('aria-pressed') === 'false'"), true, "the background login is hidden and its password is masked");
+    await page.execute("delete document.visibilityState;document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:false}))");
+    await loginForm(page);
+    assert.equal(await page.execute("return document.getElementById('email').value === arguments[0] && document.getElementById('password').value === arguments[1] && document.getElementById('factor').value === ''", fixture.email, fixture.password), true, "email and password survive the authenticator switch in memory");
+    assert.equal(await page.execute("const password=document.getElementById('password');return password.type === 'password' && password.selectionStart === 2 && password.selectionEnd === 6"), true, "masking does not select or overwrite the existing password");
+    assert.equal(await page.execute("return localStorage.length === 0 && sessionStorage.length === 0"), true, "login fields never enter persistent browser storage");
     const acceptedTotp = fixture.currentTotp();
-    await submitLogin(page, fixture, acceptedTotp); await connected(page);
+    await page.type("#factor", acceptedTotp);
+    assert.equal(await page.execute("return document.activeElement.id === 'factor' && document.getElementById('password').value === arguments[0]", fixture.password), true, "the security code receives focus without changing the password");
+    await page.click("#login-button"); await connected(page);
     const initialCookie = await sessionCookie(page);
     assert.equal(await page.execute("return ['email', 'password', 'factor'].every(id => document.getElementById(id).value === '')"), true, "successful login clears credential fields");
     // Check reuse immediately, without first navigating / logging out. A fresh
@@ -119,7 +130,7 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
       body: JSON.stringify({ email: fixture.email, password: fixture.password, factor: acceptedTotp }) });
     assert.equal(replayedTotp.status, 401, "a previously accepted OTP is rejected even while its time window remains valid");
     assert.equal(fixture.isTotpFresh(acceptedTotp), true, "OTP replay did not merely wait for expiry");
-    t.diagnostic("Wrong MFA rejected without cookie; real password + TOTP login and browser cookie protection verified.");
+    t.diagnostic("Wrong MFA rejected; authenticator app-switch fields, real TOTP login and browser cookie protection verified.");
 
     const proof = await fixtureRequest(fixture.origin, "/api/auth/session", { cookie: initialCookie });
     assert.equal(proof.status, 200);
@@ -142,8 +153,8 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     assert.equal((await page.cookies()).some((cookie) => cookie.name === cookieName), false);
     assert.equal((await fixtureRequest(fixture.origin, "/api/auth/session", { cookie: initialCookie })).status, 401, "the old cookie is revoked in SQL, not merely removed from the browser");
     await entry(page, "signed_out"); await signedOutEntry(fixture.origin);
-    await page.click("#administrator-link"); await loginForm(page);
-    t.diagnostic("DOM logout removes the cookie and revokes it in SQL; the neutral opening returns to sign-in.");
+    await page.navigate("/admin/login"); await loginForm(page);
+    t.diagnostic("DOM logout removes the cookie and revokes it in SQL; anonymous opening conceals administration and direct login remains available.");
 
     await submitLogin(page, fixture, fixture.recoveryCodes[0]); await connected(page);
     const recoveryCookie = await sessionCookie(page);

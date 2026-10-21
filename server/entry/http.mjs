@@ -20,11 +20,13 @@ function clientChoice(value, now, chatEnabled, signedOutHref) {
   const state = access.state === "active" && access.expiresAt !== null && access.expiresAt <= now ? "expired" : access.state;
   return { state, href: state === "active" && chatEnabled ? "/messages" : "/access" };
 }
-function administratorChoice(value, now, chatEnabled, signedOutHref) {
-  if (value === null) return { state: "signed_out", href: signedOutHref };
+function administratorChoice(value, now, chatEnabled) {
+  // Public entry advertises administration only after an existing session proves it.
+  // New administrators use their saved direct login address.
+  if (value === null) return null;
   const session = safeSession(value);
   identity(session);
-  if (session.expiresAt <= now) return { state: "signed_out", href: signedOutHref };
+  if (session.expiresAt <= now) return null;
   return { state: "connected", href: chatEnabled ? "/admin/messages" : "/admin" };
 }
 
@@ -59,7 +61,7 @@ export function createEntryHandler({ clientSession = null, adminSession = null, 
       const now = clock();
       if (!instant(now)) fail();
       const client = clientSession === null ? null : clientChoice(results[0].value, now, chatEnabled, deviceTransition ? "/connect-device/client" : "/access");
-      const administrator = adminSession === null ? null : administratorChoice(results[1].value, now, chatEnabled, deviceTransition ? "/connect-device/admin" : "/admin/login");
+      const administrator = adminSession === null ? null : administratorChoice(results[1].value, now, chatEnabled);
       reply(response, method, 200, { status: client === null && administrator === null ? "unavailable" : "available", client, administrator });
     } catch {
       if (!response.headersSent && !response.destroyed) reply(response, method, 503, unavailable(), { "Retry-After": "5" });

@@ -6,18 +6,22 @@ Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.3.1, 1.3.3, 1.4.0, 1.5.0 et 1.6.0 s
 
 La livraison **1.5.0 — Annonces** est close : code et CI qualifiés, versions publiées, migration et précontrôles hébergés, identité active et alignement privé confirmés. Le reçu `release150_metadata_recorded` confirme le schéma **32**, le repli compatible **1.4.1** précontrôlé et enregistré sans démarrage, l’ancien état 1.4.0 intégral et les autres blocs préservés. [Clôture et preuves](REPRISE.md#alignement-final-acquis--livraison-150-close). L’évolution 5 est désormais close par le reçu `release160_metadata_recorded`, avec le checkpoint 1.6.0/schéma 33 aligné et le repli 1.5.1 précontrôlé et enregistré sans démarrage. Le [socle du lot 6, version 1.7.0](video-transport-170.md), est fusionné, qualifié et publié, dormant dans le runtime normal. Les lots 7 et 8 restent planifiés ; aucune activation automatique.
 
+## Priorités demandées le 22 octobre
+
+Le [bilan complet et les onze itérations](PLAN-PRODUCTION-20261022.md) ajoutent le correctif urgent **1.7.1** (Node 24.22.1, accueil, entrée discrète, auth mobile et contrôle des rappels privés), puis sa livraison vérifiée. La branche vidéo est préservée : 7.1, 7.2 et 7.3a/b qualifiés sur la PR 125 ; la prochaine étape vidéo est 7.3c. Conformément à la demande de contrôler l'ensemble avant l'activation complète, **8.1/8.2/8.3 sont placés avant l'activation finale de 7.6**. Ce changement d'ordre ne bloque pas le correctif de sécurité urgent ; aucune restauration ni charge réelle n'est déduite de la CI.
+
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **7 — Vidéos dans la messagerie** | Catalogue et capacité SQL durables, aperçu, lecteur, légende, galerie et diffusion ; export, suppression, fermeture, inventaire et restauration vidéo cohérents avant activation. | Planifiée. |
+| **7 — Vidéos dans la messagerie** | Catalogue et capacité SQL durables, aperçu, lecteur, légende, galerie et diffusion ; export, suppression, fermeture, inventaire et restauration vidéo cohérents avant activation. | Planifiée avant activation vidéo finale. |
 | **8 — Validation et portabilité** | Parcours combinés, capacité du mutualisé mesurée et migration répétée sur données synthétiques. | Planifiée. |
 
 Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas ouvertes automatiquement ; la qualification d’appareils réels et des notifications conserve ses limites. Sauvegardes/PC et archivage différés restent hors de ce parcours. Les essais de masse ou de restauration exigent une cible synthétique isolée ; l’alias recette partage la production.
 
 ## Jalons de développement et livraison
 
-**Les lots 7 et 8 ne sont pas commencés. Après clôture de l’adaptation du travail, la seule prochaine action produit est 7.1 : fixer le contrat du catalogue et de la capacité vidéo, puis le vérifier sur une base synthétique isolée.** Ce découpage prépare leur exécution ; il ne modifie pas la production **1.6.0 / schéma 33**, son checkpoint ou son repli **1.5.1**.
+**Le lot 7 est en cours sur `feat/video-messaging` : 7.1, 7.2 et 7.3a/b qualifiés, 7.3 incomplet ; 7.3c est la prochaine étape vidéo. Le correctif urgent 1.7.1 est prioritaire sur une branche distincte.** Ce découpage prépare leur exécution ; il ne modifie pas la production **1.6.0 / schéma 33**, son checkpoint ou son repli **1.5.1**.
 
 Les étapes ci-dessous sont des jalons reprenables du même résultat, pas des livraisons produit distinctes. Le lot 7 garde une branche et une PR de travail ; **une seule livraison produit est prévue à son terme, sans nouvelle version, tag, release, migration hébergée ou déploiement à chaque jalon**. Les évolutions fonctionnelles restent sur cette branche jusqu’à la qualification du résultat complet. La version compatible est décidée à l’ouverture effective du lot selon [AGENTS](../AGENTS.md), sans modifier les références déjà publiées.
 
@@ -40,7 +44,7 @@ Le repli doit comprendre le futur schéma et préserver les données vidéo ; la
 
 ## Lot 8 — Validation et portabilité
 
-Ces jalons s’ouvrent après la clôture du lot 7. Ils produisent des mesures et des preuves sur les cibles réellement testées ; ils ne déclenchent pas de changement de version ou de déploiement par simple progression du plan.
+Ces jalons précèdent maintenant l’activation vidéo finale de 7.6, selon la priorité du 22 octobre. Ils produisent des mesures et des preuves sur les cibles réellement testées ; ils ne déclenchent pas de changement de version ou de déploiement par simple progression du plan.
 
 | Étape | Résultat borné | Critère de fin du jalon |
 | --- | --- | --- |

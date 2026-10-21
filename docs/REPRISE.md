@@ -17,13 +17,21 @@
 | Ancien état | 1.5.0 intégral et son empreinte archivés ; **1.5.0 et 1.4.1 ne doivent pas redémarrer sur le schéma 33**. |
 | Qualification | CI propres PR/main des deux références **5/5** ; [preuves 1.6.0](verification-proofs/jm160-verification.json) et [1.5.1](verification-proofs/jm151-verification.json). |
 | Git et documents | `main` peut avancer pour les preuves et la passation ; il ne remplace pas le commit réellement déployé. [Vérification du versionnage](verification-proofs/jm160-version-consistency.json). |
-| Prochaine action | Adaptation du travail close ; prochaine étape produit **7.1 — contrat et catalogue durable**, non commencée. [Lot 6 — socle transport vidéo 1.7.0](video-transport-170.md) publié et dormant ; aucune activation automatique. |
+| Prochaine action | Correctif urgent **1.7.1 — sécurité Node et entrée** en préparation ; voir le [bilan du 22 octobre](PLAN-PRODUCTION-20261022.md). [Lot 6 — socle transport vidéo 1.7.0](video-transport-170.md) publié et dormant ; aucune activation automatique. |
 
 Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks). Le Manager nomme ce service **recette.jessiemessage.com** ; il dessert aussi **jessiemessage.com**, avec le même runtime et la même base. Ce n’est pas une recette isolée. Le site PHP **accueil.jessiemessage.com** est distinct.
 
 Pour changer de discussion, utiliser la [passation du 21 octobre](PASSATION-20261021-160.md). Elle complète cet état sans le remplacer.
 
-## Jalon de développement courant — interruptions et découpage des lots
+## Priorité du 22 octobre — sécurité Node, accueil et entrée privée
+
+Sur `fix/security-entry-171`, correctif **1.7.1** candidat : Node **24.22.1** officiel, copies séparées des lanceurs de la source active 1.6.0, entrée sans choix admin anonyme, brouillon de login conservé en mémoire lors du changement d'application et nouvel accueil sans faux aperçu. Aucun secret de login persisté. Les tâches/rappels restent réservés à Jessie/admin, vérifiés jusqu'aux URL directes et au ZIP client ; aucun rendez-vous partagé n'est implémenté.
+
+**CI complète et opérations Node hébergées encore en attente.** Ne pas déduire une activation du nouveau pin CI ou d'un binaire préparé. Les SHA/arbre/PR et résultats propres seront consignés après publication. Le Manager PHP du site distinct accueil/www affiche **8.4.26** ; l'avis Infomaniak annonce un déploiement centralisé des correctifs critiques, installation complète encore à vérifier. La production du tableau reste la référence jusqu'à un reçu réel.
+
+Le [bilan et plan complet](PLAN-PRODUCTION-20261022.md) prévoit **11 itérations dont celle-ci**, avec une marge de deux pour corrections d'audit. Les validations combinées, mesures et portabilité précèdent désormais l'activation vidéo finale conformément à la demande du 22 octobre. Le travail vidéo est préservé sur `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessiemessage/pull/125), checkpoint `dc08d35fadd4308b34bcca89bb62ce69e047993e` : 7.1, 7.2 et 7.3a/b qualifiés, 7.3 incomplet. Aucun mélange ni activation dans ce correctif.
+
+## Jalon précédent — interruptions et découpage des lots
 
 **21 octobre 2026 : audit et adaptation clos, fusionnés et qualifiés.** L’[audit daté](AUDIT-INTERRUPTIONS-2026-10-21.md) distingue les causes établies du travail interrompu de la cause interne des coupures ChatGPT, non confirmée. Le workflow supprime les CI push de branche doublonnant les PR et conserve une qualification indépendante par SHA de main à qualifier. Les cinq jobs restent identiques. Les [règles de travail](../AGENTS.md) imposent des jalons poussés avant les attentes longues ; le [plan](PLAN-IMPLEMENTATION.md) découpe le lot 7 en six étapes et le lot 8 en trois, avec une seule livraison vidéo complète.
 
