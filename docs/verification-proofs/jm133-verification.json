@@ -1,12 +1,17 @@
 {
   "version": "1.3.3",
-  "status": "in_progress",
+  "status": "published_awaiting_hosted_preparation",
   "branch": "fix/photo-message-details-133",
   "base": "76b80e33fba5f4cbcebcf73193944077e631af50",
-  "source": null,
-  "tree": null,
+  "source": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+  "tree": "b1fe882ede0450cbf135d2ff8cb19e780d18a0e5",
   "scope": "persistent_native_photo_message_details_toggle_without_extra_height",
-  "results": null,
+  "results": {
+    "status": "code_qualified_and_release_published",
+    "codeQualified": true,
+    "releasePublished": true,
+    "deliveryComplete": false
+  },
   "authorization": {
     "method": "new_user_request",
     "developmentAuthorized": true,
@@ -59,28 +64,178 @@
     "exact_commit_review_ci_and_publication_before_hosted_preparation"
   ],
   "local": {
-    "status": "results_not_yet_reported",
-    "node": null,
-    "checks": null,
+    "status": "browser_syntax_and_diff_checks_reported_passed",
+    "node": "v24.19.0",
+    "checks": {
+      "browserSyntax": {
+        "command": "node --check",
+        "result": "passed"
+      },
+      "diffCheck": "passed"
+    },
     "physicalPhone": "not_attested_for_release133"
   },
   "review": {
-    "status": "not_yet_reported",
-    "result": null
+    "status": "completed",
+    "method": "independent_final_review",
+    "result": "no_blocking_findings"
   },
   "ci": {
-    "status": "not_yet_reported",
-    "pullRequest": null,
-    "main": null
+    "status": "pull_request_and_exact_main_passed_first_attempt_without_rerun",
+    "pullRequest": {
+      "run": 39531378842,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39531378842",
+      "status": "completed",
+      "conclusion": "success",
+      "jobsTotal": 5,
+      "jobResultsObserved": 5,
+      "logsRead": true,
+      "chrome": {
+        "job": 118997816280,
+        "tests": 174,
+        "passed": 174,
+        "failed": 0,
+        "skipped": 0,
+        "newCaptionlessPhotoPath": {
+          "combinations": 12,
+          "widthsPx": [
+            320,
+            360,
+            390
+          ],
+          "roles": [
+            "client",
+            "admin"
+          ],
+          "messageOwnership": [
+            "own",
+            "peer"
+          ]
+        },
+        "existingKeyboardPathsFrEnPreserved": true
+      },
+      "httpsMariaDB": {
+        "job": 118997816312,
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      "verification": {
+        "job": 118997816364,
+        "tests": 3226,
+        "passed": 3190,
+        "failed": 0,
+        "skipped": 36,
+        "syntaxSources": 583,
+        "build": "passed"
+      },
+      "mariaDB10_11": {
+        "job": 118997816108,
+        "status": "completed",
+        "tests": 479,
+        "passed": 479,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariaDB11_4": {
+        "job": 118997816402,
+        "status": "completed",
+        "tests": 479,
+        "passed": 479,
+        "failed": 0,
+        "skipped": 0
+      },
+      "allFiveJobsPassed": true,
+      "attempt": 1,
+      "jobsPassed": 5,
+      "confirmedAt": "2026-10-21T02:14:15Z"
+    },
+    "main": {
+      "run": 39531961261,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39531961261",
+      "source": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+      "status": "completed",
+      "conclusion": "success",
+      "qualified": true,
+      "attempt": 1,
+      "completedAt": "2026-10-21T02:21:03Z",
+      "jobsPassed": 5,
+      "jobsTotal": 5,
+      "rerun": false,
+      "runSourceJobsAndFiveLogsRead": true,
+      "syntaxSources": 583,
+      "build": "passed",
+      "jobs": [
+        {
+          "job": 118999701945,
+          "name": "Chrome keyboard and chat lifecycle",
+          "conclusion": "success",
+          "tests": 174,
+          "passed": 174,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "job": 118999702101,
+          "name": "MariaDB 11.4",
+          "conclusion": "success",
+          "tests": 479,
+          "passed": 479,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "job": 118999702159,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "conclusion": "success",
+          "tests": 3,
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "job": 118999702189,
+          "name": "verify",
+          "conclusion": "success",
+          "tests": 3226,
+          "passed": 3190,
+          "failed": 0,
+          "skipped": 36
+        },
+        {
+          "job": 118999702300,
+          "name": "MariaDB 10.11",
+          "conclusion": "success",
+          "tests": 479,
+          "passed": 479,
+          "failed": 0,
+          "skipped": 0
+        }
+      ]
+    }
   },
-  "pullRequest": null,
+  "pullRequest": {
+    "number": 116,
+    "url": "https://github.com/fredbuhr/jessiemessage/pull/116",
+    "status": "merged",
+    "head": "76f781f0c18311649a3b6c7e57df48530dfb8955",
+    "tree": "b1fe882ede0450cbf135d2ff8cb19e780d18a0e5",
+    "mergeSource": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+    "mergeTree": "b1fe882ede0450cbf135d2ff8cb19e780d18a0e5"
+  },
   "publication": {
-    "status": "not_published",
-    "tag": null,
-    "releaseUrl": null,
-    "publishedAt": null,
-    "run": null,
-    "verified": false
+    "status": "published_verified",
+    "tag": "v1.3.3",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3",
+    "publishedAt": "2026-10-21T02:22:03Z",
+    "run": 39532598912,
+    "verified": true,
+    "workflowCommit": "95fe1326aea86487ac2db15ccd58f60353cfd2ee",
+    "runConclusion": "success",
+    "releasePublished": true,
+    "verifiedTagTarget": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+    "verifiedTree": "b1fe882ede0450cbf135d2ff8cb19e780d18a0e5"
   },
   "hosting": {
     "activeVersion": "1.3.1",
@@ -105,33 +260,47 @@
     "qualifiesRelease133": false
   },
   "preparation": {
-    "status": "future_not_ready_for_operator",
-    "sourcePinned": null,
-    "treePinned": null,
-    "commit": null,
-    "file": null,
-    "sha256": null,
-    "readyForOperator": false,
+    "status": "ready_awaiting_operator_execution",
+    "sourcePinned": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+    "treePinned": "b1fe882ede0450cbf135d2ff8cb19e780d18a0e5",
+    "commit": "ffa6d51ff767d571e9031e1f00bfa207c33d5c41",
+    "file": "ops/prepare-release133.sh",
+    "sha256": "deae2f94c4032b862a2911c4493e76eedf25ee7f013a804a6e841a74f396ca77",
+    "readyForOperator": true,
     "executionReported": false,
     "hostedPrecheckPassed": false,
     "plannedRollback": "1.3.1",
     "receipt": null,
     "combinedOperatorBlock": {
-      "status": "future_after_qualification_and_publication",
+      "status": "ready_for_operator",
       "reference": "../REPRISE.md",
       "first": "idempotent_pinned_record_release131",
       "then": "pinned_prepare_release133_for_exact_qualified_published_source",
       "restart": false,
       "executedOnHosting": false,
-      "intermediateRelease132Preparation": false
-    }
+      "intermediateRelease132Preparation": false,
+      "metadata131Receipt": "not_reported",
+      "preparation133Receipt": "not_reported",
+      "firstStepIdempotent": true
+    },
+    "branch": "ops/release133-tools",
+    "syntheticTestsPassed": 15,
+    "bashSyntax": "passed",
+    "embeddedPythonSyntax": "passed",
+    "rawPublishedBytesVerified": true,
+    "operatorActionAllowedOnlyAfter": "successful_exact_main_ci_and_verified_tag_release_v1.3.3",
+    "syntheticTests": {
+      "file": "ops/test-release133-staging-synthetic.py",
+      "sha256": "1b9e17496c521fcae375918844c2bdf3e4f8563f73fe3a30c2bcf0d562ae970b",
+      "passed": 15,
+      "rawPublishedBytesVerified": true
+    },
+    "operatorPreconditionsVerified": [
+      "successful_exact_main_ci",
+      "verified_tag_release_v1.3.3"
+    ]
   },
   "notAttested": [
-    "release133_final_source_and_tree",
-    "release133_local_qualification",
-    "release133_independent_review",
-    "release133_pull_request_and_exact_main_ci",
-    "release133_publication",
     "release133_hosted_precheck",
     "release133_activation",
     "release133_metadata_recording",

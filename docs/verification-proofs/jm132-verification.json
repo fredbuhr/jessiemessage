@@ -1,13 +1,14 @@
 {
   "version": "1.3.2",
-  "status": "published_awaiting_hosted_preparation",
+  "status": "published_historical_unactivated_superseded_by_133",
   "supersession": {
+    "statusAtPublication": "published_awaiting_hosted_preparation",
     "status": "historical_published_candidate_never_prepared_or_activated",
     "replacedAsNextCandidateBy": "1.3.3",
     "historicalResultsPreserved": true,
     "historicalPreparationPlanNoLongerCurrent": true,
     "intermediatePreparation132Required": false,
-    "currentOperatorAction": "none_while_release133_qualification_pending",
+    "currentOperatorAction": "see_current_runbook_for_published_release133_preparation",
     "currentRunbook": "../REPRISE.md",
     "nextPreparation": "idempotent_record_release131_then_prepare_release133_after_qualification_and_publication"
   },

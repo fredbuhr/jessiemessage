@@ -13,7 +13,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Emojis enrichis et inclusifs, 1.3.0](docs/emoji-inclusifs-130.md) | Catalogue Unicode, carnations et critères de livraison. |
 | [Messagerie mobile, 1.3.1 active](docs/chat-mobile-131.md) | Barre de conversation unique, menus discrets et espace rendu aux messages ; suivi final en attente. |
 | [Voix client et détails des messages, 1.3.2 publiée](docs/client-voice-message-details-132.md) | Socle qualifié et publié, jamais activé ; remplacé comme candidate par 1.3.3. |
-| [Détails des photos, correctif 1.3.3 en cours](docs/photo-message-details-133.md) | Bouton de détails visible au toucher pour les photos, avec les métadonnées masquées au repos. |
+| [Détails des photos, correctif 1.3.3 publié](docs/photo-message-details-133.md) | Bouton de détails visible au toucher pour les photos, avec les métadonnées masquées au repos. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
@@ -24,7 +24,7 @@ Le [correctif mobile 1.3.1](docs/chat-mobile-131.md) est fusionné par la [PR 11
 
 Le retour utilisateur valide visuellement la présentation mobile 1.3.1 ; l’usage du clavier logiciel sur un téléphone physique n’a pas été explicitement attesté. Le [correctif 1.3.2](docs/client-voice-message-details-132.md) est **fusionné, qualifié en CI de PR et main 5/5, puis [publié](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.2)** sur le commit exact `19455771…` : textes client FR/EN à la première personne de Jessie, aide reformulée et détails/actions des messages à la sélection. L’échec initial du job verify main et sa relance ciblée réussie sur code inchangé restent consignés dans les preuves. Cette version n’a été ni préparée ni activée et sa publication reste immuable.
 
-Le [correctif minimal 1.3.3](docs/photo-message-details-133.md) remplace 1.3.2 comme prochaine candidate : il rend le petit bouton `⋯` visible à côté des seules photos, pour trouver leurs détails au toucher même sans légende. Le code et la CI 1.3.3 restent à qualifier ; aucune fusion, publication ou préparation n’est annoncée. **Aucune action opérateur n’est demandée maintenant.** Après qualification et publication, le bloc unique de [REPRISE](docs/REPRISE.md) terminera l’alignement idempotent des métadonnées 1.3.1, puis préparera directement 1.3.3 sans redémarrage, avec 1.3.1 comme repli prévu. Le schéma 31 et les dépendances sont inchangés.
+Le [correctif minimal 1.3.3](docs/photo-message-details-133.md) remplace 1.3.2 comme prochaine candidate : il rend le petit bouton `⋯` visible à côté des seules photos, pour trouver leurs détails au toucher même sans légende. La [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116) est revue et fusionnée sur `ca0d4064…` ; les CI PR et main du commit exact réussissent **5/5**. La [release v1.3.3](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3) est publiée sur ce commit exact, sans préparation ni activation hébergée rapportée. La prochaine action est le bloc unique de [REPRISE](docs/REPRISE.md), qui termine l’alignement idempotent des métadonnées 1.3.1, puis prépare directement 1.3.3 sans redémarrage, avec 1.3.1 comme repli prévu. Le schéma 31 et les dépendances sont inchangés.
 
 ## Versions et livraisons
 

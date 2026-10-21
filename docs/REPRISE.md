@@ -1,14 +1,53 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — production `1.3.1`, identité et présentation mobile confirmées par l’utilisateur. La `1.3.2` est fusionnée, qualifiée et publiée, mais n’a été ni préparée ni activée ; le correctif minimal `1.3.3` la remplace comme prochaine candidate.** Le checkpoint privé 1.3.1 n’a pas encore son reçu rapporté. Aucune action opérateur n’est demandée pendant la qualification de 1.3.3. Le schéma 31 est inchangé. Le repli de la production 1.3.1 reste 1.3.0 ; le repli prévu pour 1.3.3 est 1.3.1, avec les références antérieures préservées. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — production `1.3.1`, identité et présentation mobile confirmées par l’utilisateur. La `1.3.2` est fusionnée, qualifiée et publiée, mais n’a été ni préparée ni activée ; le correctif minimal `1.3.3` la remplace comme prochaine candidate.** Le checkpoint privé 1.3.1 n’a pas encore son reçu rapporté. La 1.3.3 est désormais fusionnée, qualifiée et publiée ; le bloc unique ci-dessous termine l’alignement privé 1.3.1 avant sa préparation, sans redémarrage. Le schéma 31 est inchangé. Le repli de la production 1.3.1 reste 1.3.0 ; le repli prévu pour 1.3.3 est 1.3.1, avec les références antérieures préservées. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
-## Travail courant — correctif 1.3.3, qualification et livraison en attente
+## Travail courant — correctif 1.3.3 publié, préparation en attente
 
-**Le code et la CI 1.3.3 ne sont pas encore qualifiés ; aucune fusion, publication, préparation ou activation n’est annoncée.** Le correctif conserve le socle 1.3.2 et rend le petit bouton natif `⋯` constamment visible à côté des seules photos, afin de trouver les détails d’une photo sans légende au toucher. Il n’ajoute ni hauteur aux messages, ni date, statut ou action de suppression au repos. Le périmètre est CSS, version et qualification Chrome ; aucun changement JavaScript, API, SQL ou dépendance. [Périmètre et critères](photo-message-details-133.md), [preuves 1.3.3](verification-proofs/jm133-verification.json).
+**Code revu, fusionné, qualifié par les CI PR/main 5/5 et publié ; aucune préparation ni activation hébergée n’est rapportée.** Le correctif conserve le socle 1.3.2 et rend le petit bouton natif `⋯` constamment visible à côté des seules photos, afin de trouver les détails d’une photo sans légende au toucher. Il n’ajoute ni hauteur aux messages, ni date, statut ou action de suppression au repos. Le périmètre est CSS, version et qualification Chrome ; aucun changement JavaScript, API, SQL ou dépendance. [Périmètre et critères](photo-message-details-133.md), [preuves 1.3.3](verification-proofs/jm133-verification.json).
 
-La branche de travail est `fix/photo-message-details-133`, issue de `76b80e33fba5f4cbcebcf73193944077e631af50`. Le commit et l’arbre de livraison 1.3.3 ne sont pas encore établis ; le helper et ses pins ne sont pas encore publiés. Le socle [1.3.2 qualifié et publié](client-voice-message-details-132.md) reste immuable. Ses résultats ne sont pas réattribués à 1.3.3 : les nouveaux contrôles et les CI du commit exact seront consignés après observation.
+La [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116), head `76f781f0c18311649a3b6c7e57df48530dfb8955` sur la branche `fix/photo-message-details-133` issue de `76b80e33fba5f4cbcebcf73193944077e631af50`, est fusionnée sur **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, arbre **`b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`** identique à celui de la PR. Le socle [1.3.2 qualifié et publié](client-voice-message-details-132.md) reste immuable et ses résultats ne sont pas réattribués à 1.3.3.
 
-**Prochaine opération opérateur, après qualification et publication vérifiées :** un seul bloc terminera d’abord l’alignement privé 1.3.1 avec le writer épinglé et idempotent, puis préparera directement 1.3.3 sans redémarrage et sans migration, avec 1.3.1 comme repli. Il n’y a pas d’étape intermédiaire de préparation 1.3.2. Les pins de la cible et du helper 1.3.3 seront ajoutés après leurs résultats réels ; aucune commande à exécuter, aucun Run/Build 1.3.3 ni reçu hébergé n’est fourni à ce stade. L’activation restera conditionnée au reçu de préparation réussi.
+**Contrôles observés 1.3.3 :** syntaxe du test navigateur (`node --check`) et diff-check locaux réussis sous Node 24.19.0 ; revue indépendante statique finale sans blocage. La [CI de PR 39531378842](https://github.com/fredbuhr/jessiemessage/actions/runs/39531378842) réussit **5/5 à la tentative 1**, terminée le `2026-10-21T02:14:15Z` ; les cinq logs ont été relus. Chrome **174/174 sans omission** (job `118997816280`), HTTPS **3/3** (`118997816312`), verify **3 226 tests, 3 190 réussis, zéro échec, 36 ignorés**, syntaxe/build **583 sources** (`118997816364`), MariaDB 10.11 et 11.4 **479/479 chacune sans échec ni omission** (`118997816108` et `118997816402`). Le nouveau parcours Chrome couvre les photos sans légende dans douze combinaisons : 320/360/390 px, client/administration, reçu/envoyé ; les parcours clavier FR/EN existants sont conservés. La [CI main 39531961261](https://github.com/fredbuhr/jessiemessage/actions/runs/39531961261) du commit exact `ca0d40648036d57fdee55b91d47d5d5a874a626e` réussit aussi **5/5 à la tentative 1, sans relance**, terminée le `2026-10-21T02:21:03Z` : mêmes compteurs général, Chrome, HTTPS et MariaDB, syntaxe/build **583 sources**, cinq logs relus. Les résultats main proviennent de cette exécution et non d’une déduction à partir de la PR. Les omissions générales restent distinctes d’une qualification native ; aucun téléphone physique 1.3.3 n’est attesté.
+
+**Publication vérifiée :** [tag/release v1.3.3](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3), publié le `2026-10-21T02:22:03Z`, relu sur la source `ca0d40648036d57fdee55b91d47d5d5a874a626e` et l’arbre `b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`. Le [run de publication 39532598912](https://github.com/fredbuhr/jessiemessage/actions/runs/39532598912) a réussi, depuis le commit opérateur `95fe1326aea86487ac2db15ccd58f60353cfd2ee`. Cette publication n’atteste pas un déploiement.
+
+**Helper publié et qualifié, sans exécution hébergée :** [préparation 1.3.3](https://github.com/fredbuhr/jessiemessage/blob/ffa6d51ff767d571e9031e1f00bfa207c33d5c41/ops/prepare-release133.sh), commit `ffa6d51ff767d571e9031e1f00bfa207c33d5c41`, SHA-256 `deae2f94c4032b862a2911c4493e76eedf25ee7f013a804a6e841a74f396ca77`. Ses [tests synthétiques](https://github.com/fredbuhr/jessiemessage/blob/ffa6d51ff767d571e9031e1f00bfa207c33d5c41/ops/test-release133-staging-synthetic.py), SHA-256 `1b9e17496c521fcae375918844c2bdf3e4f8563f73fe3a30c2bcf0d562ae970b`, réussissent **15/15** ; syntaxe Bash et Python embarqué valides. Les deux fichiers bruts publiés ont été relus et comparés aux octets locaux. Ce résultat qualifie le helper, pas une préparation de l’hébergement.
+
+**Prochaine action opérateur — un seul bloc de préparation :** ouvrir la [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller le bloc ci-dessous. Il termine d’abord l’alignement privé 1.3.1 avec le writer épinglé et idempotent ; si l’état est déjà enregistré à l’identique, il le constate sans réécriture. Il prépare ensuite directement 1.3.3 sur la source et l’arbre exacts publiés et exécute son précontrôle, avec 1.3.1 comme repli. **Le bloc ne redémarre pas le service et n’exécute aucune migration.** Il ne prépare pas 1.3.2. Les CI main et la publication 1.3.3 sont maintenant vérifiées ; aucun des reçus hébergés attendus n’est encore rapporté.
+
+```sh
+python3 - <<'PY'
+import hashlib, subprocess, urllib.request
+
+steps = [
+    (
+        "https://raw.githubusercontent.com/fredbuhr/jessiemessage/c073cc59689b5f9cb2c303055dadcaf8f740fe90/ops/record-release131.py",
+        "941f5152fdb96db82d5e1a5b3440f723e122191875d1d26e2a54c98bf506f560",
+        ["python3", "-"]
+    ),
+    (
+        "https://raw.githubusercontent.com/fredbuhr/jessiemessage/ffa6d51ff767d571e9031e1f00bfa207c33d5c41/ops/prepare-release133.sh",
+        "deae2f94c4032b862a2911c4493e76eedf25ee7f013a804a6e841a74f396ca77",
+        ["bash", "-s", "--", "ca0d40648036d57fdee55b91d47d5d5a874a626e"]
+    )
+]
+for url, expected, args in steps:
+    code = urllib.request.urlopen(url, timeout=30).read()
+    if hashlib.sha256(code).hexdigest() != expected:
+        raise SystemExit("Empreinte incorrecte : arrêt.")
+    subprocess.run(args, input=code, check=True)
+PY
+```
+
+Le bloc vérifie les octets téléchargés avant chaque action et s’arrête sur refus. La préparation préserve le code et les lanceurs 1.3.1 ; elle ne change ni Manager, ni base, ni médias. Les replis 1.3.0/1.2.0/1.1.1 restent conservés. En cas d’arrêt, relever le résultat durable et le transmettre avant toute reprise ; ne pas relancer aveuglément le staging. Le premier reçu attendu est `release131_metadata_recorded` ou `release131_metadata_already_recorded`, puis `staged_precheck_passed` pour **1.3.3**, source **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, arbre **`b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`**, Node **`v24.22.0`** et schéma **31** inchangé.
+
+**Activation conditionnelle — seulement après ce reçu de préparation réussi :** ouvrir les [réglages Run/Build de l’application Node.js 239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application). L’application est nommée **recette.jessiemessage.com** dans le Manager et dessert aussi **jessiemessage.com** ; le site PHP **accueil.jessiemessage.com** est distinct. Enregistrer :
+
+- Run : `/bin/bash /srv/customer/jessiemessage-private/start-primary-release133-ca0d4064.sh`
+- Build : `/bin/bash /srv/customer/jessiemessage-private/check-primary-release133-ca0d4064.sh`
+
+Revenir au [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), puis choisir **Redémarrer**. Ouvrir [État du service Jessie](https://jessiemessage.com/admin/readiness), **Actualiser → Détails techniques**, et relever version **1.3.3**, commit **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, Node **`v24.22.0`** et date affichée exacte. Attendre ce relevé avant de déclarer 1.3.3 active, puis son reçu d’enregistrement avant clôture. Ces chemins sont prévus mais ne sont pas encore attestés préparés sur l’hébergement ; aucun lancement n’est effectué par cette documentation.
 
 La production reste **1.3.1**. Sa validation visuelle ne constitue pas un essai de 1.3.2/1.3.3 ni une attestation explicite du clavier logiciel sur téléphone physique. Le reçu `release131_metadata_recorded` ou `release131_metadata_already_recorded` n’a pas été rapporté et la clôture 1.3.1 n’est pas revendiquée. Aucune autre évolution ni manipulation PC n’est ouverte.
 
