@@ -95,7 +95,10 @@ export function createErasureStore({ pool, database, capacity, broadcastKey }) {
             // conflict rather than recreating a permanently erased recipient.
             const removed = await connection.query("DELETE FROM broadcast_recipients WHERE campaign_id = ? AND client_id = ? AND conversation_id = ?", [row.id, target, context.id]);
             if (Number(removed.affectedRows) !== 1) failErasure("ERASURE_CAMPAIGN");
-            if (remaining.count === 0) await connection.query("DELETE FROM broadcast_campaigns WHERE id = ?", [row.id]);
+            if (remaining.count === 0) {
+              await connection.query("UPDATE announcements SET campaign_id = NULL WHERE campaign_id = ?", [row.id]);
+              await connection.query("DELETE FROM broadcast_campaigns WHERE id = ?", [row.id]);
+            }
             else {
               const next = { ...payload, audience: { ...payload.audience, count: remaining.count, digest: remaining.digest() } };
               const status = !terminal(row) && !pending ? "completed" : row.status;
@@ -122,7 +125,10 @@ export function createErasureStore({ pool, database, capacity, broadcastKey }) {
             // An old create retry now conflicts rather than recreating a removed recipient.
             const remaining = recipients.filter(r => !bytes(r.client_id).equals(target));
             await connection.query("DELETE FROM broadcast_recipients WHERE campaign_id = ? AND client_id = ? AND conversation_id = ?", [row.id, target, context.id]);
-            if (!remaining.length) await connection.query("DELETE FROM broadcast_campaigns WHERE id = ?", [row.id]);
+            if (!remaining.length) {
+              await connection.query("UPDATE announcements SET campaign_id = NULL WHERE campaign_id = ?", [row.id]);
+              await connection.query("DELETE FROM broadcast_campaigns WHERE id = ?", [row.id]);
+            }
             else {
               const next = { ...payload, conversationIds: remaining.map(r => hex(r.conversation_id)) };
               const status = !terminal(row) && remaining.every(r => !["pending", "sending"].includes(r.state)) ? "completed" : row.status;

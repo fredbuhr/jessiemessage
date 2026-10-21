@@ -1,0 +1,95 @@
+{
+  "version": "1.4.1",
+  "status": "local_verified_reviewed_own_pr_main_ci_pending",
+  "branch": "feat/announcements-compat-141",
+  "source": null,
+  "tree": null,
+  "results": {
+    "implementationReported": true,
+    "codeQualified": false,
+    "releasePublished": false,
+    "deliveryComplete": false
+  },
+  "requirements": {
+    "schemaMigrations": 32,
+    "applicationTables": 31,
+    "tablesIncludingLedger": 32,
+    "foreignKeys": 44,
+    "announcementChecks": 13,
+    "normalRuntimeAnnouncementsEnabled": false,
+    "largeBroadcastsEnabled": true,
+    "newDependencies": false,
+    "newKeys": false,
+    "newWorker": false,
+    "existingBroadcastPayloadVersion": 2
+  },
+  "local": {
+    "full": {
+      "command": "npm test with workspace TMPDIR",
+      "node": "v24.19.0",
+      "total": 3300,
+      "passed": 3083,
+      "failed": 0,
+      "skipped": 217,
+      "durationMs": 23977.837963,
+      "nativeMariaDbQualified": false,
+      "chromeQualified": false
+    },
+    "build": {
+      "passed": true,
+      "syntaxSources": 605,
+      "offlineWorkbench": true
+    },
+    "independentStaticReview": "no_blocking_findings",
+    "initialFullAttempt": {
+      "total": 3299,
+      "passed": 3079,
+      "failed": 3,
+      "skipped": 217,
+      "durationMs": 23445.575812,
+      "failures": [
+        "erasure-schema current fixture expected42 instead of44 (2cases)",
+        "notification backup fixture expected8 projections instead of9"
+      ],
+      "productGuardsChanged": false
+    },
+    "subsequentTargetedFix": {
+      "files": [
+        "tests/erasure-schema.test.mjs",
+        "tests/backup-notifications.test.mjs"
+      ],
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "qualification": {
+    "nativeAnnouncementSubcases": 9,
+    "chromeAnnouncementTests": 5,
+    "chromeContexts": 10,
+    "ownPrCi": null,
+    "ownMainCi": null
+  },
+  "publication": null,
+  "hosting": {
+    "activeVersion": "1.4.0",
+    "activeSource": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+    "activeNode": "v24.22.0",
+    "activeStartedAtDisplay": "21/10/2026 15:31:41",
+    "schemaMigrations": 31,
+    "currentRollbackRelease": "1.3.4",
+    "activeMetadataReceipt": "release140_metadata_recorded",
+    "preparationReported": false,
+    "migration32Confirmed": false,
+    "release150ActivationConfirmed": false,
+    "directPrivateToolObservation": false
+  },
+  "notAttested": [
+    "own_native_mariadb_and_chrome_ci",
+    "release141_publication",
+    "release150_publication",
+    "hosted_preparation_migration_and_activation",
+    "physical_phone_and_real_host_capacity",
+    "current_pc_or_backup_delivery"
+  ]
+}

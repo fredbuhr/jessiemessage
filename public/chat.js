@@ -34,6 +34,7 @@ let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersi
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
 let profileUI = null; let profileMount = null; let profileCapability = null;
+let announcementUI = null; let announcementMount = null; let announcementCapability = null; let announcementHost = null;
 const avatarContainers = new Map(); const avatarVersions = new Map(); const avatarPaths = new Map();
 let emojiContext = null;
 let emojiCategory = "all";
@@ -277,6 +278,31 @@ async function mountProfile() {
     if (fresh(ticket, true) && ready && visible()) el("open-profile").hidden = true;
   } finally { if (profileMount === mounting) profileMount = null; }
 }
+async function mountAnnouncements() {
+  if (announcementCapability?.enabled !== true || !ready || !visible() || !sessionOwner || loggingOut) return;
+  if (role === "admin") {
+    if (!document.getElementById("announcements-nav")) {
+      const link = document.createElement("a"); link.id = "announcements-nav"; link.href = "/admin/announcements"; ui.text(link, "Annonces");
+      document.getElementById("readiness-nav")?.append(link);
+    }
+    return;
+  }
+  if (announcementUI) { void announcementUI.refresh(true); return; }
+  if (announcementMount) return;
+  const owner = sessionOwner, lifetime = generation, ticket = snapshot(), mounting = {}; announcementMount = mounting;
+  try {
+    const { createAnnouncementBanner } = await import("/announcement-banner.js");
+    if (announcementMount !== mounting || !fresh(ticket, true) || !ready || !visible() || !sameOwner(owner, sessionOwner) || loggingOut) return;
+    announcementHost = document.createElement("div"); announcementHost.id = "announcement-host";
+    document.querySelector(".chat-head").after(announcementHost);
+    announcementUI = createAnnouncementBanner({ host: announcementHost, menuParent: el("conversation-actions"), request, ui,
+      getReturnFocus: menuReturnFocus,
+      isCurrent: () => generation === lifetime && sameOwner(owner, sessionOwner) && ready && visible() && !el("workspace").hidden && !loggingOut,
+      onError: error => { if (error.status === 401 || error.status === 403) void handleError(error); } });
+    void announcementUI.refresh(true);
+  } catch { /* An unavailable optional banner must not interrupt messages. */ }
+  finally { if (announcementMount === mounting) announcementMount = null; }
+}
 function mountNotificationSettings() {
   if (notificationsPanel || !ready || !sessionOwner || !visible() || !globalThis.JessieNotifications) return;
   const ticket = snapshot(), owner = { id: sessionOwner.id, csrf: sessionOwner.csrf };
@@ -290,6 +316,7 @@ function clearPrivate() {
   quickReplyLanguage = null;
   emojiSkinTone = "default";
   profileUI?.destroy(); profileUI = null; profileMount = null; profileCapability = null;
+  announcementUI?.destroy(); announcementUI = null; announcementMount = null; announcementCapability = null; announcementHost?.remove(); announcementHost = null;
   avatarVersions.clear(); avatarPaths.clear(); el("open-profile").hidden = true;
   clearNotificationSettings();
   cancelConfirmation(); stopReconnect(); resumeTask = null; retryConnection(false);
@@ -340,7 +367,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {
@@ -1195,6 +1222,7 @@ async function poll() {
     if (Date.now() - sessionCheckedAt > 60000 && !await refreshAndContinue()) return;
     if (role === "admin" && Date.now() - lastInboxRefresh >= 30000) await loadInbox(false, true);
     const state = currentState(); if (state) catchup = await fetchEvents(state);
+    void announcementUI?.refresh();
     retryDelay = 3000; notice("");
   } catch (error) { if (!error.stale) { retryDelay = Math.min(30000, retryDelay * 2); await handleError(error, currentState()); } }
   finally { if (cycle === pollEpoch) { cycleRunning = false; if (fresh(ticket)) schedulePolling(catchup ? 300 : retryDelay); } }
@@ -1556,6 +1584,7 @@ document.addEventListener("visibilitychange", () => {
     closeEmojis();
     profileMount = null;
     profileUI?.suspend();
+    announcementUI?.suspend(); announcementMount = null;
     clearNotificationSettings();
     cancelConfirmation(); stopReconnect(); resumeTask = null; clearMessageAnnouncement(); stopPolling(); el("workspace").hidden = true; visibilityGeneration += 1; pollEpoch += 1; cycleRunning = false; eventRequests.clear(); abortRequests(); clearImages(); crm?.suspend(); conversationDownload?.suspend();
     const state = currentState(); if (state?.pending?.status === "sending") retrySend(state);
@@ -1584,6 +1613,7 @@ async function start({ session = null } = {}) {
       const capability = await request(`${chatBase}/capabilities`, { account: true });
       if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
       profileCapability = capability.profile?.enabled === true ? capability.profile : null;
+      announcementCapability = capability.announcements?.enabled === true ? capability.announcements : null;
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       if (role === "admin" && !document.getElementById("readiness-nav")) {
         const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; ui.attr(nav, "aria-label", "Administration");
@@ -1608,7 +1638,7 @@ async function start({ session = null } = {}) {
       conversationDownloadCapability = capability.conversationExport;
       await mountConversationDownload(conversationDownloadCapability);
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
-      mountNotificationSettings(); void refreshBroadcastAccess(); scheduleRead(); schedulePolling();
+      mountNotificationSettings(); void refreshBroadcastAccess(); void mountAnnouncements(); scheduleRead(); schedulePolling();
       await openNotification();
     } catch (error) {
       if (error.stale || !fresh(task.ticket, true)) return;

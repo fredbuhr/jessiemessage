@@ -398,6 +398,59 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
         return operation(connection, { ...context, now }, append, campaign, recipient, refresh);
       });
   }
+  // Trusted server primitive: the caller owns the existing admin transaction.
+  // Announcement creation uses it so the banner and queue cannot commit apart.
+  async function createAudienceInTransaction(connection, context, { audience, campaign, snapshot, verifyPreview,
+    availableAt = context.now, expiresAt = context.now + 7 * 86400000 }) {
+    audience = scope(audience); bytes(campaign?.id); bytes(campaign?.clientCampaignId); bytes(campaign?.requestFingerprint, 32);
+    if (campaign.mediaId !== null) bytes(campaign.mediaId);
+    if (typeof campaign.allowRepeatMedia !== "boolean" || typeof campaign.payloadEncrypted !== "string"
+      || campaign.payloadEncrypted.length < 1 || campaign.payloadEncrypted.length > 32000 || /[^\x20-\x7e]/.test(campaign.payloadEncrypted)
+      || typeof campaign.recipientProof !== "function" || typeof verifyPreview !== "function"
+      || !snapshot || !Number.isSafeInteger(snapshot.count) || snapshot.count < 0 || !/^[a-f0-9]{64}$/.test(snapshot.digest)
+      || !Number.isSafeInteger(snapshot.repeatCount) || snapshot.repeatCount < 0 || snapshot.repeatCount > snapshot.count) input();
+    if (typeof connection?.query !== "function" || !context.actor || context.actor.role !== "admin") input();
+    instant(availableAt); instant(expiresAt);
+    if (availableAt < context.now || expiresAt <= availableAt || expiresAt > context.now + 7 * 86400000) input();
+    const previous = (await connection.query("SELECT * FROM broadcast_campaigns WHERE admin_id = ? AND client_campaign_id = ? FOR UPDATE", [context.actor.id, campaign.clientCampaignId]))[0];
+    if (previous) {
+      if (!timingSafeEqual(previous.request_fingerprint, campaign.requestFingerprint)) fail("BROADCAST_CONFLICT");
+      return { campaign: await rawCampaign(connection, previous), duplicate: true };
+    }
+    try { verifyPreview(currentTime(context.now)); } catch { fail("BROADCAST_CONFLICT"); }
+    if (snapshot.count < 1) fail("BROADCAST_RECIPIENTS");
+    if (!campaign.allowRepeatMedia && snapshot.repeatCount > 0) fail("BROADCAST_REPEAT");
+    const liveCount = count((await connection.query("SELECT COUNT(*) AS value FROM broadcast_campaigns WHERE admin_id = ? AND status IN ('queued', 'running')", [context.actor.id]))[0].value);
+    if (liveCount >= 10) fail("BROADCAST_LIMIT");
+    uint32(context.mfaVersion);
+    await connection.query(`INSERT INTO broadcast_campaigns (id, admin_id, client_campaign_id, mfa_version, payload_encrypted,
+      request_fingerprint, media_id, allow_repeat_media, created_at, updated_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [campaign.id, context.actor.id, campaign.clientCampaignId, context.mfaVersion, campaign.payloadEncrypted, campaign.requestFingerprint,
+        campaign.mediaId, campaign.allowRepeatMedia ? 1 : 0, sqlDate(context.now), sqlDate(context.now), sqlDate(expiresAt)]);
+    const result = await walkAudience(connection, context, audience, campaign.mediaId, async (recipients) => {
+      const values = [], parameters = [];
+      for (const target of recipients) {
+        const messageId = randomBytes(16), proof = campaign.recipientProof({ campaignId: campaign.id, adminId: context.actor.id,
+          conversationId: target.conversationId, clientId: target.client.id, messageId }); bytes(proof);
+        values.push("(?, ?, ?, ?, ?, ?, ?)"); parameters.push(campaign.id, target.conversationId, target.client.id, messageId, proof, sqlDate(availableAt), sqlDate(context.now));
+      }
+      await connection.query(`INSERT INTO broadcast_recipients (campaign_id, conversation_id, client_id, proposed_message_id, client_message_id,
+        available_at, created_at) VALUES ${values.join(", ")}`, parameters);
+    });
+    try { verifyPreview(currentTime(context.now)); } catch { fail("BROADCAST_CONFLICT"); }
+    if (result.eligibleCount !== snapshot.count || result.digest !== snapshot.digest || result.repeatCount !== snapshot.repeatCount) fail("BROADCAST_CONFLICT");
+    return { campaign: await rawCampaign(connection, await campaignRow(connection, campaign.id, context.actor.id)), duplicate: false };
+  }
+  async function cancelInTransaction(connection, context, campaignId, now = context.now) {
+    bytes(campaignId); instant(now);
+    const row = await campaignRow(connection, campaignId, context.actor.id);
+    if (live(row)) {
+      await connection.query(`UPDATE broadcast_recipients SET state = 'cancelled', reason = 'cancelled', lease_token = NULL, lease_until = NULL
+        WHERE campaign_id = ? AND state IN ('pending', 'sending')`, [campaignId]);
+      await connection.query("UPDATE broadcast_campaigns SET status = 'cancelled', updated_at = GREATEST(updated_at, ?) WHERE id = ?", [sqlDate(now), campaignId]);
+    }
+    return rawCampaign(connection, await campaignRow(connection, campaignId, context.actor.id));
+  }
   return Object.freeze({
     assertSchema: () => assertBroadcastSchema(pool),
     async preview({ tokenHash, now, conversationIds, mediaId = null }) {
@@ -443,45 +496,10 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       audience = scope(audience); if (mediaId !== null) bytes(mediaId);
       return withAdmin({ tokenHash, now }, (connection, context) => walkAudience(connection, context, audience, mediaId));
     },
-    async createAudience({ tokenHash, now, audience, campaign, snapshot, verifyPreview }) {
-      audience = scope(audience); bytes(campaign?.id); bytes(campaign?.clientCampaignId); bytes(campaign?.requestFingerprint, 32);
-      if (campaign.mediaId !== null) bytes(campaign.mediaId);
-      if (typeof campaign.allowRepeatMedia !== "boolean" || typeof campaign.payloadEncrypted !== "string"
-        || campaign.payloadEncrypted.length < 1 || campaign.payloadEncrypted.length > 32000 || /[^\x20-\x7e]/.test(campaign.payloadEncrypted)
-        || typeof campaign.recipientProof !== "function" || typeof verifyPreview !== "function"
-        || !snapshot || !Number.isSafeInteger(snapshot.count) || snapshot.count < 0 || !/^[a-f0-9]{64}$/.test(snapshot.digest)
-        || !Number.isSafeInteger(snapshot.repeatCount) || snapshot.repeatCount < 0 || snapshot.repeatCount > snapshot.count) input();
-      if (now + 7 * 86400000 > 253402300799999) input();
-      return withAdmin({ tokenHash, now }, async (connection, context) => {
-        const previous = (await connection.query("SELECT * FROM broadcast_campaigns WHERE admin_id = ? AND client_campaign_id = ? FOR UPDATE", [context.actor.id, campaign.clientCampaignId]))[0];
-        if (previous) {
-          if (!timingSafeEqual(previous.request_fingerprint, campaign.requestFingerprint)) fail("BROADCAST_CONFLICT");
-          return { campaign: await rawCampaign(connection, previous), duplicate: true };
-        }
-        try { verifyPreview(currentTime(context.now)); } catch { fail("BROADCAST_CONFLICT"); }
-        if (snapshot.count < 1) fail("BROADCAST_RECIPIENTS");
-        if (!campaign.allowRepeatMedia && snapshot.repeatCount > 0) fail("BROADCAST_REPEAT");
-        const liveCount = count((await connection.query("SELECT COUNT(*) AS value FROM broadcast_campaigns WHERE admin_id = ? AND status IN ('queued', 'running')", [context.actor.id]))[0].value);
-        if (liveCount >= 10) fail("BROADCAST_LIMIT");
-        uint32(context.mfaVersion);
-        await connection.query(`INSERT INTO broadcast_campaigns (id, admin_id, client_campaign_id, mfa_version, payload_encrypted,
-          request_fingerprint, media_id, allow_repeat_media, created_at, updated_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [campaign.id, context.actor.id, campaign.clientCampaignId, context.mfaVersion, campaign.payloadEncrypted, campaign.requestFingerprint,
-            campaign.mediaId, campaign.allowRepeatMedia ? 1 : 0, sqlDate(context.now), sqlDate(context.now), sqlDate(context.now + 7 * 86400000)]);
-        const result = await walkAudience(connection, context, audience, campaign.mediaId, async (recipients) => {
-          const values = [], parameters = [];
-          for (const target of recipients) {
-            const messageId = randomBytes(16), proof = campaign.recipientProof({ campaignId: campaign.id, adminId: context.actor.id,
-              conversationId: target.conversationId, clientId: target.client.id, messageId }); bytes(proof);
-            values.push("(?, ?, ?, ?, ?, ?, ?)"); parameters.push(campaign.id, target.conversationId, target.client.id, messageId, proof, sqlDate(context.now), sqlDate(context.now));
-          }
-          await connection.query(`INSERT INTO broadcast_recipients (campaign_id, conversation_id, client_id, proposed_message_id, client_message_id,
-            available_at, created_at) VALUES ${values.join(", ")}`, parameters);
-        });
-        try { verifyPreview(currentTime(context.now)); } catch { fail("BROADCAST_CONFLICT"); }
-        if (result.eligibleCount !== snapshot.count || result.digest !== snapshot.digest || result.repeatCount !== snapshot.repeatCount) fail("BROADCAST_CONFLICT");
-        return { campaign: await rawCampaign(connection, await campaignRow(connection, campaign.id, context.actor.id)), duplicate: false };
-      });
+    createAudienceInTransaction,
+    cancelInTransaction,
+    async createAudience({ tokenHash, now, ...value }) {
+      return withAdmin({ tokenHash, now }, (connection, context) => createAudienceInTransaction(connection, context, value));
     },
     async summary({ tokenHash, now, campaignId }) {
       bytes(campaignId);
@@ -534,15 +552,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
     },
     async cancel({ tokenHash, now, campaignId }) {
       bytes(campaignId);
-      return withAdmin({ tokenHash, now }, async (connection, context) => {
-        const row = await campaignRow(connection, campaignId, context.actor.id);
-        if (live(row)) {
-          await connection.query(`UPDATE broadcast_recipients SET state = 'cancelled', reason = 'cancelled', lease_token = NULL, lease_until = NULL
-            WHERE campaign_id = ? AND state IN ('pending', 'sending')`, [campaignId]);
-          await connection.query("UPDATE broadcast_campaigns SET status = 'cancelled', updated_at = GREATEST(updated_at, ?) WHERE id = ?", [sqlDate(now), campaignId]);
-        }
-        return rawCampaign(connection, await campaignRow(connection, campaignId, context.actor.id));
-      });
+      return withAdmin({ tokenHash, now }, (connection, context) => cancelInTransaction(connection, context, campaignId, now));
     },
     async claim({ now, leaseMilliseconds = 120000 }) {
       instant(now);
@@ -622,7 +632,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
         // Re-read after every potentially waiting media query, immediately
         // before the ordinary append. Its owner/conversation locks are held.
         now = await refresh(); if (now === null) return false;
-        const sent = await append(message);
+        const sent = await append({ ...message, notificationExpiresAt: timestamp(campaign.expires_at) });
         if (!sent.message.id.equals(recipient.proposed_message_id)) state();
         await connection.query(`UPDATE broadcast_recipients SET state = 'delivered', reason = NULL, delivered_message_id = ?, delivered_at = ?,
           lease_token = NULL, lease_until = NULL WHERE campaign_id = ? AND conversation_id = ?`, [sent.message.id, sqlDate(now), campaign.id, job.conversationId]);

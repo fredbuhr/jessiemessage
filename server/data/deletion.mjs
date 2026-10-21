@@ -54,7 +54,7 @@ function columnList(value) {
 }
 function schema(migrations) {
   validateMigrationPlan(migrations);
-  if (migrations.length !== 31 || createdMigrationTables(migrations).length !== TABLES.size || TABLES.size !== 30) fail();
+  if (migrations.length !== 32 || createdMigrationTables(migrations).length !== TABLES.size || TABLES.size !== 31) fail();
   const tables = new Map(), foreignKeys = [], constraintNames = new Set();
   for (const migration of migrations) {
     const sql = structuralSql(migration.sql), create = /^\s*CREATE\s+TABLE\s+([a-z][a-z0-9_]*)\s*\(/i.exec(sql);

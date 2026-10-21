@@ -7,9 +7,10 @@ import { decryptMessageBody, messageFingerprint, validateMessageBody } from "../
 import { openNotes } from "../crm/crypto.mjs";
 import { openPayload, campaignFingerprint, createAudienceDigest, verifyRecipientProof } from "../broadcast/crypto.mjs";
 import { openSubscription, endpointDigest } from "../notifications/crypto.mjs";
+import { openAnnouncement } from "../announcements/crypto.mjs";
 import { createBackupCryptoStore } from "./crypto-store.mjs";
 
-const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "media"];
+const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "announcements", "media"];
 const NOTIFICATION_PURPOSES = ["notifications", "notificationJobs"];
 const KEY_NAMES = ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey"];
 const TEXT_PURPOSES = ["mfa", "mail", "messages"];
@@ -17,6 +18,7 @@ const TEXT_INACTIVE_TABLES = [
   ["reset", ["client_password_resets", "password_reset_outbox"]],
   ["crm", ["crm_profiles", "crm_labels", "crm_memberships"]],
   ["broadcast", ["broadcast_preferences", "broadcast_campaigns", "broadcast_recipients"]],
+  ["announcements", ["announcements"]],
   ["media", ["media_assets", "message_media", "media_storage_state", "media_storage_objects"]],
   ["notifications", ["push_subscriptions", "push_outbox"]],
 ];
@@ -86,7 +88,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
   const notifications = crm || ["photos-notify", "photos-notify-recovery", "full-notify"].includes(profile);
   const recovery = crm || profile === "photos-notify-recovery";
   const report = { complete: true, healthy: false,
-    counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, broadcast: 0, broadcastRecipients: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0 }, issues: [] };
+    counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0 }, issues: [] };
   let secrets, currentPurpose = "verification", maxIssues = 100;
   function issue(purpose, code) {
     if (report.issues.length >= maxIssues) stop("issue_limit");
@@ -113,7 +115,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
       let connection;
       try {
         checkSignal(); connection = await pool.getConnection(); checkSignal();
-        for (const [purpose, tables] of TEXT_INACTIVE_TABLES.filter(([purpose]) => (textOnly || purpose !== "media") && (!notifications || purpose !== "notifications") && (!recovery || purpose !== "reset") && (!crm || purpose !== "crm") && (!broadcast || purpose !== "broadcast"))) for (const table of tables) {
+        for (const [purpose, tables] of TEXT_INACTIVE_TABLES.filter(([purpose]) => (textOnly || purpose !== "media") && (!notifications || purpose !== "notifications") && (!recovery || purpose !== "reset") && (!crm || purpose !== "crm") && (!broadcast || !["broadcast", "announcements"].includes(purpose)))) for (const table of tables) {
           currentPurpose = purpose; checkSignal();
           // Fixed table allowlist, EXISTS stops at the first row. Checking the
           // underlying tables also catches deleted assets and empty CRM notes.
@@ -225,6 +227,23 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
         }
         return;
       }
+      if (purpose === "announcements") {
+        const adminId = bytes(row.adminId, 16);
+        if (row.adminRole !== "admin" || row.userRole !== "admin" || typeof row.sendPrivateMessage !== "boolean"
+          || !/^[1-9][0-9]{0,19}$/.test(row.revision) || BigInt(row.revision) > 18446744073709551615n
+          || [row.startsAt, row.expiresAt, row.createdAt, row.updatedAt, ...(row.removedAt === null ? [] : [row.removedAt])]
+            .some(value => !Number.isSafeInteger(value) || value < 0 || value > 253402300799999)
+          || row.expiresAt <= row.startsAt || row.updatedAt < row.createdAt || row.removedAt !== null && row.removedAt < row.createdAt) invalid();
+        if (row.campaignId === null) { if (row.campaignAdminId !== null) throw new RowFailure("binding_mismatch"); }
+        else {
+          bytes(row.campaignId, 16);
+          if (!row.sendPrivateMessage || !adminId.equals(bytes(row.campaignAdminId, 16))) throw new RowFailure("binding_mismatch");
+        }
+        text(row.encrypted, 8192);
+        openAnnouncement(row.encrypted, secrets.messageKey, { adminId, id: row.id, revision: row.revision,
+          startsAt: row.startsAt, expiresAt: row.expiresAt, sendPrivateMessage: row.sendPrivateMessage });
+        return;
+      }
       const assetId = row.id, storageKey = bytes(row.storageKey, 32);
       bytes(row.ownerId, 16); bytes(row.digest, 32);
       if (row.journalState !== "registered" || !bytes(row.journalAssetId, 16).equals(assetId) || !bytes(row.journalOwnerId, 16).equals(row.ownerId)) invalid();
@@ -241,7 +260,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
         } finally { if (Buffer.isBuffer(plaintext)) plaintext.fill(0); }
       }
     }
-    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, ...(recovery ? ["reset"] : []), ...(crm ? ["crm"] : []), ...(broadcast ? ["broadcast"] : []), "media", ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
+    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, ...(recovery ? ["reset"] : []), ...(crm ? ["crm"] : []), ...(broadcast ? ["broadcast", "announcements"] : []), "media", ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
     for (const purpose of purposes) {
       currentPurpose = purpose;
       let afterId = null;

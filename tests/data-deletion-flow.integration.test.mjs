@@ -23,7 +23,7 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 31);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 32);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool;
   async function cleanup() {
@@ -213,7 +213,7 @@ test("offline deletion facts and operator plan inspect real reference graphs wit
             makeStorage() { assert.fail("deletion planning never opens media storage"); }, exportContent() { assert.fail("deletion planning never decrypts or exports content"); },
             outputStream: { write(value) { stdout.push(value); } } });
         assert.deepEqual(Object.keys(result).sort(), ["command", "status", "inventoryCategories", "observations", "affectedCategories", "blockers"].sort());
-        assert.equal(result.command, "plan"); assert.equal(result.status, "complete"); assert.equal(result.inventoryCategories, 30); assert.equal(result.observations, 24);
+        assert.equal(result.command, "plan"); assert.equal(result.status, "complete"); assert.equal(result.inventoryCategories, 31); assert.equal(result.observations, 24);
         assert.ok(result.blockers > 0); assert.equal(poolClosures, 1); assert.deepEqual(stdout, [JSON.stringify(result) + "\n"]);
         assert.doesNotMatch(stdout.join(""), /example\.invalid|private-|ciphertext|payload|password|token|\/workspace|[a-f0-9]{32}/);
         const manifest = JSON.parse(await readFile(path.join(output, "COMPLETE.json"), "utf8"));

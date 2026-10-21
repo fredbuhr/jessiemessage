@@ -37,7 +37,7 @@ const neutral = code => error => {
   assert.equal(error.cause, undefined); return true;
 };
 
-async function fixture(t, { application = false, broadcast = false, crm = broadcast, recovery = crm, envelopeRecovery = recovery, schemaCount = 31 } = {}) {
+async function fixture(t, { application = false, broadcast = false, crm = broadcast, recovery = crm, envelopeRecovery = recovery, schemaCount = 32 } = {}) {
   const origin = recovery ? "https://jessiemessage.com" : "https://recette.jessiemessage.com";
   await mkdir(base, { recursive: true, mode: 0o700 });
   const directory = await mkdtemp(join(base, "private-checkpoint-verify-")); await chmod(directory, 0o700);
@@ -148,19 +148,21 @@ async function fixture(t, { application = false, broadcast = false, crm = broadc
 test("private checkpoint check verifies real gzip, five-key manifest and copied photo files without password or SQL", async t => {
   const f = await fixture(t), report = await run({ ...f.selected, command: "check" }, f.dependencies);
   assert.equal(report.status, "ready_for_input"); assert.equal(report.databaseConnected, false);
-  assert.equal(report.tables, 31); assert.equal(report.migrations, 31); assert.equal(report.checkpointFilesMatched, true);
+  assert.equal(report.tables, 32); assert.equal(report.migrations, 32); assert.equal(report.checkpointFilesMatched, true);
   assert.equal(report.independentMediaDirectory, true); assert.equal(report.capacityRebound, false);
   assert.deepEqual(f.events, ["client"]); assert.deepEqual(f.connected, []);
   assert.equal(f.environments[0].JESSIEMESSAGE_RUNTIME_DB_PASSWORD, ""); assert.equal(f.environments[0].JESSIEMESSAGE_VAPID_PRIVATE_KEY, "");
 });
 
-test("historical schema30 application checks preserve their identity and refuse current clone verification before password or SQL", async t => {
-  const f = await fixture(t, { application: true, schemaCount: 30 });
-  const report = await run({ ...f.selected, command: "check-application" }, f.dependencies);
-  assert.equal(report.tables, 30); assert.equal(report.migrations, 30); assert.equal(report.coverage.tables, 30);
-  assert.equal(report.databaseConnected, false); assert.deepEqual(f.events, ["client"]);
-  await assert.rejects(run(f.selected, f.dependencies), neutral("SCHEMA"));
-  assert.deepEqual(f.events, ["client", "client"]); assert.deepEqual(f.connected, []);
+test("historical schema30/31 application checks preserve their identity and refuse current clone verification before password or SQL", async t => {
+  for (const schemaCount of [30, 31]) {
+    const f = await fixture(t, { application: true, schemaCount });
+    const report = await run({ ...f.selected, command: "check-application" }, f.dependencies);
+    assert.equal(report.tables, schemaCount); assert.equal(report.migrations, schemaCount); assert.equal(report.coverage.tables, schemaCount);
+    assert.equal(report.databaseConnected, false); assert.deepEqual(f.events, ["client"]);
+    await assert.rejects(run(f.selected, f.dependencies), neutral("SCHEMA"));
+    assert.deepEqual(f.events, ["client", "client"]); assert.deepEqual(f.connected, []);
+  }
 });
 
 test("operational receipts authenticate their capsule before password input and preserve the separate restoration prerequisite", async t => {
@@ -285,7 +287,7 @@ test("recovery snapshot comparison preserves an enabled or disabled source flag 
 test("a read-only TLS clone verification authenticates all five domains and notifications, then rolls back and wipes secrets", async t => {
   const f = await fixture(t), before = await readFile(join(f.mediaRoot, f.receipt.media.files[0].name)), report = await run(f.selected, f.dependencies);
   assert.equal(report.status, "verified"); assert.equal(report.databaseConnected, true);
-  assert.deepEqual(report.counts, { rows: 6, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, broadcast: 0, broadcastRecipients: 0, media: 1, mediaFiles: 2, notifications: 1, notificationJobs: 1 });
+  assert.deepEqual(report.counts, { rows: 6, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 1, mediaFiles: 2, notifications: 1, notificationJobs: 1 });
   for (const field of ["httpStarted", "smtpStarted", "workersStarted", "capacityRebound"]) assert.equal(report[field], false);
   assert.deepEqual(f.events, ["client", "password", "dump", "connect", "rollback", "end"]);
   assert.equal(f.connected.length, 1); assert.equal(f.connected[0].JESSIEMESSAGE_DB_PASSWORD, "");
@@ -451,7 +453,7 @@ test("application clone verifies five domains and two exact table-only dumps wit
   assert.equal(report.version, 2); assert.equal(report.profile, "messaging-photos-notify-application");
   assert.deepEqual(report.coverage, APPLICATION_COVERAGE); assert.equal(report.completeDatabase, false);
   assert.deepEqual(report.counts, { rows: 6, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, broadcast: 0,
-    broadcastRecipients: 0, media: 1, mediaFiles: 2, notifications: 1, notificationJobs: 1 });
+    broadcastRecipients: 0, announcements: 0, media: 1, mediaFiles: 2, notifications: 1, notificationJobs: 1 });
   assert.equal(f.dumps.length, 2);
   for (const options of f.dumps) assert.deepEqual(options.tables, [...f.tables].sort());
   assert.notEqual(f.dumps[0].tables, f.dumps[1].tables);

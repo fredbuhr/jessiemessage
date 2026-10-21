@@ -38,11 +38,11 @@ test("real MariaDB migration and foundation constraints (synthetic disposable da
   try {
     await reset();
     await t.test("status is read-only on an empty schema; application is ordered and repeatable", async () => {
-      assert.deepEqual((await migrationStatus(connection, context)).map((item) => item.state), Array(31).fill("pending"));
+      assert.deepEqual((await migrationStatus(connection, context)).map((item) => item.state), Array(32).fill("pending"));
       assert.equal((await connection.query("SHOW TABLES")).length, 0);
-      assert.deepEqual(await applyMigrations(connection, context), { applied: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], unchanged: 0 });
-      assert.deepEqual(await applyMigrations(connection, context), { applied: [], unchanged: 31 });
-      assert.deepEqual((await migrationStatus(connection, context)).map((item) => item.state), Array(31).fill("applied"));
+      assert.deepEqual(await applyMigrations(connection, context), { applied: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32], unchanged: 0 });
+      assert.deepEqual(await applyMigrations(connection, context), { applied: [], unchanged: 32 });
+      assert.deepEqual((await migrationStatus(connection, context)).map((item) => item.state), Array(32).fill("applied"));
       const timezone = await connection.query("SELECT @@session.time_zone AS value");
       assert.equal(timezone[0].value, "+00:00");
     });
@@ -56,7 +56,7 @@ test("real MariaDB migration and foundation constraints (synthetic disposable da
         await connection.query("SELECT RELEASE_LOCK(?)", [lockName]);
         await competitor.end();
       }
-      assert.deepEqual(await applyMigrations(connection, context), { applied: [], unchanged: 31 });
+      assert.deepEqual(await applyMigrations(connection, context), { applied: [], unchanged: 32 });
     });
     await t.test("edited and removed applied migrations are rejected before new DDL", async () => {
       const changed = migrations.map((migration) => ({ ...migration }));
@@ -64,7 +64,7 @@ test("real MariaDB migration and foundation constraints (synthetic disposable da
       changed[0].checksum = checksumSql(changed[0].sql);
       await assert.rejects(applyMigrations(connection, { database, migrations: changed }), errorCode("CHECKSUM_DRIFT"));
       await assert.rejects(applyMigrations(connection, { database, migrations: migrations.slice(0, -1) }), errorCode("HISTORY_DIVERGED"));
-      assert.equal((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count, 31n);
+      assert.equal((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count, 32n);
     });
     await t.test("client activation requires verified email and manual approval without fabricating age assurance", async () => {
       const { client } = await seed();

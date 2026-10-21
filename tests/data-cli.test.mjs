@@ -75,9 +75,9 @@ test("administrator or mismatched target cannot allocate an output directory", a
 
 test("inventory writes scoped categories without private row fields and completes after snapshot and pool closure", async () => {
   const f = fixture(); const result = await main(args(), {}, f.dependencies);
-  assert.deepEqual(result, { command: "inventory", status: "complete", inventoryCategories: 30 });
+  assert.deepEqual(result, { command: "inventory", status: "complete", inventoryCategories: 31 });
   assert.equal(f.files.get("policy.json").automaticPurge, false);
-  assert.equal(f.files.get("inventory.json").categories.length, 30);
+  assert.equal(f.files.get("inventory.json").categories.length, 31);
   assert.equal(f.files.get("inventory.json").categories.find((item) => item.table === "admin_mfa").count, null);
   assert.doesNotMatch(JSON.stringify(f.files.get("inventory.json")), /private-marker|payload/);
   assert.ok(f.events.indexOf("snapshot-end") < f.events.indexOf("pool-end"));
@@ -138,11 +138,11 @@ test("deletion plan is a keyless private diagnostic, completed after the same sn
   const result = await main(args("plan"), {}, f.dependencies);
   const report = f.files.get("deletion-plan.json");
   assert.equal(report.simulationOnly, true); assert.equal(report.executable, false); assert.equal(report.retentionDecided, false);
-  assert.equal(report.categories.length, 30); assert.equal(report.observations.length, 24);
+  assert.equal(report.categories.length, 31); assert.equal(report.observations.length, 24);
   assert.equal(report.candidateOrder.every((entry) => entry.blocked && entry.proposedAction === "review"), true);
-  assert.deepEqual(result, { command: "plan", status: "complete", inventoryCategories: 30, observations: 24,
+  assert.deepEqual(result, { command: "plan", status: "complete", inventoryCategories: 31, observations: 24,
     affectedCategories: report.affectedCategories, blockers: report.blockers.length });
-  assert.deepEqual(f.files.get("COMPLETE.json"), { inventoryCategories: 30, observations: 24,
+  assert.deepEqual(f.files.get("COMPLETE.json"), { inventoryCategories: 31, observations: 24,
     affectedCategories: report.affectedCategories, blockers: report.blockers.length });
   assert.equal(f.files.has("account.json"), false); assert.equal(f.files.has("messages.jsonl"), false);
   assert.ok(f.events.indexOf("deletion-facts") < f.events.indexOf("snapshot-end"));

@@ -157,8 +157,9 @@ function mappedError(error) {
 }
 
 /** Routes exist only when the parent has explicitly enabled the chat feature. */
-export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false }) {
-  if (typeof profileEnabled !== "boolean" || typeof avatarsEnabled !== "boolean" || avatarsEnabled && !profileEnabled) throw new TypeError("Invalid profile capability");
+export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false, announcementsEnabled = false }) {
+  if (typeof profileEnabled !== "boolean" || typeof avatarsEnabled !== "boolean" || avatarsEnabled && !profileEnabled
+    || typeof announcementsEnabled !== "boolean") throw new TypeError("Invalid chat capability");
   const configuredOrigin = new URL(origin);
   if (configuredOrigin.protocol !== "https:" || configuredOrigin.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   for (const method of ["actor", "listConversations", "clientConversation", "messages", "events", "send", "markRead", "delete"]) {
@@ -201,7 +202,7 @@ export function createChatHandler(service, { origin, clientConversationExporter 
         reply(response, method, 200, await readFile(new URL("chat.html", publicRoot)), { "Content-Type": "text/html; charset=utf-8" });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes } } : {}) });
+        reply(response, method, 200, { enabled: true, ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes } } : {}) });
       } else if (route.kind === "list") {
         const options = query(url, ["afterId", "limit"], 50);
         const afterId = options.afterId ?? null;

@@ -13,6 +13,8 @@ import { getProcessRelease } from "./release.mjs";
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
 const PRIMARY_ORIGIN = "https://jessiemessage.com";
 const RECIPE_ORIGIN = "https://recette.jessiemessage.com";
+// Release gate: compatibility 1.4.1 reads schema 32; 1.5.0 offers announcement creation.
+const ANNOUNCEMENTS_ENABLED = false;
 
 const publicFiles = new Map([
   ["/", ["index.html", "text/html; charset=utf-8"]],
@@ -73,14 +75,14 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler,
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler,
   entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null,
   legacyHandlers = null, transitionHandler = null, parentGateway = false } = {}) {
   if (typeof parentGateway !== "boolean") throw new RequestOriginError();
   const requestOriginAllowed = requestOrigin === null ? null : createRequestOriginGuard(requestOrigin);
   let legacyOriginAllowed = null, legacyChain = null;
   if (legacyHandlers !== null) {
-    const names = ["authHandler", "accessHandler", "chatHandler", "mediaHandler", "profileHandler", "crmHandler", "resetHandler", "readinessHandler", "broadcastHandler", "notificationsHandler", "entryHandler"];
+    const names = ["authHandler", "accessHandler", "chatHandler", "mediaHandler", "profileHandler", "crmHandler", "resetHandler", "readinessHandler", "broadcastHandler", "announcementsHandler", "notificationsHandler", "entryHandler"];
     if (requestOrigin !== PRIMARY_ORIGIN || !legacyHandlers || Object.getPrototypeOf(legacyHandlers) !== Object.prototype
       || Object.getOwnPropertySymbols(legacyHandlers).length
       || Object.getOwnPropertyNames(legacyHandlers).some(name => !names.includes(name))
@@ -92,14 +94,15 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   if (transitionHandler !== null && (typeof transitionHandler !== "function" || legacyChain === null)) throw new RequestOriginError();
   if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
-  const privateHandlers = [closureHandler, privacyHandler, backupHandler, notificationsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, profileHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
+  const privateHandlers = [closureHandler, privacyHandler, backupHandler, notificationsHandler, announcementsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, profileHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
-  const adminPages = new Map([["/admin", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"],
+  const adminPages = new Map([["/admin", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"], ["/admin/announcements", "announcementsHandler"],
     ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"], ["/admin/privacy", "privacyHandler"], ["/admin/closures", "closureHandler"]]);
-  const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, readinessHandler, backupHandler, privacyHandler, closureHandler };
+  const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, announcementsHandler, readinessHandler, backupHandler, privacyHandler, closureHandler };
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
     "/admin/privacy", "/privacy.js", "/privacy.css", "/i18n-privacy.js", "/admin/closures", "/closures.js", "/closures.css", "/i18n-closures.js", "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
-    "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/client-archive.js", "/conversation-download.js", "/readiness.js", "/readiness-model.js", "/readiness.css"]);
+    "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/client-archive.js", "/conversation-download.js", "/readiness.js", "/readiness-model.js", "/readiness.css",
+    "/admin/announcements", "/announcements.js", "/announcements-model.js", "/announcements.css", "/announcement-banner.js", "/announcement-banner.css"]);
   let draining = false;
   let pendingRequests = 0;
   const requestWaiters = new Set();
@@ -244,7 +247,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
 
 export async function createConfiguredServer(env = process.env, options = {}) {
   if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
-    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "backupDirectory", "accountClosures", "parentGateway"].includes(name))
+    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "announcements", "backupDirectory", "accountClosures", "parentGateway"].includes(name))
     || Object.values(Object.getOwnPropertyDescriptors(options)).some(property => !Object.hasOwn(property, "value"))) throw new RequestOriginError();
   const requestOrigin = Object.hasOwn(options, "requestOrigin") ? options.requestOrigin : null;
   const clock = Object.hasOwn(options, "clock") ? options.clock : Date.now;
@@ -252,11 +255,13 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const recovery = Object.hasOwn(options, "recovery") ? options.recovery : false;
   const crm = Object.hasOwn(options, "crm") ? options.crm : false;
   const broadcast = Object.hasOwn(options, "broadcast") ? options.broadcast : false;
+  const announcements = Object.hasOwn(options, "announcements") ? options.announcements : broadcast && ANNOUNCEMENTS_ENABLED;
   const backupDirectory = Object.hasOwn(options, "backupDirectory") ? options.backupDirectory : undefined;
   const parentGateway = Object.hasOwn(options, "parentGateway") ? options.parentGateway : false;
   const accountClosures = Object.hasOwn(options, "accountClosures") ? options.accountClosures : false;
   if (typeof parentGateway !== "boolean" || parentGateway && requestOrigin !== PRIMARY_ORIGIN || typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof crm !== "boolean" || typeof clock !== "function"
-    || typeof broadcast !== "boolean" || broadcast && !crm || typeof accountClosures !== "boolean" || accountClosures && backupDirectory === undefined
+    || typeof broadcast !== "boolean" || broadcast && !crm || typeof announcements !== "boolean" || announcements && !broadcast
+    || typeof accountClosures !== "boolean" || accountClosures && backupDirectory === undefined
     || deviceTransition && requestOrigin !== PRIMARY_ORIGIN || recovery && !deviceTransition || crm && !recovery
     || backupDirectory !== undefined && (!broadcast || typeof backupDirectory !== "string" || !backupDirectory.startsWith("/")
       || backupDirectory === "/" || /[\\\x00-\x1f\x7f]/.test(backupDirectory) || backupDirectory.split("/").slice(1).some(part => !part || part === "." || part === ".."))) throw new RequestOriginError();
@@ -393,6 +398,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     }
     let mediaHandler, profileHandler;
     let broadcastHandler;
+    let announcementsHandler;
     let notificationsHandler;
     let broadcastWorker;
     if (chatConfig.enabled) {
@@ -485,7 +491,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         authStore: store, key: chatConfig.key, clock });
       profileHandler = createProfileHandler(profileService, { origin: chatConfig.origin });
       if (legacyHandlers) legacyHandlers.profileHandler = createProfileHandler(profileService, { origin: RECIPE_ORIGIN });
-      const profileCapabilities = { profileEnabled: true, avatarsEnabled: mediaConfig.enabled };
+      const profileCapabilities = { profileEnabled: true, avatarsEnabled: mediaConfig.enabled, announcementsEnabled: announcements };
       chatHandler = createChatHandler(chatService, { origin: chatConfig.origin, clientConversationExporter, ...profileCapabilities });
       if (legacyHandlers) legacyHandlers.chatHandler = createChatHandler(chatService, { origin: RECIPE_ORIGIN, clientConversationExporter, ...profileCapabilities });
       if (broadcastConfig.enabled) {
@@ -500,6 +506,16 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         broadcastHandler = createBroadcastHandler(broadcastService, { origin: chatConfig.origin, mediaEnabled: mediaConfig.enabled });
         if (legacyHandlers) legacyHandlers.broadcastHandler = createBroadcastHandler(broadcastService, { origin: RECIPE_ORIGIN, mediaEnabled: mediaConfig.enabled });
         broadcastWorker = createBroadcastWorker({ store: broadcastStore, authStore: store, key: chatConfig.key, clock, onState: observe("broadcasts") });
+        if (announcements) {
+          const [{ createAnnouncementsStore }, { createAnnouncementsService }, { createAnnouncementsHandler }] = await Promise.all([
+            import("./announcements/store.mjs"), import("./announcements/service.mjs"), import("./announcements/http.mjs")]);
+          const announcementsStore = createAnnouncementsStore({ pool, chatStore, broadcastStore, key: chatConfig.key, clock });
+          await announcementsStore.assertSchema();
+          const announcementsService = await createAnnouncementsService({ store: announcementsStore, broadcastService, chatService,
+            authService: service, authStore: store, key: chatConfig.key, clock });
+          announcementsHandler = createAnnouncementsHandler(announcementsService, { origin: chatConfig.origin });
+          if (legacyHandlers) legacyHandlers.announcementsHandler = createAnnouncementsHandler(announcementsService, { origin: RECIPE_ORIGIN });
+        }
       }
     }
     transport = await createVerificationTransport(accessConfig.mail);
@@ -510,7 +526,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       legacyHandlers.entryHandler = createEntryHandler({ adminSession: (token) => service.session(token),
         clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, clock });
     }
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin, parentGateway,
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin, parentGateway,
       legacyHandlers, transitionHandler,
       entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled, deviceTransition, clock }) });
     const workers = [];

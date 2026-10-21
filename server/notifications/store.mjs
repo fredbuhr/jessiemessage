@@ -64,13 +64,21 @@ export async function enqueueNotification(connection, context, message) {
   if (typeof connection?.query !== "function") fail("NOTIFICATIONS_STORE_INPUT");
   const { actor, admin, client, now } = context;
   roleValue(actor?.role); instant(now); bytes(message?.id);
+  // Scheduled announcements use ordinary message notifications, but a push
+  // waiting for a provider must not outlive the announcement's useful window.
+  let expiresAt = now + 86400000;
+  if (message.notificationExpiresAt !== undefined) {
+    instant(message.notificationExpiresAt);
+    if (message.notificationExpiresAt <= now) fail("NOTIFICATIONS_STORE_INPUT");
+    expiresAt = Math.min(expiresAt, message.notificationExpiresAt);
+  }
   const recipientId = bytes(actor.role === "admin" ? client?.id : admin?.id);
   const subscriptions = await connection.query("SELECT id, generation FROM push_subscriptions WHERE user_id = ? AND enabled = 1 ORDER BY id LIMIT 17", [recipientId]);
   if (!Array.isArray(subscriptions) || subscriptions.length > 16) fail();
   for (const row of subscriptions) {
     await connection.query(`INSERT INTO push_outbox (id, message_id, subscription_id, subscription_generation,
       status, available_at, created_at, expires_at) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)`,
-    [randomBytes(16), message.id, bytes(row.id), version(row.generation), sqlDate(now), sqlDate(now), sqlDate(now + 86400000)]);
+    [randomBytes(16), message.id, bytes(row.id), version(row.generation), sqlDate(now), sqlDate(now), sqlDate(expiresAt)]);
   }
 }
 

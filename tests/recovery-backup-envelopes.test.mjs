@@ -32,7 +32,7 @@ function input(spec) {
   return { profile: spec.profile, now: 1792240000000, keys: Object.fromEntries(keyNames(spec).map((name) => [name, randomBytes(32)])),
     identity: { databaseTag: "1".repeat(64), rootPathTag: "2".repeat(64), rootPhysicalTag: "3".repeat(64), rootFingerprint: "4".repeat(64), rootAncestors: ["5".repeat(64)] },
     snapshot: { version: spec.application ? 2 : 1, ...(spec.application ? { coverage: { ...APPLICATION_COVERAGE } } : {}),
-      schemaDigest: "7".repeat(64), coreDigest: "8".repeat(64), counts: { tables: 31, rows: 0 }, objects: [], assets: [] } };
+      schemaDigest: "7".repeat(64), coreDigest: "8".repeat(64), counts: { tables: 32, rows: 0 }, objects: [], assets: [] } };
 }
 async function fixture(t) {
   const base = fileURLToPath(new URL("../../audit/", import.meta.url)); await mkdir(base, { recursive: true, mode: 0o700 });
@@ -94,7 +94,7 @@ for (const spec of profiles) {
     const raw = await readFile(f.filename);
     const receipt = { format: "jessiemessage-private-checkpoint", version: spec.receiptVersion, profile: spec.profile,
       ...(spec.application ? { coverage: { ...APPLICATION_COVERAGE } } : {}), createdAt: value.now,
-      schema: { tables: 31, migrations: 31 },
+      schema: { tables: 32, migrations: 32 },
       sql: { file: "database.sql.gz", bytes: 120, sha256: "b".repeat(64), uncompressedBytes: 700, uncompressedSha256: "c".repeat(64) },
       manifest: { file: "manifest.json", sha256: createHash("sha256").update(raw).digest("hex") }, media: { files: [], bytes: 0 } };
     assert.deepEqual(await writeCheckpointReceipt(f.scope, receipt), receipt);
@@ -109,7 +109,7 @@ for (const spec of profiles) {
     const f = await fixture(t); await writeFile(f.filename, "synthetic", { mode: 0o600 });
     const receipt = { format: "jessiemessage-private-checkpoint", version: spec.receiptVersion, profile: spec.profile,
       ...(spec.application ? { coverage: { ...APPLICATION_COVERAGE } } : {}), createdAt: 1792240000000,
-      schema: { tables: 31, migrations: 31 }, sql: { file: "database.sql.gz", bytes: 120, sha256: "b".repeat(64), uncompressedBytes: 700, uncompressedSha256: "c".repeat(64) },
+      schema: { tables: 32, migrations: 32 }, sql: { file: "database.sql.gz", bytes: 120, sha256: "b".repeat(64), uncompressedBytes: 700, uncompressedSha256: "c".repeat(64) },
       manifest: { file: "manifest.json", sha256: createHash("sha256").update("synthetic").digest("hex") }, media: { files: [], bytes: 0 } };
     for (const change of [v => { v.version = spec.application ? 2 : 1; }, v => { v.profile = spec.legacyProfile; },
       v => { v.version = 99; }, v => { v.extra = true; }, v => { v.schema.tables = 29; },

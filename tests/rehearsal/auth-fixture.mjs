@@ -187,7 +187,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
   try {
     const migrations = await loadMigrations();
     validateMigrationPlan(migrations);
-    if (migrations.length !== 31) fail();
+    if (migrations.length !== 32) fail();
     const tables = createdMigrationTables(migrations);
     if (new Set(tables).size !== tables.length) fail();
     allowedTables = [...tables.reverse(), "schema_migrations"];
