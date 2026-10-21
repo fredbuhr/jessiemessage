@@ -144,9 +144,9 @@ test("CRM switching preserves raw names, label collisions, notes, inputs and sel
 
 test("broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft", async () => {
   let offline = false;
-  // Keep the two deadline/clock reads identical: a real millisecond between
-  // them legitimately schedules 29999ms, while this fixture checks exact 30000ms.
-  const now = 1792598400000;
+  // Advance time explicitly between steps; keep deadline/clock reads within
+  // each step identical so the retry's exact 30000ms assertion is deterministic.
+  let now = 1792598400000;
   const admin = { user: { id: id(1), role: "admin", pseudonym: "Jessie" }, csrf: "a".repeat(43), expiresAt: now + 180 * 86400000 };
   const h = harness({ now: () => now, respond: () => {
     if (offline) throw new TypeError("offline");
@@ -159,10 +159,13 @@ test("broadcast feature checks cannot postpone cookie renewal and offline recove
   // Repeated feature proofs re-arm the timer but keep the earlier cookie due
   // date. Even a server-side sliding expiry must not restart that five minutes.
   const firstDelay = [...h.timers.values()][0].delay;
+  now += 15000; admin.expiresAt += 15000;
   await h.run("tools.verifySession(model.broadcastTicket(tools.state))");
   assert.ok([...h.timers.values()].some((timer) => timer.delay <= firstDelay));
+  assert.ok([...h.timers.values()].some((timer) => timer.delay <= firstDelay - 15000));
   offline = true;
-  const sessionTimer = [...h.timers].find(([, timer]) => timer.delay <= 300000); h.timers.delete(sessionTimer[0]); sessionTimer[1].callback(); await flush();
+  const sessionTimer = [...h.timers].find(([, timer]) => timer.delay <= 300000);
+  h.timers.delete(sessionTimer[0]); now += sessionTimer[1].delay; sessionTimer[1].callback(); await flush();
   assert.equal(h.ids.get("broadcast-content").hidden, true); assert.equal(h.run("tools.state.draft.body"), "Brouillon privé");
   assert.ok([...h.timers.values()].some((timer) => timer.delay === 30000));
   offline = false; await h.online();
