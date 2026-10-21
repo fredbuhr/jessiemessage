@@ -4,15 +4,19 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 
 Les livraisons 1.0.0, 1.1.0 et 1.2.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
-## Demande prioritaire du 21 octobre — cible 1.3.0
+## Clôture de la livraison active 1.3.0
 
-[Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : compléter le catalogue Unicode, ajouter des doubles sens et proposer cinq carnations pour les gestes et personnages compatibles. Le choix s’insère au curseur sans envoi automatique ; recherche FR/EN, clavier, petit écran et limites de brouillon doivent être qualifiés. Code fusionné par la PR 113 et publié en v1.3.0 ; CI du commit exact 5/5 réussie. Préparation et précontrôle Infomaniak confirmés par reçu utilisateur ; activation, relevé d’identité et suivi opérateur restent à confirmer dans REPRISE. La production reste en 1.2.0. La redistribution d’une bibliothèque Flirtmoji n’est pas incluse sans droits spécifiques ; le partage individuel prévu par leur FAQ reste distinct.
+[Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : code qualifié, fusionné, publié et actif en 1.3.0, identité admin rapportée par l’utilisateur et disponibilité publique 4/4 conforme. **Seul l’alignement final des métadonnées opérateur attend son reçu SSH** ; le helper publié a réussi neuf tests synthétiques. Ne rejouer ni préparation, ni activation, ni Build ou redémarrage. [REPRISE](REPRISE.md) donne la prochaine commande exacte. La redistribution d’une bibliothèque Flirtmoji reste distincte de ce catalogue Unicode.
+
+## Correctif prioritaire après cette clôture — cible 1.3.1
+
+[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : une seule barre active avec avatar, nom, menu et retour administrateur si nécessaire ; Contact, Aide et export dans un menu discret ; composeur compact avec émojis et pièces jointes. Corriger la présentation, les menus, le focus et le partage de hauteur sans modifier le transport des messages, les droits ou la base. Qualifier les deux rôles en FR/EN, le clavier et les petits écrans, y compris une faible hauteur visible. **Planifié, non implémenté ; à ouvrir seulement après le reçu final 1.3.0.**
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après la demande prioritaire d’emojis. |
+| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après la clôture 1.3.0 et le correctif mobile 1.3.1. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |

@@ -1,6 +1,6 @@
 # Emojis enrichis et inclusifs — 1.3.0
 
-**21 octobre 2026 — code fusionné, qualifié et publié en v1.3.0 ; préparation et précontrôle Infomaniak confirmés ; activation encore en attente.** La production reste en **1.2.0**, dont l’utilisateur confirme le bon fonctionnement. [REPRISE](REPRISE.md) centralise les références et preuves de livraison.
+**21 octobre 2026 — version 1.3.0 active, identité confirmée par relevé admin utilisateur et disponibilité publique conforme.** Code fusionné, qualifié et publié ; préparation, précontrôle et activation acquis. L’alignement final des métadonnées opérateur n’est pas encore exécuté : son reçu SSH reste nécessaire pour clore le lot. [REPRISE](REPRISE.md) centralise les références et preuves de livraison.
 
 ## Périmètre
 
@@ -22,19 +22,27 @@ Aucune illustration Flirtmoji n’est récupérée ou intégrée à ce lot. Une 
 
 1. **Validé** : variantes Unicode, recherche bilingue, insertion au curseur et limites de brouillon, y compris les séquences de plusieurs caractères.
 2. **Validé en CI Chrome** : les deux rôles, choix de peau foncée, changement de langue, clavier et petits écrans, sans envoi automatique.
-3. **CI, fusion et publication consignées** ci-dessous. Préparation hébergée confirmée ; activation reste à confirmer ; ne déclarer la 1.3.0 active qu’après vérification distincte du service.
+3. **CI, fusion, publication, préparation et activation confirmées** ci-dessous. L’alignement des métadonnées opérateur reste à confirmer par son reçu, sans nouveau redémarrage.
 
-Les diffusions à grande échelle restent la prochaine évolution métier après cette demande d’enrichissement. Le lot 1.2.0 et ses preuves conservent leur périmètre historique de 180 emojis.
+Le correctif d’interface mobile 1.3.1 est planifié après la clôture de cette livraison, avant les diffusions à grande échelle. Le lot 1.2.0 et ses preuves conservent leur périmètre historique de 180 emojis.
 
 ## Qualification locale
 
 105 tests ciblés réussis, sans échec ni omission : catalogue, cycle de session, traduction et accessibilité. Ils couvrent les cinq carnations, VS16/ZWJ/couples, recherche d’un emoji teinté, insertion, limites de texte/légende et réinitialisation au changement de compte. Le nouveau parcours Chrome 320 px client/admin est écrit et sa syntaxe vérifiée ; Chrome est absent localement ; son exécution réelle est désormais confirmée par la CI citée ci-dessous. Une revue indépendante statique n’a relevé aucun point bloquant.
 
-## Livraison et activation en attente
+## Livraison et activation confirmées
 
 - [PR 113](https://github.com/fredbuhr/jessiemessage/pull/113), source livrée `afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b`, arbre `37b3b2e9358972c95581fc0bcf16896e4074d5f9`.
 - [CI PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39514681589) et [CI main exacte](https://github.com/fredbuhr/jessiemessage/actions/runs/39515366616) réussies 5/5 : général 3 181 réussis, zéro échec, 36 ignorés ; MariaDB 10.11 et 11.4 479/479 chacune, Chrome 169/169, HTTPS/MariaDB 3/3, sans omission dans ces jobs natifs ; syntaxe et build 583 sources. Le nouveau parcours Chrome des carnations passe.
 - [Tag/release v1.3.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0) sur le commit exact, publiés le `2026-10-20T23:36:15Z` par le [workflow vérifié](https://github.com/fredbuhr/jessiemessage/actions/runs/39516082828). [Preuves structurées](verification-proofs/jm130-verification.json).
 - [Helper de préparation](https://github.com/fredbuhr/jessiemessage/blob/3e327d29c653b8e82eeb393046ba6271790f0c35/ops/prepare-release130.sh), SHA-256 `b38ad31c4838415632774877d9cd0529522cb5b617c70a970375379bc781af3b` : 15 tests synthétiques réussis sur les pins livrés, aucun staging réel exécuté par l’agent. Il conserve le repli 1.2.0 et ne modifie ni Manager ni suivi opérateur.
 
-Le reçu utilisateur `staged_precheck_passed` confirme la préparation 1.3.0 et le précontrôle hébergé, sans démarrage, migration, changement Manager ou checkpoint. Le lanceur, son précontrôle, leurs empreintes et les journaux sont conservés intégralement dans les preuves structurées. Le repli 1.2.0 est préservé. Ne pas rejouer la préparation ; enregistrer les commandes Run/Build consignées dans REPRISE, puis redémarrer depuis le Manager et relever la nouvelle identité admin. La production reste 1.2.0 tant que la nouvelle identité n’est pas confirmée. Aucun compte SQL de migration n’est requis ; les 31 migrations restent identiques. Ne rejouer aucune ancienne migration ou préparation 1.2.0.
+Le reçu utilisateur `staged_precheck_passed` confirme la préparation 1.3.0 et le précontrôle hébergé. Il décrit la phase avant activation : aucun démarrage, migration, changement Manager ou checkpoint à ce stade. Le lanceur, son précontrôle, leurs empreintes et les journaux sont conservés intégralement dans les preuves structurées ; le repli 1.2.0 est préservé.
+
+Le relevé admin utilisateur reçu ensuite confirme **1.3.0**, commit `afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b`, Node **v24.22.0**, relevé au démarrage **`21/10/2026 01:50:02`**. Ce texte est conservé tel qu’affiché ; le fuseau du navigateur n’est pas fourni et aucune conversion UTC n’en est déduite. L’agent n’a pas observé directement le GET privé et n’atteste ni PID/socket ni empreinte du binaire en cours d’exécution.
+
+Quatre contrôles HTTPS publics sont conformes à `2026-10-21T00:05:53.651600+00:00`. Ils attestent la disponibilité, distinctement de l’identité admin rapportée par l’utilisateur. **Ne rejouer ni préparation, ni Build, ni activation, ni redémarrage.** Les 31 migrations restent identiques et aucune opération SQL de migration n’est à effectuer.
+
+## Alignement final des métadonnées — en attente
+
+Le [helper d’alignement publié](https://github.com/fredbuhr/jessiemessage/blob/5d251756a3249dc08127a161942963999e9a5bf5/ops/record-release130.py) a réussi neuf tests synthétiques autonomes. Il n’est pas encore exécuté sur l’hébergement ; aucun reçu de métadonnées 1.3.0 n’est revendiqué. Exécuter uniquement la prochaine commande épinglée de [REPRISE](REPRISE.md), puis vérifier son reçu pour clore le lot. Le [correctif mobile proposé](chat-mobile-131.md) reste planifié après cette clôture, sans changement fonctionnel démarré.

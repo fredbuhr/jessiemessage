@@ -11,13 +11,14 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Plan de travail](docs/PLAN-IMPLEMENTATION.md) | Harmonisation et évolutions restantes. |
 | [Profil et expressions, 1.2.0](docs/profile-expressions-120.md) | Périmètre du lot et préconditions de migration/repli. |
 | [Emojis enrichis et inclusifs, 1.3.0](docs/emoji-inclusifs-130.md) | Catalogue Unicode, carnations et critères de livraison. |
+| [Messagerie mobile, correctif prévu 1.3.1](docs/chat-mobile-131.md) | Barre de conversation unique, menus discrets et espace rendu aux messages. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
 
-**Version active : 1.2.0**, profil, avatar et catalogue de 180 emojis. Identité admin, disponibilité et suivi de livraison du serveur sont alignés ; le lot est clos. Les preuves et le repli compatible sont consignés dans REPRISE.
+**Version active : 1.3.0**, profil, avatar, 268 choix Unicode et cinq carnations. Le relevé admin utilisateur identifie le commit livré et Node 24.22.0 ; quatre contrôles publics de disponibilité sont conformes. L’alignement final des métadonnées opérateur attend encore son reçu SSH : le lot n’est pas déclaré clos. Les preuves et le repli sont consignés dans REPRISE.
 
-**1.3.0 publiée, activation en attente** : 268 choix Unicode et cinq carnations, sans migration ni service externe. [PR 113](https://github.com/fredbuhr/jessiemessage/pull/113) fusionnée, [CI du commit livré](https://github.com/fredbuhr/jessiemessage/actions/runs/39515366616) réussie 5/5, [tag/release immuable](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0). La production reste en 1.2.0 ; préparation et précontrôle Infomaniak confirmés par reçu utilisateur ; activation et identité 1.3.0 encore en attente. [Bilan et prochaine action](docs/emoji-inclusifs-130.md).
+La [PR 113](https://github.com/fredbuhr/jessiemessage/pull/113) est fusionnée, la [CI du commit livré](https://github.com/fredbuhr/jessiemessage/actions/runs/39515366616) réussie 5/5 et le [tag/release v1.3.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0) immuable. Préparation, précontrôle et activation sont acquis : ne pas les rejouer. Le [correctif mobile prévu 1.3.1](docs/chat-mobile-131.md) vient après la clôture des métadonnées 1.3.0, avant les diffusions à grande échelle.
 
 ## Versions et livraisons
 

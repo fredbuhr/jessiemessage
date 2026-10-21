@@ -1,6 +1,6 @@
 {
   "version": "1.3.0",
-  "status": "staged_prechecked_awaiting_activation",
+  "status": "active_identity_confirmed_metadata_pending",
   "source": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
   "tree": "37b3b2e9358972c95581fc0bcf16896e4074d5f9",
   "tag": "v1.3.0",
@@ -83,17 +83,18 @@
     "verified": true
   },
   "hosting": {
-    "activeVersion": "1.2.0",
-    "activeSource": "763b632185ce13eb875110c9107687b2d278ff67",
+    "activeVersion": "1.3.0",
+    "activeSource": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
     "preparationExecuted": true,
     "precheckPassed": true,
-    "activationConfirmed": false,
+    "activationConfirmed": true,
     "metadataRecorded": false,
     "schemaMigrations": 31,
     "requiresMigration": false,
     "dependenciesChanged": false,
     "plannedRollback": "1.2.0",
-    "earlierSchema31Fallback": "1.1.1"
+    "earlierSchema31Fallback": "1.1.1",
+    "preservedRollback": "1.2.0"
   },
   "preparation": {
     "commit": "3e327d29c653b8e82eeb393046ba6271790f0c35",
@@ -146,5 +147,117 @@
     "catalogueRedistributionPermission": "not_established_from_public_terms",
     "terms": "https://flirtmoji.co/pages/terms-of-service/",
     "faq": "https://flirtmoji.co/pages/faq/"
+  },
+  "identityEvidence": {
+    "method": "authenticated_admin_readiness_user_report",
+    "url": "https://jessiemessage.com/admin/readiness",
+    "api": "GET /api/admin/readiness",
+    "directPrivateToolObservation": false,
+    "values": {
+      "version": "1.3.0",
+      "commit": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+      "nodeVersion": "v24.22.0",
+      "startedAtDisplay": "21/10/2026 01:50:02"
+    },
+    "displayTimezone": "not_reported",
+    "startedAtEpochInferred": false,
+    "meaning": "startup_identity_of_the_http_process_answering_the_authenticated_read",
+    "notAttested": [
+      "pid",
+      "socket_owner",
+      "executed_binary_hash",
+      "pc_or_backup_delivery"
+    ]
+  },
+  "publicAvailability": {
+    "observedAt": "2026-10-21T00:05:53.651600+00:00",
+    "checks": [
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/health",
+        "http": 200,
+        "body": {
+          "status": "ok"
+        },
+        "cacheControl": "no-store",
+        "setCookie": false,
+        "passed": true
+      },
+      {
+        "origin": "https://jessiemessage.com",
+        "path": "/api/ready",
+        "http": 200,
+        "body": {
+          "status": "ready"
+        },
+        "cacheControl": "no-store",
+        "setCookie": false,
+        "passed": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/health",
+        "http": 200,
+        "body": {
+          "status": "ok"
+        },
+        "cacheControl": "no-store",
+        "setCookie": false,
+        "passed": true
+      },
+      {
+        "origin": "https://recette.jessiemessage.com",
+        "path": "/api/ready",
+        "http": 200,
+        "body": {
+          "status": "ready"
+        },
+        "cacheControl": "no-store",
+        "setCookie": false,
+        "passed": true
+      }
+    ],
+    "allPassed": true,
+    "scope": "public_availability_not_identity",
+    "tlsVerified": true,
+    "redirectsFollowed": false,
+    "authenticated": false,
+    "identityAttested": false
+  },
+  "privateCheckpoint": {
+    "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
+    "lastRecordedRelease": "1.2.0",
+    "lastRecordedSource": "763b632185ce13eb875110c9107687b2d278ff67",
+    "alignmentStatus": "awaiting_personal_execution",
+    "recorded": false,
+    "runtimeRestartRequired": false,
+    "recorder": {
+      "commit": "5d251756a3249dc08127a161942963999e9a5bf5",
+      "path": "ops/record-release130.py",
+      "sha256": "26dada8bec1dfbf1ec852cdd118e202fd4fd2c56c98c9c0b02c45095fff5a61e",
+      "targetedTests": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "synthetic_metadata_files_only"
+      },
+      "serverExecution": "not_reported",
+      "metadataOnly": true,
+      "noRestart": true,
+      "preservationPlan": "full_prior_active_120_with_hashes_as_prior_active_and_usable_rollback_120_and_unchanged_other_blocks"
+    },
+    "expectedStatuses": [
+      "release130_metadata_recorded",
+      "release130_metadata_already_recorded"
+    ],
+    "expectedRollbackRelease": "1.2.0",
+    "earlierSchema31Fallback": "1.1.1",
+    "receipt": null
+  },
+  "nextWork": {
+    "version": "1.3.1",
+    "kind": "mobile_messaging_correction",
+    "status": "after_release130_closure",
+    "document": "docs/chat-mobile-131.md"
   }
 }
