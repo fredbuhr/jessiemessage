@@ -44,8 +44,8 @@ async function fixture(t) {
 test("photo-profile backup authenticates real encrypted files and caption bindings using four keys and SELECT-only reads", async t => {
   const f = await fixture(t), report = await verifyPhotoBackupData(f.options);
   assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.deepEqual(report.issues, []);
-  assert.deepEqual(report.counts, { rows: 4, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, broadcast: 0, broadcastRecipients: 0, media: 1, mediaFiles: 2, notifications: 0, notificationJobs: 0 });
-  assert.equal(f.calls.filter(sql => sql.startsWith("SELECT EXISTS")).length, 10); assert.equal(f.released(), 5);
+  assert.deepEqual(report.counts, { rows: 4, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 1, mediaFiles: 2, notifications: 0, notificationJobs: 0 });
+  assert.equal(f.calls.filter(sql => sql.startsWith("SELECT EXISTS")).length, 11); assert.equal(f.released(), 5);
   for (const value of [f.body, f.token, f.email, ...Object.values(f.keys).map(key => key.toString("base64url"))]) assert.equal(JSON.stringify(report).includes(value), false);
 });
 
@@ -60,7 +60,7 @@ test("each wrong photo-profile key fails its populated domain while caller key b
 
 test("photo verification refuses every populated disabled-domain table before crypto reads", async t => {
   for (const table of ["client_password_resets", "password_reset_outbox", "crm_profiles", "crm_labels", "crm_memberships",
-    "broadcast_preferences", "broadcast_campaigns", "broadcast_recipients", "push_subscriptions", "push_outbox"]) {
+    "broadcast_preferences", "broadcast_campaigns", "broadcast_recipients", "announcements", "push_subscriptions", "push_outbox"]) {
     const f = await fixture(t); f.populated.add(table);
     const report = await verifyPhotoBackupData(f.options); assert.equal(report.complete, false); assert.equal(report.healthy, false);
     assert.equal(report.issues[0].code, "inactive_domain_populated"); assert.equal(f.calls.some(sql => sql.includes("FROM admin_mfa ")), false);

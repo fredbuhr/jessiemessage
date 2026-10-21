@@ -22,14 +22,14 @@ function changeMigration(input, index, change) {
   const value = input.migrations[index]; value.sql = change(value.sql); value.checksum = checksumSql(value.sql);
 }
 
-test("deletion plan covers all 30 policy categories and remains blocked even when the selected inventory is empty", () => {
+test("deletion plan covers all 31 policy categories and remains blocked even when the selected inventory is empty", () => {
   const input = fixture(), before = structuredClone(input), plan = buildDeletionPlan(input);
   assert.deepEqual(input, before, "the pure builder leaves every input and migration unchanged");
   assert.deepEqual(Object.keys(plan), ["format", "version", "generatedAt", "simulationOnly", "executable", "retentionDecided", "affectedCategories",
     "categories", "candidateOrder", "dependencies", "observations", "blockers", "rollback"]);
   assert.equal(plan.format, "jessiemessage-deletion-simulation"); assert.equal(plan.version, 1); assert.equal(plan.generatedAt, "2026-10-15T14:00:00.123Z");
   assert.equal(plan.simulationOnly, true); assert.equal(plan.executable, false); assert.equal(plan.retentionDecided, false); assert.equal(plan.affectedCategories, 0);
-  assert.equal(plan.categories.length, 30); assert.deepEqual(plan.categories.map((entry) => entry.table), DATA_POLICY.map((entry) => entry.table));
+  assert.equal(plan.categories.length, 31); assert.deepEqual(plan.categories.map((entry) => entry.table), DATA_POLICY.map((entry) => entry.table));
   for (const entry of plan.categories) {
     assert.deepEqual(Object.keys(entry), ["table", "scope", "count", "truncated", "handling"]);
     assert.equal(entry.handling, entry.scope === "subject" ? "review_subject_rows" : "preserve_shared");
@@ -40,18 +40,18 @@ test("deletion plan covers all 30 policy categories and remains blocked even whe
     cloneRestoreRequiredForSchemaChange: true, noWorkersDuringCloneChecks: true, historyExamples: {
       basis: "synthetic_applied_ledgers_from_migrations", cases: [
         { codeMigrationCount: 25, recordedMigrationCount: 25, canStart: true, reason: "matching_history" },
-        { codeMigrationCount: 25, recordedMigrationCount: 31, canStart: false, reason: "database_ahead" },
-        { codeMigrationCount: 31, recordedMigrationCount: 25, canStart: false, reason: "migrations_pending" },
-        { codeMigrationCount: 31, recordedMigrationCount: 31, canStart: true, reason: "matching_history" },
+        { codeMigrationCount: 25, recordedMigrationCount: 32, canStart: false, reason: "database_ahead" },
+        { codeMigrationCount: 32, recordedMigrationCount: 25, canStart: false, reason: "migrations_pending" },
+        { codeMigrationCount: 32, recordedMigrationCount: 32, canStart: true, reason: "matching_history" },
       ],
     } });
 });
 
-test("rollback examples use real migration checksums in synthetic 25/31 ledgers without certifying a live database", () => {
+test("rollback examples use real migration checksums in synthetic 25/32 ledgers without certifying a live database", () => {
   const input = fixture(), plan = buildDeletionPlan(input), examples = plan.rollback.historyExamples;
   assert.equal(examples.basis, "synthetic_applied_ledgers_from_migrations");
   assert.deepEqual(examples.cases.map((entry) => [entry.codeMigrationCount, entry.recordedMigrationCount, entry.canStart]),
-    [[25, 25, true], [25, 31, false], [31, 25, false], [31, 31, true]]);
+    [[25, 25, true], [25, 32, false], [32, 25, false], [32, 32, true]]);
   for (const entry of examples.cases) assert.deepEqual(Object.keys(entry), ["codeMigrationCount", "recordedMigrationCount", "canStart", "reason"]);
   assert.equal(plan.rollback.codeOnlyRollbackCertified, false); assert.equal(plan.executable, false);
   assert.doesNotMatch(JSON.stringify(examples), /checksum|\.sql|CREATE TABLE|password|email|observedDatabase|currentDatabase/);
@@ -73,7 +73,7 @@ test("candidate review order derives the actual FK graph, includes every subject
       foreignKeys += 1; actual.add(`${table}:${match[1]}`);
     }
   }
-  assert.equal(foreignKeys, 42); assert.equal(actual.size, 40); assert.equal(plan.dependencies.length, 40);
+  assert.equal(foreignKeys, 44); assert.equal(actual.size, 42); assert.equal(plan.dependencies.length, 42);
   assert.deepEqual(new Set(plan.dependencies.map(({ child, parent }) => `${child}:${parent}`)), actual);
   for (const relation of plan.dependencies) {
     assert.deepEqual(Object.keys(relation), ["child", "parent"]);

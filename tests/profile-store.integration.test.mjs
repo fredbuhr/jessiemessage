@@ -20,7 +20,7 @@ test("real MariaDB own profiles, bounded private avatars and simultaneous update
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/);
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
   const migrations = await loadMigrations(), allowed = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
-  assert.equal(migrations.length, 31);
+  assert.equal(migrations.length, 32);
   const connection = await connectDatabase(); let pool;
   async function cleanup() {
     const tables = await connection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [options.database]);

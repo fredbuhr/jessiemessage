@@ -32,7 +32,7 @@ test("administrator readiness with real SQL MFA, private HTTP and fake verificat
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 31);
+  assert.equal(migrations.length, 32);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;

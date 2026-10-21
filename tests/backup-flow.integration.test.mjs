@@ -65,9 +65,9 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
   const targetEnv = { ...process.env, JESSIEMESSAGE_DB_NAME: restoreDatabase,
     JESSIEMESSAGE_MIGRATION_DATABASE: restoreDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: restoreDatabase };
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 31);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 32);
   const tables = createdMigrationTables(migrations);
-  assert.equal(tables.length, 30, "the admission ALTER adds a ledger entry, not a copied table");
+  assert.equal(tables.length, 31, "the admission ALTER adds a ledger entry, not a copied table");
   const allowedTables = [...tables, "schema_migrations", "migration_probe"];
   const qualified = (database, table) => {
     assert.ok([options.database, restoreDatabase].includes(database)); assert.ok(allowedTables.includes(table));
@@ -271,8 +271,8 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         } finally { inspector.release(); }
         t.diagnostic("inspection guards passed");
         const snapshot = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool }) });
-        assert.equal(snapshot.counts.tables, 31, "snapshot covers every application table and schema_migrations");
-        assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 31);
+        assert.equal(snapshot.counts.tables, 32, "snapshot covers every application table and schema_migrations");
+        assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 32);
         t.diagnostic("source snapshot passed");
       } finally { await inspectionPool.end(); }
       const result = await run("prepare", { env: process.env, root: sourceRoot, databaseName: options.database });

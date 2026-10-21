@@ -85,7 +85,7 @@ async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm }
   const full = Buffer.alloc(150001, 61), thumb = Buffer.from("synthetic-encrypted-thumbnail");
   await writeFile(join(mediaRoot, mediaName("full")), full, { mode: 0o600 });
   await writeFile(join(mediaRoot, mediaName("thumb")), thumb, { mode: 0o600 });
-  const snapshot = { schemaDigest: "a".repeat(64), coreDigest: "b".repeat(64), counts: { tables: 31, rows: 1 } };
+  const snapshot = { schemaDigest: "a".repeat(64), coreDigest: "b".repeat(64), counts: { tables: 32, rows: 1 } };
   const state = { events: [], loaded: [], usedEnvironments: [], keys: [], dumps: 0, prepares: 0, secretReads: 0,
     manifests: 0, compares: 0, copies: 0, verifications: 0, tools: 0, identities: 0, clocks: 0, snapshot, recovery };
   const inputStream = { isTTY: true };
@@ -154,7 +154,7 @@ async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm }
       assert.deepEqual(target, { user: state.application ? "synthetic_runtime" : "synthetic_inspection", database: "synthetic_checkpoint" });
       assert.deepEqual(configuration, { host: "db.example.invalid", port: "3306" });
       assert.equal(password, state.application ? runtimePassword : inspectionPassword);
-      if (state.application) { assert.equal(parameters.tables.length, 31); assert.equal(new Set(parameters.tables).size, 31); assert.ok(parameters.tables.includes("schema_migrations")); }
+      if (state.application) { assert.equal(parameters.tables.length, 32); assert.equal(new Set(parameters.tables).size, 32); assert.ok(parameters.tables.includes("schema_migrations")); }
       else assert.equal(parameters.tables, undefined);
       state.dumps += 1;
       state.events.push(`dump:${state.dumps}`);
@@ -213,7 +213,7 @@ test("checkpoint check loads a validated profile but performs no SQL, secret inp
   let result;
   try { result = await run(parseArguments(f.command("check")), f.dependencies); }
   finally { fs.promises.open = original; syncBuiltinESMExports(); }
-  assert.deepEqual(result, { status: "ready_for_input", profile: "messaging-photos-notify", schema: 31,
+  assert.deepEqual(result, { status: "ready_for_input", profile: "messaging-photos-notify", schema: 32,
     databaseConnected: false, checkpointSaved: false, started: false, migrationPerformed: false });
   assert.equal(writes, 0);
   assert.equal(f.state.dumps, 0);
@@ -238,7 +238,7 @@ test("inspection verifies the dedicated identity before any writes and leaves th
   let result;
   try { result = await run(parseArguments(f.command("inspect")), f.dependencies); }
   finally { fs.promises.open = original; syncBuiltinESMExports(); }
-  assert.deepEqual(result, { status: "inspection_verified", profile: "messaging-photos-notify", tables: 31, migrations: 31,
+  assert.deepEqual(result, { status: "inspection_verified", profile: "messaging-photos-notify", tables: 32, migrations: 32,
     databaseConnected: true, inspectionPrivilegesVerified: true, checkpointSaved: false, started: false, migrationPerformed: false });
   assert.equal(writes, 0);
   assert.equal(f.state.identities, 1);
@@ -311,8 +311,8 @@ test("offline capture verifies two SQL dumps and both manifests, builds the real
   const result = await main(f.command(), { ...f.dependencies, outputStream: { write(value) { output += value; } } });
   assert.equal(result.status, "checkpoint_saved");
   assert.equal(result.profile, "messaging-photos-notify");
-  assert.equal(result.tables, 31);
-  assert.equal(result.migrations, 31);
+  assert.equal(result.tables, 32);
+  assert.equal(result.migrations, 32);
   assert.equal(result.mediaFiles, 2);
   assert.equal(result.mediaBytes, f.full.length + f.thumb.length);
   assert.equal(result.archiveListed, true);
@@ -339,7 +339,7 @@ test("offline capture verifies two SQL dumps and both manifests, builds the real
   assert.deepEqual(gunzipSync(compressed), sql);
   assert.deepEqual(await readFile(join(f.destination, "database.sql")), sql);
   assert.equal(receipt.createdAt, now);
-  assert.deepEqual(receipt.schema, { tables: 31, migrations: 31 });
+  assert.deepEqual(receipt.schema, { tables: 32, migrations: 32 });
   assert.deepEqual(receipt.sql, { file: "database.sql.gz", bytes: compressed.length, sha256: hash(compressed), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) });
   assert.equal(result.sqlBytes, compressed.length);
   assert.equal(result.sqlSha256, hash(compressed));

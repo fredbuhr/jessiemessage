@@ -90,7 +90,7 @@ test("real MariaDB: 2,500-client audience is bounded, atomic, retryable and resu
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host));
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/u, "only disposable synthetic schemas may be reset");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "separate DML runtime credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 31);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 32);
   const allowed = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   let connection = await connectDatabase(), pool, worker;
   async function reconnectInspection() {

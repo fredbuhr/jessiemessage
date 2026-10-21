@@ -11,7 +11,7 @@ const profile = "messaging-photos-notify-application";
 const names = ["totpKey", "mailKey", "messageKey", "mediaKey", "notificationKey"];
 const keys = () => Object.fromEntries(names.map((name) => [name, randomBytes(32)]));
 const snapshot = () => ({ version: 2, coverage: { ...APPLICATION_COVERAGE }, schemaDigest: "7".repeat(64), coreDigest: "8".repeat(64),
-  counts: { tables: 31, rows: 0 }, objects: [], assets: [] });
+  counts: { tables: 32, rows: 0 }, objects: [], assets: [] });
 const input = () => ({ profile, snapshot: snapshot(), now: 1792240000000, keys: keys(), identity: {
   databaseTag: "1".repeat(64), rootPathTag: "2".repeat(64), rootPhysicalTag: "3".repeat(64),
   rootFingerprint: "4".repeat(64), rootAncestors: ["5".repeat(64)] } });
@@ -52,6 +52,16 @@ test("authenticated schema30 application manifests retain their historical cover
   }
   value.snapshot.coverage.tables = 31; value.snapshot.counts.tables = 30;
   assert.throws(() => createBackupManifest(value), invalid);
+});
+
+test("authenticated schema31 application manifests retain their exact historical coverage after schema32", () => {
+  const value = input(); value.snapshot.coverage.tables = 31; value.snapshot.counts.tables = 31;
+  const manifest = createBackupManifest(value), original = copy(manifest);
+  const restored = verifyBackupManifest({ manifest, keys: value.keys });
+  assert.equal(restored.snapshot.coverage.tables, 31); assert.equal(restored.snapshot.counts.tables, 31);
+  assert.deepEqual(manifest, original);
+  value.snapshot.coverage.tables = 32;
+  assert.throws(() => createBackupManifest(value), invalid, "the old snapshot cannot be relabeled with the current coverage");
 });
 
 test("application manifests refuse absent, overstated or incomplete coverage and any unsupported or mismatched schema coverage", () => {

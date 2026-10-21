@@ -10,6 +10,7 @@ import { tokenDigest } from "../server/auth/crypto.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { openPayload, sealPayload, campaignFingerprint, createAudienceDigest, recipientProof, verifyRecipientProof } from "../server/broadcast/crypto.mjs";
 import { createBroadcastStore } from "../server/broadcast/store.mjs";
+import { sealAnnouncement, openAnnouncement } from "../server/announcements/crypto.mjs";
 import { createErasureStore } from "../server/data/erasure-store.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
 import { createAccountErasure } from "../server/data/erasure.mjs";
@@ -152,7 +153,20 @@ test("durable account erasure removes the selected graph and actual encrypted fi
     const sharedCampaign = await campaign([{ client: first, conv }, { client: peer, conv: peerConv }]);
     const onlyCampaign = await campaign([{ client: first, conv, message: adminMessage }], "completed");
     const deliveredCampaign = await campaign([{ client: first, conv, message: adminMessage }, { client: peer, conv: peerConv, message: peerAdminMessage }], "completed");
-    return { first, peer, conv, peerConv, sid, peerSid, own, shared, peerAsset, objects, ownMessage, sharedCampaign, onlyCampaign, deliveredCampaign };
+    const announcement = { id: id(), adminId: admin, revision: "1", startsAt: now - 60000, expiresAt: now + 600000, sendPrivateMessage: true };
+    const announcementBody = "Synthetic administrator show notice retained after client closure";
+    announcement.encrypted = sealAnnouncement({ body: announcementBody }, broadcastKey, announcement);
+    await connection.query("DELETE FROM announcements WHERE admin_id = ?", [admin]);
+    await connection.query(`INSERT INTO announcements (admin_id, id, revision, mutation_id, request_fingerprint, body_encrypted,
+      starts_at, expires_at, send_private_message, campaign_id, created_at, updated_at) VALUES (?, ?, 1, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
+    [admin, announcement.id, id(), randomBytes(32), announcement.encrypted, created, expiry, onlyCampaign.id, created, created]);
+    return { first, peer, conv, peerConv, sid, peerSid, own, shared, peerAsset, objects, ownMessage, sharedCampaign, onlyCampaign, deliveredCampaign, announcement, announcementBody };
+  }
+  async function assertAnnouncementPreserved(f) {
+    const row = (await connection.query("SELECT * FROM announcements WHERE admin_id = ?", [admin]))[0];
+    assert.equal(row.campaign_id, null, "a campaign losing its last client is detached from the administrator announcement");
+    assert.equal(row.body_encrypted, f.announcement.encrypted, "the shared encrypted announcement is preserved byte for byte");
+    assert.deepEqual(openAnnouncement(row.body_encrypted, broadcastKey, f.announcement), { body: f.announcementBody });
   }
   async function compactCampaign(campaign) {
     const members = await connection.query("SELECT * FROM broadcast_recipients WHERE campaign_id = ? ORDER BY conversation_id", [campaign.id]);
@@ -432,6 +446,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
         assert.equal((await connection.query(`SELECT 1 FROM ${table} WHERE ${column} = ?`, [value])).length, 0, table);
       for (const object of f.objects) assert.equal((await readdir(mediaRoot)).some(name => name.includes(hex(object.storageKey))), false, "remove even released and reserved files");
       assert.equal((await connection.query("SELECT 1 FROM broadcast_campaigns WHERE id = ?", [f.onlyCampaign.id])).length, 0);
+      await assertAnnouncementPreserved(f);
       for (const original of [f.sharedCampaign, f.deliveredCampaign]) {
         const row = (await connection.query("SELECT * FROM broadcast_campaigns WHERE id = ?", [original.id]))[0];
         const associated = { campaignId: row.id, adminId: admin }, payload = openPayload(row.payload_encrypted, broadcastKey, associated);
@@ -470,6 +485,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       assert.equal((await engine().resume({ clientId: hex(f.first) })).completed, true);
       assert.equal(await peerSnapshot(f), before, "Other client content and per-member proofs are unchanged");
       assert.equal((await connection.query("SELECT 1 FROM broadcast_campaigns WHERE id = ?", [f.onlyCampaign.id])).length, 0);
+      await assertAnnouncementPreserved(f);
       for (const campaign of [shared, delivered]) {
         const row = (await connection.query("SELECT * FROM broadcast_campaigns WHERE id = ?", [campaign.id]))[0];
         const members = await connection.query("SELECT * FROM broadcast_recipients WHERE campaign_id = ? ORDER BY conversation_id", [campaign.id]);

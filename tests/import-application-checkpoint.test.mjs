@@ -28,8 +28,8 @@ const env = { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" };
 const base = fileURLToPath(new URL("../../audit/", import.meta.url));
 const args = command => [command, "--private-directory", "/private/source", "--private-path-mode", "linux-dirfd", "--checkpoint-directory", "/private/checkpoint", "--database", "only_clone", "--confirm-database", "only_clone", "--user", "clone_operator", "--sql-sha256", expected.sqlSha256];
 const neutral = code => error => { assert.equal(error.code, `APPLICATION_CHECKPOINT_IMPORT_${code}`); assert.equal(error.message, error.code); assert.equal(error.cause, undefined); assert.doesNotMatch(JSON.stringify(error), /private value|synthetic password|example\.invalid/); return true; };
-const ready = () => ({ status: "ready_for_input", checkpointFilesMatched: true, databaseConnected: false, tables: 31, migrations: 31, ...expected });
-const verified = () => ({ status: "verified", applicationSnapshotMatched: true, checkpointFilesMatched: true, databaseConnected: true, capacityRebound: false, tables: 31, migrations: 31 });
+const ready = () => ({ status: "ready_for_input", checkpointFilesMatched: true, databaseConnected: false, tables: 32, migrations: 32, ...expected });
+const verified = () => ({ status: "verified", applicationSnapshotMatched: true, checkpointFilesMatched: true, databaseConnected: true, capacityRebound: false, tables: 32, migrations: 32 });
 
 async function fixture(t) {
   await mkdir(base, { recursive: true, mode: 0o700 });
@@ -112,9 +112,9 @@ for (const { crm, broadcast = false } of [{ crm: false }, { crm: true }, { crm: 
   }
 });
 
-test("the closed SQL format accepts native conditional SET/ALTER and opaque string contents for all thirty tables", async () => {
-  assert.deepEqual(await validateApplicationSql(sql), { tables: 31 });
-  assert.deepEqual(await validateApplicationSql(Buffer.from(sql.toString().replace("/*!999999", "/*M!999999"))), { tables: 31 });
+test("the closed SQL format accepts native conditional SET/ALTER and opaque string contents for all thirty-two tables", async () => {
+  assert.deepEqual(await validateApplicationSql(sql), { tables: 32 });
+  assert.deepEqual(await validateApplicationSql(Buffer.from(sql.toString().replace("/*!999999", "/*M!999999"))), { tables: 32 });
 });
 
 test("SQL database switches, qualified targets/references, executable routines and native commands are refused", async () => {

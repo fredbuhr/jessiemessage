@@ -15,9 +15,9 @@ test("application coverage is detached and cannot claim a complete SQL object in
   assert.equal(Object.isFrozen(APPLICATION_COVERAGE), true);
   const value = validateApplicationCoverage(APPLICATION_COVERAGE);
   assert.deepEqual(value, APPLICATION_COVERAGE); assert.notEqual(value, APPLICATION_COVERAGE);
-  value.tables = 1; assert.equal(APPLICATION_COVERAGE.tables, 31);
+  value.tables = 1; assert.equal(APPLICATION_COVERAGE.tables, 32);
   assert.deepEqual(validateApplicationCoverage({ ...APPLICATION_COVERAGE, tables: 30 }), { ...APPLICATION_COVERAGE, tables: 30 });
-  for (const change of [{ scope: "complete-schema" }, { tables: 29 }, { tables: 32 }, { encryptedMedia: false }, { completeDatabase: true },
+  for (const change of [{ scope: "complete-schema" }, { tables: 29 }, { tables: 33 }, { encryptedMedia: false }, { completeDatabase: true },
     { executableInventory: "absent" }, { executableObjects: "included" }, { extra: true }]) {
     assert.throws(() => validateApplicationCoverage({ ...APPLICATION_COVERAGE, ...change }), neutral);
   }
@@ -37,7 +37,7 @@ test("application inspection validates exact table identities without probing ex
   const connection = { async query(sql, parameters) {
     queries.push(sql);
     if (sql === "SELECT DATABASE() AS name") return [{ name: database }];
-    assert.match(sql, /FROM information_schema\.TABLES .*LIMIT 32$/);
+    assert.match(sql, /FROM information_schema\.TABLES .*LIMIT 33$/);
     assert.deepEqual(parameters, [database]); return [...inventory].reverse();
   } };
   assert.equal(await assertApplicationTableInspection(connection, database), true);
@@ -123,7 +123,7 @@ async function captureFixture(coverage) {
 test("an explicit application snapshot has signed-data coverage while the default remains strict", async () => {
   const app = await captureFixture("application-tables"), strict = await captureFixture();
   const application = await captureBackupSnapshot({ store: app.store }), complete = await captureBackupSnapshot({ store: strict.store });
-  assert.equal(application.version, 2); assert.deepEqual(application.coverage, APPLICATION_COVERAGE); assert.equal(application.counts.tables, 31);
+  assert.equal(application.version, 2); assert.deepEqual(application.coverage, APPLICATION_COVERAGE); assert.equal(application.counts.tables, 32);
   assert.equal(complete.version, 1); assert.equal(Object.hasOwn(complete, "coverage"), false);
   assert.equal(application.schemaDigest, complete.schemaDigest); assert.equal(application.coreDigest, complete.coreDigest);
   assert.doesNotMatch(app.queries.join(" "), /TRIGGERS|EVENTS|ROUTINES|SHOW GRANTS/);

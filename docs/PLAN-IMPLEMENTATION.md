@@ -10,7 +10,7 @@ La livraison **1.4.0 — Diffusions à grande échelle** est close : code et CI 
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
+| **4 — Annonces** | Bandeau, programmation, expiration et envoi privé facultatif avec notifications habituelles ; publication unique et absence d’annonce devenue inutile après une coupure. | [Implémentation 1.5.0 en cours](announcements-150.md), avec [repli compatible 1.4.1](announcements-compat-141.md) et migration additive 0032 à qualifier. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |
 | **7 — Vidéos dans la messagerie** | Aperçu, lecteur, légende, galerie et diffusion ; export, suppression et fermeture de compte cohérents. | Planifiée. |

@@ -18,8 +18,8 @@ const errorCode = (code) => (error) => error.code === code;
 
 test("all committed migrations have consecutive names, exact SHA-256 checksums and a supported SQL format", async () => {
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 31);
-  assert.deepEqual(migrations.map((item) => item.version), Array.from({ length: 31 }, (_, index) => index + 1));
+  assert.equal(migrations.length, 32);
+  assert.deepEqual(migrations.map((item) => item.version), Array.from({ length: 32 }, (_, index) => index + 1));
   assert.ok(migrations.every((item) => /^[0-9a-f]{64}$/.test(item.checksum)));
 });
 
@@ -39,19 +39,19 @@ test("the admission migration replaces only its reviewed CHECK in one atomic ALT
   ]) assert.throws(() => validateSql(changed), errorCode("SQL_FORMAT"), changed);
 });
 
-test("table inventory contains 30 CREATE tables independently from 31 ledger migrations", async () => {
+test("table inventory contains 31 CREATE tables independently from 32 ledger migrations", async () => {
   const plan = await loadMigrations(), tables = createdMigrationTables(plan);
-  assert.equal(tables.length, 30); assert.equal(new Set(tables).size, 30);
+  assert.equal(tables.length, 31); assert.equal(new Set(tables).size, 31);
   assert.deepEqual(tables.slice(0, 27), createdMigrationTables(plan.slice(0, 27)));
-  assert.deepEqual(tables.slice(-3), ["push_subscriptions", "push_outbox", "user_profiles"]);
-  assert.equal(tables[0], "users"); assert.equal(tables.at(-1), "user_profiles");
+  assert.deepEqual(tables.slice(-4), ["push_subscriptions", "push_outbox", "user_profiles", "announcements"]);
+  assert.equal(tables[0], "users"); assert.equal(tables.at(-1), "announcements");
   const commented = [{ ...migration(), sql: `/* reviewed */ ${sql}`, checksum: checksumSql(`/* reviewed */ ${sql}`) }];
   assert.deepEqual(createdMigrationTables(commented), ["example"]);
   assert.throws(() => createdMigrationTables([{ ...migration(), checksum: "0".repeat(64) }]), errorCode("MIGRATION_PLAN"));
 });
 
 test("the profile migration adds an independent versioned row without altering users or cascading deletion", async () => {
-  const source = (await loadMigrations()).at(-1);
+  const source = (await loadMigrations()).find(item => item.version === 31);
   assert.equal(source.name, "0031_user_profiles.sql");
   assert.match(source.sql, /PRIMARY KEY \(user_id\)/);
   assert.match(source.sql, /version INT UNSIGNED NOT NULL DEFAULT 1/);

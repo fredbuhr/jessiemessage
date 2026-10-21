@@ -2,11 +2,25 @@ export class BackupCryptoStoreError extends Error {
   constructor() { super("Private backup data could not be read."); this.name = "BackupCryptoStoreError"; this.code = "BACKUP_DATABASE"; }
 }
 const fail = () => { throw new BackupCryptoStoreError(); };
-const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "media", "notifications", "notificationJobs"];
+const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "announcements", "media", "notifications", "notificationJobs"];
 function bytes(value, length) { if (!Buffer.isBuffer(value) || value.length !== length) fail(); return Buffer.from(value); }
 function nullableBytes(value, length) { return value === null ? null : bytes(value, length); }
 function text(value, maximum) { if (typeof value !== "string" || value.length < 1 || value.length > maximum) fail(); return value; }
 function integer(value, maximum) { const number = Number(value); if (!Number.isSafeInteger(number) || number < 1 || number > maximum) fail(); return number; }
+function announcementDate(value, nullable = false) {
+  if (nullable && value === null) return null;
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}000$/.test(value)) fail();
+  const result = Date.parse(`${value.slice(0, 23).replace(" ", "T")}Z`);
+  if (!Number.isSafeInteger(result) || result < 0 || result > 253402300799999
+    || new Date(result).toISOString() !== `${value.slice(0, 23).replace(" ", "T")}Z`) fail();
+  return result;
+}
+function announcementRevision(value) {
+  if (!["string", "number", "bigint"].includes(typeof value) || typeof value === "number" && !Number.isSafeInteger(value)) fail();
+  const result = String(value);
+  if (!/^[1-9][0-9]{0,19}$/.test(result) || BigInt(result) > 18446744073709551615n) fail();
+  return result;
+}
 
 const statements = {
   mfa: { id: "m.user_id", from: "admin_mfa m", columns: "m.user_id AS id, m.secret_encrypted AS encrypted" },
@@ -26,6 +40,12 @@ const statements = {
     m.deleted_at, c.admin_id, c.client_id, mm.media_id, a.owner_id AS media_owner_id` },
   crm: { id: null, from: "crm_profiles p", columns: "p.admin_id, p.conversation_id, p.notes_encrypted AS encrypted, p.notes_revision, p.version" },
   broadcast: { id: "b.id", from: "broadcast_campaigns b", columns: "b.id, b.admin_id, b.payload_encrypted AS encrypted, b.request_fingerprint, b.media_id, b.allow_repeat_media" },
+  announcements: { id: "a.id", from: `announcements a
+    LEFT JOIN users u ON u.id = a.admin_id
+    LEFT JOIN broadcast_campaigns b ON b.id = a.campaign_id`,
+  columns: `a.id, a.admin_id, a.admin_role, a.revision, a.body_encrypted AS encrypted,
+    a.starts_at, a.expires_at, a.send_private_message, a.campaign_id, a.removed_at, a.created_at, a.updated_at,
+    u.role AS user_role, b.admin_id AS campaign_admin_id` },
   // Unregistered candidates have no media_assets row. Their recovery belongs
   // to the storage journal; this reader never treats them as missing photos.
   media: { id: "a.id", from: `media_assets a
@@ -71,6 +91,15 @@ function normalize(purpose, row) {
     if (![0, 1, 0n, 1n].includes(row.allow_repeat_media)) fail();
     return { ...result, adminId: bytes(row.admin_id, 16), encrypted: text(row.encrypted, 32000),
       fingerprint: bytes(row.request_fingerprint, 32), mediaId: nullableBytes(row.media_id, 16), allowRepeatMedia: Number(row.allow_repeat_media) === 1 };
+  }
+  if (purpose === "announcements") {
+    if (![0, 1, 0n, 1n].includes(row.send_private_message)) fail();
+    return { ...result, adminId: bytes(row.admin_id, 16), adminRole: row.admin_role, userRole: row.user_role,
+      revision: announcementRevision(row.revision), encrypted: text(row.encrypted, 8192),
+      startsAt: announcementDate(row.starts_at), expiresAt: announcementDate(row.expires_at),
+      sendPrivateMessage: Number(row.send_private_message) === 1,
+      campaignId: nullableBytes(row.campaign_id, 16), campaignAdminId: nullableBytes(row.campaign_admin_id, 16),
+      removedAt: announcementDate(row.removed_at, true), createdAt: announcementDate(row.created_at), updatedAt: announcementDate(row.updated_at) };
   }
   if (purpose === "notifications") return { ...result, userId: bytes(row.user_id, 16), role: row.role, userRole: row.user_role,
     sessionId: bytes(row.session_id, 16), sessionUserId: bytes(row.session_user_id, 16),

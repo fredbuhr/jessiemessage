@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#100d12" /><meta name="color-scheme" content="dark" /><meta name="robots" content="noindex, nofollow, noarchive" />
+  <link rel="manifest" href="/manifest.webmanifest" /><link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" /><link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/i18n.css" /><link rel="stylesheet" href="/announcements.css" /><link rel="stylesheet" href="/brand/brand.css" />
+  <script defer src="/i18n.js"></script><script defer src="/i18n-tools.js"></script><script defer src="/help-link.js"></script><script defer src="/session-clock.js"></script><script type="module" src="/announcements.js"></script>
+  <title data-jm-i18n="JessieMessage — Mes annonces">JessieMessage — Mes annonces</title>
+</head>
+<body><div class="page">
+  <header class="topbar"><a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a><nav class="account-nav" aria-label="Administration" data-jm-i18n-aria-label="Administration"><button type="button" data-jm-language aria-label="Switch to English">EN</button><a href="/admin/messages" data-jm-i18n="Messages">Messages</a><a href="/admin/broadcasts" data-jm-i18n="Diffusions">Diffusions</a><button id="logout" type="button" hidden data-jm-i18n="Se déconnecter">Se déconnecter</button></nav></header>
+  <main class="announcements-main">
+    <div class="page-heading"><span class="eyebrow" data-jm-i18n="UN MOT POUR EUX">UN MOT POUR EUX</span><h1 data-jm-i18n="Mes annonces">Mes annonces</h1><p class="intro" data-jm-i18n="Prépare un petit mot qui apparaîtra dans leur conversation, au moment de ton choix.">Prépare un petit mot qui apparaîtra dans leur conversation, au moment de ton choix.</p></div>
+    <p id="session-status" class="status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p><button id="reload" class="button secondary" type="button" hidden data-jm-i18n="Actualiser la connexion">Actualiser la connexion</button>
+    <div id="announcements-content" class="announcement-grid" hidden>
+      <section class="card" aria-labelledby="form-title"><h2 id="form-title" data-jm-i18n="Préparer mon annonce">Préparer mon annonce</h2>
+        <form id="announcement-form"><fieldset id="announcement-fields">
+          <div class="field"><label for="body" data-jm-i18n="Ton annonce">Ton annonce</label><textarea id="body" rows="5" maxlength="1000" required placeholder="Je commence mon show à 22 h, retrouve-moi 💋" data-jm-i18n-placeholder="Je commence mon show à 22 h, retrouve-moi 💋"></textarea><p class="small-copy" data-jm-i18n="Jusqu’à 1 000 caractères. Une seule annonce apparaît à la fois.">Jusqu’à 1 000 caractères. Une seule annonce apparaît à la fois.</p></div>
+          <div class="field"><label for="start-mode" data-jm-i18n="Quand l’afficher ?">Quand l’afficher ?</label><select id="start-mode"><option value="now" data-jm-i18n="Maintenant">Maintenant</option><option value="scheduled" data-jm-i18n="Programmer">Programmer</option></select></div>
+          <div class="date-fields"><div id="starts-field" class="field" hidden><label for="starts-at" data-jm-i18n="Début">Début</label><input id="starts-at" type="datetime-local" /></div><div class="field"><label for="expires-at" data-jm-i18n="Fin de l’annonce">Fin de l’annonce</label><input id="expires-at" type="datetime-local" required /></div></div>
+          <p class="small-copy" data-jm-i18n="Heure de cet appareil. La fin doit se situer dans les 7 prochains jours.">Heure de cet appareil. La fin doit se situer dans les 7 prochains jours.</p>
+          <label class="check"><input id="send-message" type="checkbox" /><span data-jm-i18n="Envoyer aussi en message privé">Envoyer aussi en message privé</span></label>
+          <p class="small-copy" data-jm-i18n="Le message partira progressivement au début de l’annonce, vers les clients éligibles au moment de sa préparation. Leurs notifications habituelles s’appliquent.">Le message partira progressivement au début de l’annonce, vers les clients éligibles au moment de sa préparation. Leurs notifications habituelles s’appliquent.</p>
+          <button id="preview" class="button secondary" type="button" hidden data-jm-i18n="Vérifier les destinataires">Vérifier les destinataires</button>
+          <p id="preview-status" class="status" role="status" aria-live="polite"></p><label id="acknowledge-choice" class="check" hidden><input id="acknowledge" type="checkbox" /><span id="acknowledge-label"></span></label>
+          <div class="preview-card"><p class="small-copy" data-jm-i18n="Aperçu">Aperçu</p><p id="draft-preview" class="announcement-copy"></p><p id="draft-dates" class="small-copy"></p></div>
+          <p class="small-copy" data-jm-i18n="Enregistrer remplace l’annonce précédente et arrête ses envois restants. Les messages déjà remis restent dans les conversations.">Enregistrer remplace l’annonce précédente et arrête ses envois restants. Les messages déjà remis restent dans les conversations.</p>
+          <div class="actions"><button id="save" class="button primary" type="submit" data-jm-i18n="Enregistrer l’annonce">Enregistrer l’annonce</button></div>
+        </fieldset></form>
+        <p id="save-status" class="status" role="status" aria-live="polite"></p><div id="uncertain" hidden><p class="small-copy" data-jm-i18n="La confirmation n’a pas été reçue. Réessaie la même demande pour éviter une seconde publication.">La confirmation n’a pas été reçue. Réessaie la même demande pour éviter une seconde publication.</p><button id="retry" class="button primary" type="button" data-jm-i18n="Vérifier et réessayer">Vérifier et réessayer</button></div>
+      </section>
+      <section class="card" aria-labelledby="current-title"><h2 id="current-title" data-jm-i18n="Mon annonce en cours">Mon annonce en cours</h2><p id="current-status" class="status" role="status" aria-live="polite"></p><p id="current-body" class="announcement-copy"></p><p id="current-dates" class="small-copy"></p><div class="actions"><button id="refresh-current" class="button secondary" type="button" data-jm-i18n="Actualiser l’annonce">Actualiser l’annonce</button><button id="use-current" class="text-button" type="button" hidden data-jm-i18n="Reprendre cette annonce">Reprendre cette annonce</button><button id="remove-announcement" class="text-button" type="button" hidden data-jm-i18n="Retirer l’annonce">Retirer l’annonce</button></div><p class="small-copy" data-jm-i18n="Retirer l’annonce arrête aussi les envois encore en attente. Les messages déjà remis restent disponibles.">Retirer l’annonce arrête aussi les envois encore en attente. Les messages déjà remis restent disponibles.</p></section>
+    </div>
+    <noscript><p class="status" data-jm-i18n="Active JavaScript pour préparer tes annonces.">Active JavaScript pour préparer tes annonces.</p></noscript>
+  </main>
+  <footer class="footer"><span data-jm-i18n="JessieMessage · Accès privé sur invitation ·">JessieMessage · Accès privé sur invitation ·</span><a href="mailto:contact@jessiemessage.com" data-jm-i18n="Contact">Contact</a><a href="/help" data-help-link target="_blank" rel="noopener noreferrer" data-jm-i18n="Aide et confidentialité">Aide et confidentialité</a></footer>
+</div></body>
+</html>
