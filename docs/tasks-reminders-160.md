@@ -1,6 +1,6 @@
 # Tâches et rappels privés — Évolution 5, version 1.6.0
 
-**Code qualifié, fusionné, publié et préparé sur l’hébergement ; statut SQL à lire.** La production reste la **1.5.0/schéma 32**, avec son repli 1.4.1. Aucune migration 0033 ni activation 1.6.0 n’est attestée. [REPRISE](REPRISE.md) conserve l’état courant et la seule prochaine action.
+**Code qualifié, fusionné, publié et préparé sur l’hébergement ; diagnostic SQL préalable acquis.** La production reste la **1.5.0/schéma 32**, avec son repli 1.4.1. Aucune migration 0033 ni activation 1.6.0 n’est attestée. [REPRISE](REPRISE.md) conserve l’état courant et la seule prochaine action.
 
 ## Parcours retenu
 
@@ -32,6 +32,10 @@ Le repli 1.5.1 est préparé, sans précontrôle hébergé ni démarrage. `start
 
 Les [helpers opérateur initiaux publiés](https://github.com/fredbuhr/jessiemessage/tree/1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a/ops) conservent **59/59 tests synthétiques**, une revue indépendante et leurs octets publiés vérifiés. Ces tests restent distincts du reçu de staging et ne constituent pas une migration ou une activation hébergée.
 
-Les quatre empreintes de lanceurs réelles du reçu sont épinglées dans le [helper de migration courant](https://github.com/fredbuhr/jessiemessage/blob/e85cfe36ee3dfd62edf64d043461a7ebc727ba2d/ops/upgrade-release160.sh), SHA-256 **`9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5`**. Les mêmes 32 cas synthétiques de statut/migration ont réussi après cet épinglage ; ses octets publiés ont été vérifiés. L’ancien template initial reste historique. Aucun arrêt, diagnostic SQL, migration ou précontrôle hébergé n’est attesté ; le helper épinglé n’est pas encore à exécuter.
+Les quatre empreintes de lanceurs réelles du reçu sont épinglées dans le [helper de migration courant](https://github.com/fredbuhr/jessiemessage/blob/e85cfe36ee3dfd62edf64d043461a7ebc727ba2d/ops/upgrade-release160.sh), SHA-256 **`9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5`**. Les mêmes 32 cas synthétiques de statut/migration ont réussi après cet épinglage ; ses octets publiés ont été vérifiés. L’ancien template initial reste historique. Le diagnostic SQL préalable est acquis ; l’arrêt effectif du service, la migration et les précontrôles hébergés ne sont pas encore attestés. Le helper épinglé ne s’exécute qu’après confirmation de cet arrêt.
 
-La [lecture seule du statut SQL dans REPRISE](REPRISE.md#prochaine-action--statut-sql-en-lecture-seule) est la seule prochaine action. Attendre son résultat avant toute migration, modification Run/Build ou relance ; le lot reste ouvert jusqu’à sa livraison vérifiée.
+## Statut SQL préalable acquis
+
+Le [reçu SQL utilisateur complet](verification-proofs/jm160-hosted-sql-status.json) confirme **33 migrations connues, 32 appliquées et une en attente**, moteur et transport vérifiés, `interrupted:false`, `readOnly:true`, `migrated:false` et `noRestart:true`. Il provient de la source 1.5.1 exacte ci-dessus, révision de diagnostic 3. Aucune date d’exécution non fournie n’est déduite. **Ne pas rejouer ce diagnostic.**
+
+La [prochaine étape de REPRISE](REPRISE.md#prochaine-action--arrêt-confirmé-puis-migration-et-précontrôles) consiste à arrêter le service dans le Manager, attendre son arrêt confirmé, puis exécuter le helper de migration épinglé et ses deux précontrôles. Aucun arrêt, upgrade, précontrôle ou activation n’est encore attesté. Après la commande, conserver le service arrêté et transmettre les reçus avant tout changement Run/Build ou redémarrage. Le lot reste ouvert jusqu’à sa livraison vérifiée.

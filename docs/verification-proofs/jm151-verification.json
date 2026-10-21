@@ -1,6 +1,6 @@
 {
   "version": "1.5.1",
-  "status": "code_qualified_merged_published_hosted_staged_sql_status_pending",
+  "status": "code_qualified_merged_published_hosted_staged_sql_status_confirmed_migration_pending",
   "branch": "feat/tasks-compat-151",
   "baseCommit": "d985bf4e23abaeb3d275bf415f931e47bbb9ae68",
   "results": {
@@ -9,7 +9,8 @@
     "merged": true,
     "releasePublished": true,
     "deliveryComplete": false,
-    "hostedStagingReceiptValidated": true
+    "hostedStagingReceiptValidated": true,
+    "hostedSqlStatusConfirmed": true
   },
   "requirements": {
     "schemaMigrations": 33,
@@ -103,12 +104,13 @@
     "taskMetadataRecorded": false,
     "noHostedOperationReplayed": true,
     "sourceOfHostingEvidence": "previous user receipts; no direct private server observation",
-    "taskSqlStatusChecked": false,
+    "taskSqlStatusChecked": true,
     "taskStagingReceipt": "jm160-hosted-staging.json",
-    "schemaSource": "last closed150 metadata receipt; staging160 has not read SQL"
+    "schemaSource": "user-supplied read-only SQL status:33 known,32 applied,1 pending,not interrupted",
+    "taskSqlStatusReceipt": "jm160-hosted-sql-status.json"
   },
   "notAttested": [
-    "production_tasks_sql_status_schema33_prechecks_activation_and_metadata",
+    "production_tasks_service_stop_schema33_prechecks_activation_and_metadata",
     "physical_phone",
     "real_host_capacity",
     "current_pc_or_backup_delivery"
@@ -1140,7 +1142,7 @@
     "snapshotPhasePreserved": true,
     "publicationGateNowSatisfied": true,
     "helperBytesRereadAfterMainPublication": true,
-    "onlyNextOperatorAction": "status-release160-migration.sh read-only SQL status with existing migration account; keep current service running",
+    "onlyNextOperatorAction": "Stop the Node application in Manager and observe stopped state, then execute pinned upgrade-release160.sh with --service-stopped; wait both schema/precheck receipts before Run/Build or restart",
     "expectedFirstReceipt": "staged_awaiting_schema33",
     "preparationRunsSql": false,
     "preparationStartsRuntime": false,
@@ -1152,7 +1154,10 @@
     "futureRollbackHostedQualified": false,
     "schema33CompatibilityNote": "After migration33 the old 1.5.0/1.4.1 are not immediate rollback releases; qualify 1.5.1 first.",
     "firstReceiptReceived": true,
-    "expectedNextReceipt": "checked:33 migrations known,32 applied,1 pending,interrupted:false",
+    "expectedNextReceipt": [
+      "schema33_confirmed_before_prechecks",
+      "schema33_prechecks_passed"
+    ],
     "upgradeSourcePinsComplete": true
   },
   "hostedStaging": {
@@ -1239,12 +1244,31 @@
     "nowPublished": true,
     "publishedBytesVerified": true,
     "launcherPinsPending": 0,
-    "sqlStatusReceived": false,
+    "sqlStatusReceived": true,
     "serviceStopOperatorAttested": false,
     "executionPreconditionsSatisfied": false,
-    "upgradeInvocationProvided": false,
+    "upgradeInvocationProvided": true,
     "runtimeStarted": false,
     "schema33Applied": false,
-    "notAHostedMigrationReceipt": true
+    "notAHostedMigrationReceipt": true,
+    "invocationConditionalOnActualManagerStop": true,
+    "managerStopAutomaticallyVerifiedByHelper": false
+  },
+  "hostedSqlStatus": {
+    "receipt": "jm160-hosted-sql-status.json",
+    "sourceOfEvidence": "complete user-supplied read-only SSH receipt; no direct private server observation",
+    "executionTimestampNotProvided": true,
+    "statusHelperCommit": "1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a",
+    "statusHelperSha256": "95e201b4dc88ce446585c316b66f2804479f1c213d0dd027625e6bb1450b1a83",
+    "migrationsKnown": 33,
+    "applied": 32,
+    "pending": 1,
+    "interrupted": false,
+    "engineVerified": true,
+    "transportVerified": true,
+    "readOnly": true,
+    "migrated": false,
+    "noRestart": true,
+    "doNotRepeatStatusToDiscoverResult": true
   }
 }
