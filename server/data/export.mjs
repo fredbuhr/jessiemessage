@@ -1,11 +1,12 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { canonicalEmail } from "../auth/config.mjs";
-import { decryptMessageBody, messageFingerprint, validateMessageBody } from "../chat/crypto.mjs";
+import { decryptMessageBody, messageFingerprint, videoMessageFingerprint, validateMessageBody } from "../chat/crypto.mjs";
 
 export const DATA_EXPORT_DEFAULT_LIMITS = Object.freeze({ maxRows: 10000, maxTextBytes: 16 * 1024 * 1024, maxMediaBytes: 256 * 1024 * 1024 });
 const MAX_DATE = 253402300799999;
 const MAX_SEQUENCE = 18446744073709551615n;
 const PAGE_SIZE = 100;
+const VIDEO_BLOCK_BYTES = 262144, MAX_VIDEO_BYTES = 104857600;
 const STATUSES = new Set(["pending", "active", "suspended", "revoked", "deleted"]);
 
 export class DataExportError extends Error {
@@ -89,6 +90,15 @@ function mediaRecord(value, expectedOwnerId, expectedOwnerRole) {
     || !bytes(value.journalOwnerId).equals(result.ownerId)) fail();
   return result;
 }
+function videoRecord(value, expectedOwnerId, expectedOwnerRole, nowIso) {
+  object(value);
+  const result = { id: bytes(value.id), ownerId: bytes(value.ownerId), storageKey: bytes(value.storageKey, 32), digest: bytes(value.digest, 32),
+    bytes: integer(value.bytes, 1, MAX_VIDEO_BYTES), storedBytes: integer(value.storedBytes, 1, 104864048), createdAt: date(value.createdAt) };
+  if (!result.ownerId.equals(expectedOwnerId) || value.ownerRole !== expectedOwnerRole || value.deletedAt !== null
+    || value.state !== "committed" || value.mime !== "video/mp4" || result.createdAt > nowIso
+    || result.storedBytes !== 48 + result.bytes + 16 * Math.ceil(result.bytes / VIDEO_BLOCK_BYTES)) fail();
+  return result;
+}
 function page(value) {
   object(value);
   if (!Array.isArray(value.rows) || value.rows.length > PAGE_SIZE || typeof value.hasMore !== "boolean"
@@ -104,7 +114,10 @@ export async function exportClientContent(options = {}) {
   let key;
   try {
     object(options);
-    const { reader, writer, storage = null } = options;
+    const { reader, writer, storage = null, videoStorage = null, signal } = options;
+    if (signal !== undefined && !(signal instanceof AbortSignal)) fail();
+    const active = () => { if (signal?.aborted) fail(); };
+    active();
     const clientId = bytes(options.clientId);
     const now = integer(options.now, 0, MAX_DATE);
     key = bytes(options.messageKey, 32);
@@ -112,6 +125,9 @@ export async function exportClientContent(options = {}) {
     for (const name of ["messages", "ownMedia"]) if (typeof reader[name] !== "function") fail();
     for (const name of ["empty", "json", "line", "media"]) if (typeof writer[name] !== "function") fail();
     if (storage !== null && typeof storage?.get !== "function") fail();
+    const videos = videoStorage !== null;
+    if (videos ? typeof videoStorage?.open !== "function" || typeof reader.ownVideos !== "function" || typeof writer.video !== "function"
+      : reader.ownVideos !== undefined) fail();
     const supplied = options.limits ?? {};
     object(supplied);
     if (Object.keys(supplied).some((name) => !Object.hasOwn(DATA_EXPORT_DEFAULT_LIMITS, name))) fail();
@@ -122,16 +138,19 @@ export async function exportClientContent(options = {}) {
     if (user.createdAt > nowIso || selected !== null && selected.output.createdAt > nowIso) fail();
     const broadcasts = preference(reader.preference), profile = ownProfile(reader.ownProfile);
     if (profile.updatedAt !== null && profile.updatedAt > nowIso) fail();
-    const counts = { messages: 0, mediaFiles: 0, libraryItems: 0, mediaBytes: 0, rows: 0 };
-    const copiedMedia = new Map(), messageIds = new Set();
+    const counts = { messages: 0, mediaFiles: 0, libraryItems: 0, mediaBytes: 0, rows: 0,
+      ...(videos ? { videoFiles: 0, videoBytes: 0, videoLibraryItems: 0 } : {}) };
+    const copiedMedia = new Map(), copiedVideos = new Map(), messageIds = new Set();
     let textBytes = 0;
     const rowBudget = () => { if (++counts.rows > limits.maxRows) fail(); };
     async function json(name, value, line = false) {
+      active();
       const size = Buffer.byteLength(`${JSON.stringify(value)}\n`, "utf8");
       if (size > limits.maxTextBytes - textBytes) fail();
       await writer[line ? "line" : "json"](name, value); textBytes += size;
     }
     async function copyMedia(raw, ownerId, ownerRole) {
+      active();
       const media = mediaRecord(raw, ownerId, ownerRole), hex = media.id.toString("hex");
       const identity = JSON.stringify([media.ownerId.toString("hex"), ownerRole, media.storageKey.toString("hex"), media.digest.toString("hex"), media.width, media.height, media.fullBytes]);
       const publicMedia = { file: `media/${hex}.jpg`, type: "image/jpeg", width: media.width, height: media.height };
@@ -140,21 +159,59 @@ export async function exportClientContent(options = {}) {
       let plaintext;
       try {
         plaintext = await storage.get({ assetId: media.id, storageKey: media.storageKey, variant: "full" });
+        active();
         if (!Buffer.isBuffer(plaintext) || plaintext.length !== media.fullBytes || plaintext.length < 5
           || plaintext[0] !== 0xff || plaintext[1] !== 0xd8 || plaintext[2] !== 0xff
           || plaintext[plaintext.length - 2] !== 0xff || plaintext[plaintext.length - 1] !== 0xd9
           || !timingSafeEqual(createHash("sha256").update(plaintext).digest(), media.digest)) fail();
         await writer.media(publicMedia.file, plaintext);
+        active();
       } finally { if (Buffer.isBuffer(plaintext)) plaintext.fill(0); }
       copiedMedia.set(hex, identity); counts.mediaFiles += 1; counts.mediaBytes += media.fullBytes;
       return publicMedia;
     }
+    async function copyVideo(raw, ownerId, ownerRole) {
+      active();
+      if (!videos) fail();
+      const video = videoRecord(raw, ownerId, ownerRole, nowIso), hex = video.id.toString("hex");
+      const identity = JSON.stringify([video.ownerId.toString("hex"), ownerRole, video.storageKey.toString("hex"), video.digest.toString("hex"),
+        video.bytes, video.storedBytes, video.createdAt]);
+      const publicVideo = { file: `media/${hex}.mp4`, type: "video/mp4", bytes: video.bytes };
+      if (copiedVideos.has(hex)) { if (copiedVideos.get(hex) !== identity) fail(); return publicVideo; }
+      if (video.bytes > limits.maxMediaBytes - counts.mediaBytes) fail();
+      let handle, completed = false;
+      try {
+        handle = await videoStorage.open({ assetId: video.id, storageKey: video.storageKey }); active();
+        if (!handle || handle.bytes !== video.bytes || handle.storedBytes !== video.storedBytes
+          || typeof handle.stream !== "function" || typeof handle.close !== "function") fail();
+        const source = (async function* () {
+          let received = 0; const hash = createHash("sha256");
+          active();
+          for await (const chunk of handle.stream({ signal })) {
+            try {
+              active();
+              if (!Buffer.isBuffer(chunk) || chunk.length < 1 || chunk.length > VIDEO_BLOCK_BYTES || chunk.length > video.bytes - received) fail();
+              received += chunk.length; hash.update(chunk); yield chunk;
+              active();
+            } finally { if (Buffer.isBuffer(chunk)) chunk.fill(0); }
+          }
+          if (received !== video.bytes || !timingSafeEqual(hash.digest(), video.digest)) fail();
+          completed = true;
+        })();
+        try { await writer.video(publicVideo.file, source, { bytes: video.bytes, signal }); }
+        finally { await source.return(); }
+        active(); if (!completed) fail();
+      } finally { await handle?.close?.(); }
+      copiedVideos.set(hex, identity); counts.mediaFiles += 1; counts.mediaBytes += video.bytes;
+      counts.videoFiles += 1; counts.videoBytes += video.bytes;
+      return publicVideo;
+    }
     await writer.empty("messages.jsonl"); await writer.empty("library.jsonl");
-    await json("account.json", { format: "jessiemessage-client-content", version: 1, generatedAt: new Date(now).toISOString(), user,
+    await json("account.json", { format: "jessiemessage-client-content", version: videos ? 2 : 1, generatedAt: new Date(now).toISOString(), user,
       conversation: selected?.output ?? null, preferences: { broadcasts }, ownProfile: profile });
     let afterSequence = "0";
     while (true) {
-      const current = page(await reader.messages({ afterSequence, limit: PAGE_SIZE }));
+      active(); const current = page(await reader.messages({ afterSequence, limit: PAGE_SIZE })); active();
       for (const raw of current.rows) {
         rowBudget(); object(raw);
         const id = bytes(raw.id), conversationId = bytes(raw.conversationId), senderId = bytes(raw.senderId);
@@ -165,12 +222,23 @@ export async function exportClientContent(options = {}) {
           || BigInt(currentSequence) <= BigInt(afterSequence) || createdAt < selected.output.createdAt || createdAt > nowIso
           || deletedAt !== null && deletedAt < createdAt) fail();
         messageIds.add(hex); afterSequence = currentSequence;
-        let body = null, media = null;
-        if (deletedAt !== null) { if (raw.encrypted !== null) fail(); }
+        let body = null, media = null, video = null;
+        const attachedVideo = raw.video !== undefined && raw.video !== null;
+        if (deletedAt !== null) { if (raw.encrypted !== null || attachedVideo) fail(); }
         else {
           const binding = { messageId: id, conversationId, senderId };
           body = decryptMessageBody(raw.encrypted, key, binding);
-          if (!timingSafeEqual(messageFingerprint(body, key, binding), fingerprint)) fail();
+          if (attachedVideo) {
+            if (!videos || raw.media !== null || !timingSafeEqual(videoMessageFingerprint(body, key, binding), fingerprint)) fail();
+            const payload = JSON.parse(body);
+            if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.keys(payload).length !== 2
+              || !Object.hasOwn(payload, "videoId") || !Object.hasOwn(payload, "caption")
+              || payload.videoId !== bytes(raw.video.id).toString("hex") || typeof payload.caption !== "string" || payload.caption.length > 1000) fail();
+            if (payload.caption !== "") validateMessageBody(payload.caption);
+            if (JSON.stringify({ videoId: payload.videoId, caption: payload.caption }) !== body
+              || date(raw.video.createdAt) > createdAt) fail();
+            video = await copyVideo(raw.video, senderId, raw.senderRole); body = payload.caption;
+          } else if (!timingSafeEqual(messageFingerprint(body, key, binding), fingerprint)) fail();
           if (raw.media !== null) {
             const payload = JSON.parse(body);
             if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.keys(payload).length !== 2
@@ -181,7 +249,8 @@ export async function exportClientContent(options = {}) {
             media = await copyMedia(raw.media, senderId, raw.senderRole); body = payload.caption;
           }
         }
-        await json("messages.jsonl", { sequence: currentSequence, sender: raw.senderRole === "client" ? "me" : "peer", body, createdAt, deletedAt, media }, true);
+        await json("messages.jsonl", { sequence: currentSequence, sender: raw.senderRole === "client" ? "me" : "peer", body, createdAt, deletedAt, media,
+          ...(videos ? { video } : {}) }, true);
         counts.messages += 1;
       }
       if (current.hasMore && sequence(current.nextCursor, true) !== afterSequence) fail();
@@ -189,7 +258,7 @@ export async function exportClientContent(options = {}) {
     }
     let afterId = null;
     while (true) {
-      const current = page(await reader.ownMedia({ afterId, limit: PAGE_SIZE }));
+      active(); const current = page(await reader.ownMedia({ afterId, limit: PAGE_SIZE })); active();
       for (const raw of current.rows) {
         rowBudget();
         const id = bytes(raw?.id);
@@ -201,6 +270,22 @@ export async function exportClientContent(options = {}) {
       if (current.hasMore && !bytes(current.nextCursor).equals(afterId)) fail();
       if (!current.hasMore) break;
     }
+    if (videos) {
+      afterId = null;
+      while (true) {
+        active(); const current = page(await reader.ownVideos({ afterId, limit: PAGE_SIZE })); active();
+        for (const raw of current.rows) {
+          rowBudget(); const id = bytes(raw?.id);
+          if (afterId !== null && Buffer.compare(id, afterId) <= 0) fail();
+          afterId = id;
+          const video = await copyVideo(raw, clientId, "client");
+          await json("library.jsonl", video, true); counts.libraryItems += 1; counts.videoLibraryItems += 1;
+        }
+        if (current.hasMore && !bytes(current.nextCursor).equals(afterId)) fail();
+        if (!current.hasMore) break;
+      }
+    }
+    active();
     return counts;
   } catch { throw new DataExportError(); }
   finally { key?.fill(0); }
