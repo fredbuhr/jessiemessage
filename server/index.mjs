@@ -16,7 +16,7 @@ const RECIPE_ORIGIN = "https://recette.jessiemessage.com";
 // Release gate: compatibility 1.4.1 reads schema 32; 1.5.0 offers announcement creation.
 const ANNOUNCEMENTS_ENABLED = true;
 // Compatibility release reads schema 33; task editing is enabled in 1.6.0.
-const TASKS_ENABLED = false;
+const TASKS_ENABLED = true;
 
 const publicFiles = new Map([
   ["/", ["index.html", "text/html; charset=utf-8"]],
