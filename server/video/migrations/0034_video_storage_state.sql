@@ -1,0 +1,13 @@
+CREATE TABLE video_storage_state (
+  id TINYINT UNSIGNED NOT NULL,
+  owner_bytes BIGINT UNSIGNED NOT NULL,
+  total_bytes BIGINT UNSIGNED NOT NULL,
+  root_fingerprint VARBINARY(32) NOT NULL,
+  held_bytes BIGINT UNSIGNED NOT NULL,
+  initialized_at DATETIME(6) NOT NULL,
+  PRIMARY KEY (id),
+  CONSTRAINT video_storage_state_singleton CHECK (id = 1),
+  CONSTRAINT video_storage_state_limits CHECK (owner_bytes BETWEEN 1 AND 9007199254740991 AND total_bytes BETWEEN owner_bytes AND 9007199254740991),
+  CONSTRAINT video_storage_state_root_size CHECK (OCTET_LENGTH(root_fingerprint) = 32),
+  CONSTRAINT video_storage_state_held CHECK (held_bytes BETWEEN 0 AND total_bytes)
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

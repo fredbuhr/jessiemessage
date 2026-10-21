@@ -57,4 +57,6 @@ Les [annonces 1.5.0](announcements-150.md), puis les [tâches et rappels privés
 
 Le [socle technique vidéo 1.7.0, lot 6](video-transport-170.md) est qualifié et publié, et reste dormant dans le runtime normal. Il ne rend pas les vidéos disponibles dans la conversation ; catalogue durable, lecteur et cycle de vie complet restent au lot 7.
 
+Le [jalon 7.1 du lot 7](video-catalogue-180.md) est en développement sur sa branche : catalogue SQL candidat et capacité indépendants des photos. La version 1.8.0 de cette branche n’est ni publiée ni déployée ; les vidéos ne sont pas encore proposées dans la messagerie.
+
 L’[ancienne fiche produit, relevé du 20 octobre 2026 avant entretien](https://github.com/fredbuhr/jessiemessage/blob/bbd733d85b49b892d78c7cd90509ced04a990939/docs/PRODUCT.md) est conservée dans Git. Ses fonctions annoncées comme futures et son ancien statut de livraison sont historiques.
