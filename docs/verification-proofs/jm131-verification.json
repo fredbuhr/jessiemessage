@@ -335,5 +335,17 @@
     "rollbackRelease": "1.3.0",
     "rollbackPath": "developmentSimplification.release131.rollback",
     "priorActivePath": "developmentSimplification.release131.priorActiveService"
+  },
+  "mobileUI": "user_reported_ok",
+  "mobileUIEvidence": {
+    "method": "user_report",
+    "scope": "visual_mobile_chat_presentation_1.3.1",
+    "result": "user_reported_ok",
+    "directAgentObservation": false,
+    "physicalPhoneKeyboard": "not_explicitly_attested",
+    "notAttested": [
+      "physical_phone_keyboard",
+      "all_physical_device_paths"
+    ]
   }
 }

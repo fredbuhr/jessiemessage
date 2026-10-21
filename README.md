@@ -12,6 +12,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Profil et expressions, 1.2.0](docs/profile-expressions-120.md) | Périmètre du lot et préconditions de migration/repli. |
 | [Emojis enrichis et inclusifs, 1.3.0](docs/emoji-inclusifs-130.md) | Catalogue Unicode, carnations et critères de livraison. |
 | [Messagerie mobile, 1.3.1 active](docs/chat-mobile-131.md) | Barre de conversation unique, menus discrets et espace rendu aux messages ; suivi final en attente. |
+| [Voix client et détails des messages, 1.3.2 en cours](docs/client-voice-message-details-132.md) | Textes FR/EN à la première personne et messages compacts, sans changement d’API ni de SQL. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
@@ -19,6 +20,8 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 **Version active : 1.3.1**, messagerie mobile recentrée sur la conversation, avec profil, avatar, 268 choix Unicode et cinq carnations conservés. Le relevé admin utilisateur identifie le commit livré `baf91e0e…` et Node 24.22.0 ; le précontrôle hébergé est confirmé, schéma 31 inchangé et repli 1.3.0 préservé. **L’alignement final des métadonnées opérateur attend son reçu : le lot 1.3.1 n’est pas déclaré clos.** Les preuves et le repli sont consignés dans REPRISE.
 
 Le [correctif mobile 1.3.1](docs/chat-mobile-131.md) est fusionné par la [PR 114](https://github.com/fredbuhr/jessiemessage/pull/114), qualifié par les CI de PR et du commit exact 5/5, puis [publié](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.1) et activé selon le relevé admin utilisateur. Ne rejouer ni préparation, ni Build/Run, ni activation. La [livraison précédente 1.3.0](docs/emoji-inclusifs-130.md) reste close et conservée comme repli.
+
+Le retour utilisateur valide visuellement la présentation mobile 1.3.1 ; l’usage du clavier logiciel sur un téléphone physique n’a pas été explicitement attesté. Le [correctif 1.3.2](docs/client-voice-message-details-132.md) est désormais **autorisé et en cours** : textes client FR/EN à la première personne de Jessie, aide reformulée et détails/actions des messages à la sélection. Cette demande permet d’avancer malgré le reçu de métadonnées 1.3.1 encore absent. Aucune qualification finale, fusion, publication ou mise en production 1.3.2 n’est annoncée.
 
 ## Versions et livraisons
 

@@ -19,6 +19,13 @@ const session = (value = 1, csrf = "A".repeat(43), role = "client") => ({ user: 
 const response = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
 const pause = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
 const flush = async () => { for (let index = 0; index < 12; index++) await new Promise((resolve) => setImmediate(resolve)); };
+async function revealMessageDetails(article) {
+  if (!article.querySelector(".message-meta").hidden) return;
+  const toggle = article.querySelector(".message-details-toggle");
+  for (const handler of toggle.events.get("click")) handler({ currentTarget: toggle, target: toggle });
+  await flush();
+}
+
 class Element {
   constructor(tag = "div", registry = null) {
     this.tagName = tag; this.registry = registry; this.children = []; this.parentElement = null; this._connected = false; this.events = new Map();
@@ -62,6 +69,12 @@ class Element {
   querySelectorAll(selector) { const matches = (child) => selector.startsWith(".") ? child.className?.split(" ").includes(selector.slice(1)) : child.tagName === selector;
     return this.children.flatMap((child) => [...(matches(child) ? [child] : []), ...child.querySelectorAll(selector)]); }
   querySelector(selector) { return this.querySelectorAll(selector)[0] ?? null; }
+  closest(selector) {
+    for (let node = this; node; node = node.parentElement) {
+      if (selector.split(",").some(part => part.trim().startsWith(".") ? node.classList.contains(part.trim().slice(1)) : node.tagName === part.trim())) return node;
+    }
+    return null;
+  }
   getBoundingClientRect() { return { top: 0, bottom: 100, height: 100 }; }
   focus() { if (this.isConnected && this.registry?.document) this.registry.document.activeElement = this; }
   setSelectionRange(start, end) { this.selectionStart = start; this.selectionEnd = end; }
@@ -751,7 +764,7 @@ test("late unauthorized photo headers cannot sign out the new owner or a hidden 
 test("empty event polls preserve a message and its focused delete control", async () => {
   const f = harness(); await flush(); await f.send("Keep my keyboard position");
   const messages = f.element("messages"), article = messages.children.at(-1), remove = article.querySelector(".delete-message");
-  remove.focus(); assert.equal(f.document.activeElement, remove);
+  await revealMessageDetails(article); remove.focus(); assert.equal(f.document.activeElement, remove);
   await f.advance(3000);
   assert.ok(f.calls.some((call) => call.path.includes("/events?")), "a real polling cycle completed");
   assert.equal(f.document.activeElement, remove);
@@ -759,6 +772,49 @@ test("empty event polls preserve a message and its focused delete control", asyn
   assert.equal(article.querySelector(".delete-message"), remove);
   assert.equal(remove.isConnected, true); assert.equal(f.document.activeElement, remove);
   assert.match(contents(article), /Keep my keyboard position/);
+  assert.equal(article.classList.contains("is-selected"), true); assert.equal(article.querySelector(".message-meta").hidden, false);
+});
+
+for (const role of ["client", "admin"]) test(`${role}: one message at a time exposes details and selection is cleared across content, visibility and account changes`, async () => {
+  const f = harness({ currentSession: session(1, "A".repeat(43), role) }); await flush();
+  if (role === "admin") { for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); }
+  await f.send("A synthetic own message");
+  const rows = () => f.element("messages").children;
+  const selected = () => rows().filter(row => row.classList.contains("is-selected"));
+  const toggle = async row => { const button = row.querySelector(".message-details-toggle"); for (const handler of button.events.get("click")) handler({ target: button }); await flush(); };
+  assert.ok(rows().every(row => row.querySelector(".message-meta").hidden));
+  const peer = rows()[0], own = rows().at(-1), oldToggle = own.querySelector(".message-details-toggle");
+  await toggle(peer); assert.equal(selected().length, 1); assert.equal(peer.querySelector(".message-meta").hidden, false);
+  assert.equal(peer.querySelector(".delete-message"), null, "a peer message never gains an own-message delete action");
+  await toggle(own); assert.equal(selected().length, 1); assert.equal(peer.querySelector(".message-meta").hidden, true);
+  assert.equal(own.querySelector(".message-meta").hidden, false); assert.ok(own.querySelector(".delete-message"));
+  assert.equal(oldToggle.getAttribute("aria-expanded"), "true");
+  assert.equal(oldToggle.getAttribute("aria-controls"), own.querySelector(".message-meta").id);
+  await toggle(own); assert.equal(selected().length, 0); assert.equal(oldToggle.getAttribute("aria-expanded"), "false");
+  await toggle(own); await f.event("keydown", { key: "Escape", preventDefault() {} });
+  assert.equal(selected().length, 0); assert.equal(f.document.activeElement, oldToggle);
+  await toggle(own); await f.event("click", { target: f.element("message-body") });
+  assert.equal(selected().length, 0); assert.equal(own.querySelector(".message-meta").hidden, true);
+
+  await toggle(own);
+  const current = f.inspect().states.get(f.inspect().selected);
+  current.messages.get(own.dataset.sequence).body = "Changed synthetic content";
+  vm.runInContext("renderMessages(currentState())", f.context); await flush();
+  assert.equal(selected().length, 0, "replaced content cannot retain an old selection");
+  for (const handler of oldToggle.events.get("click")) handler({ target: oldToggle }); await flush();
+  assert.equal(selected().length, 0, "an obsolete details control cannot select its replacement");
+
+  if (role === "admin") {
+    await toggle(rows().at(-1)); await f.click("back-to-inbox");
+    assert.equal(selected().length, 0);
+    for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
+    assert.ok(rows().every(row => row.querySelector(".message-meta").hidden));
+  }
+  await toggle(rows().at(-1)); await f.hide(); assert.equal(selected().length, 0);
+  await f.show(); assert.ok(rows().every(row => row.querySelector(".message-meta").hidden));
+  await toggle(rows().at(-1)); await f.hide(); f.state.currentSession = session(2, "B".repeat(43), role); await f.show();
+  assert.equal(selected().length, 0); assert.ok(rows().every(row => row.querySelector(".message-meta").hidden));
+  assert.equal(posts(f).length, 1); assert.equal(f.calls.filter(call => call.path.endsWith("/delete")).length, 0);
 });
 
 function photoFixture(f, { sender = "me", messageId = id(800), sequence = "1" } = {}) {
@@ -782,7 +838,7 @@ for (const role of ["client", "admin"]) test(`${role}: a receipt-only poll prese
     await flush();
   }
   const article = f.element("messages").children[0], photo = article.querySelector(".photo-open"), image = photo.querySelector("img"), remove = article.querySelector(".delete-message");
-  assert.ok(image); assert.match(contents(article), /Envoyé/); photo.focus();
+  assert.ok(image); await revealMessageDetails(article); assert.match(contents(article), /Envoyé/); photo.focus();
   f.conversation().peerReadSequence = "1";
   await f.advance(3000);
   assert.equal(f.element("messages").children[0], article);
@@ -790,6 +846,7 @@ for (const role of ["client", "admin"]) test(`${role}: a receipt-only poll prese
   assert.equal(article.querySelector(".delete-message"), remove); assert.equal(f.document.activeElement, photo);
   const receipt = article.querySelector(".message-meta").children[1];
   assert.equal(receipt.textContent, role === "admin" ? "Lu" : "Envoyé");
+  assert.equal(article.classList.contains("is-selected"), true); assert.equal(article.querySelector(".message-meta").hidden, false);
   assert.equal(f.calls.filter((call) => call.path.endsWith("/thumb")).length, 1);
   assert.equal(f.createdUrls.length, 1); assert.equal(f.revoked.length, 0);
 });
@@ -827,7 +884,7 @@ test("loading older messages prepends in sequence and preserves the existing foc
     if (path.includes("/messages?before=")) return response(200, { conversation: f.conversation(), messages: [older], hasMoreBefore: false, nextBefore: null });
     return undefined;
   } }); await flush();
-  const messages = f.element("messages"), article = messages.children[0], remove = article.querySelector(".delete-message"); remove.focus();
+  const messages = f.element("messages"), article = messages.children[0], remove = article.querySelector(".delete-message"); await revealMessageDetails(article); remove.focus();
   await f.click("older-messages");
   assert.deepEqual(messages.children.map((item) => item.dataset.sequence), ["1", "2"]);
   assert.match(contents(messages.children[0]), /Older history/); assert.equal(messages.children[1], article);
@@ -979,7 +1036,7 @@ test("message deletion requires explicit confirmation and cancellation returns f
   f = harness({ intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
     conversation: f.conversation(), messages: [{ id: id(880), sequence: "1", sender: "me", body: "Keep until confirmed", createdAt: now, deletedAt: null }], eventCursor: "1", hasMoreBefore: false,
   }) : path.endsWith("/delete") ? response(200, { message: { id: id(880), sequence: "1", sender: "me", body: null, createdAt: now, deletedAt: now } }) : undefined }); await flush();
-  const button = f.element("messages").children[0].querySelector(".delete-message"); button.focus();
+  const button = f.element("messages").children[0].querySelector(".delete-message"); await revealMessageDetails(button.parentElement.parentElement); button.focus();
   for (const handler of button.events.get("click")) handler({}); await flush();
   assert.equal(f.element("confirm-delete").open, true); assert.equal(f.document.activeElement, f.element("cancel-delete"));
   assert.equal(f.calls.filter((call) => call.path.endsWith("/delete")).length, 0);
@@ -1030,7 +1087,7 @@ test("a delayed close event from a cancelled dialog cannot cancel its next confi
   // Native dialog.close() queues its close event; it need not be delivered
   // before the next keyboard activation reopens the same dialog.
   dialog.close = () => { dialog.open = false; queuedCloseEvents.push(...dialog.events.get("close")); };
-  const opener = f.element("messages").children[0].querySelector(".delete-message"); opener.focus();
+  const opener = f.element("messages").children[0].querySelector(".delete-message"); await revealMessageDetails(opener.parentElement.parentElement); opener.focus();
   for (const handler of opener.events.get("click")) handler({}); await flush(); await f.click("cancel-delete");
   assert.equal(dialog.open, false); assert.equal(f.document.activeElement, opener);
   for (const handler of opener.events.get("click")) handler({}); await flush();

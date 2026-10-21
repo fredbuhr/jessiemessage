@@ -79,7 +79,7 @@ test("client access states, signed-out administrator and absent roles render onl
 });
 
 test("disabled entry is distinct from failed verification and no unverified sign-in links are shown", async () => {
-  const disabled = harness({ handler: () => response(200, dto(null, null)) }); await flush(); assertNoLinks(disabled); assert.match(disabled.element("entry-status").textContent, /préparation/);
+  const disabled = harness({ handler: () => response(200, dto(null, null)) }); await flush(); assertNoLinks(disabled); assert.match(disabled.element("entry-status").textContent, /pas encore disponible/);
   for (const failure of [response(429), response(503, dto(null, null)), response(201), response(200, { ...dto(), secret: "private-value" }), response(200, dto({ state: "pending", href: "/messages" }))]) {
     const f = harness({ handler: () => failure }); await flush(); assertNoLinks(f); assert.match(f.element("entry-status").textContent, /pas pu être vérifié/); assert.equal(f.element("entry-retry").hidden, false);
     assert.doesNotMatch(f.element("entry-status").textContent, /private-value/);

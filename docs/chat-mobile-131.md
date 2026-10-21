@@ -1,6 +1,6 @@
 # Conversation au centre sur mobile — correctif 1.3.1
 
-**21 octobre 2026 — version 1.3.1 active selon le relevé admin utilisateur, après précontrôle hébergé confirmé ; alignement final des métadonnées opérateur en attente.** Code fusionné, qualifié et publié, avec CI finale de PR et du commit exact réussies 5/5. Le schéma 31 reste inchangé, sans migration ni nouvelle dépendance, et le repli 1.3.0 est préservé. Le lot n’est pas déclaré clos tant que le reçu d’alignement n’est pas reçu. La version active et les seules commandes opérateur courantes sont dans [REPRISE](REPRISE.md) ; les diffusions attendent cette clôture.
+**21 octobre 2026 — version 1.3.1 active selon le relevé admin utilisateur, après précontrôle hébergé confirmé ; alignement final des métadonnées opérateur en attente.** Code fusionné, qualifié et publié, avec CI finale de PR et du commit exact réussies 5/5. Le schéma 31 reste inchangé, sans migration ni nouvelle dépendance, et le repli 1.3.0 est préservé. Le lot n’est pas déclaré clos tant que le reçu d’alignement n’est pas reçu. La version active et les seules commandes opérateur courantes sont dans [REPRISE](REPRISE.md) ; les diffusions restent planifiées. Le correctif 1.3.2 demandé depuis est autorisé malgré ce suivi encore en attente.
 
 ## Périmètre du correctif
 
@@ -34,6 +34,8 @@ La [CI finale de PR](https://github.com/fredbuhr/jessiemessage/actions/runs/3952
 
 L’ancien test Chrome imposant six commandes visibles dans l’en-tête est remplacé dans ce travail par des critères de barre compacte et de commandes accessibles dans le menu, avec un contrôle de hauteur utile du fil. Une simple absence de débordement horizontal ne suffit pas.
 
+**Retour utilisateur ultérieur :** la présentation mobile 1.3.1 est validée visuellement par l’utilisateur (`user_reported_ok`). Ce retour ne constitue ni une observation directe de l’agent ni une validation explicite du clavier logiciel sur téléphone physique ; cette limite reste conservée dans les preuves.
+
 ## Livraison, précontrôle et activation confirmés
 
 La [PR 114](https://github.com/fredbuhr/jessiemessage/pull/114) est fusionnée sur `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, arbre `adcdf8e8e2aa202163da665aa0df8344abf7a194`. Le [tag/release v1.3.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.1) est publié et relu sur ce commit exact, à `2026-10-21T00:56:35Z`, par le [workflow de publication vérifié](https://github.com/fredbuhr/jessiemessage/actions/runs/39524324490), commit opérateur `a774e28090c61e79287e0f5ed987d678d1d48a55`.
@@ -42,7 +44,7 @@ Le reçu utilisateur `staged_precheck_passed` confirme la préparation et le pr�
 
 Le relevé admin utilisateur reçu ensuite confirme **1.3.1**, commit `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, Node **v24.22.0**, relevé au démarrage **`21/10/2026 03:04:01`**. Ce texte est conservé tel qu’affiché, sans fuseau du navigateur supposé ni conversion UTC déduite. Cette identité rapportée par l’utilisateur est distincte de la CI et du précontrôle ; elle ne constitue pas un essai complet de l’interface sur téléphone. L’agent ne revendique aucun GET privé direct ni attestation PID/socket/binaire.
 
-**Ne rejouer ni préparation, ni Build/Run, ni activation ou redémarrage.** Il n’y a ni migration ni changement de dépendances. L’alignement final des métadonnées opérateur attend encore son reçu : aucune clôture du lot 1.3.1 n’est annoncée. Suivre uniquement la prochaine action épinglée de [REPRISE](REPRISE.md).
+**Ne rejouer ni préparation, ni Build/Run, ni activation ou redémarrage.** Il n’y a ni migration ni changement de dépendances. L’alignement final des métadonnées opérateur attend encore son reçu : aucune clôture du lot 1.3.1 n’est annoncée. L’état de cet alignement reste dans [REPRISE](REPRISE.md), sans bloquer le correctif 1.3.2 nouvellement demandé.
 
 ## Références officielles consultées
 
