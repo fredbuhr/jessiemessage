@@ -1,6 +1,6 @@
 {
   "version": "1.5.1",
-  "status": "schema33_migrated_prechecked_runtime_activation_pending",
+  "status": "runtime_identity_confirmed_metadata_alignment_pending",
   "branch": "feat/tasks-compat-151",
   "baseCommit": "d985bf4e23abaeb3d275bf415f931e47bbb9ae68",
   "results": {
@@ -13,7 +13,8 @@
     "hostedSqlStatusConfirmed": true,
     "schema33Confirmed": true,
     "hostedPrechecksPassed": true,
-    "runtimeActivated": false
+    "runtimeActivated": true,
+    "runtimeIdentityReported": true
   },
   "requirements": {
     "schemaMigrations": 33,
@@ -90,11 +91,11 @@
     "scope": "Historical local development evidence under Node24.19; local native SQL/Chrome were not run. Exact final sources are qualified separately by own CI."
   },
   "hosting": {
-    "activeVersion": null,
-    "activeSource": null,
-    "activeTree": null,
+    "activeVersion": "1.6.0",
+    "activeSource": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "activeTree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
     "nodeVersion": "v24.22.0",
-    "startupDisplayExact": null,
+    "startupDisplayExact": "21/10/2026 19:56:14",
     "schemaMigrations": 33,
     "metadataReceipt": "jm150-hosted-metadata.json",
     "currentRollback": "1.5.1",
@@ -103,7 +104,7 @@
     "taskStagingReceiptReceived": true,
     "taskMigrationApplied": true,
     "taskPrechecksPassed": true,
-    "taskRuntimeActivated": false,
+    "taskRuntimeActivated": true,
     "taskMetadataRecorded": false,
     "noHostedOperationReplayed": true,
     "sourceOfHostingEvidence": "previous user receipts; no direct private server observation",
@@ -111,8 +112,8 @@
     "taskStagingReceipt": "jm160-hosted-staging.json",
     "schemaSource": "user supplied schema33 migration and two hosted precheck receipts",
     "taskSqlStatusReceipt": "jm160-hosted-sql-status.json",
-    "currentServiceState": "stopped:operator attestation before migration;no new runtime started",
-    "currentRuntimeIdentityConfirmed": false,
+    "currentServiceState": "responding:identity confirmed via user admin readiness report",
+    "currentRuntimeIdentityConfirmed": true,
     "serviceStopOperatorAttested": true,
     "taskSchemaReceipt": "jm160-hosted-schema33.json",
     "lastObservedActiveService": {
@@ -122,7 +123,7 @@
       "startupDisplayExact": "21/10/2026 17:58:07",
       "schemaMigrationsAtObservation": 32
     },
-    "metadataState": "checkpoint remains last recorded release150/schema32;schema33 helper did not change it",
+    "metadataState": "checkpoint remains last recorded release150/schema32; final release160 metadata alignment has not been executed",
     "activationTarget": {
       "version": "1.6.0",
       "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
@@ -130,10 +131,11 @@
       "nodeVersion": "v24.22.0",
       "run": "bash /srv/customer/jessiemessage-private/start-primary-release160-9590741e.sh",
       "build": "bash /srv/customer/jessiemessage-private/check-primary-release160-9590741e.sh"
-    }
+    },
+    "taskIdentityReceipt": "jm160-hosted-identity.json"
   },
   "notAttested": [
-    "production_tasks_runtime_identity_activation_metadata",
+    "production_tasks_final_metadata_alignment",
     "physical_phone",
     "real_host_capacity",
     "current_pc_or_backup_delivery"
@@ -1165,19 +1167,19 @@
     "snapshotPhasePreserved": true,
     "publicationGateNowSatisfied": true,
     "helperBytesRereadAfterMainPublication": true,
-    "onlyNextOperatorAction": "Save exact release160 Run and Build commands in existing Manager app, then start/restart once and report four readiness identity values;manual Build not required because both hosted CHECKs already passed",
+    "onlyNextOperatorAction": "Execute qualified and published record-release160.py once to align metadata only; do not rebuild,restart,replay migration or request an additional startup report",
     "expectedFirstReceipt": "staged_awaiting_schema33",
     "preparationRunsSql": false,
     "preparationStartsRuntime": false,
     "preparationChangesManagerOrCheckpoint": false,
     "upgradeLauncherHashesPendingActualHostedStagingReceipt": 0,
-    "recordRelease160WriterCreated": false,
+    "recordRelease160WriterCreated": true,
     "futureRollbackVersion": "1.5.1",
     "futureRollbackHostedPrepared": true,
     "futureRollbackHostedQualified": true,
     "schema33CompatibilityNote": "After migration33 the old 1.5.0/1.4.1 are not immediate rollback releases; qualify 1.5.1 first.",
     "firstReceiptReceived": true,
-    "expectedNextReceipt": "user-supplied application version, full commit,Node version and exact startup display",
+    "expectedNextReceipt": "release160_metadata_recorded or identical release160_metadata_already_recorded",
     "upgradeSourcePinsComplete": true
   },
   "hostedStaging": {
@@ -1337,5 +1339,176 @@
     "rollback151RuntimeStarted": false,
     "doNotReplayMigrationOrPrechecks": true,
     "manualBuildRequired": false
+  },
+  "hostingBeforeActivation160": {
+    "activeVersion": null,
+    "activeSource": null,
+    "activeTree": null,
+    "nodeVersion": "v24.22.0",
+    "startupDisplayExact": null,
+    "schemaMigrations": 33,
+    "metadataReceipt": "jm150-hosted-metadata.json",
+    "currentRollback": "1.5.1",
+    "currentRollbackHostedPrechecked": true,
+    "currentRollbackRuntimeStarted": false,
+    "taskStagingReceiptReceived": true,
+    "taskMigrationApplied": true,
+    "taskPrechecksPassed": true,
+    "taskRuntimeActivated": false,
+    "taskMetadataRecorded": false,
+    "noHostedOperationReplayed": true,
+    "sourceOfHostingEvidence": "previous user receipts; no direct private server observation",
+    "taskSqlStatusChecked": true,
+    "taskStagingReceipt": "jm160-hosted-staging.json",
+    "schemaSource": "user supplied schema33 migration and two hosted precheck receipts",
+    "taskSqlStatusReceipt": "jm160-hosted-sql-status.json",
+    "currentServiceState": "stopped:operator attestation before migration;no new runtime started",
+    "currentRuntimeIdentityConfirmed": false,
+    "serviceStopOperatorAttested": true,
+    "taskSchemaReceipt": "jm160-hosted-schema33.json",
+    "lastObservedActiveService": {
+      "activeVersion": "1.5.0",
+      "activeSource": "abca467c45c9385371a9095ab359e78c99140370",
+      "activeTree": "3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4",
+      "startupDisplayExact": "21/10/2026 17:58:07",
+      "schemaMigrationsAtObservation": 32
+    },
+    "metadataState": "checkpoint remains last recorded release150/schema32;schema33 helper did not change it",
+    "activationTarget": {
+      "version": "1.6.0",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+      "nodeVersion": "v24.22.0",
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-release160-9590741e.sh",
+      "build": "bash /srv/customer/jessiemessage-private/check-primary-release160-9590741e.sh"
+    }
+  },
+  "hostedIdentity": {
+    "receipt": "jm160-hosted-identity.json",
+    "sourceOfEvidence": "four exact values supplied by user from admin readiness; no direct private GET or process observation",
+    "version": "1.6.0",
+    "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "nodeVersion": "v24.22.0",
+    "reportedStartedAtDisplay": "21/10/2026 19:56:14",
+    "reportedStartupTimezoneAndEpochNotProvided": true,
+    "activationReported": true,
+    "metadataRecorded": false,
+    "noAdditionalBuildRestartOrIdentityRequestRequired": true,
+    "limitations": [
+      "pid_not_qualified",
+      "socket_not_qualified",
+      "executed_binary_hash_not_qualified",
+      "runtime_private_configs_not_qualified"
+    ]
+  },
+  "metadataAlignment": {
+    "helperCommit": "adb56663201ce01ebf72104ce82c6fda6921563b",
+    "helperTree": "938ba1993228e5ae31cbd42a3856bf05993bfc6f",
+    "helperFile": "ops/record-release160.py",
+    "helperSha256": "ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd",
+    "testFile": "ops/test-record-release160.py",
+    "testSha256": "92df932a1597777bd69bbf10371dee23b200f1abc5e07238639e0687e207bd4b",
+    "qualificationSnapshot": {
+      "status": "record160_synthetic_qualified_frozen_for_review_not_published",
+      "checkedAt": "2026-10-21T18:04:28.803608+00:00",
+      "identity": {
+        "provenance": "admin_readiness_user_report",
+        "version": "1.6.0",
+        "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+        "nodeVersion": "v24.22.0",
+        "reportedStartedAtDisplay": "21/10/2026 19:56:14",
+        "timezoneOrEpochInferred": false
+      },
+      "oldActiveExactCurrent150": true,
+      "oldActiveRelease": "1.5.0",
+      "oldActiveSchemaMigrations": 32,
+      "newActive": {
+        "schemaMigrations": 33,
+        "tasksEnabled": true,
+        "announcementsEnabled": true
+      },
+      "rollback": {
+        "release": "1.5.1",
+        "schemaMigrations": 33,
+        "tasksCompatible": true,
+        "tasksEnabled": false,
+        "announcementsEnabled": true,
+        "hostedPrechecked": true,
+        "runtimeIdentityObserved": false,
+        "runtimeStarted": false
+      },
+      "boundedUniqueCases": 12,
+      "repositoryRun": {
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 0.452
+      },
+      "standaloneTwoFileRun": {
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "sameCasesRepeated": true,
+        "log": "/workspace/scratch/96b2e1781a0b/task160-validation/record160-standalone-tests.log"
+      },
+      "checks": {
+        "pythonSyntax": 2,
+        "newFilesWhitespace": 2,
+        "gitDiffCheck": true,
+        "fourLauncherHashesMatchCommittedUpgradeReceiptPins": true,
+        "old150FullStateExact": true,
+        "historical150And141AndOtherBlocksPreserved": true,
+        "onlyTwoNewOpsFiles": true,
+        "active160PrecheckMayAppendWithoutWholeFileHashGuard": true
+      },
+      "expectedRollbackPrecheck": {
+        "expectedSha256": "cb5a9e6d1d1354abe8113cb12e7c6e3d636b5111041851ada88f85c5b845fea6",
+        "canonicalReport": {
+          "version": 1,
+          "type": "local_closure_precheck",
+          "status": "passed",
+          "scope": "local_application",
+          "pendingClosures": false,
+          "started": false,
+          "erased": false,
+          "externalContinuityVerified": false
+        },
+        "serialization": "JSON.stringify(report) plus newline",
+        "pinnedSource151": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "sourceBlobs": {
+          "server/backup/local-closure-parent.mjs": "1b551d4d0db0ac56081586062ed877a6c62d305b",
+          "scripts/start-recurring-private-messaging.mjs": "0c57aa4e516530a3898416b0ca901cca78b5d7de"
+        },
+        "observedHostedFileSha256": null,
+        "meaning": "Expected canonical successful check bytes; the future writer verifies the hosted file before writing metadata. No hosted log hash is claimed observed here."
+      },
+      "files": {
+        "record-release160.py": "ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd",
+        "test-record-release160.py": "92df932a1597777bd69bbf10371dee23b200f1abc5e07238639e0687e207bd4b"
+      },
+      "hostedOperationExecuted": false,
+      "sqlConnectionOpened": false,
+      "runtimeStarted": false,
+      "managerChanged": false,
+      "logsMutated": false,
+      "committed": false,
+      "published": false
+    },
+    "snapshotPhasePreserved": true,
+    "standaloneDurationSecondsObservedInLog": 0.424,
+    "independentReview": "no blocking findings",
+    "nowPublished": true,
+    "publishedBytesVerified": true,
+    "operatorInvocationProvided": true,
+    "hostedExecutionReceiptReceived": false,
+    "expectedReceipt": "release160_metadata_recorded or identical release160_metadata_already_recorded",
+    "metadataOnly": true,
+    "noRestart": true,
+    "old150ActiveWillBeArchivedWholeWithDigest": true,
+    "old150IsNotUsableRollbackOnSchema33": true,
+    "rollback151SeparateHostedPrecheckedNotStarted": true,
+    "historicalAndUnknownBlocksPreservationRequired": true,
+    "noSqlRuntimeManagerOrLogMutation": true
   }
 }

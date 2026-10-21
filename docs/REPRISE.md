@@ -1,12 +1,12 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — schéma SQL 33 confirmé, service arrêté ; activation 1.6.0 attendue.** L’arrêt est attesté par l’opérateur dans les [reçus de migration et précontrôles](verification-proofs/jm160-hosted-schema33.json). Une migration 0033 a été appliquée, 32 conservées, et les deux CHECK 1.5.1/1.6.0 sont réussis. Le repli **1.5.1 est préparé et précontrôlé sur le schéma 33, jamais démarré**. La dernière version HTTP identifiée avant cet arrêt était la **1.5.0**, commit `abca467c45c9385371a9095ab359e78c99140370`, Node `v24.22.0`, démarrage affiché exactement **`21/10/2026 17:58:07`** ; ce relevé demeure historique, sans conversion de fuseau ou d’epoch déduite. Aucune identité HTTP 1.6.0 n’est encore reçue. Le checkpoint conserve les métadonnées 1.5.0 et les anciens replis ; il n’a pas été réécrit par le helper. **Ne pas redémarrer 1.5.0 ou 1.4.1 sur le schéma 33.** Ce fichier reste l’unique état courant. Les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — production 1.6.0 identifiée, schéma SQL 33 ; alignement final des métadonnées en attente.** Le [relevé admin utilisateur](verification-proofs/jm160-hosted-identity.json) affiche **`1.6.0` / `9590741e7065067aee9d1ad5d1206739cc27eb6b` / `v24.22.0` / `21/10/2026 19:56:14`**. Ce texte de démarrage est conservé exactement, sans conversion de fuseau ou d’epoch déduite. Migration 0033 et précontrôles hébergés 1.5.1/1.6.0 sont acquis ; le repli **1.5.1 est préparé et précontrôlé sur le schéma 33, jamais démarré**. Le checkpoint privé conserve encore les métadonnées antérieures 1.5.0/schéma 32 jusqu’au reçu final ; le schéma SQL effectivement confirmé est 33. **Ne pas redémarrer 1.5.0 ou 1.4.1 sur le schéma 33.** Ce fichier reste l’unique état courant. Les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## Travail courant — Évolution 5, tâches et rappels privés
 
 Ouvert à la demande de l’utilisateur après la clôture 1.5.0. La confirmation de synchronisation interrompue par une erreur interne du contrôle d’approbation est résolue : le fetch a réussi et l’index local a été comparé au commit GitHub `d985bf4e23abaeb3d275bf415f931e47bbb9ae68`, arbre `afd31c2444e7c2742e4fd643b5273b4d2dd37f41`, avant alignement de la branche locale. Aucun changement ni reçu n’a été perdu, aucune opération d’hébergement n’a été rejouée. Le mécanisme interne d’approbation n’a pas été modifié.
 
-Le lot [Tâches et rappels 1.6.0](tasks-reminders-160.md) et sa [référence compatible 1.5.1](tasks-compat-151.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Plusieurs tâches privées par client, échéances, report, statut terminé et vue commune sont codés. Les rappels apparaissent dans l’application ; aucun push de tâche lorsque l’application est fermée. L’ancienne date de suivi CRM reste distincte. Les reçus de préparation et de statut SQL préalable restent conservés séparément. Les [deux reçus de migration et précontrôles](verification-proofs/jm160-hosted-schema33.json) confirment désormais le schéma 33, l’arrêt du service attesté et le repli 1.5.1 précontrôlé sans démarrage. Le lot n’est pas clos : **le service reste arrêté ; activation 1.6.0, identité HTTP et métadonnées 1.6.0 sont encore attendues.** Les vidéos et les opérations PC restent hors de ce lot.
+Le lot [Tâches et rappels 1.6.0](tasks-reminders-160.md) et sa [référence compatible 1.5.1](tasks-compat-151.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Plusieurs tâches privées par client, échéances, report, statut terminé et vue commune sont codés. Les rappels apparaissent dans l’application ; aucun push de tâche lorsque l’application est fermée. L’ancienne date de suivi CRM reste distincte. Les reçus de préparation et de statut SQL préalable restent conservés séparément. Les [deux reçus de migration et précontrôles](verification-proofs/jm160-hosted-schema33.json) confirment désormais le schéma 33, l’arrêt du service attesté et le repli 1.5.1 précontrôlé sans démarrage. Le [relevé admin utilisateur](verification-proofs/jm160-hosted-identity.json) confirme ensuite l’activation et l’identité HTTP 1.6.0. **Le lot reste ouvert uniquement pour l’alignement final des métadonnées ; ne rejouer ni migration, ni précontrôle, ni changement Run/Build ou redémarrage pour l’identité déjà acquise.** Les vidéos et les opérations PC restent hors de ce lot.
 
 | Référence publiée | Source et arbre exacts | Qualification propre et publication |
 | --- | --- | --- |
@@ -44,38 +44,34 @@ Les [deux reçus utilisateur complets](verification-proofs/jm160-hosted-schema33
 
 L’arrêt est attesté par l’opérateur ; l’agent n’a pas observé les processus ou le Manager privés directement. Aucune date non fournie n’est déduite. Le repli **1.5.1** est préparé et précontrôlé, jamais démarré. **Ne rejouer ni préparation, ni diagnostic SQL, ni migration, ni précontrôles pour retrouver ces résultats ; ne tronquer aucun journal.** Les anciennes versions 1.5.0/1.4.1 restent préservées historiquement, mais ne doivent pas être redémarrées sur le schéma 33.
 
-### Prochaine action — activer la 1.6.0 puis relever son identité
+### Activation 1.6.0 acquise — ne pas redémarrer pour les métadonnées
 
-1. Ouvrir les [réglages de l’application Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), toujours nommée **recette.jessiemessage.com** dans le Manager et desservant aussi **jessiemessage.com**. Le site PHP accueil.jessiemessage.com est distinct.
-2. Remplacer le champ **Run** par :
+Le [relevé admin utilisateur](verification-proofs/jm160-hosted-identity.json) affiche **1.6.0**, commit **`9590741e7065067aee9d1ad5d1206739cc27eb6b`**, Node **`v24.22.0`** et démarrage **`21/10/2026 19:56:14`**. Les quatre valeurs sont conservées exactement. Ce relevé identifie le processus HTTP répondant ; l’agent n’a pas observé le GET privé directement ni attesté PID/socket/empreinte du binaire exécuté. Le fuseau et l’epoch du démarrage ne sont pas déduits. Aucun téléphone physique ou débit réel du mutualisé n’est qualifié par ce seul relevé.
 
-   ```sh
-   bash /srv/customer/jessiemessage-private/start-primary-release160-9590741e.sh
-   ```
+Les commandes courantes sont **Run** `bash /srv/customer/jessiemessage-private/start-primary-release160-9590741e.sh` et **Build** `bash /srv/customer/jessiemessage-private/check-primary-release160-9590741e.sh`. Le repli **1.5.1**, préparé et précontrôlé sans démarrage, conserve ses lanceurs épinglés au reçu de staging. **Ne demander ni nouveau Build/Run, ni redémarrage, ni nouveau relevé d’identité pour l’activation acquise.**
 
-3. Remplacer le champ **Build** existant par la commande suivante, en conservant son activation si elle est déjà cochée :
+### Alignement final des métadonnées — seule étape restante
 
-   ```sh
-   bash /srv/customer/jessiemessage-private/check-primary-release160-9590741e.sh
-   ```
+Le [writer publié](https://github.com/fredbuhr/jessiemessage/blob/adb56663201ce01ebf72104ce82c6fda6921563b/ops/record-release160.py), commit **`adb56663201ce01ebf72104ce82c6fda6921563b`**, SHA-256 **`ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd`**, est figé sur le relevé réel **`21/10/2026 19:56:14`**. Ses [tests autonomes](https://github.com/fredbuhr/jessiemessage/blob/adb56663201ce01ebf72104ce82c6fda6921563b/ops/test-record-release160.py), SHA-256 `92df932a1597777bd69bbf10371dee23b200f1abc5e07238639e0687e207bd4b`, réussissent **12/12** en 0,452 s, puis les mêmes 12 cas dans une copie de ces deux seuls fichiers en 0,424 s, sans échec ni omission. Revue indépendante sans blocage ; les deux fichiers publiés ont été relus à l’identique des octets locaux. Ces contrôles synthétiques ne constituent pas un reçu serveur.
 
-4. Choisir **Enregistrer**. Conserver les réglages Node, port et répertoire de travail.
-5. Ouvrir le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), puis choisir **Démarrer** ou **Redémarrer**, selon le libellé proposé.
+Le writer vérifie les sources et lanceurs épinglés, puis écrit uniquement le checkpoint de métadonnées. Il archive l’ancien `activeService` **1.5.0 intégral et son empreinte** avec `priorActiveServiceUsableRollback:false` et enregistre séparément le repli **1.5.1** préparé et précontrôlé, jamais démarré. Les autres blocs et historiques restent intacts. Il n’exécute ni SQL, ni runtime, ni changement Manager, envoi ou effacement. **Aucune exécution hébergée du writer 1.6.0 n’est encore attestée : le checkpoint conserve les métadonnées 1.5.0 jusqu’au reçu final.**
 
-**Ne pas lancer Build manuellement après le démarrage.** Notre commande Build est le CHECK déjà réussi sur l’hébergement ; elle est enregistrée pour les prochains usages du Manager. Si le Manager l’exécute automatiquement, ce contrôle ne démarre pas de second serveur.
+Ouvrir la [console SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis copier ce bloc complet, sans nouveau Build ni redémarrage :
 
-Ouvrir ensuite [État du service Jessie](https://jessiemessage.com/admin/readiness) et transmettre les quatre champs affichés :
+```sh
+python3 - <<'PY_RECORD'
+import hashlib, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/adb56663201ce01ebf72104ce82c6fda6921563b/ops/record-release160.py"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+exec(compile(code, "<enregistrement>", "exec"))
+PY_RECORD
+```
 
-| Champ | Valeur à constater |
-| --- | --- |
-| Version de l’application | `1.6.0` |
-| Commit au démarrage | `9590741e7065067aee9d1ad5d1206739cc27eb6b` |
-| Version Node.js | `v24.22.0` |
-| Relevé au démarrage | Copier le texte exact affiché ; aucune heure n’est présumée. |
+Transmettre le JSON complet **`release160_metadata_recorded`** ou **`release160_metadata_already_recorded`**. Le résultat doit confirmer `metadataOnly:true`, `noRestart:true`, `rollbackRelease:"1.5.1"`, `schemaMigrations:33`, `priorActivePreserved:true`, `priorActiveUsableRollback:false`, `rollback151HostedQualified:true` et `otherBlocksPreserved:true`. En cas de refus, transmettre ce résultat sans relance aveugle. **Le lot n’est pas encore clos : seul ce reçu final reste attendu.** Aucun nouveau Build/Run, redémarrage ou relevé d’identité n’est nécessaire.
 
-**L’activation n’est pas encore attestée et aucun writer 1.6.0 n’est à exécuter avant ce relevé.** Les deux précontrôles sont acquis ; aucune nouvelle commande SSH de migration ou de Build n’est nécessaire pour les confirmer.
-
-Les rubriques suivantes conservent leurs états historiques ; leurs anciennes mentions de version courante ne remplacent pas l’état schéma 33/service arrêté ci-dessus.
+Les rubriques suivantes conservent leurs états historiques ; leurs anciennes mentions de version courante ne remplacent pas la production 1.6.0/schéma 33 identifiée ci-dessus.
 
 ## Dernière livraison close — Évolution 4, annonces 1.5.0
 

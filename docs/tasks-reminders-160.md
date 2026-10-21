@@ -1,6 +1,6 @@
 # Tâches et rappels privés — Évolution 5, version 1.6.0
 
-**Code qualifié, fusionné et publié ; migration et précontrôles hébergés sur le schéma 33 confirmés.** Le service est arrêté, avec le repli **1.5.1 préparé et précontrôlé, jamais démarré**. L’activation et l’identité HTTP 1.6.0 ne sont pas encore attestées. La dernière version HTTP identifiée avant l’arrêt reste historiquement la 1.5.0 ; son checkpoint est préservé sans réécriture. [REPRISE](REPRISE.md) conserve l’état courant et la seule prochaine action.
+**Code qualifié et publié ; préparation, migration et précontrôles hébergés confirmés. Identité active 1.6.0 confirmée ; alignement final des métadonnées attendu.** Le schéma SQL courant est 33 ; le repli **1.5.1 est préparé et précontrôlé, jamais démarré**. Le checkpoint conserve les métadonnées antérieures 1.5.0 jusqu’au reçu final. [REPRISE](REPRISE.md) conserve l’état courant et la seule prochaine action.
 
 ## Parcours retenu
 
@@ -14,7 +14,7 @@ Les rappels sont visibles dans l’application et sont actualisés à son retour
 
 Une table additive `crm_tasks`, migration **0033**, conserve les tâches liées à l’administrateur et à la conversation. Leur texte est chiffré avec un domaine propre à partir de la clé CRM existante. Aucun nouveau fournisseur, worker, secret ou paquet n’est ajouté. Les versions, l’identité stable de création et l’empreinte de demande évitent les doublons après une réponse perdue et les écrasements entre deux appareils. Un conflit conserve le brouillon et demande un choix explicite après comparaison.
 
-La [1.5.1 compatible](tasks-compat-151.md) reconnaît le schéma 33 et les tâches chiffrées, avec les tâches désactivées dans le runtime normal. La 1.6.0 les active. La production 1.5.0 et son repli 1.4.1 restent préservés ; leur usage après migration ne doit pas être présumé compatible. La 1.5.1 est désormais préparée et précontrôlée sur le schéma 33, sans démarrage.
+La [1.5.1 compatible](tasks-compat-151.md) reconnaît le schéma 33 et les tâches chiffrées, avec les tâches désactivées dans le runtime normal. La 1.6.0 les active. Les fichiers et métadonnées historiques 1.5.0/1.4.1 restent préservés ; ces versions ne doivent pas être redémarrées sur le schéma 33. La 1.5.1 est désormais préparée et précontrôlée sur le schéma 33, sans démarrage.
 
 ## Référence et qualification propres
 
@@ -42,4 +42,8 @@ Le [reçu SQL utilisateur complet](verification-proofs/jm160-hosted-sql-status.j
 
 Les [deux reçus utilisateur complets](verification-proofs/jm160-hosted-schema33.json) confirment `schema33_confirmed_before_prechecks`, puis `schema33_prechecks_passed` : une migration appliquée, 32 conservées, schéma 33 confirmé, arrêt de service attesté par l’opérateur, repli 1.5.1 et cible 1.6.0 précontrôlés. Le helper n’a démarré aucun runtime, modifié ni Manager ni checkpoint. Aucune date non fournie ou observation privée directe de l’agent n’est déduite. **Ne rejouer ni staging, diagnostic, migration ou précontrôles ; ne tronquer aucun journal.**
 
-La [prochaine étape de REPRISE](REPRISE.md#prochaine-action--activer-la-160-puis-relever-son-identité) règle Run/Build pour la 1.6.0, puis démarre l’application et relève ses quatre champs d’identité. Aucun Build manuel supplémentaire n’est nécessaire ; les CHECK sont acquis. L’activation et les métadonnées 1.6.0 restent attendues, sans writer avant l’identité HTTP. Ne pas redémarrer 1.5.0 ou 1.4.1 sur le schéma 33. Le lot reste ouvert jusqu’à sa livraison vérifiée.
+## Activation acquise, métadonnées en attente
+
+Le [relevé admin utilisateur](verification-proofs/jm160-hosted-identity.json) confirme **1.6.0 / `9590741e7065067aee9d1ad5d1206739cc27eb6b` / `v24.22.0` / `21/10/2026 19:56:14`**. Ce texte est conservé sans conversion de fuseau ou d’epoch et sans observation directe du GET privé ou du PID par l’agent. L’activation est acquise ; aucun nouveau Build/Run, redémarrage ou relevé d’identité n’est demandé.
+
+Seul l’[alignement final des métadonnées](REPRISE.md#alignement-final-des-métadonnées--seule-étape-restante) reste attendu. Le [writer 1.6.0 publié et épinglé](https://github.com/fredbuhr/jessiemessage/blob/adb56663201ce01ebf72104ce82c6fda6921563b/ops/record-release160.py), SHA-256 `ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd`, est figé sur le relevé réel ; ses 12 tests autonomes et la revue indépendante sont réussis, ses octets publiés vérifiés. Le checkpoint conserve ses métadonnées 1.5.0 jusqu’au reçu du writer ; aucune exécution hébergée de celui-ci n’est encore attestée. La seule commande SSH restante est dans REPRISE, sans Build ni redémarrage ; le lot reste ouvert jusqu’au reçu final.

@@ -61,9 +61,9 @@ Si **La fiche a été modifiée ailleurs** apparaît, ton brouillon reste visibl
 
 Le texte du message en cours et les modifications de fiche non enregistrées restent dans la page ouverte, sans synchronisation entre appareils. Enregistre tes notes et conserve ton texte avant de recharger, fermer ou te déconnecter. Après une coupure réseau, garde l’onglet ouvert et utilise **Réessayer la connexion**.
 
-## Tâches et rappels privés — après activation de la 1.6.0
+## Tâches et rappels privés
 
-**Ce parcours demande la 1.6.0 activée.** Elle est publiée, migrée au schéma 33 et précontrôlée, mais pas encore activée ; l’application est actuellement arrêtée. [REPRISE détaille son activation et le relevé d’identité attendu](REPRISE.md#prochaine-action--activer-la-160-puis-relever-son-identité). Aucun nouveau réglage n’est à effectuer dans l’application 1.5.0 pour le faire apparaître.
+**Ce parcours est disponible dans la version active 1.6.0.** Le [relevé d’identité et l’état de livraison](REPRISE.md) restent la référence. Aucun nouveau réglage, Build ou redémarrage n’est nécessaire pour utiliser ces fonctions.
 
 Depuis la conversation d’un client, ouvre **Options → Fiche → Tâches du client**, puis **Ajouter une tâche**. Écris ce que tu veux préparer ou envoyer, ajoute une échéance si utile, puis choisis **Enregistrer la tâche**. Tu peux garder plusieurs tâches pour le même client. Ces informations restent dans ton administration ; le client ne les voit pas.
 
