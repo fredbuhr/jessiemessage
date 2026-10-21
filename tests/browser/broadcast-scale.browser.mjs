@@ -79,7 +79,14 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
       const selected = targets(input.audience ?? { mode: "selected", conversationIds: input.conversationIds });
       const campaign = existing ?? makeCampaign(input, selected);
       if (!existing) { state.campaigns.set(campaign.id, campaign); state.ownerByCampaign.set(campaign.id, state.owner); }
-      if (uncertain && !state.dropped) { state.dropped = true; response.destroy(); return; }
+      if (uncertain && !state.dropped) {
+        state.dropped = true;
+        // Commit precedes a native incomplete response. Closing before headers
+        // lets Chrome retry a POST on a reused socket; deliver headers first so
+        // only the user's explicit retry can acknowledge this same campaign.
+        response.writeHead(201, { "Content-Type": "application/json", "Content-Length": "128", Connection: "close" });
+        response.end('{"campaign":'); return;
+      }
       json(existing ? 200 : 201, { campaign: summary(campaign), duplicate: !!existing }); return;
     }
     const matching = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})(?:\/(summary|recipients|cancel))?$/u.exec(url.pathname);

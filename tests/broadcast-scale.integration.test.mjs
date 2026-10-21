@@ -92,7 +92,15 @@ test("real MariaDB: 2,500-client audience is bounded, atomic, retryable and resu
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, "separate DML runtime credentials are required");
   const migrations = await loadMigrations(); assert.equal(migrations.length, 31);
   const allowed = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
-  const connection = await connectDatabase(); let pool, worker;
+  let connection = await connectDatabase(), pool, worker;
+  async function reconnectInspection() {
+    // The independent DML pool can legitimately spend over 30 seconds draining
+    // 2,500 messages. Its idle setup/inspection socket retains the product's
+    // ordinary timeout; open a fresh one before inspecting or cleaning up.
+    // No SQL statement or failed assertion is retried here.
+    const previous = connection; connection = await connectDatabase();
+    try { await previous.end(); } catch { /* Only disposal of the old idle socket may fail. */ }
+  }
   async function reset() {
     const tables = await connection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [options.database]);
     assert.ok(tables.every(row => allowed.includes(row.name)), "refuse cleanup of unrelated tables");
@@ -247,6 +255,7 @@ test("real MariaDB: 2,500-client audience is bounded, atomic, retryable and resu
       }
       assert.equal(complete, true, "injected time allows the real 120/minute limiter to complete without sleeping");
       context.diagnostic(JSON.stringify({ qualification: "broadcast-scale", operation: "drain", audienceCount: 2500, elapsedMs: Number((performance.now() - drainStarted).toFixed(1)) }));
+      await reconnectInspection();
       const totals = (await connection.query(`SELECT COUNT(*) AS total, COUNT(DISTINCT id) AS messageIds,
         COUNT(DISTINCT conversation_id) AS conversations, COUNT(DISTINCT client_message_id) AS clientIds FROM messages WHERE sender_id = ?`, [admin]))[0];
       for (const value of Object.values(totals)) assert.equal(Number(value), 2500);
@@ -263,6 +272,7 @@ test("real MariaDB: 2,500-client audience is bounded, atomic, retryable and resu
       assert.ok(observed.maxRows <= 100, `runtime audience reads never gather all 2,500 rows (${observed.maxRows})`);
     });
   } finally {
-    await worker?.stop(); await pool?.end(); await reset(); await connection.end();
+    await worker?.stop(); await pool?.end(); await reconnectInspection();
+    try { await reset(); } finally { await connection.end(); }
   }
 });
