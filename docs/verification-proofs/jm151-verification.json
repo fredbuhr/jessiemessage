@@ -1,6 +1,6 @@
 {
   "version": "1.5.1",
-  "status": "runtime_identity_confirmed_metadata_alignment_pending",
+  "status": "delivery_closed_active160_schema33_metadata_aligned",
   "branch": "feat/tasks-compat-151",
   "baseCommit": "d985bf4e23abaeb3d275bf415f931e47bbb9ae68",
   "results": {
@@ -8,13 +8,14 @@
     "codeQualified": true,
     "merged": true,
     "releasePublished": true,
-    "deliveryComplete": false,
+    "deliveryComplete": true,
     "hostedStagingReceiptValidated": true,
     "hostedSqlStatusConfirmed": true,
     "schema33Confirmed": true,
     "hostedPrechecksPassed": true,
     "runtimeActivated": true,
-    "runtimeIdentityReported": true
+    "runtimeIdentityReported": true,
+    "metadataRecorded": true
   },
   "requirements": {
     "schemaMigrations": 33,
@@ -97,7 +98,7 @@
     "nodeVersion": "v24.22.0",
     "startupDisplayExact": "21/10/2026 19:56:14",
     "schemaMigrations": 33,
-    "metadataReceipt": "jm150-hosted-metadata.json",
+    "metadataReceipt": "jm160-hosted-metadata.json",
     "currentRollback": "1.5.1",
     "currentRollbackHostedPrechecked": true,
     "currentRollbackRuntimeStarted": false,
@@ -105,7 +106,7 @@
     "taskMigrationApplied": true,
     "taskPrechecksPassed": true,
     "taskRuntimeActivated": true,
-    "taskMetadataRecorded": false,
+    "taskMetadataRecorded": true,
     "noHostedOperationReplayed": true,
     "sourceOfHostingEvidence": "previous user receipts; no direct private server observation",
     "taskSqlStatusChecked": true,
@@ -123,7 +124,7 @@
       "startupDisplayExact": "21/10/2026 17:58:07",
       "schemaMigrationsAtObservation": 32
     },
-    "metadataState": "checkpoint remains last recorded release150/schema32; final release160 metadata alignment has not been executed",
+    "metadataState": "checkpoint aligned release160/schema33;separate hosted-prechecked rollback151 recorded;prior active150 and all other blocks preserved",
     "activationTarget": {
       "version": "1.6.0",
       "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
@@ -135,7 +136,6 @@
     "taskIdentityReceipt": "jm160-hosted-identity.json"
   },
   "notAttested": [
-    "production_tasks_final_metadata_alignment",
     "physical_phone",
     "real_host_capacity",
     "current_pc_or_backup_delivery"
@@ -1167,7 +1167,7 @@
     "snapshotPhasePreserved": true,
     "publicationGateNowSatisfied": true,
     "helperBytesRereadAfterMainPublication": true,
-    "onlyNextOperatorAction": "Execute qualified and published record-release160.py once to align metadata only; do not rebuild,restart,replay migration or request an additional startup report",
+    "onlyNextOperatorAction": "none:lot5 delivery is closed;do not replay any staging,SQL status,migration,precheck,writer,Build,Run,restart or readiness identity request",
     "expectedFirstReceipt": "staged_awaiting_schema33",
     "preparationRunsSql": false,
     "preparationStartsRuntime": false,
@@ -1179,7 +1179,7 @@
     "futureRollbackHostedQualified": true,
     "schema33CompatibilityNote": "After migration33 the old 1.5.0/1.4.1 are not immediate rollback releases; qualify 1.5.1 first.",
     "firstReceiptReceived": true,
-    "expectedNextReceipt": "release160_metadata_recorded or identical release160_metadata_already_recorded",
+    "expectedNextReceipt": null,
     "upgradeSourcePinsComplete": true
   },
   "hostedStaging": {
@@ -1392,7 +1392,7 @@
     "reportedStartedAtDisplay": "21/10/2026 19:56:14",
     "reportedStartupTimezoneAndEpochNotProvided": true,
     "activationReported": true,
-    "metadataRecorded": false,
+    "metadataRecorded": true,
     "noAdditionalBuildRestartOrIdentityRequestRequired": true,
     "limitations": [
       "pid_not_qualified",
@@ -1501,14 +1501,43 @@
     "nowPublished": true,
     "publishedBytesVerified": true,
     "operatorInvocationProvided": true,
-    "hostedExecutionReceiptReceived": false,
-    "expectedReceipt": "release160_metadata_recorded or identical release160_metadata_already_recorded",
+    "hostedExecutionReceiptReceived": true,
+    "expectedReceipt": null,
     "metadataOnly": true,
     "noRestart": true,
-    "old150ActiveWillBeArchivedWholeWithDigest": true,
     "old150IsNotUsableRollbackOnSchema33": true,
     "rollback151SeparateHostedPrecheckedNotStarted": true,
     "historicalAndUnknownBlocksPreservationRequired": true,
-    "noSqlRuntimeManagerOrLogMutation": true
+    "noSqlRuntimeManagerOrLogMutation": true,
+    "hostedExecutionReceipt": "jm160-hosted-metadata.json",
+    "completed": true,
+    "doNotReplay": true,
+    "old150ActiveArchivedWholeWithDigest": true,
+    "rollback151Recorded": true,
+    "noFurtherInvocationRequired": true
+  },
+  "hostedMetadata": {
+    "receipt": "jm160-hosted-metadata.json",
+    "sourceOfEvidence": "complete user supplied SSH final metadata receipt;no direct private checkpoint observation",
+    "recordingTimestampNotProvided": true,
+    "status": "release160_metadata_recorded",
+    "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "version": "1.6.0",
+    "schemaMigrations": 33,
+    "metadataOnly": true,
+    "noRestart": true,
+    "rollbackRelease": "1.5.1",
+    "rollback151HostedQualified": true,
+    "rollback151RuntimeStarted": false,
+    "priorActiveServiceArchive": "developmentSimplification.release160.priorActiveService",
+    "priorActiveServiceSha256Recorded": true,
+    "priorActivePreserved": true,
+    "priorActiveUsableRollback": false,
+    "rollbackPreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointAligned": true,
+    "deliveryClosed": true,
+    "noFurtherOperatorActionRequired": true,
+    "notAClaimOfPhysicalDeviceCapacityOrPcQualification": true
   }
 }

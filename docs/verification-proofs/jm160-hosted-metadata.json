@@ -1,0 +1,14 @@
+{
+  "status": "release160_metadata_recorded",
+  "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+  "version": "1.6.0",
+  "metadataOnly": true,
+  "noRestart": true,
+  "rollbackPreserved": true,
+  "rollbackRelease": "1.5.1",
+  "schemaMigrations": 33,
+  "priorActivePreserved": true,
+  "priorActiveUsableRollback": false,
+  "rollback151HostedQualified": true,
+  "otherBlocksPreserved": true
+}
