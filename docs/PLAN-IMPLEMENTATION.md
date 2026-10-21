@@ -10,7 +10,7 @@ La livraison **1.4.0 — Diffusions à grande échelle** est close : code et CI 
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **4 — Annonces** | Bandeau, programmation, expiration et envoi privé facultatif avec notifications habituelles ; publication unique et absence d’annonce devenue inutile après une coupure. | [1.5.0 qualifiée et publiée](announcements-150.md), avec [repli compatible 1.4.1 publié](announcements-compat-141.md). Préparation hébergée confirmée par `staged_awaiting_schema32`. Migration 0032 et précontrôles hébergés 1.4.1/1.5.0 confirmés sur le schéma 32. Activation 1.5.0, identité HTTP et alignement final restent à constater. |
+| **4 — Annonces** | Bandeau, programmation, expiration et envoi privé facultatif avec notifications habituelles ; publication unique et absence d’annonce devenue inutile après une coupure. | [1.5.0 qualifiée et publiée](announcements-150.md), avec [repli compatible 1.4.1 publié](announcements-compat-141.md). Préparation hébergée confirmée par `staged_awaiting_schema32`. Migration 0032 et précontrôles hébergés 1.4.1/1.5.0 confirmés sur le schéma 32. Activation et identité HTTP 1.5.0 confirmées. Seul l’alignement final des métadonnées reste à constater. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |
 | **7 — Vidéos dans la messagerie** | Aperçu, lecteur, légende, galerie et diffusion ; export, suppression et fermeture de compte cohérents. | Planifiée. |

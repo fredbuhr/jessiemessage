@@ -1,6 +1,6 @@
 {
   "version": "1.4.1",
-  "status": "schema32_and_both_hosted_prechecks_confirmed_release150_activation_pending",
+  "status": "release150_identity_confirmed_metadata_alignment_pending",
   "branch": "feat/announcements-compat-141",
   "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
   "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
@@ -736,16 +736,16 @@
     "workflowConclusion": "success"
   },
   "hosting": {
-    "activeVersion": null,
-    "activeSource": null,
-    "activeNode": null,
-    "activeStartedAtDisplay": null,
+    "activeVersion": "1.5.0",
+    "activeSource": "abca467c45c9385371a9095ab359e78c99140370",
+    "activeNode": "v24.22.0",
+    "activeStartedAtDisplay": "21/10/2026 17:58:07",
     "schemaMigrations": 32,
     "currentRollbackRelease": "1.4.1",
-    "activeMetadataReceipt": "release140_metadata_recorded",
+    "activeMetadataReceipt": null,
     "preparationReported": true,
     "migration32Confirmed": true,
-    "release150ActivationConfirmed": false,
+    "release150ActivationConfirmed": true,
     "directPrivateToolObservation": false,
     "stagingReceipt": "jm150-hosted-staging.json",
     "stagingStatus": "staged_awaiting_schema32",
@@ -757,19 +757,29 @@
     "release150PrecheckConfirmed": true,
     "sqlStatusReceipt": "jm150-hosted-sql-status.json",
     "lastConfirmedActiveService": {
+      "activeVersion": "1.5.0",
+      "activeSource": "abca467c45c9385371a9095ab359e78c99140370",
+      "activeNode": "v24.22.0",
+      "activeStartedAtDisplay": "21/10/2026 17:58:07"
+    },
+    "serviceStopOperatorAttested": true,
+    "migrationReceipt": "jm150-hosted-schema32.json",
+    "runtimeIdentity150Pending": false,
+    "checkpointMetadataVersion": "1.4.0",
+    "checkpointSchemaMigrations": 31,
+    "priorActiveServiceIdentity": {
       "activeVersion": "1.4.0",
       "activeSource": "56d4595059df9292fc54ba4d4e948eeb793bae96",
       "activeNode": "v24.22.0",
       "activeStartedAtDisplay": "21/10/2026 15:31:41"
     },
-    "serviceStopOperatorAttested": true,
-    "migrationReceipt": "jm150-hosted-schema32.json",
-    "runtimeIdentity150Pending": true,
-    "checkpointMetadataVersion": "1.4.0",
-    "checkpointSchemaMigrations": 31
+    "runtimeIdentityEvidence": "admin_readiness_user_report",
+    "identityReceipt": "jm150-hosted-identity.json",
+    "metadataAlignmentReported": false,
+    "priorMetadataReceipt": "release140_metadata_recorded"
   },
   "notAttested": [
-    "release150_activation_and_metadata_alignment",
+    "release150_metadata_alignment",
     "physical_phone_and_real_host_capacity",
     "current_pc_or_backup_delivery",
     "native_backup_restore_with_nonempty_announcement"
@@ -784,7 +794,7 @@
     "mergedAt": "2026-10-21T14:49:04Z"
   },
   "operatorDelivery": {
-    "status": "schema32_prechecks_passed_awaiting_activation150_identity",
+    "status": "runtime150_identified_metadata_alignment_pending",
     "helperCommit": "40027be898f1a82cd9c2aed7c4a313096d8db4d4",
     "helperTree": "c999e78badfea23ab4e4ff9df8266f2d66bb1fb7",
     "publishedBytesVerifiedAgainstLocal": true,
@@ -1010,7 +1020,7 @@
     "hostedReceipt": "jm150-hosted-staging.json",
     "directPrivateServerObservation": false,
     "activation": {
-      "currentNextAction": true,
+      "currentNextAction": false,
       "targetVersion": "1.5.0",
       "targetSource": "abca467c45c9385371a9095ab359e78c99140370",
       "run": "bash /srv/customer/jessiemessage-private/start-primary-release150-abca467c.sh",
@@ -1018,9 +1028,55 @@
       "runBuildUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application",
       "dashboardUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard",
       "identityUrl": "https://jessiemessage.com/admin/readiness",
+      "executionReported": true,
+      "runtimeIdentityObserved": true,
+      "metadataAlignmentReported": false,
+      "identityReceipt": "jm150-hosted-identity.json",
+      "observedIdentity": {
+        "provenance": "admin_readiness_user_report",
+        "version": "1.5.0",
+        "source": "abca467c45c9385371a9095ab359e78c99140370",
+        "nodeVersion": "v24.22.0",
+        "reportedStartedAtDisplay": "21/10/2026 17:58:07"
+      }
+    },
+    "metadataRecording": {
+      "currentNextAction": true,
+      "helperCommit": "7ccb9bc3e9be1027a83cf66e8a8ea6804f0ee0ca",
+      "helperTree": "2f8d1785d858fc3fc0836cf16834b541dd87f3fd",
+      "path": "ops/record-release150.py",
+      "url": "https://github.com/fredbuhr/jessiemessage/blob/7ccb9bc3e9be1027a83cf66e8a8ea6804f0ee0ca/ops/record-release150.py",
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/7ccb9bc3e9be1027a83cf66e8a8ea6804f0ee0ca/ops/record-release150.py",
+      "sha256": "8a5fd233cda8749fe3a4caef5affc4c2ab2727b22f3ffeb3ebe45d5b344b522b",
+      "testPath": "ops/test-record-release150.py",
+      "testSha256": "7bec8d00ec3a7eaebaea31a81935e9cdb31227b757eb28a0a9262f834d346023",
+      "publishedBytesVerifiedAgainstLocal": true,
+      "qualification": {
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 0.444,
+        "standaloneTwoFileRepeat": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0,
+          "durationSeconds": 0.422
+        },
+        "syntaxValid": true,
+        "independentReview": "no_blocking_findings",
+        "noHostedExecution": true
+      },
+      "reportedStartedAtDisplay": "21/10/2026 17:58:07",
+      "expectedStatuses": [
+        "release150_metadata_recorded",
+        "release150_metadata_already_recorded"
+      ],
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackVersion": "1.4.1",
+      "priorActiveUsableRollback": false,
       "executionReported": false,
-      "runtimeIdentityObserved": false,
-      "metadataAlignmentReported": false
+      "receipt": null
     }
   },
   "initialOperatorTemplate": {

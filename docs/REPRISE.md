@@ -1,10 +1,10 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — schéma 32 et précontrôles hébergés 1.4.1/1.5.0 confirmés ; activation 1.5.0 en attente du relevé admin.** Les reçus utilisateur confirment la migration 0032 et `schema32_prechecks_passed`, avec arrêt opérateur attesté et aucun runtime lancé par le helper. Le repli compatible est désormais **1.4.1**, préparé et précontrôlé sur le schéma 32, sans démarrage. La dernière identité HTTP fournie reste celle de la 1.4.0 (`56d4595059df9292fc54ba4d4e948eeb793bae96` / `v24.22.0` / `21/10/2026 15:31:41`), antérieure à cet arrêt ; elle ne prouve pas le service actuellement en cours d’activation. Le checkpoint privé conserve ses métadonnées 1.4.0/schéma 31 jusqu’au futur enregistrement, sans nouvelle écriture à cette étape. **Ne pas redémarrer 1.4.0 ou 1.3.4 sur le schéma 32.** Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — production 1.5.0 confirmée par relevé admin utilisateur ; alignement final des métadonnées en attente.** Le relevé affiche `1.5.0` / `abca467c45c9385371a9095ab359e78c99140370` / `v24.22.0` / **`21/10/2026 17:58:07`**. Ce texte de démarrage est conservé exactement, sans conversion de fuseau ou d’epoch déduite. Le schéma **32**, les précontrôles 1.4.1/1.5.0 et le repli **1.4.1** préparé et précontrôlé sans démarrage sont acquis. Le checkpoint privé conserve encore ses métadonnées 1.4.0/schéma 31 jusqu’à l’enregistrement final. **Ne pas redémarrer 1.4.0 ou 1.3.4 sur le schéma 32.** Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
 ## Travail courant — Évolution 4, annonces publiées
 
-Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Préparation, migration additive 0032 et précontrôles hébergés des deux références sont maintenant confirmés par les reçus utilisateur. **Le schéma est 32 ; la 1.4.1 constitue le repli compatible précontrôlé. La seule étape actuelle est l’activation de la 1.5.0, puis le relevé de son identité réelle.** Le helper n’a démarré aucun runtime et n’a changé ni Manager ni checkpoint. Aucune activation 1.5.0 n’est encore attestée par une identité HTTP fournie.
+Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Préparation, migration additive 0032, précontrôles hébergés et identité HTTP 1.5.0 sont confirmés par les reçus utilisateur. **La production est la 1.5.0, schéma 32, avec repli 1.4.1 précontrôlé sans démarrage. La seule étape restante de livraison est l’enregistrement des métadonnées ; ne rejouer ni migration, ni précontrôle, ni changement Run/Build ou redémarrage pour cette identité déjà acquise.** L’agent n’a pas observé directement le processus ou les configurations privées.
 
 | Référence publiée | Source et arbre exacts | Qualification propre et publication |
 | --- | --- | --- |
@@ -37,14 +37,32 @@ Les [deux reçus utilisateur complets](verification-proofs/jm150-hosted-schema32
 
 Le repli compatible **1.4.1** est préparé et précontrôlé, sans démarrage. Ses lanceurs sont **Run** `bash /srv/customer/jessiemessage-private/start-primary-release141-bf022233.sh` et **Build** `bash /srv/customer/jessiemessage-private/check-primary-release141-bf022233.sh` ; les empreintes exactes restent dans le reçu de staging. La 1.4.0 et la 1.3.4 restent préservées historiquement, mais ne doivent plus être redémarrées sur le schéma 32.
 
-### Activation 1.5.0 — seule étape actuelle
+### Activation 1.5.0 acquise — ne pas redémarrer pour les métadonnées
 
-1. Ouvrir les [réglages Run/Build Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), application **239143**, encore nommée **recette.jessiemessage.com** et desservant aussi **jessiemessage.com**.
-2. Remplacer **Run** par `bash /srv/customer/jessiemessage-private/start-primary-release150-abca467c.sh` et **Build** par `bash /srv/customer/jessiemessage-private/check-primary-release150-abca467c.sh`. Enregistrer les réglages.
-3. Ouvrir le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et cliquer sur **Redémarrer**. Si le Manager présente **Lancer** pour le service arrêté, ce bouton lance la même commande Run enregistrée. Aucun démarrage intermédiaire de 1.4.1 n’est nécessaire.
-4. Ouvrir [État du service Jessie](https://jessiemessage.com/admin/readiness) et transmettre les quatre champs réels : version de l’application, commit au démarrage, version Node.js et relevé au démarrage. Valeurs attendues : **1.5.0**, **`abca467c45c9385371a9095ab359e78c99140370`**, **`v24.22.0`** ; le texte de date/heure doit être fourni réellement, sans le déduire.
+Le [relevé admin utilisateur](verification-proofs/jm150-hosted-identity.json) affiche **1.5.0**, commit **`abca467c45c9385371a9095ab359e78c99140370`**, Node **`v24.22.0`** et démarrage **`21/10/2026 17:58:07`**. Les quatre valeurs sont conservées exactement. Ce relevé identifie le processus HTTP répondant ; l’agent n’a pas observé le GET privé directement ni attesté PID/socket/empreinte du binaire exécuté. Le fuseau et l’epoch du démarrage ne sont pas déduits. Aucun téléphone physique ou débit réel du mutualisé n’est qualifié par ce seul relevé.
 
-Le futur writer de métadonnées attend cette identité et son relevé de démarrage avant finalisation et publication. Le checkpoint privé reste 1.4.0 ; son état antérieur intégral et les autres blocs seront préservés, avec 1.4.1 enregistré séparément comme repli compatible et 1.4.0 non utilisable sur le schéma 32. Aucune manipulation PC, aucun audit général ni lot suivant n’est ouvert.
+Les commandes courantes sont **Run** `bash /srv/customer/jessiemessage-private/start-primary-release150-abca467c.sh` et **Build** `bash /srv/customer/jessiemessage-private/check-primary-release150-abca467c.sh`. Le repli **1.4.1**, préparé et précontrôlé sans démarrage, utilise ses lanceurs 141 consignés plus haut. **Ne demander ni nouveau Build/Run, ni redémarrage, ni nouveau relevé d’identité pour l’activation acquise.**
+
+### Alignement final des métadonnées — seule étape restante
+
+Le [writer publié](https://github.com/fredbuhr/jessiemessage/blob/7ccb9bc3e9be1027a83cf66e8a8ea6804f0ee0ca/ops/record-release150.py), commit **`7ccb9bc3e9be1027a83cf66e8a8ea6804f0ee0ca`**, SHA-256 **`8a5fd233cda8749fe3a4caef5affc4c2ab2727b22f3ffeb3ebe45d5b344b522b`**, est figé sur le relevé réel **`21/10/2026 17:58:07`**. Ses [tests autonomes](https://github.com/fredbuhr/jessiemessage/blob/7ccb9bc3e9be1027a83cf66e8a8ea6804f0ee0ca/ops/test-record-release150.py), SHA-256 `7bec8d00ec3a7eaebaea31a81935e9cdb31227b757eb28a0a9262f834d346023`, réussissent **12/12** en 0,444 s, puis les mêmes 12 cas en copie de ces deux seuls fichiers en 0,422 s, sans échec ni omission. Syntaxe et revue indépendante sans blocage ; les deux fichiers publiés ont été relus et comparés aux octets locaux. Ces contrôles synthétiques ne constituent pas un reçu serveur.
+
+Le writer vérifie les deux sources et leurs lanceurs, puis écrit uniquement le checkpoint de métadonnées. Il archive l’ancien `activeService` 1.4.0 intégral et son empreinte avec `priorActiveServiceUsableRollback:false`, et enregistre séparément le repli **1.4.1** préparé et précontrôlé sans démarrage. Les autres blocs et historiques, dont release140/repli134, C1–C5, D1 et PC, sont préservés. Le journal CHECK150 peut croître lors de Build ; aucune empreinte globale inchangée de ce journal actif n’est exigée. Pas d’action SQL, runtime, Manager, envoi ou effacement. Aucune nouvelle permission n’est nécessaire.
+
+Ouvrir la [console SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) puis copier ce bloc complet, sans nouveau redémarrage :
+
+```sh
+python3 - <<'PY_RECORD'
+import hashlib, urllib.request
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/7ccb9bc3e9be1027a83cf66e8a8ea6804f0ee0ca/ops/record-release150.py"
+code = urllib.request.urlopen(url, timeout=30).read()
+if hashlib.sha256(code).hexdigest() != "8a5fd233cda8749fe3a4caef5affc4c2ab2727b22f3ffeb3ebe45d5b344b522b":
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+exec(compile(code, "<enregistrement>", "exec"))
+PY_RECORD
+```
+
+Transmettre le JSON complet **`release150_metadata_recorded`** ou **`release150_metadata_already_recorded`**. Le reçu doit confirmer `metadataOnly:true`, `noRestart:true`, `rollbackRelease:"1.4.1"`, `schemaMigrations:32`, `priorActivePreserved:true`, `priorActiveUsableRollback:false`, `rollback141HostedQualified:true` et `otherBlocksPreserved:true`. En cas de refus, transmettre ce résultat sans relance aveugle. **Aucune écriture de métadonnées n’est encore attestée ; le checkpoint demeure 1.4.0/schéma 31 jusqu’au reçu final.** Aucune manipulation PC, aucun audit général ni lot suivant n’est ouvert.
 
 ## Livraison 1.4.0 — Évolution 3, diffusions à grande échelle closes
 
@@ -172,16 +190,16 @@ Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.
 
 | Élément | État constaté |
 | --- | --- |
-| Version HTTP courante | Activation 1.5.0 en attente du relevé admin ; dernière identité HTTP 1.4.0 antérieure à l’arrêt de migration. |
-| Commit cible et arbre | `abca467c45c9385371a9095ab359e78c99140370` / `3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4`. |
-| Tag/release cible | [v1.5.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.0), cible vérifiée. |
-| Node préparé et précontrôlé | `v24.22.0`, binaire privé épinglé ; identité HTTP 1.5.0 encore attendue. |
-| Relevé de démarrage 1.5.0 | Non fourni ; aucune date n’est déduite. |
+| Version HTTP courante | **1.5.0**, confirmée par le relevé admin utilisateur. |
+| Commit actif et arbre | `abca467c45c9385371a9095ab359e78c99140370` / `3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4`. |
+| Tag/release | [v1.5.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.0), cible vérifiée. |
+| Node HTTP identifié | `v24.22.0`, valeur rapportée par le processus HTTP répondant. |
+| Relevé de démarrage affiché | `21/10/2026 17:58:07`, texte exact sans conversion de fuseau/epoch déduite. |
 | Schéma et précontrôles | Schéma 32 confirmé ; une migration appliquée, 31 conservées ; précontrôles 1.4.1 et 1.5.0 réussis. |
 | CI et publication | Qualifications propres PR/main 5/5 et publications des deux références, liens ci-dessus. |
-| Disponibilité | Aucun nouveau relevé HTTP 1.5.0 fourni ; l’arrêt était attesté pendant la migration. |
-| Portée et preuves | [Annonces 1.5.0](announcements-150.md), [preuves](verification-proofs/jm150-verification.json), [migration et précontrôles hébergés](verification-proofs/jm150-hosted-schema32.json). |
-| Checkpoint privé | Métadonnées antérieures 1.4.0/schéma 31, sans nouvelle écriture ; alignement 1.5.0 attendu après identité réelle. |
+| Disponibilité | Le relevé admin utilisateur identifie le service répondant ; pas de nouvelle attestation publique distincte. |
+| Portée et preuves | [Annonces 1.5.0](announcements-150.md), [preuves](verification-proofs/jm150-verification.json), [identité active](verification-proofs/jm150-hosted-identity.json). |
+| Checkpoint privé | Métadonnées antérieures 1.4.0/schéma 31, sans nouvelle écriture attestée ; alignement final attendu. |
 | Repli compatible courant | **1.4.1 / Node 24.22**, préparée et précontrôlée sur le schéma 32, jamais démarrée. 1.4.0 et 1.3.4 ne doivent pas être redémarrées sur ce schéma. |
 
 ## État historique de la livraison 1.2.0 — clos
@@ -282,7 +300,7 @@ Les conversations sont conservées jusqu’à fermeture définitive, hors suppre
 
 ## Pins de la référence active 1.4.0
 
-**Encadré historique antérieur au passage au schéma 32. Les lanceurs 1.4.0/1.3.4 ci-dessous ne sont plus utilisables sur ce schéma ; les commandes actuelles sont dans [Activation 1.5.0](#activation-150--seule-étape-actuelle). Les empreintes et reçus historiques restent conservés.**
+**Encadré historique antérieur au passage au schéma 32. Les lanceurs 1.4.0/1.3.4 ci-dessous ne sont plus utilisables sur ce schéma ; les commandes actuelles sont dans [Activation 1.5.0](#activation-150-acquise--ne-pas-redémarrer-pour-les-métadonnées). Les empreintes et reçus historiques restent conservés.**
 
 L’identité active est confirmée par relevé admin utilisateur. Les modes et empreintes sur disque proviennent du reçu de préparation hébergée ; aucune empreinte mesurée via le PID actif n’est revendiquée.
 
