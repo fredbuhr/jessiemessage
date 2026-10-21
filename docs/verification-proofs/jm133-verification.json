@@ -1,0 +1,142 @@
+{
+  "version": "1.3.3",
+  "status": "in_progress",
+  "branch": "fix/photo-message-details-133",
+  "base": "76b80e33fba5f4cbcebcf73193944077e631af50",
+  "source": null,
+  "tree": null,
+  "scope": "persistent_native_photo_message_details_toggle_without_extra_height",
+  "results": null,
+  "authorization": {
+    "method": "new_user_request",
+    "developmentAuthorized": true,
+    "blockedByRelease131MetadataReceipt": false
+  },
+  "requirements": {
+    "photoMessageDetails": {
+      "persistentNativeToggle": "⋯",
+      "persistentToggleOnlyOnPhotoMessages": true,
+      "captionlessPhotoTouchSelectionRequired": true,
+      "captionedPhotoTouchSelectionRequired": true,
+      "existingSelectionReused": true,
+      "keyboardAccessRequired": true,
+      "extraMessageHeightAllowed": false,
+      "datesStatusAndDeleteHiddenAtRest": true,
+      "selectionMustNotOpenPhotoOrTriggerOtherAction": true,
+      "textMessagePresentationPreserved": true
+    },
+    "plannedChanges": [
+      "photo_message_toggle_css",
+      "chrome_qualification",
+      "patch_version"
+    ],
+    "javascriptChanged": false,
+    "serverApiChanged": false,
+    "requiresMigration": false,
+    "schemaMigrations": 31,
+    "dependenciesChanged": false,
+    "release132BehaviorPreserved": true
+  },
+  "baseline": {
+    "version": "1.3.2",
+    "status": "published_qualified_immutable_historical_baseline",
+    "report": "../client-voice-message-details-132.md",
+    "proof": "jm132-verification.json",
+    "preparationReported": false,
+    "activationConfirmed": false,
+    "supersededAsNextCandidateBy": "1.3.3",
+    "intermediatePreparationRequired": false,
+    "qualifiesRelease133": false
+  },
+  "qualificationCriteria": [
+    "chrome_touch_photo_without_caption_selects_details_without_opening_photo_or_triggering_action",
+    "chrome_touch_photo_with_caption_keeps_caption_readable_and_selects_only_its_message",
+    "native_toggle_keyboard_focus_name_fr_en_activation_and_selection_exit",
+    "compact_mobile_and_desktop_layout_sent_and_received_without_horizontal_overflow_or_added_height",
+    "photo_toggle_does_not_cover_image_caption_or_other_action",
+    "dates_status_and_delete_hidden_at_rest_text_toggle_not_persistently_visible",
+    "required_error_and_retry_information_preserved",
+    "exact_commit_review_ci_and_publication_before_hosted_preparation"
+  ],
+  "local": {
+    "status": "results_not_yet_reported",
+    "node": null,
+    "checks": null,
+    "physicalPhone": "not_attested_for_release133"
+  },
+  "review": {
+    "status": "not_yet_reported",
+    "result": null
+  },
+  "ci": {
+    "status": "not_yet_reported",
+    "pullRequest": null,
+    "main": null
+  },
+  "pullRequest": null,
+  "publication": {
+    "status": "not_published",
+    "tag": null,
+    "releaseUrl": null,
+    "publishedAt": null,
+    "run": null,
+    "verified": false
+  },
+  "hosting": {
+    "activeVersion": "1.3.1",
+    "activeSource": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+    "activeNode": "v24.22.0",
+    "schemaMigrations": 31,
+    "release131MetadataReceipt": "not_reported",
+    "release131Closed": false,
+    "preparation133Reported": false,
+    "precheck133Passed": false,
+    "activation133Confirmed": false,
+    "metadata133Recorded": false,
+    "preservedActiveRollback": "1.3.0",
+    "plannedRollback133": "1.3.1"
+  },
+  "priorMobileUIEvidence": {
+    "version": "1.3.1",
+    "result": "user_reported_ok",
+    "scope": "visual_mobile_chat_presentation",
+    "directAgentObservation": false,
+    "physicalPhoneKeyboard": "not_explicitly_attested",
+    "qualifiesRelease133": false
+  },
+  "preparation": {
+    "status": "future_not_ready_for_operator",
+    "sourcePinned": null,
+    "treePinned": null,
+    "commit": null,
+    "file": null,
+    "sha256": null,
+    "readyForOperator": false,
+    "executionReported": false,
+    "hostedPrecheckPassed": false,
+    "plannedRollback": "1.3.1",
+    "receipt": null,
+    "combinedOperatorBlock": {
+      "status": "future_after_qualification_and_publication",
+      "reference": "../REPRISE.md",
+      "first": "idempotent_pinned_record_release131",
+      "then": "pinned_prepare_release133_for_exact_qualified_published_source",
+      "restart": false,
+      "executedOnHosting": false,
+      "intermediateRelease132Preparation": false
+    }
+  },
+  "notAttested": [
+    "release133_final_source_and_tree",
+    "release133_local_qualification",
+    "release133_independent_review",
+    "release133_pull_request_and_exact_main_ci",
+    "release133_publication",
+    "release133_hosted_precheck",
+    "release133_activation",
+    "release133_metadata_recording",
+    "release131_metadata_recording",
+    "physical_phone_keyboard_for_release133",
+    "current_pc_or_backup_delivery"
+  ]
+}
