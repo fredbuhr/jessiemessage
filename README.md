@@ -21,7 +21,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Annonces, livraison 1.5.0 historique close](docs/announcements-150.md) | Bandeau programmé et messages privés facultatifs ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés. |
 | [Compatibilité des tâches, 1.5.1 publiée](docs/tasks-compat-151.md) | Référence compatible avec le schéma 33, qualifiée, publiée, préparée, précontrôlée et enregistrée comme repli ; jamais démarrée. |
 | [Tâches et rappels, 1.6.0 active et close](docs/tasks-reminders-160.md) | Plusieurs tâches privées par client et vue commune ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés ; livraison close. |
-| [Transport vidéo, socle 1.7.0](docs/video-transport-170.md) | En qualification, dormant : fichiers privés chiffrés par blocs et transport HTTP partiel ; intégration produit au lot 7. |
+| [Transport vidéo, socle 1.7.0](docs/video-transport-170.md) | Fusionné, qualifié et publié, dormant : transport privé par blocs ; intégration produit au lot 7, production 1.6.0 conservée. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
@@ -73,7 +73,7 @@ Dans un run CI réussi du code choisi, télécharger l’artefact **JessieMessag
 
 L’[identité approuvée](docs/IDENTITE-VALIDEE.md) et [Nuit V2](docs/NUIT-V2.md) décrivent les choix visuels. Les portraits personnels ne font pas partie du dépôt ou des artefacts publics.
 
-L’atelier conserve les révisions historiques de maquette **0.3.1** (notice) et **0.3.0** (`JessieNight.version`). Elles ne désignent pas la version applicative 1.6.0 et ne décrivent pas toutes ses fonctions actuelles. Le guide quotidien documente la messagerie en service ; ne pas qualifier le produit à partir de cette maquette.
+L’atelier conserve les révisions historiques de maquette **0.3.1** (notice) et **0.3.0** (`JessieNight.version`). Elles ne désignent pas les versions applicatives de production ou de développement et ne décrivent pas toutes les fonctions livrées. Le guide quotidien documente la messagerie en service ; ne pas qualifier le produit à partir de cette maquette.
 
 ## Données et historique
 

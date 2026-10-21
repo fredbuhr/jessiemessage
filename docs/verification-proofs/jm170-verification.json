@@ -1,0 +1,426 @@
+{
+  "format": "jessiemessage-video-transport-verification",
+  "version": 1,
+  "clientDate": "2026-10-21",
+  "scope": "Dormant transport foundation, synthetic qualification only. No production video catalog, route registration, SQL or hosted action.",
+  "developmentBase": {
+    "source": "ab1aa853659b78c1a0df9a7b560e83b56f57b79e",
+    "tree": "dd4a8173947eccec0fb284b20dceba3e44561fa3"
+  },
+  "finalPrSource": "aab110c4388bf2a5d3f4eb63837acb6e56ce123f",
+  "finalTree": "a6132f0bf5b10f4590a93055f4df7340c547401c",
+  "pr": "https://github.com/fredbuhr/jessiemessage/pull/123",
+  "local": {
+    "nodeVersion": "v24.19.0",
+    "targetedFinal": {
+      "command": "node --test tests/tools-i18n.test.mjs tests/video-*.test.mjs",
+      "tests": 74,
+      "pass": 72,
+      "fail": 0,
+      "skipped": 2,
+      "durationMs": 834.264766
+    },
+    "videoTests": {
+      "tests": 69,
+      "pass": 67,
+      "fail": 0,
+      "skipped": 2
+    },
+    "omissions": [
+      "linux-dirfd reader remains pinned after root rename",
+      "linux-dirfd upload publishes in pinned root after rename"
+    ],
+    "reason": "Real /proc/self/fd unavailable locally; native Linux CI must execute these cases.",
+    "preliminaryGeneral": {
+      "source": "6c05ee3a30f0ff3ea4afda8315bc4a6227dcab12",
+      "tests": 3407,
+      "pass": 3187,
+      "fail": 0,
+      "skipped": 220,
+      "durationMs": 23844.627424,
+      "role": "Preliminary iteration only, not final-source qualification."
+    },
+    "syntaxAndBuild": "Passed locally during implementation; final exact-source Linux CI owns final syntax/build result.",
+    "gitTreeMatchesPublishedObjects": true
+  },
+  "review": {
+    "independentStaticReview": "No blocker after corrections.",
+    "corrections": [
+      "Known unpublished failure requires durable cleanup confirmation before refund.",
+      "Missing-file removal still synchronizes directory.",
+      "HTTP transport abort reason preserves timeout status.",
+      "Stream return/throw before first next closes descriptors and slots.",
+      "HEAD ignores Range, range units are case-insensitive, unknown units ignored."
+    ]
+  },
+  "historicalFailure": {
+    "source": "3e9502bc1e5f61b171e058b771401a8ccd281c06",
+    "run": 39657013465,
+    "job": 119420179209,
+    "jobConclusion": "failure",
+    "laterRunConclusion": "cancelled",
+    "tests": 3412,
+    "pass": 3372,
+    "fail": 1,
+    "skipped": 39,
+    "test": "tests/tools-i18n.test.mjs: offline cookie renewal exact timer",
+    "cause": "Two real Date.now() calls can differ by 1 ms; 29999 ms is valid while the fixture asserted exactly 30000.",
+    "deterministicReproduction": {
+      "observedDelays": [
+        29999
+      ],
+      "assertionFailedAsExpected": true
+    },
+    "resolution": "Controlled clock with explicit 15-second advance and simulated sliding expiry; original exact 30000-ms assertion retained.",
+    "logSha256": "9429b4e83029507bf615cd6da8c901c7d52cc24ee52e25bb8e1acd3a02a16b4e",
+    "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39657013465"
+  },
+  "production": {
+    "version": "1.6.0",
+    "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "nodeVersion": "v24.22.0",
+    "schemaMigrations": 33,
+    "rollback": "1.5.1",
+    "provenance": "Existing user receipts, no new private host observation."
+  },
+  "limitations": [
+    "Synthetic catalog adapter only; no native SQL video persistence qualified.",
+    "No production route registered and no hosted video file created.",
+    "MP4 ftyp prefix inspection does not qualify decoding, codecs, tracks, duration or progressive playback.",
+    "No physical-device or mutualized-host capacity qualification.",
+    "Video export, erasure, account closure, capture/restore and product integration await lot 7.",
+    "Current PC functionality is not inferred."
+  ],
+  "publishedSource": {
+    "version": "1.7.0",
+    "source": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+    "tree": "a6132f0bf5b10f4590a93055f4df7340c547401c",
+    "tag": "v1.7.0",
+    "releaseId": 419960010,
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.0",
+    "publishedAt": "2026-10-21T19:18:36Z",
+    "deployed": false,
+    "dormant": true
+  },
+  "publication": {
+    "source": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+    "tree": "a6132f0bf5b10f4590a93055f4df7340c547401c",
+    "releaseId": 419960010,
+    "releasePublishedAt": "2026-10-21T19:18:36Z",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.0",
+    "publishCommit": "69c2ea4530898b52a97ba87f97302d45b91f9613",
+    "publishRun": 39660459694,
+    "publishWorkflowSha256": "ffd10212d618990ebb0eb6675bca86ccd02c9b1a590a73409ca58a9bc62d16e6",
+    "status": "completed",
+    "conclusion": "success",
+    "tagSourceVerified": true,
+    "releaseSourceVerified": true,
+    "workflowReviewed": true,
+    "job": {
+      "id": 119431778987,
+      "name": "publish",
+      "conclusion": "success",
+      "nodeSetup": "24.22.0"
+    },
+    "receiptObserved": {
+      "status": "published_verified",
+      "tag": "v1.7.0",
+      "commit": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+      "tree": "a6132f0bf5b10f4590a93055f4df7340c547401c",
+      "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.0",
+      "ciRun": 39659419602,
+      "dormantTransport": true,
+      "deploymentPerformed": false,
+      "schemaMigrations": 33
+    }
+  },
+  "ciPr": {
+    "source": "aab110c4388bf2a5d3f4eb63837acb6e56ce123f",
+    "tree": "a6132f0bf5b10f4590a93055f4df7340c547401c",
+    "run": {
+      "id": 39658104644,
+      "event": "pull_request",
+      "head_sha": "aab110c4388bf2a5d3f4eb63837acb6e56ce123f",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39658104644"
+    },
+    "jobs": [
+      {
+        "id": 119424349667,
+        "name": "MariaDB 10.11",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 505,
+          "pass": 505,
+          "fail": 0,
+          "skipped": 0
+        },
+        "logsRead": true,
+        "dirfdTests": [],
+        "logSha256": "c2045a5866c2a9fd5b0edfdb33cd19cb86cdfa975bff84ff8b399eaac2d1c893",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39658104644/job/119424349667"
+      },
+      {
+        "id": 119424350269,
+        "name": "Chrome HTTPS authentication and messaging with MariaDB",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 3,
+          "pass": 3,
+          "fail": 0,
+          "skipped": 0
+        },
+        "logsRead": true,
+        "dirfdTests": [],
+        "logSha256": "3bd986f3980be9922aff79f1445af153e84a4e1ff9a8ca791e99f49950eb8690",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39658104644/job/119424350269"
+      },
+      {
+        "id": 119424350279,
+        "name": "verify",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 3412,
+          "pass": 3373,
+          "fail": 0,
+          "skipped": 39
+        },
+        "logsRead": true,
+        "dirfdTests": [
+          {
+            "name": "linux-dirfd mode keeps an open read pinned through a root rename and rejects replacement on new operations",
+            "passed": true,
+            "skipped": false
+          },
+          {
+            "name": "linux-dirfd upload publication stays in the pinned root if its path is replaced during reception",
+            "passed": true,
+            "skipped": false
+          }
+        ],
+        "clockTest": {
+          "name": "broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft",
+          "passed": true
+        },
+        "syntaxSources": 629,
+        "buildSuccess": true,
+        "applicationVersion": "1.7.0",
+        "logSha256": "6e8d3285d3a287ad4b9fcfffbcc71d0d9eddae2218746f805acb39e7d7cf61cf",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39658104644/job/119424350279"
+      },
+      {
+        "id": 119424350456,
+        "name": "MariaDB 11.4",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 505,
+          "pass": 505,
+          "fail": 0,
+          "skipped": 0
+        },
+        "logsRead": true,
+        "dirfdTests": [],
+        "logSha256": "a78313a8aa9bc5e515c75b7eabb17242f3ba91a7440e5108ff09285a89439831",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39658104644/job/119424350456"
+      },
+      {
+        "id": 119424350550,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 189,
+          "pass": 189,
+          "fail": 0,
+          "skipped": 0
+        },
+        "logsRead": true,
+        "dirfdTests": [],
+        "logSha256": "ffe37f371c4a2e6e95f51017b6cba6c1a636f287a8b637ef76a3b17783257b3f",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39658104644/job/119424350550"
+      }
+    ],
+    "pushMetadata": {
+      "id": 39658097504,
+      "event": "push",
+      "head_sha": "aab110c4388bf2a5d3f4eb63837acb6e56ce123f",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39658097504",
+      "jobs": [
+        {
+          "id": 119424371474,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 119424371707,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 119424371777,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 119424371779,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 119424371920,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "logsRead": false
+    },
+    "noRerun": true,
+    "limitations": [
+      "Synthetic CI qualification only; no production server action or physical device/capacity qualification.",
+      "39 general omissions remain omissions; both added Linux dirfd tests actually passed in this CI.",
+      "The superseded failure and its log digest remain in historicalFailure of this report."
+    ]
+  },
+  "ciMain": {
+    "source": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+    "tree": "a6132f0bf5b10f4590a93055f4df7340c547401c",
+    "run": {
+      "id": 39659419602,
+      "event": "push",
+      "head_sha": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39659419602"
+    },
+    "jobs": [
+      {
+        "id": 119428215711,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 189,
+          "pass": 189,
+          "fail": 0,
+          "skipped": 0
+        },
+        "logsRead": true,
+        "dirfdTests": [],
+        "logSha256": "c1d0cd8a2a4ac10ef18db2b19b963dae9a8101646e7733b03b21c67de41ba2ba",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39659419602/job/119428215711"
+      },
+      {
+        "id": 119428216128,
+        "name": "Chrome HTTPS authentication and messaging with MariaDB",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 3,
+          "pass": 3,
+          "fail": 0,
+          "skipped": 0
+        },
+        "logsRead": true,
+        "dirfdTests": [],
+        "logSha256": "b4a90193fb322be1a1cb96897645ecf97188d1be4c72be5730e66687d5112c93",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39659419602/job/119428216128"
+      },
+      {
+        "id": 119428216206,
+        "name": "MariaDB 11.4",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 505,
+          "pass": 505,
+          "fail": 0,
+          "skipped": 0
+        },
+        "logsRead": true,
+        "dirfdTests": [],
+        "logSha256": "a759a9f32b0b28766c8fd70c3ef4f16a4d30e94a80e2315ee0bf3084020ae5aa",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39659419602/job/119428216206"
+      },
+      {
+        "id": 119428216253,
+        "name": "MariaDB 10.11",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 505,
+          "pass": 505,
+          "fail": 0,
+          "skipped": 0
+        },
+        "logsRead": true,
+        "dirfdTests": [],
+        "logSha256": "c3a6d706da0c254b707cb6eae726f726af34362419252fc95457a148ab9d129b",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39659419602/job/119428216253"
+      },
+      {
+        "id": 119428216283,
+        "name": "verify",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.0",
+        "counts": {
+          "tests": 3412,
+          "pass": 3373,
+          "fail": 0,
+          "skipped": 39
+        },
+        "logsRead": true,
+        "dirfdTests": [
+          {
+            "name": "linux-dirfd mode keeps an open read pinned through a root rename and rejects replacement on new operations",
+            "passed": true,
+            "skipped": false
+          },
+          {
+            "name": "linux-dirfd upload publication stays in the pinned root if its path is replaced during reception",
+            "passed": true,
+            "skipped": false
+          }
+        ],
+        "clockTest": {
+          "name": "broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft",
+          "passed": true
+        },
+        "syntaxSources": 629,
+        "buildSuccess": true,
+        "applicationVersion": "1.7.0",
+        "logSha256": "f49042912de5be3699c83b42673337dcf178d387b838d704ba2e7c2d6af40332",
+        "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39659419602/job/119428216283"
+      }
+    ],
+    "noRerun": true,
+    "limitations": [
+      "Synthetic CI qualification only; no production server action or physical device/capacity qualification.",
+      "39 general omissions remain omissions; both added Linux dirfd tests actually passed in this CI.",
+      "Earlier superseded run failure remains preserved separately; it was not converted to success."
+    ]
+  },
+  "result": "qualified and published dormant foundation; production remains 1.6.0/schema33",
+  "scopedDocumentValidation": {
+    "localMarkdownFileTargetsChecked": 206,
+    "missingFileTargets": 0,
+    "jsonParsed": true,
+    "gitDiffCheck": true,
+    "applicationCodeChangedInClosure": false,
+    "suitesRerunForDocumentation": false
+  }
+}
