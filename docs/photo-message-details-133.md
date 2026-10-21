@@ -1,6 +1,6 @@
 # Détails des messages photo au toucher — correctif 1.3.3
 
-**21 octobre 2026 — complément 1.3.3 codé, revu, fusionné, qualifié par les CI PR/main 5/5 à la première tentative, publié, précontrôlé et actif selon le relevé admin utilisateur.** La production est **1.3.3**, source `ca0d40648036d57fdee55b91d47d5d5a874a626e`, arbre `b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`, sous Node **24.22.0**. Le schéma reste 31 et le repli immédiat 1.3.1 est préservé. Le reçu `release131_metadata_already_recorded` clôt la livraison historique 1.3.1 ; seul l’alignement privé 1.3.3 reste en attente. [État courant et commande opérateur](REPRISE.md), [preuves 1.3.3](verification-proofs/jm133-verification.json).
+**21 octobre 2026 — complément 1.3.3 codé, revu, fusionné, qualifié par les CI PR/main 5/5 à la première tentative, publié, précontrôlé, actif selon le relevé admin utilisateur et enregistré dans le checkpoint privé ; livraison close.** La production est **1.3.3**, source `ca0d40648036d57fdee55b91d47d5d5a874a626e`, arbre `b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`, sous Node **24.22.0**. Le schéma reste 31 et le repli immédiat 1.3.1 est préservé. Le reçu `release131_metadata_already_recorded` clôt la livraison historique 1.3.1 ; le reçu `release133_metadata_recorded` confirme désormais l’alignement privé 1.3.3. [État courant](REPRISE.md), [preuves 1.3.3](verification-proofs/jm133-verification.json).
 
 ## Périmètre du complément
 
@@ -59,10 +59,16 @@ Le relevé admin utilisateur reçu ensuite confirme **1.3.3**, commit **`ca0d406
 
 **Ne rejouer ni préparation, ni Build/Run, ni redémarrage ou relevé admin pour cette activation acquise.** Le schéma 31 et les dépendances restent inchangés, le repli 1.3.1 est conservé ainsi que les références 1.3.0/1.2.0/1.1.1.
 
-## Alignement final restant
+## Alignement final confirmé — livraison close
 
-Seul l’enregistrement des métadonnées privées 1.3.3 reste à effectuer. Le [writer 1.3.3 épinglé](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/record-release133.py), SHA-256 `d4cc3ad08aee634bdc1aa0a417c332c95407f460f4be30d0609d03cf66716cce`, est publié et prêt. Ses [tests synthétiques autonomes](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/test-record-release133.py), SHA-256 `897187a800c0938cdaa206b8343ed6afed107ae5717ee36f477f3a02d8e7205d`, réussissent **9/9**, zéro échec et zéro omission, en **0,375 s**, avec les deux fichiers dans un répertoire temporaire. L’AST Python est valide, la revue indépendante ne relève aucun blocage et les octets bruts publiés ont été relus à l’identique.
+L’utilisateur a exécuté le [writer 1.3.3 épinglé](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/record-release133.py), SHA-256 `d4cc3ad08aee634bdc1aa0a417c332c95407f460f4be30d0609d03cf66716cce`, publié et qualifié. Ses [tests synthétiques autonomes](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/test-record-release133.py), SHA-256 `897187a800c0938cdaa206b8343ed6afed107ae5717ee36f477f3a02d8e7205d`, réussissent **9/9**, zéro échec et zéro omission, en **0,375 s**, avec les deux fichiers dans un répertoire temporaire. L’AST Python est valide, la revue indépendante ne relève aucun blocage et les octets bruts publiés ont été relus à l’identique.
 
-Le writer conserve les gardes et fonctions du writer 1.3.1 qualifié ; son ancien état attendu correspond exactement à l’état courant 1.3.1 déjà confirmé. Il préservera l’ancien `activeService` 1.3.1 intégral, ses extensions et empreintes, le repli utilisable 1.3.1, les autres blocs et les références 1.3.0/1.2.0/1.1.1. Une seconde exécution identique constate l’état sans réécriture. Il ne fait qu’un enregistrement atomique de métadonnées, sans migration ni redémarrage.
+Le writer conserve les gardes et fonctions du writer 1.3.1 qualifié ; son ancien état attendu correspond exactement à l’état courant 1.3.1 déjà confirmé. Le reçu confirme qu’il a préservé l’ancien `activeService` 1.3.1 intégral, ses extensions et empreintes, le repli utilisable 1.3.1, les autres blocs et les références 1.3.0/1.2.0/1.1.1. Une seconde exécution identique constate l’état sans réécriture. Il ne fait qu’un enregistrement atomique de métadonnées, sans migration ni redémarrage.
 
-**Aucune exécution hébergée de ce writer ni aucun reçu d’enregistrement 1.3.3 n’est encore rapporté.** La seule prochaine commande est dans [REPRISE](REPRISE.md). La livraison 1.3.3 n’est pas déclarée close avant ce reçu. Ne répéter ni préparation ni activation ; aucun autre lot ou parcours PC n’est ouvert.
+**Le reçu SSH utilisateur confirme l’enregistrement de la livraison 1.3.3 :**
+
+```json
+{"status":"release133_metadata_recorded","source":"ca0d40648036d57fdee55b91d47d5d5a874a626e","version":"1.3.3","metadataOnly":true,"noRestart":true,"rollbackPreserved":true,"rollbackRelease":"1.3.1","schemaMigrations":31,"priorActivePreserved":true,"otherBlocksPreserved":true}
+```
+
+Cette preuve rapportée par l’utilisateur reste distincte d’une lecture directe du checkpoint privé par l’agent. La date exacte de l’enregistrement n’est pas fournie et n’est pas déduite du relevé de démarrage. **La livraison 1.3.3 est close.** Ne rejouer ni writer, ni préparation, ni Build/Run, ni redémarrage ou relevé admin pour la clôturer. [REPRISE](REPRISE.md) conserve l’état courant ; aucun autre lot ou parcours PC n’est ouvert.

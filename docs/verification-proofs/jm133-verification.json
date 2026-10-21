@@ -1,16 +1,16 @@
 {
   "version": "1.3.3",
-  "status": "deployed_awaiting_metadata_recording",
+  "status": "closed",
   "branch": "fix/photo-message-details-133",
   "base": "76b80e33fba5f4cbcebcf73193944077e631af50",
   "source": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
   "tree": "b1fe882ede0450cbf135d2ff8cb19e780d18a0e5",
   "scope": "persistent_native_photo_message_details_toggle_without_extra_height",
   "results": {
-    "status": "qualified_published_prechecked_and_active_metadata_pending",
+    "status": "qualified_published_prechecked_active_and_metadata_recorded",
     "codeQualified": true,
     "releasePublished": true,
-    "deliveryComplete": false
+    "deliveryComplete": true
   },
   "authorization": {
     "method": "new_user_request",
@@ -247,7 +247,7 @@
     "preparation133Reported": true,
     "precheck133Passed": true,
     "activation133Confirmed": true,
-    "metadata133Recorded": false,
+    "metadata133Recorded": true,
     "preservedActiveRollback": "1.3.1",
     "plannedRollback133": "1.3.1",
     "activeTree": "b1fe882ede0450cbf135d2ff8cb19e780d18a0e5",
@@ -260,6 +260,20 @@
       "noRestart": true,
       "rollbackPreserved": true,
       "rollbackRelease": "1.3.0",
+      "schemaMigrations": 31,
+      "priorActivePreserved": true,
+      "otherBlocksPreserved": true
+    },
+    "release133Closed": true,
+    "metadata133Receipt": "release133_metadata_recorded",
+    "metadata133ReceiptValues": {
+      "status": "release133_metadata_recorded",
+      "source": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+      "version": "1.3.3",
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackPreserved": true,
+      "rollbackRelease": "1.3.1",
       "schemaMigrations": 31,
       "priorActivePreserved": true,
       "otherBlocksPreserved": true
@@ -357,7 +371,6 @@
     "noCheckpointChange": true
   },
   "notAttested": [
-    "release133_metadata_recording",
     "physical_phone_keyboard_for_release133",
     "current_pc_or_backup_delivery"
   ],
@@ -385,28 +398,39 @@
   },
   "privateCheckpoint": {
     "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
-    "lastRecordedRelease": "1.3.1",
-    "lastRecordedSource": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+    "lastRecordedRelease": "1.3.3",
+    "lastRecordedSource": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
     "lastRecordedReceipt": {
-      "status": "release131_metadata_already_recorded",
-      "source": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
-      "version": "1.3.1",
+      "status": "release133_metadata_recorded",
+      "source": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+      "version": "1.3.3",
       "metadataOnly": true,
       "noRestart": true,
       "rollbackPreserved": true,
-      "rollbackRelease": "1.3.0",
+      "rollbackRelease": "1.3.1",
       "schemaMigrations": 31,
       "priorActivePreserved": true,
       "otherBlocksPreserved": true
     },
-    "alignmentStatus": "awaiting_release133_metadata_recording",
-    "recorded": false,
+    "alignmentStatus": "release133_metadata_recorded",
+    "recorded": true,
     "runtimeRestartRequired": false,
     "plannedRollback": "1.3.1",
     "priorActiveToPreserve": "1.3.1",
-    "receipt": null,
+    "receipt": {
+      "status": "release133_metadata_recorded",
+      "source": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+      "version": "1.3.3",
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackPreserved": true,
+      "rollbackRelease": "1.3.1",
+      "schemaMigrations": 31,
+      "priorActivePreserved": true,
+      "otherBlocksPreserved": true
+    },
     "recorder": {
-      "status": "published_ready_awaiting_user_execution",
+      "status": "executed_by_user_confirmed",
       "commit": "416d271dac67610fb7614e0089edf48399958ea4",
       "path": "ops/record-release133.py",
       "sha256": "d4cc3ad08aee634bdc1aa0a417c332c95407f460f4be30d0609d03cf66716cce",
@@ -422,8 +446,8 @@
       "syntax": "python_ast_valid",
       "independentReview": "static_no_blocking_findings",
       "rawPublishedBytesVerified": true,
-      "serverExecution": "not_reported",
-      "readyForOperator": true,
+      "serverExecution": "user_ssh_transcript_reported_success",
+      "readyForOperator": false,
       "metadataOnly": true,
       "noRestart": true,
       "noMigration": true,
@@ -434,7 +458,27 @@
         "guardsAndFunctionsPreserved": true,
         "oldActiveEqualsPriorCurrentActive": true
       },
-      "preservation": "full_prior_active_131_with_extensions_and_hashes_as_prior_active_and_usable_rollback_131_and_unchanged_other_blocks_and_fallbacks_130_120_111"
-    }
-  }
+      "preservation": "full_prior_active_131_with_extensions_and_hashes_as_prior_active_and_usable_rollback_131_and_unchanged_other_blocks_and_fallbacks_130_120_111",
+      "replayRequired": false
+    },
+    "priorRecordedRelease": "1.3.1",
+    "priorRecordedSource": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+    "priorRecordedReceipt": {
+      "status": "release131_metadata_already_recorded",
+      "source": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+      "version": "1.3.1",
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackPreserved": true,
+      "rollbackRelease": "1.3.0",
+      "schemaMigrations": 31,
+      "priorActivePreserved": true,
+      "otherBlocksPreserved": true
+    },
+    "receiptSource": "user_ssh_transcript",
+    "directPrivateToolObservation": false,
+    "originalRecordedAt": "not_reported",
+    "priorActivePreserved": true
+  },
+  "closed": true
 }

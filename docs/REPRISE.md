@@ -1,10 +1,10 @@
 # Reprendre JessieMessage
 
-**21 octobre 2026 Europe/Paris — production `1.3.3`, préparation et identité active confirmées par les reçus utilisateur.** Le relevé admin affiche `ca0d40648036d57fdee55b91d47d5d5a874a626e` / `v24.22.0` / `21/10/2026 13:20:11`. La 1.3.1 est close selon `release131_metadata_already_recorded` et constitue le repli immédiat ; 1.3.0/1.2.0/1.1.1 et les autres blocs restent préservés. **Seul l’enregistrement final des métadonnées 1.3.3 reste en attente**, sans redémarrage ni migration. Le schéma 31 est inchangé. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
+**21 octobre 2026 Europe/Paris — production `1.3.3`, préparation et identité active confirmées par les reçus utilisateur.** Le relevé admin affiche `ca0d40648036d57fdee55b91d47d5d5a874a626e` / `v24.22.0` / `21/10/2026 13:20:11`. La 1.3.1 est close selon `release131_metadata_already_recorded` et constitue le repli immédiat ; 1.3.0/1.2.0/1.1.1 et les autres blocs restent préservés. **L’enregistrement final est confirmé par `release133_metadata_recorded` : la livraison 1.3.3 est close**, sans redémarrage ni migration pour cet alignement. Le schéma 31 est inchangé. Ce fichier est l’unique état courant ; les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
-## Travail courant — correctif 1.3.3 actif, enregistrement final en attente
+## Livraison active 1.3.3 — close
 
-**Code revu, fusionné, qualifié par les CI PR/main 5/5, publié, précontrôlé et identifié actif.** La livraison conserve les textes client FR/EN à la première personne de Jessie et les messages compacts du socle 1.3.2, dont les dates, statuts et actions sont masqués jusqu’à la sélection. Le complément 1.3.3 rend le petit bouton natif `⋯` visible à côté des seules photos, même sans légende, sans hauteur ajoutée. Ce complément CSS ne change ni le JavaScript applicatif, ni les API, le SQL ou les dépendances. [Périmètre et critères](photo-message-details-133.md), [preuves 1.3.3](verification-proofs/jm133-verification.json).
+**Code revu, fusionné, qualifié par les CI PR/main 5/5, publié, précontrôlé, identifié actif et enregistré dans le checkpoint privé ; livraison close.** La livraison conserve les textes client FR/EN à la première personne de Jessie et les messages compacts du socle 1.3.2, dont les dates, statuts et actions sont masqués jusqu’à la sélection. Le complément 1.3.3 rend le petit bouton natif `⋯` visible à côté des seules photos, même sans légende, sans hauteur ajoutée. Ce complément CSS ne change ni le JavaScript applicatif, ni les API, le SQL ou les dépendances. [Périmètre et critères](photo-message-details-133.md), [preuves 1.3.3](verification-proofs/jm133-verification.json).
 
 La [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116), head `76f781f0c18311649a3b6c7e57df48530dfb8955` sur la branche `fix/photo-message-details-133` issue de `76b80e33fba5f4cbcebcf73193944077e631af50`, est fusionnée sur **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, arbre **`b1fe882ede0450cbf135d2ff8cb19e780d18a0e5`** identique à celui de la PR. Le socle [1.3.2 qualifié et publié](client-voice-message-details-132.md) reste immuable et ses résultats ne sont pas réattribués à 1.3.3.
 
@@ -18,20 +18,13 @@ La [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116), head `76f781f0c
 
 **Activation acquise :** le relevé admin utilisateur affiche **1.3.3**, commit **`ca0d40648036d57fdee55b91d47d5d5a874a626e`**, Node **`v24.22.0`** et relevé au démarrage **`21/10/2026 13:20:11`**. Ce texte est conservé exactement, sans conversion UTC ou epoch déduite. Il identifie le processus HTTP répondant ; l’agent n’a pas observé le GET privé directement et ne revendique ni attestation PID/socket ni empreinte du binaire via le processus actif. Ce relevé ne certifie pas tous les parcours physiques de messagerie. **Ne demander ni préparation, ni Build/Run, ni redémarrage, ni nouveau relevé pour cette activation déjà acquise.**
 
-**Prochaine action — enregistrement des métadonnées 1.3.3 uniquement :** ouvrir la [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller ce bloc. Le [writer épinglé](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/record-release133.py), SHA-256 `d4cc3ad08aee634bdc1aa0a417c332c95407f460f4be30d0609d03cf66716cce`, et ses [tests](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/test-record-release133.py), SHA-256 `897187a800c0938cdaa206b8343ed6afed107ae5717ee36f477f3a02d8e7205d`, sont publiés ; leurs octets bruts ont été relus identiques. **9/9 tests synthétiques autonomes réussis en 0,375 s**, syntaxe Python valide et revue indépendante sans blocage. Les fonctions et gardes reprennent le writer 1.3.1 qualifié ; l’ancien état actif attendu est exactement sa référence 1.3.1. Ces tests n’attestent pas une exécution sur l’hébergement.
+**Alignement final acquis :** le [writer 1.3.3 épinglé](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/record-release133.py), SHA-256 `d4cc3ad08aee634bdc1aa0a417c332c95407f460f4be30d0609d03cf66716cce`, a été exécuté par l’utilisateur. Ses [tests](https://github.com/fredbuhr/jessiemessage/blob/416d271dac67610fb7614e0089edf48399958ea4/ops/test-record-release133.py), SHA-256 `897187a800c0938cdaa206b8343ed6afed107ae5717ee36f477f3a02d8e7205d`, réussissent **9/9** en 0,375 s, sans omission, sur deux fichiers synthétiques autonomes ; syntaxe Python, revue indépendante et octets publiés vérifiés. Ces contrôles restent distincts du reçu serveur transmis :
 
-```sh
-python3 - <<'PY'
-import hashlib, urllib.request
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/416d271dac67610fb7614e0089edf48399958ea4/ops/record-release133.py"
-code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != "d4cc3ad08aee634bdc1aa0a417c332c95407f460f4be30d0609d03cf66716cce":
-    raise SystemExit("Empreinte incorrecte : arrêt.")
-exec(compile(code, "<enregistrement>", "exec"))
-PY
+```json
+{"status":"release133_metadata_recorded","source":"ca0d40648036d57fdee55b91d47d5d5a874a626e","version":"1.3.3","metadataOnly":true,"noRestart":true,"rollbackPreserved":true,"rollbackRelease":"1.3.1","schemaMigrations":31,"priorActivePreserved":true,"otherBlocksPreserved":true}
 ```
 
-Le writer vérifie les sources, lanceurs, modes et binaire préparés avant l’écriture atomique du seul checkpoint privé. Il préserve intégralement l’état précédent 1.3.1 et ses extensions, le repli 1.3.1 et tous les autres blocs/replis 1.3.0/1.2.0/1.1.1. S’il constate déjà le même enregistrement, il renvoie le reçu idempotent sans réécriture. **Aucune migration, Build ou redémarrage.** Le reçu attendu est `release133_metadata_recorded` ou `release133_metadata_already_recorded`, source `ca0d40648036d57fdee55b91d47d5d5a874a626e`, version `1.3.3`, schéma 31, repli `1.3.1`, avec `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `priorActivePreserved:true` et `otherBlocksPreserved:true`. Aucun de ces reçus 1.3.3 n’est encore rapporté ; la clôture reste en attente. L’alignement 1.3.1 est acquis par `release131_metadata_already_recorded`, sans exécution séparée à refaire. Aucune autre évolution ni manipulation PC n’est ouverte.
+Le reçu confirme l’écriture des seules métadonnées, sans redémarrage, avec l’ancien état actif 1.3.1 intégral, le repli immédiat 1.3.1 et les autres blocs/replis préservés. Aucune date d’enregistrement non fournie n’est déduite. L’agent n’a pas lu directement le checkpoint privé. **La livraison 1.3.3 est close : ne rejouer ni writer, ni préparation, ni Build/Run, ni redémarrage et ne demander aucun nouveau relevé pour la clore.** Les limites de qualification des appareils et sauvegardes restent inchangées. Aucune autre évolution ni manipulation PC n’est ouverte par cette clôture.
 
 <details>
 <summary>Candidate historique 1.3.2 — qualifiée et publiée, jamais préparée ni activée, remplacée par 1.3.3</summary>
@@ -88,11 +81,11 @@ Ses [9 tests synthétiques](https://github.com/fredbuhr/jessiemessage/blob/c073c
 
 Ses **9 tests synthétiques** précèdent cette exécution et restent distincts du reçu serveur. L’ancien `activeService` 1.2.0 intégral et ses empreintes sont conservés comme état antérieur et repli utilisable sous `.developmentSimplification.release130` ; les autres blocs, dont le secours 1.1.1 et les historiques, sont préservés. L’alignement n’a exécuté ni migration, ni Build, ni redémarrage. L’agent n’a pas d’accès SSH utilisable et n’a pas observé directement le checkpoint privé. **Ne rejouer ni writer, ni staging, ni Build/Run, ni redémarrage, ni relevé admin pour clore la 1.3.0 : cette clôture est acquise.**
 
-**Évolutions distinctes acquises depuis :** le [correctif messagerie mobile 1.3.1](chat-mobile-131.md) est clos et conservé en repli ; le [correctif 1.3.3](photo-message-details-133.md) est actif, avec son seul enregistrement final en attente selon la section courante. Aucune nouvelle opération utilisateur n’est attendue pour la 1.3.0 close.
+**Évolutions distinctes acquises depuis :** le [correctif messagerie mobile 1.3.1](chat-mobile-131.md) est clos et conservé en repli ; le [correctif 1.3.3](photo-message-details-133.md) est actif et clos selon la section courante. Aucune nouvelle opération utilisateur n’est attendue pour la 1.3.0 close.
 
 ## État de livraison courant
 
-Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et [État du service Jessie](https://jessiemessage.com/admin/readiness). Le Manager nomme l’application Node.js **recette.jessiemessage.com** ; **jessiemessage.com** est un alias du même runtime. Le site PHP **accueil.jessiemessage.com**, site 1532641, est distinct : les réglages Node.js concernent l’application **239143** liée ici. Aucun de ces réglages n’est à modifier pour enregistrer les métadonnées.
+Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et [État du service Jessie](https://jessiemessage.com/admin/readiness). Le Manager nomme l’application Node.js **recette.jessiemessage.com** ; **jessiemessage.com** est un alias du même runtime. Le site PHP **accueil.jessiemessage.com**, site 1532641, est distinct : les réglages Node.js concernent l’application **239143** liée ici. L’enregistrement des métadonnées n’a modifié aucun de ces réglages.
 
 | Élément | État constaté |
 | --- | --- |
@@ -105,7 +98,7 @@ Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.
 | CI et publication | CI PR/main 5/5, source exacte `ca0d4064` ; liens et compteurs ci-dessus. |
 | Disponibilité | Le relevé admin utilisateur identifie le service répondant ; aucun nouveau contrôle public distinct n’est ajouté à cette étape. |
 | Portée et preuves | Voix de Jessie, messages compacts et détails à la sélection ; bouton de détails visible à côté des photos. [Bilan 1.3.3](photo-message-details-133.md), [preuves structurées](verification-proofs/jm133-verification.json). |
-| Checkpoint privé | Dernier enregistrement confirmé **1.3.1** / `baf91e0e`, schéma 31, reçu `release131_metadata_already_recorded` ; seul alignement 1.3.3 en attente. |
+| Checkpoint privé | Dernier enregistrement confirmé **1.3.3** / `ca0d4064`, schéma 31, reçu `release133_metadata_recorded` ; ancien état 1.3.1 intégral et autres blocs préservés. |
 | Replis conservés | **1.3.1 / Node 24.22** immédiat ; **1.3.0**, **1.2.0** antérieurs et **1.1.1** compatible schéma 31 comme secours précontrôlé. **1.1.0 et 1.0.0 ne doivent plus être redémarrées sur le schéma 31.** |
 
 ## État historique de la livraison 1.2.0 — clos

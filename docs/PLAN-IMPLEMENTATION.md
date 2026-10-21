@@ -2,21 +2,13 @@
 
 La V1 initiale est terminée dans le périmètre convenu. L’état réellement déployé, ses preuves et les commandes opérateur sont exclusivement dans **[REPRISE](REPRISE.md)**. Ce plan décrit le travail restant ; les anciens lots correctifs restent historiques.
 
-Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0 et 1.3.1 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
-
-## Correctif 1.3.3 — actif, enregistrement final en attente
-
-[Détails des photos au toucher](photo-message-details-133.md) : la [PR 116](https://github.com/fredbuhr/jessiemessage/pull/116) conserve les textes client de Jessie et les détails des messages à la sélection de 1.3.2 ; le bouton natif `⋯` est visible à côté des seules photos, même sans légende, sans hauteur ajoutée. Les CI PR/main **5/5** et le [tag/release v1.3.3](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3) qualifient le commit `ca0d4064…`. Le reçu de préparation hébergée et le relevé admin utilisateur confirment désormais **1.3.3 active**, Node 24.22.0, schéma 31 inchangé et repli immédiat 1.3.1 préservé. [Preuves 1.3.3](verification-proofs/jm133-verification.json).
-
-**Reste uniquement l’enregistrement des métadonnées 1.3.3**, sans migration, Build/Run ni redémarrage. Sa prochaine action est exclusivement dans [REPRISE](REPRISE.md). La clôture de cette livraison attend le reçu final ; aucune préparation ou preuve d’activation supplémentaire n’est demandée. Les essais Chrome sont automatisés ; tous les parcours physiques sur téléphone ne sont pas attestés.
-
-La 1.3.1 est close selon le reçu `release131_metadata_already_recorded` : son alignement existait déjà et le writer idempotent l’a constaté sans réécriture. La date de l’enregistrement initial n’est pas déduite. Le socle [1.3.2](client-voice-message-details-132.md) est historique, qualifié et publié mais jamais activé séparément ; ses résultats et son tag restent conservés. Aucun nouveau lot n’est ouvert par cet alignement.
+Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.3.1 et 1.3.3 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après le correctif 1.3.3. |
+| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée ; prochain lot non ouvert. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |
@@ -27,6 +19,7 @@ Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas
 
 ## Livraisons antérieures closes
 
+- [Voix de Jessie, messages compacts et détails des photos 1.3.3](photo-message-details-133.md) : code qualifié et publié, préparation et activation confirmées ; clôture acquise par `release133_metadata_recorded`, schéma 31 inchangé et repli immédiat 1.3.1 préservé. [Preuves](verification-proofs/jm133-verification.json). Aucune manipulation supplémentaire n’est requise pour cette livraison.
 - [Messagerie mobile 1.3.1](chat-mobile-131.md) : préparation et activation acquises ; alignement privé confirmé par `release131_metadata_already_recorded`, repli immédiat de 1.3.3.
 - [Emojis enrichis et inclusifs 1.3.0](emoji-inclusifs-130.md) : clôture confirmée par `release130_metadata_recorded`, preuves historiques préservées ; référence conservée comme repli de 1.3.1.
 - [Profil et expressions 1.2.0](profile-expressions-120.md) : production identifiée, schéma 31, disponibilité et checkpoint alignés ; repli 1.1.1 compatible précontrôlé.
