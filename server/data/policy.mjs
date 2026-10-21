@@ -30,6 +30,7 @@ const catalogue = [
   ["push_outbox", "subject", "Delivery count for owned device subscriptions or the selected conversation; no endpoint or provider response."],
   ["user_profiles", "subject", "The client's own avatar reference, profile version and dates; no administrator or other client's profile."],
   ["announcements", "administrator", "Administrator announcements are shared content, outside a client conversation export."],
+  ["crm_tasks", "subject", "Related private task count only; administrator titles and deadlines never exported."],
 ];
 
 function freeze(value) {

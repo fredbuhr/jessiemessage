@@ -67,7 +67,7 @@ export async function manualOperatorFixture(t) {
   assert.ok(process.env.JESSIEMESSAGE_SHARED_RESTORE_DB_PASSWORD);
   const targetEnv = { ...process.env, JESSIEMESSAGE_DB_NAME: targetDatabase, JESSIEMESSAGE_MIGRATION_DATABASE: targetDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: targetDatabase };
   const migrations = await loadMigrations(), tables = createdMigrationTables(migrations), allTables = [...tables, "schema_migrations"], allowed = [...allTables, "migration_probe"];
-  assert.equal(migrations.length, 32); assert.equal(tables.length, 31);
+  assert.equal(migrations.length, 33); assert.equal(tables.length, 32);
   const sourceConnection = await connectDatabase(), targetConnection = await connectDatabase(targetEnv);
   const root = await erasureDirectory(t), operatorDirectory = path.join(root, "operator"), targetDirectory = path.join(operatorDirectory, "target");
   await mkdir(operatorDirectory, { mode: 0o700 }); await mkdir(targetDirectory, { mode: 0o700 });
@@ -179,7 +179,7 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
   const readRecentRegistry = () => withPrivateDirectory(dirs["source-journal"], scope => captureOperationalState(scope, { key: keys.crmKey, binding: sourceBinding }));
   const backup = await readRecentRegistry();
   const receipt = { format: "jessiemessage-private-checkpoint", version: 10, profile: "messaging-photos-notify-recovery-crm-broadcast-application", coverage: { ...APPLICATION_COVERAGE }, createdAt: now,
-    schema: { tables: 32, migrations: 32 }, sql: { file: "database.sql.gz", bytes: gzip.length, sha256: hash(gzip), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) },
+    schema: { tables: 33, migrations: 33 }, sql: { file: "database.sql.gz", bytes: gzip.length, sha256: hash(gzip), uncompressedBytes: sql.length, uncompressedSha256: hash(sql) },
     manifest: { file: "manifest.json", sha256: manifestHash(manifest) }, media: { files: mediaFiles, bytes: mediaFiles.reduce((sum, value) => sum + value.bytes, 0) } };
   receipt.operations = await withPrivateDirectory(dirs.checkpoint, scope => writeOperationalCheckpoint(scope, backup, receipt, keys.crmKey));
   await withPrivateDirectory(dirs.checkpoint, scope => writeCheckpointReceipt(scope, receipt));
@@ -235,7 +235,7 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
           const currentStorage = await createMediaStorage({ root: dirs["target-media"], key: keys.mediaKey, pathMode: "linux-dirfd" });
           assertBackupSnapshot({ expected: snapshot, actual, mode: "recovery", targetFingerprint: hex(await currentStorage.fingerprint()) });
           assert.equal(await databaseHash(targetDatabase), original.sql);
-          return { imported: existing.length === 0, applicationSnapshotMatched: true, tables: 32, migrations: 32 };
+          return { imported: existing.length === 0, applicationSnapshotMatched: true, tables: 33, migrations: 33 };
         } };
     },
     async assertRestored() {

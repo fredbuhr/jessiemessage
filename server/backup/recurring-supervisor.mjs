@@ -140,7 +140,7 @@ export async function checkpointProcess(command, options, destination, { signal,
           try { result = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); } finally { bytes.fill(0); }
           const expected = command === "capture-application" ? "application_checkpoint_saved" : "application_precheck_passed";
           if (result?.status !== expected || result.profile !== "messaging-photos-notify-recovery-crm-broadcast-application" || result.started !== false
-            || result.migrationPerformed !== false || command === "capture-application" && (result.tables !== 32 || result.migrations !== 32
+            || result.migrationPerformed !== false || command === "capture-application" && (result.tables !== 33 || result.migrations !== 33
               || result.operationsCovered !== true || result.archiveListed !== true || result.archiveContentsVerified !== true || !/^[a-f0-9]{64}$/.test(result.archive?.sha256 ?? ""))) fail("CHECKPOINT");
           yes({ saved: command === "capture-application", precheckPassed: command === "check-application" });
         } catch (error) { no(error instanceof RecurringSupervisorError ? error : new RecurringSupervisorError("CHECKPOINT")); }

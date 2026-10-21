@@ -2,7 +2,7 @@ export class BackupCryptoStoreError extends Error {
   constructor() { super("Private backup data could not be read."); this.name = "BackupCryptoStoreError"; this.code = "BACKUP_DATABASE"; }
 }
 const fail = () => { throw new BackupCryptoStoreError(); };
-const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "broadcast", "announcements", "media", "notifications", "notificationJobs"];
+const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "tasks", "broadcast", "announcements", "media", "notifications", "notificationJobs"];
 function bytes(value, length) { if (!Buffer.isBuffer(value) || value.length !== length) fail(); return Buffer.from(value); }
 function nullableBytes(value, length) { return value === null ? null : bytes(value, length); }
 function text(value, maximum) { if (typeof value !== "string" || value.length < 1 || value.length > maximum) fail(); return value; }
@@ -39,6 +39,11 @@ const statements = {
   columns: `m.id, m.conversation_id, m.sender_id, m.sender_role, m.body_encrypted AS encrypted, m.body_fingerprint,
     m.deleted_at, c.admin_id, c.client_id, mm.media_id, a.owner_id AS media_owner_id` },
   crm: { id: null, from: "crm_profiles p", columns: "p.admin_id, p.conversation_id, p.notes_encrypted AS encrypted, p.notes_revision, p.version" },
+  tasks: { id: "t.id", from: `crm_tasks t
+    LEFT JOIN users u ON u.id = t.admin_id
+    LEFT JOIN conversations c ON c.id = t.conversation_id`,
+  columns: `t.id, t.admin_id, t.admin_role, t.conversation_id, t.title_encrypted AS encrypted, t.due_at, t.done,
+    t.version, t.request_fingerprint, t.created_at, t.updated_at, u.role AS user_role, c.admin_id AS conversation_admin_id` },
   broadcast: { id: "b.id", from: "broadcast_campaigns b", columns: "b.id, b.admin_id, b.payload_encrypted AS encrypted, b.request_fingerprint, b.media_id, b.allow_repeat_media" },
   announcements: { id: "a.id", from: `announcements a
     LEFT JOIN users u ON u.id = a.admin_id
@@ -91,6 +96,14 @@ function normalize(purpose, row) {
     if (![0, 1, 0n, 1n].includes(row.allow_repeat_media)) fail();
     return { ...result, adminId: bytes(row.admin_id, 16), encrypted: text(row.encrypted, 32000),
       fingerprint: bytes(row.request_fingerprint, 32), mediaId: nullableBytes(row.media_id, 16), allowRepeatMedia: Number(row.allow_repeat_media) === 1 };
+  }
+  if (purpose === "tasks") {
+    if (![0, 1, 0n, 1n].includes(row.done)) fail();
+    return { ...result, adminId: bytes(row.admin_id, 16), adminRole: row.admin_role, userRole: row.user_role,
+      conversationId: bytes(row.conversation_id, 16), conversationAdminId: bytes(row.conversation_admin_id, 16),
+      encrypted: text(row.encrypted, 4096), dueAt: announcementDate(row.due_at, true), done: Number(row.done) === 1,
+      version: String(integer(row.version, 4294967295)), fingerprint: bytes(row.request_fingerprint, 32),
+      createdAt: announcementDate(row.created_at), updatedAt: announcementDate(row.updated_at) };
   }
   if (purpose === "announcements") {
     if (![0, 1, 0n, 1n].includes(row.send_private_message)) fail();

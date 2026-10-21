@@ -13,7 +13,7 @@ const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16);
 const now = Date.UTC(2026, 9, 14, 12);
 const date = (value) => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
-const allowedTables = ["announcements", "user_profiles", "push_outbox", "push_subscriptions", "media_storage_objects", "media_storage_state", "broadcast_recipients", "broadcast_campaigns", "broadcast_preferences", "password_reset_outbox", "client_password_resets", "crm_memberships", "crm_labels", "crm_profiles", "message_media", "media_assets", "chat_events", "chat_receipts", "messages", "mail_outbox", "email_verifications", "client_session_state", "client_auth_state",
+const allowedTables = ["crm_tasks", "announcements", "user_profiles", "push_outbox", "push_subscriptions", "media_storage_objects", "media_storage_state", "broadcast_recipients", "broadcast_campaigns", "broadcast_preferences", "password_reset_outbox", "client_password_resets", "crm_memberships", "crm_labels", "crm_profiles", "message_media", "media_assets", "chat_events", "chat_receipts", "messages", "mail_outbox", "email_verifications", "client_session_state", "client_auth_state",
   "auth_session_state", "admin_recovery_codes", "admin_mfa", "auth_rate_limits", "conversations",
   "sessions", "invitations", "users", "migration_probe", "schema_migrations"];
 

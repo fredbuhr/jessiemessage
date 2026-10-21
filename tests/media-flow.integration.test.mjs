@@ -55,7 +55,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
   const migrations = await loadMigrations();
-  assert.equal(migrations.length, 32);
+  assert.equal(migrations.length, 33);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase();
   let pool;

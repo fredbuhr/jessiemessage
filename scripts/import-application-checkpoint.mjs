@@ -147,7 +147,7 @@ export async function validateApplicationSql(bytes) {
   try { source = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes); } catch { fail("SQL"); }
   if (!bytes.length || bytes.length > MAX_SQL || source.includes("\0")) fail("SQL");
   const migrations = await loadMigrations(), tables = [...createdMigrationTables(migrations), "schema_migrations"].sort(), expected = new Set(tables), created = new Set();
-  if (migrations.length !== 32 || tables.length !== 32 || expected.size !== 32) fail("SQL");
+  if (migrations.length !== 33 || tables.length !== 33 || expected.size !== 33) fail("SQL");
   const all = tokens(source), statements = []; let statement = [];
   for (const token of all) { if (token === ";") { if (statement.length) statements.push(statement); statement = []; } else statement.push(token); }
   if (statement.length) fail("SQL");
@@ -257,7 +257,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     active(signal); const processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv);
     const check = { ...selected, command: "check-application" }, dependencies = { inheritedEnv, execArgv, signal };
     const before = await verify(check, dependencies);
-    if (before?.status !== "ready_for_input" || before.checkpointFilesMatched !== true || before.databaseConnected !== false || before.tables !== 32 || before.migrations !== 32 || before.sqlSha256 !== value.sqlSha256 || !matchesRecovery(before)) fail("CHECKPOINT");
+    if (before?.status !== "ready_for_input" || before.checkpointFilesMatched !== true || before.databaseConnected !== false || before.tables !== 33 || before.migrations !== 33 || before.sqlSha256 !== value.sqlSha256 || !matchesRecovery(before)) fail("CHECKPOINT");
     await inspectClient();
     await scopeOperation(selected.checkpointDirectory, async scope => {
       sql = await readSql(scope, before, { signal }); active(signal);

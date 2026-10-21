@@ -47,7 +47,7 @@ function canonicalReceipt(value) {
   const manifest = record(root.manifest, ["file", "sha256"]), media = record(root.media, ["files", "bytes"]);
   if (root.format !== "jessiemessage-private-checkpoint"
     || !matchesCheckpointReceipt(manifestBackupProfile(root.profile), root) || !integer(root.version, 1, 10)
-    || !integer(root.createdAt, 0, 253402300799999) || ![30, 31, 32].includes(schema.tables) || schema.migrations !== schema.tables
+    || !integer(root.createdAt, 0, 253402300799999) || ![30, 31, 32, 33].includes(schema.tables) || schema.migrations !== schema.tables
     || application && coverage.tables !== schema.tables
     || sql.file !== "database.sql.gz" || !integer(sql.bytes, 1, 16 * MIB) || !digest(sql.sha256)
     || !integer(sql.uncompressedBytes, 1, MAX_FILE) || !digest(sql.uncompressedSha256)

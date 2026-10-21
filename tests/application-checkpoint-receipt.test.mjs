@@ -10,7 +10,7 @@ import { CheckpointReceiptError, readCheckpointReceipt, writeCheckpointReceipt }
 const metadata = Buffer.from('{"synthetic":"application-manifest"}');
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const receipt = () => ({ format: "jessiemessage-private-checkpoint", version: 2, profile: "messaging-photos-notify-application",
-  coverage: { ...APPLICATION_COVERAGE }, createdAt: 1792240000000, schema: { tables: 32, migrations: 32 },
+  coverage: { ...APPLICATION_COVERAGE }, createdAt: 1792240000000, schema: { tables: 33, migrations: 33 },
   sql: { file: "database.sql.gz", bytes: 120, sha256: "b".repeat(64), uncompressedBytes: 700, uncompressedSha256: "c".repeat(64) },
   manifest: { file: "manifest.json", sha256: hash(metadata) }, media: { files: [], bytes: 0 } });
 const invalid = (error) => error instanceof CheckpointReceiptError && error.code === "CHECKPOINT_RECEIPT_INVALID"
@@ -43,7 +43,7 @@ test("application receipts reject mismatched versions and profiles, overstated c
     (v) => { v.version = 1; }, (v) => { v.version = 3; }, (v) => { v.profile = "messaging-photos-notify"; },
     (v) => { delete v.coverage; }, (v) => { v.coverage.completeDatabase = true; },
     (v) => { v.coverage.executableInventory = "proven"; }, (v) => { v.coverage.executableObjects = "included"; },
-    (v) => { v.coverage.tables = 29; }, (v) => { v.coverage.tables = 33; }, (v) => { v.coverage.tables = 30; },
+    (v) => { v.coverage.tables = 29; }, (v) => { v.coverage.tables = 34; }, (v) => { v.coverage.tables = 30; },
     (v) => { v.coverage.encryptedMedia = false; },
     (v) => { v.coverage.scope = "database"; }, (v) => { v.coverage.extra = true; },
     (v) => { v.schema.tables = 29; }, (v) => { v.schema.migrations = 29; },
@@ -70,13 +70,15 @@ test("schema30 receipts remain canonical and readable without relabeling their c
   assert.deepEqual(await readCheckpointReceipt(f.scope), value);
 });
 
-test("schema31 receipts remain canonical and readable after schema32 without relabeling their signed scope", async t => {
-  const f = await fixture(t), value = receipt(); value.coverage.tables = 31; value.schema = { tables: 31, migrations: 31 };
-  assert.deepEqual(await writeCheckpointReceipt(f.scope, value), value);
-  const original = await readFile(f.filename, "utf8");
-  assert.deepEqual(await readCheckpointReceipt(f.scope), value);
-  assert.equal(await readFile(f.filename, "utf8"), original);
-  assert.equal(APPLICATION_COVERAGE.tables, 32);
+test("schema31/32 receipts remain canonical and readable after schema33 without relabeling their signed scope", async t => {
+  for (const historical of [31, 32]) {
+    const f = await fixture(t), value = receipt(); value.coverage.tables = historical; value.schema = { tables: historical, migrations: historical };
+    assert.deepEqual(await writeCheckpointReceipt(f.scope, value), value);
+    const original = await readFile(f.filename, "utf8");
+    assert.deepEqual(await readCheckpointReceipt(f.scope), value);
+    assert.equal(await readFile(f.filename, "utf8"), original);
+  }
+  assert.equal(APPLICATION_COVERAGE.tables, 33);
 });
 
 test("application receipt reads refuse alternate coverage order, duplicate coverage keys and one-field downgrades", async (t) => {

@@ -590,7 +590,7 @@ function processFixture(payload, exitCode = 0) {
 
 test("checkpoint subprocess accepts the precise application profile and discards all other output", async () => {
   const value = { status: "application_checkpoint_saved", profile: "messaging-photos-notify-recovery-crm-broadcast-application",
-    tables: 32, migrations: 32, operationsCovered: true, archiveListed: true, archiveContentsVerified: true, archive: { sha256: "c".repeat(64) }, started: false, migrationPerformed: false };
+    tables: 33, migrations: 33, operationsCovered: true, archiveListed: true, archiveContentsVerified: true, archive: { sha256: "c".repeat(64) }, started: false, migrationPerformed: false };
   let called;
   const accepted = await checkpointProcess("capture-application", options, "/srv/private-backups/capture-test", { environment },
     { spawnClient: (_command, args, config) => { called = { args, config }; return processFixture(JSON.stringify(value)); } });

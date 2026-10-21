@@ -27,7 +27,7 @@ test("offline client content reader isolates two real MariaDB clients in one rea
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/, "integration tests require a dedicated disposable schema");
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD,
     "separately provisioned runtime DML credentials are required");
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 32);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 33);
   const allowedTables = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   assert.deepEqual([...DATA_POLICY.map((entry) => entry.table)].sort(), allowedTables.filter((table) => !["schema_migrations", "migration_probe"].includes(table)).sort());
   const connection = await connectDatabase(); let pool;
@@ -117,7 +117,7 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         assert.equal(library.rows.some((row) => row.id.equals(shared) || row.id.equals(otherLibrary)), false);
         const inventory = await reader.inventory();
         const category = (name) => inventory.find((row) => row.table === name);
-        assert.equal(inventory.length, 31); assert.equal(category("messages").count, 4); assert.equal(category("media_assets").count, 2);
+        assert.equal(inventory.length, 32); assert.equal(category("messages").count, 4); assert.equal(category("media_assets").count, 2);
         assert.equal(category("user_profiles").count, 1);
         assert.equal(category("crm_profiles").count, 1); assert.equal(category("crm_memberships").count, 1);
         assert.equal(category("crm_labels").count, null); assert.equal(category("admin_mfa").count, null);
@@ -287,10 +287,10 @@ test("offline client content reader isolates two real MariaDB clients in one rea
         assert.doesNotMatch(JSON.stringify({ accountOutput, messagesOutput, libraryOutput }), /second-secret|admin-secret|password|fingerprint|encrypted|storageKey|digest|administrator-only|other-client-private|private-label/);
         const inventoryOutput = path.join(exportParent, "client-inventory"); stdout.length = 0;
         const inventoryResult = await exportMain(argumentsFor("inventory", inventoryOutput), environment, dependencies);
-        assert.deepEqual(inventoryResult, { command: "inventory", status: "complete", inventoryCategories: 31 });
+        assert.deepEqual(inventoryResult, { command: "inventory", status: "complete", inventoryCategories: 32 });
         assert.deepEqual(stdout, [JSON.stringify(inventoryResult) + "\n"]); assert.equal(poolClosures, 2);
         const inventory = JSON.parse(await readFile(path.join(inventoryOutput, "inventory.json"), "utf8"));
-        assert.equal(inventory.categories.length, 31);
+        assert.equal(inventory.categories.length, 32);
         assert.deepEqual(inventory.categories.find((value) => value.table === "sessions"), { table: "sessions", scope: "subject", count: 10000, truncated: true });
         assert.equal(JSON.parse(await readFile(path.join(inventoryOutput, "COMPLETE.json"), "utf8")).status, "complete");
         assert.equal(await databaseHash(), beforeDatabase, "CLI changes no application or migration row");

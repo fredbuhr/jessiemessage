@@ -74,18 +74,18 @@ export async function inspectResumeClone(connection, database) {
   const identity = await connection.query("SELECT DATABASE() AS name");
   const tls = await connection.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'");
   if (identity.length !== 1 || identity[0]?.name !== database || tls.length !== 1 || tls[0]?.Variable_name !== "Ssl_cipher" || !tls[0]?.Value) fail("DATABASE", "inspection");
-  const rows = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 33", [database]);
-  if (!Array.isArray(rows) || rows.length > 33) fail("DATABASE", "inspection");
+  const rows = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 34", [database]);
+  if (!Array.isArray(rows) || rows.length > 34) fail("DATABASE", "inspection");
   if (rows.length === 0) return "empty";
   const migrations = await loadMigrations(), names = [...createdMigrationTables(migrations), "schema_migrations"];
-  return migrations.length === 32 && names.length === 32 && rows.length === 32 && new Set(rows.map(row => row.name)).size === 32
+  return migrations.length === 33 && names.length === 33 && rows.length === 33 && new Set(rows.map(row => row.name)).size === 33
     && rows.every(row => names.includes(row.name) && row.kind === "BASE TABLE" && row.engine === "InnoDB") ? "application-schema" : "partial";
 }
 
 function matches(result, selected, status) {
   const profile = checkpointBackupProfile(selected.profile, true);
   return result?.status === status && matchesCheckpointReceipt(profile, result)
-    && result.tables === 32 && result.migrations === 32 && result.sqlSha256 === selected.sqlSha256
+    && result.tables === 33 && result.migrations === 33 && result.sqlSha256 === selected.sqlSha256
     && result.checkpointFilesMatched === true && result.capacityRebound === false
     && result.httpStarted === false && result.smtpStarted === false && result.workersStarted === false;
 }

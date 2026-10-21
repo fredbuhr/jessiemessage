@@ -22,14 +22,14 @@ function changeMigration(input, index, change) {
   const value = input.migrations[index]; value.sql = change(value.sql); value.checksum = checksumSql(value.sql);
 }
 
-test("deletion plan covers all 31 policy categories and remains blocked even when the selected inventory is empty", () => {
+test("deletion plan covers all 32 policy categories and remains blocked even when the selected inventory is empty", () => {
   const input = fixture(), before = structuredClone(input), plan = buildDeletionPlan(input);
   assert.deepEqual(input, before, "the pure builder leaves every input and migration unchanged");
   assert.deepEqual(Object.keys(plan), ["format", "version", "generatedAt", "simulationOnly", "executable", "retentionDecided", "affectedCategories",
     "categories", "candidateOrder", "dependencies", "observations", "blockers", "rollback"]);
   assert.equal(plan.format, "jessiemessage-deletion-simulation"); assert.equal(plan.version, 1); assert.equal(plan.generatedAt, "2026-10-15T14:00:00.123Z");
   assert.equal(plan.simulationOnly, true); assert.equal(plan.executable, false); assert.equal(plan.retentionDecided, false); assert.equal(plan.affectedCategories, 0);
-  assert.equal(plan.categories.length, 31); assert.deepEqual(plan.categories.map((entry) => entry.table), DATA_POLICY.map((entry) => entry.table));
+  assert.equal(plan.categories.length, 32); assert.deepEqual(plan.categories.map((entry) => entry.table), DATA_POLICY.map((entry) => entry.table));
   for (const entry of plan.categories) {
     assert.deepEqual(Object.keys(entry), ["table", "scope", "count", "truncated", "handling"]);
     assert.equal(entry.handling, entry.scope === "subject" ? "review_subject_rows" : "preserve_shared");
@@ -40,18 +40,18 @@ test("deletion plan covers all 31 policy categories and remains blocked even whe
     cloneRestoreRequiredForSchemaChange: true, noWorkersDuringCloneChecks: true, historyExamples: {
       basis: "synthetic_applied_ledgers_from_migrations", cases: [
         { codeMigrationCount: 25, recordedMigrationCount: 25, canStart: true, reason: "matching_history" },
-        { codeMigrationCount: 25, recordedMigrationCount: 32, canStart: false, reason: "database_ahead" },
-        { codeMigrationCount: 32, recordedMigrationCount: 25, canStart: false, reason: "migrations_pending" },
-        { codeMigrationCount: 32, recordedMigrationCount: 32, canStart: true, reason: "matching_history" },
+        { codeMigrationCount: 25, recordedMigrationCount: 33, canStart: false, reason: "database_ahead" },
+        { codeMigrationCount: 33, recordedMigrationCount: 25, canStart: false, reason: "migrations_pending" },
+        { codeMigrationCount: 33, recordedMigrationCount: 33, canStart: true, reason: "matching_history" },
       ],
     } });
 });
 
-test("rollback examples use real migration checksums in synthetic 25/32 ledgers without certifying a live database", () => {
+test("rollback examples use real migration checksums in synthetic 25/33 ledgers without certifying a live database", () => {
   const input = fixture(), plan = buildDeletionPlan(input), examples = plan.rollback.historyExamples;
   assert.equal(examples.basis, "synthetic_applied_ledgers_from_migrations");
   assert.deepEqual(examples.cases.map((entry) => [entry.codeMigrationCount, entry.recordedMigrationCount, entry.canStart]),
-    [[25, 25, true], [25, 32, false], [32, 25, false], [32, 32, true]]);
+    [[25, 25, true], [25, 33, false], [33, 25, false], [33, 33, true]]);
   for (const entry of examples.cases) assert.deepEqual(Object.keys(entry), ["codeMigrationCount", "recordedMigrationCount", "canStart", "reason"]);
   assert.equal(plan.rollback.codeOnlyRollbackCertified, false); assert.equal(plan.executable, false);
   assert.doesNotMatch(JSON.stringify(examples), /checksum|\.sql|CREATE TABLE|password|email|observedDatabase|currentDatabase/);
@@ -61,7 +61,7 @@ test("rollback examples use real migration checksums in synthetic 25/32 ledgers 
 
 test("candidate review order derives the actual FK graph, includes every subject table once and puts children before parents", () => {
   const plan = buildDeletionPlan(fixture());
-  assert.equal(subjectNames.length, 23); assert.equal(plan.candidateOrder.length, 23);
+  assert.equal(subjectNames.length, 24); assert.equal(plan.candidateOrder.length, 24);
   assert.deepEqual([...plan.candidateOrder.map((entry) => entry.table)].sort(), [...subjectNames].sort());
   const positions = new Map(plan.candidateOrder.map((entry, index) => [entry.table, index]));
   for (const entry of plan.candidateOrder) assert.deepEqual(entry, { table: entry.table, proposedAction: "review", blocked: true });
@@ -73,7 +73,7 @@ test("candidate review order derives the actual FK graph, includes every subject
       foreignKeys += 1; actual.add(`${table}:${match[1]}`);
     }
   }
-  assert.equal(foreignKeys, 44); assert.equal(actual.size, 42); assert.equal(plan.dependencies.length, 42);
+  assert.equal(foreignKeys, 46); assert.equal(actual.size, 44); assert.equal(plan.dependencies.length, 44);
   assert.deepEqual(new Set(plan.dependencies.map(({ child, parent }) => `${child}:${parent}`)), actual);
   for (const relation of plan.dependencies) {
     assert.deepEqual(Object.keys(relation), ["child", "parent"]);
@@ -101,7 +101,7 @@ test("category counts are review observations rather than deletion totals, with 
   for (const entry of input.migrations) entry.path = "/private/secret.sql";
   input.inventory.reverse(); input.facts.reverse(); input.clientId = "private-client-identifier"; input.password = "secret";
   const plan = buildDeletionPlan(input);
-  assert.equal(plan.affectedCategories, 23);
+  assert.equal(plan.affectedCategories, 24);
   assert.deepEqual(plan.observations.map((entry) => entry.name), [...DELETION_FACT_NAMES]);
   for (const entry of plan.observations) assert.deepEqual(Object.keys(entry), ["name", "count", "truncated"]);
   assert.doesNotMatch(JSON.stringify(plan), /private|secret|example\.invalid|ciphertext|storageKey|clientId|\/private\/|DELETE|SELECT|INSERT|UPDATE|DROP/);
@@ -110,10 +110,10 @@ test("category counts are review observations rather than deletion totals, with 
   assert.notEqual(buildDeletionPlan(input).dependencies[0].child, "changed");
 });
 
-test("all 24 fact names project exact bounded counts without attributing active sessions to full authentication proof", () => {
+test("all 25 fact names project exact bounded counts without attributing active sessions to full authentication proof", () => {
   const input = fixture(); fact(input, "activeSessions").count = 10;
   const plan = buildDeletionPlan(input);
-  assert.equal(plan.observations.length, 24); assert.deepEqual(plan.observations[0], { name: "activeSessions", count: 10, truncated: false });
+  assert.equal(plan.observations.length, 25); assert.deepEqual(plan.observations[0], { name: "activeSessions", count: 10, truncated: false });
   assert.deepEqual(plan.blockers, [...always, "active_sessions_require_revocation"]);
 });
 
@@ -152,7 +152,7 @@ test("foreign media links, shared peer media and each inconsistent binding recei
   }
   const shared = fixture(); fact(shared, "sharedPeerMediaLinks").count = 2;
   assert.deepEqual(buildDeletionPlan(shared).blockers, [...always, "shared_peer_media_preserved"]);
-  for (const name of ["foreignMessageBindings", "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings", "foreignPushBindings", "foreignProfileBindings"]) {
+  for (const name of ["foreignMessageBindings", "foreignReceiptBindings", "foreignBroadcastBindings", "foreignAdministratorSessionState", "foreignMediaJournalBindings", "foreignPushBindings", "foreignProfileBindings", "foreignTaskBindings"]) {
     const input = fixture(); fact(input, name).count = 1;
     assert.deepEqual(buildDeletionPlan(input).blockers, [...always, "inconsistent_bindings"]);
   }

@@ -45,7 +45,7 @@ test("real MariaDB announcements are private, atomic, scheduled, expiring and re
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host));
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/u);
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 32);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 33);
   const allowed = [...createdMigrationTables(migrations).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool, worker;
   async function reset() {

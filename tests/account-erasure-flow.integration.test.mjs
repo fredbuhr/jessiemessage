@@ -11,6 +11,7 @@ import { createMediaStorage } from "../server/media/storage.mjs";
 import { openPayload, sealPayload, campaignFingerprint, createAudienceDigest, recipientProof, verifyRecipientProof } from "../server/broadcast/crypto.mjs";
 import { createBroadcastStore } from "../server/broadcast/store.mjs";
 import { sealAnnouncement, openAnnouncement } from "../server/announcements/crypto.mjs";
+import { sealTask } from "../server/tasks/crypto.mjs";
 import { createErasureStore } from "../server/data/erasure-store.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
 import { createAccountErasure } from "../server/data/erasure.mjs";
@@ -145,6 +146,9 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       await connection.query("INSERT INTO chat_receipts (conversation_id, user_id, last_read_sequence, updated_at) VALUES (?, ?, 2, ?), (?, ?, 2, ?)", [conversationId, uid, created, conversationId, admin, created]);
       await connection.query("INSERT INTO crm_profiles (admin_id, conversation_id, nickname, notes_encrypted, version, notes_revision, created_at, updated_at) VALUES (?, ?, 'Synthetic internal note', 'synthetic-encrypted-private-note', 1, 1, ?, ?)", [admin, conversationId, created, created]);
       await connection.query("INSERT INTO crm_memberships (admin_id, conversation_id, label_id, created_at) VALUES (?, ?, ?, ?)", [admin, conversationId, label, created]);
+      const taskId = id(), taskTitle = sealTask("Synthetic private task attached to this client", journalKey, { adminId: admin, conversationId, taskId, version: "1", dueAt: now + 3600000, done: false });
+      await connection.query("INSERT INTO crm_tasks (id, admin_id, conversation_id, title_encrypted, due_at, done, version, request_fingerprint, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 0, 1, ?, ?, ?)",
+        [taskId, admin, conversationId, taskTitle, sqlDate(now + 3600000), randomBytes(32), created, created]);
       await connection.query("INSERT INTO broadcast_preferences (user_id, enabled, version, created_at, updated_at) VALUES (?, 1, 1, ?, ?)", [uid, created, created]);
       for (const table of ["mail_outbox", "password_reset_outbox"]) for (const state of ["pending", "sending", "sent"]) await mail(uid, table, state);
     }
@@ -190,7 +194,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       ["email_verifications", "user_id", f.peer], ["client_password_resets", "user_id", f.peer], ["mail_outbox", "recipient_user_id", f.peer],
       ["password_reset_outbox", "recipient_user_id", f.peer], ["broadcast_preferences", "user_id", f.peer], ["push_subscriptions", "user_id", f.peer],
       ["media_assets", "owner_id", f.peer], ["media_storage_objects", "owner_id", f.peer], ["media_assets", "id", f.shared.id], ["media_storage_objects", "id", f.shared.id],
-      ["conversations", "id", f.peerConv], ...["messages", "chat_events", "chat_receipts", "message_media", "crm_profiles", "crm_memberships"].map(table => [table, "conversation_id", f.peerConv])])
+      ["conversations", "id", f.peerConv], ...["messages", "chat_events", "chat_receipts", "message_media", "crm_profiles", "crm_memberships", "crm_tasks"].map(table => [table, "conversation_id", f.peerConv])])
       groups.push([table, serialize(await connection.query(`SELECT * FROM ${table} WHERE ${column} = ?`, [value]))]);
     groups.push(["crm_labels", serialize(await connection.query("SELECT * FROM crm_labels"))]);
     groups.push(["peer_campaign_recipients", serialize(await connection.query("SELECT * FROM broadcast_recipients WHERE client_id = ?", [f.peer]))]);
@@ -442,7 +446,7 @@ test("durable account erasure removes the selected graph and actual encrypted fi
       const result = await engine().resume({ clientId: hex(f.first) }); assert.equal(result.completed, true); assert.equal(result.processedMedia, 4);
       assert.equal(await peerSnapshot(f), before); assert.equal(Number((await connection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes), held - 1740);
       for (const [table, column, value] of [["users", "id", f.first], ["client_auth_state", "user_id", f.first], ["user_profiles", "user_id", f.first], ["sessions", "user_id", f.first],
-        ["invitations", "consumed_by_id", f.first], ["media_assets", "owner_id", f.first], ["media_storage_objects", "owner_id", f.first], ["conversations", "id", f.conv], ["messages", "conversation_id", f.conv]])
+        ["invitations", "consumed_by_id", f.first], ["media_assets", "owner_id", f.first], ["media_storage_objects", "owner_id", f.first], ["conversations", "id", f.conv], ["messages", "conversation_id", f.conv], ["crm_tasks", "conversation_id", f.conv]])
         assert.equal((await connection.query(`SELECT 1 FROM ${table} WHERE ${column} = ?`, [value])).length, 0, table);
       for (const object of f.objects) assert.equal((await readdir(mediaRoot)).some(name => name.includes(hex(object.storageKey))), false, "remove even released and reserved files");
       assert.equal((await connection.query("SELECT 1 FROM broadcast_campaigns WHERE id = ?", [f.onlyCampaign.id])).length, 0);
