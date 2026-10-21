@@ -35,8 +35,12 @@ function uploadHeaders(request, origin) {
 
 function byteRange(header, bytes) {
   if (header === undefined) return { start: 0, end: bytes - 1, partial: false };
-  if (typeof header !== "string" || header.length > 128) return null;
-  const match = /^bytes=([0-9]*)-([0-9]*)$/.exec(header);
+  if (typeof header !== "string") return null;
+  const unit = /^([!#$%&'*+.^_`|~0-9A-Za-z-]+)=/.exec(header);
+  // RFC9110§14.2 requires an unknown range unit to be ignored.
+  if (unit && unit[1].toLowerCase() !== "bytes") return { start: 0, end: bytes - 1, partial: false };
+  if (header.length > 128) return null;
+  const match = /^bytes=([0-9]*)-([0-9]*)$/i.exec(header);
   if (!match || !match[1] && !match[2]) return null;
   const integer = (value) => value === "" ? null : /^\d{1,16}$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : NaN;
   const first = integer(match[1]), last = integer(match[2]);
@@ -204,7 +208,8 @@ export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, 
         checkSignal(operation.signal);
         if (!opened || !Number.isSafeInteger(opened.bytes) || opened.bytes < 1 || opened.bytes > MAX_BYTES
           || opened.mime !== "video/mp4" || typeof opened.stream !== "function" || typeof opened.close !== "function") throw unavailable();
-        const range = byteRange(request.headers["if-range"] === undefined ? request.headers.range : undefined, opened.bytes);
+        // Range is defined for GET only; HEAD describes the complete resource.
+        const range = byteRange(method === "GET" && request.headers["if-range"] === undefined ? request.headers.range : undefined, opened.bytes);
         if (!range) {
           reply(response, method, 416, { error: "range_not_satisfiable" }, { "Content-Range": `bytes */${opened.bytes}`, "Accept-Ranges": "bytes" });
         } else {

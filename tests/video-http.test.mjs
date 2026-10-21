@@ -106,7 +106,7 @@ test("both roles upload and read authorized bytes while private metadata never e
 
 test("single ranges clamp ends and serve inclusive, open and suffix byte intervals", async (t) => {
   const { base, streams } = await fixture(t);
-  for (const [range, start, end] of [["bytes=0-0", 0, 0], ["bytes=3-8", 3, 8], ["bytes=4-", 4, video.length - 1], ["bytes=-5", video.length - 5, video.length - 1], ["bytes=-999", 0, video.length - 1], ["bytes=2-999", 2, video.length - 1]]) {
+  for (const [range, start, end] of [["bytes=0-0", 0, 0], ["Bytes=0-1", 0, 1], ["bytes=3-8", 3, 8], ["bytes=4-", 4, video.length - 1], ["bytes=-5", video.length - 5, video.length - 1], ["bytes=-999", 0, video.length - 1], ["bytes=2-999", 2, video.length - 1]]) {
     const response = await fetch(`${base}${contentPath()}`, { headers: { Cookie: cookie(), Range: range } });
     assert.equal(response.status, 206, range); privateHeaders(response);
     assert.equal(response.headers.get("content-range"), `bytes ${start}-${end}/${video.length}`);
@@ -116,18 +116,21 @@ test("single ranges clamp ends and serve inclusive, open and suffix byte interva
   }
 });
 
-test("HEAD carries exact range headers and never invokes the byte stream", async (t) => {
+test("HEAD ignores Range and describes the complete resource without invoking the byte stream", async (t) => {
   const { base, streams, closes } = await fixture(t);
   const whole = await fetch(`${base}${contentPath()}`, { method: "HEAD", headers: { Cookie: cookie() } });
   assert.equal(whole.status, 200); assert.equal(whole.headers.get("content-length"), String(video.length)); assert.equal(await whole.text(), "");
-  const range = await fetch(`${base}${contentPath()}`, { method: "HEAD", headers: { Cookie: cookie(), Range: "bytes=2-4" } });
-  assert.equal(range.status, 206); assert.equal(range.headers.get("content-range"), `bytes 2-4/${video.length}`); assert.equal(range.headers.get("content-length"), "3");
-  assert.equal(await range.text(), ""); assert.equal(streams.length, 0); await until(() => closes.length === 2);
+  for (const Range of ["bytes=2-4", "bytes=notvalid", "other=0-1"]) {
+    const range = await fetch(`${base}${contentPath()}`, { method: "HEAD", headers: { Cookie: cookie(), Range } });
+    assert.equal(range.status, 200); assert.equal(range.headers.get("content-range"), null); assert.equal(range.headers.get("content-length"), String(video.length));
+    assert.equal(await range.text(), "");
+  }
+  assert.equal(streams.length, 0); await until(() => closes.length === 4);
 });
 
 test("malformed, multipart and impossible ranges return private 416 after owner authorization", async (t) => {
   const { base, streams, calls, closes } = await fixture(t);
-  const ranges = ["bytes=", "bytes=-", "bytes=-0", "bytes=4-2", `bytes=${video.length}-`, "bytes=0-1,4-5", "other=0-1", "bytes=1.5-", "bytes=9007199254740992-", "bytes=0-" + "1".repeat(200)];
+  const ranges = ["bytes=", "bytes=-", "bytes=-0", "bytes=4-2", `bytes=${video.length}-`, "bytes=0-1,4-5", "bytes=1.5-", "bytes=9007199254740992-", "bytes=0-" + "1".repeat(200)];
   for (const Range of ranges) {
     const response = await fetch(`${base}${contentPath()}`, { headers: { Cookie: cookie(), Range } });
     assert.equal(response.status, 416, Range); privateHeaders(response);
@@ -142,6 +145,15 @@ test("If-Range falls back to complete bytes because this private transport emits
   const response = await fetch(`${base}${contentPath()}`, { headers: { Cookie: cookie(), Range: "bytes=2-4", "If-Range": '"unavailable-validator"' } });
   assert.equal(response.status, 200); assert.equal(response.headers.get("content-range"), null); assert.equal(response.headers.get("etag"), null);
   assert.deepEqual(Buffer.from(await response.arrayBuffer()), video);
+});
+
+test("GET ignores an unknown valid range unit and returns the complete authorized video", async (t) => {
+  const { base } = await fixture(t);
+  for (const Range of ["other=0-1", "UnKnOwN=1-4", "items=0-1,4-5"]) {
+    const response = await fetch(`${base}${contentPath()}`, { headers: { Cookie: cookie(), Range } });
+    assert.equal(response.status, 200); assert.equal(response.headers.get("content-range"), null); assert.equal(response.headers.get("content-length"), String(video.length));
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), video);
+  }
 });
 
 test("missing, malformed, duplicate and other-role cookies never reach storage", async (t) => {

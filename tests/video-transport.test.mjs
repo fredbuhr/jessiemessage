@@ -52,7 +52,7 @@ test("real video transport uploads encrypted blocks and reads owner ranges acros
   const suffix = await fetch(`${f.base}${contentPath(account, result.body.id)}`, { headers: { Cookie: cookie(account), Range: "bytes=-19" } });
   assert.equal(suffix.status, 206); assert.deepEqual(Buffer.from(await suffix.arrayBuffer()), expected.subarray(-19));
   const head = await fetch(`${f.base}${contentPath(account, result.body.id)}`, { method: "HEAD", headers: { Cookie: cookie(account), Range: "bytes=0-31" } });
-  assert.equal(head.status, 206); assert.equal(head.headers.get("content-length"), "32"); assert.equal(await head.text(), "");
+  assert.equal(head.status, 200); assert.equal(head.headers.get("content-length"), String(bytes)); assert.equal(head.headers.get("content-range"), null); assert.equal(await head.text(), "");
   const whole = await fetch(`${f.base}${contentPath(account, result.body.id)}`, { headers: { Cookie: cookie(account) } });
   assert.equal(whole.status, 200); assert.deepEqual(Buffer.from(await whole.arrayBuffer()), expected);
   assert.ok(f.state.held > bytes); assert.equal(f.state.calls.filter((name) => name === "commit").length, 1);

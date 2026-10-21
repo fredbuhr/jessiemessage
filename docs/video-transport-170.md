@@ -16,13 +16,15 @@ La composition de production et le SQL ne changent pas. Les tables et inventaire
 | Inspection | Au plus 64 Kio : premier atom `ftyp` complet, taille 32/64 bits bornée, marque principale MP4 reconnue ; MOV/QuickTime et M4A refusés. |
 | Limite de validation | L'inspection du conteneur ne prouve ni présence d'une piste vidéo, ni décodage, codecs, durée, métadonnées ou lecture progressive. Les fixtures sont synthétiques. |
 | Écriture | Un bloc clair de 256 Kio, chiffrement immédiat vers un temporaire privé ; publication exclusive après réception exacte et synchronisation. Aucun temporaire clair. |
-| Lecture | Un intervalle `bytes` à la fois : entier 200, partiel 206, non satisfaisable/multiple/malformé 416. Bornes ouvertes, suffixes et fin au-delà du fichier sont traités. |
-| HEAD / If-Range | HEAD applique le même calcul de plage sans lire les blocs. Un `If-Range` entraîne une réponse entière : aucun validateur ETag n'est annoncé. |
+| Lecture | Un intervalle `bytes` à la fois sur GET : entier 200, partiel 206, non satisfaisable/multiple/malformé 416. Bornes ouvertes, suffixes et fin au-delà du fichier sont traités. Une unité inconnue est ignorée ; les unités sont insensibles à la casse. |
+| HEAD / If-Range | HEAD ignore Range et renvoie les en-têtes de la ressource entière, sans lire les blocs. Un `If-Range` entraîne une réponse entière : aucun validateur ETag n'est annoncé. |
 | Confidentialité HTTP | Cookies de rôle, Origin/CSRF pour mutation, autorisation courante avant lecture du corps ou accès fichier ; no-store, nosniff, CORP same-origin et nom fixe `video.mp4`. |
 | Budgets | Deux téléversements et quatre lectures dans le processus, également partagés entre instances ; un téléversement et deux lectures par propriétaire au service. Budgets persistants par compte et globaux avant transfert. |
 | Délais | Téléversement total 5 minutes ; lecture totale 5 minutes et inactivité 30 secondes. La source HTTP observe le signal d'annulation et ne fournit que des blocs de 64 Kio maximum. |
 
 Les routes du handler injecté sont `POST /api/video/{admin|client}/assets` et `GET/HEAD /api/video/{admin|client}/assets/{id}/content`. Elles restent absentes du runtime normal. Les paramètres inconnus sont refusés ; aucune identité de propriétaire ou clé de stockage n'est acceptée depuis le client. Le service fournit seulement `{id, bytes, mime}` après succès. Une URL propriétaire n'autorise jamais l'autre partie de la conversation ; les liens par message et leurs ACL appartiennent au lot 7.
+
+Référence du traitement Range/HEAD : [RFC 9110, section 14.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-14.2).
 
 Une erreur après le début d'une réponse détruit le transfert ; elle n'ajoute pas de JSON à une vidéo partielle. La fermeture du socket annule le travail coopératif et les descripteurs sont fermés ; le créneau n'est libéré qu'après la fin de l'opération et de son nettoyage. Les adapters et sources injectés doivent observer l'annulation et terminer leurs opérations ; le socle ne peut interrompre de force une transaction ou un producteur arbitraire bloqué.
 
