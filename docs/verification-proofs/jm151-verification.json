@@ -1,6 +1,6 @@
 {
   "version": "1.5.1",
-  "status": "code_qualified_merged_published_hosted_staging_pending",
+  "status": "code_qualified_merged_published_hosted_staged_sql_status_pending",
   "branch": "feat/tasks-compat-151",
   "baseCommit": "d985bf4e23abaeb3d275bf415f931e47bbb9ae68",
   "results": {
@@ -8,7 +8,8 @@
     "codeQualified": true,
     "merged": true,
     "releasePublished": true,
-    "deliveryComplete": false
+    "deliveryComplete": false,
+    "hostedStagingReceiptValidated": true
   },
   "requirements": {
     "schemaMigrations": 33,
@@ -95,16 +96,19 @@
     "currentRollback": "1.4.1",
     "currentRollbackHostedPrechecked": true,
     "currentRollbackRuntimeStarted": false,
-    "taskStagingReceiptReceived": false,
+    "taskStagingReceiptReceived": true,
     "taskMigrationApplied": false,
     "taskPrechecksPassed": false,
     "taskRuntimeActivated": false,
     "taskMetadataRecorded": false,
     "noHostedOperationReplayed": true,
-    "sourceOfHostingEvidence": "previous user receipts; no direct private server observation"
+    "sourceOfHostingEvidence": "previous user receipts; no direct private server observation",
+    "taskSqlStatusChecked": false,
+    "taskStagingReceipt": "jm160-hosted-staging.json",
+    "schemaSource": "last closed150 metadata receipt; staging160 has not read SQL"
   },
   "notAttested": [
-    "production_tasks_staging_migration_activation_and_metadata",
+    "production_tasks_sql_status_schema33_prechecks_activation_and_metadata",
     "physical_phone",
     "real_host_capacity",
     "current_pc_or_backup_delivery"
@@ -1136,17 +1140,111 @@
     "snapshotPhasePreserved": true,
     "publicationGateNowSatisfied": true,
     "helperBytesRereadAfterMainPublication": true,
-    "onlyNextOperatorAction": "prepare-release160.sh with exact published 1.5.1 and 1.6.0 source pins",
+    "onlyNextOperatorAction": "status-release160-migration.sh read-only SQL status with existing migration account; keep current service running",
     "expectedFirstReceipt": "staged_awaiting_schema33",
     "preparationRunsSql": false,
     "preparationStartsRuntime": false,
     "preparationChangesManagerOrCheckpoint": false,
-    "upgradeTemplateExecutable": false,
-    "upgradeLauncherHashesPendingActualHostedStagingReceipt": 4,
+    "upgradeLauncherHashesPendingActualHostedStagingReceipt": 0,
     "recordRelease160WriterCreated": false,
     "futureRollbackVersion": "1.5.1",
-    "futureRollbackHostedPrepared": false,
+    "futureRollbackHostedPrepared": true,
     "futureRollbackHostedQualified": false,
-    "schema33CompatibilityNote": "After migration33 the old 1.5.0/1.4.1 are not immediate rollback releases; qualify 1.5.1 first."
+    "schema33CompatibilityNote": "After migration33 the old 1.5.0/1.4.1 are not immediate rollback releases; qualify 1.5.1 first.",
+    "firstReceiptReceived": true,
+    "expectedNextReceipt": "checked:33 migrations known,32 applied,1 pending,interrupted:false",
+    "upgradeSourcePinsComplete": true
+  },
+  "hostedStaging": {
+    "receipt": "jm160-hosted-staging.json",
+    "sourceOfEvidence": "complete user-supplied SSH receipt; no direct private server observation",
+    "received": true,
+    "executionTimestampNotProvided": true,
+    "prepareHelperCommit": "1c5fe2e6ee0d6fb6d2e2837cb8080b831b27eb6a",
+    "prepareHelperSha256": "705d2a959e3e67a6dcd93b8ffe78695cc4883873da329e4a97e453ba8e60e4b9",
+    "preservedActiveVersion": "1.5.0",
+    "sqlStatusChecked": false,
+    "migrationApplied": false,
+    "hostedPrechecksPassed": false,
+    "activeRuntimeChanged": false,
+    "checkpointChanged": false,
+    "rollback151Prepared": true,
+    "rollback151HostedQualified": false,
+    "doNotRepeatStaging": true
+  },
+  "upgradeHelperAfterHostedStaging": {
+    "commit": "e85cfe36ee3dfd62edf64d043461a7ebc727ba2d",
+    "tree": "1109115b6db4a2fa9a503be992ed4b8aba896503",
+    "file": "ops/upgrade-release160.sh",
+    "sha256": "9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5",
+    "launcherPins": {
+      "jm_start151_sha": "804142f4fd2116b99bce9240edfad3eaa8eecda9b57a04baf52586f6ff345274",
+      "jm_check151_sha": "165f2b472c94060085758b6a3d9e1817347b26ad5edae36e06bd610199a89ae4",
+      "jm_start160_sha": "39015e53147112981203b5172f11f52563311be7e92a92f2b78bf4dca744f1b4",
+      "jm_check160_sha": "13362ac14caa4795a4fbf3ee3fc50e94188938179c1cde119d6d968427a50971"
+    },
+    "qualificationSnapshot": {
+      "status": "release160_upgrade_real_hosted_launcher_pins_synthetic_qualified",
+      "phase": "hosted_staging_received_upgrade_launcher_pins",
+      "checkedAt": "2026-10-21T17:26:59.144575+00:00",
+      "receiptProvenance": "operator_user_report_staged_awaiting_schema33",
+      "sources": [
+        {
+          "version": "1.5.1",
+          "source": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+          "tree": "f769c99aa800486bd04065a308f1f4269841c215"
+        },
+        {
+          "version": "1.6.0",
+          "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+          "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970"
+        }
+      ],
+      "helper": "ops/upgrade-release160.sh",
+      "helperSha256": "9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5",
+      "launcherPins": {
+        "jm_start151_sha": "804142f4fd2116b99bce9240edfad3eaa8eecda9b57a04baf52586f6ff345274",
+        "jm_check151_sha": "165f2b472c94060085758b6a3d9e1817347b26ad5edae36e06bd610199a89ae4",
+        "jm_start160_sha": "39015e53147112981203b5172f11f52563311be7e92a92f2b78bf4dca744f1b4",
+        "jm_check160_sha": "13362ac14caa4795a4fbf3ee3fc50e94188938179c1cde119d6d968427a50971"
+      },
+      "tests": {
+        "test": "ops/test-release160-migration-synthetic.py",
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "standaloneThreeFilesExactPinnedCopy": true,
+        "unchangedStaging27Rerun": false
+      },
+      "checks": {
+        "bashSyntax": true,
+        "embeddedJavaScriptSyntax": true,
+        "testPythonSyntax": true,
+        "gitDiffCheck": true,
+        "onlyUpgradeHelperChanged": true,
+        "serviceStoppedGuardUnchanged": true,
+        "noQualificationPlaceholderRemains": true
+      },
+      "operatorSqlStatusConfirmedByThisPhase": false,
+      "operatorServiceStopAttestedByThisPhase": false,
+      "nextOperatorStep": "SQL status read-only only; no upgrade until acceptable SQL status and service stop attestation are received.",
+      "hostedOperationExecuted": false,
+      "sqlConnectionOpened": false,
+      "runtimeStarted": false,
+      "committed": false,
+      "published": false,
+      "log": "/workspace/scratch/96b2e1781a0b/task160-validation/hosted-staging-upgrade-pins-tests.log"
+    },
+    "snapshotPhasePreserved": true,
+    "nowPublished": true,
+    "publishedBytesVerified": true,
+    "launcherPinsPending": 0,
+    "sqlStatusReceived": false,
+    "serviceStopOperatorAttested": false,
+    "executionPreconditionsSatisfied": false,
+    "upgradeInvocationProvided": false,
+    "runtimeStarted": false,
+    "schema33Applied": false,
+    "notAHostedMigrationReceipt": true
   }
 }
