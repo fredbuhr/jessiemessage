@@ -1,5 +1,9 @@
 /* Explicit UI catalogue only. User messages, captions and names are never keys. */
 globalThis.JessieI18n?.register({
+  "Options": "Options",
+  "Ouvrir les options": "Open options",
+  "Ouvrir les options de la conversation": "Open conversation options",
+  "Ajouter au message": "Add to message",
   "Mon profil": "My profile",
   "Emojis": "Emojis",
   "Choisis un emoji. Il s’ajoute au brouillon, à la position du curseur.": "Choose an emoji. It is added to your draft at the cursor.",

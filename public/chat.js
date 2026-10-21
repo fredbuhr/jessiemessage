@@ -45,6 +45,7 @@ let notificationsPanel = null;
 let pendingNotification = globalThis.JessieNotificationLink?.read() ?? null;
 let notificationTask = null;
 let newerBusy = false;
+let menuOpener = null;
 // The live region contains only a cumulative count for this visible selection.
 // No message body, sender name, caption or persistent announcement log is kept.
 let messageAnnouncement = null;
@@ -100,6 +101,53 @@ function focusVisible(node) {
   return document.activeElement === node;
 }
 function focusWasLost(node) { return document.activeElement === node || document.activeElement === document.body; }
+function menuReturnFocus() {
+  if (menuOpener?.isConnected && menuOpener.getClientRects?.().length) return menuOpener;
+  return el(el("workspace").classList.contains("selected") ? "open-conversation-menu" : "open-account-menu");
+}
+function closeChatMenu(restoreFocus = false) {
+  const wasOpen = !el("chat-menu").hidden;
+  el("chat-menu").hidden = true;
+  for (const id of ["open-account-menu", "open-conversation-menu"]) el(id).setAttribute("aria-expanded", "false");
+  if (wasOpen && restoreFocus) focusVisible(menuReturnFocus());
+}
+function closeComposerTools(restoreFocus = false) {
+  const wasOpen = !el("composer-tools").hidden;
+  el("composer-tools").hidden = true; el("open-composer-tools").setAttribute("aria-expanded", "false");
+  if (wasOpen && restoreFocus) focusVisible(el("open-composer-tools"));
+}
+function positionComposerTools() {
+  const panel = el("composer-tools"), button = el("open-composer-tools");
+  if (panel.hidden || typeof button.getBoundingClientRect !== "function") return;
+  const rect = button.getBoundingClientRect(), viewport = globalThis.visualViewport;
+  const visibleTop = viewport?.offsetTop ?? 0, visibleHeight = viewport?.height ?? window.innerHeight;
+  const visibleLeft = viewport?.offsetLeft ?? 0, visibleWidth = viewport?.width ?? window.innerWidth;
+  const width = Math.min(330, Math.max(0, visibleWidth - 24)), roomAbove = rect.top - visibleTop - 16;
+  panel.style.width = `${width}px`;
+  panel.style.left = `${Math.max(visibleLeft + 12, Math.min(rect.left, visibleLeft + visibleWidth - width - 12))}px`;
+  if (roomAbove >= 96 && rect.top <= visibleTop + visibleHeight - 8) {
+    panel.style.top = "auto"; panel.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+    panel.style.maxHeight = `${Math.min(340, roomAbove)}px`;
+  } else {
+    // With little room above the composer, use the visible viewport instead
+    // of clipping the panel or hiding the photo draft to make room.
+    panel.style.top = `${visibleTop + 8}px`; panel.style.bottom = "auto";
+    panel.style.maxHeight = `${Math.max(0, visibleHeight - 16)}px`;
+  }
+}
+function openChatMenu(opener) {
+  if (!visible()) return;
+  if (!el("chat-menu").hidden) { closeChatMenu(true); return; }
+  closeComposerTools(); menuOpener = opener;
+  el("chat-menu").hidden = false; opener.setAttribute("aria-expanded", "true");
+  focusVisible(el("close-chat-menu"));
+}
+function resizeComposer() {
+  const textarea = el("message-body");
+  textarea.style.height = "44px";
+  textarea.style.height = `${Math.min(112, Math.max(44, textarea.scrollHeight))}px`;
+  positionComposerTools();
+}
 function inboxButton(id) { return [...el("conversations").children].find((button) => button.dataset.conversationId === id) ?? null; }
 function focusInbox(id) { if (!focusVisible(inboxButton(id))) focusVisible(el("inbox-title")); }
 function focusMessage(sequence) {
@@ -126,7 +174,7 @@ function closeLightbox(restoreFocus = true) {
     if ((!openerAllowed || !focusVisible(lightboxReturnFocus)) && state) {
       const key = panel?.kind === "gallery" ? returnItem?.messageId : returnItem?.media.id;
       const card = openerAllowed && key ? [...el("media-grid").children].find((item) => item.dataset.mediaKey === key) : null;
-      if (!focusVisible(card?.querySelector(".photo-open")) && !focusVisible(panel ? el("close-media") : el("open-gallery"))) focusVisible(el("message-scroll"));
+      if (!focusVisible(card?.querySelector(".photo-open")) && !focusVisible(panel ? el("close-media") : menuReturnFocus())) focusVisible(el("message-scroll"));
     }
   }
   lightboxReturnFocus = null;
@@ -134,7 +182,7 @@ function closeLightbox(restoreFocus = true) {
 function closeMedia(restoreFocus = true) {
   panelVersion += 1; panel = null; panelBusy = false; ui.forget(el("media-grid")); el("media-grid").replaceChildren();
   if (el("media-dialog").open) el("media-dialog").close();
-  if (restoreFocus && !focusVisible(dialogReturnFocus) && !focusVisible(el("open-gallery"))) focusVisible(el("message-scroll"));
+  if (restoreFocus && !focusVisible(dialogReturnFocus) && !focusVisible(menuReturnFocus())) focusVisible(el("message-scroll"));
   dialogReturnFocus = null;
 }
 function clearImages() {
@@ -148,6 +196,7 @@ function clearImages() {
   for (const image of el("messages").querySelectorAll("img")) image.removeAttribute("src");
 }
 function clearChat() {
+  closeChatMenu(); closeComposerTools();
   conversationDownload?.suspend();
   closeQuickReplies();
   closeEmojis();
@@ -157,10 +206,11 @@ function clearChat() {
   ui.text(el("conversation-status"), "Choisis une conversation.");
   el("message-body").value = ""; el("message-body").disabled = true; el("send").disabled = true;
   el("open-emojis").disabled = true;
+  el("open-composer-tools").disabled = true;
   ui.rawText(el("peer-avatar"), "");
   el("photo-tools").hidden = true; el("open-gallery").hidden = true; el("image-draft").hidden = true; el("image-file").value = "";
   for (const id of ["older-messages", "newer-messages", "new-messages", "empty-message", "pending-controls"]) if (el(id)) el(id).hidden = true;
-  el("workspace").classList.remove("selected"); notice("");
+  el("workspace").classList.remove("selected"); document.querySelector(".page").classList.remove("has-conversation"); notice("");
 }
 function clearNotificationSettings() {
   notificationsPanel?.clear(); notificationsPanel = null;
@@ -177,7 +227,7 @@ async function mountConversationDownload(capability) {
   try {
     const { createConversationDownload } = await import("/conversation-download.js");
     if (!fresh(ticket, true) || !getContext() || conversationDownload) return;
-    conversationDownload = createConversationDownload({ parent: el("chat-footer"), capability, getContext, request, onError: error => handleError(error) });
+    conversationDownload = createConversationDownload({ parent: el("conversation-actions"), capability, getContext, request, getReturnFocus: menuReturnFocus, onError: error => handleError(error) });
     conversationDownload.update();
   } catch (error) { if (fresh(ticket, true) && getContext()) notice("Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.", true); }
 }
@@ -190,6 +240,7 @@ async function mountProfile() {
     if (profileMount !== mounting || !fresh(ticket, true) || !ready || !visible() || !sameOwner(owner, sessionOwner) || loggingOut) return;
     profileUI = createProfileUI({ role, button: el("open-profile"), request, fetchBinary: fetchProfileBinary,
       avatarsEnabled: profileCapability.avatars === true,
+      getReturnFocus: menuReturnFocus,
       isCurrent: () => generation === lifetime && sameOwner(owner, sessionOwner) && ready && visible() && !el("workspace").hidden && !loggingOut,
       onError: error => handleError(error) });
     el("open-profile").hidden = false;
@@ -206,6 +257,7 @@ function mountNotificationSettings() {
   });
 }
 function clearPrivate() {
+  closeChatMenu(); closeComposerTools(); menuOpener = null;
   quickReplyLanguage = null;
   emojiSkinTone = "default";
   profileUI?.destroy(); profileUI = null; profileMount = null; profileCapability = null;
@@ -594,6 +646,7 @@ function renderImageDraft(state) {
   el("message-body").maxLength = hasImage ? 1000 : 4096; el("message-body").required = !hasImage;
   ui.attr(el("message-body"), "placeholder", hasImage ? "Ajoute une légende (facultatif)…" : "Écris ton message…");
   ui.text(el("composer-help"), hasImage ? "Photo privée · légende facultative de 1 000 caractères maximum" : "Message privé · 4 096 caractères maximum");
+  el("composer-help").classList.toggle("sr-only", !hasImage && el("message-body").value.length < 3896);
   el("cancel-image").disabled = Boolean(state.pending) || sendBusy;
   if (!hasImage) { revokePreview(); return; }
   ui.text(el("image-draft-status"), pending?.stage === "uploading" ? "Préparation de la photo…" : draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer");
@@ -621,7 +674,7 @@ async function refreshCrmCapability() {
     if (!fresh(ticket, true)) return;
     const style = document.createElement("link"); style.id = "crm-style"; style.rel = "stylesheet"; style.href = "/crm.css"; document.head.append(style);
     crm = module.createCrmUI({
-      request, inboxHead: document.querySelector(".inbox-head"), chatHead: document.querySelector(".chat-head"),
+      request, inboxHead: document.querySelector(".inbox-head"), chatHead: el("conversation-actions"), getReturnFocus: menuReturnFocus,
       conversationExport: capability.conversationExport?.enabled === true ? capability.conversationExport : null,
       onError: (error) => handleError(error),
       onUnavailable(id) {
@@ -852,6 +905,9 @@ function renderMeta(state) {
   const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image");
   el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage ? validCaption(el("message-body").value) : validBody(el("message-body").value));
   el("photo-tools").hidden = !mediaEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
+  el("open-composer-tools").hidden = !mediaEnabled && role !== "admin";
+  el("open-composer-tools").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
+  if (el("open-composer-tools").hidden || el("open-composer-tools").disabled) closeComposerTools();
   for (const id of ["pick-image", "open-library"]) el(id).hidden = !mediaEnabled;
   el("open-quick-replies").hidden = role !== "admin";
   el("open-quick-replies").disabled = !canUseQuickReplies();
@@ -860,6 +916,7 @@ function renderMeta(state) {
   if (emojiContext && (!canUseEmojis() || !fresh(emojiContext.ticket))) closeEmojis();
   for (const id of ["pick-image", "open-library"]) el(id).disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   renderImageDraft(state);
+  resizeComposer();
   el("pending-controls").hidden = state.pending?.status !== "retry";
   el("retry-send").disabled = !conversation.canSend || sendBusy;
   el("older-messages").hidden = !state.hasMoreBefore; el("older-messages").disabled = olderBusy;
@@ -975,7 +1032,7 @@ async function selectConversation(id, { focus = false, target = null } = {}) {
   if (target) { state.messages = new Map(); state.conversation = null; state.notificationSequence = target.sequence; }
   if (state.pending?.status === "sending") retrySend(state);
   states.set(id, state);
-  clearChat(); el("workspace").classList.add("selected"); el("message-body").value = state.draft;
+  clearChat(); el("workspace").classList.add("selected"); document.querySelector(".page").classList.add("has-conversation"); el("message-body").value = state.draft;
   ui.rawText(el("peer-name"), inbox.get(id)?.peerName ?? "Jessie"); ui.text(el("conversation-status"), "Chargement de la conversation…");
   renderInbox({ restoreFocus: !focus });
   if (focus) focusVisible(el("message-scroll"));
@@ -1269,6 +1326,7 @@ function renderEmojis(rebuildCategories = false) {
   else if (rebuildCategories && focusedCategory) focusVisible([...el("emoji-categories").children].find(button => button.dataset.emojiCategory === focusedCategory));
 }
 el("open-emojis").addEventListener("click", () => {
+  closeChatMenu(); closeComposerTools();
   if (!canUseEmojis()) return;
   closeQuickReplies();
   const textarea = el("message-body"), draft = textarea.value;
@@ -1294,15 +1352,15 @@ el("emoji-list").addEventListener("keydown", (event) => {
   event.preventDefault(); focusVisible(buttons[next]);
 });
 el("close-emojis").addEventListener("click", () => closeEmojis(true));
-el("open-profile").addEventListener("click", () => { closeEmojis(); closeQuickReplies(); });
+el("open-profile").addEventListener("click", () => { closeEmojis(); closeQuickReplies(); closeComposerTools(); });
 el("emoji-dialog").addEventListener("close", () => { if (emojiContext && !el("emoji-dialog").open) closeEmojis(true); });
 ui.onChange(() => { if (emojiContext) renderEmojis(true); });
-function closeQuickReplies(restoreFocus = false) {
+function closeQuickReplies(restoreFocus = false, compose = false) {
   quickReplyContext = null;
   if (el("quick-replies-dialog").open) el("quick-replies-dialog").close();
   ui.forget(el("quick-replies-list")); el("quick-replies-list").replaceChildren();
   notice("", false, "quick-replies-status");
-  if (restoreFocus) focusVisible(el("message-body"));
+  if (restoreFocus) focusVisible(el(compose ? "message-body" : "open-composer-tools"));
 }
 function renderQuickReplies() {
   ui.forget(el("quick-replies-list")); el("quick-replies-list").replaceChildren();
@@ -1314,7 +1372,7 @@ function renderQuickReplies() {
       if (!context || !canUseQuickReplies() || !fresh(context.ticket) || context.owner !== sessionOwner.id || context.csrf !== csrf) { closeQuickReplies(); return; }
       try {
         const value = appendQuickReply(el("message-body").value, reply.id, quickReplyLanguage, Boolean(state.imageDraft));
-        el("message-body").value = value; state.draft = value; closeQuickReplies(true); renderMeta(state);
+        el("message-body").value = value; state.draft = value; closeQuickReplies(true, true); renderMeta(state);
         el("message-body").setSelectionRange?.(value.length, value.length);
         notice("Réponse ajoutée au brouillon. Relis le message avant de l’envoyer.");
       } catch {
@@ -1325,6 +1383,7 @@ function renderQuickReplies() {
   }
 }
 el("open-quick-replies").addEventListener("click", () => {
+  closeComposerTools();
   if (!canUseQuickReplies()) return;
   closeEmojis();
   quickReplyContext = { ticket: snapshot(currentState()), owner: sessionOwner.id, csrf };
@@ -1341,7 +1400,7 @@ el("quick-replies-dialog").addEventListener("close", () => { if (quickReplyConte
 el("composer").addEventListener("submit", (event) => { event.preventDefault(); void sendWithFocus(false, el("send")); });
 el("message-body").addEventListener("input", () => { const state = currentState(); if (state) { state.draft = el("message-body").value; renderMeta(state); } });
 el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
-el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) el("image-file").click(); });
+el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) { closeComposerTools(); el("image-file").click(); focusVisible(el("open-composer-tools")); } });
 el("image-file").addEventListener("change", chooseFile);
 el("cancel-image").addEventListener("click", () => {
   const state = currentState(), restoreFocus = document.activeElement === el("cancel-image");
@@ -1350,8 +1409,8 @@ el("cancel-image").addEventListener("click", () => {
     if (restoreFocus && !focusVisible(el("message-body"))) focusVisible(el("message-scroll"));
   }
 });
-el("open-library").addEventListener("click", (event) => { void openMedia("library", event.currentTarget); });
-el("open-gallery").addEventListener("click", (event) => { void openMedia("gallery", event.currentTarget); });
+el("open-library").addEventListener("click", () => { closeComposerTools(); void openMedia("library", el("open-composer-tools")); });
+el("open-gallery").addEventListener("click", () => { const opener = menuReturnFocus(); closeChatMenu(); void openMedia("gallery", opener); });
 el("close-media").addEventListener("click", () => closeMedia());
 el("close-lightbox").addEventListener("click", () => closeLightbox());
 el("media-dialog").addEventListener("close", () => { if (panel) closeMedia(); });
@@ -1376,7 +1435,41 @@ el("back-to-inbox").addEventListener("click", () => {
 el("logout").addEventListener("click", () => { void logout(); });
 el("open-notifications").addEventListener("click", () => { if (!ready || !visible() || !notificationsPanel) return; el("notifications-dialog").showModal(); focusVisible(el("close-notifications")); });
 el("close-notifications").addEventListener("click", () => el("notifications-dialog").close());
-el("notifications-dialog").addEventListener("close", () => { focusVisible(el("open-notifications")); });
+el("notifications-dialog").addEventListener("close", () => { focusVisible(menuReturnFocus()); });
+for (const id of ["open-account-menu", "open-conversation-menu"]) el(id).addEventListener("click", event => openChatMenu(event.currentTarget));
+el("close-chat-menu").addEventListener("click", () => closeChatMenu(true));
+el("chat-menu").addEventListener("click", event => {
+  if (event.target.closest("a,button") && !el("chat-menu").hidden) closeChatMenu(!document.querySelector("dialog[open]"));
+});
+el("open-composer-tools").addEventListener("click", () => {
+  const button = el("open-composer-tools"); if (button.disabled || button.hidden || !visible()) return;
+  if (!el("composer-tools").hidden) { closeComposerTools(true); return; }
+  closeChatMenu(); el("composer-tools").hidden = false; button.setAttribute("aria-expanded", "true"); positionComposerTools();
+  focusVisible(el("close-composer-tools"));
+});
+el("close-composer-tools").addEventListener("click", () => closeComposerTools(true));
+document.addEventListener("keydown", event => {
+  if (event.key !== "Escape" || document.querySelector("dialog[open]")) return;
+  if (!el("chat-menu").hidden) { event.preventDefault(); closeChatMenu(true); }
+  else if (!el("composer-tools").hidden) { event.preventDefault(); closeComposerTools(true); }
+});
+document.addEventListener("pointerdown", event => {
+  if (!el("chat-menu").hidden && !el("chat-menu").contains(event.target)
+    && ![el("open-account-menu"), el("open-conversation-menu")].some(button => button.contains(event.target))) closeChatMenu();
+  if (!el("composer-tools").hidden && !el("composer-tools").contains(event.target)
+    && !el("open-composer-tools").contains(event.target)) closeComposerTools();
+});
+// Use the visible height only at normal scale. Pinch zoom keeps the browser's
+// native viewport; no height threshold is interpreted as a keyboard signal.
+if (globalThis.visualViewport) {
+  const fitViewport = () => {
+    if (visualViewport.scale === 1) document.documentElement.style.setProperty("--chat-viewport-height", `${visualViewport.height}px`);
+    else document.documentElement.style.removeProperty("--chat-viewport-height");
+    resizeComposer();
+  };
+  visualViewport.addEventListener("resize", fitViewport); visualViewport.addEventListener("scroll", positionComposerTools); fitViewport();
+}
+window.addEventListener("resize", resizeComposer);
 el("retry-connection").addEventListener("click", () => { void resumeConnection({ reset: true }); });
 el("cancel-delete").addEventListener("click", cancelConfirmation);
 el("confirm-delete").addEventListener("close", () => {
@@ -1407,6 +1500,7 @@ globalThis.navigator?.serviceWorker?.addEventListener("message", (event) => {
 });
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
+    closeChatMenu(); closeComposerTools();
     closeQuickReplies();
     closeEmojis();
     profileMount = null;

@@ -47,7 +47,7 @@ const validName = value => typeof value === "string" && value.trim().normalize("
 // the same owner checks and return a bounded Blob, never an object URL.
 export function createProfileUI(adapter) {
   const { role, request, fetchBinary, isCurrent, onSaved, onError, avatarsEnabled = true,
-    prepareAvatar = prepareProfileAvatar, host = document.body, button: openerButton } = adapter;
+    prepareAvatar = prepareProfileAvatar, host = document.body, button: openerButton, getReturnFocus } = adapter;
   if (!["admin", "client"].includes(role) || typeof request !== "function" || typeof isCurrent !== "function"
     || avatarsEnabled && typeof fetchBinary !== "function" || typeof prepareAvatar !== "function") throw new TypeError("invalid_profile_adapter");
   const base = `/api/profile/${role}`, media = `/api/media/${role}/assets`;
@@ -267,7 +267,7 @@ export function createProfileUI(adapter) {
     name.value = ""; file.value = ""; message(""); conflictBox.hidden = true; retry.hidden = true;
     feedback.hidden = true; ui.text(feedback, ""); controls();
     if (dialog.open) dialog.close();
-    if (wasOpen && restoreFocus) focus(previous);
+    if (wasOpen && restoreFocus) focus(typeof getReturnFocus === "function" ? getReturnFocus() : previous);
   }
   async function open(opener = openerButton) {
     if (!ownerCurrent()) return false;

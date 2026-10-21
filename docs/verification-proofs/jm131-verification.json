@@ -1,0 +1,47 @@
+{
+  "version": "1.3.1",
+  "status": "implemented_locally_verified_awaiting_ci",
+  "branch": "fix/chat-mobile-131",
+  "base": "a26f60cca0e4690ebec5db8edf9152b651659efc",
+  "source": null,
+  "tree": null,
+  "scope": "mobile_chat_layout_and_secondary_action_access",
+  "local": {
+    "node": "v24.19.0",
+    "syntaxSources": 583,
+    "build": "passed",
+    "targetedTests": {
+      "passed": 147,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 4062.935
+    },
+    "chrome": "unavailable_locally",
+    "physicalPhoneKeyboard": "not_observed",
+    "lastGuardSyntaxCheck": "passed",
+    "buildBeforeFinalPlacementGuard": true
+  },
+  "review": {
+    "scope": "changed_frontend_files_only",
+    "issueAddressed": "composer_tools_moved_out_of_clipped_chat_and_bounded_to_visible_viewport",
+    "browserQualification": "pending",
+    "result": "no_remaining_blocking_findings_after_corrections"
+  },
+  "ci": {
+    "status": "not_started"
+  },
+  "publication": {
+    "status": "not_started"
+  },
+  "hosting": {
+    "activeVersion": "1.3.0",
+    "activeSource": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+    "preparationExecuted": false,
+    "activationConfirmed": false,
+    "metadataRecorded": false,
+    "schemaMigrations": 31,
+    "requiresMigration": false,
+    "dependenciesChanged": false,
+    "plannedRollback": "1.3.0"
+  }
+}

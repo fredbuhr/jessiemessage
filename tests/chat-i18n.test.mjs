@@ -187,7 +187,7 @@ test("chat HTML loads explicit catalogues before its controller and marks UI lea
     for (const attr of ["data-jm-i18n", "data-jm-i18n-placeholder", "data-jm-i18n-aria-label"]) {
       const source = node.getAttribute(attr); if (!source) continue;
       f.language("en"); const translated = f.context.JessieI18n.t(source);
-      if (!["Messages", "Photos", "Contact", "Notifications", "Emojis"].includes(source)) assert.notEqual(translated, source, source);
+      if (!["Messages", "Photos", "Contact", "Notifications", "Emojis", "Options"].includes(source)) assert.notEqual(translated, source, source);
     }
   }
 });

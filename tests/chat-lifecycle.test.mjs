@@ -79,7 +79,8 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   const document = { visibilityState: visible ? "visible" : "hidden", body, head: new Element("head", nodes),
     getElementById: (value) => { const item = nodes.get(value); return item?.isConnected ? item : null; },
     createElement: (tag) => new Element(tag, nodes), createDocumentFragment: () => new Element("fragment", nodes),
-    querySelector: () => new Element("div", nodes), addEventListener: (name, handler) => documentEvents.set(name, handler) };
+    querySelector: (selector) => selector === "dialog[open]" ? [...nodes.values()].find(node => node.open) ?? null : new Element("div", nodes),
+    addEventListener: (name, handler) => documentEvents.set(name, handler) };
   nodes.document = document; document.activeElement = body; document.head._connected = true;
   const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0 };
   const conversation = (owner = state.currentSession?.user.id) => {
@@ -501,6 +502,44 @@ for (const role of ["client", "admin"]) test(`${role}: emojis replace the select
   assert.equal(f.document.activeElement, f.element("message-body")); assert.equal(f.element("emoji-dialog").open, false);
   assert.equal(f.element("emoji-list").children.length, 0); assert.equal(f.element("send").disabled, false);
   assert.equal(f.calls.length, before); assert.equal(f.state.posts, 0);
+});
+
+for (const role of ["client", "admin"]) test(`${role}: secondary panels close on Escape, outside interaction, hiding and owner replacement without sending`, async () => {
+  const f = harness({ currentSession: session(1, "A".repeat(43), role),
+    intercept: path => path === `/api/media/${role}/capabilities` ? response(200, { enabled: true }) : undefined });
+  await flush();
+  if (role === "admin") { for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); }
+  f.element("message-body").value = "A private draft stays unchanged";
+  for (const handler of f.element("message-body").events.get("input")) handler({});
+  await f.click("open-conversation-menu");
+  assert.equal(f.element("chat-menu").hidden, false); assert.equal(f.element("open-conversation-menu").getAttribute("aria-expanded"), "true");
+  assert.equal(f.document.activeElement.id, "close-chat-menu");
+  let prevented = false; await f.event("keydown", { key: "Escape", preventDefault() { prevented = true; } });
+  assert.equal(prevented, true); assert.equal(f.element("chat-menu").hidden, true);
+  assert.equal(f.element("open-conversation-menu").getAttribute("aria-expanded"), "false");
+  assert.equal(f.document.activeElement.id, "open-conversation-menu");
+
+  await f.click("open-conversation-menu"); await f.click("open-composer-tools");
+  assert.equal(f.element("chat-menu").hidden, true); assert.equal(f.element("composer-tools").hidden, false);
+  assert.equal(f.element("open-composer-tools").getAttribute("aria-expanded"), "true");
+  assert.equal(f.document.activeElement.id, "close-composer-tools");
+  await f.event("pointerdown", { target: f.element("message-body") });
+  assert.equal(f.element("composer-tools").hidden, true); assert.equal(f.element("open-composer-tools").getAttribute("aria-expanded"), "false");
+  assert.equal(f.element("message-body").value, "A private draft stays unchanged");
+
+  await f.click("open-composer-tools"); await f.hide();
+  assert.equal(f.element("chat-menu").hidden, true); assert.equal(f.element("composer-tools").hidden, true);
+  await f.show(); assert.equal(f.element("message-body").value, "A private draft stays unchanged");
+  if (role === "admin") {
+    await f.click("open-composer-tools"); await f.click("back-to-inbox");
+    assert.equal(f.element("chat-menu").hidden, true); assert.equal(f.element("composer-tools").hidden, true);
+    for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
+    assert.equal(f.element("message-body").value, "A private draft stays unchanged");
+  }
+  await f.click("open-conversation-menu"); await f.hide(); f.state.currentSession = session(2, "B".repeat(43), role); await f.show();
+  assert.equal(f.element("chat-menu").hidden, true); assert.equal(f.element("composer-tools").hidden, true);
+  assert.equal(f.element("message-body").value, ""); assert.equal(f.state.posts, 0);
+  assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/export$/.test(call.path)).length, 0);
 });
 
 test("emoji selection preserves full drafts and photo captions without truncation or a request", async () => {

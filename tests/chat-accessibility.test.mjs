@@ -395,7 +395,7 @@ test("closing a media dialog whose original opener became disabled uses a visibl
   f.run("currentState().conversation.canSend = false; renderMeta(currentState());");
   assert.equal(f.element("open-library").disabled, true); f.element("close-media").focus();
   f.element("media-dialog").close(); await flush();
-  assert.equal(f.document.activeElement, f.element("open-gallery")); assert.equal(f.document.activeElement.disabled, false);
+  assert.equal(f.document.activeElement.id, "open-conversation-menu"); assert.equal(f.document.activeElement.disabled, false);
 });
 
 test("deleting an expanded received photo closes it with a visible logical focus target and no new-message announcement", async () => {
@@ -410,7 +410,7 @@ test("deleting an expanded received photo closes it with a visible logical focus
   assert.equal(f.element("lightbox").open, true);
   f.push([event(2, message(1, "peer", { body: null, deletedAt: now }), "delete")]); await f.fetchEvents();
   assert.equal(f.element("lightbox").open, false); assert.equal(opener.isConnected, false);
-  assert.ok([f.element("open-gallery"), f.element("message-scroll"), f.element("messages").children[0]].includes(f.document.activeElement));
+  assert.ok([f.element("open-conversation-menu"), f.element("message-scroll"), f.element("messages").children[0]].includes(f.document.activeElement));
   assert.notEqual(f.document.activeElement, f.document.body); assert.equal(announcement(f).textContent, "");
 });
 
@@ -428,9 +428,9 @@ test("a completed button-initiated send restores composer focus only if the user
     const gate = pause(); const f = liveHarness({ intercept: (path, options) => path.endsWith("/messages") && options.method === "POST" ? gate.promise : undefined }); await flush();
     f.element("send").focus(); await f.send("Synthetic sent text");
     const pending = f.inspect().states.get(f.inspect().selected).pending;
-    if (move) f.element("logout").focus();
+    if (move) f.element("open-conversation-menu").focus();
     gate.resolve(response(201, { message: message(11, "me", { body: "Synthetic sent text", clientMessageId: pending.clientMessageId }) })); await flush();
-    assert.equal(f.document.activeElement, move ? f.element("logout") : f.element("message-body"));
+    assert.equal(f.document.activeElement.id, move ? "open-conversation-menu" : "message-body");
     assert.equal(f.element("message-body").value, ""); assert.equal(messagePosts(f).length, 1); assert.equal(announcement(f).textContent, "");
   }
 });

@@ -260,7 +260,31 @@ async function startFixtureServer() {
   baseUrl = `http://127.0.0.1:${server.address().port}`;
 }
 
-const browser = (width = 1280) => driver.browser({ origin: baseUrl, width });
+const browser = (width = 1280, height) => driver.browser({ origin: baseUrl, width, ...(height === undefined ? {} : { height }) });
+async function openChatOptions(page) {
+  if (await page.execute("return !document.getElementById('chat-menu').hidden")) return;
+  const opener = await page.execute(`return ['open-conversation-menu','open-account-menu'].find(id=>{
+    const button=document.getElementById(id);return button&&!button.hidden&&!button.disabled&&button.getClientRects().length>0;
+  })`);
+  assert.ok(opener, "a visible options opener is available");
+  await page.click(`#${opener}`);
+  await waitUntil(() => page.execute("return !document.getElementById('chat-menu').hidden"), "options panel opens");
+}
+async function clickOptionsAction(page, selector) {
+  await openChatOptions(page); await page.click(selector);
+}
+async function toggleChatLanguage(page) {
+  await clickOptionsAction(page, "[data-jm-language]");
+  await waitUntil(() => page.execute("return document.getElementById('chat-menu').hidden"), "language selection closes the options panel");
+}
+async function openComposerTools(page) {
+  if (await page.execute("return !document.getElementById('composer-tools').hidden")) return;
+  await page.click("#open-composer-tools");
+  await waitUntil(() => page.execute("return !document.getElementById('composer-tools').hidden"), "attachment tools open");
+}
+async function clickComposerAction(page, selector) {
+  await openComposerTools(page); await page.click(selector);
+}
 async function loaded(page, path) {
   await page.navigate(path);
   await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden"), "private workspace bootstrap");
@@ -295,7 +319,7 @@ test("Chrome: only Jessie sees a read receipt after a metadata-only poll, with s
       await waitUntil(() => page.execute("return window.__receiptProbe.receipt.textContent === arguments[0]", role === "admin" ? "Lu" : "Envoyé"), "role-specific receipt label");
       assert.equal(await page.execute(`const p = window.__receiptProbe; return document.querySelector('#messages [data-sequence="2"]') === p.article
         && document.activeElement === p.remove && p.article.querySelector('.message-meta span') === p.receipt`), true);
-      await page.click("[data-jm-language]");
+      await toggleChatLanguage(page);
       assert.equal(await page.execute("return window.__receiptProbe.receipt.textContent"), role === "admin" ? "Read" : "Sent");
       assert.equal(await page.execute("return document.querySelector('#messages [data-sequence=\"2\"]') === window.__receiptProbe.article"), true);
       await noJavascriptErrors(page);
@@ -389,7 +413,7 @@ test("Chrome desktop and 320px: actual Tab / Enter contact selection and return,
       assert.equal(await page.execute("return document.getElementById('peer-name').textContent"), peerName);
       assert.equal(await page.execute("return document.querySelector('#readiness-nav a[href=\"/admin/readiness\"]').textContent"), "État du service");
       assert.equal(await page.execute("return document.getElementById('message-announcement').textContent"), "", "loaded history is silent");
-      await page.click("[data-jm-language]");
+      await toggleChatLanguage(page);
       assert.equal(await page.execute("return document.documentElement.lang"), "en");
       assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Write your message…");
       assert.equal(await page.execute("return document.getElementById('peer-name').textContent"), peerName, "private names are never translated");
@@ -403,51 +427,127 @@ test("Chrome desktop and 320px: actual Tab / Enter contact selection and return,
   }
 });
 
-test("Chrome mobile: all six account controls stay visible and separate with Profile and Notifications, French / English, both roles", { timeout: 90000 }, async () => {
+test("Chrome mobile: a single compact conversation bar leaves room for history and exposes account actions through its menu", { timeout: 120000 }, async () => {
   for (const width of [320, 360, 390]) for (const path of ["/messages", "/admin/messages"]) {
-    resetFixture(); fixture.notificationsEnabled = true; fixture.profileEnabled = true;
-    const page = await browser(width);
+    resetFixture(); fixture.notificationsEnabled = true; fixture.profileEnabled = true; fixture.clientExportEnabled = true;
+    fixture.peerName = "A deliberately long synthetic contact name for a small screen";
+    const page = await browser(width, 640);
     try {
       await loaded(page, path);
-      await waitUntil(() => page.execute("return !document.getElementById('open-notifications').hidden"), "real notification capability exposes the account control");
-      await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile capability mounts the real account editor");
+      await waitUntil(() => page.execute("return !document.getElementById('open-notifications').hidden && !document.getElementById('open-profile').hidden"), "optional account controls mounted");
+      if (path === "/messages") await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download-entry:not([hidden])')"), "optional client export mounted");
+      if (path === "/admin/messages") {
+        assert.equal(await page.execute("return document.querySelector('.topbar').getClientRects().length>0 && !document.getElementById('open-account-menu').disabled"), true, "the inbox has its compact account bar");
+        await page.click(".contact");
+      }
       for (const language of ["fr", "en"]) {
-        if (language === "en") await page.click("[data-jm-language]");
+        if (language === "en") await toggleChatLanguage(page);
         assert.equal(await page.execute("return document.documentElement.lang"), language);
         if (path === "/messages") {
           assert.equal(await page.execute("return !!document.querySelector('.broadcast-preference, #broadcast-preference-host, #broadcast-nav')"), false);
-          assert.equal(await page.execute("return performance.getEntriesByType('resource').some(entry => /\\/api\\/broadcast\\/|broadcast-preference\\.js/.test(new URL(entry.name).pathname))"), false, "the recipient workspace never loads broadcast settings or campaign metadata");
+          assert.equal(await page.execute("return performance.getEntriesByType('resource').some(entry => /\\/api\\/broadcast\\/|broadcast-preference\\.js/.test(new URL(entry.name).pathname))"), false);
         }
         const layout = await page.execute(`
-          const controls = [...document.querySelectorAll('.topbar .brand, .topbar .account-nav > a, .topbar .account-nav > button')]
-            .filter(node => !node.hidden).map(node => {
-              const rect = node.getBoundingClientRect(), hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
-              const container = node.closest('.topbar').getBoundingClientRect();
-              return { name: node.id || (node.matches('.brand') ? 'brand' : node.matches('[data-jm-language]') ? 'language' : new URL(node.href).pathname),
-                left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, height: rect.height,
-                containerTop: container.top, containerBottom: container.bottom,
-                reachable: hit === node || node.contains(hit) };
-            });
-          return { width: innerWidth, height: innerHeight, scrollWidth: document.documentElement.scrollWidth, controls };
+          const visible=node=>!!node&&node.getClientRects().length>0, rect=id=>document.getElementById(id).getBoundingClientRect();
+          const head=document.querySelector('.chat-head').getBoundingClientRect(), history=rect('message-scroll'), row=document.querySelector('.composer-row').getBoundingClientRect();
+          return {width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,
+            duplicateHeader:visible(document.querySelector('.topbar')), avatar:visible(document.getElementById('peer-avatar')),
+            name:document.getElementById('peer-name').textContent, headHeight:head.height,
+            optionsClosed:document.getElementById('chat-menu').hidden, toolsClosed:document.getElementById('composer-tools').hidden,
+            footerVisible:visible(document.getElementById('chat-footer')), historyHeight:history.height, historyBottom:history.bottom,
+            rowHeight:row.height, rowBottom:row.bottom,
+            controls:['open-conversation-menu','open-composer-tools','open-emojis','message-body','send'].map(id=>{
+              const node=document.getElementById(id),r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+              return {id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,reachable:hit===node||node.contains(hit)};
+            })};
         `);
-        const context = `${path}, ${width}px, ${language}`;
-        assert.equal(layout.width, width, context);
+        const context = `${path}, ${width}x640, ${language}`;
+        assert.equal(layout.width, width, context); assert.equal(layout.height, 640, context);
         assert.equal(layout.scrollWidth <= layout.width, true, `${context}: no horizontal page overflow`);
-        assert.deepEqual(layout.controls.map(control => control.name).sort(), ["account-link", "brand", "language", "logout", "open-notifications", "open-profile"], `${context}: all six header controls are present`);
+        assert.equal(layout.duplicateHeader, false, `${context}: the conversation has one header`);
+        assert.equal(layout.avatar, true); assert.equal(layout.name, fixture.peerName);
+        assert.ok(layout.headHeight <= 80, `${context}: conversation bar stays compact`);
+        assert.equal(layout.optionsClosed && layout.toolsClosed && !layout.footerVisible, true, `${context}: secondary actions reserve no permanent rows`);
+        assert.ok(layout.rowHeight <= 64, `${context}: the initial composer fits one row`);
+        assert.ok(layout.rowBottom <= layout.height+1, `${context}: send stays inside the viewport`);
+        assert.ok(layout.historyHeight > 0 && layout.historyBottom <= layout.rowBottom, context);
+        if (width === 360) assert.ok(layout.historyHeight/layout.height >= 0.70, `${context}: history receives at least 70% of the visible height (${layout.historyHeight}px)`);
         for (const control of layout.controls) {
-          assert.ok(control.left >= -1 && control.right <= layout.width + 1, `${context}: ${control.name} stays inside the viewport`);
-          assert.ok(control.top >= 0 && control.bottom <= layout.height + 1, `${context}: ${control.name} stays vertically visible`);
-          assert.ok(control.top >= control.containerTop - 1 && control.bottom <= control.containerBottom + 1, `${context}: ${control.name} stays inside the header`);
-          assert.ok(control.height >= 44, `${context}: ${control.name} keeps its 44px touch height`);
-          assert.equal(control.reachable, true, `${context}: ${control.name} is not covered`);
+          assert.ok(control.left >= -1 && control.right <= layout.width+1 && control.top >= 0 && control.bottom <= layout.height+1, `${context}: ${control.id} remains visible`);
+          assert.ok(control.width >= 44 && control.height >= 44, `${context}: ${control.id} retains its touch target`);
+          assert.equal(control.reachable, true, `${context}: ${control.id} is not covered`);
         }
-        for (let first = 0; first < layout.controls.length; first++) for (let second = first + 1; second < layout.controls.length; second++) {
-          const a = layout.controls[first], b = layout.controls[second];
-          assert.ok(a.right <= b.left + 1 || b.right <= a.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1,
-            `${context}: ${a.name} and ${b.name} do not overlap`);
+        const composer = layout.controls.filter(control=>control.id!=="open-conversation-menu");
+        assert.ok(composer.every(control=>Math.abs((control.top+control.bottom)/2-(composer[0].top+composer[0].bottom)/2)<=8), `${context}: composer controls share a row`);
+        const sent = fixture.messageRequests.length, exports = fixture.exportRequests?.length ?? 0;
+        await openChatOptions(page);
+        assert.equal(await page.execute("return document.getElementById('chat-menu').getAttribute('role')"), null, "ordinary native controls do not masquerade as an ARIA menu");
+        const selectors = ["#account-link", "#open-profile", "#open-notifications", "[data-jm-language]", "#logout", '#chat-footer a[href^="mailto:"]', "#chat-footer [data-help-link]"];
+        if (path === "/messages") selectors.push(".conversation-download-entry");
+        for (const selector of selectors) {
+          const action = await page.execute(`const node=document.querySelector(arguments[0]);node.scrollIntoView({block:'nearest'});const r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+            return {width:r.width,height:r.height,reachable:hit===node||node.contains(hit),inside:r.left>=0&&r.right<=innerWidth};`, selector);
+          assert.ok(action.width>=44 && action.height>=44 && action.reachable && action.inside, `${context}: ${selector} is accessible in the opened menu`);
         }
+        await page.key("\uE00C");
+        assert.equal(await page.execute("return document.getElementById('chat-menu').hidden && document.activeElement.id==='open-conversation-menu'"), true, "Escape closes options and restores visible focus");
+        assert.equal(fixture.messageRequests.length, sent); assert.equal(fixture.exportRequests?.length ?? 0, exports, "opening options never starts an export");
       }
       await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome short mobile viewports: a multiline draft keeps the composer usable with bounded independent history", { timeout: 60000 }, async () => {
+  for (const [width,height] of [[360,360],[640,360]]) for (const role of ["client","admin"]) {
+    resetFixture(); const page=await browser(width,height);
+    try {
+      await loaded(page,role==='admin'?'/admin/messages':'/messages');
+      if(role==='admin') await page.click('.contact');
+      await page.type('#message-body','A synthetic multiline draft\n'.repeat(8));
+      const layout=await page.execute(`const ids=['message-body','send','open-emojis','open-composer-tools'];
+        return {width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,
+          history:document.getElementById('message-scroll').getBoundingClientRect().height,
+          controls:ids.map(id=>{const node=document.getElementById(id),r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {id,top:r.top,bottom:r.bottom,height:r.height,left:r.left,right:r.right,reachable:hit===node||node.contains(hit)};})};`);
+      assert.equal(layout.width,width);assert.equal(layout.height,height);assert.ok(layout.scrollWidth<=width);
+      assert.ok(layout.history>0,`${role} ${width}x${height}: history retains independent space`);
+      for(const control of layout.controls) {
+        assert.ok(control.top>=0&&control.bottom<=height+1&&control.left>=0&&control.right<=width+1,`${role} ${width}x${height}: ${control.id} is in the viewport`);
+        assert.ok(control.height>=44&&control.reachable,`${role} ${width}x${height}: ${control.id} remains usable`);
+      }
+      assert.equal(fixture.messageRequests.length,0);await noJavascriptErrors(page);
+    } finally {await page.close();}
+  }
+});
+
+test("Chrome 360px high: photo preview and multiline caption retain reachable attachment tools and Close", { timeout: 60000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); const page = await browser(360, 360), caption = "A synthetic photo caption\n".repeat(6);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await openComposerTools(page);
+      await page.execute(`const bytes=Uint8Array.from(atob(arguments[0]),char=>char.charCodeAt(0)),files=new DataTransfer();
+        files.items.add(new File([bytes],'synthetic-attachment.jpg',{type:'image/jpeg'}));
+        const input=document.getElementById('image-file');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));`, jpeg.toString("base64"));
+      await waitUntil(() => page.execute("const image=document.querySelector('#image-preview img');return !document.getElementById('image-draft').hidden && image?.complete && image.naturalWidth>0"), "the real photo preview remains present");
+      await page.type("#message-body", caption);
+      if (await page.execute("return !document.getElementById('composer-tools').hidden")) await page.click("#close-composer-tools");
+      await openComposerTools(page);
+      const panel = await page.execute("const node=document.getElementById('composer-tools'),r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height,scrollWidth:node.scrollWidth,clientWidth:node.clientWidth};");
+      assert.ok(panel.top>=0 && panel.bottom<=360+1 && panel.left>=0 && panel.right<=360+1 && panel.height>=44, `${role}: tools stay inside the short viewport`);
+      assert.ok(panel.scrollWidth<=panel.clientWidth, `${role}: tools have no horizontal clipping`);
+      const selectors = ["#close-composer-tools", "#pick-image", "#open-library", ...(role === "admin" ? ["#open-quick-replies"] : [])];
+      for (const selector of selectors) {
+        const control = await page.execute(`const node=document.querySelector(arguments[0]);node.scrollIntoView({block:'nearest'});const r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+          return {height:r.height,width:r.width,top:r.top,bottom:r.bottom,reachable:hit===node||node.contains(hit)};`, selector);
+        assert.ok(control.height>=44 && control.width>=44 && control.top>=0 && control.bottom<=360+1 && control.reachable, `${role}: ${selector} is reachable without removing the photo preview`);
+      }
+      await page.key("\uE00C");
+      assert.equal(await page.execute("return document.getElementById('composer-tools').hidden && document.activeElement.id==='open-composer-tools'"), true);
+      assert.equal(await page.execute("return !document.getElementById('image-draft').hidden"), true);
+      assert.equal(await page.execute("return document.getElementById('message-body').value"), caption);
+      assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
     } finally { await page.close(); }
   }
 });
@@ -461,7 +561,7 @@ test("Chrome 320px: both roles edit their public profile with the keyboard, tran
       await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile control mounted");
       if (role === "admin") await page.click(".contact");
       assert.equal(await page.execute("return document.getElementById('peer-avatar').textContent"), role === "client" ? "J" : "A", "missing avatar uses the peer's initials");
-      await tabUntil(page, "#open-profile"); await page.key("\uE007");
+      await openChatOptions(page); await tabUntil(page, "#open-profile"); await page.key("\uE007");
       await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.activeElement.matches('.profile-pseudonym')"), "profile loaded with the name focused");
       assert.equal(await page.execute("return document.querySelector('.profile-header h2').textContent"), "Mon profil");
       assert.equal(await page.execute("return document.querySelector('.profile-avatar-preview img').hidden"), true);
@@ -477,13 +577,15 @@ test("Chrome 320px: both roles edit their public profile with the keyboard, tran
       assert.deepEqual(layout, { fits: true, touch: true });
       await page.type(".profile-pseudonym", nextName);
       await tabUntil(page, ".profile-save"); await page.key("\uE007");
-      await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open && document.activeElement.id==='open-profile'"), "saved profile closes and returns focus");
+      await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open && document.activeElement.id==='open-conversation-menu'"), "saved profile closes and returns focus");
       assert.deepEqual(fixture.profileRequests, [{ role, expectedVersion: "1", pseudonym: nextName, avatarId: null }]);
       assert.equal(fixture.avatarUploads.length, 0); assert.equal(fixture.messageRequests.length, 0);
       await page.key("\uE007");
+      await waitUntil(() => page.execute("return !document.getElementById('chat-menu').hidden"), "returned options button reopens its menu");
+      await tabUntil(page, "#open-profile"); await page.key("\uE007");
       await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.querySelector('.profile-pseudonym').value===arguments[0]", nextName), "reopening reloads the saved public name");
       await page.key("\uE00C");
-      await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open && document.activeElement.id==='open-profile'"), "Escape restores the profile opener");
+      await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open && document.activeElement.id==='open-conversation-menu'"), "Escape restores the profile opener");
       assert.equal(fixture.profileRequests.length, 1); await noJavascriptErrors(page);
     } finally { await page.close(); }
   }
@@ -508,7 +610,7 @@ test("Chrome: real avatar crop, private preview cleanup on controlled hiding, ex
       await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile module mounted");
       if (role === "admin") await page.click(".contact");
       await waitUntil(() => page.execute("const img=document.querySelector('#peer-avatar img');return !!img && img.src.startsWith('blob:') && img.complete && img.naturalWidth>0"), "private peer avatar decoded from a bounded authenticated response");
-      await page.click("#open-profile");
+      await clickOptionsAction(page, "#open-profile");
       await waitUntil(() => page.execute("const img=document.querySelector('.profile-avatar-preview img');return document.querySelector('.profile-dialog').matches(':modal') && !img.hidden && img.complete && img.naturalWidth>0"), "saved avatar appears as a private blob preview");
       await page.type(".profile-pseudonym", "Unsaved private profile draft");
       await chooseSyntheticAvatar();
@@ -520,14 +622,14 @@ test("Chrome: real avatar crop, private preview cleanup on controlled hiding, ex
       assert.equal(fixture.profileRequests.length, 0); assert.equal(fixture.avatarUploads.length, 0);
       await page.execute("window.__profileHidden=false;document.dispatchEvent(new Event('visibilitychange'))");
       await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden"), "same-session chat resumes after controlled visibility");
-      await page.click("#open-profile");
+      await clickOptionsAction(page, "#open-profile");
       await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.querySelector('.profile-pseudonym').value===arguments[0]", originalName), "reopening discards the unsaved profile draft");
       await chooseSyntheticAvatar(); await page.click(".profile-save");
       await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open"), "explicit save finishes the avatar upload");
       assert.equal(fixture.avatarUploads.length, 1); assert.equal(fixture.avatarUploads[0].role, role);
       assert.equal(fixture.profileRequests.length, 1); assert.equal(fixture.profileRequests[0].avatarId, id(401));
       assert.equal(fixture.profileRequests[0].pseudonym, originalName); assert.equal(fixture.messageRequests.length, 0, "an avatar is never sent as a conversation message");
-      await page.click("#open-profile");
+      await clickOptionsAction(page, "#open-profile");
       await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && !document.querySelector('.profile-remove-avatar').disabled"), "saved avatar can be removed");
       await page.click(".profile-remove-avatar"); assert.equal(fixture.profileRequests.length, 1, "removal remains a draft before save");
       await page.click(".profile-save");
@@ -547,7 +649,7 @@ test("Chrome: aggregate new-message announcement, silent empty poll / older hist
   resetFixture(); const page = await browser();
   try {
     await loaded(page, "/messages"); await loadedPhoto(page);
-    await page.click("[data-jm-language]");
+    await toggleChatLanguage(page);
     await tabUntil(page, "#messages .photo-open");
     await page.execute(`const region = document.getElementById('message-announcement');
       window.__probe = { article: document.querySelector('#messages [data-sequence="3"]'), photo: document.querySelector('#messages .photo-open'),
@@ -591,11 +693,11 @@ test("Chrome mobile: native modal Escape restores photo / gallery focus; private
     await page.key("\uE00C");
     await waitUntil(() => page.execute("return !document.getElementById('lightbox').open"), "Escape closes native modal");
     assert.equal(await page.execute("return document.activeElement === window.__photoOpener"), true, "Escape restores the same photo control");
-    await page.click("#open-gallery");
+    await clickOptionsAction(page, "#open-gallery");
     await waitUntil(() => page.execute("const dialog = document.getElementById('media-dialog'); const image = dialog.querySelector('img'); return dialog.open && dialog.matches(':modal') && !!image && image.complete && image.naturalWidth > 0"), "native conversation gallery");
     await page.key("\uE00C");
     await waitUntil(() => page.execute("return !document.getElementById('media-dialog').open"), "Escape closes conversation gallery");
-    assert.equal(await page.execute("return document.activeElement.id"), "open-gallery");
+    assert.equal(await page.execute("return document.activeElement.id"), "open-conversation-menu");
     const persistence = await page.executeAsync(`const done = arguments[arguments.length - 1];
       Promise.all([caches.keys(), navigator.serviceWorker.getRegistrations()]).then(([cacheKeys, registrations]) => {
         done({ cacheKeys, registrations: registrations.length, localKeys: Object.keys(localStorage), sessionKeys: Object.keys(sessionStorage) });
@@ -664,7 +766,7 @@ test("Chrome: notification history acknowledges a persisted send after native re
       await waitUntil(() => page.execute("return !document.querySelector('#message-body').disabled"), "conversation can send");
       await page.type("#message-body", body);
       if (kind === "photo") {
-        await page.click("#open-library");
+        await clickComposerAction(page, "#open-library");
         await waitUntil(() => page.execute("return !!document.querySelector('#media-dialog[open] [data-media-action=choose]')"), "synthetic JPEG available in the real library dialog");
         await page.click("[data-media-action=choose]");
         await waitUntil(() => page.execute("const img=document.querySelector('#image-preview img');return !document.querySelector('#image-draft').hidden && !!img && img.complete && img.naturalWidth>0"), "selected JPEG preview decoded");
@@ -711,7 +813,7 @@ async function openConversationExport(page) {
   await waitUntil(() => page.execute("return !!document.querySelector('.crm-fiche-button') && !!document.querySelector('.contact')"), "CRM initialized");
   if (await page.execute("return document.querySelector('.crm-fiche-button').hidden")) await page.click(".contact");
   await waitUntil(() => page.execute("return !document.querySelector('.crm-fiche-button').hidden"), "selected conversation profile");
-  await tabUntil(page, ".crm-fiche-button"); await page.key("\uE007");
+  await openChatOptions(page); await tabUntil(page, ".crm-fiche-button"); await page.key("\uE007");
   await waitUntil(() => page.execute("return !!document.querySelector('.crm-dialog[open] .crm-export:not([hidden])')"), "download section of current profile");
   await page.click(".crm-export > summary");
   await page.execute("window.__exportDownloads=[];const original=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{if(blob.type==='application/zip')window.__exportDownloadBytes=blob.size;return original(blob);};document.addEventListener('click',e=>{const a=e.target.closest('a[download]');if(a){e.preventDefault();window.__exportDownloads.push(a.download);}})");
@@ -722,7 +824,7 @@ test("real Chrome: conversation archive from the actual chat controller, keyboar
     resetFixture(); fixture.exportEnabled = true; const page = await browser(width);
     try {
       await openConversationExport(page);
-      if (language === "en") { await page.key("\uE00C"); await page.click("[data-jm-language]"); await page.click(".crm-fiche-button"); await waitUntil(() => page.execute("return !!document.querySelector('.crm-dialog[open] .crm-export:not([hidden])')"), "translated profile ready"); await page.click(".crm-export > summary"); }
+      if (language === "en") { await page.key("\uE00C"); await toggleChatLanguage(page); await clickOptionsAction(page, ".crm-fiche-button"); await waitUntil(() => page.execute("return !!document.querySelector('.crm-dialog[open] .crm-export:not([hidden])')"), "translated profile ready"); await page.click(".crm-export > summary"); }
       await page.type('.crm-profile-form textarea[name="notes"]', "Unsent private change");
       await tabUntil(page, ".crm-export button"); await page.key("\uE007");
       await waitUntil(() => page.execute("return window.__exportDownloads.length === 1 && window.__exportDownloadBytes > 22"), "private ZIP starts downloading");
@@ -752,7 +854,7 @@ test("real Chrome: closing a profile cancels its download and cannot unlock or p
     await openConversationExport(page); await page.click(".crm-export button");
     await waitUntil(() => Boolean(fixture.releaseExport), "server holds the first export");
     await page.key("\uE00C"); fixture.releaseExport();
-    await page.click(".crm-fiche-button");
+    await clickOptionsAction(page, ".crm-fiche-button");
     await waitUntil(() => page.execute("return document.querySelector('.crm-dialog[open] .crm-export .crm-status').textContent === ''"), "a fresh profile has no old download status");
     assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
     assert.equal(await page.execute("return document.querySelector('.crm-export button').disabled"), false);
@@ -762,9 +864,9 @@ test("real Chrome: closing a profile cancels its download and cannot unlock or p
 async function openClientExport(page, language = "fr") {
   await loaded(page, "/messages");
   await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download-entry:not([hidden])')"), "client download control mounted");
-  if (language === "en") await page.click("[data-jm-language]");
+  if (language === "en") await toggleChatLanguage(page);
   await page.execute("window.__exportDownloads=[];const original=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{if(blob.type==='application/zip')window.__exportDownloadBytes=blob.size;return original(blob);};document.addEventListener('click',e=>{const a=e.target.closest('a[download]');if(a){e.preventDefault();window.__exportDownloads.push(a.download);}})");
-  await tabUntil(page, ".conversation-download-entry"); await page.key("\uE007");
+  await openChatOptions(page); await tabUntil(page, ".conversation-download-entry"); await page.key("\uE007");
   await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download[open]')"), "client export dialog open");
 }
 
@@ -775,7 +877,7 @@ test("real Chrome: clients download their own conversation at mobile/desktop wid
       await openClientExport(page, language);
       assert.equal(await page.execute("return document.querySelector('.conversation-download h2').textContent"), language === "fr" ? "Télécharger ma conversation" : "Download my conversation");
       await page.key("\uE00C"); await page.type("#message-body", "Unsent client draft");
-      await page.click(".conversation-download-entry");
+      await clickOptionsAction(page, ".conversation-download-entry");
       if (language === "en") await page.click(".conversation-download-photos input");
       await tabUntil(page, ".conversation-download .primary"); await page.key("\uE007");
       await waitUntil(() => page.execute("return window.__exportDownloads.length === 1 && window.__exportDownloadBytes > 22"), "client ZIP accepted by the actual archive reader");
@@ -786,7 +888,7 @@ test("real Chrome: clients download their own conversation at mobile/desktop wid
       assert.equal(await page.execute("const d=document.querySelector('.conversation-download');return d.scrollWidth<=d.clientWidth+1 && document.querySelector('.conversation-download-photos').getBoundingClientRect().height>=44 && document.querySelector('.conversation-download .primary').getBoundingClientRect().height>=44"), true);
       assert.equal(await page.execute("return document.querySelector('.conversation-download').textContent.includes('notes') || document.querySelector('.conversation-download').textContent.includes('groups')"), false);
       await page.key("\uE00C");
-      assert.equal(await page.execute("return document.activeElement.matches('.conversation-download-entry')"), true);
+      assert.equal(await page.execute("return ['open-account-menu','open-conversation-menu'].includes(document.activeElement.id) && document.activeElement.getClientRects().length>0"), true);
       await noJavascriptErrors(page);
     } finally { fixture.releaseExport?.(); await page.close(); }
   });
@@ -808,7 +910,7 @@ test("real Chrome: closing the client dialog cancels a held archive and never up
   try {
     await openClientExport(page); await page.click(".conversation-download .primary");
     await waitUntil(() => Boolean(fixture.releaseExport), "server holds client export");
-    await page.key("\uE00C"); fixture.releaseExport(); await page.click(".conversation-download-entry");
+    await page.key("\uE00C"); fixture.releaseExport(); await clickOptionsAction(page, ".conversation-download-entry");
     await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download[open]') && !document.querySelector('.conversation-download .primary').disabled"), "reopened client dialog remains usable");
     assert.equal(await page.execute("return window.__exportDownloads.length"), 0); assert.equal(fixture.exportRequests.length, 1);
     assert.equal(await page.execute("return document.querySelector('.conversation-download [role=status]').textContent"), "");
@@ -851,9 +953,9 @@ for (const width of [320, 1280]) for (const language of ["fr", "en"]) {
     try {
       await loaded(page, "/admin/messages"); await tabUntil(page, ".contact"); await page.key("\uE007");
       await waitUntil(() => page.execute("return !document.querySelector('#open-quick-replies').hidden && !document.querySelector('#open-quick-replies').disabled"), "administrator quick replies ready");
-      if (language === "en") await page.click("[data-jm-language]");
+      if (language === "en") await toggleChatLanguage(page);
       await page.type("#message-body", "Personal draft");
-      await tabUntil(page, "#open-quick-replies"); await page.key("\uE007");
+      await openComposerTools(page); await tabUntil(page, "#open-quick-replies"); await page.key("\uE007");
       assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), true);
       assert.equal(await page.execute("return document.querySelector('#quick-reply-language').value"), language);
       assert.equal(await page.execute("return document.querySelector('#quick-replies-title').textContent"), language === "fr" ? "Réponses rapides" : "Quick replies");
@@ -883,10 +985,10 @@ test("Chrome: clients have no quick replies; Escape, full drafts and returning t
     await loaded(page, "/messages"); assert.equal(await page.execute("return document.querySelector('#open-quick-replies').hidden"), true);
     await loaded(page, "/admin/messages"); await page.click(".contact");
     await waitUntil(() => page.execute("return !document.querySelector('#open-quick-replies').disabled"), "quick replies available");
-    await page.type("#message-body", "Unsent draft"); await page.click("#open-quick-replies"); await page.key("\uE00C");
+    await page.type("#message-body", "Unsent draft"); await clickComposerAction(page, "#open-quick-replies"); await page.key("\uE00C");
     assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
     assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Unsent draft");
-    await page.type("#message-body", "x".repeat(4096)); await page.click("#open-quick-replies"); await page.click('[data-quick-reply="thanks"]');
+    await page.type("#message-body", "x".repeat(4096)); await clickComposerAction(page, "#open-quick-replies"); await page.click('[data-quick-reply="thanks"]');
     assert.equal(await page.execute("return document.querySelector('#message-body').value.length"), 4096);
     assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), true);
     assert.match(await page.execute("return document.querySelector('#quick-replies-status').textContent"), /ne peut pas être ajoutée/);
