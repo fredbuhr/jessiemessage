@@ -2,21 +2,17 @@
 
 La V1 initiale est terminée dans le périmètre convenu. L’état réellement déployé, ses preuves et les commandes opérateur sont exclusivement dans **[REPRISE](REPRISE.md)**. Ce plan décrit le travail restant ; les anciens lots correctifs restent historiques.
 
-Les livraisons 1.0.0, 1.1.0 et 1.2.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
+Les livraisons 1.0.0, 1.1.0, 1.2.0 et 1.3.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
-## Livraison active 1.3.0 — close
+## Livraison active 1.3.1 — suivi final en attente
 
-[Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : code qualifié, fusionné, publié et actif en 1.3.0, identité admin rapportée par l’utilisateur et disponibilité publique 4/4 conforme. **Le reçu utilisateur `release130_metadata_recorded` confirme l’alignement final du checkpoint : lot clos**, sans redémarrage, avec état antérieur/repli 1.2.0 et autres blocs préservés. Les neuf tests synthétiques du helper restent distincts de cette exécution. Ne rejouer ni writer, ni préparation, ni activation, ni Build/Run, ni relevé admin pour cette clôture. [REPRISE](REPRISE.md) conserve les preuves. La redistribution d’une bibliothèque Flirtmoji reste distincte de ce catalogue Unicode.
-
-## Travail en cours — correctif prioritaire 1.3.1
-
-[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : une seule barre active avec avatar, nom, **Options** et retour administrateur si nécessaire ; Contact, Aide et export dans le menu discret ; composeur `+` / `☺` / saisie / envoi. Correctif de présentation sans changement de transport, droits, API, dépendances ou SQL. **PR 114 fusionnée, CI finale de PR et CI main exacte 5/5 réussies, tag/release v1.3.1 publié et relu.** Préparation, précontrôle hébergé et activation distincte restent en attente ; la production reste en 1.3.0 close. Suivre uniquement la prochaine action opérateur de [REPRISE](REPRISE.md).
+[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : code fusionné, qualifié, publié, précontrôlé et actif en 1.3.1 selon le relevé admin utilisateur. Schéma 31 inchangé, sans migration ni nouvelle dépendance ; repli 1.3.0 préservé. **Seul l’alignement final des métadonnées opérateur attend son reçu ; le lot n’est pas déclaré clos.** Ne rejouer ni préparation, ni Build/Run, ni activation. Suivre uniquement la prochaine action épinglée de [REPRISE](REPRISE.md). Les parcours sur téléphone physique restent distincts des essais Chrome et du relevé d’identité.
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après le correctif mobile 1.3.1 ; la 1.3.0 est close. |
+| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après la clôture du suivi final 1.3.1. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |
@@ -27,6 +23,7 @@ Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas
 
 ## Livraisons antérieures closes
 
+- [Emojis enrichis et inclusifs 1.3.0](emoji-inclusifs-130.md) : clôture confirmée par `release130_metadata_recorded`, preuves historiques préservées ; référence conservée comme repli de 1.3.1.
 - [Profil et expressions 1.2.0](profile-expressions-120.md) : production identifiée, schéma 31, disponibilité et checkpoint alignés ; repli 1.1.1 compatible précontrôlé.
 - [Lecture privée 1.1.0](private-read-receipts-110.md) et [preuves d’harmonisation 1.0.0](REPRISE.md#validation-locale-de-100).
 - [Clôture V1 0.86](production-086.md) et [qualification Node associée](node-runtime-086.md).
