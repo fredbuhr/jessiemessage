@@ -40,8 +40,8 @@ function media(role) {
 function message(sequence, role) {
   const sent = fixture.sent.find(message => message.sequence === String(sequence)); if (sent) return { ...sent };
   const number = Number(sequence);
-  return { id: id(200 + number), sequence: String(number), sender: number === 2 ? "me" : "peer",
-    body: number === 1 ? "Earlier fictional message" : number === 2 ? "Fictional message from me" : number === 3 ? "Fictional photo caption" : `Fictional incoming body ${number}`,
+  return { id: id(200 + number), sequence: String(number), sender: number === 2 || number === 3 && fixture.ownPhoto ? "me" : "peer",
+    body: number === 1 ? "Earlier fictional message" : number === 2 ? "Fictional message from me" : number === 3 ? fixture.photoWithoutCaption ? "" : "Fictional photo caption" : `Fictional incoming body ${number}`,
     createdAt: fixture.now + number * 1000, deletedAt: null, clientMessageId: null,
     ...(number === 3 ? { media: media(role) } : {}) };
 }
@@ -385,6 +385,34 @@ test("Chrome mobile: compact messages reveal one accessible details area at a ti
       await page.click("#synthetic-message-link");
       assert.equal(await page.execute("return location.hash"), "#synthetic-link", `${context}: the native link keeps its navigation action`);
       assert.equal(await page.execute("return document.querySelectorAll('#messages .is-selected').length===0 && !document.getElementById('confirm-delete').open && document.getElementById('chat-menu').hidden"), true, `${context}: a native link never opens details, deletion or account options`);
+      assert.equal(fixture.deleteRequests, 0); assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome mobile: a captionless photo has a visible touch-sized details control without adding a metadata row", { timeout: 180000 }, async () => {
+  for (const width of [320, 360, 390]) for (const role of ["client", "admin"]) for (const ownPhoto of [false, true]) {
+    resetFixture(); fixture.photoWithoutCaption = true; fixture.ownPhoto = ownPhoto;
+    const page = await browser(width, 640), context = `${role} ${ownPhoto ? "own" : "peer"} photo ${width}px`;
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await loadedPhoto(page);
+      const resting = await page.execute(`const row=document.querySelector('#messages [data-sequence="3"]'),bubble=row.querySelector('.photo-message'),button=row.querySelector('.message-details-toggle'),meta=row.querySelector('.message-meta'),r=button.getBoundingClientRect(),b=bubble.getBoundingClientRect(),s=document.getElementById('message-scroll').getBoundingClientRect();
+        return {caption:!!row.querySelector('.photo-caption'),hidden:meta.hidden,visible:button.getClientRects().length>0 && getComputedStyle(button).clipPath==='none',
+          touch:r.width>=44 && r.height>=44,fits:r.left>=s.left && r.right<=s.right,beside:r.bottom<=b.bottom+1,
+          hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===button,extraHeight:row.getBoundingClientRect().height-b.height};`);
+      assert.equal(resting.caption, false, context); assert.equal(resting.hidden, true, context);
+      assert.equal(resting.visible && resting.touch && resting.fits && resting.beside && resting.hit, true, context);
+      assert.ok(resting.extraHeight<=1, `${context}: the details control adds no vertical space`);
+      await page.click('#messages [data-sequence="3"] .message-details-toggle');
+      assert.equal(await page.execute(`const row=document.querySelector('#messages [data-sequence="3"]');return row.classList.contains('is-selected') && !row.querySelector('.message-meta').hidden && !document.getElementById('lightbox').open && !document.getElementById('confirm-delete').open;`), true, context);
+      assert.equal(await page.execute(`const button=document.querySelector('#messages [data-sequence="3"] .delete-message');return !!button && button.getClientRects().length>0;`), ownPhoto, `${context}: existing ownership governs deletion`);
+      await page.click("#message-body");
+      await page.click('#messages [data-sequence="3"] .photo-open');
+      await waitUntil(() => page.execute("return document.getElementById('lightbox').open"), "the captionless photo still opens its viewer");
+      assert.equal(await page.execute("return document.querySelectorAll('#messages .is-selected').length===0 && !document.getElementById('confirm-delete').open"), true, context);
+      await page.key("\uE00C");
       assert.equal(fixture.deleteRequests, 0); assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
     } finally { await page.close(); }
   }
