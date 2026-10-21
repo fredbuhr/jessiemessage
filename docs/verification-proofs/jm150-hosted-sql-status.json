@@ -1,0 +1,15 @@
+{
+  "status": "checked",
+  "engineVerified": true,
+  "transportVerified": true,
+  "migrations": 32,
+  "applied": 31,
+  "pending": 1,
+  "interrupted": false,
+  "readOnly": true,
+  "migrated": false,
+  "noRestart": true,
+  "diagnosticRevision": 3,
+  "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+  "version": "1.4.1"
+}

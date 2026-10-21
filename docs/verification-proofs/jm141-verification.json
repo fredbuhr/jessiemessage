@@ -1,6 +1,6 @@
 {
   "version": "1.4.1",
-  "status": "code_qualified_published_and_hosted_prepared_awaiting_readonly_sql_status",
+  "status": "code_qualified_published_hosted_prepared_sql31_confirmed_awaiting_stop_and_upgrade",
   "branch": "feat/announcements-compat-141",
   "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
   "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
@@ -749,15 +749,16 @@
     "directPrivateToolObservation": false,
     "stagingReceipt": "jm150-hosted-staging.json",
     "stagingStatus": "staged_awaiting_schema32",
-    "sqlStatusChecked": false,
-    "freshSqlStatusObserved": false,
-    "schemaMigrationsEvidence": "last_confirmed_schema31_before_this_staging_no_sql_status_read",
+    "sqlStatusChecked": true,
+    "freshSqlStatusObserved": true,
+    "schemaMigrationsEvidence": "user_readonly_status32_known_31_applied_1_pending_not_interrupted",
     "rollback141Prepared": true,
     "rollback141HostedQualified": false,
-    "release150PrecheckConfirmed": false
+    "release150PrecheckConfirmed": false,
+    "sqlStatusReceipt": "jm150-hosted-sql-status.json"
   },
   "notAttested": [
-    "fresh_hosted_sql_status_migration_prechecks_and_activation",
+    "hosted_service_stop_migration_prechecks_and_activation",
     "physical_phone_and_real_host_capacity",
     "current_pc_or_backup_delivery",
     "native_backup_restore_with_nonempty_announcement"
@@ -772,7 +773,7 @@
     "mergedAt": "2026-10-21T14:49:04Z"
   },
   "operatorDelivery": {
-    "status": "hosted_prepared_awaiting_readonly_sql_status",
+    "status": "sql31_confirmed_awaiting_operator_stop_and_schema32_upgrade",
     "helperCommit": "40027be898f1a82cd9c2aed7c4a313096d8db4d4",
     "helperTree": "c999e78badfea23ab4e4ff9df8266f2d66bb1fb7",
     "publishedBytesVerifiedAgainstLocal": true,
@@ -895,8 +896,8 @@
       "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh",
       "sha256": "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0",
       "readOnly": true,
-      "executionReported": false,
-      "currentNextAction": true,
+      "executionReported": true,
+      "currentNextAction": false,
       "passwordEntry": "masked_tty_only_never_conversation",
       "expectedCleanStatus": {
         "migrations": 32,
@@ -905,7 +906,24 @@
         "interrupted": false
       },
       "expectedStatusGuaranteed": false,
-      "migrationAccountSource": "existing_previously_validated_migration_account_identity_not_persisted"
+      "migrationAccountSource": "existing_previously_validated_migration_account_identity_not_persisted",
+      "receipt": "jm150-hosted-sql-status.json",
+      "receiptSource": "user_ssh_console_output",
+      "observedResult": {
+        "status": "checked",
+        "engineVerified": true,
+        "transportVerified": true,
+        "migrations": 32,
+        "applied": 31,
+        "pending": 1,
+        "interrupted": false,
+        "readOnly": true,
+        "migrated": false,
+        "noRestart": true,
+        "diagnosticRevision": 3,
+        "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "version": "1.4.1"
+      }
     },
     "upgrade": {
       "path": "ops/upgrade-release150.sh",
@@ -937,10 +955,10 @@
         "service_stop_observed_and_operator_attested"
       ],
       "technicalPreconditionsMet": false,
-      "sqlStatusConfirmed": false,
+      "sqlStatusConfirmed": true,
       "serviceStopObserved": false,
       "serviceStopAttestationRequired": true,
-      "currentNextAction": false,
+      "currentNextAction": true,
       "executionReported": false
     },
     "hostedReceipt": "jm150-hosted-staging.json",

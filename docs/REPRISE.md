@@ -4,7 +4,7 @@
 
 ## Travail courant — Évolution 4, annonces publiées
 
-Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Ils ajoutent un bandeau compact, une période de début/fin et l’envoi facultatif d’un vrai message privé via la file existante, avec la migration additive 0032. **Le reçu utilisateur `staged_awaiting_schema32` confirme la préparation des deux références sur Infomaniak, sans démarrage, SQL, migration ou précontrôle. La production et le checkpoint restent au dernier état confirmé : 1.4.0 close, Node 24.22.0, schéma 31 et repli 1.3.4. Aucun nouveau statut SQL n’a encore été lu.**
+Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Ils ajoutent un bandeau compact, une période de début/fin et l’envoi facultatif d’un vrai message privé via la file existante, avec la migration additive 0032. **Le reçu utilisateur `staged_awaiting_schema32` confirme la préparation des deux références sur Infomaniak, sans démarrage, SQL, migration ou précontrôle. La production et le checkpoint restent au dernier état confirmé : 1.4.0 close, Node 24.22.0, schéma 31 et repli 1.3.4. Le diagnostic SQL utilisateur confirme désormais 32 migrations connues, 31 appliquées et une en attente, sans interruption, moteur et transport vérifiés ; la migration 0032 n’est pas encore appliquée.**
 
 | Référence publiée | Source et arbre exacts | Qualification propre et publication |
 | --- | --- | --- |
@@ -23,30 +23,36 @@ La suite native de sauvegarde/restauration valide son fixture générique au sch
 
 Le [reçu SSH utilisateur complet](verification-proofs/jm150-hosted-staging.json) confirme **`staged_awaiting_schema32`** pour les sources/arbres exacts 1.4.1 et 1.5.0 ci-dessus. Il provient du [helper de préparation publié](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/prepare-release150.sh), SHA-256 `ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021`. Ses 27 tests de staging et les 32 tests du statut/migration, soit **59/59**, qualifient les helpers synthétiques ; le reçu utilisateur distinct confirme cette préparation hébergée. Aucune date d’exécution non fournie n’est déduite.
 
-Le reçu confirme les deux checkouts et leurs lanceurs, Node **v24.22.0** et son empreinte attendue, les journaux normaux et de précontrôle encore vides et le repli **1.4.1 préparé**. Il conserve `started:false`, `migrated:false`, `precheckPassed:false`, `sqlStatusChecked:false`, `noRestart:true`, `managerChanged:false`, `runtimeStarted:false`, `checkpointChanged:false` et `rollback141HostedQualified:false`. Le schéma **32 est attendu par les fichiers**, pas confirmé en SQL ; le dernier schéma constaté reste 31. Le service 1.4.0, ses lanceurs et le checkpoint sont préservés. **Ne rejouer ni la préparation, ni une création de lanceurs ou de journaux ; ne tronquer aucun journal.**
+Le reçu confirme les deux checkouts et leurs lanceurs, Node **v24.22.0** et son empreinte attendue, les journaux normaux et de précontrôle encore vides et le repli **1.4.1 préparé**. Il conserve `started:false`, `migrated:false`, `precheckPassed:false`, `sqlStatusChecked:false`, `noRestart:true`, `managerChanged:false`, `runtimeStarted:false`, `checkpointChanged:false` et `rollback141HostedQualified:false`. Ce reçu de préparation ne vérifiait pas le SQL ; le diagnostic distinct reçu ensuite confirme le schéma 31, avec une migration 0032 en attente. Le service 1.4.0, ses lanceurs et le checkpoint sont préservés. **Ne rejouer ni la préparation, ni une création de lanceurs ou de journaux ; ne tronquer aucun journal.**
 
-Les quatre empreintes du reçu ont été épinglées dans le [helper de migration publié](https://github.com/fredbuhr/jessiemessage/blob/c798f96b631464e51c7ce212c37ceeaa681af904/ops/upgrade-release150.sh), commit `c798f96b631464e51c7ce212c37ceeaa681af904`, SHA-256 **`0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c`**. Ses **32/32 tests synthétiques après épinglage réel** réussissent, sans SQL ou runtime hébergé. L’ancien template du commit `40027be898f1a82cd9c2aed7c4a313096d8db4d4` conserve ses placeholders dans l’historique ; il n’est plus le helper de migration courant. Le helper actuel est entièrement épinglé, mais ses préconditions techniques de statut SQL confirmé et d’arrêt de service observé ne sont pas encore réunies. **Aucune commande de migration ou de redémarrage n’est à exécuter à cette étape.**
+Les quatre empreintes du reçu ont été épinglées dans le [helper de migration publié](https://github.com/fredbuhr/jessiemessage/blob/c798f96b631464e51c7ce212c37ceeaa681af904/ops/upgrade-release150.sh), commit `c798f96b631464e51c7ce212c37ceeaa681af904`, SHA-256 **`0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c`**. Ses **32/32 tests synthétiques après épinglage réel** réussissent, sans SQL ou runtime hébergé. L’ancien template du commit `40027be898f1a82cd9c2aed7c4a313096d8db4d4` conserve ses placeholders dans l’historique ; il n’est plus le helper de migration courant. Le helper actuel est entièrement épinglé. Son statut SQL préalable est confirmé ; l’arrêt effectif du service doit encore être observé avant son exécution. Les empreintes et le statut SQL ne prouvent pas cet arrêt.
 
-### Lecture SQL en lecture seule — seule étape actuelle
+### Statut SQL acquis
 
-Ouvrir la [console SSH Node.js Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis copier ce bloc complet. Il vérifie l’empreinte du [diagnostic SQL en lecture seule](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh) avant exécution ; il ne migre pas et ne redémarre pas le service :
+Le [reçu SQL utilisateur complet](verification-proofs/jm150-hosted-sql-status.json) confirme `status:"checked"`, `engineVerified:true`, `transportVerified:true`, **32 migrations connues, 31 appliquées, une en attente et `interrupted:false`**. Il provient du [diagnostic publié](https://github.com/fredbuhr/jessiemessage/blob/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh), SHA-256 `117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0`, source 1.4.1 `bf022233…`, révision de diagnostic 3. `readOnly:true`, `migrated:false` et `noRestart:true` distinguent cette lecture d’une migration. Aucune date d’exécution non fournie ni observation privée directe de l’agent n’est déduite. Le diagnostic préalable est acquis ; ne pas le rejouer pour découvrir son résultat.
+
+### Arrêt puis migration 0032 — seule étape actuelle
+
+Cette étape prévoit une interruption du service pendant la migration et les précontrôles. Toutes les références, les lanceurs et le helper sont déjà préparés et qualifiés. L’autorisation générale de l’utilisateur reste acquise ; la condition à satisfaire est technique : **observer l’arrêt effectif dans le Manager avant d’exécuter le bloc ci-dessous**.
+
+1. Ouvrir le [tableau de bord Node.js de l’application 239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), encore nommée **recette.jessiemessage.com**, qui dessert aussi **jessiemessage.com**.
+2. Dans le bloc Node.js de gestion de l’application, utiliser le bouton rouge **Stop** / arrêt, icône alimentation, à gauche de **Redémarrer**. Attendre puis actualiser jusqu’à l’état **Arrêtée**. Les [captures officielles Infomaniak](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak) montrent ce contrôle ; les [états documentés](https://www.infomaniak.com/fr/support/faq/2536/resoudre-un-probleme-de-site-nodejs) distinguent Arrêtée de la transition de redémarrage. Le libellé français exact du bouton reste non observé sur ce compte. Si le contrôle manque ou que cet arrêt n’est pas observé, ne pas exécuter le bloc ; transmettre l’état affiché. Une panne HTTP ou un processus invisible en SSH ne prouve pas l’arrêt.
+3. **Uniquement après avoir observé Arrêtée**, ouvrir la [console SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) et exécuter ce bloc. L’argument `--service-stopped` atteste l’arrêt observé par l’opérateur ; le helper ne lit pas le Manager.
 
 ```sh
-python3 - <<'PY'
+python3 - <<'PY_UPGRADE'
 import hashlib, subprocess, urllib.request
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/40027be898f1a82cd9c2aed7c4a313096d8db4d4/ops/status-release150-migration.sh"
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/c798f96b631464e51c7ce212c37ceeaa681af904/ops/upgrade-release150.sh"
 code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0":
+if hashlib.sha256(code).hexdigest() != "0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c":
     raise SystemExit("Empreinte incorrecte : arrêt.")
-subprocess.run(["bash", "-s"], input=code, check=True)
-PY
+subprocess.run(["bash", "-s", "--", "--service-stopped"], input=code, check=True)
+PY_UPGRADE
 ```
 
-À l’invite **`Identite SQL du compte de migration existant`**, saisir le compte de migration existant déjà validé. À l’invite suivante, saisir son mot de passe existant dans la console ; la saisie est masquée. Ne pas copier ce mot de passe dans la conversation. Transmettre uniquement le JSON du diagnostic.
+4. Saisir le compte SQL de migration existant déjà validé, puis son mot de passe dans la saisie masquée. Transmettre les deux JSON complets attendus : **`schema32_confirmed_before_prechecks`**, puis **`schema32_prechecks_passed`**. Le premier doit confirmer le passage au schéma 32 ; le second doit confirmer `rollback141HostedQualified:true` et `release150PrecheckPassed:true`. Ces résultats restent à observer. Le helper relit l’état SQL, applique uniquement la migration en attente puis contrôle la 1.4.1 et la 1.5.0 ; il ne lance aucun runtime.
 
-Le résultat attendu, sans le présumer, est `status:"checked"`, `migrations:32`, `applied:31`, `pending:1`, `interrupted:false`, avec les contrôles moteur/TLS réussis. Ces nombres décrivent le plan connu et le schéma précédemment confirmé ; seul le nouveau diagnostic établira l’état SQL actuel. Garder le service 1.4.0 et les réglages Run/Build actuels pendant cette lecture.
-
-Migration 0032, précontrôles 1.4.1/1.5.0 et activation restent à constater ensuite. Le futur repli **1.4.1** n’est pas encore précontrôlé sur le schéma 32 ; la **1.4.0 ne doit pas être redémarrée après cette migration**. Aucune nouvelle écriture du checkpoint, manipulation PC, audit général ou évolution suivante n’est ouverte.
+Après confirmation du schéma 32, **ne pas redémarrer la 1.4.0**. L’activation 1.5.0 ou, si nécessaire, le repli 1.4.1 utilisera leurs lanceurs compatibles. Garder le service arrêté jusqu’au résultat des précontrôles et aux consignes d’activation ; en cas d’échec, transmettre la sortie sans répétition aveugle ni troncature de journal. Aucune activation intermédiaire de 1.4.1 n’est requise. À ce stade, ni arrêt réel, ni migration, ni précontrôle hébergé, ni activation 1.5.0 ne sont encore attestés. Le checkpoint reste la 1.4.0 ; aucune manipulation PC, aucun audit général ni lot suivant n’est ouvert.
 
 ## Livraison 1.4.0 — Évolution 3, diffusions à grande échelle closes
 
