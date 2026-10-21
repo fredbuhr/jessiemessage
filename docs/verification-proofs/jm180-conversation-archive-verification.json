@@ -1,0 +1,513 @@
+{
+  "format": "jessiemessage-verification",
+  "version": 1,
+  "stage": "7.3b",
+  "developmentVersion": "1.8.0",
+  "branch": "feat/video-messaging",
+  "source": {
+    "commit": "333a6a00a3fe13708a892077d810ea2ff65962a5",
+    "tree": "d1ed0244b1581975c5e70febe50224ba199baca3",
+    "pr": 125,
+    "prUrl": "https://github.com/fredbuhr/jessiemessage/pull/125",
+    "draft": true,
+    "testedMergeCommit": "c506589c52c335da12d4bbfb77b38250b91b4981",
+    "testedMergeTree": "d1ed0244b1581975c5e70febe50224ba199baca3",
+    "testedTreeEqualsSource": true,
+    "mergeParents": [
+      "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+      "333a6a00a3fe13708a892077d810ea2ff65962a5"
+    ]
+  },
+  "qualification": {
+    "runId": 39680754396,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39680754396",
+    "event": "pull_request",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-21T21:41:00Z",
+    "completedObservedAt": "2026-10-21T21:47:24Z",
+    "ciRunsForSource": 1,
+    "branchPushRunCount": 0,
+    "rerunCount": 0,
+    "allFiveLogsRead": true,
+    "allSavedLogHashesVerified": true,
+    "jobs": [
+      {
+        "id": 119502300842,
+        "name": "verify",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39680754396/job/119502300842",
+        "status": "completed",
+        "conclusion": "success",
+        "node": "v24.22.0",
+        "startedAt": "2026-10-21T21:41:03Z",
+        "completedAt": "2026-10-21T21:43:05Z",
+        "checkedOutCommit": "c506589c52c335da12d4bbfb77b38250b91b4981",
+        "counts": {
+          "total": 3504,
+          "suites": 0,
+          "pass": 3461,
+          "fail": 0,
+          "skip": 43,
+          "cancelled": 0,
+          "todo": 0
+        },
+        "exactFooter": [
+          "2026-10-21T21:42:47.8682189Z ℹ tests 3504",
+          "2026-10-21T21:42:47.8682434Z ℹ suites 0",
+          "2026-10-21T21:42:47.8682694Z ℹ pass 3461",
+          "2026-10-21T21:42:47.8682907Z ℹ fail 0",
+          "2026-10-21T21:42:47.8683185Z ℹ cancelled 0",
+          "2026-10-21T21:42:47.8683410Z ℹ skipped 43",
+          "2026-10-21T21:42:47.8683642Z ℹ todo 0",
+          "2026-10-21T21:42:47.8683924Z ℹ duration_ms 86580.688833"
+        ],
+        "syntaxSources": [
+          647,
+          647
+        ],
+        "log": {
+          "bytes": 491755,
+          "sha256": "de3666ea19c27df1853640b3189ff088226d9b4d999216c272d54feb23e60677",
+          "lines": 3776,
+          "readInFull": true
+        },
+        "newUnitTests": {
+          "total": 36,
+          "files": {
+            "zip-stream.test.mjs": {
+              "total": 11,
+              "passed": 11,
+              "missing": []
+            },
+            "streaming-conversation-export.test.mjs": {
+              "total": 14,
+              "passed": 14,
+              "missing": []
+            },
+            "streaming-archive-http.test.mjs": {
+              "total": 11,
+              "passed": 11,
+              "missing": []
+            }
+          }
+        },
+        "omissions": {
+          "total": 43,
+          "sqlOptIn": 41,
+          "negativeMissingProcfsInapplicable": 2,
+          "sqlReason": "The general verify job does not set JESSIEMESSAGE_DB_TEST=1. These are not counted as native SQL successes.",
+          "procfsReason": "Real procfs descriptor paths are available, so the two tests for their absence are intentionally inapplicable."
+        }
+      },
+      {
+        "id": 119502300661,
+        "name": "Chrome keyboard and chat lifecycle",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39680754396/job/119502300661",
+        "status": "completed",
+        "conclusion": "success",
+        "node": "v24.22.0",
+        "startedAt": "2026-10-21T21:41:02Z",
+        "completedAt": "2026-10-21T21:44:18Z",
+        "checkedOutCommit": "c506589c52c335da12d4bbfb77b38250b91b4981",
+        "counts": {
+          "total": 189,
+          "suites": 0,
+          "pass": 189,
+          "fail": 0,
+          "skip": 0,
+          "cancelled": 0,
+          "todo": 0
+        },
+        "exactFooter": [
+          "2026-10-21T21:44:16.1721070Z ℹ tests 189",
+          "2026-10-21T21:44:16.1721194Z ℹ suites 0",
+          "2026-10-21T21:44:16.1721317Z ℹ pass 189",
+          "2026-10-21T21:44:16.1721433Z ℹ fail 0",
+          "2026-10-21T21:44:16.1721553Z ℹ cancelled 0",
+          "2026-10-21T21:44:16.1721684Z ℹ skipped 0",
+          "2026-10-21T21:44:16.1721798Z ℹ todo 0",
+          "2026-10-21T21:44:16.1721946Z ℹ duration_ms 184343.625292"
+        ],
+        "syntaxSources": [],
+        "log": {
+          "bytes": 37773,
+          "sha256": "3c8ffd13eceafc2580b7b5baa7925e1e7f34a17c3135da80fc38319cc8b07ed9",
+          "lines": 385,
+          "readInFull": true
+        }
+      },
+      {
+        "id": 119502301039,
+        "name": "Chrome HTTPS authentication and messaging with MariaDB",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39680754396/job/119502301039",
+        "status": "completed",
+        "conclusion": "success",
+        "node": "v24.22.0",
+        "startedAt": "2026-10-21T21:41:03Z",
+        "completedAt": "2026-10-21T21:42:05Z",
+        "checkedOutCommit": "c506589c52c335da12d4bbfb77b38250b91b4981",
+        "counts": {
+          "total": 3,
+          "suites": 0,
+          "pass": 3,
+          "fail": 0,
+          "skip": 0,
+          "cancelled": 0,
+          "todo": 0
+        },
+        "exactFooter": [
+          "2026-10-21T21:42:02.1999424Z ℹ tests 3",
+          "2026-10-21T21:42:02.2000126Z ℹ suites 0",
+          "2026-10-21T21:42:02.2001128Z ℹ pass 3",
+          "2026-10-21T21:42:02.2001534Z ℹ fail 0",
+          "2026-10-21T21:42:02.2002566Z ℹ cancelled 0",
+          "2026-10-21T21:42:02.2003074Z ℹ skipped 0",
+          "2026-10-21T21:42:02.2003484Z ℹ todo 0",
+          "2026-10-21T21:42:02.2003942Z ℹ duration_ms 36396.195711"
+        ],
+        "syntaxSources": [],
+        "log": {
+          "bytes": 34021,
+          "sha256": "5e0c1ae4e90399a75b44a04cc907e63dba71a0e4ee448b44c3ceacf75e60703c",
+          "lines": 379,
+          "readInFull": true
+        }
+      },
+      {
+        "id": 119502300924,
+        "name": "MariaDB 11.4",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39680754396/job/119502300924",
+        "status": "completed",
+        "conclusion": "success",
+        "node": "24.22.0",
+        "database": "11.4.13-MariaDB-ubu2404",
+        "startedAt": "2026-10-21T21:41:03Z",
+        "completedAt": "2026-10-21T21:45:09Z",
+        "counts": {
+          "total": 539,
+          "pass": 539,
+          "fail": 0,
+          "skip": 0,
+          "cancelled": 0
+        },
+        "log": {
+          "bytes": 306095,
+          "sha256": "6ab3158d5dcf1728c0df59f2d4802c76f766ca343da6ddfb59a3c383a4fd9069",
+          "lines": 3895,
+          "readInFull": true
+        },
+        "videoArchive": {
+          "name": "real HTTP conversation ZIP streams isolate video deliveries and authenticate GCM before a valid ZIP footer",
+          "passed": true,
+          "subtestCount": 5,
+          "subtests": [
+            {
+              "number": 1,
+              "name": "client HTTP ZIP deduplicates delivered originals, preserves captions and tombstones, and excludes every private library",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 2,
+              "name": "administrator and second-client HTTP archives use real authorization and the same conversation-only boundary",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 3,
+              "name": "cookies, Origin, CSRF, exact opt-in shape and conversation ownership fail before any video read",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 4,
+              "name": "an unauthentic second GCM block truncates HTTP and never produces a valid ZIP footer",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 5,
+              "name": "deletion and revocation after preparation are rechecked before the first video read",
+              "passed": true,
+              "skipped": false
+            }
+          ]
+        },
+        "priorVideoStages": [
+          {
+            "name": "catalogue",
+            "passed": true,
+            "subtests": 10
+          },
+          {
+            "name": "messages",
+            "passed": true,
+            "subtests": 10
+          },
+          {
+            "name": "operatorExport",
+            "passed": true,
+            "subtests": 5
+          }
+        ],
+        "anomalies": [],
+        "warnings": [
+          "##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+        ]
+      },
+      {
+        "id": 119502301184,
+        "name": "MariaDB 10.11",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39680754396/job/119502301184",
+        "status": "completed",
+        "conclusion": "success",
+        "node": "24.22.0",
+        "database": "10.11.19-MariaDB-ubu2204",
+        "startedAt": "2026-10-21T21:41:03Z",
+        "completedAt": "2026-10-21T21:47:24Z",
+        "counts": {
+          "total": 539,
+          "pass": 539,
+          "fail": 0,
+          "skip": 0,
+          "cancelled": 0
+        },
+        "log": {
+          "bytes": 305835,
+          "sha256": "6a02e71d84b851adae7d98bd0e5c4bed130b05497bfc04681811bdb92d33acc2",
+          "lines": 3889,
+          "readInFull": true
+        },
+        "videoArchive": {
+          "name": "real HTTP conversation ZIP streams isolate video deliveries and authenticate GCM before a valid ZIP footer",
+          "passed": true,
+          "subtestCount": 5,
+          "subtests": [
+            {
+              "number": 1,
+              "name": "client HTTP ZIP deduplicates delivered originals, preserves captions and tombstones, and excludes every private library",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 2,
+              "name": "administrator and second-client HTTP archives use real authorization and the same conversation-only boundary",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 3,
+              "name": "cookies, Origin, CSRF, exact opt-in shape and conversation ownership fail before any video read",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 4,
+              "name": "an unauthentic second GCM block truncates HTTP and never produces a valid ZIP footer",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 5,
+              "name": "deletion and revocation after preparation are rechecked before the first video read",
+              "passed": true,
+              "skipped": false
+            }
+          ]
+        },
+        "priorVideoStages": [
+          {
+            "name": "catalogue",
+            "passed": true,
+            "subtests": 10
+          },
+          {
+            "name": "messages",
+            "passed": true,
+            "subtests": 10
+          },
+          {
+            "name": "operatorExport",
+            "passed": true,
+            "subtests": 5
+          }
+        ],
+        "anomalies": [],
+        "warnings": [
+          "##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+        ]
+      }
+    ]
+  },
+  "local": {
+    "node": "24.19.0",
+    "syntaxSources": 647,
+    "historical": {
+      "tests": 93,
+      "pass": 93,
+      "fail": 0,
+      "skip": 0
+    },
+    "candidate": {
+      "tests": 37,
+      "pass": 36,
+      "fail": 0,
+      "skip": 1,
+      "omissions": [
+        "Native SQL suite not run locally: no disposable MariaDB configured."
+      ]
+    },
+    "generalSuiteCompleteClaimed": false,
+    "logs": [
+      {
+        "file": "jm73b-legacy-tests.log",
+        "bytes": 8456,
+        "sha256": "72a778945ce862060a2b723fd1f89e407546c3e4ab6f51bf821fddc688c4772f"
+      },
+      {
+        "file": "jm73b-focused-tests.log",
+        "bytes": 4207,
+        "sha256": "ef60555e04be6190aaa77daf02de250fac5168fc5abbe2acf783697f180b6cd9"
+      },
+      {
+        "file": "jm73b-syntax.log",
+        "bytes": 425,
+        "sha256": "b7a16c3c45f665d1d75b3a3c675b5b0b7a55961024453f3223e79faa6ab87a19"
+      }
+    ]
+  },
+  "contract": {
+    "factory": "createStreamingConversationExporter",
+    "injectionOnly": true,
+    "archive": {
+      "format": "ZIP32/STORED",
+      "maxBytes": 268435456,
+      "maxChunkBytes": 262144,
+      "originalMaxBytes": 104857600,
+      "exactContentLength": true,
+      "lazySequentialOriginals": true,
+      "singleUse": true,
+      "idempotentClose": true
+    },
+    "limits": {
+      "messages": 10000,
+      "retainedDocumentsBytes": 8388608,
+      "retainedPhotosBytes": 33554432,
+      "deadlineMilliseconds": 300000,
+      "cooldownMilliseconds": 30000
+    },
+    "portableJsonVersion": 2,
+    "historyRoleCanonicalization": true,
+    "assetDeduplication": true,
+    "distinctCaptions": true,
+    "tombstonesWithoutContent": true,
+    "omittedVideoPlaceholder": true,
+    "privateUnsharedLibrariesExcluded": true,
+    "offlineHtmlEscaped": true,
+    "sourceIntegrity": [
+      "GCM authentication on each storage block",
+      "Exact original byte length",
+      "Incremental ZIP CRC32"
+    ],
+    "catalogueSha256Comparison": false,
+    "transport": [
+      "Actor and ownership rechecked before response headers",
+      "Message authorization rechecked at lazy original open",
+      "Shared primary/legacy transfer slot held through actual cleanup",
+      "Every write callback awaited before output Buffer zeroisation",
+      "Interrupted, corrupt or incorrectly sized sources produce no central directory or ZIP footer; transport failure interrupts the response without a JSON tail. Already transmitted bytes cannot be withdrawn."
+    ],
+    "legacy": {
+      "bufferArchive": true,
+      "archiveMaxBytes": 33554432,
+      "portableJsonVersion": 1,
+      "unexpectedLiveVideoRejected": true
+    }
+  },
+  "exercised": {
+    "unit": [
+      "Independent Python zipfile reader and CRC checks",
+      "Lazy synthetic original of 100 MiB with bounded source chunks",
+      "Backpressure and callback-held output ownership",
+      "Abort/return during lazy open or pending next",
+      "Cancellation between ZIP output and factory yield",
+      "Late read after cancellation wipes the acquired plaintext",
+      "Close before iterator return, and busy slot retained until actual close"
+    ],
+    "native": [
+      "Real HTTP client and administrator downloads to a private file",
+      "Two isolated clients, shared administrator original, private libraries excluded, captions and tombstones",
+      "Independent ZIP directory, descriptors, CRC32 and streaming SHA256 checks",
+      "Exact body shape, cookies, Origin, CSRF and conversation ACL refusal before video open",
+      "Corrupted second GCM block yields truncated HTTP with no valid ZIP footer",
+      "Delivery deletion and account revocation after preparation are rechecked before original open",
+      "Source business SQL, capacity and encrypted files compared before and after export"
+    ]
+  },
+  "limits": [
+    "Synthetic fixtures only; no physical phone, codec decode, hosting throughput or measured process RSS result.",
+    "No full local general-suite success claimed; local SQL omission is distinct from native CI.",
+    "Message reader exposes no catalogue SHA256; no global comparison to that hash claimed.",
+    "Runtime index, CLI and browser not wired to the new exporter.",
+    "Existing browser receiver remains 32 MiB/Blob; existing global HTTP deadline remains 35 seconds and needs integration before activation.",
+    "No video restore, deletion/account closure/capacity lifecycle or old-format compatibility qualification inferred from 7.3b."
+  ],
+  "remaining": [
+    "7.3c durable deletion, account closure and capacity",
+    "7.3d inventory, capture, restore and old-format compatibility before candidate migration promotion",
+    "7.4 UI and decodable MP4",
+    "7.5 video broadcast",
+    "7.6 final whole-product and rollback qualification before activation"
+  ],
+  "state": {
+    "stage73Complete": false,
+    "merged": false,
+    "published": false,
+    "deployed": false,
+    "activated": false,
+    "normalMigrationCount": 33,
+    "candidateMigrationCount": 36,
+    "migrationPromoted": false,
+    "main": "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+    "productionVersion": "1.6.0",
+    "productionSchema": 33,
+    "productionSource": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "rollbackVersion": "1.5.1",
+    "hostingOrPcActionPerformed": false
+  },
+  "historicalProofs": [
+    "jm180-catalogue-verification.json",
+    "jm180-video-messages-verification.json",
+    "jm180-video-export-verification.json"
+  ],
+  "formatVersion": 1,
+  "type": "development-checkpoint",
+  "status": "qualified_on_working_branch",
+  "overallStage73": "incomplete",
+  "applicationDevelopmentVersion": "1.8.0",
+  "base": {
+    "source": "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+    "tree": "45dd37fad9b10b1c07d16ea9bfa0bb992d0c7ea2"
+  },
+  "previousCheckpoint": {
+    "head": "4443504c482849accf04cc1b6d4b9822e1c6cd44",
+    "tree": "ff0d9f3af7ef202042a94bd80a1efce78971c7bb",
+    "qualifiedFunctionalSource": "60dd2a3d45fa14be0db5f7336abc7197186a541d",
+    "verification": "jm180-video-export-verification.json"
+  },
+  "qualifiedSource": {
+    "head": "333a6a00a3fe13708a892077d810ea2ff65962a5",
+    "tree": "d1ed0244b1581975c5e70febe50224ba199baca3"
+  },
+  "reviews": {
+    "independentCrossReviews": 3,
+    "blockingFindingsRemaining": 0,
+    "correctedFindings": [
+      "Wipe a plaintext Buffer delivered by a pending read after cancellation.",
+      "Wipe a ZIP output Buffer refused before handing it to the next consumer.",
+      "Close underlying I/O before awaiting return/throw of an iterator with a pending next."
+    ],
+    "regressionTestsPassed": true
+  }
+}

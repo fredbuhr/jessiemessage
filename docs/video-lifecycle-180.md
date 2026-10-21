@@ -1,6 +1,6 @@
 # Cycle de vie vidéo 1.8.0 en développement — jalon 7.3
 
-**7.3a est qualifié et 7.3b est codé, en attente de sa CI native sur `feat/video-messaging` ; le jalon 7.3 reste incomplet.** La version de développement demeure **1.8.0**, sans tag, release, fusion ou déploiement intermédiaire. Les [preuves du catalogue 7.1](video-catalogue-180.md) et du [message privé 7.2](video-messages-180.md) conservent leurs sources et résultats propres. La production **1.6.0 / schéma 33**, son checkpoint et son repli **1.5.1** restent exclusivement ceux de [REPRISE](REPRISE.md).
+**7.3a et 7.3b sont codés et qualifiés sur `feat/video-messaging` ; le jalon 7.3 reste incomplet.** La version de développement demeure **1.8.0**, sans tag, release, fusion ou déploiement intermédiaire. Les [preuves du catalogue 7.1](video-catalogue-180.md) et du [message privé 7.2](video-messages-180.md) conservent leurs sources et résultats propres. La production **1.6.0 / schéma 33**, son checkpoint et son repli **1.5.1** restent exclusivement ceux de [REPRISE](REPRISE.md).
 
 ## Découpage borné de 7.3
 
@@ -9,7 +9,7 @@ Le diagnostic du code établit trois couplages : l’export photo assemble un JP
 | Sous-étape | Résultat et critère de fin | État |
 | --- | --- | --- |
 | **7.3a — Export opérateur candidat** | Export privé en flux depuis un snapshot SQL en lecture seule ; déduplication, légendes, tombstones et fichiers vérifiés par taille/SHA-256 ; aucun marqueur complet avant le commit de lecture. Qualification synthétique des interruptions, corruption de bloc et perte d’accusé. | Qualifié sur branche, CI 5/5. |
-| **7.3b — ZIP de conversation** | Adapter l’archive au flux sans charger la vidéo entière ni réutiliser implicitement la limite historique de 32 Mio ; droits, annulation et erreurs qualifiés sur un téléchargement synthétique. | Codé ; qualification CI complète en attente. |
+| **7.3b — ZIP de conversation** | Adapter l’archive au flux sans charger la vidéo entière ni réutiliser implicitement la limite historique de 32 Mio ; droits, annulation et erreurs qualifiés sur un téléchargement synthétique. | Qualifié sur branche, CI 5/5. |
 | **7.3c — Suppression, fermeture et capacité** | Suppression durable et reprise après interruption, références partagées préservées, absence de fichiers vérifiée avant remboursement de charge ; fermeture synthétique sans toucher le client témoin. | À réaliser. |
 | **7.3d — Inventaire, capture et restauration** | Recenser les vidéos et réservations, capturer/restaurer une fixture non vide, comparer données et empreintes, préserver les anciens formats selon leur propre version et qualifier la compatibilité avant promotion des migrations. | À réaliser. |
 
@@ -42,9 +42,9 @@ Localement : syntaxe **641 sources**, export historique **16/16**, export vidéo
 
 7.3a n’ajoute **aucun branchement CLI, runtime ou route**. Les migrations restent candidates : **plan normal 33, plan candidat 36**, sans promotion ni migration hébergée. À la clôture de 7.3a, les étapes b–d restaient à réaliser. La suppression physique, la fermeture, l’inventaire, la capture, la restauration et la compatibilité des anciens formats restent à adapter. Aucun résultat de restauration, débit du mutualisé, pic mémoire mesuré, codec ou téléphone n’est déduit des tests de flux synthétiques.
 
-## Contrat candidat de 7.3b — ZIP de conversation en flux
+## Contrat qualifié de 7.3b — ZIP de conversation en flux
 
-`createStreamingConversationExporter` compose explicitement les lecteurs autorisés de messages, photos et vidéos. Le résultat `{ bytes, stream({ signal }), close() }` est à usage unique, avec taille totale connue, fermeture idempotente et délai maximal de cinq minutes. Le ZIP32/STORED et son CRC32 sont calculés en flux ; répertoire central et footer ne sont émis qu’après le succès de toutes les sources et leur fermeture.
+`createStreamingConversationExporter` compose explicitement les lecteurs autorisés de messages, photos et vidéos. Le résultat `{ bytes, stream({ signal }), close() }` est à usage unique, avec taille totale connue, fermeture idempotente et déclenchement de l’annulation après cinq minutes au plus. Le slot reste tenu jusqu’à la fin effective des I/O. Le ZIP32/STORED et son CRC32 sont calculés en flux ; répertoire central et footer ne sont émis qu’après le succès de toutes les sources et leur fermeture.
 
 | Contrat | Limite ou comportement |
 | --- | --- |
@@ -55,10 +55,18 @@ Localement : syntaxe **641 sources**, export historique **16/16**, export vidéo
 | Conversation | JSON version **2**, originaux dédupliqués par identifiant, légendes distinctes, tombstones sans contenu, bibliothèques privées non partagées exclues. `includeVideos:false` conserve un placeholder avec `file:null`. |
 | Lecture hors ligne | HTML échappé, lecteur vidéo natif, CSP locale, chemins de fichiers bornés ; aucun URL privé de contenu ni identifiant d’authentification dans l’archive. |
 | Transport opt-in | Les handlers client/admin exigent exactement `{ includePhotos, includeVideos }` quand l’exporteur annonce `videos:true`. Autorisation recontrôlée avant les en-têtes, slot partagé jusqu’à la fermeture réelle, écriture attendue avant effacement des buffers. |
-| Interruption | Annulation ou échec après les en-têtes tronque la réponse, sans queue JSON ni footer valide ; les sources ouvertes sont fermées et les buffers possédés effacés. |
+| Interruption | Une source interrompue, corrompue ou de taille invalide ne produit aucun répertoire central/footer ; un échec de transport interrompt la réponse sans queue JSON. Les octets déjà transmis ne peuvent pas être repris. Les sources ouvertes sont fermées et les buffers possédés effacés. |
 
 L’exporteur historique reste en `Buffer`, JSON version 1 et limite 32 Mio ; une vidéo vivante inattendue est refusée plutôt qu’omise. Le nouveau mode n’est branché ni dans `server/index.mjs`, ni dans le CLI ou le navigateur. Le récepteur navigateur existant reste limité à 32 Mio et construit un Blob ; son adaptation, ainsi que le délai HTTP global actuel de 35 secondes, appartient à l’intégration avant activation. Le délai candidat de cinq minutes ne change pas ces contraintes du runtime normal.
 
-7.3b est codé avec tests ciblés ; sa qualification complète reste en attente sur la [PR 125 en brouillon](https://github.com/fredbuhr/jessiemessage/pull/125), où seront consignés le SHA poussé, son arbre et le run propre. Les tests natifs ajoutent cinq scénarios HTTP/SQL/GCM synthétiques sur base jetable. Aucun succès natif local n’est déduit d’une omission faute de MariaDB.
+## Qualification de 7.3b et prochaine action
 
-**Prochaine action unique : qualifier 7.3b par ses cinq jobs CI**, puis 7.3c — suppression, fermeture et capacité. 7.3 reste incomplet, plans SQL normal 33/candidat 36 inchangés. Aucune fusion, publication, migration hébergée, activation ou opération PC/Avast.
+Source fonctionnelle **`333a6a00a3fe13708a892077d810ea2ff65962a5`**, arbre **`d1ed0244b1581975c5e70febe50224ba199baca3`**, [PR 125 en brouillon](https://github.com/fredbuhr/jessiemessage/pull/125). La [CI propre 39680754396](https://github.com/fredbuhr/jessiemessage/actions/runs/39680754396), terminée le `2026-10-21T21:47:24Z`, réussit **5/5, tentative 1**, sous Node **24.22.0**. Un seul run PR, aucun run push de branche ni relance. Merge synthétique testé **`c506589c52c335da12d4bbfb77b38250b91b4981`**, arbre exactement identique à la source. [Preuve structurée](verification-proofs/jm180-conversation-archive-verification.json).
+
+Les cinq journaux complets sont relus : général **3 504 tests / 3 461 réussis / zéro échec / 43 ignorés**, Chrome **189/189**, HTTPS **3/3**, MariaDB **10.11 et 11.4 chacune 539/539 sans omission**. Les 43 omissions générales sont 41 suites SQL opt-in et deux tests négatifs « procfs absent » inapplicables parce que procfs est disponible ; elles ne sont pas des succès natifs. Chaque moteur réussit les cinq nouveaux scénarios ZIP, les dix catalogue, dix messages et cinq export opérateur.
+
+La fixture native télécharge réellement par HTTP côté client et administrateur vers un fichier privé ; un lecteur ZIP indépendant vérifie répertoire, descripteurs, tailles, CRC32 et SHA-256 en flux. Elle couvre deux clients isolés, partage, légendes, déduplication, tombstone, bibliothèques exclues, refus d’accès, corruption du second bloc GCM et suppression/révocation après préparation. Les données SQL métier, la capacité et les fichiers chiffrés source sont comparés ; les budgets d’authentification et de limitation consommés par ces appels autorisés ne sont pas présentés comme immuables.
+
+Localement : syntaxe **647 sources**, parcours historiques **93/93**, nouveaux ciblés **36 réussis / zéro échec / une suite SQL ignorée** faute de MariaDB. Les 36 nouveaux tests unitaires passent aussi en CI : ZIP **11**, factory **14**, transport HTTP **11**. Ils qualifient une source paresseuse de 100 Mio, la contre-pression et les annulations pendant ouverture, lecture ou écriture. Trois revues croisées sans blocage. Aucun succès complet de suite générale locale, pic RSS mesuré, débit hébergé, codec ou téléphone n’est déduit. Le suivi documentaire seul utilise `[skip ci]` ; il ne change pas la source fonctionnelle qualifiée.
+
+**Prochaine action unique : 7.3c — suppression, fermeture et capacité.** 7.3 reste incomplet ; 7.3d doit encore qualifier inventaire, capture/restauration et anciens formats avant promotion. Plans SQL normal **33** / candidat **36** inchangés. Aucune fusion, publication, migration hébergée, activation ou opération PC/Avast.
