@@ -197,6 +197,21 @@ async function startFixtureServer() {
           if (suffix === `/conversations/${conversationId}/messages`) {
             const older = url.searchParams.has("before");
             const numbers = url.searchParams.has("after") ? [1, 2, 3, ...(fixture.historyAcknowledgement ? fixture.sent.map(item => Number(item.sequence)) : [])] : older ? [1] : [2, 3];
+            if (role === "admin" && fixture.holdInitialAdminMessages && !older && !url.searchParams.has("after")) {
+              const held = fixture; held.holdInitialAdminMessages = false;
+              await new Promise(resolve => {
+                let released = false;
+                const release = () => {
+                  if (released) return;
+                  released = true; response.off("close", release);
+                  if (held.releaseInitialAdminMessages === release) held.releaseInitialAdminMessages = null;
+                  resolve();
+                };
+                held.releaseInitialAdminMessages = release;
+                response.once("close", release);
+              });
+              if (response.destroyed) return;
+            }
             sendJson(200, { conversation: conversation(role), messages: numbers.map((n) => message(n, role)),
               eventCursor: String(fixture.latest), hasMoreBefore: !older, nextBefore: older ? null : "2" }); return;
           }
@@ -1093,11 +1108,17 @@ for (const width of [320, 1280]) for (const language of ["fr", "en"]) {
 }
 
 test("Chrome: clients have no quick replies; Escape, full drafts and returning to the inbox never send", { timeout: 35000 }, async () => {
-  resetFixture(); const page = await browser(320);
+  resetFixture(); fixture.holdInitialAdminMessages = true; const page = await browser(320);
   try {
     await loaded(page, "/messages"); assert.equal(await page.execute("return document.querySelector('#open-quick-replies').hidden"), true);
     await loaded(page, "/admin/messages"); await page.click(".contact");
-    await waitUntil(() => page.execute("return !document.querySelector('#open-quick-replies').disabled"), "quick replies available");
+    await waitUntil(() => Boolean(fixture.releaseInitialAdminMessages), "initial administrator history held before composition is ready");
+    assert.deepEqual(await page.execute(`const reply=document.querySelector('#open-quick-replies'),body=document.querySelector('#message-body');
+      return {replyHidden:reply.hidden,replyDisabled:reply.disabled,bodyDisabled:body.disabled};`),
+    { replyHidden: true, replyDisabled: false, bodyDisabled: true }, "an initially enabled but hidden reply button does not prove the composer is ready");
+    fixture.releaseInitialAdminMessages();
+    await waitUntil(() => page.execute(`const reply=document.querySelector('#open-quick-replies'),body=document.querySelector('#message-body');
+      return !reply.hidden && !reply.disabled && !body.disabled && !body.readOnly && body.getClientRects().length>0;`), "quick replies and editable message field available after history");
     await page.type("#message-body", "Unsent draft"); await clickComposerAction(page, "#open-quick-replies"); await page.key("\uE00C");
     assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
     assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Unsent draft");
@@ -1109,5 +1130,5 @@ test("Chrome: clients have no quick replies; Escape, full drafts and returning t
     assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
     assert.equal(await page.execute("return document.querySelector('#quick-replies-list').children.length"), 0);
     assert.equal(fixture.sent.length, 0); await noJavascriptErrors(page);
-  } finally { await page.close(); }
+  } finally { fixture.releaseInitialAdminMessages?.(); await page.close(); }
 });
