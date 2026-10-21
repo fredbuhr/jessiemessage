@@ -1,0 +1,207 @@
+# Prepared outside Git from the qualified operator workflow at
+# 69c2ea4530898b52a97ba87f97302d45b91f9613. Fill the three blocking pins
+# only after the application merge and its own complete main CI are qualified.
+name: Publish qualified JessieMessage release
+
+on:
+  push:
+    branches: ["ops/publish-v1.7.1"]
+    paths: [".github/workflows/publish-qualified.yml"]
+
+permissions: {}
+
+concurrency:
+  group: publish-jessiemessage-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.22.1"
+      - name: Verify the security and entry correction and publish its immutable tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import base64, hashlib, json, os, re, subprocess, urllib.error, urllib.request
+
+          repo = "fredbuhr/jessiemessage"
+          version = "1.7.1"
+          target = "c2d7b3b31c6d0955892829f808dc4135d7d8debf"
+          tree = "d4945207f25375abb5d89c3a23ae91b6e34ea115"
+          ci_text = "39689157058"
+          baseline = "9590741e7065067aee9d1ad5d1206739cc27eb6b"
+          dormant_source = "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb"
+          migration_sha256 = "81d0d11577b6ada0f734c7497cbf44768033f1374bd830dec5e4abe9beda34af"
+          # These checks precede every API request, including all mutations.
+          assert re.fullmatch(r"[0-9a-f]{40}", target), "Pin the qualified merged main source first"
+          assert re.fullmatch(r"[0-9a-f]{40}", tree), "Pin its exact tree first"
+          assert re.fullmatch(r"[1-9][0-9]*", ci_text), "Pin its successful complete main CI first"
+          ci = int(ci_text)
+          assert version == "1.7.1"
+          tag = "v" + version
+          assert re.fullmatch(r"[0-9a-f]{64}", migration_sha256)
+          assert os.environ["GITHUB_REPOSITORY"] == repo
+          assert os.environ["GITHUB_REF"] == "refs/heads/ops/publish-" + tag
+          assert os.environ["GITHUB_EVENT_NAME"] == "push"
+          assert subprocess.check_output(["node", "--version"], text=True, timeout=5).strip() == "v24.22.1"
+          publication_qualified = False
+
+          def api(path, data=None, optional=False):
+              if data is not None:
+                  assert publication_qualified, "Publication requires every qualification gate first"
+              request = urllib.request.Request(
+                  "https://api.github.com/repos/" + repo + "/" + path,
+                  data=None if data is None else json.dumps(data).encode(),
+                  headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                           "Accept": "application/vnd.github+json",
+                           "Content-Type": "application/json",
+                           "X-GitHub-Api-Version": "2022-11-28"},
+                  method="GET" if data is None else "POST")
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as error:
+                  if optional and error.code == 404:
+                      return None
+                  raise SystemExit("GitHub operation refused: HTTP " + str(error.code))
+
+          def source_file(path):
+              value = api("contents/" + path + "?ref=" + target)
+              assert value["type"] == "file" and value["encoding"] == "base64"
+              return base64.b64decode(value["content"]).decode("utf-8")
+
+          run = api("actions/runs/" + str(ci))
+          assert run["head_sha"] == target and run["head_branch"] == "main"
+          assert run["event"] == "push" and run["path"] == ".github/workflows/ci.yml"
+          assert run["status"] == "completed" and run["conclusion"] == "success"
+          assert run["run_attempt"] == 1, "Use the clean main qualification, not a rerun"
+          jobs = api("actions/runs/" + str(ci) + "/jobs?per_page=100")
+          expected = {"verify", "MariaDB 10.11", "MariaDB 11.4",
+                      "Chrome keyboard and chat lifecycle",
+                      "Chrome HTTPS authentication and messaging with MariaDB"}
+          assert jobs["total_count"] == 5 and len(jobs["jobs"]) == 5
+          assert {job["name"] for job in jobs["jobs"]} == expected
+          assert all(job["status"] == "completed" and job["conclusion"] == "success"
+                     and job["head_sha"] == target and job["run_id"] == ci and job["run_attempt"] == 1
+                     for job in jobs["jobs"])
+          assert api("git/commits/" + target)["tree"]["sha"] == tree
+          # A later documentation commit on main does not move the release pin.
+          comparison = api("compare/" + target + "...main")
+          assert comparison["merge_base_commit"]["sha"] == target and comparison["status"] in {"identical", "ahead"}
+          package = json.loads(source_file("package.json"))
+          lock = json.loads(source_file("package-lock.json"))
+          assert package["name"] == lock["name"] == lock["packages"][""]["name"] == "jessiemessage"
+          assert package["version"] == lock["version"] == lock["packages"][""]["version"] == version
+          assert package["engines"]["node"] == lock["packages"][""]["engines"]["node"] == ">=24 <25"
+          workflow = source_file(".github/workflows/ci.yml")
+          assert len(re.findall(r"(?m)^\s+uses: actions/setup-node@v4\s*$", workflow)) == 4
+          assert len(re.findall(r'(?m)^\s+node-version: "24\.22\.1"\s*$', workflow)) == 4
+
+          runtime_source = source_file("server/index.mjs")
+          assert runtime_source.count("largeAudiencesEnabled: true") == 1
+          assert re.findall(r"(?m)^const ANNOUNCEMENTS_ENABLED = (true|false);$", runtime_source) == ["true"]
+          assert "broadcast && ANNOUNCEMENTS_ENABLED" in runtime_source
+          assert re.findall(r"(?m)^const TASKS_ENABLED = (true|false);$", runtime_source) == ["true"]
+          assert "crm && TASKS_ENABLED" in runtime_source
+          assert "createVideoHandler" not in runtime_source and "createVideoService" not in runtime_source
+
+          old_tree = api("git/trees/" + baseline + "?recursive=1")
+          new_tree = api("git/trees/" + tree + "?recursive=1")
+          dormant_tree = api("git/trees/" + dormant_source + "?recursive=1")
+          assert all(value["truncated"] is False for value in [old_tree, new_tree, dormant_tree])
+          def blobs(value, prefix):
+              return {item["path"]: (item["sha"], item["mode"]) for item in value["tree"]
+                      if item["type"] == "blob" and item["path"].startswith(prefix)}
+
+          # The entry correction is the only normal server change from 1.6.0.
+          # All other normal modules remain identical; the changed entry has no
+          # video import. The dormant four modules remain those of v1.7.0.
+          def normal_server(value):
+              return {path: blob for path, blob in blobs(value, "server/").items()
+                      if not path.startswith("server/video/") and path != "server/entry/http.mjs"}
+          assert normal_server(old_tree) == normal_server(new_tree)
+          entry_source = source_file("server/entry/http.mjs")
+          assert "video" not in entry_source.lower()
+          assert "if (value === null) return null;" in entry_source
+          assert "if (session.expiresAt <= now) return null;" in entry_source
+          video_modules = blobs(new_tree, "server/video/")
+          assert set(video_modules) == {"server/video/storage.mjs", "server/video/service.mjs",
+                                        "server/video/http.mjs", "server/video/mp4.mjs"}
+          assert video_modules == blobs(dormant_tree, "server/video/")
+          assert all(mode == "100644" for sha, mode in video_modules.values())
+          # The public home, entry UI and mobile administrator login DO change.
+          # Do not assert that the entire public tree is identical to 1.6.0.
+          old_public, new_public = blobs(old_tree, "public/"), blobs(new_tree, "public/")
+          assert set(old_public) == set(new_public)
+          changed_public = {path for path in old_public if old_public[path] != new_public[path]}
+          assert changed_public <= {"public/admin-login.js", "public/app.js", "public/index.html", "public/styles.css"}
+
+          migration_files = api("contents/db/migrations?ref=" + target)
+          assert isinstance(migration_files, list) and len(migration_files) == 33
+          assert all(item["type"] == "file" for item in migration_files)
+          versions = sorted(int(re.fullmatch(r"([0-9]{4})_[a-z0-9_]+\.sql", item["name"]).group(1)) for item in migration_files)
+          assert versions == list(range(1, 34))
+          # Every migration blob and mode must match the active 1.6.0 baseline.
+          old_migrations = blobs(old_tree, "db/migrations/")
+          assert len(old_migrations) == 33 and old_migrations == blobs(new_tree, "db/migrations/")
+          migration_source = source_file("db/migrations/0033_crm_tasks.sql")
+          assert hashlib.sha256(migration_source.encode("utf-8")).hexdigest() == migration_sha256
+          assert migration_source.lstrip().startswith("CREATE TABLE crm_tasks (")
+          erasure_source = source_file("server/data/erasure-schema.mjs")
+          assert "migrations.length !== 33" in erasure_source and "tables.length !== 32" in erasure_source
+          coverage_source = source_file("server/backup/application-scope.mjs")
+          assert re.search(r"APPLICATION_COVERAGE\s*=.*tables:\s*33\b", coverage_source)
+          assert "migrations.length !== 33" in coverage_source
+
+          name = "JessieMessage 1.7.1 — Sécurité Node et entrée privée"
+          details = ["Correctif compatible de sécurité et d'entrée, sans activation vidéo.",
+                     "- Node.js officiel 24.22.1 épinglé pour la qualification et les helpers de préparation séparés.",
+                     "- L'entrée publique ne présente plus l'administration sans session admin existante valide ; l'URL directe de connexion reste disponible.",
+                     "- Les champs du login admin survivent en mémoire au changement d'application d'authentification, sans stockage persistant ; navigation et fin de connexion les effacent.",
+                     "- Accueil public remanié, sans faux aperçu de conversation ; vérifications synthétiques Chrome FR/EN et mobile.",
+                     "- Les tâches, rappels et échéances privées restent réservés à Jessie/admin ; aucun rendez-vous partagé n'est ajouté.",
+                     "- Les quatre modules du transport vidéo v1.7.0 restent dormants, sans import ni route vidéo dans le runtime normal ; le lot7 reste sur sa branche distincte.",
+                     "- Les 33 migrations sont identiques à la référence 1.6.0 ; schéma SQL33 inchangé, aucune migration ni activation hébergée par cette publication.",
+                     "- Les tests utilisent des données et services isolés ; aucun téléphone physique ni déploiement n'est déduit de la CI."]
+          body = "\n".join(details + ["", "Commit : `" + target + "`.",
+              "Validation : [CI complète, 5/5 jobs](https://github.com/" + repo + "/actions/runs/" + str(ci) + ").",
+              "", "La publication ne prouve pas un déploiement. L'état réellement déployé et le repli sont consignés dans [REPRISE](https://github.com/" + repo + "/blob/main/docs/REPRISE.md)."])
+          def verify_release(value):
+              assert value["tag_name"] == tag and value["target_commitish"] == target
+              assert value["draft"] is False and value["prerelease"] is False
+              assert value["name"] == name and value["body"] == body, "Existing release metadata must never be edited"
+
+          # Check both existing objects before the first write. No PATCH or
+          # deletion is available: divergent tags/releases always fail closed.
+          reference = api("git/ref/tags/" + tag, optional=True)
+          if reference is not None:
+              assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target, "Existing tag must never be moved"
+          existing = api("releases/tags/" + tag, optional=True)
+          if existing is not None:
+              assert reference is not None, "A release without its expected tag is inconsistent"
+              verify_release(existing)
+          publication_qualified = True
+          if existing is None:
+              if reference is None:
+                  api("git/refs", {"ref": "refs/tags/" + tag, "sha": target})
+              reference = api("git/ref/tags/" + tag)
+              assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target
+              api("releases", {"tag_name": tag, "target_commitish": target,
+                  "name": name, "body": body, "draft": False, "prerelease": False, "make_latest": "false"})
+          reference = api("git/ref/tags/" + tag)
+          assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target
+          release = api("releases/tags/" + tag)
+          verify_release(release)
+          print(json.dumps({"status": "published_verified", "tag": tag, "commit": target,
+                            "tree": tree, "releaseUrl": release["html_url"], "ciRun": ci,
+                            "nodeVersion": "24.22.1", "schemaMigrations": 33,
+                            "dormantTransport": True, "deploymentPerformed": False}))
