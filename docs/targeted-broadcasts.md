@@ -1,5 +1,7 @@
 # Diffusions individuelles — moteur 0.11, correction 0.50
 
+**Bilan historique.** Les versions, plafonds et états ci-dessous décrivent cette étape. Pour l’usage actuel, lire le [guide quotidien](guide-jessie.md) ; pour la production et son repli, lire [REPRISE](REPRISE.md).
+
 **Étape 0.50 — correction activée le 18 octobre 2026 à 01:21 Europe/Paris :** le [relevé d’activation](broadcast-activation-050.md) confirme la source `0a1cafd85c3d8699be1961075b18e80e36bcd041`, arbre `17db89aa165e23ca427d073f5a3fcc28387f5168`, après préflight hébergé réussi à 01:19:57. L’accord et le réglage invité sont retirés ; chacun reçoit un message ordinaire dans sa conversation privée. À **01:22:38.231618**, **69/69 contrôles HTTPS** et **seize empreintes exactes de ressources** passent sur les deux origines. Les [cinq jobs CI de la source exécutée](https://github.com/fredbuhr/jessiemessage/actions/runs/39078063012) passent, dont 383/383 par MariaDB et 101/101 Chrome. Schéma, clés, comptes et règles des sessions conservés. Limite : 100 destinataires par campagne ; aucun essai réel de campagne créé par l’agent.
 
 **Activation ultérieure 0.49 :** les [diffusions privées sont actives](broadcast-activation-049.md) depuis le 18 octobre à 00:47, source `d77f16fb`, après [préparation et sauvegarde à six clés](broadcast-runtime-backup-048.md) et cinq jobs CI exacts réussis. Schéma 30 déjà présent ; aucune migration lors de cette activation. Premier essai personnel ciblé encore attendu ; les sections suivantes décrivent le moteur initial et ses garanties.

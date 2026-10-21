@@ -1,0 +1,585 @@
+{
+  "audit": "JessieMessage version consistency for discussion handoff",
+  "reportFormatVersion": 1,
+  "checkedAt": "2026-10-21T18:25:07.619840+00:00",
+  "scope": "Version coherence only: current source, all 14 published tag package/lock versions, GitHub metadata, existing hosted receipts and current documentation. Not a deployment or dependency latestness/security audit.",
+  "auditedBaseline": {
+    "main": "72850d27b22c3114c935e273d49b243a81f94ab1",
+    "tree": "9394b14919dd22fa310b54d3191926a613c7c063",
+    "applicationSource": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "applicationTree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+    "changedFilesSinceApplicationSource": [
+      "README.md",
+      "docs/PLAN-IMPLEMENTATION.md",
+      "docs/REPRISE.md",
+      "docs/guide-jessie.md",
+      "docs/tasks-compat-151.md",
+      "docs/tasks-reminders-160.md",
+      "docs/verification-proofs/jm151-verification.json",
+      "docs/verification-proofs/jm160-hosted-identity.json",
+      "docs/verification-proofs/jm160-hosted-metadata.json",
+      "docs/verification-proofs/jm160-hosted-schema33.json",
+      "docs/verification-proofs/jm160-hosted-sql-status.json",
+      "docs/verification-proofs/jm160-hosted-staging.json",
+      "docs/verification-proofs/jm160-verification.json",
+      "ops/prepare-release160.sh",
+      "ops/record-release160.py",
+      "ops/status-release160-migration.sh",
+      "ops/test-record-release160.py",
+      "ops/test-release160-migration-synthetic.py",
+      "ops/test-release160-staging-synthetic.py",
+      "ops/upgrade-release160.sh"
+    ],
+    "handoffChanges": "Documentation only; final handoff commit is the commit containing this report, not the baseline main above."
+  },
+  "currentVersions": {
+    "application": "1.6.0",
+    "lockRoot": "1.6.0",
+    "lockPackageRoot": "1.6.0",
+    "nodeEngine": ">=24 <25",
+    "ciNodePins": [
+      "24.22.0",
+      "24.22.0",
+      "24.22.0",
+      "24.22.0"
+    ],
+    "hostedNode": "v24.22.0",
+    "localNode": "v24.19.0",
+    "schemaMigrations": 33,
+    "applicationTables": 32,
+    "tablesWithLedger": 33,
+    "foreignKeys": 46,
+    "dependencies": {
+      "mariadb": "3.5.4",
+      "nodemailer": "10.1.1",
+      "otpauth": "9.5.2",
+      "sharp": "0.35.5",
+      "web-push": "3.6.7"
+    }
+  },
+  "checks": {
+    "threeCurrentPackageVersionsMatch": true,
+    "allFourteenTagPackagesMatch": true,
+    "enginesMatch": true,
+    "declaredDependenciesMatch": true,
+    "migrationSequenceContiguous": true,
+    "schemaInventoryMatches": true,
+    "baselineDeltaDocsOrOpsOnly": true,
+    "hostedReceiptsAgree": true,
+    "publishedHelperHashesMatch": true,
+    "githubMetadataCoherent": true
+  },
+  "publishedTagPackages": [
+    {
+      "tag": "v1.0.0",
+      "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+      "packageVersion": "1.0.0",
+      "lockVersion": "1.0.0",
+      "lockRootVersion": "1.0.0",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.1.0",
+      "source": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+      "packageVersion": "1.1.0",
+      "lockVersion": "1.1.0",
+      "lockRootVersion": "1.1.0",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.1.1",
+      "source": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+      "packageVersion": "1.1.1",
+      "lockVersion": "1.1.1",
+      "lockRootVersion": "1.1.1",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.2.0",
+      "source": "763b632185ce13eb875110c9107687b2d278ff67",
+      "packageVersion": "1.2.0",
+      "lockVersion": "1.2.0",
+      "lockRootVersion": "1.2.0",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.3.0",
+      "source": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+      "packageVersion": "1.3.0",
+      "lockVersion": "1.3.0",
+      "lockRootVersion": "1.3.0",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.3.1",
+      "source": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+      "packageVersion": "1.3.1",
+      "lockVersion": "1.3.1",
+      "lockRootVersion": "1.3.1",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.3.2",
+      "source": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+      "packageVersion": "1.3.2",
+      "lockVersion": "1.3.2",
+      "lockRootVersion": "1.3.2",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.3.3",
+      "source": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+      "packageVersion": "1.3.3",
+      "lockVersion": "1.3.3",
+      "lockRootVersion": "1.3.3",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.3.4",
+      "source": "4538148660fbf1487807fb1518747d8f5753cd3b",
+      "packageVersion": "1.3.4",
+      "lockVersion": "1.3.4",
+      "lockRootVersion": "1.3.4",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.4.0",
+      "source": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+      "packageVersion": "1.4.0",
+      "lockVersion": "1.4.0",
+      "lockRootVersion": "1.4.0",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.4.1",
+      "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+      "packageVersion": "1.4.1",
+      "lockVersion": "1.4.1",
+      "lockRootVersion": "1.4.1",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.5.0",
+      "source": "abca467c45c9385371a9095ab359e78c99140370",
+      "packageVersion": "1.5.0",
+      "lockVersion": "1.5.0",
+      "lockRootVersion": "1.5.0",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.5.1",
+      "source": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+      "packageVersion": "1.5.1",
+      "lockVersion": "1.5.1",
+      "lockRootVersion": "1.5.1",
+      "allMatchTag": true
+    },
+    {
+      "tag": "v1.6.0",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "packageVersion": "1.6.0",
+      "lockVersion": "1.6.0",
+      "lockRootVersion": "1.6.0",
+      "allMatchTag": true
+    }
+  ],
+  "migrationInventory": [
+    {
+      "file": "db/migrations/0001_users.sql",
+      "sha256": "8459e7c76ddd405232c192c1bfc3bf96e0000c8b42409066d7ae170ad05b20b6",
+      "tablesCreated": [
+        "users"
+      ]
+    },
+    {
+      "file": "db/migrations/0002_invitations.sql",
+      "sha256": "347061c42f5d099c410ca2dc1c53111aff510385c72eab87c1d58a67972237fa",
+      "tablesCreated": [
+        "invitations"
+      ]
+    },
+    {
+      "file": "db/migrations/0003_sessions.sql",
+      "sha256": "9faf0c66665f3ab2708572a4d9178a2454dc6058efcbaeda90094fa5c7810785",
+      "tablesCreated": [
+        "sessions"
+      ]
+    },
+    {
+      "file": "db/migrations/0004_conversations.sql",
+      "sha256": "c3463c38d7d83358b8dee3991ac836335e38b0a0b9cfe95089ee2c72acfbe3e1",
+      "tablesCreated": [
+        "conversations"
+      ]
+    },
+    {
+      "file": "db/migrations/0005_admin_mfa.sql",
+      "sha256": "df0b21dab8df4122b1335fd590e20edca2906bb67696ff155bbd5ea01e3e7ec3",
+      "tablesCreated": [
+        "admin_mfa"
+      ]
+    },
+    {
+      "file": "db/migrations/0006_admin_recovery_codes.sql",
+      "sha256": "29e7f771d406a467c68f4b4f78ff4caa46c88a95fd4a1112fa5c5e1a4ee60215",
+      "tablesCreated": [
+        "admin_recovery_codes"
+      ]
+    },
+    {
+      "file": "db/migrations/0007_auth_session_state.sql",
+      "sha256": "d9d181271eddf1351baa02a28d03b3cffddee41e6ce152b83eca6d4707bdad31",
+      "tablesCreated": [
+        "auth_session_state"
+      ]
+    },
+    {
+      "file": "db/migrations/0008_auth_rate_limits.sql",
+      "sha256": "84b3ee05a182f225edb0a4b1ec611b79bde4db3186b11520cd012c8a81e8211d",
+      "tablesCreated": [
+        "auth_rate_limits"
+      ]
+    },
+    {
+      "file": "db/migrations/0009_client_auth_state.sql",
+      "sha256": "35cbfb5651fb7f73724edc4a12a0c447eb46c6d30f56c8a82fadf0ddb835cb3c",
+      "tablesCreated": [
+        "client_auth_state"
+      ]
+    },
+    {
+      "file": "db/migrations/0010_email_verifications.sql",
+      "sha256": "178fd6fdb01778d2addf8ba1b0f606dfd6e0cf6237be5346c125f943ee79670d",
+      "tablesCreated": [
+        "email_verifications"
+      ]
+    },
+    {
+      "file": "db/migrations/0011_client_session_state.sql",
+      "sha256": "fbe0be471a713e4903163cdab02a20ecb64fa9a44a37161dcfc8a44eaddac5fd",
+      "tablesCreated": [
+        "client_session_state"
+      ]
+    },
+    {
+      "file": "db/migrations/0012_mail_outbox.sql",
+      "sha256": "d2be6c8f95bd16da4086f9c3d668c92e5739de9a33b24d3c52e0c904a7c4fb6a",
+      "tablesCreated": [
+        "mail_outbox"
+      ]
+    },
+    {
+      "file": "db/migrations/0013_messages.sql",
+      "sha256": "2291c8318a2a026d7a664de3c4a11c8a0ee25700479b065b539e9521ce3840b2",
+      "tablesCreated": [
+        "messages"
+      ]
+    },
+    {
+      "file": "db/migrations/0014_chat_receipts.sql",
+      "sha256": "58ace872361b0dfe58336e2c9222966e0081558f8c84c91df79e944e90e00ea2",
+      "tablesCreated": [
+        "chat_receipts"
+      ]
+    },
+    {
+      "file": "db/migrations/0015_chat_events.sql",
+      "sha256": "96d21269d6f17be68ea5f1bf356a2d0dc02138c124c254a1b72d9faf6519305c",
+      "tablesCreated": [
+        "chat_events"
+      ]
+    },
+    {
+      "file": "db/migrations/0016_media_assets.sql",
+      "sha256": "7f3ccb57e4f8a405624684af93a82bbdc5464515279b54be82f0dc0e428afd90",
+      "tablesCreated": [
+        "media_assets"
+      ]
+    },
+    {
+      "file": "db/migrations/0017_message_media.sql",
+      "sha256": "fe3e34a8a59458651bb4e9c29789d59d35ec0cc8a145d5b2166eb5f6795cbdf0",
+      "tablesCreated": [
+        "message_media"
+      ]
+    },
+    {
+      "file": "db/migrations/0018_crm_profiles.sql",
+      "sha256": "384001e65b3b1c803f96a29410cfdaa933a558a3d3d9bf980ad6b6c50d0f78c7",
+      "tablesCreated": [
+        "crm_profiles"
+      ]
+    },
+    {
+      "file": "db/migrations/0019_crm_labels.sql",
+      "sha256": "99de064d6f1bc38d0eddc6f627be8a07bc51c5b04c0b2bdb79cee1e0c8c488e6",
+      "tablesCreated": [
+        "crm_labels"
+      ]
+    },
+    {
+      "file": "db/migrations/0020_crm_memberships.sql",
+      "sha256": "c6e3772208cb8da2a4ba007f501a72c8fd649e08619d9da4236a1474774b17bd",
+      "tablesCreated": [
+        "crm_memberships"
+      ]
+    },
+    {
+      "file": "db/migrations/0021_client_password_resets.sql",
+      "sha256": "b524de66f8a24bd6eaf26eeb66d735362b36db0db5d7597a3ee811a06ed38ea1",
+      "tablesCreated": [
+        "client_password_resets"
+      ]
+    },
+    {
+      "file": "db/migrations/0022_password_reset_outbox.sql",
+      "sha256": "17d9dd8c774151c0086bb4b62e08e239e50033c21b083fa3e568ad047ed5bb58",
+      "tablesCreated": [
+        "password_reset_outbox"
+      ]
+    },
+    {
+      "file": "db/migrations/0023_broadcast_preferences.sql",
+      "sha256": "e0f9893dd0076358609a26863e8e57a127db53986c873a5a4ae963c691d42013",
+      "tablesCreated": [
+        "broadcast_preferences"
+      ]
+    },
+    {
+      "file": "db/migrations/0024_broadcast_campaigns.sql",
+      "sha256": "166812d97f22286dfbd60202321b4f83f76a8aebd025ef8eafc5ff5620996b26",
+      "tablesCreated": [
+        "broadcast_campaigns"
+      ]
+    },
+    {
+      "file": "db/migrations/0025_broadcast_recipients.sql",
+      "sha256": "f4690a0eb93bc67681de6d37fd7f7f43891ea45e1406c9ce1179a5ed8d1e05e6",
+      "tablesCreated": [
+        "broadcast_recipients"
+      ]
+    },
+    {
+      "file": "db/migrations/0026_media_storage_state.sql",
+      "sha256": "79ee09772f337dad06c1defce73fcf1d42ef4eb656af64a9680b664c49fd4392",
+      "tablesCreated": [
+        "media_storage_state"
+      ]
+    },
+    {
+      "file": "db/migrations/0027_media_storage_objects.sql",
+      "sha256": "bc6971d8bd70a09057530e982c28eb50e779ff461dfdd541b1d48ed3b61f5b5a",
+      "tablesCreated": [
+        "media_storage_objects"
+      ]
+    },
+    {
+      "file": "db/migrations/0028_manual_client_admission.sql",
+      "sha256": "bdb71b6a9351d93af635b7a598aad67c192ed4c91f78ecb5492d05536bba0cbb",
+      "tablesCreated": []
+    },
+    {
+      "file": "db/migrations/0029_push_subscriptions.sql",
+      "sha256": "ea51d98da123c046c7d61bc5b67268b28e2739c5169e5bb9e102fdbee2efb996",
+      "tablesCreated": [
+        "push_subscriptions"
+      ]
+    },
+    {
+      "file": "db/migrations/0030_push_outbox.sql",
+      "sha256": "82a4cd2ce99d79ff1876d72587bd4da6ad69ead0e662c8f9ec3c2fa031adf8f2",
+      "tablesCreated": [
+        "push_outbox"
+      ]
+    },
+    {
+      "file": "db/migrations/0031_user_profiles.sql",
+      "sha256": "8fa14cee33718921678b8e69e9db81b3ef8e8d12f526ad4cdfb250ecb10d005b",
+      "tablesCreated": [
+        "user_profiles"
+      ]
+    },
+    {
+      "file": "db/migrations/0032_announcements.sql",
+      "sha256": "5b86780521557175076a037a9c2abc2cd4f1eec3bb81ee8f1dcb47334f3bce5e",
+      "tablesCreated": [
+        "announcements"
+      ]
+    },
+    {
+      "file": "db/migrations/0033_crm_tasks.sql",
+      "sha256": "81d0d11577b6ada0f734c7497cbf44768033f1374bd830dec5e4abe9beda34af",
+      "tablesCreated": [
+        "crm_tasks"
+      ]
+    }
+  ],
+  "currentPublishedHelpers": [
+    {
+      "file": "ops/prepare-release160.sh",
+      "sha256": "705d2a959e3e67a6dcd93b8ffe78695cc4883873da329e4a97e453ba8e60e4b9",
+      "expectedSha256": "705d2a959e3e67a6dcd93b8ffe78695cc4883873da329e4a97e453ba8e60e4b9",
+      "matchesPublishedPin": true
+    },
+    {
+      "file": "ops/status-release160-migration.sh",
+      "sha256": "95e201b4dc88ce446585c316b66f2804479f1c213d0dd027625e6bb1450b1a83",
+      "expectedSha256": "95e201b4dc88ce446585c316b66f2804479f1c213d0dd027625e6bb1450b1a83",
+      "matchesPublishedPin": true
+    },
+    {
+      "file": "ops/upgrade-release160.sh",
+      "sha256": "9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5",
+      "expectedSha256": "9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5",
+      "matchesPublishedPin": true
+    },
+    {
+      "file": "ops/record-release160.py",
+      "sha256": "ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd",
+      "expectedSha256": "ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd",
+      "matchesPublishedPin": true
+    }
+  ],
+  "githubMetadataReport": "jm160-github-version-check.json",
+  "hostedEvidence": {
+    "identity": "jm160-hosted-identity.json",
+    "schema": "jm160-hosted-schema33.json",
+    "metadata": "jm160-hosted-metadata.json",
+    "provenance": "User-supplied SSH receipts and admin display, no new private host observation.",
+    "identityValues": {
+      "provenance": "admin_readiness_user_report",
+      "version": "1.6.0",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "nodeVersion": "v24.22.0",
+      "reportedStartedAtDisplay": "21/10/2026 19:56:14"
+    },
+    "metadataValues": {
+      "status": "release160_metadata_recorded",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "version": "1.6.0",
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackPreserved": true,
+      "rollbackRelease": "1.5.1",
+      "schemaMigrations": 33,
+      "priorActivePreserved": true,
+      "priorActiveUsableRollback": false,
+      "rollback151HostedQualified": true,
+      "otherBlocksPreserved": true
+    }
+  },
+  "independentVersionContracts": [
+    {
+      "kind": "npm lockfile",
+      "versions": [
+        3
+      ],
+      "source": "package-lock.json"
+    },
+    {
+      "kind": "exports",
+      "versions": [
+        1
+      ],
+      "sources": [
+        "server/chat/conversation-export.mjs",
+        "server/data/export.mjs",
+        "server/data/writer.mjs"
+      ]
+    },
+    {
+      "kind": "backup manifests/checkpoint profiles",
+      "versions": "profile-specific, 1 through 10; not app semver",
+      "sources": [
+        "server/backup/profiles.mjs",
+        "server/backup/manifest.mjs",
+        "server/backup/checkpoint-receipt.mjs"
+      ]
+    },
+    {
+      "kind": "SQL snapshots",
+      "versions": [
+        1,
+        2
+      ],
+      "source": "server/backup/snapshot.mjs",
+      "historicalCoverageAccepted": [
+        30,
+        31,
+        32,
+        33
+      ]
+    },
+    {
+      "kind": "encrypted envelopes",
+      "versions": "v1, v2 and JMIMGv1 by family; unchanged",
+      "sources": [
+        "server/media/storage.mjs",
+        "server/chat/crypto.mjs",
+        "server/broadcast/crypto.mjs"
+      ]
+    },
+    {
+      "kind": "offline historical workbench",
+      "versions": {
+        "notice": "0.3.1",
+        "JessieNight": "0.3.0"
+      },
+      "sources": [
+        "scripts/build-workbench.mjs",
+        "design/dark-ui.js"
+      ],
+      "role": "Fictional offline mockup, not production runtime. Kept historical and explicitly documented."
+    },
+    {
+      "kind": "service worker",
+      "versions": "no application cache version",
+      "source": "public/sw.js",
+      "role": "Notifications only; no fetch interception or CacheStorage."
+    }
+  ],
+  "documentationCorrections": [
+    {
+      "files": [
+        "docs/REPRISE.md"
+      ],
+      "finding": "A second current-state table still described 1.5.0/schema32 and historical headings implied active1.4.0.",
+      "resolution": "One current1.6.0/schema33 table at top; old state clearly historical; current links point to activation160. Historical receipt values preserved."
+    },
+    {
+      "files": [
+        "docs/PRODUCT.md",
+        "docs/DATABASE.md"
+      ],
+      "finding": "Current product/schema descriptions predated announcements and tasks.",
+      "resolution": "Current functions, 33 migrations/32 app tables/33 with ledger/46FK, supported SQL policy and actual task reminder limits; historic evidence remains dated."
+    },
+    {
+      "files": [
+        "README.md",
+        "AGENTS.md",
+        "docs/targeted-broadcasts.md",
+        "docs/private-crm.md"
+      ],
+      "finding": "Old fallback and mockup revisions could be mistaken for current runtime or current guidance.",
+      "resolution": "Dated handoff links, historical labels and current-guide routing; no format renumbering or generated mockup change."
+    }
+  ],
+  "limitations": [
+    "The final documentation-only commit is validated by scoped document/link/JSON checks, not by replaying the application CI.",
+    "CI main metadata for each pinned source is still five successful jobs; prior exact-source PR/main proofs remain authoritative and suites were not rerun.",
+    "No SQL query, service restart, Build/Run, migration, staging, writer replay, private web read or PC action occurred.",
+    "No physical device or production capacity qualification; no current PC functionality claim.",
+    "No format compatibility or historical evidence was renumbered."
+  ],
+  "result": "coherent; stale current documentation corrected in this handoff change",
+  "scopedDocumentValidation": {
+    "localMarkdownTargetsChecked": 211,
+    "missingFilesOrHeadings": 0,
+    "allChangedJsonParsed": true,
+    "reportSourcePathsExist": true,
+    "gitDiffCheck": true,
+    "applicationCodeModified": false,
+    "fullSuitesRerun": false
+  }
+}

@@ -2,6 +2,27 @@
 
 **21 octobre 2026 Europe/Paris — livraison 1.6.0 close, production identifiée, schéma SQL 33 et métadonnées alignées.** Le [relevé admin utilisateur](verification-proofs/jm160-hosted-identity.json) affiche **`1.6.0` / `9590741e7065067aee9d1ad5d1206739cc27eb6b` / `v24.22.0` / `21/10/2026 19:56:14`**. Ce texte de démarrage est conservé exactement, sans conversion de fuseau ou d’epoch déduite. Migration 0033 et précontrôles hébergés 1.5.1/1.6.0 sont acquis ; le repli **1.5.1 est préparé et précontrôlé sur le schéma 33, jamais démarré**. Le [reçu final utilisateur](verification-proofs/jm160-hosted-metadata.json) confirme le checkpoint aligné sur 1.6.0/schéma 33 et le repli 1.5.1 précontrôlé et enregistré sans démarrage, avec l’ancien état 1.5.0 intégral et les autres blocs préservés, sans redémarrage. **Ne pas redémarrer 1.5.0 ou 1.4.1 sur le schéma 33.** Ce fichier reste l’unique état courant. Les [règles de travail](../AGENTS.md), le [produit](PRODUCT.md) et le [plan restant](PLAN-IMPLEMENTATION.md) y renvoient.
 
+## État de livraison courant
+
+| Élément | État constaté à la passation du 21 octobre 2026 |
+| --- | --- |
+| Version HTTP | **1.6.0**, [relevé admin utilisateur](verification-proofs/jm160-hosted-identity.json). |
+| Commit actif et arbre | `9590741e7065067aee9d1ad5d1206739cc27eb6b` / `38e72545ab4fd6feb4a04e934b2eb8685f82b970`. |
+| Tag/release | [v1.6.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.6.0), même commit. |
+| Node HTTP identifié | `v24.22.0`. |
+| Démarrage affiché | `21/10/2026 19:56:14`, texte exact ; aucun fuseau/epoch déduit. |
+| Schéma | **33**, [migration et précontrôles 1.5.1/1.6.0 acquis](verification-proofs/jm160-hosted-schema33.json). |
+| Checkpoint privé | **1.6.0 / schéma 33**, [reçu final utilisateur](verification-proofs/jm160-hosted-metadata.json), sans redémarrage. |
+| Repli compatible | **1.5.1**, source `71e62184d2d25a4242e0349c403027e1eeb6537c`, arbre `f769c99aa800486bd04065a308f1f4269841c215` ; préparé, précontrôlé sur le schéma 33 et enregistré, **jamais démarré**. |
+| Ancien état | 1.5.0 intégral et son empreinte archivés ; **1.5.0 et 1.4.1 ne doivent pas redémarrer sur le schéma 33**. |
+| Qualification | CI propres PR/main des deux références **5/5** ; [preuves 1.6.0](verification-proofs/jm160-verification.json) et [1.5.1](verification-proofs/jm151-verification.json). |
+| Git et documents | `main` peut avancer pour les preuves et la passation ; il ne remplace pas le commit réellement déployé. [Vérification du versionnage](verification-proofs/jm160-version-consistency.json). |
+| Prochaine action | Aucune opération serveur pour clore 1.6.0. Évolutions 6–8 planifiées, sans ouverture automatique. |
+
+Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks). Le Manager nomme ce service **recette.jessiemessage.com** ; il dessert aussi **jessiemessage.com**, avec le même runtime et la même base. Ce n’est pas une recette isolée. Le site PHP **accueil.jessiemessage.com** est distinct.
+
+Pour changer de discussion, utiliser la [passation du 21 octobre](PASSATION-20261021-160.md). Elle complète cet état sans le remplacer.
+
 ## Livraison 1.6.0 close — Évolution 5, tâches et rappels privés
 
 Ouvert à la demande de l’utilisateur après la clôture 1.5.0. La confirmation de synchronisation interrompue par une erreur interne du contrôle d’approbation est résolue : le fetch a réussi et l’index local a été comparé au commit GitHub `d985bf4e23abaeb3d275bf415f931e47bbb9ae68`, arbre `afd31c2444e7c2742e4fd643b5273b4d2dd37f41`, avant alignement de la branche locale. Aucun changement ni reçu n’a été perdu, aucune opération d’hébergement n’a été rejouée. Le mécanisme interne d’approbation n’a pas été modifié.
@@ -66,7 +87,7 @@ Le checkpoint privé est désormais aligné sur **1.6.0/schéma 33**. L’ancien
 
 Les rubriques suivantes conservent leurs états historiques ; leurs anciennes mentions de version courante ne remplacent pas la production 1.6.0/schéma 33 identifiée ci-dessus.
 
-## Dernière livraison close — Évolution 4, annonces 1.5.0
+## Historique — clôture de l’évolution 4, annonces 1.5.0
 
 Le lot [Annonces 1.5.0](announcements-150.md) et son [repli compatible 1.4.1](announcements-compat-141.md) sont **revus, fusionnés, qualifiés par leurs propres CI PR/main et publiés**. Préparation, migration additive 0032, précontrôles hébergés, identité HTTP 1.5.0 et alignement final des métadonnées sont confirmés par les reçus utilisateur. **La livraison est close : production 1.5.0, schéma 32, avec repli 1.4.1 précontrôlé et enregistré, jamais démarré.** L’agent n’a pas observé directement le processus ou les configurations privées. Les évolutions suivantes restent planifiées.
 
@@ -239,15 +260,15 @@ Ses [9 tests synthétiques](https://github.com/fredbuhr/jessiemessage/blob/c073c
 
 Ses **9 tests synthétiques** précèdent cette exécution et restent distincts du reçu serveur. L’ancien `activeService` 1.2.0 intégral et ses empreintes sont conservés comme état antérieur et repli utilisable sous `.developmentSimplification.release130` ; les autres blocs, dont le secours 1.1.1 et les historiques, sont préservés. L’alignement n’a exécuté ni migration, ni Build, ni redémarrage. L’agent n’a pas d’accès SSH utilisable et n’a pas observé directement le checkpoint privé. **Ne rejouer ni writer, ni staging, ni Build/Run, ni redémarrage, ni relevé admin pour clore la 1.3.0 : cette clôture est acquise.**
 
-**Évolutions distinctes acquises depuis :** le [correctif messagerie mobile 1.3.1](chat-mobile-131.md) est clos et conservé en repli ; le [correctif 1.3.3](photo-message-details-133.md) est clos et conservé dans l’historique ; la 1.4.0 est désormais active. Aucune nouvelle opération utilisateur n’est attendue pour la 1.3.0 close.
+**Évolutions distinctes acquises depuis :** le [correctif messagerie mobile 1.3.1](chat-mobile-131.md) est clos et conservé en repli ; le [correctif 1.3.3](photo-message-details-133.md) est clos et conservé dans l’historique ; la 1.4.0 a ensuite été activée (état historique ; production courante 1.6.0). Aucune nouvelle opération utilisateur n’est attendue pour la 1.3.0 close.
 
-## État de livraison courant
+## État historique à la clôture 1.5.0
 
 Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et [État du service Jessie](https://jessiemessage.com/admin/readiness). Le Manager nomme l’application Node.js **recette.jessiemessage.com** ; **jessiemessage.com** est un alias du même runtime. Le site PHP **accueil.jessiemessage.com**, site 1532641, est distinct : les réglages Node.js concernent l’application **239143** liée ici. L’enregistrement des métadonnées n’a modifié aucun de ces réglages.
 
 | Élément | État constaté |
 | --- | --- |
-| Version HTTP courante | **1.5.0**, confirmée par le relevé admin utilisateur. |
+| Version HTTP à cette clôture | **1.5.0**, confirmée par le relevé admin utilisateur. |
 | Commit actif et arbre | `abca467c45c9385371a9095ab359e78c99140370` / `3238dd2224ea768e3ab2f8bcb7594cc3890dd5e4`. |
 | Tag/release | [v1.5.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.0), cible vérifiée. |
 | Node HTTP identifié | `v24.22.0`, valeur rapportée par le processus HTTP répondant. |
@@ -257,7 +278,7 @@ Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.
 | Disponibilité | Le relevé admin utilisateur identifie le service répondant ; pas de nouvelle attestation publique distincte. |
 | Portée et preuves | [Annonces 1.5.0](announcements-150.md), [preuves](verification-proofs/jm150-verification.json), [identité active](verification-proofs/jm150-hosted-identity.json). |
 | Checkpoint privé | **1.5.0/schéma 32**, alignement confirmé par le [reçu final](verification-proofs/jm150-hosted-metadata.json), sans redémarrage et avec l’ancien état 1.4.0 intégral préservé. |
-| Repli compatible courant | **1.4.1 / Node 24.22**, préparée, précontrôlée sur le schéma 32 et enregistrée, jamais démarrée. 1.4.0 et 1.3.4 ne doivent pas être redémarrées sur ce schéma. |
+| Repli compatible à cette clôture | **1.4.1 / Node 24.22**, préparée, précontrôlée sur le schéma 32 et enregistrée, jamais démarrée. 1.4.0 et 1.3.4 ne doivent pas être redémarrées sur ce schéma. |
 
 ## État historique de la livraison 1.2.0 — clos
 
@@ -275,7 +296,7 @@ Accès opérateur conservés : [réglages Run/Build](https://manager.infomaniak.
 | Checkpoint privé | **1.2.0** / `763b6321`, reçu utilisateur `release120_metadata_recorded`, `metadataOnly:true`, `noRestart:true` ; repli 1.1.1, ancien état intégral et autres blocs préservés. |
 | Repli compatible | **1.1.1 / Node 24.22**, source `cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a`, arbre `94b2fec5383fd948df7605b63f65a4e23078c2a1`, précontrôlé sur l’hébergement et non démarré. **1.1.0 et 1.0.0 ne doivent plus être redémarrées sur le schéma 31.** |
 
-**Lot 1.2.0 clos :** le reçu utilisateur `release120_metadata_recorded` confirme l’alignement sur le commit actif, schéma 31, `metadataOnly:true`, `noRestart:true`, `rollbackRelease:1.1.1`, `rollbackPreserved:true`, `priorActivePreserved:true`, `otherBlocksPreserved:true`. L’ancien `activeService` 1.1.0 est archivé intégralement avec empreinte sous `.developmentSimplification.release120.priorActiveService`, `priorActiveServiceUsableRollback:false` ; le repli utilisable reste la 1.1.1 compatible précontrôlée, sans démarrage HTTP rapporté. [Reçu et portée](profile-expressions-120.md#alignement-du-checkpoint--réalisé). **Ne rejouer ni enregistrement, ni staging, ni migration, ni Build, ni Run, ni preuve admin.** À cette étape historique, l’évolution **3 — Diffusions à grande échelle** était encore planifiée ; elle est désormais livrée et close en 1.4.0 selon la [livraison courante](#livraison-140--évolution-3-diffusions-à-grande-échelle-closes).
+**Lot 1.2.0 clos :** le reçu utilisateur `release120_metadata_recorded` confirme l’alignement sur le commit actif, schéma 31, `metadataOnly:true`, `noRestart:true`, `rollbackRelease:1.1.1`, `rollbackPreserved:true`, `priorActivePreserved:true`, `otherBlocksPreserved:true`. L’ancien `activeService` 1.1.0 est archivé intégralement avec empreinte sous `.developmentSimplification.release120.priorActiveService`, `priorActiveServiceUsableRollback:false` ; le repli utilisable reste la 1.1.1 compatible précontrôlée, sans démarrage HTTP rapporté. [Reçu et portée](profile-expressions-120.md#alignement-du-checkpoint--réalisé). **Ne rejouer ni enregistrement, ni staging, ni migration, ni Build, ni Run, ni preuve admin.** À cette étape historique, l’évolution **3 — Diffusions à grande échelle** était encore planifiée ; elle est désormais livrée et close en 1.4.0 selon son [bilan historique](#livraison-140--évolution-3-diffusions-à-grande-échelle-closes).
 
 Le lot 1.1.0 reste clos : reçu SSH utilisateur `release110_metadata_recorded` sur le commit 1.1.0 historique, `metadataOnly:true`, `noRestart:true`, `rollbackPreserved:true`, `otherBlocksPreserved:true`. Le [script exécuté](https://github.com/fredbuhr/jessiemessage/blob/fbe6b05f037326700228223ff0d25453af49659d/ops/record-release110.py), SHA-256 `eb10150761a513d3e08b6e9dcc22e8a2946cf5145c7cf02a3bc0197eb8b99591`, conserve l’ancien `activeService` 1.0.0 intégral sous `.developmentSimplification.release110.rollback`, avec son empreinte, et préserve notamment `release100`. [Reçu et portée](private-read-receipts-110.md#alignement-du-checkpoint--réalisé). Ne rejouer ni enregistrement, ni staging, ni Build, ni preuve admin déjà transmise. Les chantiers PC/sauvegardes restent différés.
 
@@ -331,7 +352,7 @@ Les essais SSH historiques R1/R2 de la 1.0.0 ont renvoyé respectivement `PROCES
 
 ## Build historique de 1.2.0 — repli
 
-Le Run/Build 1.2.0 reste conservé comme repli antérieur ; il ne désigne plus la production active. Les pins actifs 1.4.0 sont ci-dessous ; le repli compatible immédiat est la 1.3.4. Les références antérieures sont historiques et ne sont pas des replis pour les campagnes compactes. Aucun précontrôle supplémentaire n’est demandé pour ces clôtures historiques.
+Le Run/Build 1.2.0 reste conservé comme repli antérieur ; il ne désigne plus la production active. À la clôture historique 1.4.0, les pins ci-dessous et le repli 1.3.4 étaient les références de cette étape. Le repli courant est la 1.5.1 sur le schéma 33. Les références antérieures sont historiques et ne sont pas des replis pour les campagnes compactes. Aucun précontrôle supplémentaire n’est demandé pour ces clôtures historiques.
 
 ## Historique — validation de 1.1.0
 
@@ -355,9 +376,9 @@ A08 conserve avertissement et dry-run, sans exécuteur actif ni purge. Surveille
 
 Les conversations sont conservées jusqu’à fermeture définitive, hors suppressions volontaires. Fermeture locale journalisée et restauration opérateur en maintenance restent le périmètre convenu. Récupération autonome après perte complète de l’hôte, témoin frais à chaque phase, succession et inventaire SQL exhaustif restent hors prérequis V1 ; `completeDatabase:false`, objets exécutables exclus. Pas de garantie de capture simultanée fichiers/base ni de perte maximale de vingt-quatre heures. La [surveillance](../MONITORING.md) conserve ses limites : pas de délai maximal de détection ni de réception externe attesté.
 
-## Pins de la référence active 1.4.0
+## Pins historiques de la référence 1.4.0
 
-**Encadré historique antérieur au passage au schéma 32. Les lanceurs 1.4.0/1.3.4 ci-dessous ne sont plus utilisables sur ce schéma ; les commandes actuelles sont dans [Activation 1.5.0](#activation-150-acquise--ne-pas-redémarrer-pour-les-métadonnées). Les empreintes et reçus historiques restent conservés.**
+**Encadré historique antérieur au passage au schéma 32. Les lanceurs 1.4.0/1.3.4 ci-dessous ne sont plus utilisables sur ce schéma ; les commandes actuelles sont dans [Activation 1.6.0](#activation-160-acquise--ne-pas-redémarrer-pour-les-métadonnées). Les empreintes et reçus historiques restent conservés.**
 
 L’identité active est confirmée par relevé admin utilisateur. Les modes et empreintes sur disque proviennent du reçu de préparation hébergée ; aucune empreinte mesurée via le PID actif n’est revendiquée.
 

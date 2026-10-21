@@ -6,17 +6,18 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 
 | Document | Rôle |
 | --- | --- |
+| [Passation vers une nouvelle discussion](docs/PASSATION-20261021-160.md) | Contexte, références exactes, vérification du versionnage et texte de reprise. |
 | [Périmètre produit](docs/PRODUCT.md) | Fonctions disponibles, conservation et limites. |
 | [Guide quotidien](docs/guide-jessie.md) | Utilisation des messages, photos, fiches, notifications et exports. |
 | [Plan de travail](docs/PLAN-IMPLEMENTATION.md) | Harmonisation et évolutions restantes. |
 | [Profil et expressions, 1.2.0](docs/profile-expressions-120.md) | Périmètre du lot et préconditions de migration/repli. |
 | [Emojis enrichis et inclusifs, 1.3.0](docs/emoji-inclusifs-130.md) | Catalogue Unicode, carnations et critères de livraison. |
-| [Messagerie mobile, 1.3.1 close et conservée en repli](docs/chat-mobile-131.md) | Barre de conversation unique, menus discrets et espace rendu aux messages ; lot clos et référence conservée. |
+| [Messagerie mobile, 1.3.1 historique close](docs/chat-mobile-131.md) | Barre de conversation unique, menus discrets et espace rendu aux messages ; lot clos et ancienne référence conservée. |
 | [Voix client et détails des messages, 1.3.2 publiée](docs/client-voice-message-details-132.md) | Socle qualifié et publié, jamais activé ; remplacé comme candidate par 1.3.3. |
 | [Détails des photos, correctif 1.3.3 clos](docs/photo-message-details-133.md) | Bouton de détails visible au toucher pour les photos, avec les métadonnées masquées au repos. |
-| [Compatibilité des diffusions, 1.3.4 publiée](docs/broadcast-compat-134.md) | Code compatible qualifié et publié ; repli précontrôlé sur l’hébergement, sans démarrage. |
+| [Compatibilité des diffusions, 1.3.4 publiée](docs/broadcast-compat-134.md) | Code compatible qualifié et publié ; repli historique précontrôlé pour la 1.4.0, sans démarrage. |
 | [Diffusions à grande échelle, 1.4.0 close](docs/broadcast-scale-140.md) | Audiences globales ou filtrées, aperçu confirmé et suivi paginé ; livraison close, avec repli compatible 1.3.4 enregistré. |
-| [Compatibilité du schéma des annonces, 1.4.1](docs/announcements-compat-141.md) | Référence publiée et préparée sur l’hébergement ; repli compatible schéma 32, précontrôle hébergé confirmé sans démarrage. |
+| [Compatibilité du schéma des annonces, 1.4.1](docs/announcements-compat-141.md) | Référence publiée et préparée sur l’hébergement ; ancien repli compatible schéma 32, précontrôle hébergé confirmé sans démarrage ; le repli courant est 1.5.1. |
 | [Annonces, livraison 1.5.0 historique close](docs/announcements-150.md) | Bandeau programmé et messages privés facultatifs ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés. |
 | [Compatibilité des tâches, 1.5.1 publiée](docs/tasks-compat-151.md) | Référence compatible avec le schéma 33, qualifiée, publiée, préparée, précontrôlée et enregistrée comme repli ; jamais démarrée. |
 | [Tâches et rappels, 1.6.0 active et close](docs/tasks-reminders-160.md) | Plusieurs tâches privées par client et vue commune ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés ; livraison close. |
@@ -70,6 +71,8 @@ Les migrations `0031` des profils, `0032` des annonces et `0033` des tâches son
 Dans un run CI réussi du code choisi, télécharger l’artefact **JessieMessage-apercu-…**, l’extraire et ouvrir **JessieMessage.html**. Les comptes et interactions sont fictifs et disparaissent au rechargement. La bascule client/admin sert à examiner l’interface ; elle ne fournit aucune authentification. Ne pas déployer cet atelier comme application.
 
 L’[identité approuvée](docs/IDENTITE-VALIDEE.md) et [Nuit V2](docs/NUIT-V2.md) décrivent les choix visuels. Les portraits personnels ne font pas partie du dépôt ou des artefacts publics.
+
+L’atelier conserve les révisions historiques de maquette **0.3.1** (notice) et **0.3.0** (`JessieNight.version`). Elles ne désignent pas la version applicative 1.6.0 et ne décrivent pas toutes ses fonctions actuelles. Le guide quotidien documente la messagerie en service ; ne pas qualifier le produit à partir de cette maquette.
 
 ## Données et historique
 

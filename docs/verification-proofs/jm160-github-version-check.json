@@ -1,0 +1,581 @@
+{
+  "repository": {
+    "fullName": "fredbuhr/jessiemessage",
+    "private": false,
+    "visibility": "public",
+    "defaultBranch": "main"
+  },
+  "observedAt": "2026-10-21T18:21:04.045Z",
+  "mode": "read_only_metadata_verification",
+  "mainSnapshot": {
+    "commit": "72850d27b22c3114c935e273d49b243a81f94ab1",
+    "tree": "9394b14919dd22fa310b54d3191926a613c7c063",
+    "committerDate": "2026-10-21T18:15:26Z",
+    "packageVersion": "1.6.0",
+    "lockVersion": "1.6.0",
+    "lockRootVersion": "1.6.0",
+    "nodeEngines": ">=24 <25",
+    "packageAndLockConsistent": true,
+    "release160Ancestor": {
+      "status": "ahead",
+      "aheadBy": 10,
+      "mergeBase": "9590741e7065067aee9d1ad5d1206739cc27eb6b"
+    },
+    "notProductionSourceByItself": true
+  },
+  "pinnedPublishedReferences": [
+    {
+      "version": "1.6.0",
+      "tag": "v1.6.0",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+      "expectedSource": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "expectedTree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+      "role": "published_application_reference"
+    },
+    {
+      "version": "1.5.1",
+      "tag": "v1.5.1",
+      "source": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+      "tree": "f769c99aa800486bd04065a308f1f4269841c215",
+      "expectedSource": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+      "expectedTree": "f769c99aa800486bd04065a308f1f4269841c215",
+      "role": "published_compatible_rollback_reference"
+    }
+  ],
+  "currentCiMetadata": [
+    {
+      "version": "1.6.0",
+      "id": 39640655562,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39640655562",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "branch": "main",
+      "event": "push",
+      "path": ".github/workflows/ci.yml",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "updatedAt": "2026-10-21T17:11:40Z",
+      "headMatchesExpected": true,
+      "jobsTotal": 5,
+      "jobs": [
+        {
+          "id": 119362963183,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        },
+        {
+          "id": 119362963464,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        },
+        {
+          "id": 119362963465,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        },
+        {
+          "id": 119362963665,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        },
+        {
+          "id": 119362963721,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        }
+      ],
+      "allFiveSuccess": true,
+      "logsReread": false,
+      "suitesRerun": false
+    },
+    {
+      "version": "1.5.1",
+      "id": 39639464133,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39639464133",
+      "source": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+      "branch": "main",
+      "event": "push",
+      "path": ".github/workflows/ci.yml",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "updatedAt": "2026-10-21T17:04:43Z",
+      "headMatchesExpected": true,
+      "jobsTotal": 5,
+      "jobs": [
+        {
+          "id": 119358878537,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        },
+        {
+          "id": 119358879020,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        },
+        {
+          "id": 119358879108,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        },
+        {
+          "id": 119358879257,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        },
+        {
+          "id": 119358879377,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "runAttempt": 1
+        }
+      ],
+      "allFiveSuccess": true,
+      "logsReread": false,
+      "suitesRerun": false
+    }
+  ],
+  "inventory": {
+    "tagCount": 14,
+    "releaseCount": 14,
+    "tags": [
+      {
+        "tag": "v1.0.0",
+        "objectType": "commit",
+        "commit": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.1.0",
+        "objectType": "commit",
+        "commit": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.1.1",
+        "objectType": "commit",
+        "commit": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.2.0",
+        "objectType": "commit",
+        "commit": "763b632185ce13eb875110c9107687b2d278ff67",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "763b632185ce13eb875110c9107687b2d278ff67",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.3.0",
+        "objectType": "commit",
+        "commit": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.3.1",
+        "objectType": "commit",
+        "commit": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.3.2",
+        "objectType": "commit",
+        "commit": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.3.3",
+        "objectType": "commit",
+        "commit": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.3.4",
+        "objectType": "commit",
+        "commit": "4538148660fbf1487807fb1518747d8f5753cd3b",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "4538148660fbf1487807fb1518747d8f5753cd3b",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.4.0",
+        "objectType": "commit",
+        "commit": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.4.1",
+        "objectType": "commit",
+        "commit": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.5.0",
+        "objectType": "commit",
+        "commit": "abca467c45c9385371a9095ab359e78c99140370",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "abca467c45c9385371a9095ab359e78c99140370",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.5.1",
+        "objectType": "commit",
+        "commit": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      },
+      {
+        "tag": "v1.6.0",
+        "objectType": "commit",
+        "commit": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "canonicalSemver": true,
+        "priorKnownExpectedCommit": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "matchesPriorKnownPin": true,
+        "alreadyExists": true
+      }
+    ],
+    "releases": [
+      {
+        "id": 419841377,
+        "name": "JessieMessage 1.6.0 — Mes tâches et rappels",
+        "tag": "v1.6.0",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.6.0",
+        "targetCommitish": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "bodyCommit": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "publishedAt": "2026-10-21T17:17:53Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 419827910,
+        "name": "JessieMessage 1.5.1 — Compatibilité des tâches",
+        "tag": "v1.5.1",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.1",
+        "targetCommitish": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "bodyCommit": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "publishedAt": "2026-10-21T17:05:36Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 419695814,
+        "name": "JessieMessage 1.5.0 — Annonces programmées",
+        "tag": "v1.5.0",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.5.0",
+        "targetCommitish": "abca467c45c9385371a9095ab359e78c99140370",
+        "bodyCommit": "abca467c45c9385371a9095ab359e78c99140370",
+        "publishedAt": "2026-10-21T15:02:51Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "abca467c45c9385371a9095ab359e78c99140370",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 419688886,
+        "name": "JessieMessage 1.4.1 — Compatibilité des annonces",
+        "tag": "v1.4.1",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.4.1",
+        "targetCommitish": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "bodyCommit": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "publishedAt": "2026-10-21T14:56:19Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 419572740,
+        "name": "JessieMessage 1.4.0 — Diffusions à grande échelle",
+        "tag": "v1.4.0",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.4.0",
+        "targetCommitish": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+        "bodyCommit": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+        "publishedAt": "2026-10-21T13:09:34Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 419562116,
+        "name": "JessieMessage 1.3.4 — Compatibilité des grandes diffusions",
+        "tag": "v1.3.4",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.4",
+        "targetCommitish": "4538148660fbf1487807fb1518747d8f5753cd3b",
+        "bodyCommit": "4538148660fbf1487807fb1518747d8f5753cd3b",
+        "publishedAt": "2026-10-21T12:59:17Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "4538148660fbf1487807fb1518747d8f5753cd3b",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 419073053,
+        "name": "JessieMessage 1.3.3 — Voix de Jessie, messages compacts et détails des photos",
+        "tag": "v1.3.3",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.3",
+        "targetCommitish": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+        "bodyCommit": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+        "publishedAt": "2026-10-21T02:22:03Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 419056359,
+        "name": "JessieMessage 1.3.2 — Voix de Jessie et messages compacts",
+        "tag": "v1.3.2",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.2",
+        "targetCommitish": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+        "bodyCommit": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+        "publishedAt": "2026-10-21T01:47:46Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 419029583,
+        "name": "JessieMessage 1.3.1 — Conversation au centre sur mobile",
+        "tag": "v1.3.1",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.1",
+        "targetCommitish": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+        "bodyCommit": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+        "publishedAt": "2026-10-21T00:56:35Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 418985447,
+        "name": "JessieMessage 1.3.0 — Emojis enrichis et inclusifs",
+        "tag": "v1.3.0",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0",
+        "targetCommitish": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+        "bodyCommit": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+        "publishedAt": "2026-10-20T23:36:15Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 418899662,
+        "name": "JessieMessage 1.2.0 — Profil et emojis",
+        "tag": "v1.2.0",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.2.0",
+        "targetCommitish": "763b632185ce13eb875110c9107687b2d278ff67",
+        "bodyCommit": "763b632185ce13eb875110c9107687b2d278ff67",
+        "publishedAt": "2026-10-20T21:30:07Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "763b632185ce13eb875110c9107687b2d278ff67",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 418895187,
+        "name": "JessieMessage 1.1.1 — Compatibilité du schéma de profil",
+        "tag": "v1.1.1",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.1",
+        "targetCommitish": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+        "bodyCommit": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+        "publishedAt": "2026-10-20T21:24:27Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 418834885,
+        "name": "JessieMessage 1.1.0 — Lecture privée",
+        "tag": "v1.1.0",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.1.0",
+        "targetCommitish": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+        "bodyCommit": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+        "publishedAt": "2026-10-20T20:21:26Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      },
+      {
+        "id": 418723470,
+        "name": "JessieMessage 1.0.0 — Référence V1",
+        "tag": "v1.0.0",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.0.0",
+        "targetCommitish": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+        "bodyCommit": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+        "publishedAt": "2026-10-20T18:22:02Z",
+        "draft": false,
+        "prerelease": false,
+        "tagCommit": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+        "targetMatchesTag": true,
+        "bodyCommitMatchesTag": true,
+        "titleVersionMatchesTag": true,
+        "alreadyExists": true
+      }
+    ],
+    "tagMovedDetectedAgainstKnownPins": false,
+    "ambiguousOrNonSemverNames": [],
+    "duplicates": {
+      "tagNames": false,
+      "releaseTagNames": false
+    }
+  },
+  "pagination": {
+    "releases": {
+      "endpoint": "https://api.github.com/repos/fredbuhr/jessiemessage/releases",
+      "perPage": 100,
+      "pages": [
+        {
+          "page": 1,
+          "count": 14
+        },
+        {
+          "page": 2,
+          "count": 0
+        }
+      ],
+      "complete": true
+    },
+    "tags": {
+      "endpoint": "https://api.github.com/repos/fredbuhr/jessiemessage/git/matching-refs/tags/",
+      "canonicalResponseCount": 14,
+      "paginationAvailable": false,
+      "pageQuery1Count": 14,
+      "pageQuery2Count": 14,
+      "pageQueryResponsesIdentical": true,
+      "completeMatchingRefsResponse": true,
+      "note": "The connector rejects REST /tags collection. The allowed canonical Git matching-refs endpoint returns the whole matching-reference array; pagination query parameters are ignored. Canonical response equals both queried arrays."
+    }
+  },
+  "apiEvidence": {
+    "mainRef": "https://api.github.com/repos/fredbuhr/jessiemessage/git/ref/heads/main",
+    "mainCommit": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/72850d27b22c3114c935e273d49b243a81f94ab1",
+    "package": "https://api.github.com/repos/fredbuhr/jessiemessage/contents/package.json?ref=72850d27b22c3114c935e273d49b243a81f94ab1",
+    "lock": "https://api.github.com/repos/fredbuhr/jessiemessage/contents/package-lock.json?ref=72850d27b22c3114c935e273d49b243a81f94ab1",
+    "tag160": "https://api.github.com/repos/fredbuhr/jessiemessage/git/ref/tags/v1.6.0",
+    "tag151": "https://api.github.com/repos/fredbuhr/jessiemessage/git/ref/tags/v1.5.1",
+    "releasePages": [
+      "https://api.github.com/repos/fredbuhr/jessiemessage/releases?per_page=100&page=1",
+      "https://api.github.com/repos/fredbuhr/jessiemessage/releases?per_page=100&page=2"
+    ],
+    "ciRuns": [
+      "https://github.com/fredbuhr/jessiemessage/actions/runs/39640655562",
+      "https://github.com/fredbuhr/jessiemessage/actions/runs/39639464133"
+    ],
+    "jobEndpoints": [
+      "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39640655562/jobs?per_page=100&filter=latest",
+      "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39639464133/jobs?per_page=100&filter=latest"
+    ]
+  },
+  "results": {
+    "coherent": true,
+    "issues": []
+  },
+  "limitations": [
+    "Snapshot of current GitHub metadata only; main may advance after this read.",
+    "No repeated job-log reads or suite execution: previous exact-commit qualifications remain their own proofs.",
+    "Tags and public releases do not establish which process is running on Infomaniak.",
+    "Current tag targets match all 14 known prior pins and release metadata; this does not independently audit every historical ref event.",
+    "No historical package files were bulk-fetched; only current pinned main package and lock were read.",
+    "No tag, release, branch, repository file or hosting configuration was mutated."
+  ]
+}

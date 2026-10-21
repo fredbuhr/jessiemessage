@@ -2,6 +2,8 @@
 
 Lire d’abord `docs/REPRISE.md`, puis `docs/PLAN-IMPLEMENTATION.md`. REPRISE est l’unique référence de l’état actuellement déployé : version, commit/arbre, commandes, preuves et repli. Les bilans datés décrivent leur propre étape et ne donnent pas les commandes courantes.
 
+Pour changer de discussion, la [passation du 21 octobre 2026](docs/PASSATION-20261021-160.md) fournit le contexte et les références vérifiées à cette date ; si elle vieillit, REPRISE reste prioritaire.
+
 ## Avant de poursuivre
 
 - Relever branche, commit, arbre et modifications locales. Vérifier le statut réel de la PR et la CI du commit concerné ; une réponse perdue ne prouve ni échec ni succès.
