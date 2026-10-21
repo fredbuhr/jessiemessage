@@ -560,6 +560,7 @@ test("Chrome 320px: both roles edit their public profile with the keyboard, tran
       await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
       await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile control mounted");
       if (role === "admin") await page.click(".contact");
+      await waitUntil(() => page.execute("return !document.getElementById('message-body').disabled"), "selected conversation metadata rendered");
       assert.equal(await page.execute("return document.getElementById('peer-avatar').textContent"), role === "client" ? "J" : "A", "missing avatar uses the peer's initials");
       await openChatOptions(page); await tabUntil(page, "#open-profile"); await page.key("\uE007");
       await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.activeElement.matches('.profile-pseudonym')"), "profile loaded with the name focused");
