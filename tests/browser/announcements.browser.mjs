@@ -167,7 +167,10 @@ test("Chrome client mobile: the compact banner opens accessibly, expires locally
     try {
       page = await driver.browser({ origin: source.origin, width, height: 780 }); await page.navigate("/messages");
       await waitUntil(() => page.execute("return !document.getElementById('message-body').disabled && document.getElementById('announcement-banner')?.hidden===false"), "real chat and announcement module");
-      if (language === "en") { await page.execute("document.getElementById('open-conversation-menu').click()"); await page.click("[data-jm-language]"); await page.click("#close-chat-menu"); }
+      if (language === "en") {
+        await page.execute("document.getElementById('open-conversation-menu').click()"); await page.click("[data-jm-language]");
+        await waitUntil(() => page.execute("return document.documentElement.lang==='en' && document.getElementById('chat-menu').hidden && document.activeElement?.id==='open-conversation-menu'"), "language change closes Options and restores its visible opener");
+      }
       assert.equal(await page.execute("return document.documentElement.lang"), language);
       assert.equal(await page.execute("return document.documentElement.scrollWidth<=innerWidth && document.getElementById('announcement-banner').getBoundingClientRect().height<=70 && document.getElementById('message-scroll').getBoundingClientRect().height>300"), true);
       await page.click("#open-announcement");
