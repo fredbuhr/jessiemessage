@@ -1,6 +1,6 @@
 {
   "version": "1.3.0",
-  "status": "active_identity_confirmed_metadata_pending",
+  "status": "closed",
   "source": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
   "tree": "37b3b2e9358972c95581fc0bcf16896e4074d5f9",
   "tag": "v1.3.0",
@@ -88,7 +88,7 @@
     "preparationExecuted": true,
     "precheckPassed": true,
     "activationConfirmed": true,
-    "metadataRecorded": false,
+    "metadataRecorded": true,
     "schemaMigrations": 31,
     "requiresMigration": false,
     "dependenciesChanged": false,
@@ -226,10 +226,10 @@
   },
   "privateCheckpoint": {
     "path": "/srv/customer/jessiemessage-private/jm0702-existing-pc-update.json",
-    "lastRecordedRelease": "1.2.0",
-    "lastRecordedSource": "763b632185ce13eb875110c9107687b2d278ff67",
-    "alignmentStatus": "awaiting_personal_execution",
-    "recorded": false,
+    "lastRecordedRelease": "1.3.0",
+    "lastRecordedSource": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+    "alignmentStatus": "recorded",
+    "recorded": true,
     "runtimeRestartRequired": false,
     "recorder": {
       "commit": "5d251756a3249dc08127a161942963999e9a5bf5",
@@ -241,23 +241,35 @@
         "skipped": 0,
         "scope": "synthetic_metadata_files_only"
       },
-      "serverExecution": "not_reported",
+      "serverExecution": "confirmed_by_user_ssh_receipt",
       "metadataOnly": true,
       "noRestart": true,
-      "preservationPlan": "full_prior_active_120_with_hashes_as_prior_active_and_usable_rollback_120_and_unchanged_other_blocks"
+      "preservation": "full_prior_active_120_with_hashes_as_prior_active_and_usable_rollback_120_and_unchanged_other_blocks"
     },
-    "expectedStatuses": [
-      "release130_metadata_recorded",
-      "release130_metadata_already_recorded"
-    ],
-    "expectedRollbackRelease": "1.2.0",
     "earlierSchema31Fallback": "1.1.1",
-    "receipt": null
+    "receipt": {
+      "status": "release130_metadata_recorded",
+      "source": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+      "version": "1.3.0",
+      "metadataOnly": true,
+      "noRestart": true,
+      "rollbackPreserved": true,
+      "rollbackRelease": "1.2.0",
+      "schemaMigrations": 31,
+      "priorActivePreserved": true,
+      "otherBlocksPreserved": true
+    },
+    "priorRecordedRelease": "1.2.0",
+    "priorRecordedSource": "763b632185ce13eb875110c9107687b2d278ff67",
+    "receiptProvenance": "user_ssh_output_of_pinned_recorder",
+    "rollbackRelease": "1.2.0",
+    "rollbackPath": "developmentSimplification.release130.rollback",
+    "priorActivePath": "developmentSimplification.release130.priorActiveService"
   },
   "nextWork": {
     "version": "1.3.1",
     "kind": "mobile_messaging_correction",
-    "status": "after_release130_closure",
+    "status": "authorized_not_implemented",
     "document": "docs/chat-mobile-131.md"
   }
 }

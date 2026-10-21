@@ -1,6 +1,6 @@
 # Emojis enrichis et inclusifs — 1.3.0
 
-**21 octobre 2026 — version 1.3.0 active, identité confirmée par relevé admin utilisateur et disponibilité publique conforme.** Code fusionné, qualifié et publié ; préparation, précontrôle et activation acquis. L’alignement final des métadonnées opérateur n’est pas encore exécuté : son reçu SSH reste nécessaire pour clore le lot. [REPRISE](REPRISE.md) centralise les références et preuves de livraison.
+**21 octobre 2026 — version 1.3.0 active, identité confirmée par relevé admin utilisateur et disponibilité publique conforme.** Code fusionné, qualifié et publié ; préparation, précontrôle et activation acquis. Le reçu SSH utilisateur `release130_metadata_recorded` confirme l’alignement final du checkpoint sans redémarrage ; **lot 1.3.0 clos**. [REPRISE](REPRISE.md) centralise les références et preuves de livraison.
 
 ## Périmètre
 
@@ -22,9 +22,9 @@ Aucune illustration Flirtmoji n’est récupérée ou intégrée à ce lot. Une 
 
 1. **Validé** : variantes Unicode, recherche bilingue, insertion au curseur et limites de brouillon, y compris les séquences de plusieurs caractères.
 2. **Validé en CI Chrome** : les deux rôles, choix de peau foncée, changement de langue, clavier et petits écrans, sans envoi automatique.
-3. **CI, fusion, publication, préparation et activation confirmées** ci-dessous. L’alignement des métadonnées opérateur reste à confirmer par son reçu, sans nouveau redémarrage.
+3. **CI, fusion, publication, préparation et activation confirmées** ci-dessous. L’alignement des métadonnées opérateur est confirmé par le reçu utilisateur final, sans nouveau redémarrage.
 
-Le correctif d’interface mobile 1.3.1 est planifié après la clôture de cette livraison, avant les diffusions à grande échelle. Le lot 1.2.0 et ses preuves conservent leur périmètre historique de 180 emojis.
+Le correctif d’interface mobile 1.3.1 est la prochaine étape autorisée, non implémentée, avant les diffusions à grande échelle. Le lot 1.2.0 et ses preuves conservent leur périmètre historique de 180 emojis.
 
 ## Qualification locale
 
@@ -43,6 +43,12 @@ Le relevé admin utilisateur reçu ensuite confirme **1.3.0**, commit `afd0e98cd
 
 Quatre contrôles HTTPS publics sont conformes à `2026-10-21T00:05:53.651600+00:00`. Ils attestent la disponibilité, distinctement de l’identité admin rapportée par l’utilisateur. **Ne rejouer ni préparation, ni Build, ni activation, ni redémarrage.** Les 31 migrations restent identiques et aucune opération SQL de migration n’est à effectuer.
 
-## Alignement final des métadonnées — en attente
+## Alignement final des métadonnées — réalisé
 
-Le [helper d’alignement publié](https://github.com/fredbuhr/jessiemessage/blob/5d251756a3249dc08127a161942963999e9a5bf5/ops/record-release130.py) a réussi neuf tests synthétiques autonomes. Il n’est pas encore exécuté sur l’hébergement ; aucun reçu de métadonnées 1.3.0 n’est revendiqué. Exécuter uniquement la prochaine commande épinglée de [REPRISE](REPRISE.md), puis vérifier son reçu pour clore le lot. Le [correctif mobile proposé](chat-mobile-131.md) reste planifié après cette clôture, sans changement fonctionnel démarré.
+Le [helper d’alignement exécuté](https://github.com/fredbuhr/jessiemessage/blob/5d251756a3249dc08127a161942963999e9a5bf5/ops/record-release130.py), SHA-256 `26dada8bec1dfbf1ec852cdd118e202fd4fd2c56c98c9c0b02c45095fff5a61e`, avait réussi neuf tests synthétiques autonomes. Le reçu SSH transmis par l’utilisateur confirme ensuite :
+
+```json
+{"status":"release130_metadata_recorded","source":"afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b","version":"1.3.0","metadataOnly":true,"noRestart":true,"rollbackPreserved":true,"rollbackRelease":"1.2.0","schemaMigrations":31,"priorActivePreserved":true,"otherBlocksPreserved":true}
+```
+
+Le checkpoint décrit maintenant la 1.3.0 ; l’ancien `activeService` 1.2.0 intégral et ses empreintes restent conservés comme état antérieur et repli utilisable, et les autres blocs sont inchangés. Cette écriture n’a pas redémarré l’application. Le reçu de préparation, l’identité admin et leurs limites restent dans les [preuves structurées](verification-proofs/jm130-verification.json). **Ne rejouer aucune opération 1.3.0 pour cette clôture acquise.** Le [correctif mobile 1.3.1](chat-mobile-131.md) est autorisé comme prochaine étape, sans implémentation ni déploiement à ce stade.

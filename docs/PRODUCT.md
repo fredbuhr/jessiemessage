@@ -41,9 +41,9 @@ La référence `1.0.0` harmonise la V1 existante. La [lecture privée, livrée e
 
 Le [lot `1.2.0` — Profil et expressions](profile-expressions-120.md) a livré le pseudonyme public et l’avatar côté client/administration, puis un catalogue initial de 180 emojis Unicode avec catégories et recherche FR/EN. L’avatar utilise le stockage privé existant ; les emojis s’insèrent dans le brouillon sans envoi automatique. Son bilan conserve ses preuves historiques.
 
-La [livraison active `1.3.0` — Emojis enrichis et inclusifs](emoji-inclusifs-130.md) porte ce catalogue à 268 choix, ajoute des doubles sens et cinq carnations pour les gestes et personnages compatibles. Elle conserve le texte Unicode et l’envoi explicite, sans API externe, dépendance ou migration SQL supplémentaire. Elle n’inclut pas de bibliothèque Flirtmoji réhébergée sans droits spécifiques ; le partage individuel permis par leur FAQ est distinct. Le suivi final des métadonnées opérateur reste indiqué dans REPRISE.
+La [livraison active `1.3.0` — Emojis enrichis et inclusifs](emoji-inclusifs-130.md) porte ce catalogue à 268 choix, ajoute des doubles sens et cinq carnations pour les gestes et personnages compatibles. Elle conserve le texte Unicode et l’envoi explicite, sans API externe, dépendance ou migration SQL supplémentaire. Elle n’inclut pas de bibliothèque Flirtmoji réhébergée sans droits spécifiques ; le partage individuel permis par leur FAQ est distinct. Le lot 1.3.0 est clos, checkpoint aligné selon le reçu utilisateur ; les preuves et limites sont dans REPRISE.
 
-Le [correctif mobile prévu `1.3.1`](chat-mobile-131.md) recentre l’écran sur la conversation : barre unique, menus discrets et composeur compact. Il reste planifié après la clôture 1.3.0, sans mise en œuvre ni disponibilité annoncée.
+Le [correctif mobile prévu `1.3.1`](chat-mobile-131.md) recentre l’écran sur la conversation : barre unique, menus discrets et composeur compact. Il constitue la prochaine étape autorisée après la clôture acquise de 1.3.0, sans mise en œuvre ni disponibilité annoncée.
 
 Vidéos, annonces, diffusions élargies et alertes de tâches restent des évolutions distinctes, ordonnées dans le [plan de travail](PLAN-IMPLEMENTATION.md). Une fonction codée ou publiée reste indisponible tant que son déploiement n’est pas vérifié.
 

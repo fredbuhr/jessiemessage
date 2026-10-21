@@ -16,9 +16,9 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
 
-**Version active : 1.3.0**, profil, avatar, 268 choix Unicode et cinq carnations. Le relevé admin utilisateur identifie le commit livré et Node 24.22.0 ; quatre contrôles publics de disponibilité sont conformes. L’alignement final des métadonnées opérateur attend encore son reçu SSH : le lot n’est pas déclaré clos. Les preuves et le repli sont consignés dans REPRISE.
+**Version active : 1.3.0**, profil, avatar, 268 choix Unicode et cinq carnations. Le relevé admin utilisateur identifie le commit livré et Node 24.22.0 ; quatre contrôles publics de disponibilité sont conformes. Le reçu SSH `release130_metadata_recorded` confirme l’alignement du checkpoint, sans redémarrage, avec repli 1.2.0 et autres blocs préservés : **lot 1.3.0 clos**. Les preuves et le repli sont consignés dans REPRISE.
 
-La [PR 113](https://github.com/fredbuhr/jessiemessage/pull/113) est fusionnée, la [CI du commit livré](https://github.com/fredbuhr/jessiemessage/actions/runs/39515366616) réussie 5/5 et le [tag/release v1.3.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0) immuable. Préparation, précontrôle et activation sont acquis : ne pas les rejouer. Le [correctif mobile prévu 1.3.1](docs/chat-mobile-131.md) vient après la clôture des métadonnées 1.3.0, avant les diffusions à grande échelle.
+La [PR 113](https://github.com/fredbuhr/jessiemessage/pull/113) est fusionnée, la [CI du commit livré](https://github.com/fredbuhr/jessiemessage/actions/runs/39515366616) réussie 5/5 et le [tag/release v1.3.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.0) immuable. Préparation, précontrôle et activation sont acquis : ne pas les rejouer. Le [correctif mobile 1.3.1](docs/chat-mobile-131.md) est la prochaine étape autorisée, non implémentée, avant les diffusions à grande échelle. Aucune nouvelle action opérateur n’est attendue pour la 1.3.0.
 
 ## Versions et livraisons
 

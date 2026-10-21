@@ -4,19 +4,19 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 
 Les livraisons 1.0.0, 1.1.0 et 1.2.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
-## Clôture de la livraison active 1.3.0
+## Livraison active 1.3.0 — close
 
-[Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : code qualifié, fusionné, publié et actif en 1.3.0, identité admin rapportée par l’utilisateur et disponibilité publique 4/4 conforme. **Seul l’alignement final des métadonnées opérateur attend son reçu SSH** ; le helper publié a réussi neuf tests synthétiques. Ne rejouer ni préparation, ni activation, ni Build ou redémarrage. [REPRISE](REPRISE.md) donne la prochaine commande exacte. La redistribution d’une bibliothèque Flirtmoji reste distincte de ce catalogue Unicode.
+[Emojis enrichis et inclusifs](emoji-inclusifs-130.md) : code qualifié, fusionné, publié et actif en 1.3.0, identité admin rapportée par l’utilisateur et disponibilité publique 4/4 conforme. **Le reçu utilisateur `release130_metadata_recorded` confirme l’alignement final du checkpoint : lot clos**, sans redémarrage, avec état antérieur/repli 1.2.0 et autres blocs préservés. Les neuf tests synthétiques du helper restent distincts de cette exécution. Ne rejouer ni writer, ni préparation, ni activation, ni Build/Run, ni relevé admin pour cette clôture. [REPRISE](REPRISE.md) conserve les preuves. La redistribution d’une bibliothèque Flirtmoji reste distincte de ce catalogue Unicode.
 
-## Correctif prioritaire après cette clôture — cible 1.3.1
+## Prochaine étape autorisée — correctif prioritaire 1.3.1
 
-[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : une seule barre active avec avatar, nom, menu et retour administrateur si nécessaire ; Contact, Aide et export dans un menu discret ; composeur compact avec émojis et pièces jointes. Corriger la présentation, les menus, le focus et le partage de hauteur sans modifier le transport des messages, les droits ou la base. Qualifier les deux rôles en FR/EN, le clavier et les petits écrans, y compris une faible hauteur visible. **Planifié, non implémenté ; à ouvrir seulement après le reçu final 1.3.0.**
+[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : une seule barre active avec avatar, nom, menu et retour administrateur si nécessaire ; Contact, Aide et export dans un menu discret ; composeur compact avec émojis et pièces jointes. Corriger la présentation, les menus, le focus et le partage de hauteur sans modifier le transport des messages, les droits ou la base. Qualifier les deux rôles en FR/EN, le clavier et les petits écrans, y compris une faible hauteur visible. **Autorisé, non implémenté ; à ouvrir sur la référence 1.3.0 désormais close.**
 
 ## Évolutions de messagerie demandées le 20 octobre
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après la clôture 1.3.0 et le correctif mobile 1.3.1. |
+| **3 — Diffusions à grande échelle** | Audience globale et paginée sans plafond métier de cent ; débit adapté, reprise après interruption et absence de doublons de message sur plusieurs milliers de destinataires synthétiques. | Planifiée après le correctif mobile 1.3.1 ; la 1.3.0 est close. |
 | **4 — Annonces** | Bandeau, programmation, expiration et notification facultative ; publication unique et absence d’annonce devenue inutile après une coupure. | Planifiée. |
 | **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |

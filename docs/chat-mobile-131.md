@@ -1,6 +1,6 @@
 # Conversation au centre sur mobile — correctif prévu 1.3.1
 
-**21 octobre 2026 — proposition bornée, non implémentée.** Ouvrir ce correctif après le reçu d’alignement final des métadonnées 1.3.0, puis avant les diffusions à grande échelle. La version active et les seules commandes opérateur courantes sont dans [REPRISE](REPRISE.md).
+**21 octobre 2026 — correctif autorisé, non implémenté.** Le reçu final `release130_metadata_recorded` est acquis et la 1.3.0 est close ; ouvrir ce travail sur cette référence, avant les diffusions à grande échelle. Aucune nouvelle action opérateur 1.3.0 n’est requise. La version active et les seules commandes opérateur courantes sont dans [REPRISE](REPRISE.md).
 
 ## Résultat attendu
 
