@@ -4,7 +4,7 @@ La V1 initiale est terminée dans le périmètre convenu. L’état réellement 
 
 Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.3.1, 1.3.3, 1.4.0, 1.5.0 et 1.6.0 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.
 
-La livraison **1.5.0 — Annonces** est close : code et CI qualifiés, versions publiées, migration et précontrôles hébergés, identité active et alignement privé confirmés. Le reçu `release150_metadata_recorded` confirme le schéma **32**, le repli compatible **1.4.1** précontrôlé et enregistré sans démarrage, l’ancien état 1.4.0 intégral et les autres blocs préservés. [Clôture et preuves](REPRISE.md#alignement-final-acquis--livraison-150-close). L’évolution 5 est désormais close par le reçu `release160_metadata_recorded`, avec le checkpoint 1.6.0/schéma 33 aligné et le repli 1.5.1 précontrôlé et enregistré sans démarrage. Le [socle du lot 6, version 1.7.0](video-transport-170.md), est fusionné, qualifié et publié, dormant dans le runtime normal. Les lots 7 et 8 restent planifiés ; aucune activation automatique.
+La livraison **1.5.0 — Annonces** est close : code et CI qualifiés, versions publiées, migration et précontrôles hébergés, identité active et alignement privé confirmés. Le reçu `release150_metadata_recorded` confirme le schéma **32**, le repli compatible **1.4.1** précontrôlé et enregistré sans démarrage, l’ancien état 1.4.0 intégral et les autres blocs préservés. [Clôture et preuves](REPRISE.md#alignement-final-acquis--livraison-150-close). L’évolution 5 est désormais close par le reçu `release160_metadata_recorded`, avec le checkpoint 1.6.0/schéma 33 aligné et le repli 1.5.1 précontrôlé et enregistré sans démarrage. Le [socle du lot 6, version 1.7.0](video-transport-170.md), est fusionné, qualifié et publié, dormant dans le runtime normal. Le lot 7 est en développement ; le lot 8 reste à qualifier avant activation finale.
 
 ## Priorités demandées le 22 octobre
 
@@ -14,8 +14,8 @@ Le [bilan complet et les onze itérations](PLAN-PRODUCTION-20261022.md) ajoutent
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **7 — Vidéos dans la messagerie** | Catalogue et capacité SQL durables, aperçu, lecteur, légende, galerie et diffusion ; export, suppression, fermeture, inventaire et restauration vidéo cohérents avant activation. | Planifiée avant activation vidéo finale. |
-| **8 — Validation et portabilité** | Parcours combinés, capacité du mutualisé mesurée et migration répétée sur données synthétiques. | Planifiée. |
+| **7 — Vidéos dans la messagerie** | Catalogue et capacité SQL durables, aperçu, lecteur, légende, galerie et diffusion ; export, suppression, fermeture, inventaire et restauration vidéo cohérents avant activation. | 7.1, 7.2 et 7.3a/b qualifiés sur branche ; 7.3 incomplet, prochaine étape vidéo 7.3c. |
+| **8 — Validation et portabilité** | Parcours combinés, capacité du mutualisé mesurée et migration répétée sur données synthétiques. | À qualifier avant activation vidéo finale. |
 
 Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas ouvertes automatiquement ; la qualification d’appareils réels et des notifications conserve ses limites. Sauvegardes/PC et archivage différés restent hors de ce parcours. Les essais de masse ou de restauration exigent une cible synthétique isolée ; l’alias recette partage la production.
 

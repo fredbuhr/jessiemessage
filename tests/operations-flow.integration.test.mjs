@@ -157,8 +157,8 @@ test("operational metadata samples real MariaDB queues with runtime DML rights a
         const base = `http://127.0.0.1:${configured.server.address().port}`;
         const entry = await fetch(`${base}/api/entry`);
         assert.equal(entry.status, 200);
-        assert.deepEqual(await entry.json(), { status: "available", client: null,
-          administrator: { state: "signed_out", href: "/admin/login" } });
+        assert.deepEqual(await entry.json(), { status: "unavailable", client: null, administrator: null },
+          "anonymous entry does not advertise administration even when admin authentication is configured");
         assert.match(entry.headers.get("cache-control"), /no-store/);
         assert.equal(entry.headers.get("set-cookie"), null);
         const page = await fetch(`${base}/app`);
