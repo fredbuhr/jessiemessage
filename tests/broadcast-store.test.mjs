@@ -28,6 +28,7 @@ function fixture({ waitAt = null, expires = "lease", advance = 1000 } = {}) {
     if (stage === "media") return [{ id: job.mediaId, owner_id: job.adminId, owner_role: "admin", created_at: date(now), deleted_at: null }];
     if (stage === "repeat") return [];
     if (sql.startsWith("SELECT COUNT(*)")) return [{ value: 0 }];
+    if (sql.startsWith("SELECT 1 FROM broadcast_recipients")) return [];
     if (sql.startsWith("UPDATE")) return { affectedRows: 1 };
     throw new Error(`Unexpected query: ${sql}`);
   } };

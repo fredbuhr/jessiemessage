@@ -3,6 +3,8 @@ import { createSessionClock } from "../auth/session-policy.mjs";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { ChatStoreError } from "../chat/store.mjs";
 import { loadMigrations, migrationStatus, MigrationError } from "../db/migrations.mjs";
+import { createAudienceDigest } from "./crypto.mjs";
+import { validateAudience } from "./validation.mjs";
 
 export class BroadcastStoreError extends ChatStoreError {
   constructor(code = "BROADCAST_DATABASE_OPERATION") {
@@ -33,6 +35,7 @@ const ids = (values) => {
   return [...values].sort(Buffer.compare);
 };
 const request = (value) => { bytes(value.tokenHash, 32); instant(value.now); };
+const storedCandidateId = (value) => { if (!Buffer.isBuffer(value) || value.length !== 16) state(); return value.toString("hex"); };
 async function run(pool, operation) {
   let connection;
   try { connection = await pool.getConnection(); return await operation(connection); }
@@ -217,7 +220,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
     const counts = { total: 0, pending: 0, sending: 0, delivered: 0, skipped: 0, cancelled: 0, failed: 0 };
     const grouped = await connection.query("SELECT state, COUNT(*) AS value FROM broadcast_recipients WHERE campaign_id = ? GROUP BY state", [row.id]);
     for (const item of grouped) { if (!Object.hasOwn(counts, item.state) || item.state === "total") state(); const value = count(item.value); counts[item.state] = value; counts.total += value; }
-    if (counts.total < 1 || counts.total > 100 || (!live(row) && counts.pending + counts.sending !== 0)) state();
+    if (!Number.isSafeInteger(counts.total) || counts.total < 1 || (!live(row) && counts.pending + counts.sending !== 0)) state();
     return { id: row.id, clientCampaignId: row.client_campaign_id, payloadEncrypted: row.payload_encrypted, mediaId: row.media_id,
       allowRepeatMedia: Number(row.allow_repeat_media) === 1, status: row.status, createdAt: timestamp(row.created_at), updatedAt: timestamp(row.updated_at),
       expiresAt: timestamp(row.expires_at), counts };
@@ -234,7 +237,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       ${ownMessageId === null ? "" : "AND message_id <> ?"} LIMIT 1`, [conversationId, mediaId, ...(ownMessageId === null ? [] : [ownMessageId])])).length > 0;
   }
   async function preview(connection, context, conversationIds, mediaId) {
-    const { actor, now } = context;
+    const { actor } = context; let now = context.now;
     const candidates = await connection.query(`SELECT id, client_id FROM conversations WHERE admin_id = ?
       AND id IN (${placeholders(conversationIds)}) ORDER BY id ASC`, [actor.id, ...conversationIds]);
     if (candidates.length !== conversationIds.length) fail("BROADCAST_NOT_FOUND");
@@ -247,6 +250,9 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
     const conversations = await connection.query(`SELECT id, client_id, admin_id, created_at, closed_at FROM conversations
       WHERE id IN (${placeholders(conversationIds)}) ORDER BY id ASC FOR UPDATE`, conversationIds);
     if (!(await media(connection, actor.id, mediaId, now))) fail("BROADCAST_MEDIA");
+    const repeats = mediaId === null ? new Set() : new Set((await connection.query(`SELECT DISTINCT conversation_id FROM message_media
+      WHERE media_id = ? AND conversation_id IN (${placeholders(conversationIds)})`, [mediaId, ...conversationIds])).map((row) => row.conversation_id.toString("hex")));
+    now = currentTime(now);
     const recipients = [];
     for (const conversationId of conversationIds) {
       const conv = conversations.find((row) => row.id.equals(conversationId)), candidate = candidates.find((row) => row.id.equals(conversationId));
@@ -256,12 +262,90 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       if (conv.closed_at !== null || timestamp(conv.created_at) > now) reason = "conversation_unavailable";
       else if (!activeClient(client, now) || !authIds.has(client.id.toString("hex"))) reason = "access_inactive";
       recipients.push({ conversationId: conv.id, client: { id: client.id, pseudonym: client.pseudonym }, eligible: reason === null, reason,
-        repeatMedia: await repeated(connection, conv.id, mediaId) });
+        repeatMedia: repeats.has(conv.id.toString("hex")) });
     }
     return { recipients, eligibleCount: recipients.filter((row) => row.eligible).length, repeatCount: recipients.filter((row) => row.repeatMedia).length };
   }
+  function scope(value) {
+    try { return validateAudience(value); } catch { input(); }
+  }
+  const accessSql = `CASE WHEN u.status <> 'active' THEN u.status
+    WHEN u.email_verified_at IS NULL OR u.email_verified_at > ? OR NOT EXISTS
+      (SELECT 1 FROM invitations ai WHERE ai.consumed_by_id = u.id AND ai.consumed_at IS NOT NULL
+        AND ai.consumed_at <= ? AND ai.consumed_at <= u.access_approved_at)
+      OR u.access_approved_at IS NULL OR u.access_approved_at > ? THEN 'pending'
+    WHEN u.access_expires_at IS NOT NULL AND u.access_expires_at <= ? THEN 'expired' ELSE 'active' END`;
+  async function ownedScope(connection, actor, audience) {
+    if (audience.mode !== "filtered") return;
+    for (const [value, kind] of [[audience.filters.tagId, "tag"], [audience.filters.groupId, "group"]]) {
+      if (value !== null && !(await connection.query("SELECT id FROM crm_labels WHERE id = ? AND owner_admin_id = ? AND kind = ? FOR UPDATE",
+        [Buffer.from(value, "hex"), actor.id, kind])).length) fail("BROADCAST_NOT_FOUND");
+    }
+  }
+  async function discoverAudience(connection, context, audience, afterId, restrict = null) {
+    const date = sqlDate(context.now), where = ["c.admin_id = ?", "c.created_at <= ?"], parameters = [context.actor.id, date];
+    if (audience.mode === "filtered") {
+      const f = audience.filters;
+      if (f.q) { where.push("(LOCATE(LOWER(?), LOWER(u.pseudonym)) > 0 OR LOCATE(LOWER(?), LOWER(COALESCE(p.nickname, ''))) > 0 OR LOCATE(LOWER(?), LOWER(u.email)) > 0)"); parameters.push(f.q, f.q, f.q); }
+      for (const value of [f.tagId, f.groupId]) if (value !== null) {
+        where.push("EXISTS (SELECT 1 FROM crm_memberships mb WHERE mb.admin_id = c.admin_id AND mb.conversation_id = c.id AND mb.label_id = ?)"); parameters.push(Buffer.from(value, "hex"));
+      }
+      if (f.access !== "all") { where.push(`(${accessSql}) = ?`); parameters.push(date, date, date, date, f.access); }
+      if (f.unread) where.push(`EXISTS (SELECT 1 FROM messages m WHERE m.conversation_id = c.id AND m.sender_id <> c.admin_id AND m.deleted_at IS NULL
+        AND m.sequence_no > COALESCE((SELECT last_read_sequence FROM chat_receipts WHERE conversation_id = c.id AND user_id = c.admin_id), 0))`);
+      if (f.reminder === "none") where.push("p.reminder_at IS NULL");
+      else if (f.reminder !== "all") { where.push(`p.reminder_at ${f.reminder === "due" ? "<=" : ">"} ?`); parameters.push(date); }
+    }
+    if (afterId !== null) { where.push("c.id > ?"); parameters.push(afterId); }
+    if (restrict !== null) { where.push(`c.id IN (${placeholders(restrict)})`); parameters.push(...restrict); }
+    return connection.query(`SELECT c.id FROM conversations c JOIN users u ON u.id = c.client_id AND u.role = 'client'
+      LEFT JOIN crm_profiles p ON p.admin_id = c.admin_id AND p.conversation_id = c.id
+      WHERE ${where.join(" AND ")} ORDER BY c.id ASC LIMIT 100`, parameters);
+  }
+  async function walkAudience(connection, context, audience, mediaId, onPage) {
+    await ownedScope(connection, context.actor, audience);
+    let afterId = null, offset = 0, totalCount = 0, repeatCount = 0;
+    const digest = createAudienceDigest(), sample = [];
+    for (;;) {
+      const selected = audience.mode === "selected"
+        ? audience.conversationIds.slice(offset, offset + 100).map((value) => Buffer.from(value, "hex"))
+        : (await discoverAudience(connection, context, audience, afterId)).map((row) => row.id);
+      if (!selected.length) break;
+      const page = await preview(connection, { ...context, now: currentTime(context.now) }, selected, mediaId);
+      if (audience.mode !== "selected") {
+        const checked = await discoverAudience(connection, context, audience, afterId, selected);
+        if (checked.length !== selected.length || checked.some((row, index) => !row.id.equals(selected[index]))) fail("BROADCAST_CONFLICT");
+      }
+      totalCount += page.recipients.length; if (!Number.isSafeInteger(totalCount)) state();
+      const eligible = [];
+      for (const row of page.recipients) {
+        if (sample.length < 50) sample.push(row);
+        if (row.eligible) { digest.update(row.conversationId, row.client.id); repeatCount += Number(row.repeatMedia); eligible.push(row); }
+      }
+      if (onPage && eligible.length) await onPage(eligible);
+      afterId = selected.at(-1); offset += selected.length;
+      if (selected.length < 100) break;
+    }
+    if (totalCount === 0 && !(await media(connection, context.actor.id, mediaId, currentTime(context.now)))) fail("BROADCAST_MEDIA");
+    const eligibleCount = digest.count;
+    return { recipients: sample, totalCount, eligibleCount, excludedCount: totalCount - eligibleCount, repeatCount, digest: digest.digest() };
+  }
+  function recipientRows(rows) {
+    return rows.map((row) => ({ conversationId: row.conversation_id, client: { id: row.client_id, pseudonym: row.pseudonym },
+      state: row.state, reason: row.reason, messageId: row.delivered_message_id, deliveredAt: nullableDate(row.delivered_at),
+      proposedMessageId: row.proposed_message_id, clientMessageId: row.client_message_id }));
+  }
+  async function recipientPage(connection, campaignId, afterId, limit) {
+    if (afterId !== null && !(await connection.query("SELECT conversation_id FROM broadcast_recipients WHERE campaign_id = ? AND conversation_id = ?", [campaignId, afterId])).length) fail("BROADCAST_NOT_FOUND");
+    const rows = await connection.query(`SELECT r.conversation_id, r.client_id, u.pseudonym, r.state, r.reason, r.delivered_message_id,
+      r.delivered_at, r.proposed_message_id, r.client_message_id FROM broadcast_recipients r JOIN users u ON u.id = r.client_id
+      WHERE r.campaign_id = ? ${afterId === null ? "" : "AND r.conversation_id > ?"} ORDER BY r.conversation_id ASC LIMIT ?`,
+      [campaignId, ...(afterId === null ? [] : [afterId]), limit + 1]);
+    const selected = rows.slice(0, limit), hasMore = rows.length > limit;
+    return { recipients: recipientRows(selected), hasMore, nextCursor: hasMore ? selected.at(-1).conversation_id : null };
+  }
   async function settle(connection, campaignId, now) {
-    const remaining = count((await connection.query("SELECT COUNT(*) AS value FROM broadcast_recipients WHERE campaign_id = ? AND state IN ('pending', 'sending')", [campaignId]))[0].value);
+    const remaining = (await connection.query("SELECT 1 FROM broadcast_recipients WHERE campaign_id = ? AND state IN ('pending', 'sending') LIMIT 1", [campaignId])).length;
     await connection.query(`UPDATE broadcast_campaigns SET status = CASE WHEN ? = 0 THEN 'completed' ELSE status END,
       updated_at = GREATEST(updated_at, ?) WHERE id = ? AND status IN ('queued', 'running')`, [remaining, sqlDate(now), campaignId]);
   }
@@ -355,6 +439,61 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
         return { campaign: await rawCampaign(connection, await campaignRow(connection, campaign.id, context.actor.id)), duplicate: false };
       });
     },
+    async previewAudience({ tokenHash, now, audience, mediaId = null }) {
+      audience = scope(audience); if (mediaId !== null) bytes(mediaId);
+      return withAdmin({ tokenHash, now }, (connection, context) => walkAudience(connection, context, audience, mediaId));
+    },
+    async createAudience({ tokenHash, now, audience, campaign, snapshot, verifyPreview }) {
+      audience = scope(audience); bytes(campaign?.id); bytes(campaign?.clientCampaignId); bytes(campaign?.requestFingerprint, 32);
+      if (campaign.mediaId !== null) bytes(campaign.mediaId);
+      if (typeof campaign.allowRepeatMedia !== "boolean" || typeof campaign.payloadEncrypted !== "string"
+        || campaign.payloadEncrypted.length < 1 || campaign.payloadEncrypted.length > 32000 || /[^\x20-\x7e]/.test(campaign.payloadEncrypted)
+        || typeof campaign.recipientProof !== "function" || typeof verifyPreview !== "function"
+        || !snapshot || !Number.isSafeInteger(snapshot.count) || snapshot.count < 0 || !/^[a-f0-9]{64}$/.test(snapshot.digest)
+        || !Number.isSafeInteger(snapshot.repeatCount) || snapshot.repeatCount < 0 || snapshot.repeatCount > snapshot.count) input();
+      if (now + 7 * 86400000 > 253402300799999) input();
+      return withAdmin({ tokenHash, now }, async (connection, context) => {
+        const previous = (await connection.query("SELECT * FROM broadcast_campaigns WHERE admin_id = ? AND client_campaign_id = ? FOR UPDATE", [context.actor.id, campaign.clientCampaignId]))[0];
+        if (previous) {
+          if (!timingSafeEqual(previous.request_fingerprint, campaign.requestFingerprint)) fail("BROADCAST_CONFLICT");
+          return { campaign: await rawCampaign(connection, previous), duplicate: true };
+        }
+        try { verifyPreview(currentTime(context.now)); } catch { fail("BROADCAST_CONFLICT"); }
+        if (snapshot.count < 1) fail("BROADCAST_RECIPIENTS");
+        if (!campaign.allowRepeatMedia && snapshot.repeatCount > 0) fail("BROADCAST_REPEAT");
+        const liveCount = count((await connection.query("SELECT COUNT(*) AS value FROM broadcast_campaigns WHERE admin_id = ? AND status IN ('queued', 'running')", [context.actor.id]))[0].value);
+        if (liveCount >= 10) fail("BROADCAST_LIMIT");
+        uint32(context.mfaVersion);
+        await connection.query(`INSERT INTO broadcast_campaigns (id, admin_id, client_campaign_id, mfa_version, payload_encrypted,
+          request_fingerprint, media_id, allow_repeat_media, created_at, updated_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [campaign.id, context.actor.id, campaign.clientCampaignId, context.mfaVersion, campaign.payloadEncrypted, campaign.requestFingerprint,
+            campaign.mediaId, campaign.allowRepeatMedia ? 1 : 0, sqlDate(context.now), sqlDate(context.now), sqlDate(context.now + 7 * 86400000)]);
+        const result = await walkAudience(connection, context, audience, campaign.mediaId, async (recipients) => {
+          const values = [], parameters = [];
+          for (const target of recipients) {
+            const messageId = randomBytes(16), proof = campaign.recipientProof({ campaignId: campaign.id, adminId: context.actor.id,
+              conversationId: target.conversationId, clientId: target.client.id, messageId }); bytes(proof);
+            values.push("(?, ?, ?, ?, ?, ?, ?)"); parameters.push(campaign.id, target.conversationId, target.client.id, messageId, proof, sqlDate(context.now), sqlDate(context.now));
+          }
+          await connection.query(`INSERT INTO broadcast_recipients (campaign_id, conversation_id, client_id, proposed_message_id, client_message_id,
+            available_at, created_at) VALUES ${values.join(", ")}`, parameters);
+        });
+        try { verifyPreview(currentTime(context.now)); } catch { fail("BROADCAST_CONFLICT"); }
+        if (result.eligibleCount !== snapshot.count || result.digest !== snapshot.digest || result.repeatCount !== snapshot.repeatCount) fail("BROADCAST_CONFLICT");
+        return { campaign: await rawCampaign(connection, await campaignRow(connection, campaign.id, context.actor.id)), duplicate: false };
+      });
+    },
+    async summary({ tokenHash, now, campaignId }) {
+      bytes(campaignId);
+      return withAdmin({ tokenHash, now }, async (connection, context) => rawCampaign(connection, await campaignRow(connection, campaignId, context.actor.id)));
+    },
+    async recipients({ tokenHash, now, campaignId, afterId = null, limit = 50 }) {
+      bytes(campaignId); if (afterId !== null) bytes(afterId); if (!Number.isInteger(limit) || limit < 1 || limit > 50) input();
+      return withAdmin({ tokenHash, now }, async (connection, context) => {
+        const campaign = await rawCampaign(connection, await campaignRow(connection, campaignId, context.actor.id));
+        return { campaign, ...(await recipientPage(connection, campaignId, afterId, limit)) };
+      });
+    },
     async activity({ tokenHash, now }) {
       return withAdmin({ tokenHash, now }, async (connection, context) => {
         // ID keysets remain useful for archives, while random IDs cannot
@@ -387,11 +526,10 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       bytes(campaignId);
       return withAdmin({ tokenHash, now }, async (connection, context) => {
         const row = await campaignRow(connection, campaignId, context.actor.id), result = await rawCampaign(connection, row);
+        if (row.payload_encrypted.startsWith("v2.")) return { ...result, ...(await recipientPage(connection, campaignId, null, 50)) };
         const recipients = await connection.query(`SELECT r.conversation_id, r.client_id, u.pseudonym, r.state, r.reason, r.delivered_message_id, r.delivered_at
           FROM broadcast_recipients r JOIN users u ON u.id = r.client_id WHERE r.campaign_id = ? ORDER BY r.conversation_id ASC`, [campaignId]);
-        return { ...result, recipients: recipients.map((recipient) => ({ conversationId: recipient.conversation_id,
-          client: { id: recipient.client_id, pseudonym: recipient.pseudonym }, state: recipient.state, reason: recipient.reason,
-          messageId: recipient.delivered_message_id, deliveredAt: nullableDate(recipient.delivered_at) })) };
+        return { ...result, recipients: recipientRows(recipients) };
       });
     },
     async cancel({ tokenHash, now, campaignId }) {
@@ -409,11 +547,27 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
     async claim({ now, leaseMilliseconds = 120000 }) {
       instant(now);
       if (!Number.isSafeInteger(leaseMilliseconds) || leaseMilliseconds < 1000 || leaseMilliseconds > 300000 || now + leaseMilliseconds > 253402300799999) input();
-      const candidates = await run(pool, (connection) => connection.query(`SELECT r.campaign_id, r.conversation_id, r.client_id, c.admin_id, c.mfa_version
-        FROM broadcast_recipients r JOIN broadcast_campaigns c ON c.id = r.campaign_id
-        WHERE c.status IN ('queued', 'running') AND r.state IN ('pending', 'sending') AND
-          ((r.state = 'pending' AND r.available_at <= ?) OR (r.state = 'sending' AND r.lease_until <= ?) OR c.expires_at <= ?)
-        ORDER BY r.available_at, c.created_at, r.campaign_id, r.conversation_id LIMIT 16`, [sqlDate(now), sqlDate(now), sqlDate(now)]));
+      const candidates = await run(pool, async (connection) => {
+        const projection = "SELECT r.campaign_id, r.conversation_id, r.client_id, c.admin_id, c.mfa_version";
+        const expiredLeases = await connection.query(`${projection}
+          FROM broadcast_recipients r FORCE INDEX (broadcast_recipients_lease) JOIN broadcast_campaigns c ON c.id = r.campaign_id
+          WHERE r.state = 'sending' AND r.lease_until <= ? AND c.status IN ('queued', 'running')
+          ORDER BY r.lease_until, r.campaign_id, r.conversation_id LIMIT 16`, [sqlDate(now)]);
+        const expiredPending = await connection.query(`${projection}
+          FROM broadcast_campaigns c JOIN broadcast_recipients r ON r.campaign_id = c.id
+          WHERE c.status IN ('queued', 'running') AND c.expires_at <= ? AND r.state = 'pending'
+          ORDER BY c.expires_at, r.campaign_id, r.conversation_id LIMIT 16`, [sqlDate(now)]);
+        const pending = await connection.query(`${projection}
+          FROM broadcast_recipients r FORCE INDEX (broadcast_recipients_ready) JOIN broadcast_campaigns c ON c.id = r.campaign_id
+          WHERE r.state = 'pending' AND r.available_at <= ? AND c.status IN ('queued', 'running')
+          ORDER BY r.available_at, r.campaign_id, r.conversation_id LIMIT 16`, [sqlDate(now)]);
+        const unique = new Map();
+        for (const row of [...expiredLeases, ...expiredPending, ...pending]) {
+          const identity = `${storedCandidateId(row.campaign_id)}:${storedCandidateId(row.conversation_id)}`;
+          if (!unique.has(identity)) unique.set(identity, row);
+        }
+        return [...unique.values()].slice(0, 16);
+      });
       for (const candidate of candidates) {
         const result = await chatStore.withBroadcastDelivery({ adminId: candidate.admin_id, mfaVersion: uint32(Number(candidate.mfa_version)), conversationId: candidate.conversation_id, now },
           async (connection, context) => {

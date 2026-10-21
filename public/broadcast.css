@@ -67,3 +67,5 @@ fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .footer { border-top: 1px solid #423343; padding: 20px 0 28px; color: #bcaebb; font-size: 12px; line-height: 1.8; }
 @media (max-width: 850px) { .broadcast-grid, .history-grid { grid-template-columns: 1fr; } .campaign-detail { padding: 20px 0 0; border-left: 0; border-top: 1px solid #423343; } }
 @media (max-width: 480px) { .topbar { align-items: flex-start; padding: 20px 0; gap: 18px; } .account-nav { max-width: 165px; gap: 6px 12px; font-size: 12px; } .broadcast-main { margin-top: 18px; } .filters { gap: 0 10px; } .section-head { display: block; } .section-head .button { margin-bottom: 10px; } .footer { text-align: center; } .button { width: 100%; } }
+
+.recipient-pager{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}.recipient-pager button{min-height:44px}.selection-summary h3:focus{outline:2px solid #d8b999;outline-offset:4px}

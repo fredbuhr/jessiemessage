@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign } from "../public/broadcast-model.js";
+import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, updateAudience, parseRecipientPage } from "../public/broadcast-model.js";
 import "../public/session-clock.js";
 
 const now = 1800000000000;
@@ -143,3 +143,66 @@ test("older history responses cannot roll back delivery counts or repaint a canc
   assert.strictEqual(mergeCampaign(queued, running), running);
 });
 
+
+test("large audiences are explicit and capability absence retains the compatible manual path", () => {
+  const legacy = connected(); assert.equal(updateAudience(legacy, { mode: "all" }), false); assert.equal(legacy.audienceMode, "selected");
+  const state = createBroadcastState(); acceptBroadcastSession(state, clearBroadcast(state, { visible: true }), admin({ largeAudiencesEnabled: true }), now);
+  assert.equal(state.audienceMode, "selected"); assert.equal(updateAudience(state, { mode: "all" }), true);
+  updateComposition(state, { title: "Large synthetic audience", body: "Synthetic body" });
+  const ticket = previewTicket(state), sample = Array.from({ length: 50 }, (_, index) => ({ conversationId: id(index + 1), client: { id: id(index + 5000), pseudonym: `Client ${index + 1}` }, eligible: true, reason: null, repeatMedia: false }));
+  assert.equal(acceptPreview(state, ticket, { recipients: sample, totalCount: 2500, eligibleCount: 2499, excludedCount: 1, repeatCount: 0, previewToken: "v1.opaque.signature" }), true);
+  assert.equal(canConfirmBroadcast(state, now), false); state.acknowledged = true;
+  const payload = prepareCampaign(state, id(50000), now); assert.deepEqual(payload.audience, { mode: "all" }); assert.equal(Object.hasOwn(payload, "conversationIds"), false);
+  assert.equal(state.pending.expectedCount, 2499); assert.ok(Object.isFrozen(payload.audience)); assert.equal(updateAudience(state, { mode: "selected" }), false);
+  rejectCampaign(state, broadcastTicket(state)); assert.strictEqual(retryCampaign(state), payload);
+  const accepted = acceptCampaign(state, broadcastTicket(state), { duplicate: true, campaign: { ...campaign({ ...payload, conversationIds: Array(2499) }), formatVersion: 2, audienceMode: "all" } });
+  assert.equal(accepted.counts.total, 2499); assert.equal(state.audienceMode, "selected");
+});
+
+test("2500 manual recipients cross contact pages without a cardinality100 business ceiling", () => {
+  const state = createBroadcastState(); acceptBroadcastSession(state, clearBroadcast(state, { visible: true }), admin({ largeAudiencesEnabled: true }), now);
+  for (let start = 1; start <= 2500; start += 50) {
+    acceptContacts(state, page(Array.from({ length: 50 }, (_, index) => contact(start + index))), { replace: true });
+    for (let value = start; value < start + 50; value += 1) assert.equal(selectRecipient(state, id(value), true), true);
+    assert.equal(state.contacts.size, 50);
+  }
+  updateComposition(state, { title: "Manual synthetic audience", body: "Hello" });
+  const ticket = previewTicket(state), recipients = ticket.ids.slice(0, 50).map((conversationId) => ({ conversationId, client: { id: id(9000), pseudonym: "Synthetic" }, eligible: true, reason: null, repeatMedia: false }));
+  acceptPreview(state, ticket, { recipients, totalCount: 2500, eligibleCount: 2500, excludedCount: 0, repeatCount: 0, previewToken: "v1.opaque.signature" }); state.acknowledged = true;
+  const payload = prepareCampaign(state, id(50000), now); assert.equal(payload.audience.conversationIds.length, 2500); assert.ok(Object.isFrozen(payload.audience.conversationIds));
+  assert.ok(new TextEncoder().encode(JSON.stringify(payload)).length < 1048576);
+});
+
+test("scope changes invalidate an earlier proof even after restoring the same scope, and capability changes purge it", () => {
+  const state = createBroadcastState(); acceptBroadcastSession(state, clearBroadcast(state, { visible: true }), admin({ largeAudiencesEnabled: true }), now);
+  updateAudience(state, { mode: "all" }); const ticket = previewTicket(state);
+  updateAudience(state, { mode: "filtered", filters: { q: " e\u0301 ", tagId: null, groupId: null, access: "active", unread: false, reminder: "all" } });
+  assert.equal(state.audienceFilters.q, "é"); updateAudience(state, { mode: "all" });
+  assert.equal(acceptPreview(state, ticket, {}), false);
+  updateComposition(state, { title: "Private draft", body: "Private body" });
+  assert.equal(acceptBroadcastSession(state, broadcastTicket(state), admin(), now), false); assert.equal(state.draft.body, ""); assert.equal(state.session, null);
+});
+
+test("large previews reject inconsistent counters, oversized samples and malformed opaque proofs", () => {
+  const state = createBroadcastState(); acceptBroadcastSession(state, clearBroadcast(state, { visible: true }), admin({ largeAudiencesEnabled: true }), now); updateAudience(state, { mode: "all" });
+  const input = { recipients: [{ conversationId: id(1), client: { id: id(2), pseudonym: "Synthetic" }, eligible: true, reason: null, repeatMedia: false }], totalCount: 1, eligibleCount: 1, excludedCount: 0, repeatCount: 0, previewToken: "v1.opaque.signature" };
+  for (const change of [{ excludedCount: 1 }, { eligibleCount: 2 }, { repeatCount: 2 }, { previewToken: "" }, { previewToken: "x".repeat(4097) }, { recipients: [] }, { totalCount: Number.MAX_SAFE_INTEGER + 1 }]) {
+    assert.throws(() => acceptPreview(state, previewTicket(state), { ...input, ...change }), /invalid_preview/);
+  }
+});
+
+test("recipient pages strip private fields and enforce bounded owned monotone cursors without equating page size and total", () => {
+  const campaignId = id(9000), row = (value) => ({ conversationId: id(value), client: { id: id(value + 100), pseudonym: "Synthetic", email: "private@example.invalid" }, state: "pending", reason: null, messageId: null, deliveredAt: null, proof: "private" });
+  const page = { campaignId, recipients: Array.from({ length: 50 }, (_, index) => row(index + 1)), hasMore: true, nextCursor: id(50) };
+  const parsed = parseRecipientPage(page, { campaignId }); assert.equal(parsed.recipients.length, 50); assert.equal(JSON.stringify(parsed).includes("private"), false);
+  for (const change of [{ campaignId: id(9001) }, { nextCursor: id(49) }, { recipients: [row(2), row(1)] }, { recipients: Array.from({ length: 51 }, (_, index) => row(index + 1)) }, { recipients: [{ ...row(1), state: "failed" }], nextCursor: id(1) }]) assert.throws(() => parseRecipientPage({ ...page, ...change }, { campaignId }), /invalid_recipient_page/);
+});
+
+test("redaction can shrink a frozen audience at the same timestamp but later stale reads can never enlarge it", () => {
+  const previous = parseCampaign(campaign({ clientCampaignId: id(99), title: "Synthetic", body: "Hello", mediaId: null, allowRepeatMedia: false, conversationIds: [id(1), id(2), id(3)] }, { status: "running", counts: { total: 3, pending: 1, sending: 0, delivered: 2, skipped: 0, cancelled: 0, failed: 0 } }));
+  const reduced = parseCampaign({ ...previous, counts: { ...previous.counts, total: 2, delivered: 1 } });
+  assert.strictEqual(mergeCampaign(previous, reduced), reduced);
+  assert.strictEqual(mergeCampaign(reduced, { ...previous, updatedAt: previous.updatedAt + 1000 }), reduced);
+  assert.strictEqual(mergeCampaign(reduced, { ...reduced, updatedAt: reduced.updatedAt + 1000, counts: { ...reduced.counts, delivered: 0, pending: 2 } }), reduced);
+  assert.throws(() => parseCampaign({ ...reduced, status: "completed" }), /invalid_campaign/);
+});

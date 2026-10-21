@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac, randomBytes } from "node:crypto";
 import { createBroadcastService, BroadcastError } from "../server/broadcast/service.mjs";
-import { openPayload, sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
+import { openPayload, sealPayload, campaignFingerprint, createAudienceDigest } from "../server/broadcast/crypto.mjs";
 import { newToken, tokenDigest } from "../server/auth/crypto.mjs";
 
 const now = 1750000000000, adminId = Buffer.alloc(16, 1), clientId = Buffer.alloc(16, 2), conversationId = Buffer.alloc(16, 3);
@@ -280,4 +280,119 @@ test("live activity refuses duplicate, wrongly ordered, oversized, foreign or in
     f.state.activity = { campaigns };
     await assert.rejects(f.service.activity(f.token), hasCode("BROADCAST_UNAVAILABLE"));
   }
+});
+
+const orderedId = (number) => { const value = Buffer.alloc(16); value.writeUInt32BE(number, 12); return value; };
+async function largeFixture() {
+  const f = await fixture({ mediaEnabled: true });
+  f.state.clock = now; f.state.largeCreates = 0; f.state.largeRows = [];
+  const candidates = Array.from({ length: 2500 }, (_, index) => ({ conversationId: orderedId(index + 1),
+    client: { id: orderedId(index + 10001), pseudonym: `Synthetic ${index}` }, eligible: true, reason: null, repeatMedia: false }));
+  const digest = createAudienceDigest(); for (const row of candidates) digest.update(row.conversationId, row.client.id);
+  const summary = { recipients: candidates.slice(0, 50), totalCount: 2500, eligibleCount: 2500, excludedCount: 0, repeatCount: 0, digest: digest.digest() };
+  Object.assign(f.store, {
+    previewAudience: async () => summary,
+    createAudience: async (options) => {
+      f.calls.push({ name: "createAudience", options });
+      if (f.state.largeStored) {
+        if (!options.campaign.requestFingerprint.equals(f.state.largeStored.requestFingerprint)) throw { code: "BROADCAST_CONFLICT" };
+        return { campaign: f.state.largeStored, duplicate: true };
+      }
+      options.verifyPreview(f.state.clock); f.state.largeCreates++;
+      const command = options.campaign;
+      f.state.largeStored = { ...command, status: "queued", createdAt: f.state.clock, updatedAt: f.state.clock, expiresAt: f.state.clock + 604800000,
+        counts: { total: 2500, pending: 2500, sending: 0, delivered: 0, skipped: 0, cancelled: 0, failed: 0 } };
+      f.state.largeRows = candidates.map((row, index) => { const messageId = orderedId(index + 50001);
+        return { conversationId: row.conversationId, client: row.client, proposedMessageId: messageId,
+          clientMessageId: command.recipientProof({ campaignId: command.id, adminId, conversationId: row.conversationId, clientId: row.client.id, messageId }),
+          state: "pending", reason: null, messageId: null, deliveredAt: null, privateLease: "never-public" }; });
+      return { campaign: f.state.largeStored, duplicate: false };
+    },
+    summary: async () => f.state.largeStored,
+    recipients: async ({ afterId, limit }) => {
+      const index = afterId === null ? 0 : f.state.largeRows.findIndex(row => row.conversationId.equals(afterId)) + 1;
+      if (afterId !== null && index === 0) throw { code: "BROADCAST_NOT_FOUND" };
+      const recipients = f.state.largeRows.slice(index, index + limit), hasMore = index + limit < f.state.largeRows.length;
+      return { campaign: f.state.largeStored, recipients, hasMore, nextCursor: hasMore ? recipients.at(-1).conversationId : null };
+    },
+  });
+  f.options = { ...f.options, clock: () => f.state.clock, largeAudiencesEnabled: true };
+  f.service = await createBroadcastService(f.options); f.candidates = candidates; f.largeSummary = summary;
+  f.largeInput = (previewToken, changes = {}) => ({ clientCampaignId: "9".repeat(32), title: "Synthetic large campaign", body: "Synthetic body", mediaId: null,
+    allowRepeatMedia: false, audience: { mode: "all" }, previewToken, ...changes });
+  return f;
+}
+
+test("large audiences are a readonly explicit opt-in while compatibility can inspect existing v2", async () => {
+  const f = await largeFixture(), compat = await createBroadcastService({ ...f.options, largeAudiencesEnabled: false });
+  assert.equal(compat.largeAudiencesEnabled, false); assert.equal(f.service.largeAudiencesEnabled, true);
+  assert.throws(() => { compat.largeAudiencesEnabled = true; }, TypeError);
+  await assert.rejects(compat.preview(f.token, { audience: { mode: "all" }, mediaId: null }), hasCode("BROADCAST_INPUT"));
+  await assert.rejects(compat.create(f.token, f.largeInput("opaque")), hasCode("BROADCAST_INPUT"));
+  assert.equal(f.authCalls.length, 0);
+  const preview = await f.service.preview(f.token, { audience: { mode: "all" }, mediaId: null });
+  const result = await f.service.create(f.token, f.largeInput(preview.previewToken));
+  const summary = await compat.summary(f.token, result.campaign.id);
+  assert.equal(summary.counts.total, 2500); assert.equal(summary.formatVersion, 2); assert.equal(summary.audienceMode, "all");
+  assert.equal(Object.hasOwn(summary, "recipients"), false);
+  const page = await compat.recipients(f.token, summary.id, { afterId: null, limit: 50 });
+  assert.equal(page.recipients.length, 50); assert.equal(page.hasMore, true);
+  assert.doesNotMatch(JSON.stringify(page), /proposedMessageId|clientMessageId|privateLease|payloadEncrypted/);
+});
+
+test("large preview returns only the first 50 and confirmation creates a compact authenticated snapshot", async () => {
+  const f = await largeFixture();
+  const preview = await f.service.preview(f.token, { audience: { mode: "all" }, mediaId: null });
+  assert.equal(preview.totalCount, 2500); assert.equal(preview.eligibleCount, 2500); assert.equal(preview.excludedCount, 0);
+  assert.equal(preview.recipients.length, 50); assert.equal(preview.repeatCount, 0); assert.ok(preview.previewToken.length < 2048);
+  const result = await f.service.create(f.token, f.largeInput(preview.previewToken));
+  assert.equal(result.campaign.counts.total, 2500); assert.equal(result.duplicate, false);
+  const command = f.calls.find(call => call.name === "createAudience").options;
+  const payload = openPayload(command.campaign.payloadEncrypted, f.key, { campaignId: command.campaign.id, adminId });
+  assert.equal(payload.version, 2); assert.equal(payload.audience.count, 2500); assert.equal(payload.audience.digest, f.largeSummary.digest);
+  assert.equal(Object.hasOwn(payload, "conversationIds"), false); assert.ok(command.campaign.payloadEncrypted.length < 1000);
+  assert.deepEqual(command.campaign.requestFingerprint, campaignFingerprint(payload, f.key, { adminId }));
+});
+
+test("committed v2 retries survive expired previews and current audience drift without creating another campaign", async () => {
+  const f = await largeFixture(), preview = await f.service.preview(f.token, { audience: { mode: "all" }, mediaId: null });
+  const body = f.largeInput(preview.previewToken), first = await f.service.create(f.token, body);
+  f.state.clock += 600001; f.largeSummary.eligibleCount = 0;
+  const repeated = await f.service.create(f.token, body);
+  assert.equal(repeated.duplicate, true); assert.equal(repeated.campaign.id, first.campaign.id); assert.equal(f.state.largeCreates, 1);
+  await assert.rejects(f.service.create(f.token, { ...body, title: "Changed content" }), hasCode("BROADCAST_CONFLICT"));
+  f.state.largeStored = null;
+  await assert.rejects(f.service.create(f.token, { ...body, clientCampaignId: "8".repeat(32) }), hasCode("BROADCAST_CONFLICT"));
+  assert.equal(f.state.largeCreates, 1);
+});
+
+test("preview proof rejects tampering and different selectors or media before any campaign persistence", async () => {
+  const f = await largeFixture(), preview = await f.service.preview(f.token, { audience: { mode: "all" }, mediaId: null });
+  const body = f.largeInput(preview.previewToken);
+  const token = preview.previewToken.slice(0, -1) + (preview.previewToken.endsWith("A") ? "B" : "A");
+  for (const changes of [{ previewToken: token }, { mediaId: "a".repeat(32) }, { audience: { mode: "selected", conversationIds: f.candidates.map(row => row.conversationId.toString("hex")) } }]) {
+    await assert.rejects(f.service.create(f.token, { ...body, ...changes }), hasCode("BROADCAST_CONFLICT"));
+  }
+  assert.equal(f.state.largeCreates, 0); assert.equal(f.calls.some(call => call.name === "createAudience"), false);
+});
+
+test("v2 recipient pages authenticate individual rows and reject foreign cursors or swapped queue identities", async () => {
+  const f = await largeFixture(), preview = await f.service.preview(f.token, { audience: { mode: "all" }, mediaId: null });
+  const { campaign } = await f.service.create(f.token, f.largeInput(preview.previewToken));
+  const one = await f.service.recipients(f.token, campaign.id, { limit: 50 });
+  const two = await f.service.recipients(f.token, campaign.id, { afterId: one.nextCursor, limit: 50 });
+  assert.equal(two.recipients.length, 50); assert.ok(two.recipients[0].conversationId > one.recipients.at(-1).conversationId);
+  await assert.rejects(f.service.recipients(f.token, campaign.id, { afterId: "f".repeat(32), limit: 50 }), hasCode("BROADCAST_NOT_FOUND"));
+  const row = f.state.largeRows[0], proof = row.clientMessageId;
+  f.state.largeRows[0].clientMessageId = randomBytes(16);
+  await assert.rejects(f.service.recipients(f.token, campaign.id, { limit: 50 }), hasCode("BROADCAST_UNAVAILABLE"));
+  Object.assign(row, { clientMessageId: proof, state: "delivered", messageId: randomBytes(16), deliveredAt: now });
+  await assert.rejects(f.service.recipients(f.token, campaign.id, { limit: 50 }), hasCode("BROADCAST_UNAVAILABLE"));
+});
+
+test("authenticated v2 total is enforced independently of paginated recipient sample size", async () => {
+  const f = await largeFixture(), preview = await f.service.preview(f.token, { audience: { mode: "all" }, mediaId: null });
+  const { campaign } = await f.service.create(f.token, f.largeInput(preview.previewToken));
+  f.state.largeStored.counts = { ...f.state.largeStored.counts, total: 2501, pending: 2501 };
+  await assert.rejects(f.service.summary(f.token, campaign.id), hasCode("BROADCAST_UNAVAILABLE"));
 });

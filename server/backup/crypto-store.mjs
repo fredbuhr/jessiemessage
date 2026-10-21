@@ -87,6 +87,32 @@ function normalize(purpose, row) {
 /** Bounded SELECT-only crypto reader. It never starts services or claims jobs. */
 export function createBackupCryptoStore({ pool } = {}) {
   if (typeof pool?.getConnection !== "function") throw new TypeError("A private backup reader is required.");
+  async function* recipientPages(campaignId) {
+    let afterId = null;
+    while (true) {
+      let connection, rows;
+      try {
+        connection = await pool.getConnection();
+        rows = await connection.query(`SELECT r.conversation_id, r.client_id, r.proposed_message_id, r.client_message_id,
+          c.client_id AS actual_client, c.admin_id AS actual_admin FROM broadcast_recipients r
+          JOIN conversations c ON c.id = r.conversation_id WHERE r.campaign_id = ?
+          ${afterId === null ? "" : "AND r.conversation_id > ?"} ORDER BY r.conversation_id ASC LIMIT 100`,
+        [campaignId, ...(afterId === null ? [] : [afterId])]);
+        if (!Array.isArray(rows) || rows.length > 100) fail();
+        rows = rows.map(row => ({ conversationId: bytes(row.conversation_id, 16), clientId: bytes(row.client_id, 16),
+          messageId: bytes(row.proposed_message_id, 16), proof: bytes(row.client_message_id, 16),
+          actualClientId: bytes(row.actual_client, 16), actualAdminId: bytes(row.actual_admin, 16) }));
+        for (const row of rows) {
+          if (afterId !== null && Buffer.compare(row.conversationId, afterId) <= 0) fail();
+          afterId = row.conversationId;
+        }
+      } catch { fail(); }
+      finally { try { connection?.release(); } catch {} }
+      if (!rows.length) return;
+      yield rows;
+      if (rows.length < 100) return;
+    }
+  }
   return Object.freeze({
     async page(options = {}) {
       if (!options || typeof options !== "object" || Array.isArray(options)
@@ -114,9 +140,14 @@ export function createBackupCryptoStore({ pool } = {}) {
           if (previous !== null && Buffer.compare(row.id, previous) <= 0) fail();
           previous = row.id;
           if (purpose === "broadcast") {
-            const recipients = await connection.query("SELECT conversation_id FROM broadcast_recipients WHERE campaign_id = ? ORDER BY conversation_id ASC LIMIT 101", [row.id]);
-            if (!Array.isArray(recipients) || recipients.length > 100) fail();
-            row.conversationIds = recipients.map((recipient) => bytes(recipient.conversation_id, 16));
+            if (row.encrypted.startsWith("v2.")) {
+              const campaignId = Buffer.from(row.id);
+              row.recipientPages = () => recipientPages(campaignId);
+            } else {
+              const recipients = await connection.query("SELECT conversation_id FROM broadcast_recipients WHERE campaign_id = ? ORDER BY conversation_id ASC LIMIT 101", [row.id]);
+              if (!Array.isArray(recipients) || recipients.length > 100) fail();
+              row.conversationIds = recipients.map((recipient) => bytes(recipient.conversation_id, 16));
+            }
           }
         }
         const hasMore = rows.length > limit;

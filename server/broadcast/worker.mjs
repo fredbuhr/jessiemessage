@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { encryptMessageBody, messageFingerprint } from "../chat/crypto.mjs";
-import { openPayload } from "./crypto.mjs";
+import { openPayload, verifyRecipientProof } from "./crypto.mjs";
 
 export class BroadcastWorkerError extends Error {
   constructor() { super("Private broadcasts worker could not complete its batch."); this.name = "BroadcastWorkerError"; this.code = "BROADCAST_WORKER_FAILED"; }
@@ -40,13 +40,22 @@ export function createBroadcastWorker({ store, authStore, key, clock = Date.now,
           if (["campaignId", "adminId", "conversationId", "clientId", "messageId", "clientMessageId", "leaseToken"].some((field) => !bytes(job[field]))
             || !(job.mediaId === null || bytes(job.mediaId)) || typeof job.allowRepeatMedia !== "boolean") throw new BroadcastWorkerError();
           const payload = openPayload(job.payloadEncrypted, key, { campaignId: job.campaignId, adminId: job.adminId });
-          if (!payload.conversationIds.includes(job.conversationId.toString("hex")) || payload.mediaId !== (job.mediaId?.toString("hex") ?? null)
+          const member = payload.version === 2 ? verifyRecipientProof(key, job, job.clientMessageId)
+            : payload.conversationIds.includes(job.conversationId.toString("hex"));
+          if (!member || payload.mediaId !== (job.mediaId?.toString("hex") ?? null)
             || payload.allowRepeatMedia !== job.allowRepeatMedia) throw new BroadcastWorkerError();
           const current = now(); let retryAfter = null;
-          // Share precisely the normal chat send buckets, including their key.
-          for (const [name, identity, limit] of [["global-send", "all", 300], ["user-send", job.adminId.toString("hex"), 30]]) {
+          // Legacy jobs keep their original budgets. Compact campaigns have a
+          // separate administrator budget, checked before the shared global
+          // bucket, leaving normal manual-send capacity available.
+          const budgets = payload.version === 2
+            ? [["jessiemessage:broadcast-delivery-rate:v2:", "user-send", job.adminId.toString("hex"), 120],
+              ["jessiemessage:chat-rate:v1:", "global-send", "all", 300]]
+            : [["jessiemessage:chat-rate:v1:", "global-send", "all", 300],
+              ["jessiemessage:chat-rate:v1:", "user-send", job.adminId.toString("hex"), 30]];
+          for (const [namespace, name, identity, limit] of budgets) {
             if (stopped) break;
-            const bucket = createHmac("sha256", key).update("jessiemessage:chat-rate:v1:").update(name).update("\0").update(identity).digest();
+            const bucket = createHmac("sha256", key).update(namespace).update(name).update("\0").update(identity).digest();
             const budget = await authStore.consumeRateLimit(bucket, { now: current, windowSeconds: 60, limit });
             if (stopped) break;
             if (!budget || typeof budget.allowed !== "boolean") throw new BroadcastWorkerError();
