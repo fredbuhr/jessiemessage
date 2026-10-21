@@ -1,6 +1,6 @@
 {
   "version": "1.4.1",
-  "status": "release150_identity_confirmed_metadata_alignment_pending",
+  "status": "compatible_rollback141_recorded_hosted_qualified_never_started",
   "branch": "feat/announcements-compat-141",
   "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
   "tree": "a2f29930fe8ead853db6b6e8b76b613891ae4a04",
@@ -8,7 +8,7 @@
     "implementationReported": true,
     "codeQualified": true,
     "releasePublished": true,
-    "deliveryComplete": false
+    "deliveryComplete": true
   },
   "requirements": {
     "schemaMigrations": 32,
@@ -742,7 +742,7 @@
     "activeStartedAtDisplay": "21/10/2026 17:58:07",
     "schemaMigrations": 32,
     "currentRollbackRelease": "1.4.1",
-    "activeMetadataReceipt": null,
+    "activeMetadataReceipt": "release150_metadata_recorded",
     "preparationReported": true,
     "migration32Confirmed": true,
     "release150ActivationConfirmed": true,
@@ -765,8 +765,8 @@
     "serviceStopOperatorAttested": true,
     "migrationReceipt": "jm150-hosted-schema32.json",
     "runtimeIdentity150Pending": false,
-    "checkpointMetadataVersion": "1.4.0",
-    "checkpointSchemaMigrations": 31,
+    "checkpointMetadataVersion": "1.5.0",
+    "checkpointSchemaMigrations": 32,
     "priorActiveServiceIdentity": {
       "activeVersion": "1.4.0",
       "activeSource": "56d4595059df9292fc54ba4d4e948eeb793bae96",
@@ -775,11 +775,12 @@
     },
     "runtimeIdentityEvidence": "admin_readiness_user_report",
     "identityReceipt": "jm150-hosted-identity.json",
-    "metadataAlignmentReported": false,
-    "priorMetadataReceipt": "release140_metadata_recorded"
+    "metadataAlignmentReported": true,
+    "priorMetadataReceipt": "release140_metadata_recorded",
+    "metadataReceipt": "jm150-hosted-metadata.json",
+    "rollback141RuntimeStarted": false
   },
   "notAttested": [
-    "release150_metadata_alignment",
     "physical_phone_and_real_host_capacity",
     "current_pc_or_backup_delivery",
     "native_backup_restore_with_nonempty_announcement"
@@ -794,7 +795,7 @@
     "mergedAt": "2026-10-21T14:49:04Z"
   },
   "operatorDelivery": {
-    "status": "runtime150_identified_metadata_alignment_pending",
+    "status": "release150_closed",
     "helperCommit": "40027be898f1a82cd9c2aed7c4a313096d8db4d4",
     "helperTree": "c999e78badfea23ab4e4ff9df8266f2d66bb1fb7",
     "publishedBytesVerifiedAgainstLocal": true,
@@ -1030,7 +1031,7 @@
       "identityUrl": "https://jessiemessage.com/admin/readiness",
       "executionReported": true,
       "runtimeIdentityObserved": true,
-      "metadataAlignmentReported": false,
+      "metadataAlignmentReported": true,
       "identityReceipt": "jm150-hosted-identity.json",
       "observedIdentity": {
         "provenance": "admin_readiness_user_report",
@@ -1041,7 +1042,7 @@
       }
     },
     "metadataRecording": {
-      "currentNextAction": true,
+      "currentNextAction": false,
       "helperCommit": "7ccb9bc3e9be1027a83cf66e8a8ea6804f0ee0ca",
       "helperTree": "2f8d1785d858fc3fc0836cf16834b541dd87f3fd",
       "path": "ops/record-release150.py",
@@ -1075,8 +1076,22 @@
       "noRestart": true,
       "rollbackVersion": "1.4.1",
       "priorActiveUsableRollback": false,
-      "executionReported": false,
-      "receipt": null
+      "executionReported": true,
+      "receipt": "jm150-hosted-metadata.json",
+      "observedResult": {
+        "status": "release150_metadata_recorded",
+        "source": "abca467c45c9385371a9095ab359e78c99140370",
+        "version": "1.5.0",
+        "metadataOnly": true,
+        "noRestart": true,
+        "rollbackPreserved": true,
+        "rollbackRelease": "1.4.1",
+        "schemaMigrations": 32,
+        "priorActivePreserved": true,
+        "priorActiveUsableRollback": false,
+        "rollback141HostedQualified": true,
+        "otherBlocksPreserved": true
+      }
     }
   },
   "initialOperatorTemplate": {

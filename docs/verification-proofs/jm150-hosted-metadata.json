@@ -1,0 +1,14 @@
+{
+  "status": "release150_metadata_recorded",
+  "source": "abca467c45c9385371a9095ab359e78c99140370",
+  "version": "1.5.0",
+  "metadataOnly": true,
+  "noRestart": true,
+  "rollbackPreserved": true,
+  "rollbackRelease": "1.4.1",
+  "schemaMigrations": 32,
+  "priorActivePreserved": true,
+  "priorActiveUsableRollback": false,
+  "rollback141HostedQualified": true,
+  "otherBlocksPreserved": true
+}
