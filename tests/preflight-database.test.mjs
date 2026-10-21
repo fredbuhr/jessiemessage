@@ -82,10 +82,10 @@ test("SQL preflight drains one read-only snapshot and returns only fixed checks"
   assert.ok(result.checks.every(({ status }) => status === "pass"));
   for (const action of ["createPool", "getConnection", "rollback", "release", "end"]) assert.equal(setup.calls.filter((call) => call.action === action).length, 1);
   const statements = setup.calls.filter(({ sql }) => sql);
-  assert.equal(statements.filter(({ sql }) => /WHERE 1 = 0$/.test(sql)).length, 31);
+  assert.equal(statements.filter(({ sql }) => /WHERE 1 = 0$/.test(sql)).length, 32);
   assert.ok(statements.filter(({ sql }) => /^SELECT version|WHERE 1 = 0$/.test(sql)).every(({ timeout }) => timeout === 2000));
   assert.ok(statements.some(({ sql }) => sql === "START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT"));
-  assert.ok(statements.some(({ sql }) => sql.endsWith("ORDER BY version LIMIT 33")));
+  assert.ok(statements.some(({ sql }) => sql.endsWith("ORDER BY version LIMIT 34")));
   assert.doesNotMatch(statements.map(({ sql }) => sql).join("\n"), /GET_LOCK|RELEASE_LOCK|autocommit|foreign_key_checks|(?:^|\n)(?:INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|GRANT|REVOKE)\b/);
   assert.deepEqual(setup.calls.slice(-3), [{ action: "rollback" }, { action: "release" }, { action: "end" }]);
 });
@@ -385,7 +385,7 @@ test("ledger drift, missing migrations, invalid counters and unavailable sources
   const drift = history(); drift[3].checksum = "f".repeat(64);
   const dirty = history(); dirty[26].state = "running";
   const badAttempts = history(); badAttempts[2].attempts = "NaN";
-  for (const rows of [[], history().slice(0, -1), [...history(), { ...history().at(-1), version: 33 }], drift, dirty, badAttempts]) {
+  for (const rows of [[], history().slice(0, -1), [...history(), { ...history().at(-1), version: 34 }], drift, dirty, badAttempts]) {
     const setup = fixture({ rows });
     const result = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, setup.dependencies);
     assert.equal(statuses(result).history, "fail"); assert.equal(statuses(result).schema_reads, "pass"); safeDto(result);
@@ -395,15 +395,15 @@ test("ledger drift, missing migrations, invalid counters and unavailable sources
   assert.equal(statuses(result).history, "fail"); assert.equal(statuses(result).schema_reads, "pass"); safeDto(result);
 });
 
-test("32 applied migrations pass with 31 application tables while a missing admission ALTER fails", async () => {
-  assert.equal(plan.length, 32); assert.equal(appTables.length, 31);
+test("33 applied migrations pass with 32 application tables while a missing admission ALTER fails", async () => {
+  assert.equal(plan.length, 33); assert.equal(appTables.length, 32);
   const complete = fixture();
   const completeResult = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, complete.dependencies);
   assert.equal(completeResult.valid, true);
   const old = fixture({ rows: history().slice(0, 27) });
   const oldResult = await inspectDatabase({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }, old.dependencies);
   assert.equal(statuses(oldResult).history, "fail"); assert.equal(statuses(oldResult).schema_reads, "pass");
-  assert.equal(old.calls.filter(({ sql }) => sql?.endsWith("WHERE 1 = 0")).length, 31);
+  assert.equal(old.calls.filter(({ sql }) => sql?.endsWith("WHERE 1 = 0")).length, 32);
 });
 
 test("a projection failure stops the bounded loop and still rolls back, releases and closes", async () => {

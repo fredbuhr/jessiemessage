@@ -108,6 +108,9 @@
 (() => { globalThis.JessieI18n?.register({
   "JessieMessage — Mes annonces": "JessieMessage — My announcements",
   "Annonces": "Announcements",
+  "Mes tâches": "My tasks",
+  "Tâches du client": "Client tasks",
+  "Mes tâches · {count} à traiter": "My tasks · {count} due",
   "UN MOT POUR EUX": "A NOTE FOR THEM",
   "Mes annonces": "My announcements",
   "Prépare un petit mot qui apparaîtra dans leur conversation, au moment de ton choix.": "Write a little note to appear in their conversation when you choose.",

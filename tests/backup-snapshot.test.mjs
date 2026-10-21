@@ -147,10 +147,10 @@ async function captureFixture({ changedCheck = false, changedLedger = false, ext
     inspectionPool: { getConnection: async () => inspection } }) };
 }
 
-test("snapshot capture separates 32 migration entries from 31 CREATE tables and includes the full ledger", async () => {
+test("snapshot capture separates 33 migration entries from 32 CREATE tables and includes the full ledger", async () => {
   const f = await captureFixture(), snapshot = await captureBackupSnapshot({ store: f.store });
-  assert.equal(f.migrations.length, 32); assert.equal(f.names.length, 32);
-  assert.deepEqual(snapshot.counts, { tables: 32, rows: 33 }, "31 application tables + ledger, 32 ledger rows + capacity state");
+  assert.equal(f.migrations.length, 33); assert.equal(f.names.length, 33);
+  assert.deepEqual(snapshot.counts, { tables: 33, rows: 34 }, "32 application tables + ledger, 33 ledger rows + capacity state");
   assert.deepEqual([...f.observations.selectedTables].sort(), [...f.names].sort());
   assert.equal(f.observations.committed, 1); assert.equal(f.observations.releases, 2);
 });

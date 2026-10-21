@@ -413,7 +413,7 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
       await writeFile(path.join(checkpointDirectory, "manifest.json"), rawManifest, { mode: 0o600, flag: "wx" });
       const checkpointReceipt = { format: "jessiemessage-private-checkpoint", version: 10,
         profile: "messaging-photos-notify-recovery-crm-broadcast-application", coverage: { ...APPLICATION_COVERAGE }, createdAt: Date.now(),
-        schema: { tables: 32, migrations: 32 }, manifest: { file: "manifest.json", sha256: digest(rawManifest) },
+        schema: { tables: 33, migrations: 33 }, manifest: { file: "manifest.json", sha256: digest(rawManifest) },
         sql: { file: "database.sql.gz", bytes: 1, sha256: "e".repeat(64), uncompressedBytes: 1, uncompressedSha256: "e".repeat(64) }, media: { files: [], bytes: 0 } };
       checkpointReceipt.operations = await withPrivateDirectory(checkpointDirectory, scope => writeOperationalCheckpoint(scope, oldState, checkpointReceipt, crmKey));
       await withPrivateDirectory(checkpointDirectory, scope => writeCheckpointReceipt(scope, checkpointReceipt));

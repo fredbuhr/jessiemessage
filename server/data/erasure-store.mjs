@@ -195,7 +195,7 @@ export function createErasureStore({ pool, database, capacity, broadcastKey }) {
               WHERE p.user_id = ?${context ? " OR m.conversation_id = ?" : ""}`, [target, ...(context ? [context.id] : [])]);
             await connection.query("DELETE FROM push_subscriptions WHERE user_id = ? AND role = 'client'", [target]);
             if (context) {
-              for (const table of ["message_media", "chat_events", "chat_receipts", "crm_memberships", "crm_profiles", "messages"])
+              for (const table of ["message_media", "chat_events", "chat_receipts", "crm_memberships", "crm_tasks", "crm_profiles", "messages"])
                 await connection.query(`DELETE FROM ${table} WHERE conversation_id = ?`, [context.id]);
               await connection.query("DELETE FROM conversations WHERE id = ? AND client_id = ?", [context.id, target]);
             }

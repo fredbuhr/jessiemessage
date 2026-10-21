@@ -60,6 +60,8 @@ export function createCrmUI(adapter) {
   profileFields.append(field("Surnom privé", nickname), field("Notes privées", notes), notesCount, field("Rappel privé · heure locale", reminder), reminderHelp, memberships, saveButton); profileForm.append(profileFields);
   const conflict = node("section", null, "crm-conflict"); conflict.hidden = true; ui.attr(conflict, "aria-label", "Modification à comparer");
   profileDialog.append(profileHeader, profileHelp, clientInfo, profileStatus, profileForm, conflict); document.body.append(profileDialog); owned.push(profileDialog);
+  const tasksLink = adapter.tasksEnabled === true ? node("a", "Tâches du client", "text-button") : null;
+  if (tasksLink) { tasksLink.hidden = true; profileDialog.append(tasksLink); }
   const exportSection = node("details", null, "crm-export"); exportSection.hidden = adapter.conversationExport?.enabled !== true;
   exportSection.append(node("summary", "Télécharger la conversation"));
   const exportHelp = node("p", "Messages et photos partagées, sans notes privées, tags ni photos non envoyées.", "crm-help");
@@ -213,6 +215,7 @@ export function createCrmUI(adapter) {
       button("Enregistrer ma version", () => { void saveProfile(true); }, "button primary")); conflict.append(actions);
   }
   function renderProfile(draft) {
+    if (tasksLink) { tasksLink.href = `/admin/tasks?conversationId=${draft.profile.conversationId}`; tasksLink.hidden = false; }
     const profile = draft.profile; nickname.value = draft.nickname; notes.value = draft.notes; reminder.value = localDateTime(draft.reminderAt);
     ui.text(notesCount, "{count} / 8 000", { count: ui.numberParam(draft.notes.length) }); ui.text(profileTitle, "Fiche · {name}", { name: profile.client.pseudonym });
     replace(clientInfo, rawNode("p", profile.client.email), textNode("p", "{status}{expiry}", { status: ui.messageParam(accessNames[profile.access.state] ?? "En attente"), expiry: ui.messageParam(profile.access.expiresAt === null ? "" : " · jusqu’au {date}", { date: profile.access.expiresAt === null ? "" : dateName(profile.access.expiresAt) }) }));
@@ -243,6 +246,7 @@ export function createCrmUI(adapter) {
   function closeProfile(restore = true) {
     exportEpoch += 1; exportAbort?.abort(); exportAbort = null; exportBusy = false; exportButton.disabled = false; exportPhotos.disabled = false; exportSection.open = false; exportSection.hidden = true; status(exportStatus, "");
     for (const url of exportUrls) URL.revokeObjectURL(url); exportUrls.clear();
+    if (tasksLink) { tasksLink.removeAttribute("href"); tasksLink.hidden = true; }
     profileOpen = false; invalidateDetail(state); detailRequest += 1; detailBusy = false; if (profileDialog.open) profileDialog.close();
     profileFields.hidden = true; profileFields.disabled = false; ui.text(profileTitle, "Fiche client"); nickname.value = ""; notes.value = ""; reminder.value = ""; replace(memberships); replace(clientInfo); replace(conflict); conflict.hidden = true; status(profileStatus, "");
     if (restore) {
@@ -380,6 +384,7 @@ export function createCrmUI(adapter) {
   function removeConversation(id) { state.contacts.delete(id); state.drafts.delete(id); if (state.selected === id) { closeProfile(false); selectProfile(state, null); ficheButton.hidden = true; } publish(); }
   function forgetUnavailableProfile(id) { removeConversation(id); adapter.onUnavailable?.(id); status(filterStatus, "Cette fiche n’est plus accessible.", true); }
   return {
+    hasUnsavedWork() { return [...state.drafts.values()].some(draft => draft.dirty); },
     async initialize() { try { await loadLabels(); } catch (error) { await report(error, filterStatus); } },
     loadInbox,
     selectConversation(id) { closeProfile(false); selectProfile(state, id); ficheButton.hidden = !id; publish(); },

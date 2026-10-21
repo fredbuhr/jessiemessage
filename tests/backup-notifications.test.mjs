@@ -34,7 +34,7 @@ test("notification backup authenticates encrypted subscriptions and obsolete del
   const f = fixture(), original = Buffer.from(f.keys.notificationKey), report = await verifyPhotoNotificationBackupData(f.options);
   assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.deepEqual(report.issues, []);
   assert.equal(report.counts.notifications, 1); assert.equal(report.counts.notificationJobs, 1); assert.equal(report.counts.rows, 2);
-  assert.equal(f.calls.filter(({ sql }) => sql.startsWith("SELECT EXISTS")).length, 9);
+  assert.equal(f.calls.filter(({ sql }) => sql.startsWith("SELECT EXISTS")).length, 10);
   assert.equal(f.released(), 7); assert.deepEqual(f.keys.notificationKey, original);
   for (const value of [f.subscription.endpoint, f.subscription.keys.p256dh, f.subscription.keys.auth,
     f.rows.push_subscriptions[0].encrypted, ...Object.values(f.keys).map(key => key.toString("base64url"))]) assert.equal(JSON.stringify(report).includes(value), false);

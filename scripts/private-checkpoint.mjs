@@ -103,10 +103,10 @@ export async function inspectCheckpointIdentity(env, { signal } = {}) {
     await assertBackupInspection(connection, env.JESSIEMESSAGE_DB_NAME);
     const migrations = await loadMigrations(), expected = [...createdMigrationTables(migrations), "schema_migrations"].sort();
     const tables = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 33", [env.JESSIEMESSAGE_DB_NAME]);
-    if (migrations.length !== 32 || tables.length !== 32 || JSON.stringify(tables.map(row => row.name).sort()) !== JSON.stringify(expected)
+    if (migrations.length !== 33 || tables.length !== 33 || JSON.stringify(tables.map(row => row.name).sort()) !== JSON.stringify(expected)
       || tables.some(row => row.kind !== "BASE TABLE" || row.engine !== "InnoDB")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     const ledger = await connection.query("SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 33");
-    if (ledger.length !== 32 || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
+    if (ledger.length !== 33 || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     active(signal);
   } finally { try { await connection?.release(); } finally { await pool?.end(); } }
 }
@@ -117,7 +117,7 @@ export async function inspectApplicationCheckpointIdentity(env, { signal } = {})
     await assertApplicationTableInspection(connection, env.JESSIEMESSAGE_DB_NAME);
     const migrations = await loadMigrations();
     const ledger = await connection.query("SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 33");
-    if (migrations.length !== 32 || ledger.length !== 32 || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
+    if (migrations.length !== 33 || ledger.length !== 33 || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     active(signal);
   } finally { try { await connection?.release(); } finally { await pool?.end(); } }
 }
@@ -256,7 +256,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     await inspectTools(); active(signal);
     return await scopeOperation(dirname(selected.destination), async parent => {
       await absent(parent, basename(selected.destination));
-      if (["check", "check-application"].includes(selected.command)) return { status: application ? "application_precheck_passed" : "ready_for_input", profile, schema: 32,
+      if (["check", "check-application"].includes(selected.command)) return { status: application ? "application_precheck_passed" : "ready_for_input", profile, schema: 33,
         ...(application ? { coverage: APPLICATION_COVERAGE, passwordInputRequired: false } : {}),
         databaseConnected: false, checkpointSaved: false, started: false, migrationPerformed: false };
       try { password = application ? env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD : await readSecret(inputStream); if (typeof password !== "string" || !password || !password.isWellFormed()
@@ -270,7 +270,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           checkpointSaved: false, captureAllowed: false, started: false, migrationPerformed: false };
       }
       await (application ? inspectApplicationIdentity : inspectIdentity)(env, { signal }); active(signal);
-      if (["inspect", "inspect-application"].includes(selected.command)) return { status: application ? "application_inspection_verified" : "inspection_verified", profile, tables: 32, migrations: 32,
+      if (["inspect", "inspect-application"].includes(selected.command)) return { status: application ? "application_inspection_verified" : "inspection_verified", profile, tables: 33, migrations: 33,
         ...(application ? { coverage: APPLICATION_COVERAGE, passwordInputRequired: false } : {}),
         databaseConnected: true, ...(application ? { applicationTablesVerified: true } : { inspectionPrivilegesVerified: true }), checkpointSaved: false, started: false, migrationPerformed: false };
       keys = Object.fromEntries([["totpKey", "MFA"], ["mailKey", "MAIL"], ["messageKey", "MESSAGE"], ["mediaKey", "MEDIA"], ["notificationKey", "NOTIFICATIONS"], ...(crm ? [["crmKey", "CRM"]] : [])]
@@ -284,9 +284,9 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
             { signal, outputStream: { write() {} } });
           if (result?.command !== "prepare" || result.verified !== true || result.prepared !== true || result.restored !== false) fail("PRIVATE_CHECKPOINT_BACKUP");
           const manifest = await getManifest(`${selected.destination}/${name}`), payload = await verifyManifest({ manifest, keys });
-          if (manifest.version !== manifestVersion || manifest.profile !== profile || payload?.snapshot?.counts?.tables !== 32
+          if (manifest.version !== manifestVersion || manifest.profile !== profile || payload?.snapshot?.counts?.tables !== 33
             || application && payload.snapshot.version !== 2) fail("PRIVATE_CHECKPOINT_BACKUP");
-          if (application && validateApplicationCoverage(payload.snapshot.coverage).tables !== 32) fail("PRIVATE_CHECKPOINT_BACKUP");
+          if (application && validateApplicationCoverage(payload.snapshot.coverage).tables !== 33) fail("PRIVATE_CHECKPOINT_BACKUP");
           return payload;
         };
         const before = await prepareAt("manifest.json");
@@ -324,7 +324,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         const now = clock(); if (!Number.isSafeInteger(now) || now < 0 || now > 253402300799999) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
         const receipt = { format: "jessiemessage-private-checkpoint", version: receiptVersion, profile,
           ...(application ? { coverage: APPLICATION_COVERAGE } : {}), createdAt: now,
-          schema: { tables: 32, migrations: 32 }, sql: { file: "database.sql.gz", ...compressed, uncompressedBytes: saved.bytes, uncompressedSha256: saved.sha256 },
+          schema: { tables: 33, migrations: 33 }, sql: { file: "database.sql.gz", ...compressed, uncompressedBytes: saved.bytes, uncompressedSha256: saved.sha256 },
           manifest: { file: "manifest.json", sha256: manifest.sha256 }, media: inventory };
         if (operational) {
           if (operationalStateHash(await captureOperations()) !== operationalStateHash(operationsBefore)) fail("PRIVATE_CHECKPOINT_DRIFT");
@@ -353,7 +353,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         try { if (Object.keys(loaded).some(name => finalEnvironment[name] !== loaded[name]) || Object.keys(finalEnvironment).length !== Object.keys(loaded).length) fail("PRIVATE_CHECKPOINT_DRIFT"); }
         finally { clearRuntimeMessagingSecrets(finalEnvironment); }
         await parent.assertReady(); directoryIdentity(await scope.assertReady(), destinationIdentity);
-        return { status: application ? "application_checkpoint_saved" : "checkpoint_saved", profile, tables: 32, migrations: 32,
+        return { status: application ? "application_checkpoint_saved" : "checkpoint_saved", profile, tables: 33, migrations: 33,
           ...(application ? { coverage: APPLICATION_COVERAGE } : {}),
           ...(operational ? { operationsCovered: true, operationalFiles: operationsBefore.files.length, externalRegistryContinuityVerified: false } : {}),
           sqlBytes: compressed.bytes, sqlSha256: compressed.sha256, mediaFiles: inventory.files.length, mediaBytes: inventory.bytes,

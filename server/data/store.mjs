@@ -138,7 +138,7 @@ export async function withClientData(input = {}, callback) {
       push_subscriptions: ["push_subscriptions WHERE user_id = ? AND role = 'client'", [target]],
       push_outbox: [`push_outbox o JOIN push_subscriptions p ON p.id = o.subscription_id JOIN messages m ON m.id = o.message_id
         WHERE (p.user_id = ? AND p.role = 'client')${context ? " OR m.conversation_id = ?" : ""}`, [target, ...(context ? [context.id] : [])]],
-      ...(context ? Object.fromEntries(["messages", "chat_receipts", "chat_events", "message_media", "crm_profiles", "crm_memberships"]
+      ...(context ? Object.fromEntries(["messages", "chat_receipts", "chat_events", "message_media", "crm_profiles", "crm_memberships", "crm_tasks"]
         .map((table) => [table, [`${table} WHERE conversation_id = ?`, [context.id]]])) : {}),
       ...(context ? { broadcast_recipients: ["broadcast_recipients WHERE client_id = ? AND conversation_id = ?", [target, context.id]] } : {}),
     };

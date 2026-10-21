@@ -160,6 +160,37 @@ function harness({ currentSession = session(), visible = true, intercept = null,
 }
 const contents = (element) => [element.textContent, element.value, ...element.children.map(contents)].join(" ");
 const posts = (f) => f.calls.filter((call) => call.options.method === "POST" && call.path.includes("/messages"));
+
+test("due task counts stay in the admin menu and a late result cannot survive logout", async () => {
+  const delayed = pause();
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: path =>
+    path === "/api/chat/admin/capabilities" ? response(200, { enabled: true, tasks: { enabled: true } })
+      : path === "/api/admin/crm/tasks/summary" ? delayed.promise : undefined });
+  await flush();
+  const link = f.element("tasks-nav");
+  assert.equal(link.href, "/admin/tasks");
+  assert.equal(link.parentElement.id, "readiness-nav");
+  assert.equal(link.textContent, "Mes tâches");
+  await f.click("logout");
+  delayed.resolve(response(200, { dueCount: 7, serverTime: now })); await flush();
+  assert.equal(link.isConnected, false);
+  assert.equal(link.textContent, "Mes tâches");
+  assert.equal(posts(f).length, 0);
+});
+
+test("due task count refreshes while admin is active and never mounts for a client", async () => {
+  let dueCount = 2;
+  const intercept = path => path.endsWith("/capabilities") && path.startsWith("/api/chat/")
+    ? response(200, { enabled: true, tasks: { enabled: true } })
+    : path === "/api/admin/crm/tasks/summary" ? response(200, { dueCount, serverTime: now }) : undefined;
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept }); await flush();
+  assert.match(f.element("tasks-nav").textContent, /2 à traiter/);
+  dueCount = 0; await f.advance(31000);
+  assert.equal(f.element("tasks-nav").textContent, "Mes tâches");
+  const client = harness({ intercept }); await flush();
+  assert.equal(client.element("tasks-nav"), undefined);
+  assert.equal(client.calls.some(call => call.path === "/api/admin/crm/tasks/summary"), false);
+});
 function avatarResponse({ chunks = [new Uint8Array([255, 216, 255, 217])], declared = null, type = "image/jpeg", read = null } = {}) {
   let index = 0, cancelled = false;
   return { ok: true, status: 200, headers: { get: name => name === "Content-Type" ? type : name === "Content-Length" ? declared : null },

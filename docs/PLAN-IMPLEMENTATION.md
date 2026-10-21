@@ -10,7 +10,7 @@ La livraison **1.5.0 — Annonces** est close : code et CI qualifiés, versions 
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes et vue commune ; persistance et modifications simultanées maîtrisées. | Planifiée. |
+| **5 — Tâches et rappels** | Plusieurs tâches privées par client, échéances, report, alertes dans l’application et vue commune ; persistance et modifications simultanées maîtrisées. | [Développement en cours](tasks-reminders-160.md), branche `feat/tasks-reminders-160`. Production inchangée en 1.5.0 ; qualification, publication et livraison restent à faire. |
 | **6 — Transport vidéo** | Téléversement et lecture partielle privés avec mémoire bornée et chiffrement approprié ; refus intercompte et interruptions traitées. | Planifiée. |
 | **7 — Vidéos dans la messagerie** | Aperçu, lecteur, légende, galerie et diffusion ; export, suppression et fermeture de compte cohérents. | Planifiée. |
 | **8 — Validation et portabilité** | Parcours combinés, capacité du mutualisé mesurée et migration répétée sur données synthétiques. | Planifiée. |

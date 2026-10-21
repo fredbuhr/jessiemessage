@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#100d12" /><meta name="color-scheme" content="dark" /><meta name="robots" content="noindex, nofollow, noarchive" />
+  <link rel="manifest" href="/manifest.webmanifest" /><link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" /><link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/tasks.css" /><link rel="stylesheet" href="/brand/brand.css" /><link rel="stylesheet" href="/i18n.css" />
+  <script defer src="/i18n.js"></script><script defer src="/i18n-tools.js"></script><script defer src="/help-link.js"></script><script defer src="/session-clock.js"></script><script type="module" src="/tasks.js"></script>
+  <title data-jm-i18n="JessieMessage — Mes tâches">JessieMessage — Mes tâches</title>
+</head>
+<body><div class="page">
+  <header class="topbar"><a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a><nav class="account-nav" aria-label="Administration" data-jm-i18n-aria-label="Administration"><button type="button" data-jm-language aria-label="Switch to English">EN</button><a href="/admin/messages" data-jm-i18n="Messages">Messages</a><button id="logout" type="button" hidden data-jm-i18n="Se déconnecter">Se déconnecter</button></nav></header>
+  <main class="tasks-main">
+    <h1 id="tasks-title" tabindex="-1" data-jm-i18n="Mes tâches">Mes tâches</h1>
+    <p class="intro" data-jm-i18n="Photos à envoyer, demande personnelle, rendez-vous… garde tes prochaines choses à faire ici.">Photos à envoyer, demande personnelle, rendez-vous… garde tes prochaines choses à faire ici.</p>
+    <p id="session-status" class="status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p><button id="reload" class="button secondary" type="button" hidden data-jm-i18n="Actualiser la connexion">Actualiser la connexion</button>
+    <section id="tasks-content" hidden aria-labelledby="tasks-title">
+      <p id="summary" class="task-summary" role="status" aria-live="polite"></p>
+      <div class="task-toolbar"><label class="field" for="task-filter"><span data-jm-i18n="Afficher les tâches">Afficher les tâches</span><select id="task-filter"><option value="open" data-jm-i18n="À faire">À faire</option><option value="due" data-jm-i18n="À traiter maintenant">À traiter maintenant</option><option value="done" data-jm-i18n="Terminées">Terminées</option></select></label><button id="new-task" class="button primary" type="button" hidden data-jm-i18n="Ajouter une tâche">Ajouter une tâche</button><button id="refresh-tasks" class="button secondary" type="button" data-jm-i18n="Actualiser">Actualiser</button></div>
+      <p id="client-context" class="small-copy"></p><a id="all-clients" href="/admin/tasks" hidden data-jm-i18n="Voir les tâches de tous mes clients">Voir les tâches de tous mes clients</a>
+      <p id="create-help" class="small-copy" data-jm-i18n="Pour ajouter une tâche, ouvre la fiche du client dans tes messages.">Pour ajouter une tâche, ouvre la fiche du client dans tes messages.</p>
+      <p class="small-copy" data-jm-i18n="Ces tâches restent dans ton espace privé. Les rappels apparaissent ici lorsque tu ouvres l’application ; aucune alerte n’est envoyée au client.">Ces tâches restent dans ton espace privé. Les rappels apparaissent ici lorsque tu ouvres l’application ; aucune alerte n’est envoyée au client.</p>
+      <p class="small-copy" data-jm-i18n="Il n’y a pas de notification lorsque l’application est fermée.">Il n’y a pas de notification lorsque l’application est fermée.</p>
+      <p id="list-status" class="status" role="status" aria-live="polite"></p><ul id="task-list" class="task-list"></ul><button id="more-tasks" class="button secondary" type="button" hidden data-jm-i18n="Autres tâches">Autres tâches</button>
+    </section>
+  </main>
+  <footer><a href="/help" target="_blank" rel="noopener noreferrer" data-help-link data-jm-i18n="Aide et confidentialité">Aide et confidentialité</a></footer>
+</div>
+<dialog id="task-dialog" aria-labelledby="task-editor-title"><div class="dialog-head"><h2 id="task-editor-title" data-jm-i18n="Ma tâche">Ma tâche</h2><button id="close-task" class="text-button" type="button" data-jm-i18n="Fermer">Fermer</button></div><p id="editor-client" class="small-copy"></p>
+  <form id="task-form"><fieldset id="task-fields"><label class="field" for="task-title"><span data-jm-i18n="À faire">À faire</span><textarea id="task-title" rows="3" maxlength="500" required></textarea></label><label class="field" for="task-due"><span data-jm-i18n="Échéance · heure de cet appareil">Échéance · heure de cet appareil</span><input id="task-due" type="datetime-local" min="1970-01-01T00:00" max="9999-12-31T23:59" /></label><p class="small-copy" data-jm-i18n="La date est facultative. Modifie-la pour reporter cette tâche.">La date est facultative. Modifie-la pour reporter cette tâche.</p><button id="save-task" class="button primary" type="submit" data-jm-i18n="Enregistrer la tâche">Enregistrer la tâche</button></fieldset></form>
+  <p id="task-status" class="status" role="status" aria-live="polite"></p><button id="discard-task" class="text-button" type="button" data-jm-i18n="Abandonner le brouillon">Abandonner le brouillon</button>
+  <section id="task-conflict" class="task-conflict" hidden><h3 data-jm-i18n="La tâche a changé sur un autre appareil">La tâche a changé sur un autre appareil</h3><p data-jm-i18n="Ton brouillon est conservé. Compare la version enregistrée avant de choisir.">Ton brouillon est conservé. Compare la version enregistrée avant de choisir.</p><p id="saved-title" class="raw-copy"></p><p id="saved-due"></p><div class="task-actions"><button id="reload-task" class="button secondary" type="button" data-jm-i18n="Reprendre cette version">Reprendre cette version</button><button id="overwrite-task" class="button secondary" type="button" data-jm-i18n="Enregistrer mon brouillon">Enregistrer mon brouillon</button></div></section>
+  <div id="task-uncertain" hidden><p data-jm-i18n="La confirmation n’a pas été reçue. Réessaie la même demande pour éviter une seconde tâche.">La confirmation n’a pas été reçue. Réessaie la même demande pour éviter une seconde tâche.</p><button id="retry-task" class="button secondary" type="button" data-jm-i18n="Vérifier et réessayer">Vérifier et réessayer</button></div>
+</dialog>
+<noscript data-jm-i18n="Active JavaScript pour retrouver tes tâches.">Active JavaScript pour retrouver tes tâches.</noscript>
+</body></html>

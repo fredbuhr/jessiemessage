@@ -8,7 +8,7 @@ import { verifyTextBackupData } from "../server/backup/verify.mjs";
 
 const id = (number) => { const value = Buffer.alloc(16); value.writeUInt32BE(number, 12); return value; };
 const inactive = { notifications: ["push_subscriptions", "push_outbox"], reset: ["client_password_resets", "password_reset_outbox"], crm: ["crm_profiles", "crm_labels", "crm_memberships"],
-  broadcast: ["broadcast_preferences", "broadcast_campaigns", "broadcast_recipients"], announcements: ["announcements"],
+  broadcast: ["broadcast_preferences", "broadcast_campaigns", "broadcast_recipients"], announcements: ["announcements"], tasks: ["crm_tasks"],
   media: ["media_assets", "message_media", "media_storage_state", "media_storage_objects"] };
 
 function fixture() {
@@ -48,9 +48,9 @@ test("text verification uses only three real keys and SELECT-only crypto adapter
   const f = fixture(), original = Object.fromEntries(Object.entries(f.keys).map(([name, key]) => [name, Buffer.from(key)])), report = await verifyTextBackupData(f.options);
   assert.deepEqual(Object.keys(report), ["complete", "healthy", "counts", "issues"]);
   assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.deepEqual(report.issues, []);
-  assert.deepEqual(report.counts, { rows: 3, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0 });
+  assert.deepEqual(report.counts, { rows: 3, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, tasks: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0 });
   assert.deepEqual(f.keys, original); assert.equal(f.state.acquired, 4); assert.equal(f.state.released, 4);
-  assert.equal(f.calls.filter(({ sql }) => sql.startsWith("SELECT EXISTS")).length, 15);
+  assert.equal(f.calls.filter(({ sql }) => sql.startsWith("SELECT EXISTS")).length, 16);
   const json = JSON.stringify(report);
   for (const value of [f.secret, f.token, f.email, f.body, ...Object.values(f.keys).map((key) => key.toString("base64url"))]) assert.equal(json.includes(value), false);
 });

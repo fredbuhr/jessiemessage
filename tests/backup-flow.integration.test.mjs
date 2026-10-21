@@ -22,6 +22,7 @@ import { normalizeImage } from "../server/media/image.mjs";
 import { makeTotpSecret, sealTotpSecret, tokenDigest } from "../server/auth/crypto.mjs";
 import { encryptMessageBody, messageFingerprint } from "../server/chat/crypto.mjs";
 import { sealNotes, openNotes } from "../server/crm/crypto.mjs";
+import { openTask, sealTask } from "../server/tasks/crypto.mjs";
 import { sealVerificationPayload } from "../server/mail/crypto.mjs";
 import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 import { sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
@@ -65,9 +66,9 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
   const targetEnv = { ...process.env, JESSIEMESSAGE_DB_NAME: restoreDatabase,
     JESSIEMESSAGE_MIGRATION_DATABASE: restoreDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: restoreDatabase };
-  const migrations = await loadMigrations(); assert.equal(migrations.length, 32);
+  const migrations = await loadMigrations(); assert.equal(migrations.length, 33);
   const tables = createdMigrationTables(migrations);
-  assert.equal(tables.length, 31, "the admission ALTER adds a ledger entry, not a copied table");
+  assert.equal(tables.length, 32, "the admission ALTER adds a ledger entry, not a copied table");
   const allowedTables = [...tables, "schema_migrations", "migration_probe"];
   const qualified = (database, table) => {
     assert.ok([options.database, restoreDatabase].includes(database)); assert.ok(allowedTables.includes(table));
@@ -271,8 +272,8 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         } finally { inspector.release(); }
         t.diagnostic("inspection guards passed");
         const snapshot = await captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: sourcePool, inspectionPool }) });
-        assert.equal(snapshot.counts.tables, 32, "snapshot covers every application table and schema_migrations");
-        assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 32);
+        assert.equal(snapshot.counts.tables, 33, "snapshot covers every application table and schema_migrations");
+        assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 33);
         t.diagnostic("source snapshot passed");
       } finally { await inspectionPool.end(); }
       const result = await run("prepare", { env: process.env, root: sourceRoot, databaseName: options.database });
@@ -621,6 +622,9 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         keys: { p256dh: curve.getPublicKey().toString("base64url"), auth: randomBytes(16).toString("base64url") } };
       const recoveryEncrypted = sealResetPayload({ email: client.email, token: recoveryToken }, keys.mailKey, recoveryJobId);
       const privateNotes = "Synthetic restored shared notes with reminder", labelId = id();
+      const taskId = id(), taskTitle = "Synthetic private task restored with its deadline", taskDueAt = now + 7200000;
+      const taskBinding = { adminId: admin.id, conversationId, taskId, version: "2", dueAt: taskDueAt, done: false };
+      const taskEncrypted = sealTask(taskTitle, keys.crmKey, taskBinding);
       const notesEncrypted = sealNotes(privateNotes, keys.crmKey, { adminId: admin.id, conversationId, version: "2" });
       if (crmProfile) {
         await sourceConnection.query(`INSERT INTO crm_profiles (admin_id, conversation_id, nickname, notes_encrypted, reminder_at, version, notes_revision, created_at, updated_at)
@@ -628,6 +632,8 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         await sourceConnection.query(`INSERT INTO crm_labels (id, owner_admin_id, kind, name, normalized_name, created_at, updated_at)
           VALUES (?, ?, 'tag', 'Synthetic restore label', 'synthetic restore label', ?, ?)`, [labelId, admin.id, sqlDate(now), sqlDate(now)]);
         await sourceConnection.query(`INSERT INTO crm_memberships (admin_id, conversation_id, label_id, created_at) VALUES (?, ?, ?, ?)`, [admin.id, conversationId, labelId, sqlDate(now)]);
+        await sourceConnection.query(`INSERT INTO crm_tasks (id, admin_id, conversation_id, title_encrypted, due_at, done, version, request_fingerprint, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 0, 2, ?, ?, ?)`, [taskId, admin.id, conversationId, taskEncrypted, sqlDate(taskDueAt), randomBytes(32), sqlDate(now), sqlDate(now)]);
       }
       await sourceConnection.query(`INSERT INTO client_password_resets (id, user_id, token_hash, credential_version, email_hash, created_at, expires_at)
         VALUES (?, ?, ?, 1, ?, ?, ?)`, [recoveryId, client.id, tokenDigest(recoveryToken), createHash("sha256").update(client.email, "utf8").digest(), sqlDate(now), sqlDate(now + 1800000)]);
@@ -709,6 +715,11 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
         assert.equal(profile.notes_encrypted, notesEncrypted); assert.equal(openNotes(profile.notes_encrypted, keys.crmKey, { adminId: admin.id, conversationId, version: "2" }), privateNotes);
         assert.equal(Number((await targetConnection.query("SELECT COUNT(*) AS n FROM crm_memberships WHERE admin_id = ? AND conversation_id = ? AND label_id = ?", [admin.id, conversationId, labelId]))[0].n), 1);
         assert.equal((await targetConnection.query("SELECT name FROM crm_labels WHERE id = ?", [labelId]))[0].name, "Synthetic restore label");
+        const task = (await targetConnection.query("SELECT title_encrypted, due_at, done, version, admin_id, conversation_id FROM crm_tasks WHERE id = ?", [taskId]))[0];
+        assert.equal(task.title_encrypted, taskEncrypted); assert.deepEqual(task.admin_id, admin.id); assert.deepEqual(task.conversation_id, conversationId);
+        assert.equal(Number(task.version), 2); assert.equal(Number(task.done), 0);
+        const restoredDueAt = task.due_at instanceof Date ? task.due_at.getTime() : Date.parse(`${task.due_at.replace(" ", "T")}Z`);
+        assert.equal(restoredDueAt, taskDueAt); assert.equal(openTask(task.title_encrypted, keys.crmKey, { ...taskBinding, dueAt: restoredDueAt }), taskTitle);
       }
       if (broadcast) {
         const campaign = (await targetConnection.query("SELECT payload_encrypted, status FROM broadcast_campaigns WHERE id = ?", [broadcastId]))[0];
@@ -720,7 +731,7 @@ test("offline backup restores a separate real MariaDB schema and private encrypt
       assert.equal((await main(args("restore"), targetEnv, deps(restoreDatabase, targetRoot))).restored, true);
       assert.equal(await databaseHash(restoreDatabase), completed); await sourceUnchanged();
       for (const supplied of suppliedKeys) assert.deepEqual(supplied.keys, supplied.before, "verification erases only its own key copies");
-      for (const text of output) for (const privateValue of [recoveryToken, recoveryEncrypted, privateNotes, notesEncrypted, subscription.endpoint, notificationKey.toString("base64url")])
+      for (const text of output) for (const privateValue of [recoveryToken, recoveryEncrypted, privateNotes, notesEncrypted, taskTitle, taskEncrypted, subscription.endpoint, notificationKey.toString("base64url")])
         assert.equal(text.includes(privateValue), false);
     });
 

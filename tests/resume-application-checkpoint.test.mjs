@@ -10,7 +10,7 @@ const hash = "a".repeat(64), profile = "photos-notify-recovery-crm";
 const inheritedEnv = { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" };
 const args = (command = "resume") => [command, "--private-directory", "/private/source", "--private-path-mode", "linux-dirfd", "--checkpoint-directory", "/private/checkpoint",
   "--database", "isolated_copy", "--confirm-database", "isolated_copy", "--user", "copy_operator", "--profile", profile, "--sql-sha256", hash];
-const common = () => ({ version: 6, profile: "messaging-photos-notify-recovery-crm-application", tables: 32, migrations: 32, sqlSha256: hash,
+const common = () => ({ version: 6, profile: "messaging-photos-notify-recovery-crm-application", tables: 33, migrations: 33, sqlSha256: hash,
   checkpointFilesMatched: true, capacityRebound: false, httpStarted: false, smtpStarted: false, workersStarted: false });
 const ready = () => ({ ...common(), status: "application_restore_precheck_passed", databaseConnected: false, imported: false,
   nativeImportClientVerified: true, sqlImportFormatVerified: true, trustedSqlSha256Matched: true });

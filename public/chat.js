@@ -35,6 +35,7 @@ let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
 let profileUI = null; let profileMount = null; let profileCapability = null;
 let announcementUI = null; let announcementMount = null; let announcementCapability = null; let announcementHost = null;
+let tasksCapability = false, tasksRefresh = null, lastTasksRefresh = 0;
 const avatarContainers = new Map(); const avatarVersions = new Map(); const avatarPaths = new Map();
 let emojiContext = null;
 let emojiCategory = "all";
@@ -311,9 +312,27 @@ function mountNotificationSettings() {
     onAvailability: (available) => { if (fresh(ticket, true) && ready && visible()) el("open-notifications").hidden = !available; },
   });
 }
+async function refreshTasksMenu(force = false) {
+  if (role !== "admin" || !tasksCapability || !ready || !visible() || !sessionOwner || loggingOut) return;
+  let link = document.getElementById("tasks-nav");
+  if (!link) {
+    link = document.createElement("a"); link.id = "tasks-nav"; link.href = "/admin/tasks"; ui.text(link, "Mes tâches");
+    document.getElementById("readiness-nav")?.append(link);
+  }
+  if (tasksRefresh || !force && Date.now() - lastTasksRefresh < 30000) return;
+  const ticket = snapshot(), pending = {}; tasksRefresh = pending; lastTasksRefresh = Date.now();
+  try {
+    const value = await request("/api/admin/crm/tasks/summary", { account: true });
+    if (tasksRefresh !== pending || !fresh(ticket, true) || !ready || !visible() || !Number.isSafeInteger(value.dueCount) || value.dueCount < 0) return;
+    ui.text(link, value.dueCount ? "Mes tâches · {count} à traiter" : "Mes tâches", { count: ui.numberParam(value.dueCount) });
+  } catch (error) {
+    if (tasksRefresh === pending && fresh(ticket, true) && !error.stale && [401, 403].includes(error.status)) await handleError(error);
+  } finally { if (tasksRefresh === pending) tasksRefresh = null; }
+}
 function clearPrivate() {
   closeChatMenu(); closeComposerTools(); menuOpener = null;
   quickReplyLanguage = null;
+  tasksCapability = false; tasksRefresh = null; lastTasksRefresh = 0;
   emojiSkinTone = "default";
   profileUI?.destroy(); profileUI = null; profileMount = null; profileCapability = null;
   announcementUI?.destroy(); announcementUI = null; announcementMount = null; announcementCapability = null; announcementHost?.remove(); announcementHost = null;
@@ -367,7 +386,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountAnnouncements(); void refreshTasksMenu(true); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {
@@ -380,7 +399,7 @@ async function resumeConnection({ reset = false } = {}) {
   try { return await task.promise; } finally { if (resumeTask === task) resumeTask = null; }
 }
 function hasUnsavedWork() {
-  return !loggingOut && [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft);
+  return !loggingOut && (crm?.hasUnsavedWork?.() === true || [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft));
 }
 function signOut() {
   clearPrivate();
@@ -732,6 +751,7 @@ async function refreshCrmCapability() {
     crm = module.createCrmUI({
       request, inboxHead: document.querySelector(".inbox-head"), chatHead: el("conversation-actions"), getReturnFocus: menuReturnFocus,
       conversationExport: capability.conversationExport?.enabled === true ? capability.conversationExport : null,
+      tasksEnabled: tasksCapability,
       onError: (error) => handleError(error),
       onUnavailable(id) {
         states.delete(id); inbox.delete(id);
@@ -1222,7 +1242,7 @@ async function poll() {
     if (Date.now() - sessionCheckedAt > 60000 && !await refreshAndContinue()) return;
     if (role === "admin" && Date.now() - lastInboxRefresh >= 30000) await loadInbox(false, true);
     const state = currentState(); if (state) catchup = await fetchEvents(state);
-    void announcementUI?.refresh();
+    void announcementUI?.refresh(); void refreshTasksMenu();
     retryDelay = 3000; notice("");
   } catch (error) { if (!error.stale) { retryDelay = Math.min(30000, retryDelay * 2); await handleError(error, currentState()); } }
   finally { if (cycle === pollEpoch) { cycleRunning = false; if (fresh(ticket)) schedulePolling(catchup ? 300 : retryDelay); } }
@@ -1614,6 +1634,7 @@ async function start({ session = null } = {}) {
       if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
       profileCapability = capability.profile?.enabled === true ? capability.profile : null;
       announcementCapability = capability.announcements?.enabled === true ? capability.announcements : null;
+      tasksCapability = role === "admin" && capability.tasks?.enabled === true;
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       if (role === "admin" && !document.getElementById("readiness-nav")) {
         const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; ui.attr(nav, "aria-label", "Administration");
@@ -1638,7 +1659,7 @@ async function start({ session = null } = {}) {
       conversationDownloadCapability = capability.conversationExport;
       await mountConversationDownload(conversationDownloadCapability);
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
-      mountNotificationSettings(); void refreshBroadcastAccess(); void mountAnnouncements(); scheduleRead(); schedulePolling();
+      mountNotificationSettings(); void refreshBroadcastAccess(); void mountAnnouncements(); void refreshTasksMenu(true); scheduleRead(); schedulePolling();
       await openNotification();
     } catch (error) {
       if (error.stale || !fresh(task.ticket, true)) return;

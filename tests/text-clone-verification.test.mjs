@@ -241,8 +241,8 @@ test("exact dump mismatch prevents the crypto connection and produces no success
 
 test("one TLS clone connection checks immutable migration checksums and real MFA/mail/message crypto then rolls back", async (t) => {
   const f = await fixture(t), report = await run(f.selected, f.dependencies);
-  assert.equal(report.status, "verified"); assert.equal(report.tables, 32); assert.equal(report.migrations, 32);
-  assert.deepEqual(report.counts, { rows: 3, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0 });
+  assert.equal(report.status, "verified"); assert.equal(report.tables, 33); assert.equal(report.migrations, 33);
+  assert.deepEqual(report.counts, { rows: 3, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, tasks: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0 });
   assert.equal(report.httpStarted, false); assert.equal(report.smtpStarted, false);
   assert.deepEqual(f.events, ["client", "password", "dump", "connect", "rollback", "end"]);
   assert.equal(f.connected.length, 1); assert.equal(f.connected[0].JESSIEMESSAGE_DB_NAME, "only_clone"); assert.equal(f.connected[0].JESSIEMESSAGE_DB_HOST, f.bundle.database.host);

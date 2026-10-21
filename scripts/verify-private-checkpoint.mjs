@@ -23,7 +23,7 @@ import { main as backupMain } from "./backup.mjs";
 const REPOSITORY = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const CA = "/etc/ssl/certs/ca-certificates.crt";
 const FIELDS = ["command", "privateDirectory", "privatePathMode", "checkpointDirectory", "database", "confirmation", "user"];
-const COUNT_NAMES = ["rows", "mfa", "mail", "reset", "messages", "crm", "broadcast", "broadcastRecipients", "announcements", "media", "mediaFiles", "notifications", "notificationJobs"];
+const COUNT_NAMES = ["rows", "mfa", "mail", "reset", "messages", "crm", "tasks", "broadcast", "broadcastRecipients", "announcements", "media", "mediaFiles", "notifications", "notificationJobs"];
 const KEY_FIELDS = { totpKey: "JESSIEMESSAGE_MFA_KEY", mailKey: "JESSIEMESSAGE_MAIL_KEY", messageKey: "JESSIEMESSAGE_MESSAGE_KEY",
   mediaKey: "JESSIEMESSAGE_MEDIA_KEY", notificationKey: "JESSIEMESSAGE_NOTIFICATIONS_KEY" };
 const CODES = new Set(["USAGE", "ENVIRONMENT", "CONFIGURATION", "CHECKPOINT", "PASSWORD", "CLIENT", "DUMP", "DUMP_MISMATCH",
@@ -136,7 +136,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     if (application) {
       const migrations = await loadMigrations();
       dumpTables = [...createdMigrationTables(migrations), "schema_migrations"].sort();
-      if (migrations.length !== 32 || dumpTables.length !== 32 || new Set(dumpTables).size !== 32) fail("SCHEMA");
+      if (migrations.length !== 33 || dumpTables.length !== 33 || new Set(dumpTables).size !== 33) fail("SCHEMA");
     }
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("ENVIRONMENT"); }
@@ -215,8 +215,8 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         if (operational) Object.assign(common, { operationsCovered: true, operationalFiles: operations.files.length,
           operations: { ...checkpoint.operations }, externalRegistryContinuityVerified: false, operationalRestorationPending: true });
         if (["check", "check-application"].includes(selected.command)) { await unchanged(); result = { status: "ready_for_input", ...common, databaseConnected: false }; return; }
-        // Historical schemas30/31 remain readable above; current clone verification requires schema32.
-        if (checkpoint.schema.tables !== 32 || checkpoint.schema.migrations !== 32) fail("SCHEMA");
+        // Historical schemas30/31/32 remain readable above; current clone verification requires schema33.
+        if (checkpoint.schema.tables !== 33 || checkpoint.schema.migrations !== 33) fail("SCHEMA");
         try {
           password = await readSecret(inputStream);
           if (typeof password !== "string" || !password || !password.isWellFormed() || /[\x00-\x1f\x7f]/.test(password) || Buffer.byteLength(password, "utf8") > 4096) fail("PASSWORD");
@@ -234,7 +234,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         await connection.query("START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT"); active();
         await (application ? inspectApplicationPrivileges : inspectPrivileges)(connection, selected.database);
         const schema = await inspect(connection, selected.database);
-        if (schema?.tables !== 32 || schema.migrations !== 32) fail("SCHEMA");
+        if (schema?.tables !== 33 || schema.migrations !== 33) fail("SCHEMA");
         const pool = { getConnection: async () => ({ query(sql, parameters) {
           if (typeof sql !== "string" || !/^SELECT\s/.test(sql) || /\b(?:INTO|OUTFILE|DUMPFILE|FOR\s+UPDATE|LOCK\s+IN\s+SHARE)\b/i.test(sql)) fail("DATABASE");
           return connection.query(sql, parameters);

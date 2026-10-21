@@ -41,6 +41,7 @@ const projections = Object.freeze({
   push_outbox: "id, message_id, subscription_id, subscription_generation, status, attempts, available_at, created_at, expires_at, lease_token, lease_until, finished_at",
   user_profiles: "user_id, avatar_media_id, version, created_at, updated_at",
   announcements: "admin_id, admin_role, id, revision, mutation_id, request_fingerprint, body_encrypted, starts_at, expires_at, send_private_message, campaign_id, removed_at, created_at, updated_at",
+  crm_tasks: "id, admin_id, admin_role, conversation_id, title_encrypted, due_at, done, version, request_fingerprint, created_at, updated_at",
 });
 const tables = Object.keys(projections);
 const dml = ["SELECT", "INSERT", "UPDATE", "DELETE"];

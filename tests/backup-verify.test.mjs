@@ -9,6 +9,7 @@ import { sealVerificationPayload } from "../server/mail/crypto.mjs";
 import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 import { encryptMessageBody, messageFingerprint } from "../server/chat/crypto.mjs";
 import { sealNotes } from "../server/crm/crypto.mjs";
+import { sealTask } from "../server/tasks/crypto.mjs";
 import { sealPayload, campaignFingerprint } from "../server/broadcast/crypto.mjs";
 import { sealAnnouncement } from "../server/announcements/crypto.mjs";
 import { createMediaStorage } from "../server/media/storage.mjs";
@@ -35,7 +36,7 @@ async function fixture(t) {
   const payload = { title: "Private synthetic campaign", body: "Private synthetic broadcast body", mediaId: null, allowRepeatMedia: false, conversationIds: [conversationId.toString("hex")] };
   const campaignBinding = { campaignId: id(7), adminId };
   const rows = {
-    notifications: [], notificationJobs: [], announcements: [],
+    notifications: [], notificationJobs: [], announcements: [], tasks: [],
     mfa: [{ id: adminId, encrypted: sealTotpSecret(secret, keys.totpKey, adminId) }],
     mail: [{ id: id(4), encrypted: sealVerificationPayload({ email, token }, keys.mailKey, id(4)), recipientUserId: clientId, challengeUserId: clientId, tokenHash: tokenDigest(token), recipientEmail: email }],
     reset: [{ id: id(5), encrypted: sealResetPayload({ email, token }, keys.mailKey, id(5)), recipientUserId: clientId, challengeUserId: clientId,
@@ -64,7 +65,7 @@ test("backup verification authenticates existing ciphertext in all domains witho
   const f = await fixture(t), originalKeys = KEY_NAMES.map((name) => Buffer.from(f.keys[name])), report = await verifyBackupData(f.options);
   assert.deepEqual(Object.keys(report), ["complete", "healthy", "counts", "issues"]);
   assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.deepEqual(report.issues, []);
-  assert.deepEqual(report.counts, { rows: 8, mfa: 1, mail: 1, reset: 1, messages: 1, crm: 1, broadcast: 1, broadcastRecipients: 1, announcements: 0, media: 1, mediaFiles: 2, notifications: 0, notificationJobs: 0 });
+  assert.deepEqual(report.counts, { rows: 8, mfa: 1, mail: 1, reset: 1, messages: 1, crm: 1, tasks: 0, broadcast: 1, broadcastRecipients: 1, announcements: 0, media: 1, mediaFiles: 2, notifications: 0, notificationJobs: 0 });
   assert.ok(f.calls.every(({ limit }) => limit === 50));
   assert.equal(f.plaintexts.length, 2); assert.ok(f.plaintexts.every((bytes) => bytes.every((byte) => byte === 0)));
   KEY_NAMES.forEach((name, index) => assert.deepEqual(f.keys[name], originalKeys[index]));
@@ -237,6 +238,12 @@ test("announcement backup verifies its own envelope and owner/deadline binding, 
 function sqlFixture(f) {
   const raw = {
     notifications: [], notificationJobs: [],
+    tasks: f.rows.tasks.map(row => ({ id: row.id, admin_id: row.adminId, admin_role: row.adminRole, user_role: row.userRole,
+      conversation_id: row.conversationId, conversation_admin_id: row.conversationAdminId, encrypted: row.encrypted,
+      due_at: row.dueAt === null ? null : new Date(row.dueAt).toISOString().replace("T", " ").replace("Z", "000"),
+      done: row.done ? 1 : 0, version: Number(row.version), request_fingerprint: row.fingerprint,
+      created_at: new Date(row.createdAt).toISOString().replace("T", " ").replace("Z", "000"),
+      updated_at: new Date(row.updatedAt).toISOString().replace("T", " ").replace("Z", "000") })),
     announcements: f.rows.announcements.map(row => ({ id: row.id, admin_id: row.adminId, admin_role: row.adminRole, user_role: row.userRole,
       revision: BigInt(row.revision), encrypted: row.encrypted, starts_at: new Date(row.startsAt).toISOString().replace("T", " ").replace("Z", "000"),
       expires_at: new Date(row.expiresAt).toISOString().replace("T", " ").replace("Z", "000"), send_private_message: row.sendPrivateMessage ? 1 : 0,
@@ -258,7 +265,7 @@ function sqlFixture(f) {
     queries.push({ sql, parameters });
     assert.match(sql, /^SELECT\s/u); assert.doesNotMatch(sql, /\b(?:INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE)\b/u);
     if (sql.includes("FROM broadcast_recipients")) return f.rows.broadcast[0].conversationIds.map((conversation_id) => ({ conversation_id }));
-    const tables = { mfa: "admin_mfa", mail: "mail_outbox", reset: "password_reset_outbox", messages: "messages", crm: "crm_profiles", broadcast: "broadcast_campaigns", announcements: "announcements", media: "media_assets", notifications: "push_subscriptions", notificationJobs: "push_outbox" };
+    const tables = { mfa: "admin_mfa", mail: "mail_outbox", reset: "password_reset_outbox", messages: "messages", crm: "crm_profiles", tasks: "crm_tasks", broadcast: "broadcast_campaigns", announcements: "announcements", media: "media_assets", notifications: "push_subscriptions", notificationJobs: "push_outbox" };
     const purpose = Object.keys(tables).find((value) => sql.includes(`FROM ${tables[value]} `)); assert.ok(purpose);
     return raw[purpose];
   }, release() { releases.push(true); } }) };
@@ -268,7 +275,7 @@ function sqlFixture(f) {
 test("the SQL crypto adapter projects all domains with SELECT-only bounded reads and composes with real cryptography", async (t) => {
   const f = await fixture(t), sql = sqlFixture(f), store = createBackupCryptoStore({ pool: sql.pool });
   assert.ok(Object.isFrozen(store));
-  const report = await verifyBackupData({ ...f.options, store }); assert.equal(report.healthy, true); assert.equal(sql.releases.length, 10);
+  const report = await verifyBackupData({ ...f.options, store }); assert.equal(report.healthy, true); assert.equal(sql.releases.length, 11);
   assert.ok(sql.queries.filter((query) => !query.sql.includes("broadcast_recipients")).every((query) => query.parameters.at(-1) === 51));
   assert.equal(sql.queries.filter((query) => query.sql.includes("broadcast_recipients")).length, 1);
   assert.match(sql.queries.find((query) => query.sql.includes("FROM media_assets ")).sql, /a\.deleted_at IS NULL/u);
@@ -304,4 +311,36 @@ test("SQL backend errors are sanitized and always release the connection", async
   const store = createBackupCryptoStore({ pool: { getConnection: async () => ({ query: async () => { throw new Error("private SQL credentials and restored contents"); }, release: () => { releases++; } }) } });
   await assert.rejects(store.page({ purpose: "mail" }), (error) => error instanceof BackupCryptoStoreError && !error.message.includes("private SQL") && error.cause === undefined);
   assert.equal(releases, 1);
+});
+
+function privateTask(f) {
+  const now = Date.parse("2026-10-21T20:00:00Z");
+  const row = { id: id(10), adminId: id(1), adminRole: "admin", userRole: "admin", conversationId: id(3),
+    conversationAdminId: id(1), version: "1", dueAt: now + 3600000, done: false, fingerprint: randomBytes(32), createdAt: now, updatedAt: now };
+  row.encrypted = sealTask("Private synthetic reminder title", f.keys.crmKey, { adminId: row.adminId, conversationId: row.conversationId, taskId: row.id, version: row.version, dueAt: row.dueAt, done: row.done });
+  return row;
+}
+
+test("private tasks authenticate their owner, conversation, revision, deadline and completion state without exposing titles", async t => {
+  const f = await fixture(t), row = privateTask(f); f.rows.tasks = [row];
+  const report = await verifyBackupData(f.options);
+  assert.equal(report.healthy, true); assert.equal(report.counts.tasks, 1); assert.equal(report.counts.rows, 9);
+  assert.equal(JSON.stringify(report).includes("Private synthetic reminder title"), false);
+  for (const mutate of [r => { r.adminId = id(90); }, r => { r.conversationId = id(90); }, r => { r.id = id(90); },
+    r => { r.version = "2"; }, r => { r.dueAt++; }, r => { r.done = true; }, r => { r.userRole = "client"; },
+    r => { r.conversationAdminId = id(90); }, r => { r.updatedAt = r.createdAt - 1; },
+    r => { const b = Buffer.from(r.encrypted.slice(3), "base64url"); b[b.length - 1] ^= 1; r.encrypted = "v1." + b.toString("base64url"); }]) {
+    const changed = { ...row }; mutate(changed); f.rows.tasks = [changed];
+    const result = await verifyBackupData(f.options); assert.equal(result.healthy, false);
+    assert.ok(result.issues.some(issue => issue.purpose === "tasks"));
+  }
+});
+
+test("SELECT-only task backup projection composes with the real CRM task key and rejects sub-millisecond date aliases", async t => {
+  const f = await fixture(t); f.rows.tasks = [privateTask(f)];
+  const sql = sqlFixture(f), store = createBackupCryptoStore({ pool: sql.pool });
+  assert.equal((await verifyBackupData({ ...f.options, store })).healthy, true);
+  sql.raw.tasks[0].due_at = sql.raw.tasks[0].due_at.replace(/000$/, "001");
+  await assert.rejects(store.page({ purpose: "tasks" }), error => error instanceof BackupCryptoStoreError);
+  assert.ok(sql.queries.every(({ sql }) => /^SELECT\s/.test(sql)));
 });

@@ -1,0 +1,98 @@
+{
+  "version": "1.5.1",
+  "status": "implemented_native_qualification_pending",
+  "branch": "feat/tasks-reminders-160",
+  "baseCommit": "d985bf4e23abaeb3d275bf415f931e47bbb9ae68",
+  "results": {
+    "implementationReported": true,
+    "codeQualified": false,
+    "releasePublished": false,
+    "deliveryComplete": false
+  },
+  "requirements": {
+    "schemaMigrations": 33,
+    "applicationTables": 32,
+    "tablesIncludingLedger": 33,
+    "foreignKeys": 46,
+    "normalRuntimeTasksEnabled": false,
+    "newDependencies": false,
+    "newKeys": false,
+    "newWorker": false,
+    "closedAppTaskPush": false
+  },
+  "local": {
+    "node": "v24.19.0",
+    "fullAttempts": [
+      {
+        "reporter": "tap",
+        "concurrency": "default",
+        "exitCode": 1,
+        "completeSummaryObserved": false,
+        "successClaimed": false
+      },
+      {
+        "reporter": "tap",
+        "concurrency": 4,
+        "exitCode": 1,
+        "completeSummaryObserved": false,
+        "observedFailures": [
+          "backup-notifications inactive-table SELECT EXISTS expected9 actual10",
+          "backup-recovery-verify inactive-table SELECT EXISTS expected7 actual8"
+        ],
+        "resolution": "test expectations include the new inactive task table; production guards unchanged",
+        "successClaimed": false
+      }
+    ],
+    "subsequentTargeted": {
+      "tests": 52,
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 306.155838
+    },
+    "chatAndCrmLifecycle": {
+      "tests": 85,
+      "passed": 85,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 775.895143
+    },
+    "schemaTargetedReported": {
+      "backupTestsPassed": 30,
+      "compatibilityTestsPassed": 55,
+      "skipped": 0,
+      "initialAttempt": {
+        "passed": 315,
+        "tests": 317,
+        "failed": 2,
+        "resolution": "future schema fixture changed34; resumed inspection LIMIT changed34"
+      }
+    },
+    "build": {
+      "passed": true,
+      "syntaxSources": 619,
+      "offlineWorkbench": true
+    },
+    "independentStaticReview": "no_blocking_findings_after_two_ui_race_fixes",
+    "reviewFixes": [
+      "invalidate pre-save list/summary replies before applying a mutation acknowledgement",
+      "preserve task identity after a lost creation acknowledgement followed by a concurrent edit"
+    ],
+    "nativeMariaDbQualified": false,
+    "chromeQualified": false
+  },
+  "hosting": {
+    "activeVersion": "1.5.0",
+    "activeSource": "abca467c45c9385371a9095ab359e78c99140370",
+    "schemaMigrations": 32,
+    "metadataReceipt": "jm150-hosted-metadata.json",
+    "taskMigrationApplied": false,
+    "taskRuntimeActivated": false
+  },
+  "notAttested": [
+    "native_sql_and_chrome_on_exact_commit",
+    "physical_phone",
+    "real_host_capacity",
+    "current_pc_or_backup_delivery"
+  ]
+}

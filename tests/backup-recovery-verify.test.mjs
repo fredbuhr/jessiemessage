@@ -86,7 +86,7 @@ test("recovery photo notification backup authenticates reset mail and Push offli
   const f = fixture(), before = copyKeys(f.keys), report = await verifyPhotoNotificationRecoveryBackupData(f.options);
   assert.equal(report.complete, true); assert.equal(report.healthy, true); assert.deepEqual(report.issues, []);
   assert.equal(report.counts.reset, 1); assert.equal(report.counts.notifications, 1); assert.equal(report.counts.notificationJobs, 1); assert.equal(report.counts.rows, 3);
-  assert.equal(f.calls.filter(({ sql }) => sql.startsWith("SELECT EXISTS")).length, 7);
+  assert.equal(f.calls.filter(({ sql }) => sql.startsWith("SELECT EXISTS")).length, 8);
   assert.equal(f.released(), 8); assert.deepEqual(f.keys, before);
   assert.ok(f.calls.some(({ sql }) => sql.includes("LEFT JOIN client_password_resets r ON r.id = o.reset_id")));
   for (const value of [f.token, f.email, f.rows.password_reset_outbox[0].encrypted, f.subscription.endpoint,
