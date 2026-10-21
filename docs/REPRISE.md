@@ -17,11 +17,17 @@
 | Ancien état | 1.5.0 intégral et son empreinte archivés ; **1.5.0 et 1.4.1 ne doivent pas redémarrer sur le schéma 33**. |
 | Qualification | CI propres PR/main des deux références **5/5** ; [preuves 1.6.0](verification-proofs/jm160-verification.json) et [1.5.1](verification-proofs/jm151-verification.json). |
 | Git et documents | `main` peut avancer pour les preuves et la passation ; il ne remplace pas le commit réellement déployé. [Vérification du versionnage](verification-proofs/jm160-version-consistency.json). |
-| Prochaine action | [Lot 6 — socle transport vidéo 1.7.0](video-transport-170.md) fusionné, qualifié et publié, dormant. Lot 7 possible, puis lot 8 ; aucune activation automatique. |
+| Prochaine action | Audit des interruptions et adaptation du travail avant le lot 7 ; voir le jalon ci-dessous. [Lot 6 — socle transport vidéo 1.7.0](video-transport-170.md) fusionné, qualifié et publié, dormant. |
 
 Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks). Le Manager nomme ce service **recette.jessiemessage.com** ; il dessert aussi **jessiemessage.com**, avec le même runtime et la même base. Ce n’est pas une recette isolée. Le site PHP **accueil.jessiemessage.com** est distinct.
 
 Pour changer de discussion, utiliser la [passation du 21 octobre](PASSATION-20261021-160.md). Elle complète cet état sans le remplacer.
+
+## Jalon de développement courant — interruptions et découpage des lots
+
+**21 octobre 2026 : audit effectué, adaptation en cours de qualification.** L’[audit daté](AUDIT-INTERRUPTIONS-2026-10-21.md) distingue les causes établies du travail interrompu de la cause interne des coupures ChatGPT, non confirmée. Le workflow supprime les CI push de branche doublonnant les PR et conserve une qualification par SHA de main. Les cinq jobs restent identiques. Les [règles de travail](../AGENTS.md) imposent des jalons poussés avant les attentes longues ; le [plan](PLAN-IMPLEMENTATION.md) découpe le lot 7 en six étapes et le lot 8 en trois.
+
+Branche de travail : `fix/development-checkpoints`, base `593cb77c3b6945c566eef1bbb9beb8c10f8cec4c`. État : workflow et documentation modifiés, pas encore qualifiés par CI. Prochaine action unique : qualifier la PR d’adaptation, puis son SHA fusionné. Après clôture, la prochaine étape produit sera **7.1 — contrat et catalogue durable**, sans démarrer simultanément interface ou opérations hébergées. Le lot 7 n’est pas commencé. Aucun nouveau tag ou déploiement n’est associé à cette adaptation ; l’état de production en tête de ce fichier reste inchangé.
 
 ## Socle livré — Évolution 6, transport vidéo dormant 1.7.0
 
