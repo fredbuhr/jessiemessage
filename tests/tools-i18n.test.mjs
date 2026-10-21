@@ -44,7 +44,7 @@ function parse(html) {
   }
   return { root, ids };
 }
-function harness({ respond } = {}) {
+function harness({ respond, now } = {}) {
   const { root, ids } = parse(files["broadcast.html"]), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(); let timer = 0;
   const add = (events, name, callback) => { if (!events.has(name)) events.set(name, []); events.get(name).push(callback); };
   const document = { visibilityState: "hidden", documentElement: root.querySelectorAll("html")[0], body: root.querySelectorAll("body")[0],
@@ -52,6 +52,7 @@ function harness({ respond } = {}) {
     addEventListener: (name, callback) => add(documentEvents, name, callback), removeEventListener: (name, callback) => documentEvents.set(name, (documentEvents.get(name) ?? []).filter((value) => value !== callback)) };
   const context = vm.createContext({ document, window: { addEventListener: (name, callback) => add(windowEvents, name, callback), removeEventListener() {} }, navigator: { language: "fr-FR" },
     sessionStorage: { getItem() { return null; }, setItem() {} }, AbortController, URL, URLSearchParams, TextEncoder, console, location: { replace() {} },
+    ...(now === undefined ? {} : { Date: class extends Date { static now() { return now(); } } }),
     setTimeout(callback, delay) { timers.set(++timer, { callback, delay }); return timer; }, clearTimeout(value) { timers.delete(value); },
     fetch: async (path, options = {}) => { calls.push({ path, options }); if (respond) return respond(path, options); throw new Error("Unexpected network request in the UI-only harness"); } });
   const run = (code) => vm.runInContext(code, context);
@@ -143,8 +144,11 @@ test("CRM switching preserves raw names, label collisions, notes, inputs and sel
 
 test("broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft", async () => {
   let offline = false;
-  const admin = { user: { id: id(1), role: "admin", pseudonym: "Jessie" }, csrf: "a".repeat(43), expiresAt: Date.now() + 180 * 86400000 };
-  const h = harness({ respond: () => {
+  // Advance time explicitly between steps; keep deadline/clock reads within
+  // each step identical so the retry's exact 30000ms assertion is deterministic.
+  let now = 1792598400000;
+  const admin = { user: { id: id(1), role: "admin", pseudonym: "Jessie" }, csrf: "a".repeat(43), expiresAt: now + 180 * 86400000 };
+  const h = harness({ now: () => now, respond: () => {
     if (offline) throw new TypeError("offline");
     return { ok: true, status: 200, json: async () => ({ ...admin, mediaEnabled: true }) };
   } }); h.model("broadcast-model.js");
@@ -155,10 +159,13 @@ test("broadcast feature checks cannot postpone cookie renewal and offline recove
   // Repeated feature proofs re-arm the timer but keep the earlier cookie due
   // date. Even a server-side sliding expiry must not restart that five minutes.
   const firstDelay = [...h.timers.values()][0].delay;
+  now += 15000; admin.expiresAt += 15000;
   await h.run("tools.verifySession(model.broadcastTicket(tools.state))");
   assert.ok([...h.timers.values()].some((timer) => timer.delay <= firstDelay));
+  assert.ok([...h.timers.values()].some((timer) => timer.delay <= firstDelay - 15000));
   offline = true;
-  const sessionTimer = [...h.timers].find(([, timer]) => timer.delay <= 300000); h.timers.delete(sessionTimer[0]); sessionTimer[1].callback(); await flush();
+  const sessionTimer = [...h.timers].find(([, timer]) => timer.delay <= 300000);
+  h.timers.delete(sessionTimer[0]); now += sessionTimer[1].delay; sessionTimer[1].callback(); await flush();
   assert.equal(h.ids.get("broadcast-content").hidden, true); assert.equal(h.run("tools.state.draft.body"), "Brouillon privé");
   assert.ok([...h.timers.values()].some((timer) => timer.delay === 30000));
   offline = false; await h.online();

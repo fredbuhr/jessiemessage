@@ -17,11 +17,17 @@
 | Ancien état | 1.5.0 intégral et son empreinte archivés ; **1.5.0 et 1.4.1 ne doivent pas redémarrer sur le schéma 33**. |
 | Qualification | CI propres PR/main des deux références **5/5** ; [preuves 1.6.0](verification-proofs/jm160-verification.json) et [1.5.1](verification-proofs/jm151-verification.json). |
 | Git et documents | `main` peut avancer pour les preuves et la passation ; il ne remplace pas le commit réellement déployé. [Vérification du versionnage](verification-proofs/jm160-version-consistency.json). |
-| Prochaine action | Aucune opération serveur pour clore 1.6.0. Évolutions 6–8 planifiées, sans ouverture automatique. |
+| Prochaine action | [Lot 6 — socle transport vidéo 1.7.0](video-transport-170.md) en qualification, sans route enregistrée ni action hébergée. Lots 7–8 planifiés. |
 
 Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks). Le Manager nomme ce service **recette.jessiemessage.com** ; il dessert aussi **jessiemessage.com**, avec le même runtime et la même base. Ce n’est pas une recette isolée. Le site PHP **accueil.jessiemessage.com** est distinct.
 
 Pour changer de discussion, utiliser la [passation du 21 octobre](PASSATION-20261021-160.md). Elle complète cet état sans le remplacer.
+
+## Développement — Évolution 6, socle transport vidéo 1.7.0
+
+Ouvert à la demande de l’utilisateur après cette passation, sur une branche propre issue de `ab1aa853659b78c1a0df9a7b560e83b56f57b79e`, arbre `dd4a8173947eccec0fb284b20dceba3e44561fa3`. L’ancien checkout n’est pas présent dans ce nouvel espace ; le dépôt a été cloné et son état propre relevé avant création de `feat/video-transport-170`. [Périmètre et limites](video-transport-170.md). Le code transporte des MP4 en flux chiffrés par blocs avec Range privé, mais reste non importé et non enregistré dans le runtime normal. Aucun nouveau catalogue SQL de production, média hébergé, changement de schéma, migration ou redémarrage n’est créé par ce lot.
+
+Version de développement `1.7.0` alignée dans package/verrouillage ; production identifiée **1.6.0 / schéma 33**, commandes et repli **1.5.1** inchangés. La qualification et les références durables du lot sont en cours. Les parcours réels de messagerie vidéo et leur cycle de vie appartiennent au lot 7 ; ne pas brancher ce socle isolément dans le service courant.
 
 ## Livraison 1.6.0 close — Évolution 5, tâches et rappels privés
 
