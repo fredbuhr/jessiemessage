@@ -496,7 +496,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         const broadcastStore = createBroadcastStore(pool, { chatStore, mediaEnabled: mediaConfig.enabled, clock });
         await broadcastStore.assertSchema();
         const broadcastService = await createBroadcastService({ store: broadcastStore, authStore: store, authService: service,
-          key: chatConfig.key, mediaEnabled: mediaConfig.enabled, clock });
+          key: chatConfig.key, mediaEnabled: mediaConfig.enabled, largeAudiencesEnabled: true, clock });
         broadcastHandler = createBroadcastHandler(broadcastService, { origin: chatConfig.origin, mediaEnabled: mediaConfig.enabled });
         if (legacyHandlers) legacyHandlers.broadcastHandler = createBroadcastHandler(broadcastService, { origin: RECIPE_ORIGIN, mediaEnabled: mediaConfig.enabled });
         broadcastWorker = createBroadcastWorker({ store: broadcastStore, authStore: store, key: chatConfig.key, clock, onState: observe("broadcasts") });
