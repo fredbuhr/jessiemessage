@@ -180,7 +180,7 @@ export function createVideoStore({ pool, chatStore, capacity } = {}) {
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
         if (Number(enforcement?.foreignKeys) !== 1 || Number(enforcement?.checkConstraints) !== 1) state();
         const migrations = await loadVideoMigrations(), history = await migrationStatus(connection, { database, migrations });
-        if (history.length !== 35 || history.some((item) => item.state !== "applied")) state();
+        if (history.length !== migrations.length || history.some((item) => item.state !== "applied")) state();
         const tables = await connection.query("SELECT TABLE_NAME AS name, ENGINE AS engine, TABLE_COLLATION AS collationName FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
         const columns = await connection.query(`SELECT TABLE_NAME AS tableName, COLUMN_NAME AS columnName, DATA_TYPE AS dataType,
           IS_NULLABLE AS nullable, CHARACTER_MAXIMUM_LENGTH AS length, DATETIME_PRECISION AS precisionValue,
@@ -297,6 +297,18 @@ export function createVideoStore({ pool, chatStore, capacity } = {}) {
         if (!owns(row, context)) fail("VIDEO_NOT_FOUND"); const result = validateRow(row, context.now);
         if (row.state !== "committed") fail("VIDEO_NOT_FOUND"); return result;
       });
+    },
+    // Trusted message adapter only, inside its currently authorized chat
+    // transaction. This helper grants no session or conversation authority.
+    async getCommittedAsset(connection, { assetId, ownerId, ownerRole, now } = {}) {
+      if (typeof connection?.query !== "function") input();
+      bytes(assetId, 16); bytes(ownerId, 16); requestRole(ownerRole); instant(now);
+      await lockCapacity(connection);
+      const row = await allocation(connection, assetId);
+      if (!row || !sized(row.owner_id, 16) || !row.owner_id.equals(ownerId) || row.owner_role !== ownerRole) fail("VIDEO_NOT_FOUND");
+      const result = validateRow(row, now);
+      if (row.state !== "committed") fail("VIDEO_NOT_FOUND");
+      return result;
     },
     async release(value) {
       request(value); bytes(value.assetId, 16); bytes(value.storageKey, 32);

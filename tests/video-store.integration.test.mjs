@@ -36,7 +36,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     "integration tests require a separately provisioned DML-only runtime account");
   assert.notEqual(process.env.JESSIEMESSAGE_RUNTIME_DB_USER, options.user);
   const base = await loadMigrations(), candidates = await loadVideoMigrations();
-  assert.equal(base.length, 33); assert.equal(candidates.length, 35);
+  assert.equal(base.length, 33); assert.equal(candidates.length, 36);
   assert.deepEqual(candidates.slice(0, 33), base, "candidate qualification preserves the exact normal migration plan");
   const allowedTables = [...createdMigrationTables(candidates).reverse(), "migration_probe", "schema_migrations"];
   const connection = await connectDatabase(); let pool;
@@ -105,7 +105,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     assert.equal(await createChatStore(pool, { clock }).assertSchema(), true, "qualify the normal schema 33 before applying candidates");
     assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 33);
     await applyMigrations(connection, { database: options.database, migrations: candidates });
-    assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 35);
+    assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM schema_migrations"))[0].count), 36);
     assert.equal((await loadMigrations()).length, 33, "candidate qualification never promotes the normal loader");
 
     await t.test("offline initialization is explicit, idempotent and bound to root and both quotas", async () => {
@@ -127,9 +127,9 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
 
     await t.test("candidate DDL rejects weakened checks, keys, ownership links and dirty history", async () => {
       const { store } = await fresh(); assert.equal(await store.assertSchema(), true);
-      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = 35");
+      await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = ?", [candidates.at(-1).version]);
       try { await assert.rejects(store.assertSchema(), code("VIDEO_DATABASE_STATE")); }
-      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = 35"); }
+      finally { await connection.query("UPDATE schema_migrations SET state = 'applied', finished_at = CURRENT_TIMESTAMP(6) WHERE version = ?", [candidates.at(-1).version]); }
       for (const [alter, restore] of [
         ["ALTER TABLE video_storage_state ENGINE = MyISAM", "ALTER TABLE video_storage_state ENGINE = InnoDB"],
         ["ALTER TABLE video_storage_state MODIFY held_bytes BIGINT NOT NULL", "ALTER TABLE video_storage_state MODIFY held_bytes BIGINT UNSIGNED NOT NULL"],

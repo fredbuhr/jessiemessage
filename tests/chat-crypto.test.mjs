@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createCipheriv, createHash, createHmac, randomBytes } from "node:crypto";
 import {
-  ChatCryptoError, validateMessageBody, encryptMessageBody, decryptMessageBody, messageFingerprint,
+  ChatCryptoError, validateMessageBody, encryptMessageBody, decryptMessageBody, messageFingerprint, videoMessageFingerprint,
 } from "../server/chat/crypto.mjs";
 
 const key = randomBytes(32);
@@ -13,6 +13,19 @@ const replaceByte = (value) => {
   bytes[0] ^= 1;
   return bytes.toString("base64url");
 };
+
+test("video request fingerprints isolate literal JSON text while retaining exact retry and sender bindings", () => {
+  const body = JSON.stringify({ videoId: "a".repeat(32), caption: "Bonjour 🎥" });
+  const fingerprint = videoMessageFingerprint(body, key, context);
+  assert.equal(fingerprint.length, 32);
+  assert.notDeepEqual(fingerprint, messageFingerprint(body, key, context));
+  assert.deepEqual(fingerprint, videoMessageFingerprint(body, key, { ...context, messageId: randomBytes(16) }));
+  for (const changed of [{ ...context, senderId: randomBytes(16) }, { ...context, conversationId: randomBytes(16) }]) {
+    assert.notDeepEqual(fingerprint, videoMessageFingerprint(body, key, changed));
+  }
+  assert.notDeepEqual(fingerprint, videoMessageFingerprint(body.replace("Bonjour", "Bonsoir"), key, context));
+  assert.throws(() => videoMessageFingerprint(body, null, context), hasCode("CHAT_CRYPTO_CONFIG"));
+});
 
 // Independently seal arbitrary bytes to exercise authenticated data that cannot
 // be produced by the public plaintext validator (corruption or a legacy writer).

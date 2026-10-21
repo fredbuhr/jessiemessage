@@ -1,6 +1,6 @@
-import { createHmac, randomBytes } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
-import { decryptMessageBody, encryptMessageBody, messageFingerprint, validateMessageBody } from "./crypto.mjs";
+import { decryptMessageBody, encryptMessageBody, messageFingerprint, videoMessageFingerprint, validateMessageBody } from "./crypto.mjs";
 import { mediaDTO } from "../media/dto.mjs";
 import { peerAvatarDTO } from "./profile-avatar.mjs";
 
@@ -22,10 +22,11 @@ const sequence = (value) => {
   return value;
 };
 const limitValue = (value) => { if (!Number.isInteger(value) || value < 1 || value > 100) fail("CHAT_INPUT"); return value; };
-const allowedErrors = new Set(["CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "CHAT_RATE_LIMIT", "AUTH_BUSY"]);
+const allowedErrors = new Set(["CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "CHAT_RATE_LIMIT", "AUTH_BUSY", "VIDEO_NOT_FOUND", "VIDEO_INPUT"]);
 
-export async function createChatService({ store, authStore, authService, accessService, key, clock = Date.now }) {
+export async function createChatService({ store, authStore, authService, accessService, key, clock = Date.now, videoMessages }) {
   if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function") throw new ChatError("CHAT_CONFIG");
+  if (videoMessages !== undefined && typeof videoMessages?.sendMessage !== "function") throw new ChatError("CHAT_CONFIG");
   for (const method of ["listConversations", "getClientConversation", "readMessages", "readEvents", "sendMessage", "markRead", "deleteMessage"]) {
     if (typeof store?.[method] !== "function") throw new ChatError("CHAT_CONFIG");
   }
@@ -72,7 +73,28 @@ export async function createChatService({ store, authStore, authService, accessS
     let body = row.deletedAt === null ? decryptMessageBody(row.bodyEncrypted, key, {
       messageId: row.id, conversationId: row.conversationId, senderId: row.senderId,
     }) : null;
-    let media;
+    let media, video;
+    const binding = { messageId: row.id, conversationId: row.conversationId, senderId: row.senderId };
+    if (row.media && row.video) fail("CHAT_UNAVAILABLE");
+    if (row.deletedAt === null && row.video) {
+      if (videoMessages === undefined || !Buffer.isBuffer(row.video.id) || row.video.id.length !== 16
+        || !Number.isSafeInteger(row.video.bytes) || row.video.bytes < 1 || row.video.bytes > 104857600
+        || row.video.mime !== "video/mp4" || !Buffer.isBuffer(row.bodyFingerprint) || row.bodyFingerprint.length !== 32
+        || !timingSafeEqual(row.bodyFingerprint, videoMessageFingerprint(body, key, binding))) fail("CHAT_UNAVAILABLE");
+      const payload = JSON.parse(body);
+      if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.keys(payload).length !== 2
+        || !Object.hasOwn(payload, "videoId") || !Object.hasOwn(payload, "caption")
+        || payload.videoId !== row.video.id.toString("hex") || typeof payload.caption !== "string" || payload.caption.length > 1000) fail("CHAT_UNAVAILABLE");
+      if (payload.caption !== "") { try { validateMessageBody(payload.caption); } catch { fail("CHAT_UNAVAILABLE"); } }
+      body = payload.caption;
+      const conversationId = row.conversationId.toString("hex"), messageId = row.id.toString("hex");
+      video = { id: payload.videoId, bytes: row.video.bytes, mime: "video/mp4",
+        contentUrl: `/api/video/${session.user.role}/conversations/${conversationId}/messages/${messageId}/content` };
+    } else if (row.deletedAt === null && videoMessages !== undefined && !row.media) {
+      // Missing links cannot make a typed video payload appear as plain JSON.
+      if (!Buffer.isBuffer(row.bodyFingerprint) || row.bodyFingerprint.length !== 32
+        || !timingSafeEqual(row.bodyFingerprint, messageFingerprint(body, key, binding))) fail("CHAT_UNAVAILABLE");
+    }
     if (row.deletedAt === null && row.media) {
       const payload = JSON.parse(body);
       if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.keys(payload).length !== 2
@@ -86,6 +108,7 @@ export async function createChatService({ store, authStore, authService, accessS
     }
     return { id: row.id.toString("hex"), sequence: row.sequence, sender: mine ? "me" : "peer", body,
       ...(media ? { media } : {}),
+      ...(video ? { video } : {}),
       createdAt: row.createdAt, deletedAt: row.deletedAt, clientMessageId: mine ? row.clientMessageId.toString("hex") : null };
   }
   async function mutationLimit(userId, kind, now) {
@@ -170,6 +193,26 @@ export async function createChatService({ store, authStore, authService, accessS
       const result = await store.sendMessage({ ...request, now: nowValue(), message: { id: messageId, clientMessageId: clientId, mediaId: assetId,
         bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: messageFingerprint(body, key, binding) } });
       return { message: messageDTO(result.message, session), duplicate: result.duplicate };
+    }),
+    ...(videoMessages === undefined ? {} : {
+      sendVideo: (role, token, conversationId, input) => guarded(async () => {
+        if (!input || typeof input !== "object" || Array.isArray(input)
+          || Object.keys(input).length !== 3 || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(input, name))) fail("CHAT_INPUT");
+        const { clientMessageId, videoId, caption } = input;
+        const clientId = idBytes(clientMessageId), assetId = idBytes(videoId);
+        if (typeof caption !== "string" || caption.length > 1000) fail("CHAT_INPUT");
+        if (caption !== "") validateMessageBody(caption);
+        const { session, request } = await context(role, token, conversationId);
+        await mutationLimit(session.user.id, "send", request.now);
+        const messageId = randomBytes(16), senderId = idBytes(session.user.id);
+        const body = JSON.stringify({ videoId, caption });
+        const binding = { messageId, conversationId: request.conversationId, senderId };
+        const result = await videoMessages.sendMessage({ ...request, now: nowValue(), message: {
+          id: messageId, clientMessageId: clientId, videoId: assetId,
+          bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: videoMessageFingerprint(body, key, binding),
+        } });
+        return { message: messageDTO(result.message, session), duplicate: result.duplicate };
+      }),
     }),
     markRead: (role, token, conversationId, input) => guarded(async () => {
       if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((name) => name !== "throughSequence")) fail("CHAT_INPUT");

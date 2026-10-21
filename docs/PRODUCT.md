@@ -55,8 +55,10 @@ L’[Évolution 3 — Diffusions à grande échelle, version 1.4.0](broadcast-sc
 
 Les [annonces 1.5.0](announcements-150.md), puis les [tâches et rappels privés 1.6.0](tasks-reminders-160.md), sont livrées et closes. Le schéma 33 inclut les deux tables ajoutées par ces évolutions. La référence compatible 1.5.1 est le repli enregistré de la 1.6.0, préparé et précontrôlé sans démarrage. Les identités actives, reçus, commandes et limites exactes restent exclusivement dans [REPRISE](REPRISE.md).
 
-Le [socle technique vidéo 1.7.0, lot 6](video-transport-170.md) est qualifié et publié, et reste dormant dans le runtime normal. Il ne rend pas les vidéos disponibles dans la conversation ; catalogue durable, lecteur et cycle de vie complet restent au lot 7.
+Le [socle technique vidéo 1.7.0, lot 6](video-transport-170.md) est qualifié et publié, et reste dormant dans le runtime normal. Il ne rend pas les vidéos disponibles dans la conversation ; l’intégration produit, le lecteur et le cycle de vie complet appartiennent au lot 7.
 
 Le [jalon 7.1 du lot 7](video-catalogue-180.md) est codé et qualifié sur sa branche : catalogue SQL candidat et capacité indépendants des photos. La version 1.8.0 de cette branche n’est ni fusionnée, publiée ou déployée ; les vidéos ne sont pas encore proposées dans la messagerie.
+
+Le [jalon 7.2 — message vidéo privé](video-messages-180.md) est codé sur cette même branche, avec qualification CI en attente : légende chiffrée, publication atomique du message et de son lien, droits du destinataire et galerie serveur paginée. Le plan SQL normal reste à 33 ; le plan candidat isolé comporte 36 migrations. Aucune route vidéo normale ni interface n’est activée. Après qualification de 7.2, le cycle de vie complet en 7.3 doit adapter export, suppression durable, fermeture, inventaire et restauration avant l’activation du résultat final.
 
 L’[ancienne fiche produit, relevé du 20 octobre 2026 avant entretien](https://github.com/fredbuhr/jessiemessage/blob/bbd733d85b49b892d78c7cd90509ced04a990939/docs/PRODUCT.md) est conservée dans Git. Ses fonctions annoncées comme futures et son ancien statut de livraison sont historiques.

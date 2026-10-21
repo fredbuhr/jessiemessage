@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { checksumSql, loadMigrations, MigrationError, validateMigrationPlan } from "../db/migrations.mjs";
 
-const CANDIDATES = Object.freeze(["0034_video_storage_state.sql", "0035_video_assets.sql"]);
+const CANDIDATES = Object.freeze(["0034_video_storage_state.sql", "0035_video_assets.sql", "0036_message_video.sql"]);
 
 /** Read the complete candidate plan for isolated qualification only. The
  * ordinary migration loader still sees exactly the 33 production migrations.

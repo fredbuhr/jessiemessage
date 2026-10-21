@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { createChatService, ChatError } from "../server/chat/service.mjs";
-import { encryptMessageBody, decryptMessageBody, messageFingerprint } from "../server/chat/crypto.mjs";
+import { encryptMessageBody, decryptMessageBody, messageFingerprint, videoMessageFingerprint } from "../server/chat/crypto.mjs";
 import { newToken, tokenDigest } from "../server/auth/crypto.mjs";
 
 const now = 1750000000000;
@@ -82,6 +82,51 @@ async function fixture() {
   const service = await createChatService(options);
   return { key, token, calls, authCalls, rateCalls, state, row, store, options, service };
 }
+
+test("optional video sends encrypt captions, retain stable typed retries and expose only delivery URLs", async () => {
+  const f = await fixture(), videoId = "e".repeat(32), requests = [];
+  assert.equal(f.service.sendVideo, undefined, "the normal service has no video send operation");
+  const videoMessages = { async sendMessage(request) {
+    requests.push(request);
+    const result = await f.store.sendMessage(request);
+    return { ...result, message: { ...result.message, video: { id: request.message.videoId, bytes: 901, mime: "video/mp4", storageKey: "internal-key" } } };
+  } };
+  const service = await createChatService({ ...f.options, videoMessages });
+  const input = { clientMessageId: "d".repeat(32), videoId, caption: "" };
+  const first = await service.sendVideo("admin", f.token, conversationHex, input);
+  assert.equal(first.message.body, ""); assert.equal(first.duplicate, false);
+  assert.deepEqual(first.message.video, { id: videoId, bytes: 901, mime: "video/mp4",
+    contentUrl: `/api/video/admin/conversations/${conversationHex}/messages/${first.message.id}/content` });
+  const request = requests[0], binding = { messageId: request.message.id, conversationId, senderId: adminId };
+  const plaintext = JSON.stringify({ videoId, caption: "" });
+  assert.equal(decryptMessageBody(request.message.bodyEncrypted, f.key, binding), plaintext);
+  assert.deepEqual(request.message.bodyFingerprint, videoMessageFingerprint(plaintext, f.key, binding));
+  const retry = await service.sendVideo("admin", f.token, conversationHex, input);
+  assert.equal(retry.duplicate, true); assert.deepEqual(retry.message, first.message);
+  await assert.rejects(service.sendVideo("admin", f.token, conversationHex, { ...input, caption: "different" }), hasCode("CHAT_CONFLICT"));
+  for (const changed of [{ ...input, caption: "\u0000" }, { ...input, caption: "x".repeat(1001) }, { ...input, ownerId: adminHex }]) {
+    await assert.rejects(service.sendVideo("admin", f.token, conversationHex, changed), hasCode("CHAT_INPUT"));
+  }
+});
+
+test("video history never falls back to plaintext JSON for missing or mistyped links, and tombstones omit video", async () => {
+  const f = await fixture(), videoId = Buffer.alloc(16, 0xee), payload = JSON.stringify({ videoId: videoId.toString("hex"), caption: "Légende privée" });
+  const row = f.row(adminId, payload), binding = { messageId: row.id, conversationId, senderId: adminId };
+  row.bodyFingerprint = videoMessageFingerprint(payload, f.key, binding);
+  row.video = { id: videoId, bytes: 64, mime: "video/mp4", digest: Buffer.alloc(32) };
+  f.state.rows = [row];
+  const service = await createChatService({ ...f.options, videoMessages: { sendMessage: async () => { throw Error("unused"); } } });
+  const result = await service.messages("client", f.token, conversationHex);
+  assert.equal(result.messages[0].body, "Légende privée"); assert.equal(result.messages[0].video.id, videoId.toString("hex"));
+  assert.equal(result.messages[0].clientMessageId, null); assert.doesNotMatch(JSON.stringify(result), /digest|bodyEncrypted|storageKey/);
+  const orphan = { ...row }; delete orphan.video; f.state.rows = [orphan];
+  await assert.rejects(service.messages("client", f.token, conversationHex), hasCode("CHAT_UNAVAILABLE"));
+  f.state.rows = [{ ...row, bodyFingerprint: messageFingerprint(payload, f.key, binding) }];
+  await assert.rejects(service.messages("client", f.token, conversationHex), hasCode("CHAT_UNAVAILABLE"));
+  f.state.rows = [{ ...row, bodyEncrypted: null, deletedAt: now + 1 }];
+  const tombstone = (await service.messages("client", f.token, conversationHex)).messages[0];
+  assert.equal(tombstone.body, null); assert.equal(tombstone.video, undefined);
+});
 
 test("chat service refuses absent dependencies, missing store operations and implicit keys", async () => {
   const f = await fixture();

@@ -84,23 +84,36 @@ export function safeMedia(value, { role, conversationId = null, messageId = null
     sharedHere: value.sharedHere, fullUrl: `${base}/full`, thumbnailUrl: `${base}/thumb` };
 }
 
+export function safeVideo(value, { role, conversationId, messageId } = {}) {
+  if (!value || !id(value.id) || !["admin", "client"].includes(role) || !id(conversationId) || !id(messageId)
+    || !Number.isSafeInteger(value.bytes) || value.bytes < 1 || value.bytes > 104857600 || value.mime !== "video/mp4") throw unavailable();
+  const contentUrl = `/api/video/${role}/conversations/${conversationId}/messages/${messageId}/content`;
+  if (value.contentUrl !== contentUrl) throw unavailable();
+  return { id: value.id, bytes: value.bytes, mime: "video/mp4", contentUrl };
+}
+
 export function safeMessage(value, context = {}) {
   if (!value || !id(value.id) || !sequence(value.sequence, true) || !["me", "peer"].includes(value.sender)
     || !date(value.createdAt) || !nullableDate(value.deletedAt)
     || !(value.clientMessageId === null || id(value.clientMessageId))
     || value.sender === "peer" && value.clientMessageId !== null
     || value.deletedAt !== null && (value.deletedAt < value.createdAt || value.body !== null)) throw unavailable();
-  let media;
+  let media, video;
   if (value.deletedAt === null) {
-    if (value.media !== undefined) {
+    if (value.media !== undefined && value.video !== undefined) throw unavailable();
+    if (value.video !== undefined) {
+      video = safeVideo(value.video, { ...context, messageId: value.id });
+      if (typeof value.body !== "string" || value.body.length > 1000) throw unavailable();
+      if (value.body !== "") { try { validateMessageBody(value.body); } catch { throw unavailable(); } }
+    } else if (value.media !== undefined) {
       media = safeMedia(value.media, { ...context, messageId: value.id });
       if (typeof value.body !== "string" || value.body.length > 1000) throw unavailable();
       if (value.body !== "") { try { validateMessageBody(value.body); } catch { throw unavailable(); } }
     } else { try { validateMessageBody(value.body); } catch { throw unavailable(); } }
-  } else if (value.media !== undefined && value.media !== null) throw unavailable();
+  } else if (value.media !== undefined && value.media !== null || value.deletedAt !== null && value.video !== undefined && value.video !== null) throw unavailable();
   return { id: value.id, sequence: value.sequence, sender: value.sender, body: value.body,
     createdAt: value.createdAt, deletedAt: value.deletedAt, clientMessageId: value.clientMessageId,
-    ...(media ? { media } : {}) };
+    ...(media ? { media } : {}), ...(video ? { video } : {}) };
 }
 
 function shape(body, keys) {

@@ -23,6 +23,7 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Tâches et rappels, 1.6.0 active et close](docs/tasks-reminders-160.md) | Plusieurs tâches privées par client et vue commune ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés ; livraison close. |
 | [Transport vidéo, socle 1.7.0](docs/video-transport-170.md) | Fusionné, qualifié et publié, dormant : transport privé par blocs ; intégration produit au lot 7, production 1.6.0 conservée. |
 | [Catalogue vidéo 1.8.0 en développement](docs/video-catalogue-180.md) | Jalon 7.1 sur branche : catalogue/capacité SQL candidats et contrat, sans activation ni migration normale. |
+| [Message vidéo privé 1.8.0 en développement](docs/video-messages-180.md) | Jalon 7.2 codé, CI en attente : lien atomique, légende chiffrée, droits destinataire et galerie serveur ; aucune activation ni interface. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
