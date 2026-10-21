@@ -145,7 +145,9 @@ function openChatMenu(opener) {
 function resizeComposer() {
   const textarea = el("message-body");
   textarea.style.height = "44px";
-  textarea.style.height = `${Math.min(112, Math.max(44, textarea.scrollHeight))}px`;
+  // A wrapping placeholder must not enlarge an empty draft on narrow screens.
+  textarea.style.overflowY = textarea.value ? "auto" : "hidden";
+  if (textarea.value) textarea.style.height = `${Math.min(112, Math.max(44, textarea.scrollHeight))}px`;
   positionComposerTools();
 }
 function inboxButton(id) { return [...el("conversations").children].find((button) => button.dataset.conversationId === id) ?? null; }

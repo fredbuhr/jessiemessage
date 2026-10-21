@@ -1,6 +1,6 @@
 {
   "version": "1.3.1",
-  "status": "implemented_locally_verified_awaiting_ci",
+  "status": "placeholder_fix_awaiting_ci_requalification",
   "branch": "fix/chat-mobile-131",
   "base": "a26f60cca0e4690ebec5db8edf9152b651659efc",
   "source": null,
@@ -11,10 +11,10 @@
     "syntaxSources": 583,
     "build": "passed",
     "targetedTests": {
-      "passed": 147,
+      "passed": 148,
       "failed": 0,
       "skipped": 0,
-      "durationMs": 4062.935
+      "durationMs": 4059.947
     },
     "chrome": "unavailable_locally",
     "physicalPhoneKeyboard": "not_observed",
@@ -28,7 +28,20 @@
     "result": "no_remaining_blocking_findings_after_corrections"
   },
   "ci": {
-    "status": "not_started"
+    "status": "awaiting_corrected_head_run",
+    "initialAttempt": {
+      "run": 39521871297,
+      "source": "485f3ac86e7cea87f9d8a932b51419735200b524",
+      "browser": {
+        "job": 118967364846,
+        "passed": 170,
+        "failed": 1,
+        "skipped": 0,
+        "tests": 171,
+        "reason": "empty_composer_grew_with_wrapped_placeholder_at_320px",
+        "correction": "empty_drafts_keep_44px_without_measuring_placeholder_scroll_height"
+      }
+    }
   },
   "publication": {
     "status": "not_started"
@@ -43,5 +56,6 @@
     "requiresMigration": false,
     "dependenciesChanged": false,
     "plannedRollback": "1.3.0"
-  }
+  },
+  "pullRequest": 114
 }

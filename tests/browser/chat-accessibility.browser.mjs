@@ -468,10 +468,10 @@ test("Chrome mobile: a single compact conversation bar leaves room for history a
         assert.equal(layout.avatar, true); assert.equal(layout.name, fixture.peerName);
         assert.ok(layout.headHeight <= 80, `${context}: conversation bar stays compact`);
         assert.equal(layout.optionsClosed && layout.toolsClosed && !layout.footerVisible, true, `${context}: secondary actions reserve no permanent rows`);
-        assert.ok(layout.rowHeight <= 64, `${context}: the initial composer fits one row`);
+        assert.ok(layout.rowHeight <= 64, `${context}: the initial composer fits one row (row=${layout.rowHeight}px, viewport=${layout.width}x${layout.height}, controls=${JSON.stringify(layout.controls)})`);
         assert.ok(layout.rowBottom <= layout.height+1, `${context}: send stays inside the viewport`);
         assert.ok(layout.historyHeight > 0 && layout.historyBottom <= layout.rowBottom, context);
-        if (width === 360) assert.ok(layout.historyHeight/layout.height >= 0.70, `${context}: history receives at least 70% of the visible height (${layout.historyHeight}px)`);
+        if (width === 360) assert.ok(layout.historyHeight/layout.height >= 0.70, `${context}: history receives at least 70% of the visible height (history=${layout.historyHeight}px, viewport=${layout.height}px, composer=${layout.rowHeight}px, header=${layout.headHeight}px)`);
         for (const control of layout.controls) {
           assert.ok(control.left >= -1 && control.right <= layout.width+1 && control.top >= 0 && control.bottom <= layout.height+1, `${context}: ${control.id} remains visible`);
           assert.ok(control.width >= 44 && control.height >= 44, `${context}: ${control.id} retains its touch target`);

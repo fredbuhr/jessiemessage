@@ -423,6 +423,28 @@ test("removing a focused image draft returns to the composer without changing it
   assert.equal(f.element("message-body").value, "Keep this synthetic caption"); assert.equal(messagePosts(f).length, before);
 });
 
+test("a wrapping placeholder never expands an empty composer, while typed content grows within its height budget and clearing resets it", async () => {
+  const f = harness({ mobile: true }); await flush();
+  const textarea = f.element("message-body"), before = f.calls.length;
+  const input = async (value, measuredHeight) => {
+    textarea.value = value; textarea.scrollHeight = measuredHeight;
+    for (const handler of textarea.events.get("input")) handler({}); await flush();
+    assert.equal(textarea.value, value, "resizing never rewrites the draft");
+  };
+  await input("", 220);
+  assert.equal(textarea.style.height, "44px", "the placeholder's scrollHeight does not size an empty draft");
+  assert.equal(textarea.style.overflowY, "hidden");
+  await input("A synthetic typed draft", 70);
+  assert.equal(textarea.style.height, "70px"); assert.equal(textarea.style.overflowY, "auto");
+  await input("A synthetic multiline draft\n".repeat(12), 280);
+  assert.equal(textarea.style.height, "112px", "long drafts scroll inside the bounded composer");
+  assert.equal(textarea.style.overflowY, "auto");
+  await input("", 280);
+  assert.equal(textarea.style.height, "44px", "clearing the draft restores the initial single row");
+  assert.equal(textarea.style.overflowY, "hidden");
+  assert.equal(f.calls.length, before); assert.equal(messagePosts(f).length, 0);
+});
+
 test("a completed button-initiated send restores composer focus only if the user has not moved elsewhere", async () => {
   for (const move of [false, true]) {
     const gate = pause(); const f = liveHarness({ intercept: (path, options) => path.endsWith("/messages") && options.method === "POST" ? gate.promise : undefined }); await flush();
