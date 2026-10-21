@@ -4,7 +4,35 @@
 
 ## Travail en cours — correctif mobile 1.3.1
 
-Implémentation sur la branche `fix/chat-mobile-131` : barre de conversation compacte, actions secondaires dans les options, composeur sur une rangée et hauteur du fil adaptée au viewport visible. Les contrôles de contexte, les dialogues, les erreurs et les brouillons existants sont conservés. [Périmètre et critères](chat-mobile-131.md). 148 tests ciblés réussis sans omission, build local 583 sources et syntaxe finale ciblée réussis. La revue du diff a fait corriger le rognage du panneau « + ». La [PR 114](https://github.com/fredbuhr/jessiemessage/pull/114) est ouverte. Sa première CI Chrome compte 170 réussis et un échec à 320 px, sans omission : le champ vide grandissait avec son placeholder. Le calcul est corrigé ; une nouvelle qualification CI est requise avant fusion et publication. [Preuves 1.3.1](verification-proofs/jm131-verification.json). Aucune activation 1.3.1 n’est revendiquée. La production reste la 1.3.0 close ci-dessous. Aucune nouvelle manipulation opérateur n’est attendue pendant ce développement.
+**Code fusionné, CI PR/main exactes réussies, tag/release publiés et vérifiés ; préparation hébergée en attente.** La [PR 114](https://github.com/fredbuhr/jessiemessage/pull/114) a été fusionnée au commit `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, arbre `adcdf8e8e2aa202163da665aa0df8344abf7a194`. Le [tag/release v1.3.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.1), publié le `2026-10-21T00:56:35Z`, a été relu sur ce commit exact ; [workflow de publication](https://github.com/fredbuhr/jessiemessage/actions/runs/39524324490) réussi, source opérateur `a774e28090c61e79287e0f5ed987d678d1d48a55`. Barre de conversation mobile, actions secondaires et composeur réorganisés ; transport, droits, dépendances et schéma 31 inchangés. [Périmètre](chat-mobile-131.md) et [preuves 1.3.1](verification-proofs/jm131-verification.json). **La production reste 1.3.0, close ; aucune préparation, aucun précontrôle hébergé, activation ou enregistrement de métadonnées 1.3.1 n’a encore été rapporté.**
+
+- **Local :** 148 tests ciblés réussis sans omission sous Node 24.19.0. Build 583 sources réussi avant les dernières petites bornes, puis syntaxe finale ciblée réussie. Chrome absent localement ; clavier de téléphone physique non observé.
+- **CI finales :** [PR, run 39522976601](https://github.com/fredbuhr/jessiemessage/actions/runs/39522976601) et [main exact, run 39523643149](https://github.com/fredbuhr/jessiemessage/actions/runs/39523643149) réussis **5/5**. Main sous Node 24.22.0 ; mêmes compteurs : général **3 223 tests, 3 187 réussis, zéro échec, 36 ignorés** ; Chrome **171/171**, HTTPS/MariaDB **3/3**, MariaDB **10.11 et 11.4 : 479/479 chacune sans omission**. Les omissions générales ne valent pas qualification native.
+- **Historique conservé :** [première CI](https://github.com/fredbuhr/jessiemessage/actions/runs/39521871297), Chrome 170/171, échec du composeur vide agrandi par le placeholder à 320 px ; calcul corrigé. [Deuxième CI](https://github.com/fredbuhr/jessiemessage/actions/runs/39522459820), Chrome 170/171 : dispositions nouvelles réussies, assertion profil avant fin du chargement de la conversation ; synchronisation sur saisie activée ajoutée sans changer l’avatar attendu ni le délai. Ces deux échecs restent dans les preuves et ne sont pas réécrits en succès ; les CI finales qualifient le code après ces ajustements.
+
+**Prochaine action opérateur autorisée — préparation seulement :** ouvrir la [console SSH Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis y coller le bloc suivant. Le [helper épinglé](https://github.com/fredbuhr/jessiemessage/blob/0b9adec7b450b0501b3830a33e034b753d2c9b0c/ops/prepare-release131.sh) a été publié, sa référence brute relue identique et son SHA-256 vérifié ; **15 tests isolés et syntaxe Bash réussis**. Le bloc vérifie à nouveau les octets téléchargés avant de passer la source fusionnée exacte au script. L’agent n’a pas exécuté ce helper sur l’hébergement.
+
+```sh
+python3 - <<'PY131'
+import hashlib
+import subprocess
+import urllib.request
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/0b9adec7b450b0501b3830a33e034b753d2c9b0c/ops/prepare-release131.sh'
+data = urllib.request.urlopen(url, timeout=30).read(2000000)
+if hashlib.sha256(data).hexdigest() != 'ad86dc5b339f4932fd555638d61a15bb7382cd46d04e0c00cbeb4c376392065e':
+    raise SystemExit('HASH_MISMATCH')
+subprocess.run(['bash', '-s', '--', 'baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8'], input=data, check=True)
+PY131
+```
+
+Le helper est fixé au commit/arbre livré et prévoit uniquement staging et `check-local-closures`, sans migration, changement Manager, redémarrage ni écriture du checkpoint. Le repli prévu est la 1.3.0 active, avec les replis 1.2.0/1.1.1 conservés. **En cas de refus ou de réponse interrompue, s’arrêter et relever le résultat durable ; ne pas relancer aveuglément ni passer à l’activation.**
+
+**Parcours conditionnel après préparation :** seulement si le reçu `staged_precheck_passed` confirme `1.3.1`, la source `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, l’arbre `adcdf8e8e2aa202163da665aa0df8344abf7a194`, Node 24.22.0 et le précontrôle réussi, ouvrir les [réglages Run/Build de l’application Node.js 239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), puis enregistrer :
+
+- Run : `bash /srv/customer/jessiemessage-private/start-primary-release131-baf91e0e.sh`
+- Build : `bash /srv/customer/jessiemessage-private/check-primary-release131-baf91e0e.sh`
+
+Revenir au [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et choisir **Redémarrer**. Après le démarrage, ouvrir [État du service Jessie](https://jessiemessage.com/admin/readiness), **Actualiser la page → Détails techniques**, puis relever version, commit, Node et date affichée. Attendre cette preuve avant de déclarer 1.3.1 active et d’aligner les métadonnées opérateur. Le checkout prévu est `/srv/customer/jessiemessage-operator/production-131-baf91e0e` ; ces chemins ne sont pas encore prouvés préparés sur l’hébergement. Aucune de ces étapes conditionnelles n’est déclarée réalisée par la présente documentation.
 
 ## Livraison active 1.3.0 — close
 
@@ -22,7 +50,7 @@ Implémentation sur la branche `fix/chat-mobile-131` : barre de conversation com
 
 Ses **9 tests synthétiques** précèdent cette exécution et restent distincts du reçu serveur. L’ancien `activeService` 1.2.0 intégral et ses empreintes sont conservés comme état antérieur et repli utilisable sous `.developmentSimplification.release130` ; les autres blocs, dont le secours 1.1.1 et les historiques, sont préservés. L’alignement n’a exécuté ni migration, ni Build, ni redémarrage. L’agent n’a pas d’accès SSH utilisable et n’a pas observé directement le checkpoint privé. **Ne rejouer ni writer, ni staging, ni Build/Run, ni redémarrage, ni relevé admin pour clore la 1.3.0 : cette clôture est acquise.**
 
-**Prochaine étape autorisée, non implémentée :** le [correctif messagerie mobile 1.3.1](chat-mobile-131.md), distinct de cette livraison et prioritaire avant les diffusions à grande échelle. Aucune nouvelle opération utilisateur n’est attendue pour la 1.3.0.
+**Évolution suivante distincte :** le [correctif messagerie mobile 1.3.1](chat-mobile-131.md) est fusionné, qualifié et publié ; la préparation hébergée reste à réaliser selon la section de travail en cours ci-dessus. Il n’est pas déployé. Aucune nouvelle opération utilisateur n’est attendue pour la 1.3.0 close.
 
 ## État de livraison courant
 

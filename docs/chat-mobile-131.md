@@ -1,6 +1,6 @@
 # Conversation au centre sur mobile — correctif 1.3.1
 
-**21 octobre 2026 — code prêt et validations locales réussies sur `fix/chat-mobile-131` ; CI, fusion, publication et déploiement encore à réaliser.** La production reste en **1.3.0**, close par le reçu utilisateur `release130_metadata_recorded`. Aucune nouvelle action opérateur 1.3.0 n’est requise. La version active et les seules commandes opérateur courantes sont dans [REPRISE](REPRISE.md) ; les diffusions attendent la fin de ce correctif.
+**21 octobre 2026 — correctif fusionné, qualifié et publié en v1.3.1 ; préparation et activation hébergées en attente.** La CI finale de PR et celle du commit de fusion réussissent 5/5. La production reste en **1.3.0**, close par le reçu utilisateur `release130_metadata_recorded` ; aucun précontrôle hébergé ou déploiement 1.3.1 n’est encore rapporté. Aucune nouvelle action opérateur 1.3.0 n’est requise. La version active et les seules commandes opérateur courantes sont dans [REPRISE](REPRISE.md) ; les diffusions attendent la fin de ce correctif.
 
 ## Périmètre du correctif
 
@@ -19,9 +19,13 @@ Les boutons et liens gardent des noms accessibles traduits et un ordre de Tab si
 
 Conserver les vérifications de propriétaire, de conversation et de génération des parcours existants. Fermer les menus au changement de conversation, au masquage et au nettoyage du compte. L’ouverture d’un menu ne déclenche ni message, ni export. Aucun changement de transport, d’API serveur, de droits, de dépendances ou de schéma SQL.
 
-## Qualification locale et CI en cours
+## Qualification locale et CI de PR
 
-**148 tests ciblés réussis, zéro échec et zéro omission**, après la dernière correction de placement des outils. Build local réussi avec contrôle de 583 sources ; le dernier ajustement de borne a ensuite son contrôle de syntaxe ciblé réussi. Node local 24.19.0, CI prévue sous 24.22.0. La revue indépendante a fait corriger le rognage du panneau « + » ; aucun blocage restant dans le diff relu. Chrome est absent localement. La [première CI de PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39521871297) a exécuté 171 tests Chrome : 170 réussis, un échec et aucune omission. Le champ vide grandissait avec le retour à la ligne du placeholder à 320 px ; le calcul a été corrigé pour garder 44 px sans mesurer un placeholder vide. La [deuxième CI](https://github.com/fredbuhr/jessiemessage/actions/runs/39522459820) valide les nouvelles dispositions, mais compte encore 170/171 : une vérification du profil administrateur lisait les initiales avant la fin du chargement de la conversation. Une attente explicite de la saisie activée est ajoutée, sans changer l’avatar attendu ni le délai. Ces deux tentatives sont conservées ; la qualification finale reste à obtenir. Une simulation de viewport reste distincte d’un clavier observé sur téléphone physique. [Preuves structurées](verification-proofs/jm131-verification.json).
+**148 tests ciblés réussis, zéro échec et zéro omission**, après la dernière correction de placement des outils. Build local réussi avec contrôle de 583 sources ; le dernier ajustement de borne a ensuite son contrôle de syntaxe ciblé réussi. Node local 24.19.0 ; CI sous 24.22.0. La revue indépendante a fait corriger le rognage du panneau « + » ; aucun blocage restant dans le diff relu. Chrome est absent localement.
+
+La [première CI de PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39521871297) a exécuté 171 tests Chrome : 170 réussis, un échec et aucune omission. Le champ vide grandissait avec le retour à la ligne du placeholder à 320 px ; le calcul a été corrigé pour garder 44 px sans mesurer un placeholder vide. La [deuxième CI](https://github.com/fredbuhr/jessiemessage/actions/runs/39522459820) valide les nouvelles dispositions, mais compte encore 170/171 : une vérification du profil administrateur lisait les initiales avant la fin du chargement de la conversation. Une attente explicite de la saisie activée est ajoutée, sans changer l’avatar attendu ni le délai. Ces deux tentatives restent conservées avec leurs échecs.
+
+La [CI finale de PR](https://github.com/fredbuhr/jessiemessage/actions/runs/39522976601) et la [CI main du commit exact](https://github.com/fredbuhr/jessiemessage/actions/runs/39523643149) réussissent chacune **5/5 jobs**, avec les mêmes compteurs : général **3 187 réussis, zéro échec et 36 ignorés** ; Chrome **171/171**, HTTPS/MariaDB **3/3**, MariaDB **10.11 et 11.4 : 479/479 chacune**, sans omission dans ces jobs natifs. Cette qualification finale est distincte des deux tentatives précédentes. Les parcours Chrome et la simulation de viewport ne constituent pas un essai observé du clavier logiciel sur un téléphone physique ; aucun tel essai n’est attesté ici. [Preuves structurées](verification-proofs/jm131-verification.json).
 
 1. Client et administration, FR/EN, 320/360/390 px et ordinateur : absence de chevauchement, cibles tactiles accessibles, menu atteignable, historique mesuré et saisie visible.
 2. Clavier Tab/Entrée/Échap, ouverture/fermeture des menus, profil et export, retour de la bibliothèque et des emojis sans perte de brouillon ni envoi automatique.
@@ -30,7 +34,11 @@ Conserver les vérifications de propriétaire, de conversation et de génératio
 
 L’ancien test Chrome imposant six commandes visibles dans l’en-tête est remplacé dans ce travail par des critères de barre compacte et de commandes accessibles dans le menu, avec un contrôle de hauteur utile du fil. Une simple absence de débordement horizontal ne suffit pas.
 
-Après validation, consigner le commit exact, la CI, la fusion et la publication, puis préparer l’activation compatible. Aucun de ces états n’est acquis par la seule présence du code dans la branche. La 1.3.1 n’est pas encore disponible sur le service.
+## Livraison publiée — préparation et activation en attente
+
+La [PR 114](https://github.com/fredbuhr/jessiemessage/pull/114) est fusionnée sur `baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8`, arbre `adcdf8e8e2aa202163da665aa0df8344abf7a194`. Le [tag/release v1.3.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.3.1) est publié et relu sur ce commit exact, à `2026-10-21T00:56:35Z`, par le [workflow de publication vérifié](https://github.com/fredbuhr/jessiemessage/actions/runs/39524324490), commit opérateur `a774e28090c61e79287e0f5ed987d678d1d48a55`.
+
+Préparation, précontrôle et activation 1.3.1 sur l’hébergement restent en attente ; aucune de ces étapes n’est déduite de la CI ou de la publication. Il n’y a ni migration ni changement de dépendances. La production demeure en 1.3.0 ; le nouveau parcours 1.3.1 n’est pas encore disponible sur le service. [REPRISE](REPRISE.md) donnera la prochaine action opérateur épinglée.
 
 ## Références officielles consultées
 

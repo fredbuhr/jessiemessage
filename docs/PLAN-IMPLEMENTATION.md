@@ -10,7 +10,7 @@ Les livraisons 1.0.0, 1.1.0 et 1.2.0 sont closes ; leurs bilans et preuves sont 
 
 ## Travail en cours — correctif prioritaire 1.3.1
 
-[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : une seule barre active avec avatar, nom, **Options** et retour administrateur si nécessaire ; Contact, Aide et export dans le menu discret ; composeur `+` / `☺` / saisie / envoi. Présentation, menus, focus et hauteur visible sont en cours de correction, sans changement de transport, droits, API, dépendances ou SQL. **Implémentation et tests en cours sur `fix/chat-mobile-131` ; qualification, fusion, publication et déploiement non encore acquis.** Terminer les parcours client/admin FR/EN, le clavier, les petites tailles, le viewport réduit et le zoom avant livraison. La production reste en 1.3.0 close.
+[Messagerie mobile centrée sur la conversation](chat-mobile-131.md) : une seule barre active avec avatar, nom, **Options** et retour administrateur si nécessaire ; Contact, Aide et export dans le menu discret ; composeur `+` / `☺` / saisie / envoi. Correctif de présentation sans changement de transport, droits, API, dépendances ou SQL. **PR 114 fusionnée, CI finale de PR et CI main exacte 5/5 réussies, tag/release v1.3.1 publié et relu.** Préparation, précontrôle hébergé et activation distincte restent en attente ; la production reste en 1.3.0 close. Suivre uniquement la prochaine action opérateur de [REPRISE](REPRISE.md).
 
 ## Évolutions de messagerie demandées le 20 octobre
 
