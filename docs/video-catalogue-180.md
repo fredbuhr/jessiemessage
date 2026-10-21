@@ -43,6 +43,8 @@ La promotion vers `db/migrations/` attend l’adaptation simultanée du cycle de
 
 ## Qualification du jalon
 
-À consigner après les contrôles : source et arbre poussés, PR, CI propre et résultats natifs. Les tests SQL doivent couvrir isolement, révocation, quotas concurrents, reprise après accusés perdus et refus de rembourser un objet enregistré. Une omission locale faute de MariaDB reste une omission jusqu’à la qualification native.
+**Jalon 7.1 qualifié, non fusionné.** Source `04f375cbea572326656b6f3b08856ee789ce955a`, arbre `2e94cd6a7776a84c33890848725ed4f7bdf86794`, [PR de travail 125 en brouillon](https://github.com/fredbuhr/jessiemessage/pull/125). La [CI propre 39667232455](https://github.com/fredbuhr/jessiemessage/actions/runs/39667232455) réussit **5/5 à la tentative 1** sous Node **24.22.0**, cinq logs propres relus : général **3 413 tests, 3 373 réussis, zéro échec et 40 ignorés**, Chrome **189/189**, HTTPS **3/3**, chaque MariaDB **516/516 sans omission**. Les dix nouveaux scénarios réussissent sur **10.11 et 11.4**, dont vraie persistance SQL après accusés perdus et composition service/stockage chiffré/Range. [Preuve avec les empreintes des logs](verification-proofs/jm180-catalogue-verification.json).
+
+Localement : syntaxe de **632 sources** vérifiée, suite **3 409 tests, 3 188 réussis, zéro échec, 221 ignorés**. Ces omissions restent explicites ; la qualification SQL vient des deux jobs natifs, pas du test ignoré localement. Deux revues indépendantes ont précédé la CI. Un seul run PR a été déclenché pour ce candidat, aucun push de branche ni nouvelle tentative. La documentation de clôture seule suit avec `[skip ci]`, sans nouvelle exécution du même code.
 
 La qualification du catalogue n’atteste ni codec sur téléphone, ni transfert de 100 Mio sur le mutualisé, ni interface vidéo, ni restauration vidéo. Prochaine action après 7.1 : **7.2 — liens de message et ACL destinataire**, sur la même branche et sans activation isolée.

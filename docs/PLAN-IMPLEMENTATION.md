@@ -10,14 +10,14 @@ La livraison **1.5.0 — Annonces** est close : code et CI qualifiés, versions 
 
 | Évolution | Résultat attendu et critère de fin | État |
 | --- | --- | --- |
-| **7 — Vidéos dans la messagerie** | Catalogue et capacité SQL durables, aperçu, lecteur, légende, galerie et diffusion ; export, suppression, fermeture, inventaire et restauration vidéo cohérents avant activation. | 7.1 en développement sur `feat/video-messaging` ; aucune activation. |
+| **7 — Vidéos dans la messagerie** | Catalogue et capacité SQL durables, aperçu, lecteur, légende, galerie et diffusion ; export, suppression, fermeture, inventaire et restauration vidéo cohérents avant activation. | 7.1 qualifié sur `feat/video-messaging` ; 7.2 suivant, aucune activation. |
 | **8 — Validation et portabilité** | Parcours combinés, capacité du mutualisé mesurée et migration répétée sur données synthétiques. | Planifiée. |
 
 Un résultat borné et documenté à la fois. Les autres évolutions ne sont pas ouvertes automatiquement ; la qualification d’appareils réels et des notifications conserve ses limites. Sauvegardes/PC et archivage différés restent hors de ce parcours. Les essais de masse ou de restauration exigent une cible synthétique isolée ; l’alias recette partage la production.
 
 ## Jalons de développement et livraison
 
-**Le lot 7 est ouvert : seul le jalon 7.1 est en développement.** Son [contrat et catalogue candidat](video-catalogue-180.md) restent dormants ; la prochaine action est leur qualification sur une base synthétique isolée. Le lot 8 n’est pas commencé. Ce découpage ne modifie pas la production **1.6.0 / schéma 33**, son checkpoint ou son repli **1.5.1**.
+**Le lot 7 est ouvert : le jalon 7.1 est codé et qualifié sur sa branche, sans fusion ou activation.** Son [contrat et catalogue candidat](video-catalogue-180.md) restent dormants. La prochaine action est **7.2 — message vidéo privé et droits destinataire**. Le lot 8 n’est pas commencé. Ce découpage ne modifie pas la production **1.6.0 / schéma 33**, son checkpoint ou son repli **1.5.1**.
 
 Les étapes ci-dessous sont des jalons reprenables du même résultat, pas des livraisons produit distinctes. Le lot 7 garde une branche et une PR de travail ; **une seule livraison produit est prévue à son terme, sans nouvelle version, tag, release, migration hébergée ou déploiement à chaque jalon**. Les évolutions fonctionnelles restent sur cette branche jusqu’à la qualification du résultat complet. La version compatible est décidée à l’ouverture effective du lot selon [AGENTS](../AGENTS.md), sans modifier les références déjà publiées.
 
