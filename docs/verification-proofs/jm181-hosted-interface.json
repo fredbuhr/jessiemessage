@@ -1,0 +1,50 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_181_hosted_interface",
+  "status": "combined_list_user_reported_backup_check_deferred",
+  "date": "2026-10-22",
+  "version": "1.8.1",
+  "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+  "provenance": "USER_REPORTED feedback and user-attached screenshot inspected during this conversation; no browser automation or customer-message action.",
+  "reportedFeedback": {
+    "combinedList": "La liste commune fonctionne.",
+    "backup": "quant à la sauvegarde, je pense que infomaniak sont en maintenance, c’est donc impossible, on testera cette fonction un autre jour"
+  },
+  "quickReplies": {
+    "combinedListWorks": true,
+    "evidenceKind": "USER_REPORTED",
+    "earlierSavingWorksReportPreserved": true,
+    "reloadPersistenceSeparatelyDescribed": false,
+    "insertionSeparatelyDescribed": false,
+    "limits": "The general success statement is recorded as supplied; specific substeps or device coverage are not invented."
+  },
+  "manualBackup": {
+    "status": "deferred_unverified",
+    "deferredByUser": true,
+    "creationVerified": false,
+    "completionVerified": false,
+    "downloadVerified": false,
+    "furtherDiagnosisRequestedToday": false,
+    "automaticRecheckRequested": false,
+    "reason": "User reports the provider page and explicitly defers the check to another day.",
+    "screenshot": {
+      "name": "image(20261022-143340).png",
+      "bytes": 796556,
+      "sha256": "e99cdb531a7a1dd0b33ed55c233a6b1f34d3405db85a465c7a222a72b540af7f",
+      "observedUrl": "https://jessiemessage.com/admin/login/?continue=%2Fadmin%2Fbackups",
+      "observedPage": "Infomaniak maintenance page before the backup administrator interface.",
+      "causeEstablished": false,
+      "providerWideMaintenanceVerified": false,
+      "imageCommitted": false
+    }
+  },
+  "preservedProofs": [
+    "jm180-hosted-interface.json",
+    "jm181-public-http.json",
+    "jm181-hosted-metadata.json"
+  ],
+  "limits": [
+    "The earlier anonymous alias GET 308 remains its dated observation; the attached provider page is a distinct later user observation. Neither establishes the full backup workflow.",
+    "No additional backup run, server change, support contact, cloud browser, reminder or maintenance monitoring is requested or performed by this checkpoint."
+  ]
+}

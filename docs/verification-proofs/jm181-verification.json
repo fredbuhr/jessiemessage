@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage_181_verification",
-  "status": "deployed_user_reported_metadata_pending",
+  "status": "deployed_aligned_user_reported_backup_check_deferred",
   "recordedDate": "2026-10-22",
   "version": "1.8.1",
   "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
@@ -1207,11 +1207,11 @@
     "deploymentPerformed": false
   },
   "operatorHosted": {
-    "status": "activated_user_reported_metadata_pending",
+    "status": "metadata_recorded_user_reported",
     "release181PreparationAcquired": true,
     "release181PrecheckAcquired": true,
     "release181ActivationAcquired": true,
-    "release181MetadataAcquired": false,
+    "release181MetadataAcquired": true,
     "migrationRequired": false,
     "qualifiedPreparationHelper": {
       "operatorSource": "e618b94506da42f21b0a194e90c294ab872a8bd2",
@@ -1242,9 +1242,12 @@
       "bytes": 24720,
       "sha256": "78458879fe9a2ed022c430e1a3565ed704492f63f6089c7bfb7a7bfd561380c7",
       "remoteBytesEqualQualifiedLocalFile": true,
-      "hostExecuted": false,
-      "qualificationProof": "jm181-metadata-operator-verification.json"
-    }
+      "hostExecuted": true,
+      "qualificationProof": "jm181-metadata-operator-verification.json",
+      "hostExecutionEvidenceKind": "USER_REPORTED"
+    },
+    "hostedMetadataProof": "jm181-hosted-metadata.json",
+    "hostedInterfaceProof": "jm181-hosted-interface.json"
   },
   "production": {
     "version": "1.8.1",
@@ -1252,12 +1255,15 @@
     "tree": "eb427f887248fa9db5c656c3773e016f8688efc9",
     "nodeVersion": "v24.22.1",
     "schemaMigrations": 36,
-    "proof": "jm181-hosted-identity.json",
-    "evidenceKind": "USER_REPORTED administrator readiness identity; no direct host process observation",
+    "proof": "jm181-hosted-metadata.json",
+    "evidenceKind": "USER_REPORTED protected metadata-writer receipt and displayed administrator identity",
     "schemaProof": "jm180-hosted-schema36.json",
     "publicHttpProof": "jm181-public-http.json",
-    "metadataCheckpointVersion": "1.8.0",
-    "metadataAlignmentPending": true
+    "metadataCheckpointVersion": "1.8.1",
+    "metadataAlignmentPending": false,
+    "identityProof": "jm181-hosted-identity.json",
+    "metadataCheckpointSha256": "53bd5312c42f34934de04d1e4e7994a864892cdf5a945c6a72c7b4c46ef5be76",
+    "startedAt": 1792675816926
   },
   "rollback": {
     "version": "1.7.2",
@@ -1274,7 +1280,7 @@
     ]
   },
   "deploymentPerformed": true,
-  "release181MetadataRecorded": false,
+  "release181MetadataRecorded": true,
   "limits": [
     "The successful pull-request and main runs qualify the release source. The initial failed run records tests of its earlier source and remains failed; it does not qualify the release source.",
     "General-suite 47 omissions remain omissions: 45 SQL opt-in cases and two environment-dependent procfs cases. Both native SQL engines have zero omissions.",
@@ -1283,10 +1289,10 @@
     "Synthetic resource metrics measure peak RSS of the Node test process only; MariaDB, Chrome and child processes are excluded. They do not measure mutualised hosting performance.",
     "Native Chrome rehearsal does not establish hosted activation, an actual administrator session on the host, physical-phone behaviour or closed-app OS notifications.",
     "The exact login alias applies only to requests that reach Node. Anonymous hosted HTTP now confirms its GET 308 response with preserved query; the earlier Infomaniak page cause and the full backup workflow remain unqualified.",
-    "Creation, completion and download of a manual backup through the hosted administrator interface remain unverified.",
-    "The user reported successful personal-reply saving in 1.8.0; persistence after page reload and insertion through the final combined hosted list remain to be confirmed.",
+    "Creation, completion and download of a manual backup through the hosted administrator interface remain unverified and explicitly deferred by the user.",
+    "The user reports that saving works and the final combined list works. Specific reload/insertion substeps and device coverage were not separately described; no additional check is requested today.",
     "The upper manual-restore CLI is not claimed as a complete native end-to-end path; existing targeted wrapper qualifications remain distinct.",
-    "Publication and hosted preparation/precheck are acquired; activation is USER_REPORTED through the displayed administrator identity. Latest is aligned on v1.8.1; only execution of the qualified host metadata helper remains pending. No migration, initialisation, new key or PC manipulation is required by this patch."
+    "Publication, hosted preparation/precheck, activation and metadata alignment are acquired with their distinct evidence. Latest is aligned on v1.8.1. The user reports the combined list working and defers the unverified backup check. No migration, initialisation, new key or PC manipulation is required by this patch."
   ],
   "userFeedback": {
     "date": "2026-10-22",
@@ -1314,5 +1320,9 @@
     "markerOnly": true,
     "proof": "jm181-metadata-operator-verification.json",
     "independentLatestApiReadByRoot": true
-  }
+  },
+  "deliveryTechnicalComplete": true,
+  "hostedFunctionalQualificationComplete": false,
+  "backupCheckDeferredByUser": true,
+  "currentInterfaceFeedbackProof": "jm181-hosted-interface.json"
 }

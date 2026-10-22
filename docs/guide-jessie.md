@@ -2,7 +2,7 @@
 
 Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/app) et l’[aide du site](https://jessiemessage.com/help).
 
-La version **1.8.1** est active selon l’[identité admin rapportée](verification-proofs/jm181-hosted-identity.json), source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node **24.22.1** ; SQL **36** est conservé. [REPRISE](REPRISE.md) distingue cette activation et l’alignement des métadonnées, encore en attente. Le [retour utilisateur sur l’interface](verification-proofs/jm180-hosted-interface.json) confirme le parcours vidéo ; l’enregistrement des réponses est aussi rapporté réussi. Restent à terminer la sauvegarde manuelle et la vérification d’une réponse retrouvée puis insérée depuis la liste commune.
+La version **1.8.1** est active et ses métadonnées sont alignées, selon le [reçu utilisateur](verification-proofs/jm181-hosted-metadata.json), source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node **24.22.1**, SQL **36**, sans redémarrage. [REPRISE](REPRISE.md) conserve les références techniques. L’utilisateur confirme le fonctionnement de la [liste commune](verification-proofs/jm181-hosted-interface.json) ; le [parcours vidéo](verification-proofs/jm180-hosted-interface.json) était déjà rapporté réussi. La sauvegarde manuelle reste non vérifiée et son test est reporté à sa demande.
 
 ## Se connecter et gérer les accès
 
@@ -114,14 +114,11 @@ Sous **Dernière sauvegarde disponible**, vérifie la date et la taille, puis ch
 
 Une sauvegarde téléchargée ne certifie pas encore son déchiffrement ou une restauration de l’application. Les [copies PC](backup-destinations-055.md) décrivent le parcours historique, qui n’est pas nécessaire à cette sauvegarde manuelle.
 
-### Deux vérifications restantes dans ton navigateur
+### Test de sauvegarde reporté
 
-L’identité active 1.8.1 est rapportée ; l’alignement des métadonnées reste à terminer. Tu as confirmé ajout, retrait avant envoi, envoi et suppression d’une vidéo ; le [retour utilisateur sur l’interface](verification-proofs/jm180-hosted-interface.json) conserve ce résultat, sans précision sur l’appareil ou le destinataire. Il reste deux vérifications. Effectue d’abord la sauvegarde : sa préparation peut interrompre brièvement la messagerie. Fais cet essai avant de préparer des brouillons.
+La livraison 1.8.1 est alignée et tu confirmes que la liste commune fonctionne. Le [retour interface](verification-proofs/jm181-hosted-interface.json) conserve cette validation sans détailler tous les sous-cas. La sauvegarde reste non vérifiée : tu as demandé de la tester un autre jour après la page Infomaniak affichée avant l’écran de sauvegarde. Aucun nouvel essai ni diagnostic n’est demandé aujourd’hui.
 
-- Crée une sauvegarde, attends sa fin, puis télécharge le fichier chiffré.
-- Dans **+ → Réponses rapides**, choisis **Nouvelle réponse**, remplis titre, langue et texte, puis **Enregistrer la réponse**. Attends **Réponses personnelles enregistrées.** Recharge ensuite la page, rouvre la conversation et **+ → Réponses rapides**, choisis la **Langue des réponses** correspondante et retrouve la phrase dans le catalogue. Clique dessus pour l’insérer dans le brouillon, sans **Envoyer**.
-
-Ces deux vérifications ne demandent aucun nouvel envoi à un destinataire réel, aucune fermeture ni suppression de compte. Le brouillon du composeur disparaît normalement au rechargement : vérifie la phrase dans le catalogue, puis son insertion dans un nouveau brouillon. La restauration réelle, les téléphones physiques, les notifications système et les performances de l’hébergement restent distincts de ces vérifications.
+Lorsque tu décideras de reprendre ce test, il s’agira de créer une sauvegarde, d’attendre sa fin puis de télécharger le fichier chiffré. Sa préparation peut interrompre brièvement la messagerie : conserver alors tes brouillons avant de commencer. Aucune manipulation du PC, fermeture de compte ou restauration n’est nécessaire à ce contrôle. Les parcours physiques et les performances de l’hébergement gardent leurs limites de qualification.
 
 ## Fermeture définitive et remise en service
 
