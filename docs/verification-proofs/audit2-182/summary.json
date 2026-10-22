@@ -1,0 +1,126 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-second-complete-audit",
+  "recordedAtUTC": "2026-10-22T20:47:27.316210+00:00",
+  "status": "completed_findings_not_corrected",
+  "productionVersion": "1.8.2",
+  "productionSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "productionTree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+  "startingCheckpoint": "e2cfbefe03d3538b216f873d185b1542d856044c",
+  "auditScopeCheckpoint": "b54430d849132f3cb3f353c92bf30f2879865dec",
+  "runtimeTreesIdentical": true,
+  "sourceConfigAssetFilesInventoried": 447,
+  "allSourceFilesReviewed": true,
+  "sourceLines": 62528,
+  "sourceReviewMethods": {
+    "full_text_review": 425,
+    "full_base_plus_exhaustive_variant_diff": 11,
+    "structured_review_all_59_dependency_records": 1,
+    "binary_format_dimensions_and_hash_review": 10
+  },
+  "coverage": {
+    "auth_data_security": {
+      "files": 46,
+      "lines": 6211
+    },
+    "backup": {
+      "files": 62,
+      "lines": 9020
+    },
+    "domain_workers": {
+      "files": 42,
+      "lines": 5853
+    },
+    "frontend_identity_pwa": {
+      "files": 72,
+      "lines": 7575
+    },
+    "frontend_messaging": {
+      "files": 30,
+      "lines": 6142
+    },
+    "messaging_media": {
+      "files": 41,
+      "lines": 6560
+    },
+    "root_integration_ops": {
+      "files": 154,
+      "lines": 21167
+    }
+  },
+  "testFilesInventoried": 390,
+  "testReadingCounts": {
+    "structural_inventory_only": 163,
+    "partial_or_targeted": 25,
+    "full": 202
+  },
+  "allTestsRead": false,
+  "externalPinnedOperatorHelpersReviewed": 3,
+  "externalPinnedOperatorHelperLines": 846,
+  "confirmedDefects": [
+    {
+      "id": "B01",
+      "severity": "P2",
+      "scope": "active182",
+      "title": "Une réponse401 ancienne efface le cookie d’une session plus récente",
+      "sourceFinding": "MM-01"
+    },
+    {
+      "id": "B02",
+      "severity": "P2",
+      "scope": "active182",
+      "title": "Renouvellement expiré commis puis retourné en503",
+      "sourceFinding": "AUTH-DATA-01"
+    },
+    {
+      "id": "B03",
+      "severity": "P3",
+      "scope": "active182",
+      "title": "Émission possible d’un lien déjà expiré après attenteSQL",
+      "sourceFinding": "DOM-01",
+      "severityDecision": "Reduced from initialP2 after independent clock review: reliability only, fresh token-consumption checks remain."
+    },
+    {
+      "id": "B04",
+      "severity": "P3",
+      "scope": "active182",
+      "title": "Lien Sauvegardes vers/admin/chat inexistant",
+      "sourceFinding": "FI-PWA-01",
+      "severityDecision": "Reduced from initialP2: navigation with simple workaround, no data loss or permission bypass."
+    },
+    {
+      "id": "B05",
+      "severity": "P2_conditional",
+      "scope": "historical_optional_not_active_video182",
+      "title": "Admission concurrente du témoin au-delà du plafond2",
+      "sourceFinding": "BH-01"
+    }
+  ],
+  "improvements": [
+    {
+      "id": "I01",
+      "severity": "P3_conditional",
+      "scope": "historical_explicit_operator_use",
+      "title": "Refus explicite de l’ancien coffre lorsque la configuration vidéo est présente",
+      "sourceFinding": "VAULT_VIDEO_GUARD_P3",
+      "notCountedAsConfirmedDefect": true
+    }
+  ],
+  "noP0OrP1Established": true,
+  "noAuthorizationBypassOrPrivateDataLeakEstablished": true,
+  "theseStatementsAreNotSecurityGuarantees": true,
+  "knownDependencyAdvisories": 0,
+  "newLocalReproductionRuntime": "v24.19.0",
+  "productionAndPriorQualifiedCiRuntime": "v24.22.1",
+  "applicationChanged": false,
+  "deploymentPerformed": false,
+  "productionDataAccessed": false,
+  "generalSuitesRerun": false,
+  "hostedBackupTestPerformed": false,
+  "privacyLegalWorkReopened": false,
+  "report": "../../AUDIT-2-20261022.md",
+  "sourceCoverage": "source-coverage.json",
+  "testCoverage": "test-coverage.json",
+  "nextAction": "Audit delivered. Corrective implementation and deployment are separate work; preserve current182 identity and acquired proofs.",
+  "finalIndependentReview": "final-report-review.json"
+}

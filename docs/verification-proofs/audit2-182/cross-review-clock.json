@@ -1,0 +1,238 @@
+{
+  "formatVersion": 1,
+  "type": "audit2-182-independent-cross-review-clock",
+  "recordedAtUTC": "2026-10-22T20:40:54.655211+00:00",
+  "reviewer": "versions_reprise; independent of both reproduction authors",
+  "checkoutHead": "e2cfbefe03d3538b216f873d185b1542d856044c",
+  "method": "Read both complete reproduction scripts and recorded JSON outputs, then checked the actual production wiring, SQL-shaped adapter behavior, source contracts, schema and selected existing tests. No reproduction or existing test was executed or rerun.",
+  "verdicts": [
+    {
+      "subject": "repro-renew-expired-clock",
+      "verdict": "confirmed_real_contract_mismatch",
+      "severity": "P2",
+      "confidence": "high",
+      "title": "Une prolongation d’accès expiré réussit en SQL puis est déclarée indisponible",
+      "references": [
+        {
+          "file": "server/access/service.mjs",
+          "lines": "273–282"
+        },
+        {
+          "file": "server/access/store.mjs",
+          "lines": "474–495"
+        },
+        {
+          "file": "server/access/store.mjs",
+          "lines": "66–79"
+        },
+        {
+          "file": "server/index.mjs",
+          "lines": "396–403"
+        }
+      ],
+      "reasoning": "Le service fige expectedTarget à son heure après quotas. Le store authentifie sous transaction, relit son horloge injectée après le verrou du client, puis calcule depuis ce temps plus récent. Pour un accès expiré, toute progression positive augmente le résultat SQL. Le store commit avant de rendre la valeur ; la stricte égalité attendue par le service échoue ensuite et AUTH_UNAVAILABLE est mappé en 503.",
+      "sqlAdapterFidelity": {
+        "accepted": true,
+        "details": [
+          "Les sélections admin/MFA/session correspondent aux requêtes réelles et produisent un administrateur actuellement valide ; la session reste vivante après 1 ms.",
+          "Le client actif, vérifié, invité et approuvé avec échéance finie expirée est un état métier autorisé ; exact_expiry utilise les six chiffres SQL attendus.",
+          "L’unique progression de 1 ms au SELECT client simule un vrai délai asynchrone/verrou. createSessionClock lit cette horloge ; le même clock est réellement passé au store et service en production.",
+          "La capture UPDATE puis commit/no rollback reflète le code réel ; l’erreur est située après la sortie transactionnelle."
+        ],
+        "limits": [
+          "Le double ne prouve ni durée d’attente ni fréquence sur MariaDB réel et remplace les contrôles de quotas/session amont par des entrées valides. Ces remplacements ne créent pas la divergence.",
+          "Le résultat ne dépend pas d’une concurrence modifiant l’échéance : la CAS de snapshot reste exacte. Un simple temps écoulé suffit."
+        ]
+      },
+      "realisticPreconditions": [
+        "Administrateur authentifié et autorisé avec quota disponible.",
+        "Client actif, approuvé et vérifié sur invitation, dont l’accès fini est déjà expiré ou expire entre le calcul amont et l’heure SQL.",
+        "Au moins 1 ms s’écoule entre le temps figé du service et celui du store ; aucun verrou malveillant n’est requis."
+      ],
+      "impact": "Faux échec/état incertain d’une mutation déjà commise, avec mauvaise confirmation de prolongation. Le client obtient l’accès prolongé. Pas de bypass d’authentification, révocation ou modification de propriétaire démontré.",
+      "mitigationsAlreadyPresent": "Le contrôleur admin, lignes549–553, relit la liste sur 5xx et affiche une opération non confirmée ; il ne rejoue pas le POST. Une répétition du même snapshot renvoie ACCESS_CONFLICT. Ne pas présenter la preuve comme un double renouvellement automatique.",
+      "historicalContract": "git blame montre le calcul/égalité du service au commit0631ab13 du15octobre ; le recontrôle post-verrou du store a été ajouté à f2d492eb le16octobre. Découverte nouvelle dans audit2, défaut déjà présent avant1.8.2. Les tests service figent l’heure ou doublent le store, les tests SQL ne composent pas la comparaison finale du service.",
+      "recommendedScope": "Aligner le contrat du service sur le temps de décision transactionnel du store sans supprimer le recontrôle frais ni la CAS. Ajouter lors du futur correctif une régression composée service+store avec horloge avançant et snapshot expiré. Aucun correctif/test lancé ici."
+    },
+    {
+      "subject": "repro-expired-mail",
+      "verdict": "confirmed_stale_claim_before_transport_with_limited_impact",
+      "severity": "P3",
+      "confidence": "high for mechanism; unmeasured for hosted frequency",
+      "title": "Un bail mail peut être créé déjà expiré après l’attente SQL puis envoyé",
+      "references": [
+        {
+          "file": "server/mail/store.mjs",
+          "lines": "75–124"
+        },
+        {
+          "file": "server/reset/mail-store.mjs",
+          "lines": "35–82"
+        },
+        {
+          "file": "server/mail/worker.mjs",
+          "lines": "26–56"
+        },
+        {
+          "file": "server/mail/transport.mjs",
+          "lines": "150–192"
+        }
+      ],
+      "reasoning": "claim reçoit une seule heure et la réutilise après les verrous utilisateur/preuve/outbox. Si cette attente dépasse l’expiration, les contrôles voient encore le job valide et leaseUntil est limité à une expiration déjà passée. runMailBatch n’effectue aucun contrôle d’expiration frais avant l’appel SMTP. L’ACK utilise le temps frais et refuse donc le succès : la preuve décrit bien un SMTP démarré après expiration, et non uniquement une réponse tardive.",
+      "sqlAdapterFidelity": {
+        "accepted": true,
+        "details": [
+          "Au départ, pending/available_at satisfait réellement la requête candidate. Les lignes verrouillées et IDs sont cohérents et les préconditions email/statut/version sont satisfaites.",
+          "Le changement d’heure au retour du verrou user modélise une attente réelle ; aucun hook du store ne relit cette heure.",
+          "Les CHECK SQL n’exigent pas lease_until > heure courante : seulement une paire de bail valide et une date après created_at ; le bail expiré de la preuve resterait donc enregistrable.",
+          "Le double de markSent omet certains prédicats et la remise à NULL des champs de bail pour le succès ; pour les lignes données, created_at <= ACK est vrai et expires_at > ACK est redondant avec lease_until <= expires_at. Cela ne change ni le témoin sans attente ni le refus après attente.",
+          "Prune ne supprimerait pas ces jobs récents dans le vrai SQL ; DELETE0 est fidèle pour ce fixture."
+        ],
+        "limits": [
+          "Le fixture emploie une durée de lien de2secondes, plus courte que l’émission normale24h/30min. Les schémas et lecteurs autorisent cette durée. Un job normal ancien avec1seconde restante avant expiration produit les mêmes comparaisons ; cette substitution est une déduction statique, pas une nouvelle reproduction exécutée.",
+          "Le fixture ne mesure ni attente réelle MariaDB, ni arrivée en boîte mail, ni SMTP réel. Il montre l’appel du transport factice une seconde après expiration."
+        ]
+      },
+      "realisticPreconditions": [
+        "Un job non consommé/non révoqué demeure éligible alors que sa durée restante est courte, par exemple après indisponibilité/reprise ou retard de file.",
+        "Le cumul connexion/verrous/SQL dépasse cette durée restante ; l’utilisateur et la preuve restent autrement inchangés."
+      ],
+      "impact": "Possible envoi inutile d’un lien déjà inutilisable, consommation d’une tentative et compteur failed après SMTP accepté ; job reste sending jusqu’au prochain claim, qui peut alors le classer cancelled. Fiabilité et expérience utilisateur, pas prolongation de validité du lien.",
+      "severityRationale": "P3 recommandé : défaut de fraîcheur établi mais condition de bord et impact borné. Une classification P2 peut refléter la priorité métier de récupération, mais la preuve ne justifie aucune gravité de sécurité ou indisponibilité générale.",
+      "ttlAndFalsePositiveBoundary": "Il est normal qu’un mail commencé avant expiration arrive ou soit acquitté après expiration, et les ACK at-least-once/stale-lease ne doivent pas être assouplis. Cette arrivée tardive seule ne serait pas un bug nouveau. Le constat précis est le début évitable de SMTP après une attente connue qui a déjà périmé le bail. La vérification avant transport réduit ce cas sans promettre une livraison avant TTL.",
+      "securityBoundary": "verifyEmail relit sessionNow après verrou (access/store.mjs414–416) ; reset lockedContext relit currentTime après verrous et liveReset exige now < expires_at (reset/store.mjs160–179). Aucun lien expiré accepté ni mot de passe changé après expiration démontré.",
+      "historicalContract": "Le claim verification remonte selon git blame à8f657e3b du14octobre. Les tests existants annulent les liens expirés à l’entrée et rejettent un ACK tardif, sans simuler le passage du temps pendant claim. Ce constat est distinct de l’ancien A04 corrigé sur la consommation des liens et ne doit pas être décrit comme sa régression.",
+      "recommendedScope": "Si retenu, rafraîchir l’heure de claim après les lectures verrouillantes et éviter le début SMTP avec une échéance/bail périmé. Conserver usage unique, annulation, CAS du bail, ACK tardif refusé et garantie at-least-once. Aucun contrat garantissant réception avant TTL ni refonte transport à ajouter."
+    }
+  ],
+  "reviewedEvidenceAndSources": [
+    {
+      "path": "/workspace/scratch/bb431be72395/audit2-182/auth_data_security/repro-renew-expired-clock.mjs",
+      "sha256": "433ccb9538cbda3d87f514ea4af060582d9be5c6b4decac13b32e00f4355f2eb",
+      "reviewScope": "full script/output read; not executed by counter-reviewer"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/audit2-182/auth_data_security/repro-renew-expired-clock.json",
+      "sha256": "4806cb78b313a8ecff06ef163717d64d5a38a96692f051dff13b8eb85156ed26",
+      "reviewScope": "full script/output read; not executed by counter-reviewer"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/audit2-182/domain_workers/repro-expired-mail.mjs",
+      "sha256": "084330b625248b5370aa6c0d0a8ce5636da993a1ccccc0340630dd1fd81231f4",
+      "reviewScope": "full script/output read; not executed by counter-reviewer"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/audit2-182/domain_workers/repro-expired-mail.json",
+      "sha256": "20ac529487a12115fcf4c8b93038ab8c9a1af26fd5ead11343b3e581a90e1887",
+      "reviewScope": "full script/output read; not executed by counter-reviewer"
+    },
+    {
+      "path": "server/access/service.mjs",
+      "sha256": "5196627328e9fabaa8c57ed9503b55752024314cc3a4acb62ff8807220b431bb",
+      "reviewScope": "lines 1–118,121–169,260–288; administration and renewal contract"
+    },
+    {
+      "path": "server/access/store.mjs",
+      "sha256": "a31d21c08b81db7f566f19660bc0ae93a98d5fbad9b1f6a9684453dac1c8a625",
+      "reviewScope": "lines 1–150,402–422,450–503; clocks, authorization, consumed invitation prerequisites, transaction/commit and renewal"
+    },
+    {
+      "path": "server/auth/session-policy.mjs",
+      "sha256": "f3a68b126cc203de4776c0469ef6ab917fc5a386b8f3b9c0bb61d3f2acb8f60a",
+      "reviewScope": "lines 1–41; live injected clock behavior"
+    },
+    {
+      "path": "server/access/http.mjs",
+      "sha256": "470176b91644b54d88bb9f7d62165fd17819f5ae57083d2c0750cdb2f9615eb2",
+      "reviewScope": "lines 1–105,106–196,225–243; renewal mapping/auth/503 and DTO boundary"
+    },
+    {
+      "path": "public/admin-login.js",
+      "sha256": "f83fccbc4fdba5cbe1c3ba9b67dc122d1c826a7defaadea8613bb9b1164c6120",
+      "reviewScope": "lines 515–621; reconciliation GET and no automatic POST replay"
+    },
+    {
+      "path": "server/mail/store.mjs",
+      "sha256": "5f57379f870d37761c18d517ac49079edd3edd513a0c22776a04ce70546a63a3",
+      "reviewScope": "full; candidate selection, transaction, claim, lease, acknowledgement and prune"
+    },
+    {
+      "path": "server/reset/mail-store.mjs",
+      "sha256": "927331e2730c9b32622cf428c3a7dbb8a8255479add5a3f4544ef2e89303f767",
+      "reviewScope": "full; candidate selection, credential/email gates, claim, lease, acknowledgement and prune"
+    },
+    {
+      "path": "server/mail/worker.mjs",
+      "sha256": "9fe7a02c328a19b88bdb0446369818203fb87f45d9c9438e7f6b0e140ba13959",
+      "reviewScope": "full; claim-to-transport and acknowledgement sequence"
+    },
+    {
+      "path": "server/mail/transport.mjs",
+      "sha256": "e36749e10b9fdd4d9ef13b1c49cd7155f32cfba1228d37be1ddb2b8eb9a679a9",
+      "reviewScope": "lines 1–205; validated transport input, lack of expiry input, SMTP timeout and accepted-recipient check"
+    },
+    {
+      "path": "server/reset/service.mjs",
+      "sha256": "e7ac016c42c247cae82dac89ffe5e1f6ccbe5667e98d2ac7182f6febf88dc435",
+      "reviewScope": "TTL/issuance/consumption clock references reviewed, not full file"
+    },
+    {
+      "path": "server/reset/store.mjs",
+      "sha256": "4df15595ced959890e1b77e89205d4613106b10460c6e3c168ad5d17412e1209",
+      "reviewScope": "lines154–182 plus issuance/consumption clock/expiry references"
+    },
+    {
+      "path": "server/index.mjs",
+      "sha256": "9c4e0d8cb0e18a22363d7c700eac2c702d5262b9493386505982cd20329ae7a9",
+      "reviewScope": "lines388–423,639–653; actual shared access clock and active default-clock mail workers"
+    },
+    {
+      "path": "db/migrations/0012_mail_outbox.sql",
+      "sha256": "d2be6c8f95bd16da4086f9c3d668c92e5739de9a33b24d3c52e0c904a7c4fb6a",
+      "reviewScope": "full; dates/lease constraints"
+    },
+    {
+      "path": "db/migrations/0022_password_reset_outbox.sql",
+      "sha256": "17d9dd8c774151c0086bb4b62e08e239e50033c21b083fa3e568ad047ed5bb58",
+      "reviewScope": "full; dates/lease constraints"
+    },
+    {
+      "path": "tests/access-service.test.mjs",
+      "sha256": "f28e1a62587276f61538841f419c41abbe10c5f6772cc21c878134d0f384097d",
+      "reviewScope": "lines260–326; fixed-clock expired renewal and exact result expectation",
+      "executed": false
+    },
+    {
+      "path": "tests/access-store.integration.test.mjs",
+      "sha256": "5f0777f25b1838f0baff1c02383f6315c0490722b5f4b4a76ebfec10b674ead6",
+      "reviewScope": "lines476–520,555–603; expired concurrent CAS, target-lock expiry test, finite horizon",
+      "executed": false
+    },
+    {
+      "path": "tests/mail-store.integration.test.mjs",
+      "sha256": "aba92f975b2d684a88d2f6ac6bf2ad564507e32d6841b03ae703259d30497fbf",
+      "reviewScope": "lines39–60,126–170; cancel expired before claim, fresh markSent boundary and subsequent cancellation",
+      "executed": false
+    },
+    {
+      "path": "tests/reset-mail.test.mjs",
+      "sha256": "affbab05ba089b97f81ea168921269764ca59faf4b8e7892831179958988ab4f",
+      "reviewScope": "lines1–175; worker purpose, stale acknowledgement contract and encrypted payloads",
+      "executed": false
+    }
+  ],
+  "execution": {
+    "testsExecuted": 0,
+    "reproductionsRerun": 0,
+    "externalRequests": 0,
+    "realEmailSent": 0,
+    "productionAccountAccess": false,
+    "repositoryModified": false,
+    "existingProofsModified": false
+  },
+  "limits": [
+    "Lecture indépendante des preuves déjà produites ; leurs JSON sont des observations rapportées par les auteurs, non une nouvelle mesure du contre-reviewer.",
+    "Aucun essai SQL natif, CI, hôte, navigateur, sauvegarde, PC, e-mail ou fournisseur externe.",
+    "Recommandations de portée pour triage ultérieur seulement ; aucun changement de code ni de sévérité dans les rapports auteurs."
+  ]
+}

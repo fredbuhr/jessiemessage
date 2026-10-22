@@ -1,0 +1,282 @@
+{
+  "audit": "audit2-182",
+  "owner": "root_integration_ops",
+  "delegatedReader": "/root/delivery_review",
+  "scope": "All20 ops/ entries of root_integration_ops-files.json; read only, no historical operator or qualification script execution.",
+  "status": "complete",
+  "reviewedFileCount": 20,
+  "reviewedLines": 5722,
+  "reviewedFiles": [
+    {
+      "path": "ops/prepare-node24221.py",
+      "lines": 265,
+      "bytes": 14275,
+      "sha256": "21dc1f7e89625ecfa9d4b13951d3496ffbd600f97ed4dd393d95a689b8facaf7",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/prepare-release140.sh",
+      "lines": 193,
+      "bytes": 13213,
+      "sha256": "3de48f1570402abfeab871d4604e46cde2cca329e08cde8fbe5f29c3f30e7c4a",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/prepare-release150.sh",
+      "lines": 192,
+      "bytes": 12835,
+      "sha256": "ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/prepare-release140.sh"
+    },
+    {
+      "path": "ops/prepare-release160.sh",
+      "lines": 192,
+      "bytes": 12844,
+      "sha256": "705d2a959e3e67a6dcd93b8ffe78695cc4883873da329e4a97e453ba8e60e4b9",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/prepare-release150.sh"
+    },
+    {
+      "path": "ops/record-release140.py",
+      "lines": 256,
+      "bytes": 14167,
+      "sha256": "fba4002c3b08f43c4393f92fd13b2d743adc287b99272c87d9bc4bc25b6c0877",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/record-release150.py",
+      "lines": 277,
+      "bytes": 15456,
+      "sha256": "8a5fd233cda8749fe3a4caef5affc4c2ab2727b22f3ffeb3ebe45d5b344b522b",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/record-release140.py"
+    },
+    {
+      "path": "ops/record-release160.py",
+      "lines": 280,
+      "bytes": 15656,
+      "sha256": "ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/record-release150.py"
+    },
+    {
+      "path": "ops/status-release150-migration.sh",
+      "lines": 136,
+      "bytes": 6610,
+      "sha256": "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/status-release160-migration.sh",
+      "lines": 136,
+      "bytes": 6609,
+      "sha256": "95e201b4dc88ce446585c316b66f2804479f1c213d0dd027625e6bb1450b1a83",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/status-release150-migration.sh"
+    },
+    {
+      "path": "ops/test-prepare-node24221.py",
+      "lines": 295,
+      "bytes": 14615,
+      "sha256": "d56f90ee5bcd59fda4b4ecebb5aa1371c2e51b02bdda0c9d6b1636e5820f8dd8",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/test-record-release140.py",
+      "lines": 489,
+      "bytes": 29941,
+      "sha256": "7ff1a1998f75ee8798aafcbcc52b4f93915bd951fe6fc024a00fb3e1b1d006f9",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/test-record-release150.py",
+      "lines": 577,
+      "bytes": 35952,
+      "sha256": "7bec8d00ec3a7eaebaea31a81935e9cdb31227b757eb28a0a9262f834d346023",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/test-record-release140.py"
+    },
+    {
+      "path": "ops/test-record-release160.py",
+      "lines": 661,
+      "bytes": 41460,
+      "sha256": "92df932a1597777bd69bbf10371dee23b200f1abc5e07238639e0687e207bd4b",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/test-record-release150.py"
+    },
+    {
+      "path": "ops/test-release140-staging-synthetic.py",
+      "lines": 238,
+      "bytes": 17276,
+      "sha256": "4a9c28a749be62e756859bd1543c2e3400031a1deac3bc615b0f82dad55e2d2f",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/test-release150-migration-synthetic.py",
+      "lines": 304,
+      "bytes": 20045,
+      "sha256": "d4908a7ea869a6cf0e66461991836ca73e589d72ddde3d25956a0e7d3496eef6",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/test-release150-staging-synthetic.py",
+      "lines": 245,
+      "bytes": 17717,
+      "sha256": "fd280dc4bab9ef969c596a6fe83e45bd559ab3c774e6f9f503f7d6bc60e408d4",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/test-release140-staging-synthetic.py"
+    },
+    {
+      "path": "ops/test-release160-migration-synthetic.py",
+      "lines": 304,
+      "bytes": 20082,
+      "sha256": "2fb6595e3cd3a96b2e73221d440058429c4a4f9095d18737cab4ceb8d44a817b",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/test-release150-migration-synthetic.py"
+    },
+    {
+      "path": "ops/test-release160-staging-synthetic.py",
+      "lines": 245,
+      "bytes": 17694,
+      "sha256": "047a2e163a45a4237648cdcc669ca7b00271f9fecbb704e3cdc3277fb1f3fc3c",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "synthetic_qualification_only",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/test-release150-staging-synthetic.py"
+    },
+    {
+      "path": "ops/upgrade-release150.sh",
+      "lines": 218,
+      "bytes": 12013,
+      "sha256": "0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_direct_source_read"
+    },
+    {
+      "path": "ops/upgrade-release160.sh",
+      "lines": 219,
+      "bytes": 12103,
+      "sha256": "9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5",
+      "reader": "/root/delivery_review",
+      "reviewStatus": "complete",
+      "runtimeClassification": "historical_operator_helper_not_active182",
+      "readMethod": "complete_base_plus_exhaustive_unfiltered_unified_diff",
+      "baseReadFile": "ops/upgrade-release150.sh"
+    }
+  ],
+  "findings": [],
+  "checks": [
+    {
+      "name": "source_integrity_and_complete_coverage",
+      "status": "passed",
+      "detail": "All20 SHA256 values match the parent manifest; direct complete bases and every unfiltered unified diff of successive variants were read. Coverage method and all target ranges recorded in read-coverage.json; unchanged ranges are inherited from the already-read complete base, not omitted."
+    },
+    {
+      "name": "node_distribution_preparation",
+      "status": "no_concrete_new_defect_found",
+      "files": [
+        "ops/prepare-node24221.py",
+        "ops/test-prepare-node24221.py"
+      ],
+      "detail": "Pinned official archive size/SHA and inner node size/SHA; no full tar extraction; exact one regular selected member; fresh unactivated candidate with mkdir/O_EXCL; readback/fsync; old binary and launchers rechecked; no truncation/replacement or start; partial output causes refusal on retry. The helper targets historical1.6.0; Node24.22.1 binary remains preserved in current182."
+    },
+    {
+      "name": "historical_staging_families",
+      "status": "no_concrete_new_defect_found",
+      "detail": "prepare140 stages134/140 from133 with unchanged SQL31 and only bounded CHECK calls. prepare150/160 stage compatibility releases141/151 plus150/160, pin exact commits/trees/versions/lock equality and append-only32/33 respectively, create no SQL connection and defer CHECK until upgrade. Exclusive outputs and preexisting/partial refusal preserve earlier artifacts. No normal start launcher is invoked."
+    },
+    {
+      "name": "historical_sql_status_upgrade",
+      "status": "no_concrete_new_defect_found",
+      "detail": "status150/160 are status-only. upgrade150/160 require exactly --service-stopped (operator attestation, not process proof), validate source/tree/launcher/Node hash/mode before TTY/SQL, reject wrong baseline/future/interrupted histories, upgrade at most one expected migration32/33, then re-read status and CHECK without runtime start. Unknown outcomes demand inspection and disable automatic retry/old incompatible restart."
+    },
+    {
+      "name": "credential_transport_and_errors",
+      "status": "no_concrete_new_defect_found",
+      "detail": "TTY echo disabled before secret prompt, set+a/unset password, secret on private stdin pipe, FD3 closed in Node, migration account differs from runtime account; runtime password cleared; known diagnostic codes only and no original SQL exception text. TLS-related Node environment overrides cleared in status/upgrade; migration dependencies are pinned historical source."
+    },
+    {
+      "name": "metadata_writer_preservation",
+      "status": "no_concrete_new_defect_found",
+      "detail": "record140/150/160 pin both source checkouts, launchers, binary, rollback CHECK and empty rollback runtime log before bounded checkpoint parse. Exact prior identity and existing section digest gate all changes. Deep copies preserve every unknown/historical block; prior active is archived separately from compatible rollback; no legal/backup/PC/runtime evidence inferred. Exclusive flock on source inode, fingerprint/bytes recheck, private temporary file/fsync/replace/readback and retry read-only semantics reviewed."
+    },
+    {
+      "name": "synthetic_tests",
+      "status": "read_not_executed",
+      "detail": "All9 synthetic Python files included in20-file coverage. They substitute in-memory pins or tempfile-owned fixture paths/modules, verify wrong identities/hashes/modes/links/partial artifacts, checkpoint preservation/idempotence, precheck and SQL unknown outcomes, TTY private input. This audit neither re-ran them nor claimed their old passing outputs certify current182 host state."
+    }
+  ],
+  "testsRead": [
+    "ops/test-prepare-node24221.py",
+    "ops/test-record-release140.py",
+    "ops/test-record-release150.py",
+    "ops/test-record-release160.py",
+    "ops/test-release140-staging-synthetic.py",
+    "ops/test-release150-migration-synthetic.py",
+    "ops/test-release150-staging-synthetic.py",
+    "ops/test-release160-migration-synthetic.py",
+    "ops/test-release160-staging-synthetic.py"
+  ],
+  "limits": [
+    "No new claim of production runtime readiness, SQL state, Manager stop/start, hosted CHECK, backup or PC qualification. None of the20 files was executed by this reviewer; shell snippets, embedded Python/JS and test harnesses were read statically only.",
+    "Historical1.4/1.5/1.6 operators are not current182 commands. SQL36 and the current182 checkpoint remain authoritative. A successful historical fixture does not authorize replay on production.",
+    "Metadata writers document a pre-replace drift check, not a universal filesystem compare-and-swap; same-operator hostile concurrent path replacement and compromised operator environment are not certified as isolated. No concrete remote attack path through these dormant helpers was identified.",
+    "The20 files exclude current181/182 tools/workflows and every non-ops root-manifest entry; these retain the parent owner. This report does not assert coverage of those excluded files.",
+    "A complete direct source read was used for family bases; variant coverage was complete base plus exhaustive unfiltered diff, recorded explicitly rather than claimed as a separate direct cat of every variant."
+  ]
+}

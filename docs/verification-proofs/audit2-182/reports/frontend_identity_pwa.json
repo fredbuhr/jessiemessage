@@ -1,0 +1,1220 @@
+{
+  "formatVersion": 1,
+  "type": "audit2-182-frontend_identity_pwa",
+  "recordedAtUTC": "2026-10-22T20:38:40.389824+00:00",
+  "codeReference": {
+    "releaseVersion": "1.8.2",
+    "releaseCommit": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "checkoutHead": "e2cfbefe03d3538b216f873d185b1542d856044c",
+    "identityEvidence": "All 72 assigned files match inventory SHA256 and exact release commit bytes. Local v1.8.2 tag name is absent; release commit object is present. No new remote release or production identity check."
+  },
+  "scope": {
+    "bucket": "frontend_identity_pwa",
+    "inventory": "/workspace/scratch/bb431be72395/audit2-182/frontend_identity_pwa-files.json",
+    "assignedFiles": 72,
+    "fullTextFiles": 62,
+    "binaryFiles": 10,
+    "inventoryLineCountIncludingBinaryNewlines": 7575,
+    "textLineCount": 5791,
+    "focus": [
+      "login and administrator session",
+      "client access and recovery",
+      "device transition and fixed navigation",
+      "PWA and notifications",
+      "lifecycle/identity/late responses",
+      "private DOM text and storage boundaries",
+      "readiness/privacy/closure UI controllers",
+      "backup UI static review only",
+      "i18n and accessibility markup/styles"
+    ]
+  },
+  "findings": [
+    {
+      "id": "FI-PWA-01",
+      "status": "new_confirmed",
+      "severity": "P2",
+      "severityRationale": "Reproducible active-page navigation failure, with a simple workaround; no data loss or authorization bypass established.",
+      "title": "Le retour vers la messagerie depuis Sauvegardes utilise une route inexistante",
+      "file": "public/manual-backups.html",
+      "line": 12,
+      "endLine": 12,
+      "trigger": "Ouvrir /admin/backups en mode manuel puis cliquer sur « Ouvrir la messagerie » dans son en-tête.",
+      "cause": "Le href vaut /admin/chat. Le routeur courant et le handler chat ne reconnaissent que /admin/messages pour la page administrateur ; aucune alias /admin/chat trouvé dans server/.",
+      "impact": "Le lien de navigation mène à 404 au lieu de la messagerie. L’utilisateur peut passer par /admin puis ouvrir la messagerie. Cela ne déclenche aucune sauvegarde et ne démontre aucune perte de données.",
+      "references": [
+        {
+          "file": "server/backup/manual-backup-http.mjs",
+          "line": 7,
+          "purpose": "active /admin/backups serves manual-backups.html"
+        },
+        {
+          "file": "server/index.mjs",
+          "line": 102,
+          "purpose": "canonical admin page allowlist"
+        },
+        {
+          "file": "server/chat/http.mjs",
+          "line": 141,
+          "purpose": "actual chat page route"
+        }
+      ],
+      "repro": {
+        "kind": "new_local_synthetic_loopback_only",
+        "script": "/workspace/scratch/bb431be72395/audit2-182/frontend_identity_pwa/FI-PWA-01-repro.mjs",
+        "evidence": "/workspace/scratch/bb431be72395/audit2-182/frontend_identity_pwa/FI-PWA-01-observed.json",
+        "result": {
+          "scope": "new_local_synthetic_route_reproduction_no_backup_execution",
+          "node": "v24.19.0",
+          "source": "public/manual-backups.html:12",
+          "link": "/admin/chat",
+          "linkStatus": 404,
+          "canonicalPath": "/admin/messages",
+          "canonicalStatus": 200,
+          "externalRequests": 0
+        },
+        "limits": "Uses the actual createAppServer routing shell and a synthetic canonical chat handler; no real session, browser, database, backup or external request. Actual route definition and active asset binding checked statically."
+      },
+      "confidence": "high",
+      "priorAuditRelationship": "Distinct from A01–A15 of docs/AUDIT-FINAL-20261022.md; no duplicate navigation defect listed there. A14 concerns an unused site generator, not this active header.",
+      "recommendedFix": "Remplacer uniquement le href par /admin/messages ; ajouter une assertion ciblée sur ce lien et sa destination reconnue, sans lancer de sauvegarde. Aucun changement effectué."
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "path": "public/access.css",
+      "bytes": 974,
+      "lines": 16,
+      "sha256": "7dc88337ef66532f63f5b0c7d79978785c3a1b6e079bcb1d563585f661509ce0",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/access.html",
+      "bytes": 9289,
+      "lines": 86,
+      "sha256": "10af53c362173471e1b591dbb3346de3040e4aca8319d4230b0b5b88f7638ca8",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/access.js",
+      "bytes": 20055,
+      "lines": 322,
+      "sha256": "ad2e7dcd6c7d0264812b086d6b13de4856ac55cc14880fef579198c2f0211561",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/admin-login.css",
+      "bytes": 5718,
+      "lines": 68,
+      "sha256": "170cc1cf7d1abd1eb8907c731048242ff4b5ac8ddd88027fd44ba8fb678e55fa",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/admin-login.html",
+      "bytes": 12702,
+      "lines": 120,
+      "sha256": "d6a4adba277981d978511e6d88276eb8597ffe92e91288a534caa4afc015607c",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/admin-login.js",
+      "bytes": 38490,
+      "lines": 696,
+      "sha256": "f83fccbc4fdba5cbe1c3ba9b67dc122d1c826a7defaadea8613bb9b1164c6120",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/app.js",
+      "bytes": 2713,
+      "lines": 56,
+      "sha256": "e50d43420be2592f74d26d26b91a62958064fcf34c3d15eed8abb1026478023a",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/apple-touch-icon.png",
+      "bytes": 29891,
+      "lines": 101,
+      "sha256": "7e301411f82a11c61643f12fe75457ba3d24adc464dfcaa6c81b14ae75525946",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/backups.css",
+      "bytes": 2472,
+      "lines": 31,
+      "sha256": "9c13e95f7ed5f9d63562fed17e4d93889276ef8e65363e610bcc8710a23f9725",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/backups.html",
+      "bytes": 8611,
+      "lines": 29,
+      "sha256": "7b2e098f24aeb3115302e7d4dd3a81f20b9001ee72b5e85348090c7ca6d30b94",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/backups.js",
+      "bytes": 16695,
+      "lines": 188,
+      "sha256": "62fdd807eb0586d9c21392d0794e85f8ad4c1f1ac87a330152bced4d8c0b9b69",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/brand/asset-manifest.json",
+      "bytes": 2214,
+      "lines": 75,
+      "sha256": "c18d162c50d7d75968cb603bc790ac7b5f6469ecde44536a713a7272ed70a126",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/brand.css",
+      "bytes": 1199,
+      "lines": 28,
+      "sha256": "e2ab67e7314020ad26aeddb6670ee039d8c2de5d611cbdbced1e97c58de33ab1",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/icon-128.png",
+      "bytes": 19971,
+      "lines": 84,
+      "sha256": "476ef6a5f6fbcfc1fa425eb5a2a829d6fd5d5d0b30980592bce2a041c664adca",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/icon-16.png",
+      "bytes": 855,
+      "lines": 5,
+      "sha256": "f9d2f9ce90ad98b2f92867d5d7e3909e199049f3df7f7f836e3cbcb68c9c4e4d",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/icon-192.png",
+      "bytes": 39131,
+      "lines": 176,
+      "sha256": "58f63d8249159541c6a2ddbd1b5f8980cd1efee8f475fff3d6e6789d0c515680",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/icon-32.png",
+      "bytes": 2363,
+      "lines": 9,
+      "sha256": "6d19eb66bfc3ec9a45ac30786d82c06319b653fc638027309a264b7e249db5aa",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/icon-48.png",
+      "bytes": 4196,
+      "lines": 15,
+      "sha256": "3a585bfff8925a4bb693daa48c1f9ac3f7dc83898232762abe8712c8e7bf5abc",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/icon-512.png",
+      "bytes": 201489,
+      "lines": 856,
+      "sha256": "80623bdfa83e75c09f213f174a39af1913934328fa92f3bb71ae2e18c83e467b",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/icon-64.png",
+      "bytes": 6556,
+      "lines": 29,
+      "sha256": "616334df23d9dc3062be794979021eedb659ee03c9df3fdee31a6c35023c580f",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/brand/icon-maskable-512.png",
+      "bytes": 134157,
+      "lines": 478,
+      "sha256": "03e057a049e60beffc611dfeb4f17171d963d2c7b930656e80f6cf69c564e4d8",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/closures.css",
+      "bytes": 2373,
+      "lines": 1,
+      "sha256": "c815763de132d0ca1acfd902e8daa511eb48732f0decadbee8f9dade36b9df44",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/closures.html",
+      "bytes": 5650,
+      "lines": 21,
+      "sha256": "f30b4bd01cd9033a970e1d05bdfb6c670f0e10caeab4a06cfd79d316b28fae69",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/closures.js",
+      "bytes": 11403,
+      "lines": 134,
+      "sha256": "51621b0e20f5f35bfd444dd84c51e378b81d28c5bc45900a70a7823133e72e66",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/device-transition.css",
+      "bytes": 2685,
+      "lines": 135,
+      "sha256": "c224d2608a4469cab30f33b421d26ef634b80aef1d90d721cfdd7ecd8a529961",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/device-transition.html",
+      "bytes": 2428,
+      "lines": 37,
+      "sha256": "f1b6db0d185c4ab7a082911b2ee4d7af13b78f469d3dc2447335e15a76e20df6",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/device-transition.js",
+      "bytes": 11384,
+      "lines": 154,
+      "sha256": "274e8f1c5f7001d9a1afc35b6d3214d3d43342ed3019a600e839106c7edb7657",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/entry-model.js",
+      "bytes": 2805,
+      "lines": 40,
+      "sha256": "42e842a0a5849dea635a40ddf60dc37f3d2044ee2d62ccf5075fa7d295d438f6",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/entry.css",
+      "bytes": 4115,
+      "lines": 8,
+      "sha256": "e2f81bfbe90eb98ff2a9a6d0ec34c08ecc26874db53de03673156604fb480fb0",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/entry.html",
+      "bytes": 4998,
+      "lines": 65,
+      "sha256": "524af111ab19c59f0538f8050a253856cda410442b2227233670db2ae561970e",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/entry.js",
+      "bytes": 14580,
+      "lines": 160,
+      "sha256": "bb2968eb73334833de1cdfd77e2a17b0bdce2b514ac412939fdf1b3208d77e9c",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/favicon.ico",
+      "bytes": 7515,
+      "lines": 31,
+      "sha256": "d7c4168563ecda525ac9d6aeb83770635319925c722a8b461512043df43b6f16",
+      "binary": true,
+      "reviewStatus": "reviewed_binary_format_dimensions_integrity_manifest",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/help-link.js",
+      "bytes": 528,
+      "lines": 17,
+      "sha256": "2a35ac29cbafb5db31db2e4b6103c02ecfff796b5296b42923b9e1978486589c",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/help.css",
+      "bytes": 4380,
+      "lines": 8,
+      "sha256": "ab5a1d27ac75c6449c908b5e625f6960cc146031bcc79d781040fd60256dd245",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/help.html",
+      "bytes": 20574,
+      "lines": 117,
+      "sha256": "7f3604fbc7ecaac816687e16e9c7765e195ede364aa01b5768ce1cfa42e3fd94",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/help.js",
+      "bytes": 15579,
+      "lines": 84,
+      "sha256": "2ec15d1caae154e7505e30a888389c54f9608ba69961b4bd5eb0db5ef9c0d695",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/i18n-access.js",
+      "bytes": 13379,
+      "lines": 133,
+      "sha256": "f37cc308a09e84cf5f9875e1214ad9a5ebb4215b3cdf6a609de9b39bada1d0c9",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-admin.js",
+      "bytes": 12801,
+      "lines": 160,
+      "sha256": "a65df45f2a7ee6cbaf186acd37853a54355ca6dcee0a103b5a2ba6428715c41c",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-backups.js",
+      "bytes": 11287,
+      "lines": 104,
+      "sha256": "17a4bea697705fe3c8ceaf4f8d4bf384a3b6b30d3e5347906c272e69cf65b3b8",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-broadcast.js",
+      "bytes": 2710,
+      "lines": 31,
+      "sha256": "4c3447d45f43bd0e3f4898d030344d49338955dfaec0f9337f4c856f1811dea3",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-chat.js",
+      "bytes": 17770,
+      "lines": 227,
+      "sha256": "83872d39a7684cd9034957ac023aebca0bb38b73d526be6932e86920b8745486",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-closures.js",
+      "bytes": 4248,
+      "lines": 43,
+      "sha256": "427b9239b3cb5a347a438445982d41cb92384962e19fb31034d6a5bfd4c50fe9",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-manual-backups.js",
+      "bytes": 4185,
+      "lines": 45,
+      "sha256": "d56aa94cff7cff12a27c783d9c2b513bed939b865340561917e7b66904d8cadf",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-privacy.js",
+      "bytes": 8602,
+      "lines": 70,
+      "sha256": "8ce1be00722e508f59a0edce978c4aa5d0e189b44409d716ac41d1babc070c05",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-profile.js",
+      "bytes": 2601,
+      "lines": 32,
+      "sha256": "7acceac44537b3c5b5b2016a680a3412ba5a9931b1ded37b419529532cde0e28",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-readiness.js",
+      "bytes": 9866,
+      "lines": 118,
+      "sha256": "7f1454111ab3c17de4e012154efcc767be5b6cd94e86a9874db663d3226bf480",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n-tools.js",
+      "bytes": 25834,
+      "lines": 165,
+      "sha256": "f931074917b0d87ff98a2a2a196d061ced33e237373e7db2d0ba3a815c2956df",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n.css",
+      "bytes": 979,
+      "lines": 7,
+      "sha256": "f4d26c4cf054e9bf34c7e40b28499ef2e17a39fc60e5a4252ff471878234f5ad",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/i18n.js",
+      "bytes": 12774,
+      "lines": 182,
+      "sha256": "d80c14a673f4535feb91e1102e13b180a0f76aba4ab996b95425ddcf1f22e10c",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/icon.svg",
+      "bytes": 373,
+      "lines": 7,
+      "sha256": "8e1f3703d6b7a8e423a4bddd187cea467c50a17ed181e2c52c1bcb7551b165be",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/index.html",
+      "bytes": 3416,
+      "lines": 62,
+      "sha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/manifest.webmanifest",
+      "bytes": 654,
+      "lines": 31,
+      "sha256": "5836f05989c46a0d377457c4f6662126fd6d9fbfee4e011012e624bce3359bcf",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/manual-backups.css",
+      "bytes": 823,
+      "lines": 11,
+      "sha256": "163465b1158f1cc2f1eed68f1e011159d6a9d28fb5e28c988e063d69a6f0d26c",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/manual-backups.html",
+      "bytes": 4056,
+      "lines": 35,
+      "sha256": "88f7f5b6432432742647942dd4ecb3ba734442124c94bebc7594e8b4fc4f5f84",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/manual-backups.js",
+      "bytes": 13643,
+      "lines": 183,
+      "sha256": "5481abfd4ddc5251601bdbb37f408c6c3f2b628a691c23dfac7695da6678b413",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/notification-link.js",
+      "bytes": 829,
+      "lines": 16,
+      "sha256": "0455e2ee0208e6e06778524591b46b72345143bf1af1f76c706844258563c725",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/notifications.css",
+      "bytes": 1286,
+      "lines": 13,
+      "sha256": "66bb81dde6c2f7648c9dbeb3e4a47545b3232ecc40423e1e7db0c4ab189f7076",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/notifications.js",
+      "bytes": 19461,
+      "lines": 229,
+      "sha256": "7b839e0b642dbcce6645b1ae21c65b73313261a3dad2327c5c427b1a9af310f1",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/privacy.css",
+      "bytes": 3020,
+      "lines": 3,
+      "sha256": "ec4325dfe5ddd29c463825b486c2d74cfbb6246189b4b24c6328e2795b5dbfdc",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/privacy.html",
+      "bytes": 6762,
+      "lines": 27,
+      "sha256": "c92948e3d73d159cc06092eebfe4f8ed8c417a9eaf969879eac6efdca28a6385",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/privacy.js",
+      "bytes": 13644,
+      "lines": 159,
+      "sha256": "7429d48c3d0898b5d29d55e95943a922ce2a0a5a1b942c298bd1be9b800945e1",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/readiness-model.js",
+      "bytes": 11687,
+      "lines": 137,
+      "sha256": "2155697d21525f2bf071fe8182a8f98080fb7a974b9b72f23b9646190e15fc10",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/readiness.css",
+      "bytes": 5649,
+      "lines": 65,
+      "sha256": "c2fcc4f8a7f0dbfe9ff988c40083093b6142f7ff8a087fb4bb87e346c33e49ad",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/readiness.html",
+      "bytes": 9750,
+      "lines": 68,
+      "sha256": "7ba1c87ae5f07f1182d4e98ffa0165f166cb65bb98cab5f37af518f4841d7dba",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/readiness.js",
+      "bytes": 18912,
+      "lines": 273,
+      "sha256": "c2ada9a4ac0f68fd750df1f3ec51f13833957c1371d4f6397021b5ed0f7444a3",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/recover-model.js",
+      "bytes": 3173,
+      "lines": 63,
+      "sha256": "ebf1c1c4a753c52f5a6c9abec4cdad6c263ba633cfcc8a7ffa9c8fa424e381af",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/recover.css",
+      "bytes": 261,
+      "lines": 4,
+      "sha256": "6c84c41849939a0dc44814622b1e64e43048ca9dedad8a9fc9cceea9e5bd2b7f",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/recover.html",
+      "bytes": 5162,
+      "lines": 56,
+      "sha256": "eb3d8d122cc1a155c35733b0b7d52a1dff4f93989baeb2d55adeb55bc722b878",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/recover.js",
+      "bytes": 12319,
+      "lines": 196,
+      "sha256": "3f5246e19e2d94b2a57b9398f6ff362d6545eea6d8231e38b39d4cb33b8fb07d",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/session-clock.js",
+      "bytes": 1339,
+      "lines": 35,
+      "sha256": "8fd17c02c70b540b854e8841a8520101d711cd5ae579072b5969934f50cd18a0",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    },
+    {
+      "path": "public/styles.css",
+      "bytes": 3773,
+      "lines": 54,
+      "sha256": "1a571e095802d0197f6b974aad005c7c762e072d560749cfbdc1ba9e7782ba80",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "identity_assets_i18n"
+    },
+    {
+      "path": "public/sw.js",
+      "bytes": 3374,
+      "lines": 51,
+      "sha256": "1ed45c3fbac18948828dfce91cf42402e73f38b99a3d58bcb2a6a2f03fff019c",
+      "binary": false,
+      "reviewStatus": "full_text_read_static_review",
+      "sourceMatchesInventory": true,
+      "sourceMatchesReleaseCommit": true,
+      "reviewer": "frontend_identity_pwa"
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/access-i18n.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "1cc559d45ece88b49c5bc12e805d7e5d7948dbd635bb41c289bf176728dd0bc8"
+    },
+    {
+      "path": "tests/admin-i18n.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "c082a254c056c6061f883f488b7d3b74dab1f9d707190bb0734a91680fa086c9"
+    },
+    {
+      "path": "tests/admin-lifecycle.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "bf931a18357a688d31d9546c59fa5be87c46637b74ba2435a3b28efe0c345e74",
+      "lines": 740
+    },
+    {
+      "path": "tests/admin-navigation.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "7b420f3e543a0d32b3c499d28bb34bc99a865101c75155077c8875a6ccb20621",
+      "lines": 99
+    },
+    {
+      "path": "tests/brand.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "c94ceafc8742568fd8b778ca4a268be2004dce3055121cede3816c02bc9db692"
+    },
+    {
+      "path": "tests/browser/account-closures.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "a14d911342562f1e276b68b694d4f7fc9af53d3b11015ff80c7f7d61f60a349e",
+      "lines": 146
+    },
+    {
+      "path": "tests/browser/admin-navigation.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "1299cfc1e97034099d6fe45357bef48918f50866ca3bedf31c6307160aa783a6",
+      "lines": 87
+    },
+    {
+      "path": "tests/browser/backup-settings.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "c55b39731cb8132e5d3b89ff0381a851f438ac699f0d8510308b3828a1152682",
+      "lines": 239
+    },
+    {
+      "path": "tests/browser/device-transition.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "9d89ce1cde43ee827e6eabc92005aad89bf8d1c965b9e2cfeb352fc8619b8203",
+      "lines": 527
+    },
+    {
+      "path": "tests/browser/help.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "4920e96587884a4d99e83c607cd9958a1a05bf4b1642819f7b5651bc5d05340d",
+      "lines": 284
+    },
+    {
+      "path": "tests/browser/manual-backups.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "ad59c940a96ec793095e4f623cd03e4d0ace4fa6f9208fb0a90f43d6a8a19041",
+      "lines": 119
+    },
+    {
+      "path": "tests/browser/notifications.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "3ed8bb4f35043eb82d7fe1ea012e08c3673a46ca4cbfb176a6845ce8fcbc6dc4",
+      "lines": 94
+    },
+    {
+      "path": "tests/browser/operations-report.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "50ea5a75598e0cb3bbe5bf3f0522ccdc36e2ea1e8851def6856021b8283e56f2",
+      "lines": 85
+    },
+    {
+      "path": "tests/browser/privacy-preparation.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "616cde967468d675b9e2241066f1f56bdc8a9d0019137a39a4673f47a79ed5cb",
+      "lines": 138
+    },
+    {
+      "path": "tests/browser/recovery.browser.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "3c66de2cbd5977216edbccb878624545d4bd5b2494f9bb2ce25f9dd3ca4e75f6",
+      "lines": 309
+    },
+    {
+      "path": "tests/chat-i18n.test.mjs",
+      "readScope": "selected assertions and full lines335-461; remaining fixture/controller wiring belongs to parent review",
+      "executed": false,
+      "sha256": "5a7eae5eda336dcebd0a0fefd7f7711dbe1196709d167ccbd96333e5a1a57d78"
+    },
+    {
+      "path": "tests/closure-http.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "d8869d71caef727c2aa13bdc7fc9c377438c127d35c32d1e250608c15dbb56c6",
+      "lines": 120
+    },
+    {
+      "path": "tests/device-transition-controller.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "f9c2db80f8c14dfc2726432fd3dca08d1caef57ed6ae60559e87be6b0a5197c0",
+      "lines": 424
+    },
+    {
+      "path": "tests/entry-lifecycle.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "1ae67d4bf050a21fd6a893a06844b748e51e7bb9da68f9fbc10e150aa2da04f9",
+      "lines": 184
+    },
+    {
+      "path": "tests/entry-model.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "0e1925c5fe0fa3b6d8addbc77dd2f556a821e65eeb111526bfcbd81b0538dc6c",
+      "lines": 67
+    },
+    {
+      "path": "tests/help-link.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "c6d489bd2b0ab50f5b44b0da4222746da592aa58041b8cd5000ce289373fe9dc",
+      "lines": 100
+    },
+    {
+      "path": "tests/helpers/manual-backups-ui.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "bf2669375ddba2cc0470866911ac549adefcf74b869fc1e23784689d194826f0",
+      "lines": 85
+    },
+    {
+      "path": "tests/i18n.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "d7583bfbf2c3841084bedc82697d753ac9d2cc5da649b015cebced662ed26182"
+    },
+    {
+      "path": "tests/manual-backups-ui.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "640282b952c98bf99084d63f0b3de4a4deba1428f646bcbf5bd171da01f5a669",
+      "lines": 81
+    },
+    {
+      "path": "tests/notification-link.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "38f025de190979b84557a55efdb50176e7ed09a7f78774bfd985ff78f80f95b7",
+      "lines": 18
+    },
+    {
+      "path": "tests/notifications-ui.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "48e44e5009c930a0a26b44921ce8cecf4e794a8debfe2bd2386b4c773ab7ebd6",
+      "lines": 201
+    },
+    {
+      "path": "tests/privacy-http.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "338311efbcbfac4b89cc1f0f03051ce5926df5b4591230c65d1d5a4a5d991391",
+      "lines": 68
+    },
+    {
+      "path": "tests/privacy-preparation.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "f061de6c0206c53b4b464791a461880ebba487f68af53bb987723167442ccfbd",
+      "lines": 148
+    },
+    {
+      "path": "tests/readiness-i18n.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "fbe4ba7859ce41c1836c58934941975ef45f507529eecff87f0508bdb0147ea5",
+      "lines": 381
+    },
+    {
+      "path": "tests/readiness-model.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "7f700d22f11e89ba6511d58b1939e9afc808dfa1f8b9a1c00da14a6cac71c3fd",
+      "lines": 258
+    },
+    {
+      "path": "tests/recover-model.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "f9d5b905371c6f30d2abb15b3d45072354b3d04f230c5bd0728de988b588a719",
+      "lines": 133
+    },
+    {
+      "path": "tests/recovery-lifecycle.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "4d8f6d0484986374a7407809cfaaec67da93feb2591dcefbe0f29392d3da95a4",
+      "lines": 241
+    },
+    {
+      "path": "tests/session-clock.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "a8b84c7c68206b96fe29af1cb645a5eb1116eea4220229c2dfdd97878cf1ae7a",
+      "lines": 59
+    },
+    {
+      "path": "tests/tools-i18n.test.mjs",
+      "readScope": "full",
+      "executed": false,
+      "sha256": "70b718e4cfae0caf452fdee62a1e91c94da29ae7270f13c5141699d226ae8925",
+      "lines": 214
+    }
+  ],
+  "checks": [
+    {
+      "name": "full_assigned_source_review",
+      "status": "completed",
+      "result": "62 textual files read in full; source hashes and release bytes verified for every one of the 72 files."
+    },
+    {
+      "name": "new_local_navigation_reproduction",
+      "status": "confirmed_defect",
+      "executed": true,
+      "result": {
+        "scope": "new_local_synthetic_route_reproduction_no_backup_execution",
+        "node": "v24.19.0",
+        "source": "public/manual-backups.html:12",
+        "link": "/admin/chat",
+        "linkStatus": 404,
+        "canonicalPath": "/admin/messages",
+        "canonicalStatus": 200,
+        "externalRequests": 0
+      }
+    },
+    {
+      "name": "static_security_lifecycle_review",
+      "status": "completed",
+      "result": "Identity/generation guards, private DOM clearing, final session proofs, aborts, deliberate mutations and no automatic POST replay reviewed. No additional concrete authorization bypass, secret exposure or private caching defect established in this bucket."
+    },
+    {
+      "name": "service_worker_boundaries",
+      "status": "completed_static",
+      "result": "No fetch/cache/storage handler. Generic push copy, closed local role destinations, bounded opaque notification reference. Existing-window acknowledgement preserves current document; fallback opens a fixed local path."
+    },
+    {
+      "name": "associated_tests_review",
+      "status": "completed_with_exact_scopes",
+      "result": "34 related test files read; 33 full and one selected chat i18n scope inherited from delegated report. No existing suite executed or rerun."
+    },
+    {
+      "name": "inventory_sha256",
+      "status": "passed",
+      "files": 39,
+      "mutations": false
+    },
+    {
+      "name": "binary_images_pillow_verify",
+      "status": "passed",
+      "files": 10,
+      "result": "All declared PNG/ICO files decode; seven approved original sizes are RGBA, apple180x180 and maskable512x512 RGB; ICO native format; every asset SHA matches manifest."
+    },
+    {
+      "name": "manifest_icon_dimensions",
+      "status": "passed",
+      "result": "All3 manifest icons exist and dimensions/type match sizes; id/,start_url/app,scope/,standalone."
+    },
+    {
+      "name": "catalogue_registration_synthetic_vm",
+      "status": "passed",
+      "node": "v24.19.0",
+      "catalogueFiles": 11,
+      "uniqueKeys": 1145,
+      "placeholderMismatches": 0,
+      "differentCrossCatalogueDefinitions": 0,
+      "networkOrStorage": false
+    },
+    {
+      "name": "static_full_source_review",
+      "status": "completed",
+      "textFiles": 29,
+      "result": "All delegated CSS, catalogues, SVG, manifest and landing markup were read; references, focus/hidden rules, responsive breakpoints, translation placeholders and fixed/raw text boundaries considered."
+    }
+  ],
+  "rejectedHypotheses": [
+    {
+      "topic": "foreign Push endpoint conflicts",
+      "result": "Status service returns current:null/enabled:false for a foreign endpoint; an explicit subscribe can then produce subscription_in_use while ready. The apparent unreachable reset based solely on prepare() was not a confirmed bug. Cross-checked server/notifications/service.mjs status/subscribe contract and UI tests."
+    },
+    {
+      "topic": "device transition query sanitation order",
+      "result": "The HTTP handler rejects query/hash-bearing request targets before page serving. Client-side sanitized search ordering alone does not establish acceptance of an invalid transition query. Cross-checked server/transition/http.mjs."
+    },
+    {
+      "topic": "invitation URL after a lost response",
+      "result": "No automatic replay exists, and the UI explicitly limits the invitation link to creation. Did not infer a new recoverability requirement without proof."
+    },
+    {
+      "topic": "historical translations and assets",
+      "result": "Unused PC/opt-in/legacy SVG keys are not proof of active UI behavior and are not counted as a new defect or deleted."
+    }
+  ],
+  "priorAuditRelationship": {
+    "reference": "docs/AUDIT-FINAL-20261022.md A01–A15 plus A16",
+    "result": "Prior lifecycle, drafts, active-backup scope and i18n limits preserved. A08 draft reload belongs to frontend chat and is not re-opened here. A10 legal/privacy-notice work remains out of scope. A11 hosted network-peer uncertainty remains unresolved independently; no new host probe."
+  },
+  "limits": [
+    "Code audit only; no claim of absence of all defects or exhaustive platform qualification.",
+    "No existing green suite, CI, remote browser, production session, account, deployment, email, Push provider or hosted backup/PC operation executed.",
+    "The only new local HTTP reproduction uses a loopback synthetic chat handler. Binary/catalogue checks are in-memory or local file validation only.",
+    "33 related test files were fully read and one chat i18n file selectively read as recorded; backend suites assigned to other buckets were not all read or executed in this bucket.",
+    "No complete visual/contrast/screen-reader or physical Safari/iOS/Android/PWA/background-delivery qualification. Markup/styles and existing browser tests were reviewed.",
+    "Backup UI reviewed statically; browser backup tests read only. No new backup capture, restore, archive download, PC check, key access or scheduler state change.",
+    "Privacy preparation runtime reviewed for state/DOM/auth boundaries only; no legal/RGPD requalification, reading private saved draft or publication.",
+    "Other agents staged audit documentation concurrently; this reviewer changed no repository file. Report and evidence live outside the repository."
+  ],
+  "delegatedEvidence": {
+    "path": "/workspace/scratch/bb431be72395/audit2-182/frontend_identity_pwa/assets-i18n-review.json",
+    "sha256": "cb3ecdc79570d5d5a46dbfc1088a41cfb0cda91870fec65d488552e5c7d38b7b",
+    "files": 39
+  },
+  "repositoryModifiedByReviewer": false,
+  "nextAction": "Root independently triages FI-PWA-01 with the other audit buckets, then decides a bounded fix/qualification; no automatic test, backup or release action from this report."
+}

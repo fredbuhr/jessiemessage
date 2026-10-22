@@ -1,0 +1,51 @@
+{
+  "type": "independent_static_cross_review",
+  "reviewer": "peer_a11",
+  "candidateOwner": "audit2_frontend_messaging",
+  "candidate": "private-secrets-backup primary-crm silently omits video configuration if explicitly used on seven-file bundle",
+  "opinion": "mechanism_confirmed_conditionally; no actual vault or active backup failure asserted",
+  "evidence": [
+    {
+      "file": "scripts/private-secrets-backup.mjs",
+      "lines": [
+        68,
+        84,
+        75,
+        98
+      ],
+      "readScope": "lines1-155 plus text search; not whole script",
+      "observation": "sourceNames selects six files for primary-crm; assertProfile returns immediately; older profile guards already prevent omission of prepared CRM/media/messaging domains."
+    },
+    {
+      "file": "docs/private-secrets-backup.md",
+      "lines": [
+        3
+      ],
+      "readScope": "matching lines via rg",
+      "observation": "Documents v5 primary-crm for six primary configs including CRM, no video-key coverage claimed."
+    },
+    {
+      "file": "docs/video-integration-180.md",
+      "lines": [
+        11,
+        28,
+        34,
+        38
+      ],
+      "readScope": "matching lines via rg",
+      "observation": "Adds seventh runtime-video.json; active video captures validate seven keys and keep legacy profiles distinct."
+    }
+  ],
+  "conditions": [
+    "Operator explicitly invokes the old primary-crm helper against a directory already containing runtime-video.json.",
+    "The six pre-video configurations still satisfy existing primary-crm validation.",
+    "No observed current vault creation or key loss is assumed."
+  ],
+  "impact": "A newly created six-file secret vault can omit the independent video key while reporting its selected legacy profile successfully. This is a latent operator-tool coverage gap, separate from active video capture integrity.",
+  "dedup": "No new finding added to backup/report.json because this script belongs to another audit owner; main owner should consolidate once and cross-check prior known issues.",
+  "limits": [
+    "Read-only source review; no GPG, real backup, fixture, host access or secret read.",
+    "No current private vault contents or recovery readiness assessed.",
+    "No claim that active video archives omit the key."
+  ]
+}

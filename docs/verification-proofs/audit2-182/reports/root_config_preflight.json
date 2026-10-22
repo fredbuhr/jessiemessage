@@ -1,0 +1,252 @@
+{
+  "formatVersion": 1,
+  "agent": "audit2_domains",
+  "delegatedScope": "root config and preflight complement",
+  "status": "source_review_complete",
+  "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "coverage": {
+    "sourceFiles": 16,
+    "sourceLines": 2431,
+    "sourceFilesFullyRead": 16,
+    "associatedTestsFullyRead": 17
+  },
+  "findings": [],
+  "reviewedFiles": [
+    {
+      "file": "server/config/private-auth-environment.mjs",
+      "lines": 30,
+      "sha256": "a0f853ca16b3254ff998d9f2bc9780de30455a6e02e219d7eb0335ade350f9cd",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-authentication.mjs",
+      "lines": 73,
+      "sha256": "e93373192e9237a2279f2d8b55f6631b8e770ac98d16bd8b7998cb3f2e46e1f3",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-broadcast.mjs",
+      "lines": 43,
+      "sha256": "049f338e4aa189a4cec3d6385bc7970bf9364d65bfb85a482bd23fe2b36829ab",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-crm.mjs",
+      "lines": 74,
+      "sha256": "4a74502d36e3d4af81afa1c582855f902ccda7db6b15d9bdbc98b751f43ace00",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-database-file.mjs",
+      "lines": 771,
+      "sha256": "52878d6e29d8c8106e62eb61ac55222406435ec600d8fec21a1777dd35e17d2f",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-media-storage.mjs",
+      "lines": 39,
+      "sha256": "d3cc91e077b7f0d963140492cc43459c91912c5b2bfdddf2269a4d1ef40850cb",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-media.mjs",
+      "lines": 70,
+      "sha256": "5b9f92004999574898ac3f97e13f6ee4d2db062c43bca00f695528b94124ff4f",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-messaging.mjs",
+      "lines": 94,
+      "sha256": "972065bfd07d3e034589ba652cff8f6c5104719df5cf82e5921615b243e7f34e",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-notifications-file.mjs",
+      "lines": 86,
+      "sha256": "24130bccac30f18f3ad0e08ff2a71ca5ddeb5d20445c7ded9540dfa8330c2fef",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-video-storage.mjs",
+      "lines": 62,
+      "sha256": "44e0eb1dd0c2459808d01a3913d567f9ea3ca9944067657e5a70286723a83dac",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/config/runtime-video.mjs",
+      "lines": 74,
+      "sha256": "d23df912480c97cac32f8ccc9482358b4d141f7ca76a2bfd95f1320572206da7",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/preflight/config.mjs",
+      "lines": 150,
+      "sha256": "7f41b52222c004fb2b6e46d23605a0a7f6194806c27abfdf3f23561b703d7241",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/preflight/database.mjs",
+      "lines": 235,
+      "sha256": "5e2dbb5848a0877311e28072d4ee6b996057b4b1c0af0e4888c68d7b13ec8a21",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/preflight/platform.mjs",
+      "lines": 224,
+      "sha256": "bd12220259fd414c0b9b124dbea723262c630ad05ad61c9cb8021fa7f4973e9e",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/preflight/privilege-diagnostics.mjs",
+      "lines": 327,
+      "sha256": "c4e162c9df13c32388450587b50c1b14789ed478117b68654fe513daac98f146",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/preflight/report.mjs",
+      "lines": 79,
+      "sha256": "523576ce56f8106a3612e0d817a73e70ede4ebf2a53fed6c181fee0fbbf76c0e",
+      "reviewStatus": "fully_read"
+    }
+  ],
+  "additionalSourcesRead": [
+    {
+      "file": "scripts/preflight.mjs",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "scripts/update-runtime-smtp.mjs",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "docs/manual-invitation-runtime.md",
+      "reviewStatus": "partial",
+      "ranges": [
+        "1-18",
+        "125-155"
+      ]
+    }
+  ],
+  "testsRead": [
+    {
+      "file": "tests/runtime-video-environment.test.mjs",
+      "lines": 89,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/video-runtime-startup.test.mjs",
+      "lines": 144,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/runtime-authentication.test.mjs",
+      "lines": 112,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/private-auth-startup.test.mjs",
+      "lines": 112,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/preflight-config.test.mjs",
+      "lines": 215,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/preflight-video-database.test.mjs",
+      "lines": 64,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/preflight-dirfd-cli.test.mjs",
+      "lines": 31,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/runtime-database-file.test.mjs",
+      "lines": 409,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/privilege-diagnostics.test.mjs",
+      "lines": 248,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/preflight-database.test.mjs",
+      "lines": 470,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/preflight-cli.test.mjs",
+      "lines": 211,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/preflight-platform-dirfd.test.mjs",
+      "lines": 215,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/preflight-platform.test.mjs",
+      "lines": 271,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/runtime-media.test.mjs",
+      "lines": 127,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/runtime-broadcast-environment.test.mjs",
+      "lines": 102,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/runtime-crm-environment.test.mjs",
+      "lines": 107,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/runtime-notifications.test.mjs",
+      "lines": 165,
+      "reviewStatus": "fully_read"
+    }
+  ],
+  "checks": [
+    "Lecture intégrale des 11 modules server/config et des 5 modules server/preflight du manifeste parent ; vérification finale de leurs SHA256 contre le manifeste.",
+    "Profils de configuration contrôlés : flags fermés et explicites, origines primary/preproduction, données sans accesseurs, clés indépendantes, formats/fichiers distincts et absence de repli ambiant.",
+    "Revue fichiers : modes/UID/nlink, lecture bornée/fatale UTF-8, O_NOFOLLOW/O_EXCL, snapshots des descripteurs, ancrage du répertoire, publication exclusive par link, fsync, conservation des mutations incertaines, nettoyage par identité.",
+    "Revue des profils vidéo : septième record explicite, migrations/projections distinctes, racines lexicales et identités physiques séparées, aucune activation par ancien chargeur.",
+    "Préflight DB : TLS vérifié, nom confirmé, version MariaDB, privilèges par profil, ledger et projections en snapshot READ ONLY, drainage et fermeture, timeout/cancellation sans succès inventé.",
+    "Rapports et diagnostic privilèges reconstruits avec noms/états/enums fixes et compteurs bornés ; pas de sérialisation des requêtes, secrets, identifiants ou détails natifs.",
+    "Préflight plateforme : répertoire neuf explicite, exclusions de chemins, aucune réutilisation, écritures synthétiques bornées, annulation puis nettoyage non récursif limité aux créations connues.",
+    "Lecture intégrale de 17 fichiers de tests associés (sans exécution) ; aucune suite générale verte répétée et aucun nouveau préflight lancé."
+  ],
+  "rejectedCandidates": [
+    {
+      "candidate": "Le CLI générique préflight reste auth-only/préproduction/SQL33 sans option vidéo",
+      "reason": "Contrat historique intentionnel et testé ; le lanceur du profil actif appelle inspectDatabase avec video=true et les chargeurs primary explicites. Aucun support actif n’est déduit de ce CLI historique."
+    },
+    {
+      "candidate": "La rotation SMTP par update-runtime-smtp reste limitée à l’ancienne origine de recette",
+      "reason": "Le module réutilise par défaut le validateur préproduction et le guide lu est titré lot0.26. Ce n’est pas le parcours du profil actif ; pas de nouvelle anomalie de production ni élargissement du chargeur proposé."
+    },
+    {
+      "candidate": "valid=true avec des checks not_checked",
+      "reason": "makePreflightReport transforme cet état en incomplete avec code3. Les lanceurs de profil exigent explicitement les noms/états attendus ; aucune approbation de lancement n’est produite."
+    },
+    {
+      "candidate": "Préflight DB ne prouve pas toute la structure physique via WHERE1=0",
+      "reason": "Limite explicitement écrite : ces projections vérifient la lisibilité ; assertions physiques du serveur et contrôles de schéma distincts restent requis."
+    }
+  ],
+  "limits": [
+    "Aucun préflight, SMTP, accès DB réel, opération serveur, test de stockage réel ou script sauvegarde/PC exécuté ; revue statique seulement pour ce complément.",
+    "Les 17 fichiers de tests indiqués ont été lus intégralement, pas tous les fichiers de tests indirectement associés à ces modules (notamment flow intégration complet et tous les tests de publication de chaque sous-profil).",
+    "Les opérations descriptor et les protections contre remplacements ont été examinées par source et tests existants ; aucun nouveau montage bind ni attaquant même UID simulé. Le modèle ne promet pas de sandbox contre un opérateur contrôlant le processus.",
+    "L’état effectif du fournisseur, des privilèges privés, des fichiers serveur et des certificats de production n’a pas été inspecté ; aucune qualification hébergée nouvelle déduite.",
+    "Aucun défaut supplémentaire concret établi dans ce complément ; ceci ne démontre pas l’absence de toute vulnérabilité."
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "formatVersion": 1,
+  "agent": "audit2_domains",
+  "status": "static_review_complete",
+  "scope": "Three exact external operator helpers182 actually invoked by the user, separate from main snapshot sources",
+  "applicationSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "applicationTree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+  "coverage": {
+    "externalSourceFiles": 3,
+    "externalSourceLines": 846,
+    "externalSourceFilesFullyRead": 3,
+    "associatedTestsFullyRead": 2,
+    "associatedTestLines": 977,
+    "includedInMainSnapshotCount": false
+  },
+  "reviewedFiles": [
+    {
+      "file": "ops/prepare-release182.py",
+      "localPath": "/workspace/scratch/bb431be72395/operator182/ops/prepare-release182.py",
+      "gitRef": "040701bb8239a85c0484d21c4f1a0d585ef07260",
+      "sha256": "9b68d7a060e94781e6a2043a8b37c3a0039101bca912675a7ed8e6d4e55e407a",
+      "expectedSha256": "9b68d7a060e94781e6a2043a8b37c3a0039101bca912675a7ed8e6d4e55e407a",
+      "hashMatchesUserPin": true,
+      "bytes": 15076,
+      "lines": 283,
+      "reviewStatus": "fully_read",
+      "executed": false
+    },
+    {
+      "file": "ops/record-release182.py",
+      "localPath": "/workspace/scratch/bb431be72395/operator182/ops/record-release182.py",
+      "gitRef": "9a52b4840b65d2c825020ffa81d4bdc2d29fc268",
+      "sha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1",
+      "expectedSha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1",
+      "hashMatchesUserPin": true,
+      "bytes": 28035,
+      "lines": 465,
+      "reviewStatus": "fully_read",
+      "executed": false
+    },
+    {
+      "file": "ops/observe-peer182.py",
+      "localPath": "/workspace/scratch/bb431be72395/a11-observation/ops/observe-peer182.py",
+      "gitRef": "ea94eb697a12ef5056a86430ca6f327c6c6d9eea",
+      "sha256": "492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043",
+      "expectedSha256": "492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043",
+      "hashMatchesUserPin": true,
+      "bytes": 3930,
+      "lines": 98,
+      "reviewStatus": "fully_read",
+      "executed": false
+    }
+  ],
+  "testsRead": [
+    {
+      "file": "/workspace/scratch/bb431be72395/operator182/ops/test-prepare-release182.py",
+      "lines": 508,
+      "sha256": "6244740b859f53b905cfb4c42beae39b784d09957f5a035e6f57211e87b4d02e",
+      "reviewStatus": "fully_read",
+      "executed": false
+    },
+    {
+      "file": "/workspace/scratch/bb431be72395/operator182/ops/test_record_release182.py",
+      "lines": 469,
+      "sha256": "32632cceca00d50ca7fcd288b937b20e7f3f6d8328322b87d6fb9419116cb965",
+      "reviewStatus": "fully_read",
+      "executed": false
+    }
+  ],
+  "findings": [],
+  "checks": [
+    "Les trois copies locales correspondent exactement aux SHA256 fournis par l’utilisateur et aux trois références externes182 ; aucun réseau nécessaire pour les récupérer.",
+    "Lecture statique intégrale des trois scripts, sans import, exécution, appel de fonction, test, lancement, connexion, requête publique ou observation procfs.",
+    "Préparation : pins source/arbre1.8.2, état1.8.1 et lanceurs/binaireNode épinglés ; tag et ascendance, trois versions package/lock, graphe verrouillé et migrations33+3 identiques avant staging.",
+    "Préparation : validation des deux lanceurs par syntaxe bash-n uniquement, substitutions limitées, sorties exclusives O_EXCL/O_NOFOLLOW, modes privés/fsync, aucun start/SQL/Manager/checkpoint ; sortie partielle conservée et nouvel essai refusé.",
+    "Enregistrement : pins des reçus historiques/staging, configurations conservées octet pour octet, bundle sept fichiers, préchecks v2, rollback1.7.2 non démarré, startup1.8.2 unique, quatre GET publics bornés et trois GET GitHub anonymes sans redirection.",
+    "Enregistrement : JSON sans doublons/NaN, fichiers UID/modes/nlink et snapshots d’identité, bornes2Mio par défaut et8Mio pour startup, SHA binaire en flux borné256Mio ; aucun secret brut ou contenu privé de configuration dans le résultat.",
+    "Enregistrement : modification du seul checkpoint sous flock non bloquant, comparaison des octets/métadonnées avant remplacement atomique, fsync et relecture. Nouvel essai exact reconstruit les mêmes métadonnées et ne réécrit pas le fichier ; dérive/historique divergent refusés.",
+    "Observation A11 : fenêtre monotone8s, deux tables plafonnées1Mio chacune, filtre currentUID+port3000+étatESTABLISHED, décodage IPv4/IPv6, résultat agrégé sans adresses/UID/inodes, erreurs/lectures partielles explicites, aucune écriture ni requête réseau.",
+    "Tests locaux associés préparation/enregistrement lus intégralement (977 lignes), sans exécution ; preuve synthétique A11 existante lue sans la rejouer."
+  ],
+  "additionalEvidenceRead": [
+    {
+      "file": "/workspace/scratch/bb431be72395/a11-observation/synthetic-verification.json",
+      "reviewStatus": "fully_read",
+      "executionDuringThisAudit": false,
+      "existingReportedChecks": 34,
+      "freshVerificationClaimed": false
+    }
+  ],
+  "additionalHelpersNeeded": [],
+  "runtimeDependenciesObserved": [
+    {
+      "component": "Existing pinned 1.8.1 start/check launchers transformed into generated1.8.2 launchers",
+      "relation": "Input metadata/templates, not imported helper modules; actual private originals are not available locally. Their expected pins and generated hash receipts are checked by the helper."
+    },
+    {
+      "component": "Pinned startup chain and check-local-closures/start-local-closures application CLI",
+      "relation": "The generated launcher selects the exact checkout/profile; these application source modules belong to main audit scope and are not counted as new external helpers."
+    },
+    {
+      "component": "Prior180/181 receipts and video bundle receipt",
+      "relation": "Read-only evidence dependencies, not execution of historical helper code; unrelated historical tools were not audited."
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "candidate": "No-op metadata retry considered a second deployment",
+      "reason": "record() never restarts the runtime or changes Manager/SQL, and an exact existing182 section produces metadata_already_recorded without replacement."
+    },
+    {
+      "candidate": "Startup log plus public HTTP proves the exact live PID/process binary",
+      "reason": "The script explicitly reports pid/socket/executed_process_binary/admin_session/physical_phone as unqualified and public_http_does_not_expose_commit. No stronger identity claim inferred."
+    },
+    {
+      "candidate": "A11 no_connection_observed resolves the real proxy peer topology",
+      "reason": "Its scope is only localport3000/currentUID/established connections during8s. Empty samples preserve the absence of observation and do not establish a proxy header or client-IP contract."
+    }
+  ],
+  "limits": [
+    "Revue statique seulement. Aucun helper, test, réseau produit/GitHub, SQL, observation réelle des connexions ou opération de déploiement exécuté.",
+    "Les SHA256 des trois sources sont vérifiés localement contre les pins utilisateur ; aucune nouvelle attestation GitHub distante ou vérification de publication/CI effectuée ici.",
+    "Les snapshots et flock de record() ne forment pas un compare-and-swap universel contre un autre écrivain ignorant ce verrou ; le code le précise. Aucun nouvel accès concurrent effectif au checkpoint privé observé.",
+    "Les scripts sont des outils opérateur ponctuels sur chemins fixes appartenant au même UID, pas une sandbox contre un opérateur contrôlant le processus ou les chemins. prepare regular() et stdout/stderr subprocess ne plafonnent pas toutes les allocations de métadonnées avant lecture ; aucun incident ou entrée variable distante exploitant ce point établi.",
+    "Preuves hébergées de l’utilisateur conservées telles quelles ; aucun succès de restauration/sauvegarde/PC ou réception e-mail/Push n’est déduit de cette revue.",
+    "Aucun nouveau défaut concret établi ; ce résultat ne constitue pas une preuve d’absence de tous les défauts."
+  ]
+}

@@ -1,0 +1,5875 @@
+{
+  "type": "audit2-182-source-coverage",
+  "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "all447SourceConfigAssetFilesReviewed": true,
+  "methods": {
+    "full_text_review": 425,
+    "full_base_plus_exhaustive_variant_diff": 11,
+    "structured_review_all_59_dependency_records": 1,
+    "binary_format_dimensions_and_hash_review": 10
+  },
+  "owners": {
+    "auth_data_security": {
+      "files": 46,
+      "lines": 6211
+    },
+    "backup": {
+      "files": 62,
+      "lines": 9020
+    },
+    "domain_workers": {
+      "files": 42,
+      "lines": 5853
+    },
+    "frontend_identity_pwa": {
+      "files": 72,
+      "lines": 7575
+    },
+    "frontend_messaging": {
+      "files": 30,
+      "lines": 6142
+    },
+    "messaging_media": {
+      "files": 41,
+      "lines": 6560
+    },
+    "root_integration_ops": {
+      "files": 154,
+      "lines": 21167
+    }
+  },
+  "records": [
+    {
+      "path": ".github/workflows/backup-recovery-instructions.yml",
+      "owner": "root_integration_ops",
+      "bytes": 10536,
+      "lines": 164,
+      "sha256": "fedec4105b3140e88819808937e967f2b614ed9ac4f1de6005d7b6afb8da0cfc",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "owner": "root_integration_ops",
+      "bytes": 9762,
+      "lines": 210,
+      "sha256": "18395ea99c9cb2f13ff252a3ad33503c87c7da64fd43ae6af98f63b2d6e84545",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": ".github/workflows/service-monitor.yml",
+      "owner": "root_integration_ops",
+      "bytes": 2043,
+      "lines": 61,
+      "sha256": "7a4479c174f7df07724e76b63530461807eb09997e9b340650d98fa1c8d9ecff",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": ".gitignore",
+      "owner": "root_integration_ops",
+      "bytes": 2359,
+      "lines": 153,
+      "sha256": "ec1e8c6656c7bca86e2d00296ced4effbe3c536b19f3c65f492f59ae935f7b38",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0001_users.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1506,
+      "lines": 29,
+      "sha256": "8459e7c76ddd405232c192c1bfc3bf96e0000c8b42409066d7ae170ad05b20b6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0002_invitations.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1917,
+      "lines": 34,
+      "sha256": "347061c42f5d099c410ca2dc1c53111aff510385c72eab87c1d58a67972237fa",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0003_sessions.sql",
+      "owner": "root_integration_ops",
+      "bytes": 880,
+      "lines": 18,
+      "sha256": "9faf0c66665f3ab2708572a4d9178a2454dc6058efcbaeda90094fa5c7810785",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0004_conversations.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1247,
+      "lines": 21,
+      "sha256": "c3463c38d7d83358b8dee3991ac836335e38b0a0b9cfe95089ee2c72acfbe3e1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0005_admin_mfa.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1039,
+      "lines": 20,
+      "sha256": "df0b21dab8df4122b1335fd590e20edca2906bb67696ff155bbd5ea01e3e7ec3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0006_admin_recovery_codes.sql",
+      "owner": "root_integration_ops",
+      "bytes": 758,
+      "lines": 14,
+      "sha256": "29e7f771d406a467c68f4b4f78ff4caa46c88a95fd4a1112fa5c5e1a4ee60215",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0007_auth_session_state.sql",
+      "owner": "root_integration_ops",
+      "bytes": 624,
+      "lines": 12,
+      "sha256": "d9d181271eddf1351baa02a28d03b3cffddee41e6ce152b83eca6d4707bdad31",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0008_auth_rate_limits.sql",
+      "owner": "root_integration_ops",
+      "bytes": 438,
+      "lines": 9,
+      "sha256": "84b3ee05a182f225edb0a4b1ec611b79bde4db3186b11520cd012c8a81e8211d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0009_client_auth_state.sql",
+      "owner": "root_integration_ops",
+      "bytes": 666,
+      "lines": 12,
+      "sha256": "35cbfb5651fb7f73724edc4a12a0c447eb46c6d30f56c8a82fadf0ddb835cb3c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0010_email_verifications.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1357,
+      "lines": 25,
+      "sha256": "178fd6fdb01778d2addf8ba1b0f606dfd6e0cf6237be5346c125f943ee79670d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0011_client_session_state.sql",
+      "owner": "root_integration_ops",
+      "bytes": 530,
+      "lines": 10,
+      "sha256": "fbe0be471a713e4903163cdab02a20ecb64fa9a44a37161dcfc8a44eaddac5fd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0012_mail_outbox.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2268,
+      "lines": 39,
+      "sha256": "d2be6c8f95bd16da4086f9c3d668c92e5739de9a33b24d3c52e0c904a7c4fb6a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0013_messages.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1828,
+      "lines": 31,
+      "sha256": "2291c8318a2a026d7a664de3c4a11c8a0ee25700479b065b539e9521ce3840b2",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0014_chat_receipts.sql",
+      "owner": "root_integration_ops",
+      "bytes": 742,
+      "lines": 13,
+      "sha256": "58ace872361b0dfe58336e2c9222966e0081558f8c84c91df79e944e90e00ea2",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0015_chat_events.sql",
+      "owner": "root_integration_ops",
+      "bytes": 889,
+      "lines": 15,
+      "sha256": "96d21269d6f17be68ea5f1bf356a2d0dc02138c124c254a1b72d9faf6519305c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0016_media_assets.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2145,
+      "lines": 36,
+      "sha256": "7f3ccb57e4f8a405624684af93a82bbdc5464515279b54be82f0dc0e428afd90",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0017_message_media.sql",
+      "owner": "root_integration_ops",
+      "bytes": 927,
+      "lines": 16,
+      "sha256": "fe3e34a8a59458651bb4e9c29789d59d35ec0cc8a145d5b2166eb5f6795cbdf0",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0018_crm_profiles.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1536,
+      "lines": 24,
+      "sha256": "384001e65b3b1c803f96a29410cfdaa933a558a3d3d9bf980ad6b6c50d0f78c7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0019_crm_labels.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1457,
+      "lines": 24,
+      "sha256": "99de064d6f1bc38d0eddc6f627be8a07bc51c5b04c0b2bdb79cee1e0c8c488e6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0020_crm_memberships.sql",
+      "owner": "root_integration_ops",
+      "bytes": 948,
+      "lines": 15,
+      "sha256": "c6e3772208cb8da2a4ba007f501a72c8fd649e08619d9da4236a1474774b17bd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0021_client_password_resets.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1680,
+      "lines": 27,
+      "sha256": "b524de66f8a24bd6eaf26eeb66d735362b36db0db5d7597a3ee811a06ed38ea1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0022_password_reset_outbox.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2392,
+      "lines": 39,
+      "sha256": "17d9dd8c774151c0086bb4b62e08e239e50033c21b083fa3e568ad047ed5bb58",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0023_broadcast_preferences.sql",
+      "owner": "root_integration_ops",
+      "bytes": 760,
+      "lines": 14,
+      "sha256": "e0f9893dd0076358609a26863e8e57a127db53986c873a5a4ae963c691d42013",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0024_broadcast_campaigns.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2330,
+      "lines": 35,
+      "sha256": "166812d97f22286dfbd60202321b4f83f76a8aebd025ef8eafc5ff5620996b26",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0025_broadcast_recipients.sql",
+      "owner": "root_integration_ops",
+      "bytes": 3606,
+      "lines": 53,
+      "sha256": "f4690a0eb93bc67681de6d37fd7f7f43891ea45e1406c9ce1179a5ed8d1e05e6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0026_media_storage_state.sql",
+      "owner": "root_integration_ops",
+      "bytes": 746,
+      "lines": 13,
+      "sha256": "79ee09772f337dad06c1defce73fcf1d42ef4eb656af64a9680b664c49fd4392",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0027_media_storage_objects.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2302,
+      "lines": 38,
+      "sha256": "bc6971d8bd70a09057530e982c28eb50e779ff461dfdd541b1d48ed3b61f5b5a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0028_manual_client_admission.sql",
+      "owner": "root_integration_ops",
+      "bytes": 244,
+      "lines": 7,
+      "sha256": "bdb71b6a9351d93af635b7a598aad67c192ed4c91f78ecb5492d05536bba0cbb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0029_push_subscriptions.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1913,
+      "lines": 32,
+      "sha256": "ea51d98da123c046c7d61bc5b67268b28e2739c5169e5bb9e102fdbee2efb996",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0030_push_outbox.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2216,
+      "lines": 39,
+      "sha256": "82a4cd2ce99d79ff1876d72587bd4da6ad69ead0e662c8f9ec3c2fa031adf8f2",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0031_user_profiles.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1018,
+      "lines": 17,
+      "sha256": "8fa14cee33718921678b8e69e9db81b3ef8e8d12f526ad4cdfb250ecb10d005b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0032_announcements.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2133,
+      "lines": 36,
+      "sha256": "5b86780521557175076a037a9c2abc2cd4f1eec3bb81ee8f1dcb47334f3bce5e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "db/migrations/0033_crm_tasks.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1621,
+      "lines": 29,
+      "sha256": "81d0d11577b6ada0f734c7497cbf44768033f1374bd830dec5e4abe9beda34af",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "ops/prepare-node24221.py",
+      "owner": "root_integration_ops",
+      "bytes": 14275,
+      "lines": 265,
+      "sha256": "21dc1f7e89625ecfa9d4b13951d3496ffbd600f97ed4dd393d95a689b8facaf7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/prepare-release140.sh",
+      "owner": "root_integration_ops",
+      "bytes": 13213,
+      "lines": 193,
+      "sha256": "3de48f1570402abfeab871d4604e46cde2cca329e08cde8fbe5f29c3f30e7c4a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/prepare-release150.sh",
+      "owner": "root_integration_ops",
+      "bytes": 12835,
+      "lines": 192,
+      "sha256": "ce1c9eec5cfe33ebf58fb1300a4d7202ec56bca1b08ce92f10882e96c23b6021",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/prepare-release160.sh",
+      "owner": "root_integration_ops",
+      "bytes": 12844,
+      "lines": 192,
+      "sha256": "705d2a959e3e67a6dcd93b8ffe78695cc4883873da329e4a97e453ba8e60e4b9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/record-release140.py",
+      "owner": "root_integration_ops",
+      "bytes": 14167,
+      "lines": 256,
+      "sha256": "fba4002c3b08f43c4393f92fd13b2d743adc287b99272c87d9bc4bc25b6c0877",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/record-release150.py",
+      "owner": "root_integration_ops",
+      "bytes": 15456,
+      "lines": 277,
+      "sha256": "8a5fd233cda8749fe3a4caef5affc4c2ab2727b22f3ffeb3ebe45d5b344b522b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/record-release160.py",
+      "owner": "root_integration_ops",
+      "bytes": 15656,
+      "lines": 280,
+      "sha256": "ec7672b6072d1bc344051e5efc971f14d31eeeed105d2da7aaad5dc4453743dd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/status-release150-migration.sh",
+      "owner": "root_integration_ops",
+      "bytes": 6610,
+      "lines": 136,
+      "sha256": "117a8df748b178a607cfdbf4b17d1580292f4c868495401bb888b830915b90e0",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/status-release160-migration.sh",
+      "owner": "root_integration_ops",
+      "bytes": 6609,
+      "lines": 136,
+      "sha256": "95e201b4dc88ce446585c316b66f2804479f1c213d0dd027625e6bb1450b1a83",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-prepare-node24221.py",
+      "owner": "root_integration_ops",
+      "bytes": 14615,
+      "lines": 295,
+      "sha256": "d56f90ee5bcd59fda4b4ecebb5aa1371c2e51b02bdda0c9d6b1636e5820f8dd8",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-record-release140.py",
+      "owner": "root_integration_ops",
+      "bytes": 29941,
+      "lines": 489,
+      "sha256": "7ff1a1998f75ee8798aafcbcc52b4f93915bd951fe6fc024a00fb3e1b1d006f9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-record-release150.py",
+      "owner": "root_integration_ops",
+      "bytes": 35952,
+      "lines": 577,
+      "sha256": "7bec8d00ec3a7eaebaea31a81935e9cdb31227b757eb28a0a9262f834d346023",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-record-release160.py",
+      "owner": "root_integration_ops",
+      "bytes": 41460,
+      "lines": 661,
+      "sha256": "92df932a1597777bd69bbf10371dee23b200f1abc5e07238639e0687e207bd4b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-release140-staging-synthetic.py",
+      "owner": "root_integration_ops",
+      "bytes": 17276,
+      "lines": 238,
+      "sha256": "4a9c28a749be62e756859bd1543c2e3400031a1deac3bc615b0f82dad55e2d2f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-release150-migration-synthetic.py",
+      "owner": "root_integration_ops",
+      "bytes": 20045,
+      "lines": 304,
+      "sha256": "d4908a7ea869a6cf0e66461991836ca73e589d72ddde3d25956a0e7d3496eef6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-release150-staging-synthetic.py",
+      "owner": "root_integration_ops",
+      "bytes": 17717,
+      "lines": 245,
+      "sha256": "fd280dc4bab9ef969c596a6fe83e45bd559ab3c774e6f9f503f7d6bc60e408d4",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-release160-migration-synthetic.py",
+      "owner": "root_integration_ops",
+      "bytes": 20082,
+      "lines": 304,
+      "sha256": "2fb6595e3cd3a96b2e73221d440058429c4a4f9095d18737cab4ceb8d44a817b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/test-release160-staging-synthetic.py",
+      "owner": "root_integration_ops",
+      "bytes": 17694,
+      "lines": 245,
+      "sha256": "047a2e163a45a4237648cdcc669ca7b00271f9fecbb704e3cdc3277fb1f3fc3c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/upgrade-release150.sh",
+      "owner": "root_integration_ops",
+      "bytes": 12013,
+      "lines": 218,
+      "sha256": "0162b6a364decae68b5f6c0d76f84a20c869d6e9269ee12d40d0251bf425381c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "ops/upgrade-release160.sh",
+      "owner": "root_integration_ops",
+      "bytes": 12103,
+      "lines": 219,
+      "sha256": "9172a68d37004783422405c232e9dfe57c661f0884c887650592f6683c6123c5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_base_plus_exhaustive_variant_diff",
+      "reviewReports": [
+        "reports/root_ops_delegated.json"
+      ]
+    },
+    {
+      "path": "package-lock.json",
+      "owner": "root_integration_ops",
+      "bytes": 30119,
+      "lines": 887,
+      "sha256": "496781799c1b1ade1e4500afbcfcfd1abf059c5798e06c2b649a1667c03dccb7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "structured_review_all_59_dependency_records",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "package.json",
+      "owner": "root_integration_ops",
+      "bytes": 3154,
+      "lines": 35,
+      "sha256": "a4cd39c142382fbaac3635e5754f785735e1d3cd2b1993bc65429e659b46b4ef",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "public/access.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 974,
+      "lines": 16,
+      "sha256": "7dc88337ef66532f63f5b0c7d79978785c3a1b6e079bcb1d563585f661509ce0",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/access.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 9289,
+      "lines": 86,
+      "sha256": "10af53c362173471e1b591dbb3346de3040e4aca8319d4230b0b5b88f7638ca8",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/access.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 20055,
+      "lines": 322,
+      "sha256": "ad2e7dcd6c7d0264812b086d6b13de4856ac55cc14880fef579198c2f0211561",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/admin-login.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 5718,
+      "lines": 68,
+      "sha256": "170cc1cf7d1abd1eb8907c731048242ff4b5ac8ddd88027fd44ba8fb678e55fa",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/admin-login.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 12702,
+      "lines": 120,
+      "sha256": "d6a4adba277981d978511e6d88276eb8597ffe92e91288a534caa4afc015607c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/admin-login.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 38490,
+      "lines": 696,
+      "sha256": "f83fccbc4fdba5cbe1c3ba9b67dc122d1c826a7defaadea8613bb9b1164c6120",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/announcement-banner.css",
+      "owner": "frontend_messaging",
+      "bytes": 1523,
+      "lines": 1,
+      "sha256": "02a86af5cc255e8df5e08f945217b4d8d6e8402083c9aae43d3313dfe67f1ece",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/announcement-banner.js",
+      "owner": "frontend_messaging",
+      "bytes": 7397,
+      "lines": 88,
+      "sha256": "b1316ed252c51d6b19332f611af4119f106372efd8012863c88ab88d52194586",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/announcements-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 8270,
+      "lines": 132,
+      "sha256": "98591f79d2d1ebfabfc8f47d50e4fcf762dda70de811d6a70e12f7791701bb63",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/announcements.css",
+      "owner": "frontend_messaging",
+      "bytes": 3405,
+      "lines": 1,
+      "sha256": "987080e2dd4d45333179a4f378af31e2ef4b203502ff9da6670caa0bce2c78c1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/announcements.html",
+      "owner": "frontend_messaging",
+      "bytes": 7678,
+      "lines": 38,
+      "sha256": "40c138e7b53fd5918a695c8c819c2fc5b85151d2483a807fe3cf8999be4df5a5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/announcements.js",
+      "owner": "frontend_messaging",
+      "bytes": 16658,
+      "lines": 235,
+      "sha256": "3951e98b24df3b2c2af68dc45446dfbb43e8cdbafd663c5d8248e00cebf96cec",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/app.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2713,
+      "lines": 56,
+      "sha256": "e50d43420be2592f74d26d26b91a62958064fcf34c3d15eed8abb1026478023a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/apple-touch-icon.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 29891,
+      "lines": 101,
+      "sha256": "7e301411f82a11c61643f12fe75457ba3d24adc464dfcaa6c81b14ae75525946",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/backups.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2472,
+      "lines": 31,
+      "sha256": "9c13e95f7ed5f9d63562fed17e4d93889276ef8e65363e610bcc8710a23f9725",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/backups.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 8611,
+      "lines": 29,
+      "sha256": "7b2e098f24aeb3115302e7d4dd3a81f20b9001ee72b5e85348090c7ca6d30b94",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/backups.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 16695,
+      "lines": 188,
+      "sha256": "62fdd807eb0586d9c21392d0794e85f8ad4c1f1ac87a330152bced4d8c0b9b69",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/asset-manifest.json",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2214,
+      "lines": 75,
+      "sha256": "c18d162c50d7d75968cb603bc790ac7b5f6469ecde44536a713a7272ed70a126",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/brand.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 1199,
+      "lines": 28,
+      "sha256": "e2ab67e7314020ad26aeddb6670ee039d8c2de5d611cbdbced1e97c58de33ab1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/icon-128.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 19971,
+      "lines": 84,
+      "sha256": "476ef6a5f6fbcfc1fa425eb5a2a829d6fd5d5d0b30980592bce2a041c664adca",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/icon-16.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 855,
+      "lines": 5,
+      "sha256": "f9d2f9ce90ad98b2f92867d5d7e3909e199049f3df7f7f836e3cbcb68c9c4e4d",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/icon-192.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 39131,
+      "lines": 176,
+      "sha256": "58f63d8249159541c6a2ddbd1b5f8980cd1efee8f475fff3d6e6789d0c515680",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/icon-32.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2363,
+      "lines": 9,
+      "sha256": "6d19eb66bfc3ec9a45ac30786d82c06319b653fc638027309a264b7e249db5aa",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/icon-48.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 4196,
+      "lines": 15,
+      "sha256": "3a585bfff8925a4bb693daa48c1f9ac3f7dc83898232762abe8712c8e7bf5abc",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/icon-512.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 201489,
+      "lines": 856,
+      "sha256": "80623bdfa83e75c09f213f174a39af1913934328fa92f3bb71ae2e18c83e467b",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/icon-64.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 6556,
+      "lines": 29,
+      "sha256": "616334df23d9dc3062be794979021eedb659ee03c9df3fdee31a6c35023c580f",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/brand/icon-maskable-512.png",
+      "owner": "frontend_identity_pwa",
+      "bytes": 134157,
+      "lines": 478,
+      "sha256": "03e057a049e60beffc611dfeb4f17171d963d2c7b930656e80f6cf69c564e4d8",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/broadcast-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 22410,
+      "lines": 225,
+      "sha256": "c56980821240fe452ee27521c9d27c094832f02a7a53dbcdd53b6977a64e0778",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/broadcast.css",
+      "owner": "frontend_messaging",
+      "bytes": 7102,
+      "lines": 77,
+      "sha256": "ab049f1c226c55308c9921fddc59c5a18aeecadc69a2d485edef71fd8cae739f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/broadcast.html",
+      "owner": "frontend_messaging",
+      "bytes": 14202,
+      "lines": 37,
+      "sha256": "d057b4d9fbc59496c649c70b68345825a94367786a31d300bc6cfe521698efa4",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/broadcast.js",
+      "owner": "frontend_messaging",
+      "bytes": 61651,
+      "lines": 666,
+      "sha256": "29c8bf4a04ec2c7b91cef7b567b1ba7cabf5ac9b07fe0a9812f30339c2894455",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/chat-drafts.js",
+      "owner": "frontend_messaging",
+      "bytes": 9108,
+      "lines": 132,
+      "sha256": "36ee8d3609f26dcfaec4e74ed8941409258a8c76383ebeb7670c44263ef0e74d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/chat-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 11384,
+      "lines": 170,
+      "sha256": "feee3e3cf2080836816e80579e8873f9edd8d94b659428d3a12d12938d823c37",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/chat.css",
+      "owner": "frontend_messaging",
+      "bytes": 21159,
+      "lines": 49,
+      "sha256": "e8acf90434d13a6900b186e6eafaed731aca737ae5537959e793120bf3e5cbdf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/chat.html",
+      "owner": "frontend_messaging",
+      "bytes": 17755,
+      "lines": 91,
+      "sha256": "6b7240d87cec4ff08326bdf832709bbbcc044cd52f2600740ffeea3dd0f57bc8",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/chat.js",
+      "owner": "frontend_messaging",
+      "bytes": 159155,
+      "lines": 2183,
+      "sha256": "ab5b825b328badd5c117e9fab95cf2855ad64761f45551f2d0f07cb24348008f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/closures.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2373,
+      "lines": 1,
+      "sha256": "c815763de132d0ca1acfd902e8daa511eb48732f0decadbee8f9dade36b9df44",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/closures.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 5650,
+      "lines": 21,
+      "sha256": "f30b4bd01cd9033a970e1d05bdfb6c670f0e10caeab4a06cfd79d316b28fae69",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/closures.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 11403,
+      "lines": 134,
+      "sha256": "51621b0e20f5f35bfd444dd84c51e378b81d28c5bc45900a70a7823133e72e66",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/conversation-download.js",
+      "owner": "frontend_messaging",
+      "bytes": 6153,
+      "lines": 73,
+      "sha256": "d4e4be567a950204d5e70ed54fa35f043a473a83a4d5eb38a330303710be105f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/crm-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 6496,
+      "lines": 95,
+      "sha256": "78af19ff206c3aa361aa8de01580733c0ed455c884e43fc03ee168aade8cb1de",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/crm.css",
+      "owner": "frontend_messaging",
+      "bytes": 4524,
+      "lines": 4,
+      "sha256": "768f8a1cb3483381dc01b9460e9c617c43ff1fda53dd93ac06b0ac39da868542",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/crm.js",
+      "owner": "frontend_messaging",
+      "bytes": 37205,
+      "lines": 407,
+      "sha256": "637b04a2e9fdf2f1733a2af0b4475ba6c1717d397225e7cd3756f738c110ef2e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/device-transition.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2685,
+      "lines": 135,
+      "sha256": "c224d2608a4469cab30f33b421d26ef634b80aef1d90d721cfdd7ecd8a529961",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/device-transition.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2428,
+      "lines": 37,
+      "sha256": "f1b6db0d185c4ab7a082911b2ee4d7af13b78f469d3dc2447335e15a76e20df6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/device-transition.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 11384,
+      "lines": 154,
+      "sha256": "274e8f1c5f7001d9a1afc35b6d3214d3d43342ed3019a600e839106c7edb7657",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/emoji-catalog.js",
+      "owner": "frontend_messaging",
+      "bytes": 30297,
+      "lines": 365,
+      "sha256": "23cb0fb834cc1cfb7e05928a077c7aae04b3737178fc02da2d0a7807bd7a795b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/emoji.css",
+      "owner": "frontend_messaging",
+      "bytes": 1709,
+      "lines": 14,
+      "sha256": "b9d80b7b6c2eaa9504d759fc90159e967f7018cb7f3cbe8a932ca8ba04e9f4e9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/entry-model.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2805,
+      "lines": 40,
+      "sha256": "42e842a0a5849dea635a40ddf60dc37f3d2044ee2d62ccf5075fa7d295d438f6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/entry.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 4115,
+      "lines": 8,
+      "sha256": "e2f81bfbe90eb98ff2a9a6d0ec34c08ecc26874db53de03673156604fb480fb0",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/entry.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 4998,
+      "lines": 65,
+      "sha256": "524af111ab19c59f0538f8050a253856cda410442b2227233670db2ae561970e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/entry.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 14580,
+      "lines": 160,
+      "sha256": "bb2968eb73334833de1cdfd77e2a17b0bdce2b514ac412939fdf1b3208d77e9c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/favicon.ico",
+      "owner": "frontend_identity_pwa",
+      "bytes": 7515,
+      "lines": 31,
+      "sha256": "d7c4168563ecda525ac9d6aeb83770635319925c722a8b461512043df43b6f16",
+      "binary": true,
+      "reviewStatus": "complete",
+      "method": "binary_format_dimensions_and_hash_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/help-link.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 528,
+      "lines": 17,
+      "sha256": "2a35ac29cbafb5db31db2e4b6103c02ecfff796b5296b42923b9e1978486589c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/help.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 4380,
+      "lines": 8,
+      "sha256": "ab5a1d27ac75c6449c908b5e625f6960cc146031bcc79d781040fd60256dd245",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/help.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 20574,
+      "lines": 117,
+      "sha256": "7f3604fbc7ecaac816687e16e9c7765e195ede364aa01b5768ce1cfa42e3fd94",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/help.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 15579,
+      "lines": 84,
+      "sha256": "2ec15d1caae154e7505e30a888389c54f9608ba69961b4bd5eb0db5ef9c0d695",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-access.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 13379,
+      "lines": 133,
+      "sha256": "f37cc308a09e84cf5f9875e1214ad9a5ebb4215b3cdf6a609de9b39bada1d0c9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-admin.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 12801,
+      "lines": 160,
+      "sha256": "a65df45f2a7ee6cbaf186acd37853a54355ca6dcee0a103b5a2ba6428715c41c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-backups.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 11287,
+      "lines": 104,
+      "sha256": "17a4bea697705fe3c8ceaf4f8d4bf384a3b6b30d3e5347906c272e69cf65b3b8",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-broadcast.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2710,
+      "lines": 31,
+      "sha256": "4c3447d45f43bd0e3f4898d030344d49338955dfaec0f9337f4c856f1811dea3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-chat.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 17770,
+      "lines": 227,
+      "sha256": "83872d39a7684cd9034957ac023aebca0bb38b73d526be6932e86920b8745486",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-closures.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 4248,
+      "lines": 43,
+      "sha256": "427b9239b3cb5a347a438445982d41cb92384962e19fb31034d6a5bfd4c50fe9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-manual-backups.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 4185,
+      "lines": 45,
+      "sha256": "d56aa94cff7cff12a27c783d9c2b513bed939b865340561917e7b66904d8cadf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-privacy.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 8602,
+      "lines": 70,
+      "sha256": "8ce1be00722e508f59a0edce978c4aa5d0e189b44409d716ac41d1babc070c05",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-profile.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 2601,
+      "lines": 32,
+      "sha256": "7acceac44537b3c5b5b2016a680a3412ba5a9931b1ded37b419529532cde0e28",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-readiness.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 9866,
+      "lines": 118,
+      "sha256": "7f1454111ab3c17de4e012154efcc767be5b6cd94e86a9874db663d3226bf480",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n-tools.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 25834,
+      "lines": 165,
+      "sha256": "f931074917b0d87ff98a2a2a196d061ced33e237373e7db2d0ba3a815c2956df",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 979,
+      "lines": 7,
+      "sha256": "f4d26c4cf054e9bf34c7e40b28499ef2e17a39fc60e5a4252ff471878234f5ad",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/i18n.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 12774,
+      "lines": 182,
+      "sha256": "d80c14a673f4535feb91e1102e13b180a0f76aba4ab996b95425ddcf1f22e10c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/icon.svg",
+      "owner": "frontend_identity_pwa",
+      "bytes": 373,
+      "lines": 7,
+      "sha256": "8e1f3703d6b7a8e423a4bddd187cea467c50a17ed181e2c52c1bcb7551b165be",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/image-preparation.js",
+      "owner": "frontend_messaging",
+      "bytes": 9567,
+      "lines": 175,
+      "sha256": "6c6355ec75f9b3e2864427ade7fb7d1f811fb3bdae394ba9ecc1a565d4bec72f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/index.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 3416,
+      "lines": 62,
+      "sha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/manifest.webmanifest",
+      "owner": "frontend_identity_pwa",
+      "bytes": 654,
+      "lines": 31,
+      "sha256": "5836f05989c46a0d377457c4f6662126fd6d9fbfee4e011012e624bce3359bcf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/manual-backups.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 823,
+      "lines": 11,
+      "sha256": "163465b1158f1cc2f1eed68f1e011159d6a9d28fb5e28c988e063d69a6f0d26c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/manual-backups.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 4056,
+      "lines": 35,
+      "sha256": "88f7f5b6432432742647942dd4ecb3ba734442124c94bebc7594e8b4fc4f5f84",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/manual-backups.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 13643,
+      "lines": 183,
+      "sha256": "5481abfd4ddc5251601bdbb37f408c6c3f2b628a691c23dfac7695da6678b413",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/notification-link.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 829,
+      "lines": 16,
+      "sha256": "0455e2ee0208e6e06778524591b46b72345143bf1af1f76c706844258563c725",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/notifications.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 1286,
+      "lines": 13,
+      "sha256": "66bb81dde6c2f7648c9dbeb3e4a47545b3232ecc40423e1e7db0c4ab189f7076",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/notifications.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 19461,
+      "lines": 229,
+      "sha256": "7b839e0b642dbcce6645b1ae21c65b73313261a3dad2327c5c427b1a9af310f1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/privacy.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 3020,
+      "lines": 3,
+      "sha256": "ec4325dfe5ddd29c463825b486c2d74cfbb6246189b4b24c6328e2795b5dbfdc",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/privacy.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 6762,
+      "lines": 27,
+      "sha256": "c92948e3d73d159cc06092eebfe4f8ed8c417a9eaf969879eac6efdca28a6385",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/privacy.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 13644,
+      "lines": 159,
+      "sha256": "7429d48c3d0898b5d29d55e95943a922ce2a0a5a1b942c298bd1be9b800945e1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/private-archive.js",
+      "owner": "frontend_messaging",
+      "bytes": 4981,
+      "lines": 81,
+      "sha256": "4160501a726cdd36b9245d9d9ddebcc1cc02a8b247f18006880cce21d206b788",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/profile.css",
+      "owner": "frontend_messaging",
+      "bytes": 3145,
+      "lines": 30,
+      "sha256": "2212dd6439ecb96273dbd24fef15548e0ac4f6d8864e46f83498d120fdc88eb5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/profile.js",
+      "owner": "frontend_messaging",
+      "bytes": 18964,
+      "lines": 302,
+      "sha256": "1b7a2c99fa54e930087de217b55b40960c55df687875bd51624851c0e2f4c4ae",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/quick-replies.js",
+      "owner": "frontend_messaging",
+      "bytes": 1483,
+      "lines": 24,
+      "sha256": "974ec27c9017ed666d5471baf52d5959bd2bce29733fe68852adfea7dab85b7e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/readiness-model.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 11687,
+      "lines": 137,
+      "sha256": "2155697d21525f2bf071fe8182a8f98080fb7a974b9b72f23b9646190e15fc10",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/readiness.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 5649,
+      "lines": 65,
+      "sha256": "c2fcc4f8a7f0dbfe9ff988c40083093b6142f7ff8a087fb4bb87e346c33e49ad",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/readiness.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 9750,
+      "lines": 68,
+      "sha256": "7ba1c87ae5f07f1182d4e98ffa0165f166cb65bb98cab5f37af518f4841d7dba",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/readiness.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 18912,
+      "lines": 273,
+      "sha256": "c2ada9a4ac0f68fd750df1f3ec51f13833957c1371d4f6397021b5ed0f7444a3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/recover-model.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 3173,
+      "lines": 63,
+      "sha256": "ebf1c1c4a753c52f5a6c9abec4cdad6c263ba633cfcc8a7ffa9c8fa424e381af",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/recover.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 261,
+      "lines": 4,
+      "sha256": "6c84c41849939a0dc44814622b1e64e43048ca9dedad8a9fc9cceea9e5bd2b7f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/recover.html",
+      "owner": "frontend_identity_pwa",
+      "bytes": 5162,
+      "lines": 56,
+      "sha256": "eb3d8d122cc1a155c35733b0b7d52a1dff4f93989baeb2d55adeb55bc722b878",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/recover.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 12319,
+      "lines": 196,
+      "sha256": "3f5246e19e2d94b2a57b9398f6ff362d6545eea6d8231e38b39d4cb33b8fb07d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/session-clock.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 1339,
+      "lines": 35,
+      "sha256": "8fd17c02c70b540b854e8841a8520101d711cd5ae579072b5969934f50cd18a0",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/styles.css",
+      "owner": "frontend_identity_pwa",
+      "bytes": 3773,
+      "lines": 54,
+      "sha256": "1a571e095802d0197f6b974aad005c7c762e072d560749cfbdc1ba9e7782ba80",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/sw.js",
+      "owner": "frontend_identity_pwa",
+      "bytes": 3374,
+      "lines": 51,
+      "sha256": "1ed45c3fbac18948828dfce91cf42402e73f38b99a3d58bcb2a6a2f03fff019c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_identity_pwa.json"
+      ]
+    },
+    {
+      "path": "public/tasks-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 8670,
+      "lines": 132,
+      "sha256": "068c28e17bae63b98c839835ca2cc179b4d22df13d110120516d315b42fccd8e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/tasks.css",
+      "owner": "frontend_messaging",
+      "bytes": 4060,
+      "lines": 1,
+      "sha256": "212d6f9da36b734b50619ffef5600aa1bdadc119407bb6cfcf437a50702245f9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/tasks.html",
+      "owner": "frontend_messaging",
+      "bytes": 6853,
+      "lines": 35,
+      "sha256": "ed4f3eff653a98b26058e9075aae740c80b078bfa4d5baaa7bde8510f626ffed",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "public/tasks.js",
+      "owner": "frontend_messaging",
+      "bytes": 25234,
+      "lines": 279,
+      "sha256": "74c0f6167079e9d3359f82530adecb29b9e270319e0429df448b1e91a7b63bcb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/frontend_messaging.json"
+      ]
+    },
+    {
+      "path": "scripts/JessieMessage-recuperation-052.ps1",
+      "owner": "root_integration_ops",
+      "bytes": 6870,
+      "lines": 106,
+      "sha256": "16c7a3aef9283fb9877af078551050f303793ba28f9e805a42956d056241617c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/JessieMessage-sauvegardes-055.ps1",
+      "owner": "root_integration_ops",
+      "bytes": 27559,
+      "lines": 390,
+      "sha256": "31b95cd516028a9be43430bddeb461631279d077ad916df767114cd29bc1e436",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/JessieMessage-temoin-067.ps1",
+      "owner": "root_integration_ops",
+      "bytes": 25178,
+      "lines": 339,
+      "sha256": "c0fbcbc64096b7a3d2e2766c00636ab332e62126b65298713aa17e4ae69c6bd4",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/JessieMessage-verifier-056.ps1",
+      "owner": "root_integration_ops",
+      "bytes": 20513,
+      "lines": 301,
+      "sha256": "b6165194fc4ae5b6e0a0b74c79647bfae98e1fa671f3974d3022b8b28cd028d1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/admin-bootstrap-stdin.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 13529,
+      "lines": 254,
+      "sha256": "d5f49e2fc2c4ef002afb09dcdd3d6115ef9b52a309fe11bf199faf2680b19f84",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/admin-bootstrap.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 14525,
+      "lines": 284,
+      "sha256": "89a7bf8b4d712085fd4468b55e3e5339ff01c53d89676a5ab14a780b248e0daa",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/admin-recover.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 6752,
+      "lines": 117,
+      "sha256": "21f419bee245539dd881ccec6c7498c0092f58c24396392feed8c367bf4370c3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/backup.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 21956,
+      "lines": 255,
+      "sha256": "b978d900c54d963464ac9c84a16ba0fdd373aa9eca1e0497ec057de88eeed054",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/build-neutral-site.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 10663,
+      "lines": 185,
+      "sha256": "33ec05190cd86213444bb802450c489453f99f496c03dfabc5a66ba9ba90f381",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/build-workbench.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4183,
+      "lines": 48,
+      "sha256": "834cb77e982c15b1234cbcb045779bb8e6680bc93e762e169f23ba709d43ca87",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-admin.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1819,
+      "lines": 37,
+      "sha256": "3a8a83a4ae598bd68b9c683c9ec1d80032cde38840f59d802359ac46ad43112b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-application-checkpoint-restore.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1053,
+      "lines": 21,
+      "sha256": "fcd2f26dff0894b1c53406e6ea6927c3e05baf58e45033cf81a8406e99695325",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-application-checkpoint-resume.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1044,
+      "lines": 21,
+      "sha256": "7bd11f19b5723864ac0e652107c629f5116d2d9714c702437b0c39a3adc4926a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-messaging.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1887,
+      "lines": 43,
+      "sha256": "7831287b0e650465824f63a6d4bf037a177e87d991befd87d449e308da78ea3f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-migration.sh",
+      "owner": "root_integration_ops",
+      "bytes": 755,
+      "lines": 19,
+      "sha256": "57c08e8f463695d8a7b35c9031e0cf380d7904c55e657603c208f645115353bb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-private-checkpoint-verification.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1026,
+      "lines": 21,
+      "sha256": "eadd897bfd1b6ab97c19c0512bd7434d9006a4067832079cb04c3b5b4f7e4ae7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-private-checkpoint.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1491,
+      "lines": 28,
+      "sha256": "8b30c8dd8acbc2cf16f465a2ce6cc4378eff50f771816f8023cc7d5f96ff3e1c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-private-secrets.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1732,
+      "lines": 38,
+      "sha256": "8f0704f085094f78743eac4be15376eaf500542ea7256d52b83e3a9fa1abaf23",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-runtime.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1858,
+      "lines": 43,
+      "sha256": "b429c5f1f25dd5e89106df48f5aaf0fa757d8cffc6faa175485e86a00fc97944",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-smtp-update.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1377,
+      "lines": 32,
+      "sha256": "38fa944fc31876b06b853a18fc0eadde380c7005c770c3768c0806597c1e254e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/capture-text-clone-verification.sh",
+      "owner": "root_integration_ops",
+      "bytes": 915,
+      "lines": 22,
+      "sha256": "53869a09401ac057bc6a9d81df32dee8de3fe9cee80eee6ff0b469665ae3e4cd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/check-private-backups.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1640,
+      "lines": 32,
+      "sha256": "39217059a43addaed706327346ec89506ae0a96ae380672f21453137f84c423a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/check-private-service.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1964,
+      "lines": 37,
+      "sha256": "5922001bdfa3b57664567a382b7ddc90b087bb69e532e552c691e77e57aa4064",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/check-syntax.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1343,
+      "lines": 28,
+      "sha256": "eca02db96e2e122495cdf05c22cb4b076fcfc280724a43107331056985ebaffc",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "scripts/configure-private-backup-copies.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1600,
+      "lines": 19,
+      "sha256": "08253dfffe4b264ee5de1e0b779523cc9de64ac586a276715a902541057d87b3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/data-export.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 12017,
+      "lines": 175,
+      "sha256": "007103d5ba49d2a17e28a0b66d8f7844b5f689645f45a864ce0625f43e216951",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/diagnose-runtime-stdin.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 8722,
+      "lines": 161,
+      "sha256": "db62030e6c50d9438fb5def142395bbe4edb7664dfd7c55197a919186afe2f5b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/import-application-checkpoint.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 24006,
+      "lines": 306,
+      "sha256": "97053b10586ea7cf02bcf04110907cd674a148985ff1cffc4b0f170778c68a3c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/manual-restore.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 20055,
+      "lines": 277,
+      "sha256": "6e64ab297d88bc3187933d4cc17f8ecc889a4df95ec4e48f011dabeee4089ba5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/media-storage.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4718,
+      "lines": 76,
+      "sha256": "16f5ab0e4088537c74c43d7265b086d5fd3a25b64f6d257972f120c6d5bfa66b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/migrate-stdin.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 5481,
+      "lines": 92,
+      "sha256": "a0a77e5d87d945b841c9aad8632aa5c8f08358f18bbac129aab2c52e4bfe4b85",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/migrate.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2719,
+      "lines": 53,
+      "sha256": "989de06b9287d01b7e742bb5c13b4031aebd09572d6b8549751068caaa78b46b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/migration-input.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2443,
+      "lines": 54,
+      "sha256": "d464d910ff5560afcd5b81fc3a84908bb6484cae20d49b2b9c33b68781099147",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/plan-closure-reconciliation.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 9005,
+      "lines": 101,
+      "sha256": "716e0ab6952a36ed74ca094c9f1e651c37ef3cde745c50f574df31b6ffa97ae3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/preflight.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4009,
+      "lines": 72,
+      "sha256": "96962a5aceaa4d855ab161e853e563030e85e96bc7d849ac28e2dc3d859b56fd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "scripts/prepare-primary-origin.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 10249,
+      "lines": 161,
+      "sha256": "6e0b7ce6f0f5c7686cb3c2a2d9ec4a32fb1029867379b3bfc6bdabed3df2052c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/prepare-runtime-auth.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 6390,
+      "lines": 121,
+      "sha256": "b6190f9d2e13ed4cc6c7f9e29947f0be886b3e4bf7da5a82a8516641c2337c80",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/prepare-runtime-crm.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 5475,
+      "lines": 78,
+      "sha256": "a41dca9a3fc6f1256a63753238ce45419bcadb14ca7355839cce26cec36e5b8e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/prepare-runtime-media.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 8377,
+      "lines": 111,
+      "sha256": "9e2d2e569b8a7ccb023a1dddc7e9bb40e8ddece9a8968a2fc998e7efdea214ff",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/prepare-runtime-messaging.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 9947,
+      "lines": 136,
+      "sha256": "4d863d71c5c3894a069ed975379f4a1ffb01c2d1e7fce1636b3ca7e418a6ae52",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/prepare-runtime-notifications.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 7105,
+      "lines": 98,
+      "sha256": "6dd4a54f6c3bf65bf669cbf830910cf695a024b097a337bc82af324ad90ed2bb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/private-checkpoint-child.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1951,
+      "lines": 37,
+      "sha256": "8e5bb4dfdf62db4d1c7312a2b6edd027e986fec9bf0f3b13702f215b0e4eacf7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/private-checkpoint.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 37411,
+      "lines": 417,
+      "sha256": "fa1fe3ce9884c6ea9f0bdc1e69dcc09107699b1d82d58ad906d3e0f4aaced8bf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/private-messaging-child.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 5499,
+      "lines": 84,
+      "sha256": "3766a1e023b2d03f04fd64d2d36b792e133b4719fa80444f2ed13c107cb1b000",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/private-secrets-backup.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 26396,
+      "lines": 425,
+      "sha256": "9d9f739580a5c242b57fd29ab34f6da239cdca9700c2651bf1aa184d0c0fe9cc",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/promote-runtime-diagnostic.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 7665,
+      "lines": 151,
+      "sha256": "5e7a4fb4891233d44aef0de98ec16c2d306264dfa4306e028157410a97c9afd1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/provision-runtime-stdin.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 10228,
+      "lines": 193,
+      "sha256": "a2d033552b39d49ea039646c94aa949a79ff9a84b86ab18160b3476af278fa88",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_runtime_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/restore-private-operations.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 13112,
+      "lines": 142,
+      "sha256": "9144f534e2097cf9ebe88726318409014731dcb11276c13ddb02d937616b88dd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/resume-application-checkpoint.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 13240,
+      "lines": 165,
+      "sha256": "22039167508641f67a7ee02758f0563a1fd6de035be9c4fe0044eb72070f6d6c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/start-private-auth.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 6338,
+      "lines": 109,
+      "sha256": "2766a8e016d8f5ed74fbc38efb001ff157dc9adb52b996bed15e8dfc269b1cb5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/start-private-messaging.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 12442,
+      "lines": 167,
+      "sha256": "3970c021fa799008fff22f16ab43394c25632e7efbb32bd4c8880d7bab79e9de",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/start-recurring-private-messaging.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 11168,
+      "lines": 171,
+      "sha256": "33a17b01c3c6863ccf346ad676be8eac7c6cfd03d8b4a037929b1cddbb0119ea",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/test-private-backup-alerts.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 3409,
+      "lines": 48,
+      "sha256": "60d42f83e205a76449dea12f90b5ec808ec2d5899253ecde5254d1c54e85c1e9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/update-runtime-smtp.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 5314,
+      "lines": 95,
+      "sha256": "3690d65f4ebd46504edcd670d43a75c8ce1bd06b62c06993e470faf0a4b48881",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "scripts/verify-private-checkpoint.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 28183,
+      "lines": 318,
+      "sha256": "f4e2800593f2b310d9a1232c5017a511cd35f342ba54bf40da29728d3fc45e9e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "scripts/verify-text-clone.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 23277,
+      "lines": 318,
+      "sha256": "19043b368961f9e776208bef5b790e50232ec4b51be3b712fa5847a1c1b463d7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_historical_tools.json"
+      ]
+    },
+    {
+      "path": "server/access/admission.mjs",
+      "owner": "auth_data_security",
+      "bytes": 1527,
+      "lines": 25,
+      "sha256": "5be5c59e4cecd332a71d9cda2f8a1add8831ad9937b5001a4d212efd711751e7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/access/config.mjs",
+      "owner": "auth_data_security",
+      "bytes": 652,
+      "lines": 13,
+      "sha256": "f7b7e9bf40af5d3581d0916089e12823cc663c6770e4f8297abe5bbd1981900a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/access/http.mjs",
+      "owner": "auth_data_security",
+      "bytes": 18025,
+      "lines": 243,
+      "sha256": "470176b91644b54d88bb9f7d62165fd17819f5ae57083d2c0750cdb2f9615eb2",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/access/pagination.mjs",
+      "owner": "auth_data_security",
+      "bytes": 2847,
+      "lines": 54,
+      "sha256": "cb4e67dbf8ff6b7fdb1194a7f5f39424310b2c8d1178c4f1bc5bb3da17917739",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/access/service.mjs",
+      "owner": "auth_data_security",
+      "bytes": 18090,
+      "lines": 296,
+      "sha256": "5196627328e9fabaa8c57ed9503b55752024314cc3a4acb62ff8807220b431bb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/access/store.mjs",
+      "owner": "auth_data_security",
+      "bytes": 39117,
+      "lines": 539,
+      "sha256": "a31d21c08b81db7f566f19660bc0ae93a98d5fbad9b1f6a9684453dac1c8a625",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/announcements/crypto.mjs",
+      "owner": "domain_workers",
+      "bytes": 2761,
+      "lines": 42,
+      "sha256": "cf9efc4a7c459b1976409dabb69fdd88473067154e8e6c0c2aee617d0135017c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/announcements/http.mjs",
+      "owner": "domain_workers",
+      "bytes": 7703,
+      "lines": 96,
+      "sha256": "554639f11400fccb1ff5a4b1348f449b6d31b2234e9c6b47529a779f9b3a31fa",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/announcements/service.mjs",
+      "owner": "domain_workers",
+      "bytes": 6388,
+      "lines": 86,
+      "sha256": "2283464d80b4edcdc2dc52a8a35069976a936911999efd7d6fac2f3f82ac3db6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/announcements/store.mjs",
+      "owner": "domain_workers",
+      "bytes": 18060,
+      "lines": 215,
+      "sha256": "8b615031bbea8153287931f0c7e4a31417301690f5d67bcb3559a7491e4e22ba",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/announcements/validation.mjs",
+      "owner": "domain_workers",
+      "bytes": 2929,
+      "lines": 49,
+      "sha256": "5070ea97a50fcb104a9317ad217f185295d26707eb34fca08c4424a66c2f6554",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/auth/config.mjs",
+      "owner": "auth_data_security",
+      "bytes": 1748,
+      "lines": 34,
+      "sha256": "889610a9a4a76f42fae3735814390b491f996180d550c7b3593c4201e1108933",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/auth/crypto.mjs",
+      "owner": "auth_data_security",
+      "bytes": 10250,
+      "lines": 259,
+      "sha256": "bb63a592bbab2b951eb9c484547d2ad3461f58846ae5bb115b65d2c9248f2b9a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/auth/http.mjs",
+      "owner": "auth_data_security",
+      "bytes": 13311,
+      "lines": 267,
+      "sha256": "4bdc43c2e0e8a8405a7b7f1d7794da578e39478a52ba0bccc54884bf8411f6df",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/auth/recovery-store.mjs",
+      "owner": "auth_data_security",
+      "bytes": 4888,
+      "lines": 80,
+      "sha256": "a6b99e8fecaa8b40f67c1b291df681af910563b51a6707b6853529986b09fe9e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/auth/service.mjs",
+      "owner": "auth_data_security",
+      "bytes": 6607,
+      "lines": 122,
+      "sha256": "d8820da1a4af71c367e5dec448e0dc1b09a6ee9b2d7d3d25f45da4469393af19",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/auth/session-policy.mjs",
+      "owner": "auth_data_security",
+      "bytes": 1945,
+      "lines": 41,
+      "sha256": "f3a68b126cc203de4776c0469ef6ab917fc5a386b8f3b9c0bb61d3f2acb8f60a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/auth/store.mjs",
+      "owner": "auth_data_security",
+      "bytes": 22522,
+      "lines": 329,
+      "sha256": "0ade70aadb0f247cb7fe6ca6fa25d928d82fd8a3aef33e4b65c5744da3b957db",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/backup/alert-delivery.mjs",
+      "owner": "backup",
+      "bytes": 2871,
+      "lines": 49,
+      "sha256": "809080e56eef6634ffb43a6cb82f90bbea8b655749d9bb7633d63b7ecebdbe82",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/alert-files.mjs",
+      "owner": "backup",
+      "bytes": 6758,
+      "lines": 115,
+      "sha256": "90995eb37bf4c6a55bc53492ea84b9cd939f39fa9d347242747f059132ea778e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/alert-state.mjs",
+      "owner": "backup",
+      "bytes": 7933,
+      "lines": 99,
+      "sha256": "e15a8103e6fd02d9c13c669099c9ecc635adb4165ce0ba8a848c9758f54afb54",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/alert-worker.mjs",
+      "owner": "backup",
+      "bytes": 4199,
+      "lines": 66,
+      "sha256": "265ee22682373d194aaa74ce3936044406d561be988728c23b5f18b01db9dc89",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/application-scope.mjs",
+      "owner": "backup",
+      "bytes": 6629,
+      "lines": 116,
+      "sha256": "508e764b1af1551783070e6a183cc8b6eecf09eca22c2806865bc36e55d4d421",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/checkpoint-archive.mjs",
+      "owner": "backup",
+      "bytes": 12377,
+      "lines": 219,
+      "sha256": "4f0de05c59261abd547a8b7397df78d163b1f3f45ff1b8352e18e66f05a279da",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/checkpoint-encryption.mjs",
+      "owner": "backup",
+      "bytes": 22472,
+      "lines": 346,
+      "sha256": "f135d187567acc248012d01ecaaf2974c6b31c6eff16632a50d78e7abc42460a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/checkpoint-file-inventory.mjs",
+      "owner": "backup",
+      "bytes": 13459,
+      "lines": 275,
+      "sha256": "24bd1054785f6f8c333525598e51cdc5ddb46c829e75035f562ecc6f136db936",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/checkpoint-files.mjs",
+      "owner": "backup",
+      "bytes": 900,
+      "lines": 17,
+      "sha256": "bcdf4c4f749a916048fc798171b08436f7fb356f815d8a32550ee960423cbc55",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/checkpoint-receipt.mjs",
+      "owner": "backup",
+      "bytes": 12518,
+      "lines": 203,
+      "sha256": "9f653a936069fb6f23eb04d709e1a4a372ed4fd7d68c6625eb65caa6513147ca",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/closure-reconciliation-replay.mjs",
+      "owner": "backup",
+      "bytes": 18948,
+      "lines": 249,
+      "sha256": "c8494a401f739e67b04b6a9054ed16eb261a95497915ffb8975cc4c154dc5c0b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/closure-reconciliation.mjs",
+      "owner": "backup",
+      "bytes": 7290,
+      "lines": 93,
+      "sha256": "084403028138118b0be545599c3d3c13701e70d1035c25f233b0ca857c3936a0",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/copy-catalog.mjs",
+      "owner": "backup",
+      "bytes": 8922,
+      "lines": 141,
+      "sha256": "fd3fa9e037b1a93acf17f813fb5547488c8e21ae04f4a2da1c1824803d6c98d6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/copy-files.mjs",
+      "owner": "backup",
+      "bytes": 498,
+      "lines": 7,
+      "sha256": "88e065ad6c501ebc4ac03429985622d28280dc6179bf27b948eff8df2e2c7588",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/copy-http.mjs",
+      "owner": "backup",
+      "bytes": 10362,
+      "lines": 132,
+      "sha256": "83eefede44dadf7b0aff5288d12e7d5341b76e122b6bf91071ec5666ccd3b767",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/copy-kit.mjs",
+      "owner": "backup",
+      "bytes": 5943,
+      "lines": 45,
+      "sha256": "3ab51d4f595fb1830cd1a30aa3eced09dc91d6504224a5a862d15b1e5fa17bf4",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/copy-service.mjs",
+      "owner": "backup",
+      "bytes": 7933,
+      "lines": 131,
+      "sha256": "ca87d0a3059a98bada2a05bdbceb53eb6a34f665304f567b934758720779e08d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/copy-state.mjs",
+      "owner": "backup",
+      "bytes": 3321,
+      "lines": 43,
+      "sha256": "3bddd600a10a9ad39074dc3af87d36276bfa9f5b6552e19c49cb85c07cd97bb1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/crypto-store.mjs",
+      "owner": "backup",
+      "bytes": 16869,
+      "lines": 234,
+      "sha256": "ee97335867dbf4307901e94cd3175c3fec2d14023207c054f689be758acec1ae",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/freshness-reader.mjs",
+      "owner": "backup",
+      "bytes": 1675,
+      "lines": 22,
+      "sha256": "366dd2e17e6c2ad34edd021bc2150b71a21a7d42a72c5b92ee41ef41476e8f39",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/freshness.mjs",
+      "owner": "backup",
+      "bytes": 7903,
+      "lines": 107,
+      "sha256": "8e3cec312baa9b07ddc0ea43530071488a4a9d21ab8a6a3f375b0d4c115127f7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/inspection-diagnostics.mjs",
+      "owner": "backup",
+      "bytes": 6113,
+      "lines": 104,
+      "sha256": "55e12764eca6420ded8398e62b26d1410b23ad6dbd2748ae749c47a9f54ecd70",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/inspection.mjs",
+      "owner": "backup",
+      "bytes": 3169,
+      "lines": 57,
+      "sha256": "9f1a78c5af57221987065c887ba542628e1ee18f3302e571ff6eda7b35afd349",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/local-closure-parent.mjs",
+      "owner": "backup",
+      "bytes": 11694,
+      "lines": 166,
+      "sha256": "84096ddbec73dd9a45568303c421fb157c6a874393ae077a9d8a9ad7ab061b45",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/managed-closures.mjs",
+      "owner": "backup",
+      "bytes": 4299,
+      "lines": 64,
+      "sha256": "d65ca0d3e376c54d495baebc231bc739e6ad094da976103e4b759573d818447f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/managed-runtime.mjs",
+      "owner": "backup",
+      "bytes": 11162,
+      "lines": 180,
+      "sha256": "e581fb2db1d37a0bd649a9c7c2ecfdb5bb9ed0b4dbebdabe2a118ade0f715f06",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/managed-witness.mjs",
+      "owner": "backup",
+      "bytes": 3340,
+      "lines": 47,
+      "sha256": "c0abc326c570d93611040465f362d653f799cfd25be931fd8e4f0b16b190b52d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/manifest.mjs",
+      "owner": "backup",
+      "bytes": 21532,
+      "lines": 371,
+      "sha256": "bbf0827acb7658c3b04c9fa3b70009ff2a36d9abfa92bafe102ab58b4931aa81",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/manual-backup-files.mjs",
+      "owner": "backup",
+      "bytes": 7367,
+      "lines": 110,
+      "sha256": "4710394a9b86afb36082d13eec9acfb164c14e644ac490d78aa53d94ebdc8f13",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/manual-backup-http.mjs",
+      "owner": "backup",
+      "bytes": 6962,
+      "lines": 104,
+      "sha256": "c04ec8127a30a4dcbdd422ef4b24dc37956c1e1c3b6bd02876d9b02897a4c45b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/manual-backup-service.mjs",
+      "owner": "backup",
+      "bytes": 1335,
+      "lines": 23,
+      "sha256": "66c7c67c123dff4eaa010cc3ea750d2b2f1f044edb6a8e02ef4901afe20a5006",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/manual-operator-context.mjs",
+      "owner": "backup",
+      "bytes": 11984,
+      "lines": 148,
+      "sha256": "8b4793de7676c817ab7c6232387e170a6e0cb45d37b3290f771a0e0d7afa8648",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/manual-restore.mjs",
+      "owner": "backup",
+      "bytes": 29532,
+      "lines": 280,
+      "sha256": "34e0599b2797c8c00bf2e8f9c1cf38dc5dba2bf30efcd15291be3259f82b3bec",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/operational-checkpoint.mjs",
+      "owner": "backup",
+      "bytes": 21539,
+      "lines": 300,
+      "sha256": "1a5c10e413c43d0c15d8cd1173dffa9835d864043e9bc6c6f5d85e57c2fbbce5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/parent-gateway.mjs",
+      "owner": "backup",
+      "bytes": 3922,
+      "lines": 68,
+      "sha256": "eb3403835b735d838ba775d66c851d81b306a3568d53bc882af7b6dabbc90231",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/periodic-monitor.mjs",
+      "owner": "backup",
+      "bytes": 6915,
+      "lines": 114,
+      "sha256": "53825f4b6a9a04ee3f1ed4147dc109cdafc3ec181862f5f043d070efe2260a6f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/profiles.mjs",
+      "owner": "backup",
+      "bytes": 3152,
+      "lines": 47,
+      "sha256": "93601acc3d6732e22a70506e7e0a2682af316122438450bb3992ba2c3a85102f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/reconciliation-progress.mjs",
+      "owner": "backup",
+      "bytes": 8249,
+      "lines": 132,
+      "sha256": "6260d1c2793dc3aaddeb0cee5f990bfdc5a035ececa2690324d5fb82c1b72934",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/recovery-store.mjs",
+      "owner": "backup",
+      "bytes": 20411,
+      "lines": 284,
+      "sha256": "a11d8c269d09d30a4d3c8fcc06bc3cbc304e9320b521c6c491c43f0e61b8dfed",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/recurring-checkpoint-files.mjs",
+      "owner": "backup",
+      "bytes": 16026,
+      "lines": 297,
+      "sha256": "b51922bdf80790d1b808e1fa7f4e7548f26e4902d62f51341ff05667d348dd44",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/recurring-checkpoint.mjs",
+      "owner": "backup",
+      "bytes": 9341,
+      "lines": 149,
+      "sha256": "9c5223338b170d89b69a9b8bd7f19c09b38c7c02b2fe05f62a81bc12b0c2dffe",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/recurring-supervisor.mjs",
+      "owner": "backup",
+      "bytes": 29990,
+      "lines": 427,
+      "sha256": "ccccb65fc614f3a8456423c8a59fc6af86c06ce692814941d0edda9834374bfb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/registry-continuity.mjs",
+      "owner": "backup",
+      "bytes": 8049,
+      "lines": 115,
+      "sha256": "75b2a040dfee90cfbbe4867b5ac3d47937bef100d5d056ce74aa7bc5adf1752f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/registry-snapshot.mjs",
+      "owner": "backup",
+      "bytes": 8933,
+      "lines": 135,
+      "sha256": "12f466ac744c0b536feca437b31c27d99c389eb554ba947f60bbb93fa346b140",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/registry-witness.mjs",
+      "owner": "backup",
+      "bytes": 12871,
+      "lines": 173,
+      "sha256": "f6b66640e0ee18eab3ba2f584cbb5c163a20ff0863ad99e863356143c9d02c96",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/snapshot.mjs",
+      "owner": "backup",
+      "bytes": 28456,
+      "lines": 350,
+      "sha256": "ccd4422948db2b1ff8c941578fb88b1e116c17761e49fc641424486ebba83db3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/verification-kit.mjs",
+      "owner": "backup",
+      "bytes": 2907,
+      "lines": 26,
+      "sha256": "efdedc458a48858e2f8a6ada71b2986779cb59d7e7d40ea715ec93b46941503a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/verify.mjs",
+      "owner": "backup",
+      "bytes": 25666,
+      "lines": 361,
+      "sha256": "f8a857423307784231000fef41e2479908f1c7f48b5e8af91650676b80bd289b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/video-checkpoint-files.mjs",
+      "owner": "backup",
+      "bytes": 1036,
+      "lines": 19,
+      "sha256": "5b9a4d06ca8db24b8186a32458739dfe4877c586cfbbbfbd6330295014aa9276",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/video-inventory.mjs",
+      "owner": "backup",
+      "bytes": 12194,
+      "lines": 165,
+      "sha256": "b1b8e31064a483ab478313b3e17cf67fffc7e357634002bd03491da5adc771bf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-enrollment-http.mjs",
+      "owner": "backup",
+      "bytes": 7459,
+      "lines": 100,
+      "sha256": "a999641f9930db253f14e837e5dd7ce9b5e271fabf2ab0d7117ac45a8cca06fd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-enrollment.mjs",
+      "owner": "backup",
+      "bytes": 14952,
+      "lines": 207,
+      "sha256": "6c347e2ff96c8829205565081c3171285e7c6054f59f65886c96166ded612b0d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-genesis.mjs",
+      "owner": "backup",
+      "bytes": 14616,
+      "lines": 215,
+      "sha256": "2e90013bc24dc82df496cefe0ccda77761b0b6f6026f791449658fb88cdd7bbc",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-observation-maintenance.mjs",
+      "owner": "backup",
+      "bytes": 2458,
+      "lines": 42,
+      "sha256": "2be81fa69094e88ce3f7ff400ac69198862594fd45c932f1aa65848c311324ed",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-observer.mjs",
+      "owner": "backup",
+      "bytes": 13767,
+      "lines": 209,
+      "sha256": "8a3a789bf2276a62e8de5ab3f8340cedb7e0b97f82e3085fd39ed29010aef934",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-origin-context.mjs",
+      "owner": "backup",
+      "bytes": 4450,
+      "lines": 72,
+      "sha256": "dcdb6386e2722df36b4f45be2979979b5b76253c629b55eb1616e04cd4d44684",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-origin-diagnostics.mjs",
+      "owner": "backup",
+      "bytes": 1217,
+      "lines": 20,
+      "sha256": "e0204f4dee38d0147de6a74df853b6dc9466b395be32dcc6d2e9cafd5be4302a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-origin-operator.mjs",
+      "owner": "backup",
+      "bytes": 12986,
+      "lines": 165,
+      "sha256": "1f12ed1c21096735c20058aa309f3da10f595815b27ed57053a39b9f89f7e92b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-recovery-control.mjs",
+      "owner": "backup",
+      "bytes": 8657,
+      "lines": 145,
+      "sha256": "c96878b304cc974c41c2a617d1bb19fc9c3b284a6905c8c79c1b92f2901fffda",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-recovery-parent.mjs",
+      "owner": "backup",
+      "bytes": 9247,
+      "lines": 153,
+      "sha256": "5596688e29efd589681987d4db184cfe0aaa8aff780edfc6034f60cb4334b173",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-recovery-server.mjs",
+      "owner": "backup",
+      "bytes": 2996,
+      "lines": 59,
+      "sha256": "9326849da9f58e30ec609994915bf67c5e418176ff03870aaa05815398b20e27",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/backup/witness-transport.mjs",
+      "owner": "backup",
+      "bytes": 8243,
+      "lines": 108,
+      "sha256": "bbc35b24e2510b3e5488cdbd424f86726847a00b0fe34fafdf710536c5c73d11",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/backup.json",
+        "reports/backup_historical_delegated.json"
+      ]
+    },
+    {
+      "path": "server/broadcast/audience.mjs",
+      "owner": "domain_workers",
+      "bytes": 3867,
+      "lines": 53,
+      "sha256": "ebdbe2c9cc5c5eb9d08a293cb7ad3c4b117992f387958be168b617ccfd32dbae",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/broadcast/config.mjs",
+      "owner": "domain_workers",
+      "bytes": 537,
+      "lines": 14,
+      "sha256": "430d074e00659cf0d79f815422e92f28313f248b20214d32799db02249b88e6c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/broadcast/crypto.mjs",
+      "owner": "domain_workers",
+      "bytes": 7942,
+      "lines": 151,
+      "sha256": "00345da4da15ba8092f16cf8eca75ef7a1abc94c84c5f066e0a435a20f506ebf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/broadcast/http.mjs",
+      "owner": "domain_workers",
+      "bytes": 23821,
+      "lines": 310,
+      "sha256": "d98d1da3e42ea749edb574a61f8bb3fb304626fb959597a4a5de25608e5ad9e8",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/broadcast/service.mjs",
+      "owner": "domain_workers",
+      "bytes": 23015,
+      "lines": 270,
+      "sha256": "521bb7eadd9dc9f6a9ab1c618c0df0fa5d8a0ee5a206afee449358b362b352e7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/broadcast/store.mjs",
+      "owner": "domain_workers",
+      "bytes": 57559,
+      "lines": 706,
+      "sha256": "b153e1ea0bde7567ace659af375390427fd618c9126f46513c01cb3fc1ef4863",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/broadcast/validation.mjs",
+      "owner": "domain_workers",
+      "bytes": 8892,
+      "lines": 158,
+      "sha256": "0641b534ca64c7789d29ae422852eb9a7e4eb06ba38385ebd9f5c871f443e869",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/broadcast/worker.mjs",
+      "owner": "domain_workers",
+      "bytes": 8441,
+      "lines": 130,
+      "sha256": "b28e368ee9ea2dd64342758ded90f420f0b767467165db6c27a8b137335dc3a6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/chat/archive-transfer.mjs",
+      "owner": "messaging_media",
+      "bytes": 8653,
+      "lines": 123,
+      "sha256": "e85432692592cd13c328b742aa0a97a23505bd14da4628d934da7d1eb0c1234c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/client-export-http.mjs",
+      "owner": "messaging_media",
+      "bytes": 4610,
+      "lines": 59,
+      "sha256": "3d3a3d7e6777882d8036f15cddca990ed867b0f485b71d2e6a843af548155d04",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/config.mjs",
+      "owner": "messaging_media",
+      "bytes": 922,
+      "lines": 15,
+      "sha256": "a5cafbd170b1bffb2862361893c13c45cb485e9ab65cc9c73088adac4ae8557a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/conversation-export.mjs",
+      "owner": "messaging_media",
+      "bytes": 13828,
+      "lines": 138,
+      "sha256": "b1223413e4fce1f3155004037b563a89ce7477b5cb2a9f1e383855023dd6296d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/crypto.mjs",
+      "owner": "messaging_media",
+      "bytes": 6109,
+      "lines": 141,
+      "sha256": "5cbfae0ce05aae6cba0fb7fc1bf8f7180dcbbd6d74fd8f8668765d562b7f8a28",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/http.mjs",
+      "owner": "messaging_media",
+      "bytes": 21443,
+      "lines": 298,
+      "sha256": "f888fd677ec20e53a07a48caa431339c09ee98739ab9e32ca4b9032b390bbf8e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/profile-avatar.mjs",
+      "owner": "messaging_media",
+      "bytes": 1067,
+      "lines": 18,
+      "sha256": "9a41a4d6e7a8de7d553d1d4fe599a6039ba438c991087aeb2565f2e0554529e5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/service.mjs",
+      "owner": "messaging_media",
+      "bytes": 17047,
+      "lines": 236,
+      "sha256": "83eb3962f7a2849352d474c56be531e7a2440f003002b9dcfe8a89503bd22903",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/store.mjs",
+      "owner": "messaging_media",
+      "bytes": 45586,
+      "lines": 597,
+      "sha256": "0f5ba413f8e5a08a2cd4fd282e69f13266a33a8dca847fc4c16132774187af30",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/streaming-conversation-export.mjs",
+      "owner": "messaging_media",
+      "bytes": 18974,
+      "lines": 203,
+      "sha256": "a375abbf0fbd79aa69de472988ef226d0efe7055eece26075f3baa9a7ad727e3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/chat/zip-stream.mjs",
+      "owner": "messaging_media",
+      "bytes": 8553,
+      "lines": 167,
+      "sha256": "d62e9d03f0c01b389ff57cbb9192728c65f623b00dba97a84326c56638f2a8c7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/config/private-auth-environment.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1607,
+      "lines": 30,
+      "sha256": "a0f853ca16b3254ff998d9f2bc9780de30455a6e02e219d7eb0335ade350f9cd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-authentication.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4213,
+      "lines": 73,
+      "sha256": "e93373192e9237a2279f2d8b55f6631b8e770ac98d16bd8b7998cb3f2e46e1f3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-broadcast.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2779,
+      "lines": 43,
+      "sha256": "049f338e4aa189a4cec3d6385bc7970bf9364d65bfb85a482bd23fe2b36829ab",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-crm.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4974,
+      "lines": 74,
+      "sha256": "4a74502d36e3d4af81afa1c582855f902ccda7db6b15d9bdbc98b751f43ace00",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-database-file.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 43763,
+      "lines": 771,
+      "sha256": "52878d6e29d8c8106e62eb61ac55222406435ec600d8fec21a1777dd35e17d2f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-media-storage.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2578,
+      "lines": 39,
+      "sha256": "d3cc91e077b7f0d963140492cc43459c91912c5b2bfdddf2269a4d1ef40850cb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-media.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4427,
+      "lines": 70,
+      "sha256": "5b9f92004999574898ac3f97e13f6ee4d2db062c43bca00f695528b94124ff4f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-messaging.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 6540,
+      "lines": 94,
+      "sha256": "972065bfd07d3e034589ba652cff8f6c5104719df5cf82e5921615b243e7f34e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-notifications-file.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 6576,
+      "lines": 86,
+      "sha256": "24130bccac30f18f3ad0e08ff2a71ca5ddeb5d20445c7ded9540dfa8330c2fef",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-video-storage.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4075,
+      "lines": 62,
+      "sha256": "44e0eb1dd0c2459808d01a3913d567f9ea3ca9944067657e5a70286723a83dac",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/config/runtime-video.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 5207,
+      "lines": 74,
+      "sha256": "d23df912480c97cac32f8ccc9482358b4d141f7ca76a2bfd95f1320572206da7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/crm/config.mjs",
+      "owner": "domain_workers",
+      "bytes": 1503,
+      "lines": 27,
+      "sha256": "016fe028c614a21c9592c97195b37257acf323d1b3adc9c24adf9db7bb6fce01",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/crm/crypto.mjs",
+      "owner": "domain_workers",
+      "bytes": 3889,
+      "lines": 94,
+      "sha256": "e2d644e29d223fd96ef5fdde7bed477f4e74497a89f24ea0b66409a39578fb5a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/crm/http.mjs",
+      "owner": "domain_workers",
+      "bytes": 19231,
+      "lines": 288,
+      "sha256": "0333c7be3a864298851fe847949418611dfa69f513501932bb37e83761ded010",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/crm/service.mjs",
+      "owner": "domain_workers",
+      "bytes": 13758,
+      "lines": 173,
+      "sha256": "249283964e02fd2ed56142263a465d534bbcbe6f409380c959170aecab608d60",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/crm/store.mjs",
+      "owner": "domain_workers",
+      "bytes": 32492,
+      "lines": 350,
+      "sha256": "1433c7e5f180324a3bee108d4dc9ec585b6048e141bc931d1eeb57d33b5bb005",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/crm/validation.mjs",
+      "owner": "domain_workers",
+      "bytes": 3293,
+      "lines": 82,
+      "sha256": "25209c78de6d1255dbfbbc0e436ad41227dbd5a48b27c560c7c9475215eb68b9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/data/closure-http.mjs",
+      "owner": "auth_data_security",
+      "bytes": 4887,
+      "lines": 63,
+      "sha256": "ae582761b0f4b07d1139229057c2202288036c4bbba86d892742de59f120320f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/closure-operations.mjs",
+      "owner": "auth_data_security",
+      "bytes": 11135,
+      "lines": 192,
+      "sha256": "25d693cd15d40692881e2959b3a738e62c0405623d113c10c2f10effdce5a295",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/closure-service.mjs",
+      "owner": "auth_data_security",
+      "bytes": 5411,
+      "lines": 83,
+      "sha256": "97291da70f9e374cf52d6eca008e02f8e8c51af1a0bf494a5ec0d979a1276ea3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/deletion-store.mjs",
+      "owner": "auth_data_security",
+      "bytes": 9450,
+      "lines": 115,
+      "sha256": "b76b6018171caf40ab97cd58d66f471181f0aa7a8e746da417df33edfc6df97b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/deletion.mjs",
+      "owner": "auth_data_security",
+      "bytes": 10916,
+      "lines": 167,
+      "sha256": "1ba2f1e99fe830bb633d1b60228c3234d93116ea5455e52b74606b75b0c74a39",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/erasure-journal.mjs",
+      "owner": "auth_data_security",
+      "bytes": 12681,
+      "lines": 199,
+      "sha256": "b53437898f5cf9933117b00af77e647bc8757a5e1d62cb3617b492dc9692becb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/erasure-schema.mjs",
+      "owner": "auth_data_security",
+      "bytes": 4516,
+      "lines": 49,
+      "sha256": "76c5687a0af9bfde55ff4d03abfb2df65fd2d64679f417b81759c0882d52c32b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/erasure-state.mjs",
+      "owner": "auth_data_security",
+      "bytes": 3888,
+      "lines": 57,
+      "sha256": "1772427a3422187ea9c4ffbb339f30a2caf179e7af3de7b8aff12a98629d6066",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/erasure-store.mjs",
+      "owner": "auth_data_security",
+      "bytes": 24786,
+      "lines": 302,
+      "sha256": "136e21579953dc00347a14ae8be37d0a53763be4dea4dcdea2183b728a5761bc",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/erasure.mjs",
+      "owner": "auth_data_security",
+      "bytes": 7488,
+      "lines": 107,
+      "sha256": "fd65842450cf8a73307c33da1ae948b1bbbae11c7a2a323ab5e63dabf1df5559",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/export.mjs",
+      "owner": "auth_data_security",
+      "bytes": 18263,
+      "lines": 292,
+      "sha256": "b57e944f0acea475339ac747d32aee20ab76a4109361e9aaf1fce25342138608",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/policy.mjs",
+      "owner": "auth_data_security",
+      "bytes": 5798,
+      "lines": 55,
+      "sha256": "f0e995017447ece48253d68f8e249377cc956e7f03897f6de6777bc1b3bf3d9d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/rollback.mjs",
+      "owner": "auth_data_security",
+      "bytes": 3300,
+      "lines": 60,
+      "sha256": "cc33aec6b17a64c9b3339ca304e3c2fed84354f72d201cd51cd748e19e32e14d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/store.mjs",
+      "owner": "auth_data_security",
+      "bytes": 18244,
+      "lines": 246,
+      "sha256": "9bdc300260e7e398c6f3487a126cbab7dc4d56e4795288d4bfbfdbeefda03dee",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/data/writer.mjs",
+      "owner": "auth_data_security",
+      "bytes": 20018,
+      "lines": 284,
+      "sha256": "0b7e76c3ab9cae3a47f5812fcb0b3bbfffc4058dd0678f8d571a628274456c67",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/db/connection.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2113,
+      "lines": 43,
+      "sha256": "83e32600df6013a9b5d5689b89583323d1d6224b505b1fdf04eedf2bd166eed1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/db/migrations.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 19097,
+      "lines": 347,
+      "sha256": "8e08662b8a90a4dac525f3544ab74c6a3b8f0d6400f24cbfa07ff32345662a5f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/db/runtime.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 5582,
+      "lines": 121,
+      "sha256": "58b91ed6bfe5f8a6003d922f786b86a283eb3bb094611cd0b4de2219ca89c258",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/db/shared-runtime-privileges.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4843,
+      "lines": 85,
+      "sha256": "65264f306c1fdc6bff9302a56e04f0042e948b47964d4654e04558333cebd1ca",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/db/store-migrations.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 879,
+      "lines": 11,
+      "sha256": "868214452bbe1a9d3b4465d972f38cb36c51fcdb4438e3c4dc9e8327767b3436",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/entry/http.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4378,
+      "lines": 71,
+      "sha256": "d2e25d46bfff2b3682d56d0b3231d9a5b1da077190e15811394f5632959f17be",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/files/private-directory.mjs",
+      "owner": "auth_data_security",
+      "bytes": 6764,
+      "lines": 163,
+      "sha256": "f9741dba9f115ec319f020beac51971f09eef1c1d367fb88da59bfc5e7464a37",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/files/private-json.mjs",
+      "owner": "auth_data_security",
+      "bytes": 7767,
+      "lines": 131,
+      "sha256": "dc43f3f29677b89c4298ae7508e13fa7827169a4ac7f85eef639152f0d675a5b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/http/admission.mjs",
+      "owner": "auth_data_security",
+      "bytes": 6391,
+      "lines": 137,
+      "sha256": "dbd4efd3c3a8aa7a66ac1a336d15ee8f9370f3a7e8c60f7554c50291f615d8b9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/http/peer-address.mjs",
+      "owner": "auth_data_security",
+      "bytes": 744,
+      "lines": 17,
+      "sha256": "bdaedaa7eda2c5df654b4087701d02c64b3a1a8c9bf937b07b06d7181b0e4cb4",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/http/request-origin.mjs",
+      "owner": "auth_data_security",
+      "bytes": 2136,
+      "lines": 47,
+      "sha256": "6cffb0d4f6a7dc1f72600e84d40dfcddab628742945b95a3734f509a19528f68",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/index.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 52686,
+      "lines": 732,
+      "sha256": "9c4e0d8cb0e18a22363d7c700eac2c702d5262b9493386505982cd20329ae7a9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/lifecycle.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 3030,
+      "lines": 67,
+      "sha256": "739165655c6a2e0f0d556bec06b599ffe823ad22bb57371f5b16951785342b9d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/mail/backup-alert-message.mjs",
+      "owner": "domain_workers",
+      "bytes": 1445,
+      "lines": 16,
+      "sha256": "4decf49001d72b940954149a05f3e106b251867f3626aa730b208f840c7ec600",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/mail/config.mjs",
+      "owner": "domain_workers",
+      "bytes": 2407,
+      "lines": 51,
+      "sha256": "ddc6c64f2aac9e1e0a3a1cde2063ed61c0772e882be3ac60df35c183959c4dcc",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/mail/crypto.mjs",
+      "owner": "domain_workers",
+      "bytes": 3200,
+      "lines": 79,
+      "sha256": "956b22157a1efcab393fdab07ddb9618e7aa5fa097433227d2ba6689abc19d92",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/mail/store.mjs",
+      "owner": "domain_workers",
+      "bytes": 11681,
+      "lines": 193,
+      "sha256": "5f57379f870d37761c18d517ac49079edd3edd513a0c22776a04ce70546a63a3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/mail/transport.mjs",
+      "owner": "domain_workers",
+      "bytes": 10322,
+      "lines": 211,
+      "sha256": "e36749e10b9fdd4d9ef13b1c49cd7155f32cfba1228d37be1ddb2b8eb9a679a9",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/mail/worker.mjs",
+      "owner": "domain_workers",
+      "bytes": 5365,
+      "lines": 123,
+      "sha256": "9fe7a02c328a19b88bdb0446369818203fb87f45d9c9438e7f6b0e140ba13959",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/media/backup-admission.mjs",
+      "owner": "messaging_media",
+      "bytes": 2910,
+      "lines": 45,
+      "sha256": "d6131d17afd9a8178caffe32e818b47a9c08d916aa31bdf188641458ab8d1d32",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/backup-limits.mjs",
+      "owner": "messaging_media",
+      "bytes": 450,
+      "lines": 7,
+      "sha256": "ddb8825e3f9ffea62e7a043225af2c0fc35c6a4742799516c04073615e0ee1e7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/capacity-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 10781,
+      "lines": 150,
+      "sha256": "5b8e7441e0e17bf51f317ca6a089d1ad1111d027d81dc912c2e757a429199c58",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/config.mjs",
+      "owner": "messaging_media",
+      "bytes": 2606,
+      "lines": 37,
+      "sha256": "8dc06df5403a17aa6ddf4789e444689b32181a91e2c6784c5b48275b3dbabe84",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/dto.mjs",
+      "owner": "messaging_media",
+      "bytes": 598,
+      "lines": 8,
+      "sha256": "2c7d1500db2fd13b5e3baf66a3d68d514a636903231a5b7fa5d62a6560581ee7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/http.mjs",
+      "owner": "messaging_media",
+      "bytes": 17962,
+      "lines": 286,
+      "sha256": "7513104ea0519ed553f80828ebd432e0cd677c9ec924b9db8dbf9b13e6070966",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/image-worker.mjs",
+      "owner": "messaging_media",
+      "bytes": 4190,
+      "lines": 87,
+      "sha256": "01dfeefed6a063d4677511d4f263f63821ac6e27bd784c5fa45c1718245c57de",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/image.mjs",
+      "owner": "messaging_media",
+      "bytes": 5438,
+      "lines": 130,
+      "sha256": "4617c8ec3892464eb040b1b3995e9d3551d8d500c40e4500e235b24d02ed0b6f",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/inventory-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 4383,
+      "lines": 63,
+      "sha256": "232c79b2425ab846ab6d2eba89d787b6029a9c65976c8edd3e33d90dc4c7e86a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/inventory.mjs",
+      "owner": "messaging_media",
+      "bytes": 14093,
+      "lines": 197,
+      "sha256": "1af32c87de45bb276c384327f63568a3ad8169bb8eb109d79f2050607d374264",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/service.mjs",
+      "owner": "messaging_media",
+      "bytes": 16786,
+      "lines": 240,
+      "sha256": "0a3abfbea516002004ff020425a09d432c47602241e8954b4805afdf57f4cefb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/storage.mjs",
+      "owner": "messaging_media",
+      "bytes": 19952,
+      "lines": 431,
+      "sha256": "51d7a90d82a86e56a39272cb8f50d1e8d7f2b52ef3a242e1cc7b76ae29c4f6b2",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/media/store.mjs",
+      "owner": "messaging_media",
+      "bytes": 28989,
+      "lines": 350,
+      "sha256": "3dfe58a68052cdfeaa826206c91cb0fd382b34f1b3c6e097f12502c080ff5bc0",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/notifications/config.mjs",
+      "owner": "domain_workers",
+      "bytes": 2645,
+      "lines": 54,
+      "sha256": "ef5eb9f83e15972e0f82055fac6a9265ea4285d995a440ada325ff07c3019b46",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/notifications/crypto.mjs",
+      "owner": "domain_workers",
+      "bytes": 3155,
+      "lines": 55,
+      "sha256": "346ad8fc363ff190de1f69d2723241c2935bb72c48bcc2526202471a720fdd0c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/notifications/http.mjs",
+      "owner": "domain_workers",
+      "bytes": 8910,
+      "lines": 125,
+      "sha256": "4f5426217392aad144832fbc0bac164084bd3dcba8a626b01eaf2c4ec005b635",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/notifications/service.mjs",
+      "owner": "domain_workers",
+      "bytes": 8484,
+      "lines": 137,
+      "sha256": "954342832dd4d73e851df7ca21ae1bdc5707fc466072f52c43d635ac0729e8a2",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/notifications/store.mjs",
+      "owner": "domain_workers",
+      "bytes": 33779,
+      "lines": 419,
+      "sha256": "a33429f9b3173a5c808f88a82797529c3ed0d99b700bfad9c4f527fa540c122c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/notifications/transport.mjs",
+      "owner": "domain_workers",
+      "bytes": 8834,
+      "lines": 152,
+      "sha256": "e9a1f36fd404cbfbdd9409980a7c1494205ffeca7e51dedfc723098d05beeecb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/notifications/validation.mjs",
+      "owner": "domain_workers",
+      "bytes": 2588,
+      "lines": 42,
+      "sha256": "a38002d6dd8f5aea916f68d35224a779bd5ad7bbbcfdd67ded39890dad373160",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/notifications/worker.mjs",
+      "owner": "domain_workers",
+      "bytes": 8077,
+      "lines": 137,
+      "sha256": "646eab7e5f03f3cb6cda4c68c15e45c43c253715447dfbd148900c01b0ca5ccb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/operations/dto.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2727,
+      "lines": 39,
+      "sha256": "26708fc960e0ad6c3fa4b1fdf4c497ec387e1d504743cbb2ca4a196597025209",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/operations/external-probe.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 7943,
+      "lines": 133,
+      "sha256": "1f7468f18784b1577153addf5ca619e139f4de337dd89894a1edc82b7da6ca67",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/operations/monitor.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 10648,
+      "lines": 189,
+      "sha256": "1fe748189255ca9abe765cae56dd6266de10d3c47ed8bb703d375ec2ff810cd5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/operations/store.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4323,
+      "lines": 87,
+      "sha256": "e12308d69bb36549ef15354e8bf5ccf2eb5d16d4844711ff9975549f2307fcb5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/preflight/config.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 10684,
+      "lines": 150,
+      "sha256": "7f41b52222c004fb2b6e46d23605a0a7f6194806c27abfdf3f23561b703d7241",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/preflight/database.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 14865,
+      "lines": 235,
+      "sha256": "5e2dbb5848a0877311e28072d4ee6b996057b4b1c0af0e4888c68d7b13ec8a21",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/preflight/platform.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 14271,
+      "lines": 224,
+      "sha256": "bd12220259fd414c0b9b124dbea723262c630ad05ad61c9cb8021fa7f4973e9e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/preflight/privilege-diagnostics.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 16679,
+      "lines": 327,
+      "sha256": "c4e162c9df13c32388450587b50c1b14789ed478117b68654fe513daac98f146",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/preflight/report.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4490,
+      "lines": 79,
+      "sha256": "523576ce56f8106a3612e0d817a73e70ede4ebf2a53fed6c181fee0fbbf76c0e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_config_preflight.json"
+      ]
+    },
+    {
+      "path": "server/privacy/choices.mjs",
+      "owner": "auth_data_security",
+      "bytes": 432,
+      "lines": 11,
+      "sha256": "c9c854e633426ff86219ae57386093023356c94775d38887004acdd4a592533b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/privacy/draft.mjs",
+      "owner": "auth_data_security",
+      "bytes": 1765,
+      "lines": 28,
+      "sha256": "cd824cafab58332d879b157c9f12eff9fa9cd514a4f2ca430b2ad51171a3cbe4",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/privacy/files.mjs",
+      "owner": "auth_data_security",
+      "bytes": 4872,
+      "lines": 79,
+      "sha256": "5ff71ee36bd2459d870bcadd2779be2a8cd2a7ea6031288840bbd35f57259f57",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/privacy/http.mjs",
+      "owner": "auth_data_security",
+      "bytes": 3684,
+      "lines": 54,
+      "sha256": "3e24e561218cc2158ea9f6a0d19749a256c9edfdfa4c60021e617f4c997e8947",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/privacy/service.mjs",
+      "owner": "auth_data_security",
+      "bytes": 2673,
+      "lines": 36,
+      "sha256": "47a066093dca51beaa8ff01a9406044534b694b9eb747fd0bc1bf878d20c865d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/profile/http.mjs",
+      "owner": "messaging_media",
+      "bytes": 7548,
+      "lines": 99,
+      "sha256": "4faaa31baa9507107d196450af437a95a5bd8914f772b6411b3b6a416e5c20b7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/profile/service.mjs",
+      "owner": "messaging_media",
+      "bytes": 7533,
+      "lines": 98,
+      "sha256": "86199b92ee9b701b7c717d083f9cce5e4a4893632493fc33a082019121bd17f2",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/profile/store.mjs",
+      "owner": "messaging_media",
+      "bytes": 12801,
+      "lines": 147,
+      "sha256": "a4a427e86213b00f2a50a0ff73961b583f581b783e6dd10367421648a84910cf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/profile/validation.mjs",
+      "owner": "messaging_media",
+      "bytes": 937,
+      "lines": 17,
+      "sha256": "feef40a5465dd161c353ea0fefaa86cba328e69e1c873b123a24ab869500b9fb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/quick-replies/files.mjs",
+      "owner": "domain_workers",
+      "bytes": 6703,
+      "lines": 102,
+      "sha256": "ede192036c7dec9fe42db68e3a09b099e98c29fb157f4812cd2141c2335a003e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/quick-replies/http.mjs",
+      "owner": "domain_workers",
+      "bytes": 4333,
+      "lines": 49,
+      "sha256": "4da2789d0c730c1acd5ebe8fd646e488cb7be39772444eab88ce0268709b4afb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/quick-replies/service.mjs",
+      "owner": "domain_workers",
+      "bytes": 5119,
+      "lines": 80,
+      "sha256": "b4e107c53b9121aae8c1a3277ac0af257724f3ed2e3b8b4b16a9a60167b3df02",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/quick-replies/validation.mjs",
+      "owner": "domain_workers",
+      "bytes": 3400,
+      "lines": 56,
+      "sha256": "cdfb988fa6df1b2ab992d4aa8b79190c13ae6fa00a5a35ff50748936021f0dd5",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/readiness/http.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 7789,
+      "lines": 130,
+      "sha256": "7b5d7e644497f233e9534151ec69c92e9015ecaf8b88cdfc8b006d8663da52fd",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/readiness/service.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 8695,
+      "lines": 151,
+      "sha256": "3ce2badb18c2792b7f380ab5400f174c9ed4065463732bf30ee37d03e7f51411",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/release-features.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 243,
+      "lines": 4,
+      "sha256": "053ab0f4176da093a75660dc02ddcbda9da4b9bc9e7c053ce4cb0f7e3dfbaadf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/release.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2962,
+      "lines": 43,
+      "sha256": "6d5057f3093cfd02d56cb08ecb6adced6677579046b4df59b924283776fe37c6",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/reset/config.mjs",
+      "owner": "auth_data_security",
+      "bytes": 798,
+      "lines": 16,
+      "sha256": "e570f9406bd8f64ec8b22fc098fde31137e8d5ebf39b2da96b288d957858d528",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/reset/http.mjs",
+      "owner": "auth_data_security",
+      "bytes": 5767,
+      "lines": 115,
+      "sha256": "c5dc42e61463f4e767fe56c967025dc5afcf2377ab3ff77d3f816c84cb1b75a1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/reset/mail-crypto.mjs",
+      "owner": "auth_data_security",
+      "bytes": 3205,
+      "lines": 79,
+      "sha256": "9c3d015668a1f78f9265f2713ebce14f5ef4e06515a7a78d2a849a1daeed71c7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/reset/mail-store.mjs",
+      "owner": "auth_data_security",
+      "bytes": 9935,
+      "lines": 141,
+      "sha256": "927331e2730c9b32622cf428c3a7dbb8a8255479add5a3f4544ef2e89303f767",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/reset/service.mjs",
+      "owner": "auth_data_security",
+      "bytes": 5646,
+      "lines": 101,
+      "sha256": "e7ac016c42c247cae82dac89ffe5e1f6ccbe5667e98d2ac7182f6febf88dc435",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/reset/store.mjs",
+      "owner": "auth_data_security",
+      "bytes": 19182,
+      "lines": 233,
+      "sha256": "4df15595ced959890e1b77e89205d4613106b10460c6e3c168ad5d17412e1209",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/site.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 973,
+      "lines": 21,
+      "sha256": "b6d96a5c3bae6732751ca8c9422e7a89dae49b2d559830a1622c4062052ed1b3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "server/tasks/crypto.mjs",
+      "owner": "domain_workers",
+      "bytes": 2626,
+      "lines": 39,
+      "sha256": "8e4caf88079130443b7d34fdc2b06217c8c028fd7fe6b939d41ef7f36d8c1a80",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/tasks/http.mjs",
+      "owner": "domain_workers",
+      "bytes": 7130,
+      "lines": 98,
+      "sha256": "78c371937ad120195d4c87079110de7df87797df7c868eb41f28ef7531307a46",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/tasks/service.mjs",
+      "owner": "domain_workers",
+      "bytes": 6892,
+      "lines": 116,
+      "sha256": "e5a5b3684d528da1498af6e76c06850c255f4ca809901cb278e6e2f98369a36e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/tasks/store.mjs",
+      "owner": "domain_workers",
+      "bytes": 14994,
+      "lines": 181,
+      "sha256": "2e3d7dd1170f53255d3406cc16db3074fe899a636a7f0ad2d1eb7bf6ad52bcd7",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/tasks/validation.mjs",
+      "owner": "domain_workers",
+      "bytes": 2725,
+      "lines": 44,
+      "sha256": "54073b1e9a6e9953ecd4a9ef2ac4051c2b7b2f31307af9eda981c7e77dacb456",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/domain_workers.json"
+      ]
+    },
+    {
+      "path": "server/transition/http.mjs",
+      "owner": "auth_data_security",
+      "bytes": 7769,
+      "lines": 105,
+      "sha256": "2698c4f439f701d9429245867dcf5a09b60d9587f8db2e8b5244270c6fd4ad40",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/transition/service.mjs",
+      "owner": "auth_data_security",
+      "bytes": 9733,
+      "lines": 145,
+      "sha256": "2a23f9b111f0486f996773d26f3c30aae2c21df243d35c68f0039a0358a0dabb",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/auth_data_security.json"
+      ]
+    },
+    {
+      "path": "server/video/data-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 7962,
+      "lines": 134,
+      "sha256": "4e4e28fc41fdc3458405fa4e47e1f38fb61c4072d1b2a925193f78fae46aebea",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/erasure-storage.mjs",
+      "owner": "messaging_media",
+      "bytes": 1052,
+      "lines": 21,
+      "sha256": "bf28a2ab2a64e57a3770543c88a9464cc047b226510f5e8be0be7961c5c712c3",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/erasure-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 10387,
+      "lines": 141,
+      "sha256": "ed56bb28436cc6495288f7a2da8dbe12631b37617d4c8e42c413bfe526498a0a",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/http.mjs",
+      "owner": "messaging_media",
+      "bytes": 23245,
+      "lines": 354,
+      "sha256": "967bfc249d20c382d409539ee3592a222ae55983a98b28f0cf4f3ec66aa7f080",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/message-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 15741,
+      "lines": 224,
+      "sha256": "19f02a8e17a463d86cd6b4a3a35073f63cbe92e15054e392d601469f6bb33209",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/migrations.mjs",
+      "owner": "messaging_media",
+      "bytes": 1176,
+      "lines": 19,
+      "sha256": "be8e208aa44be99963b668c79e41330942eeb3427a7eeaa6eb52a588dea2bbc1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/migrations/0034_video_storage_state.sql",
+      "owner": "messaging_media",
+      "bytes": 741,
+      "lines": 13,
+      "sha256": "69b8ecfa68266b372642b3ee4d35de15912b8815a971b053d48ae25d5f39201e",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/migrations/0035_video_assets.sql",
+      "owner": "messaging_media",
+      "bytes": 2186,
+      "lines": 37,
+      "sha256": "8b8ae74c836de44374a63c7befcd7b01aabb7c07d506d0e8887d94a0f0fb233c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/migrations/0036_message_video.sql",
+      "owner": "messaging_media",
+      "bytes": 927,
+      "lines": 16,
+      "sha256": "8f4fcd95094ecccaa5c47daa0af3e70e6c099b4012d535f513731115b8bfe427",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/mp4.mjs",
+      "owner": "messaging_media",
+      "bytes": 2075,
+      "lines": 45,
+      "sha256": "f540bf12efd2387f22f60f956f8766dd16c8ba44ad7dd308e5a1f22d109c426d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/service.mjs",
+      "owner": "messaging_media",
+      "bytes": 23132,
+      "lines": 357,
+      "sha256": "790efe40f6b074285a336bd68287e81147d3abf8d9d6df111b2a3326640fc7c1",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/storage.mjs",
+      "owner": "messaging_media",
+      "bytes": 26356,
+      "lines": 394,
+      "sha256": "4bfbf95c51e01b079abce4dc304d5537249c0486fd33390a25fbbe026ff01e16",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "server/video/store.mjs",
+      "owner": "messaging_media",
+      "bytes": 29640,
+      "lines": 418,
+      "sha256": "3a9a740bc0de01c52ae685cf7ed9931b9f9e4bf7b9b852d597cec810d5f2b35b",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/messaging_media.json"
+      ]
+    },
+    {
+      "path": "artifacts/.gitignore",
+      "owner": "root_integration_ops",
+      "bytes": 14,
+      "lines": 2,
+      "sha256": "240a3e0d37d2e86b614063f5347eb02d4f99ca6c254de6b82871ff8d95532a7d",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_integration.json"
+      ]
+    },
+    {
+      "path": "design/admin-tools-ui.js",
+      "owner": "root_integration_ops",
+      "bytes": 24026,
+      "lines": 129,
+      "sha256": "7053adeef657a45232b80aac4ea9d73accfd669336193015bf660dd67a83cb2c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "design/admin-tools.js",
+      "owner": "root_integration_ops",
+      "bytes": 5923,
+      "lines": 112,
+      "sha256": "0e0e4971d332a3c6b9c19644cfa252c9c0dc47a53d084319d22205c02050bd69",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "design/dark-ui.js",
+      "owner": "root_integration_ops",
+      "bytes": 11334,
+      "lines": 143,
+      "sha256": "accf14b6ea7ce0e172fbc4bca842dd1004e44cad8723e58078cd1f99cd981bdf",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "design/dark.css",
+      "owner": "root_integration_ops",
+      "bytes": 21637,
+      "lines": 298,
+      "sha256": "bf2bce28475b8b6e3a347f9b0c91625dac0db2ea483c506895288e095b359640",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    },
+    {
+      "path": "design/preview.html",
+      "owner": "root_integration_ops",
+      "bytes": 44965,
+      "lines": 118,
+      "sha256": "433da81becf00f806dd65770d58536e882d18656cd47cea7acaa1b111285501c",
+      "binary": false,
+      "reviewStatus": "complete",
+      "method": "full_text_review",
+      "reviewReports": [
+        "reports/root_preview_tools.json"
+      ]
+    }
+  ]
+}

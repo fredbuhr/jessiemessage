@@ -1,0 +1,1090 @@
+{
+  "format": "jessiemessage-second-audit-domain-v1",
+  "scope": "root_historical_tools_delegated",
+  "auditedProductionSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "checkoutHead": "b54430d849132f3cb3f353c92bf30f2879865dec",
+  "applicationVersion": "1.8.2",
+  "conclusion": "All19 delegated source files fully read. One conditionalP3 improvement retained for the old six-file secrets-vault helper; no additional production bug or cryptographic failure established in this scope.",
+  "findings": [
+    {
+      "id": "VAULT_VIDEO_GUARD_P3",
+      "severity": "P3",
+      "kind": "conditional_hardening_improvement",
+      "title": "Refuser explicitement l’ancien helper de coffre sur un bundle vidéo",
+      "file": "scripts/private-secrets-backup.mjs",
+      "line": 84,
+      "additionalLocations": [
+        {
+          "file": "scripts/private-secrets-backup.mjs",
+          "line": 68
+        },
+        {
+          "file": "scripts/private-secrets-backup.mjs",
+          "line": 334
+        },
+        {
+          "file": "scripts/private-secrets-backup.mjs",
+          "line": 372
+        }
+      ],
+      "trigger": "Un opérateur relance explicitement l’ancien helper avec --profileprimary-crm et lui indique un répertoire contenant les six configurations historiques valides plus runtime-video.json. Ce scénario conditionnel n’est pas un lancement automatique de production.",
+      "observation": "Le profilprimary-crm choisit exactement six fichiers et assertProfile retourne sans examiner runtime-video.json. La présence du septième domaine ne déclenche donc aucun refus de profil, contrairement aux guards existants pour les domainesmessaging/media/notifications/CRM.",
+      "impact": "Le domaine vidéo reste intentionnellement hors du formatprimary-crm. Un refus explicite de nouvelle création éviterait de réutiliser cet ancien helper en pensant couvrir tout le bundle vidéo. Aucun coffre réel incomplet, perte de clé, défaut cryptographique ou défaut des archives vidéo actives n’est établi.",
+      "inference": "Si les autres contrôles historiques et GPG réussissaient, le contenu construit depuis sourceNames resterait limité aux six fichiers historiques. Cette conséquence est une inférence de lecture du flux; elle n’a pas été vérifiée par création/chiffrement d’un coffre.",
+      "repro": {
+        "script": "/workspace/scratch/bb431be72395/audit2-182/root_historical_tools/repro-vault-video-selection.mjs",
+        "output": "/workspace/scratch/bb431be72395/audit2-182/root_historical_tools/repro-vault-video-selection.json",
+        "execution": "PureVM des seuls sélecteurs et guards exacts, avec noms et lstat synthétiques ; aucun import du module ni run/check/GPG/backup.",
+        "actualCoffreExecuted": false,
+        "result": "guardPassed=true; guardFilesystemCalls=[]; omittedPresentFiles=[runtime-video.json]."
+      },
+      "evidence": [
+        "sourceNames:68–71 fixe les six fichiersprimary-crm.",
+        "assertProfile:83–98 revient directement pourprimary-crm et ne nomme jamais runtime-video.json.",
+        "capture:195–210 sérialise uniquement sourceNames; check/run rendent les résultats du format sélectionné, pas un inventaire général du répertoire.",
+        "docs/video-integration-180.md:11–18 décrit explicitement le septième fichier et la clé vidéo indépendante.",
+        "Le formatprimary-crm est volontairement six-fichiers : ce point est une amélioration de refus explicite, pas une violation du format ni une prétention de coffre182 complet."
+      ],
+      "confidence": {
+        "selection_and_missing_guard": "high",
+        "full_coffre_execution": "not_tested",
+        "production_occurrence": "unknown"
+      },
+      "counterReview": {
+        "reviewer": "/root/peer_a11",
+        "report": "/workspace/scratch/bb431be72395/audit2-182/cross-review-vault.json",
+        "conclusion": "Mécanique conditionnelle confirmée indépendamment; aucune opération réelle ni perte actuelle déduite."
+      },
+      "suggestedDirection": "Ajouter un refus de nouvelle création lorsque le dossier contient une configuration vidéo que ce profil ne couvre pas. Garder les anciens formats et lecteurs inchangés; ne pas ouvrir de commande de coffre ou de travailPC pour cet audit.",
+      "duplicateCheck": "Pas identifié parmiA01–A15 relus; garder séparé du défautA02 déjà corrigé et de la sauvegarde vidéoactive."
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "path": "scripts/backup.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 21956,
+      "lines": 255,
+      "sha256": "b978d900c54d963464ac9c84a16ba0fdd373aa9eca1e0497ec057de88eeed054",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit offline recovery/verification helper; includes explicit video profile and is reused by current checkpoint capture/restore code."
+    },
+    {
+      "path": "scripts/check-private-backups.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1640,
+      "lines": 32,
+      "sha256": "39217059a43addaed706327346ec89506ae0a96ae380672f21453137f84c423a",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit read-only freshness CLI. No capture, SQL or network; not proof a scheduled backup is active in182."
+    },
+    {
+      "path": "scripts/check-private-service.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1964,
+      "lines": 37,
+      "sha256": "5922001bdfa3b57664567a382b7ddc90b087bb69e532e552c691e77e57aa4064",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Fixed external read-only service probe CLI used by current monitoring; not a backup worker."
+    },
+    {
+      "path": "scripts/configure-private-backup-copies.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1600,
+      "lines": 19,
+      "sha256": "08253dfffe4b264ee5de1e0b779523cc9de64ac586a276715a902541057d87b3",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit legacy PC-copy configuration command; copy-service belongs to non-accountClosures runtime branch, not established active in182."
+    },
+    {
+      "path": "scripts/data-export.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 12017,
+      "lines": 175,
+      "sha256": "007103d5ba49d2a17e28a0b66d8f7844b5f689645f45a864ce0625f43e216951",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit privileged offline export/inventory/plan CLI; video export requires explicit profile; no automatic erasure."
+    },
+    {
+      "path": "scripts/manual-restore.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 20055,
+      "lines": 277,
+      "sha256": "6e64ab297d88bc3187933d4cc17f8ecc889a4df95ec4e48f011dabeee4089ba5",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit isolated-target manual operator restoration; supports video jobv2 and guarded publication. No invocation performed."
+    },
+    {
+      "path": "scripts/media-storage.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4718,
+      "lines": 76,
+      "sha256": "16f5ab0e4088537c74c43d7265b086d5fd3a25b64f6d257972f120c6d5bfa66b",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit legacy media capacity/inventory CLI with ordinary schema boundary; no claim of182-specific startup execution."
+    },
+    {
+      "path": "scripts/private-checkpoint-child.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1951,
+      "lines": 37,
+      "sha256": "8e5bb4dfdf62db4d1c7312a2b6edd027e986fec9bf0f3b13702f215b0e4eacf7",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "IPC-only managed capture child used by shared current/manual checkpoint machinery."
+    },
+    {
+      "path": "scripts/private-checkpoint.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 37411,
+      "lines": 417,
+      "sha256": "fa1fe3ce9884c6ea9f0bdc1e69dcc09107699b1d82d58ad906d3e0f4aaced8bf",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Shared explicit checkpoint capture/inspection code; includes exact video application profile and two-root inventory, used by current manual capture machinery."
+    },
+    {
+      "path": "scripts/private-messaging-child.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 5499,
+      "lines": 84,
+      "sha256": "3766a1e023b2d03f04fd64d2d36b792e133b4719fa80444f2ed13c107cb1b000",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "IPC-only managed runtime child; explicit video/accountClosure managed options used by current parent machinery."
+    },
+    {
+      "path": "scripts/private-secrets-backup.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 26396,
+      "lines": 425,
+      "sha256": "9d9f739580a5c242b57fd29ab34f6da239cdca9700c2651bf1aa184d0c0fe9cc",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Retained explicit historical secrets-vault helper; highest profileprimary-crm selects six records; no video vault format."
+    },
+    {
+      "path": "scripts/restore-private-operations.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 13112,
+      "lines": 142,
+      "sha256": "9144f534e2097cf9ebe88726318409014731dcb11276c13ddb02d937616b88dd",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Retained explicit witness-continuity restoration to disposable quarantine using six-file broadcast environment; historical external-witness/SQL33 contract, not current local-video closure activation."
+    },
+    {
+      "path": "scripts/resume-application-checkpoint.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 13240,
+      "lines": 165,
+      "sha256": "22039167508641f67a7ee02758f0563a1fd6de035be9c4fe0044eb72070f6d6c",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit isolated clone resume/import/verification; supports video profile and36-table boundary."
+    },
+    {
+      "path": "scripts/start-private-auth.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 6338,
+      "lines": 109,
+      "sha256": "2766a8e016d8f5ed74fbc38efb001ff157dc9adb52b996bed15e8dfc269b1cb5",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Retained auth-only launcher; argument parser also reused by current messaging launcher."
+    },
+    {
+      "path": "scripts/start-private-messaging.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 12442,
+      "lines": 167,
+      "sha256": "3970c021fa799008fff22f16ab43394c25632e7efbb32bd4c8880d7bab79e9de",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Current shared messaging check/start launcher; video startup requires fixed managed IPC seam, exact schema/storage gates."
+    },
+    {
+      "path": "scripts/start-recurring-private-messaging.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 11168,
+      "lines": 171,
+      "sha256": "33a17b01c3c6863ccf346ad676be8eac7c6cfd03d8b4a037929b1cddbb0119ea",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Shared parent entry; current182 start-local-closures mode selects manual-only capture with no recurring monitor/alerts. Other witness/recurring modes remain explicit historical contracts."
+    },
+    {
+      "path": "scripts/test-private-backup-alerts.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 3409,
+      "lines": 48,
+      "sha256": "60d42f83e205a76449dea12f90b5ec808ec2d5899253ecde5254d1c54e85c1e9",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit technical alert test/check tool; send-test would send mail only if invoked. No mail sent; no evidence of periodic alert enablement in182."
+    },
+    {
+      "path": "scripts/verify-private-checkpoint.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 28183,
+      "lines": 318,
+      "sha256": "f4e2800593f2b310d9a1232c5017a511cd35f342ba54bf40da29728d3fc45e9e",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Explicit read-only isolated checkpoint verification; video schema, receipt, keys and both roots selected explicitly."
+    },
+    {
+      "path": "scripts/verify-text-clone.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 23277,
+      "lines": 318,
+      "sha256": "19043b368961f9e776208bef5b790e50232ec4b51be3b712fa5847a1c1b463d7",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "Retained standalone text clone verifier; shared dumpCloneSql primitive supports explicit33/36-table lists and is reused by current video checkpoint tools."
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/crm-private-secrets.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "63be058362a69b513efc5e7a0ab75641233db3cdeda0bb89fe0763a952ac4d4c"
+    },
+    {
+      "path": "tests/private-checkpoint-child.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "40701e6557aa0b3a858c7f59f26c9a85a147fc0e6259b6f5efde4701a0c5242a"
+    },
+    {
+      "path": "tests/external-probe-cli.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "ae49d6b268b0c73c30f48e08daf0d72af8c48f9db0a003bc2d840bdd52a64ff4"
+    },
+    {
+      "path": "tests/media-storage-cli.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "28e16d983d530024849ea8fcad09d473483f278449fdacece749b5af0c5a2553"
+    },
+    {
+      "path": "tests/private-auth-startup.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "b4391d1ddac99051eacc486e1e54ec38aac0ab6dcb6aa4407d5f821e804233e6"
+    },
+    {
+      "path": "tests/local-closure-cli.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "daf9518ed1820c6486a3861c9671931a149fcbf44e18678a7a7d301f09938cf2"
+    },
+    {
+      "path": "tests/video-runtime-startup.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "10060a64f5eb5cf8298744604e469e15d9b3d742820d9ddf7c7eb02886d00914"
+    },
+    {
+      "path": "tests/manual-restore-operator.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "59808d5b59328a4be9e3f5aa404aaed44de3e0bb31f708c519facfe6cecd7235"
+    },
+    {
+      "path": "tests/application-table-dump.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "e48ed1e7b613c1f8c6273f1257c5567f3ae4199f352f0c17412ea5165061271c"
+    }
+  ],
+  "associatedTestReferenceIndex": [
+    {
+      "path": "tests/application-table-dump.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "an explicit application dump passes exactly the sorted migration tables after the database with unchanged TLS and read-only native flags",
+        "omitted and explicitly undefined table options preserve the full-database dump argv",
+        "application table selection rejects missing, additional, duplicated, unsorted and arbitrary native arguments before private-file access",
+        "application table selection rejects holes and non-string values without coercion",
+        "application table selection rejects element accessors, symbols, extra properties, custom prototypes and proxies without invoking getters",
+        "the tables option itself must be an own data property and never invokes its accessor",
+        "a frozen exact table list is accepted and a caller mutation after validation cannot change native arguments",
+        "an application dump still erases synchronous sink chunks and removes its private credential after native close",
+        "an application dump cancellation remains neutral and stops before private paths or table accessors",
+        "candidate video dumps require an explicit capability and pass only the authored SQL36 application inventory",
+        "video inventory cannot cross the normal33 boundary or select an unrestricted dump",
+        "video dump capability must be an own boolean data property and never executes accessors"
+      ]
+    },
+    {
+      "path": "tests/backup-alerts.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "healthy, suspect and running captures neither open SMTP nor write queue state",
+        "one incident and one recovery are acknowledged durably without repeats across restarts",
+        "SMTP errors retain FIFO incident/recovery, stable IDs and persisted exponential retry delays",
+        "an unacknowledged SMTP success is retried with the same Message-ID after restart",
+        "failed queue persistence prevents an SMTP socket and does not disclose raw errors",
+        "a full queue preserves pending order and still drains when SMTP returns",
+        "invalid, future, getter-bearing and private-extended observations cannot reach the queue",
+        "closed message templates enforce official recipient and explicit synthetic labeling",
+        "queue and alert validators reject sparse/accessor arrays, private extensions and impossible recovery",
+        "private delivery clears loaded secrets and never changes the application",
+        "bounded delivery cancels stalled SMTP and ignores late acceptance",
+        "aborting stalled delivery construction prevents any late socket send and closes its result",
+        "worker shutdown cancels mail promptly, preserves pending work and emits no late receipt",
+        "SMTP adapter accepts only the official address on the primary origin and refuses partial delivery",
+        "configuration check sends nothing; explicit drill sends two synthetic fixed-purpose alerts",
+        "drill rejects extra recipients, ambiguous commands, relative paths and ambient credentials",
+        "queue factory failures and broken console output do not stop application supervision or alert observation"
+      ]
+    },
+    {
+      "path": "tests/backup-cli.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "the real CRM backup configuration forwards six actual keys and rejects inactive CRM or active broadcasts before opening SQL",
+        "backup commands require exact offline arguments and a canonical absolute manifest path",
+        "photo CLI prepares and restores with four keys while retaining the shared clone and recovery guards",
+        "photo CLI real configuration accepts disabled CRM/recovery/broadcast without a CRM key",
+        "notification CLI uses an explicit v3 profile, five keys and the same offline clone guards",
+        "notification CLI real configuration requires VAPID and rejects choosing an older profile when notifications are enabled",
+        "recovery backup profiles prepare, verify and restore with five keys, exact envelopes and the existing clone guards",
+        "recovery backup commands reject every other envelope before opening SQL and refuse a CRM key",
+        "recovery backup real configuration accepts enabled or disabled recovery, requires photos and notifications, and keeps CRM and broadcast inactive",
+        "recovery CLI dispatches the real recovery crypto verifier for populated reset mail without starting workers or writing SQL",
+        "prepare authenticates and verifies the stable source before writing the exclusive manifest, without recovery mutations",
+        "verify is read only on an isolated clone and accepts its original source binding",
+        "verification and restoration reject source identity collisions before private reads or mutations",
+        "restore closes its signed candidate before file removal, releases using fresh time, then verifies and rebinds",
+        "no candidate file is removed unless SQL close gives a positive acknowledgement",
+        "a failed unlink never releases capacity or rebinds and a resumed restore completes safely",
+        "completed target binding skips every candidate close, unlink and release on restore replay",
+        "lost acknowledgements after durable close, release or final rebind resume without unsafe repeated deletion",
+        "preflight crypto, structural, capacity and snapshot failures prevent every destructive action",
+        "snapshot drift during verification prevents a manifest or any recovery mutation",
+        "manifest verification and authoritative database identity failures precede operations",
+        "abort, invalid final clock and pool close failure reject neutrally without success output",
+        "shared inventory limits are projected to the crypto verifier",
+        "schema inspection uses its separate pool and closes both pools even if one closure fails",
+        "the real broadcast backup configuration forwards the same six keys and refuses disabled broadcasts before opening SQL",
+        "backup schema assertion opts into the candidate migration plan only for the explicit video application profile",
+        "video restoration resumes after a failed video unlink while retaining the photo rebind and never refunding unfinished video",
+        "real video configuration accepts an ephemeral operator identity without a runtime grant profile and refuses unsafe video fields before SQL"
+      ]
+    },
+    {
+      "path": "tests/backup-flow.integration.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+        "separate exact-schema inspection does not inherit the application",
+        "inspection diagnosis handles native driver metadata and retains the exact-schema gate",
+        "prepare binds real encrypted data and five keys without exporting secrets or changing the source",
+        "verification requires a separate schema and private root and accepts an exact SQL/filesystem clone read-only",
+        "offline restore clears only known pending objects, rebinds the clone and preserves active messages and campaigns",
+        "each wrong encryption key refuses verification before any clone or source mutation",
+        "a correctly signed checkpoint with a mismatched key canary is refused before opening a database",
+        "unrelated user or exact migration-ledger drift blocks cleanup of an otherwise readable clone",
+        "lookalike foreign keys pointing at the source schema are refused by local validators before any cleanup",
+        "an unexpected pre-existing SQL trigger blocks backup recovery before any candidate changes",
+        "unknown files and encrypted staging copies block restoration without deleting them",
+        "authenticated active-file corruption blocks verification before any pending cleanup",
+        "a lost committed candidate-release acknowledgement retries safely without double credit",
+        "a partial filesystem deletion retains its charge until a later offline retry completes cleanup",
+        "a failed final root rebind rolls back atomically and a fresh retry preserves the already completed cleanup",
+        "photo-only profile prepares a four-key manifest on real SQL without a fictitious CRM key",
+        "photo-only restore verifies copied images, rebinds only its clone and replays without extra credit",
+        "application-table checkpoint uses runtime privileges, keeps explicit coverage and restores only its isolated clone",
+        "notification photo checkpoint restores encrypted subscriptions and pending jobs offline without changing delivery state"
+      ]
+    },
+    {
+      "path": "tests/backup-freshness.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "history capacity warns at either 75-percent boundary and preserves every stronger diagnosis",
+        "a full valid legacy history can warn without adding fields to its three-key DTO",
+        "the shared reader and CLI retain capacity attention and reject unavailable inventory",
+        "a fresh completed journal never certifies an independent copy or decryption",
+        "the 26-hour boundary changes the journal from current to stale without changing data",
+        "an empty journal, disabled configuration and a new failure cannot inherit an old success",
+        "a running capture becomes stalled after ten minutes even if the previous backup is fresh",
+        "a dangling old attempt or a missing durable begin is attention even after a newer success",
+        "timestamps in the future, duplicate terminals and fabricated summary dates are refused",
+        "hostile getters, extra fields and sparse records cannot run or enter the report",
+        "freshness CLI returns distinct current, attention and unavailable exit codes",
+        "CLI rejects unknown flags and repository paths before touching any private file",
+        "configuration changes and cancellation during observation never report a current backup",
+        "native private-file inspection preserves every journal file and creates no lock or capture"
+      ]
+    },
+    {
+      "path": "tests/crm-private-secrets.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "the six-file primary CRM coffre has an explicit profile instead of reusing a legacy format",
+        "Linux CI must exercise the real encrypted CRM coffre",
+        "CRM coffre metadata check reads no source content and needs no historical admin setup",
+        "primary CRM coffre encrypts and verifies all current keys without plaintext files or overwrites",
+        "new legacy coffres cannot omit a prepared CRM key and the primary profile requires that key",
+        "CRM coffre refuses mismatched primary origins and reused keys before publication",
+        "CRM source permissions are checked before prompting for a coffre passphrase"
+      ]
+    },
+    {
+      "path": "tests/data-cli.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "data CLI requires exact offline, database, repeated canonical client and private output arguments",
+        "video export requires the exact explicit candidate profile and cannot widen inventory or deletion planning",
+        "candidate export composes SQL36, the snapshot extension and streaming writer with independent protected roots",
+        "candidate export never allocates output after root or schema refusal and keeps old exports without video seams",
+        "database mismatch and invalid export key are refused before any pool or output",
+        "administrator or mismatched target cannot allocate an output directory",
+        "inventory writes scoped categories without private row fields and completes after snapshot and pool closure",
+        "export needs only message configuration until a selected photo is requested",
+        "media reader is allocated once only when selected content needs it",
+        "snapshot, file write and pool cleanup failures leave no completion and no success output",
+        "malformed inventory counts are refused rather than silently truncated or published",
+        "interruption prevents subsequent records and completion while still closing private resources",
+        "deletion plan is a keyless private diagnostic, completed after the same snapshot and pool close",
+        "failed or malformed deletion facts and migration input cannot publish a plan completion"
+      ]
+    },
+    {
+      "path": "tests/data-deletion-flow.integration.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "offline deletion facts and operator plan inspect real reference graphs without SQL or filesystem mutation (synthetic disposable database only)",
+        "normal shared-peer photos and tombstones remain distinct from owned storage and in-flight leases",
+        "schema-valid cross-client references and administrator state are flagged without broadening client scope",
+        "another client",
+        "media reference checks identify a wrong owner and storage binding without reading encrypted files",
+        "a retained client with no conversation treats every existing sender/receipt/recipient edge as foreign",
+        "facts remain in one database-enforced read-only snapshot and saturate active-session counts",
+        "real keyless CLI plan finalizes private metadata files and leaves the complete source graph and media directory unchanged"
+      ]
+    },
+    {
+      "path": "tests/data-flow.integration.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "offline client content reader isolates two real MariaDB clients in one read-only snapshot (synthetic disposable database only)",
+        "expired retained client receives only its conversation, delivered active media and own unused library",
+        "client data snapshot is unchanged when the administrator records a new read receipt",
+        "one SQL snapshot excludes a concurrent new message while the following export sees it",
+        "foreign sender and inconsistent media journal binding fail closed without granting cross-client content",
+        "read-only transaction rejects a DML write even though the runtime account otherwise has DML privileges",
+        "subject inventory counts saturate explicitly and do not count the other client",
+        "real offline CLI writes authenticated private client files and completion hashes without SQL or source-file mutation",
+        "notification inventories isolate devices and count incoming and outgoing delivery jobs without opening endpoints"
+      ]
+    },
+    {
+      "path": "tests/device-transition-runtime.integration.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "the real dual-origin runtime shares schema thirty, source sessions, encrypted notifications and invitation policy (synthetic disposable database only)",
+        "both source roles and both authorities reach the same current SQL sessions without changing cookies or account gates",
+        "each invitation uses its actual handler origin while cross-origin normal writes remain denied",
+        "one bridge carries either role into the primary host and keeps its source session usable",
+        "legacy subscription and primary message share one encrypted outbox without producer duplication",
+        "the existing deployed profile offers no recovery routes on either authority",
+        "recovery schema preflight reads both physical tables without starting services or changing credentials",
+        "recovery is available only at the primary authority while both ordinary sessions remain connected",
+        "requests queue only eligible client mail and never change either role",
+        "disabling recovery leaves queued data intact and preserves both authority sessions",
+        "CRM startup checks all three physical tables before listening and preserves credentials",
+        "the explicit primary CRM runtime exposes files to the same admin on both authorities while broadcasts remain disabled",
+        "broadcast preflight requires the three physical tables before listening",
+        "both authorities retire client broadcast settings and share one consent-free immutable campaign under the runtime clock",
+        "CRM fallback removes both broadcast entry points while preserving queued campaigns, historical preferences and current sessions"
+      ]
+    },
+    {
+      "path": "tests/external-probe-cli.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "healthy service stops after one pass and does not wait",
+        "transient failures recover without announcing a confirmed outage",
+        "three unsuccessful passes confirm failure with precisely two ten-second waits",
+        "single-pass mode never pretends to have confirmed three failures",
+        "destination and timing cannot be overridden by command arguments",
+        "unexpected transport, wait and malformed-report failures are sanitized",
+        "the returned DTO owns its data and never invokes untrusted getters or toJSON",
+        "CLI rejects an invalid flag offline, prints one safe JSON line and exits two"
+      ]
+    },
+    {
+      "path": "tests/fixtures/managed-closure-runtime.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": []
+    },
+    {
+      "path": "tests/fixtures/manual-operator.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": []
+    },
+    {
+      "path": "tests/fixtures/video-backup-flow.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": []
+    },
+    {
+      "path": "tests/local-closure-cli.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "local closure modes are explicit and accept no witness parameters",
+        "local check remains read-only and closes resources on success or failure",
+        "local start composes the existing supervisor and closes the owner after the drained child",
+        "the explicit video profile reaches both the local owner and manual-only parent",
+        "local construction and child startup failures never leak the parent context"
+      ]
+    },
+    {
+      "path": "tests/managed-runtime.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "managed child IPC, fixed arguments, inherited logs and local readiness are all required before ready",
+        "forced termination produces no graceful-stop acknowledgement and waits for actual child close",
+        "a graceful handler exiting nonzero is still an unsafe capture boundary",
+        "destroy preserves forced-stop failure and its idempotent rejected promise after actual child termination",
+        "local readiness never substitutes for the child",
+        "premature child exit and wrong IPC message fail with only fixed metadata",
+        "readiness fetch and stream are bounded even if an adapter ignores its AbortSignal",
+        "a transient local readiness refusal can recover within the same bounded startup",
+        "destroy is idempotent and forbids later starts, including a start still awaiting readiness",
+        "unexpected exit reports one fixed event while planned stop/destroy do not report crashes",
+        "actual shim serves real readiness then exits zero after graceful IPC drain",
+        "actual shim exits one for a failed drain and destroy preserves that failure",
+        "actual shim drains and exits when its parent IPC disconnects, leaving no orphan listener",
+        "actual shim cannot begin a listener after shutdown was requested during startup",
+        "production shim refuses execution without an IPC parent and rejects extra arguments",
+        "the optional copy directory crosses the fixed IPC launcher and reaches only internal startup options",
+        "explicit video activation crosses fixed IPC only with the managed closure boundary",
+        "paths, ambient application secrets, port mismatch and callback configuration fail before fork",
+        "the parent gateway flag crosses IPC, pins child startup and stamps the private readiness probe"
+      ]
+    },
+    {
+      "path": "tests/manual-restore-operator.integration.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "an administrator request drains a real child, captures SQL33 and photos, encrypts with real GPG, resumes and downloads its pinned ciphertext",
+        "manual operator imports a real native archive, publishes the actual IPC application and verifies drain and ordinary restart on an isolated target",
+        "an incorrect operator confirmation cannot open or release either quarantine",
+        "a lost ready acknowledgement stops the actual child and restores the exact new target hold",
+        "a receipt disappearing after actual startup refuses publication and drains before restoring quarantine",
+        "explicit publication requires real IPC and HTTP ready, then removes only the newly created target hold",
+        "SIGTERM drains the actual child and a normal local owner rechecks receipts before restarting it",
+        "the operator CLI resumes interrupted media using native SQL once, then copies only missing files and opens the owned IPC service"
+      ]
+    },
+    {
+      "path": "tests/manual-restore-operator.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "manual operator arguments require one absolute job directory and explicit open confirmation",
+        "an already cancelled operator never loads a job or reads a password",
+        "manual check preserves files and uses no password, database, allocation or runtime",
+        "a nonempty SQL target is refused before allocation, import or mutation",
+        "opening and opened states cannot repeat import or launch another service",
+        "a changed job cannot reuse existing import or publication progress",
+        "open refuses a missing or different durable plan before constructing a runtime",
+        "restored service readiness waits for actual supervisor start; stop drains before aborting lifetime",
+        "restored service rejects readiness when the actual supervisor fails to start",
+        "restored service preserves the manual parent composition without enabling any backup schedule",
+        "a video manual job starts the explicit candidate profile and keeps backup requests closed until publication",
+        "a nonzero restored-child drain cannot be reported as a clean stop",
+        "Linux CI must execute private manual operator checks without skipping their filesystem boundary"
+      ]
+    },
+    {
+      "path": "tests/media-storage-cli.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "storage CLI defaults to inspect and requires the exact offline initialization assertion",
+        "inspect uses runtime pool, verifies the real schema dependency, and never mutates capacity",
+        "initialize runs only after the complete healthy inventory and passes explicit offline plus fresh time",
+        "initialize without --offline is rejected before configuration, database or file work",
+        "initialize rechecks the private storage root after inventory before changing SQL",
+        "incomplete, unsafe, aborted or already initialized inventories cannot initialize or report a successful inspection",
+        "configuration, schema and backend failures are sanitized, close the pool, and never initialize",
+        "database close failure rejects the CLI with a neutral error even after successful inspection"
+      ]
+    },
+    {
+      "path": "tests/periodic-backup-monitor.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "periodic sampling starts once, reports fixed metadata and arms the next minute",
+        "an advancing clock produces an observation accepted by the real alert worker without SMTP",
+        "one temporary failure clears silently while three failures open one incident",
+        "capacity attention reaches the real alert worker after three observations and recovers only on OK",
+        "a successful new observation emits one recovery; a running capture cannot close an incident",
+        "an in-progress capture breaks an unconfirmed failure streak without claiming recovery",
+        "simultaneous ticks share the same pending reader",
+        "a stuck reader times out, cannot overlap or report a late success, and can subsequently recover",
+        "closing while reading aborts promptly and emits no late operational proof",
+        "closing before start allocates no reader or timer",
+        "raw errors, inconsistent status and hostile getters are converted to fixed neutral codes",
+        "future and stale observations and backwards clocks never certify a current backup",
+        "logging failures cannot interrupt sampling or turn into a recovery receipt",
+        "closed freshness projection refuses contradictory codes, added fields and getters",
+        "supervisor check mode cannot create a monitor or an application",
+        "monitor creation, startup and cleanup failures leave application supervision intact",
+        "supervisor startup precedes monitoring and both close on an abort"
+      ]
+    },
+    {
+      "path": "tests/primary-transition-runtime.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "primary profile is explicit at each layered loader and copy boundary, preserving the exact recipe default",
+        "Linux CI runs the real primary runtime readers through anchored private files",
+        "real file-backed text, photo and notification loaders forward the primary profile through every reader layer",
+        "primary diagnostics identify the primary origin and retain TLS, key, flags and origin drift failures",
+        "new profile options reject accessors, symbols, inherited or arbitrary activation without executing caller code",
+        "primary transition CLI performs the same SQL, schema and storage gates before requesting exactly one guarded runtime",
+        "transition CLI is restricted to one explicit fixed deployment and the full photos-notify profile",
+        "offline recovery permission reuses the same five anchored files without activating or changing the environment",
+        "recovery profile permission is primary-only, data-only, boolean and preserves every old feature boundary",
+        "recovery preflight requires the explicit target, primary origin and precisely its enabled domains",
+        "explicit recovery start alone activates the flag after loading and preserves all existing pre-listen gates",
+        "recovery cannot be selected through an old deployment, an ambient flag or an unguarded server option",
+        "two fixed authorities share one HTTP admission but their ordinary mutations remain strictly same-origin"
+      ]
+    },
+    {
+      "path": "tests/private-auth-startup.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "private process options use only a canonical port and explicitly selected anchored path mode",
+        "private startup rejects ambient trust overrides and execution flags without evaluating accessors",
+        "private startup validates its fixed path arguments before private file access",
+        "private startup never falls back to ambient credentials or a neutral listener after file/configuration failure",
+        "private startup forwards only the validated owned environment with the exact request-origin guard",
+        "private startup waits for the actual listener and sanitizes failures before clearing owned secrets",
+        "a stale or rejected SQL proof blocks a listener and waits for the actual inspector cleanup"
+      ]
+    },
+    {
+      "path": "tests/private-checkpoint-capture.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "checkpoint check loads a validated profile but performs no SQL, secret input or writes",
+        "inspection verifies the dedicated identity before any writes and leaves the checkpoint absent",
+        "diagnosis publishes only fixed categories without passing the strict inspection or creating files",
+        "diagnosis failures and impossible success reports remain closed and clear credentials",
+        "offline capture verifies two SQL dumps and both manifests, builds the real receipt, gzip and GNU tar archive",
+        "application precheck and inspection use existing guarded credentials without password input or files",
+        "application capture archives the limited manifest and matching coverage receipt without reading a password",
+        "application capture refuses missing coverage or a strict manifest before dumping data",
+        "recovery is an explicit closed selection and leaves old argument records unchanged",
+        "recovery capture authenticates distinct strict/application envelopes while recovery stays disabled",
+        "recovery capture refuses downgraded backup profiles before SQL dumping",
+        "CRM checkpoint capture carries all six keys through strict and application archives, then erases only owned secrets",
+        "CRM capture rejects an old five-key envelope before dumping SQL or publishing a receipt",
+        "an existing destination is rejected before password input or any database operation",
+        "an inspection failure stops both inspection and capture before creating their destination",
+        "wrong inspection identity, ambient environment and incomplete runtime profiles fail before input",
+        "SQL drift, manifest drift and failed media copying never publish checkpoint_saved",
+        "cancellation before work or during copying leaves no success result and erases loaded secrets",
+        "a nonrepresentable clock fails before receipt publication and clears every source key reference",
+        "a private configuration key changed during capture prevents success even after the archive exists",
+        "Broadcast checkpoint capture carries all six keys through strict and application archives, then erases only owned secrets",
+        "managed operational captures put exact encrypted receipts in the verified native archive for strict and application SQL",
+        "an operational publication during SQL capture refuses the receipt and never emits checkpoint_saved",
+        "candidate video capture binds seven keys, SQL36 and both exact ciphertext roots into one verified native archive",
+        "candidate video ciphertext drift after native archive creation never publishes a successful checkpoint result"
+      ]
+    },
+    {
+      "path": "tests/private-checkpoint-child.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "successful capture receives unchanged arguments and a live AbortSignal, then exits zero without an open IPC channel",
+        "cancellation during dynamic loading cannot start the checkpoint operation",
+        "private failures from dynamic loader or capture are replaced by the same closed error",
+        "production entry refuses execution without IPC before opening checkpoint configuration",
+        "production entry preserves the existing checkpoint parser and rejects unknown switches"
+      ]
+    },
+    {
+      "path": "tests/private-checkpoint-verify.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "private checkpoint check verifies real gzip, five-key manifest and copied photo files without password or SQL",
+        "historical schema30/31/32 application checks preserve their identity and refuse current clone verification before password or SQL",
+        "operational receipts authenticate their capsule before password input and preserve the separate restoration prerequisite",
+        "a capsule cannot be concealed by lowering its receipt to an old SQL-only version",
+        "CRM checkpoint verification authenticates the populated notes and recovery outbox while keeping SQL and files read-only",
+        "the CRM application snapshot check forwards six keys only to an isolated clone and preserves its source envelope",
+        "recovery verification authenticates a populated reset outbox with five existing keys and no enabled runtime",
+        "recovery and legacy checkpoint selections cannot substitute their receipts or manifests",
+        "recovery verification flags reject duplicate, unknown and application-suffixed profile values",
+        "recovery snapshot comparison preserves an enabled or disabled source flag and selects only the recovery application verifier",
+        "a read-only TLS clone verification authenticates all five domains and notifications, then rolls back and wipes secrets",
+        "unconfirmed targets, runtime identity, source database aliases and ambient settings fail before SQL or password",
+        "closed command arguments reject extras, repository paths and accessor records without executing getters",
+        "receipt, gzip and photo tampering are refused before a password or database connection",
+        "a wrong source notification key or source-media identity rejects the manifest before password input",
+        "an aliased or nested media directory cannot become an independent checkpoint clone",
+        "a frozen dump mismatch prevents the crypto connection and emits no success output",
+        "global, wildcard and insufficient SQL inspection rights fail and still roll back the clone",
+        "TLS, migration history and foreign schema mismatches refuse an otherwise matching imported SQL dump",
+        "crypto binding failures and checkpoint changes after SQL checks suppress success and close the connection",
+        "the crypto facade rejects writes and locking reads; cleanup failures wipe keys and suppress success",
+        "aborted and failed native-client prerequisites never request a password",
+        "cancellation during crypto verification still rolls back, closes the connection and wipes keys",
+        "application checkpoint commands retain the same closed six flags and expose their limited coverage before SQL",
+        "application clone verifies five domains and two exact table-only dumps without claiming executable-object coverage",
+        "strict and application receipts and manifests cannot be mixed before password or connection",
+        "application snapshot coverage remains authenticated even when an altered raw manifest hash is rewritten into the receipt",
+        "application clone dump drift before or after crypto suppresses success and cleans up the read-only connection",
+        "application clone still rejects changed physical tables, ledger and TLS despite matching SQL hashes",
+        "application snapshot verification uses a separate ephemeral clone identity and wipes its credentials without modifying the source",
+        "application snapshot comparison must succeed after rollback and close before a success report is emitted",
+        "application snapshot failures wipe their copied environment and file changes after comparison prevent success",
+        "Broadcast checkpoint verification authenticates the populated notes and recovery outbox while keeping SQL and files read-only"
+      ]
+    },
+    {
+      "path": "tests/private-secrets-backup.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "private secrets options only allow a canonical external directory and a safe .json.gpg basename",
+        "Linux CI requires the real GPG and anchored path tests",
+        "coffre scope is explicit and rejects unknown or accessor profiles",
+        "messaging coffre requires its fourth private source and metadata check cannot silently omit prepared keys",
+        "messaging coffre includes recoverable SMTP and chat secrets while old AUTH archives remain readable",
+        "photo coffre includes five private files, prevents omission of the media key and retains old v2 readability",
+        "photo coffre refuses a individually valid but mismatched media key or origin before publication",
+        "messaging coffre refuses malformed SMTP configuration without publishing or exposing it",
+        "check reads only source metadata, creates nothing and exposes no content",
+        "real GPG makes a portable authenticated three-file JSON coffre without disk plaintext or secret argv/env",
+        "real GPG verification refuses wrong phrases, corruption and truncation without returning plaintext",
+        "existing output of any type is refused without replacement or passphrase processing",
+        "unsafe source modes, symlinks, hardlinks, nonregular files and bounds fail before publication",
+        "private root permissions and symlink aliases are refused",
+        "source mutation during a read is refused and every descriptor closes",
+        "source mutation while GPG runs is detected before publishing the ciphertext",
+        "an output created after preflight is preserved and never overwritten",
+        "unknown GPG artifacts remain private and are never recursively removed",
+        "replacing the GPG home name preserves both directories and refuses publication",
+        "replacing the root cannot mix source files from two directories",
+        "short, malformed and control-containing phrases refuse before output or GPG work",
+        "CLI success prints only ciphertext receipt and failures do not echo input secrets",
+        "v4 notify coffre contains six files and prevents omission while preserving readable archived v3 data",
+        "v4 notify coffre refuses a mismatched VAPID pair, another origin and any domain key collision before publication"
+      ]
+    },
+    {
+      "path": "tests/recurring-supervisor.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "fixed arguments require reviewed runtime identities and separate private roots",
+        "initial witness commands require explicit private operator storage and the correct plan identity",
+        "plan and check CLI commands never construct a supervisor, listener, backup, monitor or mail worker",
+        "ordinary start composes daily backups, monitor and alerts without any witness or closure owner",
+        "an observer cleanup failure still closes the monitor, supervisor and alert worker",
+        "observer CLI modes require the existing contract pin and independent private operator root",
+        "observer check CLI reads the existing contract and always closes without a listener or background worker",
+        "explicit enrollment CLI waits for the first capture tick, attaches parent maintenance and closes observer before parent",
+        "ordinary observer start never enrolls again and keeps its channel attached to the normalized parent",
+        "an observer failure before or during enrollment releases it and never starts unrelated workers",
+        "aborting an observer CLI start closes its channel before the parent and cannot initialize",
+        "cancellation during the startup capture tick cannot initialize an observer or start background workers",
+        "supervisor prepares the actual planned contract once, with its normal application and no erasure capability",
+        "an unavailable original plan prevents the first listener and is never repaired by supervisor startup",
+        "concurrent starts cannot create a second application or timer",
+        "daily schedule catches the first installation but does not retry a recorded failed attempt",
+        "confirmed closure takes priority over capture, with one drain shared by concurrent ticks",
+        "a queued closure is resolved before the first managed listener after supervisor restart",
+        "an explicit local owner uses a fresh local startup check on initial opening and capture reopening",
+        "the selected local opening gate reaches both startup and recurring pending-closure maintenance",
+        "an owner with no pending intent cannot open its first listener without a fresh startup proof",
+        "every closure owner must implement the startup barrier before any runtime is constructed",
+        "a closure owner verifies every capture reopen under the same exclusion, including after capture failure",
+        "the first owner opening cannot bypass capture exclusion even when no intent is pending",
+        "a failed first-owner lock cleanup destroys the opened child and parent gateway",
+        "startup preserves its primary failure while a rejected destroy still closes the parent gateway",
+        "capture lock rejection after owner stop ends the runtime; rejection before stop preserves it",
+        "corrupt intent discovery or uncertain erasure ends the supervisor instead of retrying or resuming",
+        "journal precedes stop; capture and encryption finish before a ready runtime marks success",
+        "a closure published during capture preflight or HTTP drain keeps producers stopped before any reopen",
+        "missing or unsafe backup configuration leaves the application available and emits only a fixed code",
+        "disabled configuration never reads history or stops the runtime",
+        "a failed initial journal keeps the untouched application running",
+        "lock collision and failed preflight cannot interrupt the application",
+        "a concurrent tick shares the running attempt, with one capture and one stop",
+        "capture or encryption failure still resumes the same reviewed application",
+        "unexpected runtime exit produces a failed supervisor outcome for the hosting manager",
+        "global shutdown during capture aborts the operation and never restarts an application",
+        "preflight validates public recipient, source, free space and capture tools without starting anything",
+        "check command prints a safe result and cannot start a supervisor or capture",
+        "checkpoint subprocess accepts the precise application profile and discards all other output",
+        "the explicit video parent captures SQL36 and rejects an older or incomplete checkpoint receipt",
+        "capture timeout and cancellation wait for actual close, escalating an ignored SIGTERM",
+        "optional parent control listener precedes the stopped-child closure gate and survives captures"
+      ]
+    },
+    {
+      "path": "tests/restore-private-operations.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "operational restore checks read-only, confirms a current hash, and publishes an isolated blocked quarantine",
+        "a changed current registry invalidates the check hash before any recovery files are created",
+        "source aliases, legacy receipts, an existing destination and a replaced target root refuse quarantine publication",
+        "the recovery interface rejects missing confirmation, ambiguous directories, unknown flags, ambient overrides and getters",
+        "the real recovery command preserves completed remote receipts after loss of local journals and keeps source encryption",
+        "a witness older than a local receipt or the encrypted checkpoint refuses recovery",
+        "missing, replayed, corrupted, foreign or flag-only witness replies cannot authorize the real CLI",
+        "the confirmed plan binds the target database, media identity, destination, private preparation and witness contract",
+        "remote, local, capsule and target drift or cancellation during publication retain the startup-blocking quarantine"
+      ]
+    },
+    {
+      "path": "tests/resume-application-checkpoint.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "the resume interface requires an explicit recovery profile and exact target/hash",
+        "precheck never reads the personal credential, connects, inspects or imports",
+        "one credential read imports an independently observed empty clone and validates the full receipt",
+        "a populated application clone verifies using the same credential without invoking import",
+        "a partial clone is preserved without an import or a verification that could be misreported as restoration",
+        "source database or runtime identity is rejected before requesting a password",
+        "authentication rejection retains only its phase and never reaches SQL inspection or import",
+        "an unknown connection failure never leaks its SQL, host or password",
+        "a stale precheck or final result cannot lower the bound profile or expected SQL hash",
+        "typed import and verification failures retain only their existing safe category",
+        "an existing clone cannot be accepted with a downgraded receipt or changed SQL hash",
+        "an inspection failure closes the connection and clears credentials without importing",
+        "invalid and interrupted password input stops before any SQL connection",
+        "accessors and ambient trust overrides are refused before configuration or password input",
+        "SQL connection categories use numeric driver metadata while discarding every private error field",
+        "clone inspection distinguishes no objects, all expected tables, views and partial schemas using SELECT/SHOW only",
+        "the CLI success output reports the exact action without the credential",
+        "broadcast resume accepts only the new profile-bound receipt and preserves single-read import and verify behavior",
+        "operational restore scope survives native import and populated-clone verification and cannot be downgraded afterwards",
+        "candidate resume inspects exactly36 physical tables only when video is explicit and still refuses partial clones"
+      ]
+    },
+    {
+      "path": "tests/runtime-broadcast-environment.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "broadcast activation reads the existing six anchored records once and preserves all keys and the caller",
+        "broadcast copying rejects accessors, unknown fields, inherited records and incomplete activation flags",
+        "broadcast loading requires the existing strict primary/recovery permissions before reading a file",
+        "the broadcast preflight accepts only the explicit all-enabled primary target and leaves earlier profiles closed",
+        "broadcast startup checks configuration, privileges, physical schemas and storage before one explicit listener call",
+        "a broadcast environment cannot enter the server through earlier or incomplete primary options",
+        "the real Linux broadcast loader keeps all six private files byte-identical"
+      ]
+    },
+    {
+      "path": "tests/runtime-crm-environment.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "the explicit CRM loader reads one six-file bundle, preserves its caller and activates only the selected domains",
+        "CRM configuration rejects absent, incoherent or reused keys, including VAPID, before returning an environment",
+        "CRM permissions and records are closed data properties and cannot be inherited or invoke accessors",
+        "the CRM preflight requires the primary origin, recovery and its exact explicit target",
+        "CRM startup checks configuration, database, physical schema and storage before the only listener call",
+        "CRM cannot start through an old deployment, ambient flags or incomplete server options",
+        "Linux CI requires the real six-file CRM startup configuration checks",
+        "the real CRM loader leaves every private file unchanged and requires the sixth key"
+      ]
+    },
+    {
+      "path": "tests/runtime-media.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "photo records require canonical private paths, quotas, real key syntax and data properties",
+        "one private photo bundle preserves all current secrets, fixes the enabled profile and leaves injected records unchanged",
+        "photos cannot collide with existing keys or silently enable unrelated domains",
+        "photo preparation preserves existing secrets, checks source/native storage before exclusive publication and erases transient keys",
+        "existing media config, populated source, nonempty root and readback mismatch fail closed without replacement",
+        "photo startup waits for capacity/storage checks before the listener and preserves the exact text default",
+        "storage preflight exercises the real native worker without writes, checks capacity readiness and closes its pool"
+      ]
+    },
+    {
+      "path": "tests/runtime-messaging.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "messaging record validates SMTP with the existing policy and only canonical distinct mail/chat keys",
+        "one anchored bundle reuses SQL and MFA, pins its origin and enables only the four text-profile flags",
+        "profile rejects origin drift, collisions with existing MFA, arbitrary flags, ambient TLS overrides and accessors",
+        "masked SMTP input uses one bounded stdin record and rejects malformed controls without leaking diagnostics",
+        "preparation check inspects existing private prerequisites before input or generation; prepare saves two distinct keys once",
+        "existing or malformed prerequisites cannot consume credentials, regenerate keys or overwrite; mismatched readback never confirms",
+        "check mode waits for SQL and physical schema checks without a listener or any SMTP send",
+        "start waits for listener and pins request origin; failed preflight/schema/configuration never falls back to neutral startup",
+        "CLI metadata allows neither credentials, keys nor arbitrary feature activation in arguments"
+      ]
+    },
+    {
+      "path": "tests/runtime-notifications.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "private notifications record has exactly six data fields, canonical independent AES and a matching P-256 pair",
+        "one anchored bundle fixes the notify profile and preserves all four old configurations and input records",
+        "notify environment rejects every domain collision, origin drift, missing/accessor fields and unrelated activation before SQL",
+        "notification preparation checks the existing photo profile before generation and publishes only one exclusive new record",
+        "existing notification config, invalid base, invalid pairs, reused keys and ambiguous publication never trigger regeneration or false success",
+        "strict private start checks notifications schema and photo storage before listening, preserves injected source and clears copied secrets",
+        "old photo profiles stay notifications-disabled and CLI arguments cannot contain keys or feature bypasses",
+        "VAPID generation pads small valid P-256 scalars to 32 bytes and erases the minimal export"
+      ]
+    },
+    {
+      "path": "tests/text-clone-verification.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "clone guards reject source identity, unconfirmed targets and ambient configuration before credentials or any SQL access",
+        "preflight verifies the frozen gzip but never consumes a password or opens the database",
+        "frozen backups require exact compressed hash, regular owner0600, one link and valid gzip",
+        "native dump sees only the canonical private0600 config path, bounded options and no credential in argv/env",
+        "a synchronous private dump sink receives every original chunk before its buffer is erased",
+        "invalid dump sinks are refused before any private path or temporary credential is accessed",
+        "throwing, thenable and value-returning dump sinks stop the child, erase chunks and wait for close before credential cleanup",
+        "failed native dump redacts stderr and removes only its own temporary client file",
+        "native authentication, access and missing-database failures expose only a neutral code across split stderr chunks",
+        "oversized native stderr stays generic, wipes input and cleans the private configuration",
+        "cancellation waits for native child closure then removes the secret client file",
+        "exact dump mismatch prevents the crypto connection and produces no success output",
+        "one TLS clone connection checks immutable migration checksums and real MFA/mail/message crypto then rolls back",
+        "wrong real text key and altered message binding fail closed and still roll back/end",
+        "rollback/end failure suppresses success and wipes key buffers",
+        "schema inspection refuses missing tables and cross-schema foreign keys"
+      ]
+    },
+    {
+      "path": "tests/video-runtime-startup.test.mjs",
+      "readStatus": "fully_read",
+      "testCaseNames": [
+        "video is an explicit primary local-closure profile and leaves the ordinary launcher unchanged",
+        "candidate startup checks both roots after SQL and opens one listener only after all checks pass",
+        "candidate server rejects incomplete options before reading configuration or opening SQL",
+        "runtime video configuration requires independent keys and disjoint private trees",
+        "physical root checks reject aliases and nesting even with unrelated path spellings",
+        "video startup storage inspection is read-only, closes SQL, clears the copied key and rejects unready capacity",
+        "only the video candidate widens the native request budget while headers stay bounded",
+        "mounted candidate video routes preserve each authority"
+      ]
+    },
+    {
+      "path": "tests/witness-recovery-cli.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": [
+        "recovery commands require the original contract and the same disjoint pinned paths",
+        "recovery check is read-only and closes on success or authority refusal",
+        "recovery startup reserves HTTP before Unix and reports only after both are ready",
+        "port or private-control collision never reports startup and releases the newly created resources",
+        "cancellation at every startup boundary releases resources without a started report",
+        "an unexpected listener failure ends recovery and closes its private control",
+        "a listener lost while the Unix control opens cannot emit a started report",
+        "recovery rejects ambient application environment and prior cancellation before any composition"
+      ]
+    },
+    {
+      "path": "tests/witness-runtime.integration.test.mjs",
+      "readStatus": "reference_and_test_case_index_reviewed_only",
+      "testCaseNames": []
+    }
+  ],
+  "checks": [
+    {
+      "name": "Assigned source inventory and identities",
+      "status": "passed",
+      "evidence": {
+        "files": 19,
+        "lines": 3272,
+        "bytes": 246376,
+        "sha256AllMatch": true
+      }
+    },
+    {
+      "name": "Historical versus182 profiles",
+      "status": "reviewed",
+      "evidence": "Explicit33/36 table, six/seven key, old witness/PC versus local-closures/manual-only branches traced. start-recurring name alone never treated as evidence of an active recurring backup. Each source classified separately."
+    },
+    {
+      "name": "Operator path and side effects",
+      "status": "reviewed_static_only",
+      "evidence": "Checked canonical argument grammars; source/target database and root disjointness; exact schemas/receipt/profile/manifest/table selection; exclusive private files and pinned stat identities; restoration phases and explicit plan confirmation; no silent reset of partial clones or progress."
+    },
+    {
+      "name": "Secrets and subprocess boundaries",
+      "status": "reviewed_static_only",
+      "evidence": "Reviewed closed sanitized errors and driver categories, stdin-only password reads, explicit native binaries/argv, fixed child process environment, bounded native output/timeouts, filemode0600 and nofollow guards, secret cleanup, SIGINT/SIGTERM/IPCdrain."
+    },
+    {
+      "name": "No duplicate or false success on recovery",
+      "status": "reviewed_static_only",
+      "evidence": "Manual restore refuses opening/opened and changed-job reuse; resume imports only empty clone, verifies already existing schema; capacity release only authenticated candidates with physical checks; duplicate/retry paths preserve markers. No real recovery exercised."
+    },
+    {
+      "name": "Focused new synthetic evidence",
+      "status": "passed",
+      "evidence": "Pure sourceNames/assertProfileVM only; confirms six-file selection and missing video-presence refusal. Does not claim a successful run/check/encryption or actual coffre content."
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "candidate": "manual-restore first empty-target inspection omitsvideo flag",
+      "reason": "Only requires empty return in this phase; the empty classification does not depend on33/36 bound. Later explicit resume does passvideo profile; no fault established."
+    },
+    {
+      "candidate": "Partial photo/video capacity rebind on restore",
+      "reason": "Resumption gates and exact recovery snapshots retain conservative state. No double refund, unauthorized restart or corrupt retry established by static review."
+    },
+    {
+      "candidate": "Standalone text/legacy tools do not supportvideo",
+      "reason": "Intentional retained profile boundary. Shared dump primitive selects exact36 authored tables only with explicitvideo capability; no widening or automatic legacy invocation inferred."
+    }
+  ],
+  "limits": [
+    "All19 source files fully read;9 selected associated unit test files fully read, others only reference/case-name index inspected. No claim of full-line review of every historical/native/integration fixture.",
+    "Only new synthetic selector/guardVM executed. No target script/module execution, GPG, encryption, capture, backup, import, restoration, SQL, SMTP, PC, production access or real credentials.",
+    "No general or already-green suite rerun. Read test sources are not new runtime qualification.",
+    "Static conditional finding requires explicit operator reuse of oldprimary-crm helper on a seven-file directory; actual occurrence unknown.",
+    "Current video archive seven-key verification remains separate and is not alleged broken."
+  ],
+  "repositoryChanges": false,
+  "applicationFixes": false,
+  "productionActions": false,
+  "PCOperations": false
+}

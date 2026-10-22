@@ -2,9 +2,13 @@
 
 **22 octobre 2026 — application active, checkpoint privé et latest : 1.8.2 / Node v24.22.1 / SQL36, alignés.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans inspection privée directe par l’agent. La livraison technique182 est close : qualification, publication, préparation, CHECK, activation et enregistrement final acquis. Aucun chantier technique ne reste ouvert pour ce lot ; les réserves et contrôles non réalisés sont conservés ci-dessous.
 
-## Second audit explicitement demandé — en cours
+## Second audit explicitement demandé — terminé, correctifs non réalisés
 
-Après clôture du lot technique182, l’utilisateur demande un **second audit complet backend/frontend/sécurité de chaque partie du code**. La revue porte sur la source exacte ci-dessus, sans modifier l’application active. [Rapport en cours](AUDIT-2-20261022.md), [inventaire et progression](verification-proofs/audit2-182-progress.json). Terminer la couverture des sources, les reproductions locales nouvelles et leur contre-revue avant de conclure. Le dossier juridique, les essais de sauvegarde hébergée et les comptes réels restent hors des manipulations de cet audit. La clôture182 précédente reste acquise ; elle ne doit pas faire ignorer cette nouvelle demande explicite.
+Le **second audit complet backend/frontend/sécurité** de la source exacte182 est terminé : **447 fichiers examinés**, plus trois helpers 182 épinglés hors main. Les 390 tests sont inventoriés ; 202 lus en entier, 25 partiellement, 163 contrôlés structurellement seulement. [Rapport final](AUDIT-2-20261022.md), [résumé structuré](verification-proofs/audit2-182-progress.json), [couverture exacte](verification-proofs/audit2-182/source-coverage.json).
+
+**Cinq nouveaux défauts confirmés, non corrigés :** B01 cookie de session récente effacé par 401 ancien (**P2**), B02 renouvellement expiré commis puis 503 (**P2**), B03 e-mail déjà expiré après attente SQL (**P3**), B04 lien Sauvegardes vers route inexistante (**P3**), B05 admission concurrente du témoin au-delà du plafond (**P2 conditionnel, ancien mode absent du runtime vidéo182**). I01 est seulement une amélioration P3 conditionnelle de refus explicite pour l’ancien helper de coffre ; aucun coffre réel défectueux établi. Les surfaces partagées sont dédupliquées. Reproductions locales synthétiques et contre-revues conservées ; aucun contournement d’autorisation ou fuite établi, sans garantie générale de sécurité.
+
+Le [plan de correction proposé](PLAN-IMPLEMENTATION.md#second-audit-après-livraison182--terminé) distingue ces nouveaux travaux de la livraison182 déjà acquise. Aucun correctif, migration, publication ou activation supplémentaire réalisé. Production inchangée ; ne pas relancer les commandes182 acquises. Le chantier juridique, les essais de sauvegarde hébergée, le PC et les comptes réels restent hors des manipulations. Les limites antérieuresA11/A12 ne sont pas levées ni recomptées.
 
 ## État de livraison courant
 

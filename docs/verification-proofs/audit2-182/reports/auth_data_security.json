@@ -1,0 +1,675 @@
+{
+  "audit": "audit2-182",
+  "owner": "auth_data_security",
+  "base": {
+    "repository": "/workspace/scratch/bb431be72395/jessiemessage",
+    "mainAuditCommit": "e2cfbefe03d3538b216f873d185b1542d856044c",
+    "runtimeTag": "v1.8.2",
+    "runtimeSourceCommit": "78e6b8b2f6b19020c060345b9313a81829e9c8da"
+  },
+  "status": "complete_primary_source_review",
+  "reviewedFiles": [
+    {
+      "path": "server/access/admission.mjs",
+      "lines": 25,
+      "bytes": 1527,
+      "sha256": "5be5c59e4cecd332a71d9cda2f8a1add8831ad9937b5001a4d212efd711751e7",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/access/config.mjs",
+      "lines": 13,
+      "bytes": 652,
+      "sha256": "f7b7e9bf40af5d3581d0916089e12823cc663c6770e4f8297abe5bbd1981900a",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/access/http.mjs",
+      "lines": 243,
+      "bytes": 18025,
+      "sha256": "470176b91644b54d88bb9f7d62165fd17819f5ae57083d2c0750cdb2f9615eb2",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/access/pagination.mjs",
+      "lines": 54,
+      "bytes": 2847,
+      "sha256": "cb4e67dbf8ff6b7fdb1194a7f5f39424310b2c8d1178c4f1bc5bb3da17917739",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/access/service.mjs",
+      "lines": 296,
+      "bytes": 18090,
+      "sha256": "5196627328e9fabaa8c57ed9503b55752024314cc3a4acb62ff8807220b431bb",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/access/store.mjs",
+      "lines": 539,
+      "bytes": 39117,
+      "sha256": "a31d21c08b81db7f566f19660bc0ae93a98d5fbad9b1f6a9684453dac1c8a625",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/auth/config.mjs",
+      "lines": 34,
+      "bytes": 1748,
+      "sha256": "889610a9a4a76f42fae3735814390b491f996180d550c7b3593c4201e1108933",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/auth/crypto.mjs",
+      "lines": 259,
+      "bytes": 10250,
+      "sha256": "bb63a592bbab2b951eb9c484547d2ad3461f58846ae5bb115b65d2c9248f2b9a",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/auth/http.mjs",
+      "lines": 267,
+      "bytes": 13311,
+      "sha256": "4bdc43c2e0e8a8405a7b7f1d7794da578e39478a52ba0bccc54884bf8411f6df",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/auth/recovery-store.mjs",
+      "lines": 80,
+      "bytes": 4888,
+      "sha256": "a6b99e8fecaa8b40f67c1b291df681af910563b51a6707b6853529986b09fe9e",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/auth/service.mjs",
+      "lines": 122,
+      "bytes": 6607,
+      "sha256": "d8820da1a4af71c367e5dec448e0dc1b09a6ee9b2d7d3d25f45da4469393af19",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/auth/session-policy.mjs",
+      "lines": 41,
+      "bytes": 1945,
+      "sha256": "f3a68b126cc203de4776c0469ef6ab917fc5a386b8f3b9c0bb61d3f2acb8f60a",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/auth/store.mjs",
+      "lines": 329,
+      "bytes": 22522,
+      "sha256": "0ade70aadb0f247cb7fe6ca6fa25d928d82fd8a3aef33e4b65c5744da3b957db",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/closure-http.mjs",
+      "lines": 63,
+      "bytes": 4887,
+      "sha256": "ae582761b0f4b07d1139229057c2202288036c4bbba86d892742de59f120320f",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/closure-operations.mjs",
+      "lines": 192,
+      "bytes": 11135,
+      "sha256": "25d693cd15d40692881e2959b3a738e62c0405623d113c10c2f10effdce5a295",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/closure-service.mjs",
+      "lines": 83,
+      "bytes": 5411,
+      "sha256": "97291da70f9e374cf52d6eca008e02f8e8c51af1a0bf494a5ec0d979a1276ea3",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/deletion-store.mjs",
+      "lines": 115,
+      "bytes": 9450,
+      "sha256": "b76b6018171caf40ab97cd58d66f471181f0aa7a8e746da417df33edfc6df97b",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/deletion.mjs",
+      "lines": 167,
+      "bytes": 10916,
+      "sha256": "1ba2f1e99fe830bb633d1b60228c3234d93116ea5455e52b74606b75b0c74a39",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/erasure-journal.mjs",
+      "lines": 199,
+      "bytes": 12681,
+      "sha256": "b53437898f5cf9933117b00af77e647bc8757a5e1d62cb3617b492dc9692becb",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/erasure-schema.mjs",
+      "lines": 49,
+      "bytes": 4516,
+      "sha256": "76c5687a0af9bfde55ff4d03abfb2df65fd2d64679f417b81759c0882d52c32b",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/erasure-state.mjs",
+      "lines": 57,
+      "bytes": 3888,
+      "sha256": "1772427a3422187ea9c4ffbb339f30a2caf179e7af3de7b8aff12a98629d6066",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/erasure-store.mjs",
+      "lines": 302,
+      "bytes": 24786,
+      "sha256": "136e21579953dc00347a14ae8be37d0a53763be4dea4dcdea2183b728a5761bc",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/erasure.mjs",
+      "lines": 107,
+      "bytes": 7488,
+      "sha256": "fd65842450cf8a73307c33da1ae948b1bbbae11c7a2a323ab5e63dabf1df5559",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/export.mjs",
+      "lines": 292,
+      "bytes": 18263,
+      "sha256": "b57e944f0acea475339ac747d32aee20ab76a4109361e9aaf1fce25342138608",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/policy.mjs",
+      "lines": 55,
+      "bytes": 5798,
+      "sha256": "f0e995017447ece48253d68f8e249377cc956e7f03897f6de6777bc1b3bf3d9d",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/rollback.mjs",
+      "lines": 60,
+      "bytes": 3300,
+      "sha256": "cc33aec6b17a64c9b3339ca304e3c2fed84354f72d201cd51cd748e19e32e14d",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/store.mjs",
+      "lines": 246,
+      "bytes": 18244,
+      "sha256": "9bdc300260e7e398c6f3487a126cbab7dc4d56e4795288d4bfbfdbeefda03dee",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/data/writer.mjs",
+      "lines": 284,
+      "bytes": 20018,
+      "sha256": "0b7e76c3ab9cae3a47f5812fcb0b3bbfffc4058dd0678f8d571a628274456c67",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/files/private-directory.mjs",
+      "lines": 163,
+      "bytes": 6764,
+      "sha256": "f9741dba9f115ec319f020beac51971f09eef1c1d367fb88da59bfc5e7464a37",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/files/private-json.mjs",
+      "lines": 131,
+      "bytes": 7767,
+      "sha256": "dc43f3f29677b89c4298ae7508e13fa7827169a4ac7f85eef639152f0d675a5b",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/http/admission.mjs",
+      "lines": 137,
+      "bytes": 6391,
+      "sha256": "dbd4efd3c3a8aa7a66ac1a336d15ee8f9370f3a7e8c60f7554c50291f615d8b9",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/http/peer-address.mjs",
+      "lines": 17,
+      "bytes": 744,
+      "sha256": "bdaedaa7eda2c5df654b4087701d02c64b3a1a8c9bf937b07b06d7181b0e4cb4",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/http/request-origin.mjs",
+      "lines": 47,
+      "bytes": 2136,
+      "sha256": "6cffb0d4f6a7dc1f72600e84d40dfcddab628742945b95a3734f509a19528f68",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/privacy/choices.mjs",
+      "lines": 11,
+      "bytes": 432,
+      "sha256": "c9c854e633426ff86219ae57386093023356c94775d38887004acdd4a592533b",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/privacy/draft.mjs",
+      "lines": 28,
+      "bytes": 1765,
+      "sha256": "cd824cafab58332d879b157c9f12eff9fa9cd514a4f2ca430b2ad51171a3cbe4",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/privacy/files.mjs",
+      "lines": 79,
+      "bytes": 4872,
+      "sha256": "5ff71ee36bd2459d870bcadd2779be2a8cd2a7ea6031288840bbd35f57259f57",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/privacy/http.mjs",
+      "lines": 54,
+      "bytes": 3684,
+      "sha256": "3e24e561218cc2158ea9f6a0d19749a256c9edfdfa4c60021e617f4c997e8947",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/privacy/service.mjs",
+      "lines": 36,
+      "bytes": 2673,
+      "sha256": "47a066093dca51beaa8ff01a9406044534b694b9eb747fd0bc1bf878d20c865d",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/reset/config.mjs",
+      "lines": 16,
+      "bytes": 798,
+      "sha256": "e570f9406bd8f64ec8b22fc098fde31137e8d5ebf39b2da96b288d957858d528",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/reset/http.mjs",
+      "lines": 115,
+      "bytes": 5767,
+      "sha256": "c5dc42e61463f4e767fe56c967025dc5afcf2377ab3ff77d3f816c84cb1b75a1",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/reset/mail-crypto.mjs",
+      "lines": 79,
+      "bytes": 3205,
+      "sha256": "9c3d015668a1f78f9265f2713ebce14f5ef4e06515a7a78d2a849a1daeed71c7",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/reset/mail-store.mjs",
+      "lines": 141,
+      "bytes": 9935,
+      "sha256": "927331e2730c9b32622cf428c3a7dbb8a8255479add5a3f4544ef2e89303f767",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/reset/service.mjs",
+      "lines": 101,
+      "bytes": 5646,
+      "sha256": "e7ac016c42c247cae82dac89ffe5e1f6ccbe5667e98d2ac7182f6febf88dc435",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/reset/store.mjs",
+      "lines": 233,
+      "bytes": 19182,
+      "sha256": "4df15595ced959890e1b77e89205d4613106b10460c6e3c168ad5d17412e1209",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/transition/http.mjs",
+      "lines": 105,
+      "bytes": 7769,
+      "sha256": "2698c4f439f701d9429245867dcf5a09b60d9587f8db2e8b5244270c6fd4ad40",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    },
+    {
+      "path": "server/transition/service.mjs",
+      "lines": 145,
+      "bytes": 9733,
+      "sha256": "2a23f9b111f0486f996773d26f3c30aae2c21df243d35c68f0039a0358a0dabb",
+      "reviewStatus": "read_complete",
+      "reader": "/root/delivery_review"
+    }
+  ],
+  "reviewedFileCount": 46,
+  "reviewedLines": 6211,
+  "findings": [
+    {
+      "id": "AUTH-DATA-01",
+      "severity": "P2",
+      "file": "server/access/service.mjs",
+      "line": 282,
+      "title": "Expired access renewal is committed but reported unavailable when time advances during SQL",
+      "trigger": "An authenticated administrator renews a finite active client whose access has expired; Date.now advances at least 1 ms between administration() and the store post-lock clock refresh.",
+      "impact": "The database commits the correct renewal, then the service throws AUTH_UNAVAILABLE and HTTP maps it to 503. The administrator sees failure despite the extension. A retry with the same expectedExpiresAt is refused by the persisted CAS, leaving the result ambiguous until refreshing the list. This is not an authorization bypass or duplicate extension.",
+      "repro": {
+        "command": "node /workspace/scratch/bb431be72395/audit2-182/auth_data_security/repro-renew-expired-clock.mjs",
+        "method": "Unchanged real createAccessService + createAccessStore with an in-memory SQL adapter injecting 1 ms at the target-row lock; real locked auth, CAS, expiry calculation and transaction control execute. No external SQL/server is contacted.",
+        "result": {
+          "scenario": "expired renewal crosses 1ms at target lock",
+          "clockBefore": 1792700000000,
+          "clockAfter": 1792700000001,
+          "serviceExpectedExpiry": 1792786400000,
+          "storedExpiry": 1792786400001,
+          "commits": 1,
+          "updateCount": 1,
+          "outwardError": "AUTH_UNAVAILABLE",
+          "mappedHttpStatus": 503,
+          "trace": [
+            "begin",
+            "target_lock_elapsed_1ms",
+            "expiry_updated",
+            "commit"
+          ],
+          "syntheticOnly": true
+        }
+      },
+      "evidence": [
+        "server/access/service.mjs:273-282 calculates expectedTarget before await store.renewClient, then requires exact millisecond equality after the committed call.",
+        "server/access/store.mjs:474-495 refreshes now after locks and derives max(now,currentExpiry)+days before UPDATE/commit.",
+        "server/index.mjs:260,396,400-401 wires Date.now/shared advancing clock to both production factories.",
+        "tests/access-service.test.mjs:36-39 mock uses options.now rather than actual post-lock time; lines 276-296 advance only during quota waits.",
+        "tests/access-flow.integration.test.mjs:279-309 uses a fixed injected clock.",
+        "repro-renew-expired-clock.mjs",
+        "repro-renew-expired-clock.json"
+      ],
+      "confidence": "high",
+      "recommendation": "Validate the expiry against the effective post-lock mutation instant (for example return that instant from the store), while retaining exact expectedExpiresAt CAS, actor recheck and bounded horizon. Add a targeted advancing-clock regression; no SQL migration is needed."
+    }
+  ],
+  "crossReviewNotes": [
+    {
+      "owner": "/root/audit2_messaging_media",
+      "status": "confirmed_source_extension_of_same_finding",
+      "topic": "Late unauthorized response clears a replacement session cookie",
+      "evidence": [
+        "server/auth/http.mjs:210-214",
+        "server/access/http.mjs:210-214",
+        "server/auth/store.mjs:76-105",
+        "server/access/store.mjs:347-365"
+      ],
+      "detail": "Both auth and access handlers emit Max-Age=0 for stale A after awaited session lookup; a login B in another tab can have set the cookie before A response. Messaging/media owns the one shared finding and reproduction. Privacy and closure handlers intentionally omit cookie deletion on late 401. Do not duplicate as another auth finding."
+    },
+    {
+      "owner": "/root/audit2_domains",
+      "status": "cross_check_sent_owner_reproducing",
+      "topic": "Reset mail claim retains a pre-lock timestamp",
+      "evidence": [
+        "server/reset/mail-store.mjs:35-87"
+      ],
+      "detail": "claim accepts caller now and does not refresh it across pool/user/auth/reset/job waits. Domain owner confirmed worker/transport do not check expiry before delivery and is preparing a single verification+reset reproduction. Any confirmed finding belongs to that owner, not this report."
+    },
+    {
+      "owner": "/root/audit2_frontend_messaging",
+      "status": "expected_fail_closed_server_contract",
+      "topic": "Erasure changes broadcast retry fingerprint",
+      "evidence": [
+        "server/data/erasure-store.mjs:98-116",
+        "server/data/erasure-store.mjs:136-154"
+      ],
+      "detail": "Explicitly designed to preserve conflict for an old retry rather than recreate a permanently removed recipient. A conflict is not itself a new backend finding. Frontend owner may independently qualify inability to reconcile an uncertain operation."
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/access-service.test.mjs",
+      "ranges": [
+        [
+          1,
+          90
+        ],
+        [
+          263,
+          329
+        ]
+      ],
+      "coverage": "fixture clock semantics, renewal quotas and DTO checks"
+    },
+    {
+      "path": "tests/access-flow.integration.test.mjs",
+      "ranges": [
+        [
+          270,
+          324
+        ]
+      ],
+      "coverage": "expired/future renewal, atomic retry and immutable other state"
+    },
+    {
+      "path": "tests/auth-crypto.test.mjs",
+      "ranges": "complete",
+      "coverage": "canonical entropy, bounded scrypt, TOTP replay/vector/GCM, recovery namespace, CSRF"
+    },
+    {
+      "path": "tests/auth-service.test.mjs",
+      "ranges": "complete",
+      "coverage": "credential eligibility, rate buckets, post-work clock, fixed errors"
+    },
+    {
+      "path": "tests/auth-rate-limit.test.mjs",
+      "ranges": "complete",
+      "coverage": "network savepoint rollback and invalid budgets"
+    },
+    {
+      "path": "tests/auth-http.test.mjs",
+      "ranges": [
+        [
+          75,
+          94
+        ],
+        [
+          175,
+          263
+        ]
+      ],
+      "coverage": "origin, cookie parsing, csrf, stale cookie and fixed errors"
+    },
+    {
+      "path": "tests/auth-store.integration.test.mjs",
+      "ranges": [
+        [
+          82,
+          105
+        ],
+        [
+          122,
+          234
+        ]
+      ],
+      "coverage": "MFA/recovery single use, lock order, device isolation/revocation"
+    },
+    {
+      "path": "tests/access-token-clock.test.mjs",
+      "ranges": "complete",
+      "coverage": "post-wait invitation/verification/credential expiry and unchanged deadlines"
+    },
+    {
+      "path": "tests/reset-store-clock.test.mjs",
+      "ranges": "complete",
+      "coverage": "post-lock reset expiry/generation and timestamps"
+    },
+    {
+      "path": "tests/device-transition-service.test.mjs",
+      "ranges": "complete",
+      "coverage": "role/origin/nonce/ticket binding, replay, conflicts, cancellation while pending"
+    },
+    {
+      "path": "tests/privacy-http.test.mjs",
+      "ranges": "complete",
+      "coverage": "authenticated assets and precommit/postread authorization, late401 without cookie deletion"
+    },
+    {
+      "path": "tests/privacy-preparation.test.mjs",
+      "ranges": "complete",
+      "coverage": "technical bounded encrypted state, canonical JSON, revisions, symlink/hardlink/mode and revocation checks; no legal assessment"
+    },
+    {
+      "path": "tests/account-erasure.test.mjs",
+      "ranges": "complete",
+      "coverage": "intent-before-write, uncertain commits, unlink-before-capacity-release, maintenance and replay guards"
+    },
+    {
+      "path": "tests/closure-http.test.mjs",
+      "ranges": "complete",
+      "coverage": "admin-only intent, explicit confirmation, no destructive request adapter, reauthorization and no duplicate intent"
+    },
+    {
+      "path": "tests/request-origin.test.mjs",
+      "ranges": "complete",
+      "coverage": "actual Host/raw target/forwarded authority, configured routing"
+    },
+    {
+      "path": "tests/request-admission.test.mjs",
+      "ranges": [
+        [
+          1,
+          215
+        ]
+      ],
+      "coverage": "rate and active lifecycle isolation, actor-first budgets, bounded tables"
+    },
+    {
+      "path": "tests/private-directory.test.mjs",
+      "ranges": [
+        [
+          103,
+          169
+        ]
+      ],
+      "coverage": "single basename, clean absolute procfs roots, owners/modes/symlinks and descriptor drift"
+    },
+    {
+      "path": "tests/data-export.test.mjs",
+      "ranges": [
+        [
+          142,
+          216
+        ]
+      ],
+      "coverage": "foreign account/conversation/media refusal, tombstones and content authentication"
+    },
+    {
+      "path": "tests/data-writer-dirfd.test.mjs",
+      "ranges": [
+        [
+          61,
+          101
+        ]
+      ],
+      "coverage": "output/media directory replacement and file-open races"
+    }
+  ],
+  "dependencyReads": [
+    {
+      "path": "server/index.mjs",
+      "ranges": [
+        [
+          270,
+          282
+        ],
+        [
+          300,
+          425
+        ]
+      ],
+      "additionalFacts": "clock declaration at260 and server wiring396-401 verified by focused source lookup"
+    },
+    {
+      "path": "docs/AUDIT-FINAL-20261022.md",
+      "method": "focused renewal/clock search; no matching old finding"
+    },
+    {
+      "path": "docs/verification-proofs/jm182-verification.json",
+      "method": "focused renewal/clock search; no matching old finding"
+    }
+  ],
+  "checks": [
+    {
+      "name": "inventory_integrity",
+      "status": "passed",
+      "detail": "All46 current source SHA256 values match the delegated manifest exactly; all6211 lines read completely."
+    },
+    {
+      "name": "expired_renewal_clock_reproduction",
+      "status": "reproduced",
+      "evidence": "repro-renew-expired-clock.json",
+      "executedRuntime": "Node v24.19.0",
+      "detail": "One successful targeted reproduction after dependencies were available; earlier import attempt stopped on missing otpauth before running any application code."
+    },
+    {
+      "name": "authn_authz_csrf_static_review",
+      "status": "no_additional_concrete_bypass_found",
+      "detail": "Opaque role-specific cookies, exact mutation Origin and CSRF, MFA/generation/status/expiry and post-lock rechecks, scoped device revocation and invitation consumption reviewed."
+    },
+    {
+      "name": "crypto_static_review",
+      "status": "no_additional_concrete_defect_found",
+      "detail": "Fixed bounded scrypt, canonical tokens and encodings, GCM AAD scoped to identity/job/namespace/revision and per-process ticket key; recovery and token digests scoped."
+    },
+    {
+      "name": "filesystem_and_erasure_static_review",
+      "status": "no_additional_concrete_defect_found",
+      "detail": "Anchored private dirfd I/O, owner/mode/hardlink checks, bounded canonical JSON, separate journal CAS, quiescence requirement and irreversible phase ordering reviewed."
+    },
+    {
+      "name": "test_execution",
+      "status": "existing_suites_not_rerun",
+      "detail": "Read tests only; no broad green suite replay, no CI trigger, no hosted operation."
+    }
+  ],
+  "limits": [
+    "This is a source audit of the delegated46 files, not a proof of absence of all defects; associated tests listed with exact read scope, not asserted complete when only excerpts were read.",
+    "The new reproduction uses a synthetic in-memory SQL adapter and Node24.19.0, not a live MariaDB service or production Node24.22.1. SQL and HTTP mapping follow the unchanged source; no hosted failure is claimed.",
+    "No real account, private user content, host, SMTP provider, remote peer, backup or PC was accessed or mutated. No source file in the repository was edited.",
+    "Previously documented A01-A15 corrected cases or explicit limits were not recounted as new findings. A11 proxy topology remains unproven and unchanged. Growth caps and fail-closed erasure limits remain explicit.",
+    "Privacy review here concerns technical confidentiality, validation, encryption and authorization only. No GDPR/legal determination, questionnaire, publication or candidate deployment is performed.",
+    "Mailbox-worker cross finding is pending the domain owner reproduction; no independent mail-send or external-network test was executed here."
+  ]
+}

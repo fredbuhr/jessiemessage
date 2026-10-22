@@ -1,0 +1,13 @@
+{
+  "provenance": "Observed output of the one new bounded local reproduction in this audit; not a CI result, browser test or hosted check. Script preserved after observation, not rerun for saving.",
+  "observed": {
+    "scope": "new_local_synthetic_route_reproduction_no_backup_execution",
+    "node": "v24.19.0",
+    "source": "public/manual-backups.html:12",
+    "link": "/admin/chat",
+    "linkStatus": 404,
+    "canonicalPath": "/admin/messages",
+    "canonicalStatus": 200,
+    "externalRequests": 0
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "type": "synthetic_late401_cookie_replacement_reproduction",
+  "runtime": "v24.19.0",
+  "scope": "Actual HTTP handlers on a synthetic loopback server; browser cookie replacement is modeled from received Set-Cookie headers; no browser or real account used.",
+  "results": [
+    {
+      "handler": "chat",
+      "role": "admin",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict",
+      "replacementCookieErasedByResponse": true
+    },
+    {
+      "handler": "chat",
+      "role": "client",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": "__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict",
+      "replacementCookieErasedByResponse": true
+    },
+    {
+      "handler": "media",
+      "role": "admin",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict",
+      "replacementCookieErasedByResponse": true
+    },
+    {
+      "handler": "media",
+      "role": "client",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": "__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict",
+      "replacementCookieErasedByResponse": true
+    },
+    {
+      "handler": "video",
+      "role": "admin",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict",
+      "replacementCookieErasedByResponse": true
+    },
+    {
+      "handler": "video",
+      "role": "client",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": "__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict",
+      "replacementCookieErasedByResponse": true
+    },
+    {
+      "handler": "profile",
+      "role": "admin",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict",
+      "replacementCookieErasedByResponse": true
+    },
+    {
+      "handler": "profile",
+      "role": "client",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": "__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict",
+      "replacementCookieErasedByResponse": true
+    },
+    {
+      "handler": "privacy-control",
+      "role": "admin",
+      "order": [
+        "old request A starts",
+        "handler reaches delayed operation",
+        "new session B cookie is received",
+        "old A returns 401"
+      ],
+      "status": 401,
+      "lateSetCookie": null,
+      "replacementCookieErasedByResponse": false
+    }
+  ],
+  "positiveCases": 8,
+  "negativeControlCases": 1
+}

@@ -1,0 +1,41 @@
+{
+  "observations": "Original local Node24.19.0 observations retained unchanged. Published scripts differ only in portable paths and evidence output, not application behavior.",
+  "records": [
+    {
+      "id": "B01-late401",
+      "originalScriptSha256": "1ae2c4dc0bba54d0463d4ae82b26515f6677f9798ec45984aac6201b7c1428aa",
+      "publishedScriptSha256": "e95ab1d8de72b93595a27cfddab35e550522f738d07b364829946f3cc551a532",
+      "adaptation": "Repository-relative imports; vault selector proof prints its result instead of writing a scratch evidence file. No behavioral fix."
+    },
+    {
+      "id": "B02-renew-clock",
+      "originalScriptSha256": "433ccb9538cbda3d87f514ea4af060582d9be5c6b4decac13b32e00f4355f2eb",
+      "publishedScriptSha256": "572146e3759618c03e6528699b31b0c1ff8f019f7aeef6935eb21f98ddadc7d6",
+      "adaptation": "Repository-relative imports; vault selector proof prints its result instead of writing a scratch evidence file. No behavioral fix."
+    },
+    {
+      "id": "B03-mail-expiry",
+      "originalScriptSha256": "084330b625248b5370aa6c0d0a8ce5636da993a1ccccc0340630dd1fd81231f4",
+      "publishedScriptSha256": "662f461406cfcd4e56544910573d114d7d3d526248b99a3255629ab3fa0c86d9",
+      "adaptation": "Repository-relative imports; vault selector proof prints its result instead of writing a scratch evidence file. No behavioral fix."
+    },
+    {
+      "id": "B05-witness-admission",
+      "originalScriptSha256": "974f3be5d63e70d7a793baf922dcfabeeeaf158c220753b746bab83ef9b79b77",
+      "publishedScriptSha256": "fe87ca1900c1bbe94885f8114d2fb670c827792e46224abdd58e256d1c2a6073",
+      "adaptation": "Repository-relative imports; vault selector proof prints its result instead of writing a scratch evidence file. No behavioral fix."
+    },
+    {
+      "id": "I01-vault-guard",
+      "originalScriptSha256": "9cf3b7d1ea6007f7434c00920eced167fab64e7d451e39bc008e1be83f79f712",
+      "publishedScriptSha256": "641167263f28551aa1b372909a0892ba4e6eaf5a59c5463aba18ca79ed3510b1",
+      "adaptation": "Repository-relative imports; vault selector proof prints its result instead of writing a scratch evidence file. No behavioral fix."
+    },
+    {
+      "id": "B04-navigation",
+      "originalScriptSha256": "890a1230f0300d82999724d0e8847880735be5e15fae81664f53be759a6897fd",
+      "publishedScriptSha256": "656eab51110b73ad13efe6e1625d9bf78a2b27c666bcc2722ca75ef913333914",
+      "adaptation": "Repository-relative module and resource URLs only."
+    }
+  ]
+}

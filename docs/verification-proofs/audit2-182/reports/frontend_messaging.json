@@ -1,0 +1,524 @@
+{
+  "format": "jessiemessage-second-audit-domain-v1",
+  "scope": "frontend_messaging",
+  "auditedProductionSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "checkoutHead": "e2cfbefe03d3538b216f873d185b1542d856044c",
+  "applicationVersion": "1.8.2",
+  "conclusion": "No newly confirmed actionable defect in the 30 fully reviewed source files. This is not a guarantee of absence of bugs.",
+  "findings": [],
+  "reviewedFiles": [
+    {
+      "path": "public/announcement-banner.css",
+      "owner": "frontend_messaging",
+      "bytes": 1523,
+      "lines": 1,
+      "sha256": "02a86af5cc255e8df5e08f945217b4d8d6e8402083c9aae43d3313dfe67f1ece",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/announcement-banner.js",
+      "owner": "frontend_messaging",
+      "bytes": 7397,
+      "lines": 88,
+      "sha256": "b1316ed252c51d6b19332f611af4119f106372efd8012863c88ab88d52194586",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/announcements-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 8270,
+      "lines": 132,
+      "sha256": "98591f79d2d1ebfabfc8f47d50e4fcf762dda70de811d6a70e12f7791701bb63",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/announcements.css",
+      "owner": "frontend_messaging",
+      "bytes": 3405,
+      "lines": 1,
+      "sha256": "987080e2dd4d45333179a4f378af31e2ef4b203502ff9da6670caa0bce2c78c1",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/announcements.html",
+      "owner": "frontend_messaging",
+      "bytes": 7678,
+      "lines": 38,
+      "sha256": "40c138e7b53fd5918a695c8c819c2fc5b85151d2483a807fe3cf8999be4df5a5",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/announcements.js",
+      "owner": "frontend_messaging",
+      "bytes": 16658,
+      "lines": 235,
+      "sha256": "3951e98b24df3b2c2af68dc45446dfbb43e8cdbafd663c5d8248e00cebf96cec",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/broadcast-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 22410,
+      "lines": 225,
+      "sha256": "c56980821240fe452ee27521c9d27c094832f02a7a53dbcdd53b6977a64e0778",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/broadcast.css",
+      "owner": "frontend_messaging",
+      "bytes": 7102,
+      "lines": 77,
+      "sha256": "ab049f1c226c55308c9921fddc59c5a18aeecadc69a2d485edef71fd8cae739f",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/broadcast.html",
+      "owner": "frontend_messaging",
+      "bytes": 14202,
+      "lines": 37,
+      "sha256": "d057b4d9fbc59496c649c70b68345825a94367786a31d300bc6cfe521698efa4",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/broadcast.js",
+      "owner": "frontend_messaging",
+      "bytes": 61651,
+      "lines": 666,
+      "sha256": "29c8bf4a04ec2c7b91cef7b567b1ba7cabf5ac9b07fe0a9812f30339c2894455",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/chat-drafts.js",
+      "owner": "frontend_messaging",
+      "bytes": 9108,
+      "lines": 132,
+      "sha256": "36ee8d3609f26dcfaec4e74ed8941409258a8c76383ebeb7670c44263ef0e74d",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/chat-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 11384,
+      "lines": 170,
+      "sha256": "feee3e3cf2080836816e80579e8873f9edd8d94b659428d3a12d12938d823c37",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/chat.css",
+      "owner": "frontend_messaging",
+      "bytes": 21159,
+      "lines": 49,
+      "sha256": "e8acf90434d13a6900b186e6eafaed731aca737ae5537959e793120bf3e5cbdf",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/chat.html",
+      "owner": "frontend_messaging",
+      "bytes": 17755,
+      "lines": 91,
+      "sha256": "6b7240d87cec4ff08326bdf832709bbbcc044cd52f2600740ffeea3dd0f57bc8",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/chat.js",
+      "owner": "frontend_messaging",
+      "bytes": 159155,
+      "lines": 2183,
+      "sha256": "ab5b825b328badd5c117e9fab95cf2855ad64761f45551f2d0f07cb24348008f",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/conversation-download.js",
+      "owner": "frontend_messaging",
+      "bytes": 6153,
+      "lines": 73,
+      "sha256": "d4e4be567a950204d5e70ed54fa35f043a473a83a4d5eb38a330303710be105f",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/crm-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 6496,
+      "lines": 95,
+      "sha256": "78af19ff206c3aa361aa8de01580733c0ed455c884e43fc03ee168aade8cb1de",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/crm.css",
+      "owner": "frontend_messaging",
+      "bytes": 4524,
+      "lines": 4,
+      "sha256": "768f8a1cb3483381dc01b9460e9c617c43ff1fda53dd93ac06b0ac39da868542",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/crm.js",
+      "owner": "frontend_messaging",
+      "bytes": 37205,
+      "lines": 407,
+      "sha256": "637b04a2e9fdf2f1733a2af0b4475ba6c1717d397225e7cd3756f738c110ef2e",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/emoji-catalog.js",
+      "owner": "frontend_messaging",
+      "bytes": 30297,
+      "lines": 365,
+      "sha256": "23cb0fb834cc1cfb7e05928a077c7aae04b3737178fc02da2d0a7807bd7a795b",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/emoji.css",
+      "owner": "frontend_messaging",
+      "bytes": 1709,
+      "lines": 14,
+      "sha256": "b9d80b7b6c2eaa9504d759fc90159e967f7018cb7f3cbe8a932ca8ba04e9f4e9",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/image-preparation.js",
+      "owner": "frontend_messaging",
+      "bytes": 9567,
+      "lines": 175,
+      "sha256": "6c6355ec75f9b3e2864427ade7fb7d1f811fb3bdae394ba9ecc1a565d4bec72f",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/private-archive.js",
+      "owner": "frontend_messaging",
+      "bytes": 4981,
+      "lines": 81,
+      "sha256": "4160501a726cdd36b9245d9d9ddebcc1cc02a8b247f18006880cce21d206b788",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/profile.css",
+      "owner": "frontend_messaging",
+      "bytes": 3145,
+      "lines": 30,
+      "sha256": "2212dd6439ecb96273dbd24fef15548e0ac4f6d8864e46f83498d120fdc88eb5",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/profile.js",
+      "owner": "frontend_messaging",
+      "bytes": 18964,
+      "lines": 302,
+      "sha256": "1b7a2c99fa54e930087de217b55b40960c55df687875bd51624851c0e2f4c4ae",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/quick-replies.js",
+      "owner": "frontend_messaging",
+      "bytes": 1483,
+      "lines": 24,
+      "sha256": "974ec27c9017ed666d5471baf52d5959bd2bce29733fe68852adfea7dab85b7e",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/tasks-model.js",
+      "owner": "frontend_messaging",
+      "bytes": 8670,
+      "lines": 132,
+      "sha256": "068c28e17bae63b98c839835ca2cc179b4d22df13d110120516d315b42fccd8e",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/tasks.css",
+      "owner": "frontend_messaging",
+      "bytes": 4060,
+      "lines": 1,
+      "sha256": "212d6f9da36b734b50619ffef5600aa1bdadc119407bb6cfcf437a50702245f9",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/tasks.html",
+      "owner": "frontend_messaging",
+      "bytes": 6853,
+      "lines": 35,
+      "sha256": "ed4f3eff653a98b26058e9075aae740c80b078bfa4d5baaa7bde8510f626ffed",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    },
+    {
+      "path": "public/tasks.js",
+      "owner": "frontend_messaging",
+      "bytes": 25234,
+      "lines": 279,
+      "sha256": "74c0f6167079e9d3359f82530adecb29b9e270319e0429df448b1e91a7b63bcb",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read"
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/chat-accessibility-markup.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "554c146be7465ebdbfb95e149af078fb365d7e20b1772117e36174ded578d400"
+    },
+    {
+      "path": "tests/chat-drafts.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "80ba54338fd9366523fdcfe60d34ffe690a1578b3b31c25e063518fdc372541c"
+    },
+    {
+      "path": "tests/chat-lifecycle.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "692a9aaeddf01439e16051dfbe98edb0c1ebc914cabcf5bc7d40bedd6cb8bacb"
+    },
+    {
+      "path": "tests/chat-model.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "dfd29eb0cd163f8de95993d4bca665dd662b92879487ea1fc82ccf3f554b84f5"
+    },
+    {
+      "path": "tests/chat-video-model.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "8771a81a3784a3ae7e901f3c9ceb7d103ea8aae42c011e01dd25c2256dfc60af"
+    },
+    {
+      "path": "tests/crm-model.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "c7552bd97e8a67c3f94137bd0a409ee586cac82780e873825c0fedee07611533"
+    },
+    {
+      "path": "tests/crm-lifecycle.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "5e606ae38ff3e1fe37087a1cd438a4d77f5185e9801b22ace893ddc9654a8274"
+    },
+    {
+      "path": "tests/profile-ui.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "9817b5e50c1c7b8dd38307c1b88f42227bf2aa5b52a1aa86238910fe28967033"
+    },
+    {
+      "path": "tests/private-archive.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "2cf589ac82ba304276e905fc94d7e52fac3c8918065dc228bbddda6119a9c391"
+    },
+    {
+      "path": "tests/image-preparation.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "74278ec9584d69983ed9caadd68f707d9813c58a1e87dff61d16f61498e0e6c1"
+    },
+    {
+      "path": "tests/quick-replies.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "6ded368bcd0b824931a5da30198e290b3fb18de773427f6d236945f02bd93c11"
+    },
+    {
+      "path": "tests/tasks-model.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "959a66778ff652d41e0d9ac867bf5024a9f9327939cd4d6e34169ba1f2416311"
+    },
+    {
+      "path": "tests/announcements-model.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "1642b22b5c3b5ca2b7a91a5a8e2da7e53c49cd7fee8e2c3edaf1599bf23fb2a4"
+    },
+    {
+      "path": "tests/announcements-ui.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "5ff9cd130b6f7c21a704abf0e9f33fa6a03537037c296ff1f4a2b2ee24f31d58"
+    },
+    {
+      "path": "tests/announcements-notification.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "224db3e73161bd41e9f7bd61393187d7f37f009febe5c9f5915601a2af323aa3"
+    },
+    {
+      "path": "tests/broadcast-model.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "b5212acc09c3105dce1d23ad0f07c26e4114330d34aea31aba6c3e9bc7507058"
+    },
+    {
+      "path": "tests/broadcast-lifecycle.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "606ad79ebc27d1d70f510d3f2f18b5017565fe3ddecce1ceb2235f78682d8ddb"
+    },
+    {
+      "path": "tests/broadcast-compact-compat.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "6def39b72c6ae1b7831fdb240dcdf9352801b790dc81b6273a354046b0753a31"
+    },
+    {
+      "path": "tests/browser/image-preparation.browser.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "f851681e0c0d3b46b70b0348def167065fc3a048ff6b50e29aa9f4e5449d7a92"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Assigned inventory completeness and identity",
+      "status": "passed",
+      "evidence": {
+        "files": 30,
+        "lines": 6142,
+        "allSourceSha256Match": true
+      }
+    },
+    {
+      "name": "Private ownership and late response review",
+      "status": "reviewed",
+      "paths": [
+        "public/chat.js",
+        "public/crm.js",
+        "public/profile.js",
+        "public/broadcast.js",
+        "public/announcements.js",
+        "public/announcement-banner.js",
+        "public/tasks.js"
+      ],
+      "evidence": "Checked generation/selection/visibility guards, owner+CSRF revalidation before mutation and after private reads, cancellation paths, suspended private DOM, caches and dialog closures against full lifecycle tests."
+    },
+    {
+      "name": "Immutable retry and no-duplicate review",
+      "status": "reviewed",
+      "evidence": "Text/photo/video chat IDs, pending kind/body/asset binding, pending confirmation clearing, visibility retention, bounded sessionStorage text and idempotent pending record, broadcast fixed payload/count, announcement mutation revisions, task optimistic revision conflicts, personal quick reply CAS."
+    },
+    {
+      "name": "DOM and media handling",
+      "status": "reviewed",
+      "evidence": "Owned code uses textContent/text-node adapters for private content. Strict role/conversation/message-scoped photo/video/avatar URL checks, object URL revocation, 4-slot image queue, deletion tombstones, image header parsing and re-encoding, archive bounds and cancellation, video library reference protection reviewed."
+    },
+    {
+      "name": "Markup, responsive styles, keyboard and local catalogue",
+      "status": "reviewed",
+      "evidence": "All assigned HTML/CSS and emoji catalogue read; explicit labels, modal close/focus, keyboard details/emoji commands, input sizes, raw i18n values and date conversions compared with model/lifecycle/markup fixtures. No real-device acceptance claimed."
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "candidate": "Broadcast acknowledgement expectedCount mismatches after authorized recipient erasure",
+      "files": [
+        "public/broadcast-model.js:219",
+        "server/broadcast/store.mjs:454",
+        "server/data/erasure-store.mjs:98"
+      ],
+      "disposition": "No new finding retained",
+      "reason": "Counter-review audit2_domains confirms backend first rejects the old fingerprint with409. delivery_review confirms this is intentional, documented anti-resurrection behavior. An escape from the resulting uncertain UI is at most a conditional UX improvement; no duplicate or security bypass established."
+    },
+    {
+      "candidate": "Archive reader cancellation listener missing for legacy photo ZIP",
+      "files": [
+        "public/private-archive.js"
+      ],
+      "disposition": "No actionable defect established",
+      "reason": "Production request binds fetch to AbortController; browser fetch cancellation rejects reader.read. Server output and declared sizes bounded. A synthetic reader ignoring abort would not establish a reachable production fault."
+    },
+    {
+      "candidate": "Long loaded histories and decoded-image memory may grow beyond object-URL cache bound",
+      "files": [
+        "public/chat.js",
+        "public/chat-model.js"
+      ],
+      "disposition": "Unmeasured performance limit, not counted as new defect",
+      "reason": "History explicitly loads further pages on user action; no deterministic failure or production threshold established. Resource cache bounds and stable DOM are present."
+    },
+    {
+      "candidate": "Video receipt may advance on visible player before playback",
+      "files": [
+        "public/chat-model.js",
+        "public/chat.js"
+      ],
+      "disposition": "Not counted",
+      "reason": "No product guarantee that read means played. Visibility of video message is a legitimate acknowledgement policy; no wrong-recipient or unseen-window acknowledgement established."
+    }
+  ],
+  "priorAuditAvoidedDuplicates": {
+    "A06": "Current broadcast suspension preserves same-owner composition and uncertain immutable payload; old full-purge finding is fixed.",
+    "A08": "Current chat-drafts sessionStorage code restores owner/session/conversation-bound text and exact text-send identity; old absence of reload persistence is fixed.",
+    "A04": "Current chat video library and guarded deletion route now visible in reviewed code; old absence is not repeated.",
+    "A10": "Privacy/legal work excluded per user scope; no repeated questionnaire or RGPD recommendation.",
+    "A11": "No proxy inference or hosted network probe in this scope.",
+    "A12": "Capacity debt not re-counted without new evidence."
+  },
+  "limits": [
+    "Static source audit with associated full-file test review; no general green suite rerun.",
+    "No new synthetic execution was required: no candidate survived backend/counter-review as a newly established defect.",
+    "The listed tests were read, not executed; runtime acceptance must not be inferred from test source.",
+    "Other browser fixtures and chat-accessibility/chat-i18n tests were identified but are not claimed as fully read in this report.",
+    "No real accounts, user messages, production access, hosted mutation, sends, erasure, backups or PC tools used.",
+    "Read receipts, long-history memory cost, physical screenreader/mobile behavior and network failure combinations are not exhaustively qualified."
+  ],
+  "repositoryChanges": false,
+  "applicationFixes": false,
+  "productionActions": false
+}

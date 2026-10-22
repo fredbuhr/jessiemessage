@@ -1,0 +1,706 @@
+{
+  "scope": "messaging_media",
+  "audit": "second audit 1.8.2",
+  "auditBase": "e2cfbefe03d3538b216f873d185b1542d856044c",
+  "runtimeSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "complete": true,
+  "sourceCoverage": {
+    "files": 41,
+    "lines": 6560,
+    "fullSourceReads": true
+  },
+  "findings": [
+    {
+      "id": "MM-01",
+      "severity": "P2",
+      "title": "Une réponse 401 retardée efface la session plus récente du même navigateur",
+      "file": "server/chat/http.mjs",
+      "line": 286,
+      "relatedOwnedLocations": [
+        {
+          "file": "server/chat/http.mjs",
+          "line": 286
+        },
+        {
+          "file": "server/media/http.mjs",
+          "line": 279
+        },
+        {
+          "file": "server/profile/http.mjs",
+          "line": 92
+        },
+        {
+          "file": "server/video/http.mjs",
+          "line": 339
+        }
+      ],
+      "relatedLocationsReviewedByOtherAuditors": [
+        {
+          "file": "server/auth/http.mjs",
+          "line": "211–213"
+        },
+        {
+          "file": "server/access/http.mjs",
+          "line": "211–214"
+        },
+        {
+          "file": "server/notifications/http.mjs",
+          "line": 118
+        },
+        {
+          "file": "server/tasks/http.mjs",
+          "line": 88
+        },
+        {
+          "file": "server/quick-replies/http.mjs",
+          "line": 40
+        },
+        {
+          "file": "server/announcements/http.mjs",
+          "line": 86
+        },
+        {
+          "file": "server/broadcast/http.mjs",
+          "line": 303
+        },
+        {
+          "file": "server/crm/http.mjs",
+          "line": 279
+        },
+        {
+          "file": "server/readiness/http.mjs",
+          "line": 122
+        }
+      ],
+      "trigger": "Une requête portant l’ancienne session A reste en attente dans une opération async; une reconnexion installe le cookie B dans le même navigateur; l’ancienne requête A reprend et échoue en 401 après révocation/expiration.",
+      "impact": "Le Set-Cookie de suppression, indexé seulement par le nom et le Path, efface B. La connexion qui vient de réussir est perdue. Affecte les deux rôles; peut également provoquer des redirections et perdre la continuité de saisie. Aucun contournement d’authentification ou accès à un tiers n’est démontré.",
+      "cause": "Le catch efface systématiquement le cookie de rôle à réception d’un 401 lié à la requête. Un serveur ne peut pas distinguer le cookie actuel du navigateur du cookie A reçu avant l’attente. Les protections frontend contre les réponses obsolètes n’empêchent pas le navigateur de traiter Set-Cookie.",
+      "repro": {
+        "command": "node /workspace/scratch/bb431be72395/audit2-182/messaging_media/repro-late401.mjs",
+        "script": "/workspace/scratch/bb431be72395/audit2-182/messaging_media/repro-late401.mjs",
+        "result": "/workspace/scratch/bb431be72395/audit2-182/messaging_media/repro-late401.json",
+        "exitCode": 0,
+        "runtime": "v24.19.0",
+        "positiveCases": 8,
+        "negativeControls": 1,
+        "scenario": "Actual chat/media/video/profile HTTP handlers, both roles; synthetic delayed service error. Replacement cookie modeled from actual Set-Cookie received over loopback. Privacy HTTP is the non-clearing negative control."
+      },
+      "evidence": [
+        "All eight chat/media/video/profile responses are 401 with a role-cookie Max-Age=0 header after the synthetic replacement cookie was received.",
+        "The privacy handler returns 401 without Set-Cookie and preserves the replacement in the same HTTP scheduling harness.",
+        "server/chat/client-export-http.mjs explicitly states a delayed request must never erase a newer client session cookie; server/privacy/http.mjs has the same rationale.",
+        "tests/chat-http.test.mjs:414–423 and tests/media-http.test.mjs:418–423 assert unconditional clearing on delayed service-401 errors, without the replacement-in-flight case.",
+        "Delivery reviewer verified auth/store.mjs:76–105 and access/store.mjs:347–365: asynchronous lookups/locks and clock refresh permit a revoked A to return null after a concurrent B has been issued.",
+        "Root counter-review confirmed the same late-cookie clearing in readiness/http.mjs:122 after readiness operations; this remains the same finding. This agent inspected lines114–126 directly."
+      ],
+      "confidence": "high for HTTP behavior and modeled cookie replacement; real-browser and hosted timing not exercised",
+      "suggestedCorrection": "Generalize the existing privacy/export rule to delayed authenticated responses; keep cookie destruction scoped to explicitly requested logout/session transitions and check their own concurrency semantics.",
+      "regressionCoverageNeeded": "Two-role replacement-in-flight cases on all affected handler families; ensure old 401 never emits a deletion cookie for B and still denies A."
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "path": "server/chat/archive-transfer.mjs",
+      "owner": "messaging_media",
+      "bytes": 8653,
+      "lines": 123,
+      "sha256": "e85432692592cd13c328b742aa0a97a23505bd14da4628d934da7d1eb0c1234c",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/client-export-http.mjs",
+      "owner": "messaging_media",
+      "bytes": 4610,
+      "lines": 59,
+      "sha256": "3d3a3d7e6777882d8036f15cddca990ed867b0f485b71d2e6a843af548155d04",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/config.mjs",
+      "owner": "messaging_media",
+      "bytes": 922,
+      "lines": 15,
+      "sha256": "a5cafbd170b1bffb2862361893c13c45cb485e9ab65cc9c73088adac4ae8557a",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/conversation-export.mjs",
+      "owner": "messaging_media",
+      "bytes": 13828,
+      "lines": 138,
+      "sha256": "b1223413e4fce1f3155004037b563a89ce7477b5cb2a9f1e383855023dd6296d",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/crypto.mjs",
+      "owner": "messaging_media",
+      "bytes": 6109,
+      "lines": 141,
+      "sha256": "5cbfae0ce05aae6cba0fb7fc1bf8f7180dcbbd6d74fd8f8668765d562b7f8a28",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/http.mjs",
+      "owner": "messaging_media",
+      "bytes": 21443,
+      "lines": 298,
+      "sha256": "f888fd677ec20e53a07a48caa431339c09ee98739ab9e32ca4b9032b390bbf8e",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/profile-avatar.mjs",
+      "owner": "messaging_media",
+      "bytes": 1067,
+      "lines": 18,
+      "sha256": "9a41a4d6e7a8de7d553d1d4fe599a6039ba438c991087aeb2565f2e0554529e5",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/service.mjs",
+      "owner": "messaging_media",
+      "bytes": 17047,
+      "lines": 236,
+      "sha256": "83eb3962f7a2849352d474c56be531e7a2440f003002b9dcfe8a89503bd22903",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/store.mjs",
+      "owner": "messaging_media",
+      "bytes": 45586,
+      "lines": 597,
+      "sha256": "0f5ba413f8e5a08a2cd4fd282e69f13266a33a8dca847fc4c16132774187af30",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/streaming-conversation-export.mjs",
+      "owner": "messaging_media",
+      "bytes": 18974,
+      "lines": 203,
+      "sha256": "a375abbf0fbd79aa69de472988ef226d0efe7055eece26075f3baa9a7ad727e3",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/chat/zip-stream.mjs",
+      "owner": "messaging_media",
+      "bytes": 8553,
+      "lines": 167,
+      "sha256": "d62e9d03f0c01b389ff57cbb9192728c65f623b00dba97a84326c56638f2a8c7",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/backup-admission.mjs",
+      "owner": "messaging_media",
+      "bytes": 2910,
+      "lines": 45,
+      "sha256": "d6131d17afd9a8178caffe32e818b47a9c08d916aa31bdf188641458ab8d1d32",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/backup-limits.mjs",
+      "owner": "messaging_media",
+      "bytes": 450,
+      "lines": 7,
+      "sha256": "ddb8825e3f9ffea62e7a043225af2c0fc35c6a4742799516c04073615e0ee1e7",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/capacity-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 10781,
+      "lines": 150,
+      "sha256": "5b8e7441e0e17bf51f317ca6a089d1ad1111d027d81dc912c2e757a429199c58",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/config.mjs",
+      "owner": "messaging_media",
+      "bytes": 2606,
+      "lines": 37,
+      "sha256": "8dc06df5403a17aa6ddf4789e444689b32181a91e2c6784c5b48275b3dbabe84",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/dto.mjs",
+      "owner": "messaging_media",
+      "bytes": 598,
+      "lines": 8,
+      "sha256": "2c7d1500db2fd13b5e3baf66a3d68d514a636903231a5b7fa5d62a6560581ee7",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/http.mjs",
+      "owner": "messaging_media",
+      "bytes": 17962,
+      "lines": 286,
+      "sha256": "7513104ea0519ed553f80828ebd432e0cd677c9ec924b9db8dbf9b13e6070966",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/image-worker.mjs",
+      "owner": "messaging_media",
+      "bytes": 4190,
+      "lines": 87,
+      "sha256": "01dfeefed6a063d4677511d4f263f63821ac6e27bd784c5fa45c1718245c57de",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/image.mjs",
+      "owner": "messaging_media",
+      "bytes": 5438,
+      "lines": 130,
+      "sha256": "4617c8ec3892464eb040b1b3995e9d3551d8d500c40e4500e235b24d02ed0b6f",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/inventory-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 4383,
+      "lines": 63,
+      "sha256": "232c79b2425ab846ab6d2eba89d787b6029a9c65976c8edd3e33d90dc4c7e86a",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/inventory.mjs",
+      "owner": "messaging_media",
+      "bytes": 14093,
+      "lines": 197,
+      "sha256": "1af32c87de45bb276c384327f63568a3ad8169bb8eb109d79f2050607d374264",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/service.mjs",
+      "owner": "messaging_media",
+      "bytes": 16786,
+      "lines": 240,
+      "sha256": "0a3abfbea516002004ff020425a09d432c47602241e8954b4805afdf57f4cefb",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/storage.mjs",
+      "owner": "messaging_media",
+      "bytes": 19952,
+      "lines": 431,
+      "sha256": "51d7a90d82a86e56a39272cb8f50d1e8d7f2b52ef3a242e1cc7b76ae29c4f6b2",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/media/store.mjs",
+      "owner": "messaging_media",
+      "bytes": 28989,
+      "lines": 350,
+      "sha256": "3dfe58a68052cdfeaa826206c91cb0fd382b34f1b3c6e097f12502c080ff5bc0",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/profile/http.mjs",
+      "owner": "messaging_media",
+      "bytes": 7548,
+      "lines": 99,
+      "sha256": "4faaa31baa9507107d196450af437a95a5bd8914f772b6411b3b6a416e5c20b7",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/profile/service.mjs",
+      "owner": "messaging_media",
+      "bytes": 7533,
+      "lines": 98,
+      "sha256": "86199b92ee9b701b7c717d083f9cce5e4a4893632493fc33a082019121bd17f2",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/profile/store.mjs",
+      "owner": "messaging_media",
+      "bytes": 12801,
+      "lines": 147,
+      "sha256": "a4a427e86213b00f2a50a0ff73961b583f581b783e6dd10367421648a84910cf",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/profile/validation.mjs",
+      "owner": "messaging_media",
+      "bytes": 937,
+      "lines": 17,
+      "sha256": "feef40a5465dd161c353ea0fefaa86cba328e69e1c873b123a24ab869500b9fb",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/data-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 7962,
+      "lines": 134,
+      "sha256": "4e4e28fc41fdc3458405fa4e47e1f38fb61c4072d1b2a925193f78fae46aebea",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/erasure-storage.mjs",
+      "owner": "messaging_media",
+      "bytes": 1052,
+      "lines": 21,
+      "sha256": "bf28a2ab2a64e57a3770543c88a9464cc047b226510f5e8be0be7961c5c712c3",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/erasure-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 10387,
+      "lines": 141,
+      "sha256": "ed56bb28436cc6495288f7a2da8dbe12631b37617d4c8e42c413bfe526498a0a",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/http.mjs",
+      "owner": "messaging_media",
+      "bytes": 23245,
+      "lines": 354,
+      "sha256": "967bfc249d20c382d409539ee3592a222ae55983a98b28f0cf4f3ec66aa7f080",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/message-store.mjs",
+      "owner": "messaging_media",
+      "bytes": 15741,
+      "lines": 224,
+      "sha256": "19f02a8e17a463d86cd6b4a3a35073f63cbe92e15054e392d601469f6bb33209",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/migrations.mjs",
+      "owner": "messaging_media",
+      "bytes": 1176,
+      "lines": 19,
+      "sha256": "be8e208aa44be99963b668c79e41330942eeb3427a7eeaa6eb52a588dea2bbc1",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/migrations/0034_video_storage_state.sql",
+      "owner": "messaging_media",
+      "bytes": 741,
+      "lines": 13,
+      "sha256": "69b8ecfa68266b372642b3ee4d35de15912b8815a971b053d48ae25d5f39201e",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/migrations/0035_video_assets.sql",
+      "owner": "messaging_media",
+      "bytes": 2186,
+      "lines": 37,
+      "sha256": "8b8ae74c836de44374a63c7befcd7b01aabb7c07d506d0e8887d94a0f0fb233c",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/migrations/0036_message_video.sql",
+      "owner": "messaging_media",
+      "bytes": 927,
+      "lines": 16,
+      "sha256": "8f4fcd95094ecccaa5c47daa0af3e70e6c099b4012d535f513731115b8bfe427",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/mp4.mjs",
+      "owner": "messaging_media",
+      "bytes": 2075,
+      "lines": 45,
+      "sha256": "f540bf12efd2387f22f60f956f8766dd16c8ba44ad7dd308e5a1f22d109c426d",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/service.mjs",
+      "owner": "messaging_media",
+      "bytes": 23132,
+      "lines": 357,
+      "sha256": "790efe40f6b074285a336bd68287e81147d3abf8d9d6df111b2a3326640fc7c1",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/storage.mjs",
+      "owner": "messaging_media",
+      "bytes": 26356,
+      "lines": 394,
+      "sha256": "4bfbf95c51e01b079abce4dc304d5537249c0486fd33390a25fbbe026ff01e16",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/video/store.mjs",
+      "owner": "messaging_media",
+      "bytes": 29640,
+      "lines": 418,
+      "sha256": "3a9a740bc0de01c52ae685cf7ed9931b9f9e4bf7b9b852d597cec810d5f2b35b",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read; control/data-flow and dependency review",
+      "sha256Verified": true
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/archive-transfer.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/profile-service.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/profile-http.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/chat-media-service.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/video-message-service.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/video-mp4.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/video-service.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/conversation-export.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/streaming-conversation-export.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/zip-stream.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/chat-http.test.mjs",
+      "read": "partial",
+      "ranges": [
+        [
+          1,
+          105
+        ],
+        [
+          414,
+          434
+        ]
+      ],
+      "executed": false
+    },
+    {
+      "path": "tests/media-http.test.mjs",
+      "read": "partial",
+      "ranges": [
+        [
+          94,
+          117
+        ],
+        [
+          418,
+          429
+        ]
+      ],
+      "executed": false
+    },
+    {
+      "path": "tests/streaming-archive-http.test.mjs",
+      "read": "partial",
+      "ranges": [
+        [
+          145,
+          162
+        ]
+      ],
+      "executed": false
+    },
+    {
+      "path": "tests/media-service.test.mjs",
+      "read": "targeted search only",
+      "matches": "authorization before storage, fresh permissions after quota",
+      "executed": false
+    }
+  ],
+  "checks": [
+    {
+      "check": "Owned source hashes",
+      "result": "41/41 match the manifest; no source mutation"
+    },
+    {
+      "check": "Late 401 synthetic reproduction",
+      "result": "8 positives and 1 privacy negative control; script asserts expected headers and modeled cookie state"
+    },
+    {
+      "check": "Crypto binding",
+      "result": "Message AAD binds sender/conversation/message; photo AES-GCM binds asset and variant; video authenticated header + indexed block AAD and per-file derived key reviewed"
+    },
+    {
+      "check": "SQL ownership and concurrency",
+      "result": "chat actor/conversation locks, refreshed session time, idempotent appends/tombstones, owner/media references, capacity reservation/commit/release and deletion intents reviewed"
+    },
+    {
+      "check": "Transport and bounded resource use",
+      "result": "image worker isolation, bounded upload body/queue/time, video Range/HEAD/If-Range parsing, read slots, backpressure and cancellation cleanup reviewed"
+    },
+    {
+      "check": "Exports",
+      "result": "fixed entry names, ZIP32 sizes/CRC/descriptors, HTML escaping, reauthorization before headers and lazy opening of video deliveries, source wiping/close ownership reviewed"
+    },
+    {
+      "check": "Previously audited defects",
+      "result": "A01–A16 not re-counted. Existing growth/format/hosted-qualification limits retained."
+    }
+  ],
+  "nonFindings": [
+    {
+      "hypothesis": "Post-read authorization for every photo/video chunk",
+      "decision": "Not counted: ordinary photo/video downloads authorize at opening; video code explicitly transfers immutable snapshot ownership and exports recheck unopened originals. No new documented immediate-cancellation guarantee or exploit beyond normal in-flight operation established. Avatar replacement has a stricter explicit second-check contract."
+    },
+    {
+      "hypothesis": "Bootstrap/client names incompatible with profile canonicalization",
+      "decision": "Discarded after dependency review: registration and bootstrap normalize NFC and reject controls/Cf/outer whitespace before storing."
+    },
+    {
+      "hypothesis": "Video buffers wiped before HTTP socket consumption",
+      "decision": "Discarded: video/storage.mjs:222–225 transfers successful buffer ownership without wiping; archive transport separately waits write callbacks before wiping its owned copies."
+    }
+  ],
+  "limits": [
+    "Read-only audit; no repository fix or deployment performed.",
+    "No live account, real message, destructive action, hosted backup, email or production shell accessed.",
+    "No already-green general test suite rerun. Only the new scoped synthetic reproduction was executed.",
+    "Full source coverage applies to these 41 assigned files, not every repository test. testsRead distinguishes complete reads, ranges and searches honestly.",
+    "No MariaDB integration, real browser cookie jar or deployed Node v24.22.1 qualification executed; local Node v24.19.0 only.",
+    "Existing deliberate limits include original MP4 acceptance without codec/transcode guarantee, bounded exports/catalog growth and normal immutable in-flight reads.",
+    "No legal/privacy-compliance conclusion; user deferred that separate subject."
+  ]
+}

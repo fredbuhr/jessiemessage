@@ -1,0 +1,5960 @@
+{
+  "type": "audit2-182-test-reading-coverage",
+  "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "all390FilesInventoriedAndHashed": true,
+  "allTestsRead": false,
+  "counts": {
+    "structural_inventory_only": 163,
+    "partial_or_targeted": 25,
+    "full": 202
+  },
+  "records": [
+    {
+      "path": "tests/access-config.test.mjs",
+      "sha256": "742811cfb9f5b04dbfcb308ab22f173b17c7451d2ccb89fd59711e6c29f84b30",
+      "lines": 31,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/access-flow.integration.test.mjs",
+      "sha256": "aa55af53f4bfe63bc6545bc3ae019e50c404f29ba7add09a8a4d10c95cf62756",
+      "lines": 362,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/access-flow.integration.test.mjs",
+            "ranges": [
+              [
+                270,
+                324
+              ]
+            ],
+            "coverage": "expired/future renewal, atomic retry and immutable other state"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/access-http.test.mjs",
+      "sha256": "49e83c2d84a198754ac587aa2d0cfb66735d38096552323e2aa2e3b428019919",
+      "lines": 512,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/access-i18n.test.mjs",
+      "sha256": "1cc559d45ece88b49c5bc12e805d7e5d7948dbd635bb41c289bf176728dd0bc8",
+      "lines": 260,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/access-i18n.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "1cc559d45ece88b49c5bc12e805d7e5d7948dbd635bb41c289bf176728dd0bc8"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/access-pagination.test.mjs",
+      "sha256": "12fed2873eb1b78ad9e482147dbd19e467a6a81d81165f70c9585f9310e10524",
+      "lines": 60,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/access-service.test.mjs",
+      "sha256": "f28e1a62587276f61538841f419c41abbe10c5f6772cc21c878134d0f384097d",
+      "lines": 326,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/access-service.test.mjs",
+            "ranges": [
+              [
+                1,
+                90
+              ],
+              [
+                263,
+                329
+              ]
+            ],
+            "coverage": "fixture clock semantics, renewal quotas and DTO checks"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/access-store.integration.test.mjs",
+      "sha256": "5f0777f25b1838f0baff1c02383f6315c0490722b5f4b4a76ebfec10b674ead6",
+      "lines": 686,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/access-token-clock.test.mjs",
+      "sha256": "87a73bebc1e8d83072dcd75a85dd07895f50cee040aa4b0f9c4f405a394efcc3",
+      "lines": 195,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/access-token-clock.test.mjs",
+            "ranges": "complete",
+            "coverage": "post-wait invitation/verification/credential expiry and unchanged deadlines"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/account-erasure-flow.integration.test.mjs",
+      "sha256": "0ff19abf2aa41933f3294143324cb7e8b9ce02bbb3635856ee2e6edb04e65d0a",
+      "lines": 609,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/account-erasure-journal.test.mjs",
+      "sha256": "3619bb509f3ed6dd032e764e2d983dbf00e76a1d45b0f726109525533da145e1",
+      "lines": 104,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/account-erasure.test.mjs",
+      "sha256": "2657ef0624b1f1dab373d1c5d43cd879ae9ddd647080d965e3bc4b569fdb7046",
+      "lines": 132,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/account-erasure.test.mjs",
+            "ranges": "complete",
+            "coverage": "intent-before-write, uncertain commits, unlink-before-capacity-release, maintenance and replay guards"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/admin-bootstrap-input.test.mjs",
+      "sha256": "e4db4af9c48bc39224e02b7596ba0c00824165e7423e0795ed9e90522a8b419a",
+      "lines": 303,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/admin-bootstrap-input.test.mjs",
+            "ranges": [
+              [
+                193,
+                215
+              ]
+            ],
+            "coverage": "post-bootstrap uncertainty, sanitized errors and refusal of malformed success"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/admin-bootstrap.test.mjs",
+      "sha256": "1fd051b98507ea0de4c3fc43026eba81364641fc9bcefb710816183abf7546fa",
+      "lines": 341,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/admin-bootstrap.test.mjs",
+            "ranges": [
+              [
+                139,
+                160
+              ],
+              [
+                290,
+                326
+              ]
+            ],
+            "coverage": "confirmed failure vs uncertain commit and anchored cleanup under parent replacement"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/admin-i18n.test.mjs",
+      "sha256": "c082a254c056c6061f883f488b7d3b74dab1f9d707190bb0734a91680fa086c9",
+      "lines": 171,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/admin-i18n.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "c082a254c056c6061f883f488b7d3b74dab1f9d707190bb0734a91680fa086c9"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/admin-lifecycle.test.mjs",
+      "sha256": "bf931a18357a688d31d9546c59fa5be87c46637b74ba2435a3b28efe0c345e74",
+      "lines": 740,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/admin-lifecycle.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "bf931a18357a688d31d9546c59fa5be87c46637b74ba2435a3b28efe0c345e74",
+            "lines": 740
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/admin-navigation.test.mjs",
+      "sha256": "7b420f3e543a0d32b3c499d28bb34bc99a865101c75155077c8875a6ccb20621",
+      "lines": 99,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/admin-navigation.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "7b420f3e543a0d32b3c499d28bb34bc99a865101c75155077c8875a6ccb20621",
+            "lines": 99
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/admin-recovery.integration.test.mjs",
+      "sha256": "304b570b774b50a6317a154d760f53212a96234b1655e016a842e0a986cd0960",
+      "lines": 175,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/admin-recovery.test.mjs",
+      "sha256": "d321a2857ccb371bf9bf0878e8ecbf62e62a0b8909c28eb0bfa2fb61c36d6e3a",
+      "lines": 205,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/admin-recovery.test.mjs",
+            "ranges": [
+              [
+                161,
+                220
+              ]
+            ],
+            "coverage": "pool cleanup preservation, locked version/target refusal and commit uncertainty"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/admin-tools.test.mjs",
+      "sha256": "5ca4849fb9b5b9aa637eb8cb3f0d41ffe6c6f287bdedebe2b0480d030e8545a6",
+      "lines": 109,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_preview_tools.json",
+          "detail": {
+            "path": "tests/admin-tools.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "5ca4849fb9b5b9aa637eb8cb3f0d41ffe6c6f287bdedebe2b0480d030e8545a6"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcement-banner.test.mjs",
+      "sha256": "b39f7a07d9ac306f67b2dabe5880d3eae9452357d70db287dd188624b82b9455",
+      "lines": 79,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcements-crypto.test.mjs",
+      "sha256": "9a277c1ed679bfd9dd69f799c2a0e9621864ac22c7750f6157a93bb892a241f1",
+      "lines": 47,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/announcements-crypto.test.mjs",
+            "lines": 47,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcements-flow.integration.test.mjs",
+      "sha256": "0b76c774374abc7b9aee078369a5ebef3c85f14dee9eed43ea662c4f48822e01",
+      "lines": 270,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/announcements-flow.integration.test.mjs",
+            "lines": 270,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcements-http.test.mjs",
+      "sha256": "2a9fc55a90c9367437516c049a34d85f655417297a54823070b03df4b26ec548",
+      "lines": 93,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/announcements-http.test.mjs",
+            "lines": 93,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcements-model.test.mjs",
+      "sha256": "1642b22b5c3b5ca2b7a91a5a8e2da7e53c49cd7fee8e2c3edaf1599bf23fb2a4",
+      "lines": 128,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/announcements-model.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "1642b22b5c3b5ca2b7a91a5a8e2da7e53c49cd7fee8e2c3edaf1599bf23fb2a4"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcements-notification.test.mjs",
+      "sha256": "224db3e73161bd41e9f7bd61393187d7f37f009febe5c9f5915601a2af323aa3",
+      "lines": 24,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/announcements-notification.test.mjs",
+            "lines": 24,
+            "reviewStatus": "fully_read"
+          }
+        },
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/announcements-notification.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "224db3e73161bd41e9f7bd61393187d7f37f009febe5c9f5915601a2af323aa3"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcements-runtime.test.mjs",
+      "sha256": "bbf8602350fe500ef4b1690a478ac41524a708583f486e00225b5a12b81a29e2",
+      "lines": 96,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcements-service.test.mjs",
+      "sha256": "79c229886a6f280d105976b39fa0d21237101b8aa3e24df6d9a0b5a94b92a4ee",
+      "lines": 78,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/announcements-service.test.mjs",
+            "lines": 78,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/announcements-ui.test.mjs",
+      "sha256": "5ff9cd130b6f7c21a704abf0e9f33fa6a03537037c296ff1f4a2b2ee24f31d58",
+      "lines": 238,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/announcements-ui.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "5ff9cd130b6f7c21a704abf0e9f33fa6a03537037c296ff1f4a2b2ee24f31d58"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/application-checkpoint-manifest.test.mjs",
+      "sha256": "89910cda6528da83d5e6a28c09641a5f41a4397c37053a22449d0e787af7963d",
+      "lines": 129,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/application-checkpoint-manifest.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "89910cda6528da83d5e6a28c09641a5f41a4397c37053a22449d0e787af7963d",
+            "lines": 129
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/application-checkpoint-receipt.test.mjs",
+      "sha256": "ca42c4835041e1bea921029fe06c17f4f2472ca8412f1d24084e81373785abd4",
+      "lines": 108,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/application-checkpoint-receipt.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "ca42c4835041e1bea921029fe06c17f4f2472ca8412f1d24084e81373785abd4",
+            "lines": 108
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/application-table-dump.test.mjs",
+      "sha256": "e48ed1e7b613c1f8c6273f1257c5567f3ae4199f352f0c17412ea5165061271c",
+      "lines": 204,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/application-table-dump.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "e48ed1e7b613c1f8c6273f1257c5567f3ae4199f352f0c17412ea5165061271c"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/archive-transfer.test.mjs",
+      "sha256": "b98b6ee1ca7995e38892698aade13971f44300989e02c1bb0c9b79af52457166",
+      "lines": 31,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/archive-transfer.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/auth-config.test.mjs",
+      "sha256": "25543750f2be2c271e533b0352032de5c49a1afaeaaafb9b2773617823d93803",
+      "lines": 31,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/auth-crypto.test.mjs",
+      "sha256": "7946ee73467f84ee941a71b82500c850a87caf3656993864c6ccd200b170898b",
+      "lines": 226,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/auth-crypto.test.mjs",
+            "ranges": "complete",
+            "coverage": "canonical entropy, bounded scrypt, TOTP replay/vector/GCM, recovery namespace, CSRF"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/auth-http.test.mjs",
+      "sha256": "97d15c26ec6e0fa8d79cb9d8f1dbdc304d6787764aa1e2778f802cd3a1d0ff6b",
+      "lines": 395,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/auth-http.test.mjs",
+            "ranges": [
+              [
+                75,
+                94
+              ],
+              [
+                175,
+                263
+              ]
+            ],
+            "coverage": "origin, cookie parsing, csrf, stale cookie and fixed errors"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/auth-rate-limit.test.mjs",
+      "sha256": "29ac2d71732af72e3c2df399eb666798864ca018d702bf51a1805a1c52c20edd",
+      "lines": 34,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/auth-rate-limit.test.mjs",
+            "ranges": "complete",
+            "coverage": "network savepoint rollback and invalid budgets"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/auth-service.test.mjs",
+      "sha256": "8fb4acb287fa9f49d8f939eb73bb3282800242247671e98ee56207049a912345",
+      "lines": 149,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/auth-service.test.mjs",
+            "ranges": "complete",
+            "coverage": "credential eligibility, rate buckets, post-work clock, fixed errors"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/auth-session-policy.test.mjs",
+      "sha256": "eff30cd64ea26c6dee3f4552ae1d6130c966ed8857008166af61b832dd19539f",
+      "lines": 145,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/auth-store.integration.test.mjs",
+      "sha256": "92d0644f8c679d4b96f8f0206d593e968e3354738f4fb76cad1996bf1e45b935",
+      "lines": 412,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/auth-store.integration.test.mjs",
+            "ranges": [
+              [
+                82,
+                105
+              ],
+              [
+                122,
+                234
+              ]
+            ],
+            "coverage": "MFA/recovery single use, lock order, device isolation/revocation"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/authentication-rehearsal-cleanup.test.mjs",
+      "sha256": "9d9f8d855e7d1455c4231b806ad17222fc4aa4dd35fcea1e9367cd6b0e241dbe",
+      "lines": 42,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/authentication-rehearsal-guard.test.mjs",
+      "sha256": "1f2604de2ea61945ed0df1e06ba68f64fa498cdcfc3753b2dc905ffa3950ec00",
+      "lines": 49,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-alert-files.test.mjs",
+      "sha256": "2ed2b07aa8f6e1bb6344a847a0cbdefbe4dd9a9d22212d3a01a4faaa81295de5",
+      "lines": 87,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-alert-files.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "2ed2b07aa8f6e1bb6344a847a0cbdefbe4dd9a9d22212d3a01a4faaa81295de5",
+            "lines": 87
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/backup-alert-files.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-alerts.test.mjs",
+      "sha256": "7ae613347337a34138218c1dd26c53f2ee5b2eceb7522598a224e25f2bde19e3",
+      "lines": 204,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-alerts.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "7ae613347337a34138218c1dd26c53f2ee5b2eceb7522598a224e25f2bde19e3",
+            "lines": 204
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/backup-alerts.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-application-scope.test.mjs",
+      "sha256": "a66d003a5cd0a6c5ac3b2bdda3302f5e698c216b8f321733e934ac62311f9334",
+      "lines": 146,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-application-scope.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "a66d003a5cd0a6c5ac3b2bdda3302f5e698c216b8f321733e934ac62311f9334",
+            "lines": 146
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-cli.test.mjs",
+      "sha256": "da00d56116d9d62556a92c90b0ca5f7da8124fcf60bdfa935e4d841072adcfe2",
+      "lines": 518,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-copy-catalog.test.mjs",
+      "sha256": "3f61f7c3121f2c1e5f73da9574a4eb4c2280c6079abb23d43ae0ac956f0499ab",
+      "lines": 77,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-copy-catalog.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "3f61f7c3121f2c1e5f73da9574a4eb4c2280c6079abb23d43ae0ac956f0499ab",
+            "lines": 77
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/backup-copy-catalog.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-copy-files.test.mjs",
+      "sha256": "ba7842c5ce6cc7a40c65b71573ecb088eb4c45cb288485903b882d67d494e852",
+      "lines": 87,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-copy-files.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "ba7842c5ce6cc7a40c65b71573ecb088eb4c45cb288485903b882d67d494e852",
+            "lines": 87
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/backup-copy-files.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-copy-http.test.mjs",
+      "sha256": "266f5863259eb82205a71df734d820368eb3fafa730ff32c3f73b630b60fb9c2",
+      "lines": 124,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-copy-http.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "266f5863259eb82205a71df734d820368eb3fafa730ff32c3f73b630b60fb9c2",
+            "lines": 124
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/backup-copy-http.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-copy.test.mjs",
+      "sha256": "2c77587459140c0d81552c8e9284678f4f7f2050cf318b00cdad07f39bc73560",
+      "lines": 83,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-copy.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "2c77587459140c0d81552c8e9284678f4f7f2050cf318b00cdad07f39bc73560",
+            "lines": 83
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/backup-copy.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-flow.integration.test.mjs",
+      "sha256": "fa9e98afbd1bbe0c9267866ca6bd794b4cc6c62c6c4eb656de9a1f37d8521c4c",
+      "lines": 750,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-freshness.test.mjs",
+      "sha256": "9beb94a522a0bc0cbd12ee2ee166879f58d3cc7b7e1e700a7c46dc33598fcc53",
+      "lines": 166,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-freshness.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "9beb94a522a0bc0cbd12ee2ee166879f58d3cc7b7e1e700a7c46dc33598fcc53",
+            "lines": 166
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/backup-freshness.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-history-retention.test.mjs",
+      "sha256": "51d92a8c12d3b2a182c80b995699307e4d70d880d89c6ecdbc1eaeb70cfe5965",
+      "lines": 118,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-history-retention.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "51d92a8c12d3b2a182c80b995699307e4d70d880d89c6ecdbc1eaeb70cfe5965",
+            "lines": 118
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-inspection-diagnostics.test.mjs",
+      "sha256": "10258f79b930e7f7850e9109fd9ed3e1f7b5a2a5191dc0f00ee1b7f5af5c9270",
+      "lines": 144,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-inspection-diagnostics.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "10258f79b930e7f7850e9109fd9ed3e1f7b5a2a5191dc0f00ee1b7f5af5c9270",
+            "lines": 144
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-inspection.test.mjs",
+      "sha256": "a017c793e84c51da135158cb186fff9a583fae362d9c36c5eb9ebc8487de89cd",
+      "lines": 39,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-inspection.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "a017c793e84c51da135158cb186fff9a583fae362d9c36c5eb9ebc8487de89cd",
+            "lines": 39
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-manifest-dirfd.test.mjs",
+      "sha256": "9cb748a7920a02fc49007a853c68657dd744960828b697c6306128e072de2d5b",
+      "lines": 127,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-manifest-dirfd.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "9cb748a7920a02fc49007a853c68657dd744960828b697c6306128e072de2d5b",
+            "lines": 127
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-manifest.test.mjs",
+      "sha256": "e3f72f68947c5af849eb185dce47e559fba9487ffee1297dd5cb85e3233e08b5",
+      "lines": 251,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-manifest.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "e3f72f68947c5af849eb185dce47e559fba9487ffee1297dd5cb85e3233e08b5",
+            "lines": 251
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-media-admission.integration.test.mjs",
+      "sha256": "0e03a22ec6b4c475cba4fc6b9355c50d98ac3135bf3a75e718c807ad752ccc04",
+      "lines": 198,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-media-admission.test.mjs",
+      "sha256": "4cc8c1e27f2812ba37750d1e5c2fc3c56fb6a87d755ea464b0517fe366916967",
+      "lines": 84,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-notifications.test.mjs",
+      "sha256": "6093b0852e7000a9f50917735895509bd12469e03f4602f9d8543a052c2ef565",
+      "lines": 114,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-notifications.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "6093b0852e7000a9f50917735895509bd12469e03f4602f9d8543a052c2ef565",
+            "lines": 114
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-photo-verify.test.mjs",
+      "sha256": "d7901fbafdb44ba210d962445442333711c8f36d8df9b177f5300b790e9e7d54",
+      "lines": 93,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-photo-verify.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "d7901fbafdb44ba210d962445442333711c8f36d8df9b177f5300b790e9e7d54",
+            "lines": 93
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-recovery-store.test.mjs",
+      "sha256": "068bcabe55ce4ad1795188e0d35b88e65beef08834aea2e446c66a2173bebca0",
+      "lines": 245,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-recovery-store.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "068bcabe55ce4ad1795188e0d35b88e65beef08834aea2e446c66a2173bebca0",
+            "lines": 245
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-recovery-verify.test.mjs",
+      "sha256": "b12dc2c51a621aa5600f1e58c25a0c715f88be12a8992c4b4261c188200b46d0",
+      "lines": 214,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-recovery-verify.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "b12dc2c51a621aa5600f1e58c25a0c715f88be12a8992c4b4261c188200b46d0",
+            "lines": 214
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-snapshot.test.mjs",
+      "sha256": "f7eacc6329866a121210a7e2b6470bb1a9d950355108ec090e76cdb9524c5b15",
+      "lines": 174,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-snapshot.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "f7eacc6329866a121210a7e2b6470bb1a9d950355108ec090e76cdb9524c5b15",
+            "lines": 174
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-text-verify.test.mjs",
+      "sha256": "52d538c8b07eb7b4311de2ca080d474511aa1bcdf60910f2354bb7b14562723c",
+      "lines": 126,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-text-verify.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "52d538c8b07eb7b4311de2ca080d474511aa1bcdf60910f2354bb7b14562723c",
+            "lines": 126
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-verification.test.mjs",
+      "sha256": "6f4bde89047432e1fa4bcd044f9ef27d5a62eb274ba5b6d225f8dfd17589c1e9",
+      "lines": 63,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-verification.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "6f4bde89047432e1fa4bcd044f9ef27d5a62eb274ba5b6d225f8dfd17589c1e9",
+            "lines": 63
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/backup-verification.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-verify.test.mjs",
+      "sha256": "6cdcd8b278428725e7ca57f7559d506985f1bce0951e34376cad0ed743bfa80f",
+      "lines": 346,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-verify.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "6cdcd8b278428725e7ca57f7559d506985f1bce0951e34376cad0ed743bfa80f",
+            "lines": 346
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-video-formats.test.mjs",
+      "sha256": "21d09db12c3685837ee92458d3a0d12d0384d6b77653ffabe516391e0c4cda83",
+      "lines": 166,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-video-formats.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "21d09db12c3685837ee92458d3a0d12d0384d6b77653ffabe516391e0c4cda83",
+            "lines": 166
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-video-verify.test.mjs",
+      "sha256": "88396fc448c4e9f1cccef8795db8ce029cf6342c5ac79e66330c4b907882be95",
+      "lines": 169,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-video-verify.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "88396fc448c4e9f1cccef8795db8ce029cf6342c5ac79e66330c4b907882be95",
+            "lines": 169
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/backup-volume-budget.test.mjs",
+      "sha256": "4a0dc9dcb5ad898afcbf3b46eea7b7062fe9dcfd081dfc6fb5bc3291cec2c981",
+      "lines": 27,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/backup-volume-budget.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "4a0dc9dcb5ad898afcbf3b46eea7b7062fe9dcfd081dfc6fb5bc3291cec2c981",
+            "lines": 27
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/brand.test.mjs",
+      "sha256": "c94ceafc8742568fd8b778ca4a268be2004dce3055121cede3816c02bc9db692",
+      "lines": 74,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/brand.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "c94ceafc8742568fd8b778ca4a268be2004dce3055121cede3816c02bc9db692"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-chat.integration.test.mjs",
+      "sha256": "808f70ffb377f34b485ddbb9d2cb7de6f8f9f5c15cf8afab3824946a411b84be",
+      "lines": 265,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-compact-compat.test.mjs",
+      "sha256": "6def39b72c6ae1b7831fdb240dcdf9352801b790dc81b6273a354046b0753a31",
+      "lines": 160,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/broadcast-compact-compat.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "6def39b72c6ae1b7831fdb240dcdf9352801b790dc81b6273a354046b0753a31",
+            "lines": 160
+          }
+        },
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/broadcast-compact-compat.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "6def39b72c6ae1b7831fdb240dcdf9352801b790dc81b6273a354046b0753a31"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-config.test.mjs",
+      "sha256": "3e9c56b9b945b8fb03436a92a5dcdaf5ed9463c069aba6b736dcf097cff31580",
+      "lines": 30,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-crypto.test.mjs",
+      "sha256": "8d8e99cb33a7e40f751d75247da23e0c2cf9aea85da917e9c8c231e783eadcce",
+      "lines": 149,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/broadcast-crypto.test.mjs",
+            "lines": 149,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-flow.integration.test.mjs",
+      "sha256": "936a5d2366241c49e52efacc7512f8ea784751935721e63fdb971069075ff0d0",
+      "lines": 417,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-http.test.mjs",
+      "sha256": "68a8c5e041031d75addd4c35aa6470eff1fecccfd920532692910a6fb529fae2",
+      "lines": 535,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-lifecycle.test.mjs",
+      "sha256": "606ad79ebc27d1d70f510d3f2f18b5017565fe3ddecce1ceb2235f78682d8ddb",
+      "lines": 665,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/broadcast-lifecycle.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "606ad79ebc27d1d70f510d3f2f18b5017565fe3ddecce1ceb2235f78682d8ddb"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-model.test.mjs",
+      "sha256": "b5212acc09c3105dce1d23ad0f07c26e4114330d34aea31aba6c3e9bc7507058",
+      "lines": 239,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/broadcast-model.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "b5212acc09c3105dce1d23ad0f07c26e4114330d34aea31aba6c3e9bc7507058"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-scale.integration.test.mjs",
+      "sha256": "4ef15493407b390b9ee3e94b313e05175236000fcc5c9cb93c21a0f7ac37892c",
+      "lines": 278,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-service.test.mjs",
+      "sha256": "a04a03a7592c0f4727b81fc584f24fb474647aeac0fc510f3cb96f33003dd5bc",
+      "lines": 398,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-store.integration.test.mjs",
+      "sha256": "7bed84dc689b73a4c152b0adcdf9855641e38e790afdd600d1703a6e38288424",
+      "lines": 368,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-store.test.mjs",
+      "sha256": "a01ecd7840d052fe4b74aaeed4a077b30e8062b6399795b8bd65ea082be43914",
+      "lines": 86,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/broadcast-store.test.mjs",
+            "lines": 86,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-validation.test.mjs",
+      "sha256": "2b08d8bf6f8929ca911ddae274c2cf545b85e6b1b012cf5ff663b663288db535",
+      "lines": 103,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-video.test.mjs",
+      "sha256": "e23edcfb36e125bca2a1cfd1a40c002e0ce1b15d5cf3177a9c4185dc5385c957",
+      "lines": 299,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/broadcast-worker.test.mjs",
+      "sha256": "783e000c7c22a330761e6f5a445fcefc393fd8eee2f9dcf9a8912e3105c8453d",
+      "lines": 301,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/broadcast-worker.test.mjs",
+            "lines": 301,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/account-closures.browser.mjs",
+      "sha256": "a14d911342562f1e276b68b694d4f7fc9af53d3b11015ff80c7f7d61f60a349e",
+      "lines": 146,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/account-closures.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "a14d911342562f1e276b68b694d4f7fc9af53d3b11015ff80c7f7d61f60a349e",
+            "lines": 146
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/admin-navigation.browser.mjs",
+      "sha256": "1299cfc1e97034099d6fe45357bef48918f50866ca3bedf31c6307160aa783a6",
+      "lines": 87,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/admin-navigation.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "1299cfc1e97034099d6fe45357bef48918f50866ca3bedf31c6307160aa783a6",
+            "lines": 87
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/announcements.browser.mjs",
+      "sha256": "2db8f4368e18c90396a991ac974742d1e40f7ddb82504837cf3461aeff5dc38f",
+      "lines": 223,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/backup-settings.browser.mjs",
+      "sha256": "c55b39731cb8132e5d3b89ff0381a851f438ac699f0d8510308b3828a1152682",
+      "lines": 239,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/backup-settings.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "c55b39731cb8132e5d3b89ff0381a851f438ac699f0d8510308b3828a1152682",
+            "lines": 239
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/broadcast-scale.browser.mjs",
+      "sha256": "4b721afbbad2ef19f74c0a27a1acff2037ae919f8d05fc155033cafec1f37044",
+      "lines": 405,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/chat-accessibility.browser.mjs",
+      "sha256": "c781fe073292eed2db3ca3c819876d378e2d80d76c01ee35e7870d0ce3c7e588",
+      "lines": 1309,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/crm-collaboration.browser.mjs",
+      "sha256": "baa0c6e44d67fa1fd69da0bfcb3e66747f04eb577765723218bed495821a69c2",
+      "lines": 158,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/device-transition.browser.mjs",
+      "sha256": "9d89ce1cde43ee827e6eabc92005aad89bf8d1c965b9e2cfeb352fc8619b8203",
+      "lines": 527,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/device-transition.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "9d89ce1cde43ee827e6eabc92005aad89bf8d1c965b9e2cfeb352fc8619b8203",
+            "lines": 527
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/help.browser.mjs",
+      "sha256": "4920e96587884a4d99e83c607cd9958a1a05bf4b1642819f7b5651bc5d05340d",
+      "lines": 284,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/help.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "4920e96587884a4d99e83c607cd9958a1a05bf4b1642819f7b5651bc5d05340d",
+            "lines": 284
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/homepage.browser.mjs",
+      "sha256": "d5ecf9d0cd52166f3e284b2536db6630ac1299337df7a7604806ffbd3f448ee0",
+      "lines": 93,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/image-preparation.browser.mjs",
+      "sha256": "f851681e0c0d3b46b70b0348def167065fc3a048ff6b50e29aa9f4e5449d7a92",
+      "lines": 77,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/browser/image-preparation.browser.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "f851681e0c0d3b46b70b0348def167065fc3a048ff6b50e29aa9f4e5449d7a92"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/manual-backups.browser.mjs",
+      "sha256": "ad59c940a96ec793095e4f623cd03e4d0ace4fa6f9208fb0a90f43d6a8a19041",
+      "lines": 119,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/manual-backups.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "ad59c940a96ec793095e4f623cd03e4d0ace4fa6f9208fb0a90f43d6a8a19041",
+            "lines": 119
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/notifications.browser.mjs",
+      "sha256": "3ed8bb4f35043eb82d7fe1ea012e08c3673a46ca4cbfb176a6845ce8fcbc6dc4",
+      "lines": 94,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/notifications.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "3ed8bb4f35043eb82d7fe1ea012e08c3673a46ca4cbfb176a6845ce8fcbc6dc4",
+            "lines": 94
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/operations-report.browser.mjs",
+      "sha256": "50ea5a75598e0cb3bbe5bf3f0522ccdc36e2ea1e8851def6856021b8283e56f2",
+      "lines": 85,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/operations-report.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "50ea5a75598e0cb3bbe5bf3f0522ccdc36e2ea1e8851def6856021b8283e56f2",
+            "lines": 85
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/privacy-preparation.browser.mjs",
+      "sha256": "616cde967468d675b9e2241066f1f56bdc8a9d0019137a39a4673f47a79ed5cb",
+      "lines": 138,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/privacy-preparation.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "616cde967468d675b9e2241066f1f56bdc8a9d0019137a39a4673f47a79ed5cb",
+            "lines": 138
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/recovery.browser.mjs",
+      "sha256": "3c66de2cbd5977216edbccb878624545d4bd5b2494f9bb2ce25f9dd3ca4e75f6",
+      "lines": 309,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/browser/recovery.browser.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "3c66de2cbd5977216edbccb878624545d4bd5b2494f9bb2ce25f9dd3ca4e75f6",
+            "lines": 309
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/tasks.browser.mjs",
+      "sha256": "9db727cdb57aa8522e70d8b245e832b712d1e89cdbaaeec8dfa60cb716503ba6",
+      "lines": 232,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/video-messaging.browser.mjs",
+      "sha256": "c4b28b1caf01d65ba17ba4a68930214a595751f8d46f1ec31b46cb91bfdce8ae",
+      "lines": 132,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/browser/webdriver.mjs",
+      "sha256": "6577e9e2da32dfc1c2c6786bdc7e2cb6d71eff7ad655595e823230ae76db2feb",
+      "lines": 243,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-accessibility-markup.test.mjs",
+      "sha256": "554c146be7465ebdbfb95e149af078fb365d7e20b1772117e36174ded578d400",
+      "lines": 83,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/chat-accessibility-markup.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "554c146be7465ebdbfb95e149af078fb365d7e20b1772117e36174ded578d400"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-accessibility.test.mjs",
+      "sha256": "ce1722229f45ae0f862aed54152f90cabff78dfd46e3caf8f05fbd03f3ed142d",
+      "lines": 491,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-config.test.mjs",
+      "sha256": "70c8c37cd9047e30216591e23b7c510d9af333180747b0bf3af28f4000f9fa33",
+      "lines": 64,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-crypto.test.mjs",
+      "sha256": "2635fc7e0b0c78651453fd7938a69ab1731bfe42565c8f5a3ec39baa4938e356",
+      "lines": 226,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-drafts.test.mjs",
+      "sha256": "80ba54338fd9366523fdcfe60d34ffe690a1578b3b31c25e063518fdc372541c",
+      "lines": 140,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/chat-drafts.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "80ba54338fd9366523fdcfe60d34ffe690a1578b3b31c25e063518fdc372541c"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-flow.integration.test.mjs",
+      "sha256": "f4744da5bafef49230be6d4bca74fd03db519d95bde7efd25fa35e6224182f59",
+      "lines": 417,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-http.test.mjs",
+      "sha256": "3a6192bdfea5722a0450bf47fb730de2bf556978c4af4036d3677a67928225b2",
+      "lines": 587,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/chat-http.test.mjs",
+            "read": "partial",
+            "ranges": [
+              [
+                1,
+                105
+              ],
+              [
+                414,
+                434
+              ]
+            ],
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-i18n.test.mjs",
+      "sha256": "5a7eae5eda336dcebd0a0fefd7f7711dbe1196709d167ccbd96333e5a1a57d78",
+      "lines": 461,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/chat-i18n.test.mjs",
+            "readScope": "selected assertions and full lines335-461; remaining fixture/controller wiring belongs to parent review",
+            "executed": false,
+            "sha256": "5a7eae5eda336dcebd0a0fefd7f7711dbe1196709d167ccbd96333e5a1a57d78"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-lifecycle.test.mjs",
+      "sha256": "692a9aaeddf01439e16051dfbe98edb0c1ebc914cabcf5bc7d40bedd6cb8bacb",
+      "lines": 1544,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/chat-lifecycle.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "692a9aaeddf01439e16051dfbe98edb0c1ebc914cabcf5bc7d40bedd6cb8bacb"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-media-service.test.mjs",
+      "sha256": "a8e186bca89a383d49de0f78938c5b135a5349a12f5557580c158203caf40b6f",
+      "lines": 53,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/chat-media-service.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-model.test.mjs",
+      "sha256": "dfd29eb0cd163f8de95993d4bca665dd662b92879487ea1fc82ccf3f554b84f5",
+      "lines": 174,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/chat-model.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "dfd29eb0cd163f8de95993d4bca665dd662b92879487ea1fc82ccf3f554b84f5"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-service.test.mjs",
+      "sha256": "c4a84c156ef8bffdc116146b90088e33fba4a84aedcc0b5f1cc841608354f689",
+      "lines": 648,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-store.integration.test.mjs",
+      "sha256": "f52646907d8378ded65f9a14b1337c1924e8423bda688fc33d88bff0c833d610",
+      "lines": 480,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/chat-video-model.test.mjs",
+      "sha256": "8771a81a3784a3ae7e901f3c9ceb7d103ea8aae42c011e01dd25c2256dfc60af",
+      "lines": 47,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/chat-video-model.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "8771a81a3784a3ae7e901f3c9ceb7d103ea8aae42c011e01dd25c2256dfc60af"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/checkpoint-archive.test.mjs",
+      "sha256": "58d97deda9524c6ab91033535bd777cb133576fe264d51ed4c0de671d75556ce",
+      "lines": 271,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/checkpoint-archive.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "58d97deda9524c6ab91033535bd777cb133576fe264d51ed4c0de671d75556ce",
+            "lines": 271
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/checkpoint-encryption.test.mjs",
+      "sha256": "a5c13a0c1b3970eebeaab5c8b29212687d56b294bcfeaa9892409418731f588f",
+      "lines": 256,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/checkpoint-encryption.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "a5c13a0c1b3970eebeaab5c8b29212687d56b294bcfeaa9892409418731f588f",
+            "lines": 256
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/checkpoint-files.test.mjs",
+      "sha256": "aa075f0c235b0a759e5cd9f9fc68e4245344f5cfee64a099fab75bfdc1cb472f",
+      "lines": 452,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/checkpoint-files.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "aa075f0c235b0a759e5cd9f9fc68e4245344f5cfee64a099fab75bfdc1cb472f",
+            "lines": 452
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/checkpoint-receipt.test.mjs",
+      "sha256": "ff0c7da1358687d2002776d5d45a9eb175a12f6b8d3eacb245adf3c35fbaae37",
+      "lines": 186,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/checkpoint-receipt.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "ff0c7da1358687d2002776d5d45a9eb175a12f6b8d3eacb245adf3c35fbaae37",
+            "lines": 186
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/client-export-http.test.mjs",
+      "sha256": "37871b1f91eb041d6a69ed897fdbe8d9e09e97a9570af91ee1b9bba25bc21d9a",
+      "lines": 105,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/closure-http.test.mjs",
+      "sha256": "d8869d71caef727c2aa13bdc7fc9c377438c127d35c32d1e250608c15dbb56c6",
+      "lines": 120,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/closure-http.test.mjs",
+            "ranges": "complete",
+            "coverage": "admin-only intent, explicit confirmation, no destructive request adapter, reauthorization and no duplicate intent"
+          }
+        },
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/closure-http.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "d8869d71caef727c2aa13bdc7fc9c377438c127d35c32d1e250608c15dbb56c6",
+            "lines": 120
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/closure-reconciliation-replay.test.mjs",
+      "sha256": "64769635c0deca5ae73efe4b07cead0c659edc0485cda4f9eb07ef42019ff327",
+      "lines": 55,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/closure-reconciliation-replay.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "64769635c0deca5ae73efe4b07cead0c659edc0485cda4f9eb07ef42019ff327",
+            "lines": 55
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/closure-reconciliation.integration.test.mjs",
+      "sha256": "c7c3cf94008c67a4c78ba9d73fcfe3a7e0b1d3f6f5c2157f7ed12b0939a1d79c",
+      "lines": 277,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/closure-reconciliation.test.mjs",
+      "sha256": "6738874fc65bd700289f91ab88ee0d9d3019fd0e74f60a570d77bd2bce89dbaf",
+      "lines": 146,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/closure-reconciliation.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "6738874fc65bd700289f91ab88ee0d9d3019fd0e74f60a570d77bd2bce89dbaf",
+            "lines": 146
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/conversation-download-video.test.mjs",
+      "sha256": "be1525d949a59e0104582064d4eb6150ec7fda1e6bb568cbab7b2ccbbd02bdc9",
+      "lines": 39,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/conversation-export.test.mjs",
+      "sha256": "cbf6a3872c3cc20d89e6d527b1a11e5652a8af60f46dc0a2f033f216f79d12a9",
+      "lines": 121,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/conversation-export.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/copy-kit.test.mjs",
+      "sha256": "672af80ada8206fa35a1b795a17d6c6935924f2206b990a8714bd8b462580cb6",
+      "lines": 35,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/copy-kit.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "672af80ada8206fa35a1b795a17d6c6935924f2206b990a8714bd8b462580cb6",
+            "lines": 35
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/copy-kit.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-config.test.mjs",
+      "sha256": "ac399f87fa2c4b25daca47c3c3266d13b577962eece8d500880aabdf6bf54ef0",
+      "lines": 67,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-crypto.test.mjs",
+      "sha256": "9f8b214c0a735e9d6c78e2c91fcd408b132612cbd08e4126365eb10bd6b106d9",
+      "lines": 151,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/crm-crypto.test.mjs",
+            "lines": 151,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-flow.integration.test.mjs",
+      "sha256": "7dfe8ebe6821601b07934ceea1167898c4a9dd5e55a1d3fcf7b77e15fc9507b5",
+      "lines": 466,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-http.test.mjs",
+      "sha256": "81f79c4a8a31a5fd911703d835b1959f82f324e70489482084f3b3b3268f32f1",
+      "lines": 477,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-lifecycle.test.mjs",
+      "sha256": "5e606ae38ff3e1fe37087a1cd438a4d77f5185e9801b22ace893ddc9654a8274",
+      "lines": 237,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/crm-lifecycle.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "5e606ae38ff3e1fe37087a1cd438a4d77f5185e9801b22ace893ddc9654a8274"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-model.test.mjs",
+      "sha256": "c7552bd97e8a67c3f94137bd0a409ee586cac82780e873825c0fedee07611533",
+      "lines": 104,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/crm-model.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "c7552bd97e8a67c3f94137bd0a409ee586cac82780e873825c0fedee07611533"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-private-secrets.test.mjs",
+      "sha256": "63be058362a69b513efc5e7a0ab75641233db3cdeda0bb89fe0763a952ac4d4c",
+      "lines": 69,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/crm-private-secrets.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "63be058362a69b513efc5e7a0ab75641233db3cdeda0bb89fe0763a952ac4d4c"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-service.test.mjs",
+      "sha256": "5efc4e1a412e70fe7e41eed7c56e4c2c461f91c24682d878a3f0650c77c77bed",
+      "lines": 290,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/crm-service.test.mjs",
+            "lines": 290,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-store.integration.test.mjs",
+      "sha256": "3cfd5c6391c55c5af9d9ccd99bdb967a7eb4bb585123476ab9da347b5a039c81",
+      "lines": 455,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-store.test.mjs",
+      "sha256": "a9932851e6a20ab42bfb11a7531e9e1c684b1afdb28f255e93f8b74ba0847a8d",
+      "lines": 53,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/crm-store.test.mjs",
+            "lines": 53,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/crm-validation.test.mjs",
+      "sha256": "23965959316b7b5ce1ea47e15fac8e1bee19f321c7f21e8642b00647e645f7b8",
+      "lines": 113,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/crm-validation.test.mjs",
+            "lines": 113,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-cli.test.mjs",
+      "sha256": "44ee82f4bd34285399f43fd6841e772511ace0b724a2758042525e0d7a8c8aa5",
+      "lines": 224,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-deletion-flow.integration.test.mjs",
+      "sha256": "26437e8d73391f4be50a7b9cdcde3b78f500bfc5869168d70eaeb4eeb7edc2a1",
+      "lines": 234,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-deletion-store.test.mjs",
+      "sha256": "b8c878dc39301042d3ceacfd0edd05f1192a02eb044fc40ea8e83725fbc19e92",
+      "lines": 94,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-deletion.test.mjs",
+      "sha256": "550917f273b97627a659da254160d2f5a641fa91f31a5acf053a3d6aa98dc3de",
+      "lines": 260,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-export.test.mjs",
+      "sha256": "01ecf722ff40ce98c4b08e5f6fd36cd2c3e707b9ef3ce5549ba730a20f843982",
+      "lines": 301,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/data-export.test.mjs",
+            "ranges": [
+              [
+                142,
+                216
+              ]
+            ],
+            "coverage": "foreign account/conversation/media refusal, tombstones and content authentication"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-flow.integration.test.mjs",
+      "sha256": "094959a49aa8bcd6b47e3a226957960a9748f38979612d662058aa4503f2588f",
+      "lines": 352,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-rollback.test.mjs",
+      "sha256": "1aa05426bdf8beb506e6409088449ab9cf72e47fa7e71421a4f4eaafbb10cf2b",
+      "lines": 123,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-store.test.mjs",
+      "sha256": "ed4ff691ebeb96f7ce04c7a2ad77132d18a0ed8d39206b2e6e2d5614f50a0b9d",
+      "lines": 211,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-writer-dirfd.test.mjs",
+      "sha256": "ae53297e07f0c756f7a088c42a260d181516779c64238566a372bea26fe393c4",
+      "lines": 176,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/data-writer-dirfd.test.mjs",
+            "ranges": [
+              [
+                61,
+                101
+              ]
+            ],
+            "coverage": "output/media directory replacement and file-open races"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/data-writer.test.mjs",
+      "sha256": "6c109485ebe7e4f377bc43826fa2a56cd8727df616567d2c091ce877893e516d",
+      "lines": 212,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/design.test.mjs",
+      "sha256": "c9835f29ab0c1294d186b36b69ef8420ff42011fcbd84e5d602aafa32d7909ee",
+      "lines": 82,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/device-transition-controller.test.mjs",
+      "sha256": "f9c2db80f8c14dfc2726432fd3dca08d1caef57ed6ae60559e87be6b0a5197c0",
+      "lines": 424,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/device-transition-controller.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "f9c2db80f8c14dfc2726432fd3dca08d1caef57ed6ae60559e87be6b0a5197c0",
+            "lines": 424
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/device-transition-http.test.mjs",
+      "sha256": "d409536dea5aebe9f9c4ec085797330a06b3e34b09ea5107e51f35ea30282d91",
+      "lines": 145,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/device-transition-runtime.integration.test.mjs",
+      "sha256": "42d28b0e7fa85ae643c86e3aea36766853ca7e9c23904ce834e443be01739101",
+      "lines": 383,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/device-transition-service.test.mjs",
+      "sha256": "cd1f207d37b3602d34b112be6217189a258fc460619bde58e3324732e7025846",
+      "lines": 143,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/device-transition-service.test.mjs",
+            "ranges": "complete",
+            "coverage": "role/origin/nonce/ticket binding, replay, conflicts, cancellation while pending"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/emoji-catalog.test.mjs",
+      "sha256": "816983e1a285a21c1adbb6e4dbd429e24e38d372b338b85c75011faca24cb649",
+      "lines": 151,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/entry-http.test.mjs",
+      "sha256": "fb9c2dbd5b4f1112815fc1c289dfbbd4f76c2dbb0e254d06d49b33dcb19db401",
+      "lines": 228,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/entry-lifecycle.test.mjs",
+      "sha256": "1ae67d4bf050a21fd6a893a06844b748e51e7bb9da68f9fbc10e150aa2da04f9",
+      "lines": 184,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/entry-lifecycle.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "1ae67d4bf050a21fd6a893a06844b748e51e7bb9da68f9fbc10e150aa2da04f9",
+            "lines": 184
+          }
+        },
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/entry-lifecycle.test.mjs",
+            "sha256": "1ae67d4bf050a21fd6a893a06844b748e51e7bb9da68f9fbc10e150aa2da04f9",
+            "lines": 184,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "versions_reprise",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/entry-model.test.mjs",
+      "sha256": "0e1925c5fe0fa3b6d8addbc77dd2f556a821e65eeb111526bfcbd81b0538dc6c",
+      "lines": 67,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/entry-model.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "0e1925c5fe0fa3b6d8addbc77dd2f556a821e65eeb111526bfcbd81b0538dc6c",
+            "lines": 67
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/entry-server.test.mjs",
+      "sha256": "a19bf3f41dc1bb34c2f7d08719eaab20b69037530fdd69957b0fa5d6ba5c5167",
+      "lines": 64,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/erasure-schema.test.mjs",
+      "sha256": "da540cda37c24d2e5935dc02457177bd0dbe2b148fcabf2e99db5acb451d081d",
+      "lines": 72,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/external-probe-cli.test.mjs",
+      "sha256": "ae49d6b268b0c73c30f48e08daf0d72af8c48f9db0a003bc2d840bdd52a64ff4",
+      "lines": 85,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/external-probe-cli.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "ae49d6b268b0c73c30f48e08daf0d72af8c48f9db0a003bc2d840bdd52a64ff4"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/external-probe.test.mjs",
+      "sha256": "f18f0d957bb7d27a62879ceb84d1e8babcb4b080d1ba813e42589bafebe24409",
+      "lines": 162,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/crm-private.mjs",
+      "sha256": "c55847c998b4533506c9af23c14f3acc5667198e691b58fd0dc155f7c0e4b7f2",
+      "lines": 45,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/erasure-files.mjs",
+      "sha256": "4c940aad06693a685a73801e6276da9e476f344ef61b5ea92616f6ef39a71812",
+      "lines": 22,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/managed-closure-runtime.mjs",
+      "sha256": "88b5d21be5e7e2d127ca3d964a1c887e6b7960bc98da190508e0f5de5afd7a7b",
+      "lines": 48,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/manual-admission.mjs",
+      "sha256": "ceda3c2ea8c6653993cf7292bddb2d162b312a239857644b656d39027e401199",
+      "lines": 13,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/manual-operator.mjs",
+      "sha256": "6d051f7e8051ef803136d3e3f1d257e54b0d6eeed7fc178388a1b28d7d581ffd",
+      "lines": 260,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/registry-witness.mjs",
+      "sha256": "a7da010ba657dac1681a3b620966b43974e5e0a45632d11d31e410c47680ebaa",
+      "lines": 23,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/video-backup-flow.mjs",
+      "sha256": "37e0d6f47c05ff79f40225711cb5f2efc2e157efdf53bf354da51753e80e0ad3",
+      "lines": 363,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/video-backup-manual-restore.mjs",
+      "sha256": "3bdef60bc682091cf322c57f7b7cd7b44136233722d023195578f31d389d35f0",
+      "lines": 168,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/video-decodable.mp4.base64",
+      "sha256": "5e4a959563aa2a40a8a1639c3fc01a0d0bf013586c8c83b8a1516fcb1617769a",
+      "lines": 1,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/video-private.mjs",
+      "sha256": "f2b8846711136df835687b45b0bf3a623463f8c2d536d22b4eb637b30475747b",
+      "lines": 9,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/witness-enrollment-windows.mjs",
+      "sha256": "b5a2347ce7370c59ec44556ef12e93ebfb0db28a400615dc0b836330bbc3d781",
+      "lines": 36,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/witness-origin.mjs",
+      "sha256": "2cef2cc78655ae1ffb672710a4d75668b56b0f82a66a4cc1f11fde03807f84e9",
+      "lines": 47,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/fixtures/witness-windows.mjs",
+      "sha256": "ff7291af227a04d5c176c559bd94243794005c13430409fd120e775cbaabc759",
+      "lines": 7,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/help-http.test.mjs",
+      "sha256": "bf0dc6a47549fe60e4a5ba9eb55a3e7beac94eee4d60b66f90f04ae6c7a7e717",
+      "lines": 252,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/help-link.test.mjs",
+      "sha256": "c6d489bd2b0ab50f5b44b0da4222746da592aa58041b8cd5000ce289373fe9dc",
+      "lines": 100,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/help-link.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "c6d489bd2b0ab50f5b44b0da4222746da592aa58041b8cd5000ce289373fe9dc",
+            "lines": 100
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/helpers/manual-backups-ui.mjs",
+      "sha256": "bf2669375ddba2cc0470866911ac549adefcf74b869fc1e23784689d194826f0",
+      "lines": 85,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/helpers/manual-backups-ui.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "bf2669375ddba2cc0470866911ac549adefcf74b869fc1e23784689d194826f0",
+            "lines": 85
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/helpers/video-transport-fixture.mjs",
+      "sha256": "7e76729a63fced7fdf831e23b64927cc05a9199d462273d96da2a75927d59027",
+      "lines": 93,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/https-policy.test.mjs",
+      "sha256": "570beed0d1eedaba6f412f9396474b9057934abad9cb511a655849a95bf0bfb0",
+      "lines": 85,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/i18n.test.mjs",
+      "sha256": "d7583bfbf2c3841084bedc82697d753ac9d2cc5da649b015cebced662ed26182",
+      "lines": 161,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/i18n.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "d7583bfbf2c3841084bedc82697d753ac9d2cc5da649b015cebced662ed26182"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/image-preparation.test.mjs",
+      "sha256": "74278ec9584d69983ed9caadd68f707d9813c58a1e87dff61d16f61498e0e6c1",
+      "lines": 133,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/image-preparation.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "74278ec9584d69983ed9caadd68f707d9813c58a1e87dff61d16f61498e0e6c1"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/import-application-checkpoint.test.mjs",
+      "sha256": "eb2ff8d0ae220820442e9a5257a0bfc449f8ea0b884e5217de7327f9e4e215c8",
+      "lines": 277,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/import-application-checkpoint.test.mjs",
+            "ranges": [
+              [
+                116,
+                194
+              ],
+              [
+                218,
+                280
+              ]
+            ],
+            "coverage": "SQL format injection denials, TLS empty clone, native client credential config/cleanup, scope/SQL36 and final-verification denials"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/local-closure-cli.test.mjs",
+      "sha256": "daf9518ed1820c6486a3861c9671931a149fcbf44e18678a7a7d301f09938cf2",
+      "lines": 81,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/local-closure-cli.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "daf9518ed1820c6486a3861c9671931a149fcbf44e18678a7a7d301f09938cf2",
+            "lines": 81
+          }
+        },
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/local-closure-cli.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "daf9518ed1820c6486a3861c9671931a149fcbf44e18678a7a7d301f09938cf2"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/local-closure-operations.test.mjs",
+      "sha256": "7f29b52d1492190c8d97f3c1a79eb5e532be637738a4a30758ef0579f79dfb5f",
+      "lines": 115,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/local-closure-parent.test.mjs",
+      "sha256": "02c3a690a4f86473c4c272ab04a4eb5a371ad34bd7db7cbf4283644e184adcb6",
+      "lines": 67,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/local-closure-parent.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "02c3a690a4f86473c4c272ab04a4eb5a371ad34bd7db7cbf4283644e184adcb6",
+            "lines": 67
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/local-closures.integration.test.mjs",
+      "sha256": "f59d5133b9c842f8ce51dc6c88b40507cd6bf762886adc7f70593aac79248cf0",
+      "lines": 245,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/local-closures.integration.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "f59d5133b9c842f8ce51dc6c88b40507cd6bf762886adc7f70593aac79248cf0",
+            "lines": 245
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/mail-store.integration.test.mjs",
+      "sha256": "aba92f975b2d684a88d2f6ac6bf2ad564507e32d6841b03ae703259d30497fbf",
+      "lines": 225,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/mail-store.integration.test.mjs",
+            "lines": 225,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/mail.test.mjs",
+      "sha256": "f49ddd95cec67fb3f57b11e944f36789718bd36dc0ce26f05b1483b6c5da598d",
+      "lines": 369,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/mail.test.mjs",
+            "lines": 369,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/managed-closures.test.mjs",
+      "sha256": "7a02698370bb4d3bd35b628373195e668566e52b5c38ad8095030bf4543c3931",
+      "lines": 293,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/managed-closures.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "7a02698370bb4d3bd35b628373195e668566e52b5c38ad8095030bf4543c3931",
+            "lines": 293
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/managed-runtime.test.mjs",
+      "sha256": "6b579f504f09fbc46b5207118c888c6c71ba0387cd15e80d105b7206d9e2aad4",
+      "lines": 266,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/managed-runtime.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "6b579f504f09fbc46b5207118c888c6c71ba0387cd15e80d105b7206d9e2aad4",
+            "lines": 266
+          }
+        },
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/managed-runtime.test.mjs",
+            "sha256": "6b579f504f09fbc46b5207118c888c6c71ba0387cd15e80d105b7206d9e2aad4",
+            "lines": 266,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "versions_reprise",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/managed-witness.test.mjs",
+      "sha256": "a08bde53bf052ae6c0ae946b6939a6400a11299e5056bf82fcaac28e26aa6d2c",
+      "lines": 100,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/managed-witness.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "a08bde53bf052ae6c0ae946b6939a6400a11299e5056bf82fcaac28e26aa6d2c",
+            "lines": 100
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/managed-witness.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-admission.test.mjs",
+      "sha256": "f155921d6d5ef8dddcaac7fc9529f76288ec1f542592470baeb0bff41902970f",
+      "lines": 34,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-backup-files.test.mjs",
+      "sha256": "2dbfb8652d3763e379e604b9896de43c1a7f34c896ee6e82d4738cc045f290d1",
+      "lines": 100,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/manual-backup-files.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "2dbfb8652d3763e379e604b9896de43c1a7f34c896ee6e82d4738cc045f290d1",
+            "lines": 100
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-backup-http.test.mjs",
+      "sha256": "6b673fecf7489da7a60169f0a7e2bfaa6b0ed66575c402ccfa8850d5029da237",
+      "lines": 194,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/manual-backup-http.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "6b673fecf7489da7a60169f0a7e2bfaa6b0ed66575c402ccfa8850d5029da237",
+            "lines": 194
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-backup-parent.test.mjs",
+      "sha256": "a0e43e9ce51f067e49e70ae22c646d927ae9e768623a5b12dfa8258a50c1cab9",
+      "lines": 157,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/manual-backup-parent.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "a0e43e9ce51f067e49e70ae22c646d927ae9e768623a5b12dfa8258a50c1cab9",
+            "lines": 157
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-backups-ui.test.mjs",
+      "sha256": "640282b952c98bf99084d63f0b3de4a4deba1428f646bcbf5bd171da01f5a669",
+      "lines": 81,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/manual-backups-ui.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "640282b952c98bf99084d63f0b3de4a4deba1428f646bcbf5bd171da01f5a669",
+            "lines": 81
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-operator-context.test.mjs",
+      "sha256": "8a85e2f33f9cc205a8f2d723f4a8bc4a88f303ec77216cbdec6f3d05c08b829f",
+      "lines": 233,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/manual-operator-context.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "8a85e2f33f9cc205a8f2d723f4a8bc4a88f303ec77216cbdec6f3d05c08b829f",
+            "lines": 233
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-restore-operator.integration.test.mjs",
+      "sha256": "6738c9b41b1a293d99c191b2c3ca0a2da72ac216596c52f9f109eeb68c61a892",
+      "lines": 289,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/manual-restore-operator.integration.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "6738c9b41b1a293d99c191b2c3ca0a2da72ac216596c52f9f109eeb68c61a892",
+            "lines": 289
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-restore-operator.test.mjs",
+      "sha256": "59808d5b59328a4be9e3f5aa404aaed44de3e0bb31f708c519facfe6cecd7235",
+      "lines": 210,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/manual-restore-operator.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "59808d5b59328a4be9e3f5aa404aaed44de3e0bb31f708c519facfe6cecd7235"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-restore.integration.test.mjs",
+      "sha256": "0fa84302d75abfda22f8f006e083c584e450d28b128ec3451809495d7eb0a869",
+      "lines": 234,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/manual-restore.integration.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "0fa84302d75abfda22f8f006e083c584e450d28b128ec3451809495d7eb0a869",
+            "lines": 234
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/manual-restore.test.mjs",
+      "sha256": "8685b933a7fa62d40060918ca1e959a18b7bef64a845fa860f25fab81ce328c6",
+      "lines": 76,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/manual-restore.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "8685b933a7fa62d40060918ca1e959a18b7bef64a845fa860f25fab81ce328c6",
+            "lines": 76
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-admission-budget.test.mjs",
+      "sha256": "e6c718657bcb8e9dbaa83e1d9c935305c545db8aa1bdf054e6f139857892eab7",
+      "lines": 83,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-config.test.mjs",
+      "sha256": "ca54c7f1fb169391a16d8fb8d79b1693dea97f86132b56faccac8978130b8a64",
+      "lines": 95,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-flow.integration.test.mjs",
+      "sha256": "abc6a83b9466daf43250b66809a1ebe900176ecc02ff97e34eb0ac641fa7615d",
+      "lines": 664,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-http.test.mjs",
+      "sha256": "01c4a195dc856be63117c1a17d6f047289490101ebebf348bea15765577330f1",
+      "lines": 449,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/media-http.test.mjs",
+            "read": "partial",
+            "ranges": [
+              [
+                94,
+                117
+              ],
+              [
+                418,
+                429
+              ]
+            ],
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-image.test.mjs",
+      "sha256": "5dae294fb6512a0ba29b0690e47c065120bdf76913aa78abd8246884e3fe7856",
+      "lines": 164,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-inventory.test.mjs",
+      "sha256": "a2758ee3232b227b4911e55fe2ff67e7c1d3d513084a41e3f715f0fe2fa4c4bd",
+      "lines": 207,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-service.test.mjs",
+      "sha256": "ca53ed63807099d937b0b186e296ba162291ca713302c7f871a12f5a0e0f0036",
+      "lines": 787,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/media-service.test.mjs",
+            "read": "targeted search only",
+            "matches": "authorization before storage, fresh permissions after quota",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-storage-cli.test.mjs",
+      "sha256": "28e16d983d530024849ea8fcad09d473483f278449fdacece749b5af0c5a2553",
+      "lines": 99,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/media-storage-cli.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "28e16d983d530024849ea8fcad09d473483f278449fdacece749b5af0c5a2553"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-storage-dirfd.test.mjs",
+      "sha256": "7d84e886609c8fd3cfae5854f97d4db1cb44bc9affa8a503b9d5d134a99017b2",
+      "lines": 205,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-storage-identity.test.mjs",
+      "sha256": "64e245eefad765c11a26db9973d7f929ee80c8e8e135dc3040f343ab932a463c",
+      "lines": 54,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/media-storage-identity.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "64e245eefad765c11a26db9973d7f929ee80c8e8e135dc3040f343ab932a463c",
+            "lines": 54
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-storage.test.mjs",
+      "sha256": "3aaf1ab80e545b86b666229e82194b0055c0f9ce9752623c83cc752513240479",
+      "lines": 315,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/media-store.integration.test.mjs",
+      "sha256": "8b0e00f60073b1ecb0f94bca36028b56afe4cb3eb36cd055760f8c8ffbef23fd",
+      "lines": 709,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/messaging-capture.test.mjs",
+      "sha256": "4a5cb67b7ade9d1fd65bb30d77f6a428736ac88938e83887ba70ea794286139b",
+      "lines": 64,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/migration-input.test.mjs",
+      "sha256": "3da3eb982e5387b1b3a686ce179114b3fa14ba146495d062a6af9c238b965e42",
+      "lines": 246,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/migration-input.test.mjs",
+            "ranges": [
+              [
+                40,
+                73
+              ],
+              [
+                142,
+                231
+              ]
+            ],
+            "coverage": "password transport, target/profile input, drift/partial/unknown histories and cleanup"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/migrations.integration.test.mjs",
+      "sha256": "ec9b157d0c7c8d16bc9748adbf9006bf3b05dc83a585c6e41e13be77497d7b03",
+      "lines": 262,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/migrations.test.mjs",
+      "sha256": "16553ac11b5243ca8fee52be949f67b215b3b22f5d099c153f921978dd1e63b5",
+      "lines": 191,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration.json",
+          "detail": {
+            "path": "tests/migrations.test.mjs",
+            "readScope": "full",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/neutral-site-build.test.mjs",
+      "sha256": "f48a8a03ce0289418fd45177f52ed98b0e81b925526888197396f9a7cdf0a592",
+      "lines": 221,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_preview_tools.json",
+          "detail": {
+            "path": "tests/neutral-site-build.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "f48a8a03ce0289418fd45177f52ed98b0e81b925526888197396f9a7cdf0a592"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/night.test.mjs",
+      "sha256": "bf0a35be6f7355728ab11ae3c03325cd3fc6ab2fe5fff1dcec00f0bda816bc63",
+      "lines": 65,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_preview_tools.json",
+          "detail": {
+            "path": "tests/night.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "bf0a35be6f7355728ab11ae3c03325cd3fc6ab2fe5fff1dcec00f0bda816bc63"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notification-link.test.mjs",
+      "sha256": "38f025de190979b84557a55efdb50176e7ed09a7f78774bfd985ff78f80f95b7",
+      "lines": 18,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/notification-link.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "38f025de190979b84557a55efdb50176e7ed09a7f78774bfd985ff78f80f95b7",
+            "lines": 18
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-config.test.mjs",
+      "sha256": "0163bcff3d1142c2930ce4aa57e70021a6cb5a7f62ef28b680eadb1e49b0b47d",
+      "lines": 59,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-crypto.test.mjs",
+      "sha256": "81b0b418386f50ecd5b4ff6ed18cf62d017b36577d999d5e8eebfa6039e93a40",
+      "lines": 83,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/notifications-crypto.test.mjs",
+            "lines": 83,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-http.test.mjs",
+      "sha256": "7fc0fef29ee844ce5c169af8284a4e1ace58d178b6901b003bf36ce4761184e1",
+      "lines": 200,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-server.test.mjs",
+      "sha256": "57d87dfee97652970795c7b5c507410c65dd16f6c316842da79a6b6d863d62ad",
+      "lines": 74,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-service.test.mjs",
+      "sha256": "9f8f2e64795bcceb1cfe1900080b89252ef82f0d3b07f27a96b6796fdd7f6870",
+      "lines": 218,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/notifications-service.test.mjs",
+            "lines": 218,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-store.integration.test.mjs",
+      "sha256": "bdd919817390ea51d24e3f19bbb4adae05cbf9b27fd5f691c582a07331424f5c",
+      "lines": 371,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/notifications-store.integration.test.mjs",
+            "lines": 371,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-store.test.mjs",
+      "sha256": "21b2246f8148121cc4f4b2d99375a1342691e0e4b4f34f787aac49b0b235a14f",
+      "lines": 91,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/notifications-store.test.mjs",
+            "lines": 91,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-transport.test.mjs",
+      "sha256": "23f8ed03594df53d2fa9cebd612bbd0f148cc2b2ef49e3a61ac25d55fb933c73",
+      "lines": 122,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/notifications-transport.test.mjs",
+            "lines": 122,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-ui.test.mjs",
+      "sha256": "48e44e5009c930a0a26b44921ce8cecf4e794a8debfe2bd2386b4c773ab7ebd6",
+      "lines": 201,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/notifications-ui.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "48e44e5009c930a0a26b44921ce8cecf4e794a8debfe2bd2386b4c773ab7ebd6",
+            "lines": 201
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/notifications-worker.test.mjs",
+      "sha256": "45a01e8e5422728cb0d287fa5940e151cac7488ac4de7d777defeac8bc114133",
+      "lines": 122,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/notifications-worker.test.mjs",
+            "lines": 122,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/operational-checkpoint.test.mjs",
+      "sha256": "dab5614f0984d83425f064e7079682028d96f379d696ddfd18cdee4fa75dfd77",
+      "lines": 312,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/operational-checkpoint.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "dab5614f0984d83425f064e7079682028d96f379d696ddfd18cdee4fa75dfd77",
+            "lines": 312
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/operational-quarantine-read.test.mjs",
+      "sha256": "db1dd4cc6223585f576561a04211cf3ecc39c65428dde8269285c3fc52ea0e9b",
+      "lines": 125,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/operational-quarantine-read.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "db1dd4cc6223585f576561a04211cf3ecc39c65428dde8269285c3fc52ea0e9b",
+            "lines": 125
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/operations-flow.integration.test.mjs",
+      "sha256": "c3bab5f7b7367a0a8c77c4a5bf068286b48253620bd5639f763d8eb14d882e2b",
+      "lines": 202,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/operations-flow.integration.test.mjs",
+            "sha256": "c3bab5f7b7367a0a8c77c4a5bf068286b48253620bd5639f763d8eb14d882e2b",
+            "lines": 202,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "operations_test_read",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/operations-http.test.mjs",
+      "sha256": "e939040b8350d0e192eff20d3c425edb5ad90888cc8df2ce0a32102407608d9b",
+      "lines": 75,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/operations-http.test.mjs",
+            "sha256": "e939040b8350d0e192eff20d3c425edb5ad90888cc8df2ce0a32102407608d9b",
+            "lines": 75,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "operations_test_read",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/operations-monitor.test.mjs",
+      "sha256": "c6404f1870626aa4050fdc05f89938c6cb469f8c952d1e21659a55511c99ac46",
+      "lines": 235,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/operations-monitor.test.mjs",
+            "sha256": "c6404f1870626aa4050fdc05f89938c6cb469f8c952d1e21659a55511c99ac46",
+            "lines": 235,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "operations_test_read",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/operations-store.test.mjs",
+      "sha256": "7e4262ab8231181da0a69a3ec80c142c9a3ade0be7be3c07d63815f079c51246",
+      "lines": 116,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/operations-store.test.mjs",
+            "sha256": "7e4262ab8231181da0a69a3ec80c142c9a3ade0be7be3c07d63815f079c51246",
+            "lines": 116,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "operations_test_read",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/periodic-backup-monitor.test.mjs",
+      "sha256": "1f67d29861203b8739bdd922802c8e0688abc76c7bf041a61303ca893f715196",
+      "lines": 235,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/periodic-backup-monitor.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "1f67d29861203b8739bdd922802c8e0688abc76c7bf041a61303ca893f715196",
+            "lines": 235
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/periodic-backup-monitor.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/personal-quick-replies-files.test.mjs",
+      "sha256": "d4b10e607a7851e2ddaa82741476a3229854b36b74a4f55ed5a068c97875527f",
+      "lines": 103,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/personal-quick-replies-files.test.mjs",
+            "lines": 103,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/personal-quick-replies-http.test.mjs",
+      "sha256": "107e96df055ee10d7db63039acf1c995e256baa03f8d3dd519f89501628da345",
+      "lines": 66,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/personal-quick-replies-http.test.mjs",
+            "lines": 66,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/personal-quick-replies-service.test.mjs",
+      "sha256": "14e877beea129dc36b71799e38f933504e505bd815731eebf9c2d174bfe01ff8",
+      "lines": 58,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/personal-quick-replies-service.test.mjs",
+            "lines": 58,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/plan-closure-reconciliation.test.mjs",
+      "sha256": "ace704937cc4978cc72c2e9a35979c9e6efeb3bf1cc2865c2f5b413c6fddd93f",
+      "lines": 129,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/plan-closure-reconciliation.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "ace704937cc4978cc72c2e9a35979c9e6efeb3bf1cc2865c2f5b413c6fddd93f",
+            "lines": 129
+          }
+        },
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/plan-closure-reconciliation.test.mjs",
+            "ranges": [
+              [
+                61,
+                137
+              ]
+            ],
+            "coverage": "fresh proof/no cached success, quarantine preserved, alias/getter/env/changed-resource refusal"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/preflight-cli.test.mjs",
+      "sha256": "66a947dd1dd4c94bacc0a9f78ea11bc78cd87ae80f0a4aa0dcba4964f3fd1481",
+      "lines": 211,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/preflight-cli.test.mjs",
+            "lines": 211,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/preflight-config.test.mjs",
+      "sha256": "dea1a9db037614ceca9facfd83813278bc7c904958fa56ffe145a3c748af4bbe",
+      "lines": 215,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/preflight-config.test.mjs",
+            "lines": 215,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/preflight-database.test.mjs",
+      "sha256": "fc0736c96077378caa97ef72da46765dad2a753ed7e99ec6848bee1494e08075",
+      "lines": 470,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/preflight-database.test.mjs",
+            "lines": 470,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/preflight-dirfd-cli.test.mjs",
+      "sha256": "26762f44b3adfb85095a3115a2efcfc1355bc952d527d3fa28933345b7d41536",
+      "lines": 31,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/preflight-dirfd-cli.test.mjs",
+            "lines": 31,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/preflight-flow.integration.test.mjs",
+      "sha256": "1ba9ed749010c25c31a909e3e9a50cd1ea5311115a97f3a173fee84943c307b3",
+      "lines": 399,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/preflight-platform-dirfd.test.mjs",
+      "sha256": "f1123008a625a13e81774911eeb02be8f8182919d2a7fc993342cb5e6f4fa24a",
+      "lines": 215,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/preflight-platform-dirfd.test.mjs",
+            "lines": 215,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/preflight-platform.test.mjs",
+      "sha256": "7cdb297cf9baa6640cf40f32f2e5ff419695b228cfacf4057102b90621ebf832",
+      "lines": 271,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/preflight-platform.test.mjs",
+            "lines": 271,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/preflight-video-database.test.mjs",
+      "sha256": "4fa156c339b688722262f960cfedb55ce327cadbb1aadb96ac926017ae630a14",
+      "lines": 64,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/preflight-video-database.test.mjs",
+            "lines": 64,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/prepare-runtime-auth.test.mjs",
+      "sha256": "9bea1c78f58e221eb0915b9dc393dbf6eec8bd63a9b26a531785b919e75cd8ce",
+      "lines": 139,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/prepare-runtime-auth.test.mjs",
+            "ranges": [
+              [
+                45,
+                120
+              ]
+            ],
+            "coverage": "absence/random/write/readback ordering and uncertain-publish preservation"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/primary-origin-candidate.test.mjs",
+      "sha256": "8b57b0ef973df52dd116b5a15143d6e9db705bd549f01844209acadddbfaa9af",
+      "lines": 201,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/primary-origin-candidate.test.mjs",
+            "ranges": [
+              [
+                94,
+                194
+              ]
+            ],
+            "coverage": "all bytes/keys preserved, independent candidate, paths/aliases/modes/source/readback/races"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/primary-transition-runtime.test.mjs",
+      "sha256": "611ba09aa5d858455e08c94d691377a09a6636088672f0a022793ad9b5ca4ad7",
+      "lines": 300,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/privacy-http.test.mjs",
+      "sha256": "338311efbcbfac4b89cc1f0f03051ce5926df5b4591230c65d1d5a4a5d991391",
+      "lines": 68,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/privacy-http.test.mjs",
+            "ranges": "complete",
+            "coverage": "authenticated assets and precommit/postread authorization, late401 without cookie deletion"
+          }
+        },
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/privacy-http.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "338311efbcbfac4b89cc1f0f03051ce5926df5b4591230c65d1d5a4a5d991391",
+            "lines": 68
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/privacy-preparation.test.mjs",
+      "sha256": "f061de6c0206c53b4b464791a461880ebba487f68af53bb987723167442ccfbd",
+      "lines": 148,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/privacy-preparation.test.mjs",
+            "ranges": "complete",
+            "coverage": "technical bounded encrypted state, canonical JSON, revisions, symlink/hardlink/mode and revocation checks; no legal assessment"
+          }
+        },
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/privacy-preparation.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "f061de6c0206c53b4b464791a461880ebba487f68af53bb987723167442ccfbd",
+            "lines": 148
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-archive.test.mjs",
+      "sha256": "2cf589ac82ba304276e905fc94d7e52fac3c8918065dc228bbddda6119a9c391",
+      "lines": 24,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/private-archive.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "2cf589ac82ba304276e905fc94d7e52fac3c8918065dc228bbddda6119a9c391"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-auth-startup.test.mjs",
+      "sha256": "b4391d1ddac99051eacc486e1e54ec38aac0ab6dcb6aa4407d5f821e804233e6",
+      "lines": 112,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/private-auth-startup.test.mjs",
+            "lines": 112,
+            "reviewStatus": "fully_read"
+          }
+        },
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/private-auth-startup.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "b4391d1ddac99051eacc486e1e54ec38aac0ab6dcb6aa4407d5f821e804233e6"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-checkpoint-capture.test.mjs",
+      "sha256": "e36cf58539b65fa7d043bf82c65b33d31c3da44a7fd9c1aff4b0ff647dcc42ac",
+      "lines": 701,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-checkpoint-child.test.mjs",
+      "sha256": "40701e6557aa0b3a858c7f59f26c9a85a147fc0e6259b6f5efde4701a0c5242a",
+      "lines": 77,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/private-checkpoint-child.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "40701e6557aa0b3a858c7f59f26c9a85a147fc0e6259b6f5efde4701a0c5242a"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-checkpoint-verify.test.mjs",
+      "sha256": "13c740ec5e775db8941a3d197d6044b71bebf2abbb68f688714e3a4ba6ac6afa",
+      "lines": 588,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-crm-preparation.test.mjs",
+      "sha256": "05c1e29f486917c027936c90ec9d707953c71d2439cc0f331b027484af49c12f",
+      "lines": 61,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/private-crm-preparation.test.mjs",
+            "ranges": [
+              [
+                1,
+                50
+              ]
+            ],
+            "coverage": "argument/accessor/env, key reuse, unchanged prior bundle and cleared bytes"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-directory.test.mjs",
+      "sha256": "7ee01fc45c53efc13a17810d9653bcdb670b627eb3830e3635fc83d5b9e9a156",
+      "lines": 217,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/private-directory.test.mjs",
+            "ranges": [
+              [
+                103,
+                169
+              ]
+            ],
+            "coverage": "single basename, clean absolute procfs roots, owners/modes/symlinks and descriptor drift"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-secrets-backup.test.mjs",
+      "sha256": "1c3bccb487461c72f560fdfe85df3b99b205b2654872f2b297850d1363fbc348",
+      "lines": 416,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-secrets-capture.test.mjs",
+      "sha256": "b98cbec389e975d3e5a94e61e1bc3176565c57d6b9c6c5c7af0c617058ece0d1",
+      "lines": 79,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/private-ui-assets.test.mjs",
+      "sha256": "7f5885602a7b6772ae6c9511467015b48239340e20f52b5efe09dcfcff0c7cfa",
+      "lines": 74,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/privilege-diagnostics.test.mjs",
+      "sha256": "0415e1dcae080a7959f0df9aa69f580df13b820c82080eb37fed0ea9dc62bea2",
+      "lines": 248,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/privilege-diagnostics.test.mjs",
+            "lines": 248,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/profile-http.test.mjs",
+      "sha256": "2dfb7d66740e087d22aeb6d690f73451fd0272096622c14ef02956cf051ebd6c",
+      "lines": 89,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/profile-http.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/profile-service.test.mjs",
+      "sha256": "a1d3e6723a8f1c5fa088ce6033805354140e84639c14cf49175b234c59fa1a60",
+      "lines": 103,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/profile-service.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/profile-store.integration.test.mjs",
+      "sha256": "d24ecad61c9c00207ec7cbacfebaa2be35c5c15b45079bfacd7d1a84c76d5f0c",
+      "lines": 106,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/profile-ui.test.mjs",
+      "sha256": "9817b5e50c1c7b8dd38307c1b88f42227bf2aa5b52a1aa86238910fe28967033",
+      "lines": 248,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/profile-ui.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "9817b5e50c1c7b8dd38307c1b88f42227bf2aa5b52a1aa86238910fe28967033"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/quick-replies.test.mjs",
+      "sha256": "6ded368bcd0b824931a5da30198e290b3fb18de773427f6d236945f02bd93c11",
+      "lines": 36,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/quick-replies.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "6ded368bcd0b824931a5da30198e290b3fb18de773427f6d236945f02bd93c11"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/readiness-flow.integration.test.mjs",
+      "sha256": "e9399ddfd81126a16f6c8b292290d6282293ce36a4c901a3a83d311e5a2e578a",
+      "lines": 324,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/readiness-flow.integration.test.mjs",
+            "sha256": "e9399ddfd81126a16f6c8b292290d6282293ce36a4c901a3a83d311e5a2e578a",
+            "lines": 324,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "versions_reprise",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/readiness-http.test.mjs",
+      "sha256": "7426d73414f64edff8e346eb9004bdf3fa4f7efc28956c3c47117e54b8f75a06",
+      "lines": 318,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration.json",
+          "detail": {
+            "path": "tests/readiness-http.test.mjs",
+            "readScope": "partial",
+            "executed": false
+          }
+        },
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/readiness-http.test.mjs",
+            "sha256": "7426d73414f64edff8e346eb9004bdf3fa4f7efc28956c3c47117e54b8f75a06",
+            "lines": 318,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "versions_reprise",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/readiness-i18n.test.mjs",
+      "sha256": "fbe4ba7859ce41c1836c58934941975ef45f507529eecff87f0508bdb0147ea5",
+      "lines": 381,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/readiness-i18n.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "fbe4ba7859ce41c1836c58934941975ef45f507529eecff87f0508bdb0147ea5",
+            "lines": 381
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/readiness-model.test.mjs",
+      "sha256": "7f700d22f11e89ba6511d58b1939e9afc808dfa1f8b9a1c00da14a6cac71c3fd",
+      "lines": 258,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/readiness-model.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "7f700d22f11e89ba6511d58b1939e9afc808dfa1f8b9a1c00da14a6cac71c3fd",
+            "lines": 258
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/readiness-service.test.mjs",
+      "sha256": "c17e56591785a2a3c97dc2c046c53ba492c39945bc9fd830d7e0bd17a6f3c8d1",
+      "lines": 453,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration.json",
+          "detail": {
+            "path": "tests/readiness-service.test.mjs",
+            "readScope": "partial",
+            "executed": false
+          }
+        },
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/readiness-service.test.mjs",
+            "sha256": "c17e56591785a2a3c97dc2c046c53ba492c39945bc9fd830d7e0bd17a6f3c8d1",
+            "lines": 453,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "versions_reprise",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/reconciliation-progress.test.mjs",
+      "sha256": "6fb6482ebc4d36e3f8b14917f52a2232321fe247dc278315df9864d287691ad4",
+      "lines": 222,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/reconciliation-progress.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "6fb6482ebc4d36e3f8b14917f52a2232321fe247dc278315df9864d287691ad4",
+            "lines": 222
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/recover-model.test.mjs",
+      "sha256": "f9d5b905371c6f30d2abb15b3d45072354b3d04f230c5bd0728de988b588a719",
+      "lines": 133,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/recover-model.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "f9d5b905371c6f30d2abb15b3d45072354b3d04f230c5bd0728de988b588a719",
+            "lines": 133
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/recovery-backup-envelopes.test.mjs",
+      "sha256": "0a4533023f561a0063da6f4654c940aced96d288bef8a39234cfd038d71e0352",
+      "lines": 122,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/recovery-backup-envelopes.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "0a4533023f561a0063da6f4654c940aced96d288bef8a39234cfd038d71e0352",
+            "lines": 122
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/recovery-lifecycle.test.mjs",
+      "sha256": "4d8f6d0484986374a7407809cfaaec67da93feb2591dcefbe0f29392d3da95a4",
+      "lines": 241,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/recovery-lifecycle.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "4d8f6d0484986374a7407809cfaaec67da93feb2591dcefbe0f29392d3da95a4",
+            "lines": 241
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/recurring-checkpoint-files.test.mjs",
+      "sha256": "eba31bcad4f276d9c099143a498991636554e723993253e2c53387e3d42605a9",
+      "lines": 339,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/recurring-checkpoint-files.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "eba31bcad4f276d9c099143a498991636554e723993253e2c53387e3d42605a9",
+            "lines": 339
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/recurring-checkpoint.test.mjs",
+      "sha256": "84e9bcc0d76759380e12e5624a040430d7cddc961c82436503828f6ecae8f15f",
+      "lines": 176,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/recurring-checkpoint.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "84e9bcc0d76759380e12e5624a040430d7cddc961c82436503828f6ecae8f15f",
+            "lines": 176
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/recurring-source.test.mjs",
+      "sha256": "b59e475cc67f6875bab9a4f19464dcdf437f1b968f5f9f40b904547b507de39b",
+      "lines": 38,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/recurring-source.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "b59e475cc67f6875bab9a4f19464dcdf437f1b968f5f9f40b904547b507de39b",
+            "lines": 38
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/recurring-supervisor.test.mjs",
+      "sha256": "8c91daa054e12bbb6e7d1f0b8352a93eeedc14c1797cf14c70ce4dff6d25eb93",
+      "lines": 661,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/recurring-supervisor.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "8c91daa054e12bbb6e7d1f0b8352a93eeedc14c1797cf14c70ce4dff6d25eb93",
+            "lines": 661
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/registry-continuity.test.mjs",
+      "sha256": "fc8fc4b735ed3aeff017f22ab7a493d98522e37b7a8c9e322b197071a4ac6eaf",
+      "lines": 224,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/registry-continuity.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "fc8fc4b735ed3aeff017f22ab7a493d98522e37b7a8c9e322b197071a4ac6eaf",
+            "lines": 224
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/rehearsal/auth-fixture.mjs",
+      "sha256": "dbaf5303238884f2853d30662dce603b50b2cdecb4ee8fc83342499a12c4e7c6",
+      "lines": 520,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/rehearsal/authentication.rehearsal.mjs",
+      "sha256": "9b655ab0fcdc383c3d583655835be909cff5d8fd769a1df6c52eae1f750d4ced",
+      "lines": 175,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/rehearsal/messaging.rehearsal.mjs",
+      "sha256": "bb11c1085791860219d0a8edb1ba5b2c7958a1a25a4ae40893384e8fc3962e5e",
+      "lines": 332,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/rehearsal/video.rehearsal.mjs",
+      "sha256": "d72f1114212e76f87fbaab465b45203238c8d8b3b56be5e2f54748c7912bd587",
+      "lines": 232,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/release-features.test.mjs",
+      "sha256": "054a3d1e6bc0703d96ceae2f88e0db75a5b0d7c19b844cf402514e2f23529f63",
+      "lines": 11,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/release-features.test.mjs",
+            "sha256": "054a3d1e6bc0703d96ceae2f88e0db75a5b0d7c19b844cf402514e2f23529f63",
+            "lines": 11,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "versions_reprise",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/release.test.mjs",
+      "sha256": "6123fa267331e918f807fec0fd0d6b27d3db4cdadf8639de8adcabcd74d0c56d",
+      "lines": 89,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/release.test.mjs",
+            "sha256": "6123fa267331e918f807fec0fd0d6b27d3db4cdadf8639de8adcabcd74d0c56d",
+            "lines": 89,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "versions_reprise",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/request-admission.test.mjs",
+      "sha256": "f67f47c2697d7acb8c87d55e1574b595342e3b78006f8b3a7eaef71de21606b7",
+      "lines": 245,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/request-admission.test.mjs",
+            "ranges": [
+              [
+                1,
+                215
+              ]
+            ],
+            "coverage": "rate and active lifecycle isolation, actor-first budgets, bounded tables"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/request-origin.test.mjs",
+      "sha256": "593fb775bfb3536c683f584b8a7e1605562cee5e7f4a040383e2604b842e3fa4",
+      "lines": 183,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/request-origin.test.mjs",
+            "ranges": "complete",
+            "coverage": "actual Host/raw target/forwarded authority, configured routing"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/reset-config.test.mjs",
+      "sha256": "3295f5044c4b5d5700431059231ba9e4394a73eb9625e5b1fbad9addb62188f8",
+      "lines": 65,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/reset-flow.integration.test.mjs",
+      "sha256": "3d5fd12c39117f127785c111904e611c59b2e3da9c2ecd9910e67b30c2134f76",
+      "lines": 386,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/reset-http.test.mjs",
+      "sha256": "59141ea2381e555218289cb582f15931cbde54b8df7d182531c027c5c824ae6c",
+      "lines": 240,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/reset-mail.test.mjs",
+      "sha256": "affbab05ba089b97f81ea168921269764ca59faf4b8e7892831179958988ab4f",
+      "lines": 175,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/reset-service.test.mjs",
+      "sha256": "56b0e3ce1b3880e869247192e836f8f258570282a24bb3fb71ba289c02803e35",
+      "lines": 268,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/reset-store-clock.test.mjs",
+      "sha256": "84fa03457e73fd5e310dfaf45a2cc3d80b5943b51683ebe005260ff2931d56c2",
+      "lines": 94,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/auth_data_security.json",
+          "detail": {
+            "path": "tests/reset-store-clock.test.mjs",
+            "ranges": "complete",
+            "coverage": "post-lock reset expiry/generation and timestamps"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/reset-store.integration.test.mjs",
+      "sha256": "ba2ce1166fa9f6bfc8110126976fb8c4ac4b3dd871d94bbae0cf53a732b61bf2",
+      "lines": 477,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/restore-private-operations.test.mjs",
+      "sha256": "61739fe58448390ca4dd7e1457b96ae56819bd2eedb725917a0fb87bdf85a458",
+      "lines": 216,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/restore-private-operations.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "61739fe58448390ca4dd7e1457b96ae56819bd2eedb725917a0fb87bdf85a458",
+            "lines": 216
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/resume-application-checkpoint.test.mjs",
+      "sha256": "f872f83d9dab50a65d4cadb2e109cce706ed1540b50c8ba90444dfa41b86b85f",
+      "lines": 229,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-auth-file.test.mjs",
+      "sha256": "2860690ae22a7903b75932c50b06d8ce50bcee6300c4e1e8ba7fb61b05f72f31",
+      "lines": 248,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-authentication.test.mjs",
+      "sha256": "dc62791625c8c467e75c759501fc2c3bbb19fbc653b4de2bf41fca11e736fbe2",
+      "lines": 112,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/runtime-authentication.test.mjs",
+            "lines": 112,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-broadcast-environment.test.mjs",
+      "sha256": "a16324e227086f6c8dcbd9c0f0105d4ce2b6796f7aa1af35e6d637279508b8b9",
+      "lines": 102,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/runtime-broadcast-environment.test.mjs",
+            "lines": 102,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-crm-environment.test.mjs",
+      "sha256": "3dfcb0c7028a90293ce105c4a09ce2813d34241f2ddd78996bad11499d0ae218",
+      "lines": 107,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/runtime-crm-environment.test.mjs",
+            "lines": 107,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-crm-file.test.mjs",
+      "sha256": "3f449171e09cad9c1b656dfb2410c998096486f1776518c3ee1fbd335403dcdc",
+      "lines": 57,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-database-file.test.mjs",
+      "sha256": "a620c8fe973f891a93d75ff82c50d15f7c37c1e3122bd81ec14a6b8126978823",
+      "lines": 409,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/runtime-database-file.test.mjs",
+            "lines": 409,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-db.test.mjs",
+      "sha256": "d8fabddb30f68a30539d336c31f746fa8a3d8cf0fc1d216c462c3a3eac76d8ed",
+      "lines": 58,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-diagnostic-input.test.mjs",
+      "sha256": "b8972f8be5847fd86d69fed60ce9c57fc6e819b9f3afe8d63d52b84c144832b7",
+      "lines": 274,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/runtime-diagnostic-input.test.mjs",
+            "ranges": [
+              [
+                103,
+                216
+              ]
+            ],
+            "coverage": "nonactivation, sanitized grant DTO, cleanup and readback preservation"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-diagnostic-promotion.test.mjs",
+      "sha256": "e29cbbb07b398aa2a10b29b5cd3a915ac7b4a53c66d6ee39b2b964bcf22fc46d",
+      "lines": 219,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/runtime-diagnostic-promotion.test.mjs",
+            "ranges": [
+              [
+                165,
+                201
+              ]
+            ],
+            "coverage": "ordinary provisioning order and unchanged diagnostic source on failures"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-media.test.mjs",
+      "sha256": "0464e0f21f30472ab346f3dc9a6fb050be3e157b904737ec2321c8ec5aa01362",
+      "lines": 127,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/runtime-media.test.mjs",
+            "lines": 127,
+            "reviewStatus": "fully_read"
+          }
+        },
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/runtime-media.test.mjs",
+            "ranges": [
+              [
+                78,
+                102
+              ]
+            ],
+            "coverage": "source/storage readiness and empty-root, no replacement on failure"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-messaging-file.test.mjs",
+      "sha256": "f1448ddfe94b01b2a70653d422944bdbf97b232a15cfad9cb2f1fda4c68e251c",
+      "lines": 224,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-messaging.test.mjs",
+      "sha256": "2efc1afc1c8b5ea2fdc0f86a905ccd8e9edc636b9adf078f95892f19ee3a6f8d",
+      "lines": 161,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/runtime-messaging.test.mjs",
+            "ranges": [
+              [
+                79,
+                124
+              ]
+            ],
+            "coverage": "bounded masked SMTP stdin, separate keys and exclusive publication/readback"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-notifications.test.mjs",
+      "sha256": "c1a1842b0f7f67b4a4bffc99ec37973d56a4c184e7d9b01e7fe85cce666cd093",
+      "lines": 165,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/runtime-notifications.test.mjs",
+            "lines": 165,
+            "reviewStatus": "fully_read"
+          }
+        },
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/runtime-notifications.test.mjs",
+            "ranges": [
+              [
+                92,
+                121
+              ],
+              [
+                150,
+                174
+              ]
+            ],
+            "coverage": "fresh config, key/pair collisions and padded P-256 scalar"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-pattern-pool.test.mjs",
+      "sha256": "e972df7e0f773128435a5d52e47d347f612e6e0c860c4bdade96d47127ec6a80",
+      "lines": 96,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-pool-release.test.mjs",
+      "sha256": "ca789dfb83ce64c70178d9dfbc7a4035e2e71ce289fde742b7c88da017b9a472",
+      "lines": 125,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-provision-input.test.mjs",
+      "sha256": "37bbeb5888fa4db2c15af5034cfcb93b9f5f1b67232708c653d1e9c638069503",
+      "lines": 261,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/root_runtime_tools.json",
+          "detail": {
+            "path": "tests/runtime-provision-input.test.mjs",
+            "ranges": [
+              [
+                96,
+                203
+              ]
+            ],
+            "coverage": "TLS minimal env, preflight/schema/release/pool/readback gates"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-smtp-update.test.mjs",
+      "sha256": "bcc3bc76fdd5088567d41e07a3d2a874495e36ee03782be85f06649de2a78415",
+      "lines": 101,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/runtime-video-environment.test.mjs",
+      "sha256": "7b8b5a56e18774e30cc29369553c23453d06458ab092a8a1cf1b9193a407d59e",
+      "lines": 89,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/runtime-video-environment.test.mjs",
+            "lines": 89,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/server-availability.test.mjs",
+      "sha256": "6df21fcc1c7b93a000ae87560b274ecbd3a68648d55314aef96c39489e48bbc0",
+      "lines": 164,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/server.test.mjs",
+      "sha256": "868cb111bdecae994cd291bdf5c364d592b6c30d7181cb281650735f18eba9a1",
+      "lines": 51,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/session-clock.test.mjs",
+      "sha256": "a8b84c7c68206b96fe29af1cb645a5eb1116eea4220229c2dfdd97878cf1ae7a",
+      "lines": 59,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/session-clock.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "a8b84c7c68206b96fe29af1cb645a5eb1116eea4220229c2dfdd97878cf1ae7a",
+            "lines": 59
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/shared-runtime-privileges.test.mjs",
+      "sha256": "b55b08f49724d6a3494d8873b9d1d2b9f9358e1a7553a111754bd8409a13c3f4",
+      "lines": 154,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/site.test.mjs",
+      "sha256": "2bf2d9dc4acab49edef4849cbab335d16115065bd9ad42d31b51ab90d3a85f5f",
+      "lines": 23,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/smtp-socket.test.mjs",
+      "sha256": "66e5b82ac207cafe3f20ee514848e329ae757c22ba307568398caae0424da5fb",
+      "lines": 247,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/smtp-update-capture.test.mjs",
+      "sha256": "e22b2bf7596f5d14ad6fbf9da9587b361c085ecf3ba85b0dc800cf159daa5d5c",
+      "lines": 57,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/store-migrations.test.mjs",
+      "sha256": "372072dec969482b26e83062b65f92449f9a77230b556af857438bb8235fcdf2",
+      "lines": 26,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/streaming-archive-http.test.mjs",
+      "sha256": "467cd54a1844b8ee06000dc323ec6a9dddd0cab9d7cf34d841ed8b835818f578",
+      "lines": 244,
+      "reviewScope": "partial_or_targeted",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/streaming-archive-http.test.mjs",
+            "read": "partial",
+            "ranges": [
+              [
+                145,
+                162
+              ]
+            ],
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/streaming-conversation-export.test.mjs",
+      "sha256": "3219aa74ada3e1d022aefcca7f7ab702ad5ce08f7286360c6a1e3fcdc69a192f",
+      "lines": 206,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/streaming-conversation-export.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/tasks-crypto.test.mjs",
+      "sha256": "7891f21bca090e8dd373b6acf7b88a3db559fae7e70a68ee4f1b94a2c8214429",
+      "lines": 60,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/tasks-crypto.test.mjs",
+            "lines": 60,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/tasks-flow.integration.test.mjs",
+      "sha256": "8f2f2fefcd45c2a5092c322c8c51d099d9da9b15e7a2d64b5daacc99c47e3611",
+      "lines": 163,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/tasks-http.test.mjs",
+      "sha256": "45d1a6039d151a57ae951a1bf52d926dec7e905b1f746695dfdca5dab2713461",
+      "lines": 106,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/tasks-http.test.mjs",
+            "lines": 106,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/tasks-model.test.mjs",
+      "sha256": "959a66778ff652d41e0d9ac867bf5024a9f9327939cd4d6e34169ba1f2416311",
+      "lines": 78,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_messaging.json",
+          "detail": {
+            "path": "tests/tasks-model.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "959a66778ff652d41e0d9ac867bf5024a9f9327939cd4d6e34169ba1f2416311"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/tasks-runtime.test.mjs",
+      "sha256": "96e320b8dbb9942e5104ba2056ba18588211031022ccc67c2ece0b1a112db58e",
+      "lines": 54,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/tasks-service.test.mjs",
+      "sha256": "6f321436145da580214231eb1e202ae0770fcd5e6c61243cefa80172238ada63",
+      "lines": 86,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/domain_workers.json",
+          "detail": {
+            "file": "tests/tasks-service.test.mjs",
+            "lines": 86,
+            "reviewStatus": "fully_read"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/text-clone-verification.test.mjs",
+      "sha256": "c8f7d69319fc05d05a1620f6fc6140f4d341c9deec12a3ee0f938b40669a70d4",
+      "lines": 285,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/tools-i18n.test.mjs",
+      "sha256": "70b718e4cfae0caf452fdee62a1e91c94da29ae7270f13c5141699d226ae8925",
+      "lines": 214,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/frontend_identity_pwa.json",
+          "detail": {
+            "path": "tests/tools-i18n.test.mjs",
+            "readScope": "full",
+            "executed": false,
+            "sha256": "70b718e4cfae0caf452fdee62a1e91c94da29ae7270f13c5141699d226ae8925",
+            "lines": 214
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-archive-reader.test.mjs",
+      "sha256": "1a78df5fb61b89ea0b3419e00dbed5ab6ea08471d957aa32522509f7b9ef7213",
+      "lines": 45,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-backup-flow.integration.test.mjs",
+      "sha256": "71188c8ac421140a5afdcbad2ebfca66023eb3a88b94cc5b95af0686107d27d1",
+      "lines": 116,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/video-backup-flow.integration.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "71188c8ac421140a5afdcbad2ebfca66023eb3a88b94cc5b95af0686107d27d1",
+            "lines": 116
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-backup-inventory.test.mjs",
+      "sha256": "7a870330cec48e4f7de0d15a05d204955c422347c24b4620ed22734751921352",
+      "lines": 169,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/video-backup-inventory.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "7a870330cec48e4f7de0d15a05d204955c422347c24b4620ed22734751921352",
+            "lines": 169
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-backup-recovery-store.test.mjs",
+      "sha256": "37a6336ab0a034303d780a5d246ecd5029787307c276197a2ad131ff590fa3a7",
+      "lines": 94,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/video-backup-recovery-store.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "37a6336ab0a034303d780a5d246ecd5029787307c276197a2ad131ff590fa3a7",
+            "lines": 94
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-broadcast-flow.integration.test.mjs",
+      "sha256": "3b469cbb9ebc63edc9799cf941815fe0e9aff6e719de388112443f50ff9c7a46",
+      "lines": 184,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-checkpoint-files.test.mjs",
+      "sha256": "336ec4d5ad1b69b1662a92ccbc25ef4d441d3a9c95cc5d066595d7d0ea971a2f",
+      "lines": 50,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/video-checkpoint-files.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "336ec4d5ad1b69b1662a92ccbc25ef4d441d3a9c95cc5d066595d7d0ea971a2f",
+            "lines": 50
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-closure-service.test.mjs",
+      "sha256": "72853c484ed9b9a87db42f73e795176ddd3072544fb3744f2ae2f1cf56df5d5d",
+      "lines": 83,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-conversation-archive.integration.test.mjs",
+      "sha256": "059c19a1f5186029590336338ee16469a066bfefa8fe223e78dc19209b149700",
+      "lines": 362,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-data-export.test.mjs",
+      "sha256": "56aa9de42c199249136e22b05d9b62cc30a1e8511e5d6f548d53b622e6fc73e9",
+      "lines": 278,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-data-flow.integration.test.mjs",
+      "sha256": "78be560c41c978b5392426f73d0c244a4fa46ea742d3d6c6ffc5e26924eb3c07",
+      "lines": 300,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-data-store.test.mjs",
+      "sha256": "2724abf704cd5c62019982680d82904f4a2264ebf6aee117b12262e15a1103b4",
+      "lines": 171,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-data-writer.test.mjs",
+      "sha256": "e833c421673577736fbbd9476920fecf6f1026452d71f4012707e78702c0bdd9",
+      "lines": 188,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-deletion-campaigns.test.mjs",
+      "sha256": "abfbc0b788fd1cd00026c232571efd13c815fdca7143c0fb27397790e58ef306",
+      "lines": 61,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-deletion-flow.integration.test.mjs",
+      "sha256": "d8146ae372ac70812a65f1edf7d883edcc2248562ab7d2c5338187ad2e33e418",
+      "lines": 346,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-erasure-journal.test.mjs",
+      "sha256": "f87cd120cc0d0f376d7374483295ac5fa3c9ef862417e1b9ee2bc2f280553345",
+      "lines": 146,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-erasure-schema.test.mjs",
+      "sha256": "7fea4dacb73d3623372cccdd6c4a4a0337f7e1593ba4ee7b7d1aa216ce00ee10",
+      "lines": 15,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-erasure.test.mjs",
+      "sha256": "4b5802629c2161042b211bfbdfdedc4428f5ac03ab2438843ceb2c9e6fb3b499",
+      "lines": 138,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-export-admission.test.mjs",
+      "sha256": "3bfe47a6e18e1ca746716aef1a2ebcf3d1879be2c800e1281f7d5cc05489c462",
+      "lines": 85,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-http.test.mjs",
+      "sha256": "10363469e0d5564996b98308dac2167343e8f007c8f122e7d6cd20c914b9c31a",
+      "lines": 312,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-local-closure-parent.test.mjs",
+      "sha256": "caef28ee30aebf46faca97112588a624467b263aab22c6ae925279060855cbbe",
+      "lines": 53,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/video-local-closure-parent.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "caef28ee30aebf46faca97112588a624467b263aab22c6ae925279060855cbbe",
+            "lines": 53
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-message-flow.integration.test.mjs",
+      "sha256": "298a5d231b4324ed98965b10dfb2c74a59883bed2d1aa8387cb853b7de4d6951",
+      "lines": 413,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-message-http.test.mjs",
+      "sha256": "fd7b8b1671044904ac1fa2f05e8d3f8739b2a498a2b7a372fb61efb75bc1ef59",
+      "lines": 289,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-message-service.test.mjs",
+      "sha256": "4e050d67111271533cb6a09fb61e4658d1184a8d5efc3426a3ab9a147f897b07",
+      "lines": 123,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/video-message-service.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-mp4.test.mjs",
+      "sha256": "8157391ba6ae19d0897971a4e25619166c487405fb823d9774017c7975003a0c",
+      "lines": 80,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/video-mp4.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-registry-snapshot.test.mjs",
+      "sha256": "51280c50494dabb90ca524a3962a99d30ab41b3887a5dea82bb9963a0175abcb",
+      "lines": 136,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/video-registry-snapshot.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "51280c50494dabb90ca524a3962a99d30ab41b3887a5dea82bb9963a0175abcb",
+            "lines": 136
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-runtime-startup.test.mjs",
+      "sha256": "10060a64f5eb5cf8298744604e469e15d9b3d742820d9ddf7c7eb02886d00914",
+      "lines": 144,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/video-runtime-startup.test.mjs",
+            "scope": "complete",
+            "reviewer": "peer_a11",
+            "executed": false,
+            "sha256": "10060a64f5eb5cf8298744604e469e15d9b3d742820d9ddf7c7eb02886d00914",
+            "lines": 144
+          }
+        },
+        {
+          "report": "reports/root_config_preflight.json",
+          "detail": {
+            "file": "tests/video-runtime-startup.test.mjs",
+            "lines": 144,
+            "reviewStatus": "fully_read"
+          }
+        },
+        {
+          "report": "reports/root_historical_tools.json",
+          "detail": {
+            "path": "tests/video-runtime-startup.test.mjs",
+            "readStatus": "fully_read",
+            "executed": false,
+            "sha256": "10060a64f5eb5cf8298744604e469e15d9b3d742820d9ddf7c7eb02886d00914"
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-service.test.mjs",
+      "sha256": "f517d26de7da74b853dc36e847034f56beabc618bfe94541ebeb5faa5989c9b0",
+      "lines": 314,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/video-service.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-storage.test.mjs",
+      "sha256": "3dc1fe17a70bdd66aaf67a72ffe0af7d9366ba3d33d39e484d57906a1a54daf7",
+      "lines": 342,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-store.integration.test.mjs",
+      "sha256": "a01bbd3afa68c41989cafebfcc1bd5e299e47325126e28ab1baab09c77545337",
+      "lines": 350,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/video-transport.test.mjs",
+      "sha256": "6070fb83adbb0634332281413f2839919bdec142a1c173df0365c851147f7251",
+      "lines": 124,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/webdriver-diagnostics.test.mjs",
+      "sha256": "18f0db6101865d5b9603f1be87fc859dff856cb701cb17dbbec09d7612a845c6",
+      "lines": 101,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/webdriver-teardown.test.mjs",
+      "sha256": "56bf708094ff89319ea33c0edf55321fec376c67b3fddc9b595ca3d56214c772",
+      "lines": 109,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/windows/backup-copy.ps1",
+      "sha256": "21d1f67c7cd593f7b7ee562e92c2c53497cedd457382f8376ba715caf1e1f201",
+      "lines": 168,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/windows/backup-verification.ps1",
+      "sha256": "4aaa7538f750f9ed760341fc2edbbd7f14085ac0ee4ac768050184add84e7341",
+      "lines": 121,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/windows/backup-witness.ps1",
+      "sha256": "a7f6f86d96cd6eecdba9671cd4a6eb6efa5e22e00e9e3ec30aaafd70225d9790",
+      "lines": 239,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-enrollment-http.test.mjs",
+      "sha256": "e2b29460c40d38dba5a5d14063224bec16404fc28ae7685d8d5957b893b9b6c8",
+      "lines": 142,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/witness-enrollment-http.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "e2b29460c40d38dba5a5d14063224bec16404fc28ae7685d8d5957b893b9b6c8",
+            "lines": 142
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/witness-enrollment-http.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-enrollment.test.mjs",
+      "sha256": "a5a152b6078dca75857ef20f28ffae30fd0ae9f29864f5abfff5ec4abb6af312",
+      "lines": 201,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/witness-enrollment.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "a5a152b6078dca75857ef20f28ffae30fd0ae9f29864f5abfff5ec4abb6af312",
+            "lines": 201
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/witness-enrollment.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-genesis.test.mjs",
+      "sha256": "341b20a59c4b025271d07def7a01f08108e263b8bf731b16243687f7b0777173",
+      "lines": 261,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-observation-maintenance.test.mjs",
+      "sha256": "de7e5583da8a1d4080c68455ebc9039b5866f1301dcd1fd3c5d4fd1e62f56ce0",
+      "lines": 180,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/witness-observation-maintenance.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "de7e5583da8a1d4080c68455ebc9039b5866f1301dcd1fd3c5d4fd1e62f56ce0",
+            "lines": 180
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/witness-observation-maintenance.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-observer.test.mjs",
+      "sha256": "d2eb179b2b6d4765b9c00dcd4d47cc5f56d10724310efe32ebb0305d24614e00",
+      "lines": 216,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-origin-context.test.mjs",
+      "sha256": "a5b2fe4de20bb0c3e70b7917fb93f1f09903409d2ba0ca0dced4756393a2bd8d",
+      "lines": 102,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/witness-origin-context.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "a5b2fe4de20bb0c3e70b7917fb93f1f09903409d2ba0ca0dced4756393a2bd8d",
+            "lines": 102
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/witness-origin-context.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-origin-operator.test.mjs",
+      "sha256": "7912d8458f5414f88db14d65076b8e549733ecdc184ad634cd2b34159291d42a",
+      "lines": 184,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-recovery-cli.test.mjs",
+      "sha256": "72bb3aee574c55f29beec9c03d48c749848cbaf6ea404ab77cf95ce9dea9e538",
+      "lines": 93,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-recovery-control.test.mjs",
+      "sha256": "6b31c43c9adb11a5d50562850f801b1c9d16fff642b3edb5adf8c004b83e013a",
+      "lines": 106,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-recovery-parent.test.mjs",
+      "sha256": "778a8930e3c2e8bb75c720cec491f79f5865c2e4c90538f55c04eb4e861ffb1e",
+      "lines": 193,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-recovery-server.test.mjs",
+      "sha256": "c0cb42830a6f27167f00b019332c6ca6a3179b8283613236715d837cc0671239",
+      "lines": 52,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-runtime.integration.test.mjs",
+      "sha256": "6270b139b554f296f6c58a43d88873aa5c706114989d0d75451e2e36aa744d0a",
+      "lines": 628,
+      "reviewScope": "structural_inventory_only",
+      "readings": [],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/witness-transport.test.mjs",
+      "sha256": "3c785ae09d5d55747c46ae6f9a85510e635aeb0d10fb6228ed55e4d3d27b2fe4",
+      "lines": 101,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/backup.json",
+          "detail": {
+            "path": "tests/witness-transport.test.mjs",
+            "scope": "complete",
+            "reviewer": "audit2_messaging_media",
+            "executed": false,
+            "sha256": "3c785ae09d5d55747c46ae6f9a85510e635aeb0d10fb6228ed55e4d3d27b2fe4",
+            "lines": 101
+          }
+        },
+        {
+          "report": "reports/backup_historical_delegated.json",
+          "detail": {
+            "path": "tests/witness-transport.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/worker-lifecycle.test.mjs",
+      "sha256": "b3fe446328e2984f88ce4a927d4bec43ee9019bffb492c241dec6f766c79b51e",
+      "lines": 194,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/root_integration_tests.json",
+          "detail": {
+            "path": "tests/worker-lifecycle.test.mjs",
+            "sha256": "b3fe446328e2984f88ce4a927d4bec43ee9019bffb492c241dec6f766c79b51e",
+            "lines": 194,
+            "readScope": "full",
+            "executed": false,
+            "reviewer": "operations_test_read",
+            "sourceMatches182ReleaseCommit": true
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    },
+    {
+      "path": "tests/zip-stream.test.mjs",
+      "sha256": "f43132cdc3dae4cc8530bda1abf4dd07c5afb618a56935a7df262252dede897b",
+      "lines": 197,
+      "reviewScope": "full",
+      "readings": [
+        {
+          "report": "reports/messaging_media.json",
+          "detail": {
+            "path": "tests/zip-stream.test.mjs",
+            "read": "complete",
+            "executed": false
+          }
+        }
+      ],
+      "executedDuringAudit": false
+    }
+  ]
+}

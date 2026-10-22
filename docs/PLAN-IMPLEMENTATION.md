@@ -2,13 +2,18 @@
 
 Révisé le 22 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Second audit demandé après livraison182 — travail actuel
+## Second audit après livraison182 — terminé
 
-1. Revoir chaque source backend/frontend, configuration, SQL, outil et workflow sur la référence exacte182, avec inventaire des fichiers effectivement examinés et tests associés.
-2. Reproduire localement les nouvelles anomalies sur données synthétiques et croiser les interactions ; écarter les faux positifs et les doublons du premier audit.
-3. Publier le [second rapport](AUDIT-2-20261022.md) priorisé avec preuves, couverture et limites, puis proposer les corrections utiles. Aucun changement applicatif ou déploiement n’est inclus dans les constats d’audit.
+Le [second rapport](AUDIT-2-20261022.md) est terminé : 447 fichiers sources/configuration/ressources examinés, trois helpers 182 externes épinglés lus ; 390 tests inventoriés dont 202 lus intégralement, 25 partiellement et163 structurellement seulement. Les preuves synthétiques, contre-revues et [couverture exacte](verification-proofs/audit2-182/source-coverage.json) sont conservées. Cinq nouveaux défauts, une amélioration conditionnelle, aucun correctif applicatif réalisé.
 
-Les sections de livraison182 ci-dessous décrivent le résultat déjà acquis ; le présent audit est une demande nouvelle explicite. [Progression](verification-proofs/audit2-182-progress.json).
+Suite proposée, distincte de cet audit livré :
+
+1. **B01/B02/B03 : sessions et horloges.** Empêcher un401 ancien d’effacer une session récente ; réconcilier le calcul d’échéance service/store du renouvellement ; recontrôler le TTL mail après attentes. Préserver permissions finales, CAS et absence de répétition automatique des POST. B01/B02 P2, B03 P3. Les anciens tests qui exigent l’effacement sur 401 doivent changer avec le contrat ; qualification corrective avec navigateur/cookie jar réel pour A→B.
+2. **B04 : lien de navigationP3.** Remplacer `/admin/chat` par `/admin/messages` dans la page manuelle ; aucune sauvegarde à exécuter pour vérifier ce lien.
+3. **B05 : admission du témoin historiqueP2 conditionnel**, et éventuellement **I01 : refus explicite de l’ancien coffreP3 conditionnel**. Fixtures uniquement, aucune réactivation du témoin, PC ou parcours de sauvegarde reporté. I01 ne démontre aucune perte actuelle ni défaut des archives vidéo actives.
+4. Qualifier une source corrective stabilisée, puis distinguer publication et activation éventuelles. Aucun nouveau numéro de version imposé ni déploiement ouvert par le seul constat d’audit.
+
+Les sections182 ci-dessous restent l’historique de livraison acquis ; les cinq défauts et l’amélioration ci-dessus restent non corrigés. Les reprises ne doivent ni les oublier, ni rejouer les anciens lots. [État final structuré](verification-proofs/audit2-182-progress.json). Production toujours 1.8.2 / Node 24.22.1 / SQL36 ; chantier juridiqueA10, sauvegarde hébergée, PC et réservesA11/A12 conservent leur statut précédent.
 
 ## Point de départ acquis avant le correctif182
 

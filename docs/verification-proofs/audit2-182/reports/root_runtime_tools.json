@@ -1,0 +1,446 @@
+{
+  "audit": "audit2-182",
+  "owner": "root_integration_ops",
+  "delegatedReader": "/root/delivery_review",
+  "scope": "17 exact delegated scripts; update-runtime-smtp.mjs excluded as already owned/reviewed by domain_workers. Static source review only.",
+  "status": "complete",
+  "reviewedFiles": [
+    {
+      "path": "scripts/admin-bootstrap-stdin.mjs",
+      "bytes": 13529,
+      "lines": 254,
+      "sha256": "d5f49e2fc2c4ef002afb09dcdd3d6115ef9b52a309fe11bf199faf2680b19f84",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/admin-bootstrap.mjs",
+      "bytes": 14525,
+      "lines": 284,
+      "sha256": "89a7bf8b4d712085fd4468b55e3e5339ff01c53d89676a5ab14a780b248e0daa",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/admin-recover.mjs",
+      "bytes": 6752,
+      "lines": 117,
+      "sha256": "21f419bee245539dd881ccec6c7498c0092f58c24396392feed8c367bf4370c3",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/diagnose-runtime-stdin.mjs",
+      "bytes": 8722,
+      "lines": 161,
+      "sha256": "db62030e6c50d9438fb5def142395bbe4edb7664dfd7c55197a919186afe2f5b",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/import-application-checkpoint.mjs",
+      "bytes": 24006,
+      "lines": 306,
+      "sha256": "97053b10586ea7cf02bcf04110907cd674a148985ff1cffc4b0f170778c68a3c",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_clone_import_only"
+    },
+    {
+      "path": "scripts/migrate-stdin.mjs",
+      "bytes": 5481,
+      "lines": 92,
+      "sha256": "a0a77e5d87d945b841c9aad8632aa5c8f08358f18bbac129aab2c52e4bfe4b85",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_sql_migration_or_status"
+    },
+    {
+      "path": "scripts/migrate.mjs",
+      "bytes": 2719,
+      "lines": 53,
+      "sha256": "989de06b9287d01b7e742bb5c13b4031aebd09572d6b8549751068caaa78b46b",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_sql_migration_or_status"
+    },
+    {
+      "path": "scripts/migration-input.mjs",
+      "bytes": 2443,
+      "lines": 54,
+      "sha256": "d464d910ff5560afcd5b81fc3a84908bb6484cae20d49b2b9c33b68781099147",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_sql_migration_or_status"
+    },
+    {
+      "path": "scripts/plan-closure-reconciliation.mjs",
+      "bytes": 9005,
+      "lines": 101,
+      "sha256": "716e0ab6952a36ed74ca094c9f1e651c37ef3cde745c50f574df31b6ffa97ae3",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_read_only_plan_with_private_unix_socket_challenge"
+    },
+    {
+      "path": "scripts/prepare-primary-origin.mjs",
+      "bytes": 10249,
+      "lines": 161,
+      "sha256": "6e0b7ce6f0f5c7686cb3c2a2d9ec4a32fb1029867379b3bfc6bdabed3df2052c",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/prepare-runtime-auth.mjs",
+      "bytes": 6390,
+      "lines": 121,
+      "sha256": "b6190f9d2e13ed4cc6c7f9e29947f0be886b3e4bf7da5a82a8516641c2337c80",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/prepare-runtime-crm.mjs",
+      "bytes": 5475,
+      "lines": 78,
+      "sha256": "a41dca9a3fc6f1256a63753238ce45419bcadb14ca7355839cce26cec36e5b8e",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/prepare-runtime-media.mjs",
+      "bytes": 8377,
+      "lines": 111,
+      "sha256": "9e2d2e569b8a7ccb023a1dddc7e9bb40e8ddece9a8968a2fc998e7efdea214ff",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/prepare-runtime-messaging.mjs",
+      "bytes": 9947,
+      "lines": 136,
+      "sha256": "4d863d71c5c3894a069ed975379f4a1ffb01c2d1e7fce1636b3ca7e418a6ae52",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/prepare-runtime-notifications.mjs",
+      "bytes": 7105,
+      "lines": 98,
+      "sha256": "6dd4a54f6c3bf65bf669cbf830910cf695a024b097a337bc82af324ad90ed2bb",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/promote-runtime-diagnostic.mjs",
+      "bytes": 7665,
+      "lines": 151,
+      "sha256": "5e7a4fb4891233d44aef0de98ec16c2d306264dfa4306e028157410a97c9afd1",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    },
+    {
+      "path": "scripts/provision-runtime-stdin.mjs",
+      "bytes": 10228,
+      "lines": 193,
+      "sha256": "a2d033552b39d49ea039646c94aa949a79ff9a84b86ab18160b3476af278fa88",
+      "reviewStatus": "read_complete",
+      "method": "direct_complete_source_read",
+      "reader": "/root/delivery_review",
+      "classification": "operator_explicit_provisioning_or_recovery_not_autoexecuted"
+    }
+  ],
+  "reviewedFileCount": 17,
+  "reviewedLines": 2471,
+  "findings": [],
+  "checks": [
+    {
+      "name": "manifest_complete_source_coverage",
+      "status": "passed",
+      "detail": "All17 sources read completely and their current SHA256 matched root_integration_ops-files.json. No helper imported or executed."
+    },
+    {
+      "name": "bootstrap_and_controlled_recovery",
+      "status": "no_new_concrete_defect_found",
+      "detail": "Exact option/input shape, strong operator password bounds, canonical identity, verified existing admin id/email/version for recovery; reuse of core transaction with current-version CAS and revocation. Private O_EXCL enrollment copy written+fsynced before SQL; confirmed failure cleans own inode only; uncertain commit preserves the only MFA copy. Dirfd mode retains anchor through commit/cleanup and refuses repository output. Masked wrapper treats post-bootstrap errors as unknown outcome, no blind repeat."
+    },
+    {
+      "name": "stdin_migration_guards",
+      "status": "no_new_concrete_defect_found",
+      "detail": "No password argument; bounded non-TTY strict UTF-8 stdin and exact target confirmation. TLS certificate checks and actual cipher required. initialize only empty/applied histories; upgrade only a clean applied prefix or already-applied; apply reacquires migration lock/rechecks history, post-status must fully match immutable names/checksums/versions. resolve path requires exact checksum and explicit inspected flag through core MigrationError validation. No migration executed."
+    },
+    {
+      "name": "provision_diagnostic_promotion",
+      "status": "no_new_concrete_defect_found",
+      "detail": "Explicit privilege profile and canonical private directory; minimal credential-only TLS environment without process-env merge; typed sanitized preflight DTO; physical auth schema and async connection release/pool end drained before exclusive credential publication/readback. Diagnostic envelope cannot act as normal runtime config; promotion invokes the ordinary guarded provisioning path and returns launchApproved:false."
+    },
+    {
+      "name": "new_domain_key_preparations",
+      "status": "no_new_concrete_defect_found",
+      "detail": "Auth/messaging/media/notification/CRM existing-name gates precede publication; generated32-byte keys checked against prior domains through core loaders, matching P-256 pair and padded scalar; owned transient buffers/secret references cleared, exact readback. No overwrite or regeneration of existing key. Media preparation also performs explicit read-only SQL/source/native-storage verification and requires an empty media root; it was not executed here."
+    },
+    {
+      "name": "primary_origin_candidate_isolation",
+      "status": "no_new_concrete_defect_found",
+      "detail": "Source/parent/destination descriptor identities and outside-checkout restrictions, fresh exclusive candidate directory, preserved preexisting records and six keys, only exact origin fields changed. Every write guarded; readback exact and source readback unchanged; partial candidate remains private and never confers launch approval."
+    },
+    {
+      "name": "application_checkpoint_import_boundary",
+      "status": "no_new_concrete_defect_found",
+      "detail": "Explicit clone DB confirmation and user differing from source/runtime; independently supplied SQL SHA and signed precheck scope, bounded gzip/SQL read with inode/bytes/hash checks; closed SQL token format denies switching database, qualified names, routines/client commands. Native executable/version, clean environment, TLS CA/server verification, sandbox/local-infile0/no reconnect; password only private temporary0600 config removed by inode. Empty target check and final snapshot verification; no source mutation claim beyond scoped format, no universal full-host restore claim."
+    },
+    {
+      "name": "closure_reconciliation_plan",
+      "status": "no_new_concrete_defect_found",
+      "detail": "Only check command; distinct source/clone identities and roots, unchanged receipt/capsule/quarantine/roots across fresh challenge, no target SQL or writes or startup authority. Dependency exchangeWitnessRecovery uses existing private Unix socket, not registry/file publication; no PC operation ran during audit."
+    },
+    {
+      "name": "execution_boundary",
+      "status": "static_only",
+      "detail": "Associated tests were read at ranges below, not run. No server, SMTP, Push, restore, migration, provisioning, key generation, private file, backup or PC operation was performed."
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/admin-bootstrap.test.mjs",
+      "ranges": [
+        [
+          139,
+          160
+        ],
+        [
+          290,
+          326
+        ]
+      ],
+      "coverage": "confirmed failure vs uncertain commit and anchored cleanup under parent replacement"
+    },
+    {
+      "path": "tests/admin-recovery.test.mjs",
+      "ranges": [
+        [
+          161,
+          220
+        ]
+      ],
+      "coverage": "pool cleanup preservation, locked version/target refusal and commit uncertainty"
+    },
+    {
+      "path": "tests/admin-bootstrap-input.test.mjs",
+      "ranges": [
+        [
+          193,
+          215
+        ]
+      ],
+      "coverage": "post-bootstrap uncertainty, sanitized errors and refusal of malformed success"
+    },
+    {
+      "path": "tests/migration-input.test.mjs",
+      "ranges": [
+        [
+          40,
+          73
+        ],
+        [
+          142,
+          231
+        ]
+      ],
+      "coverage": "password transport, target/profile input, drift/partial/unknown histories and cleanup"
+    },
+    {
+      "path": "tests/runtime-provision-input.test.mjs",
+      "ranges": [
+        [
+          96,
+          203
+        ]
+      ],
+      "coverage": "TLS minimal env, preflight/schema/release/pool/readback gates"
+    },
+    {
+      "path": "tests/runtime-diagnostic-input.test.mjs",
+      "ranges": [
+        [
+          103,
+          216
+        ]
+      ],
+      "coverage": "nonactivation, sanitized grant DTO, cleanup and readback preservation"
+    },
+    {
+      "path": "tests/runtime-diagnostic-promotion.test.mjs",
+      "ranges": [
+        [
+          165,
+          201
+        ]
+      ],
+      "coverage": "ordinary provisioning order and unchanged diagnostic source on failures"
+    },
+    {
+      "path": "tests/prepare-runtime-auth.test.mjs",
+      "ranges": [
+        [
+          45,
+          120
+        ]
+      ],
+      "coverage": "absence/random/write/readback ordering and uncertain-publish preservation"
+    },
+    {
+      "path": "tests/private-crm-preparation.test.mjs",
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "coverage": "argument/accessor/env, key reuse, unchanged prior bundle and cleared bytes"
+    },
+    {
+      "path": "tests/runtime-messaging.test.mjs",
+      "ranges": [
+        [
+          79,
+          124
+        ]
+      ],
+      "coverage": "bounded masked SMTP stdin, separate keys and exclusive publication/readback"
+    },
+    {
+      "path": "tests/runtime-media.test.mjs",
+      "ranges": [
+        [
+          78,
+          102
+        ]
+      ],
+      "coverage": "source/storage readiness and empty-root, no replacement on failure"
+    },
+    {
+      "path": "tests/runtime-notifications.test.mjs",
+      "ranges": [
+        [
+          92,
+          121
+        ],
+        [
+          150,
+          174
+        ]
+      ],
+      "coverage": "fresh config, key/pair collisions and padded P-256 scalar"
+    },
+    {
+      "path": "tests/primary-origin-candidate.test.mjs",
+      "ranges": [
+        [
+          94,
+          194
+        ]
+      ],
+      "coverage": "all bytes/keys preserved, independent candidate, paths/aliases/modes/source/readback/races"
+    },
+    {
+      "path": "tests/import-application-checkpoint.test.mjs",
+      "ranges": [
+        [
+          116,
+          194
+        ],
+        [
+          218,
+          280
+        ]
+      ],
+      "coverage": "SQL format injection denials, TLS empty clone, native client credential config/cleanup, scope/SQL36 and final-verification denials"
+    },
+    {
+      "path": "tests/plan-closure-reconciliation.test.mjs",
+      "ranges": [
+        [
+          61,
+          137
+        ]
+      ],
+      "coverage": "fresh proof/no cached success, quarantine preserved, alias/getter/env/changed-resource refusal"
+    }
+  ],
+  "dependencyReads": [
+    {
+      "path": "scripts/start-private-auth.mjs",
+      "ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "scope": "option parser reused by prepare scripts; other runtime-start code remains parent-owned"
+    },
+    {
+      "path": "server/backup/witness-recovery-control.mjs",
+      "ranges": [
+        [
+          1,
+          85
+        ],
+        [
+          119,
+          170
+        ]
+      ],
+      "scope": "verify actual plan exchange is bounded existing private Unix socket, no file publication"
+    },
+    {
+      "path": "server/auth/recovery-store.mjs",
+      "scope": "complete earlier auth_data_security source review; report reference ../auth_data_security/report.json"
+    },
+    {
+      "path": "server/files/private-directory.mjs",
+      "scope": "complete earlier auth_data_security source review; report reference ../auth_data_security/report.json"
+    },
+    {
+      "path": "server/config/* and server/preflight/*",
+      "scope": "shared dependency ownership domain_workers; not duplicated or asserted completely read in this17-file report"
+    }
+  ],
+  "excludedDuplicate": [
+    "scripts/update-runtime-smtp.mjs"
+  ],
+  "limits": [
+    "Static review of operator surfaces only. No new runtime, native SQL client, target clone or external service qualification is inferred from source or historical tests.",
+    "No helper was executed or imported; no private contents, credentials, account or PC were accessed. Repository files unchanged by this reviewer.",
+    "Programmatic internal dependency seams are trusted test interfaces, not request-exposed capability. Direct caller-controlled JavaScript objects or malicious same-operator runtime/environment are not treated as an untrusted web input path.",
+    "The import format and signature/scope guards target application snapshots on an explicit empty clone, not recovery of every database object or total host loss. SQL36 support is explicit; no downgrade of the current production schema is authorized.",
+    "Only test ranges listed were read; test-name discovery alone is not counted as complete test reading. Existing green suites were not re-run.",
+    "All17 scripts are explicit operator entrypoints and do not execute during normal messaging requests. Their presence is not a request to rerun bootstrap, preparation, migrations, restore or reconciliation."
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "type": "synthetic_witness_admission_race",
+  "runtime": "v24.19.0",
+  "scope": "Pure calls to the actual handler with synthetic async iterables and deferred authorization. No socket, network, database, filesystem backup or real account.",
+  "documentedTransferCeiling": 2,
+  "simultaneousRequestsBeforeAuthorizationRelease": 4,
+  "observedConcurrentBodyReaders": 4,
+  "laterRequestStatus": 429,
+  "bytesPerSyntheticBody": 2,
+  "largeBodiesAllocated": false,
+  "conclusion": "The four initial requests pass the pre-await transfers.size check and all enter body collection; a later request sees the populated set and is correctly refused."
+}

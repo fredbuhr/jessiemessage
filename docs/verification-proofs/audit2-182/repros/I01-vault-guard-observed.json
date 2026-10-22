@@ -1,0 +1,31 @@
+{
+  "source": "scripts/private-secrets-backup.mjs",
+  "execution": "pure_source_selection_and_preflight_guard_only",
+  "syntheticDirectoryFiles": [
+    "runtime-auth.json",
+    "runtime-database.json",
+    "runtime-messaging.json",
+    "runtime-media.json",
+    "runtime-notifications.json",
+    "runtime-crm.json",
+    "runtime-video.json"
+  ],
+  "guardPassed": true,
+  "guardFilesystemCalls": [],
+  "selectedSourceFiles": [
+    "runtime-auth.json",
+    "runtime-database.json",
+    "runtime-messaging.json",
+    "runtime-media.json",
+    "runtime-notifications.json",
+    "runtime-crm.json"
+  ],
+  "omittedPresentFiles": [
+    "runtime-video.json"
+  ],
+  "videoConfigurationSelected": false,
+  "actualCoffreRun": false,
+  "encrypted": false,
+  "backupExecuted": false,
+  "productionTouched": false
+}

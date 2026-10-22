@@ -1,0 +1,161 @@
+{
+  "type": "audit2-182-evidence-integrity",
+  "files": [
+    {
+      "path": "cross-review-clock.json",
+      "sha256": "85b993af59a0ba6ad8795873321826a7f804da396c68e7ecaded29bc8543d0a3"
+    },
+    {
+      "path": "cross-review-vault.json",
+      "sha256": "f1c2e3af405b52e519ea6ca9b70549f98b5cbc6e7b531353e52d4e636515aae9"
+    },
+    {
+      "path": "cross-review-witness.json",
+      "sha256": "6a3390a6993a8ac572306928ab025298a4fe1ac8a3f6b977095c089b26914193"
+    },
+    {
+      "path": "dependency-audit.json",
+      "sha256": "f8779310006e6719267fc5950a101e2e75d68084f9ee1d4794426080dae51bac"
+    },
+    {
+      "path": "final-report-review.json",
+      "sha256": "c253e75f888b0934f43790425b3d0c40fc222187cb65a1b87263a57f810b37c8"
+    },
+    {
+      "path": "global-static-checks.json",
+      "sha256": "4e0c29feb10d0c0a762b4e70de5975e56759e784af07962b08a9434412c33560"
+    },
+    {
+      "path": "reports/auth_data_security.json",
+      "sha256": "cd4b50e65e97fbd4489782bd463fddb151cee4cf84e3daa3b173a1c3341fbbec"
+    },
+    {
+      "path": "reports/backup.json",
+      "sha256": "b553e045a03534080c5e153f6b8ac45571be07ff176fa02f055728b629305b58"
+    },
+    {
+      "path": "reports/backup_historical_delegated.json",
+      "sha256": "392433ab625c15a8e819718a1c8edaa6c6ad65b276205058efe30bed630c3d6d"
+    },
+    {
+      "path": "reports/domain_workers.json",
+      "sha256": "d538be29157387ea35ee41a2c06ef6bff237ce1e0beb4beeab184a1743aee596"
+    },
+    {
+      "path": "reports/external_operator182.json",
+      "sha256": "b0589ab84376dfcfcca090c5e7e0b1e6e8d2b34e35de1fcab6a64d5b8663afa4"
+    },
+    {
+      "path": "reports/frontend_identity_pwa.json",
+      "sha256": "cba738f238a3cd5fe8079975a5bdf7a5fec0842e4826e6d3585711d5abd46b4d"
+    },
+    {
+      "path": "reports/frontend_messaging.json",
+      "sha256": "5f1d9cf4da7c018f1a1e3c7b144f3c542360eb1211143bb178a8f2910afb703c"
+    },
+    {
+      "path": "reports/messaging_media.json",
+      "sha256": "b73c018034d3fe83e6619dd5cd29384b8cf95548ef20db13f008f87e8054503f"
+    },
+    {
+      "path": "reports/root_config_preflight.json",
+      "sha256": "c93dbaa8d30a03f7bccf6835d08fa8018fe9cd21bd04561a60753f27d176c4bb"
+    },
+    {
+      "path": "reports/root_historical_tools.json",
+      "sha256": "e289b2f70bf8ccc8657135dd53cf949016215e0601272ae83bae54bdc30745bf"
+    },
+    {
+      "path": "reports/root_integration.json",
+      "sha256": "19841274ef712afe7edfb9f46e62bf39879b629124c58ec80aaf029ddd5aacb3"
+    },
+    {
+      "path": "reports/root_integration_tests.json",
+      "sha256": "bffd5961cab6c1e5edd2cf8e0d44bc8f8d16093bf73b245071b91eed31bfdda1"
+    },
+    {
+      "path": "reports/root_ops_delegated.json",
+      "sha256": "c2b30442b861dc27d4c0f6d04e311e25ab5b0f309aeb4cc3e2e225a27f6e2bab"
+    },
+    {
+      "path": "reports/root_ops_read_coverage.json",
+      "sha256": "56462a5d6ce7a0818e888a46bbeb824a2177a069191d51cb802f3feee77ca5f8"
+    },
+    {
+      "path": "reports/root_preview_tools.json",
+      "sha256": "fa54f188944f9ea7320c15dc40b9841b57cb3aaf7eeb9a456411dafdfeff02be"
+    },
+    {
+      "path": "reports/root_runtime_tools.json",
+      "sha256": "f6ddc42bc935e2741f92fb4b515ebffc3a46a9ec001760a069881bcd5e32b6af"
+    },
+    {
+      "path": "repro-provenance.json",
+      "sha256": "53b0edb1733507f747e81a96e79cc345a3d3e7d3131dc818556bcafd43cfd496"
+    },
+    {
+      "path": "repros/B01-late401-observed.json",
+      "sha256": "9f6a5449a31b411dcb8f43b3a68c2a373aac3c0950ef484473935e2a60bc7a35"
+    },
+    {
+      "path": "repros/B01-late401.mjs",
+      "sha256": "e95ab1d8de72b93595a27cfddab35e550522f738d07b364829946f3cc551a532"
+    },
+    {
+      "path": "repros/B02-renew-clock-observed.json",
+      "sha256": "4806cb78b313a8ecff06ef163717d64d5a38a96692f051dff13b8eb85156ed26"
+    },
+    {
+      "path": "repros/B02-renew-clock.mjs",
+      "sha256": "572146e3759618c03e6528699b31b0c1ff8f019f7aeef6935eb21f98ddadc7d6"
+    },
+    {
+      "path": "repros/B03-mail-expiry-observed.json",
+      "sha256": "20ac529487a12115fcf4c8b93038ab8c9a1af26fd5ead11343b3e581a90e1887"
+    },
+    {
+      "path": "repros/B03-mail-expiry.mjs",
+      "sha256": "662f461406cfcd4e56544910573d114d7d3d526248b99a3255629ab3fa0c86d9"
+    },
+    {
+      "path": "repros/B04-navigation-observed.json",
+      "sha256": "b3dac608cd75c047f7e903b177fe63e85a7b8a2c752379c755c55cbd81bae22f"
+    },
+    {
+      "path": "repros/B04-navigation.mjs",
+      "sha256": "656eab51110b73ad13efe6e1625d9bf78a2b27c666bcc2722ca75ef913333914"
+    },
+    {
+      "path": "repros/B05-witness-admission-observed.json",
+      "sha256": "64b7474e21e186b8d8d8b6c65b01f4eae96d0acfb201dd4f1b007d6ee204c31e"
+    },
+    {
+      "path": "repros/B05-witness-admission.mjs",
+      "sha256": "fe87ca1900c1bbe94885f8114d2fb670c827792e46224abdd58e256d1c2a6073"
+    },
+    {
+      "path": "repros/I01-vault-guard-observed.json",
+      "sha256": "369aecd62a885a79147e9d539af02e1e2e31a01c3b13c782640fb81621be815e"
+    },
+    {
+      "path": "repros/I01-vault-guard.mjs",
+      "sha256": "641167263f28551aa1b372909a0892ba4e6eaf5a59c5463aba18ca79ed3510b1"
+    },
+    {
+      "path": "source-coverage.json",
+      "sha256": "dbdf873bce6cb31e1f560fc64add0393d2dca2fc731ea2b755dc9bab1aabe370"
+    },
+    {
+      "path": "summary.json",
+      "sha256": "9edd9a19c214ea6e692f8ef34d57cf7faa51d1f0768b32df94dc27a36605923b"
+    },
+    {
+      "path": "test-coverage.json",
+      "sha256": "1a51b9c09aa1c3136c115a4e8bc01885a0d47743d737c0f88010e498f73620a1"
+    },
+    {
+      "path": "test-structural-scan.json",
+      "sha256": "7e05d21c5fe09286055a0232a6ddfcf502354cdb70db840bb40b02584e873393"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"scenario":"expired renewal crosses 1ms at target lock","clockBefore":1792700000000,"clockAfter":1792700000001,"serviceExpectedExpiry":1792786400000,"storedExpiry":1792786400001,"commits":1,"updateCount":1,"outwardError":"AUTH_UNAVAILABLE","mappedHttpStatus":503,"trace":["begin","target_lock_elapsed_1ms","expiry_updated","commit"],"syntheticOnly":true}

@@ -1,0 +1,387 @@
+{
+  "format": "jessiemessage-second-audit-domain-v1",
+  "scope": "root_preview_tools_delegated",
+  "auditedProductionSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "applicationVersion": "1.8.2",
+  "conclusion": "No new actionable defect established by static review of all22 delegated sources. Historical PC filename versions remain dependencies of downloadable ZIPs in some profiles, not proof those endpoints are active in production182.",
+  "findings": [],
+  "reviewedFiles": [
+    {
+      "path": "scripts/JessieMessage-recuperation-052.ps1",
+      "owner": "root_integration_ops",
+      "bytes": 6870,
+      "lines": 106,
+      "sha256": "16c7a3aef9283fb9877af078551050f303793ba28f9e805a42956d056241617c",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "personal_one_time_recovery_key_preparation_tool_not_runtime_imported"
+    },
+    {
+      "path": "scripts/JessieMessage-sauvegardes-055.ps1",
+      "owner": "root_integration_ops",
+      "bytes": 27559,
+      "lines": 390,
+      "sha256": "31b95cd516028a9be43430bddeb461631279d077ad916df767114cd29bc1e436",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "PC_kit_source_reachable_in_some_profiles_not_proven_active_in_production182"
+    },
+    {
+      "path": "scripts/JessieMessage-temoin-067.ps1",
+      "owner": "root_integration_ops",
+      "bytes": 25178,
+      "lines": 339,
+      "sha256": "c0fbcbc64096b7a3d2e2766c00636ab332e62126b65298713aa17e4ae69c6bd4",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "PC_kit_source_reachable_in_some_profiles_not_proven_active_in_production182"
+    },
+    {
+      "path": "scripts/JessieMessage-verifier-056.ps1",
+      "owner": "root_integration_ops",
+      "bytes": 20513,
+      "lines": 301,
+      "sha256": "b6165194fc4ae5b6e0a0b74c79647bfae98e1fa671f3974d3022b8b28cd028d1",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "PC_kit_source_reachable_in_some_profiles_not_proven_active_in_production182"
+    },
+    {
+      "path": "scripts/build-neutral-site.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 10663,
+      "lines": 185,
+      "sha256": "33ec05190cd86213444bb802450c489453f99f496c03dfabc5a66ba9ba90f381",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "explicit_historical_export_not_current_deployment"
+    },
+    {
+      "path": "scripts/build-workbench.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4183,
+      "lines": 48,
+      "sha256": "834cb77e982c15b1234cbcb045779bb8e6680bc93e762e169f23ba709d43ca87",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "current_build_generates_offline_preview_only"
+    },
+    {
+      "path": "scripts/capture-admin.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1819,
+      "lines": 37,
+      "sha256": "3a8a83a4ae598bd68b9c683c9ec1d80032cde38840f59d802359ac46ad43112b",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-application-checkpoint-restore.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1053,
+      "lines": 21,
+      "sha256": "fcd2f26dff0894b1c53406e6ea6927c3e05baf58e45033cf81a8406e99695325",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-application-checkpoint-resume.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1044,
+      "lines": 21,
+      "sha256": "7bd11f19b5723864ac0e652107c629f5116d2d9714c702437b0c39a3adc4926a",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-messaging.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1887,
+      "lines": 43,
+      "sha256": "7831287b0e650465824f63a6d4bf037a177e87d991befd87d449e308da78ea3f",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-migration.sh",
+      "owner": "root_integration_ops",
+      "bytes": 755,
+      "lines": 19,
+      "sha256": "57c08e8f463695d8a7b35c9031e0cf380d7904c55e657603c208f645115353bb",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-private-checkpoint-verification.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1026,
+      "lines": 21,
+      "sha256": "eadd897bfd1b6ab97c19c0512bd7434d9006a4067832079cb04c3b5b4f7e4ae7",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-private-checkpoint.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1491,
+      "lines": 28,
+      "sha256": "8b30c8dd8acbc2cf16f465a2ce6cc4378eff50f771816f8023cc7d5f96ff3e1c",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-private-secrets.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1732,
+      "lines": 38,
+      "sha256": "8f0704f085094f78743eac4be15376eaf500542ea7256d52b83e3a9fa1abaf23",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-runtime.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1858,
+      "lines": 43,
+      "sha256": "b429c5f1f25dd5e89106df48f5aaf0fa757d8cffc6faa175485e86a00fc97944",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-smtp-update.sh",
+      "owner": "root_integration_ops",
+      "bytes": 1377,
+      "lines": 32,
+      "sha256": "38fa944fc31876b06b853a18fc0eadde380c7005c770c3768c0806597c1e254e",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "scripts/capture-text-clone-verification.sh",
+      "owner": "root_integration_ops",
+      "bytes": 915,
+      "lines": 22,
+      "sha256": "53869a09401ac057bc6a9d81df32dee8de3fe9cee80eee6ff0b469665ae3e4cd",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "operator_interactive_wrapper_not_automatic_runtime"
+    },
+    {
+      "path": "design/admin-tools-ui.js",
+      "owner": "root_integration_ops",
+      "bytes": 24026,
+      "lines": 129,
+      "sha256": "7053adeef657a45232b80aac4ea9d73accfd669336193015bf660dd67a83cb2c",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "offline_preview_source_not_production_runtime"
+    },
+    {
+      "path": "design/admin-tools.js",
+      "owner": "root_integration_ops",
+      "bytes": 5923,
+      "lines": 112,
+      "sha256": "0e0e4971d332a3c6b9c19644cfa252c9c0dc47a53d084319d22205c02050bd69",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "offline_preview_source_not_production_runtime"
+    },
+    {
+      "path": "design/dark-ui.js",
+      "owner": "root_integration_ops",
+      "bytes": 11334,
+      "lines": 143,
+      "sha256": "accf14b6ea7ce0e172fbc4bca842dd1004e44cad8723e58078cd1f99cd981bdf",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "offline_preview_source_not_production_runtime"
+    },
+    {
+      "path": "design/dark.css",
+      "owner": "root_integration_ops",
+      "bytes": 21637,
+      "lines": 298,
+      "sha256": "bf2bce28475b8b6e3a347f9b0c91625dac0db2ea483c506895288e095b359640",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "offline_preview_source_not_production_runtime"
+    },
+    {
+      "path": "design/preview.html",
+      "owner": "root_integration_ops",
+      "bytes": 44965,
+      "lines": 118,
+      "sha256": "433da81becf00f806dd65770d58536e882d18656cd47cea7acaa1b111285501c",
+      "binary": false,
+      "reviewStatus": "fully_read_static_review",
+      "reviewMethod": "manual_full_file_read",
+      "classification": "offline_preview_source_not_production_runtime"
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/admin-tools.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "5ca4849fb9b5b9aa637eb8cb3f0d41ffe6c6f287bdedebe2b0480d030e8545a6"
+    },
+    {
+      "path": "tests/night.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "bf0a35be6f7355728ab11ae3c03325cd3fc6ab2fe5fff1dcec00f0bda816bc63"
+    },
+    {
+      "path": "tests/neutral-site-build.test.mjs",
+      "readStatus": "fully_read",
+      "executed": false,
+      "sha256": "f48a8a03ce0289418fd45177f52ed98b0e81b925526888197396f9a7cdf0a592"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Inventory coverage and identity",
+      "status": "passed",
+      "evidence": {
+        "files": 22,
+        "lines": 2494,
+        "sourceBytes": 217808,
+        "sha256AllMatch": true
+      }
+    },
+    {
+      "name": "Preview-to-runtime reachability",
+      "status": "reviewed",
+      "evidence": [
+        "package.json:14 builds offline artifacts/JessieMessage.html via build-workbench.",
+        "build-workbench embeds only reviewed local sources and approved icon hashes; inline script/style closing delimiters guarded; empty local-branding guard excludes private portraits.",
+        "design/preview.html CSP connect-src none; in-memory demo model, no auth/session/network persistence; user-entered demo names/text escaped before HTML interpolation.",
+        "server/index.mjs:218–226 serves only publicFiles entries under publicRoot, not arbitrary design/artifacts paths.",
+        "Preview version0.3.x and LIRE-EN-PREMIER label refer to offline historical design, not active app1.8.2."
+      ]
+    },
+    {
+      "name": "Historical neutral export",
+      "status": "reviewed",
+      "evidence": [
+        "build-neutral-site top comment and --help explicitly label0.32 historical routing, outside current build/start.",
+        "A14 not recounted; optional fixed recette302 remains only historical fixture contract.",
+        "Closed source allowlist, new external absolute output leaf, ancestry/symlink/inode checks, O_EXCL|O_NOFOLLOW, public-only emitted manifest examined."
+      ]
+    },
+    {
+      "name": "PC kit reachability and controls",
+      "status": "reviewed_static_only",
+      "evidence": [
+        "copy-kit.mjs:29–43 and verification-kit.mjs:21 embed thesePS1 files in ZIPs. This proves conditional reachability only. server/index.mjs:332–338 selects manual-backup-service/manual-backup-http when accountClosures=true, whereas copy-service/copy-http are selected only in the alternative branch. Production182 account-closure/video profile does not establish current activity of these historical PC-copy endpoints.",
+        "Fixed HTTPS origin, disabled redirects, bounded API bodies/archives/deadlines; token remains header and DPAPI-protected config, never command-line argument.",
+        "Existing matching archives reused; conflicting same-name file preserved; CreateNew partial path, SHA256 verification, rename and final reread before latest receipt.",
+        "Windows directory/reparse checks, SID/SYSTEM private ACL, two worker locks, scheduled task quoting and least-privilege interactive principal reviewed.",
+        "Witness rejects rollback/missing/gapped publications and incomplete genesis; requires fresh live service authorization for enrollment, never automatic init after missing head.",
+        "Offline verifier passes GPG args via Windows quoting with UseShellExecute false, hashes plaintext from pipe, bounds stderr/plaintext/ciphertext, checks GPG integrity/status/recipient, supports cancellation without restored file.",
+        "Recovery052 validates one key, public fingerprint, private export import and fixed-byte round trip; no live recovery key inspected."
+      ]
+    },
+    {
+      "name": "Shell capture wrappers",
+      "status": "reviewed_static_only",
+      "evidence": [
+        "11 scripts fully read. Interactive stdin/stderr TTY required; hidden read -r -s; explicit quoted script and argument paths; secret passed with fixed printf format over stdin.",
+        "Scripts disable xtrace and clear task-specific secret variables through EXIT traps. Newer wrappers also disable allexport and remove NODE_OPTIONS/NODE_PATH; older admin/runtime/migration wrappers differ.",
+        "No passwords/tokens/configuration values were read, generated or transmitted; no wrappers or imported tools executed."
+      ]
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "candidate": "Witness worker loops without a client sleep when no request exists",
+      "disposition": "Rejected as false positive after direct server check",
+      "evidence": "server/backup/witness-transport.mjs:67–78 holds each idle poll up to configured20seconds. It is not an unthrottled idle spin at production default."
+    },
+    {
+      "candidate": "Historical version strings in offline design and PC tool filenames",
+      "disposition": "Classification only, no new defect",
+      "evidence": "Preview clearly says demonstration and has no network. PC files are embedded by kit generators reachable in some profiles; no production182 activation inferred. Renaming would break those retained references rather than fix a version bug."
+    },
+    {
+      "candidate": "Older capture wrappers inherit Node preloads and do not explicitly disable shell allexport",
+      "disposition": "Hardening observation only, not counted as newly established vulnerability",
+      "evidence": "Requires caller-controlled inherited shell/Node environment; no untrusted source or current authorized operator command establishing secret leakage found. Current user preparation commands already use env -i. Do not infer a production incident."
+    }
+  ],
+  "crossReadEvidenceFiles": [
+    {
+      "path": "server/index.mjs",
+      "ranges": [
+        "180–240",
+        "324–341"
+      ]
+    },
+    {
+      "path": "server/backup/copy-kit.mjs",
+      "ranges": [
+        "1–44"
+      ],
+      "note": "runtime embedding references inspected; generated source fields not all independently audited here"
+    },
+    {
+      "path": "server/backup/verification-kit.mjs",
+      "ranges": [
+        "1–26"
+      ]
+    },
+    {
+      "path": "server/backup/witness-transport.mjs",
+      "ranges": [
+        "64–82"
+      ]
+    }
+  ],
+  "priorAuditAvoidedDuplicates": [
+    "A14 historical neutral exporter already explicitly segregated; no redeploy proposed.",
+    "A02 media/backup capacity is owned by other audit scope and was not re-counted.",
+    "PC work is deferred per user; static source coverage does not reopen installation, antivirus, backups or recovery testing."
+  ],
+  "limits": [
+    "Static reading only; none of the22 reviewed tools was executed, parsed in PowerShell, built or installed.",
+    "The three test files were read, not executed; no Windows/GPG/native-host acceptance claimed.",
+    "No real PC files, keys, credentials, backups, production endpoint or personal directory accessed.",
+    "No code modification or new app tests.",
+    "Filesystem race and local hostile same-user process scenarios not qualified on Windows; no new remotely reachable exploit established."
+  ],
+  "repositoryChanges": false,
+  "applicationFixes": false,
+  "productionActions": false,
+  "PCOperations": false
+}

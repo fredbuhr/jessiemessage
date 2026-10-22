@@ -1,0 +1,638 @@
+{
+  "formatVersion": 1,
+  "scope": "root_integration",
+  "status": "complete",
+  "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "reviewedFiles": [
+    {
+      "path": ".github/workflows/backup-recovery-instructions.yml",
+      "owner": "root_integration_ops",
+      "bytes": 10536,
+      "lines": 164,
+      "sha256": "fedec4105b3140e88819808937e967f2b614ed9ac4f1de6005d7b6afb8da0cfc",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "owner": "root_integration_ops",
+      "bytes": 9762,
+      "lines": 210,
+      "sha256": "18395ea99c9cb2f13ff252a3ad33503c87c7da64fd43ae6af98f63b2d6e84545",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": ".github/workflows/service-monitor.yml",
+      "owner": "root_integration_ops",
+      "bytes": 2043,
+      "lines": 61,
+      "sha256": "7a4479c174f7df07724e76b63530461807eb09997e9b340650d98fa1c8d9ecff",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": ".gitignore",
+      "owner": "root_integration_ops",
+      "bytes": 2359,
+      "lines": 153,
+      "sha256": "ec1e8c6656c7bca86e2d00296ced4effbe3c536b19f3c65f492f59ae935f7b38",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0001_users.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1506,
+      "lines": 29,
+      "sha256": "8459e7c76ddd405232c192c1bfc3bf96e0000c8b42409066d7ae170ad05b20b6",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0002_invitations.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1917,
+      "lines": 34,
+      "sha256": "347061c42f5d099c410ca2dc1c53111aff510385c72eab87c1d58a67972237fa",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0003_sessions.sql",
+      "owner": "root_integration_ops",
+      "bytes": 880,
+      "lines": 18,
+      "sha256": "9faf0c66665f3ab2708572a4d9178a2454dc6058efcbaeda90094fa5c7810785",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0004_conversations.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1247,
+      "lines": 21,
+      "sha256": "c3463c38d7d83358b8dee3991ac836335e38b0a0b9cfe95089ee2c72acfbe3e1",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0005_admin_mfa.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1039,
+      "lines": 20,
+      "sha256": "df0b21dab8df4122b1335fd590e20edca2906bb67696ff155bbd5ea01e3e7ec3",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0006_admin_recovery_codes.sql",
+      "owner": "root_integration_ops",
+      "bytes": 758,
+      "lines": 14,
+      "sha256": "29e7f771d406a467c68f4b4f78ff4caa46c88a95fd4a1112fa5c5e1a4ee60215",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0007_auth_session_state.sql",
+      "owner": "root_integration_ops",
+      "bytes": 624,
+      "lines": 12,
+      "sha256": "d9d181271eddf1351baa02a28d03b3cffddee41e6ce152b83eca6d4707bdad31",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0008_auth_rate_limits.sql",
+      "owner": "root_integration_ops",
+      "bytes": 438,
+      "lines": 9,
+      "sha256": "84b3ee05a182f225edb0a4b1ec611b79bde4db3186b11520cd012c8a81e8211d",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0009_client_auth_state.sql",
+      "owner": "root_integration_ops",
+      "bytes": 666,
+      "lines": 12,
+      "sha256": "35cbfb5651fb7f73724edc4a12a0c447eb46c6d30f56c8a82fadf0ddb835cb3c",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0010_email_verifications.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1357,
+      "lines": 25,
+      "sha256": "178fd6fdb01778d2addf8ba1b0f606dfd6e0cf6237be5346c125f943ee79670d",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0011_client_session_state.sql",
+      "owner": "root_integration_ops",
+      "bytes": 530,
+      "lines": 10,
+      "sha256": "fbe0be471a713e4903163cdab02a20ecb64fa9a44a37161dcfc8a44eaddac5fd",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0012_mail_outbox.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2268,
+      "lines": 39,
+      "sha256": "d2be6c8f95bd16da4086f9c3d668c92e5739de9a33b24d3c52e0c904a7c4fb6a",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0013_messages.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1828,
+      "lines": 31,
+      "sha256": "2291c8318a2a026d7a664de3c4a11c8a0ee25700479b065b539e9521ce3840b2",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0014_chat_receipts.sql",
+      "owner": "root_integration_ops",
+      "bytes": 742,
+      "lines": 13,
+      "sha256": "58ace872361b0dfe58336e2c9222966e0081558f8c84c91df79e944e90e00ea2",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0015_chat_events.sql",
+      "owner": "root_integration_ops",
+      "bytes": 889,
+      "lines": 15,
+      "sha256": "96d21269d6f17be68ea5f1bf356a2d0dc02138c124c254a1b72d9faf6519305c",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0016_media_assets.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2145,
+      "lines": 36,
+      "sha256": "7f3ccb57e4f8a405624684af93a82bbdc5464515279b54be82f0dc0e428afd90",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0017_message_media.sql",
+      "owner": "root_integration_ops",
+      "bytes": 927,
+      "lines": 16,
+      "sha256": "fe3e34a8a59458651bb4e9c29789d59d35ec0cc8a145d5b2166eb5f6795cbdf0",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0018_crm_profiles.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1536,
+      "lines": 24,
+      "sha256": "384001e65b3b1c803f96a29410cfdaa933a558a3d3d9bf980ad6b6c50d0f78c7",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0019_crm_labels.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1457,
+      "lines": 24,
+      "sha256": "99de064d6f1bc38d0eddc6f627be8a07bc51c5b04c0b2bdb79cee1e0c8c488e6",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0020_crm_memberships.sql",
+      "owner": "root_integration_ops",
+      "bytes": 948,
+      "lines": 15,
+      "sha256": "c6e3772208cb8da2a4ba007f501a72c8fd649e08619d9da4236a1474774b17bd",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0021_client_password_resets.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1680,
+      "lines": 27,
+      "sha256": "b524de66f8a24bd6eaf26eeb66d735362b36db0db5d7597a3ee811a06ed38ea1",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0022_password_reset_outbox.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2392,
+      "lines": 39,
+      "sha256": "17d9dd8c774151c0086bb4b62e08e239e50033c21b083fa3e568ad047ed5bb58",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0023_broadcast_preferences.sql",
+      "owner": "root_integration_ops",
+      "bytes": 760,
+      "lines": 14,
+      "sha256": "e0f9893dd0076358609a26863e8e57a127db53986c873a5a4ae963c691d42013",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0024_broadcast_campaigns.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2330,
+      "lines": 35,
+      "sha256": "166812d97f22286dfbd60202321b4f83f76a8aebd025ef8eafc5ff5620996b26",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0025_broadcast_recipients.sql",
+      "owner": "root_integration_ops",
+      "bytes": 3606,
+      "lines": 53,
+      "sha256": "f4690a0eb93bc67681de6d37fd7f7f43891ea45e1406c9ce1179a5ed8d1e05e6",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0026_media_storage_state.sql",
+      "owner": "root_integration_ops",
+      "bytes": 746,
+      "lines": 13,
+      "sha256": "79ee09772f337dad06c1defce73fcf1d42ef4eb656af64a9680b664c49fd4392",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0027_media_storage_objects.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2302,
+      "lines": 38,
+      "sha256": "bc6971d8bd70a09057530e982c28eb50e779ff461dfdd541b1d48ed3b61f5b5a",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0028_manual_client_admission.sql",
+      "owner": "root_integration_ops",
+      "bytes": 244,
+      "lines": 7,
+      "sha256": "bdb71b6a9351d93af635b7a598aad67c192ed4c91f78ecb5492d05536bba0cbb",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0029_push_subscriptions.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1913,
+      "lines": 32,
+      "sha256": "ea51d98da123c046c7d61bc5b67268b28e2739c5169e5bb9e102fdbee2efb996",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0030_push_outbox.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2216,
+      "lines": 39,
+      "sha256": "82a4cd2ce99d79ff1876d72587bd4da6ad69ead0e662c8f9ec3c2fa031adf8f2",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0031_user_profiles.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1018,
+      "lines": 17,
+      "sha256": "8fa14cee33718921678b8e69e9db81b3ef8e8d12f526ad4cdfb250ecb10d005b",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0032_announcements.sql",
+      "owner": "root_integration_ops",
+      "bytes": 2133,
+      "lines": 36,
+      "sha256": "5b86780521557175076a037a9c2abc2cd4f1eec3bb81ee8f1dcb47334f3bce5e",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "db/migrations/0033_crm_tasks.sql",
+      "owner": "root_integration_ops",
+      "bytes": 1621,
+      "lines": 29,
+      "sha256": "81d0d11577b6ada0f734c7497cbf44768033f1374bd830dec5e4abe9beda34af",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "package-lock.json",
+      "owner": "root_integration_ops",
+      "bytes": 30119,
+      "lines": 887,
+      "sha256": "496781799c1b1ade1e4500afbcfcfd1abf059c5798e06c2b649a1667c03dccb7",
+      "binary": false,
+      "reviewStatus": "structured_dependency_review",
+      "reader": "/root"
+    },
+    {
+      "path": "package.json",
+      "owner": "root_integration_ops",
+      "bytes": 3154,
+      "lines": 35,
+      "sha256": "a4cd39c142382fbaac3635e5754f785735e1d3cd2b1993bc65429e659b46b4ef",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "scripts/check-syntax.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 1343,
+      "lines": 28,
+      "sha256": "eca02db96e2e122495cdf05c22cb4b076fcfc280724a43107331056985ebaffc",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/db/connection.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2113,
+      "lines": 43,
+      "sha256": "83e32600df6013a9b5d5689b89583323d1d6224b505b1fdf04eedf2bd166eed1",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/db/migrations.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 19097,
+      "lines": 347,
+      "sha256": "8e08662b8a90a4dac525f3544ab74c6a3b8f0d6400f24cbfa07ff32345662a5f",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/db/runtime.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 5582,
+      "lines": 121,
+      "sha256": "58b91ed6bfe5f8a6003d922f786b86a283eb3bb094611cd0b4de2219ca89c258",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/db/shared-runtime-privileges.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4843,
+      "lines": 85,
+      "sha256": "65264f306c1fdc6bff9302a56e04f0042e948b47964d4654e04558333cebd1ca",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/db/store-migrations.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 879,
+      "lines": 11,
+      "sha256": "868214452bbe1a9d3b4465d972f38cb36c51fcdb4438e3c4dc9e8327767b3436",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/entry/http.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4378,
+      "lines": 71,
+      "sha256": "d2e25d46bfff2b3682d56d0b3231d9a5b1da077190e15811394f5632959f17be",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/index.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 52686,
+      "lines": 732,
+      "sha256": "9c4e0d8cb0e18a22363d7c700eac2c702d5262b9493386505982cd20329ae7a9",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/lifecycle.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 3030,
+      "lines": 67,
+      "sha256": "739165655c6a2e0f0d556bec06b599ffe823ad22bb57371f5b16951785342b9d",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/operations/dto.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2727,
+      "lines": 39,
+      "sha256": "26708fc960e0ad6c3fa4b1fdf4c497ec387e1d504743cbb2ca4a196597025209",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/operations/external-probe.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 7943,
+      "lines": 133,
+      "sha256": "1f7468f18784b1577153addf5ca619e139f4de337dd89894a1edc82b7da6ca67",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/operations/monitor.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 10648,
+      "lines": 189,
+      "sha256": "1fe748189255ca9abe765cae56dd6266de10d3c47ed8bb703d375ec2ff810cd5",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/operations/store.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 4323,
+      "lines": 87,
+      "sha256": "e12308d69bb36549ef15354e8bf5ccf2eb5d16d4844711ff9975549f2307fcb5",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/readiness/http.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 7789,
+      "lines": 130,
+      "sha256": "7b5d7e644497f233e9534151ec69c92e9015ecaf8b88cdfc8b006d8663da52fd",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/readiness/service.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 8695,
+      "lines": 151,
+      "sha256": "3ce2badb18c2792b7f380ab5400f174c9ed4065463732bf30ee37d03e7f51411",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/release-features.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 243,
+      "lines": 4,
+      "sha256": "053ab0f4176da093a75660dc02ddcbda9da4b9bc9e7c053ce4cb0f7e3dfbaadf",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/release.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 2962,
+      "lines": 43,
+      "sha256": "6d5057f3093cfd02d56cb08ecb6adced6677579046b4df59b924283776fe37c6",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "server/site.mjs",
+      "owner": "root_integration_ops",
+      "bytes": 973,
+      "lines": 21,
+      "sha256": "b6d96a5c3bae6732751ca8c9422e7a89dae49b2d559830a1622c4062052ed1b3",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    },
+    {
+      "path": "artifacts/.gitignore",
+      "owner": "root_integration_ops",
+      "bytes": 14,
+      "lines": 2,
+      "sha256": "240a3e0d37d2e86b614063f5347eb02d4f99ca6c254de6b82871ff8d95532a7d",
+      "binary": false,
+      "reviewStatus": "read_complete",
+      "reader": "/root"
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/migrations.test.mjs",
+      "readScope": "full",
+      "executed": false
+    },
+    {
+      "path": "tests/readiness-service.test.mjs",
+      "readScope": "partial",
+      "executed": false
+    },
+    {
+      "path": "tests/readiness-http.test.mjs",
+      "readScope": "partial",
+      "executed": false
+    }
+  ],
+  "findings": [],
+  "crossReviewedFindings": [
+    "Late401 actual handlers and9-case proof inspected; readiness/http122 is another shared surface. No extra finding.",
+    "Expired renewal source/fixture inspected; independent clock review retained.",
+    "Mail expiry source/fixture inspected; independent review reduces final severity toP3.",
+    "Manual navigation source/router/fixture inspected; final severityP3.",
+    "Witness transport and4-reader fixture inspected; conditional legacy exposure only."
+  ],
+  "checks": [
+    "All33 core SQL migrations read, constraints/FKs/checks/indices compared to service contracts. Three video migrations owned by messaging_media.",
+    "Migration ledger, immutable checksums, selected schema/version, named lock, dirty-DDL recovery and conservative retry inspected.",
+    "Root profile wiring, feature/SQL36 isolation, anonymous entry routes, lifecycle/worker shutdown, readiness authorization and SMTP verify-only, diagnostic DTOs and release identity inspected.",
+    "All3 workflows read, minimal contents-read permission, synthetic credentials, pinned remote actions, no production DB fixtures.",
+    "package-lock reviewed structurally for all59 records, exact5 direct pins, HTTPS registry integrity, platform/engine/dependency declarations; npm audit once0known advisory.",
+    "Global literal relative import/resource scan1047 references resolved.",
+    "All390 test files inventoried; structural import scan and SHA256 records separate, manual full/partial reads reported by owners."
+  ],
+  "rejectedCandidates": [
+    {
+      "candidate": "Video preview blocked by CSP default-src none",
+      "reason": "Actual enabled chat and broadcast handlers append media-src self blob; AUTH_HEADERS already allows image blob. No defect."
+    },
+    {
+      "candidate": "Core33 migration count conflicts with activeSQL36",
+      "reason": "Video profile explicitly uses extended36 plan; historical normal profile refuses incompatible schema rather than silently downgrading."
+    }
+  ],
+  "limits": [
+    "New local fixtures useNode24.19.0, production and acquired nativeCI use24.22.1.",
+    "No new general suite, nativebrowser, livehost SQL, production data, SMTP/Push send, backup/restore, PC or deployment.",
+    "Third-party node_modules source is not exhaustively manually reviewed; dependency metadata/advisories only.",
+    "Historical documentation and all390 test files are not claimed fully read."
+  ]
+}

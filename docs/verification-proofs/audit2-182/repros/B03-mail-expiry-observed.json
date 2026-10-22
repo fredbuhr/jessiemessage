@@ -1,0 +1,98 @@
+{
+  "status": "reproduced",
+  "node": "v24.19.0",
+  "results": [
+    {
+      "purpose": "verification",
+      "lockWaitMilliseconds": 0,
+      "expiry": 1792670401000,
+      "events": [
+        {
+          "type": "user_lock_acquired",
+          "now": 1792670400000
+        },
+        {
+          "type": "lease_written",
+          "leaseUntil": 1792670401000,
+          "now": 1792670400000
+        }
+      ],
+      "transportCalls": 1,
+      "expiredByMilliseconds": -1000,
+      "counts": {
+        "sent": 1,
+        "failed": 0
+      },
+      "stateAfterSmtp": "sent"
+    },
+    {
+      "purpose": "verification",
+      "lockWaitMilliseconds": 2000,
+      "expiry": 1792670401000,
+      "events": [
+        {
+          "type": "user_lock_acquired",
+          "now": 1792670402000
+        },
+        {
+          "type": "lease_written",
+          "leaseUntil": 1792670401000,
+          "now": 1792670402000
+        }
+      ],
+      "transportCalls": 1,
+      "expiredByMilliseconds": 1000,
+      "counts": {
+        "sent": 0,
+        "failed": 1
+      },
+      "stateAfterSmtp": "sending"
+    },
+    {
+      "purpose": "password-reset",
+      "lockWaitMilliseconds": 0,
+      "expiry": 1792670401000,
+      "events": [
+        {
+          "type": "user_lock_acquired",
+          "now": 1792670400000
+        },
+        {
+          "type": "lease_written",
+          "leaseUntil": 1792670401000,
+          "now": 1792670400000
+        }
+      ],
+      "transportCalls": 1,
+      "expiredByMilliseconds": -1000,
+      "counts": {
+        "sent": 1,
+        "failed": 0
+      },
+      "stateAfterSmtp": "sent"
+    },
+    {
+      "purpose": "password-reset",
+      "lockWaitMilliseconds": 2000,
+      "expiry": 1792670401000,
+      "events": [
+        {
+          "type": "user_lock_acquired",
+          "now": 1792670402000
+        },
+        {
+          "type": "lease_written",
+          "leaseUntil": 1792670401000,
+          "now": 1792670402000
+        }
+      ],
+      "transportCalls": 1,
+      "expiredByMilliseconds": 1000,
+      "counts": {
+        "sent": 0,
+        "failed": 1
+      },
+      "stateAfterSmtp": "sending"
+    }
+  ]
+}

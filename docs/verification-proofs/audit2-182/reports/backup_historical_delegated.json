@@ -1,0 +1,475 @@
+{
+  "scope": "backup_historical_delegated",
+  "parentOwner": "peer_a11",
+  "auditBase": "e2cfbefe03d3538b216f873d185b1542d856044c",
+  "runtimeSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "complete": true,
+  "reservation": "Exact 21 modules delegated and acknowledged by peer_a11; no copy-* source duplicated.",
+  "sourceCoverage": {
+    "files": 21,
+    "lines": 2287,
+    "fullSourceReads": true
+  },
+  "reviewedFiles": [
+    {
+      "path": "server/backup/alert-delivery.mjs",
+      "owner": "backup",
+      "bytes": 2871,
+      "lines": 49,
+      "sha256": "809080e56eef6634ffb43a6cb82f90bbea8b655749d9bb7633d63b7ecebdbe82",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/alert-files.mjs",
+      "owner": "backup",
+      "bytes": 6758,
+      "lines": 115,
+      "sha256": "90995eb37bf4c6a55bc53492ea84b9cd939f39fa9d347242747f059132ea778e",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/alert-state.mjs",
+      "owner": "backup",
+      "bytes": 7933,
+      "lines": 99,
+      "sha256": "e15a8103e6fd02d9c13c669099c9ecc635adb4165ce0ba8a848c9758f54afb54",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/alert-worker.mjs",
+      "owner": "backup",
+      "bytes": 4199,
+      "lines": 66,
+      "sha256": "265ee22682373d194aaa74ce3936044406d561be988728c23b5f18b01db9dc89",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/freshness-reader.mjs",
+      "owner": "backup",
+      "bytes": 1675,
+      "lines": 22,
+      "sha256": "366dd2e17e6c2ad34edd021bc2150b71a21a7d42a72c5b92ee41ef41476e8f39",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/freshness.mjs",
+      "owner": "backup",
+      "bytes": 7903,
+      "lines": 107,
+      "sha256": "8e3cec312baa9b07ddc0ea43530071488a4a9d21ab8a6a3f375b0d4c115127f7",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/managed-witness.mjs",
+      "owner": "backup",
+      "bytes": 3340,
+      "lines": 47,
+      "sha256": "c0abc326c570d93611040465f362d653f799cfd25be931fd8e4f0b16b190b52d",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/periodic-monitor.mjs",
+      "owner": "backup",
+      "bytes": 6915,
+      "lines": 114,
+      "sha256": "53825f4b6a9a04ee3f1ed4147dc109cdafc3ec181862f5f043d070efe2260a6f",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/registry-witness.mjs",
+      "owner": "backup",
+      "bytes": 12871,
+      "lines": 173,
+      "sha256": "f6b66640e0ee18eab3ba2f584cbb5c163a20ff0863ad99e863356143c9d02c96",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-enrollment-http.mjs",
+      "owner": "backup",
+      "bytes": 7459,
+      "lines": 100,
+      "sha256": "a999641f9930db253f14e837e5dd7ce9b5e271fabf2ab0d7117ac45a8cca06fd",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-enrollment.mjs",
+      "owner": "backup",
+      "bytes": 14952,
+      "lines": 207,
+      "sha256": "6c347e2ff96c8829205565081c3171285e7c6054f59f65886c96166ded612b0d",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-genesis.mjs",
+      "owner": "backup",
+      "bytes": 14616,
+      "lines": 215,
+      "sha256": "2e90013bc24dc82df496cefe0ccda77761b0b6f6026f791449658fb88cdd7bbc",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-observation-maintenance.mjs",
+      "owner": "backup",
+      "bytes": 2458,
+      "lines": 42,
+      "sha256": "2be81fa69094e88ce3f7ff400ac69198862594fd45c932f1aa65848c311324ed",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-observer.mjs",
+      "owner": "backup",
+      "bytes": 13767,
+      "lines": 209,
+      "sha256": "8a3a789bf2276a62e8de5ab3f8340cedb7e0b97f82e3085fd39ed29010aef934",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-origin-context.mjs",
+      "owner": "backup",
+      "bytes": 4450,
+      "lines": 72,
+      "sha256": "dcdb6386e2722df36b4f45be2979979b5b76253c629b55eb1616e04cd4d44684",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-origin-diagnostics.mjs",
+      "owner": "backup",
+      "bytes": 1217,
+      "lines": 20,
+      "sha256": "e0204f4dee38d0147de6a74df853b6dc9466b395be32dcc6d2e9cafd5be4302a",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-origin-operator.mjs",
+      "owner": "backup",
+      "bytes": 12986,
+      "lines": 165,
+      "sha256": "1f12ed1c21096735c20058aa309f3da10f595815b27ed57053a39b9f89f7e92b",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-recovery-control.mjs",
+      "owner": "backup",
+      "bytes": 8657,
+      "lines": 145,
+      "sha256": "c96878b304cc974c41c2a617d1bb19fc9c3b284a6905c8c79c1b92f2901fffda",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-recovery-parent.mjs",
+      "owner": "backup",
+      "bytes": 9247,
+      "lines": 153,
+      "sha256": "5596688e29efd589681987d4db184cfe0aaa8aff780edfc6034f60cb4334b173",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-recovery-server.mjs",
+      "owner": "backup",
+      "bytes": 2996,
+      "lines": 59,
+      "sha256": "9326849da9f58e30ec609994915bf67c5e418176ff03870aaa05815398b20e27",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    },
+    {
+      "path": "server/backup/witness-transport.mjs",
+      "owner": "backup",
+      "bytes": 8243,
+      "lines": 108,
+      "sha256": "bbc35b24e2510b3e5488cdbd424f86726847a00b0fe34fafdf710536c5c73d11",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewMethod": "Complete source read and dependency/control-flow review; static audit only",
+      "sha256Verified": true
+    }
+  ],
+  "additionalDependencyReads": [
+    {
+      "path": "server/backup/registry-snapshot.mjs",
+      "read": "complete",
+      "reason": "Validate registry v1/v2 use and witness envelope rules; primary coverage remains with peer_a11"
+    },
+    {
+      "path": "server/http/request-origin.mjs",
+      "read": "complete",
+      "reason": "Construct pure handler fixture and verify canonical authority preconditions; primary owner elsewhere"
+    },
+    {
+      "path": "server/backup/recurring-supervisor.mjs",
+      "read": "partial",
+      "ranges": [
+        [
+          39,
+          84
+        ]
+      ],
+      "reason": "Prove witness commands exclude active video profile"
+    },
+    {
+      "path": "server/backup/copy-service.mjs",
+      "read": "partial",
+      "ranges": [
+        [
+          92,
+          124
+        ]
+      ],
+      "reason": "Trace real asynchronous authorizeWitness read; whole source owned/reviewed by peer_a11"
+    },
+    {
+      "path": "scripts/start-recurring-private-messaging.mjs",
+      "read": "partial",
+      "ranges": [
+        [
+          69,
+          90
+        ]
+      ],
+      "reason": "Verify witness is constructed only for explicit observer commands"
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/witness-transport.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/backup-copy.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/backup-copy-catalog.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/backup-copy-files.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/backup-copy-http.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/copy-kit.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/backup-verification.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/backup-alerts.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/backup-alert-files.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/backup-freshness.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/periodic-backup-monitor.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/managed-witness.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/witness-origin-context.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/witness-observation-maintenance.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/witness-enrollment.test.mjs",
+      "read": "complete",
+      "executed": false
+    },
+    {
+      "path": "tests/witness-enrollment-http.test.mjs",
+      "read": "complete",
+      "executed": false
+    }
+  ],
+  "associatedTestsNotRead": [
+    "tests/witness-genesis.test.mjs",
+    "tests/witness-observer.test.mjs",
+    "tests/witness-recovery-control.test.mjs",
+    "tests/witness-recovery-parent.test.mjs",
+    "tests/witness-recovery-server.test.mjs",
+    "tests/witness-origin-operator.test.mjs",
+    "tests/witness-runtime.integration.test.mjs",
+    "tests/witness-recovery-cli.test.mjs"
+  ],
+  "findings": [
+    {
+      "id": "BH-01",
+      "severity": "P2",
+      "scopeClassification": "Latent optional witness transport; not an asserted fault in the active manual/video runtime",
+      "title": "L’admission des transferts witness peut dépasser sa limite pendant l’authentification asynchrone",
+      "file": "server/backup/witness-transport.mjs",
+      "line": 60,
+      "relatedLines": [
+        65,
+        85,
+        87
+      ],
+      "trigger": "Plusieurs POST /api/backup-copy/witness/response arrivent ensemble pendant qu’un échange witness attend une réponse. Les requêtes portent la capacité native valide du PC. Toutes passent la vérification transfers.size avant que authorizeWitness ne termine son accès disque asynchrone.",
+      "cause": "La vérification waiters.size/transfers.size se trouve avant await identity(); la réservation transfers.add(request) arrive ensuite sans nouvelle vérification. L’état d’admission a pu changer durant l’attente.",
+      "impact": "Le nombre de corps collectés simultanément dépasse deux. Chaque corps est accepté jusqu’à REGISTRY_MAX_BYTES + 2048 (64 MiB + 2 KiB), puis copié et parsé. La mémoire et le nombre de lecteurs ne suivent donc plus la borne prévue, avec risque de refus de service dans le parent witness, éventuellement partagé avec l’application en mode observer. Aucune fuite ou falsification de preuve n’est démontrée. Le scénario exige une capacité native valide et l’activation explicite witness.",
+      "repro": {
+        "command": "node /workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.mjs",
+        "script": "/workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.mjs",
+        "result": "/workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.json",
+        "runtime": "v24.19.0",
+        "exitCode": 0,
+        "requests": 4,
+        "bytesPerBody": 2,
+        "observedConcurrentBodyReaders": 4,
+        "expectedCeiling": 2,
+        "laterRequestStatus": 429,
+        "network": false,
+        "database": false,
+        "filesystemBackup": false
+      },
+      "evidence": [
+        "The pure fixture calls the actual handler with four delayed authorizations and synthetic two-byte async request bodies. All four bodies are entered concurrently; assertions pass.",
+        "A fifth request started after the four readers are registered is refused with 429, proving the existing check applies only after admission state becomes visible.",
+        "Real authorizeWitness awaits read() in server/backup/copy-service.mjs:119–122, so the await boundary is present in the production adapter, not solely an artificial fixture.",
+        "server/backup/witness-enrollment-http.mjs:63–66 performs the analogous second reader-limit check after identity, which is absent in witness-transport.",
+        "parseRecurringArguments only permits --profile for check/start-local-closures, while observer and recovery are distinct explicit commands. Normal manual/video composition does not construct this transport.",
+        "tests/witness-transport.test.mjs covers authenticated exchange, revocation, cancellation and gateway behavior, but no simultaneous pending-authorize reader admissions."
+      ],
+      "confidence": "high for admission race and four-reader result; memory exhaustion is inferred from the source body ceiling, not allocated or exercised",
+      "suggestedCorrection": "Recheck and reserve the shared admission state synchronously immediately after authentication, retaining the slot until request/body work actually settles. Cover both poll waiters and response readers with delayed-authorize concurrency cases.",
+      "knownBounds": "The global per-minute request budget and parent connection ceilings still exist; they do not preserve the intended two-reader bound."
+    }
+  ],
+  "checks": [
+    {
+      "check": "Source integrity",
+      "result": "21 reserved source hashes match manifest; repository git status remains clean"
+    },
+    {
+      "check": "Small synthetic race fixture",
+      "result": "One execution only; actual handler, four concurrent readers observed; no sockets, network, real files, scheduler or mail"
+    },
+    {
+      "check": "Operational authority",
+      "result": "Reviewed provenance, fixed pairing, immutable contract pins, one-time authenticated enrollment, maintenance zero-exit/resume guards, read-only recovery relay and sanitized diagnostics"
+    },
+    {
+      "check": "Private files",
+      "result": "Reviewed canonical serialization, exact fields, bounded reads, owner/modes, symlink/hardlink rejection, identity rechecks, fsync publication and revision locks"
+    },
+    {
+      "check": "Alerts/freshness",
+      "result": "Reviewed closed projections, capture-only status scope, incident/recovery FIFO, persisted attempts/retries, cancellation and SMTP acknowledgement ambiguity"
+    },
+    {
+      "check": "Registry v1 hardcoding",
+      "result": "Not counted as a new video regression: witness configured context is the historical photo/broadcast binding; active video local-closure profile cannot select witness commands."
+    }
+  ],
+  "nonFindings": [
+    {
+      "hypothesis": "v1 witness empty-snapshot hash conflicts with v2 video snapshots",
+      "decision": "Existing historical composition supplies the photo-only binding and explicitly excludes video witness commands. Kept as capability boundary, not newly confirmed active fault."
+    },
+    {
+      "hypothesis": "Alert timeout permits late SMTP acceptance",
+      "decision": "Stable Message-ID and persisted retry attempts explicitly implement at-least-once delivery; unknown acceptance is recorded as unconfirmed, not success. No new duplicate guarantee violation established."
+    },
+    {
+      "hypothesis": "Unbounded fragment count while collecting witness body",
+      "decision": "Related memory amplification risk observed statically in chunks.push, but not separately reproduced or counted as a second finding."
+    }
+  ],
+  "limits": [
+    "Full source coverage is exact for the 21 reserved modules; copy-* source remains covered by peer_a11, not by this delegated source report.",
+    "Sixteen associated test files read statically in full; eight related test files left unread and named explicitly. No existing test suite executed.",
+    "No backup capture, restore, PC interaction, real witness, scheduler, SMTP, production host or hosted qualification was invoked.",
+    "Only a minimal pure synthetic handler fixture was executed; no large body or memory exhaustion test.",
+    "No source fix or deployment performed; no observed production incident attributed to this latent optional-path defect.",
+    "Local fixture runtime v24.19.0 differs from deployed qualified v24.22.1."
+  ]
+}

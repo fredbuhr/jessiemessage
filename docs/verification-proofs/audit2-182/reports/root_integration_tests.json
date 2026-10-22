@@ -1,0 +1,338 @@
+{
+  "formatVersion": 1,
+  "type": "audit2-182-root-integration-tests-complement",
+  "recordedAtUTC": "2026-10-22T20:45:20.065156+00:00",
+  "checkoutHead": "b54430d849132f3cb3f353c92bf30f2879865dec",
+  "codeReference": "78e6b8b2f6b19020c060345b9313a81829e9c8da; all12test bytes verified identical",
+  "scope": "The twelve test files explicitly delegated by root; full source reading only, no test execution or fresh application audit. Findings below are coverage/contract notes on already-existing audit2 findings, not new defects.",
+  "testsRead": [
+    {
+      "path": "tests/readiness-service.test.mjs",
+      "sha256": "c17e56591785a2a3c97dc2c046c53ba492c39945bc9fd830d7e0bd17a6f3c8d1",
+      "lines": 453,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "versions_reprise",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/readiness-http.test.mjs",
+      "sha256": "7426d73414f64edff8e346eb9004bdf3fa4f7efc28956c3c47117e54b8f75a06",
+      "lines": 318,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "versions_reprise",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/readiness-flow.integration.test.mjs",
+      "sha256": "e9399ddfd81126a16f6c8b292290d6282293ce36a4c901a3a83d311e5a2e578a",
+      "lines": 324,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "versions_reprise",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/entry-lifecycle.test.mjs",
+      "sha256": "1ae67d4bf050a21fd6a893a06844b748e51e7bb9da68f9fbc10e150aa2da04f9",
+      "lines": 184,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "versions_reprise",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/operations-http.test.mjs",
+      "sha256": "e939040b8350d0e192eff20d3c425edb5ad90888cc8df2ce0a32102407608d9b",
+      "lines": 75,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "operations_test_read",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/operations-monitor.test.mjs",
+      "sha256": "c6404f1870626aa4050fdc05f89938c6cb469f8c952d1e21659a55511c99ac46",
+      "lines": 235,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "operations_test_read",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/operations-store.test.mjs",
+      "sha256": "7e4262ab8231181da0a69a3ec80c142c9a3ade0be7be3c07d63815f079c51246",
+      "lines": 116,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "operations_test_read",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/operations-flow.integration.test.mjs",
+      "sha256": "c3bab5f7b7367a0a8c77c4a5bf068286b48253620bd5639f763d8eb14d882e2b",
+      "lines": 202,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "operations_test_read",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/worker-lifecycle.test.mjs",
+      "sha256": "b3fe446328e2984f88ce4a927d4bec43ee9019bffb492c241dec6f766c79b51e",
+      "lines": 194,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "operations_test_read",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/managed-runtime.test.mjs",
+      "sha256": "6b579f504f09fbc46b5207118c888c6c71ba0387cd15e80d105b7206d9e2aad4",
+      "lines": 266,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "versions_reprise",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/release.test.mjs",
+      "sha256": "6123fa267331e918f807fec0fd0d6b27d3db4cdadf8639de8adcabcd74d0c56d",
+      "lines": 89,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "versions_reprise",
+      "sourceMatches182ReleaseCommit": true
+    },
+    {
+      "path": "tests/release-features.test.mjs",
+      "sha256": "054a3d1e6bc0703d96ceae2f88e0db75a5b0d7c19b844cf402514e2f23529f63",
+      "lines": 11,
+      "readScope": "full",
+      "executed": false,
+      "reviewer": "versions_reprise",
+      "sourceMatches182ReleaseCommit": true
+    }
+  ],
+  "testFiles": 12,
+  "testLines": 2467,
+  "findings": [],
+  "observations": [
+    {
+      "id": "IT-01",
+      "topic": "MM-01 is supported by an older explicit cookie-cleanup expectation",
+      "relatedFinding": "MM-01",
+      "references": [
+        {
+          "file": "tests/readiness-http.test.mjs",
+          "lines": "92–105,150–167,258–272"
+        },
+        {
+          "file": "tests/readiness-flow.integration.test.mjs",
+          "lines": "140–156,283–301"
+        }
+      ],
+      "assessment": "Readiness tests explicitly require deletion Set-Cookie on401, including a session revoked during pending SMTP verification. They send raw Cookie headers, inspect responses individually and do not install a replacement session in a native shared cookie jar before the old401 arrives. These green assertions validate the old cleanup policy and cannot disprove the delayed-response race already identified in MM-01. This is a scope/contract observation for the existing finding; the current readiness source was not newly reproduced here.",
+      "futureFocusedRegression": "If protected-route cleanup policy changes in the MM-01 fix, audit and adjust these explicit expectations deliberately. A composed delayed old401/new login/browser-cookie-jar test should retain the newer cookie. No rerun or change authorized by this reading."
+    },
+    {
+      "id": "IT-02",
+      "topic": "SMTP readiness intentionally excludes mail delivery and expiry claims",
+      "relatedFinding": "DOM-01",
+      "references": [
+        {
+          "file": "tests/readiness-service.test.mjs",
+          "lines": "120–137,247–260"
+        },
+        {
+          "file": "tests/readiness-flow.integration.test.mjs",
+          "lines": "76–106,213–226"
+        }
+      ],
+      "assessment": "The readiness transport only verifies authentication; sendMail/sendVerification/sendPasswordReset are forbidden and outbox counts remain0. Consequently neither successful SMTP readiness nor this native SQL integration tests claim+lock-time advancement+real mail worker. They cannot contradict DOM-01 or establish reception of mail. Retain their no-email contract."
+    },
+    {
+      "id": "IT-03",
+      "topic": "Readiness has relevant concurrency/clock guards but these do not qualify other components",
+      "relatedFindings": [
+        "BH-01",
+        "AUTH-DATA-01",
+        "DOM-01"
+      ],
+      "references": [
+        {
+          "file": "tests/readiness-service.test.mjs",
+          "lines": "195–244,288–301,354–399"
+        },
+        {
+          "file": "tests/readiness-flow.integration.test.mjs",
+          "lines": "244–265"
+        }
+      ],
+      "assessment": "Readiness explicitly reserves its busy slot while async quota/session proof/factory work waits, rechecks revoked/expired session after awaited budgets, sanitizes invalid late clocks and closes late transports. This is useful positive coverage for readiness and a pattern for a future focused witness admission fix; it is not an integration test of witness transfers or access renewal result checking."
+    },
+    {
+      "id": "IT-04",
+      "topic": "Current route failure and access renewal composition remain outside this test set",
+      "relatedFindings": [
+        "FI-PWA-01",
+        "AUTH-DATA-01"
+      ],
+      "references": [
+        {
+          "file": "tests/entry-lifecycle.test.mjs",
+          "lines": "63–110,157–184"
+        }
+      ],
+      "assessment": "Entry tests validate fixed role destinations, stale fetch generations, hidden/BFCache state, explicit install and choice semantics. They do not load manual-backups.html or follow its header link, nor call the access renewal service composed with a fresh-clock store. No contradictory assertion or regression proof for FI-PWA-01/AUTH-DATA-01 was found here."
+    },
+    {
+      "id": "IT-05",
+      "topic": "Managed runtime protects the old forced-stop boundary and the video/witness mode separation",
+      "references": [
+        {
+          "file": "tests/managed-runtime.test.mjs",
+          "lines": "51–109,173–244,253–266"
+        }
+      ],
+      "assessment": "Tests distinguish graceful, forced SIGKILL and nonzero drain, preserve rejected stop/destroy promises and verify the actual shim no-orphan/listener boundary using synthetic children. They reject video without managed closures and reject video+parentGateway combinations. This supports the optional witness exposure boundary; it neither exercises the witness body-admission race nor requires a real backup/restore/PC operation."
+    },
+    {
+      "id": "IT-06",
+      "topic": "Release tests verify startup observation, not independent deployed identity or feature integration",
+      "references": [
+        {
+          "file": "tests/release.test.mjs",
+          "lines": "12–89"
+        },
+        {
+          "file": "tests/release-features.test.mjs",
+          "lines": "6–11"
+        }
+      ],
+      "assessment": "Release tests use a temporary Git checkout, dirty/untracked cases, bounded metadata and a frozen startup snapshot emitted by a synthetic listening application. These checks prevent expected-version fabrication but do not prove the actual remote PID/checkout or latest delivery. The short feature test checks technical1.7.2 versus other product versions for two booleans only; it is not video writer/backup integration or a comprehensive future release-version policy."
+    },
+    {
+      "id": "IT-07",
+      "topic": "Integration profile and coverage accounting",
+      "references": [
+        {
+          "file": "tests/readiness-flow.integration.test.mjs",
+          "lines": "26–43"
+        },
+        {
+          "file": "tests/operations-flow.integration.test.mjs",
+          "lines": "47–49"
+        }
+      ],
+      "assessment": "Both integrations explicitly require disposable loopback databases and default33-migration non-video schema. This is consistent with loadMigrations() profile selection, not evidence that active video schema36 is stale. They are skipped unless an explicit DB opt-in is present; no qualification success is inferred here. entry-lifecycle was already covered by frontend_identity_pwa and is listed once as overlap, not a second unique test."
+    },
+    {
+      "topic": "DOM-01 expired mail claim integration gap",
+      "references": [
+        {
+          "file": "tests/worker-lifecycle.test.mjs",
+          "lines": "14–31,35–75"
+        }
+      ],
+      "assessment": "The lifecycle fixtures replace the mail store, keep clock frozen, and return jobs with no expiry or lease-until metadata. They exercise stop/drain/refund ordering, not SQL lock time advancing before SMTP. Green outcomes cannot cover the existing DOM-01 finding. If a future fix adds an expiry-based worker guard, update the synthetic job contract deliberately while preserving the no-SMTP-after-stop and no-refund-after-SMTP assertions."
+    },
+    {
+      "topic": "DOM-01 impact contracted by telemetry tests",
+      "references": [
+        {
+          "file": "tests/operations-monitor.test.mjs",
+          "lines": "45–70"
+        },
+        {
+          "file": "tests/worker-lifecycle.test.mjs",
+          "lines": "136–163"
+        }
+      ],
+      "assessment": "Partial failed batches make readiness unavailable; a later successful empty loop restores it. A sent-but-unacknowledged expired-lease attempt should therefore not be called a permanent service failure or proof of no SMTP acceptance. These tests do not conceal link expiry; they specify bounded aggregate telemetry and recovery."
+    },
+    {
+      "topic": "Operational SQL integration is sampling only",
+      "references": [
+        {
+          "file": "tests/operations-flow.integration.test.mjs",
+          "lines": "39–139,140–202"
+        }
+      ],
+      "assessment": "Real MariaDB tests create queue rows, compare them before/after read-only samples, enforce runtime DML privilege separation, then configure an auth-only server with all delivery features disabled and mailWorker:null. They do not compose actual delivery worker+claim+clock or cover renewal, witness, chat cookie races. This is a scope limit, not a new defect."
+    },
+    {
+      "topic": "Readiness is cached process health, not functional certification",
+      "references": [
+        {
+          "file": "tests/operations-http.test.mjs",
+          "lines": "24–62"
+        },
+        {
+          "file": "tests/operations-monitor.test.mjs",
+          "lines": "22–58,72–123,139–172"
+        }
+      ],
+      "assessment": "The tests intentionally require no SQL/private handler on public readiness GET, coalesce samples, reject timed-out late success, use monotonic age and drain the real outstanding query. Their green readiness result certifies recent sampling and completed worker loops only; it cannot contradict any current functional finding or establish successful user delivery."
+    },
+    {
+      "topic": "Snapshot microseconds and bounded counts are explicit contracts",
+      "references": [
+        {
+          "file": "tests/operations-store.test.mjs",
+          "lines": "23–59,75–116"
+        },
+        {
+          "file": "tests/operations-flow.integration.test.mjs",
+          "lines": "112–139"
+        }
+      ],
+      "assessment": "Counts cap at1000 with an independent truncation bit, scheduling instants preserve SQL microsecond ordering, only aggregate fields are queried, and notification sampling is opt-in. No expectation here requires unbounded scans or changes the current capacity conclusions."
+    },
+    {
+      "topic": "The 33-migration integration fixture is an intentional profile boundary",
+      "references": [
+        {
+          "file": "tests/operations-flow.integration.test.mjs",
+          "lines": "47–49"
+        }
+      ],
+      "assessment": "The test calls default loadMigrations() and asserts33 for its non-video disposable database; it is not a failed claim that the active video schema has only33. This does not independently qualify video/push integration. Do not manufacture a version finding from that assertion."
+    },
+    {
+      "topic": "Current findings outside these five tests",
+      "assessment": "AUTH-DATA-01 (renewal composition), BH-01 (witness admission), MM-01 (delayed401 cookie) and FI-PWA-01 (backup link) are not exercised by these test paths. No contradictory expectations or regression proof for those defects was found in these files."
+    }
+  ],
+  "coverageAccounting": {
+    "requestedFiles": 12,
+    "allReadInFull": true,
+    "previouslyCoveredOverlap": [
+      "tests/entry-lifecycle.test.mjs"
+    ],
+    "doNotCountAsNewUniqueCoverage": [
+      "tests/entry-lifecycle.test.mjs"
+    ],
+    "rootPreviouslyReadPortions": "Root had read readiness portions; these entries record completion of their full read, not an independent extra source count. migrations.test.mjs is not claimed in this report."
+  },
+  "delegatedEvidence": {
+    "path": "/workspace/scratch/bb431be72395/audit2-182/root_integration_tests/operations-subreview.json",
+    "sha256": "2a4ab44ff8fce50eabc2c092c61385b61e88a26018b76dfd09e224552dd47ea6",
+    "testFiles": 5,
+    "testLines": 822
+  },
+  "limits": [
+    "No test, CI, HTTP fixture, SQL, child process, browser or other code executed by either reviewer.",
+    "Reading assertions documents expected behavior and blind spots; it does not create evidence that currently unrun assertions pass or fail.",
+    "No new source defect, production incident, backup/restore/PC task or security conclusion invented from missing tests.",
+    "No repository file or existing evidence modified; output reports only."
+  ],
+  "execution": {
+    "testsExecuted": 0,
+    "reproductionsRerun": 0,
+    "networkRequests": 0,
+    "productionAccess": false,
+    "repositoryModified": false
+  }
+}

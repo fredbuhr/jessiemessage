@@ -1,0 +1,1696 @@
+{
+  "scope": "server/backup",
+  "owner": "peer_a11",
+  "auditBase": "e2cfbefe03d3538b216f873d185b1542d856044c",
+  "runtimeSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "runtimeRelation": "Parent-provided runtime source identity for deployed 1.8.2; no production observation repeated. All local source hashes match frozen audit inventory.",
+  "completeSourceReview": true,
+  "sourceCoverage": {
+    "files": 62,
+    "lines": 9020,
+    "unreadSources": [],
+    "hashMismatches": []
+  },
+  "reviewedFiles": [
+    {
+      "path": "server/backup/alert-delivery.mjs",
+      "owner": "backup",
+      "bytes": 2871,
+      "lines": 49,
+      "sha256": "809080e56eef6634ffb43a6cb82f90bbea8b655749d9bb7633d63b7ecebdbe82",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/alert-files.mjs",
+      "owner": "backup",
+      "bytes": 6758,
+      "lines": 115,
+      "sha256": "90995eb37bf4c6a55bc53492ea84b9cd939f39fa9d347242747f059132ea778e",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/alert-state.mjs",
+      "owner": "backup",
+      "bytes": 7933,
+      "lines": 99,
+      "sha256": "e15a8103e6fd02d9c13c669099c9ecc635adb4165ce0ba8a848c9758f54afb54",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/alert-worker.mjs",
+      "owner": "backup",
+      "bytes": 4199,
+      "lines": 66,
+      "sha256": "265ee22682373d194aaa74ce3936044406d561be988728c23b5f18b01db9dc89",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/application-scope.mjs",
+      "owner": "backup",
+      "bytes": 6629,
+      "lines": 116,
+      "sha256": "508e764b1af1551783070e6a183cc8b6eecf09eca22c2806865bc36e55d4d421",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/checkpoint-archive.mjs",
+      "owner": "backup",
+      "bytes": 12377,
+      "lines": 219,
+      "sha256": "4f0de05c59261abd547a8b7397df78d163b1f3f45ff1b8352e18e66f05a279da",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/checkpoint-encryption.mjs",
+      "owner": "backup",
+      "bytes": 22472,
+      "lines": 346,
+      "sha256": "f135d187567acc248012d01ecaaf2974c6b31c6eff16632a50d78e7abc42460a",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/checkpoint-file-inventory.mjs",
+      "owner": "backup",
+      "bytes": 13459,
+      "lines": 275,
+      "sha256": "24bd1054785f6f8c333525598e51cdc5ddb46c829e75035f562ecc6f136db936",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/checkpoint-files.mjs",
+      "owner": "backup",
+      "bytes": 900,
+      "lines": 17,
+      "sha256": "bcdf4c4f749a916048fc798171b08436f7fb356f815d8a32550ee960423cbc55",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/checkpoint-receipt.mjs",
+      "owner": "backup",
+      "bytes": 12518,
+      "lines": 203,
+      "sha256": "9f653a936069fb6f23eb04d709e1a4a372ed4fd7d68c6625eb65caa6513147ca",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/closure-reconciliation-replay.mjs",
+      "owner": "backup",
+      "bytes": 18948,
+      "lines": 249,
+      "sha256": "c8494a401f739e67b04b6a9054ed16eb261a95497915ffb8975cc4c154dc5c0b",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/closure-reconciliation.mjs",
+      "owner": "backup",
+      "bytes": 7290,
+      "lines": 93,
+      "sha256": "084403028138118b0be545599c3d3c13701e70d1035c25f233b0ca857c3936a0",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/copy-catalog.mjs",
+      "owner": "backup",
+      "bytes": 8922,
+      "lines": 141,
+      "sha256": "fd3fa9e037b1a93acf17f813fb5547488c8e21ae04f4a2da1c1824803d6c98d6",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/copy-files.mjs",
+      "owner": "backup",
+      "bytes": 498,
+      "lines": 7,
+      "sha256": "88e065ad6c501ebc4ac03429985622d28280dc6179bf27b948eff8df2e2c7588",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/copy-http.mjs",
+      "owner": "backup",
+      "bytes": 10362,
+      "lines": 132,
+      "sha256": "83eefede44dadf7b0aff5288d12e7d5341b76e122b6bf91071ec5666ccd3b767",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/copy-kit.mjs",
+      "owner": "backup",
+      "bytes": 5943,
+      "lines": 45,
+      "sha256": "3ab51d4f595fb1830cd1a30aa3eced09dc91d6504224a5a862d15b1e5fa17bf4",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/copy-service.mjs",
+      "owner": "backup",
+      "bytes": 7933,
+      "lines": 131,
+      "sha256": "ca87d0a3059a98bada2a05bdbceb53eb6a34f665304f567b934758720779e08d",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/copy-state.mjs",
+      "owner": "backup",
+      "bytes": 3321,
+      "lines": 43,
+      "sha256": "3bddd600a10a9ad39074dc3af87d36276bfa9f5b6552e19c49cb85c07cd97bb1",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/crypto-store.mjs",
+      "owner": "backup",
+      "bytes": 16869,
+      "lines": 234,
+      "sha256": "ee97335867dbf4307901e94cd3175c3fec2d14023207c054f689be758acec1ae",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/freshness-reader.mjs",
+      "owner": "backup",
+      "bytes": 1675,
+      "lines": 22,
+      "sha256": "366dd2e17e6c2ad34edd021bc2150b71a21a7d42a72c5b92ee41ef41476e8f39",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/freshness.mjs",
+      "owner": "backup",
+      "bytes": 7903,
+      "lines": 107,
+      "sha256": "8e3cec312baa9b07ddc0ea43530071488a4a9d21ab8a6a3f375b0d4c115127f7",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/inspection-diagnostics.mjs",
+      "owner": "backup",
+      "bytes": 6113,
+      "lines": 104,
+      "sha256": "55e12764eca6420ded8398e62b26d1410b23ad6dbd2748ae749c47a9f54ecd70",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/inspection.mjs",
+      "owner": "backup",
+      "bytes": 3169,
+      "lines": 57,
+      "sha256": "9f1a78c5af57221987065c887ba542628e1ee18f3302e571ff6eda7b35afd349",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/local-closure-parent.mjs",
+      "owner": "backup",
+      "bytes": 11694,
+      "lines": 166,
+      "sha256": "84096ddbec73dd9a45568303c421fb157c6a874393ae077a9d8a9ad7ab061b45",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "active_manual_video_parent_or_closure_boundary"
+    },
+    {
+      "path": "server/backup/managed-closures.mjs",
+      "owner": "backup",
+      "bytes": 4299,
+      "lines": 64,
+      "sha256": "d65ca0d3e376c54d495baebc231bc739e6ad094da976103e4b759573d818447f",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "active_manual_video_parent_or_closure_boundary"
+    },
+    {
+      "path": "server/backup/managed-runtime.mjs",
+      "owner": "backup",
+      "bytes": 11162,
+      "lines": 180,
+      "sha256": "e581fb2db1d37a0bd649a9c7c2ecfdb5bb9ed0b4dbebdabe2a118ade0f715f06",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "active_manual_video_parent_or_closure_boundary"
+    },
+    {
+      "path": "server/backup/managed-witness.mjs",
+      "owner": "backup",
+      "bytes": 3340,
+      "lines": 47,
+      "sha256": "c0abc326c570d93611040465f362d653f799cfd25be931fd8e4f0b16b190b52d",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/manifest.mjs",
+      "owner": "backup",
+      "bytes": 21532,
+      "lines": 371,
+      "sha256": "bbf0827acb7658c3b04c9fa3b70009ff2a36d9abfa92bafe102ab58b4931aa81",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/manual-backup-files.mjs",
+      "owner": "backup",
+      "bytes": 7367,
+      "lines": 110,
+      "sha256": "4710394a9b86afb36082d13eec9acfb164c14e644ac490d78aa53d94ebdc8f13",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "active_manual_http"
+    },
+    {
+      "path": "server/backup/manual-backup-http.mjs",
+      "owner": "backup",
+      "bytes": 6962,
+      "lines": 104,
+      "sha256": "c04ec8127a30a4dcbdd422ef4b24dc37956c1e1c3b6bd02876d9b02897a4c45b",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "active_manual_http"
+    },
+    {
+      "path": "server/backup/manual-backup-service.mjs",
+      "owner": "backup",
+      "bytes": 1335,
+      "lines": 23,
+      "sha256": "66c7c67c123dff4eaa010cc3ea750d2b2f1f044edb6a8e02ef4901afe20a5006",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "active_manual_http"
+    },
+    {
+      "path": "server/backup/manual-operator-context.mjs",
+      "owner": "backup",
+      "bytes": 11984,
+      "lines": 148,
+      "sha256": "8b4793de7676c817ab7c6232387e170a6e0cb45d37b3290f771a0e0d7afa8648",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "explicit_offline_manual_restore_operator"
+    },
+    {
+      "path": "server/backup/manual-restore.mjs",
+      "owner": "backup",
+      "bytes": 29532,
+      "lines": 280,
+      "sha256": "34e0599b2797c8c00bf2e8f9c1cf38dc5dba2bf30efcd15291be3259f82b3bec",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "explicit_offline_manual_restore_operator"
+    },
+    {
+      "path": "server/backup/operational-checkpoint.mjs",
+      "owner": "backup",
+      "bytes": 21539,
+      "lines": 300,
+      "sha256": "1a5c10e413c43d0c15d8cd1173dffa9835d864043e9bc6c6f5d85e57c2fbbce5",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/parent-gateway.mjs",
+      "owner": "backup",
+      "bytes": 3922,
+      "lines": 68,
+      "sha256": "eb3403835b735d838ba775d66c851d81b306a3568d53bc882af7b6dabbc90231",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/periodic-monitor.mjs",
+      "owner": "backup",
+      "bytes": 6915,
+      "lines": 114,
+      "sha256": "53825f4b6a9a04ee3f1ed4147dc109cdafc3ec181862f5f043d070efe2260a6f",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/profiles.mjs",
+      "owner": "backup",
+      "bytes": 3152,
+      "lines": 47,
+      "sha256": "93601acc3d6732e22a70506e7e0a2682af316122438450bb3992ba2c3a85102f",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/reconciliation-progress.mjs",
+      "owner": "backup",
+      "bytes": 8249,
+      "lines": 132,
+      "sha256": "6260d1c2793dc3aaddeb0cee5f990bfdc5a035ececa2690324d5fb82c1b72934",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "explicit_offline_manual_restore_operator"
+    },
+    {
+      "path": "server/backup/recovery-store.mjs",
+      "owner": "backup",
+      "bytes": 20411,
+      "lines": 284,
+      "sha256": "a11d8c269d09d30a4d3c8fcc06bc3cbc304e9320b521c6c491c43f0e61b8dfed",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "explicit_offline_manual_restore_operator"
+    },
+    {
+      "path": "server/backup/recurring-checkpoint-files.mjs",
+      "owner": "backup",
+      "bytes": 16026,
+      "lines": 297,
+      "sha256": "b51922bdf80790d1b808e1fa7f4e7548f26e4902d62f51341ff05667d348dd44",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/recurring-checkpoint.mjs",
+      "owner": "backup",
+      "bytes": 9341,
+      "lines": 149,
+      "sha256": "9c5223338b170d89b69a9b8bd7f19c09b38c7c02b2fe05f62a81bc12b0c2dffe",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "active_manual_video_parent_or_closure_boundary"
+    },
+    {
+      "path": "server/backup/recurring-supervisor.mjs",
+      "owner": "backup",
+      "bytes": 29990,
+      "lines": 427,
+      "sha256": "ccccb65fc614f3a8456423c8a59fc6af86c06ce692814941d0edda9834374bfb",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "active_manual_video_parent_or_closure_boundary"
+    },
+    {
+      "path": "server/backup/registry-continuity.mjs",
+      "owner": "backup",
+      "bytes": 8049,
+      "lines": 115,
+      "sha256": "75b2a040dfee90cfbbe4867b5ac3d47937bef100d5d056ce74aa7bc5adf1752f",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/registry-snapshot.mjs",
+      "owner": "backup",
+      "bytes": 8933,
+      "lines": 135,
+      "sha256": "12f466ac744c0b536feca437b31c27d99c389eb554ba947f60bbb93fa346b140",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/registry-witness.mjs",
+      "owner": "backup",
+      "bytes": 12871,
+      "lines": 173,
+      "sha256": "f6b66640e0ee18eab3ba2f584cbb5c163a20ff0863ad99e863356143c9d02c96",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/snapshot.mjs",
+      "owner": "backup",
+      "bytes": 28456,
+      "lines": 350,
+      "sha256": "ccd4422948db2b1ff8c941578fb88b1e116c17761e49fc641424486ebba83db3",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/verification-kit.mjs",
+      "owner": "backup",
+      "bytes": 2907,
+      "lines": 26,
+      "sha256": "efdedc458a48858e2f8a6ada71b2986779cb59d7e7d40ea715ec93b46941503a",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/verify.mjs",
+      "owner": "backup",
+      "bytes": 25666,
+      "lines": 361,
+      "sha256": "f8a857423307784231000fef41e2479908f1c7f48b5e8af91650676b80bd289b",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/video-checkpoint-files.mjs",
+      "owner": "backup",
+      "bytes": 1036,
+      "lines": 19,
+      "sha256": "5b9a4d06ca8db24b8186a32458739dfe4877c586cfbbbfbd6330295014aa9276",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/video-inventory.mjs",
+      "owner": "backup",
+      "bytes": 12194,
+      "lines": 165,
+      "sha256": "b1b8e31064a483ab478313b3e17cf67fffc7e357634002bd03491da5adc771bf",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "peer_a11",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "shared_backup_integrity_capture_catalogue_helper"
+    },
+    {
+      "path": "server/backup/witness-enrollment-http.mjs",
+      "owner": "backup",
+      "bytes": 7459,
+      "lines": 100,
+      "sha256": "a999641f9930db253f14e837e5dd7ce9b5e271fabf2ab0d7117ac45a8cca06fd",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-enrollment.mjs",
+      "owner": "backup",
+      "bytes": 14952,
+      "lines": 207,
+      "sha256": "6c347e2ff96c8829205565081c3171285e7c6054f59f65886c96166ded612b0d",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-genesis.mjs",
+      "owner": "backup",
+      "bytes": 14616,
+      "lines": 215,
+      "sha256": "2e90013bc24dc82df496cefe0ccda77761b0b6f6026f791449658fb88cdd7bbc",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-observation-maintenance.mjs",
+      "owner": "backup",
+      "bytes": 2458,
+      "lines": 42,
+      "sha256": "2be81fa69094e88ce3f7ff400ac69198862594fd45c932f1aa65848c311324ed",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-observer.mjs",
+      "owner": "backup",
+      "bytes": 13767,
+      "lines": 209,
+      "sha256": "8a3a789bf2276a62e8de5ab3f8340cedb7e0b97f82e3085fd39ed29010aef934",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-origin-context.mjs",
+      "owner": "backup",
+      "bytes": 4450,
+      "lines": 72,
+      "sha256": "dcdb6386e2722df36b4f45be2979979b5b76253c629b55eb1616e04cd4d44684",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-origin-diagnostics.mjs",
+      "owner": "backup",
+      "bytes": 1217,
+      "lines": 20,
+      "sha256": "e0204f4dee38d0147de6a74df853b6dc9466b395be32dcc6d2e9cafd5be4302a",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-origin-operator.mjs",
+      "owner": "backup",
+      "bytes": 12986,
+      "lines": 165,
+      "sha256": "1f12ed1c21096735c20058aa309f3da10f595815b27ed57053a39b9f89f7e92b",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-recovery-control.mjs",
+      "owner": "backup",
+      "bytes": 8657,
+      "lines": 145,
+      "sha256": "c96878b304cc974c41c2a617d1bb19fc9c3b284a6905c8c79c1b92f2901fffda",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-recovery-parent.mjs",
+      "owner": "backup",
+      "bytes": 9247,
+      "lines": 153,
+      "sha256": "5596688e29efd589681987d4db184cfe0aaa8aff780edfc6034f60cb4334b173",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-recovery-server.mjs",
+      "owner": "backup",
+      "bytes": 2996,
+      "lines": 59,
+      "sha256": "9326849da9f58e30ec609994915bf67c5e418176ff03870aaa05815398b20e27",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    },
+    {
+      "path": "server/backup/witness-transport.mjs",
+      "owner": "backup",
+      "bytes": 8243,
+      "lines": 108,
+      "sha256": "bbc35b24e2510b3e5488cdbd424f86726847a00b0fe34fafdf710536c5c73d11",
+      "binary": false,
+      "reviewStatus": "reviewed_complete",
+      "reviewer": "audit2_messaging_media",
+      "reviewMethod": "Complete source read and control-flow review; static audit",
+      "sha256Verified": true,
+      "runtimeClassification": "historical_or_explicit_optional_witness_copy_alert_path"
+    }
+  ],
+  "testsRead": [
+    {
+      "path": "tests/application-checkpoint-manifest.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "89910cda6528da83d5e6a28c09641a5f41a4397c37053a22449d0e787af7963d",
+      "lines": 129
+    },
+    {
+      "path": "tests/application-checkpoint-receipt.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "ca42c4835041e1bea921029fe06c17f4f2472ca8412f1d24084e81373785abd4",
+      "lines": 108
+    },
+    {
+      "path": "tests/backup-alert-files.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "2ed2b07aa8f6e1bb6344a847a0cbdefbe4dd9a9d22212d3a01a4faaa81295de5",
+      "lines": 87
+    },
+    {
+      "path": "tests/backup-alerts.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "7ae613347337a34138218c1dd26c53f2ee5b2eceb7522598a224e25f2bde19e3",
+      "lines": 204
+    },
+    {
+      "path": "tests/backup-application-scope.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "a66d003a5cd0a6c5ac3b2bdda3302f5e698c216b8f321733e934ac62311f9334",
+      "lines": 146
+    },
+    {
+      "path": "tests/backup-copy-catalog.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "3f61f7c3121f2c1e5f73da9574a4eb4c2280c6079abb23d43ae0ac956f0499ab",
+      "lines": 77
+    },
+    {
+      "path": "tests/backup-copy-files.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "ba7842c5ce6cc7a40c65b71573ecb088eb4c45cb288485903b882d67d494e852",
+      "lines": 87
+    },
+    {
+      "path": "tests/backup-copy-http.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "266f5863259eb82205a71df734d820368eb3fafa730ff32c3f73b630b60fb9c2",
+      "lines": 124
+    },
+    {
+      "path": "tests/backup-copy.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "2c77587459140c0d81552c8e9284678f4f7f2050cf318b00cdad07f39bc73560",
+      "lines": 83
+    },
+    {
+      "path": "tests/backup-freshness.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "9beb94a522a0bc0cbd12ee2ee166879f58d3cc7b7e1e700a7c46dc33598fcc53",
+      "lines": 166
+    },
+    {
+      "path": "tests/backup-history-retention.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "51d92a8c12d3b2a182c80b995699307e4d70d880d89c6ecdbc1eaeb70cfe5965",
+      "lines": 118
+    },
+    {
+      "path": "tests/backup-inspection-diagnostics.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "10258f79b930e7f7850e9109fd9ed3e1f7b5a2a5191dc0f00ee1b7f5af5c9270",
+      "lines": 144
+    },
+    {
+      "path": "tests/backup-inspection.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "a017c793e84c51da135158cb186fff9a583fae362d9c36c5eb9ebc8487de89cd",
+      "lines": 39
+    },
+    {
+      "path": "tests/backup-manifest-dirfd.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "9cb748a7920a02fc49007a853c68657dd744960828b697c6306128e072de2d5b",
+      "lines": 127
+    },
+    {
+      "path": "tests/backup-manifest.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "e3f72f68947c5af849eb185dce47e559fba9487ffee1297dd5cb85e3233e08b5",
+      "lines": 251
+    },
+    {
+      "path": "tests/backup-notifications.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "6093b0852e7000a9f50917735895509bd12469e03f4602f9d8543a052c2ef565",
+      "lines": 114
+    },
+    {
+      "path": "tests/backup-photo-verify.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "d7901fbafdb44ba210d962445442333711c8f36d8df9b177f5300b790e9e7d54",
+      "lines": 93
+    },
+    {
+      "path": "tests/backup-recovery-store.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "068bcabe55ce4ad1795188e0d35b88e65beef08834aea2e446c66a2173bebca0",
+      "lines": 245
+    },
+    {
+      "path": "tests/backup-recovery-verify.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "b12dc2c51a621aa5600f1e58c25a0c715f88be12a8992c4b4261c188200b46d0",
+      "lines": 214
+    },
+    {
+      "path": "tests/backup-snapshot.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "f7eacc6329866a121210a7e2b6470bb1a9d950355108ec090e76cdb9524c5b15",
+      "lines": 174
+    },
+    {
+      "path": "tests/backup-text-verify.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "52d538c8b07eb7b4311de2ca080d474511aa1bcdf60910f2354bb7b14562723c",
+      "lines": 126
+    },
+    {
+      "path": "tests/backup-verification.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "6f4bde89047432e1fa4bcd044f9ef27d5a62eb274ba5b6d225f8dfd17589c1e9",
+      "lines": 63
+    },
+    {
+      "path": "tests/backup-verify.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "6cdcd8b278428725e7ca57f7559d506985f1bce0951e34376cad0ed743bfa80f",
+      "lines": 346
+    },
+    {
+      "path": "tests/backup-video-formats.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "21d09db12c3685837ee92458d3a0d12d0384d6b77653ffabe516391e0c4cda83",
+      "lines": 166
+    },
+    {
+      "path": "tests/backup-video-verify.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "88396fc448c4e9f1cccef8795db8ce029cf6342c5ac79e66330c4b907882be95",
+      "lines": 169
+    },
+    {
+      "path": "tests/backup-volume-budget.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "4a0dc9dcb5ad898afcbf3b46eea7b7062fe9dcfd081dfc6fb5bc3291cec2c981",
+      "lines": 27
+    },
+    {
+      "path": "tests/broadcast-compact-compat.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "6def39b72c6ae1b7831fdb240dcdf9352801b790dc81b6273a354046b0753a31",
+      "lines": 160
+    },
+    {
+      "path": "tests/checkpoint-archive.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "58d97deda9524c6ab91033535bd777cb133576fe264d51ed4c0de671d75556ce",
+      "lines": 271
+    },
+    {
+      "path": "tests/checkpoint-encryption.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "a5c13a0c1b3970eebeaab5c8b29212687d56b294bcfeaa9892409418731f588f",
+      "lines": 256
+    },
+    {
+      "path": "tests/checkpoint-files.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "aa075f0c235b0a759e5cd9f9fc68e4245344f5cfee64a099fab75bfdc1cb472f",
+      "lines": 452
+    },
+    {
+      "path": "tests/checkpoint-receipt.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "ff0c7da1358687d2002776d5d45a9eb175a12f6b8d3eacb245adf3c35fbaae37",
+      "lines": 186
+    },
+    {
+      "path": "tests/closure-reconciliation-replay.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "64769635c0deca5ae73efe4b07cead0c659edc0485cda4f9eb07ef42019ff327",
+      "lines": 55
+    },
+    {
+      "path": "tests/closure-reconciliation.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "6738874fc65bd700289f91ab88ee0d9d3019fd0e74f60a570d77bd2bce89dbaf",
+      "lines": 146
+    },
+    {
+      "path": "tests/copy-kit.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "672af80ada8206fa35a1b795a17d6c6935924f2206b990a8714bd8b462580cb6",
+      "lines": 35
+    },
+    {
+      "path": "tests/local-closure-cli.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "daf9518ed1820c6486a3861c9671931a149fcbf44e18678a7a7d301f09938cf2",
+      "lines": 81
+    },
+    {
+      "path": "tests/local-closure-parent.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "02c3a690a4f86473c4c272ab04a4eb5a371ad34bd7db7cbf4283644e184adcb6",
+      "lines": 67
+    },
+    {
+      "path": "tests/local-closures.integration.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "f59d5133b9c842f8ce51dc6c88b40507cd6bf762886adc7f70593aac79248cf0",
+      "lines": 245
+    },
+    {
+      "path": "tests/managed-closures.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "7a02698370bb4d3bd35b628373195e668566e52b5c38ad8095030bf4543c3931",
+      "lines": 293
+    },
+    {
+      "path": "tests/managed-runtime.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "6b579f504f09fbc46b5207118c888c6c71ba0387cd15e80d105b7206d9e2aad4",
+      "lines": 266
+    },
+    {
+      "path": "tests/managed-witness.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "a08bde53bf052ae6c0ae946b6939a6400a11299e5056bf82fcaac28e26aa6d2c",
+      "lines": 100
+    },
+    {
+      "path": "tests/manual-backup-files.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "2dbfb8652d3763e379e604b9896de43c1a7f34c896ee6e82d4738cc045f290d1",
+      "lines": 100
+    },
+    {
+      "path": "tests/manual-backup-http.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "6b673fecf7489da7a60169f0a7e2bfaa6b0ed66575c402ccfa8850d5029da237",
+      "lines": 194
+    },
+    {
+      "path": "tests/manual-backup-parent.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "a0e43e9ce51f067e49e70ae22c646d927ae9e768623a5b12dfa8258a50c1cab9",
+      "lines": 157
+    },
+    {
+      "path": "tests/manual-operator-context.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "8a85e2f33f9cc205a8f2d723f4a8bc4a88f303ec77216cbdec6f3d05c08b829f",
+      "lines": 233
+    },
+    {
+      "path": "tests/manual-restore-operator.integration.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "6738c9b41b1a293d99c191b2c3ca0a2da72ac216596c52f9f109eeb68c61a892",
+      "lines": 289
+    },
+    {
+      "path": "tests/manual-restore.integration.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "0fa84302d75abfda22f8f006e083c584e450d28b128ec3451809495d7eb0a869",
+      "lines": 234
+    },
+    {
+      "path": "tests/manual-restore.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "8685b933a7fa62d40060918ca1e959a18b7bef64a845fa860f25fab81ce328c6",
+      "lines": 76
+    },
+    {
+      "path": "tests/media-storage-identity.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "64e245eefad765c11a26db9973d7f929ee80c8e8e135dc3040f343ab932a463c",
+      "lines": 54
+    },
+    {
+      "path": "tests/operational-checkpoint.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "dab5614f0984d83425f064e7079682028d96f379d696ddfd18cdee4fa75dfd77",
+      "lines": 312
+    },
+    {
+      "path": "tests/operational-quarantine-read.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "db1dd4cc6223585f576561a04211cf3ecc39c65428dde8269285c3fc52ea0e9b",
+      "lines": 125
+    },
+    {
+      "path": "tests/periodic-backup-monitor.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "1f67d29861203b8739bdd922802c8e0688abc76c7bf041a61303ca893f715196",
+      "lines": 235
+    },
+    {
+      "path": "tests/plan-closure-reconciliation.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "ace704937cc4978cc72c2e9a35979c9e6efeb3bf1cc2865c2f5b413c6fddd93f",
+      "lines": 129
+    },
+    {
+      "path": "tests/reconciliation-progress.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "6fb6482ebc4d36e3f8b14917f52a2232321fe247dc278315df9864d287691ad4",
+      "lines": 222
+    },
+    {
+      "path": "tests/recovery-backup-envelopes.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "0a4533023f561a0063da6f4654c940aced96d288bef8a39234cfd038d71e0352",
+      "lines": 122
+    },
+    {
+      "path": "tests/recurring-checkpoint-files.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "eba31bcad4f276d9c099143a498991636554e723993253e2c53387e3d42605a9",
+      "lines": 339
+    },
+    {
+      "path": "tests/recurring-checkpoint.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "84e9bcc0d76759380e12e5624a040430d7cddc961c82436503828f6ecae8f15f",
+      "lines": 176
+    },
+    {
+      "path": "tests/recurring-source.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "b59e475cc67f6875bab9a4f19464dcdf437f1b968f5f9f40b904547b507de39b",
+      "lines": 38
+    },
+    {
+      "path": "tests/recurring-supervisor.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "8c91daa054e12bbb6e7d1f0b8352a93eeedc14c1797cf14c70ce4dff6d25eb93",
+      "lines": 661
+    },
+    {
+      "path": "tests/registry-continuity.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "fc8fc4b735ed3aeff017f22ab7a493d98522e37b7a8c9e322b197071a4ac6eaf",
+      "lines": 224
+    },
+    {
+      "path": "tests/restore-private-operations.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "61739fe58448390ca4dd7e1457b96ae56819bd2eedb725917a0fb87bdf85a458",
+      "lines": 216
+    },
+    {
+      "path": "tests/video-backup-flow.integration.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "71188c8ac421140a5afdcbad2ebfca66023eb3a88b94cc5b95af0686107d27d1",
+      "lines": 116
+    },
+    {
+      "path": "tests/video-backup-inventory.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "7a870330cec48e4f7de0d15a05d204955c422347c24b4620ed22734751921352",
+      "lines": 169
+    },
+    {
+      "path": "tests/video-backup-recovery-store.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "37a6336ab0a034303d780a5d246ecd5029787307c276197a2ad131ff590fa3a7",
+      "lines": 94
+    },
+    {
+      "path": "tests/video-checkpoint-files.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "336ec4d5ad1b69b1662a92ccbc25ef4d441d3a9c95cc5d066595d7d0ea971a2f",
+      "lines": 50
+    },
+    {
+      "path": "tests/video-local-closure-parent.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "caef28ee30aebf46faca97112588a624467b263aab22c6ae925279060855cbbe",
+      "lines": 53
+    },
+    {
+      "path": "tests/video-registry-snapshot.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "51280c50494dabb90ca524a3962a99d30ab41b3887a5dea82bb9963a0175abcb",
+      "lines": 136
+    },
+    {
+      "path": "tests/video-runtime-startup.test.mjs",
+      "scope": "complete",
+      "reviewer": "peer_a11",
+      "executed": false,
+      "sha256": "10060a64f5eb5cf8298744604e469e15d9b3d742820d9ddf7c7eb02886d00914",
+      "lines": 144
+    },
+    {
+      "path": "tests/witness-enrollment-http.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "e2b29460c40d38dba5a5d14063224bec16404fc28ae7685d8d5957b893b9b6c8",
+      "lines": 142
+    },
+    {
+      "path": "tests/witness-enrollment.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "a5a152b6078dca75857ef20f28ffae30fd0ae9f29864f5abfff5ec4abb6af312",
+      "lines": 201
+    },
+    {
+      "path": "tests/witness-observation-maintenance.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "de7e5583da8a1d4080c68455ebc9039b5866f1301dcd1fd3c5d4fd1e62f56ce0",
+      "lines": 180
+    },
+    {
+      "path": "tests/witness-origin-context.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "a5b2fe4de20bb0c3e70b7917fb93f1f09903409d2ba0ca0dced4756393a2bd8d",
+      "lines": 102
+    },
+    {
+      "path": "tests/witness-transport.test.mjs",
+      "scope": "complete",
+      "reviewer": "audit2_messaging_media",
+      "executed": false,
+      "sha256": "3c785ae09d5d55747c46ae6f9a85510e635aeb0d10fb6228ed55e4d3d27b2fe4",
+      "lines": 101
+    }
+  ],
+  "testCoverage": {
+    "filesReadInFull": 72,
+    "linesReadInFull": 11864,
+    "existingTestSuitesExecuted": false,
+    "associatedTopLevelTestsNotRead": [
+      {
+        "path": "tests/account-erasure-flow.integration.test.mjs",
+        "modules": [
+          "inspection.mjs",
+          "managed-closures.mjs",
+          "witness-origin-context.mjs"
+        ],
+        "lines": 609
+      },
+      {
+        "path": "tests/backup-cli.test.mjs",
+        "modules": [
+          "application-scope.mjs"
+        ],
+        "lines": 518
+      },
+      {
+        "path": "tests/backup-flow.integration.test.mjs",
+        "modules": [
+          "application-scope.mjs",
+          "inspection-diagnostics.mjs",
+          "inspection.mjs",
+          "manifest.mjs",
+          "recovery-store.mjs",
+          "snapshot.mjs"
+        ],
+        "lines": 750
+      },
+      {
+        "path": "tests/broadcast-video.test.mjs",
+        "modules": [
+          "verify.mjs"
+        ],
+        "lines": 299
+      },
+      {
+        "path": "tests/closure-reconciliation.integration.test.mjs",
+        "modules": [
+          "application-scope.mjs",
+          "checkpoint-receipt.mjs",
+          "closure-reconciliation-replay.mjs",
+          "closure-reconciliation.mjs",
+          "inspection.mjs",
+          "manifest.mjs",
+          "operational-checkpoint.mjs",
+          "snapshot.mjs"
+        ],
+        "lines": 277
+      },
+      {
+        "path": "tests/private-checkpoint-capture.test.mjs",
+        "modules": [
+          "application-scope.mjs",
+          "checkpoint-files.mjs",
+          "checkpoint-receipt.mjs",
+          "operational-checkpoint.mjs"
+        ],
+        "lines": 701
+      },
+      {
+        "path": "tests/private-checkpoint-verify.test.mjs",
+        "modules": [
+          "application-scope.mjs",
+          "checkpoint-receipt.mjs",
+          "manifest.mjs",
+          "operational-checkpoint.mjs",
+          "verify.mjs"
+        ],
+        "lines": 588
+      },
+      {
+        "path": "tests/text-clone-verification.test.mjs",
+        "modules": [
+          "verify.mjs"
+        ],
+        "lines": 285
+      },
+      {
+        "path": "tests/witness-genesis.test.mjs",
+        "modules": [
+          "copy-files.mjs",
+          "witness-genesis.mjs"
+        ],
+        "lines": 261
+      },
+      {
+        "path": "tests/witness-observer.test.mjs",
+        "modules": [
+          "registry-snapshot.mjs",
+          "witness-enrollment.mjs",
+          "witness-observer.mjs"
+        ],
+        "lines": 216
+      },
+      {
+        "path": "tests/witness-origin-operator.test.mjs",
+        "modules": [
+          "managed-witness.mjs",
+          "witness-origin-context.mjs",
+          "witness-origin-operator.mjs"
+        ],
+        "lines": 184
+      },
+      {
+        "path": "tests/witness-recovery-cli.test.mjs",
+        "modules": [
+          "recurring-supervisor.mjs"
+        ],
+        "lines": 93
+      },
+      {
+        "path": "tests/witness-recovery-control.test.mjs",
+        "modules": [
+          "registry-continuity.mjs",
+          "registry-snapshot.mjs",
+          "registry-witness.mjs",
+          "witness-recovery-control.mjs"
+        ],
+        "lines": 106
+      },
+      {
+        "path": "tests/witness-recovery-parent.test.mjs",
+        "modules": [
+          "copy-files.mjs",
+          "copy-service.mjs",
+          "copy-state.mjs",
+          "registry-snapshot.mjs",
+          "registry-witness.mjs",
+          "witness-enrollment.mjs",
+          "witness-genesis.mjs",
+          "witness-recovery-parent.mjs"
+        ],
+        "lines": 193
+      },
+      {
+        "path": "tests/witness-recovery-server.test.mjs",
+        "modules": [
+          "witness-recovery-server.mjs"
+        ],
+        "lines": 52
+      },
+      {
+        "path": "tests/witness-runtime.integration.test.mjs",
+        "modules": [
+          "application-scope.mjs",
+          "checkpoint-receipt.mjs",
+          "copy-files.mjs",
+          "managed-runtime.mjs",
+          "managed-witness.mjs",
+          "operational-checkpoint.mjs",
+          "parent-gateway.mjs",
+          "recurring-supervisor.mjs",
+          "registry-continuity.mjs",
+          "registry-witness.mjs",
+          "witness-enrollment.mjs",
+          "witness-genesis.mjs",
+          "witness-observer.mjs",
+          "witness-origin-context.mjs",
+          "witness-origin-operator.mjs",
+          "witness-recovery-parent.mjs"
+        ],
+        "lines": 628
+      }
+    ],
+    "exhaustiveAssociatedTestsRead": false,
+    "fixtureDependenciesReadExhaustively": false
+  },
+  "findings": [
+    {
+      "id": "BH-01",
+      "severity": "P2",
+      "scopeClassification": "Latent optional witness transport; not an asserted fault in the active manual/video runtime",
+      "title": "L’admission des transferts witness peut dépasser sa limite pendant l’authentification asynchrone",
+      "file": "server/backup/witness-transport.mjs",
+      "line": 60,
+      "relatedLines": [
+        65,
+        85,
+        87
+      ],
+      "trigger": "Plusieurs POST /api/backup-copy/witness/response arrivent ensemble pendant qu’un échange witness attend une réponse. Les requêtes portent la capacité native valide du PC. Toutes passent la vérification transfers.size avant que authorizeWitness ne termine son accès disque asynchrone.",
+      "cause": "La vérification waiters.size/transfers.size se trouve avant await identity(); la réservation transfers.add(request) arrive ensuite sans nouvelle vérification. L’état d’admission a pu changer durant l’attente.",
+      "impact": "Le nombre de corps collectés simultanément dépasse deux. Chaque corps est accepté jusqu’à REGISTRY_MAX_BYTES + 2048 (64 MiB + 2 KiB), puis copié et parsé. La mémoire et le nombre de lecteurs ne suivent donc plus la borne prévue, avec risque de refus de service dans le parent witness, éventuellement partagé avec l’application en mode observer. Aucune fuite ou falsification de preuve n’est démontrée. Le scénario exige une capacité native valide et l’activation explicite witness.",
+      "repro": {
+        "command": "node /workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.mjs",
+        "script": "/workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.mjs",
+        "result": "/workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.json",
+        "runtime": "v24.19.0",
+        "exitCode": 0,
+        "requests": 4,
+        "bytesPerBody": 2,
+        "observedConcurrentBodyReaders": 4,
+        "expectedCeiling": 2,
+        "laterRequestStatus": 429,
+        "network": false,
+        "database": false,
+        "filesystemBackup": false
+      },
+      "evidence": [
+        "The pure fixture calls the actual handler with four delayed authorizations and synthetic two-byte async request bodies. All four bodies are entered concurrently; assertions pass.",
+        "A fifth request started after the four readers are registered is refused with 429, proving the existing check applies only after admission state becomes visible.",
+        "Real authorizeWitness awaits read() in server/backup/copy-service.mjs:119–122, so the await boundary is present in the production adapter, not solely an artificial fixture.",
+        "server/backup/witness-enrollment-http.mjs:63–66 performs the analogous second reader-limit check after identity, which is absent in witness-transport.",
+        "parseRecurringArguments only permits --profile for check/start-local-closures, while observer and recovery are distinct explicit commands. Normal manual/video composition does not construct this transport.",
+        "tests/witness-transport.test.mjs covers authenticated exchange, revocation, cancellation and gateway behavior, but no simultaneous pending-authorize reader admissions."
+      ],
+      "confidence": "high for admission race and four-reader result; memory exhaustion is inferred from the source body ceiling, not allocated or exercised",
+      "suggestedCorrection": "Recheck and reserve the shared admission state synchronously immediately after authentication, retaining the slot until request/body work actually settles. Cover both poll waiters and response readers with delayed-authorize concurrency cases.",
+      "knownBounds": "The global per-minute request budget and parent connection ceilings still exist; they do not preserve the intended two-reader bound."
+    }
+  ],
+  "crossCuttingSurfaces": [
+    {
+      "consolidationOwner": "delivery_review/auth and root",
+      "countAsSeparateFinding": false,
+      "file": "server/backup/manual-backup-http.mjs",
+      "line": 95,
+      "classification": "active manual HTTP surface",
+      "trigger": "A delayed response from session A fails its actor/recheck after session B has been installed in the browser.",
+      "impact": "Set-Cookie expiry from the old request can erase the replacement session cookie.",
+      "evidence": [
+        "401 catch expires the cookie at line95; the archive actor recheck happens after asynchronous catalogue hashing at line81.",
+        "tests/manual-backup-http.test.mjs contains revocation-before-stream checks but no replacement-cookie ordering assertion.",
+        "Common handler race already reproduced by audit2_messaging_media; no duplicate backup fixture executed."
+      ],
+      "confidence": "high as an additional source surface; shared fixture owned by auth consolidation"
+    },
+    {
+      "consolidationOwner": "delivery_review/auth and root",
+      "countAsSeparateFinding": false,
+      "file": "server/backup/copy-http.mjs",
+      "line": 123,
+      "classification": "historical optional copy HTTP surface, not mounted by active accountClosures composition",
+      "impact": "Same late-401 cookie expiry pattern in old admin copy handler.",
+      "confidence": "high static surface"
+    }
+  ],
+  "checks": [
+    {
+      "kind": "read_only_integrity",
+      "result": "All 62 SHA256 values match frozen backup-files.json; no source edits made."
+    },
+    {
+      "kind": "static_active_composition",
+      "evidence": [
+        "server/index.mjs:328-339 mounts manual handler when accountClosures is active; old copy handler is the other branch.",
+        "server/backup/recurring-supervisor.mjs:191-222 excludes video without manualBackups and forbids witnessControl in manual mode.",
+        "scripts/start-recurring-private-messaging.mjs:124-135 does not construct alerts/periodic monitor in local mode."
+      ]
+    },
+    {
+      "kind": "static_capture_integrity",
+      "result": "Reviewed bounded archive parsing without extraction, exact closed inventories, stable private descriptors, source/target identity separation, source and recipient pins, authenticated GPG status, durable exclusive receipts, cancellation and partial-artifact refusal. Existing tests read statically; no new GPG/capture process invoked."
+    },
+    {
+      "kind": "static_crypto_profiles",
+      "result": "Reviewed seven-key video canaries, distinct manifest/receipt versions, authenticated video blocks and plaintext digests, scoped operational capsule, historical v1/v2 receipts and anti-downgrade checks, bounded SQL and recipients."
+    },
+    {
+      "kind": "static_durability_concurrency",
+      "result": "Reviewed durable manual idempotency, shared capture/closure lock, stop proof, reopen proof, failure after cleanup revoking reopened child, uncertain acknowledgements, monotone progress, capacity refunds and quarantined restore publication."
+    },
+    {
+      "kind": "small_fixture",
+      "result": "Delegated BH-01 fixture executed once only, 4 synthetic two-byte bodies, no socket/DB/backup/restore/network. Reviewed fixture/result without rerun.",
+      "artifact": "/workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.json"
+    }
+  ],
+  "nonFindings": [
+    {
+      "candidate": "Hardcoded v1 recovered registry in registry-continuity",
+      "decision": "Not counted as active video regression. Historical witness contexts load the photo/broadcast bundle and bind only database/rootFingerprint. Explicit video parent excludes witness commands. No supported video witness recovery route established."
+    },
+    {
+      "candidate": "History/request record capacities, SQL row/time/metadata ceilings, at-least-once technical alert delivery",
+      "decision": "Known explicit limits/semantics, not recounted as new defects. No quotas, cleanup or automatic retry added."
+    },
+    {
+      "candidate": "Backup active crypto/integrity defect",
+      "decision": "No new concrete defect established in reviewed active manual/video source. This static result is not a hosted backup/restore success claim."
+    }
+  ],
+  "limits": [
+    "Review covers all 62 inventoried server/backup modules in full; other scripts/config/data/media domains remain assigned elsewhere except selected cross-module reads.",
+    "Existing test files listed in testsRead were read statically, not executed. Unread top-level associated tests are named, and transitive fixture files were not exhaustively reread.",
+    "No global backup, restoration, scheduled task, provider diagnosis, PC/kit/email operation, production host access or cloud browser invoked. Hosted manual backup trial remains explicitly deferred.",
+    "One new finding BH-01 is confined to the optional historical witness transport; no current production incident or active manual/video path failure inferred.",
+    "No existing private backup, key, receipt, authority, quarantine, closure or D1 file read or changed.",
+    "No fixes, repository edits, CI changes, commits, deployment or broad test-suite reruns performed."
+  ],
+  "delegatedEvidence": "/workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/report.json"
+}

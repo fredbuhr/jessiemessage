@@ -1,0 +1,61 @@
+{
+  "type": "audit2-182-global-static-consistency",
+  "literalRelativeReferencesChecked": 1047,
+  "missingReferences": [],
+  "workflowActionPins": [
+    {
+      "file": ".github/workflows/backup-recovery-instructions.yml",
+      "uses": [
+        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1"
+      ],
+      "allRemoteActionsPinnedTo40Hex": true
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "uses": [
+        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+        "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+        "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1"
+      ],
+      "allRemoteActionsPinnedTo40Hex": true
+    },
+    {
+      "file": ".github/workflows/service-monitor.yml",
+      "uses": [
+        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1"
+      ],
+      "allRemoteActionsPinnedTo40Hex": true
+    }
+  ],
+  "lock": {
+    "version": 3,
+    "packagesExcludingRoot": 59,
+    "directDependenciesPinnedAndMatchLock": true,
+    "allTarballsHttpsNpmRegistryAndSha512": true,
+    "installScriptsOrLinks": []
+  },
+  "dependencyAdvisoryScan": {
+    "command": "npm audit --omit=dev --ignore-scripts --json",
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "limitation": "Known advisory database only, no claim of absence of vulnerabilities."
+  },
+  "runtimeSourceDifferenceFromProduction": []
+}

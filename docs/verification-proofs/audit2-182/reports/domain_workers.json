@@ -1,0 +1,562 @@
+{
+  "formatVersion": 1,
+  "agent": "audit2_domains",
+  "status": "source_review_complete",
+  "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "scope": [
+    "server/crm",
+    "server/broadcast",
+    "server/announcements",
+    "server/tasks",
+    "server/quick-replies",
+    "server/notifications",
+    "server/mail"
+  ],
+  "coverage": {
+    "sourceFiles": 42,
+    "sourceLines": 5853,
+    "sourceFilesFullyRead": 42,
+    "associatedTestsFullyRead": 26
+  },
+  "findings": [
+    {
+      "id": "DOM-01",
+      "severity": "P2",
+      "confidence": "high",
+      "title": "Une attente SQL peut déclencher un e-mail dont le lien est déjà expiré",
+      "file": "server/mail/store.mjs",
+      "line": 106,
+      "relatedLocations": [
+        {
+          "file": "server/mail/store.mjs",
+          "line": 120
+        },
+        {
+          "file": "server/reset/mail-store.mjs",
+          "line": 65
+        },
+        {
+          "file": "server/reset/mail-store.mjs",
+          "line": 78
+        },
+        {
+          "file": "server/mail/worker.mjs",
+          "line": 29
+        },
+        {
+          "file": "server/mail/worker.mjs",
+          "line": 48
+        }
+      ],
+      "trigger": "Un job de vérification ou de récupération est valide au début de claim ; l’acquisition du pool ou de l’un des verrous dépasse son expires_at. Les deux stores continuent à comparer toutes les dates avec now capturé avant ces attentes et produisent un bail déjà expiré. Le worker ne recontrôle aucune date avant le transport.",
+      "impact": "Un e-mail est transmis avec un lien inutilisable dès son émission. La CAS markSent refuse ensuite son bail expiré, ce qui laisse le job sending et compte failed malgré l’appel réussi au transport. Fiabilité et information utilisateur ; aucune possibilité d’utiliser un token expiré ni panne constatée en production n’est établie.",
+      "repro": {
+        "script": "/workspace/scratch/bb431be72395/audit2-182/domain_workers/repro-expired-mail.mjs",
+        "result": "/workspace/scratch/bb431be72395/audit2-182/domain_workers/repro-expired-mail.json",
+        "command": "node /workspace/scratch/bb431be72395/audit2-182/domain_workers/repro-expired-mail.mjs",
+        "runtime": "v24.19.0",
+        "cases": 4,
+        "description": "Vrais createMailStore, createResetMailStore et runMailBatch ; SQL et transport simulés, clock injectée. Pour chacun des deux usages, contrôle sans attente : sent=1/failed=0. Attente verrou de 2000 ms pour expiration à +1000 ms : un transport à expiration+1000 ms et sent=0/failed=1."
+      },
+      "evidence": [
+        "Les stores n’ont aucun clock de rafraîchissement et utilisent now après plusieurs awaits avant contrôle et écriture du bail.",
+        "Le worker ne transmet au transport que email, token, jobId ; le transport ne peut donc connaître l’expiration.",
+        "La reproduction associe une frontière async réelle à un avancement de clock synthétique et ne modifie aucune source."
+      ],
+      "recommendation": "Rafraîchir et valider l’heure sous les verrous après les attentes pour contrôler l’expiration et calculer le bail ; refaire un contrôle avant toute nouvelle émission SMTP. Conserver les traitements prudents des envois déjà commencés et les CAS de bail.",
+      "deduplication": "Constat commun verification/reset ; piste initiale de delivery_review, reproduction et propriété consolidées ici."
+    }
+  ],
+  "sharedFindings": [
+    {
+      "id": "SHARED-LATE-401-COOKIE",
+      "severity": "P2",
+      "confidence": "high",
+      "owner": "audit2_messaging_media",
+      "title": "Une réponse 401 tardive peut effacer le cookie d’une connexion plus récente",
+      "locations": [
+        {
+          "file": "server/notifications/http.mjs",
+          "line": 118
+        },
+        {
+          "file": "server/tasks/http.mjs",
+          "line": 88
+        },
+        {
+          "file": "server/quick-replies/http.mjs",
+          "line": 40
+        },
+        {
+          "file": "server/announcements/http.mjs",
+          "line": 86
+        },
+        {
+          "file": "server/broadcast/http.mjs",
+          "line": 303
+        },
+        {
+          "file": "server/crm/http.mjs",
+          "line": 279
+        }
+      ],
+      "evidence": "Toutes ces clauses posent Set-Cookie Max-Age=0 après des awaits pouvant produire 401. Le chemin CRM export exclut explicitement cette suppression tardive. Reproduction commune confiée à messaging_media ; ne compter qu’une fois.",
+      "repro": "Voir rapport audit2_messaging_media."
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "file": "server/announcements/crypto.mjs",
+      "lines": 42,
+      "sha256": "cf9efc4a7c459b1976409dabb69fdd88473067154e8e6c0c2aee617d0135017c",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/announcements/http.mjs",
+      "lines": 96,
+      "sha256": "554639f11400fccb1ff5a4b1348f449b6d31b2234e9c6b47529a779f9b3a31fa",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/announcements/service.mjs",
+      "lines": 86,
+      "sha256": "2283464d80b4edcdc2dc52a8a35069976a936911999efd7d6fac2f3f82ac3db6",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/announcements/store.mjs",
+      "lines": 215,
+      "sha256": "8b615031bbea8153287931f0c7e4a31417301690f5d67bcb3559a7491e4e22ba",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/announcements/validation.mjs",
+      "lines": 49,
+      "sha256": "5070ea97a50fcb104a9317ad217f185295d26707eb34fca08c4424a66c2f6554",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/broadcast/audience.mjs",
+      "lines": 53,
+      "sha256": "ebdbe2c9cc5c5eb9d08a293cb7ad3c4b117992f387958be168b617ccfd32dbae",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/broadcast/config.mjs",
+      "lines": 14,
+      "sha256": "430d074e00659cf0d79f815422e92f28313f248b20214d32799db02249b88e6c",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/broadcast/crypto.mjs",
+      "lines": 151,
+      "sha256": "00345da4da15ba8092f16cf8eca75ef7a1abc94c84c5f066e0a435a20f506ebf",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/broadcast/http.mjs",
+      "lines": 310,
+      "sha256": "d98d1da3e42ea749edb574a61f8bb3fb304626fb959597a4a5de25608e5ad9e8",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/broadcast/service.mjs",
+      "lines": 270,
+      "sha256": "521bb7eadd9dc9f6a9ab1c618c0df0fa5d8a0ee5a206afee449358b362b352e7",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/broadcast/store.mjs",
+      "lines": 706,
+      "sha256": "b153e1ea0bde7567ace659af375390427fd618c9126f46513c01cb3fc1ef4863",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/broadcast/validation.mjs",
+      "lines": 158,
+      "sha256": "0641b534ca64c7789d29ae422852eb9a7e4eb06ba38385ebd9f5c871f443e869",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/broadcast/worker.mjs",
+      "lines": 130,
+      "sha256": "b28e368ee9ea2dd64342758ded90f420f0b767467165db6c27a8b137335dc3a6",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/crm/config.mjs",
+      "lines": 27,
+      "sha256": "016fe028c614a21c9592c97195b37257acf323d1b3adc9c24adf9db7bb6fce01",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/crm/crypto.mjs",
+      "lines": 94,
+      "sha256": "e2d644e29d223fd96ef5fdde7bed477f4e74497a89f24ea0b66409a39578fb5a",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/crm/http.mjs",
+      "lines": 288,
+      "sha256": "0333c7be3a864298851fe847949418611dfa69f513501932bb37e83761ded010",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/crm/service.mjs",
+      "lines": 173,
+      "sha256": "249283964e02fd2ed56142263a465d534bbcbe6f409380c959170aecab608d60",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/crm/store.mjs",
+      "lines": 350,
+      "sha256": "1433c7e5f180324a3bee108d4dc9ec585b6048e141bc931d1eeb57d33b5bb005",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/crm/validation.mjs",
+      "lines": 82,
+      "sha256": "25209c78de6d1255dbfbbc0e436ad41227dbd5a48b27c560c7c9475215eb68b9",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/mail/backup-alert-message.mjs",
+      "lines": 16,
+      "sha256": "4decf49001d72b940954149a05f3e106b251867f3626aa730b208f840c7ec600",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/mail/config.mjs",
+      "lines": 51,
+      "sha256": "ddc6c64f2aac9e1e0a3a1cde2063ed61c0772e882be3ac60df35c183959c4dcc",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/mail/crypto.mjs",
+      "lines": 79,
+      "sha256": "956b22157a1efcab393fdab07ddb9618e7aa5fa097433227d2ba6689abc19d92",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/mail/store.mjs",
+      "lines": 193,
+      "sha256": "5f57379f870d37761c18d517ac49079edd3edd513a0c22776a04ce70546a63a3",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/mail/transport.mjs",
+      "lines": 211,
+      "sha256": "e36749e10b9fdd4d9ef13b1c49cd7155f32cfba1228d37be1ddb2b8eb9a679a9",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/mail/worker.mjs",
+      "lines": 123,
+      "sha256": "9fe7a02c328a19b88bdb0446369818203fb87f45d9c9438e7f6b0e140ba13959",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/notifications/config.mjs",
+      "lines": 54,
+      "sha256": "ef5eb9f83e15972e0f82055fac6a9265ea4285d995a440ada325ff07c3019b46",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/notifications/crypto.mjs",
+      "lines": 55,
+      "sha256": "346ad8fc363ff190de1f69d2723241c2935bb72c48bcc2526202471a720fdd0c",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/notifications/http.mjs",
+      "lines": 125,
+      "sha256": "4f5426217392aad144832fbc0bac164084bd3dcba8a626b01eaf2c4ec005b635",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/notifications/service.mjs",
+      "lines": 137,
+      "sha256": "954342832dd4d73e851df7ca21ae1bdc5707fc466072f52c43d635ac0729e8a2",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/notifications/store.mjs",
+      "lines": 419,
+      "sha256": "a33429f9b3173a5c808f88a82797529c3ed0d99b700bfad9c4f527fa540c122c",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/notifications/transport.mjs",
+      "lines": 152,
+      "sha256": "e9a1f36fd404cbfbdd9409980a7c1494205ffeca7e51dedfc723098d05beeecb",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/notifications/validation.mjs",
+      "lines": 42,
+      "sha256": "a38002d6dd8f5aea916f68d35224a779bd5ad7bbbcfdd67ded39890dad373160",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/notifications/worker.mjs",
+      "lines": 137,
+      "sha256": "646eab7e5f03f3cb6cda4c68c15e45c43c253715447dfbd148900c01b0ca5ccb",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/quick-replies/files.mjs",
+      "lines": 102,
+      "sha256": "ede192036c7dec9fe42db68e3a09b099e98c29fb157f4812cd2141c2335a003e",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/quick-replies/http.mjs",
+      "lines": 49,
+      "sha256": "4da2789d0c730c1acd5ebe8fd646e488cb7be39772444eab88ce0268709b4afb",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/quick-replies/service.mjs",
+      "lines": 80,
+      "sha256": "b4e107c53b9121aae8c1a3277ac0af257724f3ed2e3b8b4b16a9a60167b3df02",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/quick-replies/validation.mjs",
+      "lines": 56,
+      "sha256": "cdfb988fa6df1b2ab992d4aa8b79190c13ae6fa00a5a35ff50748936021f0dd5",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/tasks/crypto.mjs",
+      "lines": 39,
+      "sha256": "8e4caf88079130443b7d34fdc2b06217c8c028fd7fe6b939d41ef7f36d8c1a80",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/tasks/http.mjs",
+      "lines": 98,
+      "sha256": "78c371937ad120195d4c87079110de7df87797df7c868eb41f28ef7531307a46",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/tasks/service.mjs",
+      "lines": 116,
+      "sha256": "e5a5b3684d528da1498af6e76c06850c255f4ca809901cb278e6e2f98369a36e",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/tasks/store.mjs",
+      "lines": 181,
+      "sha256": "2e3d7dd1170f53255d3406cc16db3074fe899a636a7f0ad2d1eb7bf6ad52bcd7",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/tasks/validation.mjs",
+      "lines": 44,
+      "sha256": "54073b1e9a6e9953ecd4a9ef2ac4051c2b7b2f31307af9eda981c7e77dacb456",
+      "reviewStatus": "fully_read"
+    }
+  ],
+  "testsRead": [
+    {
+      "file": "tests/notifications-store.test.mjs",
+      "lines": 91,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/notifications-store.integration.test.mjs",
+      "lines": 371,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/notifications-service.test.mjs",
+      "lines": 218,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/notifications-worker.test.mjs",
+      "lines": 122,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/notifications-transport.test.mjs",
+      "lines": 122,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/notifications-crypto.test.mjs",
+      "lines": 83,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/mail.test.mjs",
+      "lines": 369,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/mail-store.integration.test.mjs",
+      "lines": 225,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/personal-quick-replies-files.test.mjs",
+      "lines": 103,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/personal-quick-replies-service.test.mjs",
+      "lines": 58,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/personal-quick-replies-http.test.mjs",
+      "lines": 66,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/tasks-service.test.mjs",
+      "lines": 86,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/tasks-http.test.mjs",
+      "lines": 106,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/tasks-crypto.test.mjs",
+      "lines": 60,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/announcements-service.test.mjs",
+      "lines": 78,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/announcements-http.test.mjs",
+      "lines": 93,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/announcements-notification.test.mjs",
+      "lines": 24,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/announcements-flow.integration.test.mjs",
+      "lines": 270,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/announcements-crypto.test.mjs",
+      "lines": 47,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/broadcast-worker.test.mjs",
+      "lines": 301,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/broadcast-store.test.mjs",
+      "lines": 86,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/broadcast-crypto.test.mjs",
+      "lines": 149,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/crm-service.test.mjs",
+      "lines": 290,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/crm-store.test.mjs",
+      "lines": 53,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/crm-validation.test.mjs",
+      "lines": 113,
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "tests/crm-crypto.test.mjs",
+      "lines": 151,
+      "reviewStatus": "fully_read"
+    }
+  ],
+  "additionalFilesRead": [
+    {
+      "file": "server/auth/session-policy.mjs",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/reset/mail-store.mjs",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/reset/mail-crypto.mjs",
+      "reviewStatus": "fully_read"
+    },
+    {
+      "file": "server/data/erasure-store.mjs",
+      "reviewStatus": "partial",
+      "ranges": [
+        "55-160"
+      ]
+    },
+    {
+      "file": "docs/AUDIT-FINAL-20261022.md",
+      "reviewStatus": "historical_findings_and_limits_read"
+    },
+    {
+      "file": "docs/verification-proofs/jm182-lot1-verification.json",
+      "reviewStatus": "partial",
+      "ranges": [
+        "1-60"
+      ]
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "candidate": "Push après expiration normale de la session navigateur",
+      "reason": "Comportement produit explicitement couvert par notifications-store.integration.test.mjs : l’expiration normale ne révoque pas la préférence Push. Révocations/epochs/accès/message/lecture sont revalidés."
+    },
+    {
+      "candidate": "acceptCampaign rejette une réponse duplicate à audience réduite après effacement",
+      "reason": "Le backend réécrit également request_fingerprint lors d’un effacement ; un POST avec ancien aperçu renvoie BROADCAST_CONFLICT avant une réponse duplicate. Cette hypothèse frontend précise n’est pas atteignable par ce contrat. frontend_messaging informé."
+    },
+    {
+      "candidate": "Préférences historiques de diffusion désactivées ignorées",
+      "reason": "Contrat de migration volontaire ; des tests distinguent les préférences historiques des accès actifs actuels. Ne pas rouvrir cette décision produit."
+    },
+    {
+      "candidate": "Quota global avant quota admin dans les anciens workers v1",
+      "reason": "Ancien contrat de budgets conservé intentionnellement, thème A01 déjà connu. Aucun nouveau défaut distinct démontré ; les campagnes compactes paient leur budget individuel avant le global."
+    },
+    {
+      "candidate": "Croissance du catalogue tâches / lectures CRM globales",
+      "reason": "Aucun incident, seuil concret ou nouvelle anomalie distincte des limites déjà documentées établi. Pas de finding spéculatif."
+    }
+  ],
+  "checks": [
+    "Lecture intégrale des 42 fichiers sources du manifeste, validation finale SHA256 identique pour chacun.",
+    "Revue transversale : autorisation sous verrou, ordre des verrous, isolement propriétaire, versions optimistes, reprises exactes, audiences figées/signées, baux et epochs de révocation.",
+    "Revue crypto/validation : bornes, canonicalité, domaines de clés/AAD, fichiers personnels chiffrés, URL Push/DNS épinglé, destinataires SMTP.",
+    "Lecture intégrale de 26 tests associés ; recherche de titres/assertions ciblés dans d’autres tests sans les compter intégralement lus.",
+    "Une reproduction nouvelle ciblée (4 cas, deux usages avec contrôle sans attente) exécutée ; aucune suite verte générale rejouée.",
+    "Aucune modification applicative, aucun envoi réel, aucune production, aucune session cloud ni action sauvegarde/PC."
+  ],
+  "limits": [
+    "Les 26 tests indiqués ont été lus, pas tous les tests liés à chaque domaine ; les tests frontend/UI sont examinés par les agents propriétaires.",
+    "La nouvelle preuve temporelle utilise un pool SQL simulé et un transport simulé ; aucune contention MariaDB native ni livraison SMTP réelle exécutée.",
+    "Node local 24.19.0, distinct du runtime de production rapporté 24.22.1 ; aucun résultat hébergé déduit.",
+    "Aucun état privé de production, navigateur physique, réception Push/e-mail finale ou configuration provider interrogé.",
+    "Ne vaut pas preuve d’absence de toutes les vulnérabilités ; pas de revue juridique RGPD."
+  ]
+}

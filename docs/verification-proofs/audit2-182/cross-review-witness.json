@@ -1,0 +1,162 @@
+{
+  "formatVersion": 1,
+  "type": "audit2-182-independent-cross-review-witness",
+  "recordedAtUTC": "2026-10-22T20:43:01.375100+00:00",
+  "reviewer": "versions_reprise, independent of reproduction author",
+  "checkoutHead": "b54430d849132f3cb3f353c92bf30f2879865dec",
+  "verdict": {
+    "status": "confirmed_race",
+    "severity": "P2_conditional_optional_mode",
+    "confidence": "high",
+    "title": "Le plafond de lecteurs HTTP du témoin se franchit pendant l’autorisation asynchrone",
+    "file": "server/backup/witness-transport.mjs",
+    "lines": "60–65,81–87",
+    "summary": "Le handler teste transfers.size <2 avant await identity. Plusieurs appels simultanés franchissent le contrôle tant qu’aucun lecteur de corps n’est inscrit. Après autorisation ils reprennent, trouvent le même job actif et ajoutent tous leur requête à transfers sans réexamen du plafond. Le timeout20s n’est créé qu’à cette étape."
+  },
+  "evidenceReview": {
+    "reproductionRerun": false,
+    "recordedResult": {
+      "simultaneousAuthenticatedResponses": 4,
+      "intendedTransferCeiling": 2,
+      "observedConcurrentBodyReaders": 4,
+      "laterRequestStatus": 429,
+      "bytesPerBody": 2,
+      "largeBodiesAllocated": false
+    },
+    "fidelity": [
+      "La preuve appelle le vrai handler sans le modifier. Le faux Request respecte l’autorité canonique, headers HTTP natifs attendus, méthode POST, bearer43caractères et type JSON.",
+      "Le job exchange actif est un état valide avec snapshot:null. Le verrou différé d’autorisation représente le vrai await readCopyState de authorizeWitness, ou les contrôles de provenance supplémentaires du mode recovery.",
+      "Les quatre requêtes sont entrées dans le même tour avant la levée du promise d’autorisation. Le corps différé les maintient toutes en lecture et évite qu’une fin de requête masque la violation.",
+      "Un cinquième appel reçoit429 une fois la Set peuplée : la protection existe mais n’est pas une réservation atomique.",
+      "Les corps{} échouent ensuite intentionnellement à la validation du protocole et donnent503. Leur invalidité n’affecte pas la preuve d’admission puisque la collecte complète précède ces validations."
+    ],
+    "limits": [
+      "Il ne s’agit pas d’un test HTTP réseau, de socket native, de charge, d’allocation64Mio, de sauvegarde ou de restauration.",
+      "Le faux authorize accepte un bearer synthétique ; en usage réel il faut une capacité valide correspondant à la destination, au pairedAt et au fingerprint épinglés. Aucun contournement d’autorisation démontré.",
+      "La fréquence pratique de cette concurrence sur le PC/serveur réel n’est pas mesurée."
+    ]
+  },
+  "memoryAnalysis": {
+    "perRequestLimitBytes": 67110912,
+    "registryMaxBytes": 67108864,
+    "limitSource": "registry-snapshot.mjs:6; witness-transport.mjs:84,87",
+    "whatRemainsBounded": "Chaque lecteur refuse un Content-Length supérieur au plafond et arrête la collecte lorsqu’il le dépasse. La durée de collecte est limitée à20secondes et un exchange à60secondes ; le compteur de requêtes conserve240 admissions par fenêtre60secondes.",
+    "whatBreaks": "L’agrégat supposé2× n’est pas garanti. Avec4 lecteurs proches du plafond, les seuls chunks peuvent approcher268443648octets, soit256Mio+8192octets. Buffer.concat, décodage UTF-8 et JSON produisent en plus des allocations transitoires ; leur pic n’a pas été mesuré.",
+    "qualifiers": [
+      "La preuve n’alloue que8octets de corps au total. Les volumes indiqués sont une borne arithmétique de corps collectables, pas une consommation RSS observée.",
+      "Ne pas écrire mémoire illimitée : il reste les plafonds par corps, timeout, taux et éventuellement listener. En recovery-only, le listener limite128 handlers et128 connexions ; cela est bien supérieur à2 et ne restaure pas le contrat local.",
+      "Dans le parent gateway, pending.size>=512 porte sur les requêtes proxyfiées après control ; les contrôles témoin ne sont pas inscrits dans cet ensemble. Ce plafond ne démontre donc pas une borne2 pour les lecteurs du témoin.",
+      "Les autorisations en attente ne sont pas comptées par transfers et ne démarrent pas son timeout ; ne pas en déduire une borne globale de processus à partir du seul compteur de taux."
+    ]
+  },
+  "activationAndExposure": {
+    "prerequisites": [
+      "Un mode explicite témoin observer/enrollment ou recovery-only est monté et correctement configuré avec son contrat original et ses fichiers privés.",
+      "Le client possède le bearer actuellement valable de la destination épinglée et les headers natifs requis.",
+      "Un exchange est actif au moment où les réponses sortent de l’autorisation ; autrement elles obtiennent409 avant de lire le corps.",
+      "Au moins3 réponses commencent leur autorisation avant que le premier lecteur soit ajouté, puis maintiennent leur corps en cours."
+    ],
+    "callGraph": [
+      "scripts/start-recurring-private-messaging.mjs78–89 construit observer seulement pour ses commandes dédiées ; witnessControl monte alors le parent gateway.",
+      "witness-observer.mjs75–83 monte le vrai transport avec copies.authorizeWitness.",
+      "scripts/start-recurring-private-messaging.mjs23–47 construit un listener témoin spécifique seulement pour start-witness-recovery ; witness-recovery-parent.mjs141–144 enveloppe l’autorisation avec provenance/authority."
+    ],
+    "production182": "Le profil vidéo182 courant est distinct : les commandes witness sont incompatibles avec --profile vidéo dans parseRecurringArguments66–68 ; manualBackups interdit witnessControl (recurring-supervisor.mjs197–198) et le runtime vidéo refuse parentGateway (server/index.mjs272). Le handler applicatif index ne monte pas ce transport. Ce défaut concerne donc un parcours historique/optionnel conservé, pas une exposition active démontrée de la messagerie182.",
+    "productionClaimLimit": "Aucune session/hôte/processus n’a été inspecté lors de cette contre-revue. La conclusion d’activation repose sur le graphe de code et la documentation actuelle, non sur une nouvelle sonde de production."
+  },
+  "impactAndSeverity": {
+    "recommended": "P2 conditionnel du composant conservé : un pair autorisé défaillant/compromis peut dépasser le budget de transferts, augmenter fortement la mémoire et ralentir/faire échouer un parent témoin ou recovery. Priorité opérationnelle actuelle inférieure à un défaut actif182.",
+    "notEstablished": [
+      "Aucune acceptation de snapshot invalide, contournement de challenge/requestId/pairing ou divulgation de secret.",
+      "Aucune sauvegarde, restauration ou suppression réelle, aucun OOM ni indisponibilité production observés.",
+      "Pas de P1 de messagerie active sur la seule base de cette preuve."
+    ]
+  },
+  "additionalStaticObservation": "Le même contrôle pré-await porte sur waiters.size ; plusieurs poll sans job peuvent aussi s’inscrire après autorisation sans recontrôle. Mécanisme analogue observé statiquement, pas une seconde reproduction ni un second défaut indépendant compté ici.",
+  "recommendedFixScope": "Conserver toutes les vérifications de provenance/bearer/protocole. Réserver atomiquement l’admission ou recontrôler sans await immédiatement avant l’inscription des lecteurs/waiters, et libérer la réservation en finally. Lors d’un correctif futur, ajouter un test ciblé avec autorisations différées et corps minuscules ; ne pas tester de gros volumes ou relancer un témoin réel.",
+  "reviewedEvidenceAndSources": [
+    {
+      "path": "/workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.mjs",
+      "sha256": "974f3be5d63e70d7a793baf922dcfabeeeaf158c220753b746bab83ef9b79b77",
+      "scope": "full script/output read, no execution"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/audit2-182/backup_historical_delegated/repro-witness-admission.json",
+      "sha256": "64b7474e21e186b8d8d8b6c65b01f4eae96d0acfb201dd4f1b007d6ee204c31e",
+      "scope": "full script/output read, no execution"
+    },
+    {
+      "path": "server/backup/witness-transport.mjs",
+      "sha256": "bbc35b24e2510b3e5488cdbd424f86726847a00b0fe34fafdf710536c5c73d11",
+      "scope": "full"
+    },
+    {
+      "path": "server/backup/registry-snapshot.mjs",
+      "sha256": "12f466ac744c0b536feca437b31c27d99c389eb554ba947f60bbb93fa346b140",
+      "scope": "lines1–36,75–107; max bytes constant and snapshot boundaries"
+    },
+    {
+      "path": "server/backup/copy-service.mjs",
+      "sha256": "ca87d0a3059a98bada2a05bdbceb53eb6a34f665304f567b934758720779e08d",
+      "scope": "lines1–65,110–132; actual async bearer/pairing authorization"
+    },
+    {
+      "path": "server/backup/witness-observer.mjs",
+      "sha256": "8a3a789bf2276a62e8de5ab3f8340cedb7e0b97f82e3085fd39ed29010aef934",
+      "scope": "lines20–88,155–185; construction and optional mounting"
+    },
+    {
+      "path": "server/backup/witness-recovery-parent.mjs",
+      "sha256": "5596688e29efd589681987d4db184cfe0aaa8aff780edfc6034f60cb4334b173",
+      "scope": "lines68–88,133–154; construction, provenance authorization and handler mounting"
+    },
+    {
+      "path": "server/backup/witness-recovery-server.mjs",
+      "sha256": "9326849da9f58e30ec609994915bf67c5e418176ff03870aaa05815398b20e27",
+      "scope": "full; listener request/connection bound"
+    },
+    {
+      "path": "server/backup/parent-gateway.mjs",
+      "sha256": "eb3403835b735d838ba775d66c851d81b306a3568d53bc882af7b6dabbc90231",
+      "scope": "full; control handler precedes forwarded pending accounting"
+    },
+    {
+      "path": "scripts/start-recurring-private-messaging.mjs",
+      "sha256": "33a17b01c3c6863ccf346ad676be8eac7c6cfd03d8b4a037929b1cddbb0119ea",
+      "scope": "full lines1–170; mode selection and gateway wiring"
+    },
+    {
+      "path": "server/backup/recurring-supervisor.mjs",
+      "sha256": "ccccb65fc614f3a8456423c8a59fc6af86c06ce692814941d0edda9834374bfb",
+      "scope": "lines40–78,235–275,382–411 and witness/manual/gateway configuration references188–222"
+    },
+    {
+      "path": "server/index.mjs",
+      "sha256": "9c4e0d8cb0e18a22363d7c700eac2c702d5262b9493386505982cd20329ae7a9",
+      "scope": "lines292–358 and video/parentGateway gate272–274; no witness transport mount in application handler graph"
+    },
+    {
+      "path": "server/http/request-origin.mjs",
+      "sha256": "6cffb0d4f6a7dc1f72600e84d40dfcddab628742945b95a3734f509a19528f68",
+      "scope": "full"
+    },
+    {
+      "path": "docs/REPRISE.md",
+      "sha256": "eb785546a2cb02c9bc4e5d9f64e319813ddec812641c6c17412f55ebc3d09ecf",
+      "scope": "current production182 commands70–86 and A11 parent-gateway/video reservation"
+    },
+    {
+      "path": "tests/witness-transport.test.mjs",
+      "sha256": "3c785ae09d5d55747c46ae6f9a85510e635aeb0d10fb6228ed55e4d3d27b2fe4",
+      "scope": "full, read only; not executed"
+    }
+  ],
+  "execution": {
+    "reproductionsRerun": 0,
+    "testsExecuted": 0,
+    "networkRequests": 0,
+    "backupOrRestoreOperations": 0,
+    "repositoryModified": false,
+    "existingEvidenceModified": false
+  }
+}
