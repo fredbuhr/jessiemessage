@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage182-delivery-state",
-  "recordedAtUTC": "2026-10-22T19:26:55.756245+00:00",
+  "recordedAtUTC": "2026-10-22T19:32:56.513511+00:00",
   "status": "deployed_aligned_user_reported_residual_checks_explicit",
   "version": "1.8.2",
   "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
@@ -73,11 +73,11 @@
   },
   "remaining": [
     "A11: bounded observation executed with complete table reads but zero matching sockets; result is inconclusive and the conditional shared-peer risk remains unverified. No repeat or proxy/quota change is queued.",
-    "A10: unestablished operator facts D01-D07 remain open; no full legal-compliance claim.",
+    "A10: missing operator facts D01-D07 and request-handling preparation D08 remain open. A factual correction of the default private notice template is prepared on a separate branch, not merged, natively qualified, publicly published or deployed.",
     "Available physical-device/hosted functional cases not actually tried remain unverified.",
     "Hosted manual backup UI creation/completion/download remains deferred by user; no resumption, reminder or new probe."
   ],
-  "nextAction": "No further deployment or A11 operator command is queued. Complete only genuinely missing A10 notice facts and group available-device cases not already confirmed; preserve the deferred backup decision and do not repeat successful qualifications.",
+  "nextAction": "Acquire the small unsent-text/reload case on the usual device and complete only genuinely missing A10 facts privately. Stabilize the separate notice candidate before native qualification and release. No deployment182 replay, A11 repeat or backup action is queued.",
   "operationsNotRepeated": [
     "PR merge",
     "existing successful branch/main CI",
@@ -118,5 +118,21 @@
     "hostedObservationConclusive": false,
     "conditionalRiskResolved": false,
     "attemptClosed": true
+  },
+  "noticePreparationCandidate": {
+    "branch": "docs/privacy-notice-refresh",
+    "source": "556fc38573a97e52cecdf49fba1c25b7b2de5040",
+    "tree": "5e48a1a2d6d98603cde884524202f5e098804a29",
+    "evidence": "https://github.com/fredbuhr/jessiemessage/blob/556fc38573a97e52cecdf49fba1c25b7b2de5040/docs/verification-proofs/privacy-notice-factual-preparation.json",
+    "runtimeTemplateChangedInCandidate": true,
+    "productionTemplateUnchanged": true,
+    "preliminaryStructuralValidationNode": "v24.19.0",
+    "independentReviewPassed": true,
+    "productionNodeQualificationAcquired": false,
+    "merged": false,
+    "released": false,
+    "deployed": false,
+    "privateDraftOverwritten": false,
+    "operatorFactsInvented": false
   }
 }
