@@ -304,7 +304,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         let output;
         const configuration = { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT };
         const target = { user: application ? env.JESSIEMESSAGE_RUNTIME_DB_USER : selected.inspectionUser, database: env.JESSIEMESSAGE_DB_NAME };
-        const tableOptions = application ? { tables: [...createdMigrationTables(await (video ? loadVideoMigrations : loadMigrations)()), "schema_migrations"].sort() } : {};
+        const tableOptions = application ? { tables: [...createdMigrationTables(await (video ? loadVideoMigrations : loadMigrations)()), "schema_migrations"].sort(), ...(video ? { video: true } : {}) } : {};
         let sql;
         try {
           output = await exclusive(scope, "database.sql");

@@ -160,6 +160,7 @@ async function fixture(t, { video = false, broadcast = video, crm = broadcast, r
       assert.equal(password, state.application ? runtimePassword : inspectionPassword);
       if (state.application) { assert.equal(parameters.tables.length, video ? 36 : 33); assert.equal(new Set(parameters.tables).size, video ? 36 : 33); assert.ok(parameters.tables.includes("schema_migrations")); }
       else assert.equal(parameters.tables, undefined);
+      assert.equal(Object.hasOwn(parameters, "video"), video); if (video) assert.equal(parameters.video, true);
       state.dumps += 1;
       state.events.push(`dump:${state.dumps}`);
       if (state.dumps === 1) {

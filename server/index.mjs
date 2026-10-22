@@ -310,7 +310,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const { mailConfiguration } = await import("./mail/config.mjs");
   const mailConfig = mailConfiguration(env);
   const { createRuntimePool } = await import("./db/runtime.mjs");
-  const { createAuthStore } = await import("./auth/store.mjs");
+  const { createAuthStore, AuthStoreError } = await import("./auth/store.mjs");
   const { createAuthService } = await import("./auth/service.mjs");
   const { createAuthHandler } = await import("./auth/http.mjs");
   const { createOperationsStore } = await import("./operations/store.mjs");
@@ -640,7 +640,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     });
     videoConfig?.key.fill(0);
     return { server, pool, mailWorker, diagnostics };
-  } catch {
+  } catch (error) {
     videoConfig?.key.fill(0);
     closureHandler?.close();
     await notificationTransport?.close().catch(() => {});
@@ -648,6 +648,9 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     await operations?.close().catch(() => {});
     await transport?.close().catch(() => {});
     await pool?.end().catch(() => {});
+    // Pool initialization previously exposed these fixed, sanitized categories.
+    // Retain that contract while still erasing the optional video key on error.
+    if (!pool && error instanceof AuthStoreError && ["AUTH_DATABASE_CONFIG", "AUTH_DATABASE_CONNECTION"].includes(error.code)) throw error;
     throw new Error("Authentication startup failed; check private configuration, database schema and runtime permissions.");
   }
 }

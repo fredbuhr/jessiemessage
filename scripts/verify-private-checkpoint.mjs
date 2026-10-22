@@ -250,7 +250,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         } catch { fail("PASSWORD"); }
         active();
         const dumped = await dump(checkpointScope, { database: selected.database, user: selected.user },
-          { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, ...(application ? { tables: [...dumpTables] } : {}) });
+          { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, ...(application ? { tables: [...dumpTables] } : {}), ...(video ? { video: true } : {}) });
         if (dumped?.sqlBytes !== backup.sqlBytes || dumped.sqlSha256 !== backup.sqlSha256) fail("DUMP_MISMATCH");
         active();
         connectionEnv = { JESSIEMESSAGE_DB_HOST: env.JESSIEMESSAGE_DB_HOST, JESSIEMESSAGE_DB_PORT: env.JESSIEMESSAGE_DB_PORT,
@@ -272,7 +272,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           || countNames.some(name => !Number.isSafeInteger(report.counts[name]) || report.counts[name] < 0)) fail("CRYPTO");
         if (application) {
           const after = await dump(checkpointScope, { database: selected.database, user: selected.user },
-            { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, tables: [...dumpTables] });
+            { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, tables: [...dumpTables], ...(video ? { video: true } : {}) });
           if (after?.sqlBytes !== backup.sqlBytes || after.sqlSha256 !== backup.sqlSha256) fail("DUMP_MISMATCH");
           active();
         }

@@ -455,7 +455,7 @@ test("application clone verifies five domains and two exact table-only dumps wit
   assert.deepEqual(report.counts, { rows: 6, mfa: 1, mail: 1, reset: 0, messages: 1, crm: 0, tasks: 0, broadcast: 0,
     broadcastRecipients: 0, announcements: 0, media: 1, mediaFiles: 2, notifications: 1, notificationJobs: 1 });
   assert.equal(f.dumps.length, 2);
-  for (const options of f.dumps) assert.deepEqual(options.tables, [...f.tables].sort());
+  for (const options of f.dumps) { assert.deepEqual(options.tables, [...f.tables].sort()); assert.equal(Object.hasOwn(options, "video"), false); }
   assert.notEqual(f.dumps[0].tables, f.dumps[1].tables);
   assert.deepEqual(f.events, ["client", "password", "dump", "connect", "dump", "rollback", "end", "snapshot"]);
   assert.equal(report.applicationSnapshotMatched, true);

@@ -34,7 +34,7 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
   const html = files.get("/broadcast.html").toString().replace("<head>", '<head><script src="/scale-fixture.js"></script>');
   const contacts = Array.from({ length: 2500 }, (_, index) => ({ id: id(index + 1), client: { id: id(10000 + index), pseudonym: `Scale client ${String(index + 1).padStart(4, "0")}` }, crm: { nickname: "" }, canSend: true }));
   const contactsById = new Map(contacts.map(contact => [contact.id, contact]));
-  const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0, uploads: [] };
+  const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0, uploads: [], uploadAttempts: [] };
   const session = () => ({ user: { id: id(8000 + state.owner), role: "admin", pseudonym: `Synthetic Jessie ${state.owner}` }, csrf: state.owner === 1 ? "A".repeat(43) : "B".repeat(42) + "A",
     expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}), ...(videoEnabled ? { videoEnabled: true } : {}) });
   const targets = audience => audience?.mode === "all" ? contacts : audience?.mode === "filtered" ? contacts.slice(0, 175)
@@ -68,8 +68,11 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
       json(200, { contacts: selected.values, hasMore: selected.hasMore, nextCursor: selected.nextCursor }); return;
     }
     if (url.pathname === "/api/video/admin/assets" && request.method === "POST" && videoEnabled) {
+      const attempt = { contentTypeMatches: request.headers["content-type"] === "video/mp4", csrfMatches: request.headers["x-csrf-token"] === session().csrf, bytes: null, bodyMatches: null };
+      state.uploadAttempts.push(attempt);
       assert.equal(request.headers["content-type"], "video/mp4"); assert.equal(request.headers["x-csrf-token"], session().csrf);
       const chunks = []; for await (const chunk of request) chunks.push(chunk); const bytes = Buffer.concat(chunks);
+      attempt.bytes = bytes.length; attempt.bodyMatches = bytes.equals(videoBytes);
       assert.deepEqual(bytes, videoBytes); state.uploads.push(bytes.length);
       if (!holdVideoUpload) json(201, { id: id(7000), bytes: bytes.length, mime: "video/mp4" });
       return;
@@ -251,6 +254,18 @@ async function selectVideo(page) {
   await waitUntil(() => page.execute("const player=document.querySelector('#video-preview video');return player?.videoWidth===96&&player.videoHeight===64&&player.duration>1.5&&!document.getElementById('upload-video').disabled"), "native MP4 preview is decoded before upload");
 }
 
+async function waitForVideoUpload(source, page, check, description) {
+  try { await waitUntil(check, description); }
+  catch (error) {
+    const browser = await page.execute("const byId=id=>document.getElementById(id);return {status:byId('video-status').textContent,error:byId('video-status').classList.contains('is-error'),uploadHidden:byId('upload-video').hidden,uploadDisabled:byId('upload-video').disabled,cancelHidden:byId('cancel-video').hidden,compositionDisabled:byId('composition').disabled,previewDisabled:byId('preview').disabled,pageVisible:document.visibilityState==='visible',errors:window.__scaleErrors}");
+    // Every value belongs to this synthetic fixture. Keep diagnostic transport
+    // phases separate so a failed header/body assertion cannot look like an
+    // upload that never reached the local server.
+    assert.fail(`${error.message}; ${JSON.stringify({ browser, attempts: source.state.uploadAttempts,
+      requestPaths: source.state.requests.filter(request => request.path === '/api/video/admin/assets').map(request => request.method) })}`);
+  }
+}
+
 test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry", { timeout: 120000 }, async () => {
   for (const [width, language] of [[390, "fr"], [1280, "en"]]) {
     const source = await fixture({ videoEnabled: true, uncertain: true }); let page;
@@ -262,7 +277,7 @@ test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw uploa
       assert.equal(await page.execute("return document.getElementById('upload-video').textContent"), language === "fr" ? "Charger la vidéo" : "Upload video");
       assert.equal(await page.execute("return document.querySelector('#video-preview video').autoplay"), false);
       await page.click("#upload-video");
-      await waitUntil(() => page.execute("return document.getElementById('upload-video').hidden&&!document.getElementById('preview').disabled"), "uploaded attachment enables audience verification");
+      await waitForVideoUpload(source, page, () => page.execute("return document.getElementById('upload-video').hidden&&!document.getElementById('preview').disabled"), "uploaded attachment enables audience verification");
       assert.deepEqual(source.state.uploads, [videoBytes.length]); await preview(page, 175);
       assert.equal(source.state.previewInputs.at(-1).videoId, id(7000)); assert.equal(source.state.previewInputs.at(-1).mediaId, null);
       await confirmWithKeyboard(page);
@@ -282,7 +297,7 @@ test("Chrome broadcast video upload can be cancelled while awaiting ACK without 
   const source = await fixture({ videoEnabled: true, holdVideoUpload: true }); let page;
   try {
     page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await page.click("#upload-video");
-    await waitUntil(() => source.state.uploads.length === 1 && page.execute("return !document.getElementById('cancel-video').hidden"), "native upload awaits its server acknowledgement");
+    await waitForVideoUpload(source, page, () => source.state.uploads.length === 1 && page.execute("return !document.getElementById('cancel-video').hidden"), "native upload awaits its server acknowledgement");
     assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled&&!document.getElementById('video-progress').hidden"), true);
     await page.click("#cancel-video");
     await waitUntil(() => page.execute("return document.getElementById('cancel-video').hidden&&document.getElementById('video-status').textContent.includes('Upload cancelled')"), "cancel aborts the upload and exposes a translated result");

@@ -11,7 +11,7 @@ const decode = (value) => value.replace(/&#(x[0-9a-f]+|[0-9]+);|&(amp|lt|gt|quot
 
 test("all private UI catalogues can coexist and each HTML source has an English translation in its loaded catalogues", async () => {
   const all = new Map(), perCatalogue = new Map();
-  for (const name of [...catalogues, "help-link"]) {
+  for (const name of [...catalogues, "broadcast", "help-link"]) {
     const own = new Map();
     const filename = name === "help-link" ? "help-link.js" : `i18n-${name}.js`;
     vm.runInNewContext(await readFile(new URL(`../public/${filename}`, import.meta.url), "utf8"), {
@@ -27,7 +27,7 @@ test("all private UI catalogues can coexist and each HTML source has an English 
   }
   assert.ok(all.size > 500);
   for (const [page, names] of [["access", ["access"]], ["recover", ["access"]], ["admin-login", ["admin"]],
-    ["chat", ["chat", "tools"]], ["broadcast", ["tools"]], ["readiness", ["readiness"]]]) {
+    ["chat", ["chat", "tools"]], ["broadcast", ["tools", "broadcast"]], ["readiness", ["readiness"]]]) {
     const html = await readFile(new URL(`../public/${page}.html`, import.meta.url), "utf8");
     const loaded = new Map(["help-link", ...names].flatMap((name) => [...perCatalogue.get(name)]));
     const runtime = html.indexOf('src="/i18n.js"'); assert.ok(runtime >= 0, page);
@@ -59,6 +59,13 @@ test("translation assets are public UI only, served without storage or private f
     assert.equal(await response.text(), await readFile(new URL(`../public/${path}`, import.meta.url), "utf8"));
     const head = await fetch(`${base}/${path}`, { method: "HEAD" });
     assert.equal(head.status, 200); assert.equal(await head.text(), "");
+  }
+  for (const method of ["GET", "HEAD"]) {
+    const response = await fetch(`${base}/i18n-broadcast.js`, { method });
+    assert.equal(response.status, 404, "broadcast catalogue remains behind its feature boundary");
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.equal(response.headers.get("set-cookie"), null);
+    if (method === "HEAD") assert.equal(await response.text(), "");
   }
   assert.equal((await fetch(`${base}/api/health`)).status, 200);
   assert.equal((await fetch(`${base}/api/ready`)).status, 503);

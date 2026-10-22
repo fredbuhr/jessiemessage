@@ -473,6 +473,17 @@ function videoFixture() {
   return f;
 }
 
+test("backup schema assertion opts into the candidate migration plan only for the explicit video application profile", async () => {
+  for (const video of [false, true]) {
+    const f = video ? videoFixture() : fixture(), assertions = [], videoAssertions = [];
+    f.dependencies.makeSchemaStore = () => ({ assertSchema: async (...options) => { assertions.push(options); } });
+    if (video) f.dependencies.makeVideoStore = () => ({ assertSchema: async (...options) => { videoAssertions.push(options); } });
+    await main([...args("verify"), ...(video ? ["--profile", "photos-notify-recovery-crm-broadcast-video-application"] : [])], {}, f.dependencies);
+    assert.deepEqual(assertions, [video ? [{ video: true }] : []]);
+    assert.deepEqual(videoAssertions, video ? [[]] : [], "video store schema assertion retains its connection-only API");
+  }
+});
+
 test("video restoration resumes after a failed video unlink while retaining the photo rebind and never refunding unfinished video", async () => {
   const f = videoFixture(), selected = [...args("restore"), "--profile", "photos-notify-recovery-crm-broadcast-video-application"];
   f.state.failVideoRemoval = true;

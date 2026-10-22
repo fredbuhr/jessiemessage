@@ -111,7 +111,8 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     if (video) await videoStore.assertSchema();
     const schemaStore = dependencies.makeSchemaStore ? dependencies.makeSchemaStore({ pool, capacity })
       : (await import("../server/media/store.mjs")).createMediaStore({ pool, capacity, chatStore: (await import("../server/chat/store.mjs")).createChatStore(pool) });
-    await schemaStore.assertSchema();
+    if (video) await schemaStore.assertSchema({ video: true });
+    else await schemaStore.assertSchema();
     inspectionPool = await (dependencies.createInspectionPool ?? (application
       ? (await import("../server/backup/application-scope.mjs")).createApplicationInspectionPool
       : (await import("../server/backup/inspection.mjs")).createBackupInspectionPool))(env);

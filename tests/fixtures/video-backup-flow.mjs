@@ -27,12 +27,13 @@ import { encryptMessageBody, messageFingerprint, videoMessageFingerprint } from 
 import { createErasureJournal } from "../../server/data/erasure-journal.mjs";
 import { withPrivateDirectory } from "../../server/files/private-directory.mjs";
 import { readCheckpointReceipt } from "../../server/backup/checkpoint-receipt.mjs";
-import { resumeCheckpointMedia } from "../../server/backup/checkpoint-files.mjs";
-import { resumeCheckpointVideo } from "../../server/backup/video-checkpoint-files.mjs";
+import { resumeCheckpointMedia, copyCheckpointMedia, verifyCheckpointMedia } from "../../server/backup/checkpoint-files.mjs";
+import { resumeCheckpointVideo, copyCheckpointVideo, verifyCheckpointVideo } from "../../server/backup/video-checkpoint-files.mjs";
+import { verifyCheckpointArchive } from "../../server/backup/checkpoint-archive.mjs";
 import { captureBackupSnapshot, createBackupSnapshotStore } from "../../server/backup/snapshot.mjs";
 import { readManifest, verifyBackupManifest } from "../../server/backup/manifest.mjs";
 import { main as backupMain } from "../../scripts/backup.mjs";
-import { main as captureMain, inspectApplicationCheckpointIdentity } from "../../scripts/private-checkpoint.mjs";
+import { main as captureMain, inspectApplicationCheckpointIdentity, inspectCheckpointTools, gzipCheckpointSql, archiveCheckpoint } from "../../scripts/private-checkpoint.mjs";
 import { importNativeSql, readApplicationSql } from "../../scripts/import-application-checkpoint.mjs";
 import { dumpCloneSql } from "../../scripts/verify-text-clone.mjs";
 import { loadRuntimeVideoEnvironment } from "../../server/config/runtime-video.mjs";
@@ -208,15 +209,27 @@ export async function videoBackupFixture(t) {
   baseline = await f.sourceState(); f.sourceBaseline = baseline;
   f.assertSourceUnchanged = async () => assert.deepEqual(await f.sourceState(), baseline, "native capture/import/rebind must not mutate its source");
   f.capture = async () => {
+    const phase = (label, operation) => async (...args) => {
+      t.diagnostic(`Video backup capture: ${label} started`);
+      try {
+        const result = await operation(...args); t.diagnostic(`Video backup capture: ${label} passed`); return result;
+      } catch (error) { t.diagnostic(`Video backup capture: ${label} failed`); throw error; }
+    };
     const report = await captureMain(["capture-application", "--offline", "--private-directory", dirs.privateDirectory,
       "--private-path-mode", "linux-dirfd", "--destination-private-directory", dirs.checkpoint, "--profile", BASE_PROFILE, "--operations-directory", dirs.sourceOperations], {
       inheritedEnv: environment, execArgv: [], outputStream: { write() {} },
-      inspectApplicationIdentity: (env, parameters) => inspectApplicationCheckpointIdentity(local(env), parameters),
-      prepare: (args, env, parameters) => backupMain(args, local(env), parameters),
-      dump: (scope, target, config, password, parameters) => dumpCloneSql(scope, target, config, password, { ...parameters, spawnClient: localSqlClient }),
+      loadEnvironment: phase("private configuration", loadRuntimeVideoEnvironment), inspectTools: phase("native tools", inspectCheckpointTools),
+      inspectApplicationIdentity: phase("application identity", (env, parameters) => inspectApplicationCheckpointIdentity(local(env), parameters)),
+      prepare: phase("backup prepare", (args, env, parameters) => backupMain(args, local(env), parameters)),
+      getManifest: phase("manifest read", readManifest), verifyManifest: phase("manifest authentication", verifyBackupManifest),
+      dump: phase("native SQL dump", (scope, target, config, password, parameters) => dumpCloneSql(scope, target, config, password, { ...parameters, spawnClient: localSqlClient })),
+      copyMedia: phase("photo copy", copyCheckpointMedia), verifyMedia: phase("photo verification", verifyCheckpointMedia),
+      copyVideo: phase("video copy", copyCheckpointVideo), verifyVideo: phase("video verification", verifyCheckpointVideo),
+      compress: phase("SQL compression", gzipCheckpointSql), archive: phase("archive creation", archiveCheckpoint),
+      verifyArchive: phase("archive verification", verifyCheckpointArchive),
     });
-    const receipt = await withPrivateDirectory(dirs.checkpoint, scope => readCheckpointReceipt(scope));
-    const manifest = await readManifest(path.join(dirs.checkpoint, "manifest.json")), payload = await verifyBackupManifest({ manifest, keys });
+    const receipt = await phase("fixture receipt read", () => withPrivateDirectory(dirs.checkpoint, scope => readCheckpointReceipt(scope)))();
+    const manifest = await phase("fixture manifest read", readManifest)(path.join(dirs.checkpoint, "manifest.json")), payload = await phase("fixture manifest authentication", verifyBackupManifest)({ manifest, keys });
     f.report = report; f.receipt = receipt; f.manifest = manifest; f.payload = payload; await f.assertSourceUnchanged(); return report;
   };
   f.resetTarget = async () => {
