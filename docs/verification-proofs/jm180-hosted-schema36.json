@@ -1,0 +1,82 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_180_hosted_schema36",
+  "status": "schema36_and_prechecks_user_reported_activation_pending",
+  "date": "2026-10-22",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "description": "User executed the protected upgrade helper in their own browser SSH terminal and supplied these exact two JSON results; no direct agent observation of this execution.",
+    "timestampProvided": false,
+    "credentialsExcluded": true
+  },
+  "operatorSource": "79680445793a160be8f96f82c7337e260e944808",
+  "operatorTree": "b9ed75ed1729ae13d9c3419b14295035355e3d1e",
+  "targetSource": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+  "targetTree": "324c3563fc6b1cfce669bcf58d90962c23c966b8",
+  "rollbackSource": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+  "rollbackTree": "924d500375a69ae50bc63414b15df71271e2bf8a",
+  "migrationReport": {
+    "status": "schema36_confirmed_before_prechecks",
+    "migration": {
+      "status": "upgraded",
+      "engineVerified": true,
+      "transportVerified": true,
+      "migrations": 36,
+      "applied": 3,
+      "unchanged": 33
+    },
+    "schemaMigrations": 36,
+    "upgradeAttempted": true,
+    "schema36Confirmed": true,
+    "videoStorageInitialized": true,
+    "completedReceipts": 0,
+    "runtimeStarted": false,
+    "serviceStopOperatorAttested": true,
+    "serviceStopProcessAndPortVerified": true,
+    "targetSource": "fd6e53b14b520231b0b307a2761331dd8c740a5b"
+  },
+  "precheckReport": {
+    "status": "schema36_prechecks_passed",
+    "schemaMigrations": 36,
+    "schema36Confirmed": true,
+    "rollback172HostedQualified": true,
+    "release180PrecheckPassed": true,
+    "runtimeStarted": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "restart171Allowed": false,
+    "targetVersion": "1.8.0",
+    "targetSource": "fd6e53b14b520231b0b307a2761331dd8c740a5b"
+  },
+  "currentState": {
+    "schemaMigrations": 36,
+    "videoStorageInitialized": true,
+    "serviceStoppedAtReportedExecution": true,
+    "runtimeStarted": false,
+    "rollback172HostedQualified": true,
+    "release180PrecheckPassed": true,
+    "managerCommandsVersion": "1.7.1",
+    "managerCommandsObsolete": true,
+    "checkpointVersion": "1.7.1",
+    "checkpointSchema": 33,
+    "checkpointObsolete": true,
+    "previous171IdentityHistorical": true,
+    "restart171Allowed": false,
+    "restart160Allowed": false,
+    "activationPerformed": false
+  },
+  "nextAction": {
+    "sequence": [
+      "Set Infomaniak Manager Run and Build to the prepared 1.8.0 launchers and keep port 3000.",
+      "Save the settings and start the 1.8.0 service.",
+      "Verify the new application_started identity and HTTP results before recording final metadata."
+    ],
+    "performed": false
+  },
+  "limits": [
+    "The two reports are user supplied; no direct agent host observation or invented execution time is claimed.",
+    "The service was stopped at the reported execution and both reports state runtimeStarted:false; no subsequent application start is proved.",
+    "The previous 1.7.1 identity is historical. Manager commands and the private checkpoint still describe the obsolete 1.7.1 / SQL33 state.",
+    "SQL36 is current; never start 1.7.1 or 1.6.0 on it. The 1.7.2 rollback passed its hosted precheck and has never started."
+  ]
+}
