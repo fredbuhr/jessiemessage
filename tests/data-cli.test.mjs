@@ -56,6 +56,65 @@ test("data CLI requires exact offline, database, repeated canonical client and p
   for (const input of bad) assert.throws(() => parseArguments(input), rejected("DATA_USAGE"));
 });
 
+test("video export requires the exact explicit candidate profile and cannot widen inventory or deletion planning", () => {
+  const profile = "photos-notify-recovery-crm-broadcast-video";
+  assert.equal(parseArguments([...args("export"), "--profile", profile]).video, true);
+  assert.equal(Object.hasOwn(parseArguments(args("export")), "video"), false);
+  for (const input of [[...args("inventory"), "--profile", profile], [...args("plan"), "--profile", profile],
+    [...args("export"), "--profile", "video"], [...args("export"), "--video", "1"], [...args("export"), "--profile", profile, "--profile", profile]])
+    assert.throws(() => parseArguments(input), rejected("DATA_USAGE"));
+});
+
+test("candidate export composes SQL36, the snapshot extension and streaming writer with independent protected roots", async () => {
+  const f = fixture(), seen = [], candidateArgs = [...args("export"), "--profile", "photos-notify-recovery-crm-broadcast-video"];
+  Object.assign(f.state.config, { mediaRoot: "/synthetic/photos", videoRoot: "/synthetic/videos", videoKey: Buffer.alloc(32, 7) });
+  let selectedKey, opens = 0;
+  f.dependencies.inspectRoots = async (photos, videos) => { assert.equal(photos, f.state.config.mediaRoot); assert.equal(videos, f.state.config.videoRoot); seen.push("roots"); };
+  f.dependencies.checkVideoSchema = async pool => { assert.equal(pool, f.pool); seen.push("sql36"); };
+  f.dependencies.makeSchemaStore = () => ({ async assertSchema(options) { assert.deepEqual(options, { video: true }); } });
+  const source = f.dependencies.withClientData;
+  f.dependencies.withClientData = async (options, callback) => {
+    assert.equal(typeof options.video.decorateMessages, "function"); assert.equal(typeof options.video.ownVideos, "function"); seen.push("extension");
+    return source(options, callback);
+  };
+  const writer = f.dependencies.makeWriter;
+  f.dependencies.makeWriter = async options => {
+    assert.equal(options.video, true); assert.ok(options.protectedRoots.includes(f.state.config.videoRoot)); return writer(options);
+  };
+  f.writer.video = async (path, stream, options) => { assert.equal(path, `media/${client}.mp4`); assert.equal(options.bytes, 1); seen.push("stream"); for await (const chunk of stream) assert.equal(chunk.toString(), "x"); };
+  f.dependencies.makeVideoStorage = async ({ root, key }) => { assert.equal(root, f.state.config.videoRoot); selectedKey = key;
+    return { async open() { opens++; return { async *stream() { yield Buffer.from("x"); }, async close() {} }; } }; };
+  f.dependencies.exportContent = async options => {
+    assert.equal(typeof options.videoStorage.open, "function");
+    for (let index = 0; index < 2; index++) { const opened = await options.videoStorage.open({}); await options.writer.video(`media/${client}.mp4`, opened.stream(), { bytes: 1 }); await opened.close(); }
+    return { ...emptySummary(), videoFiles: 1, videoBytes: 1, videoLibraryItems: 0 };
+  };
+  const result = await main(candidateArgs, {}, f.dependencies);
+  assert.deepEqual(result, { command: "export", status: "complete", ...emptySummary(), videoFiles: 1, videoBytes: 1, videoLibraryItems: 0 });
+  assert.equal(opens, 2); assert.ok(selectedKey.every(value => value === 0)); assert.ok(f.state.config.videoKey.every(value => value === 7));
+  assert.deepEqual(seen, ["roots", "sql36", "extension", "stream", "stream"]);
+  assert.deepEqual(f.files.get("COMPLETE.json"), { ...emptySummary(), videoFiles: 1, videoBytes: 1, videoLibraryItems: 0 });
+});
+
+test("candidate export never allocates output after root or schema refusal and keeps old exports without video seams", async () => {
+  const candidateArgs = [...args("export"), "--profile", "photos-notify-recovery-crm-broadcast-video"];
+  for (const phase of ["roots", "schema"]) {
+    const f = fixture(); Object.assign(f.state.config, { mediaRoot: "/synthetic/photos", videoRoot: "/synthetic/videos", videoKey: Buffer.alloc(32, 7) });
+    f.dependencies.inspectRoots = async () => { if (phase === "roots") throw Error("private-marker root"); };
+    f.dependencies.checkVideoSchema = async () => { if (phase === "schema") throw Error("private-marker schema"); };
+    await assert.rejects(main(candidateArgs, {}, f.dependencies), rejected());
+    assert.equal(f.events.includes("writer"), false); assert.equal(f.output.length, 0);
+    assert.equal(f.events.includes("pool-end"), phase === "schema");
+  }
+  const f = fixture();
+  f.dependencies.inspectRoots = f.dependencies.checkVideoSchema = f.dependencies.makeVideoStorage = () => assert.fail("old export must stay closed");
+  f.dependencies.withClientData = async (options, callback) => { assert.equal(Object.hasOwn(options, "video"), false); return callback(f.reader); };
+  f.dependencies.exportContent = async options => {
+    assert.equal(Object.hasOwn(options, "videoStorage"), false); assert.equal(Object.hasOwn(options.writer, "video"), false); return emptySummary();
+  };
+  assert.equal((await main(args("export"), { JESSIEMESSAGE_VIDEO_KEY: Buffer.alloc(32, 7).toString("base64url") }, f.dependencies)).status, "complete");
+});
+
 test("database mismatch and invalid export key are refused before any pool or output", async () => {
   for (const change of ["database", "key"]) {
     const f = fixture(); if (change === "database") f.state.config.databaseName = "other"; else f.state.config.messageKey = Buffer.alloc(31);

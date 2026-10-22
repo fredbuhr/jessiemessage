@@ -35,17 +35,18 @@ class FakeNode {
   replaceChildren(...nodes) { this.children = nodes; }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
+  removeAttribute(name) { this.attributes.delete(name); }
   focus() { if (this.ownerDocument) this.ownerDocument.activeElement = this; }
   reset() {}
   addEventListener(name, callback) { this.listeners.set(name, callback); }
   querySelectorAll(tag) { return this.children.flatMap((node) => node instanceof FakeNode ? [...(node.tagName === tag ? [node] : []), ...node.querySelectorAll(tag)] : []); }
 }
-function fixture(handler = () => null, initialOwner = actor()) {
+function fixture(handler = () => null, initialOwner = actor(), { XMLHttpRequest, urlApi = URL } = {}) {
   const nodes = new Map(), calls = [], timers = new Map(), documentEvents = new Map(), windowEvents = new Map(); let timerId = 0; let owner = initialOwner;
   const node = (name) => { if (!nodes.has(name)) nodes.set(name, Object.assign(new FakeNode(), { ownerDocument: document })); return nodes.get(name); };
   const document = { visibilityState: "hidden", getElementById: node, createElement: (tag) => Object.assign(new FakeNode(tag), { ownerDocument: document }), addEventListener(name, callback) { documentEvents.set(name, callback); } };
   const context = createContext({ ...model, document, window: { addEventListener(name, callback) { windowEvents.set(name, callback); } }, location: { replace() {} },
-    AbortController, URL, URLSearchParams, TextEncoder, Date, console, crypto: webcrypto,
+    AbortController, URL: urlApi, URLSearchParams, TextEncoder, Date, console, crypto: webcrypto, XMLHttpRequest,
     setTimeout(callback, delay) { const timer = ++timerId; timers.set(timer, { callback, delay }); return timer; }, clearTimeout(timer) { timers.delete(timer); },
     fetch: async (path, options) => {
       calls.push({ path, options });
@@ -64,7 +65,7 @@ function fixture(handler = () => null, initialOwner = actor()) {
       return response({ error: "not_found" }, 404);
     } });
   new Script(sessionClock).runInContext(context);
-  new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, scheduleHistory, renderSelection, renderControls, loadRecipientPage, rememberCampaign, detailState: () => ({ recipientPage, recipientAfter, recipientEpoch, detailElements }), busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
+  new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, chooseVideo, uploadVideo, removeVideo, cancelVideoUpload, videoState: () => ({videoDraft,videoTransfer}), request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, scheduleHistory, renderSelection, renderControls, loadRecipientPage, rememberCampaign, detailState: () => ({ recipientPage, recipientAfter, recipientEpoch, detailElements }), busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
   const ui = context.controller;
   document.visibilityState = "visible";
   model.acceptBroadcastSession(ui.state, model.clearBroadcast(ui.state, { visible: true }), owner);
@@ -77,7 +78,7 @@ function compose(ui) {
   ui.state.contacts.set(id(99), { id: id(99), client: { id: id(98), pseudonym: "Synthetic client" }, nickname: "", canSend: true });
   model.selectRecipient(ui.state, id(99), true);
   model.updateComposition(ui.state, { title: "Synthetic immutable draft", body: "Synthetic confirmed body" });
-  model.acceptPreview(ui.state, model.previewTicket(ui.state), { recipients: [{ conversationId: id(99), client: { id: id(98), pseudonym: "Synthetic client" }, eligible: true, reason: null, repeatMedia: false }], eligibleCount: 1, repeatCount: 0 });
+  model.acceptPreview(ui.state, model.previewTicket(ui.state), { recipients: [{ conversationId: id(99), client: { id: id(98), pseudonym: "Synthetic client" }, eligible: true, reason: null, repeatMedia: false }], eligibleCount: 1, repeatCount: 0, ...(ui.state.session?.largeAudiencesEnabled ? {totalCount:1,excludedCount:0,previewToken:"synthetic.initial-preview"} : {}) });
   ui.state.acknowledged = true;
 }
 
@@ -433,5 +434,104 @@ test("an edited filter clears the real confirmation even when canonical criteria
     f.node("search").value = " "; f.node("filters").listeners.get("input")();
     assert.equal(f.ui.state.audienceFilters.q, ""); assert.equal(f.node("acknowledge").checked, false);
     assert.equal(f.ui.state.acknowledged, false); assert.equal(f.node("confirm").disabled, true); assert.equal(model.canConfirmBroadcast(f.ui.state), false);
+  } finally { f.close(); }
+});
+
+const videoActor = (value = 1) => ({ ...actor(value), largeAudiencesEnabled: true, videoEnabled: true });
+function videoFixture(handler = () => null, owner = videoActor()) {
+  const uploads = [], revoked = [], created = [];
+  class Upload {
+    constructor() { this.listeners = new Map(); this.headers = new Map(); this.upload = { addEventListener: (name, callback) => { this.progress = callback; } }; uploads.push(this); }
+    open(method, path) { this.method = method; this.path = path; }
+    setRequestHeader(name, value) { this.headers.set(name, value); }
+    addEventListener(name, callback) { this.listeners.set(name, callback); }
+    send(file) { this.file = file; }
+    abort() { this.aborted = true; this.listeners.get("abort")?.(); }
+    complete(value = { id: id(77), bytes: this.file.size, mime: "video/mp4" }, status = 201) { this.responseText = JSON.stringify(value); this.status = status; this.listeners.get("load")?.(); }
+  }
+  class PreviewURL extends URL {
+    static createObjectURL(file) { const value = `blob:synthetic-video-${created.length}`; created.push({ value, file }); return value; }
+    static revokeObjectURL(value) { revoked.push(value); }
+  }
+  const f = fixture(handler, owner, { XMLHttpRequest: Upload, urlApi: PreviewURL });
+  return { ...f, uploads, revoked, created, choose(file = { type: "video/mp4", size: 12536 }) {
+    f.node("video-file").files = [file]; f.ui.chooseVideo();
+    return f.node("video-preview").children[0];
+  }, decode() { f.node("video-preview").children[0].listeners.get("loadedmetadata")(); } };
+}
+
+test("broadcast video is opt-in and rejects non-MP4, empty, oversized or over-caption selections before any upload", () => {
+  const off = videoFixture(() => null, actor());
+  try { off.ui.renderControls(); assert.equal(off.node("video-options").hidden, true); off.choose(); assert.equal(off.created.length, 0); assert.equal(off.uploads.length, 0); }
+  finally { off.close(); }
+  const f = videoFixture();
+  try {
+    for (const file of [{ type: "video/webm", size: 42 }, { type: "video/mp4", size: 0 }, { type: "video/mp4", size: 104857601 }]) {
+      f.choose(file); assert.equal(f.created.length, 0); assert.match(f.node("video-status").textContent, /100 Mo/);
+    }
+    model.updateComposition(f.ui.state, { body: "x".repeat(1001) }); f.choose(); assert.equal(f.created.length, 0);
+    assert.match(f.node("video-status").textContent, /1 000 caractères/); assert.equal(f.uploads.length, 0);
+  } finally { f.close(); }
+});
+
+test("broadcast video waits for native preview and a session-bound upload ACK before previewing its typed audience and sending", async () => {
+  const previews = [], sent = []; let saved;
+  const f = videoFixture((path, options) => {
+    if (path === "/api/broadcast/admin/preview") {
+      previews.push(JSON.parse(options.body)); return response({ recipients: [{ conversationId: id(99), client: { id: id(98), pseudonym: "Synthetic client" }, eligible: true, reason: null, repeatMedia: false }], eligibleCount: 1, repeatCount: 0, totalCount: 1, excludedCount: 0, previewToken: "synthetic.video-preview" });
+    }
+    if (path === "/api/broadcast/admin/campaigns" && options.method === "POST") {
+      const input = JSON.parse(options.body); sent.push(input); saved = campaign(50, { ...input, formatVersion: 3, audienceMode: "selected" }); return response({ campaign: saved, duplicate: false }, 201);
+    }
+    if (saved && path === `/api/broadcast/admin/campaigns/${saved.id}/summary`) return response(saved);
+    return null;
+  });
+  try {
+    compose(f.ui); const player = f.choose(); assert.equal(player.controls, true); assert.equal(player.preload, "metadata");
+    assert.equal(f.ui.state.preview, null); assert.equal(f.node("upload-video").disabled, true); assert.equal(f.node("preview").disabled, true);
+    await f.ui.uploadVideo(); assert.equal(f.uploads.length, 0); f.decode();
+    await f.ui.preview(); assert.equal(previews.length, 0);
+    const loading = f.ui.uploadVideo(); await flush(); const upload = f.uploads[0];
+    assert.equal(upload.method, "POST"); assert.equal(upload.path, "/api/video/admin/assets"); assert.equal(upload.withCredentials, true); assert.equal(upload.timeout, 300000);
+    assert.equal(upload.headers.get("Content-Type"), "video/mp4"); assert.equal(upload.headers.get("X-CSRF-Token"), actor().csrf);
+    upload.progress({ loaded: upload.file.size / 2 }); assert.equal(f.node("video-progress").value, 50); assert.equal(f.node("cancel-video").hidden, false);
+    assert.equal(f.node("preview").disabled, true); assert.equal(f.node("confirm").disabled, true); assert.equal(f.ui.state.draft.videoId, null);
+    upload.complete(); await loading;
+    assert.equal(f.ui.state.draft.videoId, id(77)); assert.equal(f.node("upload-video").hidden, true); assert.equal(f.node("video-progress").hidden, true);
+    await f.ui.uploadVideo(); assert.equal(f.uploads.length, 1, "an acknowledged upload is never sent again");
+    await f.ui.preview(); assert.deepEqual(previews, [{ audience: { mode: "selected", conversationIds: [id(99)] }, mediaId: null, videoId: id(77) }]);
+    f.ui.state.acknowledged = true; await f.ui.send();
+    assert.equal(sent.length, 1); assert.equal(sent[0].videoId, id(77)); assert.equal(sent[0].mediaId, null); assert.equal(sent[0].previewToken, "synthetic.video-preview");
+    assert.equal(f.ui.campaigns.get(saved.id).videoId, id(77)); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.revoked.length, 1);
+    assert.equal(f.ui.detailState().detailElements.photo.textContent, "Une vidéo jointe");
+  } finally { f.close(); }
+});
+
+test("broadcast cancelled, malformed and lost uploads never attach a video or retry automatically", async (t) => {
+  for (const failure of ["cancel", "network", "wrong-size", "extra-field"]) await t.test(failure, async () => {
+    const f = videoFixture();
+    try {
+      compose(f.ui); f.choose(); f.decode(); const loading = f.ui.uploadVideo(); await flush(); const upload = f.uploads[0];
+      if (failure === "cancel") { f.ui.cancelVideoUpload(); assert.equal(upload.aborted, true); assert.equal(f.node("cancel-video").hidden, true); }
+      else if (failure === "network") upload.listeners.get("error")();
+      else upload.complete({ id: id(77), bytes: failure === "wrong-size" ? 1 : upload.file.size, mime: "video/mp4", ...(failure === "extra-field" ? { untrusted: true } : {}) });
+      await loading; assert.equal(f.ui.state.draft.videoId, null); assert.equal(f.node("preview").disabled, true); assert.equal(f.node("upload-video").hidden, true);
+      await f.ui.uploadVideo(); await f.ui.preview(); await f.ui.send();
+      assert.equal(f.uploads.length, 1); assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+      assert.match(f.node("video-status").textContent, failure === "cancel" ? /annulé/ : /pas été confirmé/);
+      f.ui.removeVideo(); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.revoked.length, 1);
+    } finally { f.close(); }
+  });
+});
+
+test("video upload acknowledgement under a changed account is discarded and hiding the page revokes the local file", async () => {
+  const f = videoFixture();
+  try {
+    f.choose(); f.decode(); const loading = f.ui.uploadVideo(); await flush(); f.setOwner(videoActor(2)); f.uploads[0].complete(); await loading; await flush();
+    assert.equal(f.ui.state.session.id, id(2)); assert.equal(f.ui.state.draft.videoId, undefined); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.revoked.length, 1);
+    f.choose(); f.decode(); const second = f.ui.uploadVideo(); await flush();
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange"); await second;
+    assert.equal(f.uploads[1].aborted, true); assert.equal(f.ui.state.session, null); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.revoked.length, 2);
+    assert.equal(f.node("video-preview").children.length, 0); assert.equal(f.node("broadcast-content").hidden, true);
   } finally { f.close(); }
 });

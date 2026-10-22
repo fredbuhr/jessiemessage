@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { createErasureJournal, verifyErasureJournalEnvelope } from "../server/data/erasure-journal.mjs";
 import { createPrivacyFiles } from "../server/privacy/files.mjs";
+import { createQuickRepliesFiles, verifyQuickRepliesEnvelope, QUICK_REPLIES_FILE_MAX_BYTES } from "../server/quick-replies/files.mjs";
 import { DECISIONS } from "../server/privacy/draft.mjs";
 import { captureOperationalState, operationalStateHash, writeOperationalCheckpoint, readOperationalCheckpoint,
   planOperationalRestore, restoreOperationalQuarantine, assertNoOperationalRestore, OPERATIONAL_CHECKPOINT, OPERATIONAL_RESTORE_MARKER } from "../server/backup/operational-checkpoint.mjs";
@@ -15,6 +16,10 @@ const key = Buffer.alloc(32, 7), binding = { database: "synthetic_private_databa
 const targetBinding = { database: "synthetic_isolated_clone", rootFingerprint: "c".repeat(64) };
 const now = 1792350000000, clientId = "a".repeat(32), allow = async () => {};
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
+const replyOwner = "9".repeat(32), otherReplyOwner = "8".repeat(32);
+const personalReplies = () => [{ id: "1".repeat(32), title: "Accueil privé", body: "Bonjour, heureuse de te retrouver 💛", language: "fr" },
+  { id: "2".repeat(32), title: "Private greeting", body: "Lovely to see you again 💛", language: "en" }];
+const quickRepliesFor = (directory, ownerId = replyOwner) => createQuickRepliesFiles(directory, key, ownerId, { withDirectory: withErasureDirectory });
 const record = id => ({ version: 1, clientId: id, binding, phase: "requested", cursor: null, startedAt: now, updatedAt: now });
 const prepared = () => ({ updatedAt: now, draft: { answers: Object.fromEntries(DECISIONS.map(id => [id, ""])),
   notice: { fr: "Préparation privée synthétique", en: "Synthetic private preparation" } } });
@@ -171,3 +176,137 @@ test("native Linux descriptor anchoring captures, seals, rereads and quarantines
   await assert.rejects(withPrivateDirectory(f.target, assertNoOperationalRestore));
 });
 test("Linux CI must exercise native operational checkpoint anchoring", { skip: !["true", "1"].includes(process.env.CI) }, () => assert.equal(procfs, true));
+
+const videoBinding = { ...binding, videoRootFingerprint: "d".repeat(64) };
+const videoTargetBinding = { ...targetBinding, videoRootFingerprint: "e".repeat(64) };
+const videoReceipt = () => ({ ...receipt(), version: 12, profile: "messaging-photos-notify-recovery-crm-broadcast-video-application", video: { files: [], bytes: 0 } });
+async function populateVideo(directory, id = "f".repeat(32), completed = false) {
+  const journal = createErasureJournal({ directory, key, binding: videoBinding, clientId: id }, { withDirectory: withErasureDirectory });
+  let value = { version: 2, clientId: id, binding: videoBinding, phase: "requested", cursor: null, startedAt: now, updatedAt: now }, revision = 0;
+  try {
+    revision = (await journal.save(value, revision, allow)).revision;
+    if (completed) for (const phase of ["prepared", "files_erased", "completed"]) {
+      value = { ...value, phase, updatedAt: value.updatedAt + 1 }; revision = (await journal.save(value, revision, allow)).revision;
+    }
+  } finally { journal.close(); }
+}
+const videoCapture = directory => withErasureDirectory(directory, scope => captureOperationalState(scope, { key, binding: videoBinding }));
+test("video operational scope preserves and authenticates original v1 and v2 receipts in one explicit capsule", async t => {
+  const f = await fixture(t); await populate(f.source, true); await populateVideo(f.source);
+  const original = Object.fromEntries(await Promise.all((await readdir(f.source)).map(async name => [name, await readFile(path.join(f.source, name))])));
+  const state = await videoCapture(f.source);
+  assert.deepEqual(Object.keys(state), ["version", "binding", "legacyBinding", "files"]);
+  assert.equal(state.version, 2); assert.deepEqual(state.binding, videoBinding); assert.deepEqual(state.legacyBinding, binding);
+  assert.deepEqual(new Set(state.files.map(file => JSON.parse(Buffer.from(file.content, "base64url")).version)), new Set([1, 2]));
+  for (const file of state.files) assert.deepEqual(Buffer.from(file.content, "base64url"), original[file.name]);
+  const selected = videoReceipt(); selected.operations = await withErasureDirectory(f.checkpoint, scope => writeOperationalCheckpoint(scope, state, selected, key));
+  assert.equal(JSON.parse(await readFile(path.join(f.checkpoint, OPERATIONAL_CHECKPOINT))).version, 2);
+  assert.deepEqual(await withErasureDirectory(f.checkpoint, scope => readOperationalCheckpoint(scope, selected, key)), state);
+  for (const [name, content] of Object.entries(original)) assert.deepEqual(await readFile(path.join(f.source, name)), content);
+});
+test("video capsule AAD binds the video inventory and cannot be read as a legacy capsule", async t => {
+  const f = await fixture(t); await populate(f.source, true); await populateVideo(f.source);
+  const state = await videoCapture(f.source), selected = videoReceipt();
+  selected.operations = await withErasureDirectory(f.checkpoint, scope => writeOperationalCheckpoint(scope, state, selected, key));
+  for (const change of [value => value.video.bytes++, value => value.video.files.push({ name: "a".repeat(64) + ".video.enc", bytes: 1, sha256: "b".repeat(64) }), value => value.version = 10]) {
+    const altered = structuredClone(selected); change(altered);
+    await assert.rejects(withErasureDirectory(f.checkpoint, scope => readOperationalCheckpoint(scope, altered, key)));
+  }
+  const legacyDestination = path.join(f.directory, "legacy-destination"); await mkdir(legacyDestination, { mode: 0o700 });
+  await assert.rejects(withErasureDirectory(legacyDestination, scope => writeOperationalCheckpoint(scope, state, receipt(), key)), { code: "OPERATIONS_INPUT" });
+  assert.deepEqual(await readdir(legacyDestination), []);
+});
+test("mixed operational scope rejects an omitted or substituted legacy binding and any video downgrade", async t => {
+  const f = await fixture(t); await populate(f.source, true); await populateVideo(f.source, "f".repeat(32), true);
+  const state = await videoCapture(f.source);
+  for (const changed of [{ ...state, legacyBinding: targetBinding }, { version: 2, binding: videoBinding, files: state.files },
+    { version: 1, binding: videoBinding, files: state.files }, { ...state, binding: { ...videoBinding, videoRootFingerprint: "0".repeat(64) } }])
+    assert.throws(() => planOperationalRestore({ backup: state, current: changed, targetBinding: videoTargetBinding, key }));
+  assert.throws(() => planOperationalRestore({ backup: state, current: state, targetBinding, key }), { code: "OPERATIONS_BINDING_CHANGED" });
+  await assert.rejects(withErasureDirectory(f.source, scope => captureOperationalState(scope, { key, binding })), "legacy-only scope must not accept a video envelope");
+});
+test("video quarantine retains both original scopes with a v2 blocking marker and rejects photo-only reopening", async t => {
+  const f = await fixture(t); await populate(f.source, true); await populateVideo(f.source, "f".repeat(32), true);
+  const state = await videoCapture(f.source), expected = operationalStateHash(state);
+  const result = await withErasureDirectory(f.target, scope => restoreOperationalQuarantine(scope, { backup: state, current: state,
+    targetBinding: videoTargetBinding, key, expectedCurrentSha256: expected, assertCurrent: async actual => assert.equal(actual, expected) }));
+  assert.equal(result.started, false); assert.equal(result.completedReceipts, 2);
+  const marker = JSON.parse(await readFile(path.join(f.target, OPERATIONAL_RESTORE_MARKER)));
+  assert.equal(marker.version, 2); assert.deepEqual(marker.sourceBinding, videoBinding); assert.deepEqual(marker.targetBinding, videoTargetBinding);
+  for (const file of state.files) assert.equal((await readFile(path.join(f.target, file.name))).toString("base64url"), file.content);
+  const { readOperationalQuarantine } = await import("../server/backup/operational-checkpoint.mjs");
+  const restored = await withErasureDirectory(f.target, scope => readOperationalQuarantine(scope, { key, sourceBinding: videoBinding, targetBinding: videoTargetBinding }));
+  assert.deepEqual(restored.state, state);
+  await assert.rejects(withErasureDirectory(f.target, scope => readOperationalQuarantine(scope, { key, sourceBinding: binding, targetBinding })));
+});
+
+test("personal replies and empty catalogues survive exact legacy/video capsule and quarantine round trips", async t => {
+  for (const video of [false, true]) {
+    const f = await fixture(t); await populate(f.source, true);
+    const first = quickRepliesFor(f.source), second = quickRepliesFor(f.source, otherReplyOwner);
+    try {
+      await first.save(personalReplies(), 0, allow); await first.save([], 1, allow);
+      await second.save(personalReplies(), 0, allow);
+    } finally { first.close(); second.close(); }
+    const chosenBinding = video ? videoBinding : binding, chosenTarget = video ? videoTargetBinding : targetBinding;
+    const state = await (video ? videoCapture(f.source) : capture(f.source));
+    const settings = state.files.filter(file => file.name.startsWith("quick-replies-")); assert.equal(settings.length, 2);
+    const empty = settings.find(file => file.name === `quick-replies-${replyOwner}.json`);
+    assert.deepEqual(verifyQuickRepliesEnvelope(Buffer.from(empty.content, "base64url"), key, empty.name), { revision: 2, ownerId: replyOwner, replies: [] });
+    const selected = video ? videoReceipt() : receipt();
+    selected.operations = await withErasureDirectory(f.checkpoint, scope => writeOperationalCheckpoint(scope, state, selected, key));
+    const outer = await readFile(path.join(f.checkpoint, OPERATIONAL_CHECKPOINT));
+    for (const privateValue of [replyOwner, otherReplyOwner, "Accueil privé", "Lovely to see you again"]) assert.equal(outer.includes(privateValue), false);
+    assert.deepEqual(await withErasureDirectory(f.checkpoint, scope => readOperationalCheckpoint(scope, selected, key)), state);
+    const expected = operationalStateHash(state);
+    const result = await withErasureDirectory(f.target, scope => restoreOperationalQuarantine(scope, { backup: state, current: state,
+      targetBinding: chosenTarget, key, expectedCurrentSha256: expected, assertCurrent: async actual => assert.equal(actual, expected) }));
+    assert.equal(result.completedReceipts, 1); assert.equal(result.pendingReceipts, 0); assert.equal(result.started, false);
+    const { readOperationalQuarantine } = await import("../server/backup/operational-checkpoint.mjs");
+    assert.deepEqual((await withErasureDirectory(f.target, scope => readOperationalQuarantine(scope, { key, sourceBinding: chosenBinding, targetBinding: chosenTarget }))).state, state);
+    for (const file of state.files) {
+      assert.equal((await readFile(path.join(f.target, file.name))).toString("base64url"), file.content);
+      assert.equal((await readFile(path.join(f.source, file.name))).toString("base64url"), file.content);
+    }
+    await assert.rejects(withErasureDirectory(f.target, assertNoOperationalRestore), { code: "OPERATIONS_RECONCILIATION_REQUIRED" });
+  }
+});
+
+test("personal reply merge preserves each newest revision and refuses equal-revision divergent bytes", async t => {
+  const f = await fixture(t), files = quickRepliesFor(f.source);
+  let backup, current;
+  try {
+    await files.save(personalReplies(), 0, allow); backup = await capture(f.source);
+    await files.save([], 1, allow); current = await capture(f.source);
+  } finally { files.close(); }
+  for (const [older, newer] of [[backup, current], [current, backup]]) {
+    const plan = planOperationalRestore({ backup: older, current: newer, targetBinding, key });
+    assert.deepEqual(plan.state.files, current.files); assert.equal(plan.completedReceipts, 0); assert.equal(plan.pendingReceipts, 0);
+  }
+  assert.deepEqual(planOperationalRestore({ backup: current, current, targetBinding, key }).state.files, current.files);
+  const foreign = path.join(f.directory, "parallel-admin-settings"); await mkdir(foreign, { mode: 0o700 });
+  const other = quickRepliesFor(foreign);
+  try { await other.save([{ ...personalReplies()[0], body: "Different content at the same revision" }], 0, allow); }
+  finally { other.close(); }
+  const conflicting = { ...backup, files: [{ name: backup.files[0].name, content: (await readFile(path.join(foreign, backup.files[0].name))).toString("base64url") }] };
+  assert.throws(() => planOperationalRestore({ backup, current: conflicting, targetBinding, key }), { code: "OPERATIONS_CHANGED" });
+  assert.throws(() => planOperationalRestore({ backup: conflicting, current: backup, targetBinding, key }), { code: "OPERATIONS_CHANGED" });
+});
+
+test("personal settings cannot be silently omitted when locked, unsafe, oversized, renamed or corrupt", async t => {
+  for (const mode of ["mode", "symlink", "hardlink", "lock", "temporary", "name", "owner", "tag", "size", "key"]) {
+    const f = await fixture(t), files = quickRepliesFor(f.source);
+    try { await files.save(personalReplies(), 0, allow); } finally { files.close(); }
+    const name = path.join(f.source, `quick-replies-${replyOwner}.json`), original = await readFile(name);
+    if (mode === "mode") await chmod(name, 0o644);
+    if (mode === "symlink") { await unlink(name); await writeFile(path.join(f.source, "foreign"), original, { mode: 0o600 }); await symlink("foreign", name); }
+    if (mode === "hardlink") await link(name, path.join(f.source, "foreign"));
+    if (mode === "lock") await writeFile(name.replace(/\.json$/, ".lock"), "", { mode: 0o600 });
+    if (mode === "temporary") await writeFile(path.join(f.source, `.quick-replies-${replyOwner}.json.${"a".repeat(32)}.tmp`), original, { mode: 0o600 });
+    if (mode === "name") await writeFile(path.join(f.source, "quick-replies-invalid.json"), "{}", { mode: 0o600 });
+    if (mode === "owner") { await unlink(name); await writeFile(path.join(f.source, `quick-replies-${otherReplyOwner}.json`), original, { mode: 0o600 }); }
+    if (mode === "tag") { const value = JSON.parse(original); value.envelope.tag = Buffer.alloc(16).toString("base64url"); await writeFile(name, JSON.stringify(value) + "\n"); }
+    if (mode === "size") await writeFile(name, Buffer.alloc(QUICK_REPLIES_FILE_MAX_BYTES + 1));
+    await assert.rejects(withErasureDirectory(f.source, scope => captureOperationalState(scope, { key: mode === "key" ? Buffer.alloc(32, 8) : key, binding })), mode);
+  }
+});

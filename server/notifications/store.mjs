@@ -1,5 +1,6 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 import { invitationConsumptionProjection, manuallyAdmittedClient } from "../access/admission.mjs";
 import { createSessionClock } from "../auth/session-policy.mjs";
 import { ChatStoreError, normalizedCheckTree, authoredMigrationCheck } from "../chat/store.mjs";
@@ -184,10 +185,10 @@ export function createNotificationsStore({ pool, chatStore, key, clock } = {}) {
       && job.lease_until !== null && stillFuture(job.lease_until, now) && notFuture(job.created_at, now);
   }
   return Object.freeze({
-    async assertSchema() {
+    async assertSchema(options = {}) {
       return run(async (connection) => {
         const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
-        const migrations = await loadMigrations(), history = await migrationStatus(connection, { database, migrations });
+        const migrations = await loadStoreMigrations(options), history = await migrationStatus(connection, { database, migrations });
         if (history.length !== migrations.length || history.length < 30 || history.some((item) => item.state !== "applied")) fail();
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS fk, @@SESSION.check_constraint_checks AS ck"))[0];
         if (Number(enforcement?.fk) !== 1 || Number(enforcement?.ck) !== 1) fail();

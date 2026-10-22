@@ -1,5 +1,6 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { ChatStoreError } from "../chat/store.mjs";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 
 export class MediaCapacityStoreError extends ChatStoreError {
   constructor(code) { super(code, "Private media capacity persistence could not be completed."); this.name = "MediaCapacityStoreError"; }
@@ -70,10 +71,10 @@ export function createMediaCapacityStore({ pool, capacity }) {
     return { ready: true, heldBytes, pendingBytes, ownerBytes: capacity.ownerBytes, totalBytes: capacity.totalBytes, rootFingerprint: Buffer.from(capacity.rootFingerprint) };
   }
   return Object.freeze({
-    async assertSchema() {
+    async assertSchema(options = {}) {
       return run(async (connection) => {
         const database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
-        const migrations = await loadMigrations(), history = await migrationStatus(connection, { database, migrations });
+        const migrations = await loadStoreMigrations(options), history = await migrationStatus(connection, { database, migrations });
         if (history.length < 27 || history.some((item) => item.state !== "applied")) fail("MEDIA_DATABASE_STATE");
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
         if (Number(enforcement.foreignKeys) !== 1 || Number(enforcement.checkConstraints) !== 1) fail("MEDIA_DATABASE_STATE");

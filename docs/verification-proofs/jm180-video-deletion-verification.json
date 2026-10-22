@@ -1,0 +1,418 @@
+{
+  "formatVersion": 1,
+  "type": "video-180-deletion-closure-capacity-qualification",
+  "source": "231315cc17fd992eb3d9b261ea1e4448b90fd1d3",
+  "tree": "29c765ad216a2ad0ab140145e836caeb920dc482",
+  "implementationSource": "53ef2d8923ad22ec63eb7a98e8042d5d9c09566b",
+  "branch": "feat/video-messaging",
+  "pr": 125,
+  "ci": {
+    "id": 39698017769,
+    "event": "pull_request",
+    "attempt": 1,
+    "conclusion": "success",
+    "completedAt": "2026-10-22T00:16:10Z",
+    "requiredJobsSucceeded": 5,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39698017769"
+  },
+  "testedMerge": "c36d46cb1c195e702bfa92d2fffcc3e6ba548255",
+  "testedTreeEqualsSource": true,
+  "jobs": [
+    {
+      "id": 119560079460,
+      "name": "verify",
+      "conclusion": "success",
+      "counts": {
+        "tests": 3559,
+        "suites": 0,
+        "pass": 3515,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 44,
+        "todo": 0,
+        "duration_ms": 102838.585004
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "jm180-deletion-fix-verify.log",
+        "bytes": 502784,
+        "sha256": "4758b61e3b9c7bf4bf29d760875ab759fe4320bf142b1aa7de515bea47c724c7",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": 119560079543,
+      "name": "Chrome keyboard and chat lifecycle",
+      "conclusion": "success",
+      "counts": {
+        "tests": 196,
+        "suites": 0,
+        "pass": 196,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 243619.805468
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "jm180-deletion-fix-chrome.log",
+        "bytes": 41108,
+        "sha256": "37d8bb5baf6540becdf0ac7d033a3d0838c55b57a1fd310fd148a4f60bdcbd4e",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": 119560079417,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "conclusion": "success",
+      "counts": {
+        "tests": 3,
+        "suites": 0,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 39072.268025
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "jm180-deletion-fix-https.log",
+        "bytes": 33940,
+        "sha256": "60d7fdebc3e44b62100eb651296b182f4e0daaf0f0af43ade534f06f09d3ff7f",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": 119560079500,
+      "name": "MariaDB 10.11",
+      "conclusion": "success",
+      "counts": {
+        "tests": 552,
+        "suites": 0,
+        "pass": 552,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 215563.016608
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "job-119560079500-mariadb-10.11.log",
+        "bytes": 311448,
+        "sha256": "c613807d4b5c27ce3d9a6f6ad85ffdaf96177fcdcd11186d1f88008fc10f4d75",
+        "format": "Complete decoded UTF-8 connector log, original line endings and BOM preserved.",
+        "reviewed": true
+      },
+      "newScenarioCounts": {
+        "parent": 1,
+        "children": 12,
+        "childrenPassed": 12,
+        "childrenFailed": 0,
+        "parentPassed": true,
+        "totalNewTests": 13,
+        "skipped": 0
+      }
+    },
+    {
+      "id": 119560079191,
+      "name": "MariaDB 11.4",
+      "conclusion": "success",
+      "counts": {
+        "tests": 552,
+        "suites": 0,
+        "pass": 552,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 336560.750004
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "job-119560079191-mariadb-11.4.log",
+        "bytes": 311360,
+        "sha256": "dcac60477bf4ecdb347e18bfd04e91b015ec12be25ca2a8bd2077014931b7ce2",
+        "format": "Complete decoded UTF-8 connector log, original line endings and BOM preserved.",
+        "reviewed": true
+      },
+      "newScenarioCounts": {
+        "parent": 1,
+        "children": 12,
+        "childrenPassed": 12,
+        "childrenFailed": 0,
+        "parentPassed": true,
+        "totalNewTests": 13,
+        "skipped": 0
+      }
+    }
+  ],
+  "nativeScenarios": [
+    {
+      "number": 1,
+      "name": "owner deletion rejects live messages, then tombstone deletion removes only the intended original once",
+      "status": "passed"
+    },
+    {
+      "number": 2,
+      "name": "a wrong physical video root cannot tombstone or refund an existing original",
+      "status": "passed"
+    },
+    {
+      "number": 3,
+      "name": "an acknowledgement lost after actual unlink leaves the allocation held until a durable retry",
+      "status": "passed"
+    },
+    {
+      "number": 4,
+      "name": "a lost native delete intent commit is durable, explicit and not double-refunded",
+      "status": "passed"
+    },
+    {
+      "number": 5,
+      "name": "a lost native release commit is durable, explicit and not double-refunded",
+      "status": "passed"
+    },
+    {
+      "number": 6,
+      "name": "the ordinary schema-33 eraser refuses the candidate graph instead of overlooking video references",
+      "status": "passed"
+    },
+    {
+      "number": 7,
+      "name": "a bounded closure resumes with typed photo/video cursors, reserved staging and a complete peer preserved",
+      "status": "passed"
+    },
+    {
+      "number": 8,
+      "name": "candidate schema qualification and closure reuse the single lease connection",
+      "status": "passed"
+    },
+    {
+      "number": 9,
+      "name": "account closure resumes after the real prepare commit loses its acknowledgement",
+      "status": "passed"
+    },
+    {
+      "number": 10,
+      "name": "account closure resumes after the real video release commit loses its acknowledgement",
+      "status": "passed"
+    },
+    {
+      "number": 11,
+      "name": "account closure resumes after the real finish commit loses its acknowledgement",
+      "status": "passed"
+    },
+    {
+      "number": 12,
+      "name": "a changed video root binding stops closure before its first SQL mutation or destructive journal",
+      "status": "passed"
+    }
+  ],
+  "generalOmissions": {
+    "sqlOptInWrappers": 42,
+    "negativeProcfsTestsInapplicable": 2,
+    "nativeStorageLinuxScenariosPassed": 3
+  },
+  "initialFailedQualification": {
+    "source": "53ef2d8923ad22ec63eb7a98e8042d5d9c09566b",
+    "tree": "5150af5877a7c7b2cdac035281fd3a762d6e9dff",
+    "ci": {
+      "id": 39697059270,
+      "head_sha": "53ef2d8923ad22ec63eb7a98e8042d5d9c09566b",
+      "head_branch": "feat/video-messaging",
+      "event": "pull_request",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-10-22T00:00:55Z",
+      "updated_at": "2026-10-22T00:07:36Z",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39697059270"
+    },
+    "testedCheckout": {
+      "commit": "0245671b3ecf04c1519b0b4fad666eb1126fa119",
+      "tree": "5150af5877a7c7b2cdac035281fd3a762d6e9dff",
+      "parents": [
+        "5eef6b2b8d98efedf3dfaae67bf4791da6c99edd",
+        "53ef2d8923ad22ec63eb7a98e8042d5d9c09566b"
+      ],
+      "treeMatchesSource": true
+    },
+    "requiredJobsSucceeded": 3,
+    "jobs": [
+      {
+        "id": 119556895191,
+        "name": "verify",
+        "conclusion": "success",
+        "counts": {
+          "tests": 3559,
+          "suites": 0,
+          "pass": 3515,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 44,
+          "todo": 0,
+          "duration_ms": 83762.682841
+        },
+        "log": {
+          "file": "jm180-deletion-verify.log",
+          "bytes": 502491,
+          "sha256": "0f45a0bd225597dd565c717fb9d0ac228a8e36d8d34aeefbd4b6c8e6086750f3",
+          "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+          "reviewed": true
+        }
+      },
+      {
+        "id": 119556894825,
+        "name": "Chrome keyboard and chat lifecycle",
+        "conclusion": "success",
+        "counts": {
+          "tests": 196,
+          "suites": 0,
+          "pass": 196,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 193486.827971
+        },
+        "log": {
+          "file": "jm180-deletion-chrome.log",
+          "bytes": 41087,
+          "sha256": "368e85d943e34f3757442358fd0af2d27fa16397499d886e08b4310475790fbe",
+          "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+          "reviewed": true
+        }
+      },
+      {
+        "id": 119556895004,
+        "name": "Chrome HTTPS authentication and messaging with MariaDB",
+        "conclusion": "success",
+        "counts": {
+          "tests": 3,
+          "suites": 0,
+          "pass": 3,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 41135.765211
+        },
+        "log": {
+          "file": "jm180-deletion-https.log",
+          "bytes": 34234,
+          "sha256": "786834275596be1cc0672d62d7bc25aa9d0fdd002b25fff0038c218a6d21a245",
+          "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+          "reviewed": true
+        }
+      },
+      {
+        "id": 119556895102,
+        "name": "MariaDB 10.11",
+        "conclusion": "failure",
+        "counts": {
+          "tests": 552,
+          "suites": 0,
+          "pass": 550,
+          "fail": 2,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 332516.904312
+        },
+        "log": {
+          "file": "job-119556895102-mariadb-10.11.log",
+          "bytes": 312609,
+          "sha256": "405a0bdc3b01eff68c876560b4a58460eba2877089348c2d4acd3225c67109cf",
+          "format": "Complete decoded UTF-8 connector log, original line endings and BOM preserved.",
+          "reviewed": true
+        }
+      },
+      {
+        "id": 119556895047,
+        "name": "MariaDB 11.4",
+        "conclusion": "failure",
+        "counts": {
+          "tests": 552,
+          "suites": 0,
+          "pass": 550,
+          "fail": 2,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 362034.503899
+        },
+        "log": {
+          "file": "job-119556895047-mariadb-11.4.log",
+          "bytes": 313739,
+          "sha256": "62e8e17f8d1679248b57d0d0e91690f5b963a263e400186c1d1c853e447b4ecd",
+          "format": "Complete decoded UTF-8 connector log, original line endings and BOM preserved.",
+          "reviewed": true
+        }
+      }
+    ],
+    "cause": "The new ordinary-schema refusal assertion expected ERASURE_SCHEMA, but the immutable normal-33 migration ledger correctly rejected candidate version 34 with MigrationError HISTORY_DIVERGED. The test failed before its withLease assertion; the parent also counted as failed.",
+    "correction": "Only the native test expectations were corrected to exact MigrationError/HISTORY_DIVERGED/details.version34 and AccountErasureError/ERASURE_UNAVAILABLE without cause. A nonempty video/message fixture, all-table/capacity/file snapshots before and after both refusals and a never-entered destructive callback strengthen the refusal proof. No product code or guard was changed."
+  },
+  "local": {
+    "nodeVersion": "24.22.1",
+    "syntaxSources": 654,
+    "targeted": {
+      "tests": 116,
+      "pass": 110,
+      "fail": 0,
+      "skipped": 6,
+      "omissions": [
+        "Five Linux procfs-dependent scenarios unavailable locally.",
+        "One native SQL wrapper without a local MariaDB."
+      ],
+      "log": {
+        "file": "jm180-deletion-local-targeted.tap",
+        "bytes": 27079,
+        "sha256": "3bb341c59c9f78f93ad33b7db724c7782c81bb751ed02db9f519036f1c446f06",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    "general": {
+      "completeQualificationClaimed": false,
+      "exitCode": 0,
+      "completeFooterObserved": false,
+      "log": {
+        "file": "jm180-deletion-local-general.tap",
+        "bytes": 78761,
+        "sha256": "7b9fb8e395a1674df59d16ca2d54ded947fc40e6ac97b351452794936ada671c",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    "testCorrection": {
+      "syntaxPassed": true,
+      "diffCheckPassed": true,
+      "migrationRefusalSmokePassed": true,
+      "nativeSqlLocallySkipped": true,
+      "independentReviewBlockers": 0
+    }
+  },
+  "developmentVersion": "1.8.0",
+  "productionVersion": "1.7.1",
+  "normalMigrations": 33,
+  "candidateMigrations": 36,
+  "candidateTables": 35,
+  "candidateForeignKeys": 49,
+  "videoActivated": false,
+  "next": "7.3d.1 read-only candidate video inventory; authenticated capture, isolated restore and historical-format compatibility follow",
+  "limits": [
+    "This milestone qualifies dormant explicit compositions, not a runtime, CLI, HTTP or browser activation.",
+    "The eraser requires actual producer quiescence; the synthetic runtime was really started and stopped. File checks alone do not prevent republication.",
+    "Inventory, capture, restore and compatibility with historical authenticated formats remain unqualified and belong to 7.3d.",
+    "No measured hosted throughput, RSS peak, codec or physical-phone compatibility is inferred from synthetic CI.",
+    "Browser reception is still bounded by the existing 32 MiB Blob path and the ordinary HTTP timeout remains 35 seconds until integration.",
+    "No main product merge, tag, release, hosted migration, activation, real client message/account action or owner-PC operation was performed."
+  ]
+}

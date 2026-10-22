@@ -1,9 +1,12 @@
+import { lstat } from "node:fs/promises";
 import { createHash, createHmac } from "node:crypto";
 import { resolve, relative, sep, join } from "node:path";
 import { withPrivateDirectory } from "../files/private-directory.mjs";
 import { createPrivateJsonStore } from "../files/private-json.mjs";
 import { privateAuthenticationProcessOptions } from "../config/private-auth-environment.mjs";
 import { loadRuntimeBroadcastEnvironment, BROADCAST_RUNTIME_OPTIONS } from "../config/runtime-broadcast.mjs";
+import { loadRuntimeVideoEnvironment } from "../config/runtime-video.mjs";
+import { createVideoStorage } from "../video/storage.mjs";
 import { clearRuntimeMessagingSecrets } from "../config/runtime-messaging.mjs";
 import { mediaConfiguration } from "../media/config.mjs";
 import { createMediaStorage } from "../media/storage.mjs";
@@ -35,7 +38,7 @@ const configurationHash = (env, key) => createHmac("sha256", key).update("jessie
 function validateJob(value) {
   if (!value || Object.getPrototypeOf(value) !== Object.prototype || Reflect.ownKeys(value).length !== FIELDS.length
     || FIELDS.some(name => !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name) ?? {}, "value"))) fail("INPUT");
-  if (value.version !== 1 || PATHS.some(name => !cleanPath(value[name]))
+  if (![1, 2].includes(value.version) || PATHS.some(name => !cleanPath(value[name]))
     || ["runtimeHead", "runtimeTree", "targetDatabase", "importUser", "sqlSha256", "registrySha256"].some(name => typeof value[name] !== "string")
     || !GIT.test(value.runtimeHead ?? "") || !GIT.test(value.runtimeTree ?? "")
     || !/^[A-Za-z0-9_]{1,64}$/.test(value.targetDatabase ?? "") || !/^[A-Za-z0-9_]{1,80}$/.test(value.importUser ?? "")
@@ -43,22 +46,21 @@ function validateJob(value) {
   return { ...value };
 }
 
-/** Read an explicitly selected manual job and both existing six-file bundles.
+/** Read an explicitly selected manual job and both existing private bundles.
  * This context opens no database, listener or producer and creates no path. */
 export async function loadManualOperatorContext(operatorDirectory, { environment = process.env, signal } = {}, internal = {}) {
   const withDirectory = internal.withDirectory ?? withPrivateDirectory;
-  const load = internal.loadEnvironment ?? loadRuntimeBroadcastEnvironment;
   const makeStorage = internal.makeStorage ?? createMediaStorage;
   const captureRegistry = internal.captureRegistry ?? captureOperationalState;
   const assertSource = internal.assertSource ?? assertRuntimeSource;
-  let sourceEnvironment, targetEnvironment, sourceMedia, storage, rootFingerprint, closed = false;
+  let sourceEnvironment, targetEnvironment, sourceMedia, storage, rootFingerprint, videoStorage, videoRootFingerprint, closed = false;
   const keys = {};
   const active = () => { if (closed || signal?.aborted) fail("ABORTED"); };
   function close() {
     if (closed) return;
     closed = true; storage = null;
     for (const key of Object.values(keys)) key.fill(0);
-    sourceMedia?.key?.fill(0); rootFingerprint?.fill(0);
+    sourceMedia?.key?.fill(0); rootFingerprint?.fill(0); videoRootFingerprint?.fill(0);
     clearRuntimeMessagingSecrets(sourceEnvironment); clearRuntimeMessagingSecrets(targetEnvironment);
   }
   try {
@@ -69,19 +71,20 @@ export async function loadManualOperatorContext(operatorDirectory, { environment
       fail: code => fail(({ input: "INPUT", changed: "CHANGED" })[code] ?? "UNAVAILABLE"),
       isKnownError: error => error instanceof ManualOperatorContextError });
     const readJob = () => jobFile.read(operatorDirectory, { withDirectory });
-    const job = Object.freeze(await readJob()), selectedJobSha256 = jobHash(job);
+    const job = Object.freeze(await readJob()), selectedJobSha256 = jobHash(job), video = job.version === 2;
+    const load = internal.loadEnvironment ?? (video ? loadRuntimeVideoEnvironment : loadRuntimeBroadcastEnvironment);
     if (PATHS.some(name => overlap(operatorDirectory, job[name])) || overlap(job.sourcePrivateDirectory, job.targetPrivateDirectory)) fail("INPUT");
     const targetDirectory = join(operatorDirectory, "target"), paths = Object.freeze({ targetDirectory, rootPath: join(targetDirectory, "media"),
-      journalDirectory: join(targetDirectory, "operations"), progressDirectory: join(targetDirectory, "progress"), quarantineDirectory: join(targetDirectory, "quarantine") });
+      ...(video ? { videoRootPath: join(targetDirectory, "video") } : {}), journalDirectory: join(targetDirectory, "operations"), progressDirectory: join(targetDirectory, "progress"), quarantineDirectory: join(targetDirectory, "quarantine") });
     const assertPinnedSource = () => assertSource({ runtimeDirectory: job.runtimeDirectory, runtimeHead: job.runtimeHead, runtimeTree: job.runtimeTree }, { signal });
     await assertPinnedSource(); active();
     sourceEnvironment = await load(job.sourcePrivateDirectory, parameters); active();
     targetEnvironment = await load(job.targetPrivateDirectory, parameters); active();
     if (targetEnvironment.JESSIEMESSAGE_DB_NAME !== job.targetDatabase || typeof sourceEnvironment.JESSIEMESSAGE_DB_NAME !== "string"
       || sourceEnvironment.JESSIEMESSAGE_DB_NAME.toLowerCase() === job.targetDatabase.toLowerCase()
-      || targetEnvironment.JESSIEMESSAGE_MEDIA_ROOT !== paths.rootPath || job.importUser === sourceEnvironment.JESSIEMESSAGE_RUNTIME_DB_USER
+      || targetEnvironment.JESSIEMESSAGE_MEDIA_ROOT !== paths.rootPath || video && targetEnvironment.JESSIEMESSAGE_VIDEO_ROOT !== paths.videoRootPath || job.importUser === sourceEnvironment.JESSIEMESSAGE_RUNTIME_DB_USER
       || ["JESSIEMESSAGE_DB_HOST", "JESSIEMESSAGE_DB_PORT", "JESSIEMESSAGE_SITE_ORIGIN"].some(name => targetEnvironment[name] !== sourceEnvironment[name])) fail("CONFIGURATION");
-    for (const [name, field] of Object.entries(KEYS)) {
+    for (const [name, field] of Object.entries({ ...KEYS, ...(video ? { videoKey: "JESSIEMESSAGE_VIDEO_KEY" } : {}) })) {
       const encoded = sourceEnvironment[field];
       if (typeof encoded !== "string" || targetEnvironment[field] !== encoded) fail("CONFIGURATION");
       keys[name] = Buffer.from(encoded, "base64url");
@@ -96,7 +99,18 @@ export async function loadManualOperatorContext(operatorDirectory, { environment
       if (!Buffer.isBuffer(observed) || observed.length !== 32) fail("CONFIGURATION");
       rootFingerprint = Buffer.from(observed);
     } finally { observed?.fill(0); }
-    const sourceBinding = Object.freeze({ database: sourceEnvironment.JESSIEMESSAGE_DB_NAME, rootFingerprint: rootFingerprint.toString("hex") });
+    if (video) {
+      if (!cleanPath(sourceEnvironment.JESSIEMESSAGE_VIDEO_ROOT) || overlap(operatorDirectory, sourceEnvironment.JESSIEMESSAGE_VIDEO_ROOT)
+        || overlap(sourceMedia.root, sourceEnvironment.JESSIEMESSAGE_VIDEO_ROOT)) fail("CONFIGURATION");
+      const roots = await Promise.all([sourceMedia.root, sourceEnvironment.JESSIEMESSAGE_VIDEO_ROOT].map(root => lstat(root, { bigint: true })));
+      if (roots[0].dev === roots[1].dev && roots[0].ino === roots[1].ino) fail("CONFIGURATION");
+      videoStorage = await (internal.makeVideoStorage ?? createVideoStorage)({ root: sourceEnvironment.JESSIEMESSAGE_VIDEO_ROOT, key: keys.videoKey, pathMode: "linux-dirfd" });
+      let observedVideo;
+      try { observedVideo = await videoStorage.fingerprint(); if (!Buffer.isBuffer(observedVideo) || observedVideo.length !== 32 || observedVideo.equals(rootFingerprint)) fail("CONFIGURATION"); videoRootFingerprint = Buffer.from(observedVideo); }
+      finally { observedVideo?.fill(0); }
+    }
+    const sourceBinding = Object.freeze({ database: sourceEnvironment.JESSIEMESSAGE_DB_NAME, rootFingerprint: rootFingerprint.toString("hex"),
+      ...(video ? { videoRootFingerprint: videoRootFingerprint.toString("hex") } : {}) });
     const sourceHash = configurationHash(sourceEnvironment, keys.crmKey), targetHash = configurationHash(targetEnvironment, keys.crmKey);
     const jobSha256 = jobHash({ job, sourceConfigurationSha256: sourceHash, targetConfigurationSha256: targetHash });
     const readRegistry = () => withDirectory(job.sourceOperationsDirectory, scope => captureRegistry(scope, { key: keys.crmKey, binding: sourceBinding, signal }));
@@ -104,9 +118,9 @@ export async function loadManualOperatorContext(operatorDirectory, { environment
     if (operationalStateHash(recentRegistry) !== job.registrySha256) fail("REGISTRY");
     const importSelection = Object.freeze({ command: "check", privateDirectory: job.sourcePrivateDirectory, privatePathMode: "linux-dirfd",
       checkpointDirectory: job.checkpointDirectory, database: job.targetDatabase, confirmation: job.targetDatabase,
-      user: job.importUser, profile: "photos-notify-recovery-crm-broadcast", sqlSha256: job.sqlSha256 });
+      user: job.importUser, profile: `photos-notify-recovery-crm-broadcast${video ? "-video" : ""}`, sqlSha256: job.sqlSha256 });
     async function assertReady() {
-      let currentSource, currentTarget, fingerprint;
+      let currentSource, currentTarget, fingerprint, videoFingerprint;
       try {
         active(); if (jobHash(await readJob()) !== selectedJobSha256) fail("CHANGED");
         await assertPinnedSource(); active();
@@ -115,12 +129,13 @@ export async function loadManualOperatorContext(operatorDirectory, { environment
         if (configurationHash(currentSource, keys.crmKey) !== sourceHash || configurationHash(currentTarget, keys.crmKey) !== targetHash) fail("CHANGED");
         fingerprint = await storage.fingerprint();
         if (!Buffer.isBuffer(fingerprint) || !fingerprint.equals(rootFingerprint) || operationalStateHash(await readRegistry()) !== job.registrySha256) fail("CHANGED");
+        if (video) { videoFingerprint = await videoStorage.fingerprint(); if (!Buffer.isBuffer(videoFingerprint) || !videoFingerprint.equals(videoRootFingerprint)) fail("CHANGED"); }
         active();
       } catch (error) {
         if (signal?.aborted || closed) fail("ABORTED");
         if (error instanceof ManualOperatorContextError) throw error;
         fail("UNAVAILABLE");
-      } finally { fingerprint?.fill(0); clearRuntimeMessagingSecrets(currentSource); clearRuntimeMessagingSecrets(currentTarget); }
+      } finally { fingerprint?.fill(0); videoFingerprint?.fill(0); clearRuntimeMessagingSecrets(currentSource); clearRuntimeMessagingSecrets(currentTarget); }
     }
     await assertReady(); active();
     return Object.freeze({ job, jobSha256, paths, sourceEnvironment, targetEnvironment, keys, sourceBinding, recentRegistry, importSelection, assertReady, close });

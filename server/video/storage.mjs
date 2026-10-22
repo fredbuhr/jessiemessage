@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { lstat, realpath, open as openFile, link, unlink, statfs } from "node:fs/promises";
+import { lstat, realpath, open as openFile, link, unlink, statfs, readdir, opendir } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHmac, createHash, randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -238,20 +238,157 @@ export async function createVideoStorage({ root, key, pathMode = privatePathMode
   }
 
   async function remove({ storageKey: rawStorage } = {}) {
-    const storageKey = identifier(rawStorage, 32); let scope, handle;
+    const storageKey = identifier(rawStorage, 32); let scope, failure;
     try {
-      scope = await directory(); const target = scope.file(filename(storageKey));
-      let before; try { before = await lstat(target, { bigint: true }); } catch (error) { if (error?.code === "ENOENT") { await scope.sync(); return { removed: true }; } throw error; }
-      if (!safeFile(before)) throw new VideoStorageError(); ({ handle } = await privateFile(target));
-      if (!unchanged(before, await handle.stat({ bigint: true })) || !unchanged(before, await lstat(target, { bigint: true }))) throw new VideoStorageError();
-      await scope.assertReady(); await unlink(target); await scope.sync(); return { removed: true };
-    } catch (error) { throw wrapped(error); }
-    finally { await handle?.close().catch(() => {}); await scope?.close().catch(() => {}); }
+      scope = await directory();
+      const finalName = filename(storageKey), staging = new RegExp(`^\\.${storageKey.toString("hex")}\\.video\\.[a-f0-9]{32}\\.tmp$`);
+      const selected = (name) => name === finalName || staging.test(name);
+      const cleanupFile = (stats) => stats.isFile() && owner(stats) && (stats.mode & 0o7777n) === 0o600n && stats.nlink >= 1n;
+      const names = (await readdir(scope.path)).filter(selected).sort();
+      const groups = new Map();
+      // Validate the complete selection before unlinking anything. The one
+      // supported hardlink group is the interrupted put publication: all its
+      // links must be the exact final/staging names for this storage key.
+      for (const name of names) {
+        const stats = await lstat(scope.file(name), { bigint: true });
+        if (!cleanupFile(stats)) throw new VideoStorageError();
+        const key = `${stats.dev}:${stats.ino}`;
+        if (!groups.has(key)) groups.set(key, { stats, names: [] });
+        const group = groups.get(key);
+        if (!unchanged(group.stats, stats) || group.stats.nlink !== stats.nlink) throw new VideoStorageError();
+        group.names.push(name);
+      }
+      for (const group of groups.values()) {
+        if (group.stats.nlink !== BigInt(group.names.length)
+          || group.names.length > 1 && !group.names.includes(finalName)) throw new VideoStorageError();
+      }
+      for (const group of groups.values()) {
+        const handle = await openFile(scope.file(group.names[0]), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+        try {
+          let before = group.stats, remaining = BigInt(group.names.length);
+          for (const name of group.names) {
+            const opened = await handle.stat({ bigint: true }), named = await lstat(scope.file(name), { bigint: true });
+            if (![opened, named].every((stats) => cleanupFile(stats) && unchanged(before, stats) && stats.nlink === remaining)) throw new VideoStorageError();
+            await scope.assertReady(); await unlink(scope.file(name));
+            remaining -= 1n;
+            const after = await handle.stat({ bigint: true });
+            if (!after.isFile() || !owner(after) || (after.mode & 0o7777n) !== 0o600n || after.dev !== before.dev
+              || after.ino !== before.ino || after.size !== before.size || after.mtimeNs !== before.mtimeNs || after.nlink !== remaining) throw new VideoStorageError();
+            try { await lstat(scope.file(name), { bigint: true }); throw new VideoStorageError(); }
+            catch (error) { if (error?.code !== "ENOENT") throw error; }
+            before = after;
+          }
+        } finally { await handle.close(); }
+      }
+      await scope.sync();
+      // A sync alone does not prove absence: refuse a name recreated during
+      // unlink/sync, and never remove that replacement as part of this call.
+      if ((await readdir(scope.path)).some(selected)) throw new VideoStorageError();
+      try { await lstat(scope.file(finalName), { bigint: true }); throw new VideoStorageError(); }
+      catch (error) { if (error?.code !== "ENOENT") throw error; }
+      await scope.assertReady();
+    } catch (error) { failure = wrapped(error); }
+    finally { try { await scope?.close(); } catch (error) { failure ??= wrapped(error); } }
+    if (failure) throw failure;
+    return { removed: true };
+  }
+  async function fingerprint() {
+    let scope, result, failure;
+    try {
+      scope = await directory(); const stats = await scope.assertReady();
+      result = createHmac("sha256", secret).update("jessiemessage:video-root:v1:\0", "ascii")
+        .update(root, "utf8").update("\0").update(stats.dev.toString()).update("\0").update(stats.ino.toString()).digest();
+      await scope.assertReady();
+    } catch (error) { failure = wrapped(error); }
+    finally { try { await scope?.close(); } catch (error) { failure ??= wrapped(error); } }
+    if (failure) throw failure;
+    return result;
+  }
+  const publishedName = /^([a-f0-9]{64})\.video\.enc$/;
+  const stagingName = /^\.([a-f0-9]{64})\.video\.[a-f0-9]{32}\.tmp$/;
+  function entryIdentity(name) {
+    const published = publishedName.exec(name), staging = published ? null : stagingName.exec(name), match = published ?? staging;
+    return match ? { kind: published ? "published" : "staging", storageKey: Buffer.from(match[1], "hex") } : { kind: "unknown" };
+  }
+  function entryMetadata(stats) {
+    const mtimeMs = Number(stats.mtimeMs);
+    if (typeof stats.size !== "bigint" || stats.size < 0n || !Number.isSafeInteger(mtimeMs) || mtimeMs < 0) throw new VideoStorageError();
+    return { encryptedBytes: stats.size, mtimeMs };
+  }
+  // A bounded header inspection classifies entries without authenticating the
+  // payload. Backup admission separately authenticates every video block.
+  async function inspectNamed(scope, name, entry) {
+    let handle, header;
+    try {
+      await scope.assertReady();
+      const target = scope.file(name); let initial;
+      try { initial = await lstat(target, { bigint: true }); }
+      catch (error) { if (error?.code === "ENOENT") return null; throw error; }
+      const metadata = entryMetadata(initial);
+      if (entry.kind === "unknown" || !safeFile(initial)) return { ...entry, ...metadata, status: "unsafe" };
+      try { handle = await openFile(target, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK); }
+      catch (error) {
+        if (error?.code === "ENOENT") return null;
+        if (["ELOOP", "EISDIR", "ENXIO"].includes(error?.code)) return { ...entry, ...metadata, status: "unstable" };
+        throw error;
+      }
+      const before = await handle.stat({ bigint: true });
+      if (!unchanged(initial, before)) return { ...entry, ...metadata, status: "unstable" };
+      if (!safeFile(before)) return { ...entry, ...entryMetadata(before), status: "unsafe" };
+      let status = "invalid_envelope";
+      if (before.size >= BigInt(videoStoredBytes(1)) && before.size <= BigInt(videoStoredBytes(MAX_VIDEO_BYTES))) {
+        header = await readExactly(handle, RAW_HEADER_BYTES, 0);
+        if (header.subarray(0, MAGIC.length).equals(MAGIC) && header.readUInt32BE(8) === VIDEO_BLOCK_BYTES) {
+          const bytes = header.readBigUInt64BE(12);
+          if (bytes >= 1n && bytes <= BigInt(MAX_VIDEO_BYTES) && BigInt(videoStoredBytes(Number(bytes))) === before.size) status = "structural_ok";
+        }
+      }
+      const after = await handle.stat({ bigint: true }); let visible;
+      try { visible = await lstat(target, { bigint: true }); } catch (error) { if (error?.code !== "ENOENT") throw error; }
+      if (!safeFile(after) || !unchanged(initial, after) || !visible || !safeFile(visible) || !unchanged(after, visible)) status = "unstable";
+      await scope.assertReady();
+      return { ...entry, ...entryMetadata(after), status };
+    } finally { header?.fill(0); await handle?.close(); }
+  }
+  async function inspectEntry(options = {}) {
+    if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some(name => name !== "storageKey")) input();
+    const storageKey = identifier(options.storageKey, 32); let scope, failure, result;
+    try {
+      scope = await directory();
+      const entry = await inspectNamed(scope, filename(storageKey), { kind: "published", storageKey });
+      await scope.assertReady(); result = entry === null ? { exists: false } : { exists: true, ...entry };
+    } catch (error) { failure = wrapped(error); }
+    finally { try { await scope?.close(); } catch (error) { failure ??= wrapped(error); } }
+    if (failure) throw failure; return result;
+  }
+  async function* scanEntries(options = {}) {
+    if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some(name => !["maxEntries", "signal"].includes(name))) input();
+    const { maxEntries = 100000, signal } = options; checkSignal(signal);
+    if (!Number.isSafeInteger(maxEntries) || maxEntries < 1 || maxEntries > 100000) input();
+    let scope, directoryHandle, failure;
+    try {
+      abort(signal); scope = await directory(); directoryHandle = await opendir(scope.path, { bufferSize: 32 }); await scope.assertReady();
+      let count = 0;
+      while (true) {
+        abort(signal); const entry = await directoryHandle.read(); abort(signal); await scope.assertReady();
+        if (entry === null) break;
+        if (++count > maxEntries) throw new VideoStorageError("VIDEO_SCAN_LIMIT");
+        const identity = entryIdentity(entry.name), value = await inspectNamed(scope, entry.name, identity);
+        abort(signal); await scope.assertReady();
+        yield value ?? { ...identity, encryptedBytes: 0n, mtimeMs: 0, status: "unstable" };
+      }
+      abort(signal); await scope.assertReady();
+    } catch (error) { failure = wrapped(error); }
+    finally {
+      try { await directoryHandle?.close(); } catch (error) { failure ??= wrapped(error); }
+      try { await scope?.close(); } catch (error) { failure ??= wrapped(error); }
+      if (failure) throw failure;
+    }
   }
   async function availableSpace() {
     let scope;
     try { scope = await directory(); const stats = await statfs(`${scope.path}/.`, { bigint: true }); await scope.assertReady(); if (stats.bavail < 0n || stats.bsize <= 0n) throw new VideoStorageError(); return { availableBytes: stats.bavail * stats.bsize }; }
     catch (error) { throw wrapped(error); } finally { await scope?.close().catch(() => {}); }
   }
-  return Object.freeze({ put, open, remove, availableSpace });
+  return Object.freeze({ put, open, remove, fingerprint, availableSpace, inspectEntry, scanEntries });
 }

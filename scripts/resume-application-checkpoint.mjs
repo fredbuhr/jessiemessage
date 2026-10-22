@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { databaseOptions } from "../server/db/connection.mjs";
 import { loadMigrations, createdMigrationTables } from "../server/db/migrations.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
+import { loadRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
+import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
@@ -70,22 +72,24 @@ export async function connectOperatorDatabase(configuration, { readCa = readFile
   } finally { if (options) options.password = ""; }
 }
 
-export async function inspectResumeClone(connection, database) {
+export async function inspectResumeClone(connection, database, { video = false } = {}) {
+  if (typeof video !== "boolean") fail("CONFIGURATION", "inspection");
+  const count = video ? 36 : 33;
   const identity = await connection.query("SELECT DATABASE() AS name");
   const tls = await connection.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'");
   if (identity.length !== 1 || identity[0]?.name !== database || tls.length !== 1 || tls[0]?.Variable_name !== "Ssl_cipher" || !tls[0]?.Value) fail("DATABASE", "inspection");
-  const rows = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 34", [database]);
-  if (!Array.isArray(rows) || rows.length > 34) fail("DATABASE", "inspection");
+  const rows = await connection.query(`SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT ${count + 1}`, [database]);
+  if (!Array.isArray(rows) || rows.length > count + 1) fail("DATABASE", "inspection");
   if (rows.length === 0) return "empty";
-  const migrations = await loadMigrations(), names = [...createdMigrationTables(migrations), "schema_migrations"];
-  return migrations.length === 33 && names.length === 33 && rows.length === 33 && new Set(rows.map(row => row.name)).size === 33
+  const migrations = await (video ? loadVideoMigrations : loadMigrations)(), names = [...createdMigrationTables(migrations), "schema_migrations"];
+  return migrations.length === count && names.length === count && rows.length === count && new Set(rows.map(row => row.name)).size === count
     && rows.every(row => names.includes(row.name) && row.kind === "BASE TABLE" && row.engine === "InnoDB") ? "application-schema" : "partial";
 }
 
 function matches(result, selected, status) {
-  const profile = checkpointBackupProfile(selected.profile, true);
+  const profile = checkpointBackupProfile(selected.profile, true), count = profile?.video ? 36 : 33;
   return result?.status === status && matchesCheckpointReceipt(profile, result)
-    && result.tables === 33 && result.migrations === 33 && result.sqlSha256 === selected.sqlSha256
+    && result.tables === count && result.migrations === count && result.sqlSha256 === selected.sqlSha256
     && result.checkpointFilesMatched === true && result.capacityRebound === false
     && result.httpStarted === false && result.smtpStarted === false && result.workersStarted === false;
 }
@@ -98,7 +102,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   readSecret = readPassword, connect = connectOperatorDatabase, inspect = inspectResumeClone, signal } = {}) {
   let phase = "arguments", environment, connectionEnv, connection, password = "", result, failure;
   try {
-    const selected = selectedRecord(value), { crm, broadcast } = checkpointBackupProfile(selected.profile, true);
+    const selected = selectedRecord(value), { crm, broadcast, video } = checkpointBackupProfile(selected.profile, true);
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("ENVIRONMENT", "precheck"); }
     const dependencies = { inheritedEnv, execArgv, signal };
@@ -109,7 +113,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     active(signal, phase);
     if (selected.command === "check") return { ...before, resumeSupported: true };
     phase = "configuration"; active(signal, phase);
-    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
+    loadEnvironment ??= video ? loadRuntimeVideoEnvironment : broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     environment = await loadEnvironment(selected.privateDirectory, { port: processOptions.port, originProfile: "primary", recovery: true });
     if (selected.database.toLowerCase() === environment.JESSIEMESSAGE_DB_NAME.toLowerCase() || selected.user === environment.JESSIEMESSAGE_RUNTIME_DB_USER) fail("CONFIGURATION", phase);
     phase = "password";
@@ -119,7 +123,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       JESSIEMESSAGE_DB_NAME: selected.database, JESSIEMESSAGE_MIGRATION_DATABASE: selected.confirmation,
       JESSIEMESSAGE_DB_USER: selected.user, JESSIEMESSAGE_DB_PASSWORD: password, JESSIEMESSAGE_DB_TLS_CA_PATH: CA };
     phase = "connection"; active(signal, phase); connection = await connect(connectionEnv);
-    phase = "inspection"; active(signal, phase); const state = await inspect(connection, selected.database);
+    phase = "inspection"; active(signal, phase); const state = await inspect(connection, selected.database, ...(video ? [{ video: true }] : []));
     await connection.end(); connection = undefined; active(signal, phase);
     if (state === "partial") fail("PARTIAL_CLONE", phase);
     const authenticated = { ...dependencies, readSecret: async () => password };

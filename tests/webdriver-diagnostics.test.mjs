@@ -3,6 +3,19 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { createWebDriverNavigationPolicy, createWebDriverRequester } from "./browser/webdriver.mjs";
 
+test("primary-authority rehearsal is explicit, loopback-mapped and has no DNS fallback", () => {
+  assert.throws(() => createWebDriverNavigationPolicy("https://jessiemessage.com"));
+  const policy = createWebDriverNavigationPolicy("https://jessiemessage.com", [], 45678);
+  assert.equal(policy.url("/api/ready"), "https://jessiemessage.com/api/ready");
+  assert.equal(policy.resolverRules, "MAP jessiemessage.com 127.0.0.1:45678, MAP * ~NOTFOUND");
+  for (const path of ["https://recette.jessiemessage.com", "https://example.invalid", "https://127.0.0.1:45678"])
+    assert.throws(() => policy.url(path));
+  for (const port of [0, 443, 65536, "45678", NaN])
+    assert.throws(() => createWebDriverNavigationPolicy("https://jessiemessage.com", [], port));
+  assert.throws(() => createWebDriverNavigationPolicy("https://example.invalid", [], 45678));
+  assert.throws(() => createWebDriverNavigationPolicy("https://jessiemessage.com", ["https://recette.jessiemessage.com"], 45678));
+});
+
 const secret = "synthetic-sensitive-value";
 
 test("WebDriver timeout names the command without disclosing its session, element, body or transport error", async () => {

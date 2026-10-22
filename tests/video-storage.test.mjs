@@ -186,7 +186,7 @@ test("private roots reject checkout locations, aliases, unsafe modes and replace
   await chmod(root, 0o755); await unavailable(createVideoStorage({ root, key })); await chmod(root, 0o700);
   const alias = `${root}-alias`; await symlink(root, alias); t.after(() => unlink(alias)); await unavailable(createVideoStorage({ root: alias, key }));
   const moved = `${root}-moved`; t.after(() => rm(moved, { recursive: true, force: true })); await rename(root, moved); await mkdir(root, { mode: 0o700 });
-  await unavailable(storage.availableSpace()); await unavailable(storage.remove(ids())); await unavailable(storage.put({ ...ids(), bytes: 1, source: source(Buffer.alloc(1)) })); assert.deepEqual(await readdir(root), []);
+  await unavailable(storage.availableSpace()); await unavailable(storage.fingerprint()); await unavailable(storage.remove(ids())); await unavailable(storage.put({ ...ids(), bytes: 1, source: source(Buffer.alloc(1)) })); assert.deepEqual(await readdir(root), []);
 });
 
 test("unsafe file permissions, hardlinks and symlinks fail closed for open and remove", async (t) => {
@@ -208,6 +208,102 @@ test("remove is durable and idempotent, leaves unrelated files and reports bound
   const free = await storage.availableSpace(); assert.equal(typeof free.availableBytes, "bigint"); assert.ok(free.availableBytes >= 0n);
 });
 
+test("video root fingerprints are stable, keyed, physical and returned independently", async (t) => {
+  const { root, key, storage } = await fixture(t), other = await fixture(t);
+  const fingerprint = await storage.fingerprint(); assert.equal(fingerprint.length, 32);
+  assert.deepEqual(await (await createVideoStorage({ root, key })).fingerprint(), fingerprint);
+  assert.notDeepEqual(await (await createVideoStorage({ root, key: randomBytes(32) })).fingerprint(), fingerprint);
+  assert.notDeepEqual(await other.storage.fingerprint(), fingerprint);
+  fingerprint.fill(0); assert.notDeepEqual(await storage.fingerprint(), fingerprint);
+});
+
+test("remove clears crashed encrypted staging for its key and preserves other keys and malformed names", async (t) => {
+  const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(VIDEO_BLOCK_BYTES + 7));
+  const encrypted = await readFile(target(root, identity.storageKey)), hex = identity.storageKey.toString("hex");
+  const staging = [`.${hex}.video.${randomBytes(16).toString("hex")}.tmp`, `.${hex}.video.${randomBytes(16).toString("hex")}.tmp`];
+  for (const name of staging) await writeFile(path.join(root, name), encrypted.subarray(0, 91), { mode: 0o600 });
+  const untouched = [`.${randomBytes(32).toString("hex")}.video.${randomBytes(16).toString("hex")}.tmp`, `.${hex}.video.${"z".repeat(32)}.tmp`, `${hex}.video.backup`];
+  for (const name of untouched) await writeFile(path.join(root, name), "unrelated-sentinel", { mode: 0o600 });
+  assert.deepEqual(await storage.remove(identity), { removed: true });
+  assert.deepEqual((await readdir(root)).sort(), untouched.sort());
+  for (const name of untouched) assert.equal(await readFile(path.join(root, name), "utf8"), "unrelated-sentinel");
+  assert.deepEqual(await storage.remove(identity), { removed: true });
+});
+
+test("remove recovers a publication interrupted between linking the final and unlinking staging", async (t) => {
+  const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(100));
+  const final = target(root, identity.storageKey), staging = path.join(root, `.${identity.storageKey.toString("hex")}.video.${randomBytes(16).toString("hex")}.tmp`);
+  await link(final, staging); assert.equal((await stat(final)).nlink, 2);
+  assert.deepEqual(await storage.remove(identity), { removed: true }); assert.deepEqual(await readdir(root), []);
+});
+
+test("remove refuses a publication hardlink group with an additional unrelated link before changing files", async (t) => {
+  const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(100));
+  const final = target(root, identity.storageKey), staging = path.join(root, `.${identity.storageKey.toString("hex")}.video.${randomBytes(16).toString("hex")}.tmp`), external = path.join(root, "unrelated-link.enc");
+  await link(final, staging); await link(final, external); const before = await readFile(final);
+  await unavailable(storage.remove(identity));
+  for (const name of [final, staging, external]) { assert.deepEqual(await readFile(name), before); assert.equal((await stat(name)).nlink, 3); }
+});
+
+test("unsafe crashed staging refuses cleanup before the valid final is removed", async (t) => {
+  for (const kind of ["permissions", "symlink", "hardlink", "directory"]) await t.test(kind, async (t) => {
+    const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(73));
+    const final = target(root, identity.storageKey), before = await readFile(final);
+    const staging = path.join(root, `.${identity.storageKey.toString("hex")}.video.${randomBytes(16).toString("hex")}.tmp`), sentinel = path.join(root, "unrelated-sentinel");
+    await writeFile(sentinel, "must-remain", { mode: 0o600 });
+    if (kind === "permissions") await writeFile(staging, before.subarray(0, 50), { mode: 0o644 });
+    if (kind === "symlink") await symlink(sentinel, staging);
+    if (kind === "hardlink") await link(sentinel, staging);
+    if (kind === "directory") await mkdir(staging, { mode: 0o700 });
+    await unavailable(storage.remove(identity)); assert.deepEqual(await readFile(final), before);
+    assert.equal(await readFile(sentinel, "utf8"), "must-remain");
+  });
+});
+
+test("a final name recreated after unlink is preserved and never reported as removed", async (t) => {
+  const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(14)), final = target(root, identity.storageKey);
+  await intercept(t, "unlink", async (original, name) => {
+    await original(name); if (name === final) await writeFile(name, "replacement-sentinel", { mode: 0o600 });
+  }, async () => { await unavailable(storage.remove(identity)); });
+  assert.equal(await readFile(final, "utf8"), "replacement-sentinel");
+});
+
+test("a new matching staging name created during directory sync prevents a successful removal receipt", async (t) => {
+  const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(14));
+  const staging = path.join(root, `.${identity.storageKey.toString("hex")}.video.${randomBytes(16).toString("hex")}.tmp`);
+  await intercept(t, "open", async (original, name, ...args) => {
+    const handle = await original(name, ...args);
+    if (name === root) { const sync = handle.sync.bind(handle); handle.sync = async () => { await sync(); await writeFile(staging, "new-staging", { mode: 0o600 }); }; }
+    return handle;
+  }, async () => { await unavailable(storage.remove(identity)); });
+  assert.equal(await readFile(staging, "utf8"), "new-staging");
+  assert.deepEqual(await storage.remove(identity), { removed: true }); assert.deepEqual(await readdir(root), []);
+});
+
+test("remove and fingerprint propagate descriptor-close failures instead of returning success", async (t) => {
+  const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(14));
+  const handles = [];
+  await intercept(t, "open", async (original, name, ...args) => {
+    const handle = await original(name, ...args); handles.push(handle);
+    if (name === root) { const close = handle.close.bind(handle); handle.close = async () => { await close(); throw new Error("private-close-failed"); }; }
+    return handle;
+  }, async () => { await unavailable(storage.remove(identity)); await unavailable(storage.fingerprint()); });
+  assert.ok(handles.every((handle) => handle.fd === -1)); assert.deepEqual(await readdir(root), []);
+  assert.deepEqual(await storage.remove(identity), { removed: true }); assert.equal((await storage.fingerprint()).length, 32);
+});
+
+test("a file-close failure after unlink leaves removal unconfirmed until a durable retry", async (t) => {
+  const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(14)), final = target(root, identity.storageKey);
+  const handles = [];
+  await intercept(t, "open", async (original, name, ...args) => {
+    const handle = await original(name, ...args); handles.push(handle);
+    if (name === final) { const close = handle.close.bind(handle); handle.close = async () => { await close(); throw new Error("private-file-close-failed"); }; }
+    return handle;
+  }, async () => { await unavailable(storage.remove(identity)); });
+  assert.ok(handles.every((handle) => handle.fd === -1)); assert.deepEqual(await readdir(root), []);
+  assert.deepEqual(await storage.remove(identity), { removed: true });
+});
+
 test("retry of an already absent removal still requires a successful directory sync", async (t) => {
   const { root, storage } = await fixture(t), identity = await store(storage, Buffer.alloc(10)); await storage.remove(identity); let syncs = 0;
   await intercept(t, "open", async (original, name, ...args) => {
@@ -222,6 +318,20 @@ test("linux-dirfd mode keeps an open read pinned through a root rename and rejec
   await rename(root, moved); await mkdir(root, { mode: 0o700 }); await writeFile(target(root, identity.storageKey), "sentinel", { mode: 0o600 });
   assert.deepEqual(await collect(reader.stream({ start: VIDEO_BLOCK_BYTES, end: VIDEO_BLOCK_BYTES + 8 })), Buffer.alloc(9, 0x64));
   await unavailable(storage.open(identity)); await unavailable(storage.remove(identity)); assert.equal(await readFile(target(root, identity.storageKey), "utf8"), "sentinel");
+  await unavailable(storage.fingerprint());
+});
+
+test("linux-dirfd cleanup stays in the pinned root during an unlink-time root replacement", { skip: procAvailable ? false : "Linux procfs /proc/self/fd is unavailable locally; CI Linux executes this filesystem case." }, async (t) => {
+  const { root, storage } = await fixture(t, "linux-dirfd"), identity = await store(storage, Buffer.alloc(43)), moved = `${root}-moved`;
+  t.after(() => rm(moved, { recursive: true, force: true }));
+  const staging = `.${identity.storageKey.toString("hex")}.video.${randomBytes(16).toString("hex")}.tmp`;
+  await writeFile(path.join(root, staging), "crashed-staging", { mode: 0o600 }); let replaced = false;
+  await intercept(t, "unlink", async (original, name) => {
+    if (!replaced) { replaced = true; await rename(root, moved); await mkdir(root, { mode: 0o700 }); await writeFile(target(root, identity.storageKey), "replacement-sentinel", { mode: 0o600 }); }
+    return original(name);
+  }, async () => { assert.deepEqual(await storage.remove(identity), { removed: true }); });
+  assert.deepEqual(await readdir(moved), []); assert.equal(await readFile(target(root, identity.storageKey), "utf8"), "replacement-sentinel");
+  await unavailable(storage.fingerprint()); await unavailable(storage.remove(identity));
 });
 
 test("linux-dirfd upload publication stays in the pinned root if its path is replaced during reception", { skip: procAvailable ? false : "Linux procfs /proc/self/fd is unavailable locally; CI Linux executes this filesystem case." }, async (t) => {

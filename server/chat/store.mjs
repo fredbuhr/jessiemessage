@@ -1,7 +1,8 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionExpiry, CLIENT_SESSION_SECONDS, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { manuallyAdmittedClient, invitationConsumptionProjection } from "../access/admission.mjs";
 import { timingSafeEqual } from "node:crypto";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 
 export class ChatStoreError extends Error {
   constructor(code, message = "Private conversation persistence could not be completed.") {
@@ -161,9 +162,18 @@ function authoredCheck(sql, name) {
 // New private stores reuse the same restricted migration-CHECK comparison.
 export { checkTree as normalizedCheckTree, authoredCheck as authoredMigrationCheck };
 
-export function createChatStore(pool, { clock, enqueueNotification } = {}) {
+export function createChatStore(pool, { clock, enqueueNotification, decorateMessages } = {}) {
   if (enqueueNotification !== undefined && typeof enqueueNotification !== "function") input();
+  if (decorateMessages !== undefined && typeof decorateMessages !== "function") input();
   const sessionNow = createSessionClock(clock);
+  async function decorated(connection, context, rows) {
+    if (decorateMessages === undefined || rows.length === 0) return rows;
+    const result = await decorateMessages(connection, context, rows);
+    if (!Array.isArray(result) || result.length !== rows.length || result.some((row, index) =>
+      !Buffer.isBuffer(row?.id) || !row.id.equals(rows[index].id)
+      || !Buffer.isBuffer(row.conversationId) || !row.conversationId.equals(rows[index].conversationId))) state();
+    return result;
+  }
   async function run(operation, transaction = true) {
     let connection;
     let begun = false;
@@ -398,12 +408,29 @@ export function createChatStore(pool, { clock, enqueueNotification } = {}) {
       return run(async (connection) => operation(connection, await authorize(connection, request)));
     },
 
-    async assertSchema() {
+    // Trusted attachment code can add its link before this transaction commits.
+    // The normal composition supplies no decorator and queries no candidate tables.
+    async withConversationAppend(request, operation) {
+      validateRequest(request); if (typeof operation !== "function") input();
+      return run(async (connection) => {
+        const context = await authorize(connection, { ...request, send: true });
+        let open = true, used = false;
+        const append = async (message) => {
+          if (!open || used) fail("CHAT_FORBIDDEN");
+          used = true;
+          return appendMessage(connection, context, message);
+        };
+        try { return await operation(connection, context, append); }
+        finally { open = false; }
+      });
+    },
+
+    async assertSchema(options = {}) {
       return run(async (connection) => {
         const database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
         if (Number(enforcement.foreignKeys) !== 1 || Number(enforcement.checkConstraints) !== 1) state();
-        const migrations = await loadMigrations();
+        const migrations = await loadStoreMigrations(options);
         const history = await migrationStatus(connection, { database, migrations });
         if (history.length < 15 || history.some((item) => item.state !== "applied")) state();
         const tables = await connection.query("SELECT TABLE_NAME AS name, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
@@ -509,7 +536,7 @@ export function createChatStore(pool, { clock, enqueueNotification } = {}) {
           hasMoreAfter = (await connection.query("SELECT 1 FROM messages WHERE conversation_id = ? AND sequence_no > ? LIMIT 1", [conversationId, String(rows.at(-1).sequence_no)])).length > 0;
         }
         const conversation = await summary(connection, context);
-        return { conversation, messages: rows.map((row) => rawMessage(row, context.actor.id)), hasMoreBefore, hasMoreAfter,
+        return { conversation, messages: await decorated(connection, context, rows.map((row) => rawMessage(row, context.actor.id))), hasMoreBefore, hasMoreAfter,
           nextBefore: hasMoreBefore ? storedSequence(rows[0].sequence_no) : null, nextAfter: hasMoreAfter ? storedSequence(rows.at(-1).sequence_no) : null,
           eventCursor: conversation.latestEventSequence };
       });
@@ -523,8 +550,9 @@ export function createChatStore(pool, { clock, enqueueNotification } = {}) {
           FROM chat_events e JOIN messages m ON m.conversation_id = e.conversation_id AND m.id = e.message_id ${messageJoins}
           WHERE e.conversation_id = ? AND e.event_sequence > ? ORDER BY e.event_sequence ASC LIMIT ?`, [conversationId, after, limit + 1]);
         const selected = rows.slice(0, limit);
-        return { conversation: await summary(connection, context), events: selected.map((row) => ({ sequence: storedSequence(row.event_sequence),
-          kind: row.kind, occurredAt: timestamp(row.occurred_at), message: rawMessage(row, context.actor.id) })),
+        const messages = await decorated(connection, context, selected.map((row) => rawMessage(row, context.actor.id)));
+        return { conversation: await summary(connection, context), events: selected.map((row, index) => ({ sequence: storedSequence(row.event_sequence),
+          kind: row.kind, occurredAt: timestamp(row.occurred_at), message: messages[index] })),
           nextCursor: selected.length ? storedSequence(selected.at(-1).event_sequence) : after, hasMore: rows.length > limit };
       });
     },
@@ -533,7 +561,8 @@ export function createChatStore(pool, { clock, enqueueNotification } = {}) {
       validateRequest({ role, tokenHash, conversationId, now }); validateMessage(message);
       return run(async (connection) => {
         const context = await authorize(connection, { role, tokenHash, conversationId, now, send: true });
-        return appendMessage(connection, context, message);
+        const result = await appendMessage(connection, context, message);
+        return { ...result, message: (await decorated(connection, context, [result.message]))[0] };
       });
     },
 

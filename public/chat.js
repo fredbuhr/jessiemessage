@@ -1,4 +1,4 @@
-import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
+import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, prepareVideoSend, completeVideoUpload, rejectPendingVideoSend, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
 import { prepareImageUpload } from "/image-preparation.js";
 import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";
@@ -18,6 +18,7 @@ const role = location.pathname === "/admin/messages" ? "admin" : location.pathna
 const sessionBase = role === "admin" ? "/api/auth" : "/api/access";
 const chatBase = `/api/chat/${role}`;
 const mediaBase = `/api/media/${role}`;
+const videoBase = "/api/video/" + role;
 const states = new Map(); const inbox = new Map(); const controllers = new Set();
 const messageRows = new Map();
 let generation = 0; let visibilityGeneration = 0; let selectionEpoch = 0;
@@ -30,6 +31,9 @@ let olderBusy = false; let sendBusy = false; let logoutBusy = false; let logging
 const eventRequests = new Set();
 const imageUrls = createObjectUrlCache(); const imageRequests = new Map();
 let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previewIdentity = null;
+let videoEnabled = false, videoCreationEnabled = false, videoVersion = 0, videoPreviewUrl = null, videoPreviewIdentity = null, videoTransfer = null;
+let videoGallery = null, videoGalleryBusy = false, videoGalleryVersion = 0, videoGalleryReturnFocus = null;
+const videoPlayers = new Map();
 let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersion = 0; let lightboxItem = null;
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
@@ -42,6 +46,7 @@ let emojiCategory = "all";
 let emojiSkinTone = "default";
 let conversationDownload = null; let conversationDownloadCapability = null;
 let quickReplyContext = null, quickReplyLanguage = null;
+let personalReplies = null, personalReplyDraft = null, personalReplyBusy = null, personalReplyConflict = false, personalReplyUncertain = false, personalReplyDelete = null, personalReplyAbort = null;
 let reconnectTimer = null; let reconnectAttempt = 0; let resumeTask = null; let pendingConfirmation = null;
 let notificationsPanel = null;
 let pendingNotification = globalThis.JessieNotificationLink?.read() ?? null;
@@ -216,6 +221,7 @@ function closeMedia(restoreFocus = true) {
   dialogReturnFocus = null;
 }
 function clearImages() {
+  videoVersion += 1; clearVideoPlayers(); revokeVideoPreview(); closeVideoGallery(false);
   mediaVersion += 1;
   for (const record of imageRequests.values()) record.controller.abort(); imageRequests.clear();
   imageUrls.clear(); revokePreview(); closeLightbox(false); closeMedia(false);
@@ -240,6 +246,7 @@ function clearChat() {
   el("open-composer-tools").disabled = true;
   ui.rawText(el("peer-avatar"), "");
   el("photo-tools").hidden = true; el("open-gallery").hidden = true; el("image-draft").hidden = true; el("image-file").value = "";
+  el("video-draft").hidden = true; el("video-file").value = ""; el("open-video-gallery").hidden = true;
   for (const id of ["older-messages", "newer-messages", "new-messages", "empty-message", "pending-controls"]) if (el(id)) el(id).hidden = true;
   el("workspace").classList.remove("selected"); document.querySelector(".page").classList.remove("has-conversation"); notice("");
 }
@@ -342,7 +349,7 @@ function clearPrivate() {
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
   sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
   olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
-  mediaEnabled = false;
+  mediaEnabled = false; videoEnabled = false; videoCreationEnabled = false;
   conversationDownload?.clear(); conversationDownload = null; conversationDownloadCapability = null;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   document.getElementById("readiness-nav")?.remove();
@@ -399,7 +406,7 @@ async function resumeConnection({ reset = false } = {}) {
   try { return await task.promise; } finally { if (resumeTask === task) resumeTask = null; }
 }
 function hasUnsavedWork() {
-  return !loggingOut && (crm?.hasUnsavedWork?.() === true || [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft));
+  return !loggingOut && (crm?.hasUnsavedWork?.() === true || [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft || state.videoDraft));
 }
 function signOut() {
   clearPrivate();
@@ -411,7 +418,7 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
   const owner = sessionOwner; const ticket = snapshot(state); const controller = new AbortController(); controllers.add(controller);
   controller.accountScope = account;
   const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
-  const timeout = setTimeout(() => controller.abort(), rawBody || archive ? 65000 : 15000);
+  const timeout = setTimeout(() => controller.abort(), archive && videoEnabled ? 300000 : rawBody || archive ? 65000 : 15000);
   const headers = mutation ? { "Content-Type": contentType ?? "application/json", "X-CSRF-Token": csrf ?? "" } : {};
   try {
     if (mutation && verifyOwner && owner) await confirmOwner(ticket, owner, account);
@@ -420,8 +427,8 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
     let data;
     if (archive && response.ok) {
       try {
-        const { readPrivateArchive } = await import(role === "client" ? "/client-archive.js" : "/private-archive.js");
-        data = await readPrivateArchive(response, controller.signal);
+        const reader = await import(role === "client" ? "/client-archive.js" : "/private-archive.js");
+        data = await (videoEnabled ? reader.readVideoArchive : reader.readPrivateArchive)(response, controller.signal);
       } catch (error) { controller.abort(); throw error; }
     } else { try { data = await response.json(); } catch { data = {}; } }
     if (!fresh(ticket, account)) throw staleResponse();
@@ -704,7 +711,7 @@ function loadPhoto(container, media, state, { full = false, current = () => true
   }).catch((error) => { if (!error.stale && container.isConnected && current()) { container.dataset.failed = "true"; photoStatus(container, "Photo indisponible"); } });
 }
 function pruneDeletedPhotos(state, deleted = []) {
-  let galleryChanged = false;
+  let galleryChanged = false, videoGalleryChanged = false;
   for (const message of [...state.messages.values(), ...deleted]) {
     if (message.deletedAt == null) continue;
     const prefix = `${mediaBase}/conversations/${state.id}/messages/${message.id}/`;
@@ -712,8 +719,13 @@ function pruneDeletedPhotos(state, deleted = []) {
     for (const [path, record] of imageRequests) if (path.startsWith(prefix)) { record.controller.abort(); imageRequests.delete(path); }
     if (lightboxItem?.messageId === message.id) closeLightbox();
     if (panel?.kind === "gallery") { const length = panel.items.length; panel.items = panel.items.filter((item) => item.messageId !== message.id); galleryChanged ||= length !== panel.items.length; }
+    if (videoGallery?.state.id === state.id) {
+      const length = videoGallery.items.length; videoGallery.items = videoGallery.items.filter(item => item.messageId !== message.id);
+      videoGalleryChanged ||= length !== videoGallery.items.length;
+    }
   }
   if (galleryChanged) renderMediaPanel();
+  if (videoGalleryChanged) renderVideoGallery();
 }
 function renderImageDraft(state) {
   const draft = state.imageDraft; const pending = state.pending?.kind === "image" ? state.pending : null; const hasImage = Boolean(draft || pending);
@@ -735,6 +747,206 @@ function renderImageDraft(state) {
     const id = draft.asset.id; loadPhoto(el("image-preview"), draft.asset, state, { current: () => belongsTo(currentState(), state.id, state.epoch) && state.imageDraft?.asset?.id === id });
   } else ui.text(el("image-preview"), "Photo prête");
 }
+function videoErrorText(error) {
+  if (error.status === 507) return "Le stockage des vidéos a atteint sa limite.";
+  if ([400, 411, 413, 415].includes(error.status)) return "Vidéo refusée. Choisis une vidéo MP4 de 100 Mo maximum et une légende de 1 000 caractères maximum.";
+  if (error.status === 404) return "Cette vidéo n’est plus disponible.";
+  if (error.status === 429) return "Patiente un moment avant de réessayer cet envoi.";
+  return "La confirmation de la vidéo manque. Tu peux réessayer ; un transfert interrompu devra recommencer.";
+}
+function validVideoUrl(value, state, messageId) {
+  return typeof value === "string" && /^[a-f0-9]{32}$/.test(messageId ?? "")
+    && value === videoBase + "/conversations/" + state.id + "/messages/" + messageId + "/content";
+}
+function releaseVideoPlayer(video) {
+  if (!video) return;
+  videoPlayers.delete(video);
+  try { video.pause?.(); } catch {}
+  video.removeAttribute("src");
+  try { video.load?.(); } catch {}
+}
+function clearVideoPlayers(container = null) {
+  for (const video of videoPlayers.keys()) if (!container || container.contains(video)) releaseVideoPlayer(video);
+}
+function revokeVideoPreview() {
+  const container = el("video-preview");
+  for (const video of container.querySelectorAll("video")) releaseVideoPlayer(video);
+  if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+  videoPreviewUrl = null; videoPreviewIdentity = null; ui.forget(container); container.replaceChildren();
+}
+function privateVideoElement() {
+  const video = document.createElement("video"); video.className = "private-video";
+  video.controls = true; video.playsInline = true; video.preload = "none";
+  video.disablePictureInPicture = true; video.disableRemotePlayback = true;
+  ui.attr(video, "aria-label", "Vidéo privée");
+  return video;
+}
+function attachPrivateVideo(video, metadata, state, messageId, current = () => true) {
+  if (!videoEnabled || !visible() || !validVideoUrl(metadata?.contentUrl, state, messageId)) return;
+  const ticket = snapshot(state), owner = sessionOwner, version = videoVersion;
+  const record = { current: () => current() && video.isConnected && visible() && fresh(ticket)
+    && version === videoVersion && sameOwner(owner, sessionOwner) && !loggingOut };
+  videoPlayers.set(video, record);
+  let permitted = false, checking = false;
+  if (!video.dataset.videoGuard) {
+    video.dataset.videoGuard = "true";
+    video.addEventListener("play", async () => {
+      const active = videoPlayers.get(video);
+      if (permitted) { permitted = false; return; }
+      try { video.pause(); } catch {}
+      if (!active?.current() || checking) return;
+      checking = true;
+      try {
+        await confirmOwner(snapshot(state), sessionOwner);
+        if (videoPlayers.get(video) === active && active.current()) {
+          permitted = true;
+          try { await video.play(); } catch { permitted = false; }
+        }
+      } catch { releaseVideoPlayer(video); }
+      finally { checking = false; }
+    });
+    video.addEventListener("error", () => {
+      if (videoPlayers.get(video)?.current()) {
+        const error = video.parentElement?.querySelector(".video-error");
+        if (error) { error.hidden = false; ui.text(error, "Cette vidéo n’est plus disponible ou ce navigateur ne peut pas la lire."); }
+      }
+    });
+  }
+  void confirmOwner(ticket, owner).then(() => {
+    if (videoPlayers.get(video) === record && record.current()) video.src = metadata.contentUrl;
+  }).catch(() => { if (videoPlayers.get(video) === record) releaseVideoPlayer(video); });
+}
+function renderVideoDraft(state) {
+  const draft = state.videoDraft, pending = state.pending?.kind === "video" ? state.pending : null;
+  const hasVideo = Boolean(draft || pending); el("video-draft").hidden = !hasVideo;
+  el("video-progress").hidden = !videoTransfer || videoTransfer.state !== state || pending?.stage !== "uploading";
+  const uploading = Boolean(videoTransfer?.state === state && pending?.stage === "uploading");
+  el("cancel-video").disabled = Boolean(state.pending) && !uploading;
+  ui.text(el("cancel-video"), uploading ? "Annuler le transfert" : "Retirer la vidéo");
+  if (!hasVideo) { revokeVideoPreview(); return; }
+  el("message-body").maxLength = 1000; el("message-body").required = false;
+  ui.attr(el("message-body"), "placeholder", "Ajoute une légende (facultatif)…");
+  ui.text(el("composer-help"), "Vidéo privée · MP4, 100 Mo maximum · légende facultative");
+  el("composer-help").classList.remove("sr-only");
+  ui.text(el("video-draft-status"), pending?.stage === "sending" ? "Envoi de la vidéo…" : uploading ? "Transfert de la vidéo…" : draft?.invalid ? "Cette vidéo n’est plus disponible ou ce navigateur ne peut pas la lire." : "Une vidéo à envoyer");
+  if (!visible() || !draft?.file || videoPreviewIdentity === draft.file) return;
+  revokeVideoPreview(); videoPreviewIdentity = draft.file; videoPreviewUrl = URL.createObjectURL(draft.file);
+  const video = privateVideoElement(); video.preload = "metadata"; video.muted = true;
+  ui.attr(video, "aria-label", "Aperçu de la vidéo choisie"); video.src = videoPreviewUrl;
+  video.addEventListener("loadedmetadata", () => {
+    if (state.videoDraft === draft && videoPreviewIdentity === draft.file && belongsTo(currentState(), state.id, state.epoch)) {
+      draft.ready = true; draft.invalid = false; renderMeta(state);
+    }
+  });
+  video.addEventListener("error", () => {
+    if (state.videoDraft === draft && videoPreviewIdentity === draft.file && belongsTo(currentState(), state.id, state.epoch)) {
+      draft.invalid = true; draft.ready = false; renderMeta(state);
+    }
+  });
+  el("video-preview").append(video);
+}
+function chooseVideo() {
+  const state = currentState(), file = el("video-file").files?.[0]; el("video-file").value = "";
+  if (!state || !file || !videoCreationEnabled || state.pending || sendBusy || !state.conversation?.canSend) return;
+  if (file.type !== "video/mp4" || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > 104857600) {
+    notice("Choisis une vidéo MP4 de 100 Mo maximum.", true); return;
+  }
+  if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une vidéo.", true); return; }
+  state.imageDraft = null; revokePreview();
+  state.videoDraft = { file, ready: false, invalid: false }; renderMeta(state);
+  notice("Vidéo choisie. Vérifie l’aperçu, ajoute une légende ou envoie-la."); focusVisible(el("message-body"));
+}
+async function uploadVideo(file, state, transfer) {
+  const ticket = snapshot(state), owner = sessionOwner;
+  await confirmOwner(ticket, owner);
+  if (!fresh(ticket) || transfer.controller.signal.aborted) throw staleResponse();
+  const value = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest(); let done = false;
+    const abort = () => xhr.abort();
+    const finish = (error, data) => {
+      if (done) return; done = true; transfer.controller.signal.removeEventListener("abort", abort);
+      if (error) reject(error); else resolve(data);
+    };
+    xhr.open("POST", videoBase + "/assets"); xhr.withCredentials = true; xhr.timeout = 300000;
+    xhr.setRequestHeader("Content-Type", "video/mp4"); xhr.setRequestHeader("X-CSRF-Token", csrf ?? "");
+    xhr.upload.addEventListener("progress", event => {
+      if (!fresh(ticket) || videoTransfer !== transfer || state.pending !== transfer.pending) return;
+      el("video-progress").value = Math.min(100, Math.floor(event.loaded * 100 / file.size));
+    });
+    xhr.addEventListener("load", () => {
+      let result = {}; try { if (xhr.responseText.length <= 8192) result = JSON.parse(xhr.responseText); } catch {}
+      if (xhr.status < 200 || xhr.status >= 300) { finish(Object.assign(new Error("video_upload_failed"), { status: xhr.status, code: result.error })); return; }
+      if (!/^[a-f0-9]{32}$/.test(result.id ?? "") || result.mime !== "video/mp4" || result.bytes !== file.size) { finish(new Error("invalid_video_response")); return; }
+      finish(null, result);
+    });
+    xhr.addEventListener("error", () => finish(new Error("video_upload_failed")));
+    xhr.addEventListener("timeout", () => finish(new Error("video_upload_timeout")));
+    xhr.addEventListener("abort", () => finish(Object.assign(new Error("video_upload_aborted"), { cancelled: transfer.cancelled })));
+    transfer.controller.signal.addEventListener("abort", abort, { once: true });
+    if (transfer.controller.signal.aborted) { finish(staleResponse()); return; }
+    try { xhr.send(file); } catch (error) { finish(error); }
+  });
+  if (!fresh(ticket) || transfer.controller.signal.aborted) throw staleResponse();
+  await confirmOwner(ticket, owner);
+  if (!fresh(ticket) || transfer.controller.signal.aborted) throw staleResponse();
+  return value;
+}
+function closeVideoGallery(restoreFocus = true) {
+  videoGalleryVersion++; videoGallery = null; videoGalleryBusy = false;
+  clearVideoPlayers(el("video-grid")); ui.forget(el("video-grid")); el("video-grid").replaceChildren();
+  if (el("video-gallery").open) el("video-gallery").close();
+  if (restoreFocus) focusVisible(videoGalleryReturnFocus ?? menuReturnFocus());
+  videoGalleryReturnFocus = null;
+}
+async function openVideoGallery(opener) {
+  const state = currentState(); if (!videoEnabled || !state || !visible()) return;
+  closeVideoGallery(false); videoGalleryReturnFocus = opener; videoGallery = { state, items: [], nextBefore: null, hasMore: false };
+  el("video-gallery").showModal(); focusVisible(el("close-video-gallery")); await loadVideoGallery();
+}
+async function loadVideoGallery(more = false) {
+  const panel = videoGallery; if (!panel || videoGalleryBusy || more && !panel.hasMore) return;
+  const version = videoGalleryVersion; videoGalleryBusy = true; el("more-videos").disabled = true;
+  ui.text(el("video-gallery-status"), "Chargement des vidéos…");
+  try {
+    const result = await request(videoBase + "/conversations/" + panel.state.id + "/gallery?limit=20" + (more ? "&before=" + panel.nextBefore : ""), { state: panel.state });
+    if (videoGallery !== panel || version !== videoGalleryVersion) return;
+    if (!Array.isArray(result.items) || result.items.length > 20 || typeof result.hasMore !== "boolean"
+      || result.nextBefore !== null && typeof result.nextBefore !== "string") throw new Error("invalid_video_gallery");
+    let previous = more ? panel.nextBefore : null;
+    for (const item of result.items) {
+      sequence(item.sequence);
+      if (previous !== null && compareSequence(item.sequence, previous) >= 0 || !validVideoUrl(item.video?.contentUrl, panel.state, item.messageId)) throw new Error("invalid_video_gallery");
+      previous = item.sequence;
+    }
+    if (result.hasMore && (!result.items.length || result.nextBefore !== result.items.at(-1).sequence)
+      || !result.hasMore && result.nextBefore !== null) throw new Error("invalid_video_gallery");
+    const deleted = new Set([...panel.state.messages.values()].filter(message => message.deletedAt != null).map(message => message.id));
+    const items = result.items.filter(item => !deleted.has(item.messageId));
+    panel.items = more ? [...panel.items, ...items] : items;
+    panel.nextBefore = result.nextBefore; panel.hasMore = result.hasMore; renderVideoGallery();
+    ui.text(el("video-gallery-status"), panel.items.length ? "Les vidéos restent privées dans cette conversation." : "Aucune vidéo dans cette conversation.");
+  } catch (error) {
+    if (videoGallery === panel && version === videoGalleryVersion && !error.stale) {
+      ui.text(el("video-gallery-status"), videoErrorText(error));
+      if ([401, 403].includes(error.status)) await handleError(error, panel.state);
+    }
+  } finally {
+    if (videoGallery === panel && version === videoGalleryVersion) { videoGalleryBusy = false; el("more-videos").disabled = false; }
+  }
+}
+function renderVideoGallery() {
+  const panel = videoGallery; if (!panel) return;
+  clearVideoPlayers(el("video-grid")); ui.forget(el("video-grid")); el("video-grid").replaceChildren();
+  for (const item of panel.items) {
+    const card = document.createElement("article"), video = privateVideoElement(); card.className = "video-card";
+    const error = document.createElement("p"); error.className = "video-error"; error.hidden = true;
+    const time = document.createElement("p"); ui.text(time, "{date}", { date: dateParameter(item.createdAt, true) });
+    card.append(video, error, time); el("video-grid").append(card);
+    attachPrivateVideo(video, item.video, panel.state, item.messageId, () => videoGallery === panel && panel.items.includes(item));
+  }
+  el("more-videos").hidden = !panel.hasMore;
+}
+
 async function refreshMediaCapability() {
   try { const value = await request(`${mediaBase}/capabilities`); mediaEnabled = value.enabled === true; }
   catch (error) { if (error.stale) throw error; if (error.status === 404) mediaEnabled = false; else if (error.status === 401 || (role === "client" && error.status === 403)) { signOut(); throw error; } else mediaEnabled = false; }
@@ -777,7 +989,7 @@ function chooseFile() {
   if (!state || !file || state.pending || sendBusy || !state.conversation?.canSend) return;
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size < 1 || file.size > 10485760) { notice("Choisis une photo JPEG, PNG ou WebP de 10 Mo maximum.", true); return; }
   if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true); return; }
-  state.imageDraft = { file, asset: null }; renderMeta(state); notice("Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
+  state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file, asset: null }; renderMeta(state); notice("Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
 }
 function mediaErrorText(error) {
   if (error.code === "media_format") return "Ce format n’est pas pris en charge. Choisis une photo JPEG, PNG ou WebP.";
@@ -855,7 +1067,7 @@ function renderMediaPanel() {
       choose.addEventListener("click", () => {
         if (!belongsTo(currentState(), state.id, state.epoch) || state.pending || !state.conversation?.canSend) return;
         if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant de choisir une photo.", true, "media-status"); return; }
-        state.imageDraft = { file: null, asset: media }; closeMedia(); renderMeta(state); notice(media.sharedHere ? "Cette photo a déjà été envoyée ici. Envoyer ajoutera un nouveau message." : "Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
+        state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file: null, asset: media }; closeMedia(); renderMeta(state); notice(media.sharedHere ? "Cette photo a déjà été envoyée ici. Envoyer ajoutera un nouveau message." : "Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
       });
       const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; remove.dataset.mediaAction = "remove"; ui.text(remove, "Supprimer la photo");
       remove.addEventListener("click", () => { void removeOwnAsset(media, state, remove); }); actions.append(choose, remove); card.append(actions);
@@ -979,12 +1191,16 @@ function renderMeta(state) {
   ui.text(el("conversation-status"), conversation.closedAt != null ? "Conversation fermée · historique disponible" : !conversation.canSend ? "Accès à l’envoi suspendu · historique disponible" : "Conversation privée");
   el("message-body").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image");
-  el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage ? validCaption(el("message-body").value) : validBody(el("message-body").value));
-  el("photo-tools").hidden = !mediaEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
-  el("open-composer-tools").hidden = !mediaEnabled && role !== "admin";
+  const hasVideo = Boolean(state.videoDraft || state.pending?.kind === "video");
+  el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage || hasVideo ? validCaption(el("message-body").value) : validBody(el("message-body").value))
+    || hasVideo && (!videoCreationEnabled || state.videoDraft?.invalid || !state.videoDraft?.ready && !state.pending?.videoId);
+  el("photo-tools").hidden = !mediaEnabled && !videoCreationEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
+  el("open-video-gallery").hidden = !videoEnabled;
+  el("open-composer-tools").hidden = !mediaEnabled && !videoCreationEnabled && role !== "admin";
   el("open-composer-tools").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   if (el("open-composer-tools").hidden || el("open-composer-tools").disabled) closeComposerTools();
   for (const id of ["pick-image", "open-library"]) el(id).hidden = !mediaEnabled;
+  el("pick-video").hidden = !videoCreationEnabled; el("pick-video").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   el("open-quick-replies").hidden = role !== "admin";
   el("open-quick-replies").disabled = !canUseQuickReplies();
   if (quickReplyContext && (!canUseQuickReplies() || !fresh(quickReplyContext.ticket))) closeQuickReplies();
@@ -992,6 +1208,7 @@ function renderMeta(state) {
   if (emojiContext && (!canUseEmojis() || !fresh(emojiContext.ticket))) closeEmojis();
   for (const id of ["pick-image", "open-library"]) el(id).disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   renderImageDraft(state);
+  renderVideoDraft(state);
   resizeComposer();
   el("pending-controls").hidden = state.pending?.status !== "retry";
   el("retry-send").disabled = !conversation.canSend || sendBusy;
@@ -1010,15 +1227,24 @@ function viewportAnchor() {
 // independently, and fresh API snapshots need not disturb an existing control.
 function messageContentKey(message) {
   const media = message.media;
+  const video = message.video;
   return JSON.stringify([message.id, message.sequence, message.sender, message.body, message.createdAt, message.deletedAt,
-    media ? [media.id, media.width, media.height, media.thumbnailWidth, media.thumbnailHeight, media.fullUrl, media.thumbnailUrl, mediaEnabled] : null]);
+    media ? [media.id, media.width, media.height, media.thumbnailWidth, media.thumbnailHeight, media.fullUrl, media.thumbnailUrl, mediaEnabled] : null,
+    video ? [video.id, video.bytes, video.mime, video.contentUrl, videoEnabled] : null]);
 }
 function createMessageRow(state, message, contentKey) {
   const own = message.sender === "me"; const fromJessie = role === "admin" ? own : !own;
   const article = document.createElement("article"); article.className = `message ${own ? "own" : ""} ${fromJessie ? "from-jessie" : "from-client"}`; article.dataset.sequence = message.sequence; article.dataset.sender = message.sender; article.setAttribute("role", "listitem");
-  const body = document.createElement(message.media && message.deletedAt == null ? "div" : "p"); body.className = "bubble"; article.classList.toggle("deleted", message.deletedAt != null);
+  const body = document.createElement((message.media || message.video) && message.deletedAt == null ? "div" : "p"); body.className = "bubble"; article.classList.toggle("deleted", message.deletedAt != null);
   const row = { article, contentKey, body, meta: null, detailsToggle: null, time: null, remove: null, photoButton: null, receipt: null, photo: null, mediaVersion: null };
-  if (message.media && message.deletedAt == null) {
+  if (message.video && message.deletedAt == null) {
+    body.classList.add("video-message");
+    if (videoEnabled && validVideoUrl(message.video.contentUrl, state, message.id)) {
+      row.video = privateVideoElement(); body.append(row.video);
+      const error = document.createElement("p"); error.className = "video-error"; error.hidden = true; body.append(error);
+    } else { const unavailable = document.createElement("p"); ui.text(unavailable, "Vidéos indisponibles pour le moment"); body.append(unavailable); }
+    if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; ui.rawText(caption, message.body); body.append(caption); }
+  } else if (message.media && message.deletedAt == null) {
     body.classList.add("photo-message"); const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; photo.style.aspectRatio = `${message.media.thumbnailWidth}/${message.media.thumbnailHeight}`; ui.attr(photo, "aria-label", "Agrandir la photo de ce message");
     row.photoButton = photo;
     if (mediaEnabled) {
@@ -1058,13 +1284,13 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
   const retained = new Set(messages.map((message) => message.sequence));
   for (const [key, row] of messageRows) if (!retained.has(key)) {
     if (selectedMessageSequence === key) clearMessageSelection();
-    row.article.remove(); messageRows.delete(key);
+    releaseVideoPlayer(row.video); row.article.remove(); messageRows.delete(key);
   }
   for (const [index, message] of messages.entries()) {
     const contentKey = messageContentKey(message); let row = messageRows.get(message.sequence);
     if (!row || row.contentKey !== contentKey) {
       if (selectedMessageSequence === message.sequence) clearMessageSelection();
-      row?.article.remove();
+      releaseVideoPlayer(row?.video); row?.article.remove();
       row = createMessageRow(state, message, contentKey); messageRows.set(message.sequence, row);
     }
     row.article.classList.toggle("notification-target", state.notificationSequence === message.sequence);
@@ -1074,6 +1300,10 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
     if (message.deletedAt != null) ui.text(row.body, "Message supprimé");
     if (row.remove) { ui.text(row.remove, "Supprimer"); ui.attr(row.remove, "aria-label", "Supprimer mon message du {date}", { date: dateParameter(message.createdAt, true) }); }
     if (row.photoButton) { ui.attr(row.photoButton, "aria-label", "Agrandir la photo de ce message"); if (!mediaEnabled) ui.text(row.photoButton, "Photos indisponibles pour le moment"); }
+    if (row.video && row.videoVersion !== videoVersion) {
+      row.videoVersion = videoVersion;
+      attachPrivateVideo(row.video, message.video, state, message.id, () => messageRows.get(message.sequence) === row && state.messages.get(message.sequence)?.deletedAt == null);
+    }
     if (row.receipt) {
       const receipt = role === "admin" && compareSequence(state.conversation.peerReadSequence, message.sequence) >= 0 ? "Lu" : "Envoyé";
       ui.text(row.receipt, receipt);
@@ -1109,7 +1339,7 @@ function mergeMessagePage(state, result) {
   // its draft only when the exact clientMessageId has actually been found.
   if (pending && !state.pending) {
     state.draft = ""; el("message-body").value = "";
-    notice(pending.kind === "image" ? "Photo enregistrée." : "Message enregistré.");
+    notice(pending.kind === "image" ? "Photo enregistrée." : pending.kind === "video" ? "Vidéo enregistrée." : "Message enregistré.");
   }
 }
 async function selectConversation(id, { focus = false, target = null } = {}) {
@@ -1251,6 +1481,7 @@ function newClientId() { return [...crypto.getRandomValues(new Uint8Array(16))].
 async function sendMessage(retry = false) {
   const state = currentState(); if (!state || sendBusy || !state.conversation?.canSend || (retry && !state.pending) || (!retry && state.pending)) return;
   if (state.hasMoreAfter && (!await loadNewer({ latest: true }) || state !== currentState() || (retry && !state.pending))) return;
+  if ((retry && state.pending?.kind === "video") || (!retry && state.videoDraft)) { await sendVideo(retry); return; }
   if ((retry && state.pending?.kind === "image") || (!retry && state.imageDraft)) { await sendImage(retry); return; }
   const ticket = snapshot(state);
   const body = retry ? state.pending?.body : el("message-body").value;
@@ -1303,6 +1534,45 @@ async function sendImage(retry = false) {
     await handleMediaError(error, state);
   } finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
 }
+async function sendVideo(retry = false) {
+  const state = currentState(); if (!state || sendBusy || !videoCreationEnabled || !state.conversation?.canSend) return;
+  const ticket = snapshot(state), caption = retry ? state.pending?.caption : el("message-body").value;
+  if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
+  if (!retry && (!state.videoDraft?.ready || state.videoDraft.invalid)) return;
+  const pending = prepareVideoSend(state, { caption, videoId: retry ? state.pending?.videoId : null,
+    file: retry ? state.pending?.file : state.videoDraft?.file }, state.pending?.clientMessageId ?? newClientId());
+  const transfer = { controller: new AbortController(), state, pending, cancelled: false };
+  videoTransfer = transfer; controllers.add(transfer.controller); el("video-progress").value = 0;
+  state.draft = caption; sendBusy = true; renderMeta(state);
+  notice(pending.videoId ? "Envoi de la vidéo…" : "Transfert de la vidéo…");
+  try {
+    if (!pending.videoId) {
+      const result = await uploadVideo(pending.file, state, transfer);
+      if (!fresh(ticket) || transfer.cancelled || transfer.controller.signal.aborted || state.pending !== pending) return;
+      if (!completeVideoUpload(state, pending.clientMessageId, result.id)) return;
+      renderMeta(state);
+    }
+    if (transfer.cancelled || transfer.controller.signal.aborted || !fresh(ticket)) return;
+    const result = await request(videoBase + "/conversations/" + state.id + "/messages", { state, mutation: true,
+      body: { clientMessageId: pending.clientMessageId, videoId: pending.videoId, caption: pending.caption } });
+    mergeMessages(state, [result.message]); state.conversation.latestSequence = maxSequence(state.conversation.latestSequence, result.message.sequence);
+    state.draft = ""; state.videoDraft = null; el("message-body").value = ""; renderMessages(state, { ownSend: true });
+    notice("Vidéo enregistrée."); schedulePolling(300);
+  } catch (error) {
+    if (transfer.cancelled && fresh(ticket) && state.pending === pending && pending.stage === "uploading") {
+      state.pending = null; notice("Transfert arrêté. La vidéo reste dans ton brouillon.");
+    } else if (!error.stale && state.pending) {
+      if (!rejectPendingVideoSend(state, error.status)) retrySend(state);
+      if ([401, 403].includes(error.status)) await handleError(error, state);
+      else notice(videoErrorText(error), true);
+    }
+  } finally {
+    controllers.delete(transfer.controller);
+    if (videoTransfer === transfer) videoTransfer = null;
+    if (fresh(ticket)) { sendBusy = false; renderMeta(state); }
+  }
+}
+
 async function deleteMessage(state, message, button) {
   if (!belongsTo(currentState(), state.id, state.epoch) || button.disabled) return;
   if (!await confirmDeletion("message", button) || !belongsTo(currentState(), state.id, state.epoch) || !visible()) return;
@@ -1404,7 +1674,7 @@ function renderEmojis(rebuildCategories = false) {
       if (!context || !canUseEmojis() || !fresh(context.ticket) || context.owner !== sessionOwner.id || context.csrf !== csrf
         || context.draft !== el("message-body").value) { closeEmojis(); return; }
       try {
-        const result = insertEmoji(context.draft, choice.id, { start: context.start, end: context.end, image: Boolean(state.imageDraft), skinTone: selectedSkinTone });
+        const result = insertEmoji(context.draft, choice.id, { start: context.start, end: context.end, image: Boolean(state.imageDraft || state.videoDraft), skinTone: selectedSkinTone });
         el("message-body").value = result.value; state.draft = result.value; closeEmojis(true, true); renderMeta(state);
         el("message-body").setSelectionRange?.(result.caret, result.caret);
         notice("Emoji ajouté au brouillon. Relis le message avant de l’envoyer.");
@@ -1448,32 +1718,144 @@ el("close-emojis").addEventListener("click", () => closeEmojis(true));
 el("open-profile").addEventListener("click", () => { closeEmojis(); closeQuickReplies(); closeComposerTools(); });
 el("emoji-dialog").addEventListener("close", () => { if (emojiContext && !el("emoji-dialog").open) closeEmojis(true); });
 ui.onChange(() => { if (emojiContext) renderEmojis(true); });
+function quickRepliesCurrent(context = quickReplyContext) {
+  return Boolean(context && context === quickReplyContext && canUseQuickReplies() && fresh(context.ticket)
+    && context.owner === sessionOwner.id && context.csrf === csrf);
+}
 function closeQuickReplies(restoreFocus = false, compose = false) {
-  quickReplyContext = null;
+  quickReplyContext = null; personalReplyAbort?.abort(); personalReplyAbort = null;
+  personalReplies = null; personalReplyDraft = null; personalReplyBusy = null; personalReplyConflict = false; personalReplyUncertain = false; personalReplyDelete = null;
   if (el("quick-replies-dialog").open) el("quick-replies-dialog").close();
-  ui.forget(el("quick-replies-list")); el("quick-replies-list").replaceChildren();
-  notice("", false, "quick-replies-status");
+  for (const id of ["quick-replies-list", "personal-replies-list"]) { ui.forget(el(id)); el(id).replaceChildren(); }
+  for (const id of ["personal-reply-title", "personal-reply-body"]) el(id).value = "";
+  el("personal-reply-language").value = "fr"; el("personal-reply-editor").hidden = true;
+  notice("", false, "quick-replies-status"); notice("", false, "personal-replies-status");
   if (restoreFocus) focusVisible(el(compose ? "message-body" : "open-composer-tools"));
+}
+function insertQuickReply(text) {
+  const context = quickReplyContext, state = currentState();
+  if (!quickRepliesCurrent(context)) { closeQuickReplies(); return; }
+  if (personalReplyDraft || personalReplyBusy === "write") return;
+  const draft = el("message-body").value, value = draft + (draft && !draft.endsWith("\n") ? "\n" : "") + text;
+  if (!(state.imageDraft || state.videoDraft ? validCaption(value) : validBody(value))) {
+    notice("Cette réponse ne peut pas être ajoutée. Raccourcis ou corrige le brouillon puis réessaie.", true, "quick-replies-status"); return;
+  }
+  el("message-body").value = value; state.draft = value; closeQuickReplies(true, true); renderMeta(state);
+  el("message-body").setSelectionRange?.(value.length, value.length);
+  notice("Réponse ajoutée au brouillon. Relis le message avant de l’envoyer.");
 }
 function renderQuickReplies() {
   ui.forget(el("quick-replies-list")); el("quick-replies-list").replaceChildren();
   for (const reply of quickReplyOptions(quickReplyLanguage)) {
     const button = document.createElement("button"); button.type = "button"; button.className = "quick-reply";
     button.dataset.quickReply = reply.id; button.lang = quickReplyLanguage; ui.rawText(button, reply.text);
-    button.addEventListener("click", () => {
-      const context = quickReplyContext, state = currentState();
-      if (!context || !canUseQuickReplies() || !fresh(context.ticket) || context.owner !== sessionOwner.id || context.csrf !== csrf) { closeQuickReplies(); return; }
-      try {
-        const value = appendQuickReply(el("message-body").value, reply.id, quickReplyLanguage, Boolean(state.imageDraft));
-        el("message-body").value = value; state.draft = value; closeQuickReplies(true, true); renderMeta(state);
-        el("message-body").setSelectionRange?.(value.length, value.length);
-        notice("Réponse ajoutée au brouillon. Relis le message avant de l’envoyer.");
-      } catch {
-        notice("Cette réponse ne peut pas être ajoutée. Raccourcis ou corrige le brouillon puis réessaie.", true, "quick-replies-status");
-      }
-    });
-    el("quick-replies-list").append(button);
+    button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
+    button.addEventListener("click", () => insertQuickReply(reply.text)); el("quick-replies-list").append(button);
   }
+}
+function validPersonalReplyTitle(value) {
+  return typeof value === "string" && value.length >= 1 && value.length <= 64 && value.isWellFormed() && value.trim() === value
+    && !/^[\p{C}\p{Z}]+$/u.test(value) && !/[\x00-\x1f\x7f-\x9f]/u.test(value);
+}
+function personalReplyView(value) {
+  if (!value || value.writable !== undefined && typeof value.writable !== "boolean" || typeof value.version !== "string" || (!/^(0|[1-9][0-9]{0,9})$/.test(value.version) || Number(value.version) > 4294967295) || !Array.isArray(value.replies) || value.replies.length > 50) throw new Error("invalid_quick_replies");
+  const ids = new Set(), replies = value.replies.map(reply => {
+    if (!reply || !/^[0-9a-f]{32}$/.test(reply.id) || ids.has(reply.id) || !validPersonalReplyTitle(reply.title) || !validBody(reply.body) || !["fr", "en"].includes(reply.language)) throw new Error("invalid_quick_replies");
+    ids.add(reply.id); return { id: reply.id, title: reply.title, body: reply.body, language: reply.language };
+  });
+  if (new TextEncoder().encode(JSON.stringify(replies)).length > 32768) throw new Error("invalid_quick_replies");
+  return { version: value.version, replies, writable: value.writable !== false };
+}
+function personalReplyControls() {
+  const blocked = Boolean(personalReplyBusy || personalReplyConflict || personalReplyUncertain || !personalReplies || !personalReplies.writable);
+  el("new-personal-reply").hidden = personalReplies?.writable === false;
+  el("new-personal-reply").disabled = blocked || Boolean(personalReplyDraft) || personalReplies.replies.length >= 50;
+  el("reload-personal-replies").disabled = Boolean(personalReplyBusy);
+  el("personal-reply-save").disabled = blocked; el("personal-reply-save").hidden = personalReplies?.writable === false;
+  el("personal-reply-cancel").disabled = Boolean(personalReplyBusy);
+  for (const id of ["personal-reply-title", "personal-reply-body"]) { el(id).disabled = Boolean(personalReplyBusy); el(id).readOnly = personalReplies?.writable === false; }
+  el("personal-reply-language").disabled = Boolean(personalReplyBusy) || personalReplies?.writable === false;
+  for (const button of el("quick-replies-list").children) button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
+}
+function personalReplyAction(source, handler, marker) {
+  const button = document.createElement("button"); button.type = "button"; button.className = "text-button"; ui.text(button, source);
+  if (marker) button.dataset.personalAction = marker;
+  button.disabled = Boolean(personalReplyBusy || personalReplyConflict || personalReplyUncertain || personalReplyDraft || !personalReplies?.writable);
+  button.addEventListener("click", () => { if (quickRepliesCurrent() && !button.disabled) handler(); }); return button;
+}
+function renderPersonalReplies() {
+  const list = el("personal-replies-list"); ui.forget(list); list.replaceChildren();
+  for (const reply of personalReplies?.replies ?? []) {
+    if (reply.language !== quickReplyLanguage) continue;
+    const row = document.createElement("div"); row.className = "personal-reply-row"; row.dataset.personalId = reply.id;
+    const insert = document.createElement("button"); insert.type = "button"; insert.className = "quick-reply personal-reply-insert"; insert.lang = reply.language;
+    insert.dataset.personalQuickReply = reply.id; insert.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
+    const title = document.createElement("strong"), body = document.createElement("span"); ui.rawText(title, reply.title); ui.rawText(body, reply.body); insert.append(title, body);
+    insert.addEventListener("click", () => insertQuickReply(reply.body)); row.append(insert);
+    const actions = document.createElement("div"); actions.className = "personal-reply-actions"; actions.hidden = personalReplies.writable === false;
+    actions.append(personalReplyAction("Modifier", () => editPersonalReply(reply), "edit"), personalReplyAction("Supprimer", () => { personalReplyDelete = reply.id; renderPersonalReplies(); focusVisible(el("personal-replies-list").querySelector(".personal-reply-confirm")?.querySelector("button")); }, "delete"));
+    row.append(actions);
+    if (personalReplyDelete === reply.id) {
+      const confirmation = document.createElement("div"), prompt = document.createElement("p"); ui.text(prompt, "Supprimer cette réponse personnelle ?");
+      confirmation.className = "personal-reply-confirm"; confirmation.append(prompt,
+        personalReplyAction("Confirmer la suppression", () => { void savePersonalReplies(personalReplies.replies.filter(value => value.id !== reply.id)); }, "confirm-delete"),
+        personalReplyAction("Annuler", () => { personalReplyDelete = null; renderPersonalReplies(); }, "cancel-delete")); row.append(confirmation);
+    }
+    list.append(row);
+  }
+  if (personalReplies && !list.children.length) {
+    const empty = document.createElement("p"); empty.className = "media-help"; ui.text(empty, "Aucune réponse personnelle dans cette langue."); list.append(empty);
+  }
+  personalReplyControls();
+}
+function capturePersonalReplyDraft() {
+  if (!personalReplyDraft) return;
+  personalReplyDraft.title = el("personal-reply-title").value; personalReplyDraft.body = el("personal-reply-body").value;
+  personalReplyDraft.language = el("personal-reply-language").value;
+}
+function editPersonalReply(reply = null) {
+  if (!quickRepliesCurrent() || !personalReplies?.writable || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
+  personalReplyDraft = reply ? { ...reply } : { id: newClientId(), title: "", body: "", language: quickReplyLanguage };
+  personalReplyDelete = null; el("personal-reply-editor").hidden = false;
+  el("personal-reply-title").value = personalReplyDraft.title; el("personal-reply-body").value = personalReplyDraft.body; el("personal-reply-language").value = personalReplyDraft.language;
+  notice("", false, "personal-replies-status"); renderPersonalReplies(); focusVisible(el("personal-reply-title"));
+}
+function reportPersonalReplyError(error) {
+  if (error.status === 401) { signOut(); return; }
+  const text = error.status === 400 || error.status === 413 ? "Vérifie la réponse : titre de 1 à 64 caractères, texte de 1 à 4 096 caractères et 50 réponses maximum."
+    : "Les réponses personnelles sont momentanément indisponibles. Tu peux utiliser les phrases proposées.";
+  notice(text, true, "personal-replies-status");
+}
+async function loadPersonalReplies() {
+  const context = quickReplyContext; if (!quickRepliesCurrent(context) || personalReplyBusy) return;
+  capturePersonalReplyDraft(); personalReplyBusy = "load"; const abort = new AbortController(); personalReplyAbort = abort; personalReplyControls();
+  try {
+    const value = personalReplyView(await request("/api/admin/quick-replies", { account: true, signal: abort.signal }));
+    if (!quickRepliesCurrent(context)) return;
+    personalReplies = value; personalReplyConflict = false; personalReplyUncertain = false; personalReplyDelete = null;
+    notice(!value.writable ? personalReplyDraft ? "Les réponses sont en lecture seule. Ton brouillon est conservé." : "Les réponses personnelles sont en lecture seule." : personalReplyDraft ? "Liste rechargée. Ton brouillon est conservé : vérifie-le puis enregistre." : "", false, "personal-replies-status");
+  } catch (error) { if (quickRepliesCurrent(context) && !error.stale) reportPersonalReplyError(error); }
+  finally { if (quickRepliesCurrent(context)) { personalReplyBusy = null; personalReplyAbort = null; renderPersonalReplies(); } }
+}
+async function savePersonalReplies(replies) {
+  const context = quickReplyContext; if (!quickRepliesCurrent(context) || !personalReplies?.writable || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
+  if (replies.length > 50 || new TextEncoder().encode(JSON.stringify(replies)).length > 32768) {
+    notice("Vérifie la réponse : titre de 1 à 64 caractères, texte de 1 à 4 096 caractères et 50 réponses maximum.", true, "personal-replies-status"); return;
+  }
+  const command = { expectedVersion: personalReplies.version, replies }; personalReplyBusy = "write";
+  const abort = new AbortController(); personalReplyAbort = abort; renderPersonalReplies(); notice("Enregistrement…", false, "personal-replies-status");
+  try {
+    const value = personalReplyView(await request("/api/admin/quick-replies", { account: true, mutation: true, body: command, signal: abort.signal }));
+    if (!quickRepliesCurrent(context)) return;
+    personalReplies = value; personalReplyDraft = null; personalReplyDelete = null; el("personal-reply-editor").hidden = true;
+    el("personal-reply-title").value = ""; el("personal-reply-body").value = ""; notice("Réponses personnelles enregistrées.", false, "personal-replies-status");
+  } catch (error) {
+    if (!quickRepliesCurrent(context) || error.stale) return;
+    if (error.status === 409) { personalReplyConflict = true; notice("Les réponses ont changé ailleurs. Ton brouillon est conservé. Recharge la liste avant de réessayer.", true, "personal-replies-status"); }
+    else if (!error.status || error.status >= 500 || error.status === 408) {
+      personalReplyUncertain = true; notice("La confirmation manque. Recharge les réponses enregistrées avant toute nouvelle modification ; ton brouillon est conservé.", true, "personal-replies-status");
+    } else reportPersonalReplyError(error);
+  } finally { if (quickRepliesCurrent(context)) { personalReplyBusy = null; personalReplyAbort = null; renderPersonalReplies(); } }
 }
 el("open-quick-replies").addEventListener("click", () => {
   closeComposerTools();
@@ -1481,12 +1863,28 @@ el("open-quick-replies").addEventListener("click", () => {
   closeEmojis();
   quickReplyContext = { ticket: snapshot(currentState()), owner: sessionOwner.id, csrf };
   quickReplyLanguage ??= ui.getLanguage() === "en" ? "en" : "fr";
-  el("quick-reply-language").value = quickReplyLanguage; renderQuickReplies();
-  el("quick-replies-dialog").showModal(); focusVisible(el("quick-reply-language"));
+  el("quick-reply-language").value = quickReplyLanguage; renderQuickReplies(); renderPersonalReplies();
+  el("quick-replies-dialog").showModal(); focusVisible(el("quick-reply-language")); void loadPersonalReplies();
 });
 el("quick-reply-language").addEventListener("change", () => {
-  if (!quickReplyContext || !["fr", "en"].includes(el("quick-reply-language").value)) return;
-  quickReplyLanguage = el("quick-reply-language").value; renderQuickReplies(); notice("", false, "quick-replies-status");
+  if (!quickRepliesCurrent() || !["fr", "en"].includes(el("quick-reply-language").value)) return;
+  quickReplyLanguage = el("quick-reply-language").value; renderQuickReplies(); renderPersonalReplies(); notice("", false, "quick-replies-status");
+});
+el("new-personal-reply").addEventListener("click", () => editPersonalReply());
+el("reload-personal-replies").addEventListener("click", () => { void loadPersonalReplies(); });
+el("personal-reply-cancel").addEventListener("click", () => {
+  if (!quickRepliesCurrent() || personalReplyBusy) return;
+  personalReplyDraft = null; el("personal-reply-title").value = ""; el("personal-reply-body").value = ""; el("personal-reply-editor").hidden = true;
+  renderPersonalReplies(); focusVisible(el("new-personal-reply"));
+});
+for (const id of ["personal-reply-title", "personal-reply-body", "personal-reply-language"]) el(id).addEventListener("input", capturePersonalReplyDraft);
+el("personal-reply-editor").addEventListener("submit", event => {
+  event.preventDefault(); if (!quickRepliesCurrent() || !personalReplyDraft || !personalReplies?.writable || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
+  capturePersonalReplyDraft(); const reply = { ...personalReplyDraft, title: personalReplyDraft.title.trim().normalize("NFC") };
+  if (!validPersonalReplyTitle(reply.title) || !validBody(reply.body) || !["fr", "en"].includes(reply.language)) {
+    notice("Vérifie la réponse : titre de 1 à 64 caractères, texte de 1 à 4 096 caractères et 50 réponses maximum.", true, "personal-replies-status"); return;
+  }
+  const replies = personalReplies.replies.filter(value => value.id !== reply.id); replies.push(reply); void savePersonalReplies(replies);
 });
 el("close-quick-replies").addEventListener("click", () => closeQuickReplies(true));
 el("quick-replies-dialog").addEventListener("close", () => { if (quickReplyContext && !el("quick-replies-dialog").open) closeQuickReplies(true); });
@@ -1495,6 +1893,20 @@ el("message-body").addEventListener("input", () => { const state = currentState(
 el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
 el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) { closeComposerTools(); el("image-file").click(); focusVisible(el("open-composer-tools")); } });
 el("image-file").addEventListener("change", chooseFile);
+el("pick-video").addEventListener("click", () => { if (videoCreationEnabled && !el("pick-video").disabled) { closeComposerTools(); el("video-file").click(); focusVisible(el("open-composer-tools")); } });
+el("video-file").addEventListener("change", chooseVideo);
+el("cancel-video").addEventListener("click", () => {
+  const state = currentState(); if (!state) return;
+  if (videoTransfer?.state === state && state.pending?.kind === "video" && state.pending.stage === "uploading") {
+    videoTransfer.cancelled = true; videoTransfer.controller.abort(); return;
+  }
+  if (state.pending || sendBusy) return;
+  state.videoDraft = null; revokeVideoPreview(); renderMeta(state); focusVisible(el("message-body"));
+});
+el("open-video-gallery").addEventListener("click", () => { const opener = menuReturnFocus(); closeChatMenu(); void openVideoGallery(opener); });
+el("close-video-gallery").addEventListener("click", () => closeVideoGallery());
+el("video-gallery").addEventListener("close", () => { if (videoGallery && !el("video-gallery").open) closeVideoGallery(); });
+el("more-videos").addEventListener("click", () => { void loadVideoGallery(true); });
 el("cancel-image").addEventListener("click", () => {
   const state = currentState(), restoreFocus = document.activeElement === el("cancel-image");
   if (state && !state.pending && !sendBusy) {
@@ -1632,6 +2044,8 @@ async function start({ session = null } = {}) {
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       const capability = await request(`${chatBase}/capabilities`, { account: true });
       if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
+      videoEnabled = capability.video?.enabled === true && capability.video.maxBytes === 104857600 && capability.video.mime === "video/mp4";
+      videoCreationEnabled = videoEnabled && capability.video.creationEnabled !== false;
       profileCapability = capability.profile?.enabled === true ? capability.profile : null;
       announcementCapability = capability.announcements?.enabled === true ? capability.announcements : null;
       tasksCapability = role === "admin" && capability.tasks?.enabled === true;

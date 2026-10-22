@@ -7,6 +7,8 @@ import { copyRuntimeMediaEnvironment, loadRuntimeMediaEnvironment } from "../ser
 import { copyRuntimeNotificationsEnvironment, loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { copyRuntimeCrmEnvironment, loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { copyRuntimeBroadcastEnvironment, loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
+import { copyRuntimeVideoEnvironment, loadRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
+import { checkRuntimeVideoStorage } from "../server/config/runtime-video-storage.mjs";
 import { checkRuntimeMediaStorage } from "../server/config/runtime-media-storage.mjs";
 import { inspectDatabase } from "../server/preflight/database.mjs";
 import { makePreflightReport } from "../server/preflight/report.mjs";
@@ -28,9 +30,9 @@ export function parseArguments(args) {
     }
     if (args[offset] === "--profile") {
       const profile = args[offset + 1];
-      if (!["photos", "photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast"].includes(profile)
-        || deployment && !["photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast"].includes(profile)
-        || ["photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast"].includes(profile) && !deployment) fail("PRIVATE_MESSAGING_USAGE");
+      if (!["photos", "photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(profile)
+        || deployment && !["photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(profile)
+        || ["photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(profile) && !deployment) fail("PRIVATE_MESSAGING_USAGE");
       return { command: args[0], ...(deployment ? { deployment } : {}), profile: args[offset + 1], ...authenticationArguments(args.slice(offset + 2)) };
     }
     if (deployment) fail("PRIVATE_MESSAGING_USAGE");
@@ -40,7 +42,9 @@ export function parseArguments(args) {
 
 // Match the configured server's physical schema checks, without creating its
 // services, HTTP listener, transport or workers. These adapters issue reads.
-export async function checkMessagingSchema(env) {
+export async function checkMessagingSchema(env, { video = false } = {}) {
+  if (typeof video !== "boolean") fail("PRIVATE_MESSAGING_SCHEMA");
+  const schemaOptions = video ? { video: true } : {};
   let pool;
   try {
     const { createRuntimePool } = await import("../server/db/runtime.mjs");
@@ -52,27 +56,33 @@ export async function checkMessagingSchema(env) {
     pool = await createRuntimePool(env);
     const chatStore = createChatStore(pool);
     for (const store of [createAuthStore(pool), createAccessStore(pool), createMailStore(pool), chatStore,
-      createMediaStore({ pool, chatStore })]) await store.assertSchema();
+      createMediaStore({ pool, chatStore })]) await store.assertSchema(schemaOptions);
     if (env.JESSIEMESSAGE_ENABLE_NOTIFICATIONS === "1") {
       const { createNotificationsStore } = await import("../server/notifications/store.mjs");
       const { loadNotificationsConfig } = await import("../server/notifications/config.mjs");
       const notifications = loadNotificationsConfig(env);
-      try { await createNotificationsStore({ pool, chatStore, key: notifications.key }).assertSchema(); }
+      try { await createNotificationsStore({ pool, chatStore, key: notifications.key }).assertSchema(schemaOptions); }
       finally { notifications.key.fill(0); }
     }
     if (env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY === "1") {
       const { createResetStore } = await import("../server/reset/store.mjs");
       const { createResetMailStore } = await import("../server/reset/mail-store.mjs");
-      await createResetStore(pool).assertSchema();
-      await createResetMailStore(pool).assertSchema();
+      await createResetStore(pool).assertSchema(schemaOptions);
+      await createResetMailStore(pool).assertSchema(schemaOptions);
     }
     if (env.JESSIEMESSAGE_ENABLE_CRM === "1") {
       const { createCrmStore } = await import("../server/crm/store.mjs");
-      await createCrmStore({ pool, chatStore }).assertSchema();
+      await createCrmStore({ pool, chatStore }).assertSchema(schemaOptions);
     }
     if (env.JESSIEMESSAGE_ENABLE_BROADCAST === "1") {
       const { assertBroadcastSchema } = await import("../server/broadcast/store.mjs");
-      await assertBroadcastSchema(pool);
+      await assertBroadcastSchema(pool, schemaOptions);
+    }
+    if (video) {
+      const [{ assertErasureSchema }, { loadVideoMigrations }] = await Promise.all([import("../server/data/erasure-schema.mjs"), import("../server/video/migrations.mjs")]);
+      const connection = await pool.getConnection();
+      try { await assertErasureSchema(connection, env.JESSIEMESSAGE_DB_NAME, { candidateMigrations: await loadVideoMigrations() }); }
+      finally { connection.release(); }
     }
   } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
   finally { try { await pool?.end(); } catch { fail("PRIVATE_MESSAGING_SCHEMA"); } }
@@ -80,7 +90,7 @@ export async function checkMessagingSchema(env) {
 
 export async function run(options, { inheritedEnv = process.env, execArgv = process.execArgv,
   loadEnvironment, inspect = inspectDatabase, checkSchema = checkMessagingSchema,
-  startServer = start, checkStorage = checkRuntimeMediaStorage } = {}) {
+  startServer = start, checkStorage = checkRuntimeMediaStorage, checkVideoStorage = checkRuntimeVideoStorage, managedVideo = false } = {}) {
   let source, env;
   try {
     const names = ["command", "privateDirectory", "privatePathMode", ...(Object.hasOwn(options ?? {}, "profile") ? ["profile"] : []),
@@ -92,18 +102,22 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       ...(Object.hasOwn(options, "profile") ? ["--profile", options.profile] : []),
       "--private-directory", options.privateDirectory, "--private-path-mode", options.privatePathMode]);
     const transition = selected.deployment === "primary-transition", originOptions = transition ? { originProfile: "primary" } : {};
-    const broadcast = selected.profile === "photos-notify-recovery-crm-broadcast";
+    const video = selected.profile === "photos-notify-recovery-crm-broadcast-video";
+    // The two-root closure owner and manual backup parent must own every video
+    // producer. Only its fixed IPC child supplies this internal startup seam.
+    if (typeof managedVideo !== "boolean" || video && selected.command === "start" && !managedVideo) fail("PRIVATE_MESSAGING_USAGE");
+    const broadcast = video || selected.profile === "photos-notify-recovery-crm-broadcast";
     const crm = broadcast || selected.profile === "photos-notify-recovery-crm";
     const recovery = crm || selected.profile === "photos-notify-recovery";
     const notifications = recovery || selected.profile === "photos-notify", photos = notifications || selected.profile === "photos";
     const profileOptions = { ...originOptions, ...(recovery ? { recovery: true } : {}) };
-    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : notifications ? loadRuntimeNotificationsEnvironment : photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
+    loadEnvironment ??= video ? loadRuntimeVideoEnvironment : broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : notifications ? loadRuntimeNotificationsEnvironment : photos ? loadRuntimeMediaEnvironment : loadRuntimeMessagingEnvironment;
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); }
     catch { fail("PRIVATE_MESSAGING_ENVIRONMENT"); }
     try {
       source = await loadEnvironment(selected.privateDirectory, { ...processOptions, ...profileOptions });
-      env = (broadcast ? copyRuntimeBroadcastEnvironment : crm ? copyRuntimeCrmEnvironment : notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source, profileOptions);
+      env = (video ? copyRuntimeVideoEnvironment : broadcast ? copyRuntimeBroadcastEnvironment : crm ? copyRuntimeCrmEnvironment : notifications ? copyRuntimeNotificationsEnvironment : photos ? copyRuntimeMediaEnvironment : copyRuntimeMessagingEnvironment)(source, profileOptions);
       if (recovery && !crm) {
         // The files contain no recovery switch. Activate it only after their
         // unchanged, anchored profile has passed validation, never from env.
@@ -113,19 +127,20 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       if (env.PORT !== processOptions.port || env.JESSIEMESSAGE_PRIVATE_PATH_MODE !== selected.privatePathMode) fail("PRIVATE_MESSAGING_CONFIGURATION");
     } catch { fail("PRIVATE_MESSAGING_CONFIGURATION"); }
     try {
-      const report = makePreflightReport("database", await inspect({ env, databaseName: env.JESSIEMESSAGE_DB_NAME }));
+      const report = makePreflightReport("database", await inspect({ env, databaseName: env.JESSIEMESSAGE_DB_NAME, ...(video ? { video: true } : {}) }));
       if (report.status !== "checks_passed" || report.checks.some((check) => check.status !== "pass")
         || report.privilegeObservation.profile !== env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE) fail("PRIVATE_MESSAGING_DATABASE");
     } catch { fail("PRIVATE_MESSAGING_DATABASE"); }
     try {
-      await checkSchema(env);
-      if (photos) await checkStorage(env);
+      await checkSchema(env, ...(video ? [{ video: true }] : []));
+      if (photos) await checkStorage(env, ...(video ? [{ video: true }] : []));
+      if (video) await checkVideoStorage(env);
     } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
     if (selected.command === "start") {
-      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}), ...(crm ? { crm: true } : {}), ...(broadcast ? { broadcast: true } : {}) }); }
+      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}), ...(crm ? { crm: true } : {}), ...(broadcast ? { broadcast: true } : {}), ...(video ? { video: true } : {}) }); }
       catch { fail("PRIVATE_MESSAGING_STARTUP"); }
     }
-    return { status: selected.command === "start" ? "started" : "checks_passed", profile: broadcast ? "messaging-photos-notify-recovery-crm-broadcast" : crm ? "messaging-photos-notify-recovery-crm" : recovery ? "messaging-photos-notify-recovery" : notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
+    return { status: selected.command === "start" ? "started" : "checks_passed", profile: video ? "messaging-photos-notify-recovery-crm-broadcast-video" : broadcast ? "messaging-photos-notify-recovery-crm-broadcast" : crm ? "messaging-photos-notify-recovery-crm" : recovery ? "messaging-photos-notify-recovery" : notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",
       ...(transition ? { deployment: "primary-transition" } : {}),
       started: selected.command === "start", smtpDeliveryTested: false, launchApproved: false };
   } catch (error) {
@@ -133,7 +148,7 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
     fail("PRIVATE_MESSAGING_STARTUP");
   } finally {
     clearRuntimeMessagingSecrets(env);
-    if ([loadRuntimeMessagingEnvironment, loadRuntimeMediaEnvironment, loadRuntimeNotificationsEnvironment, loadRuntimeCrmEnvironment, loadRuntimeBroadcastEnvironment].includes(loadEnvironment)) clearRuntimeMessagingSecrets(source);
+    if ([loadRuntimeMessagingEnvironment, loadRuntimeMediaEnvironment, loadRuntimeNotificationsEnvironment, loadRuntimeCrmEnvironment, loadRuntimeBroadcastEnvironment, loadRuntimeVideoEnvironment].includes(loadEnvironment)) clearRuntimeMessagingSecrets(source);
   }
 }
 

@@ -1,6 +1,7 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionExpiry, CLIENT_SESSION_SECONDS, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { randomBytes } from "node:crypto";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 import { encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
 import { CLIENT_ADMISSION_POLICY, hasConsumedInvitation, invitationConsumptionProjection } from "./admission.mjs";
 
@@ -133,10 +134,10 @@ export function createAccessStore(pool, { clock } = {}) {
   }
 
   return {
-    async assertSchema() {
+    async assertSchema(options = {}) {
       return withConnection(async (connection) => {
         const database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
-        const status = await migrationStatus(connection, { database, migrations: await loadMigrations() });
+        const status = await migrationStatus(connection, { database, migrations: await loadStoreMigrations(options) });
         if (status.some((item) => item.state !== "applied")) stateError();
         const tables = await connection.query("SELECT TABLE_NAME AS name, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
         const columns = await connection.query(`SELECT TABLE_NAME AS tableName, COLUMN_NAME AS columnName,

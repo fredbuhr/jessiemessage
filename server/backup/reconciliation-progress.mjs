@@ -1,7 +1,9 @@
 import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:crypto";
 import { createPrivateJsonStore } from "../files/private-json.mjs";
 
-const NAMESPACE = "jessiemessage:closure-reconciliation-progress:v1";
+const namespace = context => Object.hasOwn(context.targetBinding, "videoRootFingerprint")
+  ? "jessiemessage:closure-reconciliation-progress:v2:video"
+  : "jessiemessage:closure-reconciliation-progress:v1";
 const PHASES = ["prepared", "running", "completed"];
 const HEX = /^[a-f0-9]{64}$/;
 const MAX_PLAINTEXT = 1024;
@@ -18,10 +20,14 @@ function fields(value, names) {
     || names.some(name => !Object.hasOwn(value, name) || !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name), "value"))) fail("INPUT");
 }
 function binding(value) {
-  fields(value, ["database", "rootFingerprint"]);
+  const video = value !== null && typeof value === "object" && Object.hasOwn(value, "videoRootFingerprint");
+  fields(value, ["database", "rootFingerprint", ...(video ? ["videoRootFingerprint"] : [])]);
   if (typeof value.database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(value.database)
-    || typeof value.rootFingerprint !== "string" || !HEX.test(value.rootFingerprint)) fail("INPUT");
-  return { database: value.database, rootFingerprint: value.rootFingerprint };
+    || typeof value.rootFingerprint !== "string" || !HEX.test(value.rootFingerprint)
+    || video && (typeof value.videoRootFingerprint !== "string" || !HEX.test(value.videoRootFingerprint)
+      || value.videoRootFingerprint === value.rootFingerprint)) fail("INPUT");
+  return { database: value.database, rootFingerprint: value.rootFingerprint,
+    ...(video ? { videoRootFingerprint: value.videoRootFingerprint } : {}) };
 }
 function selected(options, hasDirectory) {
   fields(options, [...(hasDirectory ? ["directory"] : []), "key", "planSha256", "manifestSha256", "targetBinding"]);
@@ -31,7 +37,7 @@ function selected(options, hasDirectory) {
   return { planSha256: options.planSha256, manifestSha256: options.manifestSha256, targetBinding: binding(options.targetBinding) };
 }
 function derive(key, context, purpose) {
-  return Buffer.from(hkdfSync("sha256", key, Buffer.alloc(0), Buffer.from(`${NAMESPACE}:${purpose}:${JSON.stringify(context)}`), 32));
+  return Buffer.from(hkdfSync("sha256", key, Buffer.alloc(0), Buffer.from(`${namespace(context)}:${purpose}:${JSON.stringify(context)}`), 32));
 }
 
 /** Separate keys for target progress receipts, never for rewriting source envelopes. */
@@ -50,26 +56,27 @@ function decoded(value, min, max = min) {
   if (result.length < min || result.length > max || result.toString("base64url") !== value) { result.fill(0); fail(); }
   return result;
 }
-function envelopeState(value) {
+function envelopeState(value, version) {
   fields(value, ["version", "revision", "envelope"]); revision(value.revision);
-  if (value.version !== 1 || value.envelope === null && value.revision !== 0) fail("INPUT");
-  if (value.envelope === null) return { version: 1, revision: value.revision, envelope: null };
+  if (value.version !== version || value.envelope === null && value.revision !== 0) fail("INPUT");
+  if (value.envelope === null) return { version, revision: value.revision, envelope: null };
   fields(value.envelope, ["iv", "ciphertext", "tag"]);
   for (const [field, min, max] of [["iv", 12, 12], ["ciphertext", 1, MAX_PLAINTEXT], ["tag", 16, 16]]) decoded(value.envelope[field], min, max).fill(0);
-  return { version: 1, revision: value.revision, envelope: { iv: value.envelope.iv, ciphertext: value.envelope.ciphertext, tag: value.envelope.tag } };
+  return { version, revision: value.revision, envelope: { iv: value.envelope.iv, ciphertext: value.envelope.ciphertext, tag: value.envelope.tag } };
 }
 
 /** A private run ledger; completion is neither a startup nor authority capability. */
 export function createReconciliationProgress(options, internal = {}) {
   const context = selected(options, true), directory = options.directory;
-  const key = derive(options.key, context, "ledger-key"), associated = `${NAMESPACE}:ledger:${JSON.stringify(context)}`;
+  const version = Object.hasOwn(context.targetBinding, "videoRootFingerprint") ? 2 : 1;
+  const key = derive(options.key, context, "ledger-key"), associated = `${namespace(context)}:ledger:${JSON.stringify(context)}`;
   let closed = false;
   const available = () => { if (closed) fail(); };
   function record(value) {
     fields(value, ["version", "planSha256", "manifestSha256", "targetBinding", "phase"]);
     const result = { version: value.version, planSha256: value.planSha256, manifestSha256: value.manifestSha256,
       targetBinding: binding(value.targetBinding), phase: value.phase };
-    if (result.version !== 1 || !PHASES.includes(result.phase)) fail("INPUT");
+    if (result.version !== version || !PHASES.includes(result.phase)) fail("INPUT");
     if (result.planSha256 !== context.planSha256 || result.manifestSha256 !== context.manifestSha256
       || JSON.stringify(result.targetBinding) !== JSON.stringify(context.targetBinding)) fail("CHANGED");
     return result;
@@ -96,7 +103,7 @@ export function createReconciliationProgress(options, internal = {}) {
     if (to < from || to > from + 1 || to === from && JSON.stringify(previous) !== JSON.stringify(next)) fail("CHANGED");
   }
   const store = createPrivateJsonStore({ name: "reconciliation-progress.json", lock: "reconciliation-progress.lock", maxBytes: 8192,
-    validate: envelopeState, empty: () => ({ version: 1, revision: 0, envelope: null }),
+    validate: value => envelopeState(value, version), empty: () => ({ version, revision: 0, envelope: null }),
     fail: code => fail(({ input: "INPUT", changed: "CHANGED", busy: "BUSY" })[code]),
     isKnownError: error => error instanceof ReconciliationProgressError });
   return Object.freeze({
@@ -112,7 +119,7 @@ export function createReconciliationProgress(options, internal = {}) {
         const iv = randomBytes(12), cipher = createCipheriv("aes-256-gcm", key, iv);
         cipher.setAAD(Buffer.from(`${associated}:${expectedRevision + 1}`));
         const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-        const saved = await store.save(directory, { version: 1, revision: expectedRevision,
+        const saved = await store.save(directory, { version, revision: expectedRevision,
           envelope: { iv: iv.toString("base64url"), ciphertext: ciphertext.toString("base64url"), tag: cipher.getAuthTag().toString("base64url") } }, expectedRevision,
         { ...internal, async beforeCommit(previous) {
           available(); transition(opened(previous).record, next); await authorize(); available();

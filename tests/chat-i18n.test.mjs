@@ -97,7 +97,7 @@ function parsePage(nodes) {
   }
   return root;
 }
-function harness({ currentSession = session(), visible = true, intercept = null, language = "fr" } = {}) {
+function harness({ currentSession = session(), visible = true, intercept = null, quickReplies = null, language = "fr" } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const root = parsePage(nodes), body = root.querySelector("body");
@@ -109,7 +109,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     querySelector: (selector) => root.querySelector(selector), querySelectorAll: (selector) => root.querySelectorAll(selector),
     addEventListener: (name, handler) => addEvent(documentEvents, name, handler) };
   nodes.document = document; document.activeElement = body;
-  const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0 };
+  const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0, quickReplies: quickReplies ?? { version: "0", replies: [] }, quickReplyWrites: 0 };
   const conversation = (owner = state.currentSession?.user.id) => {
     if (!state.conversations.has(owner)) state.conversations.set(owner, { id: id(100 + Number.parseInt(owner, 16)), clientId: owner, clientPseudonym: `Synthetic ${owner}`,
       peerName: "Messages privés", createdAt: now, closedAt: null, lastActivityAt: now, latestSequence: "1", latestEventSequence: "1", lastReadSequence: "0", peerReadSequence: "0", unreadCount: 1, canSend: true });
@@ -127,6 +127,13 @@ function harness({ currentSession = session(), visible = true, intercept = null,
       // Intercepts deliberately can complete after abort, exercising the real
       // controller's generation checks rather than relying on fetch alone.
       const value = intercept?.(path, options, state, calls); if (value !== undefined) return await value;
+      if (path === "/api/admin/quick-replies") {
+        if (options.method !== "POST") return response(200, structuredClone(state.quickReplies));
+        state.quickReplyWrites += 1; const command = JSON.parse(options.body);
+        if (command.expectedVersion !== state.quickReplies.version) return response(409, { error: "quick_replies_conflict" });
+        state.quickReplies.version = String(BigInt(state.quickReplies.version) + 1n); state.quickReplies.replies = structuredClone(command.replies);
+        return response(200, structuredClone(state.quickReplies));
+      }
       if (/^\/api\/(?:auth|access)\/session$/.test(path)) return response(state.currentSession ? 200 : 401, state.currentSession ? structuredClone(state.currentSession) : { error: "authentication_required" });
       if (path.startsWith("/api/broadcast/") || path === "/api/admin/crm/capabilities" || /\/api\/media\/.*\/capabilities$/.test(path)) return response(404, { error: "not_found" });
       if (path.endsWith("/capabilities")) return response(200, { enabled: true });
@@ -432,4 +439,16 @@ test("all controller message and photo error variants retain reactive translated
     assert.equal(f.element("chat-status").classList.contains("is-error"), true);
   }
   assert.equal(f.calls.length, before);
+});
+
+test("personal replies keep their title and body verbatim while management controls change language", async () => {
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: { version: "1", replies: [{ id: id(901), title: "Envoyer", body: "Mes photos <b>texte brut</b>", language: "fr" }] } }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); await f.click("open-quick-replies");
+  const row = f.element("personal-replies-list").children.find(node => node.dataset.personalId === id(901));
+  assert.equal(row.querySelector("strong").textContent, "Envoyer"); assert.equal(row.querySelector("span").textContent, "Mes photos <b>texte brut</b>");
+  f.language("en"); assert.equal(f.element("personal-replies-title").textContent, "My replies");
+  assert.equal(f.element("new-personal-reply").textContent, "New reply"); assert.equal(row.querySelector("strong").textContent, "Envoyer");
+  assert.equal(row.querySelector("span").textContent, "Mes photos <b>texte brut</b>"); assert.equal(row.querySelectorAll("b").length, 0);
+  for (const handler of row.querySelector(".personal-reply-insert").events.get("click")) handler({}); await flush();
+  assert.equal(f.element("message-body").value, "Mes photos <b>texte brut</b>"); assert.equal(f.state.posts, 0);
 });

@@ -23,6 +23,36 @@ const message = (overrides = {}) => ({
   id: messageId, sequence: "1", sender: "me", body: "Bonjour 👋 <script>example</script>", createdAt: now,
   deletedAt: null, clientMessageId, encryptedBody: "private-ciphertext", senderId: adminId, fingerprint: "private-fingerprint", ...overrides,
 });
+
+test("chat history exposes bounded message-scoped video metadata and rejects forged or tombstoned attachments", async t => {
+  const { base, service } = await fixture(t);
+  for (const role of ["admin", "client"]) {
+    const video = { id: "e".repeat(32), bytes: 901, mime: "video/mp4",
+      contentUrl: `/api/video/${role}/conversations/${conversationId}/messages/${messageId}/content`,
+      storageKey: "private-video-key", digest: "private-video-digest" };
+    const respond = (value) => { service.messages = async () => ({ conversation: conversation(role), messages: [value],
+      hasMoreBefore: false, hasMoreAfter: false, nextBefore: null, nextAfter: null, eventCursor: "1" }); };
+    respond(message({ body: "", video }));
+    const response = await fetch(`${base}${path(role)}`, { headers: { Cookie: cookie(role) } });
+    assert.equal(response.status, 200); headersArePrivate(response);
+    const payload = await response.json();
+    assert.deepEqual(payload.messages[0].video, { id: video.id, bytes: 901, mime: "video/mp4", contentUrl: video.contentUrl });
+    assert.equal(payload.messages[0].body, ""); assert.doesNotMatch(JSON.stringify(payload), /private-video|storageKey|digest/);
+    for (const changed of [
+      message({ body: "", video: { ...video, contentUrl: `/api/video/${role}/assets/${video.id}/content` } }),
+      message({ body: "", video: { ...video, contentUrl: video.contentUrl.replace(conversationId, "f".repeat(32)) } }),
+      message({ body: "", video: { ...video, bytes: 104857601 } }),
+      message({ body: "", video, media: deliveredMedia(role) }),
+      message({ body: null, deletedAt: now + 1, video }),
+    ]) {
+      respond(changed);
+      assert.equal((await fetch(`${base}${path(role)}`, { headers: { Cookie: cookie(role) } })).status, 503);
+    }
+    respond(message({ body: null, deletedAt: now + 1 }));
+    const tombstone = await (await fetch(`${base}${path(role)}`, { headers: { Cookie: cookie(role) } })).json();
+    assert.equal(tombstone.messages[0].video, undefined); assert.equal(tombstone.messages[0].body, null);
+  }
+});
 function deliveredMedia(role, overrides = {}) {
   const base = `/api/media/${role}/conversations/${conversationId}/messages/${messageId}`;
   return { id: "e".repeat(32), width: 100, height: 150, thumbnailWidth: 100, thumbnailHeight: 150,
@@ -525,5 +555,33 @@ test("conversation avatar DTO preserves role and conversation ACL URLs without s
       const refused = await fetch(`${base}${path(role)}`, { headers: { Cookie: cookie(role) } });
       assert.equal(refused.status, 503);
     }
+  }
+});
+
+
+test("video capability and blob media CSP require the explicit candidate option and administrator/client authentication", async t => {
+  const ordinary = await fixture(t);
+  const candidate = await fixture(t, {}, { videoEnabled: true });
+  for (const role of ["admin", "client"]) {
+    const api = `/api/chat/${role}/capabilities`, page = role === "admin" ? "/admin/messages" : "/messages";
+    assert.equal((await fetch(candidate.base + api)).status, 401);
+    const oldResponse = await fetch(ordinary.base + api, { headers: { Cookie: cookie(role) } });
+    assert.equal((await oldResponse.json()).video, undefined);
+    const current = await fetch(candidate.base + api, { headers: { Cookie: cookie(role) } });
+    assert.deepEqual((await current.json()).video, { enabled: true, maxBytes: 104857600, mime: "video/mp4" });
+    const protectedPage = await fetch(candidate.base + page, { headers: { Cookie: cookie(role) } });
+    assert.match(protectedPage.headers.get("content-security-policy"), /(?:^|;) media-src 'self' blob:/);
+    const oldPage = await fetch(ordinary.base + page, { headers: { Cookie: cookie(role) } });
+    assert.doesNotMatch(oldPage.headers.get("content-security-policy"), /media-src/);
+  }
+});
+
+test("compatibility chat advertises video reading with creation disabled and keeps its media CSP", async t => {
+  const f = await fixture(t, {}, { videoEnabled: true, videoCreationEnabled: false });
+  for (const role of ["admin", "client"]) {
+    const response = await fetch(`${f.base}/api/chat/${role}/capabilities`, { headers: { Cookie: cookie(role) } });
+    assert.deepEqual((await response.json()).video, { enabled: true, maxBytes: 104857600, mime: "video/mp4", creationEnabled: false });
+    const page = await fetch(f.base + (role === "admin" ? "/admin/messages" : "/messages"), { headers: { Cookie: cookie(role) } });
+    assert.match(page.headers.get("content-security-policy"), /(?:^|;) media-src 'self' blob:/);
   }
 });

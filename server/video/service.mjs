@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
+import { validateMessageBody } from "../chat/crypto.mjs";
 import { MAX_VIDEO_BYTES, VIDEO_BLOCK_BYTES, videoStoredBytes } from "./storage.mjs";
 import { validateMp4Prefix } from "./mp4.mjs";
 
@@ -11,8 +12,9 @@ export class VideoError extends Error {
 }
 const fail = (code) => { throw new VideoError(code); };
 const PREFIX_BYTES = 65536, ADMISSION_MS = 305000;
-const permitted = new Set(["VIDEO_INPUT", "VIDEO_FORMAT", "VIDEO_BUSY", "VIDEO_NOT_FOUND", "VIDEO_RATE_LIMIT", "VIDEO_STORAGE_LIMIT",
-  "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "ACCESS_FORBIDDEN", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "AUTH_BUSY"]);
+const permitted = new Set(["VIDEO_INPUT", "VIDEO_FORMAT", "VIDEO_BUSY", "VIDEO_NOT_FOUND", "VIDEO_IN_USE", "VIDEO_RATE_LIMIT", "VIDEO_STORAGE_LIMIT",
+  "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT", "CHAT_READ_ONLY",
+  "ACCESS_FORBIDDEN", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "AUTH_BUSY"]);
 let activeUploads = 0, activeReads = 0;
 const uploadingOwners = new Set(), readingOwners = new Map();
 const identifier = (value) => {
@@ -21,6 +23,14 @@ const identifier = (value) => {
 };
 const sized = (value, bytes) => Buffer.isBuffer(value) && value.length === bytes;
 const validBytes = (bytes) => Number.isSafeInteger(bytes) && bytes >= 1 && bytes <= MAX_VIDEO_BYTES;
+const sequence = (value, positive = false) => typeof value === "string" && /^(?:0|[1-9][0-9]{0,19})$/.test(value)
+  && BigInt(value) <= 18446744073709551615n && (!positive || value !== "0");
+function pageOptions(options = {}) {
+  if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((name) => !["before", "limit"].includes(name))) fail("VIDEO_INPUT");
+  const { before = null, limit = 50 } = options;
+  if (before !== null && !sequence(before) || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) fail("VIDEO_INPUT");
+  return { before, limit };
+}
 function checkAbort(signal) { if (signal?.aborted) fail("VIDEO_INPUT"); }
 async function guarded(operation) {
   try { return await operation(); }
@@ -87,11 +97,13 @@ async function inspectSource(source, bytes, signal) {
  * actor/owner ACL and durable capacity in each transaction. No in-memory or SQL
  * production adapter is provided by this lot, and no route is registered.
  */
-export async function createVideoService({ store, chatService, authStore, storage, key, minimumFreeBytes = 536870912, clock = Date.now } = {}) {
-  if (!sized(key, 32) || typeof clock !== "function" || !Number.isSafeInteger(minimumFreeBytes) || minimumFreeBytes < 0) fail("VIDEO_CONFIG");
+export async function createVideoService({ store, chatService, authStore, storage, key, messages = null, minimumFreeBytes = 536870912, clock = Date.now, creationEnabled = true } = {}) {
+  if (!sized(key, 32) || typeof clock !== "function" || !Number.isSafeInteger(minimumFreeBytes) || minimumFreeBytes < 0 || typeof creationEnabled !== "boolean") fail("VIDEO_CONFIG");
   for (const method of ["reserve", "commit", "getOwned", "release"]) if (typeof store?.[method] !== "function") fail("VIDEO_CONFIG");
   for (const method of ["put", "open", "availableSpace"]) if (typeof storage?.[method] !== "function") fail("VIDEO_CONFIG");
   if (typeof chatService?.actor !== "function" || typeof authStore?.consumeRateLimit !== "function") fail("VIDEO_CONFIG");
+  if (messages !== null && (["getMessageAsset", "gallery"].some((name) => typeof messages?.[name] !== "function")
+    || typeof chatService.sendVideo !== "function")) fail("VIDEO_CONFIG");
   key = Buffer.from(key);
   const tickets = new WeakMap();
   function now() { const value = clock(); if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail(); return value; }
@@ -128,7 +140,7 @@ export async function createVideoService({ store, chatService, authStore, storag
     try { await refund(record); } finally { finish(record); }
   }
   function validateRow(row, owner, proposed) {
-    if (!sized(row?.id, 16) || !sized(row.storageKey, 32) || !sized(row.ownerId, 16) || row.ownerId.toString("hex") !== owner
+    if (!sized(row?.id, 16) || !sized(row.storageKey, 32) || !sized(row.ownerId, 16) || owner !== null && row.ownerId.toString("hex") !== owner
       || !sized(row.digest, 32) || !validBytes(row.bytes) || row.storedBytes !== videoStoredBytes(row.bytes)
       || row.mime !== "video/mp4" || row.deletedAt !== null
       || !Number.isSafeInteger(row.createdAt) || row.createdAt < 0 || row.createdAt > now()) fail();
@@ -136,11 +148,62 @@ export async function createVideoService({ store, chatService, authStore, storag
       || !row.digest.equals(proposed.digest))) fail();
     return row;
   }
+  function deliveryDTO(row, role, conversationId, messageId) {
+    return { id: row.id.toString("hex"), bytes: row.bytes, mime: "video/mp4",
+      contentUrl: `/api/video/${role}/conversations/${conversationId}/messages/${messageId}/content` };
+  }
+  async function openContent(role, raw, lookup, { signal, ownerOnly = true, expectedId = null } = {}) {
+    const { actor, request } = await context(role, raw), releaseSlot = readSlot(actor.user.id);
+    let handle;
+    try {
+      checkAbort(signal); await budget(actor.user.id, "read", request.now);
+      // Delivery ACL belongs to the current conversation/message transaction.
+      // Its owner is the sender and can differ from the authorized reader.
+      const row = validateRow(await lookup({ ...request, now: now() }), ownerOnly ? actor.user.id : null);
+      if (expectedId !== null && !row.id.equals(expectedId)) fail();
+      checkAbort(signal); handle = await storage.open({ assetId: row.id, storageKey: row.storageKey });
+      if (!handle || handle.bytes !== row.bytes || handle.storedBytes !== row.storedBytes || typeof handle.stream !== "function" || typeof handle.close !== "function") fail();
+      let closing, closed = false, started = false;
+      const close = () => {
+        if (!closing) { closed = true; closing = (async () => { try { await handle.close(); } finally { releaseSlot(); } })(); }
+        return closing;
+      };
+      return Object.freeze({ bytes: row.bytes, mime: "video/mp4", close,
+        stream({ start = 0, end = row.bytes - 1, signal: streamSignal } = {}) {
+          if (started || closed) fail("VIDEO_INPUT");
+          started = true;
+          const combined = signal && streamSignal ? AbortSignal.any([signal, streamSignal]) : signal ?? streamSignal;
+          const iterator = (async function* () {
+            try {
+              checkAbort(combined);
+              for await (const chunk of handle.stream({ start, end, signal: combined })) {
+                checkAbort(combined);
+                if (!Buffer.isBuffer(chunk) || chunk.length < 1 || chunk.length > VIDEO_BLOCK_BYTES) fail();
+                yield chunk;
+              }
+            } catch (error) { await guarded(() => { throw error; }); }
+            finally { await close(); }
+          })();
+          // AsyncGenerator.return() before next() does not execute finally.
+          // Own descriptor cleanup even when the consumer never starts.
+          return Object.freeze({
+            next: (...args) => iterator.next(...args),
+            async return(value) { try { return await iterator.return(value); } finally { await close(); } },
+            async throw(error) { try { return await iterator.throw(error); } finally { await close(); } },
+            [Symbol.asyncIterator]() { return this; },
+          });
+        },
+      });
+    } catch (error) { try { await handle?.close?.(); } finally { releaseSlot(); } throw error; }
+  }
   return Object.freeze({
+    creationEnabled,
     actor: (role, raw) => guarded(async () => (await context(role, raw)).actor),
     admitUpload: (role, raw, { bytes, mime } = {}) => guarded(async () => {
       if (!validBytes(bytes) || mime !== "video/mp4") fail("VIDEO_INPUT");
-      const { actor, request } = await context(role, raw), releaseSlot = uploadSlot(actor.user.id);
+      const { actor, request } = await context(role, raw);
+      if (!creationEnabled) fail("VIDEO_READ_ONLY");
+      const releaseSlot = uploadSlot(actor.user.id);
       try {
         await budget(actor.user.id, "upload", request.now);
         const asset = { id: randomBytes(16), storageKey: randomBytes(32), bytes, storedBytes: videoStoredBytes(bytes), mime };
@@ -157,6 +220,7 @@ export async function createVideoService({ store, chatService, authStore, storag
     }),
     releaseUpload: (ticket) => guarded(() => releaseUpload(ticket)),
     upload: (role, raw, ticket, source, { signal } = {}) => guarded(async () => {
+      if (!creationEnabled) { await context(role, raw); fail("VIDEO_READ_ONLY"); }
       const record = tickets.get(ticket);
       if (!record || record.state !== "waiting") fail("VIDEO_INPUT");
       let digest; try { digest = tokenDigest(raw); } catch { fail("CHAT_UNAUTHORIZED"); }
@@ -196,46 +260,67 @@ export async function createVideoService({ store, chatService, authStore, storag
       } finally { try { await inspected?.close(); } finally { finish(record); } }
     }),
     open: (role, raw, assetId, { signal } = {}) => guarded(async () => {
+      const target = identifier(assetId);
+      return openContent(role, raw, (request) => store.getOwned({ ...request, assetId: target }), { signal, expectedId: target });
+    }),
+    remove: (role, raw, assetId) => guarded(async () => {
       const target = identifier(assetId), { actor, request } = await context(role, raw);
-      const releaseSlot = readSlot(actor.user.id); let handle;
-      try {
-        checkAbort(signal); await budget(actor.user.id, "read", request.now);
-        const row = validateRow(await store.getOwned({ ...request, now: now(), assetId: target }), actor.user.id);
-        if (!row.id.equals(target)) fail();
-        checkAbort(signal); handle = await storage.open({ assetId: row.id, storageKey: row.storageKey });
-        if (!handle || handle.bytes !== row.bytes || handle.storedBytes !== row.storedBytes || typeof handle.stream !== "function" || typeof handle.close !== "function") fail();
-        let closing, closed = false, started = false;
-        const close = () => {
-          if (!closing) { closed = true; closing = (async () => { try { await handle.close(); } finally { releaseSlot(); } })(); }
-          return closing;
-        };
-        return Object.freeze({ bytes: row.bytes, mime: "video/mp4", close,
-          stream({ start = 0, end = row.bytes - 1, signal: streamSignal } = {}) {
-            if (started || closed) fail("VIDEO_INPUT");
-            started = true;
-            const combined = signal && streamSignal ? AbortSignal.any([signal, streamSignal]) : signal ?? streamSignal;
-            const iterator = (async function* () {
-              try {
-                checkAbort(combined);
-                for await (const chunk of handle.stream({ start, end, signal: combined })) {
-                  checkAbort(combined);
-                  if (!Buffer.isBuffer(chunk) || chunk.length < 1 || chunk.length > VIDEO_BLOCK_BYTES) fail();
-                  yield chunk;
-                }
-              } catch (error) { await guarded(() => { throw error; }); }
-              finally { await close(); }
-            })();
-            // AsyncGenerator.return() before next() does not execute finally.
-            // Own descriptor cleanup even when the consumer never starts.
-            return Object.freeze({
-              next: (...args) => iterator.next(...args),
-              async return(value) { try { return await iterator.return(value); } finally { await close(); } },
-              async throw(error) { try { return await iterator.throw(error); } finally { await close(); } },
-              [Symbol.asyncIterator]() { return this; },
-            });
-          },
+      if (["deleteAsset", "releaseDeletedStorage"].some((name) => typeof store[name] !== "function")
+        || typeof storage.remove !== "function" || typeof storage.fingerprint !== "function"
+        || typeof store.binding?.rootFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(store.binding.rootFingerprint)) fail("VIDEO_CONFIG");
+      const binding = store.binding.rootFingerprint;
+      const assertRoot = async () => {
+        const fingerprint = await storage.fingerprint();
+        if (!sized(fingerprint, 32) || fingerprint.toString("hex") !== binding) fail();
+      };
+      await budget(actor.user.id, "delete", request.now); await assertRoot();
+      const row = await store.deleteAsset({ ...request, now: now(), assetId: target });
+      if (!sized(row?.id, 16) || !row.id.equals(target) || !sized(row.ownerId, 16) || row.ownerId.toString("hex") !== actor.user.id
+        || !sized(row.storageKey, 32) || !Number.isSafeInteger(row.deletedAt) || row.deletedAt < 0 || row.deletedAt > now()) fail();
+      await assertRoot();
+      const removed = await storage.remove({ storageKey: row.storageKey });
+      if (removed?.removed !== true) fail();
+      await assertRoot();
+      const released = await store.releaseDeletedStorage({ ...request, now: now(), assetId: target, storageKey: row.storageKey });
+      if (released?.released !== true) fail();
+      return { deleted: true };
+    }),
+    ...(messages === null ? {} : {
+      send: (role, raw, conversationId, input) => guarded(async () => {
+        if (!creationEnabled) { await context(role, raw); fail("VIDEO_READ_ONLY"); }
+        if (!["admin", "client"].includes(role)) fail("VIDEO_INPUT");
+        identifier(conversationId);
+        if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).length !== 3
+          || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(input, name))) fail("VIDEO_INPUT");
+        identifier(input.clientMessageId); identifier(input.videoId);
+        if (typeof input.caption !== "string" || input.caption.length > 1000) fail("VIDEO_INPUT");
+        if (input.caption !== "") { try { validateMessageBody(input.caption); } catch { fail("VIDEO_INPUT"); } }
+        return chatService.sendVideo(role, raw, conversationId, input);
+      }),
+      openMessage: (role, raw, conversationId, messageId, { signal } = {}) => guarded(async () => {
+        const conversation = identifier(conversationId), message = identifier(messageId);
+        return openContent(role, raw, (request) => messages.getMessageAsset({ ...request, conversationId: conversation, messageId: message }), { signal, ownerOnly: false });
+      }),
+      gallery: (role, raw, conversationId, options = {}) => guarded(async () => {
+        const conversation = identifier(conversationId), { before, limit } = pageOptions(options), { actor, request } = await context(role, raw);
+        await budget(actor.user.id, "gallery", request.now);
+        const result = await messages.gallery({ ...request, now: now(), conversationId: conversation, before, limit });
+        if (!result || !Array.isArray(result.items) || result.items.length > limit || typeof result.hasMore !== "boolean"
+          || !(result.nextBefore === null || sequence(result.nextBefore, true))) fail();
+        let previous = before === null ? 18446744073709551616n : BigInt(before);
+        const items = result.items.map((item) => {
+          if (!sized(item?.messageId, 16) || !sized(item.senderId, 16) || !sequence(item.sequence, true) || BigInt(item.sequence) >= previous
+            || !Number.isSafeInteger(item.createdAt) || item.createdAt < 0 || item.createdAt > now()) fail();
+          previous = BigInt(item.sequence);
+          const row = validateRow(item.asset, null);
+          if (!row.ownerId.equals(item.senderId) || row.createdAt > item.createdAt) fail();
+          const messageId = item.messageId.toString("hex");
+          return { messageId, sequence: item.sequence, sender: item.senderId.toString("hex") === actor.user.id ? "me" : "peer",
+            createdAt: item.createdAt, video: deliveryDTO(row, role, conversationId, messageId) };
         });
-      } catch (error) { try { await handle?.close?.(); } finally { releaseSlot(); } throw error; }
+        if (result.hasMore ? !items.length || result.nextBefore !== items.at(-1).sequence : result.nextBefore !== null) fail();
+        return { items, nextBefore: result.nextBefore, hasMore: result.hasMore };
+      }),
     }),
   });
 }

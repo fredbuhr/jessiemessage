@@ -81,7 +81,7 @@ class Element {
   showModal() { this.open = true; }
   close() { this.open = false; for (const handler of this.events.get("close") ?? []) handler({}); }
 }
-function harness({ currentSession = session(), visible = true, intercept = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null } = {}) {
+function harness({ currentSession = session(), visible = true, intercept = null, quickReplies = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const body = new Element("body", nodes);
@@ -95,7 +95,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     querySelector: (selector) => selector === "dialog[open]" ? [...nodes.values()].find(node => node.open) ?? null : new Element("div", nodes),
     addEventListener: (name, handler) => documentEvents.set(name, handler) };
   nodes.document = document; document.activeElement = body; document.head._connected = true;
-  const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0 };
+  const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0, quickReplies: quickReplies ?? { version: "0", replies: [] }, quickReplyWrites: 0 };
   const conversation = (owner = state.currentSession?.user.id) => {
     if (!state.conversations.has(owner)) state.conversations.set(owner, { id: id(100 + Number.parseInt(owner, 16)), clientId: owner, clientPseudonym: `Synthetic ${owner}`,
       peerName: `Peer ${owner}`, createdAt: now, closedAt: null, lastActivityAt: now, latestSequence: "1", latestEventSequence: "1", lastReadSequence: "0", peerReadSequence: "0", unreadCount: 1, canSend: true });
@@ -115,6 +115,13 @@ function harness({ currentSession = session(), visible = true, intercept = null,
       // Intercepts deliberately can complete after abort, exercising the real
       // controller's generation checks rather than relying on fetch alone.
       const value = intercept?.(path, options, state, calls); if (value !== undefined) return await value;
+      if (path === "/api/admin/quick-replies") {
+        if (options.method !== "POST") return response(200, structuredClone(state.quickReplies));
+        state.quickReplyWrites += 1; const command = JSON.parse(options.body);
+        if (command.expectedVersion !== state.quickReplies.version) return response(409, { error: "quick_replies_conflict" });
+        state.quickReplies.version = String(BigInt(state.quickReplies.version) + 1n); state.quickReplies.replies = structuredClone(command.replies);
+        return response(200, structuredClone(state.quickReplies));
+      }
       if (/^\/api\/(?:auth|access)\/session$/.test(path)) return response(state.currentSession ? 200 : 401, state.currentSession ? structuredClone(state.currentSession) : { error: "authentication_required" });
       if (path.startsWith("/api/broadcast/") || path === "/api/admin/crm/capabilities" || /\/api\/media\/.*\/capabilities$/.test(path)) return response(404, { error: "not_found" });
       if (path.endsWith("/capabilities")) return response(200, { enabled: true });
@@ -160,6 +167,114 @@ function harness({ currentSession = session(), visible = true, intercept = null,
 }
 const contents = (element) => [element.textContent, element.value, ...element.children.map(contents)].join(" ");
 const posts = (f) => f.calls.filter((call) => call.options.method === "POST" && call.path.includes("/messages"));
+
+// Controllable transport keeps progress, an uncertain response and a late abort
+// independent of fetch; the UI must preserve the message identity in each case.
+function videoTransport(f) {
+  const uploads = [];
+  f.context.XMLHttpRequest = class {
+    constructor() { this.events = new Map(); this.headers = {}; this.upload = { addEventListener: (name, handler) => { this.progress = handler; } }; uploads.push(this); }
+    open(method, path) { this.method = method; this.path = path; }
+    setRequestHeader(name, value) { this.headers[name] = value; }
+    addEventListener(name, handler) { this.events.set(name, handler); }
+    send(file) { this.file = file; }
+    abort() { this.aborted = true; this.events.get("abort")?.(); }
+    complete(videoId = id(902)) { this.status = 201; this.responseText = JSON.stringify({ id: videoId, bytes: this.file.size, mime: "video/mp4" }); this.events.get("load")(); }
+  };
+  return uploads;
+}
+const videoCapability = path => path === "/api/chat/client/capabilities"
+  ? response(200, { enabled: true, video: { enabled: true, maxBytes: 104857600, mime: "video/mp4" } }) : undefined;
+async function selectVideo(f) {
+  const file = new Blob(["synthetic video payload"], { type: "video/mp4" });
+  f.element("video-file").files = [file];
+  for (const handler of f.element("video-file").events.get("change")) handler({});
+  const preview = f.element("video-preview").querySelector("video");
+  for (const handler of preview.events.get("loadedmetadata")) handler({});
+  await flush(); return { file, preview };
+}
+
+test("video selection is a local draft and cancelling upload never submits a message", async () => {
+  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  const { file, preview } = await selectVideo(f);
+  assert.equal(f.element("pick-video").hidden, false); assert.equal(f.element("send").disabled, false);
+  assert.match(preview.src, /^blob:/); assert.equal(uploads.length, 0); assert.equal(posts(f).length, 0);
+  await f.send("Keep this caption"); assert.equal(uploads.length, 1);
+  assert.equal(uploads[0].file, file); assert.equal(uploads[0].headers["Content-Type"], "video/mp4");
+  assert.equal(uploads[0].headers["Content-Length"], undefined, "the browser supplies native framing");
+  uploads[0].progress({ loaded: file.size / 2 }); assert.equal(f.element("video-progress").value, 50);
+  await f.click("cancel-video"); assert.equal(uploads[0].aborted, true); assert.equal(posts(f).length, 0);
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(state.pending, null); assert.equal(state.videoDraft.file, file); assert.equal(state.draft, "Keep this caption");
+  assert.equal(f.element("message-body").disabled, false); assert.equal(f.element("send").disabled, false);
+});
+
+test("an uncertain video message response retries the same asset and identity without uploading again", async () => {
+  let f, attempts = 0; const commands = [];
+  f = harness({ intercept: (path, options) => {
+    const capability = videoCapability(path); if (capability) return capability;
+    if (path.startsWith("/api/video/client/") && path.endsWith("/messages")) {
+      const command = JSON.parse(options.body); commands.push(command); attempts++;
+      if (attempts === 1) throw new Error("synthetic lost response");
+      return response(200, { duplicate: true, message: { id: id(903), sequence: "2", sender: "me", body: command.caption,
+        createdAt: now, deletedAt: null, clientMessageId: command.clientMessageId,
+        video: { id: command.videoId, bytes: 23, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + f.conversation().id + "/messages/" + id(903) + "/content" } } });
+    }
+    return undefined;
+  } });
+  await flush(); const uploads = videoTransport(f); await selectVideo(f); await f.send("Caption remains exact");
+  uploads[0].complete(); await flush();
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(state.pending.status, "retry"); assert.equal(state.pending.videoId, id(902)); assert.equal(state.pending.file, null);
+  assert.equal(f.element("pending-controls").hidden, false);
+  await f.click("retry-send"); assert.equal(uploads.length, 1); assert.deepEqual(commands[1], commands[0]);
+  assert.equal(state.pending, null); assert.equal(state.videoDraft, null); assert.equal(f.element("message-body").value, "");
+  assert.match(contents(f.element("messages")), /Caption remains exact/);
+  const player = f.element("messages").querySelector("video");
+  assert.equal(player.controls, true); assert.equal(player.preload, "none"); assert.equal(player.autoplay, undefined);
+  assert.match(player.src, /^\/api\/video\/client\/conversations\//);
+  await f.hide(); assert.equal(player.src, "");
+  await f.show(); assert.match(player.src, /^\/api\/video\/client\/conversations\//);
+});
+
+test("video players never adopt foreign origin, role, conversation or message URLs", async () => {
+  const f = harness({ intercept: videoCapability }); await flush(); const state = f.inspect().states.get(f.inspect().selected);
+  const path = "/api/video/client/conversations/" + state.id + "/messages/" + id(903) + "/content";
+  const urls = ["https://other.invalid" + path, "https://example.invalid" + path, "//other.invalid" + path,
+    path.replace("/client/", "/admin/"), path.replace(state.id, id(999)), path.replace(id(903), id(998)), path + "?x=1"];
+  for (const url of urls) {
+    f.context.__candidate = url;
+    assert.equal(vm.runInContext("validVideoUrl(__candidate,currentState(),'" + id(903) + "')", f.context), false);
+  }
+  f.context.__candidate = path;
+  assert.equal(vm.runInContext("validVideoUrl(__candidate,currentState(),'" + id(903) + "')", f.context), true);
+});
+
+test("hidden video uploads abort and old acknowledgements cannot submit for another session", async () => {
+  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  const { preview } = await selectVideo(f); const oldUrl = preview.src; await f.send("Private pending caption");
+  await f.hide(); assert.equal(uploads[0].aborted, true); assert.ok(f.revoked.includes(oldUrl));
+  assert.equal(preview.src, ""); assert.equal(f.element("video-preview").children.length, 0);
+  const pending = f.inspect().states.get(f.inspect().selected).pending; assert.equal(pending.status, "retry");
+  f.state.currentSession = session(2, "B".repeat(43)); await f.show(); uploads[0].complete(); await flush();
+  assert.equal(posts(f).length, 0); assert.equal(f.inspect().sessionOwner.id, id(2));
+  assert.equal(f.element("video-draft").hidden, true); assert.equal(f.element("message-body").value, "");
+});
+
+test("late video gallery pages respect tombstones and queued close events cannot close a new gallery", async () => {
+  let f; const delayed = pause();
+  f = harness({ intercept: path => videoCapability(path) ?? (path.includes("/gallery?") ? delayed.promise : undefined) });
+  await flush(); await f.click("open-video-gallery");
+  const state = f.inspect().states.get(f.inspect().selected);
+  vm.runInContext("mergeMessages(currentState(), [{id:'" + id(904) + "',sequence:'2',sender:'peer',body:null,deletedAt:123}])", f.context);
+  delayed.resolve(response(200, { items: [{ messageId: id(904), sequence: "2", createdAt: now,
+    video: { id: id(905), bytes: 20, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + state.id + "/messages/" + id(904) + "/content" } }], nextBefore: null, hasMore: false }));
+  await flush(); assert.equal(f.element("video-grid").children.length, 0);
+  const dialog = f.element("video-gallery"), queued = [];
+  dialog.close = () => { dialog.open = false; queued.push(...dialog.events.get("close")); };
+  await f.click("close-video-gallery"); await f.click("open-video-gallery");
+  for (const handler of queued) handler({}); await flush(); assert.equal(dialog.open, true);
+});
 
 test("due task counts stay in the admin menu and a late result cannot survive logout", async () => {
   const delayed = pause();
@@ -1129,4 +1244,110 @@ test("a delayed close event from a cancelled dialog cannot cancel its next confi
   await f.click("accept-delete");
   assert.equal(f.calls.filter((call) => call.path.endsWith("/delete")).length, 1);
   assert.match(contents(f.element("messages")), /Message supprimé/);
+});
+
+async function openPersonalReplies(f) {
+  await flush();
+  if (!f.inspect().selected) { for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); }
+  await f.click("open-quick-replies");
+}
+async function submitPersonalReply(f, title, body, language = "fr") {
+  f.element("personal-reply-title").value = title; f.element("personal-reply-body").value = body; f.element("personal-reply-language").value = language;
+  for (const handler of f.element("personal-reply-editor").events.get("submit")) handler({ preventDefault() {} }); await flush();
+}
+async function clickPersonalNode(node) { for (const handler of node.events.get("click") ?? []) handler({}); await flush(); }
+function personalRow(f, replyId) { return f.element("personal-replies-list").children.find(node => node.dataset.personalId === replyId); }
+function personalAction(row, name) { return row.querySelectorAll("button").find(node => node.dataset.personalAction === name); }
+
+test("personal quick replies create, edit, insert without sending and delete across independent administrator sessions", async () => {
+  const catalogue = { version: "0", replies: [] }, first = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue });
+  await openPersonalReplies(first); await first.click("new-personal-reply");
+  await submitPersonalReply(first, "Mon accueil 👩‍💻", "Texte personnel <b>brut</b> 😊");
+  assert.equal(catalogue.version, "1"); assert.equal(catalogue.replies.length, 1); assert.equal(first.state.posts, 0);
+  assert.equal(first.element("personal-reply-editor").hidden, true); assert.equal(first.element("personal-reply-body").value, "");
+  const replyId = catalogue.replies[0].id; assert.match(replyId, /^[0-9a-f]{32}$/);
+  const second = harness({ currentSession: session(1, "B".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(second);
+  const insert = personalRow(second, replyId).querySelector(".personal-reply-insert"); second.element("message-body").value = "Brouillon";
+  await clickPersonalNode(insert); assert.equal(second.element("message-body").value, "Brouillon\nTexte personnel <b>brut</b> 😊"); assert.equal(second.state.posts, 0);
+  await second.click("open-quick-replies"); await clickPersonalNode(personalAction(personalRow(second, replyId), "edit"));
+  await submitPersonalReply(second, "Accueil modifié", "Texte modifié"); assert.equal(catalogue.version, "2");
+  await first.click("close-quick-replies"); await first.click("open-quick-replies"); assert.equal(personalRow(first, replyId).querySelector("strong").textContent, "Accueil modifié");
+  await clickPersonalNode(personalAction(personalRow(first, replyId), "delete")); assert.equal(catalogue.replies.length, 1);
+  await clickPersonalNode(personalAction(personalRow(first, replyId), "confirm-delete")); assert.equal(catalogue.version, "3"); assert.equal(catalogue.replies.length, 0);
+  assert.equal(first.state.posts + second.state.posts, 0); assert.equal(first.state.quickReplyWrites + second.state.quickReplyWrites, 3);
+});
+
+test("personal quick reply CAS conflicts preserve the editor and merge only after explicit reload and save", async () => {
+  const catalogue = { version: "1", replies: [{ id: id(901), title: "Initial", body: "Texte initial", language: "fr" }] };
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(f);
+  await clickPersonalNode(personalAction(personalRow(f, id(901)), "edit"));
+  catalogue.version = "2"; catalogue.replies.push({ id: id(902), title: "Autre session", body: "À conserver", language: "en" });
+  await submitPersonalReply(f, "Mon titre", "Mon brouillon"); assert.equal(catalogue.version, "2"); assert.equal(f.element("personal-reply-body").value, "Mon brouillon");
+  assert.match(f.element("personal-replies-status").textContent, /changé ailleurs/); assert.equal(f.element("personal-reply-save").disabled, true); assert.equal(f.state.quickReplyWrites, 1);
+  await submitPersonalReply(f, "Mon titre", "Mon brouillon"); assert.equal(f.state.quickReplyWrites, 1, "conflict never retries a mutation");
+  await f.click("reload-personal-replies"); assert.equal(f.element("personal-reply-body").value, "Mon brouillon"); assert.equal(f.element("personal-reply-save").disabled, false);
+  await submitPersonalReply(f, "Mon titre", "Mon brouillon"); assert.equal(catalogue.version, "3"); assert.equal(catalogue.replies.length, 2);
+  assert.equal(catalogue.replies.find(reply => reply.id === id(902)).body, "À conserver"); assert.equal(catalogue.replies.find(reply => reply.id === id(901)).body, "Mon brouillon");
+});
+
+test("an uncertain personal reply save requires explicit reload and never automatically repeats a POST", async () => {
+  let lost = true;
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path, options, state) => {
+    if (path !== "/api/admin/quick-replies" || options.method !== "POST" || !lost) return;
+    lost = false; const command = JSON.parse(options.body); state.quickReplies.version = "1"; state.quickReplies.replies = structuredClone(command.replies);
+    return Promise.reject(new Error("synthetic_lost_ack"));
+  } });
+  await openPersonalReplies(f); await f.click("new-personal-reply"); await submitPersonalReply(f, "Titre", "Réponse incertaine");
+  const mutations = () => f.calls.filter(call => call.path === "/api/admin/quick-replies" && call.options.method === "POST");
+  assert.equal(mutations().length, 1); assert.equal(f.element("personal-reply-body").value, "Réponse incertaine"); assert.equal(f.element("personal-reply-save").disabled, true);
+  await f.advance(60000); assert.equal(mutations().length, 1); await f.click("reload-personal-replies");
+  assert.equal(f.element("personal-reply-body").value, "Réponse incertaine"); assert.equal(f.state.quickReplies.replies.length, 1); assert.equal(mutations().length, 1);
+});
+
+test("personal replies respect caption limits and are erased on hide, stale network completion and owner replacement", async () => {
+  const catalogue = { version: "1", replies: [{ id: id(901), title: "Private title", body: "x".repeat(1001), language: "fr" }] };
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(f);
+  f.inspect().states.get(f.inspect().selected).videoDraft = { file: {} }; await clickPersonalNode(personalRow(f, id(901)).querySelector(".personal-reply-insert"));
+  assert.equal(f.element("message-body").value, ""); assert.match(f.element("quick-replies-status").textContent, /ne peut pas être ajoutée/);
+  await clickPersonalNode(personalAction(personalRow(f, id(901)), "edit")); assert.equal(f.element("personal-reply-body").value.length, 1001);
+  await f.hide(); assert.equal(f.element("personal-reply-body").value, ""); assert.equal(f.element("personal-replies-list").children.length, 0);
+  f.state.currentSession = session(2, "B".repeat(43), "admin"); await f.show(); assert.equal(f.element("personal-reply-title").value, ""); assert.equal(f.state.posts, 0);
+  const pending = pause(); const delayed = harness({ currentSession: session(1, "C".repeat(43), "admin"), intercept: path => path === "/api/admin/quick-replies" ? pending.promise : undefined });
+  await openPersonalReplies(delayed); await delayed.hide(); pending.resolve(response(200, catalogue)); await flush();
+  assert.equal(delayed.element("personal-replies-list").children.length, 0); assert.equal(delayed.element("quick-replies-dialog").open, false);
+  const client = harness(); await flush(); await client.click("open-quick-replies"); assert.equal(client.calls.some(call => call.path === "/api/admin/quick-replies"), false);
+});
+
+test("compatibility video capabilities preserve existing players and gallery while refusing every new draft/send", async () => {
+  const f = harness({ intercept: path => path === "/api/chat/client/capabilities" ? response(200, { enabled: true, video: { enabled: true, creationEnabled: false, maxBytes: 104857600, mime: "video/mp4" } }) : undefined });
+  await flush(); const state = f.inspect().states.get(f.inspect().selected), item = state.messages.get("1");
+  item.video = { id: id(902), bytes: 23, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + state.id + "/messages/" + item.id + "/content" };
+  await f.hide(); await f.show();
+  assert.equal(f.element("pick-video").hidden, true); assert.equal(f.element("open-video-gallery").hidden, false);
+  const player = f.element("messages").querySelector("video"); assert.ok(player); assert.equal(player.controls, true); assert.equal(player.src, item.video.contentUrl);
+  const uploads = videoTransport(f); f.element("video-file").files = [new Blob(["synthetic"], { type: "video/mp4" })];
+  for (const handler of f.element("video-file").events.get("change")) handler({}); await flush(); assert.equal(state.videoDraft, null);
+  state.videoDraft = { file: new Blob(["synthetic"], { type: "video/mp4" }), ready: true, invalid: false };
+  await f.send("No new video"); assert.equal(uploads.length, 0); assert.equal(state.pending, null); assert.equal(posts(f).length, 0); assert.equal(f.element("send").disabled, true);
+});
+
+test("read-only personal replies still insert saved text but expose no editing or mutation", async () => {
+  const catalogue = { version: "1", replies: [{ id: id(901), title: "Saved title", body: "Saved private reply", language: "fr" }], writable: false };
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(f);
+  const row = personalRow(f, id(901)); assert.ok(row); assert.equal(row.querySelector(".personal-reply-actions").hidden, true);
+  assert.equal(f.element("new-personal-reply").hidden, true); await f.click("new-personal-reply"); assert.equal(f.element("personal-reply-editor").hidden, true);
+  await clickPersonalNode(personalAction(row, "edit")); assert.equal(f.element("personal-reply-editor").hidden, true); assert.equal(f.state.quickReplyWrites, 0);
+  f.element("message-body").value = "Draft"; await clickPersonalNode(row.querySelector(".personal-reply-insert"));
+  assert.equal(f.element("message-body").value, "Draft\nSaved private reply"); assert.equal(f.state.posts, 0); assert.equal(f.state.quickReplyWrites, 0);
+});
+
+test("a read-only capability change preserves an unsaved reply draft for copying or explicit cancellation", async () => {
+  const catalogue = { version: "0", replies: [] }, f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue });
+  await openPersonalReplies(f); await f.click("new-personal-reply"); f.element("personal-reply-title").value = "Unsent title"; f.element("personal-reply-body").value = "Unsent private draft";
+  catalogue.writable = false; await f.click("reload-personal-replies");
+  assert.equal(f.element("personal-reply-editor").hidden, false); assert.equal(f.element("personal-reply-body").value, "Unsent private draft");
+  assert.equal(f.element("personal-reply-body").readOnly, true); assert.equal(f.element("personal-reply-body").disabled, false); assert.equal(f.element("personal-reply-save").hidden, true);
+  assert.match(f.element("personal-replies-status").textContent, /lecture seule.*brouillon est conservé/); assert.equal(f.state.quickReplyWrites, 0);
+  await submitPersonalReply(f, "Unsent title", "Unsent private draft"); assert.equal(f.state.quickReplyWrites, 0);
+  await f.click("personal-reply-cancel"); assert.equal(f.element("personal-reply-body").value, ""); assert.equal(f.element("personal-reply-editor").hidden, true);
 });

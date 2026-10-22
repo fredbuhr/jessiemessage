@@ -1,0 +1,110 @@
+// Chrome-only UI qualification with a synthetic decodable MP4. The separate
+// video rehearsal exercises the real authenticated HTTPS/SQL/storage chain.
+import assert from "node:assert/strict";
+import { after, before, test } from "node:test";
+import { readFile } from "node:fs/promises";
+import { createServer } from "node:http";
+import { extname } from "node:path";
+import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
+
+const id = number => number.toString(16).padStart(32, "0");
+const conversationId = id(10), initialMessageId = id(20), videoId = id(30);
+const mp4 = Buffer.from(await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
+const csrf = Buffer.alloc(32, 1).toString("base64url");
+const publicFiles = new Set(["chat.html", "chat.js", "chat-model.js", "chat.css", "session-clock.js", "notification-link.js", "i18n.js", "i18n-chat.js", "i18n-tools.js", "i18n.css", "help-link.js", "notifications.js", "notifications.css", "emoji-catalog.js", "emoji.css", "quick-replies.js", "image-preparation.js", "profile.css", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-32.png", "brand/icon-128.png", "brand/icon-192.png"]);
+const types = { ".js": "text/javascript", ".css": "text/css", ".html": "text/html", ".png": "image/png", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
+let server, driver, origin, fixture;
+function metadata(messageId) { return { id: videoId, bytes: mp4.length, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + conversationId + "/messages/" + messageId + "/content" }; }
+function reset() {
+  fixture = { signedIn: true, uploads: [], commands: [], ranges: [], uncertainSend: true, now: Date.now() - 10000,
+    messages: [{ id: initialMessageId, sequence: "1", sender: "peer", body: "Synthetic private video", createdAt: Date.now() - 9000, deletedAt: null, clientMessageId: null, video: metadata(initialMessageId) }] };
+}
+function conversation() { return { id: conversationId, peerName: "Synthetic peer", createdAt: fixture.now, closedAt: null, lastActivityAt: fixture.now,
+  latestSequence: String(fixture.messages.length), latestEventSequence: "1", lastReadSequence: "0", peerReadSequence: "0", unreadCount: 0, canSend: true }; }
+async function startFixture() {
+  const files = new Map(await Promise.all([...publicFiles].map(async name => ["/" + name, await readFile(new URL("../../public/" + name, import.meta.url))])));
+  files.set("/video-fixture.js", Buffer.from('window.__videoErrors=[];window.__revoked=[];window.addEventListener("error",e=>__videoErrors.push(String(e.message)));window.addEventListener("unhandledrejection",e=>__videoErrors.push(String(e.reason?.message??e.reason)));window.addEventListener("securitypolicyviolation",e=>__videoErrors.push("CSP: "+e.violatedDirective));const revoke=URL.revokeObjectURL.bind(URL);URL.revokeObjectURL=u=>{__revoked.push(u);revoke(u)};'));
+  files.set("/chat.html", Buffer.from(files.get("/chat.html").toString().replace("<head>", '<head><script src="/video-fixture.js"></script>')));
+  server = createServer((request, response) => { void (async () => {
+    const url = new URL(request.url, "http://localhost");
+    response.setHeader("Cache-Control", "no-store");
+    response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    const json = (status, value) => { response.writeHead(status, { "Content-Type": "application/json" }); response.end(JSON.stringify(value)); };
+    if (url.pathname === "/messages") { response.writeHead(200, { "Content-Type": "text/html" }); response.end(files.get("/chat.html")); return; }
+    if (files.has(url.pathname)) { response.writeHead(200, { "Content-Type": types[extname(url.pathname)] ?? "application/octet-stream" }); response.end(files.get(url.pathname)); return; }
+    if (url.pathname === "/api/access/session") { json(fixture.signedIn ? 200 : 401, fixture.signedIn ? { user: { id: id(1), role: "client", pseudonym: "Synthetic client" }, csrf, expiresAt: Date.now() + 3600000, access: { state: "active" } } : { error: "authentication_required" }); return; }
+    if (url.pathname === "/api/chat/client/capabilities") { json(200, { enabled: true, video: { enabled: true, maxBytes: 104857600, mime: "video/mp4" } }); return; }
+    if (url.pathname === "/api/chat/client/conversation") { json(200, conversation()); return; }
+    const chatPath = "/api/chat/client/conversations/" + conversationId;
+    if (url.pathname === chatPath + "/messages") { json(200, { conversation: conversation(), messages: fixture.messages, eventCursor: "1", hasMoreBefore: false, nextBefore: null }); return; }
+    if (url.pathname === chatPath + "/events") { json(200, { conversation: conversation(), events: [], nextCursor: "1", hasMore: false }); return; }
+    if (url.pathname === chatPath + "/read") { for await (const _chunk of request) {} json(200, { lastReadSequence: "1" }); return; }
+    if (url.pathname === "/api/video/client/assets" && request.method === "POST") {
+      assert.equal(request.headers["x-csrf-token"], csrf); assert.equal(request.headers["content-type"], "video/mp4");
+      const chunks = []; for await (const chunk of request) chunks.push(chunk); const bytes = Buffer.concat(chunks);
+      assert.equal(Number(request.headers["content-length"]), mp4.length); assert.deepEqual(bytes, mp4); fixture.uploads.push(bytes.length);
+      json(201, { id: id(31), bytes: bytes.length, mime: "video/mp4" }); return;
+    }
+    const videoPath = "/api/video/client/conversations/" + conversationId;
+    if (url.pathname === videoPath + "/messages" && request.method === "POST") {
+      assert.equal(request.headers["x-csrf-token"], csrf); let body = ""; for await (const chunk of request) body += chunk;
+      const command = JSON.parse(body); assert.deepEqual(Object.keys(command).sort(), ["caption", "clientMessageId", "videoId"]); fixture.commands.push(command);
+      let message = fixture.messages.find(item => item.clientMessageId === command.clientMessageId); const duplicate = Boolean(message);
+      if (!message) { message = { id: id(21), sequence: "2", sender: "me", body: command.caption, createdAt: Date.now(), deletedAt: null, clientMessageId: command.clientMessageId, video: metadata(id(21)) }; fixture.messages.push(message); }
+      // Persistence happened, while this response cannot confirm the send.
+      if (fixture.uncertainSend) { fixture.uncertainSend = false; json(503, { error: "synthetic_response_unavailable" }); return; }
+      json(duplicate ? 200 : 201, { message, duplicate }); return;
+    }
+    if (url.pathname === videoPath + "/gallery") { json(200, { items: [...fixture.messages].reverse().map(message => ({ messageId: message.id, sequence: message.sequence, sender: message.sender, createdAt: message.createdAt, video: message.video })), nextBefore: null, hasMore: false }); return; }
+    if (new RegExp("^" + videoPath + "/messages/[a-f0-9]{32}/content$").test(url.pathname)) {
+      const range = request.headers.range ?? null; fixture.ranges.push(range); let start = 0, end = mp4.length - 1;
+      if (range) { const match = /^bytes=(\d+)-(\d*)$/.exec(range); if (!match) { response.writeHead(416); response.end(); return; } start = Number(match[1]); end = match[2] ? Math.min(Number(match[2]), end) : end; }
+      if (start > end) { response.writeHead(416, { "Content-Range": "bytes */" + mp4.length }); response.end(); return; }
+      response.writeHead(range ? 206 : 200, { "Content-Type": "video/mp4", "Accept-Ranges": "bytes", "Content-Length": end - start + 1, ...(range ? { "Content-Range": "bytes " + start + "-" + end + "/" + mp4.length } : {}) });
+      response.end(request.method === "HEAD" ? undefined : mp4.subarray(start, end + 1)); return;
+    }
+    json(404, { error: "not_found" });
+  })().catch(() => { if (!response.headersSent) response.writeHead(500); response.end(); }); });
+  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve)); origin = "http://127.0.0.1:" + server.address().port;
+}
+before(async () => { reset(); await startFixture(); driver = await startWebDriver(); });
+after(async () => { await driver?.close(); await new Promise(resolve => server ? server.close(resolve) : resolve()); });
+
+for (const width of [320, 375, 1280]) for (const language of ["fr", "en"]) test("video draft, native decoding, retry and gallery at " + width + "px in " + language, async () => {
+  reset(); const page = await driver.browser({ origin, width });
+  try {
+    await page.navigate("/messages");
+    await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden && !!document.querySelector('.video-message video')"), "visible video history");
+    await page.execute("JessieI18n.setLanguage(arguments[0])", language);
+    assert.equal(await page.execute("return document.getElementById('open-video-gallery').textContent"), language === "fr" ? "Vidéos" : "Videos");
+    assert.equal(await page.execute("return document.querySelector('.video-message video').autoplay"), false);
+    await waitUntil(() => page.execute("return !!document.querySelector('.video-message video')?.getAttribute('src')"), "current owner authorizes the native media URL");
+    await page.execute("const v=document.querySelector('.video-message video');v.preload='auto';v.load()");
+    await waitUntil(() => page.execute("const v=document.querySelector('.video-message video');return v.videoWidth===96&&v.videoHeight===64&&v.duration>1.5"), "real H264 decoding");
+    await page.execute("document.querySelector('.video-message video').currentTime=1.2");
+    await waitUntil(() => page.execute("return Math.abs(document.querySelector('.video-message video').currentTime-1.2)<.2"), "native seek");
+    assert.equal(await page.executeAsync("const done=arguments[arguments.length-1],v=document.querySelector('.video-message video');v.muted=true;const timer=setTimeout(()=>done(false),5000);v.requestVideoFrameCallback(()=>{clearTimeout(timer);v.pause();done(true)});v.play().catch(()=>{})"), true, "Chrome actually presents a decoded video frame");
+    await page.click("#open-composer-tools"); await tabUntil(page, "#pick-video");
+    assert.equal(await page.execute("return document.activeElement.textContent"), language === "fr" ? "Ajouter une vidéo" : "Add a video");
+    await page.execute("const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0));const transfer=new DataTransfer();transfer.items.add(new File([bytes],'synthetic.mp4',{type:'video/mp4'}));const input=document.getElementById('video-file');input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));", mp4.toString("base64"));
+    await page.click("#close-composer-tools");
+    await waitUntil(() => page.execute("return !!document.querySelector('#video-preview video') && !document.getElementById('send').disabled"), "local decodable draft");
+    assert.equal(fixture.uploads.length, 0); assert.equal(fixture.commands.length, 0);
+    await page.type("#message-body", "Synthetic caption <plain text>");
+    const metrics = await page.execute("return {overflow:document.documentElement.scrollWidth>innerWidth,buttons:['send','cancel-video'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {w:r.width,h:r.height}}),preview:document.querySelector('#video-preview video').src}");
+    assert.equal(metrics.overflow, false); assert.ok(metrics.buttons.every(button => button.w >= 44 && button.h >= 44)); assert.match(metrics.preview, /^blob:/);
+    await page.click("#send");
+    await waitUntil(() => page.execute("return !document.getElementById('pending-controls').hidden"), "uncertain response exposes explicit retry");
+    assert.equal(fixture.uploads.length, 1); await page.click("#retry-send");
+    await waitUntil(() => page.execute("return document.getElementById('video-draft').hidden && document.querySelectorAll('.video-message video').length===2"), "acknowledged video");
+    assert.equal(fixture.uploads.length, 1); assert.equal(fixture.commands.length, 2); assert.deepEqual(fixture.commands[0], fixture.commands[1]);
+    assert.equal(fixture.messages.length, 2); assert.ok(await page.execute("return document.getElementById('messages').textContent.includes('Synthetic caption <plain text>')"));
+    assert.ok(fixture.ranges.some(range => typeof range === "string" && range.startsWith("bytes=")), "native media request uses Range");
+    await page.click("#open-conversation-menu"); await tabUntil(page, "#open-video-gallery"); await page.key("\uE007");
+    await waitUntil(() => page.execute("return document.getElementById('video-gallery').open && document.querySelectorAll('#video-grid video').length===2"), "private video gallery");
+    await page.key("\uE00C"); await waitUntil(() => page.execute("return !document.getElementById('video-gallery').open"), "Escape closes gallery");
+    await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,get:()=> 'hidden'});document.dispatchEvent(new Event('visibilitychange'))");
+    assert.deepEqual(await page.execute("return Array.from(document.querySelectorAll('video')).map(v=>({src:v.getAttribute('src'),paused:v.paused}))"), [{ src: null, paused: true }, { src: null, paused: true }]);
+    assert.ok(await page.execute("return __revoked.length>0")); assert.deepEqual(await page.execute("return __videoErrors"), []);
+  } finally { await page.close(); }
+});

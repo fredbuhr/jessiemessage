@@ -7,6 +7,8 @@ import { createPrivateJsonStore } from "../server/files/private-json.mjs";
 import { loadManualOperatorContext } from "../server/backup/manual-operator-context.mjs";
 import { acquireRecurringLock, readRecurringConfiguration, readRecurringRecipientPublicKey } from "../server/backup/recurring-checkpoint-files.mjs";
 import { readCopyState } from "../server/backup/copy-files.mjs";
+import { resumeCheckpointVideo } from "../server/backup/video-checkpoint-files.mjs";
+import { createVideoStorage } from "../server/video/storage.mjs";
 import { resumeCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { readCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
 import { readOperationalCheckpoint, readOperationalQuarantine, restoreOperationalQuarantine } from "../server/backup/operational-checkpoint.mjs";
@@ -102,17 +104,18 @@ async function copyBackupSettings(context, signal) {
   } finally { bytes.forEach(value => value.fill(0)); }
 }
 
-/** The normal daily parent owns the real child, monitors and alerts after the
- * one-time publication. Captures stay paused only until publication completes. */
+/** The normal manual-backup parent owns the real child after publication.
+ * Restoring a service never enables a daily capture or a background copier. */
 export function createRestoredService(context, { environment = process.env, signal, outputStream = process.stdout } = {}, internal = {}) {
   const cancellation = new AbortController();
-  let runtime, supervisor, service, stopped = false, allowed = false, resolveReady, rejectReady;
+  let runtime, supervisor, service, stopped = false, manualRequestsAllowed = false, resolveReady, rejectReady;
   const ready = new Promise((yes, no) => { resolveReady = yes; rejectReady = no; });
   ready.catch(() => {});
   const abort = () => cancellation.abort(); signal?.addEventListener("abort", abort, { once: true });
   const { job, paths } = context;
   const options = ["start-local-closures", "--runtime-directory", job.runtimeDirectory, "--runtime-head", job.runtimeHead, "--runtime-tree", job.runtimeTree,
-    "--private-directory", job.targetPrivateDirectory, "--operations-directory", paths.journalDirectory, "--private-path-mode", "linux-dirfd"];
+    "--private-directory", job.targetPrivateDirectory, "--operations-directory", paths.journalDirectory, "--private-path-mode", "linux-dirfd",
+    ...(job.version === 2 ? ["--profile", "photos-notify-recovery-crm-broadcast-video"] : [])];
   return Object.freeze({
     state: () => stopped ? { status: "stopped" } : runtime?.state() ?? { status: "stopped" },
     async start() {
@@ -120,12 +123,13 @@ export function createRestoredService(context, { environment = process.env, sign
       service = (internal.recurringMain ?? recurringMain)(options, { environment, execArgv: [], signal: cancellation.signal, outputStream,
         makeSupervisor: (selected, dependencies) => {
           supervisor = (internal.makeSupervisor ?? createRecurringSupervisor)(selected, { ...dependencies,
-            readConfiguration: async (...args) => { const value = await (internal.readConfiguration ?? readRecurringConfiguration)(...args); return allowed ? value : { ...value, enabled: false }; },
+            allowManualRequests: () => manualRequestsAllowed,
             makeRuntime: (...args) => { runtime = (internal.makeRuntime ?? createManagedRuntime)(...args); return runtime; } });
           return { ...supervisor, async start() { try { const result = await supervisor.start(); resolveReady(result); return result; } catch (error) { rejectReady(error); throw error; } } };
         } });
       service.catch(rejectReady); return ready;
     },
+    allowManualBackups() { manualRequestsAllowed = true; },
     async stop() {
       const result = runtime ? await runtime.stop() : { exitCode: 0, signal: null };
       if (result?.exitCode !== 0 || result.signal !== null) fail("DRAIN");
@@ -133,7 +137,6 @@ export function createRestoredService(context, { environment = process.env, sign
       if (service) { try { await service; } catch {} }
       return result;
     },
-    allowCaptures() { allowed = true; },
     async finished() { if (!service) fail("SERVICE"); return service; },
     async close() { signal?.removeEventListener("abort", abort); if (service) { cancellation.abort(); await service; } },
   });
@@ -163,7 +166,7 @@ export async function run(selected, { environment = process.env, signal, inputSt
       };
       if (state.phase !== "new" && state.jobSha256 !== context.jobSha256) fail("JOB_CHANGED");
       if (["opening", "opened"].includes(state.phase)) fail("ALREADY_OPENED_OR_UNCERTAIN");
-      const { job, paths } = context;
+      const { job, paths } = context, video = job.version === 2;
       if (options.command === "restore" && ["new", "allocated"].includes(state.phase)) {
         await guard();
         password = await (internal.readSecret ?? readPassword)(inputStream);
@@ -178,7 +181,7 @@ export async function run(selected, { environment = process.env, signal, inputSt
           await connection.end(); connection = undefined; await guard();
           await withPrivateDirectory(options.operatorDirectory, async scope => { await mkdir(scope.file("target"), { mode: 0o700 }); await scope.sync(); });
           await withPrivateDirectory(paths.targetDirectory, async scope => {
-            for (const name of ["media", "operations", "progress", "quarantine"]) await mkdir(scope.file(name), { mode: 0o700 });
+            for (const name of ["media", "operations", "progress", "quarantine", ...(video ? ["video"] : [])]) await mkdir(scope.file(name), { mode: 0o700 });
             await scope.sync();
           });
           await save("allocated", null);
@@ -189,14 +192,19 @@ export async function run(selected, { environment = process.env, signal, inputSt
         const receipt = await withPrivateDirectory(job.checkpointDirectory, scope => readCheckpointReceipt(scope, { signal }));
         await withPrivateDirectory(paths.rootPath, target => withPrivateDirectory(`${job.checkpointDirectory}/media`,
           source => resumeCheckpointMedia(source, target, receipt.media, { signal })));
+        if (video) await withPrivateDirectory(paths.videoRootPath, target => withPrivateDirectory(`${job.checkpointDirectory}/video`,
+          source => resumeCheckpointVideo(source, target, receipt.video, { signal })));
         await save("imported", null);
       }
       if (options.command === "open" && (state.phase !== "reconciled" || state.planSha256 !== options.expectedPlanSha256)) fail("PLAN_CONFIRMATION");
       if (!["imported", "reconciled"].includes(state.phase)) fail("STATE");
       await guard();
       const storage = await (internal.makeStorage ?? createMediaStorage)({ root: paths.rootPath, key: context.keys.mediaKey, pathMode: "linux-dirfd" });
-      const targetIdentity = await backupIdentity({ databaseName: job.targetDatabase, rootPath: paths.rootPath, storage, mediaKey: context.keys.mediaKey });
-      const targetBinding = { database: job.targetDatabase, rootFingerprint: targetIdentity.rootFingerprint };
+      const videoStorage = video ? await (internal.makeVideoStorage ?? createVideoStorage)({ root: paths.videoRootPath, key: context.keys.videoKey, pathMode: "linux-dirfd" }) : null;
+      const targetIdentity = await backupIdentity({ databaseName: job.targetDatabase, rootPath: paths.rootPath, storage, mediaKey: context.keys.mediaKey,
+        ...(video ? { videoRootPath: paths.videoRootPath, videoStorage } : {}) });
+      const targetBinding = { database: job.targetDatabase, rootFingerprint: targetIdentity.rootFingerprint,
+        ...(video ? { videoRootFingerprint: targetIdentity.video.rootFingerprint } : {}) };
       const receipt = await withPrivateDirectory(job.checkpointDirectory, scope => readCheckpointReceipt(scope, { signal }));
       const backup = await withPrivateDirectory(job.checkpointDirectory, scope => readOperationalCheckpoint(scope, receipt, context.keys.crmKey, { signal }));
       await withPrivateDirectory(paths.quarantineDirectory, async scope => {
@@ -215,7 +223,7 @@ export async function run(selected, { environment = process.env, signal, inputSt
       const input = { checkpointDirectory: job.checkpointDirectory, quarantineDirectory: paths.quarantineDirectory,
         journalDirectory: paths.journalDirectory, progressDirectory: paths.progressDirectory, recentRegistry: context.recentRegistry,
         expectedRegistrySha256: job.registrySha256, readRecentRegistry: async () => { await context.assertReady(); return context.recentRegistry; },
-        keys: context.keys, target: { database: job.targetDatabase, rootPath: paths.rootPath, storage, pool, inspectionPool }, maintenance, assertReady: guard, signal };
+        keys: context.keys, target: { database: job.targetDatabase, rootPath: paths.rootPath, storage, ...(video ? { videoRootPath: paths.videoRootPath, videoStorage } : {}), pool, inspectionPool }, maintenance, assertReady: guard, signal };
       if (options.command === "restore") {
         const result = await (internal.reconcile ?? reconcileManualRestore)(input);
         await copyBackupSettings(context, signal); await save("reconciled", result.planSha256);
@@ -228,9 +236,9 @@ export async function run(selected, { environment = process.env, signal, inputSt
       try {
         const runtime = { state: service.state, stop: service.stop, async start() { await service.start(); await save("opened"); } };
         const result = await (internal.publish ?? publishManualRestore)(input, { expectedPlanSha256: options.expectedPlanSha256, runtime });
-        published = true; service.allowCaptures(); emit(result);
+        published = true; service.allowManualBackups(); emit(result);
         // Normal service lifetime: the existing parent handles actual SIGTERM
-        // drain, daily captures, closure priority, monitor and alerts.
+        // drain, closure priority and explicitly requested manual captures.
         await service.finished(); return result;
       } catch (error) {
         if (!published) {

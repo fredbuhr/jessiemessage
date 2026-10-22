@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { AccountErasureError, erasureBinding, erasureFields, erasureTransition } from "../data/erasure-state.mjs";
-import { verifyErasureJournalEnvelope } from "../data/erasure-journal.mjs";
+import { erasureJournalBindings, verifyScopedErasureJournalEnvelope } from "../data/erasure-journal.mjs";
+import { QUICK_REPLIES_FILENAME_PATTERN, QUICK_REPLIES_FILE_MAX_BYTES, verifyQuickRepliesEnvelope } from "../quick-replies/files.mjs";
 
 export const REGISTRY_MAX_BYTES = 64 * 1024 * 1024;
 export const REGISTRY_NAME = /^erasure-[a-f0-9]{64}\.json$/;
@@ -35,7 +36,7 @@ function decoded(value, minimum, maximum = minimum) {
 
 /** The witness needs neither the CRM key nor plaintext client identities. It
  * checks canonical, bounded encrypted envelopes and never decrypts them. */
-export function registryEnvelope(file) {
+function registryEnvelopeState(file) {
   registryFields(file, ["name", "content"]);
   if (typeof file.name !== "string" || !REGISTRY_NAME.test(file.name)) failContinuity("ERASURE_CONTINUITY_INPUT");
   let content;
@@ -43,61 +44,76 @@ export function registryEnvelope(file) {
     content = decoded(file.content, 1, 4096);
     const text = new TextDecoder("utf-8", { fatal: true }).decode(content), state = JSON.parse(text);
     registryFields(state, ["version", "revision", "envelope"]);
-    if (state.version !== 1 || !Number.isSafeInteger(state.revision) || state.revision < 1 || state.revision >= Number.MAX_SAFE_INTEGER) failContinuity("ERASURE_CONTINUITY_INPUT");
+    if (![1, 2].includes(state.version) || !Number.isSafeInteger(state.revision) || state.revision < 1 || state.revision >= Number.MAX_SAFE_INTEGER) failContinuity("ERASURE_CONTINUITY_INPUT");
     registryFields(state.envelope, ["iv", "ciphertext", "tag"]);
     decoded(state.envelope.iv, 12); decoded(state.envelope.ciphertext, 1, 2048); decoded(state.envelope.tag, 16);
     if (`${JSON.stringify(state)}\n` !== text) failContinuity("ERASURE_CONTINUITY_INPUT");
-    return state.revision;
+    return { version: state.version, revision: state.revision };
   } catch (error) { if (error instanceof ErasureContinuityError) throw error; failContinuity("ERASURE_CONTINUITY_INPUT"); }
   finally { content?.fill(0); }
 }
+export function registryEnvelope(file) { return registryEnvelopeState(file).revision; }
 export function validateRegistrySnapshot(value) {
   registryFields(value, ["version", "registryId", "files"]);
-  if (value.version !== 1 || typeof value.registryId !== "string" || !REGISTRY_HEX.test(value.registryId)) failContinuity("ERASURE_CONTINUITY_INPUT");
+  if (![1, 2].includes(value.version) || typeof value.registryId !== "string" || !REGISTRY_HEX.test(value.registryId)) failContinuity("ERASURE_CONTINUITY_INPUT");
   let previous = null, bytes = 0;
   const files = array(value.files).map(file => {
-    registryEnvelope(file);
+    const envelope = registryEnvelopeState(file);
+    if (value.version === 1 && envelope.version !== 1) failContinuity("ERASURE_CONTINUITY_INPUT");
     if (previous !== null && file.name <= previous || (bytes += file.content.length) > 56 * 1024 * 1024) failContinuity("ERASURE_CONTINUITY_INPUT");
     previous = file.name; return { name: file.name, content: file.content };
   });
-  return { version: 1, registryId: value.registryId, files };
+  return { version: value.version, registryId: value.registryId, files };
 }
 export function registryIdentity(key, value) {
-  const binding = erasureBinding(value);
+  const { binding, legacyBinding } = erasureJournalBindings(value);
   if (!Buffer.isBuffer(key) || key.length !== 32) failContinuity("ERASURE_CONTINUITY_INPUT");
-  return createHmac("sha256", key).update("jessiemessage:erasure-witness:https://jessiemessage.com:v1:").update(JSON.stringify(binding)).digest("hex");
+  const namespace = legacyBinding ? "jessiemessage:erasure-witness:https://jessiemessage.com:v2:video:"
+    : "jessiemessage:erasure-witness:https://jessiemessage.com:v1:";
+  return createHmac("sha256", key).update(namespace).update(JSON.stringify(binding)).digest("hex");
 }
 export function authenticateRegistrySnapshot(value, { key, binding }) {
-  const snapshot = validateRegistrySnapshot(value), jobs = new Map();
-  if (snapshot.registryId !== registryIdentity(key, binding)) failContinuity("ERASURE_CONTINUITY_BINDING");
+  const snapshot = validateRegistrySnapshot(value), jobs = new Map(), scopes = erasureJournalBindings(binding);
+  if (snapshot.version !== (scopes.legacyBinding ? 2 : 1)
+    || snapshot.registryId !== registryIdentity(key, scopes.binding)) failContinuity("ERASURE_CONTINUITY_BINDING");
   for (const file of snapshot.files) {
     const content = Buffer.from(file.content, "base64url");
-    try { jobs.set(file.name, { ...verifyErasureJournalEnvelope({ key, binding, filename: file.name, content }), file }); }
+    try { jobs.set(file.name, { ...verifyScopedErasureJournalEnvelope({ key, ...scopes, filename: file.name, content }), file }); }
     catch { failContinuity("ERASURE_CONTINUITY_AUTHENTICATION"); }
     finally { content.fill(0); }
   }
   return { snapshot, jobs };
 }
 export function snapshotErasureRegistry(value, { key, binding }) {
-  registryFields(value, ["version", "binding", "files"]);
-  if (value.version !== 1 || JSON.stringify(erasureBinding(value.binding)) !== JSON.stringify(erasureBinding(binding))) failContinuity("ERASURE_CONTINUITY_BINDING");
+  const scopes = erasureJournalBindings(binding), version = scopes.legacyBinding ? 2 : 1;
+  registryFields(value, ["version", "binding", ...(version === 2 ? ["legacyBinding"] : []), "files"]);
+  if (value.version !== version || JSON.stringify(erasureBinding(value.binding)) !== JSON.stringify(scopes.binding)
+    || version === 2 && JSON.stringify(erasureBinding(value.legacyBinding)) !== JSON.stringify(scopes.legacyBinding)) failContinuity("ERASURE_CONTINUITY_BINDING");
   const files = array(value.files).filter(file => {
     registryFields(file, ["name", "content"]);
+    if (typeof file.name === "string" && QUICK_REPLIES_FILENAME_PATTERN.test(file.name)) {
+      let content;
+      try { content = decoded(file.content, 1, QUICK_REPLIES_FILE_MAX_BYTES); verifyQuickRepliesEnvelope(content, key, file.name); }
+      catch { failContinuity("ERASURE_CONTINUITY_AUTHENTICATION"); }
+      finally { content?.fill(0); }
+      return false;
+    }
     if (file.name !== "privacy-preparation.json" && (typeof file.name !== "string" || !REGISTRY_NAME.test(file.name))) failContinuity("ERASURE_CONTINUITY_INPUT");
     return file.name !== "privacy-preparation.json";
   });
-  return authenticateRegistrySnapshot({ version: 1, registryId: registryIdentity(key, binding), files }, { key, binding }).snapshot;
+  return authenticateRegistrySnapshot({ version, registryId: registryIdentity(key, scopes.binding), files }, { key, binding: scopes.binding }).snapshot;
 }
 
 /** This keyless check protects the witness against source rollback. The
  * application additionally authenticates and checks plaintext transitions. */
 export function assertRegistryEnvelopeAdvance(previous, proposed) {
   previous = validateRegistrySnapshot(previous); proposed = validateRegistrySnapshot(proposed);
-  if (previous.registryId !== proposed.registryId) failContinuity("ERASURE_CONTINUITY_BINDING");
+  if (previous.version !== proposed.version || previous.registryId !== proposed.registryId) failContinuity("ERASURE_CONTINUITY_BINDING");
   const files = new Map(proposed.files.map(file => [file.name, file]));
   for (const before of previous.files) {
     const after = files.get(before.name), oldRevision = registryEnvelope(before);
-    if (!after || registryEnvelope(after) < oldRevision || registryEnvelope(after) > oldRevision + 1
+    if (!after || registryEnvelopeState(after).version !== registryEnvelopeState(before).version
+      || registryEnvelope(after) < oldRevision || registryEnvelope(after) > oldRevision + 1
       || registryEnvelope(after) === oldRevision && after.content !== before.content) failContinuity("ERASURE_CONTINUITY_ROLLBACK");
   }
   const oldNames = new Set(previous.files.map(file => file.name));

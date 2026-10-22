@@ -9,6 +9,9 @@ const KEY_V2_NAMESPACE = Buffer.from("jessiemessage:broadcast-payload-key:v2:", 
 const FINGERPRINT_V2_NAMESPACE = Buffer.from("jessiemessage:broadcast-fingerprint:v2:", "ascii");
 const AUDIENCE_NAMESPACE = Buffer.from("jessiemessage:broadcast-audience:v2:", "ascii");
 const RECIPIENT_NAMESPACE = Buffer.from("jessiemessage:broadcast-recipient:v2:", "ascii");
+const PAYLOAD_V3_NAMESPACE = Buffer.from("jessiemessage:broadcast-payload:v3:", "ascii");
+const KEY_V3_NAMESPACE = Buffer.from("jessiemessage:broadcast-payload-key:v3:", "ascii");
+const FINGERPRINT_V3_NAMESPACE = Buffer.from("jessiemessage:broadcast-fingerprint:v3:", "ascii");
 const MAX_ENVELOPE_CHARACTERS = 32000;
 const MAX_PAYLOAD_BYTES = 23967;
 
@@ -29,11 +32,11 @@ function validateContext(key, binding, needsCampaign) {
 }
 
 function associatedData(binding, version = 1) {
-  return Buffer.concat([version === 2 ? PAYLOAD_V2_NAMESPACE : PAYLOAD_NAMESPACE, binding.adminId, binding.campaignId]);
+  return Buffer.concat([version === 3 ? PAYLOAD_V3_NAMESPACE : version === 2 ? PAYLOAD_V2_NAMESPACE : PAYLOAD_NAMESPACE, binding.adminId, binding.campaignId]);
 }
 
-function payloadBytes(input) {
-  const plaintext = Buffer.from(JSON.stringify(validatePayload(input)), "utf8");
+function payloadBytes(input, options) {
+  const plaintext = Buffer.from(JSON.stringify(validatePayload(input, options)), "utf8");
   if (plaintext.length > MAX_PAYLOAD_BYTES) { plaintext.fill(0); invalid(); }
   return plaintext;
 }
@@ -46,15 +49,15 @@ function decodeCanonical(value, expectedBytes) {
   return bytes;
 }
 
-export function sealPayload(payload, key, binding) {
+export function sealPayload(payload, key, binding, options) {
   validateContext(key, binding, true);
   // Invalid caller input keeps the canonical BROADCAST_INPUT error. Stored
   // plaintext failures in openPayload are all treated as corrupt ciphertext.
-  const plaintext = payloadBytes(payload);
-  const version = payload.version === 2 ? 2 : 1;
+  const plaintext = payloadBytes(payload, options);
+  const version = payload.version === 3 ? 3 : payload.version === 2 ? 2 : 1;
   let purposeKey;
   try {
-    purposeKey = createHmac("sha256", key).update(version === 2 ? KEY_V2_NAMESPACE : KEY_NAMESPACE).digest();
+    purposeKey = createHmac("sha256", key).update(version === 3 ? KEY_V3_NAMESPACE : version === 2 ? KEY_V2_NAMESPACE : KEY_NAMESPACE).digest();
     const nonce = randomBytes(12);
     const cipher = createCipheriv("aes-256-gcm", purposeKey, nonce, { authTagLength: 16 });
     cipher.setAAD(associatedData(binding, version));
@@ -66,7 +69,8 @@ export function sealPayload(payload, key, binding) {
   finally { plaintext.fill(0); purposeKey?.fill(0); }
 }
 
-export function openPayload(encrypted, key, binding) {
+export function openPayload(encrypted, key, binding, { video = false } = {}) {
+  if (typeof video !== "boolean") invalid();
   validateContext(key, binding, true);
   let plaintext;
   let finalBytes;
@@ -74,13 +78,13 @@ export function openPayload(encrypted, key, binding) {
   try {
     if (typeof encrypted !== "string" || encrypted.length > MAX_ENVELOPE_CHARACTERS) invalid();
     const fields = encrypted.split(".");
-    if (fields.length !== 4 || !["v1", "v2"].includes(fields[0])) invalid();
-    const version = fields[0] === "v2" ? 2 : 1;
+    if (fields.length !== 4 || !["v1", "v2", ...(video ? ["v3"] : [])].includes(fields[0])) invalid();
+    const version = fields[0] === "v3" ? 3 : fields[0] === "v2" ? 2 : 1;
     const nonce = decodeCanonical(fields[1], 12);
     const ciphertext = decodeCanonical(fields[2]);
     const tag = decodeCanonical(fields[3], 16);
     if (ciphertext.length < 1 || ciphertext.length > MAX_PAYLOAD_BYTES) invalid();
-    purposeKey = createHmac("sha256", key).update(version === 2 ? KEY_V2_NAMESPACE : KEY_NAMESPACE).digest();
+    purposeKey = createHmac("sha256", key).update(version === 3 ? KEY_V3_NAMESPACE : version === 2 ? KEY_V2_NAMESPACE : KEY_NAMESPACE).digest();
     const decipher = createDecipheriv("aes-256-gcm", purposeKey, nonce, { authTagLength: 16 });
     decipher.setAAD(associatedData(binding, version));
     decipher.setAuthTag(tag);
@@ -92,8 +96,8 @@ export function openPayload(encrypted, key, binding) {
       interim.fill(0);
     }
     const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(plaintext);
-    const payload = validatePayload(JSON.parse(text));
-    if ((payload.version === 2 ? 2 : 1) !== version) invalid();
+    const payload = validatePayload(JSON.parse(text), { video });
+    if ((payload.version === 3 ? 3 : payload.version === 2 ? 2 : 1) !== version) invalid();
     // Producers write one canonical form. Reject authenticated duplicate JSON
     // keys, unsorted audiences or alternate shapes instead of interpreting them.
     if (JSON.stringify(payload) !== text) invalid();
@@ -102,13 +106,13 @@ export function openPayload(encrypted, key, binding) {
   finally { plaintext?.fill(0); finalBytes?.fill(0); purposeKey?.fill(0); }
 }
 
-export function campaignFingerprint(payload, key, binding) {
+export function campaignFingerprint(payload, key, binding, options) {
   validateContext(key, binding, false);
-  const plaintext = payloadBytes(payload);
+  const plaintext = payloadBytes(payload, options);
   try {
     // Campaign IDs are regenerated on retries; the administrator, complete
     // immutable payload and audience determine the request identity.
-    return createHmac("sha256", key).update(payload.version === 2 ? FINGERPRINT_V2_NAMESPACE : FINGERPRINT_NAMESPACE)
+    return createHmac("sha256", key).update(payload.version === 3 ? FINGERPRINT_V3_NAMESPACE : payload.version === 2 ? FINGERPRINT_V2_NAMESPACE : FINGERPRINT_NAMESPACE)
       .update(binding.adminId).update(plaintext).digest();
   } catch { invalid(); }
   finally { plaintext.fill(0); }

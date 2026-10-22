@@ -1,5 +1,6 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { ChatStoreError } from "../chat/store.mjs";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 import { canonicalProfileName, isProfileVersion, MAX_PROFILE_VERSION, MAX_AVATAR_FULL_BYTES, MAX_AVATAR_THUMBNAIL_BYTES, MAX_AVATAR_SIDE } from "./validation.mjs";
 
 export class ProfileStoreError extends ChatStoreError {
@@ -58,14 +59,14 @@ export function createProfileStore({ pool, chatStore }) {
     return { userId: Buffer.from(user.id), version: profile.version, assetId: Buffer.from(row.id), storageKey: Buffer.from(row.storage_key), thumbnailBytes };
   }
   return Object.freeze({
-    async assertSchema() {
+    async assertSchema(options = {}) {
       let connection;
       try {
         connection = await pool.getConnection();
         const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checks"))[0];
         if (typeof database !== "string" || Number(enforcement?.foreignKeys) !== 1 || Number(enforcement?.checks) !== 1) fail("PROFILE_DATABASE_STATE");
-        const migrations = await loadMigrations();
+        const migrations = await loadStoreMigrations(options);
         const history = await migrationStatus(connection, { database, migrations });
         if (migrations.length < 31 || !/^CREATE\s+TABLE\s+user_profiles\s*\(/i.test(migrations[30].sql.trim()) || history.some(value => value.state !== "applied")) fail("PROFILE_DATABASE_STATE");
         const tables = await connection.query("SELECT ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'user_profiles'", [database]);

@@ -22,6 +22,21 @@ import { createMediaStorage } from "../../server/media/storage.mjs";
 import { createMediaCapacityStore } from "../../server/media/capacity-store.mjs";
 import { consumeSyntheticInvitation } from "../fixtures/manual-admission.mjs";
 import { generateNotificationVapidKeys } from "../../scripts/prepare-runtime-notifications.mjs";
+import { loadVideoMigrations } from "../../server/video/migrations.mjs";
+import { createVideoStorage } from "../../server/video/storage.mjs";
+import { createVideoStore } from "../../server/video/store.mjs";
+import { createChatStore } from "../../server/chat/store.mjs";
+import { createAuthService } from "../../server/auth/service.mjs";
+import { createAccessStore } from "../../server/access/store.mjs";
+import { createAccessService } from "../../server/access/service.mjs";
+import { createChatService } from "../../server/chat/service.mjs";
+import { createVideoMessageStore } from "../../server/video/message-store.mjs";
+import { createVideoService } from "../../server/video/service.mjs";
+import { createBroadcastStore } from "../../server/broadcast/store.mjs";
+import { createBroadcastService } from "../../server/broadcast/service.mjs";
+import { createBroadcastWorker } from "../../server/broadcast/worker.mjs";
+import { createQuickRepliesFiles } from "../../server/quick-replies/files.mjs";
+import { VIDEO_CREATION_ENABLED } from "../../server/release-features.mjs";
 
 const run = promisify(execFile);
 const LOOPBACK = new Set(["127.0.0.1", "::1", "localhost"]);
@@ -33,6 +48,7 @@ const DATABASE_KEYS = Object.freeze([
 ]);
 const CERTIFICATE_FILES = new Set(["tls-key.pem", "tls-cert.pem"]);
 const MEDIA_FILE = /^(?:[a-f0-9]{64}\.(?:full|thumb)\.enc|\.[a-f0-9]{64}\.(?:full|thumb)\.[a-f0-9]{32}\.tmp)$/;
+const VIDEO_FILE = /^(?:[a-f0-9]{64}\.video\.enc|\.[a-f0-9]{64}\.video\.[a-f0-9]{32}\.tmp)$/;
 const sqlDate = value => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
 
 export class AuthenticationFixtureError extends Error {
@@ -86,14 +102,14 @@ async function removeCertificateDirectory(directory) {
 }
 
 /** Only the new, pinned flat synthetic media directory is removable. */
-async function removeMediaDirectory(directory, identity) {
+async function removeMediaDirectory(directory, identity, pattern = MEDIA_FILE) {
   if (!directory) return;
   const stat = await lstat(directory, { bigint: true });
   if (!stat.isDirectory() || stat.isSymbolicLink() || stat.dev !== identity.dev || stat.ino !== identity.ino
     || stat.uid !== BigInt(process.getuid()) || (stat.mode & 0o7777n) !== 0o700n || await realpath(directory) !== directory) fail("AUTH_REHEARSAL_CLEANUP");
   const files = await readdir(directory);
   for (const name of files) {
-    if (!MEDIA_FILE.test(name)) fail("AUTH_REHEARSAL_CLEANUP");
+    if (!pattern.test(name)) fail("AUTH_REHEARSAL_CLEANUP");
     const file = await lstat(join(directory, name), { bigint: true });
     if (!file.isFile() || file.isSymbolicLink() || file.uid !== stat.uid || file.nlink !== 1n || (file.mode & 0o7777n) !== 0o600n) fail("AUTH_REHEARSAL_CLEANUP");
   }
@@ -118,25 +134,82 @@ export async function cleanupAuthenticationSchema(connection, { database, lockNa
   }
 }
 
+/** Seed a former writable release through the real direct services before the
+ * compatibility application exists. These sessions are revoked before boot;
+ * no production option or feature gate is overridden. */
+async function seedVideoCompatibility({ pool, connection, adminId, clientId, key, keys, origin, root, operationsRoot }) {
+  const now = Date.now(), created = sqlDate(now), conversation = await connection.query("SELECT id FROM conversations WHERE admin_id=? AND client_id=?", [adminId, clientId]);
+  if (conversation.length !== 1) fail();
+  const conversationId = conversation[0].id.toString("hex"), owners = [];
+  for (const [role, userId] of [["admin", adminId], ["client", clientId]]) {
+    const owner = { role, id: userId, sessionId: randomBytes(16), token: randomBytes(32).toString("base64url") };
+    owners.push(owner);
+    await connection.query("INSERT INTO sessions(id,user_id,token_hash,created_at,expires_at) VALUES(?,?,?,?,?)", [owner.sessionId, userId, tokenDigest(owner.token), created, sqlDate(now + 3600000)]);
+    await connection.query(role === "admin" ? "INSERT INTO auth_session_state(session_id,last_seen_at,mfa_verified_at,mfa_version) VALUES(?,?,?,1)"
+      : "INSERT INTO client_session_state(session_id,last_seen_at,credential_version) VALUES(?,?,1)", role === "admin" ? [owner.sessionId, created, created] : [owner.sessionId, created]);
+  }
+  try {
+    const authStore = createAuthStore(pool), authService = await createAuthService({ store: authStore, totpKey: key });
+    const accessService = await createAccessService({ store: createAccessStore(pool), authStore, authService, totpKey: key, mailKey: keys.MAIL, origin });
+    let messages;
+    const chatStore = createChatStore(pool, { decorateMessages: (...args) => messages.decorateMessages(...args) });
+    const storage = await createVideoStorage({ root, key: keys.VIDEO }), videoStore = createVideoStore({ pool, chatStore,
+      capacity: { ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await storage.fingerprint() } });
+    messages = createVideoMessageStore({ pool, chatStore, videoStore });
+    const chatService = await createChatService({ store: chatStore, authStore, authService, accessService, key: keys.MESSAGE, videoMessages: messages });
+    const videos = await createVideoService({ store: videoStore, chatService, authStore, storage, key: keys.VIDEO, messages, minimumFreeBytes: 0 });
+    const media = Buffer.from((await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8")).trim(), "base64");
+    const seeded = [];
+    try {
+      for (const owner of owners) {
+        const caption = `Synthetic retained ${owner.role} video`, ticket = await videos.admitUpload(owner.role, owner.token, { bytes: media.length, mime: "video/mp4" });
+        const asset = await videos.upload(owner.role, owner.token, ticket, (async function* () { yield Buffer.from(media); })());
+        const result = await videos.send(owner.role, owner.token, conversationId, { clientMessageId: randomBytes(16).toString("hex"), videoId: asset.id, caption });
+        seeded.push({ role: owner.role, asset, message: result.message, caption });
+      }
+    } finally { media.fill(0); }
+    const replies = createQuickRepliesFiles(operationsRoot, keys.CRM, adminId.toString("hex")); let catalogue;
+    try { catalogue = await replies.save([{ id: "c".repeat(32), title: "Retained personal reply", body: "Private retained <phrase> 💛", language: "fr" }], 0, async () => {}); }
+    finally { replies.close(); }
+    const broadcastStore = createBroadcastStore(pool, { chatStore, videoStore, videoMessageStore: messages, key: keys.MESSAGE, videoEnabled: true });
+    const broadcasts = await createBroadcastService({ store: broadcastStore, authStore, authService, key: keys.MESSAGE, videoEnabled: true, largeAudiencesEnabled: true });
+    const admin = owners.find(value => value.role === "admin"), videoId = seeded.find(value => value.role === "admin").asset.id,
+      audience = { mode: "selected", conversationIds: [conversationId] };
+    const preview = await broadcasts.preview(admin.token, { audience, mediaId: null, videoId });
+    const campaignInput = { clientCampaignId: randomBytes(16).toString("hex"), title: "Retained video campaign", body: "Synthetic pending video campaign", mediaId: null,
+      videoId, allowRepeatMedia: true, audience, previewToken: preview.previewToken };
+    const campaign = await broadcasts.create(admin.token, campaignInput);
+    if (campaign.campaign.formatVersion !== 3 || campaign.duplicate !== false) fail();
+    return Object.freeze({ conversationId, seeded, campaignInput, campaignId: campaign.campaign.id,
+      replies: { version: String(catalogue.revision), replies: catalogue.replies } });
+  } finally {
+    const revoked = await connection.query("UPDATE sessions SET revoked_at=? WHERE id IN (?,?) AND revoked_at IS NULL", [sqlDate(Date.now()), ...owners.map(owner => owner.sessionId)]);
+    if (Number(revoked.affectedRows) !== 2) fail();
+    for (const owner of owners) owner.token = "";
+  }
+}
+
 /**
  * Real configured application + runtime DML account, fronted by test-only TLS.
  * Browser callers must set acceptInsecureCerts on their disposable WebDriver
  * session. This fixture never changes NODE_TLS_REJECT_UNAUTHORIZED or any
  * production listener, feature configuration, mail transport, or credential.
  */
-export async function createAuthenticationFixture({ messaging = false } = {}) {
-  if (typeof messaging !== "boolean") fail("AUTH_REHEARSAL_CONFIG");
+export async function createAuthenticationFixture({ messaging = false, video = false } = {}) {
+  if (typeof messaging !== "boolean" || typeof video !== "boolean" || video && !messaging) fail("AUTH_REHEARSAL_CONFIG");
   const confirmed = validateFixtureEnvironment();
   const env = Object.fromEntries(DATABASE_KEYS.map((key) => [key, process.env[key]]));
   env.JESSIEMESSAGE_DB_HOST = confirmed.host;
-  let connection, configured, shutdown, proxy, certificateDirectory, stopping, bootstrapPool, mediaRoot, mediaIdentity;
+  let connection, configured, shutdown, proxy, certificateDirectory, stopping, bootstrapPool, mediaRoot, mediaIdentity,
+    videoRoot, videoIdentity, operationsRoot, operationsIdentity, compatibilityData, compatibilityWorker;
   let ownsSchema = false, lockHeld = false, targetPort = null, accepting = false;
   let allowedTables = [];
   const upstreams = new Set(), sockets = new Set();
   const lockName = `jessie:auth-rehearsal:${createHash("sha256").update(confirmed.database).digest("hex").slice(0, 32)}`;
   const adminId = randomBytes(16), key = randomBytes(32);
   const clientId = messaging ? randomBytes(16) : null;
-  const domainKeys = messaging ? Object.fromEntries(["MAIL", "MESSAGE", "MEDIA", "NOTIFICATIONS", "CRM"].map(name => [name, randomBytes(32)])) : {};
+  const domainKeys = messaging ? Object.fromEntries(["MAIL", "MESSAGE", "MEDIA", "NOTIFICATIONS", "CRM", ...(video ? ["VIDEO"] : [])].map(name => [name, randomBytes(32)])) : {};
+  const videoAttestation = video ? randomBytes(32).toString("hex") : null;
   const client = messaging ? Object.freeze({ id: clientId.toString("hex"), email: `messaging-rehearsal-${randomBytes(6).toString("hex")}@example.invalid`,
     password: `Synthetic client ${randomBytes(24).toString("base64url")}!` }) : null;
   const email = `auth-rehearsal-${randomBytes(6).toString("hex")}@example.invalid`;
@@ -158,6 +231,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
         for (const socket of sockets) socket.destroy();
         await closed;
       } catch { failed = true; }
+      try { await compatibilityWorker?.stop(); } catch { failed = true; applicationClosed = false; }
       try {
         if (shutdown) {
           const result = await shutdown();
@@ -176,7 +250,15 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
         if (lockHeld) { try { await connection.query("SELECT RELEASE_LOCK(?)", [lockName]); } catch { failed = true; } lockHeld = false; }
         try { await connection.end(); } catch { failed = true; }
       }
-      if (applicationClosed) { try { await removeMediaDirectory(mediaRoot, mediaIdentity); } catch { failed = true; } }
+      if (applicationClosed) {
+        try { await removeMediaDirectory(mediaRoot, mediaIdentity); } catch { failed = true; }
+        try { await removeMediaDirectory(videoRoot, videoIdentity, VIDEO_FILE); } catch { failed = true; }
+        // Only this fixture's administrator catalogue may be created here.
+        // Any closure, backup, unknown file or writer lock preserves the owned
+        // directory instead of deleting potentially unfinished state.
+        try { await removeMediaDirectory(operationsRoot, operationsIdentity,
+          new RegExp(`^quick-replies-${adminId.toString("hex")}\\.json$`)); } catch { failed = true; }
+      }
       try { await removeCertificateDirectory(certificateDirectory); } catch { failed = true; }
       key.fill(0); for (const value of Object.values(domainKeys)) value.fill(0); secret = ""; adminId.fill(0); clientId?.fill(0);
       if (failed) fail("AUTH_REHEARSAL_CLEANUP");
@@ -185,9 +267,9 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
   }
 
   try {
-    const migrations = await loadMigrations();
+    const migrations = await (video ? loadVideoMigrations() : loadMigrations());
     validateMigrationPlan(migrations);
-    if (migrations.length !== 33) fail();
+    if (migrations.length !== (video ? 36 : 33)) fail();
     const tables = createdMigrationTables(migrations);
     if (new Set(tables).size !== tables.length) fail();
     allowedTables = [...tables.reverse(), "schema_migrations"];
@@ -205,7 +287,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     ownsSchema = true;
     await applyMigrations(connection, { database: confirmed.database, migrations });
     if (messaging) {
-      if (new Set([key, ...Object.values(domainKeys)].map(value => value.toString("hex"))).size !== 6) fail();
+      if (new Set([key, ...Object.values(domainKeys)].map(value => value.toString("hex"))).size !== (video ? 7 : 6)) fail();
       mediaRoot = await mkdtemp(join(tmpdir(), "jessiemessage-messaging-rehearsal-"));
       await chmod(mediaRoot, 0o700); mediaIdentity = await lstat(mediaRoot, { bigint: true });
       const storage = await createMediaStorage({ root: mediaRoot, key: domainKeys.MEDIA });
@@ -213,6 +295,16 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
       await createMediaCapacityStore({ pool: bootstrapPool, capacity: {
         ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await storage.fingerprint(),
       } }).initialize({ now: Date.now(), offline: true });
+      if (video) {
+        videoRoot = await mkdtemp(join(tmpdir(), "jessiemessage-video-rehearsal-"));
+        await chmod(videoRoot, 0o700); videoIdentity = await lstat(videoRoot, { bigint: true });
+        operationsRoot = await mkdtemp(join(tmpdir(), "jessiemessage-video-operations-"));
+        await chmod(operationsRoot, 0o700); operationsIdentity = await lstat(operationsRoot, { bigint: true });
+        const videos = await createVideoStorage({ root: videoRoot, key: domainKeys.VIDEO });
+        await createVideoStore({ pool: bootstrapPool, chatStore: createChatStore(bootstrapPool), capacity: {
+          ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await videos.fingerprint(),
+        } }).initialize({ now: Date.now(), offline: true });
+      }
       await bootstrapPool.end(); bootstrapPool = null;
     }
 
@@ -221,7 +313,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     const keyPath = join(certificateDirectory, "tls-key.pem"), certPath = join(certificateDirectory, "tls-cert.pem");
     // No shell is involved and neither output nor private material is logged.
     await run("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-sha256", "-nodes", "-days", "1",
-      "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1,DNS:localhost", "-keyout", keyPath, "-out", certPath],
+      "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1,DNS:localhost,DNS:jessiemessage.com", "-keyout", keyPath, "-out", certPath],
     { timeout: 15000, maxBuffer: 65536, env: { PATH: process.env.PATH ?? "/usr/bin:/bin", OPENSSL_CONF: "/dev/null" } });
     await chmod(keyPath, 0o600); await chmod(certPath, 0o600);
     const [tlsKey, certificate] = await Promise.all([readFile(keyPath), readFile(certPath)]);
@@ -234,6 +326,10 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
       proxy = createHttpsServer({ key: tlsKey, cert: certificate, minVersion: "TLSv1.2" }, (request, response) => {
         if (!accepting || targetPort === null) {
           response.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store" }); response.end('{"error":"fixture_unavailable"}'); request.resume(); return;
+        }
+        if (video && request.method === "GET" && request.url === "/__video_rehearsal/" + videoAttestation) {
+          response.writeHead(200, { "Content-Type": "text/plain", "Cache-Control": "no-store" });
+          response.end(videoAttestation); return;
         }
         const requestUrl = new URL(request.url, origin);
         if (request.headers.host === new URL(outside).host) {
@@ -281,7 +377,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     } finally { tlsKey.fill(0); }
     proxy.on("connection", (socket) => { sockets.add(socket); socket.on("close", () => sockets.delete(socket)); });
     proxy.on("clientError", (_error, socket) => socket.destroy());
-    const port = await listen(proxy), origin = `https://127.0.0.1:${port}`, outside = `https://localhost:${port}`;
+    const port = await listen(proxy), origin = video ? "https://jessiemessage.com" : `https://127.0.0.1:${port}`, outside = `https://localhost:${port}`;
     const runtimeEnvironment = { ...env,
       JESSIEMESSAGE_ENABLE_AUTH: "1", JESSIEMESSAGE_SITE_ORIGIN: origin, JESSIEMESSAGE_MFA_KEY: key.toString("base64url"),
       JESSIEMESSAGE_ENABLE_ACCESS: "0", JESSIEMESSAGE_ENABLE_CHAT: "0", JESSIEMESSAGE_ENABLE_MEDIA: "0",
@@ -305,14 +401,14 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
       notificationSubscription = Object.freeze({ endpoint: `https://fcm.googleapis.com/wp/synthetic-rehearsal-${randomBytes(16).toString("hex")}`, expirationTime: null,
         keys: Object.freeze({ p256dh: subscription.getPublicKey().toString("base64url"), auth: randomBytes(16).toString("base64url") }) });
     }
-    configured = await createConfiguredServer(runtimeEnvironment);
-    shutdown = createShutdown(configured);
-    if (!configured.pool || !messaging && configured.mailWorker !== null) fail();
-    // Access requires valid mail configuration. Stop its real worker owner
-    // before listen; the once-listening callback sees stopping and starts no
-    // SMTP, push, broadcast or monitoring producer. No endpoint is contacted.
-    if (messaging) { if (typeof configured.mailWorker?.stop !== "function") fail(); await configured.mailWorker.stop(); }
-    await createAuthStore(configured.pool).initializeAdmin({ id: adminId, email, pseudonym: "Synthetic browser administrator",
+    if (video) Object.assign(runtimeEnvironment, {
+      JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1", JESSIEMESSAGE_ENABLE_BROADCAST: "1",
+      JESSIEMESSAGE_VIDEO_ROOT: videoRoot, JESSIEMESSAGE_VIDEO_OWNER_BYTES: String(16 * 1024 * 1024),
+      JESSIEMESSAGE_VIDEO_TOTAL_BYTES: String(64 * 1024 * 1024), JESSIEMESSAGE_VIDEO_MINIMUM_FREE_BYTES: "0",
+      JESSIEMESSAGE_SMTP_USER: "contact@jessiemessage.com", JESSIEMESSAGE_SMTP_FROM: "contact@jessiemessage.com",
+    });
+    bootstrapPool = await createRuntimePool(env);
+    await createAuthStore(bootstrapPool).initializeAdmin({ id: adminId, email, pseudonym: "Synthetic browser administrator",
       passwordHash: await hashPassword(password), secretEncrypted: sealTotpSecret(secret, key, adminId),
       recoveryDigests: recoveryCodes.map(recoveryCodeDigest), now: Date.now() });
     if (messaging) {
@@ -330,6 +426,23 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
         await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [randomBytes(16), clientId, adminId, at]);
         await connection.commit();
       } catch (error) { await connection.rollback(); throw error; }
+    }
+    if (video && !VIDEO_CREATION_ENABLED) compatibilityData = await seedVideoCompatibility({ pool: bootstrapPool, connection, adminId, clientId,
+      key, keys: domainKeys, origin, root: videoRoot, operationsRoot });
+    await bootstrapPool.end(); bootstrapPool = null;
+    configured = await createConfiguredServer(runtimeEnvironment, video ? { requestOrigin: origin, deviceTransition: true,
+      recovery: true, crm: true, broadcast: true, accountClosures: true, backupDirectory: operationsRoot, video: true } : {});
+    shutdown = createShutdown(configured);
+    if (!configured.pool || !messaging && configured.mailWorker !== null) fail();
+    // Stop the configured owner before listen: no SMTP, push, broadcast or
+    // monitoring producer contacts any external endpoint in this fixture.
+    if (messaging) { if (typeof configured.mailWorker?.stop !== "function") fail(); await configured.mailWorker.stop(); }
+    if (compatibilityData) {
+      const chatStore = createChatStore(configured.pool), storage = await createVideoStorage({ root: videoRoot, key: domainKeys.VIDEO }),
+        videoStore = createVideoStore({ pool: configured.pool, chatStore, capacity: { ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await storage.fingerprint() } }),
+        messages = createVideoMessageStore({ pool: configured.pool, chatStore, videoStore });
+      compatibilityWorker = createBroadcastWorker({ store: createBroadcastStore(configured.pool, { chatStore, videoStore, videoMessageStore: messages,
+        key: domainKeys.MESSAGE, videoEnabled: true, videoCreationEnabled: false }), authStore: createAuthStore(configured.pool), key: domainKeys.MESSAGE, videoEnabled: true, batchSize: 1 });
     }
     targetPort = await listen(configured.server);
     accepting = true;
@@ -382,6 +495,18 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
       finally { digest?.fill(0); runtime?.release(); }
     }
     return Object.freeze({ origin, email, password, currentTotp, isTotpFresh, invalidTotp, recoveryCodes: Object.freeze([...recoveryCodes]), expireSession, stop,
+      ...(video ? { primaryFixturePort: port, videoAttestation, videoFileCount: async () => (await readdir(videoRoot)).filter(name => VIDEO_FILE.test(name)).length } : {}),
+      ...(compatibilityData ? { compatibilityData, async runExistingVideoCampaign() {
+        if (stopping || !compatibilityWorker) fail();
+        const result = await compatibilityWorker.runOnce();
+        if (result.delivered !== 1 || result.deferred !== 0 || result.failed !== 0) fail();
+        return result;
+      }, async compatibilityState() {
+        if (stopping) fail();
+        const rows = await connection.query("SELECT (SELECT COUNT(*) FROM video_assets) AS videos,(SELECT COUNT(*) FROM message_video) AS links,(SELECT COUNT(*) FROM broadcast_campaigns) AS campaigns");
+        return { videos: Number(rows[0].videos), links: Number(rows[0].links), campaigns: Number(rows[0].campaigns),
+          repliesSha256: createHash("sha256").update(await readFile(join(operationsRoot, `quick-replies-${adminId.toString("hex")}.json`))).digest("hex") };
+      } } : {}),
       ...(messaging ? { client, notificationSubscription, notificationReference, sessionRemainsActive, outsideOrigin: outside,
         externalApiNavigation: (role, kind) => { if (!Object.hasOwn(navigationPaths, role) || !Object.hasOwn(navigationPaths[role], kind)) fail(); return `${outside}/c01-navigation?role=${role}&kind=${kind}`; },
         sessionNavigations: () => navigationObservations.map(value => ({ ...value })) } : {}) });

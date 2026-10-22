@@ -1,7 +1,7 @@
 import { createClientConversationExportHandler } from "./client-export-http.mjs";
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { readFile } from "node:fs/promises";
-import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { AUTH_HEADERS, checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { validateMessageBody } from "./crypto.mjs";
 import { safePeerAvatar } from "./profile-avatar.mjs";
 
@@ -84,23 +84,36 @@ export function safeMedia(value, { role, conversationId = null, messageId = null
     sharedHere: value.sharedHere, fullUrl: `${base}/full`, thumbnailUrl: `${base}/thumb` };
 }
 
+export function safeVideo(value, { role, conversationId, messageId } = {}) {
+  if (!value || !id(value.id) || !["admin", "client"].includes(role) || !id(conversationId) || !id(messageId)
+    || !Number.isSafeInteger(value.bytes) || value.bytes < 1 || value.bytes > 104857600 || value.mime !== "video/mp4") throw unavailable();
+  const contentUrl = `/api/video/${role}/conversations/${conversationId}/messages/${messageId}/content`;
+  if (value.contentUrl !== contentUrl) throw unavailable();
+  return { id: value.id, bytes: value.bytes, mime: "video/mp4", contentUrl };
+}
+
 export function safeMessage(value, context = {}) {
   if (!value || !id(value.id) || !sequence(value.sequence, true) || !["me", "peer"].includes(value.sender)
     || !date(value.createdAt) || !nullableDate(value.deletedAt)
     || !(value.clientMessageId === null || id(value.clientMessageId))
     || value.sender === "peer" && value.clientMessageId !== null
     || value.deletedAt !== null && (value.deletedAt < value.createdAt || value.body !== null)) throw unavailable();
-  let media;
+  let media, video;
   if (value.deletedAt === null) {
-    if (value.media !== undefined) {
+    if (value.media !== undefined && value.video !== undefined) throw unavailable();
+    if (value.video !== undefined) {
+      video = safeVideo(value.video, { ...context, messageId: value.id });
+      if (typeof value.body !== "string" || value.body.length > 1000) throw unavailable();
+      if (value.body !== "") { try { validateMessageBody(value.body); } catch { throw unavailable(); } }
+    } else if (value.media !== undefined) {
       media = safeMedia(value.media, { ...context, messageId: value.id });
       if (typeof value.body !== "string" || value.body.length > 1000) throw unavailable();
       if (value.body !== "") { try { validateMessageBody(value.body); } catch { throw unavailable(); } }
     } else { try { validateMessageBody(value.body); } catch { throw unavailable(); } }
-  } else if (value.media !== undefined && value.media !== null) throw unavailable();
+  } else if (value.media !== undefined && value.media !== null || value.deletedAt !== null && value.video !== undefined && value.video !== null) throw unavailable();
   return { id: value.id, sequence: value.sequence, sender: value.sender, body: value.body,
     createdAt: value.createdAt, deletedAt: value.deletedAt, clientMessageId: value.clientMessageId,
-    ...(media ? { media } : {}) };
+    ...(media ? { media } : {}), ...(video ? { video } : {}) };
 }
 
 function shape(body, keys) {
@@ -157,9 +170,9 @@ function mappedError(error) {
 }
 
 /** Routes exist only when the parent has explicitly enabled the chat feature. */
-export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false, announcementsEnabled = false, tasksEnabled = false }) {
+export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false, announcementsEnabled = false, tasksEnabled = false, videoEnabled = false, videoCreationEnabled = true }) {
   if (typeof profileEnabled !== "boolean" || typeof avatarsEnabled !== "boolean" || avatarsEnabled && !profileEnabled
-    || typeof announcementsEnabled !== "boolean" || typeof tasksEnabled !== "boolean") throw new TypeError("Invalid chat capability");
+    || typeof announcementsEnabled !== "boolean" || typeof tasksEnabled !== "boolean" || typeof videoEnabled !== "boolean" || typeof videoCreationEnabled !== "boolean") throw new TypeError("Invalid chat capability");
   const configuredOrigin = new URL(origin);
   if (configuredOrigin.protocol !== "https:" || configuredOrigin.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   for (const method of ["actor", "listConversations", "clientConversation", "messages", "events", "send", "markRead", "delete"]) {
@@ -199,10 +212,11 @@ export function createChatHandler(service, { origin, clientConversationExporter 
       if (method === "POST" && !sameText(request.headers["x-csrf-token"], authenticated.csrf)) throw httpError(403, "csrf_failed");
       if (route.kind === "page") {
         query(url, []);
-        reply(response, method, 200, await readFile(new URL("chat.html", publicRoot)), { "Content-Type": "text/html; charset=utf-8" });
+        reply(response, method, 200, await readFile(new URL("chat.html", publicRoot)), { "Content-Type": "text/html; charset=utf-8",
+          ...(videoEnabled ? { "Content-Security-Policy": AUTH_HEADERS["Content-Security-Policy"] + "; media-src 'self' blob:" } : {}) });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes } } : {}) });
+        reply(response, method, 200, { enabled: true, ...(videoEnabled ? { video: { enabled: true, maxBytes: 104857600, mime: "video/mp4", ...(!videoCreationEnabled ? { creationEnabled: false } : {}) } } : {}), ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes, ...(clientConversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
       } else if (route.kind === "list") {
         const options = query(url, ["afterId", "limit"], 50);
         const afterId = options.afterId ?? null;

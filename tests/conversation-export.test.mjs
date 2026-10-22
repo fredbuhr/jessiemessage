@@ -58,6 +58,11 @@ test("text-only exports never read photos and do not enumerate an unshared libra
   await assert.rejects(f.create({ includePhotos: true }), error => error.code === "input");
 });
 
+test("legacy archives reject a live video rather than silently dropping its attachment", async () => {
+  const f = fixture({ photo: false, pages: [page([message(1, { video: { id: id(21), bytes: 100, mime: "video/mp4" } })])] });
+  await assert.rejects(f.create({ includePhotos: false }), error => error.code === "changed");
+});
+
 test("foreign conversations, rebinding, malformed pagination and deleted-message payloads never form an archive", async t => {
   const wrong = [
     page([message(1)], { conversation: { id: id(88), client: { id: clientId, pseudonym: "X" }, peerName: "X", latestSequence: "1" } }),

@@ -8,18 +8,29 @@ import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
 const id = number => number.toString(16).padStart(32, "0");
 const publicRoot = new URL("../../public/", import.meta.url);
-const assets = ["broadcast.html", "broadcast.js", "broadcast-model.js", "broadcast.css", "session-clock.js", "i18n.js", "i18n.css", "i18n-tools.js", "help-link.js",
+const assets = ["broadcast.html", "broadcast.js", "broadcast-model.js", "broadcast.css", "session-clock.js", "i18n.js", "i18n.css", "i18n-tools.js", "i18n-broadcast.js", "help-link.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png",
   "brand/icon-128.png", "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
+const videoBytes = Buffer.from(await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
 let driver;
 before(async () => { driver = await startWebDriver(); }, { timeout: 60000 });
 after(async () => { await driver?.close(); });
 
 const bootstrap = `
 window.__scaleErrors=[];
+window.__scalePointerEvents=[];
 addEventListener('error',event=>window.__scaleErrors.push(String(event.message)));
 addEventListener('unhandledrejection',event=>window.__scaleErrors.push(String(event.reason?.message??event.reason)));
 addEventListener('securitypolicyviolation',event=>window.__scaleErrors.push('CSP:'+event.violatedDirective));
+for(const type of ['pointerdown','pointerup','click'])addEventListener(type,event=>{
+  const target=event.target,button=document.getElementById('upload-video'),rect=button?.getBoundingClientRect();
+  const box=value=>({x:Math.round(value.x),y:Math.round(value.y),width:Math.round(value.width),height:Math.round(value.height)}),visual=window.visualViewport;
+  window.__scalePointerEvents.push({type,targetId:target?.id??null,targetTag:target?.tagName??null,buttonId:target?.closest?.('button')?.id??null,
+    trusted:event.isTrusted,fieldsetDisabled:document.getElementById('composition')?.disabled??null,
+    x:Math.round(event.clientX),y:Math.round(event.clientY),uploadRect:rect?box(rect):null,uploadClientRects:Array.from(button?.getClientRects()??[],box),
+    viewport:{width:innerWidth,height:innerHeight,scrollX,scrollY,visual:visual?{width:visual.width,height:visual.height,offsetLeft:visual.offsetLeft,offsetTop:visual.offsetTop,pageLeft:visual.pageLeft,pageTop:visual.pageTop,scale:visual.scale}:null}});
+  if(window.__scalePointerEvents.length>18)window.__scalePointerEvents.shift();
+},true);
 // Advance only the product's 30-second history poll, retaining its actual
 // callback and all other timeout/session/transport behavior.
 const nativeSetTimeout=window.setTimeout.bind(window),nativeClearTimeout=window.clearTimeout.bind(window),polls=new Map();
@@ -28,19 +39,20 @@ window.clearTimeout=handle=>{polls.delete(handle);return nativeClearTimeout(hand
 window.__runScalePoll=async()=>{const entry=[...polls].at(-1);if(!entry)throw Error('No product history poll');nativeClearTimeout(entry[0]);polls.delete(entry[0]);await entry[1]();};
 `;
 
-async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false } = {}) {
+async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false, videoEnabled = false, videoCreationEnabled = true, seedVideo = false, holdVideoUpload = false } = {}) {
   const files = new Map(await Promise.all(assets.map(async name => ["/" + name, await readFile(new URL(name, publicRoot))])));
   const html = files.get("/broadcast.html").toString().replace("<head>", '<head><script src="/scale-fixture.js"></script>');
   const contacts = Array.from({ length: 2500 }, (_, index) => ({ id: id(index + 1), client: { id: id(10000 + index), pseudonym: `Scale client ${String(index + 1).padStart(4, "0")}` }, crm: { nickname: "" }, canSend: true }));
   const contactsById = new Map(contacts.map(contact => [contact.id, contact]));
-  const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0 };
+  const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0, uploads: [], uploadAttempts: [] };
   const session = () => ({ user: { id: id(8000 + state.owner), role: "admin", pseudonym: `Synthetic Jessie ${state.owner}` }, csrf: state.owner === 1 ? "A".repeat(43) : "B".repeat(42) + "A",
-    expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}) });
+    expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}), ...(videoEnabled ? { videoEnabled: true, ...(videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) });
   const targets = audience => audience?.mode === "all" ? contacts : audience?.mode === "filtered" ? contacts.slice(0, 175)
     : contacts.filter(contact => audience.conversationIds.includes(contact.id));
   function makeCampaign(input, selected) {
     const at = Date.now();
     return { id: id(9000 + state.campaigns.size), clientCampaignId: input.clientCampaignId, title: input.title, body: input.body, mediaId: null, allowRepeatMedia: false,
+      ...(input.videoId ? { videoId: input.videoId, formatVersion: 3, audienceMode: input.audience.mode } : {}),
       status: "queued", createdAt: at, updatedAt: at, expiresAt: at + 604800000,
       counts: { total: selected.length, pending: selected.length, sending: 0, delivered: 0, skipped: 0, cancelled: 0, failed: 0 }, targetIds: selected.map(contact => contact.id) };
   }
@@ -49,13 +61,13 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
     return value;
   }
   if (seed) {
-    const campaign = makeCampaign({ clientCampaignId: id(9900), title: "Synthetic existing compact campaign", body: "A private historical body" }, contacts);
+    const campaign = makeCampaign({ clientCampaignId: id(9900), title: "Synthetic existing compact campaign", body: "A private historical body", ...(seedVideo ? { videoId: id(7000), audience: { mode: "all" } } : {}) }, contacts);
     state.campaigns.set(campaign.id, campaign); state.ownerByCampaign.set(campaign.id, 1);
   }
   const server = createServer((request, response) => { void (async () => {
     const url = new URL(request.url, "http://localhost"); state.requests.push({ path: url.pathname + url.search, method: request.method });
     response.setHeader("Cache-Control", "no-store");
-    response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
     const json = (status, body) => { response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" }); response.end(JSON.stringify(body)); };
     const page = (rows, key = "id") => { const after = url.searchParams.get("afterId"), limit = Number(url.searchParams.get("limit") ?? 50); const rest = rows.filter(row => after === null || row[key] > after), values = rest.slice(0, limit), hasMore = rest.length > limit;
       return { values, hasMore, nextCursor: hasMore ? values.at(-1)[key] : null }; };
@@ -64,6 +76,16 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
     if (url.pathname === "/api/admin/crm/contacts") {
       const rows = state.owner === 1 ? url.searchParams.get("q") ? contacts.slice(0, 175) : contacts : [], selected = page(rows);
       json(200, { contacts: selected.values, hasMore: selected.hasMore, nextCursor: selected.nextCursor }); return;
+    }
+    if (url.pathname === "/api/video/admin/assets" && request.method === "POST" && videoEnabled) {
+      const attempt = { contentTypeMatches: request.headers["content-type"] === "video/mp4", csrfMatches: request.headers["x-csrf-token"] === session().csrf, bytes: null, bodyMatches: null };
+      state.uploadAttempts.push(attempt);
+      assert.equal(request.headers["content-type"], "video/mp4"); assert.equal(request.headers["x-csrf-token"], session().csrf);
+      const chunks = []; for await (const chunk of request) chunks.push(chunk); const bytes = Buffer.concat(chunks);
+      attempt.bytes = bytes.length; attempt.bodyMatches = bytes.equals(videoBytes);
+      assert.deepEqual(bytes, videoBytes); state.uploads.push(bytes.length);
+      if (!holdVideoUpload) json(201, { id: id(7000), bytes: bytes.length, mime: "video/mp4" });
+      return;
     }
     if (url.pathname === "/api/broadcast/admin/preview" && request.method === "POST") {
       let raw = ""; for await (const chunk of request) raw += chunk;
@@ -228,10 +250,103 @@ test("Chrome: compatibility capability hides global creation while existing 2,50
   try {
     page = await open(source, 390, "en");
     assert.equal(await page.execute("return document.getElementById('audience-options').hidden"), true);
+    assert.equal(await page.execute("return document.getElementById('video-options').hidden"), true);
     await page.click("#history button");
     await waitUntil(() => page.execute("return document.querySelectorAll('#campaign-detail .recipient-list li').length===50"), "compatible version reads the first bounded compact page");
     await page.click("#recipients-more");
     await waitUntil(() => page.execute("return document.querySelector('#campaign-detail .recipient-list li')?.textContent.includes('0051')"), "compatible version reads another compact page");
     assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0); await errors(page);
+  } finally { await page?.close(); await source.close(); }
+});
+
+async function selectVideo(page) {
+  await page.execute("const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0));const transfer=new DataTransfer();transfer.items.add(new File([bytes],'synthetic-broadcast.mp4',{type:'video/mp4'}));const input=document.getElementById('video-file');input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));", videoBytes.toString("base64"));
+  await waitUntil(() => page.execute("const player=document.querySelector('#video-preview video');return player?.videoWidth===96&&player.videoHeight===64&&player.duration>1.5&&!document.getElementById('upload-video').disabled"), "native MP4 preview is decoded before upload");
+}
+
+async function assertVideoViewport(page, width) {
+  const viewport = await page.execute("const input=document.getElementById('video-file'),rect=input.getBoundingClientRect(),style=getComputedStyle(input),root=document.documentElement,visual=window.visualViewport;return {width:innerWidth,height:innerHeight,clientWidth:root.clientWidth,scrollWidth:root.scrollWidth,visual:visual?{width:visual.width,height:visual.height,offsetLeft:visual.offsetLeft,offsetTop:visual.offsetTop,scale:visual.scale}:null,activeElement:{id:document.activeElement?.id,tag:document.activeElement?.tagName},file:{width:rect.width,height:rect.height,position:style.position,padding:[style.paddingTop,style.paddingRight,style.paddingBottom,style.paddingLeft],border:[style.borderTopWidth,style.borderRightWidth,style.borderBottomWidth,style.borderLeftWidth]}}");
+  assert.equal(viewport.width, width, `the hidden video control must not enlarge the requested viewport: ${JSON.stringify(viewport)}`);
+  assert.ok(viewport.scrollWidth <= viewport.clientWidth, `video selection must not create horizontal overflow: ${JSON.stringify(viewport)}`);
+  assert.equal(viewport.file.position, "absolute"); assert.equal(viewport.file.width, 1); assert.equal(viewport.file.height, 1);
+  assert.deepEqual(viewport.file.padding, ["0px", "0px", "0px", "0px"]); assert.deepEqual(viewport.file.border, ["0px", "0px", "0px", "0px"]);
+}
+
+async function waitForVideoUpload(source, page, check, description) {
+  try { await waitUntil(check, description); }
+  catch (error) {
+    const browser = await page.execute("const byId=id=>document.getElementById(id);return {status:byId('video-status').textContent,error:byId('video-status').classList.contains('is-error'),uploadHidden:byId('upload-video').hidden,uploadDisabled:byId('upload-video').disabled,cancelHidden:byId('cancel-video').hidden,compositionDisabled:byId('composition').disabled,previewDisabled:byId('preview').disabled,pageVisible:document.visibilityState==='visible',errors:window.__scaleErrors,pointerEvents:window.__scalePointerEvents}");
+    // Every value belongs to this synthetic fixture. Keep diagnostic transport
+    // phases separate so a failed header/body assertion cannot look like an
+    // upload that never reached the local server.
+    assert.fail(`${error.message}; ${JSON.stringify({ browser, attempts: source.state.uploadAttempts,
+      requestPaths: source.state.requests.filter(request => request.path === '/api/video/admin/assets').map(request => request.method) })}`);
+  }
+}
+
+async function clickVideoButton(page, buttonId) {
+  const geometry = await page.executeAsync("const id=arguments[0],done=arguments[arguments.length-1],button=document.getElementById(id);button.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'});const measure=()=>{const r=button.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}};requestAnimationFrame(()=>{const first=measure();requestAnimationFrame(()=>{const second=measure(),target=document.elementFromPoint(second.x+second.width/2,second.y+second.height/2);done({first,second,enabled:!button.matches(':disabled'),centerHitsButton:target===button||button.contains(target)})})})", buttonId);
+  assert.equal(geometry.enabled, true, `${buttonId}: enabled before the native click`);
+  assert.ok(geometry.second.width > 0 && geometry.second.height > 0 && geometry.centerHitsButton,
+    `${buttonId}: visible center must hit the button: ${JSON.stringify(geometry)}`);
+  assert.ok(["x", "y", "width", "height"].every(name => Math.abs(geometry.first[name] - geometry.second[name]) < 0.5),
+    `${buttonId}: native target geometry must settle across two animation frames: ${JSON.stringify(geometry)}`);
+  await page.execute("window.__scalePointerEvents.length=0");
+  await page.click(`#${buttonId}`);
+  const events = await page.execute("return window.__scalePointerEvents");
+  assert.ok(events.some(event => event.type === "click" && event.buttonId === buttonId && event.trusted && event.fieldsetDisabled === false),
+    `Native ${buttonId} click must reach the enabled button: ${JSON.stringify(events)}`);
+}
+
+test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry", { timeout: 120000 }, async () => {
+  for (const [width, language] of [[390, "fr"], [1280, "en"]]) {
+    const source = await fixture({ videoEnabled: true, uncertain: true }); let page;
+    try {
+      page = await open(source, width, language); await chooseMode(page, "filtered"); await compose(page, "Synthetic video campaign", "Synthetic private video caption");
+      await selectVideo(page); await assertVideoViewport(page, width);
+      assert.equal(source.state.uploads.length, 0); assert.equal(source.state.creates.length, 0);
+      assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled"), true);
+      assert.equal(await page.execute("return document.getElementById('upload-video').textContent"), language === "fr" ? "Charger la vidéo" : "Upload video");
+      assert.equal(await page.execute("return document.querySelector('#video-preview video').autoplay"), false);
+      await clickVideoButton(page, "upload-video");
+      await waitForVideoUpload(source, page, () => page.execute("return document.getElementById('upload-video').hidden&&!document.getElementById('preview').disabled"), "uploaded attachment enables audience verification");
+      assert.deepEqual(source.state.uploads, [videoBytes.length]); await preview(page, 175);
+      assert.equal(source.state.previewInputs.at(-1).videoId, id(7000)); assert.equal(source.state.previewInputs.at(-1).mediaId, null);
+      await confirmWithKeyboard(page);
+      await waitUntil(() => page.execute("return !document.getElementById('uncertain').hidden&&!document.getElementById('retry').disabled"), "lost campaign response requires an explicit retry");
+      assert.equal(source.state.uploads.length, 1); await page.click("#retry");
+      await waitUntil(() => page.execute("return document.getElementById('uncertain').hidden&&!document.getElementById('campaign-detail').hidden&&document.querySelectorAll('#campaign-detail .recipient-list li').length===50"), "typed campaign is acknowledged and shown with bounded recipient history");
+      assert.equal(source.state.uploads.length, 1); assert.deepEqual(source.state.creates[0], source.state.creates[1]);
+      assert.equal(source.state.creates[0].videoId, id(7000)); assert.equal(source.state.creates[0].mediaId, null);
+      assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length===0&&document.documentElement.scrollWidth<=innerWidth"), true);
+      assert.match(await page.execute("return document.getElementById('campaign-detail').textContent"), language === "fr" ? /Une vidéo jointe/ : /A video attached/);
+      await errors(page);
+    } finally { await page?.close(); await source.close(); }
+  }
+});
+
+test("Chrome broadcast video upload can be cancelled while awaiting ACK without any campaign or automatic upload retry", { timeout: 60000 }, async () => {
+  const source = await fixture({ videoEnabled: true, holdVideoUpload: true }); let page;
+  try {
+    page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await assertVideoViewport(page, 390); await clickVideoButton(page, "upload-video");
+    await waitForVideoUpload(source, page, () => source.state.uploads.length === 1 && page.execute("return !document.getElementById('cancel-video').hidden"), "native upload awaits its server acknowledgement");
+    assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled&&!document.getElementById('video-progress').hidden"), true);
+    await clickVideoButton(page, "cancel-video");
+    await waitUntil(() => page.execute("return document.getElementById('cancel-video').hidden&&document.getElementById('video-status').textContent.includes('Upload cancelled')"), "cancel aborts the upload and exposes a translated result");
+    await clickVideoButton(page, "remove-video");
+    assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length===0&&document.getElementById('video-progress').hidden"), true);
+    assert.equal(source.state.uploads.length, 1); assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0); await errors(page);
+  } finally { await page?.close(); await source.close(); }
+});
+
+test("Chrome compatibility preserves existing v3 video campaign details while hiding new video creation", { timeout: 45000 }, async () => {
+  const source = await fixture({ videoEnabled: true, videoCreationEnabled: false, seed: true, seedVideo: true }); let page;
+  try {
+    page = await open(source, 390, "en"); assert.equal(await page.execute("return document.getElementById('video-options').hidden"), true);
+    await waitUntil(() => page.execute("return document.querySelectorAll('.history-row').length===1"), "existing typed video campaign remains visible");
+    await page.click(".history-row"); await waitUntil(() => page.execute("return document.getElementById('campaign-detail').textContent.includes('A video attached')"), "existing v3 detail is readable");
+    await page.execute("const transfer=new DataTransfer();transfer.items.add(new File(['synthetic'],'blocked.mp4',{type:'video/mp4'}));const input=document.getElementById('video-file');input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));");
+    assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length"), 0); assert.equal(source.state.uploads.length, 0); assert.equal(source.state.creates.length, 0);
+    await errors(page);
   } finally { await page?.close(); await source.close(); }
 });

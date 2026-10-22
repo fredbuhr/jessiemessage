@@ -1,5 +1,6 @@
 import { createRuntimePool } from "../db/runtime.mjs";
 import { createdMigrationTables, loadMigrations } from "../db/migrations.mjs";
+import { loadVideoMigrations } from "../video/migrations.mjs";
 
 export class ApplicationBackupScopeError extends Error {
   constructor() {
@@ -13,6 +14,19 @@ const fail = () => { throw new ApplicationBackupScopeError(); };
 // objects are excluded, and no claim is made about their visible inventory.
 export const APPLICATION_COVERAGE = Object.freeze({ scope: "application-tables", tables: 33, encryptedMedia: true,
   executableObjects: "excluded", executableInventory: "unproven", completeDatabase: false });
+export const VIDEO_APPLICATION_COVERAGE = Object.freeze({ ...APPLICATION_COVERAGE, tables: 36, encryptedVideo: true });
+
+/** The candidate's additional coverage is accepted only by its explicit format. */
+export function validateVideoApplicationCoverage(value) {
+  try {
+    if (!value || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) fail();
+    const descriptors = Object.getOwnPropertyDescriptors(value), names = Reflect.ownKeys(descriptors);
+    if (names.length !== Object.keys(VIDEO_APPLICATION_COVERAGE).length || names.some(name => typeof name !== "string"
+      || !Object.hasOwn(VIDEO_APPLICATION_COVERAGE, name) || !descriptors[name].enumerable
+      || !Object.hasOwn(descriptors[name], "value") || descriptors[name].value !== VIDEO_APPLICATION_COVERAGE[name])) fail();
+    return { ...VIDEO_APPLICATION_COVERAGE };
+  } catch { fail(); }
+}
 
 export function validateApplicationCoverage(value) {
   try {
@@ -74,6 +88,24 @@ export async function assertApplicationTableInspection(connection, database) {
     const migrations = await loadMigrations(), names = [...createdMigrationTables(migrations), "schema_migrations"].sort();
     if (migrations.length !== 33 || names.length !== 33 || new Set(names).size !== 33) fail();
     const tables = rowValues(await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 34", [database]), 33);
+    const actual = tables.map(row => {
+      if (dataField(row, "kind") !== "BASE TABLE" || dataField(row, "engine") !== "InnoDB") fail();
+      return dataField(row, "name");
+    });
+    if (actual.some(name => typeof name !== "string") || JSON.stringify(actual.sort()) !== JSON.stringify(names)) fail();
+    return true;
+  } catch { fail(); }
+}
+
+/** Explicit SQL36 counterpart. Historical SQL30–33 coverage stays unchanged. */
+export async function assertVideoApplicationTableInspection(connection, database) {
+  try {
+    if (typeof connection?.query !== "function" || typeof database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(database)) fail();
+    const identity = rowValues(await connection.query("SELECT DATABASE() AS name"), 1);
+    if (dataField(identity[0], "name") !== database) fail();
+    const migrations = await loadVideoMigrations(), names = [...createdMigrationTables(migrations), "schema_migrations"].sort();
+    if (migrations.length !== 36 || names.length !== 36 || new Set(names).size !== 36) fail();
+    const tables = rowValues(await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 37", [database]), 36);
     const actual = tables.map(row => {
       if (dataField(row, "kind") !== "BASE TABLE" || dataField(row, "engine") !== "InnoDB") fail();
       return dataField(row, "name");

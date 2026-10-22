@@ -1,0 +1,157 @@
+{
+  "formatVersion": 1,
+  "type": "video-180-security-integration-qualification",
+  "source": "779273126a2952ef461d884167b4db4c201a4c54",
+  "tree": "987f8df316ab969f44f7c29fcec39f204923a43f",
+  "parents": [
+    "dc08d35fadd4308b34bcca89bb62ce69e047993e",
+    "5eef6b2b8d98efedf3dfaae67bf4791da6c99edd"
+  ],
+  "branch": "feat/video-messaging",
+  "pr": 125,
+  "ci": {
+    "id": 39695632070,
+    "event": "pull_request",
+    "attempt": 1,
+    "conclusion": "success",
+    "completedAt": "2026-10-21T23:53:27Z",
+    "requiredJobsSucceeded": 5,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39695632070"
+  },
+  "testedMerge": "a6a4dccf2281298b580e70e0af331d1948585060",
+  "testedTreeEqualsSource": true,
+  "jobs": [
+    {
+      "id": 119552185734,
+      "name": "verify",
+      "conclusion": "success",
+      "counts": {
+        "tests": 3508,
+        "suites": 0,
+        "pass": 3465,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 43,
+        "todo": 0,
+        "duration_ms": 95808.022212
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "jm180-merge171-verify.log",
+        "bytes": 496129,
+        "sha256": "69b415c737fdd047eca87583444e0a3c4edf26c7a2e315b62fdddc5b64b684ed",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": 119552185422,
+      "name": "Chrome keyboard and chat lifecycle",
+      "conclusion": "success",
+      "counts": {
+        "tests": 196,
+        "suites": 0,
+        "pass": 196,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 224238.496723
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "jm180-merge171-chrome.log",
+        "bytes": 41109,
+        "sha256": "6e120eaf1e3e8024b994aba016f396e6c58f30f1a56783d9c73a65185945cf11",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": 119552185689,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "conclusion": "success",
+      "counts": {
+        "tests": 3,
+        "suites": 0,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 37282.951085
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "jm180-merge171-https.log",
+        "bytes": 34003,
+        "sha256": "2eb7aa3686bee79f501f97411435b5126d1ac685d72fd3b387748489017e05fa",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": 119552185725,
+      "name": "MariaDB 10.11",
+      "conclusion": "success",
+      "counts": {
+        "tests": 539,
+        "suites": 0,
+        "pass": 539,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 339681.201945
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "jm180-merge171-mariadb1011.log",
+        "bytes": 305202,
+        "sha256": "294685ce9adb95e915a9be205afd0bda1377971e4b8ed4b0e5dae1ebe64485f7",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": 119552185759,
+      "name": "MariaDB 11.4",
+      "conclusion": "success",
+      "counts": {
+        "tests": 539,
+        "suites": 0,
+        "pass": 539,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 335871.860079
+      },
+      "nodeVersion": "24.22.1",
+      "log": {
+        "file": "jm180-merge171-mariadb114.log",
+        "bytes": 306343,
+        "sha256": "5e62799368772bae73315369c8ddcd6acedb2f7953ace1e4ea4b224936d44d0b",
+        "format": "Complete decoded UTF-8 log; LF normalized and single terminal newline.",
+        "reviewed": true
+      }
+    }
+  ],
+  "local": {
+    "syntaxSources": 648,
+    "targetedTests": 87,
+    "failed": 0,
+    "skipped": 0
+  },
+  "developmentVersion": "1.8.0",
+  "productionVersion": "1.7.1",
+  "normalMigrations": 33,
+  "candidateMigrations": 36,
+  "videoActivated": false,
+  "next": "7.3c deletion, closure and capacity",
+  "limits": [
+    "This qualification concerns integration before the 7.3c lifecycle source changes.",
+    "The Windows backup workflow is independent of the five required CI jobs and does not certify the user PC.",
+    "No hosted schema, service, migration, release or real account action performed."
+  ]
+}

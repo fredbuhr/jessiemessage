@@ -97,13 +97,21 @@ Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une séle
 
 Un changement d’audience, de filtres ou de photo demande une nouvelle prévisualisation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi doit être revérifié. Après un résultat d’envoi incertain, la commande de reprise réutilise la même demande. Le suivi présente les compteurs et les destinataires par pages, pendant que les messages sont traités progressivement. Chaque client reçoit son message dans sa conversation privée ; aucun salon collectif n’est créé.
 
-## Copies sur le PC
+## Copies sur le PC — mécanisme actuellement livré
 
-Dans [Sauvegardes](https://jessiemessage.com/admin/backups), consulte les dates de sauvegarde et de copie. Le PC doit être allumé, connecté à Internet et ta session Windows ouverte. Les copies en attente peuvent se rattraper lors d’un prochain passage.
+Dans [Sauvegardes](https://jessiemessage.com/admin/backups), consulte les dates de sauvegarde et de copie. La version actuellement livrée utilise encore le mécanisme automatique : le PC doit être allumé, connecté à Internet et ta session Windows ouverte. Son fonctionnement reste bloqué ou incertain après le signalement antivirus ; les dates et anciens reçus ne prouvent pas une copie actuelle. Les copies en attente peuvent se rattraper lorsque ce mécanisme fonctionne.
 
 Le raccourci **JessieMessage — Sauvegardes** sur le Bureau indique le dossier choisi et permet de le changer. Aucune manipulation de clé ni nouveau raccordement n’est nécessaire au quotidien. En cas d’erreur, conserve les copies, le dossier de récupération et le raccordement existants. Aucune sauvegarde n’est supprimée automatiquement.
 
 Le reçu confirme le fichier chiffré reçu, sans certifier une restauration de l’application. [Copies PC](backup-destinations-055.md).
+
+### Sur branche, non livré : nouveautés 1.8.0
+
+La sauvegarde à la demande depuis l’administration, la vidéo et les réponses personnelles sont codées et qualifiées sur branche, selon [REPRISE](REPRISE.md). **Ces nouveautés ne sont pas encore disponibles en production.** Le nouveau parcours de sauvegarde ne dépend pas du PC et l’archivage automatique est abandonné. Les anciennes archives, clés et le raccordement existant sont conservés.
+
+Dans le candidat 1.8.0, ouvre `+`, puis **Réponses rapides**. La rubrique **Mes réponses** contient tes phrases enregistrées. **Nouvelle réponse** permet de saisir un titre, une langue et un texte, puis **Enregistrer la réponse**. **Modifier** reprend une phrase ; **Supprimer**, puis sa confirmation, la retire. Le catalogue peut contenir jusqu’à 50 phrases, chacune de 4 096 caractères au maximum. Choisir une phrase l’ajoute au brouillon ; relis-la puis utilise **Envoyer**.
+
+Les réponses enregistrées se retrouvent dans tes sessions administrateur. Si une autre session les a modifiées ou si la confirmation manque, ton texte en cours reste affiché : utilise **Recharger les réponses enregistrées**, vérifie le résultat, puis enregistre explicitement si nécessaire.
 
 ## Fermeture définitive et remise en service
 

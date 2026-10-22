@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PassThrough } from "node:stream";
+import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { loadMigrations, createdMigrationTables } from "../server/db/migrations.mjs";
 import { CheckpointResumeError, parseArguments, connectOperatorDatabase, inspectResumeClone, run, main } from "../scripts/resume-application-checkpoint.mjs";
 import { ApplicationCheckpointImportError } from "../scripts/import-application-checkpoint.mjs";
@@ -211,4 +212,18 @@ test("operational restore scope survives native import and populated-clone verif
       assert.equal(result.operationalRestorationPending, true); assert.equal(result.externalRegistryContinuityVerified, false); assert.equal(result.version, 10);
     }
   }
+});
+
+
+test("candidate resume inspects exactly36 physical tables only when video is explicit and still refuses partial clones", async () => {
+  const names = [...createdMigrationTables(await loadVideoMigrations()), "schema_migrations"];
+  let partial = false;
+  const connection = { async query(sql, parameters) {
+    if (sql === "SELECT DATABASE() AS name") return [{ name: "isolated_video" }];
+    if (sql === "SHOW SESSION STATUS LIKE 'Ssl_cipher'") return [{ Variable_name: "Ssl_cipher", Value: "synthetic TLS" }];
+    assert.equal(sql.includes("LIMIT 37"), true); assert.deepEqual(parameters, ["isolated_video"]);
+    return names.slice(0, partial ? -1 : undefined).map(name => ({ name, kind: "BASE TABLE", engine: "InnoDB" }));
+  } };
+  assert.equal(await inspectResumeClone(connection, "isolated_video", { video: true }), "application-schema");
+  partial = true; assert.equal(await inspectResumeClone(connection, "isolated_video", { video: true }), "partial");
 });

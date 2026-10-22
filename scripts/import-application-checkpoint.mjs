@@ -9,6 +9,8 @@ import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
+import { loadRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
+import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { checkpointBackupProfile, matchesCheckpointReceipt, sameCheckpointReceiptScope } from "../server/backup/profiles.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
@@ -142,12 +144,13 @@ function validSet(statement) {
   return undefined;
 }
 
-export async function validateApplicationSql(bytes) {
+export async function validateApplicationSql(bytes, { video = false } = {}) {
+  if (typeof video !== "boolean") fail("SQL");
   let source;
   try { source = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes); } catch { fail("SQL"); }
   if (!bytes.length || bytes.length > MAX_SQL || source.includes("\0")) fail("SQL");
-  const migrations = await loadMigrations(), tables = [...createdMigrationTables(migrations), "schema_migrations"].sort(), expected = new Set(tables), created = new Set();
-  if (migrations.length !== 33 || tables.length !== 33 || expected.size !== 33) fail("SQL");
+  const migrations = await (video ? loadVideoMigrations : loadMigrations)(), count = video ? 36 : 33, tables = [...createdMigrationTables(migrations), "schema_migrations"].sort(), expected = new Set(tables), created = new Set();
+  if (migrations.length !== count || tables.length !== count || expected.size !== count) fail("SQL");
   const all = tokens(source), statements = []; let statement = [];
   for (const token of all) { if (token === ";") { if (statement.length) statements.push(statement); statement = []; } else statement.push(token); }
   if (statement.length) fail("SQL");
@@ -174,7 +177,7 @@ export async function validateApplicationSql(bytes) {
   return { tables: created.size };
 }
 
-export async function readApplicationSql(scope, expected, { signal } = {}) {
+export async function readApplicationSql(scope, expected, { signal, video = false } = {}) {
   let handle, gzip, sql;
   try {
     active(signal); await scope.assertReady();
@@ -187,7 +190,7 @@ export async function readApplicationSql(scope, expected, { signal } = {}) {
     if (!same(before, after) || !same(after, visible) || length !== Number(before.size) || digest(gzip.subarray(0, length)) !== expected.backupSha256) fail("CHECKPOINT");
     sql = gunzipSync(gzip.subarray(0, length), { maxOutputLength: MAX_SQL });
     if (sql.length !== expected.sqlBytes || digest(sql) !== expected.sqlSha256) fail("CHECKPOINT");
-    await validateApplicationSql(sql); await scope.assertReady(); active(signal); return sql;
+    await validateApplicationSql(sql, { video }); await scope.assertReady(); active(signal); return sql;
   } catch (error) { sql?.fill(0); if (error instanceof ApplicationCheckpointImportError) throw error; fail("CHECKPOINT"); }
   finally { gzip?.fill(0); await handle?.close(); }
 }
@@ -251,16 +254,17 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       "--checkpoint-directory", value.checkpointDirectory, "--database", value.database, "--confirm-database", value.confirmation, "--user", value.user,
       ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : [])]);
     if (!["check-application", "verify-application"].includes(selected.command) || !/^[a-f0-9]{64}$/.test(value.sqlSha256)) fail("USAGE");
-    const selectedProfile = checkpointBackupProfile(selected.profile, true), { recovery, crm, broadcast } = selectedProfile;
-    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
+    const selectedProfile = checkpointBackupProfile(selected.profile, true), { recovery, crm, broadcast, video } = selectedProfile;
+    const tableCount = video ? 36 : 33;
+    loadEnvironment ??= video ? loadRuntimeVideoEnvironment : broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     const matchesRecovery = report => !recovery || matchesCheckpointReceipt(selectedProfile, report);
     active(signal); const processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv);
     const check = { ...selected, command: "check-application" }, dependencies = { inheritedEnv, execArgv, signal };
     const before = await verify(check, dependencies);
-    if (before?.status !== "ready_for_input" || before.checkpointFilesMatched !== true || before.databaseConnected !== false || before.tables !== 33 || before.migrations !== 33 || before.sqlSha256 !== value.sqlSha256 || !matchesRecovery(before)) fail("CHECKPOINT");
+    if (before?.status !== "ready_for_input" || before.checkpointFilesMatched !== true || before.databaseConnected !== false || before.tables !== tableCount || before.migrations !== tableCount || before.sqlSha256 !== value.sqlSha256 || !matchesRecovery(before)) fail("CHECKPOINT");
     await inspectClient();
     await scopeOperation(selected.checkpointDirectory, async scope => {
-      sql = await readSql(scope, before, { signal }); active(signal);
+      sql = await readSql(scope, before, { signal, ...(video ? { video: true } : {}) }); active(signal);
       if (digest(sql) !== value.sqlSha256) fail("CHECKPOINT");
       if (selected.command === "check-application") { result = { ...before, status: "application_restore_precheck_passed", imported: false, nativeImportClientVerified: true, sqlImportFormatVerified: true, trustedSqlSha256Matched: true }; return; }
       environment = await loadEnvironment(selected.privateDirectory, { port: processOptions.port,

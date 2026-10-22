@@ -10,9 +10,12 @@ export function createConversationDownload({ parent, capability, getContext, req
   const photos = document.createElement("input"); photos.type = "checkbox"; photos.checked = capability.photos === true;
   const label = node("label", null, "conversation-download-photos"); label.hidden = capability.photos !== true;
   label.append(photos, node("span", "Inclure les photos partagées"));
+  const videos = document.createElement("input"); videos.type = "checkbox"; videos.checked = capability.videos === true;
+  const videoLabel = node("label", null, "conversation-download-photos conversation-download-videos"); videoLabel.hidden = capability.videos !== true;
+  videoLabel.append(videos, node("span", "Inclure les vidéos partagées"));
   const download = node("button", "Télécharger le ZIP", "button primary"); download.type = "button";
   const status = node("p", null, "media-help"); status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite");
-  dialog.append(head, node("p", "Les messages et les photos que nous avons partagés.", "media-help"), label, download, status,
+  dialog.append(head, node("p", capability.videos === true ? "Les messages, photos et vidéos que nous avons partagés." : "Les messages et les photos que nous avons partagés.", "media-help"), label, videoLabel, download, status,
     node("p", "Le fichier se lit sans connexion. Conserve-le dans un endroit privé.", "media-help"));
   parent.append(entry); document.body.append(dialog);
   let cleared = false, epoch = 0, busy = false, controller = null, opened = null;
@@ -21,7 +24,7 @@ export function createConversationDownload({ parent, capability, getContext, req
   const current = context => { const value = getContext(); return !cleared && value && value.id === context?.id && value.key === context.key; };
   function stop(restore = false) {
     const focus = restore && dialog.open; epoch += 1; controller?.abort(); controller = null; busy = false; opened = null;
-    download.disabled = false; photos.disabled = false; ui.rawText(status, "");
+    download.disabled = false; photos.disabled = false; videos.disabled = false; ui.rawText(status, "");
     for (const url of urls.keys()) revoke(url);
     if (dialog.open) dialog.close();
     if (focus) {
@@ -40,10 +43,11 @@ export function createConversationDownload({ parent, capability, getContext, req
   async function save() {
     if (busy || !dialog.open || !current(opened)) return;
     const context = opened, ticket = ++epoch, cancellation = new AbortController(); controller = cancellation; busy = true;
-    download.disabled = true; photos.disabled = true; ui.text(status, "Préparation de la conversation…");
+    download.disabled = true; photos.disabled = true; videos.disabled = true; ui.text(status, "Préparation de la conversation…");
     const fresh = () => ticket === epoch && dialog.open && current(context) && !cancellation.signal.aborted;
     try {
-      const blob = await request(`/api/chat/client/conversations/${context.id}/export`, { body: { includePhotos: capability.photos === true && photos.checked },
+      const blob = await request(`/api/chat/client/conversations/${context.id}/export`, { body: { includePhotos: capability.photos === true && photos.checked,
+        ...(capability.videos === true ? { includeVideos: videos.checked } : {}) },
         mutation: true, archive: true, state: context.state, signal: cancellation.signal });
       if (!fresh()) return;
       if (!(blob instanceof Blob) || blob.size < 22 || blob.size > capability.maxBytes) throw new Error("invalid_archive");
@@ -54,10 +58,12 @@ export function createConversationDownload({ parent, capability, getContext, req
     } catch (error) {
       if (!fresh() || error.stale) return;
       if ([401, 403].includes(error.status)) { stop(); onError(error); return; }
-      ui.text(status, error.code === "conversation_export_limit" ? "La conversation dépasse la limite de téléchargement. Essaie sans les photos si elles sont incluses." :
+      ui.text(status, error.code === "conversation_export_limit" ? capability.videos === true
+        ? "La conversation dépasse la limite de téléchargement. Essaie sans les photos ou vidéos si elles sont incluses."
+        : "La conversation dépasse la limite de téléchargement. Essaie sans les photos si elles sont incluses." :
         error.code === "conversation_export_busy" ? "Une préparation est déjà en cours ou vient de se terminer. Patiente trente secondes puis réessaie." :
           "Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.");
-    } finally { if (ticket === epoch) { controller = null; busy = false; download.disabled = false; photos.disabled = false; } }
+    } finally { if (ticket === epoch) { controller = null; busy = false; download.disabled = false; photos.disabled = false; videos.disabled = false; } }
   }
   return {
     update() { entry.hidden = cleared || !getContext(); },

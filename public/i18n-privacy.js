@@ -34,7 +34,7 @@ globalThis.JessieI18n?.register({
   "Que doit couvrir une suppression ?": "What should deletion cover?",
   "Précise le sort du compte, des échanges et des photos, y compris les photos réutilisées, et les éventuelles exceptions justifiées.": "Specify what happens to the account, exchanges and photos, including reused photos, and any justified exceptions.",
   "Que deviennent les copies et sauvegardes ?": "What happens to copies and backups?",
-  "La copie automatique sur le PC fonctionne. Il reste à préciser les lieux, la rotation, la fin de vie des copies et le traitement d’une restauration.": "Automatic copying to the PC works. Locations, rotation, copy end of life and treatment after restoration still need to be specified.",
+  "Les sauvegardes et fichiers téléchargés sont des copies séparées. Il reste à préciser leurs lieux de conservation, leur fin de vie et le traitement d’une restauration.": "Backups and downloaded files are separate copies. Their storage locations, end of life and treatment after restoration still need to be specified.",
   "Quels prestataires et quels lieux ?": "Which providers and locations?",
   "L’hébergement Infomaniak, les e-mails et les services Push sont utilisés. Précise les entités, lieux, transferts, journaux et autres sources de données réellement applicables.": "Infomaniak hosting, email and Push services are used. Specify the actual entities, locations, transfers, logs and other data sources.",
   "Qui traite les demandes de données ?": "Who handles data requests?",

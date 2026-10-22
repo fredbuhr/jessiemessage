@@ -3,7 +3,7 @@ import { lstat, open, realpath } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import path from "node:path";
 import { openPrivateDirectory, privatePathMode } from "../files/private-directory.mjs";
-import { validateApplicationCoverage } from "./application-scope.mjs";
+import { validateApplicationCoverage, validateVideoApplicationCoverage } from "./application-scope.mjs";
 import { manifestBackupProfile } from "./profiles.mjs";
 
 const MAX_BYTES = 64 * 1024 * 1024;
@@ -69,7 +69,7 @@ const canonical = (value) => JSON.stringify(safeJson(value));
 const instant = (value) => { if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail(); return value; };
 const profileKeyNames = (profile) => {
   const selected = manifestBackupProfile(profile);
-  if (selected) return [...KEY_NAMES.slice(0, selected.crm ? 5 : 4), ...(selected.notifications ? ["notificationKey"] : [])];
+  if (selected) return [...KEY_NAMES.slice(0, selected.crm ? 5 : 4), ...(selected.notifications ? ["notificationKey"] : []), ...(selected.video ? ["videoKey"] : [])];
   if (profile === "full") return KEY_NAMES;
   if (profile === "full-notify") return [...KEY_NAMES, "notificationKey"];
   fail();
@@ -90,14 +90,23 @@ function keySet(keys, names = KEY_NAMES) {
     return result;
   } catch { for (const key of Object.values(result)) key.fill(0); fail(); }
 }
-function identityValue(identity) {
+function identityValue(identity, video = false) {
   const result = safeJson(identity);
-  exact(result, [...TAG_FIELDS, "rootAncestors"]);
+  exact(result, [...TAG_FIELDS, "rootAncestors", ...(video ? ["video"] : [])]);
   for (const name of TAG_FIELDS) if (typeof result[name] !== "string" || !HEX.test(result[name])) fail();
   if (!Array.isArray(result.rootAncestors) || result.rootAncestors.length < 1 || result.rootAncestors.length > 256
     || result.rootAncestors.some((tag) => typeof tag !== "string" || !HEX.test(tag))
     || new Set(result.rootAncestors).size !== result.rootAncestors.length || result.rootAncestors.includes(result.rootPathTag)) fail();
+  if (video) {
+    const nested = identityValue(result.video);
+    if (nested.databaseTag !== result.databaseTag) fail();
+    assertDistinctRoots(result, nested);
+  }
   return result;
+}
+function assertDistinctRoots(left, right) {
+  if (["rootPathTag", "rootPhysicalTag", "rootFingerprint"].some(name => left[name] === right[name])
+    || left.rootAncestors.includes(right.rootPathTag) || right.rootAncestors.includes(left.rootPathTag)) fail("BACKUP_CLONE_REQUIRED");
 }
 function decode(value, length) {
   if (typeof value !== "string" || value.length > 256 || !/^[A-Za-z0-9_-]+$/.test(value)) fail();
@@ -114,13 +123,13 @@ function canaryFields(value, name) {
 }
 function manifestValue(manifest) {
   const result = safeJson(manifest);
-  const selected = manifestBackupProfile(result.profile), profiled = [2, 3, 4, 5, 6, 7, 8, 9, 10].includes(result.version);
+  const selected = manifestBackupProfile(result.profile), profiled = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(result.version);
   exact(result, ["version", "payload", "signature", ...(profiled ? ["profile"] : [])]);
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(result.version)
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(result.version)
     || profiled && !(selected?.manifestVersion === result.version || result.version === 3 && result.profile === "full-notify")
     || typeof result.signature !== "string" || !HEX.test(result.signature)) fail();
   exact(result.payload, ["createdAt", "identity", "snapshot", "canaries"]);
-  instant(result.payload.createdAt); identityValue(result.payload.identity);
+  instant(result.payload.createdAt); identityValue(result.payload.identity, selected?.video === true);
   // The coordinator owns the snapshot's schema and ciphertext-only contents.
   snapshotScope(result.payload.snapshot, profiled ? result.profile : "full");
   const names = profileKeyNames(profiled ? result.profile : "full");
@@ -132,9 +141,13 @@ const envelope = (profile) => manifestBackupProfile(profile) ? { version: manife
   : profile === "full-notify" ? { version: 3, profile } : { version: 1 };
 function snapshotScope(snapshot, profile) {
   plain(snapshot);
-  if (manifestBackupProfile(profile)?.application) {
-    if (snapshot.version !== 2 || validateApplicationCoverage(snapshot.coverage).tables !== snapshot.counts?.tables) fail();
-  } else if (snapshot.version === 2 || Object.hasOwn(snapshot, "coverage")) {
+  const selected = manifestBackupProfile(profile);
+  if (selected?.video) {
+    if (snapshot.version !== 3 || validateVideoApplicationCoverage(snapshot.coverage).tables !== snapshot.counts?.tables
+      || !snapshot.video || typeof snapshot.video !== "object" || Array.isArray(snapshot.video)) fail();
+  } else if (selected?.application) {
+    if (snapshot.version !== 2 || validateApplicationCoverage(snapshot.coverage).tables !== snapshot.counts?.tables || Object.hasOwn(snapshot, "video")) fail();
+  } else if ([2, 3].includes(snapshot.version) || Object.hasOwn(snapshot, "coverage") || Object.hasOwn(snapshot, "video")) {
     // Application-only snapshots cannot acquire the complete-backup envelope.
     fail();
   }
@@ -175,7 +188,7 @@ export function createBackupManifest({ snapshot, identity, keys, now, profile = 
   let secrets;
   try {
     const names = profileKeyNames(profile); secrets = keySet(keys, names);
-    const payload = { createdAt: instant(now), identity: identityValue(identity), snapshot: safeJson(snapshot), canaries: Object.create(null) };
+    const payload = { createdAt: instant(now), identity: identityValue(identity, manifestBackupProfile(profile)?.video === true), snapshot: safeJson(snapshot), canaries: Object.create(null) };
     snapshotScope(payload.snapshot, profile);
     const bound = binding(payload, profile);
     for (const name of names) payload.canaries[name] = sealCanary(secrets[name], name, bound);
@@ -207,7 +220,7 @@ function absolutePath(value) {
   return value;
 }
 const identityTag = (key, purpose, value) => createHmac("sha256", key).update(`jessiemessage:backup-identity:${purpose}:v1:\0`, "ascii").update(value, "utf8").digest("hex");
-export async function backupIdentity({ databaseName, rootPath, storage, mediaKey } = {}) {
+export async function backupIdentity({ databaseName, rootPath, storage, mediaKey, videoRootPath, videoStorage } = {}) {
   let secret;
   try {
     if (typeof databaseName !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(databaseName)
@@ -226,16 +239,40 @@ export async function backupIdentity({ databaseName, rootPath, storage, mediaKey
     }
     // Reject case-only aliases even on hosts that preserve identifier case
     // while resolving database names without case sensitivity.
+    const video = videoRootPath !== undefined || videoStorage !== undefined;
+    let nested;
+    if (video) {
+      absolutePath(videoRootPath);
+      if (typeof videoStorage?.fingerprint !== "function") throw new Error();
+      const before = await parentIdentity(path.join(videoRootPath, "identity-binding")), videoFingerprint = await videoStorage.fingerprint();
+      if (!Buffer.isBuffer(videoFingerprint) || videoFingerprint.length !== 32) throw new Error();
+      await unchangedParent(path.join(videoRootPath, "identity-binding"), before);
+      const ancestors = []; let parent = path.dirname(videoRootPath);
+      while (true) {
+        ancestors.push(identityTag(secret, "root-path", parent));
+        if (ancestors.length > 256) throw new Error();
+        if (parent === path.parse(parent).root) break;
+        parent = path.dirname(parent);
+      }
+      // The common signing key and physical namespace make all four source /
+      // clone roots comparable, even though video encryption has its own key.
+      const physicalTag = createHmac("sha256", secret).update("jessiemessage:media-root-physical:v1:\0", "ascii")
+        .update(before.dev.toString()).update("\0").update(before.ino.toString()).digest("hex");
+      nested = { databaseTag: identityTag(secret, "database", databaseName.toLowerCase()), rootPathTag: identityTag(secret, "root-path", videoRootPath),
+        rootPhysicalTag: physicalTag, rootFingerprint: videoFingerprint.toString("hex"), rootAncestors: ancestors };
+    }
     return identityValue({ databaseTag: identityTag(secret, "database", databaseName.toLowerCase()), rootPathTag: identityTag(secret, "root-path", rootPath),
-      rootPhysicalTag: physical.toString("hex"), rootFingerprint: fingerprint.toString("hex"), rootAncestors });
+      rootPhysicalTag: physical.toString("hex"), rootFingerprint: fingerprint.toString("hex"), rootAncestors, ...(video ? { video: nested } : {}) }, video);
   } catch { fail("BACKUP_IDENTITY_INVALID"); }
   finally { secret?.fill(0); }
 }
 export function assertCloneIdentity(source, target) {
   try {
-    const left = identityValue(source), right = identityValue(target);
-    if (TAG_FIELDS.some((field) => left[field] === right[field]) || left.rootAncestors.includes(right.rootPathTag)
-      || right.rootAncestors.includes(left.rootPathTag)) fail("BACKUP_CLONE_REQUIRED");
+    const video = Object.hasOwn(source ?? {}, "video");
+    if (video !== Object.hasOwn(target ?? {}, "video")) fail("BACKUP_IDENTITY_INVALID");
+    const left = identityValue(source, video), right = identityValue(target, video);
+    if (left.databaseTag === right.databaseTag) fail("BACKUP_CLONE_REQUIRED");
+    for (const original of video ? [left, left.video] : [left]) for (const clone of video ? [right, right.video] : [right]) assertDistinctRoots(original, clone);
   } catch (error) {
     if (error instanceof BackupManifestError && error.code === "BACKUP_CLONE_REQUIRED") throw error;
     fail("BACKUP_IDENTITY_INVALID");

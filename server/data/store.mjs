@@ -51,8 +51,10 @@ function media(row, nowSql) {
 /** One read-only SQL snapshot. No service, authentication mutation or file operation is started. */
 export async function withClientData(input = {}, callback) {
   if (!input || typeof input !== "object" || Array.isArray(input)) fail();
-  const { pool, clientId, now } = input;
+  const { pool, clientId, now, video = null } = input;
   if (typeof pool?.getConnection !== "function" || typeof callback !== "function" || !instant(now)) fail();
+  if (video !== null && (typeof video !== "object" || Array.isArray(video)
+    || typeof video.decorateMessages !== "function" || typeof video.ownVideos !== "function")) fail();
   const target = bytes(clientId, 16), nowSql = new Date(now).toISOString().replace("T", " ").replace("Z", "000");
   let connection, begun = false, active = false, busy = false;
   const pending = new Set();
@@ -109,6 +111,8 @@ export async function withClientData(input = {}, callback) {
       if (ownProfile.createdAt > ownProfile.updatedAt || ownProfile.updatedAt > nowSql) fail();
     }
     ownProfile = Object.freeze(ownProfile);
+    const videoContext = () => ({ clientId: Buffer.from(target), now, nowSql, conversation: context === null ? null
+      : { id: Buffer.from(context.id), clientId: Buffer.from(context.clientId), adminId: Buffer.from(context.adminId) } });
     function run(operation) {
       if (!active || busy) return Promise.reject(new DataStoreError());
       busy = true;
@@ -185,7 +189,14 @@ export async function withClientData(input = {}, callback) {
           return result;
         });
         const hasMore = values.length > limit;
-        return { rows: selected, hasMore, nextCursor: hasMore ? selected.at(-1).sequence : null };
+        if (video === null) return { rows: selected, hasMore, nextCursor: hasMore ? selected.at(-1).sequence : null };
+        const identities = selected.map((row) => ({ id: Buffer.from(row.id), conversationId: Buffer.from(row.conversationId), sequence: row.sequence }));
+        const decorated = await video.decorateMessages(connection, videoContext(), selected);
+        if (!Array.isArray(decorated) || decorated.length !== identities.length || decorated.some((row, index) =>
+          !Buffer.isBuffer(row?.id) || !row.id.equals(identities[index].id)
+          || !Buffer.isBuffer(row.conversationId) || !row.conversationId.equals(identities[index].conversationId)
+          || row.sequence !== identities[index].sequence)) fail();
+        return { rows: decorated, hasMore, nextCursor: hasMore ? identities.at(-1).sequence : null };
       }),
       ownMedia: (options = {}) => run(async () => {
         const { limit, after } = pageInput(options, "afterId");
@@ -203,6 +214,19 @@ export async function withClientData(input = {}, callback) {
         const hasMore = values.length > limit;
         return { rows: selected, hasMore, nextCursor: hasMore ? Buffer.from(selected.at(-1).id) : null };
       }),
+      ...(video === null ? {} : { ownVideos: (options = {}) => run(async () => {
+        const { limit, after } = pageInput(options, "afterId");
+        const result = await video.ownVideos(connection, videoContext(), { afterId: after, limit });
+        if (!result || !Array.isArray(result.rows) || result.rows.length > limit || typeof result.hasMore !== "boolean") fail();
+        let previous = after;
+        for (const row of result.rows) {
+          const current = bytes(row?.id, 16);
+          if (previous !== null && Buffer.compare(current, previous) <= 0) fail();
+          previous = current;
+        }
+        if (result.hasMore ? result.rows.length !== limit || !bytes(result.nextCursor, 16).equals(previous) : result.nextCursor !== null) fail();
+        return result;
+      }) }),
     });
     active = true;
     let result, unfinished = false;

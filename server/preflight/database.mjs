@@ -2,6 +2,7 @@ import { stat } from "node:fs/promises";
 import { createRuntimePool, runtimeDatabaseOptions } from "../db/runtime.mjs";
 import { createdMigrationTables, inspectHistory, loadMigrations, validateMigrationPlan } from "../db/migrations.mjs";
 import { sharedRuntimePrivileges, inspectSharedRuntimePatternPrivileges } from "../db/shared-runtime-privileges.mjs";
+import { loadVideoMigrations } from "../video/migrations.mjs";
 
 export const DATABASE_CHECK_NAMES = Object.freeze([
   "config", "connection", "identity", "engine", "transport", "privileges", "history", "schema_reads", "cleanup",
@@ -44,6 +45,11 @@ const projections = Object.freeze({
   crm_tasks: "id, admin_id, admin_role, conversation_id, title_encrypted, due_at, done, version, request_fingerprint, created_at, updated_at",
 });
 const tables = Object.keys(projections);
+const videoProjections = Object.freeze({
+  video_storage_state: "id, owner_bytes, total_bytes, root_fingerprint, held_bytes, initialized_at",
+  video_assets: "id, owner_id, owner_role, storage_key, reserve_token_hash, content_digest, bytes, stored_bytes, mime, state, created_at, updated_at, released_at",
+  message_video: "message_id, conversation_id, video_id, created_at",
+});
 const dml = ["SELECT", "INSERT", "UPDATE", "DELETE"];
 const maxGrants = 128;
 const maxGrantLength = 16384;
@@ -62,10 +68,10 @@ function identifier(value) {
   return /^[a-zA-Z0-9_]+$/.test(plain) ? plain : null;
 }
 
-function runtimePrivileges(rows, database, profile) {
+function runtimePrivileges(rows, database, profile, selectedTables = tables) {
   if (profile === "infomaniak-shared") return sharedRuntimePrivileges(rows, database);
   if (!Array.isArray(rows) || !rows.length || rows.length > maxGrants) return false;
-  const rights = new Map([...tables, "schema_migrations"].map((table) => [table, new Set()]));
+  const rights = new Map([...selectedTables, "schema_migrations"].map((table) => [table, new Set()]));
   let totalLength = 0;
   for (const row of rows) {
     if (!row || typeof row !== "object" || Object.keys(row).length !== 1) return false;
@@ -91,15 +97,15 @@ function runtimePrivileges(rows, database, profile) {
       || (grantedTable === "schema_migrations" && privileges.some((privilege) => privilege !== "SELECT"))) return false;
     for (const privilege of privileges) rights.get(grantedTable).add(privilege);
   }
-  return tables.every((table) => dml.every((privilege) => rights.get(table).has(privilege)))
+  return selectedTables.every((table) => dml.every((privilege) => rights.get(table).has(privilege)))
     && rights.get("schema_migrations").has("SELECT");
 }
 
-function matchingHistory(plan, rows) {
+function matchingHistory(plan, rows, selectedTables = tables) {
   validateMigrationPlan(plan);
   const createdTables = createdMigrationTables(plan);
-  if (createdTables.length !== tables.length || !Array.isArray(rows) || rows.length !== plan.length) return false;
-  if (!createdTables.every((table, index) => table === tables[index])) return false;
+  if (createdTables.length !== selectedTables.length || !Array.isArray(rows) || rows.length !== plan.length) return false;
+  if (!createdTables.every((table, index) => table === selectedTables[index])) return false;
   if (!rows.every((row) => row && Number.isSafeInteger(Number(row.version)) && Number(row.version) > 0
     && typeof row.name === "string" && row.name.length <= 128
     && typeof row.checksum === "string" && /^[0-9a-f]{64}$/.test(row.checksum)
@@ -109,9 +115,11 @@ function matchingHistory(plan, rows) {
 
 // No Promise.race deadline: all actual driver work is drained before releasing
 // the single connection and awaiting pool.end(), including on failure.
-export async function inspectDatabase({ env = process.env, databaseName } = {}, {
-  createPool = createRuntimePool, loadPlan = loadMigrations, signal,
+export async function inspectDatabase({ env = process.env, databaseName, video = false } = {}, {
+  createPool = createRuntimePool, loadPlan, signal,
 } = {}) {
+  const selectedProjections = video ? { ...projections, ...videoProjections } : projections;
+  const selectedTables = Object.keys(selectedProjections), readPlan = loadPlan ?? (video ? loadVideoMigrations : loadMigrations);
   const states = new Map(DATABASE_CHECK_NAMES.map((name) => [name, "not_checked"]));
   let profile = null, privilegesObserved = false;
   const result = () => ({
@@ -132,6 +140,7 @@ export async function inspectDatabase({ env = process.env, databaseName } = {}, 
   });
   let options;
   try {
+    if (typeof video !== "boolean") throw new Error();
     const requested = env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE === undefined ? "strict" : env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE;
     if (!["strict", "infomaniak-shared", "infomaniak-shared-pattern"].includes(requested)) throw new Error();
     profile = requested;
@@ -180,7 +189,7 @@ export async function inspectDatabase({ env = process.env, databaseName } = {}, 
         await check("privileges", async () => {
           privilegesObserved = profile === "infomaniak-shared-pattern"
             ? await inspectSharedRuntimePatternPrivileges({ query }, options.database)
-            : runtimePrivileges(await query("SHOW GRANTS FOR CURRENT_USER"), options.database, profile);
+            : runtimePrivileges(await query("SHOW GRANTS FOR CURRENT_USER"), options.database, profile, selectedTables);
           return privilegesObserved;
         });
         if (states.get("engine") === "pass") {
@@ -189,14 +198,14 @@ export async function inspectDatabase({ env = process.env, databaseName } = {}, 
             transactionAttempted = true;
             await query("START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT");
             await check("history", async () => {
-              const plan = await loadPlan();
+              const plan = await readPlan();
               validateMigrationPlan(plan);
               return matchingHistory(plan, await query({
                 sql: `SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT ${plan.length + 1}`, timeout: 2000,
-              }));
+              }), selectedTables);
             });
             await check("schema_reads", async () => {
-              for (const [table, columns] of Object.entries(projections)) {
+              for (const [table, columns] of Object.entries(selectedProjections)) {
                 const rows = await query({ sql: `SELECT ${columns} FROM ${table} WHERE 1 = 0`, timeout: 2000 });
                 if (!Array.isArray(rows) || rows.length !== 0) return false;
               }

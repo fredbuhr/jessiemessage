@@ -131,3 +131,11 @@ export function messageFingerprint(body, key, context) {
     plaintext.fill(0);
   }
 }
+
+// A literal text containing the same JSON must remain a different request type.
+// The encrypted-body envelope and its message/conversation/sender binding stay v1.
+export function videoMessageFingerprint(body, key, context) {
+  const fingerprint = messageFingerprint(body, key, context);
+  return createHmac("sha256", key).update("jessiemessage:video-message-fingerprint:v1:\0")
+    .update(fingerprint).digest();
+}

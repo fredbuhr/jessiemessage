@@ -11,13 +11,14 @@ import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
+import { loadRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
 import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { readCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
 import { createErasureJournal } from "../server/data/erasure-journal.mjs";
 import { readOperationalCheckpoint } from "../server/backup/operational-checkpoint.mjs";
 import { withErasureDirectory } from "./fixtures/erasure-files.mjs";
-import { APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
+import { APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { PrivateCheckpointError, archiveCheckpoint, parseArguments, run, main } from "../scripts/private-checkpoint.mjs";
 
 const base = fileURLToPath(new URL("../../audit/", import.meta.url));
@@ -74,14 +75,15 @@ async function syntheticScope(directory) {
   };
 }
 
-async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm } = {}) {
+async function fixture(t, { video = false, broadcast = video, crm = broadcast, recovery = crm } = {}) {
   await mkdir(base, { recursive: true, mode: 0o700 });
   const root = await mkdtemp(join(base, "private-checkpoint-capture-"));
   await chmod(root, 0o700);
   t.after(() => rm(root, { recursive: true, force: true }));
-  const privateDirectory = join(root, "private"), mediaRoot = join(root, "media"), destination = join(root, "checkpoint-036");
+  const privateDirectory = join(root, "private"), mediaRoot = join(root, "media"), videoRoot = join(root, "video"), destination = join(root, "checkpoint-036");
   await mkdir(privateDirectory, { mode: 0o700 });
   await mkdir(mediaRoot, { mode: 0o700 });
+  if (video) { await mkdir(videoRoot, { mode: 0o700 }); await writeFile(join(videoRoot, `${"9".repeat(64)}.video.enc`), Buffer.alloc(300001, 91), { mode: 0o600 }); }
   const full = Buffer.alloc(150001, 61), thumb = Buffer.from("synthetic-encrypted-thumbnail");
   await writeFile(join(mediaRoot, mediaName("full")), full, { mode: 0o600 });
   await writeFile(join(mediaRoot, mediaName("thumb")), thumb, { mode: 0o600 });
@@ -91,16 +93,18 @@ async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm }
   const inputStream = { isTTY: true };
   const command = (mode = "capture") => [mode, ...(["capture", "capture-application"].includes(mode) ? ["--offline"] : []),
     "--private-directory", privateDirectory, "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination,
-    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", `photos-notify-recovery${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}`] : [])];
+    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", `photos-notify-recovery${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${video ? "-video" : ""}`] : [])];
   const dependencies = {
     inheritedEnv: { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" }, execArgv: [], inputStream,
     async scopeOperation(directory, operation) { return operation(await syntheticScope(directory)); },
     async loadEnvironment(directory, parameters) {
       assert.equal(directory, privateDirectory);
       assert.deepEqual(parameters, { port: "3000", ...(recovery ? { originProfile: "primary", recovery: true } : {}) });
-      const environment = await (broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment)(directory, parameters,
+      const environment = await (video ? loadRuntimeVideoEnvironment : broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment)(directory, parameters,
         { readBundle: async () => ({ ...bundle(mediaRoot, recovery ? "https://jessiemessage.com" : origin),
-          ...(crm ? { crm: { version: 1, origin: "https://jessiemessage.com", crmKey: key(6) } } : {}) }) });
+          ...(crm ? { crm: { version: 1, origin: "https://jessiemessage.com", crmKey: key(6) } } : {}),
+          ...(video ? { video: { format: "jessiemessage-runtime-video", version: 1, origin: "https://jessiemessage.com", videoKey: key(8), videoRoot,
+            ownerBytes: "1073741824", totalBytes: "10737418240", minimumFreeBytes: "0" } } : {}) }) });
       state.loaded.push(environment);
       state.events.push("load");
       return environment;
@@ -127,7 +131,7 @@ async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm }
       assert.equal(args[0], "prepare");
       assert.equal(args[1], "--offline");
       assert.equal(args[2], "--manifest");
-      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${state.application ? "-application" : ""}`]);
+      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${video ? "-video" : ""}${state.application ? "-application" : ""}`]);
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_USER, state.application ? undefined : "synthetic_inspection");
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD, state.application ? undefined : inspectionPassword);
       assert.equal(environment.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, runtimePassword);
@@ -136,15 +140,15 @@ async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm }
       state.usedEnvironments.push(environment);
       state.prepares += 1;
       state.events.push(`prepare:${basename(args[3])}`);
-      await writeFile(args[3], `${JSON.stringify({ version: broadcast ? state.application ? 10 : 9 : crm ? state.application ? 8 : 7 : recovery ? state.application ? 6 : 5 : state.application ? 4 : 3,
-        profile: `messaging-photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${state.application ? "-application" : ""}`, payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
+      await writeFile(args[3], `${JSON.stringify({ version: video ? 11 : broadcast ? state.application ? 10 : 9 : crm ? state.application ? 8 : 7 : recovery ? state.application ? 6 : 5 : state.application ? 4 : 3,
+        profile: `messaging-photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${video ? "-video" : ""}${state.application ? "-application" : ""}`, payload: { snapshot: structuredClone(state.snapshot) } })}\n`,
         { mode: 0o600, flag: "wx" });
       return { command: "prepare", verified: true, prepared: true, restored: false };
     },
     async getManifest(filename) { state.manifests += 1; return JSON.parse(await readFile(filename, "utf8")); },
     async verifyManifest({ manifest, keys }) {
       state.keys.push(keys);
-      assert.deepEqual(Object.keys(keys).sort(), ["mailKey", "mediaKey", "messageKey", "notificationKey", "totpKey", ...(crm ? ["crmKey"] : [])].sort());
+      assert.deepEqual(Object.keys(keys).sort(), ["mailKey", "mediaKey", "messageKey", "notificationKey", "totpKey", ...(crm ? ["crmKey"] : []), ...(video ? ["videoKey"] : [])].sort());
       for (const value of Object.values(keys)) assert.equal(value.length, 32);
       return manifest.payload;
     },
@@ -154,8 +158,9 @@ async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm }
       assert.deepEqual(target, { user: state.application ? "synthetic_runtime" : "synthetic_inspection", database: "synthetic_checkpoint" });
       assert.deepEqual(configuration, { host: "db.example.invalid", port: "3306" });
       assert.equal(password, state.application ? runtimePassword : inspectionPassword);
-      if (state.application) { assert.equal(parameters.tables.length, 33); assert.equal(new Set(parameters.tables).size, 33); assert.ok(parameters.tables.includes("schema_migrations")); }
+      if (state.application) { assert.equal(parameters.tables.length, video ? 36 : 33); assert.equal(new Set(parameters.tables).size, video ? 36 : 33); assert.ok(parameters.tables.includes("schema_migrations")); }
       else assert.equal(parameters.tables, undefined);
+      assert.equal(Object.hasOwn(parameters, "video"), video); if (video) assert.equal(parameters.video, true);
       state.dumps += 1;
       state.events.push(`dump:${state.dumps}`);
       if (state.dumps === 1) {
@@ -181,7 +186,7 @@ async function fixture(t, { broadcast = false, crm = broadcast, recovery = crm }
     },
     clock() { state.clocks += 1; return now; },
   };
-  return { root, privateDirectory, mediaRoot, destination, full, thumb, state, command, dependencies };
+  return { root, privateDirectory, mediaRoot, videoRoot, destination, full, thumb, state, command, dependencies };
 }
 
 function cleared(state) {
@@ -657,4 +662,40 @@ test("an operational publication during SQL capture refuses the receipt and neve
       return result;
     } }), { code: "PRIVATE_CHECKPOINT_DRIFT" });
   await assert.rejects(lstat(join(f.destination, "receipt.json")), { code: "ENOENT" }); cleared(f.state);
+});
+
+
+test("candidate video capture binds seven keys, SQL36 and both exact ciphertext roots into one verified native archive", async t => {
+  const f = await fixture(t, { video: true }); f.state.application = true;
+  Object.assign(f.state.snapshot, { version: 3, coverage: VIDEO_APPLICATION_COVERAGE, counts: { tables: 36, rows: 1 },
+    video: { capacity: { rootFingerprint: "d".repeat(64) }, assets: [] } });
+  const result = await run(parseArguments(f.command("capture-application")), f.dependencies);
+  assert.equal(result.status, "application_checkpoint_saved"); assert.equal(result.tables, 36); assert.equal(result.migrations, 36);
+  assert.equal(result.videoCovered, true); assert.equal(result.videoFiles, 1); assert.equal(result.videoBytes, 300001);
+  assert.equal(result.archiveListed, true); assert.equal(result.archiveContentsVerified, true);
+  assert.equal(f.state.secretReads, 0); assert.equal(f.state.dumps, 2);
+  const receipt = await readCheckpointReceipt(await syntheticScope(f.destination));
+  assert.equal(receipt.version, 11); assert.equal(receipt.profile, "messaging-photos-notify-recovery-crm-broadcast-video-application");
+  assert.deepEqual(receipt.coverage, VIDEO_APPLICATION_COVERAGE); assert.equal(receipt.video.files.length, 1);
+  const name = `${"9".repeat(64)}.video.enc`;
+  assert.deepEqual(await readFile(join(f.destination, "video", name)), await readFile(join(f.videoRoot, name)));
+  assert.equal(receipt.video.files[0].sha256, hash(await readFile(join(f.videoRoot, name))));
+  for (const environment of f.state.loaded) assert.equal(environment.JESSIEMESSAGE_VIDEO_KEY, "");
+  cleared(f.state);
+  for (const command of ["capture", "check", "inspect"]) assert.throws(() => parseArguments(f.command(command)), neutral);
+});
+
+test("candidate video ciphertext drift after native archive creation never publishes a successful checkpoint result", async t => {
+  const f = await fixture(t, { video: true }); f.state.application = true;
+  Object.assign(f.state.snapshot, { version: 3, coverage: VIDEO_APPLICATION_COVERAGE, counts: { tables: 36, rows: 1 },
+    video: { capacity: { rootFingerprint: "d".repeat(64) }, assets: [] } });
+  const archive = f.dependencies.archive;
+  f.dependencies.archive = async (...args) => {
+    const result = await archive(...args);
+    await writeFile(join(f.videoRoot, `${"9".repeat(64)}.video.enc`), Buffer.alloc(300001, 92), { mode: 0o600 });
+    return result;
+  };
+  await assert.rejects(run(parseArguments(f.command("capture-application")), f.dependencies), neutral);
+  assert.equal(f.state.dumps, 2); assert.ok((await lstat(join(f.destination, "checkpoint.tar.gz"))).size > 0);
+  assert.equal((await readdir(f.videoRoot)).length, 1); cleared(f.state);
 });

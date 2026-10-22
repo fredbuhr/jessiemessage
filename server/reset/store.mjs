@@ -1,7 +1,8 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { createHash } from "node:crypto";
 import { canonicalEmail } from "../auth/config.mjs";
 import { createSessionClock } from "../auth/session-policy.mjs";
-import { loadMigrations, migrationStatus, MigrationError } from "../db/migrations.mjs";
+import { migrationStatus, MigrationError } from "../db/migrations.mjs";
 
 export class ResetStoreError extends Error {
   constructor(code = "RESET_DATABASE_OPERATION") {
@@ -97,10 +98,10 @@ const foreignKeys = [
   ["password_reset_outbox", "password_reset_outbox_reset_fk", "client_password_resets", ["reset_id", "recipient_user_id"], ["id", "user_id"]],
 ];
 
-export async function assertResetSchema(pool) {
+export async function assertResetSchema(pool, options = {}) {
   if (!pool || typeof pool.getConnection !== "function") input();
   return run(pool, async (connection) => {
-    const migrations = await loadMigrations(), database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
+    const migrations = await loadStoreMigrations(options), database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
     const status = await migrationStatus(connection, { database, migrations });
     if (migrations.length < 22 || status.some((item) => item.state !== "applied")) state();
     const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
@@ -182,7 +183,7 @@ export function createResetStore(pool, { clock } = {}) {
       WHERE recipient_user_id = ? AND status IN ('pending', 'sending', 'failed')`, [userId]);
   }
   return Object.freeze({
-    assertSchema: () => assertResetSchema(pool),
+    assertSchema: (options) => assertResetSchema(pool, options),
     async requestReset({ email, now, reset, mail }) {
       if (!canonical(email)) input(); instant(now); bytes(reset?.id); bytes(reset?.tokenHash, 32); instant(reset?.expiresAt); bytes(mail?.id);
       if (reset.expiresAt <= now || reset.expiresAt - now > 1800000 || typeof mail?.payloadEncrypted !== "string"

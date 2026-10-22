@@ -9,7 +9,9 @@ const MAX_FILES = 10010;
 const JSON_FILES = new Set(["account.json", "inventory.json", "policy.json", "deletion-plan.json"]);
 const LINE_FILES = new Set(["messages.jsonl", "library.jsonl"]);
 const MEDIA_NAME = /^media\/[0-9a-f]{32}\.jpg$/;
+const VIDEO_NAME = /^media\/[0-9a-f]{32}\.mp4$/;
 const COUNTS = ["messages", "mediaFiles", "libraryItems", "mediaBytes", "rows", "inventoryCategories", "observations", "affectedCategories", "blockers"];
+const VIDEO_COUNTS = ["videoFiles", "videoBytes", "videoLibraryItems"];
 const FLAGS = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW;
 
 export class DataWriterError extends Error {
@@ -74,7 +76,7 @@ async function ancestry(directory) {
  * to opened directories; strict mode retains its pathname identity checks.
  * Concurrent changes by the same operator and bind-mounted aliases remain
  * outside this output writer's isolation contract. */
-export async function createDataWriter({ output, protectedRoots, maximumBytes = MAX_BYTES, maximumFiles = MAX_FILES, pathMode } = {}) {
+export async function createDataWriter({ output, protectedRoots, maximumBytes = MAX_BYTES, maximumFiles = MAX_FILES, pathMode, video = false } = {}) {
   let rootHandle = null, mediaHandle = null, parentScope = null, mode;
   const records = new Map(); let rootIdentity, mediaIdentity = null, ancestors, protectedIdentities, parentIdentity;
   let totalBytes = 0, failed = false, closed = false, finalized = false, closing = null, chain = Promise.resolve();
@@ -115,24 +117,27 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
     if (!privateFile(local) || !same(local, record.identity) || local.size !== BigInt(record.bytes)) fail();
     if (handle) { const stats = await handle.stat({ bigint: true }); if (!privateFile(stats) || !same(stats, local) || stats.size !== local.size) fail(); }
   }
-  async function writeBytes(handle, bytes, position = 0) {
+  async function writeBytes(handle, bytes, position = 0, synchronize = true, signal) {
     let offset = 0;
     while (offset < bytes.length) {
-      if (closed) fail();
+      if (closed || signal?.aborted) fail();
       const result = await handle.write(bytes, offset, bytes.length - offset, position + offset);
-      if (!Number.isSafeInteger(result.bytesWritten) || result.bytesWritten < 1) fail();
+      if (!Number.isSafeInteger(result.bytesWritten) || result.bytesWritten < 1 || result.bytesWritten > bytes.length - offset) fail();
       offset += result.bytesWritten;
     }
-    await handle.sync();
+    if (synchronize) await handle.sync();
   }
-  async function create(name, bytes, keepOpen = false) {
-    if (records.has(name)) fail(); room(bytes.length, true);
+  async function mediaDirectory(name) {
     if (name.startsWith("media/") && !mediaHandle) {
       await mkdir(filename("media"), { mode: 0o700 });
       const stats = await lstat(filename("media"), { bigint: true }); if (!privateDirectory(stats)) fail();
       mediaHandle = await open(filename("media"), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
       if (!same(stats, await mediaHandle.stat({ bigint: true }))) fail(); mediaIdentity = stats; await check();
     }
+  }
+  async function create(name, bytes, keepOpen = false) {
+    if (records.has(name)) fail(); room(bytes.length, true);
+    await mediaDirectory(name);
     let handle;
     try {
       handle = await open(filename(name), FLAGS, 0o600);
@@ -145,6 +150,35 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
       if (keepOpen) handle = null;
     } finally { await handle?.close(); }
   }
+  async function createVideo(name, source, options) {
+    if (typeof name !== "string" || name.length !== 42 || !VIDEO_NAME.test(name)
+      || typeof source?.[Symbol.asyncIterator] !== "function" || !options || typeof options !== "object" || Array.isArray(options)
+      || Object.keys(options).some((key) => !["bytes", "signal"].includes(key))) fail();
+    const { bytes, signal } = options;
+    if (!Number.isSafeInteger(bytes) || bytes < 1 || bytes > 104857600
+      || signal !== undefined && !(signal instanceof AbortSignal) || signal?.aborted || closed || records.has(name)) fail();
+    room(bytes, true); await mediaDirectory(name);
+    let handle;
+    try {
+      if (signal?.aborted || closed) fail();
+      handle = await open(filename(name), FLAGS, 0o600);
+      const identity = await handle.stat({ bigint: true }); if (!privateFile(identity)) fail();
+      await check();
+      const record = { name, bytes: 0, hash: createHash("sha256"), identity, handle: null };
+      records.set(name, record);
+      for await (const chunk of source) {
+        if (signal?.aborted || closed || !Buffer.isBuffer(chunk) || chunk.length < 1 || chunk.length > 262144 || chunk.length > bytes - record.bytes) fail();
+        room(chunk.length); await check(); await verify(record, handle);
+        await writeBytes(handle, chunk, record.bytes, false, signal);
+        record.hash.update(chunk); record.bytes += chunk.length; totalBytes += chunk.length;
+        await check(); await verify(record, handle);
+        if (signal?.aborted || closed) fail();
+      }
+      if (record.bytes !== bytes || signal?.aborted || closed) fail();
+      await handle.sync(); await check(); await verify(record, handle);
+      if (signal?.aborted || closed) fail();
+    } finally { await handle?.close(); }
+  }
   async function cleanOwned(name, identity) {
     try { await check(false); const stats = await lstat(filename(name), { bigint: true }); if (same(stats, identity) && stats.isFile()) await unlink(filename(name)); }
     catch { /* Preserve an uncertain private artifact rather than delete another file. */ }
@@ -152,7 +186,7 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
   try {
     if (!absolute(output) || output === path.parse(output).root || !Array.isArray(protectedRoots) || protectedRoots.length < 1 || protectedRoots.length > 32
       || !Number.isSafeInteger(maximumBytes) || maximumBytes < 1 || maximumBytes > MAX_BYTES
-      || !Number.isSafeInteger(maximumFiles) || maximumFiles < 1 || maximumFiles > MAX_FILES || !constants.O_NOFOLLOW || !constants.O_DIRECTORY) fail();
+      || !Number.isSafeInteger(maximumFiles) || maximumFiles < 1 || maximumFiles > MAX_FILES || typeof video !== "boolean" || !constants.O_NOFOLLOW || !constants.O_DIRECTORY) fail();
     mode = pathMode === undefined ? privatePathMode() : privatePathMode({ JESSIEMESSAGE_PRIVATE_PATH_MODE: pathMode });
     let parentAncestors;
     if (mode === "linux-dirfd") {
@@ -185,10 +219,11 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
       await writeBytes(record.handle, bytes, record.bytes); record.hash.update(bytes); record.bytes += bytes.length; totalBytes += bytes.length; await verify(record);
     }); },
     media(name, bytes) { return run(async () => { if (typeof name !== "string" || !MEDIA_NAME.test(name) || !Buffer.isBuffer(bytes)) fail(); await create(name, bytes); }); },
+    ...(video ? { video(name, source, options = {}) { return run(() => createVideo(name, source, options)); } } : {}),
     finalize(summary) { return run(async () => {
       if (!summary || typeof summary !== "object" || Array.isArray(summary) || ![Object.prototype, null].includes(Object.getPrototypeOf(summary))) fail();
       const counts = {};
-      for (const name of COUNTS) {
+      for (const name of video ? [...COUNTS, ...VIDEO_COUNTS] : COUNTS) {
         const descriptor = Object.getOwnPropertyDescriptor(summary, name); if (!descriptor) continue;
         if (!Object.hasOwn(descriptor, "value") || !Number.isSafeInteger(descriptor.value) || descriptor.value < 0) fail(); counts[name] = descriptor.value;
       }
@@ -213,7 +248,7 @@ export async function createDataWriter({ output, protectedRoots, maximumBytes = 
         entries.push({ name: record.name, bytes: record.bytes, sha256: record.hash.copy().digest("hex") });
       }
       entries.sort((left, right) => left.name.localeCompare(right.name, "en"));
-      const manifest = encode({ format: "jessiemessage-private-export", version: 1, status: "complete", counts, entries }, maximumBytes - totalBytes);
+      const manifest = encode({ format: "jessiemessage-private-export", version: video ? 2 : 1, status: "complete", counts, entries }, maximumBytes - totalBytes);
       room(manifest.length, true);
       if (mediaHandle) { await mediaHandle.sync(); await mediaHandle.close(); mediaHandle = null; }
       await rootHandle.sync(); await check();

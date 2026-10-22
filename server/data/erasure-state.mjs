@@ -21,18 +21,27 @@ export function erasureFields(value, names) {
       || !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name), "value"))) failErasure("ERASURE_INPUT");
 }
 export function erasureBinding(value) {
-  erasureFields(value, ["database", "rootFingerprint"]);
+  const video = value !== null && typeof value === "object" && Object.hasOwn(value, "videoRootFingerprint");
+  erasureFields(value, ["database", "rootFingerprint", ...(video ? ["videoRootFingerprint"] : [])]);
   if (typeof value.database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(value.database)
-    || typeof value.rootFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(value.rootFingerprint)) failErasure("ERASURE_INPUT");
-  return { database: value.database, rootFingerprint: value.rootFingerprint };
+    || typeof value.rootFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(value.rootFingerprint)
+    || video && (typeof value.videoRootFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(value.videoRootFingerprint))) failErasure("ERASURE_INPUT");
+  return { database: value.database, rootFingerprint: value.rootFingerprint,
+    ...(video ? { videoRootFingerprint: value.videoRootFingerprint } : {}) };
+}
+export function erasureCursor(value, version = 1) {
+  if (version === 1) return erasureId(value);
+  if (version !== 2 || typeof value !== "string" || !/^[pv]:[a-f0-9]{32}$/.test(value)) failErasure("ERASURE_INPUT");
+  return value;
 }
 export function erasureRecord(value) {
   erasureFields(value, ["version", "clientId", "binding", "phase", "cursor", "startedAt", "updatedAt"]);
-  if (value.version !== 1 || !ERASURE_PHASES.includes(value.phase)) failErasure("ERASURE_INPUT");
+  const binding = erasureBinding(value.binding), version = Object.hasOwn(binding, "videoRootFingerprint") ? 2 : 1;
+  if (value.version !== version || !ERASURE_PHASES.includes(value.phase)) failErasure("ERASURE_INPUT");
   const startedAt = erasureTime(value.startedAt), updatedAt = erasureTime(value.updatedAt);
   if (updatedAt < startedAt || value.phase === "requested" && value.cursor !== null) failErasure("ERASURE_INPUT");
-  return { version: 1, clientId: erasureId(value.clientId), binding: erasureBinding(value.binding), phase: value.phase,
-    cursor: value.cursor === null ? null : erasureId(value.cursor), startedAt, updatedAt };
+  return { version, clientId: erasureId(value.clientId), binding, phase: value.phase,
+    cursor: value.cursor === null ? null : erasureCursor(value.cursor, version), startedAt, updatedAt };
 }
 export function erasureTransition(previous, next) {
   next = erasureRecord(next);

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import vm from "node:vm";
 
-const files = Object.fromEntries(await Promise.all(["i18n.js", "help-link.js", "i18n-tools.js", "session-clock.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "crm.js", "crm-model.js"].map(async (name) => [name, await readFile(new URL(`../public/${name}`, import.meta.url), "utf8")])));
+const files = Object.fromEntries(await Promise.all(["i18n.js", "help-link.js", "i18n-tools.js", "i18n-broadcast.js", "session-clock.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "crm.js", "crm-model.js"].map(async (name) => [name, await readFile(new URL(`../public/${name}`, import.meta.url), "utf8")])));
 const flush = async () => { for (let index = 0; index < 10; index++) await new Promise((resolve) => setImmediate(resolve)); };
 const id = (value) => value.toString(16).padStart(32, "0");
 class Element {
@@ -56,7 +56,7 @@ function harness({ respond, now } = {}) {
     setTimeout(callback, delay) { timers.set(++timer, { callback, delay }); return timer; }, clearTimeout(value) { timers.delete(value); },
     fetch: async (path, options = {}) => { calls.push({ path, options }); if (respond) return respond(path, options); throw new Error("Unexpected network request in the UI-only harness"); } });
   const run = (code) => vm.runInContext(code, context);
-  run(files["i18n.js"]); run(files["help-link.js"]); run(files["i18n-tools.js"]); run(files["session-clock.js"]);
+  run(files["i18n.js"]); run(files["help-link.js"]); run(files["i18n-tools.js"]); run(files["i18n-broadcast.js"]); run(files["session-clock.js"]);
   const model = (name) => {
     const source = files[name], exports = [...source.matchAll(/export (?:function|const) ([A-Za-z][A-Za-z0-9_]*)/g)].map((match) => match[1]);
     run(`globalThis.model = (() => {${source.replaceAll("export function ", "function ").replaceAll("export const ", "const ")}\nreturn {${exports.join(",")}};})();`);
@@ -192,4 +192,23 @@ test("all private-interface catalogs can coexist and every static broadcast mark
       const source = node.getAttribute(name); if (source !== null) assert.ok(dictionary.has(source), `Missing UI translation: ${source}`);
     }
   }
+});
+
+test("broadcast video labels, live progress and typed campaign details switch FR/EN without altering private draft or audience", () => {
+  const h = harness(); h.model("broadcast-model.js");
+  const executable = files["broadcast.js"].replace(/^import \{([^\n]+)\} from "\/broadcast-model\.js";/, "const {$1} = model;");
+  h.run(`(() => {${executable}\nglobalThis.videoTools={state,renderControls,renderPreview,renderDetail,notice};})();`); h.visible();
+  h.run(`document.getElementById("broadcast-content").hidden=false;videoTools.state.visible=true;videoTools.state.session={id:"${id(1)}",csrf:"${"a".repeat(43)}",expiresAt:Date.now()+3600000,mediaEnabled:true,largeAudiencesEnabled:true,videoEnabled:true};
+    videoTools.state.draft={title:"Private raw title",body:"Private raw caption",mediaId:null,videoId:"${id(88)}",allowRepeatMedia:false};
+    videoTools.state.preview={eligibleCount:1,totalCount:1,excludedCount:0,repeatCount:1,audience:{mode:"all"},previewToken:"synthetic.preview",recipients:[{client:{pseudonym:"Vidéo"},eligible:true,reason:null,repeatMedia:true}]};
+    videoTools.renderControls();videoTools.renderPreview();videoTools.notice("Chargement de la vidéo… {percent} %",false,"video-status",{percent:JessieI18n.numberParam(50)});
+    videoTools.renderDetail({id:"${id(5)}",title:"Private raw title",body:"",videoId:"${id(88)}",mediaId:null,status:"queued",counts:{total:1,pending:1,sending:0,delivered:0,skipped:0,cancelled:0,failed:0}});`);
+  const before = h.run("JSON.stringify({draft:videoTools.state.draft,preview:videoTools.state.preview})");
+  h.switch("en");
+  assert.equal(h.ids.get("pick-video").textContent, "Add a video"); assert.equal(h.ids.get("upload-video").textContent, "Upload video");
+  assert.equal(h.ids.get("video-progress").getAttribute("aria-label"), "Video upload progress"); assert.equal(h.ids.get("video-status").textContent, "Uploading video… 50%");
+  assert.match(h.ids.get("preview-list").textContent, /Vidéo · Ready to receive · video already shared/);
+  assert.match(h.ids.get("repeat-label").textContent, /send this video again/); assert.match(h.ids.get("campaign-detail").textContent, /Video without a captionA video attached/);
+  assert.equal(h.run("JSON.stringify({draft:videoTools.state.draft,preview:videoTools.state.preview})"), before); assert.equal(h.calls.length, 0);
+  h.switch("fr"); assert.equal(h.ids.get("video-status").textContent, "Chargement de la vidéo… 50 %");
 });

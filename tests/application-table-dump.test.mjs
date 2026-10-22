@@ -7,6 +7,7 @@ import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/pro
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
+import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { dumpCloneSql } from "../scripts/verify-text-clone.mjs";
 
 const base = fileURLToPath(new URL("../../audit/", import.meta.url));
@@ -163,4 +164,41 @@ test("an application dump cancellation remains neutral and stops before private 
     signal: abort.signal, get tables() { getterRead = true; return tables; },
   }), neutral("TEXT_CLONE_CANCELLED"));
   assert.equal(accessed, false); assert.equal(getterRead, false);
+});
+
+
+test("candidate video dumps require an explicit capability and pass only the authored SQL36 application inventory", async t => {
+  const f = await fixture(t), observed = [], videoTables = [...createdMigrationTables(await loadVideoMigrations()), "schema_migrations"].sort();
+  assert.equal(videoTables.length, 36); assert.equal((await loadMigrations()).length, 33);
+  assert.deepEqual(await dumpCloneSql(f.scope, selected, configuration, "synthetic-password", {
+    video: true, tables: Object.freeze([...videoTables]), spawnClient: successfulSpawn(observed),
+  }), report);
+  assert.deepEqual(observed[0].args.slice(-36), videoTables);
+  assert.deepEqual(observed[0].args.slice(1, -36), ["--single-transaction", "--quick", "--skip-lock-tables", "--skip-add-locks", "--skip-add-drop-table",
+    "--skip-comments", "--skip-triggers", "--hex-blob", "--no-tablespaces", "--protocol=TCP", "--ssl-ca=/etc/ssl/certs/ca-certificates.crt",
+    "--ssl-verify-server-cert", selected.database]);
+  assert.deepEqual(await readdir(f.directory), []);
+});
+
+test("video inventory cannot cross the normal33 boundary or select an unrestricted dump", async () => {
+  const videoTables = [...createdMigrationTables(await loadVideoMigrations()), "schema_migrations"].sort(); let accessed = false;
+  const scope = { get path() { accessed = true; throw new Error("must reject before path access"); } };
+  const duplicate = [...videoTables]; duplicate[2] = duplicate[1];
+  const injected = [...videoTables]; injected[2] = "--all-databases";
+  const unknown = [...videoTables]; unknown[2] = "synthetic_other";
+  for (const options of [{ tables: videoTables }, { video: false, tables: videoTables }, { video: true, tables }, { video: true }, { video: true, tables: undefined },
+    { video: true, tables: duplicate }, { video: true, tables: injected }, { video: true, tables: unknown }, { video: true, tables: [...videoTables].reverse() }]) {
+    await assert.rejects(dumpCloneSql(scope, selected, configuration, "synthetic-password", options), neutral("TEXT_CLONE_DUMP"));
+  }
+  assert.equal(accessed, false);
+});
+
+test("video dump capability must be an own boolean data property and never executes accessors", async () => {
+  let accessed = false, executed = false; const scope = { get path() { accessed = true; throw new Error("must reject before path access"); } };
+  const videoTables = [...createdMigrationTables(await loadVideoMigrations()), "schema_migrations"].sort();
+  for (const options of [{ video: "true", tables: videoTables }, { video: 1, tables: videoTables },
+    { get video() { executed = true; return true; }, tables: videoTables }, Object.assign(Object.create({ video: true }), { tables: videoTables })]) {
+    await assert.rejects(dumpCloneSql(scope, selected, configuration, "synthetic-password", options), neutral("TEXT_CLONE_DUMP"));
+  }
+  assert.equal(accessed, false); assert.equal(executed, false);
 });

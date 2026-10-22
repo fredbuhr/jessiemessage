@@ -23,6 +23,7 @@ let fixture;
 
 function resetFixture() {
   fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, eventHolds: [], read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false, sent: [], messageRequests: [],
+    quickReplies: { version: "0", replies: [] }, quickReplyRequests: [], quickReplyReads: 0,
     profileEnabled: false, profileAvatarsEnabled: true, profileRequests: [], avatarRequests: [], avatarUploads: [], profiles: {
       client: { pseudonym: peerName, version: "1", avatarId: null }, admin: { pseudonym: "Jessie", version: "1", avatarId: null },
     } };
@@ -117,6 +118,20 @@ async function startFixtureServer() {
         const extension = url.pathname.slice(url.pathname.lastIndexOf("."));
         response.writeHead(200, { "Content-Type": contentTypes[extension] ?? "application/octet-stream" }); response.end(files.get(url.pathname)); return;
       }
+      if (url.pathname === "/api/admin/quick-replies") {
+        if (!fixture.signedIn) { sendJson(401, { error: "authentication_required" }); return; }
+        if (request.method === "GET") { fixture.quickReplyReads += 1; sendJson(200, { ...fixture.quickReplies, ...(fixture.quickRepliesWritable === false ? { writable: false } : {}) }); return; }
+        if (request.method === "POST") {
+          if (fixture.quickRepliesWritable === false) { sendJson(403, { error: "feature_read_only" }); return; }
+          let raw = ""; for await (const chunk of request) { raw += chunk; if (raw.length > 65536) throw new Error("oversized_fixture_quick_replies"); }
+          const command = JSON.parse(raw); fixture.quickReplyRequests.push(command);
+          assert.equal(request.headers["x-csrf-token"], fixture.csrf ?? "A".repeat(43));
+          if (command.expectedVersion !== fixture.quickReplies.version) { sendJson(409, { error: "quick_replies_conflict" }); return; }
+          fixture.quickReplies = { version: String(BigInt(fixture.quickReplies.version) + 1n), replies: command.replies };
+          if (fixture.loseQuickReplyAck) { fixture.loseQuickReplyAck = false; response.writeHead(200, { "Content-Type": "application/json", "Content-Length": "4096" }); response.write("{"); setImmediate(() => response.destroy()); return; }
+          sendJson(200, fixture.quickReplies); return;
+        }
+      }
       const sessionRole = url.pathname === "/api/auth/session" ? "admin" : url.pathname === "/api/access/session" ? "client" : null;
       const loginRole = url.pathname === "/api/auth/login" ? "admin" : url.pathname === "/api/access/login" ? "client" : null;
       if (sessionRole && request.method === "GET" || loginRole && request.method === "POST") {
@@ -188,6 +203,7 @@ async function startFixtureServer() {
         if (request.method === "GET" && suffix === "/capabilities") {
           if (feature === "media" && fixture.mediaDisabled) { sendJson(404, { error: "not_found" }); return; }
           sendJson(200, { enabled: true,
+            ...(fixture.videoReadOnly && feature === "chat" ? { video: { enabled: true, creationEnabled: false, maxBytes: 104857600, mime: "video/mp4" } } : {}),
             ...(fixture.profileEnabled && feature === "chat" ? { profile: { enabled: true, avatars: fixture.profileAvatarsEnabled } } : {}),
             ...(fixture.clientExportEnabled && feature === "chat" && role === "client" ? { conversationExport: { enabled: true, photos: true, maxBytes: 32 * 1024 * 1024 } } : {}) }); return;
         }
@@ -1131,4 +1147,85 @@ test("Chrome: clients have no quick replies; Escape, full drafts and returning t
     assert.equal(await page.execute("return document.querySelector('#quick-replies-list').children.length"), 0);
     assert.equal(fixture.sent.length, 0); await noJavascriptErrors(page);
   } finally { fixture.releaseInitialAdminMessages?.(); await page.close(); }
+});
+
+async function openPersonalRepliesBrowser(page, language = "fr") {
+  await loaded(page, "/admin/messages"); await page.click(".contact");
+  await waitUntil(() => page.execute("const reply=document.querySelector('#open-quick-replies'),body=document.querySelector('#message-body');return !reply.hidden&&!reply.disabled&&!body.disabled&&!body.readOnly&&body.getClientRects().length>0"), "quick replies and the editable message field are ready in the selected conversation");
+  if (language === "en") await toggleChatLanguage(page);
+  await clickComposerAction(page, "#open-quick-replies");
+  await waitUntil(() => page.execute("return !document.querySelector('#new-personal-reply').disabled"), "personal catalogue loaded");
+}
+async function fillPersonalReply(page, title, body) {
+  await page.type("#personal-reply-title", title); await page.type("#personal-reply-body", body); await page.click("#personal-reply-save");
+}
+for (const [width, language] of [[320, "fr"], [1280, "en"]]) test(`Chrome ${width}px ${language}: personal replies persist between sessions and CAS conflicts preserve both catalogue and draft`, { timeout: 90000 }, async () => {
+  resetFixture(); const first = await browser(width), second = await browser(width);
+  try {
+    await openPersonalRepliesBrowser(first, language);
+    await first.click("#new-personal-reply"); await fillPersonalReply(first, "Envoyer", "Mes photos <b>texte personnel</b>");
+    await waitUntil(() => fixture.quickReplies.version === "1" && first.execute("return document.querySelector('#personal-reply-editor').hidden"), "first personal reply saved");
+    const replyId = fixture.quickReplies.replies[0].id;
+    assert.equal(fixture.quickReplyRequests.length, 1); assert.equal(fixture.sent.length, 0);
+    await openPersonalRepliesBrowser(second, language);
+    assert.equal(await second.execute(`return document.querySelector('[data-personal-id="${replyId}"] strong').textContent`), "Envoyer");
+    assert.equal(await second.execute(`return document.querySelector('[data-personal-id="${replyId}"] span').textContent`), "Mes photos <b>texte personnel</b>");
+    assert.equal(await second.execute("return document.querySelectorAll('#personal-replies-list b').length"), 0);
+    await second.click(`[data-personal-id="${replyId}"] [data-personal-action="edit"]`);
+    await second.type("#personal-reply-title", "Mon titre"); await second.type("#personal-reply-body", "Brouillon conservé");
+    await first.click("#new-personal-reply"); await fillPersonalReply(first, "Autre réponse", "À conserver depuis la première session");
+    await waitUntil(() => fixture.quickReplies.version === "2", "other session adds a reply");
+    await second.click("#personal-reply-save");
+    const conflictText = language === "fr" ? "Les réponses ont changé ailleurs. Ton brouillon est conservé. Recharge la liste avant de réessayer." : "Replies changed elsewhere. Your draft is preserved. Reload the list before trying again.";
+    await waitUntil(() => second.execute("return document.querySelector('#personal-reply-save').disabled && document.querySelector('#personal-replies-status').textContent===arguments[0]", conflictText), "the completed conflict response blocks another mutation");
+    assert.equal(fixture.quickReplyRequests.length, 3); assert.equal(await second.execute("return document.querySelector('#personal-reply-body').value"), "Brouillon conservé");
+    assert.match(await second.execute("return document.querySelector('#personal-replies-status').textContent"), language === "fr" ? /changé ailleurs/ : /changed elsewhere/);
+    await second.click("#reload-personal-replies");
+    await waitUntil(() => second.execute("return !document.querySelector('#personal-reply-save').disabled"), "explicit reload adopts the current catalogue version");
+    assert.equal(await second.execute("return document.querySelector('#personal-reply-body').value"), "Brouillon conservé"); assert.equal(fixture.quickReplyRequests.length, 3);
+    await second.click("#personal-reply-save"); await waitUntil(() => fixture.quickReplies.version === "3", "explicit save keeps the concurrent addition");
+    assert.equal(fixture.quickReplies.replies.length, 2); assert.equal(fixture.quickReplies.replies.find(reply => reply.id === replyId).body, "Brouillon conservé");
+    await waitUntil(() => second.execute("return document.querySelector('#personal-reply-editor').hidden"), "editor cleared after acknowledgement");
+    await second.execute("document.querySelector('#message-body').value='Personal draft'"); await second.click(`[data-personal-quick-reply="${replyId}"]`);
+    assert.equal(await second.execute("return document.querySelector('#message-body').value"), "Personal draft\nBrouillon conservé"); assert.equal(fixture.sent.length, 0);
+    await first.click("#close-quick-replies"); await clickComposerAction(first, "#open-quick-replies");
+    await waitUntil(() => first.execute(`return document.querySelector('[data-personal-id="${replyId}"] span')?.textContent==='Brouillon conservé'`), "reopening refreshes personal replies");
+    await first.click(`[data-personal-id="${replyId}"] [data-personal-action="delete"]`); assert.equal(fixture.quickReplies.replies.length, 2);
+    await first.click(`[data-personal-id="${replyId}"] [data-personal-action="confirm-delete"]`);
+    await waitUntil(() => fixture.quickReplies.version === "4", "confirmed deletion persists"); assert.equal(fixture.quickReplies.replies.length, 1);
+    assert.equal(await first.execute("const d=document.querySelector('#quick-replies-dialog');return d.scrollWidth<=d.clientWidth+1 && document.documentElement.scrollWidth<=innerWidth"), true);
+    await noJavascriptErrors(first); await noJavascriptErrors(second);
+  } finally { await first.close(); await second.close(); }
+});
+
+test("Chrome personal reply lost acknowledgement never retries automatically and explicit reload reveals the saved reply", { timeout: 45000 }, async () => {
+  resetFixture(); const page = await browser(375);
+  try {
+    await openPersonalRepliesBrowser(page); await page.click("#new-personal-reply"); fixture.loseQuickReplyAck = true;
+    await fillPersonalReply(page, "Réponse sauvegardée", "Confirmation perdue");
+    await waitUntil(() => page.execute("return document.querySelector('#personal-replies-status').textContent.includes('La confirmation manque') && document.querySelector('#personal-reply-save').disabled"), "uncertain save is explicit");
+    assert.equal(fixture.quickReplyRequests.length, 1); assert.equal(fixture.quickReplies.version, "1"); assert.equal(fixture.sent.length, 0);
+    assert.equal(await page.execute("return document.querySelector('#personal-reply-body').value"), "Confirmation perdue");
+    await page.click("#reload-personal-replies"); await waitUntil(() => page.execute("return !document.querySelector('#personal-reply-save').disabled && document.querySelectorAll('[data-personal-quick-reply]').length===1"), "explicit reload observes the saved reply");
+    assert.equal(fixture.quickReplyRequests.length, 1); assert.equal(fixture.quickReplies.replies.length, 1); assert.equal(fixture.sent.length, 0);
+    await page.key("\uE00C"); assert.equal(await page.execute("return document.querySelector('#personal-reply-body').value"), "");
+    const reads = fixture.quickReplyReads; await loaded(page, "/messages"); assert.equal(await page.execute("return document.querySelector('#open-quick-replies').hidden"), true);
+    assert.equal(fixture.quickReplyReads, reads); await noJavascriptErrors(page);
+  } finally { await page.close(); }
+});
+
+test("Chrome compatibility hides new video and reply editing while preserving gallery access and saved reply insertion", { timeout: 35000 }, async () => {
+  resetFixture(); fixture.quickRepliesWritable = false; fixture.videoReadOnly = true;
+  fixture.quickReplies = { version: "1", replies: [{ id: id(991), title: "Saved private reply", body: "Existing personal text", language: "fr" }] };
+  const page = await browser(375);
+  try {
+    await loaded(page, "/admin/messages"); await page.click(".contact");
+    await waitUntil(() => page.execute("return !document.querySelector('#open-quick-replies').hidden&&!document.querySelector('#open-quick-replies').disabled"), "compatibility conversation ready");
+    assert.equal(await page.execute("return document.querySelector('#pick-video').hidden && !document.querySelector('#open-video-gallery').hidden"), true);
+    await page.type("#message-body", "Draft"); await clickComposerAction(page, "#open-quick-replies");
+    await waitUntil(() => page.execute("return document.querySelectorAll('[data-personal-quick-reply]').length===1"), "saved read-only replies loaded");
+    assert.equal(await page.execute("return document.querySelector('#new-personal-reply').hidden&&document.querySelector('#personal-reply-editor').hidden&&document.querySelector('.personal-reply-actions:not([hidden]) [data-personal-action]')===null"), true);
+    await page.click('[data-personal-quick-reply]'); assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Draft\nExisting personal text");
+    assert.equal(fixture.quickReplyRequests.length, 0); assert.equal(fixture.sent.length, 0); await noJavascriptErrors(page);
+  } finally { await page.close(); }
 });

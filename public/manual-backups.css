@@ -1,0 +1,11 @@
+.manual-backups-main { max-width: 760px; }
+.backup-card { margin-bottom: 22px; }
+.backup-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 22px 0; }
+.backup-details:empty { display: none; }
+.backup-details dt { color: #bcaebb; font-size: 12px; margin-bottom: 7px; }
+.backup-details dd { margin: 0; font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+.capture-state { color: #d8b999; line-height: 1.7; font-size: 14px; }
+.capture-state.is-error { color: #ffb8cb; }
+.backup-card .button { min-height: 46px; }
+.footer { display: flex; justify-content: space-between; gap: 20px; }
+@media (max-width: 600px) { .topbar { flex-wrap: wrap; gap: 14px; } .account-nav { justify-content: flex-start; max-width: none; } .backup-details { grid-template-columns: 1fr; gap: 16px; } }

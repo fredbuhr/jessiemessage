@@ -1,6 +1,7 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { createHash } from "node:crypto";
 import { createSessionClock, sessionIsValid, adminSessionExpiry, SESSION_TOUCH_MILLISECONDS } from "./session-policy.mjs";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 
 export class AuthStoreError extends Error {
   constructor(code, message) {
@@ -100,7 +101,7 @@ export function createAuthStore(pool, { clock } = {}) {
   }
 
   return {
-    async assertSchema() {
+    async assertSchema(options = {}) {
       return withConnection(async (connection) => {
         const projections = [
           "SELECT id, role, status, pseudonym, email, password_hash FROM users WHERE 1 = 0",
@@ -112,7 +113,7 @@ export function createAuthStore(pool, { clock } = {}) {
         ];
         for (const projection of projections) await connection.query(projection);
         const database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
-        const status = await migrationStatus(connection, { database, migrations: await loadMigrations() });
+        const status = await migrationStatus(connection, { database, migrations: await loadStoreMigrations(options) });
         if (status.some((migration) => migration.state !== "applied")) schemaStateError();
         const columns = await connection.query(`SELECT TABLE_NAME AS tableName, COLUMN_NAME AS columnName,
           DATA_TYPE AS dataType, IS_NULLABLE AS nullable, CHARACTER_MAXIMUM_LENGTH AS length,

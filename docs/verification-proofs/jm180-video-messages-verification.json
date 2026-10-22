@@ -1,0 +1,583 @@
+{
+  "formatVersion": 1,
+  "type": "development-checkpoint",
+  "stage": "7.2",
+  "status": "qualified_on_working_branch",
+  "applicationDevelopmentVersion": "1.8.0",
+  "branch": "feat/video-messaging",
+  "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/125",
+  "draft": true,
+  "base": {
+    "source": "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+    "tree": "45dd37fad9b10b1c07d16ea9bfa0bb992d0c7ea2"
+  },
+  "previousCheckpoint": {
+    "head": "1cf2aa61cf8f95a969976dbce51b8b40fe04c831",
+    "tree": "07d9bf1f2ce0b43bb752d281b8d4bdce581a689b",
+    "qualifiedFunctionalSource": "04f375cbea572326656b6f3b08856ee789ce955a",
+    "verification": "jm180-catalogue-verification.json"
+  },
+  "qualifiedSource": {
+    "head": "e113faf1ea7b278fb2f290b2981fb10bc8166968",
+    "tree": "597567d65b8917b115e91d2597e468d71ae7ba2f"
+  },
+  "migrationQualification": {
+    "normalMigrations": 33,
+    "candidateMigrations": 36,
+    "candidates": [
+      {
+        "version": 34,
+        "name": "0034_video_storage_state.sql",
+        "checksum": "69b8ecfa68266b372642b3ee4d35de15912b8815a971b053d48ae25d5f39201e"
+      },
+      {
+        "version": 35,
+        "name": "0035_video_assets.sql",
+        "checksum": "0d4f3c7bb72d8e6212cf5a7cea95012c645a732ed36adf19be849d83eb86c71e"
+      },
+      {
+        "version": 36,
+        "name": "0036_message_video.sql",
+        "checksum": "8f4fcd95094ecccaa5c47daa0af3e70e6c099b4012d535f513731115b8bfe427"
+      }
+    ]
+  },
+  "localVerification": {
+    "nodeVersion": "24.19.0",
+    "syntaxSources": 636,
+    "targetedChat": {
+      "tests": 73,
+      "pass": 73,
+      "fail": 0,
+      "skipped": 0
+    },
+    "targetedVideoMessage": {
+      "tests": 17,
+      "pass": 17,
+      "fail": 0,
+      "skipped": 0
+    },
+    "nativeDatabaseAvailable": false,
+    "general": {
+      "status": "incomplete_not_qualification",
+      "firstTapAttempt": {
+        "exitCode": 1,
+        "errors": 3,
+        "reason": "ENOENT for three pre-existing conversation ZIP tests because /tmp is absent"
+      },
+      "finalAttempt": {
+        "exitCode": 0,
+        "tmpdir": "/workspace/scratch/661996893e4c/jm180-test-tmp",
+        "concurrency": 4,
+        "reportedOk": 2261,
+        "finalPlanAndSummaryPresent": false
+      },
+      "unknown": "The cause of the missing final TAP plan/summary and unfinished fixture cleanup was not established. Exit zero alone is not used as a complete suite result.",
+      "additionalObservedEnvironmentLimit": "/proc unavailable; ps cannot enumerate processes."
+    },
+    "logsSha256": {
+      "jm180-message-check.log": "e7f252a3ed88667aba4a3a292b184b6306d355777713ced68c5610a94c4b4ae0",
+      "jm180-message-chat-targeted.log": "faef2b19508033b85816e8cf67056e070c98a9b7da37245f5df50e8de461be5e",
+      "jm180-message-general-tap.log": "e7454eb0651794479bc88454c74c943d58c5cf022af90bd20fb809ae5048674c",
+      "jm180-message-general-tap-final.log": "9afb68c37473df248bccbdc317f00a00f32963d00b2832ea46987deccb18c943",
+      "jm180-message-local-receipt.json": "8193cd86857572e70798e835b4f6e1f28c4e0a1b9a6fc069351523d10bf2c23f"
+    }
+  },
+  "independentReviews": {
+    "blockingFindings": 0,
+    "reviewers": 2,
+    "scope": [
+      "chat hooks, typed fingerprints and DTO",
+      "candidate message SQL and native fixture",
+      "video transport contracts and shared limits"
+    ],
+    "correctedBeforeCi": [
+      "Local invalid caption validation mapped to VIDEO_INPUT consistently."
+    ]
+  },
+  "operationalState": {
+    "merged": false,
+    "published": false,
+    "deployed": false,
+    "videoRoutesRegisteredInNormalRuntime": false,
+    "hostedMigrationRun": false,
+    "pcWorkPerformed": false,
+    "mainSource": "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+    "productionVersion": "1.6.0",
+    "productionSource": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+    "productionSchema": 33,
+    "rollbackVersion": "1.5.1",
+    "rollbackStarted": false,
+    "freshHostedObservation": false
+  },
+  "limits": [
+    "No actual video decoding, codec, duration, physical phone or hosted 100 MiB throughput qualification.",
+    "Physical deletion/capacity refund, export, closure, inventory, capture and restore belong to milestone 7.3.",
+    "Original upload remains charged after failed message publication; already transmitted bytes are not retroactively revoked.",
+    "SQL notification rows are deduplicated per recipient device; this does not claim exactly-once network delivery.",
+    "Normal migration plan and legacy lifecycle guards remain at schema 33."
+  ],
+  "nextAction": "7.3 — cycle de vie complet, sur la même branche ; PR en brouillon jusqu’à 7.6.",
+  "ciObservation": {
+    "repository": "fredbuhr/jessiemessage",
+    "observedAt": "2026-10-21T21:03:20.756Z",
+    "run": {
+      "id": 39674397798,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39674397798",
+      "event": "pull_request",
+      "head_sha": "e113faf1ea7b278fb2f290b2981fb10bc8166968",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-21T20:54:51Z",
+      "updated_at": "2026-10-21T21:01:08Z",
+      "run_started_at": "2026-10-21T20:54:51Z"
+    },
+    "eventCounts": {
+      "pull_request": 1,
+      "push": 0
+    },
+    "testedMerge": {
+      "sha": "cdd97ce991915a24ed8269133955ad9f75ba3cde",
+      "tree": "597567d65b8917b115e91d2597e468d71ae7ba2f",
+      "parents": [
+        "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+        "e113faf1ea7b278fb2f290b2981fb10bc8166968"
+      ]
+    },
+    "jobs": [
+      {
+        "id": 119480323926,
+        "name": "Chrome keyboard and chat lifecycle",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39674397798/job/119480323926",
+        "started_at": "2026-10-21T20:54:53Z",
+        "completed_at": "2026-10-21T20:58:44Z",
+        "durationSeconds": 231,
+        "nodeVersion": "24.22.0",
+        "counts": {
+          "tests": 189,
+          "suites": 0,
+          "pass": 189,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "logsRead": true,
+        "logFingerprint": {
+          "algorithm": "SHA-256",
+          "sha256": "e4258071191599d75f5e803f4eff9280e1e02b48edb036f4d766c6efd7d2abb9",
+          "bytes": 37790,
+          "format": "complete decoded UTF-8 job log"
+        },
+        "warnings": []
+      },
+      {
+        "id": 119480324233,
+        "name": "MariaDB 11.4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39674397798/job/119480324233",
+        "started_at": "2026-10-21T20:54:53Z",
+        "completed_at": "2026-10-21T21:00:14Z",
+        "durationSeconds": 321,
+        "nodeVersion": "24.22.0",
+        "databaseVersion": "11.4.13-MariaDB-ubu2404",
+        "counts": {
+          "tests": 527,
+          "suites": 0,
+          "pass": 527,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 259249.748302
+        },
+        "logsRead": true,
+        "logFingerprint": {
+          "algorithm": "SHA-256",
+          "sha256": "8b78ae6086901aa2f7e8d224519d64b554dff070af9aae3e1857f80ce68ae78b",
+          "bytes": 300216,
+          "format": "complete decoded UTF-8 job log"
+        },
+        "catalogue": {
+          "name": "real MariaDB dormant video catalog reserves, commits and reconciles durable capacity",
+          "passed": true,
+          "subtestCount": 10,
+          "subtests": [
+            {
+              "number": 1,
+              "name": "offline initialization is explicit, idempotent and bound to root and both quotas",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 2,
+              "name": "candidate DDL rejects weakened checks, keys, ownership links and dirty history",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 3,
+              "name": "SQL itself enforces encrypted-byte accounting, state, role, digest and ownership",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 4,
+              "name": "a corrupted durable counter fails every mutation without weakening SQL limits",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 5,
+              "name": "reserve, commit and release are exact retries, and committed objects cannot be released",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 6,
+              "name": "current SQL owner, role, session, access and creator gates cannot be bypassed",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 7,
+              "name": "cleanup after revocation is bound to the original reservation and never authorizes a read",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 8,
+              "name": "exact owner and global quotas serialize simultaneous reservations without oversubscription",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 9,
+              "name": "lost acknowledgements after actual reserve and commit transactions survive store recreation",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 10,
+              "name": "real SQL service and encrypted storage preserve a committed video after a lost acknowledgement",
+              "passed": true,
+              "skipped": false
+            }
+          ]
+        },
+        "messages": {
+          "name": "real HTTP/SQL video messages are atomic, idempotent, private and visible only through live deliveries",
+          "passed": true,
+          "subtestCount": 10,
+          "subtests": [
+            {
+              "number": 1,
+              "name": "real HTTP captions, concurrent exact retries, history, events and recipient-device notifications agree",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 2,
+              "name": "delivery GET/HEAD use live SQL authorization, private headers and authenticated Range bytes",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 3,
+              "name": "HTTP mutations enforce real origin, CSRF, strict shape and committed-owner eligibility",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 4,
+              "name": "link, event and real notification failures roll back the complete publication without discarding the original",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 5,
+              "name": "a lost acknowledgement after the native publication COMMIT survives reconstruction without duplicate jobs",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 6,
+              "name": "the native composite link refuses another conversation and schema inspection refuses weakened foreign keys",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 7,
+              "name": "video galleries are scoped keyset pages and preserve full unsigned sequence values",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 8,
+              "name": "persisted revocation, expiration and blocking deny viewing and retries while assigned administrator history survives",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 9,
+              "name": "a revocation committed during a native send lock wait prevents every publication row",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 10,
+              "name": "tombstones revoke delivery bytes and old event payloads without resurrecting content or removing another live delivery",
+              "passed": true,
+              "skipped": false
+            }
+          ]
+        },
+        "anomalies": [],
+        "warnings": [
+          "##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+        ]
+      },
+      {
+        "id": 119480324249,
+        "name": "MariaDB 10.11",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39674397798/job/119480324249",
+        "started_at": "2026-10-21T20:54:53Z",
+        "completed_at": "2026-10-21T21:01:07Z",
+        "durationSeconds": 374,
+        "nodeVersion": "24.22.0",
+        "databaseVersion": "10.11.19-MariaDB-ubu2204",
+        "counts": {
+          "tests": 527,
+          "suites": 0,
+          "pass": 527,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 342405.042717
+        },
+        "logsRead": true,
+        "logFingerprint": {
+          "algorithm": "SHA-256",
+          "sha256": "5d425dfd37f93c2008d8e22698830537a834456a1e4c2df7bf46080ccee6eb1e",
+          "bytes": 298674,
+          "format": "complete decoded UTF-8 job log"
+        },
+        "catalogue": {
+          "name": "real MariaDB dormant video catalog reserves, commits and reconciles durable capacity",
+          "passed": true,
+          "subtestCount": 10,
+          "subtests": [
+            {
+              "number": 1,
+              "name": "offline initialization is explicit, idempotent and bound to root and both quotas",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 2,
+              "name": "candidate DDL rejects weakened checks, keys, ownership links and dirty history",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 3,
+              "name": "SQL itself enforces encrypted-byte accounting, state, role, digest and ownership",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 4,
+              "name": "a corrupted durable counter fails every mutation without weakening SQL limits",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 5,
+              "name": "reserve, commit and release are exact retries, and committed objects cannot be released",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 6,
+              "name": "current SQL owner, role, session, access and creator gates cannot be bypassed",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 7,
+              "name": "cleanup after revocation is bound to the original reservation and never authorizes a read",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 8,
+              "name": "exact owner and global quotas serialize simultaneous reservations without oversubscription",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 9,
+              "name": "lost acknowledgements after actual reserve and commit transactions survive store recreation",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 10,
+              "name": "real SQL service and encrypted storage preserve a committed video after a lost acknowledgement",
+              "passed": true,
+              "skipped": false
+            }
+          ]
+        },
+        "messages": {
+          "name": "real HTTP/SQL video messages are atomic, idempotent, private and visible only through live deliveries",
+          "passed": true,
+          "subtestCount": 10,
+          "subtests": [
+            {
+              "number": 1,
+              "name": "real HTTP captions, concurrent exact retries, history, events and recipient-device notifications agree",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 2,
+              "name": "delivery GET/HEAD use live SQL authorization, private headers and authenticated Range bytes",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 3,
+              "name": "HTTP mutations enforce real origin, CSRF, strict shape and committed-owner eligibility",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 4,
+              "name": "link, event and real notification failures roll back the complete publication without discarding the original",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 5,
+              "name": "a lost acknowledgement after the native publication COMMIT survives reconstruction without duplicate jobs",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 6,
+              "name": "the native composite link refuses another conversation and schema inspection refuses weakened foreign keys",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 7,
+              "name": "video galleries are scoped keyset pages and preserve full unsigned sequence values",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 8,
+              "name": "persisted revocation, expiration and blocking deny viewing and retries while assigned administrator history survives",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 9,
+              "name": "a revocation committed during a native send lock wait prevents every publication row",
+              "passed": true,
+              "skipped": false
+            },
+            {
+              "number": 10,
+              "name": "tombstones revoke delivery bytes and old event payloads without resurrecting content or removing another live delivery",
+              "passed": true,
+              "skipped": false
+            }
+          ]
+        },
+        "anomalies": [],
+        "warnings": [
+          "##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+        ]
+      },
+      {
+        "id": 119480324298,
+        "name": "Chrome HTTPS authentication and messaging with MariaDB",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39674397798/job/119480324298",
+        "started_at": "2026-10-21T20:54:53Z",
+        "completed_at": "2026-10-21T20:56:04Z",
+        "durationSeconds": 71,
+        "nodeVersion": "24.22.0",
+        "counts": {
+          "tests": 3,
+          "suites": 0,
+          "pass": 3,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "logsRead": true,
+        "logFingerprint": {
+          "algorithm": "SHA-256",
+          "sha256": "b9de5f8e3aae8798a82e92c189f7702c664a94c7c26eacb16a574d56ef4f1900",
+          "bytes": 33422,
+          "format": "complete decoded UTF-8 job log"
+        },
+        "warnings": []
+      },
+      {
+        "id": 119480324538,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39674397798/job/119480324538",
+        "started_at": "2026-10-21T20:54:53Z",
+        "completed_at": "2026-10-21T20:57:33Z",
+        "durationSeconds": 160,
+        "nodeVersion": "24.22.0",
+        "counts": {
+          "tests": 3435,
+          "suites": 0,
+          "pass": 3394,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 41,
+          "todo": 0
+        },
+        "logsRead": true,
+        "logFingerprint": {
+          "algorithm": "SHA-256",
+          "sha256": "fc96ed4c27e92c592f910aa4596a0017df4ff10fa1e7e682961189b61c4d8320",
+          "bytes": 482378,
+          "format": "complete decoded UTF-8 job log"
+        },
+        "syntaxSources": [
+          636,
+          636
+        ],
+        "skippedTypes": {
+          "databaseRequiresDedicatedJobs": 39,
+          "conditionalProcPaths": 2
+        },
+        "warnings": []
+      }
+    ]
+  },
+  "documentationFollowup": {
+    "proofOnly": true,
+    "commitUsesSkipCi": true,
+    "qualifiedFunctionalSourceRetained": true,
+    "exactFollowupHeadRecordedInPullRequest": true
+  }
+}

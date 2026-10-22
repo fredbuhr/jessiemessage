@@ -27,10 +27,14 @@ export function createClientConversationExportHandler({ actor, conversation }, {
       if (asset) { reply(response, method, 200, await readFile(new URL(asset, root)), { "Content-Type": "text/javascript; charset=utf-8" }); return true; }
       if (!sameText(request.headers["x-csrf-token"], authenticated.csrf)) throw httpError(403, "csrf_failed");
       const body = await readJson(request, { maxBytes: 1024 });
-      if (Object.keys(body).length !== 1 || typeof body.includePhotos !== "boolean" || body.includePhotos && !conversationExporter.photos) throw invalid();
+      const videos = conversationExporter.videos === true, keys = videos ? ["includePhotos", "includeVideos"] : ["includePhotos"];
+      if (Object.keys(body).length !== keys.length || keys.some((name) => !Object.hasOwn(body, name))
+        || typeof body.includePhotos !== "boolean" || body.includePhotos && !conversationExporter.photos
+        || videos && typeof body.includeVideos !== "boolean") throw invalid();
       const initial = await conversation(token);
       if (initial.id !== match[1]) throw Object.assign(new Error("Conversation not found"), { code: "CHAT_NOT_FOUND" });
-      await transfer.send(request, response, { token, conversationId: initial.id, expectedClientId: authenticated.user.id, clientName: authenticated.user.pseudonym, includePhotos: body.includePhotos }, async () => {
+      await transfer.send(request, response, { token, conversationId: initial.id, expectedClientId: authenticated.user.id, clientName: authenticated.user.pseudonym,
+        includePhotos: body.includePhotos, ...(videos ? { includeVideos: body.includeVideos } : {}) }, async () => {
         const current = await actor(token);
         if (!current || !sameText(current.user.id, authenticated.user.id) || !sameText(current.csrf, authenticated.csrf)) throw unauthorized();
         if ((await conversation(token)).id !== initial.id) throw new ConversationExportError("changed");

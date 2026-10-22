@@ -201,13 +201,17 @@ export function createCrmHandler(service, { origin, conversationExporter = null 
       } else if (route.kind === "capabilities") {
         query(url, []);
         reply(response, method, 200, { enabled: true, limits: { labelsPerKind: 100, labelsPerClient: 32, noteCharacters: 8000 },
-          ...(conversationExporter ? { conversationExport: { enabled: true, photos: conversationExporter.photos, maxBytes: conversationExporter.maxBytes } } : {}) });
+          ...(conversationExporter ? { conversationExport: { enabled: true, photos: conversationExporter.photos, maxBytes: conversationExporter.maxBytes,
+            ...(conversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
       } else if (route.kind === "export") {
         query(url, []);
-        const body = shape(await readJson(request, { maxBytes: 1024 }), ["includePhotos"]);
-        if (typeof body.includePhotos !== "boolean" || body.includePhotos && !conversationExporter.photos) throw invalid();
+        const videos = conversationExporter.videos === true;
+        const body = shape(await readJson(request, { maxBytes: 1024 }), videos ? ["includePhotos", "includeVideos"] : ["includePhotos"]);
+        if (typeof body.includePhotos !== "boolean" || body.includePhotos && !conversationExporter.photos
+          || videos && typeof body.includeVideos !== "boolean") throw invalid();
         const profile = safeProfile(await service.profile(token, route.conversationId), route.conversationId);
-        await transfer.send(request, response, { token, conversationId: route.conversationId, expectedClientId: profile.client.id, includePhotos: body.includePhotos }, async () => {
+        await transfer.send(request, response, { token, conversationId: route.conversationId, expectedClientId: profile.client.id,
+          includePhotos: body.includePhotos, ...(videos ? { includeVideos: body.includeVideos } : {}) }, async () => {
           const current = safeActor(await service.actor(token));
           if (!sameText(current.id, authenticated.id) || !sameText(current.csrf, authenticated.csrf)) throw Object.assign(new Error("CRM_UNAUTHORIZED"), { code: "CRM_UNAUTHORIZED" });
           const finalProfile = safeProfile(await service.profile(token, route.conversationId), route.conversationId);

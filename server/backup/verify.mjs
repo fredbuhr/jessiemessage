@@ -3,13 +3,14 @@ import { canonicalEmail } from "../auth/config.mjs";
 import { openTotpSecret, tokenDigest } from "../auth/crypto.mjs";
 import { openVerificationPayload } from "../mail/crypto.mjs";
 import { openResetPayload } from "../reset/mail-crypto.mjs";
-import { decryptMessageBody, messageFingerprint, validateMessageBody } from "../chat/crypto.mjs";
+import { decryptMessageBody, messageFingerprint, videoMessageFingerprint, validateMessageBody } from "../chat/crypto.mjs";
 import { openNotes } from "../crm/crypto.mjs";
 import { openPayload, campaignFingerprint, createAudienceDigest, verifyRecipientProof } from "../broadcast/crypto.mjs";
 import { openSubscription, endpointDigest } from "../notifications/crypto.mjs";
 import { openAnnouncement } from "../announcements/crypto.mjs";
 import { openTask } from "../tasks/crypto.mjs";
 import { createBackupCryptoStore } from "./crypto-store.mjs";
+import { MAX_VIDEO_BYTES, VIDEO_BLOCK_BYTES, videoStoredBytes } from "../video/storage.mjs";
 
 const PURPOSES = ["mfa", "mail", "reset", "messages", "crm", "tasks", "broadcast", "announcements", "media"];
 const NOTIFICATION_PURPOSES = ["notifications", "notificationJobs"];
@@ -79,18 +80,24 @@ export async function verifyPhotoNotificationRecoveryCrmBackupData({ pool, stora
 export async function verifyPhotoNotificationRecoveryCrmBroadcastBackupData({ pool, storage, keys, signal, limits = {} } = {}) {
   return verifyData({ pool, storage, keys, signal, limits }, "photos-notify-recovery-crm-broadcast");
 }
+/** Explicit seven-key video profile; each committed original is authenticated
+ * in bounded blocks and compared with its catalogue digest. */
+export async function verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData({ pool, storage, videoStorage, keys, signal, limits = {} } = {}) {
+  return verifyData({ pool, storage, videoStorage, keys, signal, limits }, "photos-notify-recovery-crm-broadcast-video");
+}
 export async function verifyFullNotificationBackupData({ store, storage, keys, signal, limits = {} } = {}) {
   return verifyData({ store, storage, keys, signal, limits }, "full-notify");
 }
 
-async function verifyData({ store, storage, keys, signal, limits = {}, pool } = {}, profile = "full") {
-  const broadcast = profile === "photos-notify-recovery-crm-broadcast";
+async function verifyData({ store, storage, videoStorage, keys, signal, limits = {}, pool } = {}, profile = "full") {
+  const video = profile === "photos-notify-recovery-crm-broadcast-video";
+  const broadcast = video || profile === "photos-notify-recovery-crm-broadcast";
   const textOnly = profile === "text", crm = broadcast || profile === "photos-notify-recovery-crm";
   const limited = crm || ["text", "photos", "photos-notify", "photos-notify-recovery"].includes(profile);
   const notifications = crm || ["photos-notify", "photos-notify-recovery", "full-notify"].includes(profile);
   const recovery = crm || profile === "photos-notify-recovery";
   const report = { complete: true, healthy: false,
-    counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, tasks: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0 }, issues: [] };
+    counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, tasks: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0, ...(video ? { videos: 0, videoFiles: 0, videoBytes: 0 } : {}) }, issues: [] };
   let secrets, currentPurpose = "verification", maxIssues = 100;
   function issue(purpose, code) {
     if (report.issues.length >= maxIssues) stop("issue_limit");
@@ -98,9 +105,10 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
   }
   const checkSignal = () => { if (signal?.aborted) stop("aborted"); };
   try {
-    const keyNames = [...(textOnly ? KEY_NAMES.slice(0, 3) : limited && !crm ? KEY_NAMES.slice(0, 4) : KEY_NAMES), ...(notifications ? ["notificationKey"] : [])];
+    const keyNames = [...(textOnly ? KEY_NAMES.slice(0, 3) : limited && !crm ? KEY_NAMES.slice(0, 4) : KEY_NAMES), ...(notifications ? ["notificationKey"] : []), ...(video ? ["videoKey"] : [])];
     if ((limited ? typeof pool?.getConnection !== "function" || !textOnly && typeof storage?.get !== "function"
       : typeof store?.page !== "function" || typeof storage?.get !== "function")
+      || video && typeof videoStorage?.open !== "function"
       || !keys || typeof keys !== "object" || Array.isArray(keys)
       || Object.keys(keys).length !== keyNames.length || keyNames.some((name) => !Buffer.isBuffer(keys[name]) || keys[name].length !== 32)
       || !limits || typeof limits !== "object" || Array.isArray(limits) || Object.keys(limits).some((name) => !["maxRows", "maxIssues"].includes(name))) stop("invalid_configuration");
@@ -127,7 +135,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
           if (Number(rows[0].present) === 1) stop("inactive_domain_populated");
         }
       } finally { await connection?.release(); }
-      store = createBackupCryptoStore({ pool });
+      store = createBackupCryptoStore({ pool, video });
     }
     const countRow = () => { if (++report.counts.rows > maxRows) { report.counts.rows--; stop("row_limit"); } };
     async function verifyRow(purpose, row) {
@@ -151,10 +159,30 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
           || !binding.senderId.equals(bytes(row.senderRole === "admin" ? row.adminId : row.clientId, 16))) invalid();
         bytes(row.fingerprint, 32);
         if (textOnly && (row.mediaId !== null || row.mediaOwnerId !== null)) throw new RowFailure("inactive_domain_populated");
+        if (video) {
+          if (row.videoId === null) {
+            if ([row.videoConversationId, row.videoOwnerId, row.videoOwnerRole, row.videoState, row.videoLinkedAt, row.videoCreatedAt].some(value => value !== null)) invalid();
+          } else {
+            bytes(row.videoId, 16);
+            if (row.mediaId !== null || row.mediaOwnerId !== null || !bytes(row.videoConversationId, 16).equals(binding.conversationId)
+              || row.videoLinkedAt !== row.createdAt) throw new RowFailure("binding_mismatch");
+            if (!row.deleted && (!bytes(row.videoOwnerId, 16).equals(binding.senderId) || row.videoOwnerRole !== row.senderRole
+              || row.videoState !== "committed" || typeof row.videoCreatedAt !== "string" || row.videoCreatedAt > row.createdAt)) throw new RowFailure("binding_mismatch");
+          }
+        }
         if (row.deleted) { if (row.encrypted !== null) invalid(); return; }
         text(row.encrypted, 22000);
         const body = decryptMessageBody(row.encrypted, secrets.messageKey, binding);
-        if (!equal(messageFingerprint(body, secrets.messageKey, binding), row.fingerprint)) throw new RowFailure("binding_mismatch");
+        const fingerprint = video && row.videoId !== null ? videoMessageFingerprint : messageFingerprint;
+        if (!equal(fingerprint(body, secrets.messageKey, binding), row.fingerprint)) throw new RowFailure("binding_mismatch");
+        if (video && row.videoId !== null) {
+          let payload;
+          try { payload = JSON.parse(body); } catch { throw new RowFailure("binding_mismatch"); }
+          if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.keys(payload).sort().join(",") !== "caption,videoId"
+            || payload.videoId !== row.videoId.toString("hex") || typeof payload.caption !== "string" || payload.caption.length > 1000) throw new RowFailure("binding_mismatch");
+          if (payload.caption !== "") validateMessageBody(payload.caption);
+          return;
+        }
         if (row.mediaId !== null) {
           bytes(row.mediaId, 16);
           if (!bytes(row.mediaOwnerId, 16).equals(binding.senderId)) throw new RowFailure("binding_mismatch");
@@ -189,12 +217,12 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
       if (purpose === "broadcast") {
         const binding = { campaignId: row.id, adminId: bytes(row.adminId, 16) };
         text(row.encrypted, 32000);
-        const payload = openPayload(row.encrypted, secrets.messageKey, binding);
-        if (!equal(campaignFingerprint(payload, secrets.messageKey, binding), row.fingerprint)
+        const payload = openPayload(row.encrypted, secrets.messageKey, binding, { video });
+        if (!equal(campaignFingerprint(payload, secrets.messageKey, binding, { video }), row.fingerprint)
           || typeof row.allowRepeatMedia !== "boolean" || payload.allowRepeatMedia !== row.allowRepeatMedia
           || !(row.mediaId === null || Buffer.isBuffer(row.mediaId) && row.mediaId.length === 16)
           || payload.mediaId !== (row.mediaId?.toString("hex") ?? null)) throw new RowFailure("binding_mismatch");
-        if (payload.version === 2) {
+        if (payload.version >= 2) {
           if (typeof row.recipientPages !== "function") invalid();
           const digest = createAudienceDigest();
           for await (const page of row.recipientPages()) {
@@ -258,6 +286,29 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
           startsAt: row.startsAt, expiresAt: row.expiresAt, sendPrivateMessage: row.sendPrivateMessage });
         return;
       }
+      if (purpose === "videos") {
+        const assetId = row.id, storageKey = bytes(row.storageKey, 32), expectedBytes = integer(row.bytes, MAX_VIDEO_BYTES);
+        bytes(row.ownerId, 16); bytes(row.digest, 32);
+        if (!["admin", "client"].includes(row.ownerRole) || row.state !== "committed" || row.mime !== "video/mp4"
+          || row.storedBytes !== videoStoredBytes(expectedBytes)) invalid();
+        let handle;
+        try {
+          checkSignal(); handle = await videoStorage.open({ assetId, storageKey, bytes: expectedBytes, signal }); checkSignal();
+          if (handle?.bytes !== expectedBytes || handle.storedBytes !== row.storedBytes || typeof handle.stream !== "function" || typeof handle.close !== "function") invalid();
+          const hash = createHash("sha256"); let total = 0;
+          for await (const chunk of handle.stream()) {
+            try {
+              checkSignal();
+              if (!Buffer.isBuffer(chunk) || chunk.length < 1 || chunk.length > VIDEO_BLOCK_BYTES || total + chunk.length > expectedBytes) throw new RowFailure("binding_mismatch");
+              hash.update(chunk); total += chunk.length;
+            } finally { if (Buffer.isBuffer(chunk)) chunk.fill(0); }
+          }
+          checkSignal();
+          if (total !== expectedBytes || !equal(hash.digest(), row.digest)) throw new RowFailure("binding_mismatch");
+          report.counts.videoFiles++; report.counts.videoBytes += total;
+        } finally { await handle?.close(); }
+        return;
+      }
       const assetId = row.id, storageKey = bytes(row.storageKey, 32);
       bytes(row.ownerId, 16); bytes(row.digest, 32);
       if (row.journalState !== "registered" || !bytes(row.journalAssetId, 16).equals(assetId) || !bytes(row.journalOwnerId, 16).equals(row.ownerId)) invalid();
@@ -274,7 +325,7 @@ async function verifyData({ store, storage, keys, signal, limits = {}, pool } = 
         } finally { if (Buffer.isBuffer(plaintext)) plaintext.fill(0); }
       }
     }
-    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, ...(recovery ? ["reset"] : []), ...(crm ? ["crm", "tasks"] : []), ...(broadcast ? ["broadcast", "announcements"] : []), "media", ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
+    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, ...(recovery ? ["reset"] : []), ...(crm ? ["crm", "tasks"] : []), ...(broadcast ? ["broadcast", "announcements"] : []), "media", ...(video ? ["videos"] : []), ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
     for (const purpose of purposes) {
       currentPurpose = purpose;
       let afterId = null;
