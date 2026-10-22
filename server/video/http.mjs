@@ -82,6 +82,7 @@ function mappedError(error) {
     return { status: error.httpStatus, code: error.publicCode };
   }
   if (["CHAT_UNAUTHORIZED", "AUTH_INVALID", "VIDEO_UNAUTHORIZED"].includes(error?.code)) return { status: 401, code: "authentication_required" };
+  if (["VIDEO_READ_ONLY", "CHAT_READ_ONLY"].includes(error?.code) || error?.httpStatus === 403 && error.publicCode === "feature_read_only") return { status: 403, code: "feature_read_only" };
   if (["CHAT_FORBIDDEN", "ACCESS_FORBIDDEN", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES"].includes(error?.code)) return { status: 403, code: "request_rejected" };
   if (["VIDEO_NOT_FOUND", "MEDIA_NOT_FOUND", "CHAT_NOT_FOUND"].includes(error?.code)) return { status: 404, code: "not_found" };
   if (["VIDEO_INPUT", "MEDIA_INPUT", "CHAT_INPUT"].includes(error?.code)) return { status: 400, code: "invalid_request" };
@@ -199,9 +200,9 @@ function milliseconds(value, maximum) {
 }
 
 /** Dormant transport: the caller must supply live authorization and durable admission. */
-export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, readTimeoutMs = 30000, transferTimeoutMs = 300000 } = {}) {
+export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, readTimeoutMs = 30000, transferTimeoutMs = 300000, creationEnabled = service?.creationEnabled ?? true } = {}) {
   const configured = new URL(origin);
-  if (configured.protocol !== "https:" || configured.origin !== origin) throw new TypeError("A canonical HTTPS origin is required.");
+  if (configured.protocol !== "https:" || configured.origin !== origin || typeof creationEnabled !== "boolean") throw new TypeError("A canonical HTTPS origin and creation capability are required.");
   for (const name of ["actor", "admitUpload", "releaseUpload", "upload", "open"]) if (typeof service?.[name] !== "function") throw new TypeError("A private video service is required.");
   const additions = ["send", "openMessage", "gallery"], messaging = additions.every((name) => typeof service[name] === "function");
   if (!messaging && additions.some((name) => service[name] !== undefined)) throw new TypeError("A complete private video message service is required.");
@@ -223,6 +224,7 @@ export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, 
       if (!actor) throw Object.assign(new Error("Authentication required."), { code: "VIDEO_UNAUTHORIZED" });
       safeActor(actor, role);
       if (mutation && !sameText(request.headers["x-csrf-token"], actor.csrf)) throw httpError(403, "csrf_failed");
+      if (mutation && !creationEnabled) throw httpError(403, "feature_read_only");
       if (route.kind === "send") {
         const body = await readJson(request, { maxBytes: 8192 });
         if (Object.keys(body).length !== 3 || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(body, name))

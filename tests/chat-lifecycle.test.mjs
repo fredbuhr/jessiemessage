@@ -1317,3 +1317,37 @@ test("personal replies respect caption limits and are erased on hide, stale netw
   assert.equal(delayed.element("personal-replies-list").children.length, 0); assert.equal(delayed.element("quick-replies-dialog").open, false);
   const client = harness(); await flush(); await client.click("open-quick-replies"); assert.equal(client.calls.some(call => call.path === "/api/admin/quick-replies"), false);
 });
+
+test("compatibility video capabilities preserve existing players and gallery while refusing every new draft/send", async () => {
+  const f = harness({ intercept: path => path === "/api/chat/client/capabilities" ? response(200, { enabled: true, video: { enabled: true, creationEnabled: false, maxBytes: 104857600, mime: "video/mp4" } }) : undefined });
+  await flush(); const state = f.inspect().states.get(f.inspect().selected), item = state.messages.get("1");
+  item.video = { id: id(902), bytes: 23, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + state.id + "/messages/" + item.id + "/content" };
+  await f.hide(); await f.show();
+  assert.equal(f.element("pick-video").hidden, true); assert.equal(f.element("open-video-gallery").hidden, false);
+  const player = f.element("messages").querySelector("video"); assert.ok(player); assert.equal(player.controls, true); assert.equal(player.src, item.video.contentUrl);
+  const uploads = videoTransport(f); f.element("video-file").files = [new Blob(["synthetic"], { type: "video/mp4" })];
+  for (const handler of f.element("video-file").events.get("change")) handler({}); await flush(); assert.equal(state.videoDraft, null);
+  state.videoDraft = { file: new Blob(["synthetic"], { type: "video/mp4" }), ready: true, invalid: false };
+  await f.send("No new video"); assert.equal(uploads.length, 0); assert.equal(state.pending, null); assert.equal(posts(f).length, 0); assert.equal(f.element("send").disabled, true);
+});
+
+test("read-only personal replies still insert saved text but expose no editing or mutation", async () => {
+  const catalogue = { version: "1", replies: [{ id: id(901), title: "Saved title", body: "Saved private reply", language: "fr" }], writable: false };
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(f);
+  const row = personalRow(f, id(901)); assert.ok(row); assert.equal(row.querySelector(".personal-reply-actions").hidden, true);
+  assert.equal(f.element("new-personal-reply").hidden, true); await f.click("new-personal-reply"); assert.equal(f.element("personal-reply-editor").hidden, true);
+  await clickPersonalNode(personalAction(row, "edit")); assert.equal(f.element("personal-reply-editor").hidden, true); assert.equal(f.state.quickReplyWrites, 0);
+  f.element("message-body").value = "Draft"; await clickPersonalNode(row.querySelector(".personal-reply-insert"));
+  assert.equal(f.element("message-body").value, "Draft\nSaved private reply"); assert.equal(f.state.posts, 0); assert.equal(f.state.quickReplyWrites, 0);
+});
+
+test("a read-only capability change preserves an unsaved reply draft for copying or explicit cancellation", async () => {
+  const catalogue = { version: "0", replies: [] }, f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue });
+  await openPersonalReplies(f); await f.click("new-personal-reply"); f.element("personal-reply-title").value = "Unsent title"; f.element("personal-reply-body").value = "Unsent private draft";
+  catalogue.writable = false; await f.click("reload-personal-replies");
+  assert.equal(f.element("personal-reply-editor").hidden, false); assert.equal(f.element("personal-reply-body").value, "Unsent private draft");
+  assert.equal(f.element("personal-reply-body").readOnly, true); assert.equal(f.element("personal-reply-body").disabled, false); assert.equal(f.element("personal-reply-save").hidden, true);
+  assert.match(f.element("personal-replies-status").textContent, /lecture seule.*brouillon est conservé/); assert.equal(f.state.quickReplyWrites, 0);
+  await submitPersonalReply(f, "Unsent title", "Unsent private draft"); assert.equal(f.state.quickReplyWrites, 0);
+  await f.click("personal-reply-cancel"); assert.equal(f.element("personal-reply-body").value, ""); assert.equal(f.element("personal-reply-editor").hidden, true);
+});

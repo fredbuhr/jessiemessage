@@ -38,6 +38,18 @@ test("message functionality is opt-in and incomplete adapters are rejected", asy
   await assert.rejects(createVideoService({ ...f.extendedOptions, chatService: { ...f.extendedOptions.chatService, sendVideo: null } }), code("VIDEO_CONFIG"));
 });
 
+test("compatibility transport reads existing message videos and galleries but cannot send an existing asset", async t => {
+  const f = await fixture(t), service = await createVideoService({ ...f.extendedOptions, creationEnabled: false });
+  const input = { clientMessageId: requestId, videoId: f.saved.id, caption: "Existing private asset" };
+  await assert.rejects(service.send("admin", f.owner.token, conversationId, input), code("VIDEO_READ_ONLY"));
+  assert.equal(f.calls.some(([name]) => name === "send"), false);
+  const opened = await service.openMessage("client", f.recipient.token, conversationId, messageId);
+  assert.equal((await collectVideo(opened.stream({ start: 0, end: 15 }))).length, 16); await opened.close();
+  assert.equal((await service.gallery("client", f.recipient.token, conversationId)).items.length, 1);
+  f.recipient.active = false;
+  await assert.rejects(service.send("client", f.recipient.token, conversationId, input), code("CHAT_UNAUTHORIZED"));
+});
+
 test("message publication validates its exact payload and preserves chat conflicts and rate limits", async (t) => {
   const f = await fixture(t, { uploaded: false }), input = { clientMessageId: requestId, videoId: "a".repeat(32), caption: "Texte 👋 <b>littéral</b>" };
   const result = await f.extended.send("admin", f.owner.token, conversationId, input);

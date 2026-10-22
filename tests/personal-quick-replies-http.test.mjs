@@ -7,10 +7,10 @@ import { AUTH_HEADERS } from "../server/auth/http.mjs";
 const origin = "https://jessiemessage.example", token = Buffer.alloc(32, 1).toString("base64url"), csrf = Buffer.alloc(32, 2).toString("base64url");
 const replies = [{ id: "b".repeat(32), title: "Saved", body: "Synthetic personal reply", language: "en" }], input = { expectedVersion: "0", replies };
 const headers = { Cookie: `__Host-jessie_session=${token}`, Origin: origin, "X-CSRF-Token": csrf, "Content-Type": "application/json" };
-async function fixture(t, overrides = {}) {
+async function fixture(t, overrides = {}, options = {}) {
   const calls = [], service = { async actor(value) { calls.push("actor"); assert.equal(value, token); return { user: { id: "a".repeat(32), role: "admin" }, csrf }; },
     async read() { calls.push("read"); return { version: "0", replies: [] }; }, async save(value, body) { calls.push("save"); assert.equal(value, token); assert.deepEqual(body, input); return { version: "1", replies }; }, close() { calls.push("close"); }, ...overrides };
-  const handler = createQuickRepliesHandler(service, { origin }), server = createServer(async (request, response) => { if (!await handler(request, response)) { response.writeHead(404); response.end(); } });
+  const handler = createQuickRepliesHandler(service, { origin, ...options }), server = createServer(async (request, response) => { if (!await handler(request, response)) { response.writeHead(404); response.end(); } });
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
   t.after(async () => { handler.close(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
   return { base: `http://127.0.0.1:${server.address().port}`, calls, service, handler };
@@ -52,4 +52,15 @@ test("conflicts, busy stores and failures are sanitized and unsupported methods 
   const count = f.calls.length;
   for (const method of ["PUT", "DELETE", "HEAD"]) { const result = await fetch(url, { method, headers }); assert.equal(result.status, 405); assert.equal(result.headers.get("allow"), "GET, POST"); }
   assert.equal(f.calls.length, count);
+});
+
+test("compatibility replies GET is readable and POST checks credentials before a body-free read-only refusal", async t => {
+  const f = await fixture(t, {}, { writable: false }), url = f.base + "/api/admin/quick-replies";
+  const read = await fetch(url, { headers }); assert.equal(read.status, 200); assert.deepEqual(await read.json(), { version: "0", replies: [], writable: false });
+  const refused = await fetch(url, { method: "POST", headers, body: "not JSON" });
+  assert.equal(refused.status, 403); assert.deepEqual(await refused.json(), { error: "feature_read_only" });
+  const csrf = await fetch(url, { method: "POST", headers: { ...headers, "X-CSRF-Token": "bad" }, body: "not JSON" });
+  assert.equal(csrf.status, 403); assert.deepEqual(await csrf.json(), { error: "csrf_failed" });
+  assert.equal((await fetch(url, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json" }, body: "not JSON" })).status, 401);
+  assert.equal(f.calls.includes("save"), false);
 });

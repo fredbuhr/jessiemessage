@@ -207,8 +207,8 @@ export async function assertBroadcastSchema(pool, options = {}) {
   });
 }
 
-export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, videoEnabled = false, key, videoStore, videoMessageStore, clock } = {}) {
-  if (!pool || typeof pool.getConnection !== "function" || typeof mediaEnabled !== "boolean" || typeof videoEnabled !== "boolean" || videoEnabled && (!Buffer.isBuffer(key) || key.length !== 32 || typeof videoStore?.getCommittedAsset !== "function" || typeof videoMessageStore?.appendBroadcastVideo !== "function") || !chatStore
+export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, videoEnabled = false, videoCreationEnabled = true, key, videoStore, videoMessageStore, clock } = {}) {
+  if (!pool || typeof pool.getConnection !== "function" || typeof mediaEnabled !== "boolean" || typeof videoEnabled !== "boolean" || typeof videoCreationEnabled !== "boolean" || videoEnabled && (!Buffer.isBuffer(key) || key.length !== 32 || typeof videoStore?.getCommittedAsset !== "function" || typeof videoMessageStore?.appendBroadcastVideo !== "function") || !chatStore
     || ["withActor", "withBroadcastDelivery"].some((name) => typeof chatStore[name] !== "function")) input();
   if (videoEnabled) key = Buffer.from(key);
   const readTime = createSessionClock(clock);
@@ -422,7 +422,8 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, vi
   // Trusted server primitive: the caller owns the existing admin transaction.
   // Announcement creation uses it so the banner and queue cannot commit apart.
   async function createAudienceInTransaction(connection, context, { audience, campaign, snapshot, verifyPreview,
-    availableAt = context.now, expiresAt = context.now + 7 * 86400000 }) {
+    availableAt = context.now, expiresAt = context.now + 7 * 86400000, allowVideoCreation = true }) {
+    if (typeof allowVideoCreation !== "boolean") input();
     audience = scope(audience); bytes(campaign?.id); bytes(campaign?.clientCampaignId); bytes(campaign?.requestFingerprint, 32);
     if (campaign.mediaId !== null) bytes(campaign.mediaId);
     const videoId = campaign.videoId ?? null;
@@ -445,6 +446,9 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, vi
       if (!timingSafeEqual(previous.request_fingerprint, campaign.requestFingerprint)) fail("BROADCAST_CONFLICT");
       return { campaign: await rawCampaign(connection, previous), duplicate: true };
     }
+    // A compatibility runtime may acknowledge the exact recorded request, but
+    // never create a new video campaign. Existing workers use separate paths.
+    if (videoId !== null && (!videoCreationEnabled || !allowVideoCreation)) fail("BROADCAST_READ_ONLY");
     try { verifyPreview(currentTime(context.now)); } catch { fail("BROADCAST_CONFLICT"); }
     if (snapshot.count < 1) fail("BROADCAST_RECIPIENTS");
     if (!campaign.allowRepeatMedia && snapshot.repeatCount > 0) fail("BROADCAST_REPEAT");

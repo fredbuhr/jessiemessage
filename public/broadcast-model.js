@@ -31,11 +31,12 @@ export function acceptBroadcastSession(state, ticket, input, now = Date.now()) {
   if (!id(user?.id) || user.role !== "admin" || !label(user.pseudonym) || typeof input.csrf !== "string" || input.csrf.length !== 43 || !TOKEN.test(input.csrf)
     || !date(input.expiresAt) || input.expiresAt <= now || typeof input.mediaEnabled !== "boolean"
     || input.videoEnabled !== undefined && typeof input.videoEnabled !== "boolean"
+    || input.videoCreationEnabled !== undefined && typeof input.videoCreationEnabled !== "boolean"
     || input.videoEnabled === true && input.largeAudiencesEnabled !== true
     || input.largeAudiencesEnabled !== undefined && typeof input.largeAudiencesEnabled !== "boolean") { clearBroadcast(state); return false; }
   const largeAudiencesEnabled = input.largeAudiencesEnabled === true;
-  if (state.session && (state.session.id !== user.id || state.session.csrf !== input.csrf || state.session.largeAudiencesEnabled !== largeAudiencesEnabled || (state.session.videoEnabled === true) !== (input.videoEnabled === true))) { clearBroadcast(state, { visible: true }); return false; }
-  state.session = { id: user.id, csrf: input.csrf, expiresAt: input.expiresAt, mediaEnabled: input.mediaEnabled, largeAudiencesEnabled, ...(input.videoEnabled === true ? { videoEnabled: true } : {}) }; return true;
+  if (state.session && (state.session.id !== user.id || state.session.csrf !== input.csrf || state.session.largeAudiencesEnabled !== largeAudiencesEnabled || (state.session.videoEnabled === true) !== (input.videoEnabled === true) || (state.session.videoCreationEnabled !== false) !== (input.videoCreationEnabled !== false))) { clearBroadcast(state, { visible: true }); return false; }
+  state.session = { id: user.id, csrf: input.csrf, expiresAt: input.expiresAt, mediaEnabled: input.mediaEnabled, largeAudiencesEnabled, ...(input.videoEnabled === true ? { videoEnabled: true, ...(input.videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) }; return true;
 }
 export function resetContacts(state, query = "limit=50") { state.filterEpoch += 1; state.contactQuery = query; state.contacts.clear(); return state.filterEpoch; }
 export function contactPageQuery(state, afterId = null) {
@@ -66,7 +67,7 @@ export function updateComposition(state, input) {
   if (state.pending) return false;
   const previousMedia = state.draft.mediaId, previousVideo = state.draft.videoId ?? null;
   if (Object.hasOwn(input, "videoId")) {
-    if (!state.session?.videoEnabled || input.videoId !== null && !id(input.videoId)) return false;
+    if (!state.session?.videoEnabled || input.videoId !== null && (!id(input.videoId) || state.session.videoCreationEnabled === false)) return false;
     state.draft.videoId = input.videoId; if (input.videoId !== null) state.draft.mediaId = null;
   }
   if (input.mediaId !== undefined && input.mediaId !== null) state.draft.videoId = null;
@@ -120,7 +121,7 @@ export function acceptPreview(state, ticket, input) {
 export function compositionValid(state) {
   const draft = state.draft;
   if (!title(draft.title) || !body(draft.body, draft.videoId ?? draft.mediaId)
-    || draft.mediaId !== null && (!id(draft.mediaId) || !state.session?.mediaEnabled) || draft.videoId != null && (!id(draft.videoId) || !state.session?.videoEnabled || !state.session?.largeAudiencesEnabled || draft.mediaId !== null)
+    || draft.mediaId !== null && (!id(draft.mediaId) || !state.session?.mediaEnabled) || draft.videoId != null && (!id(draft.videoId) || !state.session?.videoEnabled || state.session.videoCreationEnabled === false || !state.session?.largeAudiencesEnabled || draft.mediaId !== null)
     || typeof draft.allowRepeatMedia !== "boolean") return false;
   return new TextEncoder().encode(draft.body).length <= (draft.mediaId === null && !draft.videoId ? 16384 : 4096);
 }

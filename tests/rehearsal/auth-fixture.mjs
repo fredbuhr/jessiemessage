@@ -26,6 +26,17 @@ import { loadVideoMigrations } from "../../server/video/migrations.mjs";
 import { createVideoStorage } from "../../server/video/storage.mjs";
 import { createVideoStore } from "../../server/video/store.mjs";
 import { createChatStore } from "../../server/chat/store.mjs";
+import { createAuthService } from "../../server/auth/service.mjs";
+import { createAccessStore } from "../../server/access/store.mjs";
+import { createAccessService } from "../../server/access/service.mjs";
+import { createChatService } from "../../server/chat/service.mjs";
+import { createVideoMessageStore } from "../../server/video/message-store.mjs";
+import { createVideoService } from "../../server/video/service.mjs";
+import { createBroadcastStore } from "../../server/broadcast/store.mjs";
+import { createBroadcastService } from "../../server/broadcast/service.mjs";
+import { createBroadcastWorker } from "../../server/broadcast/worker.mjs";
+import { createQuickRepliesFiles } from "../../server/quick-replies/files.mjs";
+import { VIDEO_CREATION_ENABLED } from "../../server/release-features.mjs";
 
 const run = promisify(execFile);
 const LOOPBACK = new Set(["127.0.0.1", "::1", "localhost"]);
@@ -123,6 +134,61 @@ export async function cleanupAuthenticationSchema(connection, { database, lockNa
   }
 }
 
+/** Seed a former writable release through the real direct services before the
+ * compatibility application exists. These sessions are revoked before boot;
+ * no production option or feature gate is overridden. */
+async function seedVideoCompatibility({ pool, connection, adminId, clientId, key, keys, origin, root, operationsRoot }) {
+  const now = Date.now(), created = sqlDate(now), conversation = await connection.query("SELECT id FROM conversations WHERE admin_id=? AND client_id=?", [adminId, clientId]);
+  if (conversation.length !== 1) fail();
+  const conversationId = conversation[0].id.toString("hex"), owners = [];
+  for (const [role, userId] of [["admin", adminId], ["client", clientId]]) {
+    const owner = { role, id: userId, sessionId: randomBytes(16), token: randomBytes(32).toString("base64url") };
+    owners.push(owner);
+    await connection.query("INSERT INTO sessions(id,user_id,token_hash,created_at,expires_at) VALUES(?,?,?,?,?)", [owner.sessionId, userId, tokenDigest(owner.token), created, sqlDate(now + 3600000)]);
+    await connection.query(role === "admin" ? "INSERT INTO auth_session_state(session_id,last_seen_at,mfa_verified_at,mfa_version) VALUES(?,?,?,1)"
+      : "INSERT INTO client_session_state(session_id,last_seen_at,credential_version) VALUES(?,?,1)", role === "admin" ? [owner.sessionId, created, created] : [owner.sessionId, created]);
+  }
+  try {
+    const authStore = createAuthStore(pool), authService = await createAuthService({ store: authStore, totpKey: key });
+    const accessService = await createAccessService({ store: createAccessStore(pool), authStore, authService, totpKey: key, mailKey: keys.MAIL, origin });
+    let messages;
+    const chatStore = createChatStore(pool, { decorateMessages: (...args) => messages.decorateMessages(...args) });
+    const storage = await createVideoStorage({ root, key: keys.VIDEO }), videoStore = createVideoStore({ pool, chatStore,
+      capacity: { ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await storage.fingerprint() } });
+    messages = createVideoMessageStore({ pool, chatStore, videoStore });
+    const chatService = await createChatService({ store: chatStore, authStore, authService, accessService, key: keys.MESSAGE, videoMessages: messages });
+    const videos = await createVideoService({ store: videoStore, chatService, authStore, storage, key: keys.VIDEO, messages, minimumFreeBytes: 0 });
+    const media = Buffer.from((await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8")).trim(), "base64");
+    const seeded = [];
+    try {
+      for (const owner of owners) {
+        const caption = `Synthetic retained ${owner.role} video`, ticket = await videos.admitUpload(owner.role, owner.token, { bytes: media.length, mime: "video/mp4" });
+        const asset = await videos.upload(owner.role, owner.token, ticket, (async function* () { yield Buffer.from(media); })());
+        const result = await videos.send(owner.role, owner.token, conversationId, { clientMessageId: randomBytes(16).toString("hex"), videoId: asset.id, caption });
+        seeded.push({ role: owner.role, asset, message: result.message, caption });
+      }
+    } finally { media.fill(0); }
+    const replies = createQuickRepliesFiles(operationsRoot, keys.CRM, adminId.toString("hex")); let catalogue;
+    try { catalogue = await replies.save([{ id: "c".repeat(32), title: "Retained personal reply", body: "Private retained <phrase> 💛", language: "fr" }], 0, async () => {}); }
+    finally { replies.close(); }
+    const broadcastStore = createBroadcastStore(pool, { chatStore, videoStore, videoMessageStore: messages, key: keys.MESSAGE, videoEnabled: true });
+    const broadcasts = await createBroadcastService({ store: broadcastStore, authStore, authService, key: keys.MESSAGE, videoEnabled: true, largeAudiencesEnabled: true });
+    const admin = owners.find(value => value.role === "admin"), videoId = seeded.find(value => value.role === "admin").asset.id,
+      audience = { mode: "selected", conversationIds: [conversationId] };
+    const preview = await broadcasts.preview(admin.token, { audience, mediaId: null, videoId });
+    const campaignInput = { clientCampaignId: randomBytes(16).toString("hex"), title: "Retained video campaign", body: "Synthetic pending video campaign", mediaId: null,
+      videoId, allowRepeatMedia: true, audience, previewToken: preview.previewToken };
+    const campaign = await broadcasts.create(admin.token, campaignInput);
+    if (campaign.campaign.formatVersion !== 3 || campaign.duplicate !== false) fail();
+    return Object.freeze({ conversationId, seeded, campaignInput, campaignId: campaign.campaign.id,
+      replies: { version: String(catalogue.revision), replies: catalogue.replies } });
+  } finally {
+    const revoked = await connection.query("UPDATE sessions SET revoked_at=? WHERE id IN (?,?) AND revoked_at IS NULL", [sqlDate(Date.now()), ...owners.map(owner => owner.sessionId)]);
+    if (Number(revoked.affectedRows) !== 2) fail();
+    for (const owner of owners) owner.token = "";
+  }
+}
+
 /**
  * Real configured application + runtime DML account, fronted by test-only TLS.
  * Browser callers must set acceptInsecureCerts on their disposable WebDriver
@@ -135,7 +201,7 @@ export async function createAuthenticationFixture({ messaging = false, video = f
   const env = Object.fromEntries(DATABASE_KEYS.map((key) => [key, process.env[key]]));
   env.JESSIEMESSAGE_DB_HOST = confirmed.host;
   let connection, configured, shutdown, proxy, certificateDirectory, stopping, bootstrapPool, mediaRoot, mediaIdentity,
-    videoRoot, videoIdentity, operationsRoot, operationsIdentity;
+    videoRoot, videoIdentity, operationsRoot, operationsIdentity, compatibilityData, compatibilityWorker;
   let ownsSchema = false, lockHeld = false, targetPort = null, accepting = false;
   let allowedTables = [];
   const upstreams = new Set(), sockets = new Set();
@@ -165,6 +231,7 @@ export async function createAuthenticationFixture({ messaging = false, video = f
         for (const socket of sockets) socket.destroy();
         await closed;
       } catch { failed = true; }
+      try { await compatibilityWorker?.stop(); } catch { failed = true; applicationClosed = false; }
       try {
         if (shutdown) {
           const result = await shutdown();
@@ -340,15 +407,8 @@ export async function createAuthenticationFixture({ messaging = false, video = f
       JESSIEMESSAGE_VIDEO_TOTAL_BYTES: String(64 * 1024 * 1024), JESSIEMESSAGE_VIDEO_MINIMUM_FREE_BYTES: "0",
       JESSIEMESSAGE_SMTP_USER: "contact@jessiemessage.com", JESSIEMESSAGE_SMTP_FROM: "contact@jessiemessage.com",
     });
-    configured = await createConfiguredServer(runtimeEnvironment, video ? { requestOrigin: origin, deviceTransition: true,
-      recovery: true, crm: true, broadcast: true, accountClosures: true, backupDirectory: operationsRoot, video: true } : {});
-    shutdown = createShutdown(configured);
-    if (!configured.pool || !messaging && configured.mailWorker !== null) fail();
-    // Access requires valid mail configuration. Stop its real worker owner
-    // before listen; the once-listening callback sees stopping and starts no
-    // SMTP, push, broadcast or monitoring producer. No endpoint is contacted.
-    if (messaging) { if (typeof configured.mailWorker?.stop !== "function") fail(); await configured.mailWorker.stop(); }
-    await createAuthStore(configured.pool).initializeAdmin({ id: adminId, email, pseudonym: "Synthetic browser administrator",
+    bootstrapPool = await createRuntimePool(env);
+    await createAuthStore(bootstrapPool).initializeAdmin({ id: adminId, email, pseudonym: "Synthetic browser administrator",
       passwordHash: await hashPassword(password), secretEncrypted: sealTotpSecret(secret, key, adminId),
       recoveryDigests: recoveryCodes.map(recoveryCodeDigest), now: Date.now() });
     if (messaging) {
@@ -366,6 +426,23 @@ export async function createAuthenticationFixture({ messaging = false, video = f
         await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [randomBytes(16), clientId, adminId, at]);
         await connection.commit();
       } catch (error) { await connection.rollback(); throw error; }
+    }
+    if (video && !VIDEO_CREATION_ENABLED) compatibilityData = await seedVideoCompatibility({ pool: bootstrapPool, connection, adminId, clientId,
+      key, keys: domainKeys, origin, root: videoRoot, operationsRoot });
+    await bootstrapPool.end(); bootstrapPool = null;
+    configured = await createConfiguredServer(runtimeEnvironment, video ? { requestOrigin: origin, deviceTransition: true,
+      recovery: true, crm: true, broadcast: true, accountClosures: true, backupDirectory: operationsRoot, video: true } : {});
+    shutdown = createShutdown(configured);
+    if (!configured.pool || !messaging && configured.mailWorker !== null) fail();
+    // Stop the configured owner before listen: no SMTP, push, broadcast or
+    // monitoring producer contacts any external endpoint in this fixture.
+    if (messaging) { if (typeof configured.mailWorker?.stop !== "function") fail(); await configured.mailWorker.stop(); }
+    if (compatibilityData) {
+      const chatStore = createChatStore(configured.pool), storage = await createVideoStorage({ root: videoRoot, key: domainKeys.VIDEO }),
+        videoStore = createVideoStore({ pool: configured.pool, chatStore, capacity: { ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await storage.fingerprint() } }),
+        messages = createVideoMessageStore({ pool: configured.pool, chatStore, videoStore });
+      compatibilityWorker = createBroadcastWorker({ store: createBroadcastStore(configured.pool, { chatStore, videoStore, videoMessageStore: messages,
+        key: domainKeys.MESSAGE, videoEnabled: true, videoCreationEnabled: false }), authStore: createAuthStore(configured.pool), key: domainKeys.MESSAGE, videoEnabled: true, batchSize: 1 });
     }
     targetPort = await listen(configured.server);
     accepting = true;
@@ -419,6 +496,17 @@ export async function createAuthenticationFixture({ messaging = false, video = f
     }
     return Object.freeze({ origin, email, password, currentTotp, isTotpFresh, invalidTotp, recoveryCodes: Object.freeze([...recoveryCodes]), expireSession, stop,
       ...(video ? { primaryFixturePort: port, videoAttestation, videoFileCount: async () => (await readdir(videoRoot)).filter(name => VIDEO_FILE.test(name)).length } : {}),
+      ...(compatibilityData ? { compatibilityData, async runExistingVideoCampaign() {
+        if (stopping || !compatibilityWorker) fail();
+        const result = await compatibilityWorker.runOnce();
+        if (result.delivered !== 1 || result.deferred !== 0 || result.failed !== 0) fail();
+        return result;
+      }, async compatibilityState() {
+        if (stopping) fail();
+        const rows = await connection.query("SELECT (SELECT COUNT(*) FROM video_assets) AS videos,(SELECT COUNT(*) FROM message_video) AS links,(SELECT COUNT(*) FROM broadcast_campaigns) AS campaigns");
+        return { videos: Number(rows[0].videos), links: Number(rows[0].links), campaigns: Number(rows[0].campaigns),
+          repliesSha256: createHash("sha256").update(await readFile(join(operationsRoot, `quick-replies-${adminId.toString("hex")}.json`))).digest("hex") };
+      } } : {}),
       ...(messaging ? { client, notificationSubscription, notificationReference, sessionRemainsActive, outsideOrigin: outside,
         externalApiNavigation: (role, kind) => { if (!Object.hasOwn(navigationPaths, role) || !Object.hasOwn(navigationPaths[role], kind)) fail(); return `${outside}/c01-navigation?role=${role}&kind=${kind}`; },
         sessionNavigations: () => navigationObservations.map(value => ({ ...value })) } : {}) });

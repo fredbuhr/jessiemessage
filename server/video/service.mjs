@@ -13,7 +13,7 @@ export class VideoError extends Error {
 const fail = (code) => { throw new VideoError(code); };
 const PREFIX_BYTES = 65536, ADMISSION_MS = 305000;
 const permitted = new Set(["VIDEO_INPUT", "VIDEO_FORMAT", "VIDEO_BUSY", "VIDEO_NOT_FOUND", "VIDEO_IN_USE", "VIDEO_RATE_LIMIT", "VIDEO_STORAGE_LIMIT",
-  "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT",
+  "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT", "CHAT_READ_ONLY",
   "ACCESS_FORBIDDEN", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "AUTH_BUSY"]);
 let activeUploads = 0, activeReads = 0;
 const uploadingOwners = new Set(), readingOwners = new Map();
@@ -97,8 +97,8 @@ async function inspectSource(source, bytes, signal) {
  * actor/owner ACL and durable capacity in each transaction. No in-memory or SQL
  * production adapter is provided by this lot, and no route is registered.
  */
-export async function createVideoService({ store, chatService, authStore, storage, key, messages = null, minimumFreeBytes = 536870912, clock = Date.now } = {}) {
-  if (!sized(key, 32) || typeof clock !== "function" || !Number.isSafeInteger(minimumFreeBytes) || minimumFreeBytes < 0) fail("VIDEO_CONFIG");
+export async function createVideoService({ store, chatService, authStore, storage, key, messages = null, minimumFreeBytes = 536870912, clock = Date.now, creationEnabled = true } = {}) {
+  if (!sized(key, 32) || typeof clock !== "function" || !Number.isSafeInteger(minimumFreeBytes) || minimumFreeBytes < 0 || typeof creationEnabled !== "boolean") fail("VIDEO_CONFIG");
   for (const method of ["reserve", "commit", "getOwned", "release"]) if (typeof store?.[method] !== "function") fail("VIDEO_CONFIG");
   for (const method of ["put", "open", "availableSpace"]) if (typeof storage?.[method] !== "function") fail("VIDEO_CONFIG");
   if (typeof chatService?.actor !== "function" || typeof authStore?.consumeRateLimit !== "function") fail("VIDEO_CONFIG");
@@ -197,10 +197,13 @@ export async function createVideoService({ store, chatService, authStore, storag
     } catch (error) { try { await handle?.close?.(); } finally { releaseSlot(); } throw error; }
   }
   return Object.freeze({
+    creationEnabled,
     actor: (role, raw) => guarded(async () => (await context(role, raw)).actor),
     admitUpload: (role, raw, { bytes, mime } = {}) => guarded(async () => {
       if (!validBytes(bytes) || mime !== "video/mp4") fail("VIDEO_INPUT");
-      const { actor, request } = await context(role, raw), releaseSlot = uploadSlot(actor.user.id);
+      const { actor, request } = await context(role, raw);
+      if (!creationEnabled) fail("VIDEO_READ_ONLY");
+      const releaseSlot = uploadSlot(actor.user.id);
       try {
         await budget(actor.user.id, "upload", request.now);
         const asset = { id: randomBytes(16), storageKey: randomBytes(32), bytes, storedBytes: videoStoredBytes(bytes), mime };
@@ -217,6 +220,7 @@ export async function createVideoService({ store, chatService, authStore, storag
     }),
     releaseUpload: (ticket) => guarded(() => releaseUpload(ticket)),
     upload: (role, raw, ticket, source, { signal } = {}) => guarded(async () => {
+      if (!creationEnabled) { await context(role, raw); fail("VIDEO_READ_ONLY"); }
       const record = tickets.get(ticket);
       if (!record || record.state !== "waiting") fail("VIDEO_INPUT");
       let digest; try { digest = tokenDigest(raw); } catch { fail("CHAT_UNAUTHORIZED"); }
@@ -283,6 +287,7 @@ export async function createVideoService({ store, chatService, authStore, storag
     }),
     ...(messages === null ? {} : {
       send: (role, raw, conversationId, input) => guarded(async () => {
+        if (!creationEnabled) { await context(role, raw); fail("VIDEO_READ_ONLY"); }
         if (!["admin", "client"].includes(role)) fail("VIDEO_INPUT");
         identifier(conversationId);
         if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).length !== 3

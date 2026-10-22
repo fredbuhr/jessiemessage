@@ -120,8 +120,9 @@ async function startFixtureServer() {
       }
       if (url.pathname === "/api/admin/quick-replies") {
         if (!fixture.signedIn) { sendJson(401, { error: "authentication_required" }); return; }
-        if (request.method === "GET") { fixture.quickReplyReads += 1; sendJson(200, fixture.quickReplies); return; }
+        if (request.method === "GET") { fixture.quickReplyReads += 1; sendJson(200, { ...fixture.quickReplies, ...(fixture.quickRepliesWritable === false ? { writable: false } : {}) }); return; }
         if (request.method === "POST") {
+          if (fixture.quickRepliesWritable === false) { sendJson(403, { error: "feature_read_only" }); return; }
           let raw = ""; for await (const chunk of request) { raw += chunk; if (raw.length > 65536) throw new Error("oversized_fixture_quick_replies"); }
           const command = JSON.parse(raw); fixture.quickReplyRequests.push(command);
           assert.equal(request.headers["x-csrf-token"], fixture.csrf ?? "A".repeat(43));
@@ -202,6 +203,7 @@ async function startFixtureServer() {
         if (request.method === "GET" && suffix === "/capabilities") {
           if (feature === "media" && fixture.mediaDisabled) { sendJson(404, { error: "not_found" }); return; }
           sendJson(200, { enabled: true,
+            ...(fixture.videoReadOnly && feature === "chat" ? { video: { enabled: true, creationEnabled: false, maxBytes: 104857600, mime: "video/mp4" } } : {}),
             ...(fixture.profileEnabled && feature === "chat" ? { profile: { enabled: true, avatars: fixture.profileAvatarsEnabled } } : {}),
             ...(fixture.clientExportEnabled && feature === "chat" && role === "client" ? { conversationExport: { enabled: true, photos: true, maxBytes: 32 * 1024 * 1024 } } : {}) }); return;
         }
@@ -1209,5 +1211,21 @@ test("Chrome personal reply lost acknowledgement never retries automatically and
     await page.key("\uE00C"); assert.equal(await page.execute("return document.querySelector('#personal-reply-body').value"), "");
     const reads = fixture.quickReplyReads; await loaded(page, "/messages"); assert.equal(await page.execute("return document.querySelector('#open-quick-replies').hidden"), true);
     assert.equal(fixture.quickReplyReads, reads); await noJavascriptErrors(page);
+  } finally { await page.close(); }
+});
+
+test("Chrome compatibility hides new video and reply editing while preserving gallery access and saved reply insertion", { timeout: 35000 }, async () => {
+  resetFixture(); fixture.quickRepliesWritable = false; fixture.videoReadOnly = true;
+  fixture.quickReplies = { version: "1", replies: [{ id: id(991), title: "Saved private reply", body: "Existing personal text", language: "fr" }] };
+  const page = await browser(375);
+  try {
+    await loaded(page, "/admin/messages"); await page.click(".contact");
+    await waitUntil(() => page.execute("return !document.querySelector('#open-quick-replies').hidden&&!document.querySelector('#open-quick-replies').disabled"), "compatibility conversation ready");
+    assert.equal(await page.execute("return document.querySelector('#pick-video').hidden && !document.querySelector('#open-video-gallery').hidden"), true);
+    await page.type("#message-body", "Draft"); await clickComposerAction(page, "#open-quick-replies");
+    await waitUntil(() => page.execute("return document.querySelectorAll('[data-personal-quick-reply]').length===1"), "saved read-only replies loaded");
+    assert.equal(await page.execute("return document.querySelector('#new-personal-reply').hidden&&document.querySelector('#personal-reply-editor').hidden&&document.querySelector('.personal-reply-actions:not([hidden]) [data-personal-action]')===null"), true);
+    await page.click('[data-personal-quick-reply]'); assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Draft\nExisting personal text");
+    assert.equal(fixture.quickReplyRequests.length, 0); assert.equal(fixture.sent.length, 0); await noJavascriptErrors(page);
   } finally { await page.close(); }
 });

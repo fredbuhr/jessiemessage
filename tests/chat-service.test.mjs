@@ -10,6 +10,17 @@ const adminId = Buffer.alloc(16, 0x11), clientId = Buffer.alloc(16, 0x22), conve
 const adminHex = adminId.toString("hex"), clientHex = clientId.toString("hex"), conversationHex = conversationId.toString("hex");
 const maximumSequence = "18446744073709551615";
 const hasCode = (code) => (error) => error instanceof ChatError && error.code === code;
+
+test("read-only video chat still sends ordinary text but refuses its lower-level video writer", async () => {
+  const f = await fixture(); let videoWrites = 0;
+  const service = await createChatService({ ...f.options, videoCreationEnabled: false, videoMessages: { async sendMessage() { videoWrites++; assert.fail("Video writer is closed"); } } });
+  await assert.rejects(service.sendVideo("admin", f.token, conversationHex, { clientMessageId: "4".repeat(32), videoId: "5".repeat(32), caption: "Existing asset" }), hasCode("CHAT_READ_ONLY"));
+  assert.equal(videoWrites, 0);
+  const ordinary = await service.send("admin", f.token, conversationHex, { clientMessageId: "6".repeat(32), body: "Still an ordinary text message" });
+  assert.equal(ordinary.message.body, "Still an ordinary text message");
+  f.state.admin = false;
+  await assert.rejects(service.sendVideo("admin", f.token, conversationHex, { clientMessageId: "4".repeat(32), videoId: "5".repeat(32), caption: "Existing asset" }), hasCode("CHAT_UNAUTHORIZED"));
+});
 const conversation = () => ({
   id: conversationId, clientId, clientPseudonym: "Synthetic client", peerPseudonym: "Jessie",
   createdAt: now - 20000, closedAt: null, lastActivityAt: now,

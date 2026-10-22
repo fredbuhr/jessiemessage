@@ -49,6 +49,8 @@ globalThis.JessieI18n?.register({
   "Cet emoji ne peut pas être ajouté. Raccourcis le brouillon puis réessaie.": "This emoji cannot be added. Shorten your draft and try again.",
   "Réponses rapides": "Quick replies",
   "Mes réponses": "My replies",
+  "Les réponses sont en lecture seule. Ton brouillon est conservé.": "Replies are read-only. Your draft is preserved.",
+  "Les réponses personnelles sont en lecture seule.": "Personal replies are read-only.",
   "Tes réponses restent privées et sont disponibles dans tes sessions administrateur.": "Your replies stay private and are available in your administrator sessions.",
   "Nouvelle réponse": "New reply",
   "Recharger les réponses enregistrées": "Reload saved replies",

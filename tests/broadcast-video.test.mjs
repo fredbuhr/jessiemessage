@@ -87,6 +87,52 @@ test("service video confirmation produces a compact authenticated queue command 
   await assert.rejects(disabled.preview(token, input), code("BROADCAST_INPUT"));
 });
 
+test("compatibility campaign creation rejects new videos after idempotency lookup and retains exact recorded acknowledgements", async () => {
+  const key = randomBytes(32), queries = [], fingerprint = campaignFingerprint(payload(), key, binding, { video: true });
+  let previous = null;
+  const connection = { async query(sql) {
+    queries.push(sql);
+    if (sql.startsWith("SELECT * FROM broadcast_campaigns WHERE admin_id")) return previous ? [previous] : [];
+    if (sql.startsWith("SELECT state, COUNT(*)")) return [{ state: "pending", value: 1 }];
+    assert.fail("A compatibility creator must not insert or walk an audience: " + sql);
+  } };
+  const store = createBroadcastStore({ getConnection() { assert.fail("Use the supplied authorization transaction"); } }, {
+    key, videoEnabled: true, videoCreationEnabled: false, clock: () => now,
+    chatStore: { withActor() {}, withBroadcastDelivery() {} }, videoStore: { getCommittedAsset() {} }, videoMessageStore: { appendBroadcastVideo() {} },
+  });
+  const command = { audience, snapshot: { count: 1, digest: digest(), repeatCount: 0 }, verifyPreview() { assert.fail("New video confirmation is closed before proof freshness or writes"); },
+    campaign: { id: campaignId, clientCampaignId: id(9), requestFingerprint: fingerprint, payloadEncrypted: sealPayload(payload(), key, binding, { video: true }), mediaId: null, videoId,
+      allowRepeatMedia: false, recipientProof: value => recipientProof(key, value) } };
+  const context = { now, actor: { id: adminId, role: "admin" }, mfaVersion: 1 };
+  await assert.rejects(store.createAudienceInTransaction(connection, context, command), code("BROADCAST_READ_ONLY"));
+  assert.equal(queries.length, 1);
+  previous = { id: campaignId, admin_id: adminId, client_campaign_id: id(9), request_fingerprint: fingerprint,
+    payload_encrypted: command.campaign.payloadEncrypted, media_id: null, allow_repeat_media: 0, status: "queued", created_at: new Date(now), updated_at: new Date(now), expires_at: new Date(now + 10000) };
+  const replay = await store.createAudienceInTransaction(connection, context, command);
+  assert.equal(replay.duplicate, true); assert.equal(replay.campaign.payloadEncrypted, previous.payload_encrypted);
+  previous.request_fingerprint = Buffer.alloc(32, 9);
+  await assert.rejects(store.createAudienceInTransaction(connection, context, command), code("BROADCAST_CONFLICT"));
+  assert.equal(queries.some(sql => /^(?:INSERT|UPDATE|DELETE)/.test(sql)), false);
+});
+
+test("read-only broadcast service keeps v3 DTOs and delegates only exact retries to the guarded store", async () => {
+  const key = randomBytes(32), token = newToken(), commands = [], value = payload(), previewToken = issuePreviewToken(key, { adminId: hex(adminId), selectorHash: value.audience.selectorHash,
+    mediaId: null, videoId: hex(videoId), count: 1, digest: digest(), repeatCount: 0, issuedAt: now }, { video: true });
+  const campaign = { id: campaignId, clientCampaignId: id(9), payloadEncrypted: sealPayload(value, key, binding, { video: true }), mediaId: null,
+    allowRepeatMedia: false, status: "queued", createdAt: now, updatedAt: now, expiresAt: now + 10000,
+    counts: { total: 1, pending: 1, sending: 0, delivered: 0, skipped: 0, cancelled: 0, failed: 0 } };
+  const store = { preview() {}, create() {}, activity() {}, list: async () => ({ campaigns: [campaign], nextCursor: null, hasMore: false }), get() {}, cancel() {},
+    async previewAudience() { assert.fail("A new video audience cannot be prepared in compatibility mode"); },
+    async createAudience(command) { commands.push(command); assert.equal(command.allowVideoCreation, false); return { campaign, duplicate: true }; } };
+  const service = await createBroadcastService({ store, key, videoEnabled: true, videoCreationEnabled: false, largeAudiencesEnabled: true, clock: () => now,
+    authService: { session: async () => ({ user: { id: hex(adminId), role: "admin", pseudonym: "Jessie" }, csrf: newToken(), expiresAt: now + 10000 }) },
+    authStore: { consumeRateLimit: async () => ({ allowed: true }) } });
+  await assert.rejects(service.preview(token, { audience, mediaId: null, videoId: hex(videoId) }), code("BROADCAST_READ_ONLY"));
+  const result = await service.create(token, { audience, mediaId: null, videoId: hex(videoId), clientCampaignId: hex(id(9)), title: value.title, body: value.body, allowRepeatMedia: false, previewToken });
+  assert.equal(result.duplicate, true); assert.equal(result.campaign.formatVersion, 3); assert.equal((await service.list(token)).campaigns[0].videoId, hex(videoId));
+  assert.equal(commands.length, 1);
+});
+
 test("worker emits an ordinary typed video body with the video fingerprint and no broadcast metadata", async () => {
   for (const enabled of [false, true]) {
     const key = randomBytes(32), value = job(key), commands = [], queue = [value];
@@ -106,7 +152,7 @@ test("worker emits an ordinary typed video body with the video fingerprint and n
   }
 });
 
-function deliveryFixture({ unavailable = false, repeat = false } = {}) {
+function deliveryFixture({ unavailable = false, repeat = false, videoCreationEnabled = true } = {}) {
   const key = randomBytes(32), value = job(key), queries = [], events = [], date = value => new Date(value);
   const campaign = { id: campaignId, admin_id: adminId, media_id: null, mfa_version: 1, status: "running", created_at: date(now), expires_at: date(now + 10000),
     payload_encrypted: value.payloadEncrypted, request_fingerprint: campaignFingerprint(payload(), key, binding, { video: true }), allow_repeat_media: 0 };
@@ -133,7 +179,7 @@ function deliveryFixture({ unavailable = false, repeat = false } = {}) {
   const videoMessageStore = { async appendBroadcastVideo(actual, current, append, message) { assert.equal(actual, connection); assert.equal(current.actor.role, "admin");
     events.push({ kind: "video" }); return append(message);
   } };
-  const store = createBroadcastStore({ getConnection() { assert.fail("Delivery must use the current chat transaction"); } }, { key, chatStore, videoEnabled: true, videoStore, videoMessageStore, clock: () => now });
+  const store = createBroadcastStore({ getConnection() { assert.fail("Delivery must use the current chat transaction"); } }, { key, chatStore, videoEnabled: true, videoCreationEnabled, videoStore, videoMessageStore, clock: () => now });
   return { value, campaign, store, queries, events, deliver: () => store.deliver(value, { now, message: { id: value.messageId, clientMessageId: value.clientMessageId, videoId } }) };
 }
 
@@ -143,6 +189,11 @@ test("video delivery validates ownership within the existing transaction and use
   assert.ok(f.events.at(-1).prepared.videoId.equals(videoId));
   assert.equal(f.queries.some(({ sql }) => sql.includes("message_media")), false);
   assert.equal(f.queries.some(({ sql }) => sql.includes("state = 'delivered'")), true);
+});
+
+test("compatibility store continues already queued v3 deliveries with new creation disabled", async () => {
+  const f = deliveryFixture({ videoCreationEnabled: false }); assert.deepEqual(await f.deliver(), { delivered: true, duplicate: false });
+  assert.deepEqual(f.events.map(event => event.kind), ["owner", "video", "append"]);
 });
 
 test("missing source video and previous delivery become sanitized terminal skips before append", async () => {

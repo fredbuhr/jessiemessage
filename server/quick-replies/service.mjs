@@ -10,9 +10,9 @@ function actorView(value) {
   catch { failQuickReplies(); }
   return value;
 }
-export function createQuickRepliesService({ directory, key, chatService, chatStore, authStore, clock = Date.now } = {}, internal = {}) {
+export function createQuickRepliesService({ directory, key, chatService, chatStore, authStore, clock = Date.now, writable = true } = {}, internal = {}) {
   if (typeof directory !== "string" || typeof chatService?.actor !== "function" || typeof chatStore?.withActor !== "function"
-    || typeof authStore?.consumeRateLimit !== "function" || !Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function") throw new TypeError("A private saved replies configuration is required.");
+    || typeof authStore?.consumeRateLimit !== "function" || !Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || typeof writable !== "boolean") throw new TypeError("A private saved replies configuration is required.");
   key = Buffer.from(key);
   const files = new Map(); let closed = false;
   const available = () => { if (closed) failQuickReplies(); };
@@ -59,6 +59,7 @@ export function createQuickRepliesService({ directory, key, chatService, chatSto
         try {
           available();
           if (live?.actor?.role !== "admin" || !Buffer.isBuffer(live.actor.id) || live.actor.id.toString("hex") !== current.session.user.id) failQuickReplies("QUICK_REPLIES_UNAUTHORIZED");
+          if (mutation && !writable) failQuickReplies("QUICK_REPLIES_READ_ONLY");
           const authorize = async () => { available(); if (instant(clock()) >= current.session.expiresAt) failQuickReplies("QUICK_REPLIES_UNAUTHORIZED"); };
           const result = dto(await work(filesFor(current.session.user.id), authorize), current.session.user.id);
           await authorize(); return result;
@@ -67,6 +68,7 @@ export function createQuickRepliesService({ directory, key, chatService, chatSto
     } catch (error) { if (ownError) throw ownError; throw error; }
   }
   return Object.freeze({
+    writable,
     actor: token => guarded(() => actor(token)),
     read: token => guarded(() => authorized(token, false, async files => files.read())),
     save: (token, input) => guarded(async () => {

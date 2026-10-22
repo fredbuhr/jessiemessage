@@ -47,3 +47,12 @@ test("expiry during file work prevents publication and the final write authoriza
   const saving = fixture(); saving.state.onSave = () => { saving.state.now += 60000; };
   await assert.rejects(saving.service.save(token, { expectedVersion: "1", replies }), { code: "QUICK_REPLIES_UNAUTHORIZED" }); assert.equal(saving.state.fileSaves, 1); saving.service.close();
 });
+
+test("compatibility service keeps catalogue reads and rejects mutation before opening a file handle", async () => {
+  const f = fixture({ writable: false }); assert.equal(f.service.writable, false);
+  await assert.rejects(f.service.save(token, { expectedVersion: "1", replies }), { code: "QUICK_REPLIES_READ_ONLY" });
+  assert.equal(f.state.factoryCalls, 0); assert.equal(f.state.fileSaves, 0);
+  assert.deepEqual(await f.service.read(token), { version: "1", replies });
+  f.state.role = "client";
+  await assert.rejects(f.service.save(token, { expectedVersion: "1", replies }), { code: "QUICK_REPLIES_UNAUTHORIZED" }); f.service.close();
+});

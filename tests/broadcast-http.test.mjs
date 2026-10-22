@@ -73,6 +73,22 @@ const mutationHeaders = (role = "admin", extra = {}) => ({ Origin: origin, "Cont
   Cookie: role === "admin" ? cookie : clientCookie, ...extra });
 const post = (base, path, body, headers = mutationHeaders()) => fetch(`${base}${path}`, { method: "POST", headers, body: typeof body === "string" ? body : JSON.stringify(body) });
 const get = (base, path, headers = { Cookie: cookie }) => fetch(`${base}${path}`, { headers });
+
+test("compatibility broadcast session retains video readers while rejecting new video commands after auth and CSRF", async t => {
+  const video = campaign({ formatVersion: 3, audienceMode: "all", videoId: mediaId });
+  const f = await fixture(t, { largeAudiencesEnabled: true, videoEnabled: true, videoCreationEnabled: false,
+    activity: async () => ({ campaigns: [video] }), preview: async () => { throw Object.assign(new Error("closed"), { code: "BROADCAST_READ_ONLY" }); },
+    create: async () => { throw Object.assign(new Error("closed"), { code: "BROADCAST_READ_ONLY" }); } }, { videoEnabled: true, videoCreationEnabled: false });
+  const session = await get(f.base, `${root}/admin/session`), sessionBody = await session.json();
+  assert.equal(sessionBody.videoEnabled, true); assert.equal(sessionBody.videoCreationEnabled, false);
+  const activity = await get(f.base, `${root}/admin/activity`); assert.equal(activity.status, 200); assert.equal((await activity.json()).campaigns[0].videoId, mediaId);
+  const requested = { audience: { mode: "all" }, mediaId: null, videoId: mediaId };
+  await errorBody(await post(f.base, `${root}/admin/preview`, requested), 403, "feature_read_only");
+  const mutation = { ...largeInput(), ...requested };
+  await errorBody(await post(f.base, campaigns, mutation), 403, "feature_read_only");
+  await errorBody(await post(f.base, campaigns, mutation, mutationHeaders("admin", { "X-CSRF-Token": "bad" })), 403, "csrf_failed");
+  await errorBody(await post(f.base, campaigns, mutation, { Origin: origin, "Content-Type": "application/json" }), 401, "authentication_required");
+});
 function privateHeaders(response) {
   for (const [name, value] of Object.entries(AUTH_HEADERS)) assert.equal(response.headers.get(name), value, name);
   assert.equal(response.headers.get("access-control-allow-origin"), null);

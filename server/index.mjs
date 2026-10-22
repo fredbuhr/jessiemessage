@@ -9,6 +9,7 @@ import { createEntryHandler } from "./entry/http.mjs";
 import { createRequestOriginGuard, isOriginFormTarget, RequestOriginError } from "./http/request-origin.mjs";
 import { sessionToken } from "./auth/http.mjs";
 import { getProcessRelease } from "./release.mjs";
+import { VIDEO_CREATION_ENABLED, QUICK_REPLIES_WRITABLE } from "./release-features.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
 const PRIMARY_ORIGIN = "https://jessiemessage.com";
@@ -441,13 +442,13 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         if ((await videoStore.status()).ready !== true) throw new Error("Private video capacity must be initialized offline.");
       }
       const chatService = await createChatService({ store: chatStore, authStore: store, authService: service,
-        accessService, key: chatConfig.key, clock, ...(video ? { videoMessages } : {}) });
+        accessService, key: chatConfig.key, clock, videoCreationEnabled: VIDEO_CREATION_ENABLED, ...(video ? { videoMessages } : {}) });
       if (video) {
         const [{ createVideoService }, { createVideoHandler }] = await Promise.all([import("./video/service.mjs"), import("./video/http.mjs")]);
         videoService = await createVideoService({ store: videoStore, messages: videoMessages, storage: videoStorage, chatService, authStore: store,
-          key: videoConfig.key, minimumFreeBytes: videoConfig.minimumFreeBytes, clock });
-        videoHandler = createVideoHandler(videoService, { origin: chatConfig.origin });
-        if (legacyHandlers) legacyHandlers.videoHandler = createVideoHandler(videoService, { origin: RECIPE_ORIGIN });
+          key: videoConfig.key, minimumFreeBytes: videoConfig.minimumFreeBytes, clock, creationEnabled: VIDEO_CREATION_ENABLED });
+        videoHandler = createVideoHandler(videoService, { origin: chatConfig.origin, creationEnabled: VIDEO_CREATION_ENABLED });
+        if (legacyHandlers) legacyHandlers.videoHandler = createVideoHandler(videoService, { origin: RECIPE_ORIGIN, creationEnabled: VIDEO_CREATION_ENABLED });
       }
       if (notificationsConfig.enabled) {
         const { createNotificationsService } = await import("./notifications/service.mjs");
@@ -492,9 +493,9 @@ export async function createConfiguredServer(env = process.env, options = {}) {
           const [{ createQuickRepliesService }, { createQuickRepliesHandler }] = await Promise.all([
             import("./quick-replies/service.mjs"), import("./quick-replies/http.mjs")]);
           const quickRepliesService = createQuickRepliesService({ directory: backupDirectory, key: crmConfig.key,
-            chatService, chatStore, authStore: store, clock });
-          quickRepliesHandler = createQuickRepliesHandler(quickRepliesService, { origin: crmConfig.origin });
-          if (legacyHandlers) legacyHandlers.quickRepliesHandler = createQuickRepliesHandler(quickRepliesService, { origin: RECIPE_ORIGIN });
+            chatService, chatStore, authStore: store, clock, writable: QUICK_REPLIES_WRITABLE });
+          quickRepliesHandler = createQuickRepliesHandler(quickRepliesService, { origin: crmConfig.origin, writable: QUICK_REPLIES_WRITABLE });
+          if (legacyHandlers) legacyHandlers.quickRepliesHandler = createQuickRepliesHandler(quickRepliesService, { origin: RECIPE_ORIGIN, writable: QUICK_REPLIES_WRITABLE });
         }
         const conversationExporter = exporter({ history: (token, id, options) => chatService.messages("admin", token, id, options),
           photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportMessageAsset(token, id, message) : null,
@@ -569,7 +570,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         authStore: store, key: chatConfig.key, clock });
       profileHandler = createProfileHandler(profileService, { origin: chatConfig.origin });
       if (legacyHandlers) legacyHandlers.profileHandler = createProfileHandler(profileService, { origin: RECIPE_ORIGIN });
-      const profileCapabilities = { profileEnabled: true, avatarsEnabled: mediaConfig.enabled, announcementsEnabled: announcements, tasksEnabled: tasks && crmConfig.enabled, ...(video ? { videoEnabled: true } : {}) };
+      const profileCapabilities = { profileEnabled: true, avatarsEnabled: mediaConfig.enabled, announcementsEnabled: announcements, tasksEnabled: tasks && crmConfig.enabled, ...(video ? { videoEnabled: true, videoCreationEnabled: VIDEO_CREATION_ENABLED } : {}) };
       chatHandler = createChatHandler(chatService, { origin: chatConfig.origin, clientConversationExporter, ...profileCapabilities });
       if (legacyHandlers) legacyHandlers.chatHandler = createChatHandler(chatService, { origin: RECIPE_ORIGIN, clientConversationExporter, ...profileCapabilities });
       if (broadcastConfig.enabled) {
@@ -577,12 +578,12 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         const { createBroadcastService } = await import("./broadcast/service.mjs");
         const { createBroadcastHandler } = await import("./broadcast/http.mjs");
         const { createBroadcastWorker } = await import("./broadcast/worker.mjs");
-        const broadcastStore = createBroadcastStore(pool, { chatStore, mediaEnabled: mediaConfig.enabled, clock, ...(video ? { videoEnabled: true, key: chatConfig.key, videoStore, videoMessageStore: videoMessages } : {}) });
+        const broadcastStore = createBroadcastStore(pool, { chatStore, mediaEnabled: mediaConfig.enabled, clock, ...(video ? { videoEnabled: true, videoCreationEnabled: VIDEO_CREATION_ENABLED, key: chatConfig.key, videoStore, videoMessageStore: videoMessages } : {}) });
         await broadcastStore.assertSchema(schemaOptions);
         const broadcastService = await createBroadcastService({ store: broadcastStore, authStore: store, authService: service,
-          key: chatConfig.key, mediaEnabled: mediaConfig.enabled, largeAudiencesEnabled: true, clock, ...(video ? { videoEnabled: true } : {}) });
-        broadcastHandler = createBroadcastHandler(broadcastService, { origin: chatConfig.origin, mediaEnabled: mediaConfig.enabled, ...(video ? { videoEnabled: true } : {}) });
-        if (legacyHandlers) legacyHandlers.broadcastHandler = createBroadcastHandler(broadcastService, { origin: RECIPE_ORIGIN, mediaEnabled: mediaConfig.enabled, ...(video ? { videoEnabled: true } : {}) });
+          key: chatConfig.key, mediaEnabled: mediaConfig.enabled, largeAudiencesEnabled: true, clock, ...(video ? { videoEnabled: true, videoCreationEnabled: VIDEO_CREATION_ENABLED } : {}) });
+        broadcastHandler = createBroadcastHandler(broadcastService, { origin: chatConfig.origin, mediaEnabled: mediaConfig.enabled, ...(video ? { videoEnabled: true, videoCreationEnabled: VIDEO_CREATION_ENABLED } : {}) });
+        if (legacyHandlers) legacyHandlers.broadcastHandler = createBroadcastHandler(broadcastService, { origin: RECIPE_ORIGIN, mediaEnabled: mediaConfig.enabled, ...(video ? { videoEnabled: true, videoCreationEnabled: VIDEO_CREATION_ENABLED } : {}) });
         broadcastWorker = createBroadcastWorker({ store: broadcastStore, authStore: store, key: chatConfig.key, clock, onState: observe("broadcasts"), ...(video ? { videoEnabled: true } : {}) });
         if (announcements) {
           const [{ createAnnouncementsStore }, { createAnnouncementsService }, { createAnnouncementsHandler }] = await Promise.all([

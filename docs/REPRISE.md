@@ -40,7 +40,13 @@ Le [bilan global](BILAN-GLOBAL-20261022.md) et le [plan courant](PLAN-IMPLEMENTA
 
 L’[audit de version du 22 octobre](verification-proofs/jm171-version-audit-20261022.json) confirme sur le serveur le package/lock **1.7.1**, la source et l’arbre exacts, le journal `application_started`, les métadonnées privées **1.7.1 / Node 24.22.1 / SQL33**, le binaire Node épinglé et les champs Manager Run/Build. Le repli reste **1.6.0 sur Node 24.22.1**, précédemment précontrôlé sans démarrage. Les libellés courants 1.6.0 périmés sont corrigés dans les documents. Le [workflow opérateur 39703548161](https://github.com/fredbuhr/jessiemessage/actions/runs/39703548161), commit `f2e90e5f34a290ffff80108f830f21b09d87813b`, a aligné **uniquement le marqueur GitHub latest sur la release v1.7.1 existante** ; tag, cible, corps et assets vérifiés inchangés. Aucun nouveau tag, release, déploiement, migration ou redémarrage du service n’a été réalisé. PID/socket et lien binaire/processus restent non requalifiés par cette lecture.
 
-## Jalon de développement courant — G3 qualifié sur branche, non livré
+## Jalon de développement courant — G4, repli compatible en préparation
+
+**G4 est commencé sur `fix/video-compat-172`, version technique 1.7.2 issue du checkpoint G3 `92a59e3de98bcc848b507aa593901e0d57e5e2ce`.** Le [contrat de repli](video-compat-172.md) conserve les lecteurs SQL 36, vidéo, campagnes v3, capsules, fermetures et sauvegardes manuelles, tout en désactivant séparément les nouvelles créations vidéo et les modifications des réponses personnelles. Cette référence reste en développement : aucune qualification 1.7.2, publication, préparation hébergée ou migration n’est encore acquise. G1–G3 restent qualifiés sur la branche produit 1.8.0 ; la production et ses métadonnées 1.7.1 restent inchangées.
+
+**Prochaine action : terminer et qualifier le repli exact, puis poursuivre G4 jusqu’à la livraison vérifiée de 1.8.0.** Le repli courant 1.6.0 reste réservé à SQL 33. Ne pas le démarrer sur SQL 36.
+
+## Jalon acquis — G3 qualifié sur branche, non livré
 
 **22 octobre 2026 : réponses personnelles et qualification globale du candidat 1.8.0 acquises sur `feat/video-messaging`, PR 125 en brouillon.** Source **`4f6587aee355b213b58734b576809eae0943553c`**, arbre **`3a1defe079e2095fb0ee89ad51312c91916cd292`**, [CI 39755558913](https://github.com/fredbuhr/jessiemessage/actions/runs/39755558913) **5/5, tentative 1**. Merge testé **`2142d0e50ce4ed4a65ef21afa86598778c737fc4`**, arbre identique vérifié par API et checkout des cinq journaux. [Preuve G3](verification-proofs/jm180-personal-replies-verification.json).
 

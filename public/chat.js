@@ -31,7 +31,7 @@ let olderBusy = false; let sendBusy = false; let logoutBusy = false; let logging
 const eventRequests = new Set();
 const imageUrls = createObjectUrlCache(); const imageRequests = new Map();
 let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previewIdentity = null;
-let videoEnabled = false, videoVersion = 0, videoPreviewUrl = null, videoPreviewIdentity = null, videoTransfer = null;
+let videoEnabled = false, videoCreationEnabled = false, videoVersion = 0, videoPreviewUrl = null, videoPreviewIdentity = null, videoTransfer = null;
 let videoGallery = null, videoGalleryBusy = false, videoGalleryVersion = 0, videoGalleryReturnFocus = null;
 const videoPlayers = new Map();
 let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersion = 0; let lightboxItem = null;
@@ -349,7 +349,7 @@ function clearPrivate() {
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
   sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
   olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
-  mediaEnabled = false; videoEnabled = false;
+  mediaEnabled = false; videoEnabled = false; videoCreationEnabled = false;
   conversationDownload?.clear(); conversationDownload = null; conversationDownloadCapability = null;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   document.getElementById("readiness-nav")?.remove();
@@ -847,7 +847,7 @@ function renderVideoDraft(state) {
 }
 function chooseVideo() {
   const state = currentState(), file = el("video-file").files?.[0]; el("video-file").value = "";
-  if (!state || !file || !videoEnabled || state.pending || sendBusy || !state.conversation?.canSend) return;
+  if (!state || !file || !videoCreationEnabled || state.pending || sendBusy || !state.conversation?.canSend) return;
   if (file.type !== "video/mp4" || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > 104857600) {
     notice("Choisis une vidéo MP4 de 100 Mo maximum.", true); return;
   }
@@ -1193,14 +1193,14 @@ function renderMeta(state) {
   const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image");
   const hasVideo = Boolean(state.videoDraft || state.pending?.kind === "video");
   el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage || hasVideo ? validCaption(el("message-body").value) : validBody(el("message-body").value))
-    || hasVideo && (!videoEnabled || state.videoDraft?.invalid || !state.videoDraft?.ready && !state.pending?.videoId);
-  el("photo-tools").hidden = !mediaEnabled && !videoEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
+    || hasVideo && (!videoCreationEnabled || state.videoDraft?.invalid || !state.videoDraft?.ready && !state.pending?.videoId);
+  el("photo-tools").hidden = !mediaEnabled && !videoCreationEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
   el("open-video-gallery").hidden = !videoEnabled;
-  el("open-composer-tools").hidden = !mediaEnabled && !videoEnabled && role !== "admin";
+  el("open-composer-tools").hidden = !mediaEnabled && !videoCreationEnabled && role !== "admin";
   el("open-composer-tools").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   if (el("open-composer-tools").hidden || el("open-composer-tools").disabled) closeComposerTools();
   for (const id of ["pick-image", "open-library"]) el(id).hidden = !mediaEnabled;
-  el("pick-video").hidden = !videoEnabled; el("pick-video").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
+  el("pick-video").hidden = !videoCreationEnabled; el("pick-video").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   el("open-quick-replies").hidden = role !== "admin";
   el("open-quick-replies").disabled = !canUseQuickReplies();
   if (quickReplyContext && (!canUseQuickReplies() || !fresh(quickReplyContext.ticket))) closeQuickReplies();
@@ -1535,7 +1535,7 @@ async function sendImage(retry = false) {
   } finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
 }
 async function sendVideo(retry = false) {
-  const state = currentState(); if (!state || sendBusy || !videoEnabled || !state.conversation?.canSend) return;
+  const state = currentState(); if (!state || sendBusy || !videoCreationEnabled || !state.conversation?.canSend) return;
   const ticket = snapshot(state), caption = retry ? state.pending?.caption : el("message-body").value;
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   if (!retry && (!state.videoDraft?.ready || state.videoDraft.invalid)) return;
@@ -1758,27 +1758,29 @@ function validPersonalReplyTitle(value) {
     && !/^[\p{C}\p{Z}]+$/u.test(value) && !/[\x00-\x1f\x7f-\x9f]/u.test(value);
 }
 function personalReplyView(value) {
-  if (!value || typeof value.version !== "string" || (!/^(0|[1-9][0-9]{0,9})$/.test(value.version) || Number(value.version) > 4294967295) || !Array.isArray(value.replies) || value.replies.length > 50) throw new Error("invalid_quick_replies");
+  if (!value || value.writable !== undefined && typeof value.writable !== "boolean" || typeof value.version !== "string" || (!/^(0|[1-9][0-9]{0,9})$/.test(value.version) || Number(value.version) > 4294967295) || !Array.isArray(value.replies) || value.replies.length > 50) throw new Error("invalid_quick_replies");
   const ids = new Set(), replies = value.replies.map(reply => {
     if (!reply || !/^[0-9a-f]{32}$/.test(reply.id) || ids.has(reply.id) || !validPersonalReplyTitle(reply.title) || !validBody(reply.body) || !["fr", "en"].includes(reply.language)) throw new Error("invalid_quick_replies");
     ids.add(reply.id); return { id: reply.id, title: reply.title, body: reply.body, language: reply.language };
   });
   if (new TextEncoder().encode(JSON.stringify(replies)).length > 32768) throw new Error("invalid_quick_replies");
-  return { version: value.version, replies };
+  return { version: value.version, replies, writable: value.writable !== false };
 }
 function personalReplyControls() {
-  const blocked = Boolean(personalReplyBusy || personalReplyConflict || personalReplyUncertain || !personalReplies);
+  const blocked = Boolean(personalReplyBusy || personalReplyConflict || personalReplyUncertain || !personalReplies || !personalReplies.writable);
+  el("new-personal-reply").hidden = personalReplies?.writable === false;
   el("new-personal-reply").disabled = blocked || Boolean(personalReplyDraft) || personalReplies.replies.length >= 50;
   el("reload-personal-replies").disabled = Boolean(personalReplyBusy);
-  el("personal-reply-save").disabled = blocked;
+  el("personal-reply-save").disabled = blocked; el("personal-reply-save").hidden = personalReplies?.writable === false;
   el("personal-reply-cancel").disabled = Boolean(personalReplyBusy);
-  for (const id of ["personal-reply-title", "personal-reply-body", "personal-reply-language"]) el(id).disabled = Boolean(personalReplyBusy);
+  for (const id of ["personal-reply-title", "personal-reply-body"]) { el(id).disabled = Boolean(personalReplyBusy); el(id).readOnly = personalReplies?.writable === false; }
+  el("personal-reply-language").disabled = Boolean(personalReplyBusy) || personalReplies?.writable === false;
   for (const button of el("quick-replies-list").children) button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
 }
 function personalReplyAction(source, handler, marker) {
   const button = document.createElement("button"); button.type = "button"; button.className = "text-button"; ui.text(button, source);
   if (marker) button.dataset.personalAction = marker;
-  button.disabled = Boolean(personalReplyBusy || personalReplyConflict || personalReplyUncertain || personalReplyDraft);
+  button.disabled = Boolean(personalReplyBusy || personalReplyConflict || personalReplyUncertain || personalReplyDraft || !personalReplies?.writable);
   button.addEventListener("click", () => { if (quickRepliesCurrent() && !button.disabled) handler(); }); return button;
 }
 function renderPersonalReplies() {
@@ -1790,7 +1792,7 @@ function renderPersonalReplies() {
     insert.dataset.personalQuickReply = reply.id; insert.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
     const title = document.createElement("strong"), body = document.createElement("span"); ui.rawText(title, reply.title); ui.rawText(body, reply.body); insert.append(title, body);
     insert.addEventListener("click", () => insertQuickReply(reply.body)); row.append(insert);
-    const actions = document.createElement("div"); actions.className = "personal-reply-actions";
+    const actions = document.createElement("div"); actions.className = "personal-reply-actions"; actions.hidden = personalReplies.writable === false;
     actions.append(personalReplyAction("Modifier", () => editPersonalReply(reply), "edit"), personalReplyAction("Supprimer", () => { personalReplyDelete = reply.id; renderPersonalReplies(); focusVisible(el("personal-replies-list").querySelector(".personal-reply-confirm")?.querySelector("button")); }, "delete"));
     row.append(actions);
     if (personalReplyDelete === reply.id) {
@@ -1812,7 +1814,7 @@ function capturePersonalReplyDraft() {
   personalReplyDraft.language = el("personal-reply-language").value;
 }
 function editPersonalReply(reply = null) {
-  if (!quickRepliesCurrent() || !personalReplies || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
+  if (!quickRepliesCurrent() || !personalReplies?.writable || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
   personalReplyDraft = reply ? { ...reply } : { id: newClientId(), title: "", body: "", language: quickReplyLanguage };
   personalReplyDelete = null; el("personal-reply-editor").hidden = false;
   el("personal-reply-title").value = personalReplyDraft.title; el("personal-reply-body").value = personalReplyDraft.body; el("personal-reply-language").value = personalReplyDraft.language;
@@ -1831,12 +1833,12 @@ async function loadPersonalReplies() {
     const value = personalReplyView(await request("/api/admin/quick-replies", { account: true, signal: abort.signal }));
     if (!quickRepliesCurrent(context)) return;
     personalReplies = value; personalReplyConflict = false; personalReplyUncertain = false; personalReplyDelete = null;
-    notice(personalReplyDraft ? "Liste rechargée. Ton brouillon est conservé : vérifie-le puis enregistre." : "", false, "personal-replies-status");
+    notice(!value.writable ? personalReplyDraft ? "Les réponses sont en lecture seule. Ton brouillon est conservé." : "Les réponses personnelles sont en lecture seule." : personalReplyDraft ? "Liste rechargée. Ton brouillon est conservé : vérifie-le puis enregistre." : "", false, "personal-replies-status");
   } catch (error) { if (quickRepliesCurrent(context) && !error.stale) reportPersonalReplyError(error); }
   finally { if (quickRepliesCurrent(context)) { personalReplyBusy = null; personalReplyAbort = null; renderPersonalReplies(); } }
 }
 async function savePersonalReplies(replies) {
-  const context = quickReplyContext; if (!quickRepliesCurrent(context) || !personalReplies || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
+  const context = quickReplyContext; if (!quickRepliesCurrent(context) || !personalReplies?.writable || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
   if (replies.length > 50 || new TextEncoder().encode(JSON.stringify(replies)).length > 32768) {
     notice("Vérifie la réponse : titre de 1 à 64 caractères, texte de 1 à 4 096 caractères et 50 réponses maximum.", true, "personal-replies-status"); return;
   }
@@ -1877,7 +1879,7 @@ el("personal-reply-cancel").addEventListener("click", () => {
 });
 for (const id of ["personal-reply-title", "personal-reply-body", "personal-reply-language"]) el(id).addEventListener("input", capturePersonalReplyDraft);
 el("personal-reply-editor").addEventListener("submit", event => {
-  event.preventDefault(); if (!quickRepliesCurrent() || !personalReplyDraft || !personalReplies || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
+  event.preventDefault(); if (!quickRepliesCurrent() || !personalReplyDraft || !personalReplies?.writable || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
   capturePersonalReplyDraft(); const reply = { ...personalReplyDraft, title: personalReplyDraft.title.trim().normalize("NFC") };
   if (!validPersonalReplyTitle(reply.title) || !validBody(reply.body) || !["fr", "en"].includes(reply.language)) {
     notice("Vérifie la réponse : titre de 1 à 64 caractères, texte de 1 à 4 096 caractères et 50 réponses maximum.", true, "personal-replies-status"); return;
@@ -1891,7 +1893,7 @@ el("message-body").addEventListener("input", () => { const state = currentState(
 el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
 el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) { closeComposerTools(); el("image-file").click(); focusVisible(el("open-composer-tools")); } });
 el("image-file").addEventListener("change", chooseFile);
-el("pick-video").addEventListener("click", () => { if (!el("pick-video").disabled) { closeComposerTools(); el("video-file").click(); focusVisible(el("open-composer-tools")); } });
+el("pick-video").addEventListener("click", () => { if (videoCreationEnabled && !el("pick-video").disabled) { closeComposerTools(); el("video-file").click(); focusVisible(el("open-composer-tools")); } });
 el("video-file").addEventListener("change", chooseVideo);
 el("cancel-video").addEventListener("click", () => {
   const state = currentState(); if (!state) return;
@@ -2043,6 +2045,7 @@ async function start({ session = null } = {}) {
       const capability = await request(`${chatBase}/capabilities`, { account: true });
       if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
       videoEnabled = capability.video?.enabled === true && capability.video.maxBytes === 104857600 && capability.video.mime === "video/mp4";
+      videoCreationEnabled = videoEnabled && capability.video.creationEnabled !== false;
       profileCapability = capability.profile?.enabled === true ? capability.profile : null;
       announcementCapability = capability.announcements?.enabled === true ? capability.announcements : null;
       tasksCapability = role === "admin" && capability.tasks?.enabled === true;

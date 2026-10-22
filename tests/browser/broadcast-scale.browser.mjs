@@ -39,14 +39,14 @@ window.clearTimeout=handle=>{polls.delete(handle);return nativeClearTimeout(hand
 window.__runScalePoll=async()=>{const entry=[...polls].at(-1);if(!entry)throw Error('No product history poll');nativeClearTimeout(entry[0]);polls.delete(entry[0]);await entry[1]();};
 `;
 
-async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false, videoEnabled = false, holdVideoUpload = false } = {}) {
+async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false, videoEnabled = false, videoCreationEnabled = true, seedVideo = false, holdVideoUpload = false } = {}) {
   const files = new Map(await Promise.all(assets.map(async name => ["/" + name, await readFile(new URL(name, publicRoot))])));
   const html = files.get("/broadcast.html").toString().replace("<head>", '<head><script src="/scale-fixture.js"></script>');
   const contacts = Array.from({ length: 2500 }, (_, index) => ({ id: id(index + 1), client: { id: id(10000 + index), pseudonym: `Scale client ${String(index + 1).padStart(4, "0")}` }, crm: { nickname: "" }, canSend: true }));
   const contactsById = new Map(contacts.map(contact => [contact.id, contact]));
   const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0, uploads: [], uploadAttempts: [] };
   const session = () => ({ user: { id: id(8000 + state.owner), role: "admin", pseudonym: `Synthetic Jessie ${state.owner}` }, csrf: state.owner === 1 ? "A".repeat(43) : "B".repeat(42) + "A",
-    expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}), ...(videoEnabled ? { videoEnabled: true } : {}) });
+    expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}), ...(videoEnabled ? { videoEnabled: true, ...(videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) });
   const targets = audience => audience?.mode === "all" ? contacts : audience?.mode === "filtered" ? contacts.slice(0, 175)
     : contacts.filter(contact => audience.conversationIds.includes(contact.id));
   function makeCampaign(input, selected) {
@@ -61,7 +61,7 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
     return value;
   }
   if (seed) {
-    const campaign = makeCampaign({ clientCampaignId: id(9900), title: "Synthetic existing compact campaign", body: "A private historical body" }, contacts);
+    const campaign = makeCampaign({ clientCampaignId: id(9900), title: "Synthetic existing compact campaign", body: "A private historical body", ...(seedVideo ? { videoId: id(7000), audience: { mode: "all" } } : {}) }, contacts);
     state.campaigns.set(campaign.id, campaign); state.ownerByCampaign.set(campaign.id, 1);
   }
   const server = createServer((request, response) => { void (async () => {
@@ -336,5 +336,17 @@ test("Chrome broadcast video upload can be cancelled while awaiting ACK without 
     await clickVideoButton(page, "remove-video");
     assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length===0&&document.getElementById('video-progress').hidden"), true);
     assert.equal(source.state.uploads.length, 1); assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0); await errors(page);
+  } finally { await page?.close(); await source.close(); }
+});
+
+test("Chrome compatibility preserves existing v3 video campaign details while hiding new video creation", { timeout: 45000 }, async () => {
+  const source = await fixture({ videoEnabled: true, videoCreationEnabled: false, seed: true, seedVideo: true }); let page;
+  try {
+    page = await open(source, 390, "en"); assert.equal(await page.execute("return document.getElementById('video-options').hidden"), true);
+    await waitUntil(() => page.execute("return document.querySelectorAll('.history-row').length===1"), "existing typed video campaign remains visible");
+    await page.click(".history-row"); await waitUntil(() => page.execute("return document.getElementById('campaign-detail').textContent.includes('A video attached')"), "existing v3 detail is readable");
+    await page.execute("const transfer=new DataTransfer();transfer.items.add(new File(['synthetic'],'blocked.mp4',{type:'video/mp4'}));const input=document.getElementById('video-file');input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));");
+    assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length"), 0); assert.equal(source.state.uploads.length, 0); assert.equal(source.state.creates.length, 0);
+    await errors(page);
   } finally { await page?.close(); await source.close(); }
 });

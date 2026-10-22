@@ -108,7 +108,7 @@ async function checkSession(ticket) {
     // Feature checks renew the SQL session, while this endpoint also renews the
     // browser cookie. Keep both proofs bound to the account owning this draft.
     const session = await request("/api/auth/session", { ticket });
-    if (!acceptBroadcastSession(state, ticket, { ...session, mediaEnabled: state.session.mediaEnabled, largeAudiencesEnabled: state.session.largeAudiencesEnabled, ...(state.session.videoEnabled === true ? { videoEnabled: true } : {}) })) {
+    if (!acceptBroadcastSession(state, ticket, { ...session, mediaEnabled: state.session.mediaEnabled, largeAudiencesEnabled: state.session.largeAudiencesEnabled, ...(state.session.videoEnabled === true ? { videoEnabled: true, ...(state.session.videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) })) {
       if (state.visible) await bootstrap("La session a changé. Consulte l’historique avant de préparer une nouvelle diffusion."); else signOut();
       return;
     }
@@ -166,11 +166,11 @@ function renderControls() {
   el("more-photos").hidden = !photoMore; el("more-photos").disabled = photosBusy || frozen;
   el("photo-select").disabled = frozen || !!videoTransfer || state.csrfFailed;
   el("load-photos").disabled = frozen || !!videoTransfer || state.csrfFailed;
-  el("video-options").hidden = state.session?.videoEnabled !== true;
-  el("pick-video").disabled = frozen || !!videoTransfer || state.csrfFailed;
-  el("video-file").disabled = frozen || !!videoTransfer || state.csrfFailed;
+  el("video-options").hidden = state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false;
+  el("pick-video").disabled = frozen || !!videoTransfer || state.csrfFailed || state.session?.videoCreationEnabled === false;
+  el("video-file").disabled = frozen || !!videoTransfer || state.csrfFailed || state.session?.videoCreationEnabled === false;
   el("upload-video").hidden = !videoDraft || !!videoDraft.id || videoDraft.failed === true || !!videoTransfer;
-  el("upload-video").disabled = frozen || !videoDraft?.ready || videoDraft.invalid || state.csrfFailed;
+  el("upload-video").disabled = frozen || !videoDraft?.ready || videoDraft.invalid || state.csrfFailed || state.session?.videoCreationEnabled === false;
   el("remove-video").hidden = !videoDraft || !!videoTransfer; el("remove-video").disabled = frozen || state.csrfFailed;
   el("cancel-video").hidden = !videoTransfer; el("cancel-video").disabled = frozen;
   el("video-progress").hidden = !videoTransfer;
@@ -299,7 +299,7 @@ function attachmentChanged() {
 }
 function chooseVideo() {
   const file = el("video-file").files?.[0]; el("video-file").value = "";
-  if (!file || state.session?.videoEnabled !== true || state.pending || sendBusy || videoTransfer || state.csrfFailed || !visible()) return;
+  if (!file || state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false || state.pending || sendBusy || videoTransfer || state.csrfFailed || !visible()) return;
   if (file.type !== "video/mp4" || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > MAX_VIDEO_BYTES) {
     notice("Choisis une vidéo MP4 de 100 Mo maximum.", true, "video-status"); return;
   }
@@ -327,7 +327,7 @@ function removeVideo() {
 }
 async function uploadVideo() {
   const draft = videoDraft;
-  if (!draft?.ready || draft.invalid || draft.id || draft.failed || videoTransfer || state.session?.videoEnabled !== true || state.pending || sendBusy || state.csrfFailed || !visible()) return;
+  if (!draft?.ready || draft.invalid || draft.id || draft.failed || videoTransfer || state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false || state.pending || sendBusy || state.csrfFailed || !visible()) return;
   const ticket = broadcastTicket(state), transfer = { controller: new AbortController(), cancelled: false, draft };
   videoTransfer = transfer; controllers.add(transfer.controller); el("video-progress").value = 0;
   notice("Chargement de la vidéo… {percent} %", false, "video-status", { percent: ui.numberParam(0) }); renderControls();
@@ -590,7 +590,7 @@ el("photo-select").addEventListener("change", () => {
   const mediaId = el("photo-select").value || null; if (mediaId) { clearVideo(); notice("", false, "video-status"); }
   updateComposition(state, { mediaId }); compositionChanged(); void showPhoto();
 });
-el("pick-video").addEventListener("click", () => { if (!el("pick-video").disabled && state.session?.videoEnabled === true) el("video-file").click(); });
+el("pick-video").addEventListener("click", () => { if (!el("pick-video").disabled && state.session?.videoEnabled === true && state.session.videoCreationEnabled !== false) el("video-file").click(); });
 el("video-file").addEventListener("change", chooseVideo);
 el("upload-video").addEventListener("click", () => { void uploadVideo(); });
 el("remove-video").addEventListener("click", removeVideo);

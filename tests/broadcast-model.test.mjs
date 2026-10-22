@@ -206,3 +206,16 @@ test("redaction can shrink a frozen audience at the same timestamp but later sta
   assert.strictEqual(mergeCampaign(reduced, { ...reduced, updatedAt: reduced.updatedAt + 1000, counts: { ...reduced.counts, delivered: 0, pending: 2 } }), reduced);
   assert.throws(() => parseCampaign({ ...reduced, status: "completed" }), /invalid_campaign/);
 });
+
+test("compatibility keeps typed video campaign reads while refusing new video compositions", () => {
+  const state = createBroadcastState(); assert.equal(acceptBroadcastSession(state, clearBroadcast(state, { visible: true }), admin({ largeAudiencesEnabled: true, videoEnabled: true, videoCreationEnabled: false }), now), true);
+  assert.equal(state.session.videoEnabled, true); assert.equal(state.session.videoCreationEnabled, false);
+  assert.equal(updateComposition(state, { videoId: id(600) }), false); assert.equal(updateComposition(state, { title: "Text stays available", body: "Existing tools", videoId: null }), true);
+  assert.equal(compositionValid(state), true); state.draft.videoId = id(600); assert.equal(compositionValid(state), false);
+  const value = { ...campaign({ clientCampaignId: id(500), title: "Existing video", body: "Caption", mediaId: null, allowRepeatMedia: false, conversationIds: [id(1)] }), formatVersion: 3, videoId: id(600), audienceMode: "all" };
+  assert.equal(parseCampaign(value, { video: true }).videoId, id(600));
+  const exact = Object.freeze({ clientCampaignId: id(500), title: "Existing video", body: "Caption", mediaId: null, videoId: id(600), allowRepeatMedia: false, audience: Object.freeze({ mode: "all" }), previewToken: "v1.existing.signature" });
+  state.pending = { status: "uncertain", payload: exact, expectedCount: 1 }; assert.strictEqual(retryCampaign(state), exact, "the immutable retry of an existing campaign remains available"); state.pending = null;
+  assert.equal(acceptBroadcastSession(state, broadcastTicket(state), admin({ largeAudiencesEnabled: true, videoEnabled: true, videoCreationEnabled: false }), now), true);
+  assert.equal(acceptBroadcastSession(state, broadcastTicket(state), admin({ largeAudiencesEnabled: true, videoEnabled: true }), now), false, "a capability change discards pending composition state");
+});

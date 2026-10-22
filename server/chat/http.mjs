@@ -170,9 +170,9 @@ function mappedError(error) {
 }
 
 /** Routes exist only when the parent has explicitly enabled the chat feature. */
-export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false, announcementsEnabled = false, tasksEnabled = false, videoEnabled = false }) {
+export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false, announcementsEnabled = false, tasksEnabled = false, videoEnabled = false, videoCreationEnabled = true }) {
   if (typeof profileEnabled !== "boolean" || typeof avatarsEnabled !== "boolean" || avatarsEnabled && !profileEnabled
-    || typeof announcementsEnabled !== "boolean" || typeof tasksEnabled !== "boolean" || typeof videoEnabled !== "boolean") throw new TypeError("Invalid chat capability");
+    || typeof announcementsEnabled !== "boolean" || typeof tasksEnabled !== "boolean" || typeof videoEnabled !== "boolean" || typeof videoCreationEnabled !== "boolean") throw new TypeError("Invalid chat capability");
   const configuredOrigin = new URL(origin);
   if (configuredOrigin.protocol !== "https:" || configuredOrigin.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   for (const method of ["actor", "listConversations", "clientConversation", "messages", "events", "send", "markRead", "delete"]) {
@@ -216,7 +216,7 @@ export function createChatHandler(service, { origin, clientConversationExporter 
           ...(videoEnabled ? { "Content-Security-Policy": AUTH_HEADERS["Content-Security-Policy"] + "; media-src 'self' blob:" } : {}) });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, ...(videoEnabled ? { video: { enabled: true, maxBytes: 104857600, mime: "video/mp4" } } : {}), ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes, ...(clientConversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
+        reply(response, method, 200, { enabled: true, ...(videoEnabled ? { video: { enabled: true, maxBytes: 104857600, mime: "video/mp4", ...(!videoCreationEnabled ? { creationEnabled: false } : {}) } } : {}), ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes, ...(clientConversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
       } else if (route.kind === "list") {
         const options = query(url, ["afterId", "limit"], 50);
         const afterId = options.afterId ?? null;

@@ -203,6 +203,7 @@ function safeActivity(value, video = false) {
 }
 
 function mappedError(error) {
+  if (error?.code === "BROADCAST_READ_ONLY") return { status: 403, code: "feature_read_only" };
   const publicErrors = new Map([[400, "invalid_request"], [408, "request_timeout"], [413, "request_too_large"],
     [415, "json_required"], [503, "broadcast_unavailable"]]);
   if (publicErrors.has(error?.httpStatus) && publicErrors.get(error.httpStatus) === error.publicCode
@@ -223,13 +224,14 @@ function mappedError(error) {
 }
 
 /** Every route and source asset requires its own current role and cookie. */
-export function createBroadcastHandler(service, { origin, mediaEnabled = false, videoEnabled = false }) {
+export function createBroadcastHandler(service, { origin, mediaEnabled = false, videoEnabled = false, videoCreationEnabled = service?.videoCreationEnabled ?? true }) {
   const configured = new URL(origin);
   if (configured.protocol !== "https:" || configured.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
-  if (typeof mediaEnabled !== "boolean" || typeof videoEnabled !== "boolean") throw new TypeError("A boolean media capability is required");
+  if (typeof mediaEnabled !== "boolean" || typeof videoEnabled !== "boolean" || typeof videoCreationEnabled !== "boolean") throw new TypeError("A boolean media capability is required");
   if (service?.largeAudiencesEnabled !== undefined && typeof service.largeAudiencesEnabled !== "boolean") throw new TypeError("A boolean audience capability is required");
   const largeAudiencesEnabled = service?.largeAudiencesEnabled === true;
   if (videoEnabled && (!largeAudiencesEnabled || service?.videoEnabled !== true)) throw new TypeError("A video broadcast capability is required");
+  if (videoEnabled && !videoCreationEnabled && service?.videoCreationEnabled !== false) throw new TypeError("A read-only video broadcast service is required");
   for (const method of ["actor", "preview", "create", "activity", "list", "get", "cancel"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("A private broadcast service is required");
   }
@@ -257,7 +259,7 @@ export function createBroadcastHandler(service, { origin, mediaEnabled = false, 
         const [name, type] = files.get(url.pathname);
         reply(response, method, 200, await readFile(new URL(name, publicRoot)), { "Content-Type": type, ...(videoEnabled && name === "broadcast.html" ? { "Content-Security-Policy": AUTH_HEADERS["Content-Security-Policy"] + "; media-src 'self' blob:" } : {}) });
       } else if (route.kind === "session") {
-        reply(response, method, 200, { ...current, mediaEnabled, ...(videoEnabled ? { videoEnabled: true } : {}), ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}) });
+        reply(response, method, 200, { ...current, mediaEnabled, ...(videoEnabled ? { videoEnabled: true, ...(!videoCreationEnabled ? { videoCreationEnabled: false } : {}) } : {}), ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}) });
       } else if (route.kind === "preview") {
         const body = await readJson(request, { maxBytes: largeAudiencesEnabled ? 1048576 : 32768 }), requested = validatePreview(body, { video: videoEnabled });
         if (requested.audience && !largeAudiencesEnabled) throw invalid();

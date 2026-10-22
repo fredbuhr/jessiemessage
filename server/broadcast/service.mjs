@@ -14,12 +14,12 @@ const fail = (code) => { throw new BroadcastError(code); };
 const states = ["pending", "sending", "delivered", "skipped", "cancelled", "failed"];
 const statuses = ["queued", "running", "completed", "cancelled", "paused"];
 const reasons = ["access_inactive", "opted_out", "conversation_unavailable", "media_unavailable", "repeat_media", "expired", "administrator_invalid", "processing_failed", "cancelled"];
-const permitted = new Set(["BROADCAST_INPUT", "BROADCAST_UNAUTHORIZED", "BROADCAST_NOT_FOUND", "BROADCAST_CONFLICT", "BROADCAST_LIMIT", "BROADCAST_RECIPIENTS", "BROADCAST_REPEAT", "BROADCAST_MEDIA", "BROADCAST_RATE_LIMIT"]);
+const permitted = new Set(["BROADCAST_INPUT", "BROADCAST_UNAUTHORIZED", "BROADCAST_NOT_FOUND", "BROADCAST_CONFLICT", "BROADCAST_LIMIT", "BROADCAST_RECIPIENTS", "BROADCAST_REPEAT", "BROADCAST_MEDIA", "BROADCAST_RATE_LIMIT", "BROADCAST_READ_ONLY"]);
 const storedId = (value) => { if (!Buffer.isBuffer(value) || value.length !== 16) fail("BROADCAST_UNAVAILABLE"); return value.toString("hex"); };
 const date = (value) => { if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail("BROADCAST_UNAVAILABLE"); return value; };
 const text = (value, max = 64) => { if (typeof value !== "string" || !value.isWellFormed() || value.length > max) fail("BROADCAST_UNAVAILABLE"); return value; };
-export async function createBroadcastService({ store, authService, authStore, key, mediaEnabled = false, videoEnabled = false, largeAudiencesEnabled = false, clock = Date.now }) {
-  if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || typeof mediaEnabled !== "boolean" || typeof videoEnabled !== "boolean" || videoEnabled && !largeAudiencesEnabled || typeof largeAudiencesEnabled !== "boolean"
+export async function createBroadcastService({ store, authService, authStore, key, mediaEnabled = false, videoEnabled = false, videoCreationEnabled = true, largeAudiencesEnabled = false, clock = Date.now }) {
+  if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || typeof mediaEnabled !== "boolean" || typeof videoEnabled !== "boolean" || typeof videoCreationEnabled !== "boolean" || videoEnabled && !largeAudiencesEnabled || typeof largeAudiencesEnabled !== "boolean"
     || typeof authService?.session !== "function" || typeof authStore?.consumeRateLimit !== "function"
     || ["preview", "create", "activity", "list", "get", "cancel"].some((method) => typeof store?.[method] !== "function")) fail("BROADCAST_CONFIG");
   key = Buffer.from(key);
@@ -145,12 +145,13 @@ export async function createBroadcastService({ store, authService, authStore, ke
     return { recipients, totalCount: row.totalCount, eligibleCount: row.eligibleCount, excludedCount: row.excludedCount, repeatCount: row.repeatCount, previewToken };
   }
   return Object.freeze({
-    largeAudiencesEnabled, videoEnabled,
+    largeAudiencesEnabled, videoEnabled, videoCreationEnabled,
     actor: (role, token) => guarded(() => actor(role, token)),
     preview: (token, input) => guarded(async () => {
       const parsed = validatePreview(input, { video: videoEnabled }); imageEnabled(parsed.mediaId);
       if (parsed.audience && !largeAudiencesEnabled) fail("BROADCAST_INPUT");
       const { session, request } = await context("admin", token);
+      if (parsed.videoId && !videoCreationEnabled) fail("BROADCAST_READ_ONLY");
       if (parsed.audience) {
         if (typeof store.previewAudience !== "function") fail("BROADCAST_UNAVAILABLE");
         return audiencePreviewDTO(await store.previewAudience({ ...request, ...parsed }), parsed, session);
@@ -185,7 +186,7 @@ export async function createBroadcastService({ store, authService, authStore, ke
         const payload = { version: video ? 3 : 2, title: parsed.title, body: parsed.body, mediaId: binding.mediaId, ...(video ? { videoId: binding.videoId } : {}), allowRepeatMedia: parsed.allowRepeatMedia,
           audience: { mode: parsed.audience.mode, count: snapshot.count, digest: snapshot.digest, selectorHash: binding.selectorHash } };
         const requestFingerprint = campaignFingerprint(payload, key, { adminId }, { video: videoEnabled });
-        const result = await store.createAudience({ ...request, audience: parsed.audience, snapshot,
+        const result = await store.createAudience({ ...request, audience: parsed.audience, snapshot, ...(video && !videoCreationEnabled ? { allowVideoCreation: false } : {}),
           verifyPreview: (now) => readPreviewToken(parsed.previewToken, key, binding, { now, video }),
           campaign: { id, clientCampaignId: parsed.clientCampaignId, requestFingerprint,
             payloadEncrypted: sealPayload(payload, key, { campaignId: id, adminId }, { video: videoEnabled }), mediaId: parsed.mediaId, ...(video ? { videoId: parsed.videoId } : {}),

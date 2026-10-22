@@ -24,7 +24,8 @@ const sequence = (value) => {
 const limitValue = (value) => { if (!Number.isInteger(value) || value < 1 || value > 100) fail("CHAT_INPUT"); return value; };
 const allowedErrors = new Set(["CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "CHAT_RATE_LIMIT", "AUTH_BUSY", "VIDEO_NOT_FOUND", "VIDEO_INPUT"]);
 
-export async function createChatService({ store, authStore, authService, accessService, key, clock = Date.now, videoMessages }) {
+export async function createChatService({ store, authStore, authService, accessService, key, clock = Date.now, videoMessages, videoCreationEnabled = true }) {
+  if (typeof videoCreationEnabled !== "boolean") throw new ChatError("CHAT_CONFIG");
   if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function") throw new ChatError("CHAT_CONFIG");
   if (videoMessages !== undefined && typeof videoMessages?.sendMessage !== "function") throw new ChatError("CHAT_CONFIG");
   for (const method of ["listConversations", "getClientConversation", "readMessages", "readEvents", "sendMessage", "markRead", "deleteMessage"]) {
@@ -203,6 +204,7 @@ export async function createChatService({ store, authStore, authService, accessS
         if (typeof caption !== "string" || caption.length > 1000) fail("CHAT_INPUT");
         if (caption !== "") validateMessageBody(caption);
         const { session, request } = await context(role, token, conversationId);
+        if (!videoCreationEnabled) fail("CHAT_READ_ONLY");
         await mutationLimit(session.user.id, "send", request.now);
         const messageId = randomBytes(16), senderId = idBytes(session.user.id);
         const body = JSON.stringify({ videoId, caption });

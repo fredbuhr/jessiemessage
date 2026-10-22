@@ -57,6 +57,23 @@ async function fixture(t, overrides = {}, options = {}) {
   return { base: `http://127.0.0.1:${server.address().port}`, port: server.address().port, calls, handles, service, handler };
 }
 const post = (f, url = sendPath(), payload = body(), requestHeaders = headers()) => fetch(f.base + url, { method: "POST", headers: requestHeaders, body: typeof payload === "string" ? payload : JSON.stringify(payload) });
+
+test("read-only video HTTP checks auth and CSRF before refusing body parsing while retaining range and gallery reads", async t => {
+  const f = await fixture(t, {}, { creationEnabled: false });
+  for (const role of ["admin", "client"]) {
+    const refused = await post(f, sendPath(role), "not JSON", headers(role));
+    assert.equal(refused.status, 403); assert.deepEqual(await refused.json(), { error: "feature_read_only" });
+    const upload = await fetch(f.base + `/api/video/${role}/assets`, { method: "POST", headers: headers(role, { "Content-Type": "video/mp4" }), body: video });
+    assert.equal(upload.status, 403); assert.deepEqual(await upload.json(), { error: "feature_read_only" });
+    const range = await fetch(f.base + contentPath(role), { headers: headers(role, { Range: "bytes=0-4" }) });
+    assert.equal(range.status, 206); assert.deepEqual(Buffer.from(await range.arrayBuffer()), video.subarray(0, 5));
+    assert.equal((await fetch(f.base + `${basePath(role)}/gallery`, { headers: headers(role) })).status, 200);
+  }
+  const csrfFailure = await post(f, sendPath(), "not JSON", headers("admin", { "X-CSRF-Token": "bad" }));
+  assert.equal(csrfFailure.status, 403); assert.deepEqual(await csrfFailure.json(), { error: "csrf_failed" });
+  assert.equal((await post(f, sendPath(), "not JSON", { Origin: origin, "Content-Type": "application/json" })).status, 401);
+  assert.equal(f.calls.some(([kind]) => kind === "send"), false);
+});
 function privateResponse(response) {
   for (const [key, value] of Object.entries(AUTH_HEADERS)) assert.equal(response.headers.get(key), value);
   assert.equal(response.headers.get("access-control-allow-origin"), null);

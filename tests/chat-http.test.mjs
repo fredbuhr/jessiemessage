@@ -575,3 +575,13 @@ test("video capability and blob media CSP require the explicit candidate option 
     assert.doesNotMatch(oldPage.headers.get("content-security-policy"), /media-src/);
   }
 });
+
+test("compatibility chat advertises video reading with creation disabled and keeps its media CSP", async t => {
+  const f = await fixture(t, {}, { videoEnabled: true, videoCreationEnabled: false });
+  for (const role of ["admin", "client"]) {
+    const response = await fetch(`${f.base}/api/chat/${role}/capabilities`, { headers: { Cookie: cookie(role) } });
+    assert.deepEqual((await response.json()).video, { enabled: true, maxBytes: 104857600, mime: "video/mp4", creationEnabled: false });
+    const page = await fetch(f.base + (role === "admin" ? "/admin/messages" : "/messages"), { headers: { Cookie: cookie(role) } });
+    assert.match(page.headers.get("content-security-policy"), /(?:^|;) media-src 'self' blob:/);
+  }
+});

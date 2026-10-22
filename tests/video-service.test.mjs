@@ -9,6 +9,17 @@ import { videoFixture, mp4Source, uploadFixture, collectVideo } from "./helpers/
 
 const code = (wanted) => (error) => error.code === wanted;
 
+test("compatibility video transport keeps authenticated ranges while refusing admission and upload before storage", async t => {
+  const f = await videoFixture(t), account = f.accounts[0], saved = await uploadFixture(f, account, 100);
+  const compat = await createVideoService({ ...f.options, creationEnabled: false }), before = f.state.calls.length;
+  await assert.rejects(compat.admitUpload(account.role, account.token, { bytes: 100, mime: "video/mp4" }), code("VIDEO_READ_ONLY"));
+  await assert.rejects(compat.upload(account.role, account.token, {}, { async *[Symbol.asyncIterator]() { assert.fail("A closed creator must not read a body"); } }), code("VIDEO_READ_ONLY"));
+  await assert.rejects(compat.upload(account.role, "bad", {}, []), code("CHAT_UNAUTHORIZED"));
+  assert.equal(f.state.calls.length, before);
+  const opened = await compat.open(account.role, account.token, saved.id);
+  assert.equal((await collectVideo(opened.stream({ start: 0, end: 15 }))).length, 16); await opened.close();
+});
+
 async function deletionFixture(t) {
   const f = await videoFixture(t), fingerprint = await f.storage.fingerprint();
   const failure = (value) => { throw Object.assign(new Error("synthetic lifecycle failure"), { code: value }); };
