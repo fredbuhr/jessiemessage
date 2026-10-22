@@ -3,6 +3,7 @@
 // service is contacted and no real message or credential is used.
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
@@ -104,13 +105,60 @@ async function readyHelp(page, language) {
   await waitUntil(() => page.execute("return location.pathname === '/help' && !location.hash && !location.search && document.documentElement.lang === arguments[0] && document.title === arguments[1] && !!globalThis.JessieI18n && !!document.querySelector('main h1')", language, title), "fully initialised real Help page with its URL cleaned");
 }
 async function noErrors(page) { assert.deepEqual(await page.execute("return window.__helpErrors"), [], "no script, promise or CSP errors"); }
-async function privateSurfaces(page) {
+const chatDraftKey = "jessiemessage.chat-drafts.v1.client";
+function assertSourceChatDraft(raw, now = Date.now()) {
+  assert.equal(typeof raw, "string");
+  assert.ok(Buffer.byteLength(raw, "utf8") <= 65536, "the tab draft record remains bounded");
+  const saved = JSON.parse(raw);
+  assert.equal(JSON.stringify(saved), raw, "the record has no duplicate or extra wire fields");
+  assert.deepEqual(Object.keys(saved).sort(), ["entries", "id", "role", "selected", "sessionTag", "version"]);
+  assert.equal(saved.version, 1); assert.equal(saved.role, "client"); assert.equal(saved.id, id(2));
+  assert.equal(saved.sessionTag, createHash("sha256").update(`jessiemessage:chat-drafts:v1:client:${id(2)}:${"A".repeat(43)}`).digest("hex"),
+    "only the non-authorizing session fingerprint is retained");
+  assert.equal(saved.selected, conversationId);
+  assert.ok(Array.isArray(saved.entries)); assert.equal(saved.entries.length, 1, "only this conversation's current draft is retained");
+  const entry = saved.entries[0];
+  assert.deepEqual(Object.keys(entry).sort(), ["hadAttachment", "id", "pending", "text", "updatedAt"]);
+  assert.equal(entry.id, conversationId); assert.equal(entry.text, draft);
+  assert.equal(entry.pending, null); assert.equal(entry.hadAttachment, false, "no media or unfinished POST belongs to this fixture");
+  assert.ok(entry.text.length <= 4096 && Buffer.byteLength(entry.text, "utf8") <= 16384);
+  assert.ok(Number.isSafeInteger(entry.updatedAt) && entry.updatedAt >= 0 && entry.updatedAt <= now && entry.updatedAt >= now - 86400000);
+  for (const secret of [syntheticToken, "A".repeat(43)]) assert.equal(raw.includes(secret), false, "no recovery token or raw CSRF credential is stored");
+}
+async function privateSurfaces(page, { chatDraft = false } = {}) {
   assert.equal(await page.execute(`const secret = arguments[0]; return [location.href, document.documentElement.outerHTML, JSON.stringify({...localStorage}), JSON.stringify({...sessionStorage})].every(surface => !surface.includes(secret));`, syntheticToken), true,
     "no recovery token is copied to the URL, markup or browser storage");
   assert.deepEqual(await page.execute("return Object.keys(localStorage)"), [], "Help introduces no local storage");
-  assert.deepEqual(await page.execute("return Object.keys(sessionStorage)"), ["jessiemessage.language"], "only the existing language preference is stored");
-  assert.equal(await page.execute("return !JSON.stringify({...localStorage, ...sessionStorage}).includes(arguments[0])", draft), true, "a chat draft is never copied into web storage");
+  const stored = await page.execute("return {...sessionStorage}");
+  assert.deepEqual(Object.keys(stored).sort(), (chatDraft ? ["jessiemessage.language", chatDraftKey] : ["jessiemessage.language"]).sort(),
+    "only the language preference and the explicitly expected source-tab draft can exist");
+  if (chatDraft) {
+    assert.equal(await page.execute("return location.pathname"), "/messages", "the allowance belongs only to the unchanged source chat tab");
+    assertSourceChatDraft(stored[chatDraftKey]);
+  } else assert.equal(await page.execute("return !JSON.stringify({...localStorage, ...sessionStorage}).includes(arguments[0])", draft), true,
+    "Help and recovery never receive a chat draft in web storage");
 }
+
+test("Help source storage assertions reject credentials, media, history and malformed draft records", () => {
+  const now = Date.now(), valid = { version: 1, role: "client", id: id(2),
+    sessionTag: createHash("sha256").update(`jessiemessage:chat-drafts:v1:client:${id(2)}:${"A".repeat(43)}`).digest("hex"), selected: conversationId,
+    entries: [{ id: conversationId, text: draft, pending: null, hadAttachment: false, updatedAt: now }] };
+  assertSourceChatDraft(JSON.stringify(valid), now);
+  const changes = [
+    value => { value.token = syntheticToken; }, value => { value.csrf = "A".repeat(43); }, value => { value.role = "admin"; },
+    value => { value.id = id(3); }, value => { value.sessionTag = "A".repeat(43); }, value => { value.selected = id(4); },
+    value => { value.entries.push({ ...value.entries[0], id: id(5) }); }, value => { value.entries[0].videoId = id(6); },
+    value => { value.entries[0].mediaId = id(7); }, value => { value.entries[0].pending = { clientMessageId: id(8) }; },
+    value => { value.entries[0].hadAttachment = true; }, value => { value.entries[0].text = "A historical message"; },
+    value => { value.entries[0].updatedAt = now + 1; }, value => { value.entries[0].updatedAt = now - 86400001; },
+    value => { value.entries[0].text = "x".repeat(65537); },
+  ];
+  for (const change of changes) {
+    const value = structuredClone(valid); change(value);
+    assert.throws(() => assertSourceChatDraft(JSON.stringify(value), now));
+  }
+  assert.throws(() => assertSourceChatDraft(JSON.stringify(valid).replace('"version":1', '"version":2,"version":1'), now));
+});
 async function helpLayout(page) {
   const result = await page.execute(`const width = document.documentElement.clientWidth;
     const targets = [...document.querySelectorAll('summary, button, main a')].filter(node => node.getBoundingClientRect().width > 0);
@@ -229,7 +277,7 @@ test("real Chrome: practical Help is translated, accessible and never collects p
         assert.equal(fixture.requests.filter(request => request.path === "/help").every(request => !request.query && !request.hasReferrer), true,
           "native noreferrer navigation sends no source URL or private fragment");
         assert.equal(fixture.requests.every(request => !request.secretInUrl && !request.secretInReferrer), true);
-        await noErrors(page); await privateSurfaces(page); assert.deepEqual(fixture.failures, []);
+        await noErrors(page); await privateSurfaces(page, { chatDraft: source === "chat" }); assert.deepEqual(fixture.failures, []);
       } finally { await page.close(); }
     });
   } finally { await fixture?.close(); await driver.close(); }

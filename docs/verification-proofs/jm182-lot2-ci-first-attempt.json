@@ -1,0 +1,996 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-audit182-lot2-ci-qualification",
+  "status": "source_not_qualified_failed_run_and_complete_job_logs_verified",
+  "repository": "fredbuhr/jessiemessage",
+  "candidateVersion": "1.8.2",
+  "pullRequest": 129,
+  "pullRequestUrl": "https://github.com/fredbuhr/jessiemessage/pull/129",
+  "source": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+  "tree": "60e80d85d488c12dbcde54ea4e404cae64ed5977",
+  "testedCheckout": "80984986afc5b1069f88e63b633f83dfc8f4a6fc",
+  "testedTree": "60e80d85d488c12dbcde54ea4e404cae64ed5977",
+  "testedParents": [
+    "422c8ac0b75b945d280c3a84225cd3e2b0025087",
+    "479e45a969cb6d33b959ac4eacf75c9b02268e79"
+  ],
+  "testedTreeEqualsSource": true,
+  "run": {
+    "id": 39823939808,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39823939808",
+    "event": "pull_request",
+    "path": ".github/workflows/ci.yml",
+    "head": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "createdAt": "2026-10-22T17:34:45Z",
+    "startedAt": "2026-10-22T17:34:45Z",
+    "updatedAt": "2026-10-22T17:43:50Z"
+  },
+  "jobs": [
+    {
+      "id": 119982120183,
+      "name": "verify",
+      "head": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T17:34:48Z",
+      "completedAt": "2026-10-22T17:37:35Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Check JavaScript syntax",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Verify private Node preparation with synthetic files",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Run tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Build offline workbench",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Downloadable preview (open HTML, no console)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 18,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 19,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "80984986afc5b1069f88e63b633f83dfc8f4a6fc",
+      "tests": {
+        "tests": 3869,
+        "suites": 0,
+        "pass": 3821,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 110436.031814
+      },
+      "fullLog": {
+        "file": "ci-39823939808-job119982120183.log",
+        "bytes": 545933,
+        "sha256": "2bb151d64ea0fe654bc04520a458e2aa1003ee5f44362d4e3ae642c0ff61aa18",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": [],
+      "pythonTests": {
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "evidence": "2026-10-22T17:35:19.4336886Z Ran 15 tests in 0.408s",
+        "result": "2026-10-22T17:35:19.4337438Z OK"
+      },
+      "omissions": {
+        "total": 48,
+        "sqlOptIn": 46,
+        "procfsConditional": 2,
+        "countedAsPassed": false,
+        "details": [
+          {
+            "line": 197,
+            "text": "2026-10-22T17:35:19.8172449Z ﹣ real HTTP invitation, encrypted verification mail and gated client access (synthetic disposable database only) (1.374707ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 276,
+            "text": "2026-10-22T17:35:25.1879239Z ﹣ real MariaDB invitation and restricted client access persistence (synthetic disposable database only) (1.031749ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 289,
+            "text": "2026-10-22T17:35:25.1926161Z ﹣ durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only) (1.243849ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials."
+          },
+          {
+            "line": 340,
+            "text": "2026-10-22T17:35:25.2058324Z ﹣ Linux descriptor bootstrap refuses unavailable proc descriptor paths before database initialization (0.172591ms) # Real proc descriptor paths are available"
+          },
+          {
+            "line": 411,
+            "text": "2026-10-22T17:35:25.2333081Z ﹣ real MariaDB controlled administrator recovery (synthetic disposable database only) (0.871737ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 443,
+            "text": "2026-10-22T17:35:25.2471565Z ﹣ real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery (1.109716ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 570,
+            "text": "2026-10-22T17:35:38.4923559Z ﹣ real MariaDB administrator authentication persistence (synthetic disposable database only) (1.031869ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 674,
+            "text": "2026-10-22T17:35:38.5086499Z ﹣ offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only) (1.021933ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases."
+          },
+          {
+            "line": 731,
+            "text": "2026-10-22T17:35:38.5182071Z ﹣ real MariaDB photo and video admission share the existing backup envelope without rewriting historical quotas (1.022445ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 846,
+            "text": "2026-10-22T17:35:38.5393603Z ﹣ real MariaDB trusted broadcast/chat transactions (synthetic disposable database only) (1.150868ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 866,
+            "text": "2026-10-22T17:35:38.5424862Z ﹣ real HTTP targeted broadcasts require active access and retain durable ordinary chat delivery (synthetic disposable database only) (1.11274ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 981,
+            "text": "2026-10-22T17:35:38.5585801Z ﹣ real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages (1.135745ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 1005,
+            "text": "2026-10-22T17:35:38.5622511Z ﹣ real MariaDB active-access eligibility, immutable targeted campaigns and atomic private delivery (synthetic disposable schema only) (1.004988ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 1130,
+            "text": "2026-10-22T17:35:38.5814662Z ﹣ real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only) (1.020031ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 1329,
+            "text": "2026-10-22T17:35:38.6108946Z ﹣ real MariaDB private text chat persistence (synthetic disposable database only) (0.856503ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 1415,
+            "text": "2026-10-22T17:35:39.5306806Z ﹣ native closure reconciliation replays a source receipt into a distinct MariaDB/media clone and retains quarantine (1.295366ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases."
+          },
+          {
+            "line": 1469,
+            "text": "2026-10-22T17:35:40.3556491Z ﹣ real HTTP private CRM, encrypted notes, scoped labels and current authorization (synthetic disposable database only) (1.108425ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 1572,
+            "text": "2026-10-22T17:35:42.4317432Z ﹣ real MariaDB private CRM ownership, optimistic saves and inbox filters (synthetic disposable schema only) (1.035934ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 1602,
+            "text": "2026-10-22T17:35:42.4368549Z ﹣ offline deletion facts and operator plan inspect real reference graphs without SQL or filesystem mutation (synthetic disposable database only) (0.945028ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 1638,
+            "text": "2026-10-22T17:35:42.4426472Z ﹣ offline client content reader isolates two real MariaDB clients in one read-only snapshot (synthetic disposable database only) (1.107433ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 1796,
+            "text": "2026-10-22T17:35:43.1176106Z ﹣ the real dual-origin runtime shares schema thirty, source sessions, encrypted notifications and invitation policy (synthetic disposable database only) (1.197159ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 1969,
+            "text": "2026-10-22T17:35:45.7908949Z ﹣ local closures drain the real managed process and preserve durable SQL/photo absence without a PC (disposable MariaDB only) (1.208717ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials."
+          },
+          {
+            "line": 1970,
+            "text": "2026-10-22T17:35:45.7910485Z ﹣ real MariaDB encrypted verification mail persistence (synthetic disposable database only) (1.048204ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 2126,
+            "text": "2026-10-22T17:35:52.6904551Z ﹣ an administrator request drains a real child, captures SQL33 and photos, encrypts with real GPG, resumes and downloads its pinned ciphertext (0.977967ms) # Set JESSIEMESSAGE_DB_TEST=1 with disposable loopback MariaDB, native clients, procfs and GPG."
+          },
+          {
+            "line": 2127,
+            "text": "2026-10-22T17:35:52.6908563Z ﹣ manual operator imports a real native archive, publishes the actual IPC application and verifies drain and ordinary restart on an isolated target (0.213602ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases and native MariaDB clients."
+          },
+          {
+            "line": 2128,
+            "text": "2026-10-22T17:35:52.6912053Z ﹣ the operator CLI resumes interrupted media using native SQL once, then copies only missing files and opens the owned IPC service (0.171489ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable databases and native MariaDB clients."
+          },
+          {
+            "line": 2142,
+            "text": "2026-10-22T17:35:52.6933297Z ﹣ manual local restoration reconciles later closures on a distinct MariaDB/media clone without witness or exhaustive SQL inventory (1.055315ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases."
+          },
+          {
+            "line": 2183,
+            "text": "2026-10-22T17:35:52.6985983Z ﹣ real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only) (0.801171ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 2336,
+            "text": "2026-10-22T17:35:55.5974384Z ﹣ real MariaDB private media ownership and delivery (synthetic disposable database only) (1.051458ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 2360,
+            "text": "2026-10-22T17:35:55.6005915Z ﹣ real MariaDB migration and foundation constraints (synthetic disposable database only) (0.889614ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 2439,
+            "text": "2026-10-22T17:35:55.6129367Z ﹣ real MariaDB private notification transactions (synthetic disposable database only) (0.976775ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 2504,
+            "text": "2026-10-22T17:35:56.0488040Z ﹣ operational metadata samples real MariaDB queues with runtime DML rights and no queue mutation (synthetic disposable database only) (0.492644ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 2627,
+            "text": "2026-10-22T17:35:59.6733031Z ﹣ operator SQL preflight observes real MariaDB with runtime DML rights without mutation (synthetic disposable database only) (1.051739ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 2629,
+            "text": "2026-10-22T17:35:59.6754656Z ﹣ explicit Linux dirfd selection fails closed when real procfs is absent (0.194533ms) # SKIP"
+          },
+          {
+            "line": 2881,
+            "text": "2026-10-22T17:36:11.5166312Z ﹣ real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only) (1.188906ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 2903,
+            "text": "2026-10-22T17:36:11.5196398Z ﹣ administrator readiness with real SQL MFA, private HTTP and fake verification-only SMTP (synthetic disposable database only) (0.930275ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 3263,
+            "text": "2026-10-22T17:36:11.5727291Z ﹣ real HTTP client recovery, encrypted mail, single use and unchanged access gates (synthetic disposable database only) (1.336248ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 3316,
+            "text": "2026-10-22T17:36:15.6993250Z ﹣ real MariaDB single-use client password recovery and private leased mail (synthetic disposable database only) (0.842072ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database."
+          },
+          {
+            "line": 3585,
+            "text": "2026-10-22T17:36:18.3301155Z ﹣ real MariaDB private tasks persist, retry, page and serialize simultaneous administrators (0.871216ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 3652,
+            "text": "2026-10-22T17:36:19.4899218Z ﹣ native SQL36 video backup captures two encrypted roots, resumes a separate clone and preserves old closure receipts (1.212031ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit disposable loopback databases, native SQL/tar clients and procfs."
+          },
+          {
+            "line": 3670,
+            "text": "2026-10-22T17:36:20.3418001Z ﹣ SQL36 video broadcasts protect queued originals, preserve private delivery and release unused terminal sources (1.153092ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 3679,
+            "text": "2026-10-22T17:36:20.3428649Z ﹣ real HTTP conversation ZIP streams isolate video deliveries and authenticate GCM before a valid ZIP footer (0.899548ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 3692,
+            "text": "2026-10-22T17:36:20.4475464Z ﹣ real read-only MariaDB client video exports stream authenticated files without changing SQL or source capacity (1.166112ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 3714,
+            "text": "2026-10-22T17:36:20.7036221Z ﹣ candidate video deletion and account closure remain durable and preserve other clients (1.258371ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 3765,
+            "text": "2026-10-22T17:36:21.5720191Z ﹣ real HTTP/SQL video messages are atomic, idempotent, private and visible only through live deliveries (1.2977ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 3881,
+            "text": "2026-10-22T17:36:23.1934694Z ﹣ real MariaDB dormant video catalog reserves, commits and reconciles durable capacity (0.935713ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database."
+          },
+          {
+            "line": 4074,
+            "text": "2026-10-22T17:37:10.0484744Z ﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media directly without enabling closures (disposable MariaDB only) (0.885127ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials."
+          },
+          {
+            "line": 4075,
+            "text": "2026-10-22T17:37:10.0495225Z ﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media through the real parent gateway without enabling closures (disposable MariaDB only) (0.179681ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials."
+          }
+        ]
+      }
+    },
+    {
+      "id": 119982120359,
+      "name": "MariaDB 11.4",
+      "head": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T17:34:48Z",
+      "completedAt": "2026-10-22T17:41:51Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "80984986afc5b1069f88e63b633f83dfc8f4a6fc",
+      "tests": {
+        "tests": 575,
+        "suites": 0,
+        "pass": 575,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 381854.714367
+      },
+      "fullLog": {
+        "file": "ci-39823939808-job119982120359.log",
+        "bytes": 331140,
+        "sha256": "0ef73707ff65f345841cb6a86ed763a87c21ac352756a1fa534d353a44de368c",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": [],
+      "syntheticSqlMetrics": [
+        {
+          "type": "video-backup-synthetic-metrics",
+          "sqlBytes": 84555,
+          "encryptedPhotoBytes": 1272,
+          "encryptedVideoBytes": 2622485,
+          "measurements": [
+            {
+              "phase": "capture",
+              "durationMs": 1422.813,
+              "peakNodeRssKiB": 156220
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1592.392,
+              "peakNodeRssKiB": 176304
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 66.449,
+              "peakNodeRssKiB": 176304
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 109.813,
+              "peakNodeRssKiB": 176304
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1062.357,
+              "peakNodeRssKiB": 176304
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 118.08,
+              "peakNodeRssKiB": 176304
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 48.249,
+              "peakNodeRssKiB": 176304
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 803.283,
+              "peakNodeRssKiB": 199208
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 737.922,
+              "peakNodeRssKiB": 209264
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1583.88,
+              "peakNodeRssKiB": 225632
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 101.102,
+              "peakNodeRssKiB": 225632
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 821.449,
+              "peakNodeRssKiB": 225632
+            },
+            {
+              "phase": "manual-reconcile-publish",
+              "durationMs": 18962.867,
+              "peakNodeRssKiB": 324136
+            }
+          ],
+          "peakNodeRssKiB": 324136,
+          "memoryScope": "Node test process peak RSS only; MariaDB, Chrome and child processes excluded",
+          "sqlTransport": "owned loopback without TLS"
+        }
+      ]
+    },
+    {
+      "id": 119982120408,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "head": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T17:34:48Z",
+      "completedAt": "2026-10-22T17:36:22Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Create disposable DML-only runtime account",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Rehearse authentication and independent messaging sessions over loopback HTTPS",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "80984986afc5b1069f88e63b633f83dfc8f4a6fc",
+      "tests": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 58686.291771
+      },
+      "fullLog": {
+        "file": "ci-39823939808-job119982120408.log",
+        "bytes": 34624,
+        "sha256": "e7a86df74ebfd41e5f62fa242e8614aca3c67c74cc0f1e06839745082a23021f",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": []
+    },
+    {
+      "id": 119982120700,
+      "name": "Chrome keyboard and chat lifecycle",
+      "head": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "startedAt": "2026-10-22T17:34:48Z",
+      "completedAt": "2026-10-22T17:39:20Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Exercise real Chrome with synthetic local fixtures",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 6,
+          "name": "Homepage rendering in French and English",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 12,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "80984986afc5b1069f88e63b633f83dfc8f4a6fc",
+      "tests": {
+        "tests": 222,
+        "suites": 0,
+        "pass": 218,
+        "fail": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 260218.95171
+      },
+      "fullLog": {
+        "file": "ci-39823939808-job119982120700.log",
+        "bytes": 50409,
+        "sha256": "2cca042d0faffbf481ace35af490f0d191575435162e10269372d4e30ccc3b23",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": [
+        {
+          "line": 484,
+          "text": "2026-10-22T17:39:17.6091250Z ##[error]Process completed with exit code 1."
+        }
+      ]
+    },
+    {
+      "id": 119982120722,
+      "name": "MariaDB 10.11",
+      "head": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T17:34:48Z",
+      "completedAt": "2026-10-22T17:43:49Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "80984986afc5b1069f88e63b633f83dfc8f4a6fc",
+      "tests": {
+        "tests": 575,
+        "suites": 0,
+        "pass": 575,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 381731.483385
+      },
+      "fullLog": {
+        "file": "ci-39823939808-job119982120722.log",
+        "bytes": 330157,
+        "sha256": "b25ab06246ed9e6ecebdb6074f99e9d8ccf31a2ca0129e668fe19728352ec13d",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": [],
+      "syntheticSqlMetrics": [
+        {
+          "type": "video-backup-synthetic-metrics",
+          "sqlBytes": 84555,
+          "encryptedPhotoBytes": 1272,
+          "encryptedVideoBytes": 2622485,
+          "measurements": [
+            {
+              "phase": "capture",
+              "durationMs": 1460.014,
+              "peakNodeRssKiB": 169452
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1627.223,
+              "peakNodeRssKiB": 174108
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 67.214,
+              "peakNodeRssKiB": 174108
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 104.811,
+              "peakNodeRssKiB": 174108
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1069.257,
+              "peakNodeRssKiB": 181928
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 102.555,
+              "peakNodeRssKiB": 186780
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 43.15,
+              "peakNodeRssKiB": 186780
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 817.544,
+              "peakNodeRssKiB": 190628
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 781.534,
+              "peakNodeRssKiB": 191512
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1571.587,
+              "peakNodeRssKiB": 203916
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 103.851,
+              "peakNodeRssKiB": 203916
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 822.413,
+              "peakNodeRssKiB": 212816
+            },
+            {
+              "phase": "manual-reconcile-publish",
+              "durationMs": 19172.451,
+              "peakNodeRssKiB": 339360
+            }
+          ],
+          "peakNodeRssKiB": 339360,
+          "memoryScope": "Node test process peak RSS only; MariaDB, Chrome and child processes excluded",
+          "sqlTransport": "owned loopback without TLS"
+        }
+      ]
+    }
+  ],
+  "failure": {
+    "job": 119982120700,
+    "tapFailedCount": 4,
+    "failedLeafTests": 3,
+    "failedParentTests": 1,
+    "file": "tests/browser/help.browser.mjs",
+    "assertionLine": 111,
+    "callLine": 232,
+    "leafDefinitionLine": 192,
+    "leafWidthsPx": [
+      320,
+      375,
+      1280
+    ],
+    "cause": "The old privateSurfaces helper expects only jessiemessage.language; the current same-tab chat draft legitimately adds jessiemessage.chat-drafts.v1.client to sessionStorage.",
+    "expectedKeys": [
+      "jessiemessage.language"
+    ],
+    "actualKeys": [
+      "jessiemessage.chat-drafts.v1.client",
+      "jessiemessage.language"
+    ],
+    "logFile": "ci-39823939808-job119982120700.log",
+    "logLines": [
+      410,
+      482
+    ],
+    "failedAssertionOccurrences": [
+      {
+        "line": 412,
+        "text": "2026-10-22T17:39:17.6046572Z   AssertionError [ERR_ASSERTION]: only the existing language preference is stored"
+      },
+      {
+        "line": 437,
+        "text": "2026-10-22T17:39:17.6057668Z   AssertionError [ERR_ASSERTION]: only the existing language preference is stored"
+      },
+      {
+        "line": 462,
+        "text": "2026-10-22T17:39:17.6068758Z   AssertionError [ERR_ASSERTION]: only the existing language preference is stored"
+      }
+    ],
+    "applicationDefectEstablishedByThisFailure": false,
+    "collectorAppliedFix": false
+  },
+  "newChromeContinuityChecks": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "countedWithinChromeTotals": true,
+    "logFile": "ci-39823939808-job119982120700.log",
+    "cases": [
+      {
+        "feature": "broadcast suspended text and recipient",
+        "evidence": {
+          "line": 196,
+          "text": "2026-10-22T17:35:53.9896320Z ✔ Chrome: suspended text and explicit recipient return only after session proof, and another account purges them (1865.863681ms)"
+        }
+      },
+      {
+        "feature": "broadcast suspended uncertain exact retry",
+        "evidence": {
+          "line": 197,
+          "text": "2026-10-22T17:35:53.9941335Z ✔ Chrome: a suspended uncertain confirmation retains its exact key and only an explicit retry can acknowledge it (3277.346916ms)"
+        }
+      },
+      {
+        "feature": "chat real reload role/session binding",
+        "evidence": {
+          "line": 249,
+          "text": "2026-10-22T17:39:16.0091429Z ✔ Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it (2552.209476ms)"
+        }
+      },
+      {
+        "feature": "chat uncertain real reload exact retry",
+        "evidence": {
+          "line": 250,
+          "text": "2026-10-22T17:39:17.5342403Z ✔ Chrome: an uncertain text survives a real reload with its exact retry key and no automatic POST (1524.969731ms)"
+        }
+      }
+    ]
+  },
+  "nonBlockingWarnings": [
+    "Runner Node20 deprecation warnings concern actions/checkout, setup-node and upload-artifact v4 forced to runner Node24; application tests explicitly use v24.22.1."
+  ],
+  "repositoryModifiedByCollector": false,
+  "productionAccessPerformed": false,
+  "mergePerformedByCollector": false,
+  "deploymentPerformedByCollector": false,
+  "sameRunRerunPerformed": false,
+  "limits": [
+    "This source is not CI-qualified: one Chrome job failed and its failure is preserved, even though four new chat/broadcast cases passed.",
+    "General suite omits 46 SQL opt-in cases and two conditional procfs cases; these 48 omissions are not successes.",
+    "Native MariaDB and HTTPS counts are separate suites, not additional unique application coverage to sum with general tests.",
+    "Synthetic local Chrome/loopback SQL tests do not qualify a physical mobile device or the Infomaniak production runtime.",
+    "No hosted manual backup/restore, customer data access or external service mutation was performed.",
+    "A10 practical Help changes do not establish legal items D01 through D07 or complete those open requirements.",
+    "Raw GitHub archive bytes were not collected; hashes cover the complete decoded connector logs saved in UTF-8."
+  ],
+  "checkedAtUTC": "2026-10-22T17:45:24.435180+00:00"
+}

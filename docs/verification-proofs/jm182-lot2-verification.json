@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage-audit-lot2-implementation",
-  "recordedAtUTC": "2026-10-22T17:33:06.347189+00:00",
-  "status": "implemented_targeted_passed_native_ci_pending",
+  "recordedAtUTC": "2026-10-22T17:46:30.160839+00:00",
+  "status": "first_ci_failed_legacy_help_fixture_corrected_requalification_pending",
   "branch": "fix/audit-182",
   "baseSource": "e47a883c8f2a7087f18027de88e889e3e4f65dea",
   "baseTree": "8fb54159346bedebd0824c28a54994867b034ed2",
@@ -162,6 +162,19 @@
         "skipped": 0,
         "cancelled": 0
       }
+    },
+    {
+      "file": "lot2-help-browser-storage-assertions.log",
+      "bytes": 377,
+      "sha256": "da07d12812b6ef493e0a6d68723222ffa2be5561290ce70b7441ad5652153d06",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "scope": "Focused privacy-oracle test only; native Chrome parent was not selected locally."
     }
   ],
   "localRunsOverlapDoNotSumAsUnique": true,
@@ -216,12 +229,97 @@
     ],
     "newBroadcastCases": 2,
     "realBrowserQualificationStillRequired": true,
-    "physicalOsBfcacheAndEvictionNotQualified": true
+    "physicalOsBfcacheAndEvictionNotQualified": true,
+    "firstSourceResult": "All four new chat/broadcast continuity cases passed; the legacy Help source-tab storage expectation failed three leaves plus the parent. Overall Chrome remains unqualified until corrected exact-source CI."
   },
   "ci": {
-    "status": "not_requested_yet",
+    "status": "first_attempt_failed_corrected_revision_requires_fresh_ci",
     "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/129",
-    "run": null
+    "firstSource": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+    "firstTree": "60e80d85d488c12dbcde54ea4e404cae64ed5977",
+    "firstRun": {
+      "id": 39823939808,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39823939808",
+      "event": "pull_request",
+      "path": ".github/workflows/ci.yml",
+      "head": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "createdAt": "2026-10-22T17:34:45Z",
+      "startedAt": "2026-10-22T17:34:45Z",
+      "updatedAt": "2026-10-22T17:43:50Z"
+    },
+    "firstAttemptProof": "jm182-lot2-ci-first-attempt.json",
+    "firstJobResults": {
+      "verify": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 3869,
+          "suites": 0,
+          "pass": 3821,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 48,
+          "todo": 0,
+          "duration_ms": 110436.031814
+        }
+      },
+      "MariaDB 11.4": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 575,
+          "suites": 0,
+          "pass": 575,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 381854.714367
+        }
+      },
+      "Chrome HTTPS authentication and messaging with MariaDB": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 4,
+          "suites": 0,
+          "pass": 4,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 58686.291771
+        }
+      },
+      "Chrome keyboard and chat lifecycle": {
+        "conclusion": "failure",
+        "tests": {
+          "tests": 222,
+          "suites": 0,
+          "pass": 218,
+          "fail": 4,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 260218.95171
+        }
+      },
+      "MariaDB 10.11": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 575,
+          "suites": 0,
+          "pass": 575,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 381731.483385
+        }
+      }
+    },
+    "correction": "Only the Help Chrome privacy fixture changed; application code and privacy guards remain unchanged.",
+    "sameRunRerunPerformed": false
   },
   "references": [
     {
@@ -324,8 +422,8 @@
     },
     {
       "path": "tests/browser/help.browser.mjs",
-      "bytes": 21122,
-      "sha256": "5e668305453a1487de912c11af8a4354820c7ffd17208ff6119519cbac3e3a99"
+      "bytes": 24923,
+      "sha256": "4920e96587884a4d99e83c607cd9958a1a05bf4b1642819f7b5651bc5d05340d"
     },
     {
       "path": "tests/browser/video-messaging.browser.mjs",
@@ -379,5 +477,40 @@
     "Lot4 final exact-source merge/release/deployment and grouped hosted checks remains.",
     "Unestablished privacy-notice operator facts and A11 topology remain explicit; no legal foundation or proxy trust is invented."
   ],
-  "nextAction": "Publish the coherent lot2 checkpoint and qualify its exact source once in PR129; no production operation."
+  "nextAction": "Publish the corrected strict Help privacy fixture and acquire its own complete exact-source CI in PR129.",
+  "fixtureCorrection": {
+    "file": "tests/browser/help.browser.mjs",
+    "reason": "privateSurfaces expected language-only storage even in the source chat tab now retaining its explicit bounded text draft",
+    "contract": {
+      "helpAndRecoveryLanguageOnly": true,
+      "onlySourceChatPermitsKey": "jessiemessage.chat-drafts.v1.client",
+      "sourceChatPath": "/messages",
+      "exactCurrentDraftEntries": 1,
+      "closedSchema": true,
+      "maxRecordBytes": 65536,
+      "maxTextLength": 4096,
+      "maxTextBytes": 16384,
+      "maxDraftAgeMs": 86400000,
+      "knownOwnerAndConversation": true,
+      "sessionTagHashedNotCredential": true,
+      "pending": null,
+      "hadAttachment": false,
+      "noRecoveryTokenOrRawCsrf": true,
+      "duplicateWireFieldsRejected": true,
+      "localStorageEmptyGuardPreserved": true,
+      "helpNoFetchNoApiGuardsPreserved": true,
+      "urlReferrerNoopenerNoreferrerGuardsPreserved": true
+    },
+    "validation": {
+      "node": "v24.22.1",
+      "syntaxCheck": true,
+      "focusedHelperTests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0,
+      "realChromeExecuted": false,
+      "nativeBrowserQualification": "pending corrected CI revision",
+      "helpUnitSuitesRerun": false
+    }
+  }
 }
