@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage182-a10-purpose-review",
+  "recordedAtUTC": "2026-10-22T19:58:56.835619+00:00",
+  "status": "actual_purpose_clarification_pending_no_legal_classification_selected",
+  "factsAlreadyAcquired": [
+    "Jessie in France; private invitation-only space; no organization specified.",
+    "Conversation retention until permanent account closure is a confirmed product rule.",
+    "Private preparation save after D01/D08 instructions is user-confirmed; personal values remain undisclosed and uninspected."
+  ],
+  "reason": "A private interface and lack of a company do not by themselves settle whether the actual processing is strictly personal/domestic or linked to a professional/commercial activity. Earlier client-oriented project context and the later private description must not be converted into an unqualified legal conclusion.",
+  "primarySourcesRead": [
+    {
+      "url": "https://www.cnil.fr/fr/reglement-europeen-protection-donnees/chapitre1",
+      "provision": "Article 2(2)(c)",
+      "readOn": "2026-10-22",
+      "finding": "The stated exclusion concerns processing by a natural person in a strictly personal or household activity."
+    },
+    {
+      "url": "https://www.cnil.fr/fr/reglement-europeen-protection-donnees",
+      "provision": "Recital 18",
+      "readOn": "2026-10-22",
+      "finding": "The described personal/household activity has no professional or commercial connection; access restrictions alone do not establish that factual condition."
+    }
+  ],
+  "nextSingleFactualQuestion": "JessieMessage sert-il à garder le contact avec les clients ou abonnés de l’activité de Jessie, comme prévu au départ, ou uniquement à des échanges personnels sans lien avec cette activité ?",
+  "questionIsLegalBasisSelection": false,
+  "questionRequestsPersonalValues": false,
+  "legalComplianceConcluded": false,
+  "householdExemptionAssumed": false,
+  "publicNoticeReady": false,
+  "technical182DeploymentBlockedByThisReview": false,
+  "operatorD01D08CollectionRepeated": false,
+  "newPortalProposed": false,
+  "newDeploymentProposed": false,
+  "limits": [
+    "A factual purpose answer informs further notice analysis; it does not establish all remaining legal bases, retention periods, recipients or safeguards.",
+    "Do not ask the user to select a legal article or repeat the private identity/request-handler collection.",
+    "Candidate556 remains an unpublished private-draft template preparation on its separate branch; existing saved private texts are not replaced."
+  ]
+}

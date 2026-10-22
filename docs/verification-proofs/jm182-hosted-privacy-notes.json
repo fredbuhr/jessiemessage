@@ -1,0 +1,52 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage182-private-privacy-preparation-save",
+  "recordedAtUTC": "2026-10-22T19:57:31.319943+00:00",
+  "status": "private_preparation_save_confirmed_user_reported",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "exactUserConfirmation": "enregistré",
+    "description": "User reported completion after the instruction to fill the missing private D01/D08 facts and choose Enregistrer le brouillon in the existing authenticated privacy preparation. No agent read of field values, saved texts, revision or ciphertext."
+  },
+  "requestedScope": {
+    "path": "/admin/privacy",
+    "fields": [
+      "D01",
+      "D08"
+    ],
+    "action": "Enregistrer le brouillon",
+    "personalValuesRequestedInChat": false
+  },
+  "confirmedResult": {
+    "saveReportedByUser": true,
+    "personalValuesReadByAgent": false,
+    "fieldCompletenessVerified": false,
+    "revisionRead": false,
+    "noticeTextsReadFromHost": false,
+    "legalQualificationEstablished": false,
+    "publicNoticePublicationInferred": false
+  },
+  "applicationContext": {
+    "version": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "identityEvidence": "jm182-hosted-identity.json",
+    "releaseIdentityIndependentlyRereadDuringSave": false
+  },
+  "codeEstablishedLimits": [
+    "The preparation service returns publication:draft_only; note answers and French/English notice texts are separate fields.",
+    "Saving notes does not substitute their values into the notice, publish it or alter application retention/erasure policy.",
+    "The whole prepared draft overrides the source default template. Deploying candidate556 alone would not refresh this existing private preparation.",
+    "No new public notice or publication interface was implemented or activated by this save."
+  ],
+  "remainingNoticeAreas": [
+    "D02/D03: applicable grounds and handling of any sensitive-data category.",
+    "D04/D06: criteria or durations not yet established for other data families and copies.",
+    "D05: final erasure scope and applicable exceptions.",
+    "D07: actual recipients, processing locations and any transfers.",
+    "D01/D08: save acquired; contents/completeness not independently inspected and must not be re-requested in chat."
+  ],
+  "repeatSameCollectionRequired": false,
+  "deploymentRequiredByThisReceipt": false,
+  "privatePreparationOverwrittenByAgent": false,
+  "backupWorkReopened": false
+}

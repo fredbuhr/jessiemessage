@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage182-delivery-state",
-  "recordedAtUTC": "2026-10-22T19:50:24.017954+00:00",
+  "recordedAtUTC": "2026-10-22T19:58:56.835619+00:00",
   "status": "deployed_aligned_user_reported_residual_checks_explicit",
   "version": "1.8.2",
   "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
@@ -73,11 +73,11 @@
   },
   "remaining": [
     "A11: bounded observation executed with complete table reads but zero matching sockets; result is inconclusive and the conditional shared-peer risk remains unverified. No repeat or proxy/quota change is queued.",
-    "A10: missing operator facts D01-D07 and request-handling preparation D08 remain open. A factual correction of the default private notice template is prepared on a separate branch, not merged, natively qualified, publicly published or deployed.",
+    "A10: the private preparation save following D01/D08 instructions is user-confirmed; contents and completeness are not inspected and no public notice is inferred. Remaining legal/operational facts and final FR/EN text still require stabilization; candidate556 stays isolated.",
     "The single hosted text-draft reload case is confirmed by the user; unspecified devices/browsers and other untried hosted or physical cases remain unverified.",
     "Hosted manual backup UI creation/completion/download remains deferred by user; no resumption, reminder or new probe."
   ],
-  "nextAction": "Collect only the missing private controller/contact and actual request-handler facts in the existing admin privacy preparation fields D01/D08; do not request their personal values in chat or Git. Keep the factual notice candidate isolated until its remaining facts and qualification are ready. Do not repeat the confirmed text-draft reload, A11 observation, deployment182 or deferred backup work.",
+  "nextAction": "Clarify only the actual messaging purpose: client/subscriber relationship linked to Jessie activity versus strictly personal exchanges unrelated to it. Use that factual input for the remaining concise notice analysis. Do not repeat the acquired D01/D08 save or request personal values; no technical182, successful reload, A11 or backup operation is queued.",
   "operationsNotRepeated": [
     "PR merge",
     "existing successful branch/main CI",
@@ -87,7 +87,8 @@
     "Manager activation and startup",
     "metadata writer already recorded",
     "completed bounded A11 observation",
-    "single hosted text-draft reload confirmed by user"
+    "single hosted text-draft reload confirmed by user",
+    "private D01/D08 preparation save reported by user"
   ],
   "cloudBrowserUsed": false,
   "deploymentPerformed": true,
@@ -145,5 +146,21 @@
     "pwaMode": null,
     "allPlatformsQualified": false,
     "repeatRequired": false
+  },
+  "privatePrivacyPreparationSave": {
+    "status": "private_preparation_save_confirmed_user_reported",
+    "evidence": "jm182-hosted-privacy-notes.json",
+    "userSaveConfirmationAcquired": true,
+    "privateValuesInspected": false,
+    "fieldCompletenessVerified": false,
+    "publicNoticePublished": false,
+    "repeatSameCollectionRequired": false
+  },
+  "privacyPurposeReview": {
+    "evidence": "jm182-a10-purpose-review.json",
+    "actualPurposeClarificationPending": true,
+    "legalClassificationSelected": false,
+    "singleFactualQuestion": "JessieMessage sert-il à garder le contact avec les clients ou abonnés de l’activité de Jessie, comme prévu au départ, ou uniquement à des échanges personnels sans lien avec cette activité ?",
+    "newDeploymentProposed": false
   }
 }
