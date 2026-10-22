@@ -105,9 +105,9 @@ Le raccourci **JessieMessage — Sauvegardes** sur le Bureau indique le dossier 
 
 Le reçu confirme le fichier chiffré reçu, sans certifier une restauration de l’application. [Copies PC](backup-destinations-055.md).
 
-### Planifié : sauvegarde à la demande dans l’administration
+### Sur branche, non livré : sauvegarde à la demande et vidéo
 
-La prochaine évolution remplacera les sauvegardes et copies automatiques par une sauvegarde simple déclenchée depuis l’administration lorsque tu la demandes, sans dépendre du PC. **Ce parcours n’est pas encore disponible** ; ses boutons et étapes seront décrits après livraison vérifiée. L’archivage automatique est abandonné. Les archives déjà créées, les clés et le raccordement existant sont conservés ; aucun nouveau raccordement ni manipulation de clé n’est demandé.
+La sauvegarde simple à la demande depuis l’administration et la vidéo complète sont codées et qualifiées sur branche, selon [REPRISE](REPRISE.md) et le [bilan G2](video-integration-180.md). **Ces parcours ne sont pas encore disponibles en production** ; leurs boutons et étapes seront décrits après livraison vérifiée. Le nouveau parcours ne dépend pas du PC et l’archivage automatique est abandonné. Les archives déjà créées, les clés et le raccordement existant sont conservés ; aucun nouveau raccordement ni manipulation de clé n’est demandé.
 
 ## Fermeture définitive et remise en service
 

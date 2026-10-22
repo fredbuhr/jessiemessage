@@ -6,7 +6,7 @@ Révisé le 22 octobre 2026 après le bilan de **l’ensemble de l’application
 
 La production identifiée est **1.7.1 / Node 24.22.1 / schéma 33**. Invitations, authentification et sessions multiples, texte/photos, profils et avatars, 268 emojis Unicode, lecture privée, CRM, diffusions élargies, annonces, tâches privées et exports photo sont livrés. Les réponses rapides se limitent à six phrases fixes FR/EN. La fermeture locale des comptes est disponible sous ses gardes, sans nouveau raccordement PC.
 
-La branche `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessiemessage/pull/125), prépare **1.8.0**. Catalogue, messages vidéo serveur, export opérateur, ZIP en flux et suppression/fermeture/capacité sont qualifiés ; **l’intégration vidéo dans l’interface et le runtime est maintenant codée sur branche, en attente de qualification native complète ; aucune vidéo n’est activée en production**. La source vidéo de ce jalon est `231315cc17fd992eb3d9b261ea1e4448b90fd1d3`, CI 5/5 ; [preuve vidéo](verification-proofs/jm180-video-deletion-verification.json). La source courante qualifiée après G1 est `e190217b890e57e9693fea9e03c654c9b465d7d3`, [CI 39706108306](https://github.com/fredbuhr/jessiemessage/actions/runs/39706108306) **5/5** ; [preuve manuelle](verification-proofs/jm180-manual-backup-verification.json). Les 36 migrations candidates ne sont pas promues ; le plan normal en conserve 33.
+La branche `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessiemessage/pull/125), prépare **1.8.0**. **G1 sauvegarde manuelle admin et G2 vidéo complète sont qualifiés sur branche, non livrés.** La source G2 est `cecd60ced91d7eaf79025f06233833dad52ddef0`, arbre `a2d639166576d24aaa233f333a13f3959f5ddd53`, [CI 39721685571 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39721685571) ; [preuve G2](verification-proofs/jm180-video-integration-verification.json). La [preuve G1](verification-proofs/jm180-manual-backup-verification.json) est conservée. Les 36 migrations candidates ne sont pas promues ; le plan normal en conserve 33 et aucune vidéo n’est activée en production.
 
 ## Périmètre décidé le 22 octobre
 
@@ -14,19 +14,18 @@ La branche `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessieme
 
 **Les sauvegardes et l’archivage automatiques sont remplacés dans le périmètre cible par une sauvegarde simple, déclenchée à la demande depuis l’administration.** Aucun exécuteur d’archivage automatique n’est à développer. Les copies, clés, autorités et historiques existants sont préservés ; les fermetures locales et leurs contrôles restent opérationnels. Cette décision ne décrit pas encore la production : **1.7.1 conserve ses automatismes existants tant que leur remplacement n’a pas été livré et vérifié**.
 
-## Un lot qualifié sur branche, trois lots restants
+## Deux lots restants : G3 et G4
 
-Ces lots regroupent le travail selon le résultat utile. Les numéros techniques 7.3d, 7.4, 7.5 et 8 restent des repères dans le code et les preuves ; ils ne deviennent pas autant de livraisons ou d’arrêts à faire valider par l’utilisateur. La branche 1.8.0 et ses qualifications vidéo acquises sont conservées.
+Ces lots regroupent le travail selon le résultat utile. G1 et G2 sont acquis sur branche et attendent leur livraison commune ; leurs subdivisions techniques ne deviennent pas de nouveaux lots ou arrêts à faire valider par l’utilisateur.
 
 | Lot | Travail regroupé | Critère de fin concret |
 | --- | --- | --- |
-| **G2 — Vidéo utilisable de bout en bout, codée et à qualifier** | Qualifier ensemble inventaire, capture/restauration manuelle à deux racines et anciens formats, interface vidéo, téléchargement ZIP et diffusions. Corriger les défauts concrets de la revue et des essais natifs. À ce checkpoint le code ne vaut pas une validation CI. | Sur données synthétiques isolées, client et admin envoient/lisent une vraie vidéo décodable ; sauvegarde manuelle avec vidéos, export, suppression, fermeture et restauration restent cohérents, références partagées préservées, aucune fuite intercompte. Aucune activation partielle anticipée. |
 | **G3 — Réponses personnelles et qualification globale** | Permettre à Jessie de créer, modifier et supprimer ses phrases enregistrées, partagées entre les sessions autorisées du même compte admin, avec insertion au brouillon et envoi explicite. Qualifier ensemble accès, sessions, texte/photo/vidéo, notifications, CRM, annonces, tâches, diffusions, sauvegarde manuelle et exports ; corriger les défauts observés, vérifier droits/confidentialité/révocation et mesurer mémoire/débit/délais. Qualifier transfert/restauration isolés et repli compatible. | Les phrases personnelles persistent entre appareils sans perte silencieuse lors d’un conflit et restent privées. Les parcours combinés passent sur les sources exactes ; limites justifiées et un parcours complet reproductible de transfert/restauration comparé. Répéter seulement après changement, échec ou préoccupation concrète. Les appareils absents restent non vérifiés. |
 | **G4 — Livraison unique et contrôle en service** | Fusion finale, CI requises, version/tag/release, préparation, migration et activation bornées ; contrôle HTTP et identité du processus actif, métadonnées et repli, guide quotidien cohérent. | La version exacte est réellement active ; sauvegarde manuelle et vidéo sont accessibles, absence des automatismes abandonnés vérifiée, contrôles hébergés consignés. Publication et déploiement restent distingués. |
 
-**G1 — sauvegarde à la demande admin — est codé et qualifié sur branche, CI 5/5 : interface, demande persistante, capture SQL33/photos chiffrée, téléchargement et reprise contrôlée.** Les automatismes sont absents de cette composition manuelle ; les anciennes archives et les gardes de fermeture/restauration sont préservées. **G1 n’est pas encore livré : la production conserve son code 1.7.1 jusqu’à G4. Prochaine action : G2 — vidéo complète.** G2 reprend le chantier vidéo déjà qualifié et complète notamment la sauvegarde/restauration à deux racines. G3 conserve la personnalisation des réponses et regroupe les contrôles de l’ensemble. La livraison produit reste unique ; aucune nouvelle version ni aucun déploiement ne sont nécessaires à chaque sous-tâche.
+**Prochaine action : G3 — réponses personnelles et qualification globale.** La production conserve son code 1.7.1 jusqu’à G4. La livraison produit reste unique ; aucune nouvelle version ni aucun déploiement ne sont nécessaires à chaque sous-tâche.
 
-L’ancien ordre de grandeur de six à neuf séquences précédait cette modification de portée et ne vaut plus estimation. Aucun nouveau décompte précis ou pourcentage d’achèvement n’est justifié pour la vidéo et la qualification globale restantes. L’ancien plan demandait deux transferts synthétiques non encore qualifiés ; la cible reste un parcours complet comparé, sans présenter cet objectif comme deux répétitions déjà réalisées.
+Il reste deux lots ; aucun nombre précis de séquences internes ni pourcentage d’achèvement n’est justifié. G3 conserve un parcours complet comparé de transfert/restauration et le repli compatible ; les essais G2 ne sont pas présentés comme une qualification hébergée ou sur téléphone physique.
 
 ## Fonctions non abandonnées, à préciser et non ouvertes
 
@@ -40,7 +39,7 @@ La décision cite les fonctions abandonnées ci-dessus. Elle ne suffit pas à su
 | **Recherche de messages/notes** | Recherche de clients livrée ; recherche dans les contenus absente. | Périmètre à préciser, sans ajout au lot en cours. |
 | **Réactions** | Absentes. | Usage à préciser, sans engagement de développement automatique. |
 
-La **personnalisation des réponses**, absente des six phrases fixes actuelles, reste incluse dans G3. Les sujets de cette table ne bloquent pas les trois lots restants et n’autorisent pas l’ouverture simultanée d’autres évolutions.
+La **personnalisation des réponses**, absente des six phrases fixes actuelles, reste incluse dans G3. Les sujets de cette table ne bloquent pas les deux lots restants et n’autorisent pas l’ouverture simultanée d’autres évolutions.
 
 ## Exploitation et limites conservées
 
@@ -56,7 +55,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Un export interne, compteur SQL ou document ne constitue pas à lui seul une nouvelle fonction utilisable. G1 est qualifié sur branche ; aucun mécanisme n’est encore désactivé et ni la sauvegarde manuelle ni la vidéo ne sont activées en production. Les contrats techniques et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) restent conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Un export interne, compteur SQL ou document ne constitue pas à lui seul une nouvelle fonction utilisable. G1 et G2 sont qualifiés sur branche ; aucun mécanisme n’est encore désactivé et ni la sauvegarde manuelle ni la vidéo ne sont activées en production. Les contrats techniques et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) restent conservés sans réétiquetage.
 
 ## Livraisons closes
 

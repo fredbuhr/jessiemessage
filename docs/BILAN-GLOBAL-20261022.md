@@ -1,8 +1,8 @@
 # JessieMessage — bilan global du 22 octobre 2026
 
-**JessieMessage fonctionne déjà en production pour la messagerie texte et photo et les outils de Jessie. La vidéo reste en développement. Le périmètre est simplifié le 22 octobre : sauvegarde manuelle admin en premier et abandon explicite des fonctions citées ci-dessous.** Le précédent décompte « huit résultats plus deux corrections possibles » concernait la fin du chantier vidéo et sa qualification. Il ne constituait pas un bilan de tout le projet.
+**JessieMessage fonctionne en production pour la messagerie texte et photo et les outils de Jessie. G1 sauvegarde manuelle admin et G2 vidéo complète sont qualifiés sur la branche 1.8.0, non livrés. Il reste G3, réponses personnelles et qualification globale, puis G4, livraison unique et contrôles.** Le périmètre simplifié et les abandons du 22 octobre restent conservés.
 
-Ce bilan rassemble l’existant, les manques et la suite retenue en quatre résultats lisibles après la décision de simplification. Les subdivisions techniques servent à reprendre le travail après une interruption ; elles ne doivent pas devenir autant de livraisons ou de nouvelles décisions demandées à l’utilisateur.
+Ce bilan distingue ce qui est livré, les acquis sur branche et les deux lots restants. Les subdivisions techniques servent à reprendre le travail après une interruption ; elles ne deviennent pas autant de livraisons ou de nouvelles décisions demandées à l’utilisateur.
 
 ## La référence réellement en service
 
@@ -10,7 +10,7 @@ La production est **1.7.1**, commit `c2d7b3b31c6d0955892829f808dc4135d7d8debf`, 
 
 Le [contrôle public du 22 octobre](verification-proofs/jm171-global-public-health-20261022.json) confirme santé, disponibilité et accueil HTTP 200 ; il ne prouve ni la version active ni une session réelle.
 
-La branche de développement `feat/video-messaging`, relevée avant ce bilan à `34da07ad4ac1b23b1b2f00396d39de8b8c004122`, prépare **1.8.0**. Son dernier code fonctionnel vidéo qualifié est `231315cc17fd992eb3d9b261ea1e4448b90fd1d3`, arbre `29c765ad216a2ad0ab140145e836caeb920dc482` : [CI 39698017769 réussie 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39698017769), [preuve détaillée](verification-proofs/jm180-video-deletion-verification.json). Cette qualification ne signifie ni fusion produit, ni migration hébergée, ni activation vidéo.
+La branche de développement `feat/video-messaging` prépare **1.8.0**. G2 est qualifié sur la source `cecd60ced91d7eaf79025f06233833dad52ddef0`, arbre `a2d639166576d24aaa233f333a13f3959f5ddd53` : [CI 39721685571 réussie 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39721685571), [preuve détaillée](verification-proofs/jm180-video-integration-verification.json). Cette qualification ne signifie ni fusion produit, ni migration hébergée, ni activation vidéo.
 
 ## Ce qui est disponible et branché en production
 
@@ -29,11 +29,9 @@ La branche de développement `feat/video-messaging`, relevée avant ce bilan à 
 
 Les preuves et parcours sont regroupés dans [PRODUCT](PRODUCT.md), le [guide quotidien](guide-jessie.md), les bilans [diffusions](broadcast-scale-140.md), [annonces](announcements-150.md), [tâches](tasks-reminders-160.md), [profils](profile-expressions-120.md), [emojis](emoji-inclusifs-130.md) et [exports](client-conversation-export-060.md). La [CI propre 1.7.1](verification-proofs/jm171-verification.json) est verte sur ses cinq contrôles ; ses 39 omissions générales restent des omissions.
 
-## Ce qui manque réellement
+## Acquis sur branche et travail restant
 
-**Mise à jour de développement G2 :** interface, runtime explicite SQL36, diffusions, ZIP et sauvegarde/restauration à deux racines sont désormais codés sur la branche 1.8.0 et en cours de qualification native. La description initiale des manques vidéo ci-dessous décrit le point de départ de ce bilan ; elle ne révoque pas ce travail ni ses qualifications antérieures. [REPRISE](REPRISE.md) et le [guide G2](video-integration-180.md) donnent l’état du checkpoint courant. Cette évolution n’est pas encore livrée.
-
-**La vidéo n’est pas utilisable dans la conversation.** Catalogue, accès privé, exports et suppression/fermeture/capacité ont des qualifications backend sur branche. Inventaire, capture/restauration et compatibilité restent incomplets ; l’interface avec sélection, progression, lecteur, avance/recul et galerie reste absente, ainsi que la diffusion vidéo complète.
+**G2 vidéo complète est qualifié sur branche, non livré.** Le candidat couvre sélection, chargement, lecture native et déplacement dans la vidéo, galerie, diffusions, ZIP et sauvegarde/restauration à deux racines, avec compatibilité des anciens formats et fermetures. Les essais utilisent des comptes, médias et bases synthétiques isolés ; ils ne prouvent aucune activation hébergée, utilisation sur téléphone physique ou mesure du débit du mutualisé. Le [guide G2](video-integration-180.md) précise le périmètre et les limites des essais.
 
 **La sauvegarde simple à la demande via l’administration n’est pas encore livrée.** La production 1.7.1 conserve ses mécanismes automatiques existants ; leur remplacement effectif est le premier résultat codé et qualifié sur la branche, [CI 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39706108306), en attente de livraison. Les réponses rapides personnelles restent à développer : les six phrases actuelles sont fixes.
 
@@ -51,13 +49,13 @@ Fermeture locale et restauration manuelle sous maintenance conservent leurs gard
 
 Authenticator sur téléphone physique reste non vérifié. PHP du site secondaire relève d’Infomaniak et sort des actions du projet. L’ancien aperçu de `accueil.jessiemessage.com` reste constaté ; le principal et www ont le nouvel accueil. La redirection du sous-domaine a été refusée par le contrôle automatique pour autorisation explicite manquante ; elle n’est pas appliquée et n’est pas reprise dans ce chantier.
 
-## Suite retenue : quatre résultats pour la prochaine version
+## Suite retenue : deux lots restants
+
+G1 sauvegarde manuelle admin et G2 vidéo complète sont qualifiés sur branche et attendent leur livraison. La production conserve son code 1.7.1 et ses automatismes jusqu’à G4.
 
 | Résultat | Critère de fin |
 | --- | --- |
-| **G1 — Sauvegarde manuelle admin, qualifiée sur branche et non livrée** | Déclenchement explicite, résultat visible et archive récupérable, sans dépendance PC ni déclenchements/copies/archivage automatiques inutiles dans le nouveau parcours. Archives, clés, autorités et fermetures locales préservées et vérifiées. |
-| **G2 — Vidéo complète** | Cycle de vie, sauvegarde/restauration manuelle, interface lisant une vraie vidéo décodable, galerie, export, suppression et diffusion cohérents. |
 | **G3 — Réponses personnelles et qualification globale** | Jessie crée/modifie/retrouve ses phrases avec envoi explicite ; parcours combinés, corrections utiles, sécurité, performances et transfert/restauration/repli qualifiés sur des cibles isolées. |
 | **G4 — Livraison unique et contrôles** | Sources qualifiées, publication, repli compatible, préparation/migration/activation distinctement attestées ; identité active et comportements réellement vérifiés, dont remplacement des automatismes. |
 
-L’ancien ordre de grandeur de six à neuf séquences précède cette nouvelle portée et n’est plus retenu. Aucun nouveau nombre précis de séquences ni pourcentage global n’est étayé à ce stade. Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. G1 est qualifié sur branche et attend sa livraison ; la prochaine action est G2, qui conserve les qualifications vidéo acquises. Il reste trois lots : G2, G3 et G4.
+Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. La prochaine action est G3 ; il reste G3 et G4. Aucun nombre supplémentaire de séquences ni pourcentage global n’est étayé.

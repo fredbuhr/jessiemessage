@@ -1,76 +1,77 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage-video-integration-verification",
-  "status": "qualification_failed",
+  "status": "qualified_on_branch_not_deployed",
   "branch": "feat/video-messaging",
   "pr": "https://github.com/fredbuhr/jessiemessage/pull/125",
-  "source": "afc1711f093257369314874f4d4f3c241ecd6f69",
-  "tree": "005fbb9b9af5aaf778cc3f1f441013ae911946ae",
+  "source": "cecd60ced91d7eaf79025f06233833dad52ddef0",
+  "tree": "a2d639166576d24aaa233f333a13f3959f5ddd53",
   "ci": {
-    "id": 39720790706,
-    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39720790706",
+    "id": 39721685571,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39721685571",
     "attempt": 1,
     "status": "completed",
-    "conclusion": "failure",
-    "successfulJobs": 4,
-    "totalJobs": 5
+    "conclusion": "success",
+    "successfulJobs": 5,
+    "totalJobs": 5,
+    "updatedAt": "2026-10-22T04:25:38Z"
   },
-  "testedMerge": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+  "testedMerge": "e50b64b15a51f228c56d9164b36729d5420c29c5",
   "testedTreeEqualsSource": true,
   "jobs": [
     {
       "name": "verify",
-      "id": 119633510399,
+      "id": 119636358635,
       "conclusion": "success",
       "counts": {
-        "tests": 3757,
+        "tests": 3756,
         "suites": 0,
-        "pass": 3710,
+        "pass": 3709,
         "fail": 0,
         "cancelled": 0,
         "skipped": 47,
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-pointer-verify.log",
-        "sha256": "9079f0550185479389e5bbcd7f8d33ed91ade14243bb14d73d780639a4164ade",
-        "bytes": 530194,
+        "filename": "jm180-g2-css-verify.log",
+        "sha256": "08963ea8337ceeb7813ed957e82941be742c8cc59c62f4f5a0465a6198b0326d",
+        "bytes": 530030,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+      "checkout": "e50b64b15a51f228c56d9164b36729d5420c29c5",
       "nodeVersion": "v24.22.1"
     },
     {
       "name": "Chrome keyboard and chat lifecycle",
-      "id": 119633510598,
-      "conclusion": "failure",
+      "id": 119636358458,
+      "conclusion": "success",
       "counts": {
         "tests": 213,
         "suites": 0,
-        "pass": 211,
-        "fail": 2,
+        "pass": 213,
+        "fail": 0,
         "cancelled": 0,
         "skipped": 0,
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-pointer-browser.log",
-        "sha256": "d58e5b2e3c50ea54b89b5210720e6fa06a94098713ca851a41013fdccac5719a",
-        "bytes": 48384,
+        "filename": "jm180-g2-css-browser.log",
+        "sha256": "6ca9a8aefb7c0439b4106f8dda43afdd210c5aa7ae8d4832bd7320a702b233d6",
+        "bytes": 43118,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+      "checkout": "e50b64b15a51f228c56d9164b36729d5420c29c5",
       "nodeVersion": "v24.22.1"
     },
     {
       "name": "Chrome HTTPS authentication and messaging with MariaDB",
-      "id": 119633510586,
+      "id": 119636358508,
       "conclusion": "success",
       "counts": {
         "tests": 4,
@@ -82,20 +83,20 @@
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-pointer-https.log",
-        "sha256": "7b72c6dd03f9d106c9a8c484029eef77f1ad27fb98cf30bbc960a430bf6ffd25",
-        "bytes": 34540,
+        "filename": "jm180-g2-css-https.log",
+        "sha256": "c7099618699784b0c853d18087ddf64eb5aab3aa3e70ffa4e63a8532f74b4892",
+        "bytes": 34410,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+      "checkout": "e50b64b15a51f228c56d9164b36729d5420c29c5",
       "nodeVersion": "v24.22.1"
     },
     {
       "name": "MariaDB 10.11",
-      "id": 119633510651,
+      "id": 119636358628,
       "conclusion": "success",
       "counts": {
         "tests": 564,
@@ -107,20 +108,20 @@
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-pointer-mariadb1011.log",
-        "sha256": "c48b4f2fd7cb0917693194f566403d0d9c1d2247e2d8d00824678194836e88c7",
-        "bytes": 322059,
+        "filename": "jm180-g2-css-mariadb1011.log",
+        "sha256": "e47f5c7219b8c20b22fe612bcd013ec34eedd3d8930daf96499c7b913c3223a1",
+        "bytes": 322054,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+      "checkout": "e50b64b15a51f228c56d9164b36729d5420c29c5",
       "nodeVersion": "v24.22.1"
     },
     {
       "name": "MariaDB 11.4",
-      "id": 119633510579,
+      "id": 119636358379,
       "conclusion": "success",
       "counts": {
         "tests": 564,
@@ -132,19 +133,18 @@
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-pointer-mariadb114.log",
-        "sha256": "394a29d8ed53fb6c0b2815f0c8566ab700b7af6f16dad499c162760ffa78ea2f",
-        "bytes": 322211,
+        "filename": "jm180-g2-css-mariadb114.log",
+        "sha256": "0922208ec9bead056617b49a6aae71cb9a9e53ba4ceceab5d3b1db41444be671",
+        "bytes": 321620,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+      "checkout": "e50b64b15a51f228c56d9164b36729d5420c29c5",
       "nodeVersion": "v24.22.1"
     }
   ],
-  "failureSummary": "Chrome video broadcast still fails before upload: mobile layout viewport is enlarged by a hidden file input whose sr-only sizing is overridden by the generic input rule.",
   "previousRuns": [
     {
       "source": "2f02d7df95072acc029d573550665105e18dcfde",
@@ -717,11 +717,160 @@
         }
       ],
       "failureSummary": "Centering/stable geometry does not repair the command offset: native clicks remain79–80px below the button."
+    },
+    {
+      "source": "afc1711f093257369314874f4d4f3c241ecd6f69",
+      "tree": "005fbb9b9af5aaf778cc3f1f441013ae911946ae",
+      "ci": {
+        "id": 39720790706,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39720790706",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
+        "successfulJobs": 4,
+        "totalJobs": 5
+      },
+      "testedMerge": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+      "testedTreeEqualsSource": true,
+      "jobs": [
+        {
+          "name": "verify",
+          "id": 119633510399,
+          "conclusion": "success",
+          "counts": {
+            "tests": 3757,
+            "suites": 0,
+            "pass": 3710,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 47,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-pointer-verify.log",
+            "sha256": "9079f0550185479389e5bbcd7f8d33ed91ade14243bb14d73d780639a4164ade",
+            "bytes": 530194,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "Chrome keyboard and chat lifecycle",
+          "id": 119633510598,
+          "conclusion": "failure",
+          "counts": {
+            "tests": 213,
+            "suites": 0,
+            "pass": 211,
+            "fail": 2,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-pointer-browser.log",
+            "sha256": "d58e5b2e3c50ea54b89b5210720e6fa06a94098713ca851a41013fdccac5719a",
+            "bytes": 48384,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "id": 119633510586,
+          "conclusion": "success",
+          "counts": {
+            "tests": 4,
+            "suites": 0,
+            "pass": 4,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-pointer-https.log",
+            "sha256": "7b72c6dd03f9d106c9a8c484029eef77f1ad27fb98cf30bbc960a430bf6ffd25",
+            "bytes": 34540,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "MariaDB 10.11",
+          "id": 119633510651,
+          "conclusion": "success",
+          "counts": {
+            "tests": 564,
+            "suites": 0,
+            "pass": 564,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-pointer-mariadb1011.log",
+            "sha256": "c48b4f2fd7cb0917693194f566403d0d9c1d2247e2d8d00824678194836e88c7",
+            "bytes": 322059,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "MariaDB 11.4",
+          "id": 119633510579,
+          "conclusion": "success",
+          "counts": {
+            "tests": 564,
+            "suites": 0,
+            "pass": 564,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-pointer-mariadb114.log",
+            "sha256": "394a29d8ed53fb6c0b2815f0c8566ab700b7af6f16dad499c162760ffa78ea2f",
+            "bytes": 322211,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "a8378a61089039fc843cb0176aaa82b71f28c8dd",
+          "nodeVersion": "v24.22.1"
+        }
+      ],
+      "failureSummary": "Chrome video broadcast still fails before upload: mobile layout viewport is enlarged by a hidden file input whose sr-only sizing is overridden by the generic input rule.",
+      "broadcastBrowserDiagnosis": {
+        "evidence": "Native viewport actions at y469/470 produce client events at y549/550; visualViewport.offsetTop is exactly80. Layout430x860 and visual390x780 share the same enlargement ratio. The generic input selector overrides the hidden file input width/padding/border, creating40px horizontal overflow.",
+        "nextAction": "Fix only the hidden input CSS specificity, assert computed1x1px sizing and no horizontal overflow, and return to the existing native element click with trusted target assertions. Remove the unneeded pointer adapter. Qualify the exact corrected source; no product guard relaxed."
+      }
     }
   ],
   "broadcastBrowserDiagnosis": {
-    "evidence": "Native viewport actions at y469/470 produce client events at y549/550; visualViewport.offsetTop is exactly80. Layout430x860 and visual390x780 share the same enlargement ratio. The generic input selector overrides the hidden file input width/padding/border, creating40px horizontal overflow.",
-    "nextAction": "Fix only the hidden input CSS specificity, assert computed1x1px sizing and no horizontal overflow, and return to the existing native element click with trusted target assertions. Remove the unneeded pointer adapter. Qualify the exact corrected source; no product guard relaxed."
+    "resolved": true,
+    "cause": "The generic input rule overrode the hidden video input width, padding and border. Its horizontal overflow enlarged the mobile layout viewport, with a matching visual viewport pan and misdirected native clicks.",
+    "fix": "Preserve the hidden input at 1 × 1 CSS pixels using the specific selector. Assert computed size, no horizontal overflow and native trusted clicks on the enabled target. The temporary pointer adapter was removed.",
+    "productGuardsRelaxed": false
   },
   "scope": {
     "runtimeProfile": "photos-notify-recovery-crm-broadcast-video",
@@ -736,14 +885,15 @@
     "operationalStateVersion": 2
   },
   "nativeVerified": [
-    "Both engines 564/564 on current source: real SQL36 capture/dumps/tar with photos/videos, interrupted copy, root/corruption refusals, authenticated recovery/refunds/rebind, v3 shared campaign, real later closure, retained original v1/v2 receipts, quarantine, reconciliation and explicit publication/drain.",
-    "Actual configured application HTTPS, independent MFA/client cookies, forced loopback primary attestation, H264 upload/decode/seek/Range206, two roles, gallery, idempotency and deleted-content404."
+    "Both engines: SQL36 capture/dumps/tar with photos and videos, interrupted copy, root/corruption refusals, authenticated recovery/refunds/rebind, shared v3 campaign, real later closure, original v1/v2 receipts, quarantine, reconciliation and explicit publication/drain.",
+    "Configured application over HTTPS: independent MFA/client cookies, forced loopback primary attestation, H264 upload/decode/seek/Range206, both roles, private gallery, idempotency and deleted content returns 404.",
+    "Chrome chat video FR/EN at 320/375/1280, plus broadcast video mobile/desktop: decoded preview, one raw upload, typed audience, exact explicit retry after uncertain campaign response, cancellation while awaiting upload acknowledgement, no automatic upload retry."
   ],
   "limits": [
-    "No merge, release, hosted migration/activation or deployment. Production1.7.1/Node24.22.1/SQL33 unchanged.",
-    "Local missing native prerequisites remain omissions; 47 general CI omissions are45 opt-in SQL suites plus2 negative procfs cases, distinct from native jobs.",
-    "New native restore fixture calls real import/copy/recovery functions; high-level operator import/resume wrappers are covered by targeted profile tests, not executed end-to-end by this fixture.",
-    "Restore producer is a genuine synthetic IPC/HTTP shim. The complete configured application is exercised separately by HTTPS.",
-    "Physical devices, real hosting throughput/memory and combined G3 qualification remain unverified."
+    "No merge, release, hosted migration, activation or deployment. Production 1.7.1 / Node 24.22.1 / SQL33 unchanged.",
+    "Local native prerequisites remain unavailable. The 47 general CI omissions are 45 opt-in SQL suites plus 2 negative procfs cases; native jobs are separate.",
+    "The native restore fixture calls real import/copy/recovery functions. High-level video operator import/resume wrappers have targeted profile tests and are not executed end-to-end by this fixture.",
+    "The restore producer is a real synthetic IPC/HTTP shim. The complete configured application is exercised separately over HTTPS.",
+    "Physical devices, actual hosting throughput/memory, combined G3 qualification and G4 delivery remain outside this proof."
   ]
 }
