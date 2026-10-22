@@ -1,23 +1,23 @@
 # Reprendre JessieMessage
 
-**22 octobre 2026 — application active rapportée : 1.8.2 / Node v24.22.1 / SQL36 ; latest GitHub : v1.8.2. Le checkpoint privé reste1.8.1, alignement final en attente.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans nouvelle observation du processus par l’agent. Fusion, qualification, publication, préparation, CHECK et identité active182 sont acquis ; ne pas rejouer ces opérations.
+**22 octobre 2026 — application active, checkpoint privé et latest : 1.8.2 / Node v24.22.1 / SQL36, alignés.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans inspection privée directe par l’agent. La livraison technique182 est close : qualification, publication, préparation, CHECK, activation et enregistrement final acquis. Les contrôles complémentaires de l’audit restent explicitement ouverts ci-dessous.
 
 ## État de livraison courant
 
 | Élément | Référence acquise |
 | --- | --- |
 | Application active | **1.8.2**, source `78e6b8b2f6b19020c060345b9313a81829e9c8da`, arbre `7b722ca1fbd3416acecffa3c122e967511184d4c` ; [tag/release v1.8.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.2). |
-| Identité au démarrage | Node **v24.22.1**, relevé UI exact **`22/10/2026 21:04:19`** ; [preuve d’identité USER_REPORTED](verification-proofs/jm182-hosted-identity.json). Aucun epoch déduit de ce texte ; le writer relira le journal réel. |
+| Identité au démarrage | Node **v24.22.1**, relevé UI exact **`22/10/2026 21:04:19`** ; [identité UI](verification-proofs/jm182-hosted-identity.json). L’epoch **`1792695859461`** vient séparément du vrai journal relu par le writer : `21:04:19.461` à Paris, concordant avec l’affichage. |
 | Base | **SQL36** : 33 migrations de base et 3 migrations vidéo ; [preuve SQL36 antérieure](verification-proofs/jm180-hosted-schema36.json), migrations inchangées et CHECK182 acquis. Aucune migration au démarrage ni pour1.8.2. |
 | Préparation et qualification | [Préparation/CHECK182](verification-proofs/jm182-hosted-preparation.json) acquis ; [CI main182](verification-proofs/jm182-main-ci.json) **5/5**, qualification de branche conservée séparément. |
-| Checkpoint privé | Encore **1.8.1 / SQL36**, SHA-256 `53bd5312c42f34934de04d1e4e7994a864892cdf5a945c6a72c7b4c46ef5be76` ; [reçu181 antérieur](verification-proofs/jm181-hosted-metadata.json). Alignement182 en attente ; ne pas déclarer le nouveau reçu acquis. |
+| Checkpoint privé | **1.8.2 / SQL36**, SHA-256 `148b1e0f1ef0e585aa0e0be99ba4e65517b30d2827e3dc26768684bfc5afa280` ; [reçu final182](verification-proofs/jm182-hosted-metadata.json), `publicReady:true`, métadonnées seules, sans redémarrage ; état antérieur et autres blocs préservés. |
 | Repli compatible SQL36 | **1.7.2**, source `6b3319a77c307ed7d6b003fe33de36807c70c266`, arbre `924d500375a69ae50bc63414b15df71271e2bf8a` ; préparé et **précontrôlé sur l’hôte, jamais démarré**, selon le reçu SQL36. |
 | Dernier état actif antérieur | **1.8.1**, source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, arbre `eb427f887248fa9db5c656c3773e016f8688efc9` ; [reçu historique](verification-proofs/jm181-hosted-metadata.json) inchangé. |
-| Disponibilité et interface | L’identité182 vient de l’administration selon l’utilisateur. Aucun run de sonde déjà disponible n’est postérieur à cette activation ; le lecteur public de l’agent n’a pas pu accéder aux deux endpoints, sans conclusion sur l’application. Le writer vérifiera le HTTP courant avant écriture. Les parcours vidéo/réponses précédemment rapportés restent distincts des essais182 ; sauvegarde hébergée **reportée et non vérifiée**. |
+| Disponibilité et interface | Le writer182 a vérifié les HTTP publics courants avant écriture et rapporte `publicReady:true` ; pas de détail de réponse supplémentaire inventé. Les parcours vidéo/réponses précédemment rapportés restent distincts des essais182 ; sauvegarde hébergée **reportée et non vérifiée**. |
 
 **Ne rejouer ni préparation, CHECK, migration, bascule ou writer déjà acquis. Ne démarrer ni 1.7.1 ni 1.6.0 sur SQL36.** `main` peut avancer pour les preuves ; le tag et le commit réellement exécuté restent la référence de production.
 
-## Développement courant — audit 1.8.2
+## Livraison182 acquise et limites de l’audit
 
 La [PR 129](https://github.com/fredbuhr/jessiemessage/pull/129), branche **`fix/audit-182`**, est **fusionnée** sur `78e6b8b2f6b19020c060345b9313a81829e9c8da`, arbre `7b722ca1fbd3416acecffa3c122e967511184d4c`. Les [lots 1](verification-proofs/jm182-lot1-verification.json), [2](verification-proofs/jm182-lot2-verification.json) et [3](verification-proofs/jm182-lot3-ci.json) sont qualifiés sur branche. La [qualification main](verification-proofs/jm182-main-ci.json) est acquise : [CI 39832723570](https://github.com/fredbuhr/jessiemessage/actions/runs/39832723570) **5/5**, tentative 1, Chrome223/223, HTTPS4/4, MariaDB576/576 chacune, général3869/3821 réussis/48 omissions ; Windows et sonde existante réussis, huit journaux complets empreintés. Aucun résultat hébergé privé n’en est déduit.
 
@@ -31,7 +31,7 @@ La [publication 39833775425](https://github.com/fredbuhr/jessiemessage/actions/r
 
 Le lot 2 qualifie brouillons texte dans le même onglet après rechargement, demandes incertaines conservant leur identité exacte sans envoi automatique, reprise des diffusions après revalidation du propriétaire et protection des dates/options d’annonce. Aucun fichier, identifiant média ou secret d’authentification réutilisable n’est persisté. Un navigateur refusant le stockage ne garantit pas la reprise après rechargement. Chrome **223/223**, HTTPS **4/4**, MariaDB **575/575 chacune**, sans omission ; général **3 869 tests / 3 821 réussis / 48 omissions**. Les omissions générales restent distinctes des essais natifs. Les premiers échecs et leurs corrections sont conservés dans les preuves.
 
-**Limites encore ouvertes :** les faits juridiques **D01–D07** de l’aide A10 restent à établir ; l’aide harmonisée n’est pas une notice complète ni une certification juridique. Le dossier privé reste `draft_only`. **A11** demande une observation privée du pair réseau lors du contrôle hébergé final, sans ajouter de confiance proxy par supposition. Les appareils physiques non essayés restent non vérifiés. Le test de sauvegarde hébergée reste reporté : aucun diagnostic, nouvel essai, rappel ou surveillance automatique n’est ouvert.
+**Limites encore ouvertes :** les faits juridiques **D01–D07** de l’aide A10 restent à établir ; l’aide harmonisée n’est pas une notice complète ni une certification juridique. Le dossier privé reste `draft_only`. **A11** reste une observation privée du pair réseau à effectuer ; `publicReady:true` ne qualifie pas la topologie et n’autorise aucune confiance proxy supposée. Les appareils physiques et parcours non essayés restent non vérifiés. Le test de sauvegarde hébergée reste reporté : aucun diagnostic, nouvel essai, rappel ou surveillance automatique n’est ouvert.
 
 **Reprise de « Bilan de production » :** le commit du lot 3 était poussé le **22 octobre à 20:17:49, heure de Paris** ; la CI s’est achevée à **20:24:57**. Sa [preuve préalable](verification-proofs/jm182-lot3-verification.json) et les guides indiquaient encore les résultats en attente. La [collecte des sept journaux complets existants](verification-proofs/jm182-lot3-ci.json) termine ce jalon sans réimplémentation ni nouvelle exécution : général **3 869 / 3 821 réussis / 48 omissions**, Chrome **223/223**, HTTPS **4/4**, MariaDB **576/576 chacune**, tests de sonde **24/24**, Windows natif réussi sur données synthétiques. L’arbre du merge de test est identique à la source de branche. Les 33 empreintes d’implémentation, 6 ressources préservées, trois versions package/lock et 36 fichiers SQL ont été recroisés. La cause interne du blocage ChatGPT reste **non établie**, faute de télémétrie correspondante.
 
@@ -39,9 +39,31 @@ Le [diagnostic SQL A12](capacity-182.md) est acquis sur les deux versions native
 
 **Préparation et CHECK182 acquis, ne pas les rejouer :** [deux résultats et marque de fin rapportés](verification-proofs/jm182-hosted-preparation.json), source/arbre publiés exacts, Node24.22.1, SQL36 attendu inchangé ; précontrôle `passed`, `pendingClosures:false`, `started:false` à cette étape antérieure à l’activation. Empreinte du reçu `ba1aa8d0527dd8bbff76c86e274c9681ce9b6546bfd997a47e44988a92e3157f`, recalculée depuis les champs rapportés. Lanceur `eed42b10e0787ccd75e02524ffa814c83fffb41e1954d28e99721145660e0bdb`, CHECK `a6c4435dcb8eb71a7b9801c223aa0e5f0c1b3b784270d212df679a924e5954cd`. Les empreintes de journaux vides appartiennent à la préparation avant CHECK ; elles ne décrivent pas le journal après le contrôle ou le démarrage.
 
-**Identité active182 acquise selon l’utilisateur**, source et Node exacts, relevé UI `22/10/2026 21:04:19`. Ne pas rejouer l’arrêt, la modification Manager ou le démarrage. **Prochaine action personnelle : exécuter une fois le writer182 qualifié dans le terminal SSH**, puis fournir son reçu JSON. Il vérifiera le journal de démarrage réel, le HTTP courant, la publication et les états privés avant d’aligner uniquement les métadonnées. Aucun parcours de sauvegarde n’est rouvert.
+**Enregistrement final182 acquis selon l’utilisateur :** `release182_metadata_recorded`, source/arbre/Node/SQL exacts, `publicReady:true`, repli172 précontrôlé et jamais démarré, historiques181/180/171/160, état antérieur et autres blocs préservés. [Reçu final](verification-proofs/jm182-hosted-metadata.json). **Aucune opération de déploiement ne reste à rejouer** : ni préparation, CHECK, Manager, démarrage ou writer. La suite porte seulement sur les observations d’audit non acquises, selon le [plan](PLAN-IMPLEMENTATION.md) ; la sauvegarde reste reportée.
 
-Le writer182 est **qualifié et publié, exécution hébergée encore en attente** : [qualification native39835184817](verification-proofs/jm182-metadata-operator-verification.json), **19/19 tests**, tentative1, droits lecture seule du workflow ; aucun alignement latest rejoué. Source opérateur `9a52b4840b65d2c825020ffa81d4bdc2d29fc268`, `ops/record-release182.py`, SHA-256 `48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1`. Ses gardes exigent le reçu réel ci-dessus, le checkpoint181 `53bd5312…`, les anciens blocs et repli, l’identité de démarrage182 unique et exacte, le HTTP public et la publication/tag/latest182 vérifiés en GET. L’identité préalable est désormais reçue ; cette opération ne redémarre pas le service et ne migre pas la base.
+Le writer182 est **qualifié et exécuté avec succès selon le reçu utilisateur** : [qualification native39835184817](verification-proofs/jm182-metadata-operator-verification.json), **19/19 tests**, tentative1. Source opérateur `9a52b4840b65d2c825020ffa81d4bdc2d29fc268`, `ops/record-release182.py`, SHA-256 `48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1`. Ses gardes ont conservé le checkpoint181 antérieur `53bd5312…` dans les preuves/historiques, les anciens blocs et le repli, après contrôles du démarrage182, du HTTP courant et de la publication. Ce résultat reste distinct d’une inspection directe du PID/socket, d’A11 ou des essais fonctionnels non réalisés.
+
+## Prochaine observation — A11
+
+Le [relevé ponctuel A11](https://github.com/fredbuhr/jessiemessage/blob/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/ops/observe-peer182.py) est publié sur la branche opérateur `ops/audit182-peer`, source `ea94eb697a12ef5056a86430ca6f327c6c6d9eea`, SHA-256 `492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043`. Ses [34 vérifications synthétiques](https://github.com/fredbuhr/jessiemessage/blob/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/docs/verification-proofs/jm182-peer-observer-synthetic.json) sont réussies et le script a été relu indépendamment ; aucune observation hébergée n’est encore acquise.
+
+Ouvrir Jessie dans son onglet habituel. Dans le terminal SSH personnel, exécuter une fois la commande ci-dessous ; au signal `A11_EN_COURS`, recharger Jessie, puis fournir uniquement le JSON. Le script observe les connexions établies du port local3000 appartenant à l’utilisateur courant pendant une fenêtre d’environ huit secondes, avec lecture bornée à1Mio par table. Il ne montre que des agrégats, sans adresse réseau, ne crée aucun fichier et n’émet aucune requête réseau ; le téléchargement initial du script reste distinct de l’observation.
+
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_A11'
+import hashlib, urllib.request
+
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/ops/observe-peer182.py"
+code = urllib.request.urlopen(url, timeout=30).read()
+expected = "492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043"
+if hashlib.sha256(code).hexdigest() != expected:
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+print("A11_EN_COURS : actualise Jessie maintenant.", flush=True)
+exec(compile(code, "<observation-A11>", "exec"), {"__name__": "__main__"})
+PY_A11
+```
+
+Un relevé partiel, indisponible ou sans connexion reste non concluant ; ne pas le relancer automatiquement. Même un relevé complet ne prouve ni le PID du service, ni l’identité des espaces réseau SSH/application, ni le visiteur réel, ni un contrat de confiance XFF. Un pair privé ou local signale seulement un intermédiaire possible dans le périmètre observé. Aucun changement de confiance proxy ou de quota n’est déduit automatiquement. Aucune suite applicative verte, action de déploiement ou sauvegarde n’est rouverte.
 
 ## Accès et commandes de l’application active
 

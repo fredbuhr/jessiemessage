@@ -1,0 +1,67 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_182_hosted_metadata",
+  "status": "release182_metadata_recorded_user_reported",
+  "date": "2026-10-22",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "description": "User executed the published SHA256-pinned record-release182.py in their own Infomaniak SSH terminal and supplied its JSON result. No direct agent observation of host PID, socket, startup-log or checkpoint file.",
+    "operatorSource": "9a52b4840b65d2c825020ffa81d4bdc2d29fc268",
+    "helperSha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1",
+    "qualificationProof": "jm182-metadata-operator-verification.json"
+  },
+  "receipt": {
+    "status": "release182_metadata_recorded",
+    "version": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 36,
+    "release": {
+      "version": "1.8.2",
+      "commit": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1792695859461
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.7.2",
+    "rollbackPrecheckedNotStarted": true,
+    "historicalRelease181Preserved": true,
+    "historicalRelease180Preserved": true,
+    "historicalRelease171Preserved": true,
+    "historicalRelease160Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "148b1e0f1ef0e585aa0e0be99ba4e65517b30d2827e3dc26768684bfc5afa280"
+  },
+  "currentState": {
+    "applicationVersion": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "metadataCheckpointVersion": "1.8.2",
+    "metadataCheckpointSha256": "148b1e0f1ef0e585aa0e0be99ba4e65517b30d2827e3dc26768684bfc5afa280",
+    "metadataAlignmentPending": false,
+    "latest": "v1.8.2",
+    "latestReleaseId": 421075470,
+    "rollbackVersion": "1.7.2",
+    "rollbackPrechecked": true,
+    "rollbackStarted": false,
+    "backupFunctionalCheck": "deferred_unverified_by_user_request"
+  },
+  "limits": [
+    "The JSON is user-reported evidence from the qualified protected writer, not a direct agent inspection of PID, socket or Manager fields.",
+    "publicReady:true is the guarded writer result after current anonymous HTTP checks; no additional response headers or full response bodies are invented.",
+    "This receipt does not establish manual backup creation/completion/download, network proxy topology A11, legal operator facts A10, physical-device or all hosted functional cases."
+  ],
+  "startupTime": {
+    "epochMillisecondsFromWriterReceipt": 1792695859461,
+    "utc": "2026-10-22T19:04:19.461000+00:00",
+    "europeParis": "2026-10-22T21:04:19.461000+02:00",
+    "earlierDisplayedText": "22/10/2026 21:04:19",
+    "earlierUiIdentityProof": "jm182-hosted-identity.json",
+    "epochNotInferredFromUiText": true
+  }
+}

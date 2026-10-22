@@ -2,7 +2,7 @@
 
 Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/app) et l’[aide du site](https://jessiemessage.com/help).
 
-La version **1.8.1** est active et ses métadonnées sont alignées, selon le [reçu utilisateur](verification-proofs/jm181-hosted-metadata.json), source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node **24.22.1**, SQL **36**, sans redémarrage. [REPRISE](REPRISE.md) conserve les références techniques. L’utilisateur confirme le fonctionnement de la [liste commune](verification-proofs/jm181-hosted-interface.json) ; le [parcours vidéo](verification-proofs/jm180-hosted-interface.json) était déjà rapporté réussi. La sauvegarde manuelle reste non vérifiée et son test est reporté à sa demande.
+La version **1.8.2** est active et ses métadonnées sont alignées, selon le [reçu utilisateur](verification-proofs/jm182-hosted-metadata.json). [REPRISE](REPRISE.md) conserve les références techniques et les contrôles restant à vérifier. Les retours antérieurs confirment le fonctionnement de la [liste commune](verification-proofs/jm181-hosted-interface.json) et du [parcours vidéo](verification-proofs/jm180-hosted-interface.json), sans nouvelle recette complète présumée. La sauvegarde manuelle reste non vérifiée et son test est reporté à ta demande.
 
 ## Se connecter et gérer les accès
 
@@ -68,7 +68,9 @@ Si **La fiche a été modifiée ailleurs** apparaît, ton brouillon reste visibl
 - **Recharger la fiche** reprend la version enregistrée et abandonne ton brouillon de fiche ;
 - **Enregistrer ma version** la remplace explicitement par la tienne. Une nouvelle modification simultanée peut provoquer un autre conflit.
 
-Le texte non envoyé du message reste dans la page ouverte : changer de conversation ou d’onglet le conserve tant que la page n’est pas déchargée, mais recharger ou fermer la page l’efface normalement. Une phrase enregistrée dans **Réponses rapides** reste disponible dans le catalogue. Les modifications de fiche non enregistrées restent aussi dans la page ouverte, sans synchronisation entre appareils. Enregistre tes notes et conserve ton texte avant de recharger, fermer ou te déconnecter. Après une coupure réseau, garde l’onglet ouvert et utilise **Réessayer la connexion**.
+Depuis 1.8.2, le texte non envoyé du message peut se retrouver après rechargement dans le **même onglet**, pour le même compte et la même connexion, après vérification de l’accès à la conversation. Cette conservation est limitée et dépend de l’autorisation du navigateur ; si elle est indisponible, le texte reste seulement dans la page ouverte. Elle ne synchronise pas tes brouillons entre appareils. Les fichiers photo et vidéo sélectionnés doivent être ajoutés de nouveau après rechargement. Si un envoi texte n’a pas reçu sa confirmation, la reprise conserve la même demande et attend ton action : aucun message n’est envoyé automatiquement.
+
+Une phrase enregistrée dans **Réponses rapides** reste disponible dans le catalogue. Les modifications de fiche non enregistrées restent dans la page ouverte, sans synchronisation entre appareils. Enregistre tes notes et conserve le texte important avant de fermer l’onglet ou de te déconnecter. Après une coupure réseau, garde l’onglet ouvert et utilise **Réessayer la connexion**.
 
 ## Tâches et rappels privés
 
@@ -116,7 +118,7 @@ Une sauvegarde téléchargée ne certifie pas encore son déchiffrement ou une r
 
 ### Test de sauvegarde reporté
 
-La livraison 1.8.1 est alignée et tu confirmes que la liste commune fonctionne. Le [retour interface](verification-proofs/jm181-hosted-interface.json) conserve cette validation sans détailler tous les sous-cas. La sauvegarde reste non vérifiée : tu as demandé de la tester un autre jour après la page Infomaniak affichée avant l’écran de sauvegarde. Aucun nouvel essai ni diagnostic n’est demandé aujourd’hui.
+La livraison 1.8.2 est alignée ; le [retour interface 1.8.1](verification-proofs/jm181-hosted-interface.json) conserve ta confirmation de fonctionnement de la liste commune sans détailler tous les sous-cas. La sauvegarde reste non vérifiée : tu as demandé de la tester un autre jour après la page Infomaniak affichée avant l’écran de sauvegarde. Aucun nouvel essai ni diagnostic n’est demandé aujourd’hui.
 
 Lorsque tu décideras de reprendre ce test, il s’agira de créer une sauvegarde, d’attendre sa fin puis de télécharger le fichier chiffré. Sa préparation peut interrompre brièvement la messagerie : conserver alors tes brouillons avant de commencer. Aucune manipulation du PC, fermeture de compte ou restauration n’est nécessaire à ce contrôle. Les parcours physiques et les performances de l’hébergement gardent leurs limites de qualification.
 

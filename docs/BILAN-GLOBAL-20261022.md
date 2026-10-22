@@ -1,5 +1,7 @@
 # JessieMessage — bilan global du 22 octobre 2026
 
+> **Bilan historique du jalon 1.8.0.** Les états de production, latest, brouillons et contrôles restants ci-dessous décrivent cette étape ; ils ne donnent pas l’état ni les consignes actuelles. La production et les métadonnées sont désormais alignées en **1.8.2** selon le [reçu utilisateur](verification-proofs/jm182-hosted-metadata.json). [REPRISE](REPRISE.md) est l’unique référence courante et le [plan](PLAN-IMPLEMENTATION.md) garde les limites ouvertes, dont le test de sauvegarde reporté à la demande de l’utilisateur. Les preuves, textes et ancres historiques sont conservés sans réétiquetage.
+
 **La 1.8.0 est en production : sauvegarde manuelle admin, vidéo et réponses personnelles sont implémentées, qualifiées et déployées. Le versionnage du service, du checkpoint, des releases GitHub et des documents courants est aligné. Le repli 1.7.2 a passé son précontrôle hébergé sans être démarré. Le parcours vidéo est rapporté réussi par l’utilisateur. G4 garde seulement deux vérifications dans l’interface : sauvegarde manuelle et réponse personnelle enregistrée persistante.** Le périmètre simplifié et les abandons du 22 octobre restent conservés.
 
 Les jalons G1–G3 ont servi à développer puis qualifier une livraison commune. Les contrôles restants ne constituent pas de nouveaux lots d’implémentation.
