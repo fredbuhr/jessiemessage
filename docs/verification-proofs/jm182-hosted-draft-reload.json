@@ -1,0 +1,42 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage182-hosted-text-draft-reload",
+  "recordedAtUTC": "2026-10-22T19:50:24.017954+00:00",
+  "status": "text_draft_restoration_confirmed_user_reported",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "exactUserConfirmation": "c'est bon le texte est revenu",
+    "description": "User confirmed that the text returned after the requested same-tab reload procedure. No direct agent device or browser observation."
+  },
+  "applicationContext": {
+    "version": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "identityEvidence": "jm182-hosted-identity.json",
+    "versionIndependentlyRereadDuringThisTest": false
+  },
+  "requestedProcedure": [
+    "Open an existing conversation on the usual device/browser.",
+    "Type a short text draft without sending it.",
+    "Reload the same tab and reopen the same conversation if needed.",
+    "Check whether the text returns, then erase it without sending."
+  ],
+  "confirmedResult": {
+    "textReturnedAfterRequestedReload": true,
+    "scope": "single_reported_text_draft_restoration_case",
+    "device": null,
+    "browser": null,
+    "role": null,
+    "pwaMode": null,
+    "finalDraftErasureConfirmedSeparately": false,
+    "sendOrNoSendConfirmedSeparately": false
+  },
+  "limits": [
+    "Device, browser, role and installed-PWA mode were not supplied; do not infer mobile, Firefox or another platform from account metadata.",
+    "The confirmation does not qualify all browsers, reloads across different tabs/accounts, uncertain-send recovery, media persistence or cross-device synchronization.",
+    "Final erasure of the test draft and whether any send occurred were not explicitly reported.",
+    "No runtime action, new synthetic suite or hosting change was performed by the agent."
+  ],
+  "repeatRequired": false,
+  "technicalReleaseChanged": false,
+  "backupWorkReopened": false
+}
