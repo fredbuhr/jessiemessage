@@ -1,6 +1,6 @@
 # JessieMessage — bilan global du 22 octobre 2026
 
-**JessieMessage fonctionne en production pour la messagerie texte et photo et les outils de Jessie. G1 sauvegarde manuelle admin, G2 vidéo complète et G3 réponses personnelles sont fusionnés, qualifiés et publiés dans la 1.8.0, sans activation hébergée. Le repli technique 1.7.2 est qualifié et publié, sans préparation hébergée. Il reste G4, livraison unique et contrôles en service.** Le périmètre simplifié et les abandons du 22 octobre restent conservés.
+**JessieMessage fonctionne en production pour la messagerie texte et photo et les outils de Jessie. G1 sauvegarde manuelle admin, G2 vidéo complète et G3 réponses personnelles sont fusionnés, qualifiés et publiés dans la 1.8.0, sans activation hébergée. Le repli technique 1.7.2 est qualifié et publié ; ses fichiers et le bundle vidéo sont préparés sur l’hôte, sans précontrôle ni migration. Il reste G4, livraison unique et contrôles en service.** Le périmètre simplifié et les abandons du 22 octobre restent conservés.
 
 Ce bilan distingue ce qui est livré, les acquis sur branche et le dernier lot de livraison. Les subdivisions techniques servent à reprendre le travail après une interruption ; elles ne deviennent pas autant de livraisons ou de nouvelles décisions demandées à l’utilisateur.
 
@@ -10,7 +10,7 @@ La production est **1.7.1**, commit `c2d7b3b31c6d0955892829f808dc4135d7d8debf`, 
 
 Le [contrôle public du 22 octobre](verification-proofs/jm171-global-public-health-20261022.json) confirme santé, disponibilité et accueil HTTP 200 ; il ne prouve ni la version active ni une session réelle.
 
-La 1.8.0 est fusionnée sur `fd6e53b14b520231b0b307a2761331dd8c740a5b`, arbre `324c3563fc6b1cfce669bcf58d90962c23c966b8` ; le repli 1.7.2 sur `6b3319a77c307ed7d6b003fe33de36807c70c266`, arbre `924d500375a69ae50bc63414b15df71271e2bf8a`. Chacune passe ses CI PR et main **5/5 à la première tentative** : [preuve 1.8.0](verification-proofs/jm180-final-delivery-verification.json), [preuve 1.7.2](verification-proofs/jm172-verification.json). La [1.8.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.0) et le [repli v1.7.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2) sont publiés, sans déplacer latest 1.7.1 ; préparation hébergée, migration et activation restent à effectuer. Les qualifications G1–G3 restent conservées.
+La 1.8.0 est fusionnée sur `fd6e53b14b520231b0b307a2761331dd8c740a5b`, arbre `324c3563fc6b1cfce669bcf58d90962c23c966b8` ; le repli 1.7.2 sur `6b3319a77c307ed7d6b003fe33de36807c70c266`, arbre `924d500375a69ae50bc63414b15df71271e2bf8a`. Chacune passe ses CI PR et main **5/5 à la première tentative** : [preuve 1.8.0](verification-proofs/jm180-final-delivery-verification.json), [preuve 1.7.2](verification-proofs/jm172-verification.json). La [1.8.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.0) et le [repli v1.7.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2) sont publiés, sans déplacer latest 1.7.1 ; Les [sources/lanceurs et le bundle vidéo sont préparés](verification-proofs/jm180-hosted-preparation.json), sans SQL ni démarrage ; contrôle SQL en lecture seule, migration, précontrôles et activation restent à effectuer. Les qualifications G1–G3 restent conservées.
 
 ## Ce qui est disponible et branché en production
 
@@ -57,8 +57,8 @@ G1, G2 et G3 sont qualifiés sur branche et attendent leur livraison commune. La
 
 | Résultat | Critère de fin |
 | --- | --- |
-| **G4 — Livraison unique et contrôles** | Préparer les références produit/repli publiées avant migration, puis migrer, activer et contrôler en service. L’identité active, les métadonnées, la sauvegarde manuelle et le remplacement des automatismes doivent être réellement attestés. |
+| **G4 — Livraison unique et contrôles** | Contrôler le SQL en lecture seule, puis migrer les références préparées, précontrôler le repli sans le démarrer, activer et contrôler en service. L’identité active, les métadonnées, la sauvegarde manuelle et le remplacement des automatismes doivent être réellement attestés. |
 
-**Le repli actuel 1.6.0 est compatible avec SQL 33, pas avec le candidat SQL 36.** L’ancien lecteur G2 refuse les nouvelles capsules contenant les réponses personnelles. La référence 1.7.2 est adaptée, qualifiée sur SQL 36 et publiée ; sa préparation hébergée reste à effectuer avant migration.
+**Le repli actuel 1.6.0 est compatible avec SQL 33, pas avec le candidat SQL 36.** L’ancien lecteur G2 refuse les nouvelles capsules contenant les réponses personnelles. La référence 1.7.2 est adaptée, qualifiée sur SQL 36 et publiée ; ses fichiers sont préparés sur l’hôte ; son précontrôle SQL36 reste à effectuer après migration, sans démarrage.
 
 Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. La prochaine action est G4. Les appareils physiques, les notifications système hors application et les performances réelles du mutualisé restent non vérifiés ; les essais synthétiques ne les remplacent pas.

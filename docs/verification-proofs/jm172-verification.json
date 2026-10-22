@@ -644,7 +644,17 @@
     "deploymentPerformed": false,
     "hostWritesPerformed": false
   },
-  "hostedPreparation": null,
+  "hostedPreparation": {
+    "proof": "jm180-hosted-preparation.json",
+    "status": "sources_and_video_runtime_prepared_not_migrated_not_prechecked_not_started",
+    "stagingReceiptSha256": "c43b16b305be8be861c65dfae2881634a28beec6d0067ee0d6c26f6c274d9a74",
+    "videoRuntimeReceiptSha256": "9ba65419109c16b7bc94101c63becee5c156b611e6f8f917a210fe7d216b2ff4",
+    "bundleFingerprintSha256": "bcca2f3fd91ffc0dec51a7077eb9e192a53b6e653b60c7db7159e473b83aac85",
+    "hostedQualified": false,
+    "started": false,
+    "migrated": false,
+    "precheckPassed": false
+  },
   "deploymentPerformed": false,
   "limits": [
     "General-suite 47 omissions remain omissions; both native engines have zero omissions.",
