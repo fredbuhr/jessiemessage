@@ -264,6 +264,14 @@ async function selectVideo(page) {
   await waitUntil(() => page.execute("const player=document.querySelector('#video-preview video');return player?.videoWidth===96&&player.videoHeight===64&&player.duration>1.5&&!document.getElementById('upload-video').disabled"), "native MP4 preview is decoded before upload");
 }
 
+async function assertVideoViewport(page, width) {
+  const viewport = await page.execute("const input=document.getElementById('video-file'),rect=input.getBoundingClientRect(),style=getComputedStyle(input),root=document.documentElement,visual=window.visualViewport;return {width:innerWidth,height:innerHeight,clientWidth:root.clientWidth,scrollWidth:root.scrollWidth,visual:visual?{width:visual.width,height:visual.height,offsetLeft:visual.offsetLeft,offsetTop:visual.offsetTop,scale:visual.scale}:null,activeElement:{id:document.activeElement?.id,tag:document.activeElement?.tagName},file:{width:rect.width,height:rect.height,position:style.position,padding:[style.paddingTop,style.paddingRight,style.paddingBottom,style.paddingLeft],border:[style.borderTopWidth,style.borderRightWidth,style.borderBottomWidth,style.borderLeftWidth]}}");
+  assert.equal(viewport.width, width, `the hidden video control must not enlarge the requested viewport: ${JSON.stringify(viewport)}`);
+  assert.ok(viewport.scrollWidth <= viewport.clientWidth, `video selection must not create horizontal overflow: ${JSON.stringify(viewport)}`);
+  assert.equal(viewport.file.position, "absolute"); assert.equal(viewport.file.width, 1); assert.equal(viewport.file.height, 1);
+  assert.deepEqual(viewport.file.padding, ["0px", "0px", "0px", "0px"]); assert.deepEqual(viewport.file.border, ["0px", "0px", "0px", "0px"]);
+}
+
 async function waitForVideoUpload(source, page, check, description) {
   try { await waitUntil(check, description); }
   catch (error) {
@@ -284,10 +292,10 @@ async function clickVideoButton(page, buttonId) {
   assert.ok(["x", "y", "width", "height"].every(name => Math.abs(geometry.first[name] - geometry.second[name]) < 0.5),
     `${buttonId}: native target geometry must settle across two animation frames: ${JSON.stringify(geometry)}`);
   await page.execute("window.__scalePointerEvents.length=0");
-  const pointer = await page.pointerClick(`#${buttonId}`);
+  await page.click(`#${buttonId}`);
   const events = await page.execute("return window.__scalePointerEvents");
   assert.ok(events.some(event => event.type === "click" && event.buttonId === buttonId && event.trusted && event.fieldsetDisabled === false),
-    `Native ${buttonId} click must reach the enabled button: ${JSON.stringify({ pointer, events })}`);
+    `Native ${buttonId} click must reach the enabled button: ${JSON.stringify(events)}`);
 }
 
 test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry", { timeout: 120000 }, async () => {
@@ -295,7 +303,7 @@ test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw uploa
     const source = await fixture({ videoEnabled: true, uncertain: true }); let page;
     try {
       page = await open(source, width, language); await chooseMode(page, "filtered"); await compose(page, "Synthetic video campaign", "Synthetic private video caption");
-      await selectVideo(page);
+      await selectVideo(page); await assertVideoViewport(page, width);
       assert.equal(source.state.uploads.length, 0); assert.equal(source.state.creates.length, 0);
       assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled"), true);
       assert.equal(await page.execute("return document.getElementById('upload-video').textContent"), language === "fr" ? "Charger la vidéo" : "Upload video");
@@ -320,7 +328,7 @@ test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw uploa
 test("Chrome broadcast video upload can be cancelled while awaiting ACK without any campaign or automatic upload retry", { timeout: 60000 }, async () => {
   const source = await fixture({ videoEnabled: true, holdVideoUpload: true }); let page;
   try {
-    page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await clickVideoButton(page, "upload-video");
+    page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await assertVideoViewport(page, 390); await clickVideoButton(page, "upload-video");
     await waitForVideoUpload(source, page, () => source.state.uploads.length === 1 && page.execute("return !document.getElementById('cancel-video').hidden"), "native upload awaits its server acknowledgement");
     assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled&&!document.getElementById('video-progress').hidden"), true);
     await clickVideoButton(page, "cancel-video");

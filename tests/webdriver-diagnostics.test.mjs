@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { createWebDriverNavigationPolicy, createWebDriverRequester, createWebDriverPointerClick } from "./browser/webdriver.mjs";
+import { createWebDriverNavigationPolicy, createWebDriverRequester } from "./browser/webdriver.mjs";
 
 test("primary-authority rehearsal is explicit, loopback-mapped and has no DNS fallback", () => {
   assert.throws(() => createWebDriverNavigationPolicy("https://jessiemessage.com"));
@@ -17,30 +17,6 @@ test("primary-authority rehearsal is explicit, loopback-mapped and has no DNS fa
 });
 
 const secret = "synthetic-sensitive-value";
-
-test("native viewport pointer uses one local W3C action and refuses invalid geometry before input", async () => {
-  const calls = []; let point = { x: 195, y: 470, width: 390, height: 844 };
-  const server = createServer(async (request, response) => {
-    let raw = ""; for await (const chunk of request) raw += chunk;
-    calls.push({ path: request.url, method: request.method, body: JSON.parse(raw) });
-    response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify({ value: request.url.endsWith("/execute/sync") ? point : null }));
-  });
-  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-  try {
-    const click = createWebDriverPointerClick(createWebDriverRequester(`http://127.0.0.1:${server.address().port}`), "/session/synthetic");
-    assert.deepEqual(await click("#upload-video"), { x: 195, y: 470 });
-    const action = calls.filter(call => call.path.endsWith("/actions")); assert.equal(action.length, 1);
-    assert.equal(action[0].method, "POST"); assert.equal(action[0].body.actions.length, 1);
-    const pointer = action[0].body.actions[0]; assert.equal(pointer.type, "pointer"); assert.equal(pointer.parameters.pointerType, "mouse");
-    assert.deepEqual(pointer.actions, [{ type: "pointerMove", duration: 0, origin: "viewport", x: 195, y: 470 }, { type: "pointerDown", button: 0 }, { type: "pointerUp", button: 0 }]);
-    for (const invalid of [null, { ...point, x: 195.5 }, { ...point, y: -1 }, { ...point, y: 844 }, { ...point, width: 32769 }, { ...point, height: Infinity }]) {
-      point = invalid; await assert.rejects(click("#upload-video"), /not visible and enabled/);
-    }
-    assert.equal(calls.filter(call => call.path.endsWith("/actions")).length, 1, "invalid or missing hit tests never send pointer input");
-    const before = calls.length; await assert.rejects(click(""), /Invalid WebDriver pointer target/); assert.equal(calls.length, before);
-  } finally { const closed = new Promise(resolve => server.close(resolve)); server.closeAllConnections(); await closed; }
-});
 
 test("WebDriver timeout names the command without disclosing its session, element, body or transport error", async () => {
   let calls = 0;
