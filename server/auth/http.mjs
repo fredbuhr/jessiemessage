@@ -24,6 +24,7 @@ const routeMethods = new Map([
   ["/api/auth/logout", ["POST"]],
   ["/api/auth/logout-all", ["POST"]],
   ["/admin/login", ["GET", "HEAD"]],
+  ["/admin/login/", ["GET", "HEAD"]],
   ["/admin", ["GET", "HEAD"]],
   ["/admin-login.js", ["GET", "HEAD"]],
   ["/admin-login.css", ["GET", "HEAD"]],
@@ -190,9 +191,10 @@ export function createAuthHandler(service, { origin, clock = Date.now }) {
     if (typeof service?.[method] !== "function") throw new TypeError("An authentication service is required");
   }
   return async (request, response) => {
-    let pathname;
-    try { pathname = new URL(request.url ?? "/", "http://localhost").pathname; }
+    let requestUrl;
+    try { requestUrl = new URL(request.url ?? "/", "http://localhost"); }
     catch { return false; }
+    const pathname = requestUrl.pathname;
     const deviceId = /^\/api\/auth\/devices\/([a-f0-9]{32})\/revoke$/.exec(pathname)?.[1];
     const allowed = deviceId ? ["POST"] : routeMethods.get(pathname);
     if (!allowed) return false;
@@ -202,6 +204,10 @@ export function createAuthHandler(service, { origin, clock = Date.now }) {
       return true;
     }
     try {
+      if (pathname === "/admin/login/") {
+        reply(response, method, 308, "", { Location: `/admin/login${requestUrl.search}`, "Content-Type": "text/html; charset=utf-8" });
+        return true;
+      }
       if (method === "POST") checkMutation(request, origin, pathname);
       if (pathname === "/api/auth/login") {
         const body = loginPayload(await readJson(request));

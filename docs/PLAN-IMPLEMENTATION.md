@@ -16,6 +16,8 @@ L’[identité active **1.8.0 / Node 24.22.1**](verification-proofs/jm180-hosted
 
 ## Un seul lot restant : G4
 
+**Retour utilisateur intégré :** l’enregistrement des réponses fonctionne ; leur regroupement avec les phrases proposées et l’alias de connexion `/admin/login/` sont traités ensemble dans le [correctif 1.8.1](quick-replies-login-181.md). La prochaine action est de terminer, qualifier puis livrer ce correctif ; la sauvegarde complète reste à vérifier après accès à son interface. La production reste 1.8.0 jusqu’à cette livraison.
+
 G1, G2 et G3 sont fusionnés et qualifiés dans la référence produit 1.8.0. Le repli 1.7.2 est lui aussi qualifié et désormais publié ; ses fichiers et le bundle vidéo sont préparés sur l’hôte ; SQL36, initialisation vidéo et les deux précontrôles sont acquis, selon les résultats utilisateur ; l’identité 1.8.0 est rapportée ; déploiement, disponibilité contrôlée par le writer et alignement des métadonnées sont terminés ; seule la recette interface hébergée reste à effectuer. Les subdivisions techniques ne deviennent pas de nouveaux lots ou arrêts à faire valider par l’utilisateur.
 
 | Lot | Travail regroupé | Critère de fin concret |

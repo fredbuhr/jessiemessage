@@ -66,8 +66,13 @@ class Element {
     if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((child) => child !== this);
     this.parentElement = null; this._connected = false;
   }
-  querySelectorAll(selector) { const matches = (child) => selector.startsWith(".") ? child.className?.split(" ").includes(selector.slice(1)) : child.tagName === selector;
-    return this.children.flatMap((child) => [...(matches(child) ? [child] : []), ...child.querySelectorAll(selector)]); }
+  querySelectorAll(selector) {
+    const data = /^\[data-([a-z-]+)="([^"]*)"\]$/.exec(selector);
+    const dataKey = data?.[1].replace(/-([a-z])/g, (_whole, letter) => letter.toUpperCase());
+    const matches = (child) => data ? child.dataset[dataKey] === data[2]
+      : selector.startsWith(".") ? child.className?.split(" ").includes(selector.slice(1)) : child.tagName === selector;
+    return this.children.flatMap((child) => [...(matches(child) ? [child] : []), ...child.querySelectorAll(selector)]);
+  }
   querySelector(selector) { return this.querySelectorAll(selector)[0] ?? null; }
   closest(selector) {
     for (let node = this; node; node = node.parentElement) {
@@ -1256,25 +1261,49 @@ async function submitPersonalReply(f, title, body, language = "fr") {
   for (const handler of f.element("personal-reply-editor").events.get("submit")) handler({ preventDefault() {} }); await flush();
 }
 async function clickPersonalNode(node) { for (const handler of node.events.get("click") ?? []) handler({}); await flush(); }
-function personalRow(f, replyId) { return f.element("personal-replies-list").children.find(node => node.dataset.personalId === replyId); }
+function personalRow(f, replyId) { return f.element("quick-replies-list").children.find(node => node.dataset.personalId === replyId); }
 function personalAction(row, name) { return row.querySelectorAll("button").find(node => node.dataset.personalAction === name); }
 
-test("personal quick replies create, edit, insert without sending and delete across independent administrator sessions", async () => {
+test("personal quick replies join the preset list, edit, insert without sending and delete across independent administrator sessions", async () => {
   const catalogue = { version: "0", replies: [] }, first = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue });
   await openPersonalReplies(first); await first.click("new-personal-reply");
   await submitPersonalReply(first, "Mon accueil 👩‍💻", "Texte personnel <b>brut</b> 😊");
   assert.equal(catalogue.version, "1"); assert.equal(catalogue.replies.length, 1); assert.equal(first.state.posts, 0);
   assert.equal(first.element("personal-reply-editor").hidden, true); assert.equal(first.element("personal-reply-body").value, "");
   const replyId = catalogue.replies[0].id; assert.match(replyId, /^[0-9a-f]{32}$/);
+  const combined = first.element("quick-replies-list");
+  assert.equal(combined.children.filter(node => node.dataset.quickReply).length, 6);
+  assert.equal(combined.children.length, 7); assert.equal(personalRow(first, replyId).parentElement, combined);
+  assert.equal(first.element("personal-replies-list"), undefined); assert.equal(first.element("personal-replies-title"), undefined);
+  assert.ok(combined.children.filter(node => node.dataset.quickReply).every(node => node.querySelectorAll("button").length === 0));
+  first.element("quick-reply-language").value = "en";
+  for (const handler of first.element("quick-reply-language").events.get("change")) handler({}); await flush();
+  assert.equal(combined.children.length, 6); assert.equal(personalRow(first, replyId), undefined);
+  assert.equal(combined.children.find(node => node.dataset.quickReply === "good-night").textContent, "Good night, kisses 😘");
+  first.element("quick-reply-language").value = "fr";
+  for (const handler of first.element("quick-reply-language").events.get("change")) handler({}); await flush();
+  assert.equal(combined.children.length, 7); assert.ok(personalRow(first, replyId)); assert.equal(first.state.quickReplyWrites, 1);
   const second = harness({ currentSession: session(1, "B".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(second);
   const insert = personalRow(second, replyId).querySelector(".personal-reply-insert"); second.element("message-body").value = "Brouillon";
   await clickPersonalNode(insert); assert.equal(second.element("message-body").value, "Brouillon\nTexte personnel <b>brut</b> 😊"); assert.equal(second.state.posts, 0);
   await second.click("open-quick-replies"); await clickPersonalNode(personalAction(personalRow(second, replyId), "edit"));
   await submitPersonalReply(second, "Accueil modifié", "Texte modifié"); assert.equal(catalogue.version, "2");
-  await first.click("close-quick-replies"); await first.click("open-quick-replies"); assert.equal(personalRow(first, replyId).querySelector("strong").textContent, "Accueil modifié");
+  await first.click("close-quick-replies"); await first.click("open-quick-replies"); assert.equal(personalRow(first, replyId).getAttribute("aria-label"), "Accueil modifié");
   await clickPersonalNode(personalAction(personalRow(first, replyId), "delete")); assert.equal(catalogue.replies.length, 1);
   await clickPersonalNode(personalAction(personalRow(first, replyId), "confirm-delete")); assert.equal(catalogue.version, "3"); assert.equal(catalogue.replies.length, 0);
   assert.equal(first.state.posts + second.state.posts, 0); assert.equal(first.state.quickReplyWrites + second.state.quickReplyWrites, 3);
+});
+
+test("loading personal replies into the common list preserves keyboard focus on a preset", { timeout: 5000 }, async () => {
+  const pending = pause(), catalogue = { version: "1", replies: [{ id: id(901), title: "Saved title", body: "Saved phrase", language: "fr" }] };
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: path => path === "/api/admin/quick-replies" ? pending.promise : undefined });
+  await openPersonalReplies(f);
+  const preset = f.element("quick-replies-list").children.find(node => node.dataset.quickReply === "good-night");
+  preset.focus(); assert.equal(f.document.activeElement === preset, true);
+  pending.resolve(response(200, catalogue)); await flush();
+  const loadedPreset = f.element("quick-replies-list").children.find(node => node.dataset.quickReply === "good-night");
+  assert.equal(loadedPreset === preset, false); assert.equal(f.document.activeElement === loadedPreset, true);
+  assert.equal(personalRow(f, id(901)).parentElement, loadedPreset.parentElement); assert.equal(f.state.posts, 0);
 });
 
 test("personal quick reply CAS conflicts preserve the editor and merge only after explicit reload and save", async () => {
@@ -1310,11 +1339,11 @@ test("personal replies respect caption limits and are erased on hide, stale netw
   f.inspect().states.get(f.inspect().selected).videoDraft = { file: {} }; await clickPersonalNode(personalRow(f, id(901)).querySelector(".personal-reply-insert"));
   assert.equal(f.element("message-body").value, ""); assert.match(f.element("quick-replies-status").textContent, /ne peut pas être ajoutée/);
   await clickPersonalNode(personalAction(personalRow(f, id(901)), "edit")); assert.equal(f.element("personal-reply-body").value.length, 1001);
-  await f.hide(); assert.equal(f.element("personal-reply-body").value, ""); assert.equal(f.element("personal-replies-list").children.length, 0);
+  await f.hide(); assert.equal(f.element("personal-reply-body").value, ""); assert.equal(f.element("quick-replies-list").children.length, 0);
   f.state.currentSession = session(2, "B".repeat(43), "admin"); await f.show(); assert.equal(f.element("personal-reply-title").value, ""); assert.equal(f.state.posts, 0);
   const pending = pause(); const delayed = harness({ currentSession: session(1, "C".repeat(43), "admin"), intercept: path => path === "/api/admin/quick-replies" ? pending.promise : undefined });
   await openPersonalReplies(delayed); await delayed.hide(); pending.resolve(response(200, catalogue)); await flush();
-  assert.equal(delayed.element("personal-replies-list").children.length, 0); assert.equal(delayed.element("quick-replies-dialog").open, false);
+  assert.equal(delayed.element("quick-replies-list").children.length, 0); assert.equal(delayed.element("quick-replies-dialog").open, false);
   const client = harness(); await flush(); await client.click("open-quick-replies"); assert.equal(client.calls.some(call => call.path === "/api/admin/quick-replies"), false);
 });
 

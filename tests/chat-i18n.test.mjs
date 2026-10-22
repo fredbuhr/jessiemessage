@@ -444,11 +444,13 @@ test("all controller message and photo error variants retain reactive translated
 test("personal replies keep their title and body verbatim while management controls change language", async () => {
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: { version: "1", replies: [{ id: id(901), title: "Envoyer", body: "Mes photos <b>texte brut</b>", language: "fr" }] } }); await flush();
   for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); await f.click("open-quick-replies");
-  const row = f.element("personal-replies-list").children.find(node => node.dataset.personalId === id(901));
-  assert.equal(row.querySelector("strong").textContent, "Envoyer"); assert.equal(row.querySelector("span").textContent, "Mes photos <b>texte brut</b>");
-  f.language("en"); assert.equal(f.element("personal-replies-title").textContent, "My replies");
-  assert.equal(f.element("new-personal-reply").textContent, "New reply"); assert.equal(row.querySelector("strong").textContent, "Envoyer");
-  assert.equal(row.querySelector("span").textContent, "Mes photos <b>texte brut</b>"); assert.equal(row.querySelectorAll("b").length, 0);
+  const row = f.element("quick-replies-list").children.find(node => node.dataset.personalId === id(901));
+  assert.equal(row.getAttribute("role"), "group"); assert.equal(row.getAttribute("aria-label"), "Envoyer");
+  assert.equal(row.querySelector(".personal-reply-insert").textContent, "Mes photos <b>texte brut</b>");
+  f.language("en"); assert.equal(f.element("personal-replies-title"), undefined);
+  assert.equal(f.element("new-personal-reply").textContent, "New reply"); assert.equal(row.getAttribute("aria-label"), "Envoyer");
+  assert.equal(row.querySelector(".personal-reply-insert").textContent, "Mes photos <b>texte brut</b>"); assert.equal(row.querySelectorAll("b").length, 0);
+  assert.equal(row.querySelector("strong"), null);
   for (const handler of row.querySelector(".personal-reply-insert").events.get("click")) handler({}); await flush();
   assert.equal(f.element("message-body").value, "Mes photos <b>texte brut</b>"); assert.equal(f.state.posts, 0);
 });
