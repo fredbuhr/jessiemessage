@@ -1,0 +1,64 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-a10-factual-notice-preparation",
+  "recordedAtUTC": "2026-10-22T19:32:12.201723+00:00",
+  "status": "prepared_branch_candidate_not_qualified_not_published_not_deployed",
+  "branch": "docs/privacy-notice-refresh",
+  "baseSource": "21176e43e240622b28e5bba703807abea3ad3f0b",
+  "productionSourcePreserved": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "productionVersionPreserved": "1.8.2",
+  "releaseVersionAssigned": false,
+  "files": [
+    {
+      "path": "docs/privacy-notice-draft.md",
+      "bytes": 15538,
+      "sha256": "3f43beea173d14c995760c3d8ac32b8c395f39cae5ac23aeea2c63f13c4bbfac"
+    },
+    {
+      "path": "docs/data-privacy-preparation.md",
+      "bytes": 14339,
+      "sha256": "b3c7dff55530cafca33759eb1860b4678efdfbc1d70651f2f321a9900eeabc65"
+    }
+  ],
+  "purpose": "Correct factual descriptions of existing video, export, local erasure and text-draft behavior; identify historical preparation states. Do not choose missing operator/legal facts.",
+  "runtimeDependency": "server/privacy/service.mjs extracts the exact French/English headings from docs/privacy-notice-draft.md; this is a runtime template and cannot be merged as a proof-only documentation update.",
+  "preliminaryValidation": {
+    "provenance": "Observed by delegated author on these exact two candidate files; not rerun by root.",
+    "node": "v24.19.0",
+    "exactHeadingCountPerRequiredHeading": 1,
+    "serviceEquivalentExtractionPassed": true,
+    "validateDraftPassed": true,
+    "frenchCharacters": 7276,
+    "englishCharacters": 6376,
+    "draftJsonBytes": 14628,
+    "exportLabelsAndMissingD01D03MarkersPreserved": true,
+    "relativeLinksResolvedInTargetRepository": true,
+    "historical041ResultsPreserved": true,
+    "applicationTestSuiteExecuted": false,
+    "nativeProductionNodeQualification": false
+  },
+  "independentReview": "passed_read_only_review_on_exact_candidate_files",
+  "officialReferencesReadOn20261022": [
+    {
+      "url": "https://www.cnil.fr/fr/conformite-rgpd-information-des-personnes-et-transparence",
+      "scope": "Information categories and concise presentation; no controller identity, legal basis or retention periods selected."
+    },
+    {
+      "url": "https://www.cnil.fr/fr/reglement-europeen-protection-donnees/chapitre2",
+      "scope": "Principles context only; no legal qualification of JessieMessage concluded."
+    }
+  ],
+  "limits": [
+    "D01-D08 still require their genuinely missing facts/decisions; the product facts already confirmed remain distinct.",
+    "The existing encrypted private prepared draft overrides the default template; no host draft is accessed, overwritten or migrated by this candidate.",
+    "No public privacy notice is published and no full legal-compliance conclusion is made.",
+    "Native targeted privacy suites and required CI remain to be qualified before merging a stabilized runtime template.",
+    "A11 inconclusive risk remains independent; hosted backup UI test remains deferred without further action."
+  ],
+  "nextAction": "Review remaining operator facts privately and stabilize the final candidate, then qualify the existing privacy-preparation and privacy-http suites under Node v24.22.1 and the required release workflow before any merge or deployment.",
+  "merged": false,
+  "released": false,
+  "deployed": false,
+  "privateConfigurationChanged": false,
+  "backupWorkReopened": false
+}
