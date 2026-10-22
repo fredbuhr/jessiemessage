@@ -106,13 +106,12 @@ function showEntry(entry) {
     signedOut("", { allowRecovery: false }); loginForm.hidden = true; element("resend-section").hidden = true;
     element("client-recovery-link").hidden = true; recoveryRetry.hidden = true;
     accessI18n.text(element("access-title"), "Choisis ton espace.");
-    accessI18n.text(element("access-intro"), "Tes deux espaces sont connectés sur cet appareil.");
     element("entry-client-link").href = client.href + (notificationReference ? `#notification=${notificationReference}` : "");
-    element("entry-admin-link").href = "/admin" + (notificationReference ? `#notification=${notificationReference}` : "");
+    element("entry-admin-link").href = notificationReference ? `/admin/messages#notification=${notificationReference}` : "/admin";
     element("entry-role-choice").hidden = false;
     return;
   }
-  if (administrator) { openDestination("/admin"); return; }
+  if (administrator) { openDestination(notificationReference ? "/admin/messages" : "/admin"); return; }
   if (client && client.state !== "signed_out") { openDestination(client.href); return; }
   signedOut();
 }

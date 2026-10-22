@@ -1,0 +1,111 @@
+{
+  "status": "implemented_targeted_local_tests_passed_not_committed",
+  "scope": [
+    "B05",
+    "I01"
+  ],
+  "branch": "fix/messaging-183",
+  "baseHead": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "runtime": "v24.19.0",
+  "createdAt": "2026-10-22T21:25:51.569407+00:00",
+  "files": [
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/server/backup/witness-transport.mjs",
+      "sha256": "7887ba4a5817be9c06ed931a8fc0169f7e906fd219916db4eabcca614b9e94ce",
+      "bytes": 8462,
+      "relativePath": "server/backup/witness-transport.mjs"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/scripts/private-secrets-backup.mjs",
+      "sha256": "01338ad13f953d4ac9cb37472a09222e768f257277831e6862f673dc355cacb6",
+      "bytes": 26725,
+      "relativePath": "scripts/private-secrets-backup.mjs"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/tests/witness-transport-admission.test.mjs",
+      "sha256": "af29fa1d1c8a735fe2384316e018216d04e8943e810de47239b08c1b64b21274",
+      "bytes": 8005,
+      "relativePath": "tests/witness-transport-admission.test.mjs"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/tests/private-secrets-video-guard.test.mjs",
+      "sha256": "74b645adf88528c958b9afb1a59dd99682a5db0bdb814341d75cbbc7ff39bc89",
+      "bytes": 4118,
+      "relativePath": "tests/private-secrets-video-guard.test.mjs"
+    }
+  ],
+  "changes": [
+    {
+      "id": "B05",
+      "implementation": "Reserve poll or response admission synchronously before awaited authorization; retain polling admission through final identity check; release both admission sets in finally. Existing rate, origin, bearer, pinned identity, payload size and final identity checks remain.",
+      "tests": [
+        "Two of four simultaneous polls and responses enter deferred authorization; the others return429.",
+        "At most two concurrent body iterators; later request429; parse failures return reservations.",
+        "Polling admission retained after wake during final identity check.",
+        "Early415/409, size413, iterator error503 and three valid complete response cycles release admission.",
+        "Closing also destroys response requests awaiting authorization."
+      ]
+    },
+    {
+      "id": "I01",
+      "implementation": "assertProfile rejects any runtime-video.json entry before historical profile shortcuts, including primary-crm. Existing sourceNames, payload versions and verifyCiphertext reader are unchanged.",
+      "tests": [
+        "For default/auth/messaging/messaging-photos/messaging-photos-notify/primary-crm, public check and run reject PRIVATE_SECRETS_SOURCE before source reads, GPG calls or output creation.",
+        "Synthetic dirfd spelling is emulated; actual fixture metadata and directory anchoring logic remain exercised. All descriptors closed and marker unchanged."
+      ]
+    }
+  ],
+  "verification": {
+    "command": "node --test tests/witness-transport-admission.test.mjs tests/private-secrets-video-guard.test.mjs",
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "skipped": 0,
+    "durationMs": 486.314132,
+    "log": {
+      "path": "/workspace/scratch/bb431be72395/ux183/historical-guards-tests-final.log",
+      "sha256": "a88aa4347a3f04dba8a0c07c7139209e313a75a4fcdfeed3c3a851ea8317e039",
+      "bytes": 880
+    },
+    "gitDiffCheck": "passed for the four owned paths"
+  },
+  "earlierAttempts": [
+    {
+      "operation": "Shell redirection before test startup",
+      "result": "Log directory absent; no test started; directory then created."
+    },
+    {
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux183/historical-guards-tests.log",
+        "sha256": "9cf755c8e9ccc0b2d6d342c5a6650b80c4ac449cc0197b84b14e34280e19e69b",
+        "bytes": 2264
+      },
+      "result": "Six witness tests passed; guard integration failed because /proc/self/fd is absent locally; no production guard changed."
+    },
+    {
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux183/historical-guards-tests-guard-diagnostic.log",
+        "sha256": "4e84962052edf86fc5cab602278db95ab2cbcbf73b0019fca0e95ef6c0b66272",
+        "bytes": 1162
+      },
+      "result": "Confirmed PRIVATE_PATH_UNAVAILABLE before profile guard; test fixture changed to explicit synthetic dirfd mapping."
+    },
+    {
+      "result": "Intermediate seven-test targeted run passed after fixture correction; then an additional successful-transfer/size/read-error test was added and final eight-test run passed."
+    }
+  ],
+  "actionsNotPerformed": [
+    "No git commit or push.",
+    "No version, DB, SQL schema, public frontend or runtime activation changes.",
+    "No real witness, backup, restore, PC, account, SMTP or database operation.",
+    "No encryption/decryption process or coffre creation.",
+    "No broad green suite rerun."
+  ],
+  "limits": [
+    "Historical witness mode remains optional and unmounted by active video182; no activation performed.",
+    "Admission tests call the real handler with pure synthetic requests/responses and two-byte malformed bodies or small valid JSON; no socket/load/RSS qualification.",
+    "Local /proc/self/fd is absent, so guard test explicitly emulates dirfd path spelling and proc type; it does not qualify native Linux /proc security.",
+    "Existing native OS/GPG/legacy ciphertext tests were not rerun locally; reader and format code is unchanged.",
+    "Shared branch contains other agents’ changes; only these four files are owned and frozen by this task."
+  ]
+}

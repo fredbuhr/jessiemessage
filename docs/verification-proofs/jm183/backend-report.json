@@ -1,0 +1,386 @@
+{
+  "status": "implemented_local_targeted_checks_passed_native_qualification_pending",
+  "branch": "fix/messaging-183",
+  "baseHead": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "createdAt": "2026-10-22T21:32:02.235783+00:00",
+  "runtimeLocal": "v24.19.0",
+  "productionUnchanged": {
+    "version": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "node": "v24.22.1",
+    "schema": 36
+  },
+  "scope": [
+    "B01",
+    "B02",
+    "B03",
+    "B05",
+    "I01"
+  ],
+  "sourceFiles": [
+    {
+      "path": "server/auth/http.mjs",
+      "sha256": "96f04e5f6cd0226044b9c56c186f812fc84978406b7e558c442cf87f123ba8e6",
+      "bytes": 13590
+    },
+    {
+      "path": "server/access/http.mjs",
+      "sha256": "37e53abdceac373773024ba33508170c020cf28defbdbccb576477b3d8effcba",
+      "bytes": 17979
+    },
+    {
+      "path": "server/access/service.mjs",
+      "sha256": "3463710199aadefbb97a1c200346d8ee6ced6448b0ee666621ca9624bdf9760a",
+      "bytes": 18517
+    },
+    {
+      "path": "server/access/store.mjs",
+      "sha256": "1efc5a42de2bc8d3c8327f1b767c525722ab425f8f6355aa657f455ed6b9b5c5",
+      "bytes": 39136
+    },
+    {
+      "path": "server/announcements/http.mjs",
+      "sha256": "c1ab341c3a0a374e503b0ea5b45f07a03d51c2aeb3c438a4a1fcf0894aef7d47",
+      "bytes": 7504
+    },
+    {
+      "path": "server/backup/copy-http.mjs",
+      "sha256": "93e85f5b14ac8cd4c8245b77ccdf41a73fc2db14394ccb5a62efaa92d465c68b",
+      "bytes": 10170
+    },
+    {
+      "path": "server/backup/manual-backup-http.mjs",
+      "sha256": "fa92c04d9b066029e5c397a51d1a7ef96d6db9d78e01fa491a6629e34b782382",
+      "bytes": 6812
+    },
+    {
+      "path": "server/broadcast/http.mjs",
+      "sha256": "7b7ab056196252be45b5eaba1e944ad1b89380a295908320372eda3d3e343d3f",
+      "bytes": 23631
+    },
+    {
+      "path": "server/chat/http.mjs",
+      "sha256": "f4fe7bf665a48d2097f64711fb23ec6ff6efe71091dd8c42dfa1314b4c55641f",
+      "bytes": 21116
+    },
+    {
+      "path": "server/crm/http.mjs",
+      "sha256": "7a84111985f5e8f41b7de3226bf125372d46f29cea9e79aab931cc1d7610f9f7",
+      "bytes": 19040
+    },
+    {
+      "path": "server/mail/store.mjs",
+      "sha256": "19f8d1d9ea47bbe45347a95b30d8b52a3cf38361c215b5ea86a638fa650e303a",
+      "bytes": 11975
+    },
+    {
+      "path": "server/mail/worker.mjs",
+      "sha256": "5ebbeda42e0a9fdda0c181a43521a7b7813f61bfb57f1ecaad472cb69ea3e60e",
+      "bytes": 6008
+    },
+    {
+      "path": "server/media/http.mjs",
+      "sha256": "35f8d3226581dcf1d99375a9c3bac3fec5a92af850468b606847df966c8d1e61",
+      "bytes": 17649
+    },
+    {
+      "path": "server/profile/http.mjs",
+      "sha256": "f4cb09e961691c461ca78b623f7d13d48e9bee86e49970241bb58556ea3bdb43",
+      "bytes": 7348
+    },
+    {
+      "path": "server/quick-replies/http.mjs",
+      "sha256": "b4c74a8063bf0f380d3bf64428805e76aa224ee307c2497cf1744981fa3bc792",
+      "bytes": 4162
+    },
+    {
+      "path": "server/readiness/http.mjs",
+      "sha256": "bf146ae4989b888e9dcd63cfa9810ecf55d20d3568590fef39e5a5755d1d6062",
+      "bytes": 7625
+    },
+    {
+      "path": "server/reset/mail-store.mjs",
+      "sha256": "5318c0b169108867769b98643dd8ba6280468b364653aa9b4ea159383428615e",
+      "bytes": 10222
+    },
+    {
+      "path": "server/tasks/http.mjs",
+      "sha256": "32199423b0ab0d4d9ff332bf4256f2d885aa4e734eec13a3213a7e90c6e65bdf",
+      "bytes": 6959
+    },
+    {
+      "path": "server/video/http.mjs",
+      "sha256": "8855baffc15edf150fa2c8c92711b75354e84e0a7a43e7f88db19dbde6f263e4",
+      "bytes": 23076
+    }
+  ],
+  "testFiles": [
+    {
+      "path": "tests/access-http.test.mjs",
+      "sha256": "ac4dda8c743b45c63c0064af7b091f3286d5c02543e50700a273f0078d8a8ca2",
+      "bytes": 39968
+    },
+    {
+      "path": "tests/access-service.test.mjs",
+      "sha256": "16e7579d958012fa6c6a15dfeb597b81adbebee5457e8dbcf43c005e65273c0b",
+      "bytes": 23298
+    },
+    {
+      "path": "tests/access-store.integration.test.mjs",
+      "sha256": "74c2050575f0bc6b6b19075f2b881f6409d72b9ad829b773a19c603ae9484b15",
+      "bytes": 57616
+    },
+    {
+      "path": "tests/announcements-http.test.mjs",
+      "sha256": "beeb21cd33c749937aa5eab8b0f42c859a40decd2f4dc6069b59c93ce6b8487c",
+      "bytes": 8654
+    },
+    {
+      "path": "tests/auth-http.test.mjs",
+      "sha256": "885f604e06ed169bc74de4045a7717dee7569b401cfb6c09b037274c4688af61",
+      "bytes": 22376
+    },
+    {
+      "path": "tests/backup-copy-http.test.mjs",
+      "sha256": "3ba0c9513c92598eae32fd1f15f6e526a795cac87eda257ce4e4294c1106fd0d",
+      "bytes": 12466
+    },
+    {
+      "path": "tests/backup-verification.test.mjs",
+      "sha256": "cef273379f06c0f40d82140d5ca1682b228e16057aa27f5b4c95d920076d8642",
+      "bytes": 5398
+    },
+    {
+      "path": "tests/broadcast-http.test.mjs",
+      "sha256": "5fc068a66752de3345490d1697dcd5ba3cd4847cf7705e6a3190a21032c04e73",
+      "bytes": 40489
+    },
+    {
+      "path": "tests/chat-http.test.mjs",
+      "sha256": "3bf06c595390a2ee8efbeaa540ec4e6051c8209245f856efdb1d55bb0d8744e1",
+      "bytes": 41602
+    },
+    {
+      "path": "tests/crm-http.test.mjs",
+      "sha256": "dc06240a2b567afd9ab7982993d6bdb92281ead66e88a529614739e5b65c74d4",
+      "bytes": 37139
+    },
+    {
+      "path": "tests/mail.test.mjs",
+      "sha256": "131c0ee337e595f1f7da4bc9db4cef449c3f188689290605e60e42e23562d092",
+      "bytes": 24811
+    },
+    {
+      "path": "tests/manual-backup-http.test.mjs",
+      "sha256": "af4ec18d7964741ac5f5ed1f448fad18400f56186b76dd9f508ee87af898419d",
+      "bytes": 15284
+    },
+    {
+      "path": "tests/media-http.test.mjs",
+      "sha256": "52fe96c73b88e490ef057ac95b111deee5c4cd54941edb37dc48300278c825bc",
+      "bytes": 38786
+    },
+    {
+      "path": "tests/readiness-flow.integration.test.mjs",
+      "sha256": "bb798c420434983c3b76d08b61dae1a92a594b907a69eccc78aecff63828eab1",
+      "bytes": 19948
+    },
+    {
+      "path": "tests/readiness-http.test.mjs",
+      "sha256": "daf6b64ee8c83813fcbd5af582bf1ef47b86d598b3d64800ba5621fb7faca022",
+      "bytes": 22027
+    },
+    {
+      "path": "tests/reset-flow.integration.test.mjs",
+      "sha256": "038e07fb488282dd13ccb512f0ed21b95f50807c0e7eedcfa758d3a0df324298",
+      "bytes": 28089
+    },
+    {
+      "path": "tests/reset-mail.test.mjs",
+      "sha256": "28ac647a6a09cdde27d06654b83942fa1f119cc82ea75003231e222881c44886",
+      "bytes": 11123
+    },
+    {
+      "path": "tests/tasks-http.test.mjs",
+      "sha256": "d0f501019e77230ce7ed8de4530608df94647c99a0b923f02bc1d34a3b602276",
+      "bytes": 9767
+    },
+    {
+      "path": "tests/video-transport.test.mjs",
+      "sha256": "066dee5e27466e7254c5f1a15e720a662e0ae5032340db0b26f3fcec9609e869",
+      "bytes": 9884
+    },
+    {
+      "path": "tests/worker-lifecycle.test.mjs",
+      "sha256": "70f43ca8bac3f91220a6fd96df3e01385eb8344d3c478cc443ca7b94993dff1d",
+      "bytes": 14138
+    },
+    {
+      "path": "tests/access-renewal-clock.test.mjs",
+      "sha256": "982840e7eb2332e0d63b53bddcf6cc476ff1c48de6d78fb71f36580d66b626a4",
+      "bytes": 4694
+    },
+    {
+      "path": "tests/mail-expiry-clock.test.mjs",
+      "sha256": "ecb388acb5130060bd9dd43e0c51c5adeaf50fb65d4b799fe78b519c72dd4993",
+      "bytes": 6256
+    },
+    {
+      "path": "tests/session-late-401.test.mjs",
+      "sha256": "a290f530442bb7421a57985d0cb10735e603704ac64dd983a77b79cf203d77ec",
+      "bytes": 1247
+    },
+    {
+      "path": "tests/helpers/session-race-fixture.mjs",
+      "sha256": "894858a3a33e7ba3fa030ad952d9d8fe5c9e488ac061275814612643bec42886",
+      "bytes": 6350
+    },
+    {
+      "path": "tests/browser/session-race.browser.mjs",
+      "sha256": "b5cfc724dd2db0c2235a87991ec89c040a9120edc9227f5ce87ceaef03c512e3",
+      "bytes": 4306
+    }
+  ],
+  "coordinatedEdits": [
+    {
+      "owner": "versions_reprise",
+      "file": {
+        "path": "server/index.mjs",
+        "sha256": "b6d2d01d9fe5f68a18065d5c815d8ca8953d99a820eca86cd28a6a92803a24d2",
+        "bytes": 53081
+      },
+      "change": "Inject shared clock into createMailStore(pool, { clock }) and createResetMailStore(pool, { clock }); owner also changes navigation independently."
+    },
+    {
+      "owner": "versions_reprise",
+      "path": "server/auth/http.mjs",
+      "change": "Shared file: this task changed only absent-session headers; navigation owner changes routes/pages. Successful explicit logout and current-device revoke still clear cookies."
+    },
+    {
+      "owner": "audit2_messaging_media",
+      "file": {
+        "path": "server/notifications/http.mjs",
+        "sha256": "d6d1174123173062e26ebd7dae85a8d46d4cba6833dc5e9a76d2a83c4430c74f",
+        "bytes": 8802
+      },
+      "change": "Owner removes 401 cookie deletion and qualifies notifications-http 14 tests separately; helper here includes both roles in the shared 22-surface and native Chrome scenarios."
+    }
+  ],
+  "changes": [
+    {
+      "id": "B01",
+      "implementation": "Remove automatic session-cookie deletion on refused protected requests, including redirects and initial/deep awaited failures on every shared HTTP surface. Server authorization, CSRF, origin, cache, role and error checks remain. Successful explicit logout/revoke still clear their cookie.",
+      "regressions": "22 real-handler synthetic HTTP cases cover both roles where supported plus admin-only services. Native HTTPS Chrome regression uses a real Secure/HttpOnly/Strict cookie jar, installs A, starts delayed A request, installs B, releases 401A and verifies B plus next-request cookie. Chrome test added, not run locally."
+    },
+    {
+      "id": "B02",
+      "implementation": "Store returns calculatedAt from its locked calculation; service validates safe timestamp >= administrator instant and exact bounded expiry formula using that timestamp, then strips calculatedAt from public DTO. Existing exact expiry CAS, lock order, final admin-expiry and business gates retained.",
+      "regressions": "Real service/store with synthetic SQL: expired/still-valid access, 1ms/5s elapsed lock, exactly one committed write, original snapshot retry conflicts, explicit fresh-snapshot renewal allowed, expired administrator refused. Malformed returned timestamps/identities/expiries rejected."
+    },
+    {
+      "id": "B03",
+      "implementation": "Mail stores refresh injected monotonic clock after pool acquisition and final row locks, cancel expired jobs before lease, and return min(job/proof expiry) plus leaseUntil. Worker rechecks bounded expiry and lease immediately before starting transport; CAS/abort/already-started transport behavior retained.",
+      "regressions": "Both purposes, lock waits 0/999/1000/2000ms, exact deadline, expiry during commit, proof lifetime shorter than outbox, stale/missing/invalid worker lease metadata, existing abort/drain/SMTP ambiguity synthetic lifecycle tests."
+    },
+    {
+      "id": "B05",
+      "implementation": "Historical witness admission reserved synchronously before awaited identity for polling/transfers; finally releases slots, close destroys transfers awaiting authorization. No historical mode activated. See delegated report."
+    },
+    {
+      "id": "I01",
+      "implementation": "Historical creation/check helper refuses runtime-video.json before primary-crm shortcut or any other profile; old sourceNames, payload versions, reader and cryptography unchanged. See delegated report."
+    }
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/access-renewal-clock.test.mjs tests/access-service.test.mjs tests/mail-expiry-clock.test.mjs tests/mail.test.mjs tests/reset-mail.test.mjs tests/worker-lifecycle.test.mjs tests/session-late-401.test.mjs tests/auth-http.test.mjs tests/access-http.test.mjs tests/chat-http.test.mjs tests/media-http.test.mjs tests/video-message-http.test.mjs tests/profile-http.test.mjs tests/readiness-http.test.mjs tests/crm-http.test.mjs tests/broadcast-http.test.mjs tests/announcements-http.test.mjs tests/tasks-http.test.mjs tests/personal-quick-replies-http.test.mjs tests/backup-copy-http.test.mjs tests/manual-backup-http.test.mjs tests/backup-verification.test.mjs",
+      "result": {
+        "tests": 369,
+        "pass": 368,
+        "fail": 0,
+        "skipped": 1,
+        "durationMs": 6440.908719
+      },
+      "skip": "Existing native durable manual-request test: native procfs unavailable; not counted as qualified.",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux183/backend-targeted-initial.log",
+        "sha256": "a69662647304d2839b5d618438ba7381349a30184654f530c1ca2d25f55087c5",
+        "bytes": 37830
+      }
+    },
+    {
+      "command": "node --test tests/access-service.test.mjs tests/mail-expiry-clock.test.mjs",
+      "reason": "Only two changed test files rerun after adding calculatedAt malformed cases and six commit/proof-expiry cases.",
+      "result": {
+        "tests": 36,
+        "pass": 36,
+        "fail": 0,
+        "skipped": 0,
+        "durationMs": 6457.674137
+      },
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux183/backend-targeted-added-cases.log",
+        "sha256": "748ee59b3f5bf94a8023733f78953619def32a4b8d1679ecf83586eb9846f75f",
+        "bytes": 3923
+      }
+    },
+    {
+      "command": "node --test tests/session-late-401.test.mjs",
+      "reason": "Extended shared fixture to notifications; initial 20/22 passed, two added cases exposed fixture actor(null) -> 503 instead of required unauthorized exception. Fixture changed to actual unauthorized exception; application unchanged.",
+      "initialResult": {
+        "tests": 22,
+        "pass": 20,
+        "fail": 2
+      },
+      "initialLog": {
+        "path": "/workspace/scratch/bb431be72395/ux183/backend-session-surfaces-final.log",
+        "sha256": "d43ee65b9c6d5f20798f1bc8e5e21339d3a08863c830f64fac425c7396c85f62",
+        "bytes": 3462
+      },
+      "result": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0
+      },
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux183/backend-session-surfaces-corrected.log",
+        "sha256": "65ae0c577faff6f1dc99b8a43f378f08f1bab5c695e565d4dfa9c338f57344bc",
+        "bytes": 1983
+      }
+    },
+    {
+      "command": "node --check on browser session race and three adapted integration files",
+      "result": "4/4 parsed",
+      "evidence": {
+        "path": "/workspace/scratch/bb431be72395/ux183/backend-native-syntax.json",
+        "sha256": "9f50bc33ae42b212627f8fbea5c561df44ea9dae8d24a770b36894f8802986b0",
+        "bytes": 402
+      }
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "delegatedHistoricalReport": {
+    "path": "/workspace/scratch/bb431be72395/ux183/historical-guards-report.json",
+    "sha256": "8a1fd3e7e4aa648b299182d6b1a7a711fcd15747126cf24b999edf5978dee6d9",
+    "bytes": 5546
+  },
+  "nativePrerequisites": {
+    "chrome": "/usr/bin/google-chrome absent",
+    "chromeDriver": "/usr/local/share/chromedriver-linux64 absent",
+    "procfs": "/proc/self/fd absent"
+  },
+  "limits": [
+    "No general suite or prior green CI rerun. Native Chrome and MariaDB qualification remain pending on stabilized source; local syntax does not qualify them.",
+    "All targeted runtime work used Node v24.19.0, not production/native CI v24.22.1.",
+    "Three SQL integration assertion contracts adapted but not executed; video-transport assertion also adapted without rerunning that filesystem-based suite locally.",
+    "No SQL/schema migration, SMTP/Push transmission, real account, hosted backup, restore, witness/PC operation or deployment performed.",
+    "No commit, push, version/package/lock change performed by this task.",
+    "Historical report documents synthetic dirfd emulation due missing local procfs; no native OS/GPG or existing vault-reader execution claimed.",
+    "Shared worktree includes other agents frontend/navigation/notification changes. Exact file hashes here are a freeze snapshot; CI must qualify the combined stabilized commit.",
+    "Successful read/session cookie refresh behavior is unchanged; B01 is scoped to late refusal-cookie deletion and preserves explicit successful logout semantics."
+  ]
+}

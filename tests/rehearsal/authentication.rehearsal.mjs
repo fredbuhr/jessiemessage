@@ -76,10 +76,10 @@ async function sessionCookie(page) {
 }
 async function entry(page, state) {
   await page.navigate("/app");
-  if (state === "connected") await waitUntil(() => page.execute("const link = document.getElementById('administrator-link'); return !!link && !link.hidden && link.getAttribute('href') === '/admin'"), "neutral opening shows the connected administrator choice");
+  if (state === "connected") await connected(page);
   else await waitUntil(() => page.execute("const card = document.getElementById('administrator-card'); return !!card && card.hidden && document.getElementById('entry-status').textContent.includes('pas encore disponible')"), "anonymous opening conceals administrator access");
   assert.equal(await page.execute("return location.protocol"), "https:", "the actual browser is using HTTPS, not localhost HTTP cookie exceptions");
-  assert.equal(await page.execute("return document.getElementById('client-card').hidden"), true, "the fixture has no client access service");
+  if (state !== "connected") assert.equal(await page.execute("return document.getElementById('client-card').hidden"), true, "the fixture has no client access service");
 }
 async function signedOutEntry(origin) {
   const result = await fixtureRequest(origin, "/api/entry");
@@ -145,7 +145,7 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     const authenticatedEntry = await fixtureRequest(fixture.origin, "/api/entry", { cookie: initialCookie });
     assert.equal(authenticatedEntry.status, 200);
     assert.deepEqual(authenticatedEntry.data, { status: "available", client: null, administrator: { state: "connected", href: "/admin" } });
-    await entry(page, "connected"); await page.click("#administrator-link"); await connected(page);
+    await entry(page, "connected");
     t.diagnostic("CSRF / Origin refusals preserve the session; /api/entry, /app and /admin recognize the real cookie.");
 
     await signOutThisDevice(page);

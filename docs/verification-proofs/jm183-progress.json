@@ -2,7 +2,7 @@
   "type": "jm183-corrective-progress",
   "version": 1,
   "recordedAtUTC": "2026-10-22T21:31:31.793035+00:00",
-  "status": "implementation_and_targeted_tests_in_progress",
+  "status": "code_and_local_review_complete_native_qualification_pending",
   "branch": "fix/messaging-183",
   "base": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
   "candidateVersion": "1.8.3",
@@ -18,5 +18,7 @@
   "productionDataAccessed": false,
   "hostedBackupTestPerformed": false,
   "realNotificationSent": false,
-  "nextAction": "Finish composed route/chat tests and independent review, freeze source, then open qualification PR."
+  "nextAction": "Open native qualification PR on final frozen source; inspect CI and synthetic screenshots.",
+  "lastPublishedCheckpoint": "04b99da27726ffd10946c75827edf456bf0c2475",
+  "localVerification": "jm183/local-verification.json"
 }

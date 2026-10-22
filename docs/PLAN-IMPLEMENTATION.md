@@ -6,8 +6,8 @@ Révisé le 22 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 [Périmètre détaillé et critères](UX-183-20261022.md). Nouvelle demande explicite après l’audit : dix signalements UX et revue des parcours client/admin, avec correction des constatsB01–B05/I01.
 
-1. Terminer les corrections et tests composés : entrée client directe, accueil admin distinct, accès compte explicite, navigation, clavier tactile, messages/émojis/exports, préparation des diffusions, notifications et cohérence des sessions/horloges.
-2. Contre-relire les diff et contrats, figer la source, puis qualifier laPR sousNode24.22.1 avec Chrome, HTTPS et MariaDB. Inspecter les captures synthétiques320/1280 du nouveau parcours. Les tests locaux sous24.19 et l’absence de Chrome locale restent distincts.
+1. Corrections et tests composés locaux terminés : entrée client directe, accueil admin distinct, accès compte explicite, navigation, clavier tactile, messages/émojis/exports, préparation des diffusions, notifications et cohérence des sessions/horloges.
+2. Contre-revue locale terminée ; qualifier laPR sousNode24.22.1 avec Chrome, HTTPS et MariaDB. Inspecter les captures synthétiques320/1280 du nouveau parcours. Les tests locaux sous24.19 et l’absence de Chrome locale restent distincts.
 3. Après qualification seulement, traiter fusion/main, tag/release et préparation opérateur de cette source exacte ; activation hébergée séparée avec reçu. Production actuelle1.8.2/SQL36 inchangée jusque-là. Aucun PC, nouvel essai de sauvegarde, envoi ou effacement de compte réel.
 
 La branche candidate est `fix/messaging-183`, base `38ccb3862f3d9ab4153b578dfb3abbd0dd94d857`. [État](verification-proofs/jm183-progress.json). Le rapport d’audit ci-dessous décrit les constats avant correction ; ne pas le réécrire comme preuve de déploiement.

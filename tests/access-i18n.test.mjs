@@ -100,6 +100,7 @@ function controller(name, fetchHandler, { language = "fr", hash = "", pathname =
     input(id, value) { const node = document.getElementById(id); node.value = value; node.dispatchEvent(new Event("input")); },
     submit(id) { document.getElementById(id).dispatchEvent(new Event("submit", { cancelable: true })); },
     hide() { document.visibilityState = "hidden"; document.dispatchEvent(new Event("visibilitychange")); },
+    async show() { document.visibilityState = "visible"; document.dispatchEvent(new Event("visibilitychange")); await flush(); },
     dispose() { window.dispatchEvent(new Event("pagehide")); } };
 }
 const user = (state = "pending", pseudonym = "Bienvenue.") => ({ user: { id: "a".repeat(32), role: "client", pseudonym }, csrf: "A".repeat(43), expiresAt: Date.now() + 3600000,
@@ -293,12 +294,29 @@ test("public entry sends a single authenticated role straight to its own destina
       if (roles === "both") {
         assert.deepEqual(f.navigations, []); assert.equal(f.get("entry-role-choice").hidden, false); assert.equal(f.get("client-login-form").hidden, true);
         assert.equal(f.get("entry-client-link").href, `/messages#notification=${reference}`);
-        assert.equal(f.get("entry-admin-link").href, `/admin#notification=${reference}`);
-      } else assert.deepEqual(f.navigations, [`${roles === "admin" ? "/admin" : "/messages"}#notification=${reference}`]);
+        assert.equal(f.get("entry-admin-link").href, `/admin/messages#notification=${reference}`);
+      } else assert.deepEqual(f.navigations, [`${roles === "admin" ? "/admin/messages" : "/messages"}#notification=${reference}`]);
       assert.equal(f.calls.length, 1); assert.equal(f.calls[0].path, "/api/entry");
       assert.deepEqual(f.writes, [], "a role is never selected through persisted identity state");
     } finally { f.dispose(); }
   }
+});
+
+test("public entry returns from the two-role choice to neutral sign-in copy after the sessions end elsewhere", async () => {
+  let authenticated = true;
+  const f = controller("access", (path) => path === "/api/entry" ? response({ status: "available",
+    client: { state: authenticated ? "active" : "signed_out", href: authenticated ? "/messages" : "/access" },
+    administrator: authenticated ? { state: "connected", href: "/admin" } : null }) : capability(), { pathname: "/" });
+  const intro = f.get("access-intro").textContent;
+  try {
+    await flush(); assert.equal(f.get("entry-role-choice").hidden, false); assert.equal(f.get("access-intro").textContent, intro);
+    f.hide(); authenticated = false; await f.show();
+    assert.equal(f.get("entry-role-choice").hidden, true); assert.equal(f.get("client-login-form").hidden, false);
+    assert.equal(f.get("access-intro").textContent, intro); assert.equal(f.get("access-title").textContent, "Bienvenue.");
+    assert.deepEqual(f.navigations, []);
+    assert.equal(f.calls.filter(call => call.path === "/api/entry").length, 2);
+    assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+  } finally { f.dispose(); }
 });
 
 test("an invalid or late public entry decision cannot navigate or expose a login guessed from a failed proof", async () => {

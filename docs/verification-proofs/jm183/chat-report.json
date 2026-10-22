@@ -1,0 +1,118 @@
+{
+  "status": "implemented_locally_targeted_tests_passed_native_browser_pending",
+  "branch": "fix/messaging-183",
+  "baseCommit": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "runtimeTested": "v24.19.0",
+  "files": [
+    {
+      "file": "public/chat.js",
+      "sha256": "ef88172452810c43960d3ab55ec4bd6c0493589ea3b92ef1fcaa2b4014ed6134",
+      "bytes": 157279
+    },
+    {
+      "file": "public/chat.html",
+      "sha256": "7fbf63133107cd9fdb7a2038196398c7e817cf292107d56c1654999bf92af16f",
+      "bytes": 17612
+    },
+    {
+      "file": "public/chat.css",
+      "sha256": "8e9867360a6dd4ae6602686a3ee9180974a2231aacc14773a9b13b46091d2a11",
+      "bytes": 21285
+    },
+    {
+      "file": "public/profile.js",
+      "sha256": "9846211ca16aad30bcc5d3c4f31801889c5e5a7ac07a8af0ba205911d8211e91",
+      "bytes": 19383
+    },
+    {
+      "file": "public/emoji.css",
+      "sha256": "c2723e6e77658d3ba14511e22e587889195953e944a7d6dcf1a0209c44fab37d",
+      "bytes": 1453
+    },
+    {
+      "file": "public/i18n-chat.js",
+      "sha256": "7031b590ab2eb4277d8f05472f93c51da15017ee361e86d8db69d51c173dd76f",
+      "bytes": 17864
+    },
+    {
+      "file": "tests/chat-lifecycle.test.mjs",
+      "sha256": "43c8aa234d4ba19869b7aeb8d66e4e22da511e259fe33ecde95ba97ca4cf646c",
+      "bytes": 135698
+    },
+    {
+      "file": "tests/chat-i18n.test.mjs",
+      "sha256": "0e4955abd8c4e0681868c45d2da66d42effc749265ec2fc22e12fa55195197e6",
+      "bytes": 40654
+    },
+    {
+      "file": "tests/chat-accessibility.test.mjs",
+      "sha256": "33a31e535e000bbae3e90cebf68bc6fc0df1a2857831b6db4da14549c0ea704f",
+      "bytes": 42148
+    },
+    {
+      "file": "tests/profile-ui.test.mjs",
+      "sha256": "7aaf803ac3be48beeca330e9fa09b37ac2e5a9d56f18a82e90dc6f8636f5a805",
+      "bytes": 19313
+    },
+    {
+      "file": "tests/browser/chat-accessibility.browser.mjs",
+      "sha256": "f6e774c503daf280bbe83f17b9f6d06832b5ea29f3879afce4e2c99909bcc82b",
+      "bytes": 126223
+    }
+  ],
+  "changes": [
+    "Client rendering omits deleted messages from the DOM while retaining all tombstones, sequence numbers, cursors and deletion-wins merge state.",
+    "Client notifications targeting a deleted message focus history and consume their navigation reference without a tombstone or deleted-message notice.",
+    "Delete-message controls and the frontend delete handler are admin-only; existing sender ownership and confirmation remain unchanged.",
+    "No visible per-message ellipsis remains, including selected text, photos and videos. Ordinary bubble/caption clicks reveal metadata; photo/video interactive controls keep their own behavior. A native Details button is revealed only for keyboard focus.",
+    "Emoji panel has no search field. Categories, skin tones, cursor insertion, translation, keyboard navigation and owner checks remain. Opening focuses Close rather than an input.",
+    "Touch-capable devices use any-pointer:coarse to dismiss the composer keyboard and avoid automatic text-field focus after send, profile load/save, emoji/quick-reply insertion, photo/video selection and removal. Desktop focus behavior is preserved.",
+    "Client download moved into Options > More options, with help/contact. Closing the menu collapses its secondary options.",
+    "Admin chat has a single Admin home link to /admin; removed legacy raw tool links and their task-summary/broadcast menu polling. Tasks capability remains available to the CRM UI.",
+    "Opening notification settings refreshes their existing mounted panel and closes the options menu."
+  ],
+  "authorizationContract": {
+    "existingBackend": "server/chat/store.mjs deleteMessage requires row.sender_id equal to context.actor.id for either authenticated role.",
+    "implementedScope": "Hide client message-delete UI and reject direct calls through frontend controller. Preserve backend route and ownership contract, as coordinated with root.",
+    "mediaLibraryDeletion": "Unchanged; request concerns message controls.",
+    "conversationExport": "Unchanged. server/chat/conversation-export.mjs still includes tombstones in portable JSON and Message supprimé / Deleted message in offline HTML. No deleted body is restored; root explicitly kept export formats outside this UI change."
+  },
+  "validation": {
+    "command": "node --test --test-reporter=tap tests/chat-model.test.mjs tests/chat-lifecycle.test.mjs tests/chat-i18n.test.mjs tests/chat-accessibility.test.mjs tests/chat-accessibility-markup.test.mjs tests/profile-ui.test.mjs tests/emoji-catalog.test.mjs tests/chat-drafts.test.mjs",
+    "tests": 196,
+    "passed": 196,
+    "failed": 0,
+    "skipped": 0,
+    "log": "/workspace/scratch/bb431be72395/ux183-chat-final.tap",
+    "logSha256": "d043829c62b805c19bd8c37540048783aab4b6ed9a30e0ee0893b2897fea145f",
+    "syntaxChecked": [
+      "public/chat.js",
+      "public/profile.js",
+      "public/i18n-chat.js",
+      "tests/browser/chat-accessibility.browser.mjs"
+    ],
+    "diffWhitespaceCheck": "passed for owned files",
+    "nativeBrowser": {
+      "status": "not_run",
+      "reason": "Chrome and ChromeDriver absent at default and discovered runtime paths. Existing browser assertions updated and new real-DOM tombstone/touch-policy cases added for native CI.",
+      "physicalDeviceKeyboard": "not_tested",
+      "coarsePointerVm": "passed",
+      "coarsePointerBrowserCase": "Synthetic coarse-pointer response in real DOM, not a claim of a physical mobile keyboard."
+    },
+    "iterations": "Earlier runs exposed residual references to removed menu functions and old expected client-delete/emoji-search behavior; corrected before the final green run."
+  },
+  "preserved": [
+    "public/chat-model.js unchanged",
+    "public/chat-drafts.js unchanged",
+    "public/emoji-catalog.js unchanged",
+    "public/conversation-download.js unchanged",
+    "public/private-archive.js unchanged",
+    "No database/schema/runtime/deployment change"
+  ],
+  "reviewInput": "User-provided upload/image(20261022-204948).png inspected locally; no private screenshot copied to Git.",
+  "limits": [
+    "Local Node v24.19.0 differs from production v24.22.1; final native CI remains required.",
+    "No production account, real send, real deletion, backup, restore, cloud browser, commit, push or version change performed.",
+    "Other agents own navigation/auth/backend/notifications changes on this shared branch; this report covers the listed files."
+  ]
+}

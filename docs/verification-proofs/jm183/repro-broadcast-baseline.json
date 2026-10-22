@@ -1,0 +1,14 @@
+{
+  "status": "reproduced",
+  "runtime": "v24.19.0",
+  "source": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "proof": {
+    "selected": 1,
+    "selectedLabel": "1 destinataire choisi",
+    "confirmationLabel": "Je confirme le contenu et l’envoi individuel à 0 client.",
+    "checked": true,
+    "sendDisabled": true,
+    "previewRequests": 0,
+    "campaignRequests": 0
+  }
+}

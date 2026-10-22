@@ -1,0 +1,315 @@
+{
+  "schemaVersion": 1,
+  "completedAt": "2026-10-22T21:40:13.552164+00:00",
+  "owner": "versions_reprise",
+  "status": "implementation_frozen_targeted_tests_passed_native_browser_and_visual_qualification_pending",
+  "scope": "UX183 primary entry, client sign-in/account navigation, administrator home/clients routing and notification destinations. No deployment performed by this agent.",
+  "repository": {
+    "path": "/workspace/scratch/bb431be72395/jessiemessage",
+    "branch": "fix/messaging-183",
+    "sharedParentCheckpoint": "04b99da27726ffd10946c75827edf456bf0c2475",
+    "localNode": "v24.19.0",
+    "versionBumpByThisAgent": false,
+    "commitOrPushByThisAgent": false
+  },
+  "observedCause": [
+    "The primary public root served a marketing document and /app served a role chooser. A signed-out primary client entry offered /connect-device/client, which is a migration bridge needing an old-origin session; that normal-entry chain sent users through unnecessary pages.",
+    "The existing /admin document mixed sign-in and client/invitation management rather than providing a separate administrator home. Some controls required an additional conversation-opening click after a successful sign-in."
+  ],
+  "implementedJourneys": [
+    {
+      "entry": "primary /, /index.html, /app with configured access",
+      "proof": "fresh /api/entry",
+      "anonymous": "one client login form in the initial document",
+      "clientOnly": "/messages for active access; /access for pending/expired access",
+      "administratorOnly": "/admin; /admin/messages#notification=ref for a validated notification reference",
+      "bothRoles": "compact explicit role links; no stored identity guess",
+      "unavailableOrInvalidProof": "closed error/retry, no guessed login or navigation"
+    },
+    {
+      "entry": "explicit /access",
+      "proof": "fresh /api/access/session and current chat capability",
+      "result": "restored active session retains account/settings and conversation link; explicit successful login or a notification intent opens messages after a fresh owner proof"
+    },
+    {
+      "entry": "/admin",
+      "result": "protected administrator dashboard with eight tool cards; existing MFA/session controls and account/device settings retained; no client/invitation audience request on the home"
+    },
+    {
+      "entry": "/admin/clients",
+      "result": "existing protected invitation/client management UI; anonymous request uses canonical /admin/login?continue=%2Fadmin%2Fclients"
+    },
+    {
+      "entry": "/admin/login",
+      "result": "MFA remains required; successful login clears credentials before /admin or a fixed allowlisted continue target; a validated notification reference opens /admin/messages directly"
+    },
+    {
+      "entry": "true legacy origin /connect-device/{role}",
+      "result": "existing migration contract retained; signed-out legacy client entry may offer the bridge only through explicit legacyOrigin mode"
+    },
+    {
+      "entry": "hide/show after two-role choice and session end elsewhere",
+      "result": "new proof returns to neutral sign-in copy without stale connected-role text or an automatic POST"
+    }
+  ],
+  "securityAndCoordination": [
+    "Preserved delivery_review B01: unauthenticated/expired auth refusal uses no Set-Cookie; only explicit logout/session creation keeps its existing cookie semantics. New /admin/clients late-refusal regression proves an older refusal cannot clear a newer session.",
+    "Entry decisions use exact local path/state allowlists; a validated opaque notification fragment is retained in local messages destinations. No arbitrary return URL, cached identity selection or automatic replay of a notification-opening POST was added.",
+    "The primary login shortcut does not weaken the real origin-migration/session bridge. Notifications remain local to the origin of their service-worker subscription.",
+    "Shared administrator navigation CSS and seven other tools/catalogues belong to root. This agent registered its asset in index and used its classes/catalogue keys on the administrator document.",
+    "Applied requested shared clock injection into both mail-store constructors in server/index.mjs; mail store and worker implementation/tests belong to delivery_review."
+  ],
+  "ownedFiles": [
+    {
+      "file": "server/index.mjs",
+      "sha256": "b6d2d01d9fe5f68a18065d5c815d8ca8953d99a820eca86cd28a6a92803a24d2",
+      "bytes": 53081
+    },
+    {
+      "file": "server/entry/http.mjs",
+      "sha256": "05e4139becf420629d6af34fc1426d9acf027fec272281c3227c964fc5f6dec8",
+      "bytes": 4419
+    },
+    {
+      "file": "server/auth/http.mjs",
+      "sha256": "96f04e5f6cd0226044b9c56c186f812fc84978406b7e558c442cf87f123ba8e6",
+      "bytes": 13590
+    },
+    {
+      "file": "public/access.html",
+      "sha256": "2368b6c917f9878d412aa1fb1755d823c4936e9f77a4c2ab2ae6e08f1efe101b",
+      "bytes": 9721
+    },
+    {
+      "file": "public/access.js",
+      "sha256": "a3ac86e8677d958a0db51531deb50ee577d307f980b7443d444d958982d62221",
+      "bytes": 22486
+    },
+    {
+      "file": "public/access.css",
+      "sha256": "0752992a3ce1512c65416797eae728885d5342640ef9ebe54a23c49aab17d3d1",
+      "bytes": 1108
+    },
+    {
+      "file": "public/admin-login.html",
+      "sha256": "fcee04696d90b125bd229115d34f71a60759379da3b19fcf53c54f222ca58135",
+      "bytes": 14536
+    },
+    {
+      "file": "public/admin-login.js",
+      "sha256": "2f03a2d8be8666cab94f32aece0927192c9d6416dee54ac17e38a1f635f83825",
+      "bytes": 39050
+    },
+    {
+      "file": "public/admin-login.css",
+      "sha256": "8dae222ee07ec4e10052802a7f80330201e46d11ca3fff5e8bc8e9c4b8934610",
+      "bytes": 7216
+    },
+    {
+      "file": "public/entry.js",
+      "sha256": "23c22bafe28f523eed2753a44a06623e59f4d1bdb1955acda49d18528d842109",
+      "bytes": 14598
+    },
+    {
+      "file": "public/i18n-admin.js",
+      "sha256": "075883b3cda8c51bcfe511dd601fa477a38b32105742c9fd9ac0179bf38cd12e",
+      "bytes": 13916
+    },
+    {
+      "file": "public/i18n-access.js",
+      "sha256": "c0584d41c109d6892492127f15711a8cd3d7cca3fe1c2ef9e73b78067ba56d49",
+      "bytes": 13737
+    },
+    {
+      "file": "tests/entry-http.test.mjs",
+      "sha256": "567ae5ed04d72d8f380534a134d411562fb968fa122bfb2c241c7cfacbfba800",
+      "bytes": 17187
+    },
+    {
+      "file": "tests/entry-server.test.mjs",
+      "sha256": "245ce53fa58e3ed6685cdaad0972adb2c03698fb0f6a154f87f8121d78d6bced",
+      "bytes": 4969
+    },
+    {
+      "file": "tests/access-i18n.test.mjs",
+      "sha256": "ec859593f303c04d2b6a1bd3ea1979ff7897399d3ce1641ee557868bdbb58d43",
+      "bytes": 28184
+    },
+    {
+      "file": "tests/admin-i18n.test.mjs",
+      "sha256": "fb6cafa8c7b886cba6801770b01ad41f5a3defe0bc56052a96172274e97c0217",
+      "bytes": 14429
+    },
+    {
+      "file": "tests/admin-lifecycle.test.mjs",
+      "sha256": "d03d018f9547b737ba7a5c6e2b578ce3905826b435b70899aeb5a0a02c9da608",
+      "bytes": 61135
+    },
+    {
+      "file": "tests/admin-navigation.test.mjs",
+      "sha256": "01ba5469a4a69ebcbda2393589a62f9455c81ea6bc63b2df4d04f48c1a440ab6",
+      "bytes": 8966
+    },
+    {
+      "file": "tests/browser/admin-navigation.browser.mjs",
+      "sha256": "766e3a1502b47f8ffbb4b352474b24fb0cbd348643f18d542d7280cbf55ec361",
+      "bytes": 7156
+    },
+    {
+      "file": "tests/browser/entry-navigation.browser.mjs",
+      "sha256": "27ec80ba590bd68bbb9ba5c145da99e4e398709c2b85687037e7667ff43adbb6",
+      "bytes": 12642
+    },
+    {
+      "file": "tests/browser/chat-accessibility.browser.mjs",
+      "sha256": "7829f3b09f4540b4a837d7cd5b917785292aedfede5e6a4b78cf7541923862a2",
+      "bytes": 126247,
+      "ownership": "Bounded test-fixture compatibility amendment requested by root; main chat fixture remains frontend owner's work."
+    },
+    {
+      "file": "tests/rehearsal/authentication.rehearsal.mjs",
+      "sha256": "88cad996059e5b152a484a214d813cb1d049ca8b8bf3710aa41b3a6dc6aff756",
+      "bytes": 14478,
+      "ownership": "Rehearsal expectation updated for the new single-role /app redirect."
+    }
+  ],
+  "relatedReusedSourcesOrInfrastructure": [
+    {
+      "file": "public/admin-navigation.css",
+      "sha256": "a446effff268ef2e0175de33acee162cd6b195a912e403c9d2c4d42210bd734a",
+      "bytes": 1072
+    },
+    {
+      "file": "public/entry-model.js",
+      "sha256": "42e842a0a5849dea635a40ddf60dc37f3d2044ee2d62ccf5075fa7d295d438f6",
+      "bytes": 2805
+    },
+    {
+      "file": "public/device-transition.js",
+      "sha256": "274e8f1c5f7001d9a1afc35b6d3214d3d43342ed3019a600e839106c7edb7657",
+      "bytes": 11384
+    },
+    {
+      "file": "tests/entry-model.test.mjs",
+      "sha256": "0e1925c5fe0fa3b6d8addbc77dd2f556a821e65eeb111526bfcbd81b0538dc6c",
+      "bytes": 6042
+    },
+    {
+      "file": "tests/entry-lifecycle.test.mjs",
+      "sha256": "1ae67d4bf050a21fd6a893a06844b748e51e7bb9da68f9fbc10e150aa2da04f9",
+      "bytes": 18430
+    },
+    {
+      "file": "tests/browser/webdriver.mjs",
+      "sha256": "6577e9e2da32dfc1c2c6786bdc7e2cb6d71eff7ad655595e823230ae76db2feb",
+      "bytes": 14274
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "sha256": "18395ea99c9cb2f13ff252a3ad33503c87c7da64fd43ae6af98f63b2d6e84545",
+      "bytes": 9762
+    },
+    {
+      "file": "tests/rehearsal/messaging.rehearsal.mjs",
+      "sha256": "bb11c1085791860219d0a8edb1ba5b2c7958a1a25a4ae40893384e8fc3962e5e",
+      "bytes": 29074
+    },
+    {
+      "file": "tests/rehearsal/auth-fixture.mjs",
+      "sha256": "dbaf5303238884f2853d30662dce603b50b2cdecb4ee8fc83342499a12c4e7c6",
+      "bytes": 38017
+    }
+  ],
+  "verification": {
+    "targetedBaseline": {
+      "command": "node --test tests/entry-http.test.mjs tests/entry-model.test.mjs tests/entry-lifecycle.test.mjs tests/entry-server.test.mjs tests/access-i18n.test.mjs tests/admin-i18n.test.mjs tests/admin-lifecycle.test.mjs tests/admin-navigation.test.mjs",
+      "tests": 123,
+      "passed": 123,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/workspace/scratch/bb431be72395/ux183-navigation-final.tap",
+      "scope": "Before the final bounded intro/notification microfix. The final access.js behavior is rechecked separately below; CSS layout is reserved for native browser qualification."
+    },
+    "finalBoundedRegression": {
+      "command": "node --test tests/access-i18n.test.mjs",
+      "tests": 18,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/workspace/scratch/bb431be72395/ux183-navigation-microfix.tap",
+      "scope": "After final access.js changes; covers direct notification destination for single/dual role and role-choice to anonymous lifecycle with neutral copy. Includes one new regression beyond the17 tests in the baseline file."
+    },
+    "syntax": [
+      {
+        "command": "node --check tests/browser/entry-navigation.browser.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node --check tests/browser/admin-navigation.browser.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node --check tests/browser/chat-accessibility.browser.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node --check tests/rehearsal/authentication.rehearsal.mjs",
+        "exitCode": 0
+      }
+    ],
+    "diffWhitespace": {
+      "command": "git diff --check",
+      "exitCode": 0
+    },
+    "logHashes": [
+      {
+        "file": "/workspace/scratch/bb431be72395/ux183-navigation-final.tap",
+        "sha256": "4a8b10f419b4c91b0c8347a8293e080e5fbb7d7a692e396f4acfc19e7c6b1e59"
+      },
+      {
+        "file": "/workspace/scratch/bb431be72395/ux183-navigation-microfix.tap",
+        "sha256": "2d304b5a824c474ce58be30bbced8119586f463a9e569be8c10ae29f8603918b"
+      }
+    ],
+    "broaderRun": "Root reported a single general npm test run:3940 tests,3699 passed,1 failed,240 skipped on local platform. The isolated failure was the old broadcast-header link expectation; root owns its correction. This report does not claim a green general rerun."
+  },
+  "nativeBrowser": {
+    "status": "prepared_not_executed_here",
+    "reason": "Native Chrome/ChromeDriver unavailable in this execution environment, as confirmed by root; no cloud browser used.",
+    "newTest": "tests/browser/entry-navigation.browser.mjs",
+    "fixture": "Loopback self-signed HTTPS; real createAppServer/createEntryHandler/createAccessHandler/createAuthHandler, actual UI/controllers and native cookies. Accounts/credential checks and final chat document/capability endpoints are synthetic; no SQL, SMTP, provider, production host or backup operation.",
+    "plannedChecks": [
+      "320px and1280px primary anonymous form, keyboard client login exactly once, connected root direct messages, explicit /access retained",
+      "320px and1280px MFA login, separate /admin home with audience tools hidden, /admin/clients management, explicit two-role choice",
+      "client and administrator notification sign-in preserve exact role-specific messages fragment without a dashboard/migration hop",
+      "action target44px/label fitting and horizontal overflow; logo is checked for fitting but exempt from action-height assertion",
+      "storage contains no persisted identity/credentials; only the existing language setting is allowed"
+    ],
+    "independentReadOnlyReview": "peer_a11 reviewed fixture and CI inclusion; found and closed a logo/action-height false positive and driver cleanup gap before execution. Existing admin-navigation browser selector changed from removed .admin-shortcuts to .admin-dashboard. Pending access.css adds44px height/padding to the existing resend-details summary; no additional UI control was added.",
+    "screenshotsExpected": [
+      "artifacts/homepage/client-home-320.png",
+      "artifacts/homepage/client-home-1280.png",
+      "artifacts/homepage/admin-home-320.png",
+      "artifacts/homepage/admin-home-1280.png",
+      "artifacts/homepage/admin-home-320-bottom.png if vertically scrollable",
+      "artifacts/homepage/admin-home-1280-bottom.png if vertically scrollable"
+    ],
+    "screenshotsCreatedByThisAgent": [],
+    "ciInclusion": "npm run test:browser already globs tests/browser/*.browser.mjs; existing homepage-render artifact uploads artifacts/homepage/*.png. No workflow change required.",
+    "compatibilityFollowup": [
+      "admin-navigation.browser.mjs uses the real createAppServer publicFiles map, which includes /admin-navigation.css; no separate manual asset map is needed there.",
+      "chat-accessibility.browser.mjs manual fileNames list now includes admin-navigation.css so reconnect/login views do not silently get a404 stylesheet.",
+      "authentication.rehearsal.mjs now expects the sole connected administrator to navigate /app→/admin directly and removes the obsolete intermediate administrator-link click. Anonymous auth-only fixture still uses the neutral entry shell.",
+      "messaging.rehearsal.mjs opens /admin/messages explicitly after administrator login; no invitation/client management expectation needed adaptation.",
+      "No .admin-shortcuts test selector remains. A single unused legacy CSS declaration remains in public/admin-login.css:34; no runtime element has that class, so it has no effect and was left during the application freeze."
+    ]
+  },
+  "limits": [
+    "Implementation and Node synthetic checks are complete for this owner scope. Native Chrome/visual screenshot review remains required; screenshots must not be represented as already produced or inspected.",
+    "No hosted runtime, real account, actual migration ticket/device flow, real mobile keyboard, OS notification permission UI, real push or message send was exercised by this agent.",
+    "Source uploads were inspected locally to identify navigation/layout issues; private identity/capture contents were not copied into the repository or this report.",
+    "No backup/restore/PC/production diagnostics, real mail, legal/privacy questionnaire, commit, push, merge or deployment performed by this agent.",
+    "Shared branch contains other owners' changes. File hashes identify this review snapshot, not a released/deployed version."
+  ],
+  "nextAction": "Parent includes pending navigation/test files in the next checkpoint, then runs required native CI browser qualification and inspects the four requested synthetic320/1280px captures before any delivery claim."
+}

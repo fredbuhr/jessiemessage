@@ -80,7 +80,7 @@ test("real Chrome: external links retain the existing Strict admin session and r
       await link(page, `${source.origin}/admin/login?${query}`);
       await waitUntil(() => page.execute("return location.pathname === '/admin' && !document.getElementById('connected').hidden"), "invalid return link ignored");
     }
-    assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && document.querySelector('.admin-shortcuts a[href=\"/admin/backups\"]')?.getBoundingClientRect().height >= 44"), true);
+    assert.equal(await page.execute("return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && document.querySelector('.admin-dashboard a[href=\"/admin/backups\"]')?.getBoundingClientRect().height >= 44"), true);
   } finally {
     try { await page?.close(); } finally { try { await source?.close(); } finally { await driver.close(); } }
   }
