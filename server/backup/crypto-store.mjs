@@ -1,3 +1,5 @@
+import { MAX_VIDEO_BYTES, videoStoredBytes } from "../video/storage.mjs";
+
 export class BackupCryptoStoreError extends Error {
   constructor() { super("Private backup data could not be read."); this.name = "BackupCryptoStoreError"; this.code = "BACKUP_DATABASE"; }
 }
@@ -70,7 +72,25 @@ const statements = {
     c.admin_id, c.client_id` },
 };
 
-function normalize(purpose, row) {
+const videoMessages = { id: "m.id", from: `${statements.messages.from}
+    LEFT JOIN message_video mv ON mv.message_id = m.id
+    LEFT JOIN video_assets va ON va.id = mv.video_id`,
+  columns: `${statements.messages.columns}, mv.video_id, mv.conversation_id AS video_conversation_id,
+    va.owner_id AS video_owner_id, va.owner_role AS video_owner_role, va.state AS video_state,
+    DATE_FORMAT(m.created_at, '%Y-%m-%d %H:%i:%s.%f') AS message_created_at,
+    DATE_FORMAT(mv.created_at, '%Y-%m-%d %H:%i:%s.%f') AS video_link_created_at,
+    DATE_FORMAT(va.created_at, '%Y-%m-%d %H:%i:%s.%f') AS video_created_at` };
+const videoAssets = { id: "a.id", from: "video_assets a LEFT JOIN users u ON u.id = a.owner_id",
+  columns: "a.id, a.owner_id, a.owner_role, u.role AS user_role, a.storage_key, a.content_digest, a.bytes, a.stored_bytes, a.mime, a.state",
+  where: "a.state = 'committed'" };
+function videoDate(value, nullable = false) {
+  if (nullable && value === null) return null;
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}$/.test(value)) fail();
+  const iso = value.slice(0, 23).replace(" ", "T") + "Z", instant = Date.parse(iso);
+  if (!Number.isSafeInteger(instant) || instant < 0 || new Date(instant).toISOString() !== iso) fail();
+  return value;
+}
+function normalize(purpose, row, video = false) {
   if (!row || typeof row !== "object") fail();
   if (purpose === "crm") {
     const adminId = bytes(row.admin_id, 16), conversationId = bytes(row.conversation_id, 16);
@@ -90,7 +110,11 @@ function normalize(purpose, row) {
     return { ...result, conversationId: bytes(row.conversation_id, 16), senderId: bytes(row.sender_id, 16), senderRole: row.sender_role,
       adminId: bytes(row.admin_id, 16), clientId: bytes(row.client_id, 16), encrypted: row.encrypted === null ? null : text(row.encrypted, 22000),
       fingerprint: bytes(row.body_fingerprint, 32), deleted: row.deleted_at !== null,
-      mediaId: nullableBytes(row.media_id, 16), mediaOwnerId: nullableBytes(row.media_owner_id, 16) };
+      mediaId: nullableBytes(row.media_id, 16), mediaOwnerId: nullableBytes(row.media_owner_id, 16),
+      ...(video ? { videoId: nullableBytes(row.video_id, 16), videoConversationId: nullableBytes(row.video_conversation_id, 16),
+        videoOwnerId: nullableBytes(row.video_owner_id, 16), videoOwnerRole: row.video_owner_role, videoState: row.video_state,
+        createdAt: videoDate(row.message_created_at), videoLinkedAt: videoDate(row.video_link_created_at, true),
+        videoCreatedAt: videoDate(row.video_created_at, true) } : {}) };
   }
   if (purpose === "broadcast") {
     if (![0, 1, 0n, 1n].includes(row.allow_repeat_media)) fail();
@@ -121,14 +145,22 @@ function normalize(purpose, row) {
   if (purpose === "notificationJobs") return { ...result, userId: bytes(row.user_id, 16), role: row.role,
     subscriptionGeneration: integer(row.subscription_generation, 4294967295), generation: integer(row.generation, 4294967295),
     senderId: bytes(row.sender_id, 16), senderRole: row.sender_role, adminId: bytes(row.admin_id, 16), clientId: bytes(row.client_id, 16) };
+  if (purpose === "videos") {
+    const byteLength = integer(row.bytes, MAX_VIDEO_BYTES), storedBytes = integer(row.stored_bytes, videoStoredBytes(MAX_VIDEO_BYTES));
+    if (!["admin", "client"].includes(row.owner_role) || row.user_role !== row.owner_role || row.state !== "committed"
+      || row.mime !== "video/mp4" || storedBytes !== videoStoredBytes(byteLength)) fail();
+    return { ...result, ownerId: bytes(row.owner_id, 16), ownerRole: row.owner_role,
+      storageKey: bytes(row.storage_key, 32), digest: bytes(row.content_digest, 32), bytes: byteLength, storedBytes,
+      mime: row.mime, state: row.state };
+  }
   return { ...result, ownerId: bytes(row.owner_id, 16), storageKey: bytes(row.storage_key, 32), digest: bytes(row.content_digest, 32),
     fullBytes: integer(row.full_bytes, 10485760), thumbnailBytes: integer(row.thumbnail_bytes, 524288),
     journalState: row.journal_state, journalAssetId: nullableBytes(row.journal_asset_id, 16), journalOwnerId: nullableBytes(row.journal_owner_id, 16) };
 }
 
 /** Bounded SELECT-only crypto reader. It never starts services or claims jobs. */
-export function createBackupCryptoStore({ pool } = {}) {
-  if (typeof pool?.getConnection !== "function") throw new TypeError("A private backup reader is required.");
+export function createBackupCryptoStore({ pool, video = false } = {}) {
+  if (typeof video !== "boolean" || typeof pool?.getConnection !== "function") throw new TypeError("A private backup reader is required.");
   async function* recipientPages(campaignId) {
     let afterId = null;
     while (true) {
@@ -160,9 +192,10 @@ export function createBackupCryptoStore({ pool } = {}) {
       if (!options || typeof options !== "object" || Array.isArray(options)
         || Object.keys(options).some((name) => !["purpose", "afterId", "limit"].includes(name))) fail();
       const { purpose, afterId = null, limit = 50 } = options;
-      if (!PURPOSES.includes(purpose) || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) fail();
+      if (!(PURPOSES.includes(purpose) || video && purpose === "videos") || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) fail();
       const cursor = afterId === null ? null : bytes(afterId, purpose === "crm" ? 32 : 16);
-      const statement = statements[purpose], predicates = statement.where ? [statement.where] : [], parameters = [];
+      const statement = video && purpose === "messages" ? videoMessages : purpose === "videos" ? videoAssets : statements[purpose],
+        predicates = statement.where ? [statement.where] : [], parameters = [];
       if (cursor !== null) {
         if (purpose === "crm") {
           predicates.push("(p.admin_id > ? OR (p.admin_id = ? AND p.conversation_id > ?))");
@@ -176,13 +209,13 @@ export function createBackupCryptoStore({ pool } = {}) {
         const rows = await connection.query(`SELECT ${statement.columns} FROM ${statement.from}
           ${predicates.length ? `WHERE ${predicates.join(" AND ")}` : ""} ORDER BY ${order} LIMIT ?`, [...parameters, limit + 1]);
         if (!Array.isArray(rows) || rows.length > limit + 1) fail();
-        const selected = rows.slice(0, limit).map((row) => normalize(purpose, row));
+        const selected = rows.slice(0, limit).map((row) => normalize(purpose, row, video));
         let previous = cursor;
         for (const row of selected) {
           if (previous !== null && Buffer.compare(row.id, previous) <= 0) fail();
           previous = row.id;
           if (purpose === "broadcast") {
-            if (row.encrypted.startsWith("v2.")) {
+            if (row.encrypted.startsWith("v2.") || video && row.encrypted.startsWith("v3.")) {
               const campaignId = Buffer.from(row.id);
               row.recipientPages = () => recipientPages(campaignId);
             } else {

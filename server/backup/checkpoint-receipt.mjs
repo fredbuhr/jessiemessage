@@ -1,9 +1,10 @@
 import { constants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { validateApplicationCoverage } from "./application-scope.mjs";
+import { validateApplicationCoverage, validateVideoApplicationCoverage } from "./application-scope.mjs";
 import { manifestBackupProfile, matchesCheckpointReceipt } from "./profiles.mjs";
 import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_FILES } from "../media/backup-limits.mjs";
+import { MAX_VIDEO_BYTES, videoStoredBytes } from "../video/storage.mjs";
 
 const MIB = 1024 * 1024;
 const MAX_FILE = 64 * MIB, MAX_RECEIPT = 32 * MIB, MAX_MEDIA = BACKUP_MEDIA_MAX_BYTES, MAX_HASH = 2 * 1024 * MIB;
@@ -35,19 +36,20 @@ function record(value, fields) {
 
 function canonicalReceipt(value) {
   const version = value && typeof value === "object" && Object.getOwnPropertyDescriptor(value, "version")?.value;
-  const application = [2, 4, 6, 8, 10].includes(version), operational = [9, 10].includes(version);
-  const root = record(value, ["format", "version", "profile", ...(application ? ["coverage"] : []), "createdAt", "schema", "sql", "manifest", "media", ...(operational ? ["operations"] : [])]);
+  const video = [11, 12].includes(version), application = [2, 4, 6, 8, 10, 11, 12].includes(version), operational = [9, 10, 12].includes(version);
+  const root = record(value, ["format", "version", "profile", ...(application ? ["coverage"] : []), "createdAt", "schema", "sql", "manifest", "media", ...(video ? ["video"] : []), ...(operational ? ["operations"] : [])]);
   let coverage;
   if (application) {
-    try { coverage = validateApplicationCoverage(root.coverage); }
+    try { coverage = (video ? validateVideoApplicationCoverage : validateApplicationCoverage)(root.coverage); }
     catch { fail("CHECKPOINT_RECEIPT_INVALID"); }
   }
   const schema = record(root.schema, ["tables", "migrations"]);
   const sql = record(root.sql, ["file", "bytes", "sha256", "uncompressedBytes", "uncompressedSha256"]);
   const manifest = record(root.manifest, ["file", "sha256"]), media = record(root.media, ["files", "bytes"]);
   if (root.format !== "jessiemessage-private-checkpoint"
-    || !matchesCheckpointReceipt(manifestBackupProfile(root.profile), root) || !integer(root.version, 1, 10)
-    || !integer(root.createdAt, 0, 253402300799999) || ![30, 31, 32, 33].includes(schema.tables) || schema.migrations !== schema.tables
+    || !matchesCheckpointReceipt(manifestBackupProfile(root.profile), root) || !integer(root.version, 1, 12)
+    || video !== (manifestBackupProfile(root.profile)?.video === true)
+    || !integer(root.createdAt, 0, 253402300799999) || !(video ? schema.tables === 36 : [30, 31, 32, 33].includes(schema.tables)) || schema.migrations !== schema.tables
     || application && coverage.tables !== schema.tables
     || sql.file !== "database.sql.gz" || !integer(sql.bytes, 1, 16 * MIB) || !digest(sql.sha256)
     || !integer(sql.uncompressedBytes, 1, MAX_FILE) || !digest(sql.uncompressedSha256)
@@ -67,11 +69,33 @@ function canonicalReceipt(value) {
     previous = file.name; files.push(file);
   }
   if (total !== media.bytes) fail("CHECKPOINT_RECEIPT_INVALID");
+  const videoInventory = video ? canonicalVideoInventory(root.video) : null;
   const operations = operational ? record(root.operations, ["file", "bytes", "sha256"]) : null;
   if (operational && (operations.file !== "operations.enc.json" || !integer(operations.bytes, 1, MAX_FILE) || !digest(operations.sha256))) fail("CHECKPOINT_RECEIPT_INVALID");
   return { format: root.format, version: root.version, profile: root.profile,
     ...(application ? { coverage } : {}), createdAt: root.createdAt,
-    schema, sql, manifest, media: { files, bytes: total }, ...(operational ? { operations } : {}) };
+    schema, sql, manifest, media: { files, bytes: total }, ...(video ? { video: videoInventory } : {}), ...(operational ? { operations } : {}) };
+}
+
+function canonicalVideoInventory(value) {
+  const inventory = record(value, ["files", "bytes"]);
+  if (!integer(inventory.bytes, 0, MAX_MEDIA) || !Array.isArray(inventory.files) || inventory.files.length > BACKUP_MEDIA_MAX_FILES
+    || Object.getPrototypeOf(inventory.files) !== Array.prototype) fail("CHECKPOINT_RECEIPT_INVALID");
+  const descriptors = Object.getOwnPropertyDescriptors(inventory.files);
+  if (Reflect.ownKeys(descriptors).length !== inventory.files.length + 1) fail("CHECKPOINT_RECEIPT_INVALID");
+  let total = 0, previous = ""; const files = [];
+  for (let index = 0; index < inventory.files.length; index++) {
+    const descriptor = descriptors[String(index)];
+    if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) fail("CHECKPOINT_RECEIPT_INVALID");
+    const file = record(descriptor.value, ["name", "bytes", "sha256"]);
+    if (typeof file.name !== "string" || !/^[a-f0-9]{64}\.video\.enc$/.test(file.name) || file.name <= previous
+      || !integer(file.bytes, 1, videoStoredBytes(MAX_VIDEO_BYTES)) || !digest(file.sha256)) fail("CHECKPOINT_RECEIPT_INVALID");
+    total += file.bytes;
+    if (total > MAX_MEDIA) fail("CHECKPOINT_RECEIPT_INVALID");
+    previous = file.name; files.push(file);
+  }
+  if (total !== inventory.bytes) fail("CHECKPOINT_RECEIPT_INVALID");
+  return { files, bytes: total };
 }
 
 function regular(stats) {

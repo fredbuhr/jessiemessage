@@ -32,15 +32,15 @@ async function tree(directory) {
   await visit(directory); return result;
 }
 
-async function fixture(t) {
-  const root = await erasureDirectory(t), operatorDirectory = path.join(root, "operator"), sourceMedia = path.join(root, "source-media");
+async function fixture(t, { video = false } = {}) {
+  const root = await erasureDirectory(t), operatorDirectory = path.join(root, "operator"), sourceMedia = path.join(root, "source-media"), sourceVideo = path.join(root, "source-video");
   const locations = Object.fromEntries(["runtime", "source-private", "source-operations", "checkpoint", "target-private"]
     .map(name => [name, path.join(root, name)]));
-  for (const directory of [operatorDirectory, sourceMedia, ...Object.values(locations)]) await mkdir(directory, { mode: 0o700 });
-  const paths = { targetDirectory: path.join(operatorDirectory, "target"), rootPath: path.join(operatorDirectory, "target/media"),
+  for (const directory of [operatorDirectory, sourceMedia, ...(video ? [sourceVideo] : []), ...Object.values(locations)]) await mkdir(directory, { mode: 0o700 });
+  const paths = { targetDirectory: path.join(operatorDirectory, "target"), rootPath: path.join(operatorDirectory, "target/media"), ...(video ? { videoRootPath: path.join(operatorDirectory, "target/video") } : {}),
     journalDirectory: path.join(operatorDirectory, "target/operations"), progressDirectory: path.join(operatorDirectory, "target/progress"),
     quarantineDirectory: path.join(operatorDirectory, "target/quarantine") };
-  const keys = Object.fromEntries(Object.keys(keyFields).map((name, index) => [name, Buffer.alloc(32, index + 1)]));
+  const keys = { ...Object.fromEntries(Object.keys(keyFields).map((name, index) => [name, Buffer.alloc(32, index + 1)])), ...(video ? { videoKey: Buffer.alloc(32, 11) } : {}) };
   const curve = createECDH("prime256v1"); curve.setPrivateKey(Buffer.alloc(32, 7));
   function config(database, mediaRoot, user) {
     return { PORT: "3000", JESSIEMESSAGE_DB_HOST: "sql.synthetic.invalid", JESSIEMESSAGE_DB_PORT: "3306", JESSIEMESSAGE_DB_NAME: database,
@@ -48,6 +48,8 @@ async function fixture(t) {
       JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd", JESSIEMESSAGE_SITE_ORIGIN: "https://jessiemessage.com", JESSIEMESSAGE_MEDIA_ROOT: mediaRoot,
       JESSIEMESSAGE_MEDIA_ACCOUNT_BYTES: "1048576", JESSIEMESSAGE_MEDIA_TOTAL_BYTES: "104857600", JESSIEMESSAGE_MEDIA_MIN_FREE_BYTES: "0",
       ...Object.fromEntries(Object.keys(keyFields).map(name => [keyFields[name], keys[name].toString("base64url")])),
+      ...(video ? { JESSIEMESSAGE_VIDEO_ROOT: database === "synthetic_source" ? sourceVideo : paths.videoRootPath, JESSIEMESSAGE_VIDEO_KEY: keys.videoKey.toString("base64url"),
+        JESSIEMESSAGE_VIDEO_OWNER_BYTES: "104857600", JESSIEMESSAGE_VIDEO_TOTAL_BYTES: "1073741824", JESSIEMESSAGE_VIDEO_MINIMUM_FREE_BYTES: "0" } : {}),
       ...Object.fromEntries(["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY", "NOTIFICATIONS"]
         .map(name => [`JESSIEMESSAGE_ENABLE_${name}`, "1"])),
       JESSIEMESSAGE_SMTP_HOST: "smtp.synthetic.invalid", JESSIEMESSAGE_SMTP_PORT: "587", JESSIEMESSAGE_SMTP_USER: "synthetic-smtp-user",
@@ -56,20 +58,20 @@ async function fixture(t) {
       JESSIEMESSAGE_VAPID_SUBJECT: "mailto:contact@jessiemessage.com" };
   }
   const source = config("synthetic_source", sourceMedia, "synthetic_source_runtime"), target = config("synthetic_restore", paths.rootPath, "synthetic_restore_runtime");
-  const state = { fingerprint: Buffer.alloc(32, 9), sourceChanged: false }, loaded = [], sourceChecks = [], storageCalls = [];
-  const sourceBinding = { database: source.JESSIEMESSAGE_DB_NAME, rootFingerprint: state.fingerprint.toString("hex") };
+  const state = { fingerprint: Buffer.alloc(32, 9), videoFingerprint: Buffer.alloc(32, 12), sourceChanged: false }, loaded = [], sourceChecks = [], storageCalls = [];
+  const sourceBinding = { database: source.JESSIEMESSAGE_DB_NAME, rootFingerprint: state.fingerprint.toString("hex"), ...(video ? { videoRootFingerprint: state.videoFingerprint.toString("hex") } : {}) };
   async function advance(phase) {
     const journal = createErasureJournal({ directory: locations["source-operations"], key: keys.crmKey, binding: sourceBinding, clientId }, { withDirectory: withErasureDirectory });
     try {
       const current = await journal.read();
       await journal.save(current.record ? { ...current.record, phase, updatedAt: at + current.revision }
-        : { version: 1, clientId, binding: sourceBinding, phase, cursor: null, startedAt: at, updatedAt: at }, current.revision, async () => {});
+        : { version: video ? 2 : 1, clientId, binding: sourceBinding, phase, cursor: null, startedAt: at, updatedAt: at }, current.revision, async () => {});
     } finally { journal.close(); }
   }
   await advance("requested");
   const registry = () => withErasureDirectory(locations["source-operations"], scope => captureOperationalState(scope, { key: keys.crmKey, binding: sourceBinding }));
   const recentRegistry = await registry();
-  const job = { version: 1, runtimeDirectory: locations.runtime, runtimeHead: "b".repeat(40), runtimeTree: "c".repeat(40),
+  const job = { version: video ? 2 : 1, runtimeDirectory: locations.runtime, runtimeHead: "b".repeat(40), runtimeTree: "c".repeat(40),
     sourcePrivateDirectory: locations["source-private"], sourceOperationsDirectory: locations["source-operations"], checkpointDirectory: locations.checkpoint,
     targetPrivateDirectory: locations["target-private"], targetDatabase: target.JESSIEMESSAGE_DB_NAME, importUser: "synthetic_restore_import",
     sqlSha256: "d".repeat(64), registrySha256: operationalStateHash(recentRegistry) };
@@ -88,6 +90,10 @@ async function fixture(t) {
       assert.equal(rootPath, sourceMedia); assert.deepEqual(key, keys.mediaKey); assert.equal(pathMode, "linux-dirfd");
       storageCalls.push(rootPath); return { async fingerprint() { return Buffer.from(state.fingerprint); } };
     },
+    async makeVideoStorage({ root: rootPath, key, pathMode }) {
+      assert.equal(rootPath, sourceVideo); assert.deepEqual(key, keys.videoKey); assert.equal(pathMode, "linux-dirfd");
+      storageCalls.push(rootPath); return { async fingerprint() { return Buffer.from(state.videoFingerprint); } };
+    },
     async assertSource(selected) {
       assert.deepEqual(selected, { runtimeDirectory: job.runtimeDirectory, runtimeHead: job.runtimeHead, runtimeTree: job.runtimeTree });
       sourceChecks.push(selected); if (state.sourceChanged) throw new Error("Synthetic reviewed checkout changed");
@@ -95,7 +101,7 @@ async function fixture(t) {
   };
   const load = (options = {}, overrides = {}) => loadManualOperatorContext(operatorDirectory, { environment, ...options }, { ...internal, ...overrides });
   const cleared = () => { for (const copy of loaded) for (const name of secretFields) assert.equal(copy[name], "", `Owned ${name} is cleared`); };
-  return { root, operatorDirectory, sourceMedia, locations, paths, keys, source, target, sourceBinding, recentRegistry, job, jobFile,
+  return { root, operatorDirectory, sourceMedia, sourceVideo, locations, paths, keys, source, target, sourceBinding, recentRegistry, job, jobFile,
     state, loaded, sourceChecks, storageCalls, writeJob, advance, registry, load, cleared };
 }
 
@@ -198,4 +204,30 @@ test("cancellation rejects loading and a later guard without creating target sta
   try { active.abort(); await assert.rejects(context.assertReady(), { code: "MANUAL_OPERATOR_CONTEXT_ABORTED" }); }
   finally { context.close(); }
   f.cleared(); assert.deepEqual(await readdir(f.operatorDirectory), ["job.json"]);
+});
+
+
+test("video manual job v2 pins seven keys, both roots and the candidate profile without creating a target", async t => {
+  const f = await fixture(t, { video: true }), before = await tree(f.root), context = await f.load();
+  try {
+    assert.equal(context.job.version, 2); assert.equal(context.paths.videoRootPath, f.paths.videoRootPath);
+    assert.deepEqual(context.sourceBinding, f.sourceBinding); assert.equal(context.recentRegistry.version, 2);
+    assert.equal(context.importSelection.profile, "photos-notify-recovery-crm-broadcast-video");
+    assert.deepEqual(context.keys.videoKey, f.keys.videoKey); assert.notEqual(context.keys.videoKey, f.keys.videoKey);
+    await context.assertReady(); assert.deepEqual(await tree(f.root), before);
+    assert.ok(f.storageCalls.includes(f.sourceMedia)); assert.ok(f.storageCalls.includes(f.sourceVideo));
+  } finally { context.close(); }
+  for (const copy of f.loaded) assert.equal(copy.JESSIEMESSAGE_VIDEO_KEY, "");
+  assert.ok(context.keys.videoKey.every(value => value === 0)); assert.ok(f.keys.videoKey.every(value => value === 11));
+});
+test("video manual context cannot reuse changed video roots, key or target destination", async t => {
+  for (const mode of ["fingerprint", "key", "destination"]) {
+    const f = await fixture(t, { video: true }), context = await f.load();
+    try {
+      if (mode === "fingerprint") f.state.videoFingerprint = Buffer.alloc(32, 13);
+      if (mode === "key") f.source.JESSIEMESSAGE_VIDEO_KEY = Buffer.alloc(32, 14).toString("base64url");
+      if (mode === "destination") f.target.JESSIEMESSAGE_VIDEO_ROOT = f.sourceVideo;
+      await assert.rejects(context.assertReady(), { code: "MANUAL_OPERATOR_CONTEXT_CHANGED" });
+    } finally { context.close(); }
+  }
 });

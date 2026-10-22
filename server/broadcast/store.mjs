@@ -2,8 +2,9 @@ import { manuallyAdmittedClient, invitationConsumptionProjection } from "../acce
 import { createSessionClock } from "../auth/session-policy.mjs";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { ChatStoreError } from "../chat/store.mjs";
-import { loadMigrations, migrationStatus, MigrationError } from "../db/migrations.mjs";
-import { createAudienceDigest } from "./crypto.mjs";
+import { migrationStatus, MigrationError } from "../db/migrations.mjs";
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
+import { createAudienceDigest, openPayload, campaignFingerprint } from "./crypto.mjs";
 import { validateAudience } from "./validation.mjs";
 
 export class BroadcastStoreError extends ChatStoreError {
@@ -155,10 +156,10 @@ const foreignKeys = [
   ["broadcast_recipients", "broadcast_recipients_delivered_fk", "messages", ["conversation_id", "delivered_message_id"], ["conversation_id", "id"]],
 ];
 
-export async function assertBroadcastSchema(pool) {
+export async function assertBroadcastSchema(pool, options = {}) {
   if (!pool || typeof pool.getConnection !== "function") input();
   return run(pool, async (connection) => {
-    const migrations = await loadMigrations(), database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
+    const migrations = await loadStoreMigrations(options), database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
     const status = await migrationStatus(connection, { database, migrations });
     if (migrations.length < 25 || status.some((item) => item.state !== "applied")) state();
     const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
@@ -206,9 +207,10 @@ export async function assertBroadcastSchema(pool) {
   });
 }
 
-export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, clock } = {}) {
-  if (!pool || typeof pool.getConnection !== "function" || typeof mediaEnabled !== "boolean" || !chatStore
+export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, videoEnabled = false, key, videoStore, videoMessageStore, clock } = {}) {
+  if (!pool || typeof pool.getConnection !== "function" || typeof mediaEnabled !== "boolean" || typeof videoEnabled !== "boolean" || videoEnabled && (!Buffer.isBuffer(key) || key.length !== 32 || typeof videoStore?.getCommittedAsset !== "function" || typeof videoMessageStore?.appendBroadcastVideo !== "function") || !chatStore
     || ["withActor", "withBroadcastDelivery"].some((name) => typeof chatStore[name] !== "function")) input();
+  if (videoEnabled) key = Buffer.from(key);
   const readTime = createSessionClock(clock);
   const currentTime = (previous) => Math.max(instant(previous), readTime(previous));
   const withAdmin = (value, operation) => { request(value); return chatStore.withActor({ role: "admin", tokenHash: value.tokenHash, now: value.now }, operation); };
@@ -225,18 +227,34 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       allowRepeatMedia: Number(row.allow_repeat_media) === 1, status: row.status, createdAt: timestamp(row.created_at), updatedAt: timestamp(row.updated_at),
       expiresAt: timestamp(row.expires_at), counts };
   }
-  async function media(connection, adminId, mediaId, now) {
+  function campaignVideo(row) {
+    if (!row.payload_encrypted?.startsWith("v3.")) return null;
+    if (!videoEnabled || row.media_id !== null) state();
+    const payload = openPayload(row.payload_encrypted, key, { campaignId: row.id, adminId: row.admin_id }, { video: true });
+    if (payload.version !== 3 || payload.mediaId !== null || payload.allowRepeatMedia !== (Number(row.allow_repeat_media) === 1)
+      || !Buffer.isBuffer(row.request_fingerprint) || !timingSafeEqual(campaignFingerprint(payload, key, { adminId: row.admin_id }, { video: true }), row.request_fingerprint)) state();
+    return Buffer.from(payload.videoId, "hex");
+  }
+  async function media(connection, adminId, mediaId, now, videoId = null) {
+    if (videoId !== null) {
+      if (!videoEnabled || mediaId !== null) return false;
+      bytes(videoId);
+      try { const asset = await videoStore.getCommittedAsset(connection, { assetId: videoId, ownerId: adminId, ownerRole: "admin", now }); return Boolean(asset?.id?.equals(videoId)); }
+      catch (error) { if (error?.code === "VIDEO_NOT_FOUND") return false; throw error; }
+    }
     if (mediaId === null) return true;
     if (!mediaEnabled) return false;
     const row = (await connection.query("SELECT id, owner_id, owner_role, created_at, deleted_at FROM media_assets WHERE id = ? FOR UPDATE", [mediaId]))[0];
     return Boolean(row && row.owner_id.equals(adminId) && row.owner_role === "admin" && row.deleted_at === null && timestamp(row.created_at) <= now);
   }
-  async function repeated(connection, conversationId, mediaId, ownMessageId = null) {
+  async function repeated(connection, conversationId, mediaId, ownMessageId = null, videoId = null) {
+    if (videoId !== null) return (await connection.query(`SELECT 1 FROM message_video WHERE conversation_id = ? AND video_id = ?
+      ${ownMessageId === null ? "" : "AND message_id <> ?"} LIMIT 1`, [conversationId, videoId, ...(ownMessageId === null ? [] : [ownMessageId])])).length > 0;
     if (mediaId === null) return false;
     return (await connection.query(`SELECT 1 FROM message_media WHERE conversation_id = ? AND media_id = ?
       ${ownMessageId === null ? "" : "AND message_id <> ?"} LIMIT 1`, [conversationId, mediaId, ...(ownMessageId === null ? [] : [ownMessageId])])).length > 0;
   }
-  async function preview(connection, context, conversationIds, mediaId) {
+  async function preview(connection, context, conversationIds, mediaId, videoId = null) {
     const { actor } = context; let now = context.now;
     const candidates = await connection.query(`SELECT id, client_id FROM conversations WHERE admin_id = ?
       AND id IN (${placeholders(conversationIds)}) ORDER BY id ASC`, [actor.id, ...conversationIds]);
@@ -249,9 +267,9 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
     const authIds = new Set(auth.map((row) => row.user_id.toString("hex")));
     const conversations = await connection.query(`SELECT id, client_id, admin_id, created_at, closed_at FROM conversations
       WHERE id IN (${placeholders(conversationIds)}) ORDER BY id ASC FOR UPDATE`, conversationIds);
-    if (!(await media(connection, actor.id, mediaId, now))) fail("BROADCAST_MEDIA");
-    const repeats = mediaId === null ? new Set() : new Set((await connection.query(`SELECT DISTINCT conversation_id FROM message_media
-      WHERE media_id = ? AND conversation_id IN (${placeholders(conversationIds)})`, [mediaId, ...conversationIds])).map((row) => row.conversation_id.toString("hex")));
+    if (!(await media(connection, actor.id, mediaId, now, videoId))) fail("BROADCAST_MEDIA");
+    const repeats = mediaId === null && videoId === null ? new Set() : new Set((await connection.query(`SELECT DISTINCT conversation_id FROM ${videoId === null ? "message_media" : "message_video"}
+      WHERE ${videoId === null ? "media_id" : "video_id"} = ? AND conversation_id IN (${placeholders(conversationIds)})`, [videoId ?? mediaId, ...conversationIds])).map((row) => row.conversation_id.toString("hex")));
     now = currentTime(now);
     const recipients = [];
     for (const conversationId of conversationIds) {
@@ -302,7 +320,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       LEFT JOIN crm_profiles p ON p.admin_id = c.admin_id AND p.conversation_id = c.id
       WHERE ${where.join(" AND ")} ORDER BY c.id ASC LIMIT 100`, parameters);
   }
-  async function walkAudience(connection, context, audience, mediaId, onPage) {
+  async function walkAudience(connection, context, audience, mediaId, onPage, videoId = null) {
     await ownedScope(connection, context.actor, audience);
     let afterId = null, offset = 0, totalCount = 0, repeatCount = 0;
     const digest = createAudienceDigest(), sample = [];
@@ -311,7 +329,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
         ? audience.conversationIds.slice(offset, offset + 100).map((value) => Buffer.from(value, "hex"))
         : (await discoverAudience(connection, context, audience, afterId)).map((row) => row.id);
       if (!selected.length) break;
-      const page = await preview(connection, { ...context, now: currentTime(context.now) }, selected, mediaId);
+      const page = await preview(connection, { ...context, now: currentTime(context.now) }, selected, mediaId, videoId);
       if (audience.mode !== "selected") {
         const checked = await discoverAudience(connection, context, audience, afterId, selected);
         if (checked.length !== selected.length || checked.some((row, index) => !row.id.equals(selected[index]))) fail("BROADCAST_CONFLICT");
@@ -326,7 +344,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       afterId = selected.at(-1); offset += selected.length;
       if (selected.length < 100) break;
     }
-    if (totalCount === 0 && !(await media(connection, context.actor.id, mediaId, currentTime(context.now)))) fail("BROADCAST_MEDIA");
+    if (totalCount === 0 && !(await media(connection, context.actor.id, mediaId, currentTime(context.now), videoId))) fail("BROADCAST_MEDIA");
     const eligibleCount = digest.count;
     return { recipients: sample, totalCount, eligibleCount, excludedCount: totalCount - eligibleCount, repeatCount, digest: digest.digest() };
   }
@@ -363,6 +381,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
     if (!job || typeof job !== "object") input();
     for (const name of ["campaignId", "adminId", "conversationId", "clientId", "messageId", "clientMessageId", "leaseToken"]) bytes(job[name]);
     uint32(job.mfaVersion); if (job.mediaId !== null) bytes(job.mediaId);
+    if (Object.hasOwn(job, "videoId")) { if (!videoEnabled) input(); bytes(job.videoId); if (job.mediaId !== null) input(); }
     if (typeof job.allowRepeatMedia !== "boolean" || typeof job.payloadEncrypted !== "string") input();
   }
   async function jobTime(connection, context, campaign, recipient, previous) {
@@ -395,6 +414,8 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
         now = await refresh(); if (now === null) return false;
         if (campaign.payload_encrypted !== job.payloadEncrypted || (Number(campaign.allow_repeat_media) === 1) !== job.allowRepeatMedia
           || (campaign.media_id === null ? job.mediaId !== null : !campaign.media_id.equals(job.mediaId))) state();
+        const videoId = campaignVideo(campaign);
+        if (videoId === null ? Object.hasOwn(job, "videoId") : !Buffer.isBuffer(job.videoId) || !videoId.equals(job.videoId)) state();
         return operation(connection, { ...context, now }, append, campaign, recipient, refresh);
       });
   }
@@ -404,6 +425,13 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
     availableAt = context.now, expiresAt = context.now + 7 * 86400000 }) {
     audience = scope(audience); bytes(campaign?.id); bytes(campaign?.clientCampaignId); bytes(campaign?.requestFingerprint, 32);
     if (campaign.mediaId !== null) bytes(campaign.mediaId);
+    const videoId = campaign.videoId ?? null;
+    if (videoId !== null) {
+      if (!videoEnabled || campaign.mediaId !== null) input(); bytes(videoId);
+      const authenticated = campaignVideo({ id: campaign.id, admin_id: context.actor?.id, media_id: campaign.mediaId,
+        payload_encrypted: campaign.payloadEncrypted, request_fingerprint: campaign.requestFingerprint, allow_repeat_media: campaign.allowRepeatMedia ? 1 : 0 });
+      if (!authenticated?.equals(videoId)) input();
+    } else if (typeof campaign.payloadEncrypted === "string" && campaign.payloadEncrypted.startsWith("v3.")) input();
     if (typeof campaign.allowRepeatMedia !== "boolean" || typeof campaign.payloadEncrypted !== "string"
       || campaign.payloadEncrypted.length < 1 || campaign.payloadEncrypted.length > 32000 || /[^\x20-\x7e]/.test(campaign.payloadEncrypted)
       || typeof campaign.recipientProof !== "function" || typeof verifyPreview !== "function"
@@ -436,7 +464,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       }
       await connection.query(`INSERT INTO broadcast_recipients (campaign_id, conversation_id, client_id, proposed_message_id, client_message_id,
         available_at, created_at) VALUES ${values.join(", ")}`, parameters);
-    });
+    }, videoId);
     try { verifyPreview(currentTime(context.now)); } catch { fail("BROADCAST_CONFLICT"); }
     if (result.eligibleCount !== snapshot.count || result.digest !== snapshot.digest || result.repeatCount !== snapshot.repeatCount) fail("BROADCAST_CONFLICT");
     return { campaign: await rawCampaign(connection, await campaignRow(connection, campaign.id, context.actor.id)), duplicate: false };
@@ -452,12 +480,13 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
     return rawCampaign(connection, await campaignRow(connection, campaignId, context.actor.id));
   }
   return Object.freeze({
-    assertSchema: () => assertBroadcastSchema(pool),
+    assertSchema: (options) => assertBroadcastSchema(pool, options),
     async preview({ tokenHash, now, conversationIds, mediaId = null }) {
       const selected = ids(conversationIds); if (mediaId !== null) bytes(mediaId);
       return withAdmin({ tokenHash, now }, (connection, context) => preview(connection, context, selected, mediaId));
     },
     async create({ tokenHash, now, campaign }) {
+      if (typeof campaign?.payloadEncrypted === "string" && campaign.payloadEncrypted.startsWith("v3.") || campaign?.videoId !== undefined) input();
       bytes(campaign?.id); bytes(campaign?.clientCampaignId); bytes(campaign?.requestFingerprint, 32);
       if (campaign.mediaId !== null) bytes(campaign.mediaId);
       if (typeof campaign.allowRepeatMedia !== "boolean" || typeof campaign.payloadEncrypted !== "string" || campaign.payloadEncrypted.length < 1
@@ -492,9 +521,10 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
         return { campaign: await rawCampaign(connection, await campaignRow(connection, campaign.id, context.actor.id)), duplicate: false };
       });
     },
-    async previewAudience({ tokenHash, now, audience, mediaId = null }) {
+    async previewAudience({ tokenHash, now, audience, mediaId = null, videoId = null }) {
       audience = scope(audience); if (mediaId !== null) bytes(mediaId);
-      return withAdmin({ tokenHash, now }, (connection, context) => walkAudience(connection, context, audience, mediaId));
+      if (videoId !== null) { if (!videoEnabled || mediaId !== null) input(); bytes(videoId); }
+      return withAdmin({ tokenHash, now }, (connection, context) => walkAudience(connection, context, audience, mediaId, undefined, videoId));
     },
     createAudienceInTransaction,
     cancelInTransaction,
@@ -544,7 +574,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       bytes(campaignId);
       return withAdmin({ tokenHash, now }, async (connection, context) => {
         const row = await campaignRow(connection, campaignId, context.actor.id), result = await rawCampaign(connection, row);
-        if (row.payload_encrypted.startsWith("v2.")) return { ...result, ...(await recipientPage(connection, campaignId, null, 50)) };
+        if (row.payload_encrypted.startsWith("v2.") || videoEnabled && row.payload_encrypted.startsWith("v3.")) return { ...result, ...(await recipientPage(connection, campaignId, null, 50)) };
         const recipients = await connection.query(`SELECT r.conversation_id, r.client_id, u.pseudonym, r.state, r.reason, r.delivered_message_id, r.delivered_at
           FROM broadcast_recipients r JOIN users u ON u.id = r.client_id WHERE r.campaign_id = ? ORDER BY r.conversation_id ASC`, [campaignId]);
         return { ...result, recipients: recipientRows(recipients) };
@@ -593,12 +623,13 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
             const ready = (recipient.state === "pending" && timestamp(recipient.available_at) <= now)
               || (recipient.state === "sending" && timestamp(recipient.lease_until) <= now) || (expired && ["pending", "sending"].includes(recipient.state));
             if (!ready) return null;
+            const videoId = campaignVideo(campaign);
             let reason = null;
             if (!compatible || context.conversation.closed_at !== null || timestamp(context.conversation.created_at) > now) reason = "conversation_unavailable";
             else if (!context.canSend || !activeClient(context.client, now)) reason = "access_inactive";
             else if (expired) reason = "expired";
-            else if (!(await media(connection, campaign.admin_id, campaign.media_id, now))) reason = "media_unavailable";
-            else if (Number(campaign.allow_repeat_media) !== 1 && await repeated(connection, candidate.conversation_id, campaign.media_id, recipient.proposed_message_id)) reason = "repeat_media";
+            else if (!(await media(connection, campaign.admin_id, campaign.media_id, now, videoId))) reason = "media_unavailable";
+            else if (Number(campaign.allow_repeat_media) !== 1 && await repeated(connection, candidate.conversation_id, campaign.media_id, recipient.proposed_message_id, videoId)) reason = "repeat_media";
             // The media lock and repeat query can also wait. Keep every account,
             // conversation and queue lock held while checking the final time.
             now = currentTime(now);
@@ -611,7 +642,7 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
             await connection.query("UPDATE broadcast_campaigns SET status = 'running', updated_at = GREATEST(updated_at, ?) WHERE id = ?", [sqlDate(now), campaign.id]);
             return { campaignId: campaign.id, adminId: campaign.admin_id, mfaVersion: Number(campaign.mfa_version), conversationId: recipient.conversation_id,
               clientId: recipient.client_id, messageId: recipient.proposed_message_id, clientMessageId: recipient.client_message_id, mediaId: campaign.media_id,
-              allowRepeatMedia: Number(campaign.allow_repeat_media) === 1, payloadEncrypted: campaign.payload_encrypted, leaseToken };
+              allowRepeatMedia: Number(campaign.allow_repeat_media) === 1, payloadEncrypted: campaign.payload_encrypted, leaseToken, ...(videoId === null ? {} : { videoId }) };
           });
         if (result) return result;
       }
@@ -621,18 +652,20 @@ export function createBroadcastStore(pool, { chatStore, mediaEnabled = false, cl
       jobInput(job);
       if (!message || !Buffer.isBuffer(message.id) || !message.id.equals(job.messageId)
         || !Buffer.isBuffer(message.clientMessageId) || !message.clientMessageId.equals(job.clientMessageId)
-        || (job.mediaId === null ? (message.mediaId ?? null) !== null : !Buffer.isBuffer(message.mediaId) || !message.mediaId.equals(job.mediaId))) input();
+        || (job.mediaId === null ? (message.mediaId ?? null) !== null : !Buffer.isBuffer(message.mediaId) || !message.mediaId.equals(job.mediaId))
+        || (job.videoId === undefined ? message.videoId !== undefined : !Buffer.isBuffer(message.videoId) || !message.videoId.equals(job.videoId))) input();
       const expiredDuringDelivery = new BroadcastStoreError();
       let result;
       try { result = await withJob(job, now, async (connection, context, append, campaign, recipient, refresh) => {
-        if (!(await media(connection, campaign.admin_id, campaign.media_id, context.now))) { await terminal(connection, campaign.id, job.conversationId, "media_unavailable", currentTime(context.now)); return false; }
-        if (Number(campaign.allow_repeat_media) !== 1 && await repeated(connection, job.conversationId, campaign.media_id, recipient.proposed_message_id)) {
+        if (!(await media(connection, campaign.admin_id, campaign.media_id, context.now, job.videoId ?? null))) { await terminal(connection, campaign.id, job.conversationId, "media_unavailable", currentTime(context.now)); return false; }
+        if (Number(campaign.allow_repeat_media) !== 1 && await repeated(connection, job.conversationId, campaign.media_id, recipient.proposed_message_id, job.videoId ?? null)) {
           await terminal(connection, campaign.id, job.conversationId, "repeat_media", currentTime(context.now)); return false;
         }
         // Re-read after every potentially waiting media query, immediately
         // before the ordinary append. Its owner/conversation locks are held.
         now = await refresh(); if (now === null) return false;
-        const sent = await append({ ...message, notificationExpiresAt: timestamp(campaign.expires_at) });
+        const prepared = { ...message, notificationExpiresAt: timestamp(campaign.expires_at) };
+        const sent = job.videoId === undefined ? await append(prepared) : await videoMessageStore.appendBroadcastVideo(connection, context, append, prepared);
         if (!sent.message.id.equals(recipient.proposed_message_id)) state();
         await connection.query(`UPDATE broadcast_recipients SET state = 'delivered', reason = NULL, delivered_message_id = ?, delivered_at = ?,
           lease_token = NULL, lease_until = NULL WHERE campaign_id = ? AND conversation_id = ?`, [sent.message.id, sqlDate(now), campaign.id, job.conversationId]);

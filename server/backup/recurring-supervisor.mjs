@@ -19,6 +19,7 @@ import { createManualBackupRequests } from "./manual-backup-files.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const PROFILE = "photos-notify-recovery-crm-broadcast";
+const VIDEO_PROFILE = "photos-notify-recovery-crm-broadcast-video";
 const DAY = 86400000, MAX_DATE = 253402300799999;
 const MINIMUM_FREE = 8n * 1024n ** 3n;
 const CODE_SUFFIXES = ["USAGE", "ENVIRONMENT", "SOURCE", "SPACE", "CONFIGURATION", "CHECKPOINT", "TIMEOUT", "ABORTED", "RUNTIME", "OPERATION"];
@@ -43,12 +44,13 @@ export function parseRecurringArguments(args) {
   const witness = ["plan-witness", "check-witness", "prepare-witness"].includes(args[0]);
   const observer = ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"].includes(args[0]);
   const recovery = ["check-witness-recovery", "start-witness-recovery"].includes(args[0]);
-  if (args.length !== (witness || observer || recovery ? 17 : 13) || !["check", "start", "check-local-closures", "start-local-closures", "plan-witness", "check-witness", "prepare-witness",
+  const video = args.includes("--profile");
+  if (args.length !== (witness || observer || recovery ? 17 : video ? 15 : 13) || !["check", "start", "check-local-closures", "start-local-closures", "plan-witness", "check-witness", "prepare-witness",
     "prepare-witness-enrollment", "check-witness-observer", "start-witness-observer", "check-witness-recovery", "start-witness-recovery"].includes(args[0])) fail("USAGE");
   const names = new Map([["--runtime-directory", "runtimeDirectory"], ["--runtime-head", "runtimeHead"], ["--runtime-tree", "runtimeTree"],
     ["--private-directory", "privateDirectory"], ["--operations-directory", "operationsDirectory"], ["--private-path-mode", "privatePathMode"],
     ["--witness-operator-directory", "witnessOperatorDirectory"], ["--witness-destination", "witnessDestination"], ["--witness-plan-sha256", "witnessPlanSha256"],
-    ["--witness-contract-sha256", "witnessContractSha256"]]);
+    ["--witness-contract-sha256", "witnessContractSha256"], ["--profile", "profile"]]);
   const result = { command: args[0] };
   for (let index = 1; index < args.length; index += 2) {
     const name = names.get(args[index]);
@@ -61,6 +63,10 @@ export function parseRecurringArguments(args) {
     || inside(result.operationsDirectory, result.privateDirectory) || inside(result.privateDirectory, result.operationsDirectory)
     || inside(result.runtimeDirectory, result.privateDirectory) || inside(result.runtimeDirectory, result.operationsDirectory)
     || inside(result.privateDirectory, result.runtimeDirectory) || inside(result.operationsDirectory, result.runtimeDirectory)) fail("USAGE");
+  if (video) {
+    if (!["check-local-closures", "start-local-closures"].includes(result.command) || result.profile !== VIDEO_PROFILE) fail("USAGE");
+    result.video = true;
+  }
   const extras = ["witnessOperatorDirectory", "witnessDestination", "witnessPlanSha256", "witnessContractSha256"].filter(name => Object.hasOwn(result, name));
   if (witness || observer || recovery) {
     if (extras.length !== 2 || !path(result.witnessOperatorDirectory)
@@ -120,7 +126,7 @@ export async function checkpointProcess(command, options, destination, { signal,
     try {
       const args = [fileURLToPath(new URL("../../scripts/private-checkpoint-child.mjs", import.meta.url)), command,
         ...(command === "capture-application" ? ["--offline"] : []), "--private-directory", options.privateDirectory,
-        "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination, "--profile", PROFILE,
+        "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination, "--profile", options.video === true ? VIDEO_PROFILE : PROFILE,
         "--operations-directory", options.operationsDirectory];
       child = spawnClient(process.execPath, args, { cwd: REPOSITORY, env: environment, stdio: ["ignore", "pipe", "pipe", "ipc"] });
       timer = setTimeout(() => stop("TIMEOUT"), timeoutMilliseconds);
@@ -140,8 +146,11 @@ export async function checkpointProcess(command, options, destination, { signal,
           const bytes = Buffer.concat(output); let result;
           try { result = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); } finally { bytes.fill(0); }
           const expected = command === "capture-application" ? "application_checkpoint_saved" : "application_precheck_passed";
-          if (result?.status !== expected || result.profile !== "messaging-photos-notify-recovery-crm-broadcast-application" || result.started !== false
-            || result.migrationPerformed !== false || command === "capture-application" && (result.tables !== 33 || result.migrations !== 33
+          if (result?.status !== expected || result.profile !== `messaging-${options.video === true ? VIDEO_PROFILE : PROFILE}-application` || result.started !== false
+            || result.migrationPerformed !== false || options.video === true && command === "check-application" && (result.schema !== 36
+              || result.coverage?.encryptedVideo !== true || result.databaseConnected !== false || result.passwordInputRequired !== false)
+            || command === "capture-application" && (result.tables !== (options.video === true ? 36 : 33) || result.migrations !== (options.video === true ? 36 : 33)
+              || options.video === true && (result.videoCovered !== true || result.coverage?.encryptedVideo !== true)
               || result.operationsCovered !== true || result.archiveListed !== true || result.archiveContentsVerified !== true || !/^[a-f0-9]{64}$/.test(result.archive?.sha256 ?? ""))) fail("CHECKPOINT");
           yes({ saved: command === "capture-application", precheckPassed: command === "check-application" });
         } catch (error) { no(error instanceof RecurringSupervisorError ? error : new RecurringSupervisorError("CHECKPOINT")); }
@@ -179,7 +188,8 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures, resumeClosures = resumeManagedClosureRuntime, witnessControl = null, makeGateway = createParentGateway,
   witnessOriginOperations = null, prepareWitness = runManagedWitnessPreparation, manualBackups = false, manualRequests = null,
   allowManualRequests = () => true } = {}) {
-  if (!["start", "prepare-witness"].includes(options.command)) fail("CONFIGURATION");
+  if (!["start", "prepare-witness"].includes(options.command) || options.video !== undefined && options.video !== true
+    || options.video === true && !manualBackups) fail("CONFIGURATION");
   if (witnessControl !== null && typeof witnessControl !== "function") fail("CONFIGURATION");
   if (!Number.isSafeInteger(intervalMilliseconds) || intervalMilliseconds < 1 || intervalMilliseconds > 60000) fail("CONFIGURATION");
   if (closureOperations !== null && ["hasPending", "preflight", "run", "verifyStartup"].some(name => typeof closureOperations?.[name] !== "function")) fail("CONFIGURATION");
@@ -208,7 +218,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   if (childPort > 65535) fail("CONFIGURATION");
   const gateway = witnessControl === null ? null : makeGateway({ port: publicPort, childPort, control: witnessControl, onFailure: unexpected });
   const runtime = makeRuntime({ runtimeDirectory: options.runtimeDirectory, privateDirectory: options.privateDirectory, operationsDirectory: options.operationsDirectory,
-    port: childPort, environment: witnessControl === null ? environment : { ...environment, PORT: String(childPort) }, onUnexpectedExit: unexpected, accountClosures: closureOperations !== null,
+    port: childPort, environment: witnessControl === null ? environment : { ...environment, PORT: String(childPort) }, onUnexpectedExit: unexpected, accountClosures: closureOperations !== null, ...(options.video === true ? { video: true } : {}),
     ...(witnessControl === null ? {} : { parentGateway: true }) });
   function tick() {
     if (closed || !started || observing) return Promise.resolve(null);

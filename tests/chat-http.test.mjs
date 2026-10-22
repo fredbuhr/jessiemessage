@@ -557,3 +557,21 @@ test("conversation avatar DTO preserves role and conversation ACL URLs without s
     }
   }
 });
+
+
+test("video capability and blob media CSP require the explicit candidate option and administrator/client authentication", async t => {
+  const ordinary = await fixture(t);
+  const candidate = await fixture(t, {}, { videoEnabled: true });
+  for (const role of ["admin", "client"]) {
+    const api = `/api/chat/${role}/capabilities`, page = role === "admin" ? "/admin/messages" : "/messages";
+    assert.equal((await fetch(candidate.base + api)).status, 401);
+    const oldResponse = await fetch(ordinary.base + api, { headers: { Cookie: cookie(role) } });
+    assert.equal((await oldResponse.json()).video, undefined);
+    const current = await fetch(candidate.base + api, { headers: { Cookie: cookie(role) } });
+    assert.deepEqual((await current.json()).video, { enabled: true, maxBytes: 104857600, mime: "video/mp4" });
+    const protectedPage = await fetch(candidate.base + page, { headers: { Cookie: cookie(role) } });
+    assert.match(protectedPage.headers.get("content-security-policy"), /(?:^|;) media-src 'self' blob:/);
+    const oldPage = await fetch(ordinary.base + page, { headers: { Cookie: cookie(role) } });
+    assert.doesNotMatch(oldPage.headers.get("content-security-policy"), /media-src/);
+  }
+});

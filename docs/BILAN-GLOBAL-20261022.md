@@ -31,6 +31,8 @@ Les preuves et parcours sont regroupés dans [PRODUCT](PRODUCT.md), le [guide qu
 
 ## Ce qui manque réellement
 
+**Mise à jour de développement G2 :** interface, runtime explicite SQL36, diffusions, ZIP et sauvegarde/restauration à deux racines sont désormais codés sur la branche 1.8.0 et en cours de qualification native. La description initiale des manques vidéo ci-dessous décrit le point de départ de ce bilan ; elle ne révoque pas ce travail ni ses qualifications antérieures. [REPRISE](REPRISE.md) et le [guide G2](video-integration-180.md) donnent l’état du checkpoint courant. Cette évolution n’est pas encore livrée.
+
 **La vidéo n’est pas utilisable dans la conversation.** Catalogue, accès privé, exports et suppression/fermeture/capacité ont des qualifications backend sur branche. Inventaire, capture/restauration et compatibilité restent incomplets ; l’interface avec sélection, progression, lecteur, avance/recul et galerie reste absente, ainsi que la diffusion vidéo complète.
 
 **La sauvegarde simple à la demande via l’administration n’est pas encore livrée.** La production 1.7.1 conserve ses mécanismes automatiques existants ; leur remplacement effectif est le premier résultat codé et qualifié sur la branche, [CI 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39706108306), en attente de livraison. Les réponses rapides personnelles restent à développer : les six phrases actuelles sont fixes.

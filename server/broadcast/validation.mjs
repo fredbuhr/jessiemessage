@@ -74,7 +74,14 @@ export function validateAudience(input) {
   return { mode: "filtered", filters: { q, tagId, groupId, access: filters.access, unread: filters.unread, reminder: filters.reminder } };
 }
 
-export function validatePreview(input) {
+export function validatePreview(input, { video = false } = {}) {
+  if (typeof video !== "boolean") invalid();
+  if (Object.hasOwn(input ?? {}, "videoId")) {
+    if (!video) invalid();
+    exactObject(input, ["audience", "mediaId", "videoId"]);
+    if (input.mediaId !== null) invalid();
+    return { audience: validateAudience(input.audience), mediaId: null, videoId: validateId(input.videoId) };
+  }
   if (input && typeof input === "object" && Object.hasOwn(input, "audience")) {
     exactObject(input, ["audience", "mediaId"]);
     return { audience: validateAudience(input.audience), mediaId: input.mediaId === null ? null : validateId(input.mediaId) };
@@ -86,25 +93,34 @@ export function validatePreview(input) {
   };
 }
 
-function contentValues(input) {
+function contentValues(input, video = false) {
   const { title, body, mediaId, allowRepeatMedia } = input;
+  const videoId = video ? validateId(input.videoId) : null;
+  if (video && mediaId !== null) invalid();
   if (typeof title !== "string" || title.length < 1 || title.length > 80 || !title.isWellFormed()
     || Buffer.byteLength(title, "utf8") > 320 || title.trim().length === 0
     || ONLY_INVISIBLE.test(title) || TITLE_CONTROLS.test(title)
     || typeof allowRepeatMedia !== "boolean") invalid();
   const media = mediaId === null ? null : validateId(mediaId);
-  if (media !== null && (typeof body !== "string" || body.length > 1000)) invalid();
-  if (media === null || body !== "") {
+  if ((media !== null || video) && (typeof body !== "string" || body.length > 1000)) invalid();
+  if (media === null && !video || body !== "") {
     try { validateMessageBody(body); } catch { invalid(); }
   }
-  return { title, body, mediaId: media, allowRepeatMedia };
+  return { title, body, mediaId: media, allowRepeatMedia, ...(video ? { videoId } : {}) };
 }
 
 function payloadValues(input) {
   return { ...contentValues(input), conversationIds: conversationIds(input.conversationIds) };
 }
 
-export function validateCampaign(input) {
+export function validateCampaign(input, { video = false } = {}) {
+  if (typeof video !== "boolean") invalid();
+  if (Object.hasOwn(input ?? {}, "videoId")) {
+    if (!video) invalid();
+    exactObject(input, ["clientCampaignId", "title", "body", "mediaId", "videoId", "allowRepeatMedia", "audience", "previewToken"]);
+    if (typeof input.previewToken !== "string" || input.previewToken.length < 1 || input.previewToken.length > 4096 || /[^\x21-\x7e]/u.test(input.previewToken)) invalid();
+    return { clientCampaignId: validateId(input.clientCampaignId), ...contentValues(input, true), audience: validateAudience(input.audience), previewToken: input.previewToken };
+  }
   if (input && typeof input === "object" && Object.hasOwn(input, "audience")) {
     exactObject(input, ["clientCampaignId", "title", "body", "mediaId", "allowRepeatMedia", "audience", "previewToken"]);
     if (typeof input.previewToken !== "string" || input.previewToken.length < 1 || input.previewToken.length > 4096
@@ -118,16 +134,19 @@ export function validateCampaign(input) {
 
 // The encrypted payload has no caller retry ID. Keep one validation path for
 // API input and authenticated database plaintext, returning a canonical DTO.
-export function validatePayload(input) {
+export function validatePayload(input, { video = false } = {}) {
+  if (typeof video !== "boolean") invalid();
   if (input && typeof input === "object" && Object.hasOwn(input, "version")) {
-    exactObject(input, ["version", "title", "body", "mediaId", "allowRepeatMedia", "audience"]);
-    if (input.version !== 2) invalid();
-    const value = contentValues(input), audience = input.audience;
+    const typedVideo = Object.getOwnPropertyDescriptor(input, "version")?.value === 3;
+    if (typedVideo && !video) invalid();
+    exactObject(input, ["version", "title", "body", "mediaId", ...(typedVideo ? ["videoId"] : []), "allowRepeatMedia", "audience"]);
+    if (![2, 3].includes(input.version)) invalid();
+    const value = contentValues(input, typedVideo), audience = input.audience;
     exactObject(audience, ["mode", "count", "digest", "selectorHash"]);
     if (!["all", "filtered", "selected"].includes(audience.mode) || !Number.isSafeInteger(audience.count) || audience.count < 1
       || typeof audience.digest !== "string" || !/^[a-f0-9]{64}$/u.test(audience.digest)
       || typeof audience.selectorHash !== "string" || !/^[a-f0-9]{64}$/u.test(audience.selectorHash)) invalid();
-    return { version: 2, title: value.title, body: value.body, mediaId: value.mediaId?.toString("hex") ?? null,
+    return { version: typedVideo ? 3 : 2, title: value.title, body: value.body, mediaId: value.mediaId?.toString("hex") ?? null, ...(typedVideo ? { videoId: value.videoId.toString("hex") } : {}),
       allowRepeatMedia: value.allowRepeatMedia,
       audience: { mode: audience.mode, count: audience.count, digest: audience.digest, selectorHash: audience.selectorHash } };
   }

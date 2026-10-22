@@ -113,16 +113,16 @@ export function createErasureStore({ pool, database, capacity, broadcastKey, vid
               const next = { ...payload, audience: { ...payload.audience, count: remaining.count, digest: remaining.digest() } };
               const status = !terminal(row) && !pending ? "completed" : row.status;
               await connection.query("UPDATE broadcast_campaigns SET payload_encrypted = ?, request_fingerprint = ?, status = ?, updated_at = ? WHERE id = ?",
-                [sealPayload(next, broadcastKey, associated), campaignFingerprint(next, broadcastKey, associated), status, nowSql, row.id]);
+                [sealPayload(next, broadcastKey, associated, { video: video !== undefined }), campaignFingerprint(next, broadcastKey, associated, { video: video !== undefined }), status, nowSql, row.id]);
             }
           }
           for (const row of rows) {
             const associated = { campaignId: bytes(row.id), adminId: bytes(row.admin_id) };
-            const payload = openPayload(row.payload_encrypted, broadcastKey, associated);
-            if (!timingSafeEqual(bytes(row.request_fingerprint, 32), campaignFingerprint(payload, broadcastKey, associated))
+            const payload = openPayload(row.payload_encrypted, broadcastKey, associated, { video: video !== undefined });
+            if (!timingSafeEqual(bytes(row.request_fingerprint, 32), campaignFingerprint(payload, broadcastKey, associated, { video: video !== undefined }))
               || payload.mediaId !== (row.media_id === null ? null : hex(row.media_id)) || payload.allowRepeatMedia !== (Number(row.allow_repeat_media) === 1)
               || row.updated_at > nowSql) failErasure("ERASURE_CAMPAIGN");
-            if (payload.version === 2) { await compactCampaign(row, payload, associated); continue; }
+            if (payload.version >= 2) { await compactCampaign(row, payload, associated); continue; }
             const recipients = await connection.query(`SELECT r.*, c.client_id AS actual_client, c.admin_id AS actual_admin FROM broadcast_recipients r
               JOIN conversations c ON c.id = r.conversation_id WHERE r.campaign_id = ? ORDER BY r.conversation_id FOR UPDATE`, [row.id]);
             if (JSON.stringify(recipients.map(r => hex(r.conversation_id))) !== JSON.stringify(payload.conversationIds)
@@ -143,7 +143,7 @@ export function createErasureStore({ pool, database, capacity, broadcastKey, vid
               const next = { ...payload, conversationIds: remaining.map(r => hex(r.conversation_id)) };
               const status = !terminal(row) && remaining.every(r => !["pending", "sending"].includes(r.state)) ? "completed" : row.status;
               await connection.query("UPDATE broadcast_campaigns SET payload_encrypted = ?, request_fingerprint = ?, status = ?, updated_at = ? WHERE id = ?",
-                [sealPayload(next, broadcastKey, associated), campaignFingerprint(next, broadcastKey, associated), status, nowSql, row.id]);
+                [sealPayload(next, broadcastKey, associated, { video: video !== undefined }), campaignFingerprint(next, broadcastKey, associated, { video: video !== undefined }), status, nowSql, row.id]);
             }
           }
         }

@@ -35,6 +35,15 @@ test("a target journal cannot be hidden inside the imported media or its source 
   }
 });
 
+test("the second target root cannot alias the photo root or any restoration metadata", async t => {
+  for (const field of ["rootPath", "checkpointDirectory", "quarantineDirectory", "journalDirectory", "progressDirectory"]) {
+    const f = await fixture(t);
+    f.input.target.videoStorage = { fingerprint: async () => Buffer.alloc(32, 2) };
+    f.input.target.videoRootPath = field === "rootPath" ? f.input.target.rootPath : f.input[field];
+    await assert.rejects(reconcileManualRestore(f.input), { code: "MANUAL_RESTORE_DIRECTORY" }); await f.unchanged();
+  }
+});
+
 for (const field of ["checkpointDirectory", "quarantineDirectory", "journalDirectory", "progressDirectory"]) {
   for (const relationship of ["same", "inside", "around"]) {
     test(`target media ${relationship} ${field} is refused before execution`, async t => {

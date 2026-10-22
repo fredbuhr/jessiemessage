@@ -6,6 +6,7 @@ import { createGunzip } from "node:zlib";
 const MAX_BYTES = 2 * 1024 * 1024 * 1024, CHUNK = 64 * 1024, BLOCK = 512;
 const ROOT_NAMES = ["manifest.json", "database.sql.gz", "receipt.json"];
 const NAME = /^(?:manifest\.json|database\.sql\.gz|receipt\.json|operations\.enc\.json|media\/[a-f0-9]{64}\.(?:full|thumb)\.enc)$/;
+const VIDEO_NAME = /^(?:manifest\.json|database\.sql\.gz|receipt\.json|operations\.enc\.json|media\/[a-f0-9]{64}\.(?:full|thumb)\.enc|video\/[a-f0-9]{64}\.video\.enc)$/;
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 
 export class CheckpointArchiveError extends Error {
@@ -27,8 +28,8 @@ function record(value, names) {
   return Object.fromEntries(names.map((name) => [name, descriptors[name].value]));
 }
 
-function inventory(value) {
-  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length < 3 || value.length > 100004) fail("INPUT");
+function inventory(value, video = false) {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length < 3 || value.length > (video ? 200004 : 100004)) fail("INPUT");
   const descriptors = Object.getOwnPropertyDescriptors(value);
   if (Reflect.ownKeys(descriptors).length !== value.length + 1) fail("INPUT");
   const files = new Map(); let bytes = 0;
@@ -36,20 +37,21 @@ function inventory(value) {
     const descriptor = descriptors[String(index)];
     if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) fail("INPUT");
     const entry = record(descriptor.value, ["name", "bytes", "sha256"]);
-    if (typeof entry.name !== "string" || !NAME.test(entry.name) || files.has(entry.name)
+    if (typeof entry.name !== "string" || !(video ? VIDEO_NAME : NAME).test(entry.name) || files.has(entry.name)
       || !Number.isSafeInteger(entry.bytes) || entry.bytes < 1 || entry.bytes > MAX_BYTES
       || typeof entry.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(entry.sha256)) fail("INPUT");
     bytes += entry.bytes; if (bytes > MAX_BYTES) fail("INPUT");
     files.set(entry.name, Object.freeze(entry));
   }
   if (ROOT_NAMES.some((name) => !files.has(name))) fail("INPUT");
-  return { files, bytes };
+  return { files, bytes, video };
 }
 
-function selectedSignal(options) {
-  const selected = record(options, Object.hasOwn(options ?? {}, "signal") ? ["signal"] : []);
-  if (selected.signal !== undefined && !(selected.signal instanceof AbortSignal)) fail("INPUT");
-  return selected.signal;
+function selectedOptions(options) {
+  const selected = record(options, ["signal", "video"].filter(name => Object.hasOwn(options ?? {}, name)));
+  if (selected.signal !== undefined && !(selected.signal instanceof AbortSignal)
+    || Object.hasOwn(selected, "video") && selected.video !== true) fail("INPUT");
+  return { signal: selected.signal, video: selected.video === true };
 }
 
 function regular(stats) {
@@ -94,7 +96,7 @@ function textField(buffer) {
 // accepted. No extraction, path resolution, extension records or link targets.
 function tarReader(expected) {
   const header = Buffer.alloc(BLOCK), seen = new Set();
-  let filled = 0, remaining = 0, padding = 0, fileHash, current, ended = 0, media = false, total = 0;
+  let filled = 0, remaining = 0, padding = 0, fileHash, current, ended = 0, media = false, video = false, total = 0;
   const finishFile = () => {
     if (fileHash.digest("hex") !== current.sha256) fail("CONTENT");
     fileHash = null; current = null;
@@ -115,7 +117,8 @@ function tarReader(expected) {
     const name = textField(header.subarray(0, 100)), size = octal(header.subarray(124, 136)), type = header[156];
     if (size > MAX_BYTES) fail("LIMIT");
     if (type === 53 && name === "media/" && size === 0 && !media) { media = true; return; }
-    if (type !== 0 && type !== 48 || !NAME.test(name) || seen.has(name)) fail("FORMAT");
+    if (type === 53 && name === "video/" && size === 0 && expected.video && !video) { video = true; return; }
+    if (type !== 0 && type !== 48 || !(expected.video ? VIDEO_NAME : NAME).test(name) || seen.has(name)) fail("FORMAT");
     current = expected.files.get(name);
     if (!current || size !== current.bytes) fail("CONTENT");
     seen.add(name); remaining = size; padding = (BLOCK - size % BLOCK) % BLOCK; fileHash = createHash("sha256");
@@ -141,7 +144,7 @@ function tarReader(expected) {
       }
     },
     finish() {
-      if (remaining !== 0 || padding !== 0 || filled !== 0 || ended < 2 || !media || seen.size !== expected.files.size) fail("FORMAT");
+      if (remaining !== 0 || padding !== 0 || filled !== 0 || ended < 2 || !media || expected.video && !video || seen.size !== expected.files.size) fail("FORMAT");
     },
     clear() { header.fill(0); current = null; fileHash = null; },
   };
@@ -151,8 +154,8 @@ function tarReader(expected) {
 export async function verifyCheckpointArchive(scope, expected, options = {}) {
   let file, gunzip, parser, buffer, signal, abort;
   try {
-    signal = selectedSignal(options); active(signal);
-    const selected = inventory(expected), root = await ready(scope, null, signal);
+    const choice = selectedOptions(options); signal = choice.signal; active(signal);
+    const selected = inventory(expected, choice.video), root = await ready(scope, null, signal);
     const filename = scope.file("checkpoint.tar.gz"), visible = await lstat(filename, { bigint: true }); regular(visible);
     file = await open(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK); active(signal);
     const before = await file.stat({ bigint: true }); regular(before);

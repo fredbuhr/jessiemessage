@@ -22,6 +22,10 @@ import { createMediaStorage } from "../../server/media/storage.mjs";
 import { createMediaCapacityStore } from "../../server/media/capacity-store.mjs";
 import { consumeSyntheticInvitation } from "../fixtures/manual-admission.mjs";
 import { generateNotificationVapidKeys } from "../../scripts/prepare-runtime-notifications.mjs";
+import { loadVideoMigrations } from "../../server/video/migrations.mjs";
+import { createVideoStorage } from "../../server/video/storage.mjs";
+import { createVideoStore } from "../../server/video/store.mjs";
+import { createChatStore } from "../../server/chat/store.mjs";
 
 const run = promisify(execFile);
 const LOOPBACK = new Set(["127.0.0.1", "::1", "localhost"]);
@@ -33,6 +37,7 @@ const DATABASE_KEYS = Object.freeze([
 ]);
 const CERTIFICATE_FILES = new Set(["tls-key.pem", "tls-cert.pem"]);
 const MEDIA_FILE = /^(?:[a-f0-9]{64}\.(?:full|thumb)\.enc|\.[a-f0-9]{64}\.(?:full|thumb)\.[a-f0-9]{32}\.tmp)$/;
+const VIDEO_FILE = /^(?:[a-f0-9]{64}\.video\.enc|\.[a-f0-9]{64}\.video\.[a-f0-9]{32}\.tmp)$/;
 const sqlDate = value => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
 
 export class AuthenticationFixtureError extends Error {
@@ -86,14 +91,14 @@ async function removeCertificateDirectory(directory) {
 }
 
 /** Only the new, pinned flat synthetic media directory is removable. */
-async function removeMediaDirectory(directory, identity) {
+async function removeMediaDirectory(directory, identity, pattern = MEDIA_FILE) {
   if (!directory) return;
   const stat = await lstat(directory, { bigint: true });
   if (!stat.isDirectory() || stat.isSymbolicLink() || stat.dev !== identity.dev || stat.ino !== identity.ino
     || stat.uid !== BigInt(process.getuid()) || (stat.mode & 0o7777n) !== 0o700n || await realpath(directory) !== directory) fail("AUTH_REHEARSAL_CLEANUP");
   const files = await readdir(directory);
   for (const name of files) {
-    if (!MEDIA_FILE.test(name)) fail("AUTH_REHEARSAL_CLEANUP");
+    if (!pattern.test(name)) fail("AUTH_REHEARSAL_CLEANUP");
     const file = await lstat(join(directory, name), { bigint: true });
     if (!file.isFile() || file.isSymbolicLink() || file.uid !== stat.uid || file.nlink !== 1n || (file.mode & 0o7777n) !== 0o600n) fail("AUTH_REHEARSAL_CLEANUP");
   }
@@ -124,19 +129,21 @@ export async function cleanupAuthenticationSchema(connection, { database, lockNa
  * session. This fixture never changes NODE_TLS_REJECT_UNAUTHORIZED or any
  * production listener, feature configuration, mail transport, or credential.
  */
-export async function createAuthenticationFixture({ messaging = false } = {}) {
-  if (typeof messaging !== "boolean") fail("AUTH_REHEARSAL_CONFIG");
+export async function createAuthenticationFixture({ messaging = false, video = false } = {}) {
+  if (typeof messaging !== "boolean" || typeof video !== "boolean" || video && !messaging) fail("AUTH_REHEARSAL_CONFIG");
   const confirmed = validateFixtureEnvironment();
   const env = Object.fromEntries(DATABASE_KEYS.map((key) => [key, process.env[key]]));
   env.JESSIEMESSAGE_DB_HOST = confirmed.host;
-  let connection, configured, shutdown, proxy, certificateDirectory, stopping, bootstrapPool, mediaRoot, mediaIdentity;
+  let connection, configured, shutdown, proxy, certificateDirectory, stopping, bootstrapPool, mediaRoot, mediaIdentity,
+    videoRoot, videoIdentity, operationsRoot, operationsIdentity;
   let ownsSchema = false, lockHeld = false, targetPort = null, accepting = false;
   let allowedTables = [];
   const upstreams = new Set(), sockets = new Set();
   const lockName = `jessie:auth-rehearsal:${createHash("sha256").update(confirmed.database).digest("hex").slice(0, 32)}`;
   const adminId = randomBytes(16), key = randomBytes(32);
   const clientId = messaging ? randomBytes(16) : null;
-  const domainKeys = messaging ? Object.fromEntries(["MAIL", "MESSAGE", "MEDIA", "NOTIFICATIONS", "CRM"].map(name => [name, randomBytes(32)])) : {};
+  const domainKeys = messaging ? Object.fromEntries(["MAIL", "MESSAGE", "MEDIA", "NOTIFICATIONS", "CRM", ...(video ? ["VIDEO"] : [])].map(name => [name, randomBytes(32)])) : {};
+  const videoAttestation = video ? randomBytes(32).toString("hex") : null;
   const client = messaging ? Object.freeze({ id: clientId.toString("hex"), email: `messaging-rehearsal-${randomBytes(6).toString("hex")}@example.invalid`,
     password: `Synthetic client ${randomBytes(24).toString("base64url")}!` }) : null;
   const email = `auth-rehearsal-${randomBytes(6).toString("hex")}@example.invalid`;
@@ -176,7 +183,13 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
         if (lockHeld) { try { await connection.query("SELECT RELEASE_LOCK(?)", [lockName]); } catch { failed = true; } lockHeld = false; }
         try { await connection.end(); } catch { failed = true; }
       }
-      if (applicationClosed) { try { await removeMediaDirectory(mediaRoot, mediaIdentity); } catch { failed = true; } }
+      if (applicationClosed) {
+        try { await removeMediaDirectory(mediaRoot, mediaIdentity); } catch { failed = true; }
+        try { await removeMediaDirectory(videoRoot, videoIdentity, VIDEO_FILE); } catch { failed = true; }
+        // The rehearsal never submits a closure or backup. Any unexpected
+        // operation file preserves its owned directory instead of deleting it.
+        try { await removeMediaDirectory(operationsRoot, operationsIdentity, /a^/); } catch { failed = true; }
+      }
       try { await removeCertificateDirectory(certificateDirectory); } catch { failed = true; }
       key.fill(0); for (const value of Object.values(domainKeys)) value.fill(0); secret = ""; adminId.fill(0); clientId?.fill(0);
       if (failed) fail("AUTH_REHEARSAL_CLEANUP");
@@ -185,9 +198,9 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
   }
 
   try {
-    const migrations = await loadMigrations();
+    const migrations = await (video ? loadVideoMigrations() : loadMigrations());
     validateMigrationPlan(migrations);
-    if (migrations.length !== 33) fail();
+    if (migrations.length !== (video ? 36 : 33)) fail();
     const tables = createdMigrationTables(migrations);
     if (new Set(tables).size !== tables.length) fail();
     allowedTables = [...tables.reverse(), "schema_migrations"];
@@ -205,7 +218,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     ownsSchema = true;
     await applyMigrations(connection, { database: confirmed.database, migrations });
     if (messaging) {
-      if (new Set([key, ...Object.values(domainKeys)].map(value => value.toString("hex"))).size !== 6) fail();
+      if (new Set([key, ...Object.values(domainKeys)].map(value => value.toString("hex"))).size !== (video ? 7 : 6)) fail();
       mediaRoot = await mkdtemp(join(tmpdir(), "jessiemessage-messaging-rehearsal-"));
       await chmod(mediaRoot, 0o700); mediaIdentity = await lstat(mediaRoot, { bigint: true });
       const storage = await createMediaStorage({ root: mediaRoot, key: domainKeys.MEDIA });
@@ -213,6 +226,16 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
       await createMediaCapacityStore({ pool: bootstrapPool, capacity: {
         ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await storage.fingerprint(),
       } }).initialize({ now: Date.now(), offline: true });
+      if (video) {
+        videoRoot = await mkdtemp(join(tmpdir(), "jessiemessage-video-rehearsal-"));
+        await chmod(videoRoot, 0o700); videoIdentity = await lstat(videoRoot, { bigint: true });
+        operationsRoot = await mkdtemp(join(tmpdir(), "jessiemessage-video-operations-"));
+        await chmod(operationsRoot, 0o700); operationsIdentity = await lstat(operationsRoot, { bigint: true });
+        const videos = await createVideoStorage({ root: videoRoot, key: domainKeys.VIDEO });
+        await createVideoStore({ pool: bootstrapPool, chatStore: createChatStore(bootstrapPool), capacity: {
+          ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await videos.fingerprint(),
+        } }).initialize({ now: Date.now(), offline: true });
+      }
       await bootstrapPool.end(); bootstrapPool = null;
     }
 
@@ -221,7 +244,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     const keyPath = join(certificateDirectory, "tls-key.pem"), certPath = join(certificateDirectory, "tls-cert.pem");
     // No shell is involved and neither output nor private material is logged.
     await run("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-sha256", "-nodes", "-days", "1",
-      "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1,DNS:localhost", "-keyout", keyPath, "-out", certPath],
+      "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1,DNS:localhost,DNS:jessiemessage.com", "-keyout", keyPath, "-out", certPath],
     { timeout: 15000, maxBuffer: 65536, env: { PATH: process.env.PATH ?? "/usr/bin:/bin", OPENSSL_CONF: "/dev/null" } });
     await chmod(keyPath, 0o600); await chmod(certPath, 0o600);
     const [tlsKey, certificate] = await Promise.all([readFile(keyPath), readFile(certPath)]);
@@ -234,6 +257,10 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
       proxy = createHttpsServer({ key: tlsKey, cert: certificate, minVersion: "TLSv1.2" }, (request, response) => {
         if (!accepting || targetPort === null) {
           response.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store" }); response.end('{"error":"fixture_unavailable"}'); request.resume(); return;
+        }
+        if (video && request.method === "GET" && request.url === "/__video_rehearsal/" + videoAttestation) {
+          response.writeHead(200, { "Content-Type": "text/plain", "Cache-Control": "no-store" });
+          response.end(videoAttestation); return;
         }
         const requestUrl = new URL(request.url, origin);
         if (request.headers.host === new URL(outside).host) {
@@ -281,7 +308,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
     } finally { tlsKey.fill(0); }
     proxy.on("connection", (socket) => { sockets.add(socket); socket.on("close", () => sockets.delete(socket)); });
     proxy.on("clientError", (_error, socket) => socket.destroy());
-    const port = await listen(proxy), origin = `https://127.0.0.1:${port}`, outside = `https://localhost:${port}`;
+    const port = await listen(proxy), origin = video ? "https://jessiemessage.com" : `https://127.0.0.1:${port}`, outside = `https://localhost:${port}`;
     const runtimeEnvironment = { ...env,
       JESSIEMESSAGE_ENABLE_AUTH: "1", JESSIEMESSAGE_SITE_ORIGIN: origin, JESSIEMESSAGE_MFA_KEY: key.toString("base64url"),
       JESSIEMESSAGE_ENABLE_ACCESS: "0", JESSIEMESSAGE_ENABLE_CHAT: "0", JESSIEMESSAGE_ENABLE_MEDIA: "0",
@@ -305,7 +332,14 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
       notificationSubscription = Object.freeze({ endpoint: `https://fcm.googleapis.com/wp/synthetic-rehearsal-${randomBytes(16).toString("hex")}`, expirationTime: null,
         keys: Object.freeze({ p256dh: subscription.getPublicKey().toString("base64url"), auth: randomBytes(16).toString("base64url") }) });
     }
-    configured = await createConfiguredServer(runtimeEnvironment);
+    if (video) Object.assign(runtimeEnvironment, {
+      JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY: "1", JESSIEMESSAGE_ENABLE_BROADCAST: "1",
+      JESSIEMESSAGE_VIDEO_ROOT: videoRoot, JESSIEMESSAGE_VIDEO_OWNER_BYTES: String(16 * 1024 * 1024),
+      JESSIEMESSAGE_VIDEO_TOTAL_BYTES: String(64 * 1024 * 1024), JESSIEMESSAGE_VIDEO_MINIMUM_FREE_BYTES: "0",
+      JESSIEMESSAGE_SMTP_USER: "contact@jessiemessage.com", JESSIEMESSAGE_SMTP_FROM: "contact@jessiemessage.com",
+    });
+    configured = await createConfiguredServer(runtimeEnvironment, video ? { requestOrigin: origin, deviceTransition: true,
+      recovery: true, crm: true, broadcast: true, accountClosures: true, backupDirectory: operationsRoot, video: true } : {});
     shutdown = createShutdown(configured);
     if (!configured.pool || !messaging && configured.mailWorker !== null) fail();
     // Access requires valid mail configuration. Stop its real worker owner
@@ -382,6 +416,7 @@ export async function createAuthenticationFixture({ messaging = false } = {}) {
       finally { digest?.fill(0); runtime?.release(); }
     }
     return Object.freeze({ origin, email, password, currentTotp, isTotpFresh, invalidTotp, recoveryCodes: Object.freeze([...recoveryCodes]), expireSession, stop,
+      ...(video ? { primaryFixturePort: port, videoAttestation, videoFileCount: async () => (await readdir(videoRoot)).filter(name => VIDEO_FILE.test(name)).length } : {}),
       ...(messaging ? { client, notificationSubscription, notificationReference, sessionRemainsActive, outsideOrigin: outside,
         externalApiNavigation: (role, kind) => { if (!Object.hasOwn(navigationPaths, role) || !Object.hasOwn(navigationPaths[role], kind)) fail(); return `${outside}/c01-navigation?role=${role}&kind=${kind}`; },
         sessionNavigations: () => navigationObservations.map(value => ({ ...value })) } : {}) });

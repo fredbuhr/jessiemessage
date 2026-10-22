@@ -195,3 +195,43 @@ test("a missing filter refresh handles a failed labels reload without rejecting 
   await assert.doesNotReject(f.ui.loadInbox()); assert.deepEqual(f.errors, []);
   assert.match(f.body.querySelectorAll(".crm-filter-status")[0].textContent, /réessaie/);
 });
+
+test("CRM conversation exports explicitly select videos only under the advertised capability and cancel when the profile closes", async t => {
+  for (const videos of [false, true]) await t.test(videos ? "video archive" : "historical photo archive", async t => {
+    const conversationId = id(100), pending = deferred();
+    const profile = { conversationId, client: { id: id(2), pseudonym: "Synthetic client", email: "synthetic@example.invalid", status: "active" },
+      access: { state: "active", expiresAt: null }, nickname: "", notes: "", reminderAt: null, labels: [], version: "1", updatedAt: 1 };
+    const f = await harness(t, call => call.path.endsWith("/export") ? pending.promise
+      : call.path.endsWith(`/conversations/${conversationId}`) ? structuredClone(profile) : undefined,
+    { conversationExport: { enabled: true, photos: true, maxBytes: videos ? 268435456 : 33554432, ...(videos ? { videos: true } : {}) } });
+    f.ui.selectConversation(conversationId); await f.emit(f.body.querySelectorAll(".crm-fiche-button")[0], "click");
+    const section = f.body.querySelectorAll(".crm-export")[0], checkbox = section.querySelectorAll("input").find(input => input.name === "exportVideos"),
+      download = section.querySelectorAll("button").find(button => button.textContent === "Télécharger le ZIP");
+    assert.equal(checkbox.parentElement.hidden, !videos); assert.equal(checkbox.checked, videos);
+    await f.emit(download, "click");
+    const request = f.calls.find(call => call.path.endsWith("/export"));
+    assert.deepEqual(JSON.parse(JSON.stringify(request.options.body)), videos ? { includePhotos: true, includeVideos: true } : { includePhotos: true });
+    assert.equal(request.options.archive, true); assert.equal(download.disabled, true); assert.equal(checkbox.disabled, true);
+    const dialog = f.body.querySelectorAll(".crm-dialog").find(element => !element.className.includes("crm-label-dialog"));
+    await f.emit(dialog.querySelectorAll("button").find(button => button.textContent === "Fermer"), "click");
+    assert.equal(request.options.signal.aborted, true); assert.equal(download.disabled, false); assert.equal(checkbox.disabled, false);
+    pending.resolve({ incomplete: true }); await f.settle(); assert.deepEqual(f.errors, []); assert.equal(dialog.open, false);
+  });
+});
+
+test("CRM video export can omit originals and restores controls with useful size feedback after a limit refusal", async t => {
+  const conversationId = id(100), pending = deferred();
+  const profile = { conversationId, client: { id: id(2), pseudonym: "Synthetic client", email: "synthetic@example.invalid", status: "active" },
+    access: { state: "active", expiresAt: null }, nickname: "", notes: "", reminderAt: null, labels: [], version: "1", updatedAt: 1 };
+  const f = await harness(t, call => call.path.endsWith("/export") ? pending.promise
+    : call.path.endsWith(`/conversations/${conversationId}`) ? structuredClone(profile) : undefined,
+  { conversationExport: { enabled: true, photos: true, videos: true, maxBytes: 268435456 } });
+  f.ui.selectConversation(conversationId); await f.emit(f.body.querySelectorAll(".crm-fiche-button")[0], "click");
+  const section = f.body.querySelectorAll(".crm-export")[0], checkbox = section.querySelectorAll("input").find(input => input.name === "exportVideos"),
+    download = section.querySelectorAll("button").find(button => button.textContent === "Télécharger le ZIP");
+  checkbox.checked = false; await f.emit(download, "click");
+  assert.equal(f.calls.find(call => call.path.endsWith("/export")).options.body.includeVideos, false);
+  pending.reject(Object.assign(Error("size limit"), { status: 413, code: "conversation_export_limit" })); await f.settle();
+  assert.equal(download.disabled, false); assert.equal(checkbox.disabled, false); assert.equal(checkbox.checked, false);
+  assert.match(section.querySelectorAll(".crm-status")[0].textContent, /photos ou les vidéos/); assert.deepEqual(f.errors, []);
+});

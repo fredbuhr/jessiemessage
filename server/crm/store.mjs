@@ -1,6 +1,7 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { hasConsumedInvitation, invitationConsumptionProjection } from "../access/admission.mjs";
 import { ChatStoreError } from "../chat/store.mjs";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 
 export class CrmStoreError extends ChatStoreError {
   constructor(code) { super(code, "Private contact persistence could not be completed."); this.name = "CrmStoreError"; }
@@ -150,14 +151,14 @@ export function createCrmStore({ pool, chatStore }) {
       version: row ? storedVersion(row.version) : "0", updatedAt: row ? timestamp(row.updated_at) : null, labels };
   }
   return Object.freeze({
-    async assertSchema() {
-      await chatStore.assertSchema(); let connection;
+    async assertSchema(options = {}) {
+      await chatStore.assertSchema(options); let connection;
       try {
         connection = await pool.getConnection();
         const database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
         if (Number(enforcement.foreignKeys) !== 1 || Number(enforcement.checkConstraints) !== 1) state();
-        const migrations = await loadMigrations(), history = await migrationStatus(connection, { database, migrations });
+        const migrations = await loadStoreMigrations(options), history = await migrationStatus(connection, { database, migrations });
         if (history.length < 20 || history.some((item) => item.state !== "applied")) state();
         const tables = await connection.query("SELECT TABLE_NAME AS name, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
         const columns = await connection.query(`SELECT TABLE_NAME AS tableName, COLUMN_NAME AS columnName, DATA_TYPE AS dataType, IS_NULLABLE AS nullable,

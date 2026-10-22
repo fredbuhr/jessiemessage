@@ -8,9 +8,10 @@ import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
 const id = number => number.toString(16).padStart(32, "0");
 const publicRoot = new URL("../../public/", import.meta.url);
-const assets = ["broadcast.html", "broadcast.js", "broadcast-model.js", "broadcast.css", "session-clock.js", "i18n.js", "i18n.css", "i18n-tools.js", "help-link.js",
+const assets = ["broadcast.html", "broadcast.js", "broadcast-model.js", "broadcast.css", "session-clock.js", "i18n.js", "i18n.css", "i18n-tools.js", "i18n-broadcast.js", "help-link.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png",
   "brand/icon-128.png", "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
+const videoBytes = Buffer.from(await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
 let driver;
 before(async () => { driver = await startWebDriver(); }, { timeout: 60000 });
 after(async () => { await driver?.close(); });
@@ -28,19 +29,20 @@ window.clearTimeout=handle=>{polls.delete(handle);return nativeClearTimeout(hand
 window.__runScalePoll=async()=>{const entry=[...polls].at(-1);if(!entry)throw Error('No product history poll');nativeClearTimeout(entry[0]);polls.delete(entry[0]);await entry[1]();};
 `;
 
-async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false } = {}) {
+async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false, videoEnabled = false, holdVideoUpload = false } = {}) {
   const files = new Map(await Promise.all(assets.map(async name => ["/" + name, await readFile(new URL(name, publicRoot))])));
   const html = files.get("/broadcast.html").toString().replace("<head>", '<head><script src="/scale-fixture.js"></script>');
   const contacts = Array.from({ length: 2500 }, (_, index) => ({ id: id(index + 1), client: { id: id(10000 + index), pseudonym: `Scale client ${String(index + 1).padStart(4, "0")}` }, crm: { nickname: "" }, canSend: true }));
   const contactsById = new Map(contacts.map(contact => [contact.id, contact]));
-  const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0 };
+  const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0, uploads: [] };
   const session = () => ({ user: { id: id(8000 + state.owner), role: "admin", pseudonym: `Synthetic Jessie ${state.owner}` }, csrf: state.owner === 1 ? "A".repeat(43) : "B".repeat(42) + "A",
-    expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}) });
+    expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}), ...(videoEnabled ? { videoEnabled: true } : {}) });
   const targets = audience => audience?.mode === "all" ? contacts : audience?.mode === "filtered" ? contacts.slice(0, 175)
     : contacts.filter(contact => audience.conversationIds.includes(contact.id));
   function makeCampaign(input, selected) {
     const at = Date.now();
     return { id: id(9000 + state.campaigns.size), clientCampaignId: input.clientCampaignId, title: input.title, body: input.body, mediaId: null, allowRepeatMedia: false,
+      ...(input.videoId ? { videoId: input.videoId, formatVersion: 3, audienceMode: input.audience.mode } : {}),
       status: "queued", createdAt: at, updatedAt: at, expiresAt: at + 604800000,
       counts: { total: selected.length, pending: selected.length, sending: 0, delivered: 0, skipped: 0, cancelled: 0, failed: 0 }, targetIds: selected.map(contact => contact.id) };
   }
@@ -55,7 +57,7 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
   const server = createServer((request, response) => { void (async () => {
     const url = new URL(request.url, "http://localhost"); state.requests.push({ path: url.pathname + url.search, method: request.method });
     response.setHeader("Cache-Control", "no-store");
-    response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
     const json = (status, body) => { response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" }); response.end(JSON.stringify(body)); };
     const page = (rows, key = "id") => { const after = url.searchParams.get("afterId"), limit = Number(url.searchParams.get("limit") ?? 50); const rest = rows.filter(row => after === null || row[key] > after), values = rest.slice(0, limit), hasMore = rest.length > limit;
       return { values, hasMore, nextCursor: hasMore ? values.at(-1)[key] : null }; };
@@ -64,6 +66,13 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
     if (url.pathname === "/api/admin/crm/contacts") {
       const rows = state.owner === 1 ? url.searchParams.get("q") ? contacts.slice(0, 175) : contacts : [], selected = page(rows);
       json(200, { contacts: selected.values, hasMore: selected.hasMore, nextCursor: selected.nextCursor }); return;
+    }
+    if (url.pathname === "/api/video/admin/assets" && request.method === "POST" && videoEnabled) {
+      assert.equal(request.headers["content-type"], "video/mp4"); assert.equal(request.headers["x-csrf-token"], session().csrf);
+      const chunks = []; for await (const chunk of request) chunks.push(chunk); const bytes = Buffer.concat(chunks);
+      assert.deepEqual(bytes, videoBytes); state.uploads.push(bytes.length);
+      if (!holdVideoUpload) json(201, { id: id(7000), bytes: bytes.length, mime: "video/mp4" });
+      return;
     }
     if (url.pathname === "/api/broadcast/admin/preview" && request.method === "POST") {
       let raw = ""; for await (const chunk of request) raw += chunk;
@@ -228,10 +237,57 @@ test("Chrome: compatibility capability hides global creation while existing 2,50
   try {
     page = await open(source, 390, "en");
     assert.equal(await page.execute("return document.getElementById('audience-options').hidden"), true);
+    assert.equal(await page.execute("return document.getElementById('video-options').hidden"), true);
     await page.click("#history button");
     await waitUntil(() => page.execute("return document.querySelectorAll('#campaign-detail .recipient-list li').length===50"), "compatible version reads the first bounded compact page");
     await page.click("#recipients-more");
     await waitUntil(() => page.execute("return document.querySelector('#campaign-detail .recipient-list li')?.textContent.includes('0051')"), "compatible version reads another compact page");
     assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0); await errors(page);
+  } finally { await page?.close(); await source.close(); }
+});
+
+async function selectVideo(page) {
+  await page.execute("const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0));const transfer=new DataTransfer();transfer.items.add(new File([bytes],'synthetic-broadcast.mp4',{type:'video/mp4'}));const input=document.getElementById('video-file');input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));", videoBytes.toString("base64"));
+  await waitUntil(() => page.execute("const player=document.querySelector('#video-preview video');return player?.videoWidth===96&&player.videoHeight===64&&player.duration>1.5&&!document.getElementById('upload-video').disabled"), "native MP4 preview is decoded before upload");
+}
+
+test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry", { timeout: 120000 }, async () => {
+  for (const [width, language] of [[390, "fr"], [1280, "en"]]) {
+    const source = await fixture({ videoEnabled: true, uncertain: true }); let page;
+    try {
+      page = await open(source, width, language); await chooseMode(page, "filtered"); await compose(page, "Synthetic video campaign", "Synthetic private video caption");
+      await selectVideo(page);
+      assert.equal(source.state.uploads.length, 0); assert.equal(source.state.creates.length, 0);
+      assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled"), true);
+      assert.equal(await page.execute("return document.getElementById('upload-video').textContent"), language === "fr" ? "Charger la vidéo" : "Upload video");
+      assert.equal(await page.execute("return document.querySelector('#video-preview video').autoplay"), false);
+      await page.click("#upload-video");
+      await waitUntil(() => page.execute("return document.getElementById('upload-video').hidden&&!document.getElementById('preview').disabled"), "uploaded attachment enables audience verification");
+      assert.deepEqual(source.state.uploads, [videoBytes.length]); await preview(page, 175);
+      assert.equal(source.state.previewInputs.at(-1).videoId, id(7000)); assert.equal(source.state.previewInputs.at(-1).mediaId, null);
+      await confirmWithKeyboard(page);
+      await waitUntil(() => page.execute("return !document.getElementById('uncertain').hidden&&!document.getElementById('retry').disabled"), "lost campaign response requires an explicit retry");
+      assert.equal(source.state.uploads.length, 1); await page.click("#retry");
+      await waitUntil(() => page.execute("return document.getElementById('uncertain').hidden&&!document.getElementById('campaign-detail').hidden&&document.querySelectorAll('#campaign-detail .recipient-list li').length===50"), "typed campaign is acknowledged and shown with bounded recipient history");
+      assert.equal(source.state.uploads.length, 1); assert.deepEqual(source.state.creates[0], source.state.creates[1]);
+      assert.equal(source.state.creates[0].videoId, id(7000)); assert.equal(source.state.creates[0].mediaId, null);
+      assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length===0&&document.documentElement.scrollWidth<=innerWidth"), true);
+      assert.match(await page.execute("return document.getElementById('campaign-detail').textContent"), language === "fr" ? /Une vidéo jointe/ : /A video attached/);
+      await errors(page);
+    } finally { await page?.close(); await source.close(); }
+  }
+});
+
+test("Chrome broadcast video upload can be cancelled while awaiting ACK without any campaign or automatic upload retry", { timeout: 60000 }, async () => {
+  const source = await fixture({ videoEnabled: true, holdVideoUpload: true }); let page;
+  try {
+    page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await page.click("#upload-video");
+    await waitUntil(() => source.state.uploads.length === 1 && page.execute("return !document.getElementById('cancel-video').hidden"), "native upload awaits its server acknowledgement");
+    assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled&&!document.getElementById('video-progress').hidden"), true);
+    await page.click("#cancel-video");
+    await waitUntil(() => page.execute("return document.getElementById('cancel-video').hidden&&document.getElementById('video-status').textContent.includes('Upload cancelled')"), "cancel aborts the upload and exposes a translated result");
+    await page.click("#remove-video");
+    assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length===0&&document.getElementById('video-progress').hidden"), true);
+    assert.equal(source.state.uploads.length, 1); assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0); await errors(page);
   } finally { await page?.close(); await source.close(); }
 });

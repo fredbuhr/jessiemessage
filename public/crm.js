@@ -64,13 +64,17 @@ export function createCrmUI(adapter) {
   if (tasksLink) { tasksLink.hidden = true; profileDialog.append(tasksLink); }
   const exportSection = node("details", null, "crm-export"); exportSection.hidden = adapter.conversationExport?.enabled !== true;
   exportSection.append(node("summary", "Télécharger la conversation"));
-  const exportHelp = node("p", "Messages et photos partagées, sans notes privées, tags ni photos non envoyées.", "crm-help");
+  const exportVideoEnabled = adapter.conversationExport?.videos === true;
+  const exportHelp = node("p", exportVideoEnabled ? "Messages, photos et vidéos partagés, sans notes privées, tags ni pièces jointes non envoyées." : "Messages et photos partagées, sans notes privées, tags ni photos non envoyées.", "crm-help");
   const exportPhotos = input("checkbox", "exportPhotos"); exportPhotos.checked = adapter.conversationExport?.photos === true;
   const exportPhotosLabel = node("label", null, "crm-check"); exportPhotosLabel.hidden = adapter.conversationExport?.photos !== true;
   exportPhotosLabel.append(exportPhotos, node("span", "Inclure les photos partagées"));
+  const exportVideos = input("checkbox", "exportVideos"); exportVideos.checked = exportVideoEnabled;
+  const exportVideosLabel = node("label", null, "crm-check"); exportVideosLabel.hidden = !exportVideoEnabled;
+  exportVideosLabel.append(exportVideos, node("span", "Inclure les vidéos partagées"));
   const exportButton = button("Télécharger le ZIP", () => { void downloadConversation(); }, "button secondary");
   const exportStatus = node("p", null, "crm-status"); exportStatus.setAttribute("role", "status"); exportStatus.setAttribute("aria-live", "polite");
-  exportSection.append(exportHelp, exportPhotosLabel, exportButton, exportStatus, node("p", "Le fichier se lit sans connexion. Conserve-le dans un endroit privé.", "crm-help")); profileDialog.append(exportSection);
+  exportSection.append(exportHelp, exportPhotosLabel, exportVideosLabel, exportButton, exportStatus, node("p", "Le fichier se lit sans connexion. Conserve-le dans un endroit privé.", "crm-help")); profileDialog.append(exportSection);
 
   const manager = node("dialog", null, "crm-dialog crm-label-dialog"); manager.setAttribute("aria-labelledby", "crm-label-title");
   const managerTitle = node("h2", "Tags et groupes"); managerTitle.id = "crm-label-title";
@@ -244,7 +248,7 @@ export function createCrmUI(adapter) {
     try { await loadLabels(); if (profileOpen && currentDetail(state, ticket)) await loadProfile(); } catch (error) { if (profileOpen && currentDetail(state, ticket)) await report(error, profileStatus); }
   }
   function closeProfile(restore = true) {
-    exportEpoch += 1; exportAbort?.abort(); exportAbort = null; exportBusy = false; exportButton.disabled = false; exportPhotos.disabled = false; exportSection.open = false; exportSection.hidden = true; status(exportStatus, "");
+    exportEpoch += 1; exportAbort?.abort(); exportAbort = null; exportBusy = false; exportButton.disabled = false; exportPhotos.disabled = false; exportVideos.disabled = false; exportSection.open = false; exportSection.hidden = true; status(exportStatus, "");
     for (const url of exportUrls) URL.revokeObjectURL(url); exportUrls.clear();
     if (tasksLink) { tasksLink.removeAttribute("href"); tasksLink.hidden = true; }
     profileOpen = false; invalidateDetail(state); detailRequest += 1; detailBusy = false; if (profileDialog.open) profileDialog.close();
@@ -259,9 +263,10 @@ export function createCrmUI(adapter) {
   async function downloadConversation() {
     if (!profileOpen || !profileDialog.open || exportBusy || detailBusy || !state.selected || adapter.conversationExport?.enabled !== true) return;
     const ticket = detailTicket(state), epoch = ++exportEpoch, controller = new AbortController(); exportAbort = controller; exportBusy = true;
-    exportButton.disabled = true; exportPhotos.disabled = true; status(exportStatus, "Préparation de la conversation…");
+    exportButton.disabled = true; exportPhotos.disabled = true; exportVideos.disabled = true; status(exportStatus, "Préparation de la conversation…");
     try {
-      const blob = await ask(`/conversations/${ticket.id}/export`, { mutation: true, archive: true, body: { includePhotos: exportPhotos.checked }, signal: controller.signal });
+      const blob = await ask(`/conversations/${ticket.id}/export`, { mutation: true, archive: true,
+        body: { includePhotos: exportPhotos.checked, ...(exportVideoEnabled ? { includeVideos: exportVideos.checked } : {}) }, signal: controller.signal });
       if (!profileOpen || !profileDialog.open || epoch !== exportEpoch || !currentDetail(state, ticket) || controller.signal.aborted) return;
       const url = URL.createObjectURL(blob); exportUrls.add(url); const link = document.createElement("a"); link.href = url; link.download = `JessieMessage-conversation-${ticket.id}.zip`;
       document.body.append(link); try { link.click(); } finally { link.remove(); }
@@ -271,12 +276,12 @@ export function createCrmUI(adapter) {
       if (!profileOpen || epoch !== exportEpoch || !currentDetail(state, ticket) || controller.signal.aborted || error.stale || error.name === "AbortError") return;
       if (error.status === 401 || error.status === 403) { await report(error, exportStatus); return; }
       const message = error.code === "conversation_export_limit"
-        ? "La conversation dépasse la limite de téléchargement. Essaie sans les photos si elles sont incluses."
+        ? exportVideoEnabled ? "La conversation dépasse la limite de téléchargement. Essaie sans les photos ou les vidéos si elles sont incluses." : "La conversation dépasse la limite de téléchargement. Essaie sans les photos si elles sont incluses."
         : error.status === 429 ? "Une préparation est déjà en cours ou vient de se terminer. Patiente trente secondes puis réessaie."
         : "Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.";
       status(exportStatus, message, true);
     } finally {
-      if (epoch === exportEpoch) { exportBusy = false; exportAbort = null; exportButton.disabled = false; exportPhotos.disabled = false; }
+      if (epoch === exportEpoch) { exportBusy = false; exportAbort = null; exportButton.disabled = false; exportPhotos.disabled = false; exportVideos.disabled = false; }
     }
   }
   profileForm.addEventListener("submit", (event) => { event.preventDefault(); void saveProfile(); });

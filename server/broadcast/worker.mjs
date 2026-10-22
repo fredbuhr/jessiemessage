@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { encryptMessageBody, messageFingerprint } from "../chat/crypto.mjs";
+import { encryptMessageBody, messageFingerprint, videoMessageFingerprint } from "../chat/crypto.mjs";
 import { openPayload, verifyRecipientProof } from "./crypto.mjs";
 
 export class BroadcastWorkerError extends Error {
@@ -12,8 +12,8 @@ function observe(callback, event) {
   if (!callback) return;
   try { void Promise.resolve(callback(Object.freeze(event))).catch(() => {}); } catch {}
 }
-export function createBroadcastWorker({ store, authStore, key, clock = Date.now, pollMilliseconds = 2000, batchSize = 5, onState, onError } = {}) {
-  if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || !Number.isInteger(pollMilliseconds)
+export function createBroadcastWorker({ store, authStore, key, videoEnabled = false, clock = Date.now, pollMilliseconds = 2000, batchSize = 5, onState, onError } = {}) {
+  if (!Buffer.isBuffer(key) || key.length !== 32 || typeof videoEnabled !== "boolean" || typeof clock !== "function" || !Number.isInteger(pollMilliseconds)
     || pollMilliseconds < 1000 || pollMilliseconds > 300000 || !Number.isInteger(batchSize) || batchSize < 1 || batchSize > 20
     || typeof authStore?.consumeRateLimit !== "function" || ["claim", "deliver", "defer", "fail"].some((method) => typeof store?.[method] !== "function")
     || onState !== undefined && typeof onState !== "function" || onError !== undefined && typeof onError !== "function") throw new BroadcastWorkerError();
@@ -39,16 +39,17 @@ export function createBroadcastWorker({ store, authStore, key, clock = Date.now,
         try {
           if (["campaignId", "adminId", "conversationId", "clientId", "messageId", "clientMessageId", "leaseToken"].some((field) => !bytes(job[field]))
             || !(job.mediaId === null || bytes(job.mediaId)) || typeof job.allowRepeatMedia !== "boolean") throw new BroadcastWorkerError();
-          const payload = openPayload(job.payloadEncrypted, key, { campaignId: job.campaignId, adminId: job.adminId });
-          const member = payload.version === 2 ? verifyRecipientProof(key, job, job.clientMessageId)
+          const payload = openPayload(job.payloadEncrypted, key, { campaignId: job.campaignId, adminId: job.adminId }, { video: videoEnabled });
+          const member = payload.version >= 2 ? verifyRecipientProof(key, job, job.clientMessageId)
             : payload.conversationIds.includes(job.conversationId.toString("hex"));
           if (!member || payload.mediaId !== (job.mediaId?.toString("hex") ?? null)
-            || payload.allowRepeatMedia !== job.allowRepeatMedia) throw new BroadcastWorkerError();
+            || payload.allowRepeatMedia !== job.allowRepeatMedia
+            || (payload.version === 3 ? !bytes(job.videoId) || payload.videoId !== job.videoId.toString("hex") : job.videoId !== undefined)) throw new BroadcastWorkerError();
           const current = now(); let retryAfter = null;
           // Legacy jobs keep their original budgets. Compact campaigns have a
           // separate administrator budget, checked before the shared global
           // bucket, leaving normal manual-send capacity available.
-          const budgets = payload.version === 2
+          const budgets = payload.version >= 2
             ? [["jessiemessage:broadcast-delivery-rate:v2:", "user-send", job.adminId.toString("hex"), 120],
               ["jessiemessage:chat-rate:v1:", "global-send", "all", 300]]
             : [["jessiemessage:chat-rate:v1:", "global-send", "all", 300],
@@ -67,10 +68,10 @@ export function createBroadcastWorker({ store, authStore, key, clock = Date.now,
             continue;
           }
           const binding = { messageId: job.messageId, conversationId: job.conversationId, senderId: job.adminId };
-          const body = payload.mediaId === null ? payload.body : JSON.stringify({ mediaId: payload.mediaId, caption: payload.body });
+          const body = payload.version === 3 ? JSON.stringify({ videoId: payload.videoId, caption: payload.body }) : payload.mediaId === null ? payload.body : JSON.stringify({ mediaId: payload.mediaId, caption: payload.body });
           const message = { id: job.messageId, clientMessageId: job.clientMessageId,
-            bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: messageFingerprint(body, key, binding),
-            ...(job.mediaId === null ? {} : { mediaId: job.mediaId }) };
+            bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: payload.version === 3 ? videoMessageFingerprint(body, key, binding) : messageFingerprint(body, key, binding),
+            ...(job.mediaId === null ? {} : { mediaId: job.mediaId }), ...(payload.version === 3 ? { videoId: job.videoId } : {}) };
           const deliveryAt = now();
           if (stopped) { await returnUnstartedClaim(); break; }
           deliveryStarted = true;

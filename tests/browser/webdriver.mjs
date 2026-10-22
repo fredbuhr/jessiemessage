@@ -1,5 +1,5 @@
 // Minimal W3C WebDriver client for local-only Chrome rehearsals. No CDP calls,
-// npm browser dependency, implicit skip or production origin is supported.
+// npm browser dependency, implicit skip or external network is supported.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { constants } from "node:fs";
@@ -58,8 +58,12 @@ function browserOrigin(value) {
 // Cross-origin rehearsals use one of two fixed HTTPS loopback pairs on one port:
 // the transition aliases or 127.0.0.1/localhost for native cross-site cookie tests.
 // The WebDriver command transport stays numeric/localhost HTTP loopback only.
-export function createWebDriverNavigationPolicy(origin, siblingOrigins = []) {
-  const base = browserOrigin(origin), parsed = new URL(base);
+export function createWebDriverNavigationPolicy(origin, siblingOrigins = [], primaryFixturePort = null) {
+  if (primaryFixturePort !== null && (!Number.isSafeInteger(primaryFixturePort) || primaryFixturePort < 1024
+    || primaryFixturePort > 65535 || origin !== "https://jessiemessage.com" || !Array.isArray(siblingOrigins) || siblingOrigins.length)) {
+    throw new Error("Primary rehearsal requires one fixed authority mapped to an explicit loopback port");
+  }
+  const base = primaryFixturePort === null ? browserOrigin(origin) : origin, parsed = new URL(base);
   if (!Array.isArray(siblingOrigins) || siblingOrigins.length > 1) throw new Error("WebDriver requires a bounded sibling-origin allowlist");
   const origins = new Set([base]);
   for (const sibling of siblingOrigins) {
@@ -70,7 +74,9 @@ export function createWebDriverNavigationPolicy(origin, siblingOrigins = []) {
       || parsed.hostname === url.hostname || url.port !== parsed.port) throw new Error("WebDriver sibling navigation requires a fixed HTTPS loopback pair on one port");
     origins.add(selected);
   }
-  return Object.freeze({ origin: base, transitionAlias: transitionHosts.has(parsed.hostname), url(path) {
+  return Object.freeze({ origin: base, transitionAlias: transitionHosts.has(parsed.hostname),
+    primaryFixturePort, resolverRules: primaryFixturePort === null ? null
+      : "MAP jessiemessage.com 127.0.0.1:" + primaryFixturePort + ", MAP * ~NOTFOUND", url(path) {
     const url = new URL(path, base);
     if (!origins.has(url.origin) || url.username || url.password) throw new Error("WebDriver navigation must stay on its allowed loopback origins");
     return url.href;
@@ -200,12 +206,12 @@ export async function startWebDriver() {
 
   return {
     close,
-    async browser({ origin, siblingOrigins = [], width = 1280, height = width < 800 ? 844 : 900, acceptInsecureCerts = false } = {}) {
+    async browser({ origin, siblingOrigins = [], width = 1280, height = width < 800 ? 844 : 900, acceptInsecureCerts = false, primaryFixturePort = null } = {}) {
       if (closed) throw new Error("WebDriver already closed");
-      const navigation = createWebDriverNavigationPolicy(origin, siblingOrigins), baseUrl = navigation.origin;
+      const navigation = createWebDriverNavigationPolicy(origin, siblingOrigins, primaryFixturePort), baseUrl = navigation.origin;
       if (acceptInsecureCerts && !baseUrl.startsWith("https:")) throw new Error("Insecure test certificates require HTTPS loopback");
       const value = await request("POST", "/session", { capabilities: { alwaysMatch: { browserName: "chrome", acceptInsecureCerts, "goog:chromeOptions": {
-        binary: chromeBin, args: ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-background-networking", "--disable-component-update", "--disable-default-apps", "--disable-sync", "--no-first-run", "--lang=fr-FR", "--window-size=1280,900", ...(navigation.transitionAlias ? ["--no-proxy-server", "--host-resolver-rules=MAP jessiemessage.localhost 127.0.0.1, MAP recette.jessiemessage.localhost 127.0.0.1, MAP * ~NOTFOUND"] : [])],
+        binary: chromeBin, args: ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-background-networking", "--disable-component-update", "--disable-default-apps", "--disable-sync", "--no-first-run", "--lang=fr-FR", "--window-size=1280,900", ...(navigation.resolverRules ? ["--no-proxy-server", "--host-resolver-rules=" + navigation.resolverRules] : navigation.transitionAlias ? ["--no-proxy-server", "--host-resolver-rules=MAP jessiemessage.localhost 127.0.0.1, MAP recette.jessiemessage.localhost 127.0.0.1, MAP * ~NOTFOUND"] : [])],
         prefs: { "intl.accept_languages": "fr-FR,fr" },
         ...(width < 800 ? { mobileEmulation: { deviceMetrics: { width, height, pixelRatio: 1, mobile: true, touch: true } } } : {})
       } } } });

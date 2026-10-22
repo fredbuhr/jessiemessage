@@ -9,6 +9,9 @@ import { withPrivateDirectory } from "../server/files/private-directory.mjs";
 import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironment } from "../server/config/runtime-notifications-file.mjs";
 import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment, copyRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
+import { loadRuntimeVideoEnvironment, copyRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
+import { loadVideoMigrations } from "../server/video/migrations.mjs";
+import { copyCheckpointVideo, verifyCheckpointVideo } from "../server/backup/video-checkpoint-files.mjs";
 import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile, checkpointReceiptVersion } from "../server/backup/profiles.mjs";
 import { captureOperationalState, operationalStateHash, writeOperationalCheckpoint, readOperationalCheckpoint, assertNoOperationalRestore, OPERATIONAL_CHECKPOINT } from "../server/backup/operational-checkpoint.mjs";
 import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging.mjs";
@@ -17,7 +20,7 @@ import { readManifest, verifyBackupManifest } from "../server/backup/manifest.mj
 import { assertBackupSnapshot } from "../server/backup/snapshot.mjs";
 import { assertBackupInspection, createBackupInspectionPool } from "../server/backup/inspection.mjs";
 import { diagnoseBackupInspection } from "../server/backup/inspection-diagnostics.mjs";
-import { APPLICATION_COVERAGE, validateApplicationCoverage, createApplicationInspectionPool, assertApplicationTableInspection } from "../server/backup/application-scope.mjs";
+import { APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE, validateApplicationCoverage, validateVideoApplicationCoverage, createApplicationInspectionPool, assertApplicationTableInspection, assertVideoApplicationTableInspection } from "../server/backup/application-scope.mjs";
 import { createdMigrationTables, inspectHistory, loadMigrations } from "../server/db/migrations.mjs";
 import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { hashCheckpointFile, writeCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
@@ -57,9 +60,9 @@ export function parseArguments(args) {
   if (!path(value.privateDirectory) || !path(value.destination) || inside(value.privateDirectory, REPOSITORY) || inside(value.destination, REPOSITORY)
     || value.privatePathMode !== "linux-dirfd" || !application && !/^[A-Za-z0-9_]{1,80}$/.test(value.inspectionUser)
     || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(basename(value.destination))
-    || Object.hasOwn(value, "profile") && !CHECKPOINT_RUNTIME_PROFILES.includes(value.profile)
+    || Object.hasOwn(value, "profile") && (!CHECKPOINT_RUNTIME_PROFILES.includes(value.profile) || !checkpointBackupProfile(value.profile, application))
     || Object.hasOwn(value, "operationsDirectory") && (!path(value.operationsDirectory) || inside(value.operationsDirectory, REPOSITORY)
-      || value.profile !== "photos-notify-recovery-crm-broadcast" || inside(value.operationsDirectory, value.destination))) fail("PRIVATE_CHECKPOINT_USAGE");
+      || !["photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(value.profile) || inside(value.operationsDirectory, value.destination))) fail("PRIVATE_CHECKPOINT_USAGE");
   return Object.fromEntries([...FIELDS, ...["profile", "operationsDirectory"].filter(name => Object.hasOwn(value, name))].map(name => [name, value[name]]));
 }
 function options(value) {
@@ -110,14 +113,15 @@ export async function inspectCheckpointIdentity(env, { signal } = {}) {
     active(signal);
   } finally { try { await connection?.release(); } finally { await pool?.end(); } }
 }
-export async function inspectApplicationCheckpointIdentity(env, { signal } = {}) {
+export async function inspectApplicationCheckpointIdentity(env, { signal, video = false } = {}) {
   let pool, connection;
   try {
     active(signal); pool = await createApplicationInspectionPool(env); connection = await pool.getConnection();
-    await assertApplicationTableInspection(connection, env.JESSIEMESSAGE_DB_NAME);
-    const migrations = await loadMigrations();
-    const ledger = await connection.query("SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 33");
-    if (migrations.length !== 33 || ledger.length !== 33 || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
+    if (typeof video !== "boolean") fail("PRIVATE_CHECKPOINT_CONFIGURATION");
+    await (video ? assertVideoApplicationTableInspection : assertApplicationTableInspection)(connection, env.JESSIEMESSAGE_DB_NAME);
+    const migrations = await (video ? loadVideoMigrations : loadMigrations)(), count = video ? 36 : 33;
+    const ledger = await connection.query(`SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT ${count}`);
+    if (migrations.length !== count || ledger.length !== count || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     active(signal);
   } finally { try { await connection?.release(); } finally { await pool?.end(); } }
 }
@@ -181,7 +185,7 @@ export async function gzipCheckpointSql(scope, { signal } = {}) {
 
 // A single native tar process reads only the explicit, already verified members.
 // The archive output is an exclusive pinned FD, never a filename opened by tar.
-export async function archiveCheckpoint(scope, inventory, { signal, spawnClient = spawn, operations = false } = {}) {
+export async function archiveCheckpoint(scope, inventory, { signal, spawnClient = spawn, operations = false, video } = {}) {
   let output, input, directory, child;
   const run = (args, stdio, collect = false, sink = null) => new Promise((yes, no) => {
     let length = 0, diagnostics = 0, text = "", failed = false;
@@ -211,7 +215,7 @@ export async function archiveCheckpoint(scope, inventory, { signal, spawnClient 
     const pinned = await scope.assertReady(), actual = await directory.stat({ bigint: true });
     if (pinned.dev !== actual.dev || pinned.ino !== actual.ino) fail("PRIVATE_CHECKPOINT_DRIFT");
     output = await exclusive(scope, "checkpoint.tar.gz");
-    await run(["--create", "--gzip", "--file=-", "--directory=/proc/self/fd/3", "--", "manifest.json", "database.sql.gz", "receipt.json", "media", ...(operations ? [OPERATIONAL_CHECKPOINT] : [])], ["ignore", "pipe", "pipe", directory.fd], false, output);
+    await run(["--create", "--gzip", "--file=-", "--directory=/proc/self/fd/3", "--", "manifest.json", "database.sql.gz", "receipt.json", "media", ...(video ? ["video"] : []), ...(operations ? [OPERATIONAL_CHECKPOINT] : [])], ["ignore", "pipe", "pipe", directory.fd], false, output);
     await output.sync(); const stats = await output.stat({ bigint: true }); regular(stats);
     if (stats.size < 1n || stats.size > BigInt(MAX_ARCHIVE)) fail("PRIVATE_CHECKPOINT_ARCHIVE");
     await visible(scope, "checkpoint.tar.gz", stats); await output.close(); output = null;
@@ -219,7 +223,7 @@ export async function archiveCheckpoint(scope, inventory, { signal, spawnClient 
     if (!same(stats, await input.stat({ bigint: true }))) fail("PRIVATE_CHECKPOINT_DRIFT");
     const listing = await run(["--list", "--gzip", "--file=-"], [input.fd, "pipe", "pipe"], true);
     const names = listing.trimEnd().split("\n").sort();
-    const expected = ["manifest.json", "database.sql.gz", "receipt.json", "media/", ...inventory.files.map(file => `media/${file.name}`), ...(operations ? [OPERATIONAL_CHECKPOINT] : [])].sort();
+    const expected = ["manifest.json", "database.sql.gz", "receipt.json", "media/", ...inventory.files.map(file => `media/${file.name}`), ...(video ? ["video/", ...video.files.map(file => `video/${file.name}`)] : []), ...(operations ? [OPERATIONAL_CHECKPOINT] : [])].sort();
     if (JSON.stringify(names) !== JSON.stringify(expected)) fail("PRIVATE_CHECKPOINT_ARCHIVE");
     if (!same(stats, await input.stat({ bigint: true }))) fail("PRIVATE_CHECKPOINT_DRIFT");
     await visible(scope, "checkpoint.tar.gz", stats); await scope.sync();
@@ -233,31 +237,35 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
   scopeOperation = withPrivateDirectory, loadEnvironment, inspectTools = inspectCheckpointTools,
   inspectIdentity = inspectCheckpointIdentity, diagnoseIdentity = diagnoseCheckpointIdentity, inspectApplicationIdentity = inspectApplicationCheckpointIdentity,
   readSecret = readPassword, prepare = backupMain, dump = dumpCloneSql, copyMedia = copyCheckpointMedia, verifyMedia = verifyCheckpointMedia,
+  copyVideo = copyCheckpointVideo, verifyVideo = verifyCheckpointVideo,
   getManifest = readManifest, verifyManifest = verifyBackupManifest, compareSnapshots = assertBackupSnapshot,
   compress = gzipCheckpointSql, archive = archiveCheckpoint, verifyArchive = verifyCheckpointArchive, clock = Date.now } = {}) {
   let env, loaded, password = "", keys;
   try {
     const selected = options(value); active(signal);
     const application = selected.command.endsWith("-application"), selectedProfile = checkpointBackupProfile(selected.profile, application);
-    const { recovery, crm, broadcast, name: backupProfile, manifestProfile: profile, manifestVersion } = selectedProfile;
+    const { recovery, crm, broadcast, video, name: backupProfile, manifestProfile: profile, manifestVersion } = selectedProfile;
+    const tableCount = video ? 36 : 33, applicationCoverage = video ? VIDEO_APPLICATION_COVERAGE : APPLICATION_COVERAGE;
     const operational = Object.hasOwn(selected, "operationsDirectory"), receiptVersion = checkpointReceiptVersion(selectedProfile, operational);
-    loadEnvironment ??= broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
+    loadEnvironment ??= video ? loadRuntimeVideoEnvironment : broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let parameters; try { parameters = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("PRIVATE_CHECKPOINT_ENVIRONMENT"); }
     if (recovery) parameters = { ...parameters, originProfile: "primary", recovery: true };
     loaded = await loadEnvironment(selected.privateDirectory, parameters);
-    env = broadcast ? copyRuntimeBroadcastEnvironment(loaded, { originProfile: "primary", recovery: true })
+    env = video ? copyRuntimeVideoEnvironment(loaded, { originProfile: "primary", recovery: true }) : broadcast ? copyRuntimeBroadcastEnvironment(loaded, { originProfile: "primary", recovery: true })
       : crm ? copyRuntimeCrmEnvironment(loaded, { originProfile: "primary", recovery: true })
       : recovery ? copyRuntimeNotificationsEnvironment(loaded, { originProfile: "primary", recovery: true }) : copyRuntimeNotificationsEnvironment(loaded);
     if (selected.inspectionUser === env.JESSIEMESSAGE_RUNTIME_DB_USER || inside(selected.destination, env.JESSIEMESSAGE_MEDIA_ROOT)
       || inside(env.JESSIEMESSAGE_MEDIA_ROOT, selected.destination)) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     if (operational && (inside(selected.operationsDirectory, env.JESSIEMESSAGE_MEDIA_ROOT) || inside(env.JESSIEMESSAGE_MEDIA_ROOT, selected.operationsDirectory)
       || inside(selected.privateDirectory, selected.operationsDirectory) || inside(selected.operationsDirectory, selected.privateDirectory))) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
+    if (video && (inside(selected.destination, env.JESSIEMESSAGE_VIDEO_ROOT) || inside(env.JESSIEMESSAGE_VIDEO_ROOT, selected.destination)
+      || operational && (inside(selected.operationsDirectory, env.JESSIEMESSAGE_VIDEO_ROOT) || inside(env.JESSIEMESSAGE_VIDEO_ROOT, selected.operationsDirectory)))) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     if (operational) await scopeOperation(selected.operationsDirectory, assertNoOperationalRestore);
     await inspectTools(); active(signal);
     return await scopeOperation(dirname(selected.destination), async parent => {
       await absent(parent, basename(selected.destination));
-      if (["check", "check-application"].includes(selected.command)) return { status: application ? "application_precheck_passed" : "ready_for_input", profile, schema: 33,
-        ...(application ? { coverage: APPLICATION_COVERAGE, passwordInputRequired: false } : {}),
+      if (["check", "check-application"].includes(selected.command)) return { status: application ? "application_precheck_passed" : "ready_for_input", profile, schema: tableCount,
+        ...(application ? { coverage: applicationCoverage, passwordInputRequired: false } : {}),
         databaseConnected: false, checkpointSaved: false, started: false, migrationPerformed: false };
       try { password = application ? env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD : await readSecret(inputStream); if (typeof password !== "string" || !password || !password.isWellFormed()
         || Buffer.byteLength(password) > 4096 || /[\x00-\x1f\x7f]/.test(password)) fail("PRIVATE_CHECKPOINT_PASSWORD"); }
@@ -269,11 +277,11 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         return { status: "inspection_diagnosed", profile, databaseConnected: true, diagnosis,
           checkpointSaved: false, captureAllowed: false, started: false, migrationPerformed: false };
       }
-      await (application ? inspectApplicationIdentity : inspectIdentity)(env, { signal }); active(signal);
-      if (["inspect", "inspect-application"].includes(selected.command)) return { status: application ? "application_inspection_verified" : "inspection_verified", profile, tables: 33, migrations: 33,
-        ...(application ? { coverage: APPLICATION_COVERAGE, passwordInputRequired: false } : {}),
+      await (application ? inspectApplicationIdentity : inspectIdentity)(env, { signal, ...(video ? { video: true } : {}) }); active(signal);
+      if (["inspect", "inspect-application"].includes(selected.command)) return { status: application ? "application_inspection_verified" : "inspection_verified", profile, tables: tableCount, migrations: tableCount,
+        ...(application ? { coverage: applicationCoverage, passwordInputRequired: false } : {}),
         databaseConnected: true, ...(application ? { applicationTablesVerified: true } : { inspectionPrivilegesVerified: true }), checkpointSaved: false, started: false, migrationPerformed: false };
-      keys = Object.fromEntries([["totpKey", "MFA"], ["mailKey", "MAIL"], ["messageKey", "MESSAGE"], ["mediaKey", "MEDIA"], ["notificationKey", "NOTIFICATIONS"], ...(crm ? [["crmKey", "CRM"]] : [])]
+      keys = Object.fromEntries([["totpKey", "MFA"], ["mailKey", "MAIL"], ["messageKey", "MESSAGE"], ["mediaKey", "MEDIA"], ["notificationKey", "NOTIFICATIONS"], ...(crm ? [["crmKey", "CRM"]] : []), ...(video ? [["videoKey", "VIDEO"]] : [])]
         .map(([name, field]) => [name, Buffer.from(env[`JESSIEMESSAGE_${field}_KEY`], "base64url")]));
       const destinationIdentity = await childDirectory(parent, basename(selected.destination));
       return scopeOperation(selected.destination, async scope => {
@@ -284,19 +292,19 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
             { signal, outputStream: { write() {} } });
           if (result?.command !== "prepare" || result.verified !== true || result.prepared !== true || result.restored !== false) fail("PRIVATE_CHECKPOINT_BACKUP");
           const manifest = await getManifest(`${selected.destination}/${name}`), payload = await verifyManifest({ manifest, keys });
-          if (manifest.version !== manifestVersion || manifest.profile !== profile || payload?.snapshot?.counts?.tables !== 33
-            || application && payload.snapshot.version !== 2) fail("PRIVATE_CHECKPOINT_BACKUP");
-          if (application && validateApplicationCoverage(payload.snapshot.coverage).tables !== 33) fail("PRIVATE_CHECKPOINT_BACKUP");
+          if (manifest.version !== manifestVersion || manifest.profile !== profile || payload?.snapshot?.counts?.tables !== tableCount
+            || application && payload.snapshot.version !== (video ? 3 : 2)) fail("PRIVATE_CHECKPOINT_BACKUP");
+          if (application && (video ? validateVideoApplicationCoverage : validateApplicationCoverage)(payload.snapshot.coverage).tables !== tableCount) fail("PRIVATE_CHECKPOINT_BACKUP");
           return payload;
         };
         const before = await prepareAt("manifest.json");
-        const binding = operational ? { database: env.JESSIEMESSAGE_DB_NAME, rootFingerprint: before.snapshot.capacity?.rootFingerprint } : null;
+        const binding = operational ? { database: env.JESSIEMESSAGE_DB_NAME, rootFingerprint: before.snapshot.capacity?.rootFingerprint, ...(video ? { videoRootFingerprint: before.snapshot.video?.capacity?.rootFingerprint } : {}) } : null;
         const captureOperations = () => scopeOperation(selected.operationsDirectory, scope => captureOperationalState(scope, { key: keys.crmKey, binding, signal }));
         const operationsBefore = operational ? await captureOperations() : null;
         let output;
         const configuration = { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT };
         const target = { user: application ? env.JESSIEMESSAGE_RUNTIME_DB_USER : selected.inspectionUser, database: env.JESSIEMESSAGE_DB_NAME };
-        const tableOptions = application ? { tables: [...createdMigrationTables(await loadMigrations()), "schema_migrations"].sort() } : {};
+        const tableOptions = application ? { tables: [...createdMigrationTables(await (video ? loadVideoMigrations : loadMigrations)()), "schema_migrations"].sort() } : {};
         let sql;
         try {
           output = await exclusive(scope, "database.sql");
@@ -311,6 +319,13 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         const inventory = await scopeOperation(env.JESSIEMESSAGE_MEDIA_ROOT, sourceScope => scopeOperation(`${selected.destination}/media`, async targetScope => {
           directoryIdentity(await targetScope.assertReady(), mediaIdentity); return copyMedia(sourceScope, targetScope, { signal });
         }));
+        const videoIdentity = video ? await childDirectory(scope, "video") : null;
+        const videoInventory = video ? await scopeOperation(env.JESSIEMESSAGE_VIDEO_ROOT, sourceScope => scopeOperation(`${selected.destination}/video`, async targetScope => {
+          directoryIdentity(await targetScope.assertReady(), videoIdentity); return copyVideo(sourceScope, targetScope, { signal });
+        })) : null;
+        const verifyVideoCopy = () => scopeOperation(`${selected.destination}/video`, async targetScope => {
+          directoryIdentity(await targetScope.assertReady(), videoIdentity); return verifyVideo(targetScope, videoInventory, { signal });
+        });
         const second = await dump(scope, target, configuration, password, { signal, ...tableOptions });
         if (second.sqlBytes !== saved.bytes || second.sqlSha256 !== saved.sha256) fail("PRIVATE_CHECKPOINT_DRIFT");
         const after = await prepareAt("manifest-after.json"); compareSnapshots({ expected: before.snapshot, actual: after.snapshot, mode: "exact" });
@@ -318,14 +333,18 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         await scopeOperation(`${selected.destination}/media`, async targetScope => {
           directoryIdentity(await targetScope.assertReady(), mediaIdentity); return verifyMedia(targetScope, inventory, { signal });
         });
+        if (video) {
+          await scopeOperation(env.JESSIEMESSAGE_VIDEO_ROOT, sourceScope => verifyVideo(sourceScope, videoInventory, { signal }));
+          await verifyVideoCopy();
+        }
         active(signal); await compress(scope, { signal });
         const compressed = await hashCheckpointFile(scope, "database.sql.gz", { signal, maxBytes: 16 * 1024 * 1024 });
         const manifest = await hashCheckpointFile(scope, "manifest.json", { signal });
         const now = clock(); if (!Number.isSafeInteger(now) || now < 0 || now > 253402300799999) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
         const receipt = { format: "jessiemessage-private-checkpoint", version: receiptVersion, profile,
-          ...(application ? { coverage: APPLICATION_COVERAGE } : {}), createdAt: now,
-          schema: { tables: 33, migrations: 33 }, sql: { file: "database.sql.gz", ...compressed, uncompressedBytes: saved.bytes, uncompressedSha256: saved.sha256 },
-          manifest: { file: "manifest.json", sha256: manifest.sha256 }, media: inventory };
+          ...(application ? { coverage: applicationCoverage } : {}), createdAt: now,
+          schema: { tables: tableCount, migrations: tableCount }, sql: { file: "database.sql.gz", ...compressed, uncompressedBytes: saved.bytes, uncompressedSha256: saved.sha256 },
+          manifest: { file: "manifest.json", sha256: manifest.sha256 }, media: inventory, ...(video ? { video: videoInventory } : {}) };
         if (operational) {
           if (operationalStateHash(await captureOperations()) !== operationalStateHash(operationsBefore)) fail("PRIVATE_CHECKPOINT_DRIFT");
           receipt.operations = await writeOperationalCheckpoint(scope, operationsBefore, receipt, keys.crmKey, { signal });
@@ -333,17 +352,22 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         }
         await writeCheckpointReceipt(scope, receipt, { signal });
         const receiptFile = await hashCheckpointFile(scope, "receipt.json", { signal });
-        const archived = await archive(scope, inventory, { signal, ...(operational ? { operations: true } : {}) });
+        const archived = await archive(scope, inventory, { signal, ...(video ? { video: videoInventory } : {}), ...(operational ? { operations: true } : {}) });
         const archiveCheck = await verifyArchive(scope, [
           { name: "manifest.json", bytes: manifest.bytes, sha256: manifest.sha256 },
           { name: "database.sql.gz", ...compressed }, { name: "receipt.json", ...receiptFile },
           ...inventory.files.map(file => ({ ...file, name: `media/${file.name}` })),
+          ...(video ? videoInventory.files.map(file => ({ ...file, name: `video/${file.name}` })) : []),
           ...(operational ? [{ name: receipt.operations.file, bytes: receipt.operations.bytes, sha256: receipt.operations.sha256 }] : []),
-        ], { signal });
+        ], { signal, ...(video ? { video: true } : {}) });
         if (archiveCheck.archiveBytes !== archived.bytes || archiveCheck.archiveSha256 !== archived.sha256) fail("PRIVATE_CHECKPOINT_ARCHIVE");
         await scopeOperation(`${selected.destination}/media`, async targetScope => {
           directoryIdentity(await targetScope.assertReady(), mediaIdentity); return verifyMedia(targetScope, inventory, { signal });
         });
+        if (video) {
+          await scopeOperation(env.JESSIEMESSAGE_VIDEO_ROOT, sourceScope => verifyVideo(sourceScope, videoInventory, { signal }));
+          await verifyVideoCopy();
+        }
         if ((await hashCheckpointFile(scope, "database.sql.gz", { signal })).sha256 !== compressed.sha256
           || (await hashCheckpointFile(scope, "manifest.json", { signal })).sha256 !== manifest.sha256
           || (await hashCheckpointFile(scope, "receipt.json", { signal })).sha256 !== receiptFile.sha256) fail("PRIVATE_CHECKPOINT_DRIFT");
@@ -353,10 +377,11 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         try { if (Object.keys(loaded).some(name => finalEnvironment[name] !== loaded[name]) || Object.keys(finalEnvironment).length !== Object.keys(loaded).length) fail("PRIVATE_CHECKPOINT_DRIFT"); }
         finally { clearRuntimeMessagingSecrets(finalEnvironment); }
         await parent.assertReady(); directoryIdentity(await scope.assertReady(), destinationIdentity);
-        return { status: application ? "application_checkpoint_saved" : "checkpoint_saved", profile, tables: 33, migrations: 33,
-          ...(application ? { coverage: APPLICATION_COVERAGE } : {}),
+        return { status: application ? "application_checkpoint_saved" : "checkpoint_saved", profile, tables: tableCount, migrations: tableCount,
+          ...(application ? { coverage: applicationCoverage } : {}),
           ...(operational ? { operationsCovered: true, operationalFiles: operationsBefore.files.length, externalRegistryContinuityVerified: false } : {}),
           sqlBytes: compressed.bytes, sqlSha256: compressed.sha256, mediaFiles: inventory.files.length, mediaBytes: inventory.bytes,
+          ...(video ? { videoCovered: true, videoFiles: videoInventory.files.length, videoBytes: videoInventory.bytes } : {}),
           archive: { file: "checkpoint.tar.gz", ...archived }, archiveListed: true, archiveContentsVerified: true, archiveExtracted: false,
           independentCopyPending: true, sqlRestorePending: true, capacityRebound: false, started: false, migrationPerformed: false };
       });

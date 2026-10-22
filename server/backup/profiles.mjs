@@ -10,16 +10,19 @@ const definitions = [
   ["photos-notify-recovery-crm-application", 8, 6],
   ["photos-notify-recovery-crm-broadcast", 9, 7],
   ["photos-notify-recovery-crm-broadcast-application", 10, 8],
+  ["photos-notify-recovery-crm-broadcast-video-application", 11, 11],
 ].map(([name, manifestVersion, receiptVersion]) => Object.freeze({
   name, manifestProfile: `messaging-${name}`, manifestVersion, receiptVersion,
   notifications: name !== "photos", recovery: name.includes("-recovery"), crm: name.includes("-crm"), broadcast: name.includes("-broadcast"), application: name.endsWith("-application"),
+  ...(name.includes("-video-") ? { video: true } : {}),
 }));
 export const PHOTO_BACKUP_PROFILES = Object.freeze(definitions.map(value => value.name));
-export const CHECKPOINT_RUNTIME_PROFILES = Object.freeze(["photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast"]);
+export const CHECKPOINT_RUNTIME_PROFILES = Object.freeze(["photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"]);
 export const photoBackupProfile = name => definitions.find(value => value.name === name) ?? null;
 export const manifestBackupProfile = name => definitions.find(value => value.manifestProfile === name) ?? null;
 export function checkpointBackupProfile(name, application = false) {
   if (name !== undefined && !CHECKPOINT_RUNTIME_PROFILES.includes(name) || typeof application !== "boolean") return null;
+  if (name === "photos-notify-recovery-crm-broadcast-video" && !application) return null;
   return photoBackupProfile(`${name ?? "photos-notify"}${application ? "-application" : ""}`);
 }
 
@@ -27,6 +30,7 @@ export function checkpointBackupProfile(name, application = false) {
 // manifest, six existing keys and all historical receipt versions stay intact.
 export function checkpointReceiptVersion(profile, operations = false) {
   if (operations && !profile?.broadcast) return null;
+  if (profile?.video) return operations ? 12 : 11;
   return operations ? profile.application ? 10 : 9 : profile?.receiptVersion ?? null;
 }
 export function matchesCheckpointReceipt(profile, value) {

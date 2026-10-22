@@ -16,8 +16,9 @@ const MESSAGING_BASENAME = "runtime-messaging.json";
 const MEDIA_BASENAME = "runtime-media.json";
 const NOTIFICATIONS_BASENAME = "runtime-notifications.json";
 const CRM_BASENAME = "runtime-crm.json";
+const VIDEO_BASENAME = "runtime-video.json";
 const CONFIGURATION_BASENAMES = Object.freeze([BASENAME, DIAGNOSTIC_BASENAME, AUTHENTICATION_BASENAME,
-  MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME, CRM_BASENAME]);
+  MESSAGING_BASENAME, MEDIA_BASENAME, NOTIFICATIONS_BASENAME, CRM_BASENAME, VIDEO_BASENAME]);
 const MAX_BYTES = 16384;
 const REPOSITORY = fileURLToPath(new URL("../../", import.meta.url));
 const FIELDS = ["format", "version", "host", "port", "database", "user", "password", "privilegeProfile"];
@@ -27,6 +28,7 @@ const MESSAGING_FIELDS = ["format", "version", "origin", "mailKey", "messageKey"
 const MEDIA_FIELDS = ["format", "version", "origin", "mediaKey", "mediaRoot", "ownerBytes", "totalBytes", "minimumFreeBytes"];
 const NOTIFICATIONS_FIELDS = ["version", "origin", "notificationKey", "vapidPublicKey", "vapidPrivateKey", "vapidSubject"];
 const CRM_FIELDS = ["version", "origin", "crmKey"];
+const VIDEO_FIELDS = ["format", "version", "origin", "videoKey", "videoRoot", "ownerBytes", "totalBytes", "minimumFreeBytes"];
 const FLAGS = ["AUTH", "ACCESS", "CHAT", "MEDIA", "CRM", "CLIENT_RECOVERY", "BROADCAST", "MAIL_DELIVERY", "NOTIFICATIONS"];
 const STAT_FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 
@@ -78,6 +80,10 @@ export class RuntimeCrmConfigurationError extends Error {
   constructor() { super("Private file configuration is unavailable."); this.code = "RUNTIME_CRM_CONFIGURATION"; }
 }
 const crmFailure = () => { throw new RuntimeCrmConfigurationError(); };
+export class RuntimeVideoConfigurationError extends Error {
+  constructor() { super("Private video configuration is unavailable."); this.code = "RUNTIME_VIDEO_CONFIGURATION"; }
+}
+const videoFailure = () => { throw new RuntimeVideoConfigurationError(); };
 const messagingFailure = () => { throw new RuntimeMessagingConfigurationError(); };
 const inside = (filename, root) => {
   const suffix = path.relative(root, filename);
@@ -86,10 +92,10 @@ const inside = (filename, root) => {
 
 function clearSecrets(value) {
   if (!value || typeof value !== "object") return;
-  const nested = ["credentials", "database", "authentication", "messaging", "media", "notifications", "crm"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
+  const nested = ["credentials", "database", "authentication", "messaging", "media", "notifications", "crm", "video"].map((name) => Object.getOwnPropertyDescriptor(value, name)?.value);
   for (const record of [value, ...nested]) {
     if (record && typeof record === "object") {
-      for (const name of ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "notificationKey", "vapidPrivateKey", "crmKey", "smtpUser", "smtpPassword"]) {
+      for (const name of ["password", "mfaKey", "mailKey", "messageKey", "mediaKey", "notificationKey", "vapidPrivateKey", "crmKey", "videoKey", "smtpUser", "smtpPassword"]) {
         const descriptor = Object.getOwnPropertyDescriptor(record, name);
         if (descriptor && Object.hasOwn(descriptor, "value") && descriptor.writable) record[name] = "";
       }
@@ -304,6 +310,55 @@ export function validateRuntimeCrmBundle(value, options = {}) {
   } catch { clearSecrets(selected); crmFailure(); }
 }
 
+/** Video is a separately selected seventh record; older bundles stay closed. */
+export function validateRuntimeVideoConfiguration(value, options = {}) {
+  let selected, syntax;
+  try {
+    if (originProfile(options) !== "primary" || !value || Object.getPrototypeOf(value) !== Object.prototype
+      || Object.getOwnPropertySymbols(value).length || Object.getOwnPropertyNames(value).sort().join(",") !== [...VIDEO_FIELDS].sort().join(",")) videoFailure();
+    selected = Object.fromEntries(VIDEO_FIELDS.map(name => {
+      const descriptor = Object.getOwnPropertyDescriptor(value, name);
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) videoFailure();
+      return [name, descriptor.value];
+    }));
+    if (selected.format !== "jessiemessage-runtime-video" || selected.version !== 1) videoFailure();
+    syntax = validateRuntimeAuthenticationConfiguration({ format: "jessiemessage-runtime-auth", version: 1,
+      origin: selected.origin, mfaKey: selected.videoKey }, options);
+    const root = selected.videoRoot;
+    if (typeof root !== "string" || !path.isAbsolute(root) || root !== path.resolve(root) || root.length > 4096
+      || /[\\\x00-\x1f\x7f]/.test(root) || inside(root, path.resolve(REPOSITORY)) || inside(path.resolve(REPOSITORY), root)) videoFailure();
+    for (const name of ["ownerBytes", "totalBytes", "minimumFreeBytes"]) {
+      const amount = selected[name];
+      if (typeof amount !== "string" || !/^(?:0|[1-9][0-9]{0,15})$/.test(amount) || !Number.isSafeInteger(Number(amount))
+        || Number(amount) < (name === "minimumFreeBytes" ? 0 : 65) || Number(amount) > 1125899906842624) videoFailure();
+    }
+    if (Number(selected.ownerBytes) > Number(selected.totalBytes) || Buffer.byteLength(JSON.stringify(selected), "utf8") + 1 > MAX_BYTES) videoFailure();
+    return selected;
+  } catch { clearSecrets(selected); videoFailure(); }
+  finally { clearSecrets(syntax); }
+}
+
+export function validateRuntimeVideoBundle(value, options = {}) {
+  let base, video;
+  try {
+    const names = ["database", "authentication", "messaging", "media", "notifications", "crm", "video"];
+    if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
+      || Object.getOwnPropertyNames(value).sort().join(",") !== [...names].sort().join(",")) videoFailure();
+    const selected = Object.fromEntries(names.map(name => {
+      const descriptor = Object.getOwnPropertyDescriptor(value, name);
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) videoFailure();
+      return [name, descriptor.value];
+    }));
+    base = validateRuntimeCrmBundle(Object.fromEntries(names.slice(0, -1).map(name => [name, selected[name]])), options);
+    video = validateRuntimeVideoConfiguration(selected.video, options);
+    const keys = [base.authentication.mfaKey, base.messaging.mailKey, base.messaging.messageKey, base.media.mediaKey,
+      base.notifications.notificationKey, base.notifications.vapidPrivateKey, base.crm.crmKey];
+    if (keys.includes(video.videoKey) || video.origin !== base.authentication.origin
+      || inside(video.videoRoot, base.media.mediaRoot) || inside(base.media.mediaRoot, video.videoRoot)) videoFailure();
+    return { ...base, video };
+  } catch { clearSecrets(base); clearSecrets(video); videoFailure(); }
+}
+
 async function privateScope(directory, callback) {
   try {
     if (typeof directory !== "string" || !path.isAbsolute(directory) || path.normalize(directory) !== directory
@@ -421,6 +476,13 @@ export async function writeRuntimeCrmConfiguration(directory, value, options = {
   const record = validateRuntimeCrmConfiguration(value, options);
   try { return await writeConfiguration(directory, record, CRM_BASENAME); }
   catch { crmFailure(); }
+  finally { clearSecrets(record); }
+}
+
+export async function writeRuntimeVideoConfiguration(directory, value, options = {}) {
+  const record = validateRuntimeVideoConfiguration(value, options);
+  try { return await writeConfiguration(directory, record, VIDEO_BASENAME); }
+  catch { videoFailure(); }
   finally { clearSecrets(record); }
 }
 
@@ -547,6 +609,11 @@ export async function readRuntimeNotificationsConfiguration(directory, options =
 export async function readRuntimeCrmConfiguration(directory, options = {}) {
   try { return await readConfiguration(directory, CRM_BASENAME, value => validateRuntimeCrmConfiguration(value, options)); }
   catch { crmFailure(); }
+}
+
+export async function readRuntimeVideoConfiguration(directory, options = {}) {
+  try { return await readConfiguration(directory, VIDEO_BASENAME, value => validateRuntimeVideoConfiguration(value, options)); }
+  catch { videoFailure(); }
 }
 
 export async function runtimeCrmConfigurationExists(directory) {
@@ -682,5 +749,23 @@ export async function readRuntimeCrmBundle(directory, options = {}) {
       return validateRuntimeCrmBundle(records, options);
     });
   } catch { crmFailure(); }
+  finally { clearSecrets(records); }
+}
+
+export async function readRuntimeVideoBundle(directory, options = {}) {
+  let records;
+  try {
+    return await privateScope(directory, async scope => {
+      records = {};
+      records.database = await readAnchoredConfiguration(scope, BASENAME, validateRuntimeDatabaseConfiguration);
+      records.authentication = await readAnchoredConfiguration(scope, AUTHENTICATION_BASENAME, value => validateRuntimeAuthenticationConfiguration(value, options));
+      records.messaging = await readAnchoredConfiguration(scope, MESSAGING_BASENAME, value => validateRuntimeMessagingConfiguration(value, options));
+      records.media = await readAnchoredConfiguration(scope, MEDIA_BASENAME, value => validateRuntimeMediaConfiguration(value, options));
+      records.notifications = await readAnchoredConfiguration(scope, NOTIFICATIONS_BASENAME, value => validateRuntimeNotificationsConfiguration(value, options));
+      records.crm = await readAnchoredConfiguration(scope, CRM_BASENAME, value => validateRuntimeCrmConfiguration(value, options));
+      records.video = await readAnchoredConfiguration(scope, VIDEO_BASENAME, value => validateRuntimeVideoConfiguration(value, options));
+      return validateRuntimeVideoBundle(records, options);
+    });
+  } catch { videoFailure(); }
   finally { clearSecrets(records); }
 }

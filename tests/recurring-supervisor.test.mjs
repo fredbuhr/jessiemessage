@@ -603,6 +603,28 @@ test("checkpoint subprocess accepts the precise application profile and discards
   }
 });
 
+test("the explicit video parent captures SQL36 and rejects an older or incomplete checkpoint receipt", async () => {
+  const selected = { ...options, video: true }, value = { status: "application_checkpoint_saved", profile: "messaging-photos-notify-recovery-crm-broadcast-video-application",
+    tables: 36, migrations: 36, coverage: { encryptedVideo: true }, videoCovered: true, videoFiles: 1, videoBytes: 100,
+    operationsCovered: true, archiveListed: true, archiveContentsVerified: true, archive: { sha256: "c".repeat(64) }, started: false, migrationPerformed: false };
+  let called;
+  const accepted = await checkpointProcess("capture-application", selected, "/srv/private-backups/capture-test", { environment },
+    { spawnClient: (_command, args) => { called = args; return processFixture(JSON.stringify(value)); } });
+  assert.deepEqual(accepted, { saved: true, precheckPassed: false });
+  assert.equal(called[called.indexOf("--profile") + 1], "photos-notify-recovery-crm-broadcast-video");
+  for (const changes of [{ tables: 33 }, { migrations: 33 }, { videoCovered: false }, { coverage: {} },
+    { profile: "messaging-photos-notify-recovery-crm-broadcast-application" }])
+    await assert.rejects(checkpointProcess("capture-application", selected, "/srv/private-backups/capture-test", { environment },
+      { spawnClient: () => processFixture(JSON.stringify({ ...value, ...changes })) }), { code: "RECURRING_SUPERVISOR_CHECKPOINT" });
+  const precheck = { status: "application_precheck_passed", profile: value.profile, schema: 36, coverage: value.coverage,
+    databaseConnected: false, passwordInputRequired: false, started: false, migrationPerformed: false };
+  assert.deepEqual(await checkpointProcess("check-application", selected, "/srv/private-backups/precheck-test", { environment },
+    { spawnClient: () => processFixture(JSON.stringify(precheck)) }), { saved: false, precheckPassed: true });
+  for (const changes of [{ schema: 33 }, { coverage: {} }, { databaseConnected: true }, { passwordInputRequired: true }])
+    await assert.rejects(checkpointProcess("check-application", selected, "/srv/private-backups/precheck-test", { environment },
+      { spawnClient: () => processFixture(JSON.stringify({ ...precheck, ...changes })) }), { code: "RECURRING_SUPERVISOR_CHECKPOINT" });
+});
+
 test("capture timeout and cancellation wait for actual close, escalating an ignored SIGTERM", async () => {
   for (const mode of ["timeout", "abort"]) {
     const cancellation = new AbortController(), killed = [], closeAllowed = deferred();

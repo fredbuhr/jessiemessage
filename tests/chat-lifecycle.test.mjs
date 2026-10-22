@@ -161,6 +161,114 @@ function harness({ currentSession = session(), visible = true, intercept = null,
 const contents = (element) => [element.textContent, element.value, ...element.children.map(contents)].join(" ");
 const posts = (f) => f.calls.filter((call) => call.options.method === "POST" && call.path.includes("/messages"));
 
+// Controllable transport keeps progress, an uncertain response and a late abort
+// independent of fetch; the UI must preserve the message identity in each case.
+function videoTransport(f) {
+  const uploads = [];
+  f.context.XMLHttpRequest = class {
+    constructor() { this.events = new Map(); this.headers = {}; this.upload = { addEventListener: (name, handler) => { this.progress = handler; } }; uploads.push(this); }
+    open(method, path) { this.method = method; this.path = path; }
+    setRequestHeader(name, value) { this.headers[name] = value; }
+    addEventListener(name, handler) { this.events.set(name, handler); }
+    send(file) { this.file = file; }
+    abort() { this.aborted = true; this.events.get("abort")?.(); }
+    complete(videoId = id(902)) { this.status = 201; this.responseText = JSON.stringify({ id: videoId, bytes: this.file.size, mime: "video/mp4" }); this.events.get("load")(); }
+  };
+  return uploads;
+}
+const videoCapability = path => path === "/api/chat/client/capabilities"
+  ? response(200, { enabled: true, video: { enabled: true, maxBytes: 104857600, mime: "video/mp4" } }) : undefined;
+async function selectVideo(f) {
+  const file = new Blob(["synthetic video payload"], { type: "video/mp4" });
+  f.element("video-file").files = [file];
+  for (const handler of f.element("video-file").events.get("change")) handler({});
+  const preview = f.element("video-preview").querySelector("video");
+  for (const handler of preview.events.get("loadedmetadata")) handler({});
+  await flush(); return { file, preview };
+}
+
+test("video selection is a local draft and cancelling upload never submits a message", async () => {
+  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  const { file, preview } = await selectVideo(f);
+  assert.equal(f.element("pick-video").hidden, false); assert.equal(f.element("send").disabled, false);
+  assert.match(preview.src, /^blob:/); assert.equal(uploads.length, 0); assert.equal(posts(f).length, 0);
+  await f.send("Keep this caption"); assert.equal(uploads.length, 1);
+  assert.equal(uploads[0].file, file); assert.equal(uploads[0].headers["Content-Type"], "video/mp4");
+  assert.equal(uploads[0].headers["Content-Length"], undefined, "the browser supplies native framing");
+  uploads[0].progress({ loaded: file.size / 2 }); assert.equal(f.element("video-progress").value, 50);
+  await f.click("cancel-video"); assert.equal(uploads[0].aborted, true); assert.equal(posts(f).length, 0);
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(state.pending, null); assert.equal(state.videoDraft.file, file); assert.equal(state.draft, "Keep this caption");
+  assert.equal(f.element("message-body").disabled, false); assert.equal(f.element("send").disabled, false);
+});
+
+test("an uncertain video message response retries the same asset and identity without uploading again", async () => {
+  let f, attempts = 0; const commands = [];
+  f = harness({ intercept: (path, options) => {
+    const capability = videoCapability(path); if (capability) return capability;
+    if (path.startsWith("/api/video/client/") && path.endsWith("/messages")) {
+      const command = JSON.parse(options.body); commands.push(command); attempts++;
+      if (attempts === 1) throw new Error("synthetic lost response");
+      return response(200, { duplicate: true, message: { id: id(903), sequence: "2", sender: "me", body: command.caption,
+        createdAt: now, deletedAt: null, clientMessageId: command.clientMessageId,
+        video: { id: command.videoId, bytes: 23, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + f.conversation().id + "/messages/" + id(903) + "/content" } } });
+    }
+    return undefined;
+  } });
+  await flush(); const uploads = videoTransport(f); await selectVideo(f); await f.send("Caption remains exact");
+  uploads[0].complete(); await flush();
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(state.pending.status, "retry"); assert.equal(state.pending.videoId, id(902)); assert.equal(state.pending.file, null);
+  assert.equal(f.element("pending-controls").hidden, false);
+  await f.click("retry-send"); assert.equal(uploads.length, 1); assert.deepEqual(commands[1], commands[0]);
+  assert.equal(state.pending, null); assert.equal(state.videoDraft, null); assert.equal(f.element("message-body").value, "");
+  assert.match(contents(f.element("messages")), /Caption remains exact/);
+  const player = f.element("messages").querySelector("video");
+  assert.equal(player.controls, true); assert.equal(player.preload, "none"); assert.equal(player.autoplay, undefined);
+  assert.match(player.src, /^\/api\/video\/client\/conversations\//);
+  await f.hide(); assert.equal(player.src, "");
+  await f.show(); assert.match(player.src, /^\/api\/video\/client\/conversations\//);
+});
+
+test("video players never adopt foreign origin, role, conversation or message URLs", async () => {
+  const f = harness({ intercept: videoCapability }); await flush(); const state = f.inspect().states.get(f.inspect().selected);
+  const path = "/api/video/client/conversations/" + state.id + "/messages/" + id(903) + "/content";
+  const urls = ["https://other.invalid" + path, "https://example.invalid" + path, "//other.invalid" + path,
+    path.replace("/client/", "/admin/"), path.replace(state.id, id(999)), path.replace(id(903), id(998)), path + "?x=1"];
+  for (const url of urls) {
+    f.context.__candidate = url;
+    assert.equal(vm.runInContext("validVideoUrl(__candidate,currentState(),'" + id(903) + "')", f.context), false);
+  }
+  f.context.__candidate = path;
+  assert.equal(vm.runInContext("validVideoUrl(__candidate,currentState(),'" + id(903) + "')", f.context), true);
+});
+
+test("hidden video uploads abort and old acknowledgements cannot submit for another session", async () => {
+  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  const { preview } = await selectVideo(f); const oldUrl = preview.src; await f.send("Private pending caption");
+  await f.hide(); assert.equal(uploads[0].aborted, true); assert.ok(f.revoked.includes(oldUrl));
+  assert.equal(preview.src, ""); assert.equal(f.element("video-preview").children.length, 0);
+  const pending = f.inspect().states.get(f.inspect().selected).pending; assert.equal(pending.status, "retry");
+  f.state.currentSession = session(2, "B".repeat(43)); await f.show(); uploads[0].complete(); await flush();
+  assert.equal(posts(f).length, 0); assert.equal(f.inspect().sessionOwner.id, id(2));
+  assert.equal(f.element("video-draft").hidden, true); assert.equal(f.element("message-body").value, "");
+});
+
+test("late video gallery pages respect tombstones and queued close events cannot close a new gallery", async () => {
+  let f; const delayed = pause();
+  f = harness({ intercept: path => videoCapability(path) ?? (path.includes("/gallery?") ? delayed.promise : undefined) });
+  await flush(); await f.click("open-video-gallery");
+  const state = f.inspect().states.get(f.inspect().selected);
+  vm.runInContext("mergeMessages(currentState(), [{id:'" + id(904) + "',sequence:'2',sender:'peer',body:null,deletedAt:123}])", f.context);
+  delayed.resolve(response(200, { items: [{ messageId: id(904), sequence: "2", createdAt: now,
+    video: { id: id(905), bytes: 20, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + state.id + "/messages/" + id(904) + "/content" } }], nextBefore: null, hasMore: false }));
+  await flush(); assert.equal(f.element("video-grid").children.length, 0);
+  const dialog = f.element("video-gallery"), queued = [];
+  dialog.close = () => { dialog.open = false; queued.push(...dialog.events.get("close")); };
+  await f.click("close-video-gallery"); await f.click("open-video-gallery");
+  for (const handler of queued) handler({}); await flush(); assert.equal(dialog.open, true);
+});
+
 test("due task counts stay in the admin menu and a late result cannot survive logout", async () => {
   const delayed = pause();
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: path =>

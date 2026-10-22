@@ -168,6 +168,28 @@ test("restored service preserves the manual parent composition without enabling 
   } finally { await service.stop(); await service.close(); }
 });
 
+test("a video manual job starts the explicit candidate profile and keeps backup requests closed until publication", async () => {
+  const lifetime = deferred(), context = { job: { version: 2, runtimeDirectory: "/reviewed", runtimeHead: "1".repeat(40), runtimeTree: "2".repeat(40),
+    targetPrivateDirectory: "/target-private" }, paths: { journalDirectory: "/target-operations" } };
+  let received, requestsAllowed;
+  const service = createRestoredService(context, { environment, outputStream: { write() {} } }, {
+    async recurringMain(args, dependencies) {
+      received = args; dependencies.signal.addEventListener("abort", () => lifetime.resolve(), { once: true });
+      await dependencies.makeSupervisor({ command: "start", video: true }, { manualBackups: true }).start(); await lifetime.promise;
+    },
+    makeSupervisor(options, dependencies) {
+      assert.equal(options.video, true); assert.equal(dependencies.manualBackups, true);
+      requestsAllowed = dependencies.allowManualRequests; dependencies.makeRuntime({}); return { async start() { return { ready: true }; } };
+    },
+    makeRuntime() { return { state: () => ({ status: "running" }), async stop() { return { exitCode: 0, signal: null }; } }; },
+  });
+  try {
+    await service.start(); assert.equal(received[0], "start-local-closures");
+    assert.deepEqual(received.slice(-2), ["--profile", "photos-notify-recovery-crm-broadcast-video"]);
+    assert.equal(requestsAllowed(), false); service.allowManualBackups(); assert.equal(requestsAllowed(), true);
+  } finally { await service.stop(); await service.close(); }
+});
+
 test("a nonzero restored-child drain cannot be reported as a clean stop", async () => {
   const lifetime = deferred(), context = { job: { runtimeDirectory: "/reviewed", runtimeHead: "1".repeat(40), runtimeTree: "2".repeat(40),
     targetPrivateDirectory: "/target-private" }, paths: { journalDirectory: "/target-operations" } };

@@ -8,6 +8,7 @@ import { gzipSync } from "node:zlib";
 import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
 import { parseArguments, validateApplicationSql, readApplicationSql, inspectEmptyClone, importNativeSql, run, main } from "../scripts/import-application-checkpoint.mjs";
 
@@ -247,4 +248,30 @@ test("a nonempty target, changed checkpoint, failed native import or incomplete 
     assert.deepEqual(output, []);
     if (overrides === cases[1]) { assert.equal(checkpointReads, 2); assert.equal(events.includes("import"), false); }
   }
+});
+
+
+test("candidate SQL36 is accepted only by the explicit video validator and refuses old or incomplete table sets", async () => {
+  const videoTables = [...createdMigrationTables(await loadVideoMigrations()), "schema_migrations"].sort();
+  const dump = Buffer.from("SET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\n" + videoTables.map(name => `CREATE TABLE \`${name}\` (\`id\` INT NOT NULL) ENGINE=InnoDB;\n`).join(""));
+  assert.deepEqual(await validateApplicationSql(dump, { video: true }), { tables: 36 });
+  await assert.rejects(validateApplicationSql(dump), neutral("SQL"));
+  await assert.rejects(validateApplicationSql(sql, { video: true }), neutral("SQL"));
+  await assert.rejects(validateApplicationSql(Buffer.from(dump.toString().replace(/CREATE TABLE `video_assets`[^;]+;\n/, "")), { video: true }), neutral("SQL"));
+  await assert.rejects(validateApplicationSql(Buffer.concat([dump, Buffer.from("USE only_source;\n")]), { video: true }), neutral("SQL"));
+});
+
+test("video import keeps SQL36 and its seventh-key profile through precheck and final verification without accepting a schema33 downgrade", async () => {
+  const runtimeProfile = "photos-notify-recovery-crm-broadcast-video", signed = { version: 11,
+    profile: "messaging-photos-notify-recovery-crm-broadcast-video-application", tables: 36, migrations: 36 };
+  const events = [], original = dependencies(events);
+  const result = await run(parseArguments([...args("restore"), "--profile", runtimeProfile]), { ...original,
+    verify: async (selection, options) => ({ ...await original.verify(selection, options), ...signed }),
+    readSql: async (scope, before, options) => { assert.equal(options.video, true); assert.equal(before.tables, 36); return original.readSql(scope, before, options); },
+  });
+  assert.equal(result.tables, 36); assert.equal(result.profile, signed.profile); assert.equal(result.imported, true);
+  const rejected = dependencies([]);
+  await assert.rejects(run(parseArguments([...args("restore"), "--profile", runtimeProfile]), { ...rejected,
+    verify: async (selection, options) => ({ ...await rejected.verify(selection, options), ...signed, tables: 33, migrations: 33 }),
+  }), neutral("CHECKPOINT"));
 });

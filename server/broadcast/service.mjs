@@ -18,8 +18,8 @@ const permitted = new Set(["BROADCAST_INPUT", "BROADCAST_UNAUTHORIZED", "BROADCA
 const storedId = (value) => { if (!Buffer.isBuffer(value) || value.length !== 16) fail("BROADCAST_UNAVAILABLE"); return value.toString("hex"); };
 const date = (value) => { if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail("BROADCAST_UNAVAILABLE"); return value; };
 const text = (value, max = 64) => { if (typeof value !== "string" || !value.isWellFormed() || value.length > max) fail("BROADCAST_UNAVAILABLE"); return value; };
-export async function createBroadcastService({ store, authService, authStore, key, mediaEnabled = false, largeAudiencesEnabled = false, clock = Date.now }) {
-  if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || typeof mediaEnabled !== "boolean" || typeof largeAudiencesEnabled !== "boolean"
+export async function createBroadcastService({ store, authService, authStore, key, mediaEnabled = false, videoEnabled = false, largeAudiencesEnabled = false, clock = Date.now }) {
+  if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function" || typeof mediaEnabled !== "boolean" || typeof videoEnabled !== "boolean" || videoEnabled && !largeAudiencesEnabled || typeof largeAudiencesEnabled !== "boolean"
     || typeof authService?.session !== "function" || typeof authStore?.consumeRateLimit !== "function"
     || ["preview", "create", "activity", "list", "get", "cancel"].some((method) => typeof store?.[method] !== "function")) fail("BROADCAST_CONFIG");
   key = Buffer.from(key);
@@ -57,13 +57,13 @@ export async function createBroadcastService({ store, authService, authStore, ke
     if (!recipient || !recipient.client || !states.includes(recipient.state)
       || recipient.reason !== null && !reasons.includes(recipient.reason)) fail("BROADCAST_UNAVAILABLE");
     const conversationId = storedId(recipient.conversationId), clientId = storedId(recipient.client.id);
-    if (payload.version === 2) {
+    if (payload.version >= 2) {
       if (!verifyRecipientProof(key, { ...binding, conversationId: recipient.conversationId, clientId: recipient.client.id,
         messageId: recipient.proposedMessageId }, recipient.clientMessageId)) fail("BROADCAST_UNAVAILABLE");
     } else if (!payload.conversationIds.includes(conversationId)) fail("BROADCAST_UNAVAILABLE");
     const messageId = recipient.messageId === null ? null : storedId(recipient.messageId);
     const deliveredAt = recipient.deliveredAt === null ? null : date(recipient.deliveredAt);
-    if (payload.version === 2 && messageId !== null && messageId !== storedId(recipient.proposedMessageId)
+    if (payload.version >= 2 && messageId !== null && messageId !== storedId(recipient.proposedMessageId)
       || (recipient.state === "delivered") !== (messageId !== null && deliveredAt !== null)
       || recipient.state !== "delivered" && (messageId !== null || deliveredAt !== null)
       || ["pending", "sending", "delivered"].includes(recipient.state) && recipient.reason !== null
@@ -89,9 +89,9 @@ export async function createBroadcastService({ store, authService, authStore, ke
     if (!row || !statuses.includes(row.status) || typeof row.allowRepeatMedia !== "boolean") fail("BROADCAST_UNAVAILABLE");
     const id = storedId(row.id), clientCampaignId = storedId(row.clientCampaignId);
     const binding = { campaignId: row.id, adminId: Buffer.from(session.user.id, "hex") };
-    const payload = openPayload(row.payloadEncrypted, key, binding);
+    const payload = openPayload(row.payloadEncrypted, key, binding, { video: videoEnabled });
     if (expectedFingerprint !== null && !timingSafeEqual(expectedFingerprint,
-      campaignFingerprint(payload, key, { adminId: binding.adminId }))) fail("BROADCAST_UNAVAILABLE");
+      campaignFingerprint(payload, key, { adminId: binding.adminId }, { video: videoEnabled }))) fail("BROADCAST_UNAVAILABLE");
     if (expectedPayload !== null && JSON.stringify(payload) !== JSON.stringify(expectedPayload)) fail("BROADCAST_UNAVAILABLE");
     const mediaId = row.mediaId === null ? null : storedId(row.mediaId);
     if (payload.mediaId !== mediaId || payload.allowRepeatMedia !== row.allowRepeatMedia) fail("BROADCAST_UNAVAILABLE");
@@ -102,14 +102,14 @@ export async function createBroadcastService({ store, authService, authStore, ke
       if (!Number.isSafeInteger(row.counts[name]) || row.counts[name] < 0) fail("BROADCAST_UNAVAILABLE");
       counts[name] = row.counts[name];
     }
-    const total = payload.version === 2 ? payload.audience.count : payload.conversationIds.length;
+    const total = payload.version >= 2 ? payload.audience.count : payload.conversationIds.length;
     if (counts.total !== total || states.reduce((sum, state) => sum + counts[state], 0) !== counts.total
       || ["completed", "cancelled", "paused"].includes(row.status) && (counts.pending || counts.sending)) fail("BROADCAST_UNAVAILABLE");
     const dto = { id, clientCampaignId, title: payload.title, body: payload.body, mediaId, allowRepeatMedia: payload.allowRepeatMedia,
       status: row.status, createdAt, updatedAt, expiresAt, counts };
-    if (payload.version === 2) { dto.formatVersion = 2; dto.audienceMode = payload.audience.mode; }
+    if (payload.version >= 2) { dto.formatVersion = payload.version; if (payload.version === 3) dto.videoId = payload.videoId; dto.audienceMode = payload.audience.mode; }
     if (detail) {
-      if (payload.version === 2) Object.assign(dto, recipientPageDTO(row, payload, binding, {}, counts.total));
+      if (payload.version >= 2) Object.assign(dto, recipientPageDTO(row, payload, binding, {}, counts.total));
       else {
         if (!Array.isArray(row.recipients) || row.recipients.length !== counts.total) fail("BROADCAST_UNAVAILABLE");
         const seen = new Set();
@@ -125,14 +125,14 @@ export async function createBroadcastService({ store, authService, authStore, ke
     if (!row || ![row.totalCount, row.eligibleCount, row.excludedCount, row.repeatCount].every(count)
       || row.totalCount !== row.eligibleCount + row.excludedCount || row.repeatCount > row.eligibleCount
       || !/^[a-f0-9]{64}$/.test(row.digest) || !Array.isArray(row.recipients) || row.recipients.length !== Math.min(50, row.totalCount)
-      || parsed.mediaId === null && row.repeatCount !== 0
+      || parsed.mediaId === null && !parsed.videoId && row.repeatCount !== 0
       || parsed.audience.mode === "selected" && row.totalCount !== parsed.audience.conversationIds.length) fail("BROADCAST_UNAVAILABLE");
     let previous = null, eligible = 0, repeat = 0;
     const recipients = row.recipients.map((recipient, index) => {
       const conversationId = storedId(recipient.conversationId);
       if (previous !== null && conversationId <= previous || !recipient.client || typeof recipient.eligible !== "boolean"
         || typeof recipient.repeatMedia !== "boolean" || ![null, "access_inactive", "conversation_unavailable"].includes(recipient.reason)
-        || recipient.eligible !== (recipient.reason === null) || parsed.mediaId === null && recipient.repeatMedia
+        || recipient.eligible !== (recipient.reason === null) || parsed.mediaId === null && !parsed.videoId && recipient.repeatMedia
         || parsed.audience.mode === "selected" && conversationId !== parsed.audience.conversationIds[index]) fail("BROADCAST_UNAVAILABLE");
       previous = conversationId; eligible += Number(recipient.eligible); repeat += Number(recipient.eligible && recipient.repeatMedia);
       return { conversationId, client: { id: storedId(recipient.client.id), pseudonym: text(recipient.client.pseudonym) },
@@ -141,14 +141,14 @@ export async function createBroadcastService({ store, authService, authStore, ke
     if (eligible > row.eligibleCount || recipients.length - eligible > row.excludedCount || repeat > row.repeatCount
       || row.totalCount <= 50 && (eligible !== row.eligibleCount || repeat !== row.repeatCount)) fail("BROADCAST_UNAVAILABLE");
     const previewToken = issuePreviewToken(key, { adminId: session.user.id, selectorHash: audienceSelectorHash(parsed.audience),
-      mediaId: parsed.mediaId?.toString("hex") ?? null, count: row.eligibleCount, digest: row.digest, repeatCount: row.repeatCount, issuedAt: date(clock()) });
+      mediaId: parsed.mediaId?.toString("hex") ?? null, count: row.eligibleCount, digest: row.digest, repeatCount: row.repeatCount, issuedAt: date(clock()), ...(parsed.videoId ? { videoId: parsed.videoId.toString("hex") } : {}) }, { video: !!parsed.videoId });
     return { recipients, totalCount: row.totalCount, eligibleCount: row.eligibleCount, excludedCount: row.excludedCount, repeatCount: row.repeatCount, previewToken };
   }
   return Object.freeze({
-    largeAudiencesEnabled,
+    largeAudiencesEnabled, videoEnabled,
     actor: (role, token) => guarded(() => actor(role, token)),
     preview: (token, input) => guarded(async () => {
-      const parsed = validatePreview(input); imageEnabled(parsed.mediaId);
+      const parsed = validatePreview(input, { video: videoEnabled }); imageEnabled(parsed.mediaId);
       if (parsed.audience && !largeAudiencesEnabled) fail("BROADCAST_INPUT");
       const { session, request } = await context("admin", token);
       if (parsed.audience) {
@@ -162,7 +162,7 @@ export async function createBroadcastService({ store, authService, authStore, ke
         const conversationId = storedId(recipient.conversationId);
         if (!expected.has(conversationId) || seen.has(conversationId) || !recipient.client || typeof recipient.eligible !== "boolean"
           || typeof recipient.repeatMedia !== "boolean" || ![null, "access_inactive", "conversation_unavailable"].includes(recipient.reason)
-          || recipient.eligible !== (recipient.reason === null) || parsed.mediaId === null && recipient.repeatMedia) fail("BROADCAST_UNAVAILABLE");
+          || recipient.eligible !== (recipient.reason === null) || parsed.mediaId === null && !parsed.videoId && recipient.repeatMedia) fail("BROADCAST_UNAVAILABLE");
         seen.add(conversationId);
         return { conversationId, client: { id: storedId(recipient.client.id), pseudonym: text(recipient.client.pseudonym) },
           eligible: recipient.eligible, reason: recipient.reason, repeatMedia: recipient.repeatMedia };
@@ -172,22 +172,23 @@ export async function createBroadcastService({ store, authService, authStore, ke
       return { recipients, eligibleCount, repeatCount };
     }),
     create: (token, input) => guarded(async () => {
-      const parsed = validateCampaign(input); imageEnabled(parsed.mediaId);
+      const parsed = validateCampaign(input, { video: videoEnabled }); imageEnabled(parsed.mediaId);
       if (parsed.audience && !largeAudiencesEnabled) fail("BROADCAST_INPUT");
       const { session, request } = await context("admin", token, true);
       const id = randomBytes(16), adminId = Buffer.from(session.user.id, "hex");
       if (parsed.audience) {
         if (typeof store.createAudience !== "function") fail("BROADCAST_UNAVAILABLE");
-        const binding = { adminId: session.user.id, selectorHash: audienceSelectorHash(parsed.audience), mediaId: parsed.mediaId?.toString("hex") ?? null };
-        const snapshot = readPreviewToken(parsed.previewToken, key, binding, { now: request.now, fresh: false });
+        const video = !!parsed.videoId;
+        const binding = { adminId: session.user.id, selectorHash: audienceSelectorHash(parsed.audience), mediaId: parsed.mediaId?.toString("hex") ?? null, ...(video ? { videoId: parsed.videoId.toString("hex") } : {}) };
+        const snapshot = readPreviewToken(parsed.previewToken, key, binding, { now: request.now, fresh: false, video });
         if (snapshot.count < 1) fail("BROADCAST_RECIPIENTS");
-        const payload = { version: 2, title: parsed.title, body: parsed.body, mediaId: binding.mediaId, allowRepeatMedia: parsed.allowRepeatMedia,
+        const payload = { version: video ? 3 : 2, title: parsed.title, body: parsed.body, mediaId: binding.mediaId, ...(video ? { videoId: binding.videoId } : {}), allowRepeatMedia: parsed.allowRepeatMedia,
           audience: { mode: parsed.audience.mode, count: snapshot.count, digest: snapshot.digest, selectorHash: binding.selectorHash } };
-        const requestFingerprint = campaignFingerprint(payload, key, { adminId });
+        const requestFingerprint = campaignFingerprint(payload, key, { adminId }, { video: videoEnabled });
         const result = await store.createAudience({ ...request, audience: parsed.audience, snapshot,
-          verifyPreview: (now) => readPreviewToken(parsed.previewToken, key, binding, { now }),
+          verifyPreview: (now) => readPreviewToken(parsed.previewToken, key, binding, { now, video }),
           campaign: { id, clientCampaignId: parsed.clientCampaignId, requestFingerprint,
-            payloadEncrypted: sealPayload(payload, key, { campaignId: id, adminId }), mediaId: parsed.mediaId,
+            payloadEncrypted: sealPayload(payload, key, { campaignId: id, adminId }, { video: videoEnabled }), mediaId: parsed.mediaId, ...(video ? { videoId: parsed.videoId } : {}),
             allowRepeatMedia: parsed.allowRepeatMedia, recipientProof: (binding) => recipientProof(key, binding) } });
         if (!result || typeof result.duplicate !== "boolean") fail("BROADCAST_UNAVAILABLE");
         const campaign = campaignDTO(result.campaign, session, false, requestFingerprint, payload);
@@ -196,9 +197,9 @@ export async function createBroadcastService({ store, authService, authStore, ke
       }
       const payload = { title: parsed.title, body: parsed.body, mediaId: parsed.mediaId?.toString("hex") ?? null,
         allowRepeatMedia: parsed.allowRepeatMedia, conversationIds: parsed.conversationIds.map((value) => value.toString("hex")) };
-      const requestFingerprint = campaignFingerprint(payload, key, { adminId });
+      const requestFingerprint = campaignFingerprint(payload, key, { adminId }, { video: videoEnabled });
       const result = await store.create({ ...request, campaign: { id, clientCampaignId: parsed.clientCampaignId,
-        payloadEncrypted: sealPayload(payload, key, { campaignId: id, adminId }), requestFingerprint,
+        payloadEncrypted: sealPayload(payload, key, { campaignId: id, adminId }, { video: videoEnabled }), requestFingerprint,
         mediaId: parsed.mediaId, allowRepeatMedia: parsed.allowRepeatMedia,
         recipients: parsed.conversationIds.map((conversationId) => ({ conversationId, messageId: randomBytes(16), clientMessageId: randomBytes(16) })) } });
       if (!result || typeof result.duplicate !== "boolean") fail("BROADCAST_UNAVAILABLE");
@@ -256,7 +257,7 @@ export async function createBroadcastService({ store, authService, authStore, ke
       const campaign = campaignDTO(result?.campaign, session);
       if (campaign.id !== id) fail("BROADCAST_UNAVAILABLE");
       const binding = { campaignId, adminId: Buffer.from(session.user.id, "hex") };
-      const payload = openPayload(result.campaign.payloadEncrypted, key, binding);
+      const payload = openPayload(result.campaign.payloadEncrypted, key, binding, { video: videoEnabled });
       return { campaignId: id, ...recipientPageDTO(result, payload, binding, { afterId, limit }, campaign.counts.total) };
     }),
     cancel: (token, id) => guarded(async () => {

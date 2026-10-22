@@ -444,3 +444,64 @@ test("the real broadcast backup configuration forwards the same six keys and ref
     assert.equal(opened, false);
   }
 });
+
+function videoFixture() {
+  const f = fixture(), sourceRoot = "a1".repeat(32), targetRoot = "a2".repeat(32);
+  f.config.keys.notificationKey = Buffer.alloc(32, 8); f.config.keys.videoKey = Buffer.alloc(32, 9);
+  f.config.video = { root: "/synthetic/private-video", capacity: { ownerBytes: 1000, totalBytes: 10000 } };
+  f.sourceIdentity.video = { ...clone(f.sourceIdentity), rootFingerprint: sourceRoot };
+  f.targetIdentity.video = { ...clone(f.targetIdentity), rootFingerprint: targetRoot };
+  const asset = { id: "91".repeat(16), owner_id: "92".repeat(16), owner_role: "admin", storage_key: "93".repeat(32), reserve_token_hash: "94".repeat(32),
+    content_digest: null, bytes: 17, stored_bytes: 81, mime: "video/mp4", state: "reserved", created_at: "2026-10-15 00:00:00.000000", updated_at: "2026-10-15 00:00:00.000000", released_at: null };
+  Object.assign(f.state.snapshot, { version: 3, counts: { tables: 36, rows: 1 }, video: { capacity: { rootFingerprint: sourceRoot, heldBytes: 81, ownerBytes: 1000, totalBytes: 10000 }, assets: [asset] } });
+  f.state.manifest = { version: 11, profile: "messaging-photos-notify-recovery-crm-broadcast-video-application",
+    payload: { identity: clone(f.sourceIdentity), snapshot: clone(f.state.snapshot) } };
+  f.dependencies.makeVideoStorage = async () => ({ fingerprint: async () => Buffer.from(targetRoot, "hex"),
+    async remove() { f.events.push("video-remove"); if (f.state.failVideoRemoval) throw new Error("private failed unlink"); } });
+  f.dependencies.makeVideoStore = () => ({ assertSchema: async () => { f.events.push("video-schema"); } });
+  const compare = f.snapshots.assertBackupSnapshot;
+  f.snapshots.assertBackupSnapshot = options => {
+    const result = compare(options), { expected, actual, mode, targetVideoFingerprint } = options;
+    if (mode === "recovery" && ![expected.video.capacity.rootFingerprint, targetVideoFingerprint].includes(actual.video.capacity.rootFingerprint)) throw new Error("video binding drift");
+    return { ...result, videoCandidates: expected.video.assets.filter(row => ["reserved", "cleanup_pending"].includes(row.state)), videoHeldBytes: actual.video.capacity.heldBytes };
+  };
+  f.dependencies.makeVideoRecoveryStore = () => ({
+    async closeCandidate() { f.events.push("video-close"); asset.state = "cleanup_pending"; return { closed: true, state: "cleanup_pending" }; },
+    async releaseCandidate() { f.events.push("video-release"); asset.state = "released"; f.state.snapshot.video.capacity.heldBytes = 0; return { released: true }; },
+    async rebind(command) { f.events.push("video-rebind"); assert.equal(command.expectedHeldBytes, 0); f.state.snapshot.video.capacity.rootFingerprint = targetRoot; return { rebound: true }; },
+  });
+  return f;
+}
+
+test("video restoration resumes after a failed video unlink while retaining the photo rebind and never refunding unfinished video", async () => {
+  const f = videoFixture(), selected = [...args("restore"), "--profile", "photos-notify-recovery-crm-broadcast-video-application"];
+  f.state.failVideoRemoval = true;
+  await assert.rejects(main(selected, {}, f.dependencies), errorCode("BACKUP_OPERATION"));
+  assert.equal(f.state.snapshot.capacity.rootFingerprint, f.targetIdentity.rootFingerprint);
+  assert.equal(f.state.snapshot.video.capacity.heldBytes, 81); assert.equal(f.state.snapshot.video.assets[0].state, "cleanup_pending");
+  assert.equal(f.events.includes("video-release"), false); assert.equal(f.events.includes("video-rebind"), false);
+  f.state.failVideoRemoval = false;
+  const result = await main(selected, {}, f.dependencies);
+  assert.equal(result.restored, true); assert.equal(result.releasedVideoCandidates, 1);
+  assert.equal(f.state.snapshot.video.capacity.rootFingerprint, f.targetIdentity.video.rootFingerprint);
+  assert.deepEqual(f.events.filter(event => typeof event === "string" && event.startsWith("video-")),
+    ["video-schema", "video-close", "video-remove", "video-schema", "video-close", "video-remove", "video-release", "video-rebind"]);
+});
+
+test("real video configuration accepts an ephemeral operator identity without a runtime grant profile and refuses unsafe video fields before SQL", async () => {
+  const base = await loadRuntimeBroadcastEnvironment("/private/synthetic-crm", CRM_RUNTIME_OPTIONS, { readBundle: async () => crmBundle() });
+  const environment = { ...base, JESSIEMESSAGE_RUNTIME_DB_USER: "isolated_operator", JESSIEMESSAGE_VIDEO_KEY: Buffer.alloc(32, 8).toString("base64url"),
+    JESSIEMESSAGE_VIDEO_ROOT: "/synthetic/separate-video", JESSIEMESSAGE_VIDEO_OWNER_BYTES: "1048576", JESSIEMESSAGE_VIDEO_TOTAL_BYTES: "10485760", JESSIEMESSAGE_VIDEO_MINIMUM_FREE_BYTES: "0" };
+  delete environment.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE;
+  let opened = false;
+  const selected = [...args("prepare"), "--profile", "photos-notify-recovery-crm-broadcast-video-application"];
+  await assert.rejects(main(selected, environment, { createPool: async () => { opened = true; throw new Error("synthetic database boundary"); } }), errorCode("BACKUP_OPERATION"));
+  assert.equal(opened, true);
+  for (const override of [{ JESSIEMESSAGE_VIDEO_ROOT: environment.JESSIEMESSAGE_MEDIA_ROOT },
+    { JESSIEMESSAGE_VIDEO_KEY: environment.JESSIEMESSAGE_MFA_KEY }, { JESSIEMESSAGE_VIDEO_KEY: environment.JESSIEMESSAGE_VAPID_PRIVATE_KEY },
+    { JESSIEMESSAGE_VIDEO_TOTAL_BYTES: "1" }]) {
+    opened = false;
+    await assert.rejects(main(selected, { ...environment, ...override }, { createPool: async () => { opened = true; assert.fail("Unsafe video configuration cannot open SQL"); } }));
+    assert.equal(opened, false);
+  }
+});

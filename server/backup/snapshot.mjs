@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
 import { createdMigrationTables, loadMigrations } from "../db/migrations.mjs";
 import { assertBackupInspection } from "./inspection.mjs";
-import { assertApplicationTableInspection, validateApplicationCoverage, APPLICATION_COVERAGE } from "./application-scope.mjs";
+import { assertApplicationTableInspection, assertVideoApplicationTableInspection, validateApplicationCoverage, validateVideoApplicationCoverage, APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE } from "./application-scope.mjs";
+import { loadVideoMigrations } from "../video/migrations.mjs";
+import { videoStoredBytes, MAX_VIDEO_BYTES } from "../video/storage.mjs";
+import { inspectVideoBackupInventory } from "./video-inventory.mjs";
 
 export class BackupSnapshotError extends Error {
   constructor(code = "BACKUP_SNAPSHOT_STATE") { super("The private backup could not be verified."); this.name = "BackupSnapshotError"; this.code = code; }
@@ -45,10 +48,63 @@ function assetRow(row) {
   return { id: bytes(row.id, 16), owner_id: bytes(row.owner_id, 16), storage_key: bytes(row.storage_key, 32),
     content_digest: bytes(row.content_digest, 32), full_bytes: number(row.full_bytes), thumbnail_bytes: number(row.thumbnail_bytes), deleted_at: row.deleted_at };
 }
+function videoAssetRow(row) {
+  return { id: bytes(row.id, 16), owner_id: bytes(row.owner_id, 16), owner_role: row.owner_role,
+    storage_key: bytes(row.storage_key, 32), reserve_token_hash: bytes(row.reserve_token_hash, 32),
+    content_digest: row.content_digest === null ? null : bytes(row.content_digest, 32), bytes: number(row.bytes),
+    stored_bytes: number(row.stored_bytes), mime: row.mime, state: row.state,
+    created_at: row.created_at, updated_at: row.updated_at, released_at: row.released_at };
+}
+
+function exactRecord(value, names) {
+  if (!value || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) fail();
+  const descriptors = Object.getOwnPropertyDescriptors(value), keys = Reflect.ownKeys(descriptors);
+  if (keys.length !== names.length || keys.some(name => !names.includes(name)
+    || !descriptors[name].enumerable || !Object.hasOwn(descriptors[name], "value"))) fail();
+}
+function validateVideoSnapshot(video) {
+  exactRecord(video, ["capacity", "assets"]);
+  exactRecord(video.capacity, ["ownerBytes", "totalBytes", "heldBytes", "rootFingerprint", "initializedAt"]);
+  const capacity = video.capacity;
+  if (!integer(capacity.ownerBytes, 1) || !integer(capacity.totalBytes, capacity.ownerBytes) || !integer(capacity.heldBytes)
+    || capacity.heldBytes > capacity.totalBytes || !hex(capacity.rootFingerprint, 32) || !date(capacity.initializedAt)
+    || !Array.isArray(video.assets) || Object.getPrototypeOf(video.assets) !== Array.prototype || video.assets.length > 100000) fail();
+  const ids = new Set(), keys = new Set(); let held = 0, previous = "";
+  for (const asset of video.assets) {
+    exactRecord(asset, ["id", "owner_id", "owner_role", "storage_key", "reserve_token_hash", "content_digest", "bytes", "stored_bytes", "mime", "state", "created_at", "updated_at", "released_at"]);
+    if (!hex(asset.id, 16) || asset.id <= previous || !hex(asset.owner_id, 16) || !["admin", "client"].includes(asset.owner_role)
+      || !hex(asset.storage_key, 32) || !hex(asset.reserve_token_hash, 32) || !(asset.content_digest === null || hex(asset.content_digest, 32))
+      || !integer(asset.bytes, 1) || asset.bytes > MAX_VIDEO_BYTES || asset.stored_bytes !== videoStoredBytes(asset.bytes) || asset.mime !== "video/mp4"
+      || !["reserved", "committed", "cleanup_pending", "released"].includes(asset.state) || !date(asset.created_at) || !date(asset.updated_at)
+      || asset.updated_at < asset.created_at || !(asset.released_at === null || date(asset.released_at) && asset.released_at >= asset.created_at && asset.released_at <= asset.updated_at)
+      || asset.state === "reserved" && asset.content_digest !== null || asset.state === "committed" && asset.content_digest === null
+      || (asset.state === "released") !== (asset.released_at !== null) || ids.has(asset.id) || keys.has(asset.storage_key)) fail();
+    ids.add(asset.id); keys.add(asset.storage_key); previous = asset.id;
+    if (asset.state !== "released") held += asset.stored_bytes;
+    if (!integer(held)) fail();
+  }
+  if (held !== capacity.heldBytes) fail();
+}
+function assertVideoRecovery(before, after, fingerprint) {
+  if (before.capacity.ownerBytes !== after.capacity.ownerBytes || before.capacity.totalBytes !== after.capacity.totalBytes
+    || before.capacity.initializedAt !== after.capacity.initializedAt || before.assets.length !== after.assets.length
+    || !(after.capacity.rootFingerprint === before.capacity.rootFingerprint || hex(fingerprint, 32) && after.capacity.rootFingerprint === fingerprint)) fail("BACKUP_SNAPSHOT_DRIFT");
+  for (let index = 0; index < before.assets.length; index++) {
+    const original = before.assets[index], current = after.assets[index];
+    if (!["reserved", "cleanup_pending"].includes(original.state)) { if (!same(original, current)) fail("BACKUP_SNAPSHOT_DRIFT"); continue; }
+    const { state: oldState, updated_at: oldUpdated, released_at: oldReleased, ...immutableBefore } = original;
+    const { state, updated_at, released_at, ...immutableAfter } = current;
+    if (!same(immutableBefore, immutableAfter) || ![oldState, "cleanup_pending", "released"].includes(state)
+      || updated_at < oldUpdated || oldReleased !== null || state === "released" && released_at < oldUpdated
+      || state === oldState && (updated_at !== oldUpdated || released_at !== null)) fail("BACKUP_SNAPSHOT_DRIFT");
+  }
+  if (after.capacity.rootFingerprint !== before.capacity.rootFingerprint && after.assets.some(asset => ["reserved", "cleanup_pending"].includes(asset.state))) fail("BACKUP_SNAPSHOT_DRIFT");
+}
 
 /** A bounded consistent read of every application row, including tombstones and outboxes. */
-export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "complete-schema" }) {
-  if (typeof pool?.getConnection !== "function" || !["complete-schema", "application-tables"].includes(coverage)) fail("BACKUP_SNAPSHOT_INPUT");
+export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "complete-schema", video = false }) {
+  if (typeof pool?.getConnection !== "function" || typeof video !== "boolean" || video && coverage !== "application-tables"
+    || !["complete-schema", "application-tables"].includes(coverage)) fail("BACKUP_SNAPSHOT_INPUT");
   async function read(operation, transaction = false) {
     let connection, inspection, begun = false;
     try {
@@ -77,9 +133,9 @@ export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "co
       const { maxRows } = budget(limits); checkSignal(signal);
       const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
       if (typeof database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(database)) fail();
-      if (coverage === "application-tables") await assertApplicationTableInspection(inspection, database);
+      if (coverage === "application-tables") await (video ? assertVideoApplicationTableInspection : assertApplicationTableInspection)(inspection, database);
       else await assertBackupInspection(inspection, database);
-      const migrations = await loadMigrations();
+      const migrations = await (video ? loadVideoMigrations : loadMigrations)();
       // A reviewed ALTER adds a migration-ledger row, not another table. The
       // shared inventory validates every statement before selecting CREATEs.
       // Physical CHECK clauses are still included in schemaDigest below, and
@@ -130,8 +186,8 @@ export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "co
       foreignKeys.sort(metadataOrder(["table_name", "name", "position"])); checks.sort(metadataOrder(["table_name", "name"]));
       const schemaDigest = createHash("sha256").update(json([orderedTables.map((row) => [row.name, row.kind, row.engine, row.collation]),
         ...[columns, indexes, foreignKeys, checks].map((rows) => rows.map((row) => Object.values(row).map(cell)))])).digest("hex");
-      const core = createHash("sha256").update("jessiemessage:backup-core:v1\0"), objects = [], assets = [];
-      let rowsRead = 0, capacity = null;
+      const core = createHash("sha256").update(video ? "jessiemessage:backup-core:v2\0" : "jessiemessage:backup-core:v1\0"), objects = [], assets = [], videoAssets = [];
+      let rowsRead = 0, capacity = null, videoCapacity = null;
       for (const table of definitions) {
         checkSignal(signal);
         const tableColumns = columns.filter((column) => column.table_name === table.name);
@@ -139,7 +195,7 @@ export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "co
         const select = tableColumns.map(({ name, type }) => /^datetime/i.test(type) ? `DATE_FORMAT(${name}, '%Y-%m-%d %H:%i:%s.%f') AS ${name}` : name).join(", ");
         if (tableColumns.some(({ name }) => !/^[a-z_]+$/.test(name))) fail();
         let after = null;
-        const isCore = !["media_storage_state", "media_storage_objects"].includes(table.name);
+        const isCore = !["media_storage_state", "media_storage_objects", ...(video ? ["video_storage_state", "video_assets"] : [])].includes(table.name);
         if (isCore) core.update(json(["table", table.name, tableColumns.map(({ name }) => name)]));
         while (true) {
           checkSignal(signal);
@@ -150,6 +206,12 @@ export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "co
             if (isCore) core.update(json(tableColumns.map(({ name }) => cell(row[name]))));
             if (table.name === "media_storage_objects") objects.push(objectRow(row));
             if (table.name === "media_assets") assets.push(assetRow(row));
+            if (video && table.name === "video_assets") videoAssets.push(videoAssetRow(row));
+            if (video && table.name === "video_storage_state") {
+              if (videoCapacity !== null || number(row.id) !== 1) fail();
+              videoCapacity = { ownerBytes: number(row.owner_bytes), totalBytes: number(row.total_bytes), heldBytes: number(row.held_bytes),
+                rootFingerprint: bytes(row.root_fingerprint, 32), initializedAt: row.initialized_at };
+            }
             if (table.name === "media_storage_state") {
               if (capacity !== null || number(row.id) !== 1) fail();
               capacity = { ownerBytes: number(row.owner_bytes), totalBytes: number(row.total_bytes), heldBytes: number(row.held_bytes),
@@ -160,9 +222,10 @@ export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "co
           after = table.primary.map((name) => rows.at(-1)[name]);
         }
       }
-      const snapshot = { version: coverage === "application-tables" ? 2 : 1,
-        ...(coverage === "application-tables" ? { coverage: validateApplicationCoverage(APPLICATION_COVERAGE) } : {}),
-        schemaDigest, coreDigest: core.digest("hex"), counts: { tables: definitions.length, rows: rowsRead }, capacity, objects, assets };
+      const snapshot = { version: video ? 3 : coverage === "application-tables" ? 2 : 1,
+        ...(coverage === "application-tables" ? { coverage: video ? validateVideoApplicationCoverage(VIDEO_APPLICATION_COVERAGE) : validateApplicationCoverage(APPLICATION_COVERAGE) } : {}),
+        schemaDigest, coreDigest: core.digest("hex"), counts: { tables: definitions.length, rows: rowsRead }, capacity, objects, assets,
+        ...(video ? { video: { capacity: videoCapacity, assets: videoAssets } } : {}) };
       validateSnapshot(snapshot); return snapshot;
     }, true),
   });
@@ -174,7 +237,7 @@ export async function captureBackupSnapshot({ store, signal, limits } = {}) {
 }
 
 function validateSnapshot(snapshot) {
-  if (!snapshot || ![1, 2].includes(snapshot.version) || !hex(snapshot.schemaDigest, 32) || !hex(snapshot.coreDigest, 32)
+  if (!snapshot || ![1, 2, 3].includes(snapshot.version) || !hex(snapshot.schemaDigest, 32) || !hex(snapshot.coreDigest, 32)
     || !snapshot.counts || !integer(snapshot.counts.tables, 1) || !integer(snapshot.counts.rows)
     || !Array.isArray(snapshot.objects) || !Array.isArray(snapshot.assets) || snapshot.objects.length + snapshot.assets.length > 100000) fail();
   if (snapshot.version === 1) {
@@ -182,8 +245,13 @@ function validateSnapshot(snapshot) {
   } else {
     const coverage = Object.getOwnPropertyDescriptor(snapshot, "coverage");
     if (!coverage?.enumerable || !Object.hasOwn(coverage, "value")) fail();
-    try { if (validateApplicationCoverage(coverage.value).tables !== snapshot.counts.tables) fail(); } catch { fail(); }
+    try { if ((snapshot.version === 3 ? validateVideoApplicationCoverage : validateApplicationCoverage)(coverage.value).tables !== snapshot.counts.tables) fail(); } catch { fail(); }
   }
+  if (snapshot.version === 3) {
+    validateVideoSnapshot(snapshot.video);
+    if (snapshot.objects.length + snapshot.assets.length + snapshot.video.assets.length > 100000) fail();
+  }
+  else if (Object.hasOwn(snapshot, "video")) fail();
   const capacity = snapshot.capacity;
   if (!capacity || !integer(capacity.ownerBytes, 1) || !integer(capacity.totalBytes, capacity.ownerBytes) || !integer(capacity.heldBytes)
     || !hex(capacity.rootFingerprint, 32) || !date(capacity.initializedAt)) fail();
@@ -219,7 +287,7 @@ function validateSnapshot(snapshot) {
 }
 
 /** The signed original journal is the durable repair plan; only its pending rows may progress. */
-export function assertBackupSnapshot({ expected, actual, mode, targetFingerprint } = {}) {
+export function assertBackupSnapshot({ expected, actual, mode, targetFingerprint, targetVideoFingerprint } = {}) {
   validateSnapshot(expected); validateSnapshot(actual);
   if (!["exact", "recovery"].includes(mode)) fail("BACKUP_SNAPSHOT_INPUT");
   if (mode === "exact") { if (!same(expected, actual)) fail("BACKUP_SNAPSHOT_DRIFT"); }
@@ -241,11 +309,14 @@ export function assertBackupSnapshot({ expected, actual, mode, targetFingerprint
     }
     if (actual.capacity.rootFingerprint !== expected.capacity.rootFingerprint && actual.objects.some((object) => ["reserved", "cleanup_pending"].includes(object.state))) fail("BACKUP_SNAPSHOT_DRIFT");
   }
-  return { candidates: expected.objects.filter((object) => ["reserved", "cleanup_pending"].includes(object.state)).map((object) => ({ ...object })), heldBytes: actual.capacity.heldBytes };
+  if (expected.version === 3 && mode === "recovery") assertVideoRecovery(expected.video, actual.video, targetVideoFingerprint);
+  return { candidates: expected.objects.filter((object) => ["reserved", "cleanup_pending"].includes(object.state)).map((object) => ({ ...object })), heldBytes: actual.capacity.heldBytes,
+    ...(expected.version === 3 ? { videoCandidates: expected.video.assets.filter(object => ["reserved", "cleanup_pending"].includes(object.state)).map(object => ({ ...object })), videoHeldBytes: actual.video.capacity.heldBytes } : {}) };
 }
 
-/** Structural scan only: GCM authentication is performed by verifyBackupData. */
-export async function verifyBackupStorage({ snapshot, storage, signal, limits } = {}) {
+/** Photo structure plus candidate video inventory. The video pass also checks
+ * pending published files, which the committed-content crypto reader omits. */
+export async function verifyBackupStorage({ snapshot, storage, videoStorage, expectedVideoRootFingerprint, signal, limits } = {}) {
   validateSnapshot(snapshot); const { maxEntries, maxIssues } = budget(limits);
   if (typeof storage?.inspectEntry !== "function" || typeof storage?.scanEntries !== "function") fail("BACKUP_SNAPSHOT_INPUT");
   const issues = [], expected = new Map(), seen = new Set(); let entries = 0, healthy = true;
@@ -270,5 +341,10 @@ export async function verifyBackupStorage({ snapshot, storage, signal, limits } 
     observed.add(key);
   }
   if (seen.size !== observed.size || [...seen].some((key) => !observed.has(key))) issue("FILES_CHANGED");
+  if (snapshot.version === 3) {
+    const video = await inspectVideoBackupInventory({ video: snapshot.video, storage: videoStorage, expectedRootFingerprint: expectedVideoRootFingerprint, signal, limits });
+    return { complete: video.complete === true, healthy: healthy && video.healthy === true, entries,
+      issues, issuesTruncated: !healthy && issues.length === maxIssues, video };
+  }
   return { complete: true, healthy, entries, issues, issuesTruncated: !healthy && issues.length === maxIssues };
 }

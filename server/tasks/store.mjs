@@ -1,7 +1,8 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { createSessionClock } from "../auth/session-policy.mjs";
 import { ChatStoreError, normalizedCheckTree, authoredMigrationCheck } from "../chat/store.mjs";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 import { openTask, sealTask, taskFingerprint } from "./crypto.mjs";
 import { TasksError, fail, id, instant, MAX_VERSION, validateList, validateSave, version } from "./validation.mjs";
 
@@ -64,13 +65,13 @@ export function createTasksStore({ pool, chatStore, key, clock } = {}) {
     if (!row) fail("TASKS_NOT_FOUND"); return decoded(row, adminId, now);
   }
   return Object.freeze({
-    async assertSchema() {
+    async assertSchema(options = {}) {
       let connection;
       try {
         connection = await pool.getConnection();
         const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
-        const migrations = await loadMigrations(), history = await migrationStatus(connection, { database, migrations });
-        if (migrations.length !== 33 || history.length !== 33 || history.some(row => row.state !== "applied")) fail();
+        const migrations = await loadStoreMigrations(options), history = await migrationStatus(connection, { database, migrations });
+        if (migrations.length !== (options.video === true ? 36 : 33) || history.length !== migrations.length || history.some(row => row.state !== "applied")) fail();
         const table = (await connection.query("SELECT ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'crm_tasks'", [database]))[0];
         if (table?.engine !== "InnoDB") fail();
         const columns = await connection.query(`SELECT COLUMN_NAME AS name, DATA_TYPE AS type, IS_NULLABLE AS nullable,

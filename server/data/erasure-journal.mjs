@@ -63,6 +63,41 @@ export function verifyErasureJournalEnvelope({ key: sourceKey, binding, filename
   finally { key.fill(0); }
 }
 
+/** Explicit scopes for a video runtime. Historical photo receipts keep their
+ * original root and database binding, filename, namespace and ciphertext. */
+export function erasureJournalBindings(value) {
+  const binding = erasureBinding(value), video = Object.hasOwn(binding, "videoRootFingerprint");
+  if (video && binding.videoRootFingerprint === binding.rootFingerprint) failErasure("ERASURE_INPUT");
+  return { binding, ...(video ? { legacyBinding: { database: binding.database, rootFingerprint: binding.rootFingerprint } } : {}) };
+}
+function scopedBindings(value, legacyBinding) {
+  const scopes = erasureJournalBindings(value);
+  if (legacyBinding !== undefined) {
+    if (!scopes.legacyBinding || JSON.stringify(erasureBinding(legacyBinding)) !== JSON.stringify(scopes.legacyBinding)) failErasure("ERASURE_INPUT");
+  }
+  return { ...scopes, allowLegacy: legacyBinding !== undefined };
+}
+
+/** Select one authenticated scope from the envelope version. Never try keys or
+ * bindings in turn, and never reinterpret a historical receipt as video work. */
+export function verifyScopedErasureJournalEnvelope({ key, binding, legacyBinding, filename, content }) {
+  const scopes = scopedBindings(binding, legacyBinding);
+  if (!Buffer.isBuffer(content) || content.length > 4096) failErasure("ERASURE_INPUT");
+  let version;
+  try {
+    const parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(content));
+    const descriptor = Object.getOwnPropertyDescriptor(parsed, "version");
+    if (!descriptor || !Object.hasOwn(descriptor, "value")) failErasure();
+    version = descriptor.value;
+  } catch (error) { if (error instanceof AccountErasureError) throw error; failErasure(); }
+  if (version !== 1 && version !== 2) failErasure("ERASURE_INPUT");
+  const selected = version === 1 && scopes.legacyBinding
+    ? scopes.allowLegacy ? scopes.legacyBinding : null
+    : version === versionFor(scopes.binding) ? scopes.binding : null;
+  if (selected === null) failErasure("ERASURE_INPUT");
+  return verifyErasureJournalEnvelope({ key, binding: selected, filename, content });
+}
+
 /** Outside the SQL/media backup: a minimal encrypted intent and completion receipt.
  * Key-independent opaque names ensure a wrong key cannot hide an existing job. */
 export function createErasureJournal({ directory, key: sourceKey, binding, clientId }, internal = {}) {
@@ -113,8 +148,8 @@ function journalFile({ directory, sourceKey, binding, clientId, name }, internal
 
 /** Read-only recovery discovery, including a job whose SQL account is already
  * gone. No plaintext identity index or remembered browser ID is required. */
-export async function readErasureJournalBatch({ directory, key, binding, afterName = null, limit = 25 }, internal = {}) {
-  binding = erasureBinding(binding);
+export async function readErasureJournalBatch({ directory, key, binding, legacyBinding, afterName = null, limit = 25 }, internal = {}) {
+  const scopes = scopedBindings(binding, legacyBinding); binding = scopes.binding;
   const pattern = /^erasure-[a-f0-9]{64}\.json$/;
   if (!Buffer.isBuffer(key) || key.length !== 32 || afterName !== null && (typeof afterName !== "string" || !pattern.test(afterName))
     || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) failErasure("ERASURE_INPUT");
@@ -130,13 +165,33 @@ export async function readErasureJournalBatch({ directory, key, binding, afterNa
       }
       names.sort(); const jobs = [];
       for (const filename of names.slice(0, limit)) {
-        const file = journalFile({ directory, sourceKey: key, binding, clientId: null, name: filename.slice(0, -5) },
-          { withDirectory: (_directory, work) => work(scope) });
-        try {
-          const { revision, record } = await file.read();
-          if (record === null) failErasure("ERASURE_CHANGED");
-          jobs.push({ clientId: record.clientId, phase: record.phase, revision, updatedAt: record.updatedAt });
-        } finally { file.close(); }
+        if (scopes.legacyBinding) {
+          // The shared reader authenticates canonical, pinned private bytes;
+          // the envelope version only selects the one permitted scope.
+          const store = createPrivateJsonStore({ name: filename, lock: filename.replace(/\.json$/, ".lock"), maxBytes: 4096,
+            validate(value) {
+              const version = value && typeof value === "object" && Object.getOwnPropertyDescriptor(value, "version")?.value;
+              if (![1, 2].includes(version)) failErasure("ERASURE_INPUT");
+              return validate(value, version);
+            }, empty: () => { failErasure("ERASURE_CHANGED"); },
+            fail: code => failErasure(({ input: "ERASURE_INPUT", changed: "ERASURE_CHANGED", busy: "ERASURE_BUSY" })[code]),
+            isKnownError: error => error instanceof AccountErasureError });
+          const state = await store.read(directory, { withDirectory: (_directory, work) => work(scope) });
+          const content = Buffer.from(`${JSON.stringify(state)}\n`);
+          try {
+            const { revision, record } = verifyScopedErasureJournalEnvelope({ key, binding, legacyBinding, filename, content });
+            jobs.push({ clientId: record.clientId, phase: record.phase, revision, updatedAt: record.updatedAt,
+              version: record.version, binding: record.binding });
+          } finally { content.fill(0); }
+        } else {
+          const file = journalFile({ directory, sourceKey: key, binding, clientId: null, name: filename.slice(0, -5) },
+            { withDirectory: (_directory, work) => work(scope) });
+          try {
+            const { revision, record } = await file.read();
+            if (record === null) failErasure("ERASURE_CHANGED");
+            jobs.push({ clientId: record.clientId, phase: record.phase, revision, updatedAt: record.updatedAt });
+          } finally { file.close(); }
+        }
       }
       await scope.assertReady(); return { jobs, nextCursor: names.length > limit ? names[limit - 1] : null };
     });

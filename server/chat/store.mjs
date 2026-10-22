@@ -1,7 +1,8 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionExpiry, CLIENT_SESSION_SECONDS, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { manuallyAdmittedClient, invitationConsumptionProjection } from "../access/admission.mjs";
 import { timingSafeEqual } from "node:crypto";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 
 export class ChatStoreError extends Error {
   constructor(code, message = "Private conversation persistence could not be completed.") {
@@ -424,12 +425,12 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
       });
     },
 
-    async assertSchema() {
+    async assertSchema(options = {}) {
       return run(async (connection) => {
         const database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
         if (Number(enforcement.foreignKeys) !== 1 || Number(enforcement.checkConstraints) !== 1) state();
-        const migrations = await loadMigrations();
+        const migrations = await loadStoreMigrations(options);
         const history = await migrationStatus(connection, { database, migrations });
         if (history.length < 15 || history.some((item) => item.state !== "applied")) state();
         const tables = await connection.query("SELECT TABLE_NAME AS name, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);

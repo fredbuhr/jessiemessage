@@ -1,7 +1,8 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { createSessionClock } from "../auth/session-policy.mjs";
 import { ChatStoreError, normalizedCheckTree, authoredMigrationCheck } from "../chat/store.mjs";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 import { campaignFingerprint, recipientProof, sealPayload } from "../broadcast/crypto.mjs";
 import { audienceSelectorHash, readPreviewToken } from "../broadcast/audience.mjs";
 import { BroadcastStoreError } from "../broadcast/store.mjs";
@@ -104,13 +105,13 @@ export function createAnnouncementsStore({ pool, chatStore, broadcastStore, key,
     }
   }
   return Object.freeze({
-    async assertSchema() {
+    async assertSchema(options = {}) {
       let connection;
       try {
         connection = await pool.getConnection();
         const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
-        const migrations = await loadMigrations(), history = await migrationStatus(connection, { database, migrations });
-        if (migrations.length !== 33 || history.length !== 33 || history.some(row => row.state !== "applied")) fail();
+        const migrations = await loadStoreMigrations(options), history = await migrationStatus(connection, { database, migrations });
+        if (migrations.length !== (options.video === true ? 36 : 33) || history.length !== migrations.length || history.some(row => row.state !== "applied")) fail();
         const table = (await connection.query("SELECT ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'announcements'", [database]))[0];
         if (table?.engine !== "InnoDB") fail();
         const columns = await connection.query(`SELECT COLUMN_NAME AS name, DATA_TYPE AS type, IS_NULLABLE AS nullable,

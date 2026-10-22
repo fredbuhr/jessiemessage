@@ -29,6 +29,7 @@ Le [plan révisé](docs/PLAN-IMPLEMENTATION.md) suit quatre livrables : **G1 sau
 | [Catalogue vidéo 1.8.0 en développement](docs/video-catalogue-180.md) | Jalon 7.1 sur branche : catalogue/capacité SQL candidats et contrat, sans activation ni migration normale. |
 | [Message vidéo privé 1.8.0 en développement](docs/video-messages-180.md) | Jalon 7.2 qualifié sur branche : lien atomique, légende chiffrée, droits destinataire et galerie serveur ; aucune activation ni interface. |
 | [Cycle de vie vidéo 1.8.0 en développement](docs/video-lifecycle-180.md) | 7.3a/b/c et intégration de sécurité qualifiés sur branche ; suite inventaire/capture/restauration 7.3d ; aucun branchement normal ni promotion SQL. |
+| [Intégration vidéo G2 sur branche](docs/video-integration-180.md) | Runtime explicite SQL36, interface, diffusions, sauvegarde/restauration à deux racines et ZIP vidéo codés ; qualification native complète en attente, non livré. |
 | [Bilan global de l’application](docs/BILAN-GLOBAL-20261022.md) | Fonctions livrées, vidéo encore sur branche, manques, défauts connus et limites ; plan regroupé en quatre livrables pour la prochaine version. |
 | [Bilan de production du 22 octobre](docs/PLAN-PRODUCTION-20261022.md) | Correctif 1.7.1 livré ; le décompte vidéo est remplacé par le plan global. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |

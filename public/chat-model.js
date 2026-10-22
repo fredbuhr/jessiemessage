@@ -11,7 +11,7 @@ export function compareSequence(left, right) {
 }
 export function maxSequence(left, right) { return compareSequence(left, right) < 0 ? right : left; }
 export function makeConversationState(id, epoch = 0) {
-  return { id, epoch, messages: new Map(), conversation: null, eventCursor: "0", pending: null, draft: "", imageDraft: null, hasMoreBefore: false, nextBefore: null, hasMoreAfter: false, nextAfter: null, notificationSequence: null };
+  return { id, epoch, messages: new Map(), conversation: null, eventCursor: "0", pending: null, draft: "", imageDraft: null, videoDraft: null, hasMoreBefore: false, nextBefore: null, hasMoreAfter: false, nextAfter: null, notificationSequence: null };
 }
 export function belongsTo(state, id, epoch) { return Boolean(state && state.id === id && state.epoch === epoch); }
 export function orderedMessages(state) { return [...state.messages.values()].sort((a, b) => compareSequence(a.sequence, b.sequence)); }
@@ -22,10 +22,10 @@ export function mergeMessages(state, messages) {
     if (existing && existing.id !== incoming.id) throw new TypeError("conflicting_message_sequence");
     // A later fetch may contain an older snapshot; a deletion always wins.
     const message = existing?.deletedAt != null ? { ...existing } : { ...incoming, body: incoming.deletedAt != null ? null : incoming.body };
-    if (message.deletedAt != null) delete message.media;
+    if (message.deletedAt != null) { delete message.media; delete message.video; }
     state.messages.set(incoming.sequence, message);
     if (message.sender === "me" && message.clientMessageId && state.pending?.clientMessageId === message.clientMessageId) {
-      state.pending = null; state.imageDraft = null;
+      state.pending = null; state.imageDraft = null; state.videoDraft = null;
     }
   }
   return state;
@@ -64,7 +64,7 @@ export function validBody(body) {
 }
 export function prepareSend(state, body, clientMessageId) {
   if (state.pending) {
-    if (state.pending.kind === "image" || state.pending.body !== body) throw new Error("pending_message_changed");
+    if (["image", "video"].includes(state.pending.kind) || state.pending.body !== body) throw new Error("pending_message_changed");
     state.pending.status = "sending";
     return state.pending;
   }
@@ -92,6 +92,29 @@ export function completeImageUpload(state, clientMessageId, mediaId) {
   if (typeof mediaId !== "string" || mediaId.length !== 32 || !/^[0-9a-f]{32}$/.test(mediaId)) throw new TypeError("invalid_media_id");
   if (state.pending.mediaId && state.pending.mediaId !== mediaId) throw new Error("pending_asset_changed");
   state.pending.mediaId = mediaId; state.pending.file = null; state.pending.stage = "sending"; return true;
+}
+export function prepareVideoSend(state, { caption, videoId = null, file = null }, clientMessageId) {
+  if (state.pending) {
+    if (state.pending.kind !== "video" || state.pending.caption !== caption
+      || videoId !== null && state.pending.videoId !== videoId || file !== null && state.pending.file !== file) throw new Error("pending_message_changed");
+    state.pending.status = "sending"; return state.pending;
+  }
+  if (!validCaption(caption) || typeof clientMessageId !== "string" || !/^[0-9a-f]{32}$/.test(clientMessageId)
+    || videoId !== null && (typeof videoId !== "string" || !/^[0-9a-f]{32}$/.test(videoId))
+    || videoId === null && !file) throw new TypeError("invalid_video_message");
+  state.pending = { kind: "video", clientMessageId, caption, videoId, file, stage: videoId ? "sending" : "uploading", status: "sending" };
+  return state.pending;
+}
+export function completeVideoUpload(state, clientMessageId, videoId) {
+  if (state.pending?.kind !== "video" || state.pending.clientMessageId !== clientMessageId) return false;
+  if (typeof videoId !== "string" || !/^[0-9a-f]{32}$/.test(videoId)) throw new TypeError("invalid_video_id");
+  if (state.pending.videoId && state.pending.videoId !== videoId) throw new Error("pending_asset_changed");
+  state.pending.videoId = videoId; state.pending.file = null; state.pending.stage = "sending"; return true;
+}
+export function rejectPendingVideoSend(state, status) {
+  if (state.pending?.kind !== "video") return false;
+  if (status === 404) { state.pending = null; state.videoDraft = null; return true; }
+  return rejectPendingSend(state, status);
 }
 export function mediaStillCurrent(state, { id, epoch, messageId, mediaId }) {
   if (!belongsTo(state, id, epoch)) return false;

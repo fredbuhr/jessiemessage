@@ -1,5 +1,6 @@
+import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { ChatStoreError } from "../chat/store.mjs";
-import { loadMigrations, migrationStatus } from "../db/migrations.mjs";
+import { migrationStatus } from "../db/migrations.mjs";
 import { heldMediaObjects, lockMediaCapacity, ownerMediaBytes, pendingMediaBytes, validateMediaCapacity } from "./capacity-store.mjs";
 import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS } from "./backup-limits.mjs";
 
@@ -127,14 +128,14 @@ export function createMediaStore({ pool, chatStore, capacity = null }) {
   }
 
   return Object.freeze({
-    async assertSchema() {
-      await chatStore.assertSchema(); let connection;
+    async assertSchema(options = {}) {
+      await chatStore.assertSchema(options); let connection;
       try {
         connection = await pool.getConnection();
         const database = (await connection.query("SELECT DATABASE() AS name"))[0].name;
         const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
         if (Number(enforcement.foreignKeys) !== 1 || Number(enforcement.checkConstraints) !== 1) state();
-        const migrations = await loadMigrations(), history = await migrationStatus(connection, { database, migrations });
+        const migrations = await loadStoreMigrations(options), history = await migrationStatus(connection, { database, migrations });
         if (history.length < 27 || history.some((item) => item.state !== "applied")) state();
         const tables = await connection.query("SELECT TABLE_NAME AS name, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
         const columns = await connection.query(`SELECT TABLE_NAME AS tableName, COLUMN_NAME AS columnName, DATA_TYPE AS dataType,

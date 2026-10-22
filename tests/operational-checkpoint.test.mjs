@@ -171,3 +171,66 @@ test("native Linux descriptor anchoring captures, seals, rereads and quarantines
   await assert.rejects(withPrivateDirectory(f.target, assertNoOperationalRestore));
 });
 test("Linux CI must exercise native operational checkpoint anchoring", { skip: !["true", "1"].includes(process.env.CI) }, () => assert.equal(procfs, true));
+
+const videoBinding = { ...binding, videoRootFingerprint: "d".repeat(64) };
+const videoTargetBinding = { ...targetBinding, videoRootFingerprint: "e".repeat(64) };
+const videoReceipt = () => ({ ...receipt(), version: 12, profile: "messaging-photos-notify-recovery-crm-broadcast-video-application", video: { files: [], bytes: 0 } });
+async function populateVideo(directory, id = "f".repeat(32), completed = false) {
+  const journal = createErasureJournal({ directory, key, binding: videoBinding, clientId: id }, { withDirectory: withErasureDirectory });
+  let value = { version: 2, clientId: id, binding: videoBinding, phase: "requested", cursor: null, startedAt: now, updatedAt: now }, revision = 0;
+  try {
+    revision = (await journal.save(value, revision, allow)).revision;
+    if (completed) for (const phase of ["prepared", "files_erased", "completed"]) {
+      value = { ...value, phase, updatedAt: value.updatedAt + 1 }; revision = (await journal.save(value, revision, allow)).revision;
+    }
+  } finally { journal.close(); }
+}
+const videoCapture = directory => withErasureDirectory(directory, scope => captureOperationalState(scope, { key, binding: videoBinding }));
+test("video operational scope preserves and authenticates original v1 and v2 receipts in one explicit capsule", async t => {
+  const f = await fixture(t); await populate(f.source, true); await populateVideo(f.source);
+  const original = Object.fromEntries(await Promise.all((await readdir(f.source)).map(async name => [name, await readFile(path.join(f.source, name))])));
+  const state = await videoCapture(f.source);
+  assert.deepEqual(Object.keys(state), ["version", "binding", "legacyBinding", "files"]);
+  assert.equal(state.version, 2); assert.deepEqual(state.binding, videoBinding); assert.deepEqual(state.legacyBinding, binding);
+  assert.deepEqual(new Set(state.files.map(file => JSON.parse(Buffer.from(file.content, "base64url")).version)), new Set([1, 2]));
+  for (const file of state.files) assert.deepEqual(Buffer.from(file.content, "base64url"), original[file.name]);
+  const selected = videoReceipt(); selected.operations = await withErasureDirectory(f.checkpoint, scope => writeOperationalCheckpoint(scope, state, selected, key));
+  assert.equal(JSON.parse(await readFile(path.join(f.checkpoint, OPERATIONAL_CHECKPOINT))).version, 2);
+  assert.deepEqual(await withErasureDirectory(f.checkpoint, scope => readOperationalCheckpoint(scope, selected, key)), state);
+  for (const [name, content] of Object.entries(original)) assert.deepEqual(await readFile(path.join(f.source, name)), content);
+});
+test("video capsule AAD binds the video inventory and cannot be read as a legacy capsule", async t => {
+  const f = await fixture(t); await populate(f.source, true); await populateVideo(f.source);
+  const state = await videoCapture(f.source), selected = videoReceipt();
+  selected.operations = await withErasureDirectory(f.checkpoint, scope => writeOperationalCheckpoint(scope, state, selected, key));
+  for (const change of [value => value.video.bytes++, value => value.video.files.push({ name: "a".repeat(64) + ".video.enc", bytes: 1, sha256: "b".repeat(64) }), value => value.version = 10]) {
+    const altered = structuredClone(selected); change(altered);
+    await assert.rejects(withErasureDirectory(f.checkpoint, scope => readOperationalCheckpoint(scope, altered, key)));
+  }
+  const legacyDestination = path.join(f.directory, "legacy-destination"); await mkdir(legacyDestination, { mode: 0o700 });
+  await assert.rejects(withErasureDirectory(legacyDestination, scope => writeOperationalCheckpoint(scope, state, receipt(), key)), { code: "OPERATIONS_INPUT" });
+  assert.deepEqual(await readdir(legacyDestination), []);
+});
+test("mixed operational scope rejects an omitted or substituted legacy binding and any video downgrade", async t => {
+  const f = await fixture(t); await populate(f.source, true); await populateVideo(f.source, "f".repeat(32), true);
+  const state = await videoCapture(f.source);
+  for (const changed of [{ ...state, legacyBinding: targetBinding }, { version: 2, binding: videoBinding, files: state.files },
+    { version: 1, binding: videoBinding, files: state.files }, { ...state, binding: { ...videoBinding, videoRootFingerprint: "0".repeat(64) } }])
+    assert.throws(() => planOperationalRestore({ backup: state, current: changed, targetBinding: videoTargetBinding, key }));
+  assert.throws(() => planOperationalRestore({ backup: state, current: state, targetBinding, key }), { code: "OPERATIONS_BINDING_CHANGED" });
+  await assert.rejects(withErasureDirectory(f.source, scope => captureOperationalState(scope, { key, binding })), "legacy-only scope must not accept a video envelope");
+});
+test("video quarantine retains both original scopes with a v2 blocking marker and rejects photo-only reopening", async t => {
+  const f = await fixture(t); await populate(f.source, true); await populateVideo(f.source, "f".repeat(32), true);
+  const state = await videoCapture(f.source), expected = operationalStateHash(state);
+  const result = await withErasureDirectory(f.target, scope => restoreOperationalQuarantine(scope, { backup: state, current: state,
+    targetBinding: videoTargetBinding, key, expectedCurrentSha256: expected, assertCurrent: async actual => assert.equal(actual, expected) }));
+  assert.equal(result.started, false); assert.equal(result.completedReceipts, 2);
+  const marker = JSON.parse(await readFile(path.join(f.target, OPERATIONAL_RESTORE_MARKER)));
+  assert.equal(marker.version, 2); assert.deepEqual(marker.sourceBinding, videoBinding); assert.deepEqual(marker.targetBinding, videoTargetBinding);
+  for (const file of state.files) assert.equal((await readFile(path.join(f.target, file.name))).toString("base64url"), file.content);
+  const { readOperationalQuarantine } = await import("../server/backup/operational-checkpoint.mjs");
+  const restored = await withErasureDirectory(f.target, scope => readOperationalQuarantine(scope, { key, sourceBinding: videoBinding, targetBinding: videoTargetBinding }));
+  assert.deepEqual(restored.state, state);
+  await assert.rejects(withErasureDirectory(f.target, scope => readOperationalQuarantine(scope, { key, sourceBinding: binding, targetBinding })));
+});

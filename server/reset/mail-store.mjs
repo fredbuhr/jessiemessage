@@ -31,7 +31,7 @@ export function createResetMailStore(pool) {
     } finally { if (connection) { try { connection.release(); } catch {} } }
   }
   return Object.freeze({
-    assertSchema: () => assertResetSchema(pool),
+    assertSchema: (options) => assertResetSchema(pool, options),
     async claim({ now, leaseMilliseconds = 120000 }) {
       instant(now);
       if (!Number.isSafeInteger(leaseMilliseconds) || leaseMilliseconds < 1000 || leaseMilliseconds > 300000

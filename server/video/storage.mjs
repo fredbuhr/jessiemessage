@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { lstat, realpath, open as openFile, link, unlink, statfs, readdir } from "node:fs/promises";
+import { lstat, realpath, open as openFile, link, unlink, statfs, readdir, opendir } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHmac, createHash, randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -304,10 +304,91 @@ export async function createVideoStorage({ root, key, pathMode = privatePathMode
     if (failure) throw failure;
     return result;
   }
+  const publishedName = /^([a-f0-9]{64})\.video\.enc$/;
+  const stagingName = /^\.([a-f0-9]{64})\.video\.[a-f0-9]{32}\.tmp$/;
+  function entryIdentity(name) {
+    const published = publishedName.exec(name), staging = published ? null : stagingName.exec(name), match = published ?? staging;
+    return match ? { kind: published ? "published" : "staging", storageKey: Buffer.from(match[1], "hex") } : { kind: "unknown" };
+  }
+  function entryMetadata(stats) {
+    const mtimeMs = Number(stats.mtimeMs);
+    if (typeof stats.size !== "bigint" || stats.size < 0n || !Number.isSafeInteger(mtimeMs) || mtimeMs < 0) throw new VideoStorageError();
+    return { encryptedBytes: stats.size, mtimeMs };
+  }
+  // A bounded header inspection classifies entries without authenticating the
+  // payload. Backup admission separately authenticates every video block.
+  async function inspectNamed(scope, name, entry) {
+    let handle, header;
+    try {
+      await scope.assertReady();
+      const target = scope.file(name); let initial;
+      try { initial = await lstat(target, { bigint: true }); }
+      catch (error) { if (error?.code === "ENOENT") return null; throw error; }
+      const metadata = entryMetadata(initial);
+      if (entry.kind === "unknown" || !safeFile(initial)) return { ...entry, ...metadata, status: "unsafe" };
+      try { handle = await openFile(target, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK); }
+      catch (error) {
+        if (error?.code === "ENOENT") return null;
+        if (["ELOOP", "EISDIR", "ENXIO"].includes(error?.code)) return { ...entry, ...metadata, status: "unstable" };
+        throw error;
+      }
+      const before = await handle.stat({ bigint: true });
+      if (!unchanged(initial, before)) return { ...entry, ...metadata, status: "unstable" };
+      if (!safeFile(before)) return { ...entry, ...entryMetadata(before), status: "unsafe" };
+      let status = "invalid_envelope";
+      if (before.size >= BigInt(videoStoredBytes(1)) && before.size <= BigInt(videoStoredBytes(MAX_VIDEO_BYTES))) {
+        header = await readExactly(handle, RAW_HEADER_BYTES, 0);
+        if (header.subarray(0, MAGIC.length).equals(MAGIC) && header.readUInt32BE(8) === VIDEO_BLOCK_BYTES) {
+          const bytes = header.readBigUInt64BE(12);
+          if (bytes >= 1n && bytes <= BigInt(MAX_VIDEO_BYTES) && BigInt(videoStoredBytes(Number(bytes))) === before.size) status = "structural_ok";
+        }
+      }
+      const after = await handle.stat({ bigint: true }); let visible;
+      try { visible = await lstat(target, { bigint: true }); } catch (error) { if (error?.code !== "ENOENT") throw error; }
+      if (!safeFile(after) || !unchanged(initial, after) || !visible || !safeFile(visible) || !unchanged(after, visible)) status = "unstable";
+      await scope.assertReady();
+      return { ...entry, ...entryMetadata(after), status };
+    } finally { header?.fill(0); await handle?.close(); }
+  }
+  async function inspectEntry(options = {}) {
+    if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some(name => name !== "storageKey")) input();
+    const storageKey = identifier(options.storageKey, 32); let scope, failure, result;
+    try {
+      scope = await directory();
+      const entry = await inspectNamed(scope, filename(storageKey), { kind: "published", storageKey });
+      await scope.assertReady(); result = entry === null ? { exists: false } : { exists: true, ...entry };
+    } catch (error) { failure = wrapped(error); }
+    finally { try { await scope?.close(); } catch (error) { failure ??= wrapped(error); } }
+    if (failure) throw failure; return result;
+  }
+  async function* scanEntries(options = {}) {
+    if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some(name => !["maxEntries", "signal"].includes(name))) input();
+    const { maxEntries = 100000, signal } = options; checkSignal(signal);
+    if (!Number.isSafeInteger(maxEntries) || maxEntries < 1 || maxEntries > 100000) input();
+    let scope, directoryHandle, failure;
+    try {
+      abort(signal); scope = await directory(); directoryHandle = await opendir(scope.path, { bufferSize: 32 }); await scope.assertReady();
+      let count = 0;
+      while (true) {
+        abort(signal); const entry = await directoryHandle.read(); abort(signal); await scope.assertReady();
+        if (entry === null) break;
+        if (++count > maxEntries) throw new VideoStorageError("VIDEO_SCAN_LIMIT");
+        const identity = entryIdentity(entry.name), value = await inspectNamed(scope, entry.name, identity);
+        abort(signal); await scope.assertReady();
+        yield value ?? { ...identity, encryptedBytes: 0n, mtimeMs: 0, status: "unstable" };
+      }
+      abort(signal); await scope.assertReady();
+    } catch (error) { failure = wrapped(error); }
+    finally {
+      try { await directoryHandle?.close(); } catch (error) { failure ??= wrapped(error); }
+      try { await scope?.close(); } catch (error) { failure ??= wrapped(error); }
+      if (failure) throw failure;
+    }
+  }
   async function availableSpace() {
     let scope;
     try { scope = await directory(); const stats = await statfs(`${scope.path}/.`, { bigint: true }); await scope.assertReady(); if (stats.bavail < 0n || stats.bsize <= 0n) throw new VideoStorageError(); return { availableBytes: stats.bavail * stats.bsize }; }
     catch (error) { throw wrapped(error); } finally { await scope?.close().catch(() => {}); }
   }
-  return Object.freeze({ put, open, remove, fingerprint, availableSpace });
+  return Object.freeze({ put, open, remove, fingerprint, availableSpace, inspectEntry, scanEntries });
 }

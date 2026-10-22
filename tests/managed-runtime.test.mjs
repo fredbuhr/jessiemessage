@@ -226,6 +226,25 @@ test("the optional copy directory crosses the fixed IPC launcher and reaches onl
   assert.deepEqual(await runtime.stop(), { exitCode: 0, signal: null });
 });
 
+test("explicit video activation crosses fixed IPC only with the managed closure boundary", async t => {
+  const port = await freePort();
+  const source = shimFixture().replace("port:Number(process.env.PORT)},", "port:Number(process.env.PORT),operationsDirectory:'/synthetic-operations',accountClosures:true,video:true},")
+    .replace("async main(args,dependencies){", "async main(args,dependencies){if(args[args.indexOf('--profile')+1]!=='photos-notify-recovery-crm-broadcast-video'||dependencies.managedVideo!==true)throw new Error('missing explicit video profile');")
+    .replace("async start(){const server", "async start(env,options){if(options.video!==true||options.accountClosures!==true||options.backupDirectory!=='/synthetic-operations')throw new Error('missing managed video boundary');const server");
+  const f = await fixture(t, source), runtime = createManagedRuntime({ ...options(port), operationsDirectory: "/synthetic-operations", accountClosures: true, video: true },
+    { ...f.internal, startupMilliseconds: 1500, stopMilliseconds: 400, fetchClient: undefined });
+  t.after(() => runtime.destroy()); await runtime.start();
+  assert.deepEqual(f.invocations[0].args.slice(-4), ["--account-closures", "managed", "--video", "managed"]);
+  assert.equal(parseArguments(f.invocations[0].args).video, true); assert.deepEqual(await runtime.stop(), { exitCode: 0, signal: null });
+  for (const changes of [{ video: true }, { operationsDirectory: "/synthetic-operations", accountClosures: true, video: "1" },
+    { operationsDirectory: "/synthetic-operations", accountClosures: true, video: true, parentGateway: true }])
+    assert.throws(() => createManagedRuntime({ ...options(port), ...changes }), { code: "MANAGED_RUNTIME_CONFIGURATION" });
+  const base = ["--runtime-directory", "/synthetic-runtime", "--private-directory", "/synthetic-private", "--port", String(port)];
+  for (const flags of [["--video", "managed"], ["--operations-directory", "/synthetic-operations", "--account-closures", "managed", "--video", "true"],
+    ["--operations-directory", "/synthetic-operations", "--account-closures", "managed", "--parent-gateway", "managed", "--video", "managed"]])
+    assert.throws(() => parseArguments([...base, ...flags]), { code: "PRIVATE_MESSAGING_CHILD" });
+});
+
 test("paths, ambient application secrets, port mismatch and callback configuration fail before fork", () => {
   for (const changes of [{ runtimeDirectory: "/a/../b" }, { privateDirectory: "/" }, { port: 0 }, { environment: { ...environment(), JESSIEMESSAGE_RUNTIME_DB_PASSWORD: "secret" } },
     { environment: environment(3001) }, { onUnexpectedExit: true }]) {

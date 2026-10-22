@@ -77,14 +77,14 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler,
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, videoHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler,
   entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null,
   legacyHandlers = null, transitionHandler = null, parentGateway = false } = {}) {
   if (typeof parentGateway !== "boolean") throw new RequestOriginError();
   const requestOriginAllowed = requestOrigin === null ? null : createRequestOriginGuard(requestOrigin);
   let legacyOriginAllowed = null, legacyChain = null;
   if (legacyHandlers !== null) {
-    const names = ["authHandler", "accessHandler", "chatHandler", "mediaHandler", "profileHandler", "crmHandler", "resetHandler", "readinessHandler", "broadcastHandler", "announcementsHandler", "tasksHandler", "notificationsHandler", "entryHandler"];
+    const names = ["authHandler", "accessHandler", "chatHandler", "mediaHandler", "videoHandler", "profileHandler", "crmHandler", "resetHandler", "readinessHandler", "broadcastHandler", "announcementsHandler", "tasksHandler", "notificationsHandler", "entryHandler"];
     if (requestOrigin !== PRIMARY_ORIGIN || !legacyHandlers || Object.getPrototypeOf(legacyHandlers) !== Object.prototype
       || Object.getOwnPropertySymbols(legacyHandlers).length
       || Object.getOwnPropertyNames(legacyHandlers).some(name => !names.includes(name))
@@ -96,14 +96,14 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   if (transitionHandler !== null && (typeof transitionHandler !== "function" || legacyChain === null)) throw new RequestOriginError();
   if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
-  const privateHandlers = [closureHandler, privacyHandler, backupHandler, notificationsHandler, tasksHandler, announcementsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, profileHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
+  const privateHandlers = [closureHandler, privacyHandler, backupHandler, notificationsHandler, tasksHandler, announcementsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, profileHandler, videoHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
   const adminPages = new Map([["/admin", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"], ["/admin/announcements", "announcementsHandler"], ["/admin/tasks", "tasksHandler"],
     ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"], ["/admin/privacy", "privacyHandler"], ["/admin/closures", "closureHandler"]]);
   const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, announcementsHandler, tasksHandler, readinessHandler, backupHandler, privacyHandler, closureHandler };
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
     "/manual-backups.js", "/manual-backups.css", "/i18n-manual-backups.js",
-    "/admin/privacy", "/privacy.js", "/privacy.css", "/i18n-privacy.js", "/admin/closures", "/closures.js", "/closures.css", "/i18n-closures.js", "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
+    "/admin/privacy", "/privacy.js", "/privacy.css", "/i18n-privacy.js", "/admin/closures", "/closures.js", "/closures.css", "/i18n-closures.js", "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/i18n-broadcast.js",
     "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/client-archive.js", "/conversation-download.js", "/readiness.js", "/readiness-model.js", "/readiness.css",
     "/admin/announcements", "/announcements.js", "/announcements-model.js", "/announcements.css", "/announcement-banner.js", "/announcement-banner.css",
     "/admin/tasks", "/tasks.js", "/tasks-model.js", "/tasks.css"]);
@@ -242,7 +242,9 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   });
   server.beginDrain = () => { draining = true; };
   server.waitForRequests = () => pendingRequests === 0 ? Promise.resolve() : new Promise((resolve) => { requestWaiters.add(resolve); });
-  server.requestTimeout = mediaHandler ? 35000 : 15000;
+  // The video handler owns fixed 300s upload/transfer and 30s inactivity
+  // deadlines. Earlier deployments keep their original request budget.
+  server.requestTimeout = videoHandler ? 300000 : mediaHandler ? 35000 : 15000;
   server.headersTimeout = 10000;
   server.keepAliveTimeout = 5000;
   server.maxRequestsPerSocket = 100;
@@ -251,7 +253,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
 
 export async function createConfiguredServer(env = process.env, options = {}) {
   if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
-    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "announcements", "tasks", "backupDirectory", "accountClosures", "parentGateway"].includes(name))
+    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "announcements", "tasks", "backupDirectory", "accountClosures", "parentGateway", "video"].includes(name))
     || Object.values(Object.getOwnPropertyDescriptors(options)).some(property => !Object.hasOwn(property, "value"))) throw new RequestOriginError();
   const requestOrigin = Object.hasOwn(options, "requestOrigin") ? options.requestOrigin : null;
   const clock = Object.hasOwn(options, "clock") ? options.clock : Date.now;
@@ -264,7 +266,10 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const backupDirectory = Object.hasOwn(options, "backupDirectory") ? options.backupDirectory : undefined;
   const parentGateway = Object.hasOwn(options, "parentGateway") ? options.parentGateway : false;
   const accountClosures = Object.hasOwn(options, "accountClosures") ? options.accountClosures : false;
-  if (typeof parentGateway !== "boolean" || parentGateway && requestOrigin !== PRIMARY_ORIGIN || typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof crm !== "boolean" || typeof clock !== "function"
+  const video = Object.hasOwn(options, "video") ? options.video : false;
+  const schemaOptions = video ? { video: true } : {};
+  if (typeof video !== "boolean" || video && (!accountClosures || parentGateway || !broadcast || requestOrigin !== PRIMARY_ORIGIN)
+    || typeof parentGateway !== "boolean" || parentGateway && requestOrigin !== PRIMARY_ORIGIN || typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof crm !== "boolean" || typeof clock !== "function"
     || typeof broadcast !== "boolean" || broadcast && !crm || typeof announcements !== "boolean" || announcements && !broadcast
     || typeof tasks !== "boolean" || tasks && !crm
     || typeof accountClosures !== "boolean" || accountClosures && backupDirectory === undefined
@@ -289,6 +294,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const resetConfig = clientRecoveryConfiguration(env);
   const broadcastConfig = broadcastConfiguration(env, { crmEnabled: crmConfig.enabled });
   const notificationsConfig = loadNotificationsConfig(env);
+  let videoConfig;
   if (deviceTransition) {
     const { inspectPreproductionConfiguration } = await import("./preflight/config.mjs");
     const profile = inspectPreproductionConfiguration(env, { expectedOrigin: PRIMARY_ORIGIN,
@@ -309,11 +315,12 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const { createAuthHandler } = await import("./auth/http.mjs");
   const { createOperationsStore } = await import("./operations/store.mjs");
   const { createOperationsMonitor } = await import("./operations/monitor.mjs");
-  const pool = await createRuntimePool(env);
-  let transport, operations, notificationTransport, notificationWorker, closureHandler;
+  let pool, transport, operations, notificationTransport, notificationWorker, closureHandler;
   try {
+    videoConfig = video ? (await import("./config/runtime-video-storage.mjs")).runtimeVideoConfiguration(env) : null;
+    pool = await createRuntimePool(env);
     const store = createAuthStore(pool, { clock });
-    await store.assertSchema();
+    await store.assertSchema(schemaOptions);
     const service = await createAuthService({ store, totpKey: config.totpKey, clock });
     const authHandler = createAuthHandler(service, { origin: config.origin, clock });
     let backupHandler, privacyHandler, crmHandler, chatHandler;
@@ -387,8 +394,8 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     const { startMailWorker } = await import("./mail/worker.mjs");
     const accessStore = createAccessStore(pool, { clock });
     const mailStore = createMailStore(pool);
-    await accessStore.assertSchema();
-    await mailStore.assertSchema();
+    await accessStore.assertSchema(schemaOptions);
+    await mailStore.assertSchema(schemaOptions);
     const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
       totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin, clock });
     const legacyAccessService = deviceTransition ? await createAccessService({ store: accessStore, authStore: store, authService: service,
@@ -403,12 +410,12 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const { createResetHandler } = await import("./reset/http.mjs");
       const resetStore = createResetStore(pool, { clock });
       resetMailStore = createResetMailStore(pool);
-      await resetStore.assertSchema();
-      await resetMailStore.assertSchema();
+      await resetStore.assertSchema(schemaOptions);
+      await resetMailStore.assertSchema(schemaOptions);
       const resetService = await createResetService({ store: resetStore, authStore: store, mailKey: resetConfig.key, clock });
       resetHandler = createResetHandler(resetService, { origin: resetConfig.origin });
     }
-    let mediaHandler, profileHandler;
+    let mediaHandler, videoHandler, profileHandler;
     let broadcastHandler;
     let announcementsHandler, tasksHandler;
     let notificationsHandler;
@@ -418,17 +425,37 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const { createChatService } = await import("./chat/service.mjs");
       const { createChatHandler } = await import("./chat/http.mjs");
       const notificationsModule = notificationsConfig.enabled ? await import("./notifications/store.mjs") : null;
-      const chatStore = createChatStore(pool, { clock, ...(notificationsModule ? { enqueueNotification: notificationsModule.enqueueNotification } : {}) });
-      await chatStore.assertSchema();
+      let videoMessages, videoStore, videoStorage, videoCapacity, videoService;
+      const chatStore = createChatStore(pool, { clock, ...(notificationsModule ? { enqueueNotification: notificationsModule.enqueueNotification } : {}),
+        ...(video ? { decorateMessages: (...args) => videoMessages.decorateMessages(...args) } : {}) });
+      await chatStore.assertSchema(schemaOptions);
+      if (video) {
+        const [{ createVideoStorage }, { createVideoStore }, { createVideoMessageStore }, { assertDistinctVideoRoots }] = await Promise.all([
+          import("./video/storage.mjs"), import("./video/store.mjs"), import("./video/message-store.mjs"), import("./config/runtime-video-storage.mjs")]);
+        await assertDistinctVideoRoots(mediaConfig.root, videoConfig.root);
+        videoStorage = await createVideoStorage({ root: videoConfig.root, key: videoConfig.key });
+        videoCapacity = { ...videoConfig.capacity, rootFingerprint: await videoStorage.fingerprint() };
+        videoStore = createVideoStore({ pool, chatStore, capacity: videoCapacity });
+        videoMessages = createVideoMessageStore({ pool, chatStore, videoStore });
+        await videoStore.assertSchema(); await videoMessages.assertSchema();
+        if ((await videoStore.status()).ready !== true) throw new Error("Private video capacity must be initialized offline.");
+      }
       const chatService = await createChatService({ store: chatStore, authStore: store, authService: service,
-        accessService, key: chatConfig.key, clock });
+        accessService, key: chatConfig.key, clock, ...(video ? { videoMessages } : {}) });
+      if (video) {
+        const [{ createVideoService }, { createVideoHandler }] = await Promise.all([import("./video/service.mjs"), import("./video/http.mjs")]);
+        videoService = await createVideoService({ store: videoStore, messages: videoMessages, storage: videoStorage, chatService, authStore: store,
+          key: videoConfig.key, minimumFreeBytes: videoConfig.minimumFreeBytes, clock });
+        videoHandler = createVideoHandler(videoService, { origin: chatConfig.origin });
+        if (legacyHandlers) legacyHandlers.videoHandler = createVideoHandler(videoService, { origin: RECIPE_ORIGIN });
+      }
       if (notificationsConfig.enabled) {
         const { createNotificationsService } = await import("./notifications/service.mjs");
         const { createNotificationsHttpHandler } = await import("./notifications/http.mjs");
         const { createNotificationTransport } = await import("./notifications/transport.mjs");
         const { createNotificationWorker } = await import("./notifications/worker.mjs");
         const notificationsStore = notificationsModule.createNotificationsStore({ pool, chatStore, key: notificationsConfig.key, clock });
-        await notificationsStore.assertSchema();
+        await notificationsStore.assertSchema(schemaOptions);
         const notificationsService = await createNotificationsService({ store: notificationsStore, config: notificationsConfig,
           chatService, authStore: store, clock });
         notificationsHandler = createNotificationsHttpHandler(notificationsService, { origin: notificationsConfig.origin });
@@ -448,24 +475,27 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         mediaCapacity = { ...mediaConfig.capacity, rootFingerprint: await mediaStorage.fingerprint() };
       }
       const mediaStore = createMediaStore({ pool, chatStore, capacity: mediaCapacity });
-      await mediaStore.assertSchema();
+      await mediaStore.assertSchema(schemaOptions);
       const { createConversationExporter } = await import("./chat/conversation-export.mjs");
-      const clientConversationExporter = createConversationExporter({ role: "client", history: (token, id, options) => chatService.messages("client", token, id, options),
-        photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportClientMessageAsset(token, id, message) : null, clock });
+      const exporter = video ? (await import("./chat/streaming-conversation-export.mjs")).createStreamingConversationExporter : createConversationExporter;
+      const clientConversationExporter = exporter({ role: "client", history: (token, id, options) => chatService.messages("client", token, id, options),
+        photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportClientMessageAsset(token, id, message) : null,
+        ...(video ? { video: (token, id, message, settings) => videoService.openMessage("client", token, id, message, settings) } : {}), clock });
       if (crmConfig.enabled) {
         const { createCrmStore } = await import("./crm/store.mjs");
         const { createCrmService } = await import("./crm/service.mjs");
         const { createCrmHandler } = await import("./crm/http.mjs");
         const crmStore = createCrmStore({ pool, chatStore });
-        await crmStore.assertSchema();
+        await crmStore.assertSchema(schemaOptions);
         const crmService = await createCrmService({ store: crmStore, authStore: store, authService: service, key: crmConfig.key, clock });
-        const conversationExporter = createConversationExporter({ history: (token, id, options) => chatService.messages("admin", token, id, options),
-          photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportMessageAsset(token, id, message) : null, clock });
+        const conversationExporter = exporter({ history: (token, id, options) => chatService.messages("admin", token, id, options),
+          photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportMessageAsset(token, id, message) : null,
+          ...(video ? { video: (token, id, message, settings) => videoService.openMessage("admin", token, id, message, settings) } : {}), clock });
         crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin, conversationExporter });
         if (legacyHandlers) legacyHandlers.crmHandler = createCrmHandler(crmService, { origin: RECIPE_ORIGIN, conversationExporter });
         const { createTasksStore } = await import("./tasks/store.mjs");
         const tasksStore = createTasksStore({ pool, chatStore, key: crmConfig.key, clock });
-        await tasksStore.assertSchema();
+        await tasksStore.assertSchema(schemaOptions);
         if (tasks) {
           const [{ createTasksService }, { createTasksHttpHandler }] = await Promise.all([
             import("./tasks/service.mjs"), import("./tasks/http.mjs")]);
@@ -486,19 +516,37 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         mediaService = await createMediaService({ store: mediaStore, chatService, authStore: store,
           storage: mediaStorage, key: mediaConfig.key, minimumFreeBytes: mediaConfig.minimumFreeBytes });
         if (backupDirectory !== undefined) {
-          const [{ createErasureStore }, { createErasureJournal, readErasureJournalBatch }, { verifyClosureStartup },
+          const [{ createErasureStore }, { createErasureJournal, readErasureJournalBatch, erasureJournalBindings }, { verifyClosureStartup },
             { createClosureService, createClosureTargets }, { createClosureHandler }] = await Promise.all([
             import("./data/erasure-store.mjs"), import("./data/erasure-journal.mjs"), import("./data/closure-operations.mjs"),
             import("./data/closure-service.mjs"), import("./data/closure-http.mjs")]);
-          const erasureStore = createErasureStore({ pool, database: env.JESSIEMESSAGE_DB_NAME, capacity: mediaCapacity, broadcastKey: chatConfig.key });
-          // This read-only check applies even when closure requests are disabled.
-          // A downgrade to 0.64 must not ignore a receipt or a pending intent.
-          await verifyClosureStartup({ store: erasureStore, clock,
-            batch: page => readErasureJournalBatch({ directory: backupDirectory, key: crmConfig.key, binding: erasureStore.binding, ...page }) });
+          const erasureVideo = video ? (await import("./video/erasure-store.mjs")).createVideoErasureExtension({ videoStore, videoStorage, capacity: videoCapacity }) : null;
+          const erasureStore = createErasureStore({ pool, database: env.JESSIEMESSAGE_DB_NAME, capacity: mediaCapacity, broadcastKey: chatConfig.key,
+            ...(video ? { video: erasureVideo } : {}) });
+          // The two-root owner authenticates completed historical photo receipts
+          // in their original scope and refuses unfinished v1 work on upgrade.
+          const scopes = erasureJournalBindings(erasureStore.binding);
+          const batch = page => readErasureJournalBatch({ directory: backupDirectory, key: crmConfig.key, ...scopes, ...page });
+          if (video) {
+            const [{ createVideoLocalClosureOperations }, { composeVideoErasureStorage }, { assertErasureSchema }, { loadVideoMigrations }] = await Promise.all([
+              import("./backup/local-closure-parent.mjs"), import("./video/erasure-storage.mjs"), import("./data/erasure-schema.mjs"), import("./video/migrations.mjs")]);
+            const inspectApplicationSchema = async () => {
+              const connection = await pool.getConnection();
+              try {
+                await assertErasureSchema(connection, env.JESSIEMESSAGE_DB_NAME, { candidateMigrations: await loadVideoMigrations() });
+                await erasureVideo.snapshot(connection);
+              } finally { connection.release(); }
+              return { verified: true };
+            };
+            await createVideoLocalClosureOperations({ store: erasureStore, storage: composeVideoErasureStorage({ storage: mediaStorage, videoStorage }),
+              inspectApplicationSchema, batch, clock,
+              journalFor: clientId => createErasureJournal({ directory: backupDirectory, key: crmConfig.key, binding: erasureStore.binding, clientId }) })
+              .verifyStartup(async () => {});
+          } else await verifyClosureStartup({ store: erasureStore, clock, batch });
           if (accountClosures) {
             closureHandler.close();
             closureHandler = createClosureHandler(createClosureService({ directory: backupDirectory, key: crmConfig.key, store: erasureStore,
-              target: createClosureTargets(pool), clock }, { journalFor: clientId => createErasureJournal({ directory: backupDirectory, key: crmConfig.key, binding: erasureStore.binding, clientId }) }),
+              target: createClosureTargets(pool), clock }, { journalFor: (clientId, binding = erasureStore.binding) => createErasureJournal({ directory: backupDirectory, key: crmConfig.key, binding, clientId }) }),
             { origin: config.origin, actor: token => service.session(token) });
           }
         }
@@ -508,12 +556,12 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const [{ createProfileStore }, { createProfileService }, { createProfileHandler }] = await Promise.all([
         import("./profile/store.mjs"), import("./profile/service.mjs"), import("./profile/http.mjs")]);
       const profileStore = createProfileStore({ pool, chatStore });
-      await profileStore.assertSchema();
+      await profileStore.assertSchema(schemaOptions);
       const profileService = await createProfileService({ store: profileStore, chatService, storage: mediaStorage ?? null,
         authStore: store, key: chatConfig.key, clock });
       profileHandler = createProfileHandler(profileService, { origin: chatConfig.origin });
       if (legacyHandlers) legacyHandlers.profileHandler = createProfileHandler(profileService, { origin: RECIPE_ORIGIN });
-      const profileCapabilities = { profileEnabled: true, avatarsEnabled: mediaConfig.enabled, announcementsEnabled: announcements, tasksEnabled: tasks && crmConfig.enabled };
+      const profileCapabilities = { profileEnabled: true, avatarsEnabled: mediaConfig.enabled, announcementsEnabled: announcements, tasksEnabled: tasks && crmConfig.enabled, ...(video ? { videoEnabled: true } : {}) };
       chatHandler = createChatHandler(chatService, { origin: chatConfig.origin, clientConversationExporter, ...profileCapabilities });
       if (legacyHandlers) legacyHandlers.chatHandler = createChatHandler(chatService, { origin: RECIPE_ORIGIN, clientConversationExporter, ...profileCapabilities });
       if (broadcastConfig.enabled) {
@@ -521,18 +569,18 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         const { createBroadcastService } = await import("./broadcast/service.mjs");
         const { createBroadcastHandler } = await import("./broadcast/http.mjs");
         const { createBroadcastWorker } = await import("./broadcast/worker.mjs");
-        const broadcastStore = createBroadcastStore(pool, { chatStore, mediaEnabled: mediaConfig.enabled, clock });
-        await broadcastStore.assertSchema();
+        const broadcastStore = createBroadcastStore(pool, { chatStore, mediaEnabled: mediaConfig.enabled, clock, ...(video ? { videoEnabled: true, key: chatConfig.key, videoStore, videoMessageStore: videoMessages } : {}) });
+        await broadcastStore.assertSchema(schemaOptions);
         const broadcastService = await createBroadcastService({ store: broadcastStore, authStore: store, authService: service,
-          key: chatConfig.key, mediaEnabled: mediaConfig.enabled, largeAudiencesEnabled: true, clock });
-        broadcastHandler = createBroadcastHandler(broadcastService, { origin: chatConfig.origin, mediaEnabled: mediaConfig.enabled });
-        if (legacyHandlers) legacyHandlers.broadcastHandler = createBroadcastHandler(broadcastService, { origin: RECIPE_ORIGIN, mediaEnabled: mediaConfig.enabled });
-        broadcastWorker = createBroadcastWorker({ store: broadcastStore, authStore: store, key: chatConfig.key, clock, onState: observe("broadcasts") });
+          key: chatConfig.key, mediaEnabled: mediaConfig.enabled, largeAudiencesEnabled: true, clock, ...(video ? { videoEnabled: true } : {}) });
+        broadcastHandler = createBroadcastHandler(broadcastService, { origin: chatConfig.origin, mediaEnabled: mediaConfig.enabled, ...(video ? { videoEnabled: true } : {}) });
+        if (legacyHandlers) legacyHandlers.broadcastHandler = createBroadcastHandler(broadcastService, { origin: RECIPE_ORIGIN, mediaEnabled: mediaConfig.enabled, ...(video ? { videoEnabled: true } : {}) });
+        broadcastWorker = createBroadcastWorker({ store: broadcastStore, authStore: store, key: chatConfig.key, clock, onState: observe("broadcasts"), ...(video ? { videoEnabled: true } : {}) });
         if (announcements) {
           const [{ createAnnouncementsStore }, { createAnnouncementsService }, { createAnnouncementsHandler }] = await Promise.all([
             import("./announcements/store.mjs"), import("./announcements/service.mjs"), import("./announcements/http.mjs")]);
           const announcementsStore = createAnnouncementsStore({ pool, chatStore, broadcastStore, key: chatConfig.key, clock });
-          await announcementsStore.assertSchema();
+          await announcementsStore.assertSchema(schemaOptions);
           const announcementsService = await createAnnouncementsService({ store: announcementsStore, broadcastService, chatService,
             authService: service, authStore: store, key: chatConfig.key, clock });
           announcementsHandler = createAnnouncementsHandler(announcementsService, { origin: chatConfig.origin });
@@ -548,7 +596,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       legacyHandlers.entryHandler = createEntryHandler({ adminSession: (token) => service.session(token),
         clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, clock });
     }
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin, parentGateway,
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, videoHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin, parentGateway,
       legacyHandlers, transitionHandler,
       entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled, deviceTransition, clock }) });
     const workers = [];
@@ -590,14 +638,16 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       if (resetMailStore) workers.push(startMailWorker({ store: resetMailStore, transport, key: resetConfig.key, purpose: "password-reset", closeTransport: false,
         onState: observe("recovery") }));
     });
+    videoConfig?.key.fill(0);
     return { server, pool, mailWorker, diagnostics };
   } catch {
+    videoConfig?.key.fill(0);
     closureHandler?.close();
     await notificationTransport?.close().catch(() => {});
     await notificationWorker?.stop().catch(() => {});
     await operations?.close().catch(() => {});
     await transport?.close().catch(() => {});
-    await pool.end().catch(() => {});
+    await pool?.end().catch(() => {});
     throw new Error("Authentication startup failed; check private configuration, database schema and runtime permissions.");
   }
 }

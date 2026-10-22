@@ -7,6 +7,7 @@ import { chatConfiguration } from "../server/chat/config.mjs";
 import { crmConfiguration } from "../server/crm/config.mjs";
 import { loadNotificationsConfig } from "../server/notifications/config.mjs";
 import { runtimeDatabaseOptions } from "../server/db/runtime.mjs";
+import { validateRuntimeVideoConfiguration } from "../server/config/runtime-database-file.mjs";
 import { PHOTO_BACKUP_PROFILES, photoBackupProfile } from "../server/backup/profiles.mjs";
 
 export class BackupCliError extends Error {
@@ -19,6 +20,8 @@ const assertReport = (report) => { if (report?.complete !== true || report?.heal
 const checkSignal = (signal) => { if (signal?.aborted) fail("BACKUP_ABORTED"); };
 const candidateKeys = ["id", "owner_id", "owner_role", "storage_key", "content_digest", "full_bytes", "thumbnail_bytes", "stored_bytes", "asset_id", "state", "created_at"];
 const candidateDTO = (value) => Object.fromEntries(candidateKeys.map((key) => [key, value[key]]));
+const VIDEO_CANDIDATE_FIELDS = ["id", "owner_id", "owner_role", "storage_key", "reserve_token_hash", "content_digest", "bytes", "stored_bytes", "mime", "state", "created_at"];
+const videoCandidateDTO = value => Object.fromEntries(VIDEO_CANDIDATE_FIELDS.map(name => [name, value[name]]));
 const PHOTO_PROFILES = PHOTO_BACKUP_PROFILES;
 const manifestProfile = (profile) => PHOTO_PROFILES.includes(profile) ? `messaging-${profile}` : "full";
 const manifestVersion = (profile) => photoBackupProfile(profile)?.manifestVersion ?? 1;
@@ -42,9 +45,18 @@ function configuration(env, profile) {
       || !(selected?.broadcast ? ["1"] : [undefined, "0"]).includes(env.JESSIEMESSAGE_ENABLE_BROADCAST)
       || !(recovery ? [undefined, "0", "1"] : [undefined, "0"]).includes(env.JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY))
     || Boolean(selected?.notifications) !== notifications.enabled) fail("BACKUP_CONFIG");
-  return { media, databaseName: runtimeDatabaseOptions(env).database,
+  const videoRecord = selected?.video ? validateRuntimeVideoConfiguration({ format: "jessiemessage-runtime-video", version: 1,
+    origin: env.JESSIEMESSAGE_SITE_ORIGIN, videoKey: env.JESSIEMESSAGE_VIDEO_KEY, videoRoot: env.JESSIEMESSAGE_VIDEO_ROOT,
+    ownerBytes: env.JESSIEMESSAGE_VIDEO_OWNER_BYTES, totalBytes: env.JESSIEMESSAGE_VIDEO_TOTAL_BYTES,
+    minimumFreeBytes: env.JESSIEMESSAGE_VIDEO_MINIMUM_FREE_BYTES }, { originProfile: "primary" }) : null;
+  if (videoRecord && videoRecord.videoKey === env.JESSIEMESSAGE_VAPID_PRIVATE_KEY) fail("BACKUP_CONFIG");
+  const video = videoRecord ? { root: videoRecord.videoRoot,
+    capacity: { ownerBytes: Number(videoRecord.ownerBytes), totalBytes: Number(videoRecord.totalBytes) },
+    minimumFreeBytes: BigInt(videoRecord.minimumFreeBytes) } : null;
+  return { media, ...(video ? { video } : {}), databaseName: runtimeDatabaseOptions(env).database,
     keys: { totpKey: auth.totpKey, mailKey: access.mail.key, messageKey: chat.key, mediaKey: media.key,
-      ...(photos && !crmProfile ? {} : { crmKey: crm.key }), ...(selected?.notifications ? { notificationKey: notifications.key } : {}) } };
+      ...(photos && !crmProfile ? {} : { crmKey: crm.key }), ...(selected?.notifications ? { notificationKey: notifications.key } : {}),
+      ...(video ? { videoKey: Buffer.from(videoRecord.videoKey, "base64url") } : {}) } };
 }
 
 /** All commands require an operator-confirmed offline source or isolated clone. */
@@ -54,20 +66,27 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
   try {
     checkSignal(dependencies.signal);
     const selected = photoBackupProfile(options.profile), photos = Boolean(selected), notifications = selected?.notifications,
-      application = selected?.application, recovery = selected?.recovery, crm = selected?.crm, broadcast = selected?.broadcast;
-    const keyNames = [...["totpKey", "mailKey", "messageKey", "mediaKey"], ...(!photos || crm ? ["crmKey"] : []), ...(notifications ? ["notificationKey"] : [])];
-    const config = (dependencies.configure ?? configuration)(env, options.profile), { media, keys } = config ?? {};
+      application = selected?.application, recovery = selected?.recovery, crm = selected?.crm, broadcast = selected?.broadcast, video = selected?.video;
+    const keyNames = [...["totpKey", "mailKey", "messageKey", "mediaKey"], ...(!photos || crm ? ["crmKey"] : []), ...(notifications ? ["notificationKey"] : []), ...(video ? ["videoKey"] : [])];
+    const config = (dependencies.configure ?? configuration)(env, options.profile), { media, keys, video: videoConfig } = config ?? {};
     if (media?.enabled !== true || !media.capacity || typeof config.databaseName !== "string" || !/^[A-Za-z0-9_]{1,64}$/.test(config.databaseName)
       || !keys || keyNames.some((key) => !Buffer.isBuffer(keys[key]) || keys[key].length !== 32)
-      || !Buffer.isBuffer(media.key) || !media.key.equals(keys.mediaKey)) fail("BACKUP_CONFIG");
+      || !Buffer.isBuffer(media.key) || !media.key.equals(keys.mediaKey)
+      || video && (!videoConfig || typeof videoConfig.root !== "string" || !isAbsolute(videoConfig.root) || videoConfig.root !== resolve(videoConfig.root)
+        || !videoConfig.capacity || ![videoConfig.capacity.ownerBytes, videoConfig.capacity.totalBytes].every(value => Number.isSafeInteger(value) && value > 0)
+        || videoConfig.capacity.totalBytes < videoConfig.capacity.ownerBytes)) fail("BACKUP_CONFIG");
     const keyValues = Object.values(keys);
     if (keyValues.length !== keyNames.length || keyValues.some((key, index) => keyValues.slice(index + 1).some((other) => key.equals(other)))) fail("BACKUP_CONFIG");
     const manifestRelative = relative(media.root, options.manifestPath);
+    if (video) {
+      const overlaps = (a, b) => { const suffix = relative(a, b); return suffix === "" || suffix !== ".." && !suffix.startsWith(`..${sep}`) && !isAbsolute(suffix); };
+      if (overlaps(media.root, videoConfig.root) || overlaps(videoConfig.root, media.root) || overlaps(videoConfig.root, options.manifestPath)) fail("BACKUP_CONFIG");
+    }
     if (manifestRelative === "" || !manifestRelative.startsWith(`..${sep}`) && manifestRelative !== ".." && !isAbsolute(manifestRelative)) fail("BACKUP_CONFIG");
     const manifests = dependencies.manifests ?? await import("../server/backup/manifest.mjs");
     const snapshots = dependencies.snapshots ?? await import("../server/backup/snapshot.mjs");
     const verification = await import("../server/backup/verify.mjs");
-    const verifyCrypto = dependencies.verifyBackupData ?? (broadcast ? verification.verifyPhotoNotificationRecoveryCrmBroadcastBackupData : crm ? verification.verifyPhotoNotificationRecoveryCrmBackupData : recovery ? verification.verifyPhotoNotificationRecoveryBackupData
+    const verifyCrypto = dependencies.verifyBackupData ?? (video ? verification.verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData : broadcast ? verification.verifyPhotoNotificationRecoveryCrmBroadcastBackupData : crm ? verification.verifyPhotoNotificationRecoveryCrmBackupData : recovery ? verification.verifyPhotoNotificationRecoveryBackupData
       : notifications ? verification.verifyPhotoNotificationBackupData : photos ? verification.verifyPhotoBackupData : verification.verifyBackupData);
     const makeCryptoStore = dependencies.makeCryptoStore ?? (await import("../server/backup/crypto-store.mjs")).createBackupCryptoStore;
     let manifest, payload;
@@ -83,6 +102,13 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     const rootFingerprint = await storage.fingerprint();
     if (!Buffer.isBuffer(rootFingerprint) || rootFingerprint.length !== 32) fail("BACKUP_VERIFY");
     const capacity = { ...media.capacity, rootFingerprint };
+    const videoStorage = video ? await (dependencies.makeVideoStorage ?? (await import("../server/video/storage.mjs")).createVideoStorage)({ root: videoConfig.root, key: keys.videoKey }) : null;
+    const videoFingerprint = video ? await videoStorage.fingerprint() : null;
+    if (video && (!Buffer.isBuffer(videoFingerprint) || videoFingerprint.length !== 32)) fail("BACKUP_VERIFY");
+    const videoCapacity = video ? { ...videoConfig.capacity, rootFingerprint: videoFingerprint } : null;
+    const videoStore = video ? await (dependencies.makeVideoStore ?? (await import("../server/video/store.mjs")).createVideoStore)({ pool, capacity: videoCapacity,
+      chatStore: (await import("../server/chat/store.mjs")).createChatStore(pool) }) : null;
+    if (video) await videoStore.assertSchema();
     const schemaStore = dependencies.makeSchemaStore ? dependencies.makeSchemaStore({ pool, capacity })
       : (await import("../server/media/store.mjs")).createMediaStore({ pool, capacity, chatStore: (await import("../server/chat/store.mjs")).createChatStore(pool) });
     await schemaStore.assertSchema();
@@ -90,10 +116,10 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       ? (await import("../server/backup/application-scope.mjs")).createApplicationInspectionPool
       : (await import("../server/backup/inspection.mjs")).createBackupInspectionPool))(env);
     if (!inspectionPool || inspectionPool === pool) fail("BACKUP_CONFIG");
-    const store = (dependencies.makeSnapshotStore ?? snapshots.createBackupSnapshotStore)({ pool, inspectionPool, ...(application ? { coverage: "application-tables" } : {}) });
+    const store = (dependencies.makeSnapshotStore ?? snapshots.createBackupSnapshotStore)({ pool, inspectionPool, ...(application ? { coverage: "application-tables" } : {}), ...(video ? { video: true } : {}) });
     const databaseName = await store.databaseName();
     if (databaseName !== config.databaseName) fail("BACKUP_CONFIG");
-    const identity = await manifests.backupIdentity({ databaseName, rootPath: media.root, storage, mediaKey: keys.mediaKey });
+    const identity = await manifests.backupIdentity({ databaseName, rootPath: media.root, storage, mediaKey: keys.mediaKey, ...(video ? { videoRootPath: videoConfig.root, videoStorage } : {}) });
     if (!fingerprint(identity.rootFingerprint).equals(rootFingerprint)) fail("BACKUP_VERIFY");
     const sourceIdentity = payload?.identity;
     if (sourceIdentity) await manifests.assertCloneIdentity(sourceIdentity, identity);
@@ -103,15 +129,15 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       return snapshots.captureBackupSnapshot({ store, signal: dependencies.signal, limits: dependencies.limits });
     };
     const compare = (expected, actual, mode) => snapshots.assertBackupSnapshot({ expected, actual, mode,
-      ...(sourceIdentity ? { targetFingerprint: identity.rootFingerprint } : {}) });
+      ...(sourceIdentity ? { targetFingerprint: identity.rootFingerprint, ...(video ? { targetVideoFingerprint: identity.video.rootFingerprint } : {}) } : {}) });
     async function verifyData(snapshot, mode) {
       checkSignal(dependencies.signal);
-      assertReport(await snapshots.verifyBackupStorage({ snapshot, storage, mode, signal: dependencies.signal, limits: dependencies.limits }));
+      assertReport(await snapshots.verifyBackupStorage({ snapshot, storage, ...(video ? { videoStorage, expectedVideoRootFingerprint: identity.video.rootFingerprint } : {}), mode, signal: dependencies.signal, limits: dependencies.limits }));
       const cryptoLimits = Object.fromEntries(Object.entries(dependencies.limits ?? {}).filter(([key]) => ["maxRows", "maxIssues"].includes(key)));
-      assertReport(await verifyCrypto({ ...(photos ? { pool } : { store: cryptoStore }), storage, keys, signal: dependencies.signal, limits: cryptoLimits }));
+      assertReport(await verifyCrypto({ ...(photos ? { pool } : { store: cryptoStore }), storage, ...(video ? { videoStorage } : {}), keys, signal: dependencies.signal, limits: cryptoLimits }));
     }
     async function sameIdentity() {
-      const current = await manifests.backupIdentity({ databaseName: await store.databaseName(), rootPath: media.root, storage, mediaKey: keys.mediaKey });
+      const current = await manifests.backupIdentity({ databaseName: await store.databaseName(), rootPath: media.root, storage, mediaKey: keys.mediaKey, ...(video ? { videoRootPath: videoConfig.root, videoStorage } : {}) });
       if (JSON.stringify(current) !== JSON.stringify(identity)) fail("BACKUP_VERIFY");
       checkSignal(dependencies.signal);
     }
@@ -122,6 +148,12 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       if (status?.ready !== true || !Buffer.isBuffer(status.rootFingerprint) || !status.rootFingerprint.equals(rootFingerprint)
         || status.ownerBytes !== media.capacity.ownerBytes || status.totalBytes !== media.capacity.totalBytes
         || before.capacity?.rootFingerprint !== identity.rootFingerprint) fail("BACKUP_VERIFY");
+      if (video) {
+        const status = await videoStore.status();
+        if (status?.ready !== true || !Buffer.isBuffer(status.rootFingerprint) || !status.rootFingerprint.equals(videoFingerprint)
+          || status.ownerBytes !== videoConfig.capacity.ownerBytes || status.totalBytes !== videoConfig.capacity.totalBytes
+          || before.video?.capacity?.rootFingerprint !== identity.video.rootFingerprint) fail("BACKUP_VERIFY");
+      }
       await verifyData(before, "exact");
       const after = await capture(); compare(before, after, "exact"); await sameIdentity();
       manifest = await manifests.createBackupManifest({ snapshot: after, identity, keys, now: instant(clock),
@@ -131,12 +163,13 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       result = { command: options.command, verified: true, prepared: true, restored: false, releasedCandidates: 0, manifestHash: manifests.manifestHash(manifest) };
     } else {
       const expected = payload.snapshot;
-      if (expected.capacity?.ownerBytes !== media.capacity.ownerBytes || expected.capacity?.totalBytes !== media.capacity.totalBytes) fail("BACKUP_VERIFY");
+      if (expected.capacity?.ownerBytes !== media.capacity.ownerBytes || expected.capacity?.totalBytes !== media.capacity.totalBytes
+        || video && (expected.video?.capacity?.ownerBytes !== videoConfig.capacity.ownerBytes || expected.video?.capacity?.totalBytes !== videoConfig.capacity.totalBytes)) fail("BACKUP_VERIFY");
       let comparison = compare(expected, before, "recovery");
       await verifyData(before, "recovery");
       const afterChecks = await capture(); compare(before, afterChecks, "exact"); compare(expected, afterChecks, "recovery"); await sameIdentity();
       before = afterChecks;
-      let releasedCandidates = 0;
+      let releasedCandidates = 0, releasedVideoCandidates = 0;
       if (options.command === "restore") {
         const recovery = (dependencies.makeRecoveryStore ?? (await import("../server/backup/recovery-store.mjs")).createBackupRecoveryStore)({ pool });
         const sourceFingerprint = fingerprint(sourceIdentity.rootFingerprint), targetFingerprint = fingerprint(identity.rootFingerprint);
@@ -170,8 +203,36 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
         const binding = await recovery.rebind({ sourceFingerprint, targetFingerprint, targetDatabaseName: databaseName,
           capacity: media.capacity, expectedHeldBytes: comparison.heldBytes, now: instant(clock) });
         if (binding?.rebound !== true) fail("BACKUP_VERIFY");
+        if (video) {
+          const videoRecovery = (dependencies.makeVideoRecoveryStore ?? (await import("../server/backup/recovery-store.mjs")).createVideoBackupRecoveryStore)({ pool });
+          const sourceFingerprint = fingerprint(sourceIdentity.video.rootFingerprint), targetFingerprint = fingerprint(identity.video.rootFingerprint);
+          const current = await capture(), currentComparison = compare(expected, current, "recovery");
+          if (!Array.isArray(currentComparison.videoCandidates)) fail("BACKUP_VERIFY");
+          if (current.video.capacity.rootFingerprint !== identity.video.rootFingerprint) {
+            const byId = new Map(current.video.assets.map(row => [row.id, row]));
+            for (const original of currentComparison.videoCandidates) {
+              checkSignal(dependencies.signal); const row = byId.get(original.id);
+              if (!row || !["reserved", "cleanup_pending", "released"].includes(row.state)) fail("BACKUP_VERIFY");
+              if (row.state === "released") continue;
+              const candidate = videoCandidateDTO(original), command = { candidate, sourceFingerprint, targetDatabaseName: databaseName };
+              const closed = await videoRecovery.closeCandidate({ ...command, now: instant(clock) });
+              if (closed?.closed !== true || !["cleanup_pending", "released"].includes(closed.state)) fail("BACKUP_VERIFY");
+              if (closed.state === "released") continue;
+              await videoStorage.remove({ storageKey: Buffer.from(candidate.storage_key, "hex") });
+              if ((await videoRecovery.releaseCandidate({ ...command, now: instant(clock) }))?.released !== true) fail("BACKUP_VERIFY");
+              releasedVideoCandidates++;
+            }
+          }
+          const afterVideo = await capture(); compare(expected, afterVideo, "recovery"); await verifyData(afterVideo, "recovery");
+          const finalVideo = await capture(); compare(afterVideo, finalVideo, "exact");
+          const compared = compare(expected, finalVideo, "recovery"); await sameIdentity();
+          if (!Number.isSafeInteger(compared.videoHeldBytes) || compared.videoHeldBytes < 0) fail("BACKUP_VERIFY");
+          if ((await videoRecovery.rebind({ sourceFingerprint, targetFingerprint, targetDatabaseName: databaseName,
+            capacity: videoConfig.capacity, expectedHeldBytes: compared.videoHeldBytes, now: instant(clock) }))?.rebound !== true) fail("BACKUP_VERIFY");
+        }
       }
-      result = { command: options.command, verified: true, prepared: false, restored: options.command === "restore", releasedCandidates, manifestHash: manifests.manifestHash(manifest) };
+      result = { command: options.command, verified: true, prepared: false, restored: options.command === "restore", releasedCandidates,
+        ...(video ? { releasedVideoCandidates } : {}), manifestHash: manifests.manifestHash(manifest) };
     }
   } catch (error) {
     if (error instanceof BackupCliError) throw error;

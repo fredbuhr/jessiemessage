@@ -50,6 +50,20 @@ test("local start composes the existing supervisor and closes the owner after th
   assert.deepEqual(events, ["source", "start", "supervisor-close", "local-close"]);
 });
 
+test("the explicit video profile reaches both the local owner and manual-only parent", async () => {
+  const profile = "photos-notify-recovery-crm-broadcast-video", seen = [], operations = {};
+  await main([...args("start-local-closures"), "--profile", profile], { environment, execArgv: [], ...noWitness,
+    async localPreflight(selected) { assert.equal(selected.video, true); seen.push("preflight"); },
+    async makeLocalClosures(selected) { assert.equal(selected.video, true); return { operations, async close() { seen.push("local-close"); } }; },
+    makeSupervisor(selected, dependencies) {
+      assert.equal(selected.command, "start"); assert.equal(selected.profile, profile); assert.equal(selected.video, true);
+      assert.equal(dependencies.manualBackups, true); assert.equal(dependencies.closureOperations, operations);
+      return { async start() { seen.push("start"); }, async close() { seen.push("parent-close"); }, finished: Promise.resolve({ failed: false }) };
+    }, makeMonitor: forbidden, makeAlerts: forbidden,
+  });
+  assert.deepEqual(seen, ["preflight", "start", "parent-close", "local-close"]);
+});
+
 test("local construction and child startup failures never leak the parent context", async () => {
   for (const stage of ["construct", "start", "close"]) {
     const events = [];

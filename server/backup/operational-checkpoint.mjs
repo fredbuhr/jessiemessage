@@ -2,10 +2,11 @@ import { constants } from "node:fs";
 import { lstat, open, opendir } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from "node:crypto";
 import { erasureBinding, ERASURE_PHASES } from "../data/erasure-state.mjs";
-import { verifyErasureJournalEnvelope } from "../data/erasure-journal.mjs";
+import { verifyScopedErasureJournalEnvelope, erasureJournalBindings } from "../data/erasure-journal.mjs";
 import { verifyPrivacyEnvelope } from "../privacy/files.mjs";
 
 const NAMESPACE = "jessiemessage:operational-checkpoint:https://jessiemessage.com:v1";
+const VIDEO_NAMESPACE = "jessiemessage:operational-checkpoint:https://jessiemessage.com:v2:video";
 const MAX_BYTES = 64 * 1024 * 1024, MAX_FILES = 9990;
 const NAME = /^(?:privacy-preparation\.json|erasure-[a-f0-9]{64}\.json)$/;
 const HEX = /^[a-f0-9]{64}$/;
@@ -83,9 +84,12 @@ async function names(scope, allowRestoreMarker = false) {
   await scope.assertReady(); return result.sort();
 }
 function state(value, key) {
-  fields(value, ["version", "binding", "files"]);
-  const binding = erasureBinding(value.binding);
-  if (value.version !== 1 || !Buffer.isBuffer(key) || key.length !== 32 || !Array.isArray(value.files)
+  const video = value?.version === 2;
+  fields(value, ["version", "binding", ...(video ? ["legacyBinding"] : []), "files"]);
+  const binding = erasureBinding(value.binding), scopes = erasureJournalBindings(binding);
+  if (video !== Object.hasOwn(binding, "videoRootFingerprint") || value.version !== (video ? 2 : 1)
+    || video && JSON.stringify(erasureBinding(value.legacyBinding)) !== JSON.stringify(scopes.legacyBinding)
+    || !Buffer.isBuffer(key) || key.length !== 32 || !Array.isArray(value.files)
     || Object.getPrototypeOf(value.files) !== Array.prototype || value.files.length > MAX_FILES
     || Reflect.ownKeys(value.files).length !== value.files.length + 1) fail("OPERATIONS_INPUT");
   let previous = null, total = 0; const jobs = new Map(); let privacy = null;
@@ -98,11 +102,11 @@ function state(value, key) {
     try {
       total += content.length; if (total > 42 * 1024 * 1024) fail("OPERATIONS_LIMIT");
       if (file.name === "privacy-preparation.json") privacy = { ...verifyPrivacyEnvelope(content, key), file };
-      else jobs.set(file.name, { ...verifyErasureJournalEnvelope({ key, binding, filename: file.name, content }), file });
+      else jobs.set(file.name, { ...verifyScopedErasureJournalEnvelope({ key, binding, ...(video ? { legacyBinding: scopes.legacyBinding } : {}), filename: file.name, content }), file });
     } finally { content.fill(0); }
     previous = file.name;
   }
-  return { value: { version: 1, binding, files: value.files.map(file => ({ name: file.name, content: file.content })) }, jobs, privacy };
+  return { value: { version: video ? 2 : 1, binding, ...(video ? { legacyBinding: scopes.legacyBinding } : {}), files: value.files.map(file => ({ name: file.name, content: file.content })) }, jobs, privacy };
 }
 export const operationalStateHash = value => hash(JSON.stringify(value));
 
@@ -114,7 +118,8 @@ async function readState(scope, { key, binding, signal }, allowRestoreMarker = f
     const content = await readFile(scope, name, name === "privacy-preparation.json" ? 65536 : 4096, signal);
     try { files.push({ name, content: content.toString("base64url") }); } finally { content.fill(0); }
   }
-  const checked = state({ version: 1, binding, files }, key).value;
+  const video = Object.hasOwn(binding, "videoRootFingerprint");
+  const checked = state({ version: video ? 2 : 1, ...erasureJournalBindings(binding), files }, key).value;
   if (JSON.stringify(await names(scope, allowRestoreMarker)) !== JSON.stringify(selected)) fail("OPERATIONS_CHANGED");
   for (const file of checked.files) {
     const content = await readFile(scope, file.name, file.name === "privacy-preparation.json" ? 65536 : 4096, signal);
@@ -132,14 +137,16 @@ export async function captureOperationalState(scope, { key, binding, signal }) {
 export async function readOperationalQuarantine(scope, { key, sourceBinding, targetBinding, signal }) {
   return safe(async () => {
     const source = erasureBinding(sourceBinding), target = erasureBinding(targetBinding);
+    if (Object.hasOwn(source, "videoRootFingerprint") !== Object.hasOwn(target, "videoRootFingerprint")) fail("OPERATIONS_BINDING_CHANGED");
     let content, final;
     try {
       content = await readFile(scope, OPERATIONAL_RESTORE_MARKER, 4096, signal);
       const text = new TextDecoder("utf-8", { fatal: true }).decode(content), value = JSON.parse(text);
       fields(value, ["version", "status", "backupSha256", "currentSha256", "mergedSha256", "sourceBinding", "targetBinding"]);
-      if (value.version !== 1 || value.status !== "reconciliation_required"
+      const version = Object.hasOwn(source, "videoRootFingerprint") ? 2 : 1;
+      if (value.version !== version || value.status !== "reconciliation_required"
         || ![value.backupSha256, value.currentSha256, value.mergedSha256].every(value => typeof value === "string" && HEX.test(value))) fail("OPERATIONS_INPUT");
-      const marker = { version: 1, status: "reconciliation_required", backupSha256: value.backupSha256,
+      const marker = { version, status: "reconciliation_required", backupSha256: value.backupSha256,
         currentSha256: value.currentSha256, mergedSha256: value.mergedSha256,
         sourceBinding: erasureBinding(value.sourceBinding), targetBinding: erasureBinding(value.targetBinding) };
       if (`${JSON.stringify(marker)}\n` !== text) fail("OPERATIONS_INPUT");
@@ -155,24 +162,29 @@ export async function readOperationalQuarantine(scope, { key, sourceBinding, tar
   });
 }
 function context(receipt) {
-  if (![9, 10].includes(receipt?.version) || typeof receipt.profile !== "string" || !HEX.test(receipt.manifest?.sha256 ?? "")
+  if (![9, 10, 12].includes(receipt?.version) || typeof receipt.profile !== "string" || !HEX.test(receipt.manifest?.sha256 ?? "")
     || !HEX.test(receipt.sql?.sha256 ?? "")) fail("OPERATIONS_INPUT");
+  if (receipt.version === 12 && (receipt.profile !== "messaging-photos-notify-recovery-crm-broadcast-video-application"
+    || !receipt.video || typeof receipt.video !== "object" || Array.isArray(receipt.video))) fail("OPERATIONS_INPUT");
   return { version: receipt.version, profile: receipt.profile, createdAt: receipt.createdAt,
-    manifestSha256: receipt.manifest.sha256, sqlSha256: receipt.sql.sha256, mediaSha256: hash(JSON.stringify(receipt.media)) };
+    manifestSha256: receipt.manifest.sha256, sqlSha256: receipt.sql.sha256, mediaSha256: hash(JSON.stringify(receipt.media)),
+    ...(receipt.version === 12 ? { videoSha256: hash(JSON.stringify(receipt.video)) } : {}) };
 }
-function secret(key) {
+function secret(key, namespace = NAMESPACE) {
   if (!Buffer.isBuffer(key) || key.length !== 32) fail("OPERATIONS_INPUT");
-  return Buffer.from(hkdfSync("sha256", key, Buffer.alloc(0), Buffer.from(NAMESPACE), 32));
+  return Buffer.from(hkdfSync("sha256", key, Buffer.alloc(0), Buffer.from(namespace), 32));
 }
 export async function writeOperationalCheckpoint(scope, value, receipt, key, { signal } = {}) {
   return safe(async () => {
-    const checked = state(value, key).value, derived = secret(key), plaintext = Buffer.from(JSON.stringify(checked));
+    const checked = state(value, key).value, version = receipt?.version === 12 ? 2 : 1, namespace = version === 2 ? VIDEO_NAMESPACE : NAMESPACE;
+    if (checked.version !== version) fail("OPERATIONS_INPUT");
+    const derived = secret(key, namespace), plaintext = Buffer.from(JSON.stringify(checked));
     let content;
     try {
       const iv = randomBytes(12), cipher = createCipheriv("aes-256-gcm", derived, iv);
-      cipher.setAAD(Buffer.from(`${NAMESPACE}:${JSON.stringify(context(receipt))}`));
+      cipher.setAAD(Buffer.from(`${namespace}:${JSON.stringify(context(receipt))}`));
       const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-      content = Buffer.from(`${JSON.stringify({ version: 1, iv: iv.toString("base64url"), ciphertext: ciphertext.toString("base64url"), tag: cipher.getAuthTag().toString("base64url") })}\n`);
+      content = Buffer.from(`${JSON.stringify({ version, iv: iv.toString("base64url"), ciphertext: ciphertext.toString("base64url"), tag: cipher.getAuthTag().toString("base64url") })}\n`);
       if (content.length > MAX_BYTES) fail("OPERATIONS_LIMIT");
       await writeFile(scope, OPERATIONAL_CHECKPOINT, content, signal);
       const saved = await readFile(scope, OPERATIONAL_CHECKPOINT, MAX_BYTES, signal);
@@ -186,19 +198,20 @@ export async function readOperationalCheckpoint(scope, receipt, key, { signal } 
     fields(receipt.operations, ["file", "bytes", "sha256"]);
     if (receipt.operations.file !== OPERATIONAL_CHECKPOINT || !Number.isSafeInteger(receipt.operations.bytes)
       || receipt.operations.bytes < 1 || receipt.operations.bytes > MAX_BYTES || !HEX.test(receipt.operations.sha256)) fail("OPERATIONS_INPUT");
-    const content = await readFile(scope, OPERATIONAL_CHECKPOINT, MAX_BYTES, signal), derived = secret(key);
+    const version = receipt?.version === 12 ? 2 : 1, namespace = version === 2 ? VIDEO_NAMESPACE : NAMESPACE;
+    const content = await readFile(scope, OPERATIONAL_CHECKPOINT, MAX_BYTES, signal), derived = secret(key, namespace);
     let plaintext, tail;
     try {
       if (content.length !== receipt.operations.bytes || hash(content) !== receipt.operations.sha256) fail("OPERATIONS_CHANGED");
       const text = new TextDecoder("utf-8", { fatal: true }).decode(content), envelope = JSON.parse(text);
       fields(envelope, ["version", "iv", "ciphertext", "tag"]);
-      if (envelope.version !== 1 || `${JSON.stringify(envelope)}\n` !== text) fail("OPERATIONS_INPUT");
+      if (envelope.version !== version || `${JSON.stringify(envelope)}\n` !== text) fail("OPERATIONS_INPUT");
       const decipher = createDecipheriv("aes-256-gcm", derived, encoded(envelope.iv, 12, 12));
-      decipher.setAAD(Buffer.from(`${NAMESPACE}:${JSON.stringify(context(receipt))}`)); decipher.setAuthTag(encoded(envelope.tag, 16, 16));
+      decipher.setAAD(Buffer.from(`${namespace}:${JSON.stringify(context(receipt))}`)); decipher.setAuthTag(encoded(envelope.tag, 16, 16));
       plaintext = decipher.update(encoded(envelope.ciphertext, MAX_BYTES)); tail = decipher.final();
       if (tail.length) fail("OPERATIONS_INPUT");
       const data = new TextDecoder("utf-8", { fatal: true }).decode(plaintext), checked = state(JSON.parse(data), key).value;
-      if (JSON.stringify(checked) !== data) fail("OPERATIONS_INPUT");
+      if (checked.version !== version || JSON.stringify(checked) !== data) fail("OPERATIONS_INPUT");
       active(signal); return checked;
     } finally { content.fill(0); derived.fill(0); plaintext?.fill(0); tail?.fill(0); }
   });
@@ -209,7 +222,8 @@ export async function readOperationalCheckpoint(scope, receipt, key, { signal } 
 export function planOperationalRestore({ backup, current, targetBinding, key }) {
   try {
     const old = state(backup, key), latest = state(current, key), target = erasureBinding(targetBinding);
-    if (JSON.stringify(old.value.binding) !== JSON.stringify(latest.value.binding)) fail("OPERATIONS_BINDING_CHANGED");
+    if (old.value.version !== latest.value.version || JSON.stringify(old.value.binding) !== JSON.stringify(latest.value.binding)
+      || Object.hasOwn(target, "videoRootFingerprint") !== (old.value.version === 2)) fail("OPERATIONS_BINDING_CHANGED");
     const files = new Map(latest.value.files.map(file => [file.name, file]));
     for (const [name, job] of old.jobs) {
       const newer = latest.jobs.get(name);
@@ -225,7 +239,8 @@ export function planOperationalRestore({ backup, current, targetBinding, key }) 
       if (!latest.privacy || latest.privacy.revision < old.privacy.revision) files.set(old.privacy.file.name, old.privacy.file);
       else if (latest.privacy.revision === old.privacy.revision && latest.privacy.file.content !== old.privacy.file.content) fail("OPERATIONS_CHANGED");
     }
-    const merged = { version: 1, binding: old.value.binding, files: [...files.values()].sort((a, b) => a.name.localeCompare(b.name, "en")) };
+    const merged = { version: old.value.version, binding: old.value.binding,
+      ...(old.value.version === 2 ? { legacyBinding: old.value.legacyBinding } : {}), files: [...files.values()].sort((a, b) => a.name.localeCompare(b.name, "en")) };
     state(merged, key);
     return { state: merged, targetBinding: target, backupSha256: operationalStateHash(old.value), currentSha256: operationalStateHash(latest.value),
       mergedSha256: operationalStateHash(merged), completedReceipts: [...latest.jobs.values()].filter(job => job.record.phase === "completed").length,
@@ -246,7 +261,7 @@ export async function restoreOperationalQuarantine(scope, { backup, current, tar
     for await (const _entry of directory) empty = false;
     if (!empty) fail("OPERATIONS_NOT_EMPTY");
     await assertCurrent(plan.currentSha256); active(signal);
-    const marker = Buffer.from(`${JSON.stringify({ version: 1, status: "reconciliation_required", backupSha256: plan.backupSha256,
+    const marker = Buffer.from(`${JSON.stringify({ version: plan.state.version, status: "reconciliation_required", backupSha256: plan.backupSha256,
       currentSha256: plan.currentSha256, mergedSha256: plan.mergedSha256, sourceBinding: plan.state.binding, targetBinding: plan.targetBinding })}\n`);
     try { await writeFile(scope, OPERATIONAL_RESTORE_MARKER, marker, signal); } finally { marker.fill(0); }
     for (const file of plan.state.files) {

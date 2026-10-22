@@ -104,30 +104,38 @@ export function createVideoMessageStore({ pool, chatStore, videoStore } = {}) {
     return result;
   }
 
+  async function appendBroadcastVideo(connection, context, append, message) {
+    if (typeof connection?.query !== "function" || typeof append !== "function" || context?.actor?.role !== "admin") input();
+    return appendVideo(connection, context, append, message);
+  }
+  async function appendVideo(connection, context, append, message) {
+    bytes(message?.videoId, 16);
+    if (message.mediaId !== undefined && message.mediaId !== null) input();
+    const { videoId, ...ordinary } = message;
+    const result = await append(ordinary);
+    const existing = (await connection.query(`SELECT ${projection} FROM message_video mv ${joins}
+      WHERE mv.message_id = ? FOR UPDATE`, [result.message.id]))[0];
+    if (result.duplicate) {
+      if (!existing || !sized(existing.video_id, 16) || !existing.video_id.equals(videoId) || existing.photo_id !== null) fail("CHAT_CONFLICT");
+      link(existing, context);
+      if (result.message.deletedAt !== null) return result;
+    } else {
+      if (existing || result.message.media || result.message.deletedAt !== null) state();
+      const asset = await videoStore.getCommittedAsset(connection, { assetId: videoId,
+        ownerId: context.actor.id, ownerRole: context.actor.role, now: context.now });
+      if (asset.createdAt > result.message.createdAt) state();
+      await connection.query("INSERT INTO message_video (message_id, conversation_id, video_id, created_at) VALUES (?, ?, ?, ?)",
+        [result.message.id, context.conversation.id, videoId, sqlDate(result.message.createdAt)]);
+    }
+    return { ...result, message: (await decorateMessages(connection, context, [result.message]))[0] };
+  }
+
   return Object.freeze({
-    decorateMessages,
+    decorateMessages, appendBroadcastVideo,
     async sendMessage(value) {
       request(value); bytes(value.message?.videoId, 16);
       if (value.message.mediaId !== undefined && value.message.mediaId !== null) input();
-      const { videoId, ...ordinary } = value.message;
-      return chatStore.withConversationAppend(value, async (connection, context, append) => {
-        const result = await append(ordinary);
-        const existing = (await connection.query(`SELECT ${projection} FROM message_video mv ${joins}
-          WHERE mv.message_id = ? FOR UPDATE`, [result.message.id]))[0];
-        if (result.duplicate) {
-          if (!existing || !sized(existing.video_id, 16) || !existing.video_id.equals(videoId) || existing.photo_id !== null) fail("CHAT_CONFLICT");
-          link(existing, context);
-          if (result.message.deletedAt !== null) return result;
-        } else {
-          if (existing || result.message.media || result.message.deletedAt !== null) state();
-          const asset = await videoStore.getCommittedAsset(connection, { assetId: videoId,
-            ownerId: context.actor.id, ownerRole: context.actor.role, now: context.now });
-          if (asset.createdAt > result.message.createdAt) state();
-          await connection.query("INSERT INTO message_video (message_id, conversation_id, video_id, created_at) VALUES (?, ?, ?, ?)",
-            [result.message.id, context.conversation.id, videoId, sqlDate(context.now)]);
-        }
-        return { ...result, message: (await decorateMessages(connection, context, [result.message]))[0] };
-      });
+      return chatStore.withConversationAppend(value, (connection, context, append) => appendVideo(connection, context, append, value.message));
     },
     async getMessageAsset(value) {
       request(value); bytes(value.messageId, 16);

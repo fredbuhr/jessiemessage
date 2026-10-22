@@ -1,5 +1,5 @@
-import { createErasureJournal, readErasureJournalBatch } from "./erasure-journal.mjs";
-import { erasureBinding, erasureFields, erasureId, erasureTime, failErasure } from "./erasure-state.mjs";
+import { createErasureJournal, erasureJournalBindings, readErasureJournalBatch } from "./erasure-journal.mjs";
+import { erasureFields, erasureId, erasureTime, failErasure } from "./erasure-state.mjs";
 
 const statuses = ["active", "pending", "revoked", "suspended", "deleted"];
 export function closureTarget(value, clientId) {
@@ -24,12 +24,24 @@ const view = (clientId, record) => ({ clientId, phase: record?.phase ?? "none", 
 /** An explicit admin action writes only the encrypted requested intent. The
  * managed parent, after a complete process drain, is the sole destructive owner. */
 export function createClosureService({ directory, key, store, target, clock = Date.now }, internal = {}) {
-  const binding = erasureBinding(store?.binding), ownedKey = Buffer.from(key ?? []);
+  const { binding, legacyBinding } = erasureJournalBindings(store?.binding), ownedKey = Buffer.from(key ?? []);
   if (ownedKey.length !== 32 || typeof target !== "function" || typeof store?.withLease !== "function" || typeof clock !== "function") failErasure("ERASURE_INPUT");
-  const journalFor = internal.journalFor ?? (clientId => createErasureJournal({ directory, key: ownedKey, binding, clientId }));
-  const batch = internal.batch ?? (options => readErasureJournalBatch({ directory, key: ownedKey, binding, ...options }));
+  const journalFor = internal.journalFor ?? ((clientId, selectedBinding = binding) => createErasureJournal({ directory, key: ownedKey, binding: selectedBinding, clientId }));
+  const batch = internal.batch ?? (options => readErasureJournalBatch({ directory, key: ownedKey, binding, ...(legacyBinding ? { legacyBinding } : {}), ...options }));
   let closed = false;
   const available = () => { if (closed) failErasure(); };
+  async function readExisting(clientId, currentJournal) {
+    const current = await currentJournal.read(); available();
+    if (current.record !== null || !legacyBinding) return current;
+    const legacy = journalFor(clientId, legacyBinding);
+    try {
+      const previous = await legacy.read(); available();
+      if (previous.record !== null && previous.record.phase !== "completed") failErasure("ERASURE_LEGACY_PENDING");
+      // A historical completion is read in its original scope and is never
+      // migrated into the current journal or used to authorize a new deletion.
+      return previous.record === null ? current : previous;
+    } finally { legacy.close(); }
+  }
   return Object.freeze({
     async list({ afterName = null } = {}) {
       available(); const result = await batch({ afterName, limit: 25 }); available();
@@ -38,7 +50,7 @@ export function createClosureService({ directory, key, store, target, clock = Da
     async preview(clientId) {
       available(); erasureId(clientId); const journal = journalFor(clientId);
       try {
-        const { record } = await journal.read(); available();
+        const { record } = await readExisting(clientId, journal); available();
         // A completed receipt remains readable after its SQL identity is gone.
         const client = record?.phase === "completed" ? null : closureTarget(await target(clientId), clientId);
         available(); return { version: 1, client, closure: view(clientId, record) };
@@ -50,7 +62,7 @@ export function createClosureService({ directory, key, store, target, clock = Da
         || body.expectedPseudonym.length > 64 || !body.expectedPseudonym.isWellFormed() || typeof authorize !== "function") failErasure("ERASURE_INPUT");
       const journal = journalFor(clientId);
       try {
-        const { record } = await journal.read();
+        const { record } = await readExisting(clientId, journal);
         await authorize(); available();
         if (record) return { version: 1, accepted: true, closure: view(clientId, record) };
         const checkTarget = async () => {
@@ -60,7 +72,7 @@ export function createClosureService({ directory, key, store, target, clock = Da
         await checkTarget();
         return await store.withLease(clientId, async scope => {
           const now = erasureTime(clock()); await scope.inspect(now);
-          const requested = { version: 1, clientId, binding, phase: "requested", cursor: null, startedAt: now, updatedAt: now };
+          const requested = { version: legacyBinding ? 2 : 1, clientId, binding, phase: "requested", cursor: null, startedAt: now, updatedAt: now };
           await journal.save(requested, 0, async () => { available(); await checkTarget(); await authorize(); available(); });
           return { version: 1, accepted: true, closure: view(clientId, requested) };
         });

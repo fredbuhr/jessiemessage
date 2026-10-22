@@ -3,7 +3,7 @@ const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const reasons = new Set([null, "access_inactive", "conversation_unavailable"]);
 export const recipientNames = Object.freeze({ pending: "En attente", sending: "En cours", delivered: "Remis", skipped: "Ignoré", cancelled: "Annulé", failed: "Échec" });
 export const campaignNames = Object.freeze({ queued: "En attente", running: "En cours", completed: "Terminée", cancelled: "Annulée", paused: "Interrompue" });
-export const reasonNames = Object.freeze({ access_inactive: "Accès non actif", opted_out: "Diffusions non acceptées", conversation_unavailable: "Conversation indisponible", media_unavailable: "Photo indisponible", repeat_media: "Photo déjà partagée", expired: "Délai d’envoi dépassé", administrator_invalid: "Autorisation de Jessie à renouveler", processing_failed: "Envoi non abouti", cancelled: "Annulé par Jessie" });
+export const reasonNames = Object.freeze({ access_inactive: "Accès non actif", opted_out: "Diffusions non acceptées", conversation_unavailable: "Conversation indisponible", media_unavailable: "Pièce jointe indisponible", repeat_media: "Pièce jointe déjà partagée", expired: "Délai d’envoi dépassé", administrator_invalid: "Autorisation de Jessie à renouveler", processing_failed: "Envoi non abouti", cancelled: "Annulé par Jessie" });
 const id = (value) => typeof value === "string" && value.length === 32 && ID.test(value);
 const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 253402300799999;
 const text = (value, max) => typeof value === "string" && value.length <= max && value.isWellFormed() && !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/u.test(value);
@@ -30,10 +30,12 @@ export function acceptBroadcastSession(state, ticket, input, now = Date.now()) {
   const user = input?.user;
   if (!id(user?.id) || user.role !== "admin" || !label(user.pseudonym) || typeof input.csrf !== "string" || input.csrf.length !== 43 || !TOKEN.test(input.csrf)
     || !date(input.expiresAt) || input.expiresAt <= now || typeof input.mediaEnabled !== "boolean"
+    || input.videoEnabled !== undefined && typeof input.videoEnabled !== "boolean"
+    || input.videoEnabled === true && input.largeAudiencesEnabled !== true
     || input.largeAudiencesEnabled !== undefined && typeof input.largeAudiencesEnabled !== "boolean") { clearBroadcast(state); return false; }
   const largeAudiencesEnabled = input.largeAudiencesEnabled === true;
-  if (state.session && (state.session.id !== user.id || state.session.csrf !== input.csrf || state.session.largeAudiencesEnabled !== largeAudiencesEnabled)) { clearBroadcast(state, { visible: true }); return false; }
-  state.session = { id: user.id, csrf: input.csrf, expiresAt: input.expiresAt, mediaEnabled: input.mediaEnabled, largeAudiencesEnabled }; return true;
+  if (state.session && (state.session.id !== user.id || state.session.csrf !== input.csrf || state.session.largeAudiencesEnabled !== largeAudiencesEnabled || (state.session.videoEnabled === true) !== (input.videoEnabled === true))) { clearBroadcast(state, { visible: true }); return false; }
+  state.session = { id: user.id, csrf: input.csrf, expiresAt: input.expiresAt, mediaEnabled: input.mediaEnabled, largeAudiencesEnabled, ...(input.videoEnabled === true ? { videoEnabled: true } : {}) }; return true;
 }
 export function resetContacts(state, query = "limit=50") { state.filterEpoch += 1; state.contactQuery = query; state.contacts.clear(); return state.filterEpoch; }
 export function contactPageQuery(state, afterId = null) {
@@ -62,9 +64,14 @@ export function selectRecipient(state, conversationId, checked) {
 export function clearSelection(state) { if (state.pending) return false; state.selected.clear(); invalidatePreview(state); return true; }
 export function updateComposition(state, input) {
   if (state.pending) return false;
-  const previousMedia = state.draft.mediaId;
+  const previousMedia = state.draft.mediaId, previousVideo = state.draft.videoId ?? null;
+  if (Object.hasOwn(input, "videoId")) {
+    if (!state.session?.videoEnabled || input.videoId !== null && !id(input.videoId)) return false;
+    state.draft.videoId = input.videoId; if (input.videoId !== null) state.draft.mediaId = null;
+  }
+  if (input.mediaId !== undefined && input.mediaId !== null) state.draft.videoId = null;
   for (const key of ["title", "body", "mediaId", "allowRepeatMedia"]) if (Object.hasOwn(input, key)) state.draft[key] = input[key];
-  if (state.draft.mediaId !== previousMedia) invalidatePreview(state); else state.acknowledged = false;
+  if (state.draft.mediaId !== previousMedia || (state.draft.videoId ?? null) !== previousVideo) invalidatePreview(state); else state.acknowledged = false;
   return true;
 }
 export function updateAudience(state, { mode = state.audienceMode, filters = state.audienceFilters } = {}) {
@@ -86,9 +93,10 @@ export function audienceValue(state) {
 }
 export function confirmationCount(state) { return state.session?.largeAudiencesEnabled ? state.preview?.eligibleCount ?? 0 : state.selected.size; }
 export function previewTicket(state) { return { ...broadcastTicket(state), previewEpoch: state.previewEpoch, ids: [...state.selected.keys()].sort(), mediaId: state.draft.mediaId,
+  ...(state.draft.videoId ? { videoId: state.draft.videoId } : {}),
   ...(state.session?.largeAudiencesEnabled ? { audience: audienceValue(state) } : {}) }; }
 export function acceptPreview(state, ticket, input) {
-  if (!currentBroadcast(state, ticket) || state.pending || ticket.previewEpoch !== state.previewEpoch || ticket.mediaId !== state.draft.mediaId
+  if (!currentBroadcast(state, ticket) || state.pending || ticket.previewEpoch !== state.previewEpoch || ticket.mediaId !== state.draft.mediaId || (ticket.videoId ?? null) !== (state.draft.videoId ?? null)
     || JSON.stringify(ticket.ids) !== JSON.stringify([...state.selected.keys()].sort())) return false;
   const large = !!ticket.audience;
   if (large && JSON.stringify(ticket.audience) !== JSON.stringify(audienceValue(state))) return false;
@@ -104,16 +112,17 @@ export function acceptPreview(state, ticket, input) {
       || typeof value.eligible !== "boolean" || !reasons.has(value.reason) || value.eligible !== (value.reason === null) || typeof value.repeatMedia !== "boolean") throw new TypeError("invalid_preview");
     return { conversationId: value.conversationId, client: { id: value.client.id, pseudonym: value.client.pseudonym }, eligible: value.eligible, reason: value.reason, repeatMedia: value.repeatMedia };
   });
-  if (new Set(recipients.map((value) => value.conversationId)).size !== recipients.length || ticket.mediaId === null && input.repeatCount !== 0
+  if (new Set(recipients.map((value) => value.conversationId)).size !== recipients.length || ticket.mediaId === null && !ticket.videoId && input.repeatCount !== 0
     || !large && (input.eligibleCount !== recipients.filter((value) => value.eligible).length || input.repeatCount !== recipients.filter((value) => value.repeatMedia).length)) throw new TypeError("invalid_preview");
   state.preview = { recipients, eligibleCount: input.eligibleCount, repeatCount: input.repeatCount,
     ...(large ? { totalCount: input.totalCount, excludedCount: input.excludedCount, previewToken: input.previewToken, audience: ticket.audience } : {}) }; state.acknowledged = false; return true;
 }
 export function compositionValid(state) {
   const draft = state.draft;
-  if (!title(draft.title) || !body(draft.body, draft.mediaId)
-    || draft.mediaId !== null && (!id(draft.mediaId) || !state.session?.mediaEnabled) || typeof draft.allowRepeatMedia !== "boolean") return false;
-  return new TextEncoder().encode(draft.body).length <= (draft.mediaId === null ? 16384 : 4096);
+  if (!title(draft.title) || !body(draft.body, draft.videoId ?? draft.mediaId)
+    || draft.mediaId !== null && (!id(draft.mediaId) || !state.session?.mediaEnabled) || draft.videoId != null && (!id(draft.videoId) || !state.session?.videoEnabled || !state.session?.largeAudiencesEnabled || draft.mediaId !== null)
+    || typeof draft.allowRepeatMedia !== "boolean") return false;
+  return new TextEncoder().encode(draft.body).length <= (draft.mediaId === null && !draft.videoId ? 16384 : 4096);
 }
 export function canConfirmBroadcast(state, now = Date.now()) {
   return state.visible && !!state.session && state.session.expiresAt > now && !state.pending && !state.csrfFailed
@@ -124,7 +133,7 @@ export function canConfirmBroadcast(state, now = Date.now()) {
 export function prepareCampaign(state, clientCampaignId, now = Date.now()) {
   if (!id(clientCampaignId) || !canConfirmBroadcast(state, now)) return null;
   const payload = Object.freeze({ clientCampaignId, title: state.draft.title, body: state.draft.body, mediaId: state.draft.mediaId,
-    allowRepeatMedia: state.draft.allowRepeatMedia, ...(state.session.largeAudiencesEnabled
+    ...(state.draft.videoId ? { videoId: state.draft.videoId } : {}), allowRepeatMedia: state.draft.allowRepeatMedia, ...(state.session.largeAudiencesEnabled
       ? { audience: audienceValue(state), previewToken: state.preview.previewToken } : { conversationIds: Object.freeze([...state.selected.keys()].sort()) }) });
   state.pending = { payload, expectedCount: confirmationCount(state), status: "sending" }; return payload;
 }
@@ -137,8 +146,10 @@ export function rejectCampaign(state, ticket, { csrfFailed = false, definitiveRe
   if (definitiveRejected && !csrfFailed) { state.pending = null; invalidatePreview(state); return true; }
   state.pending.status = "uncertain"; state.csrfFailed = csrfFailed; return true;
 }
-export function parseCampaign(input, { detail = false } = {}) {
-  if (!id(input?.id) || !id(input.clientCampaignId) || !title(input.title) || !body(input.body, input.mediaId)
+export function parseCampaign(input, { detail = false, video = false } = {}) {
+  const typedVideo = video && input?.formatVersion === 3;
+  if (typedVideo ? !id(input.videoId) || input.mediaId !== null : input?.videoId !== undefined) throw new TypeError("invalid_campaign");
+  if (!id(input?.id) || !id(input.clientCampaignId) || !title(input.title) || !body(input.body, typedVideo ? input.videoId : input.mediaId)
     || input.mediaId !== null && !id(input.mediaId) || typeof input.allowRepeatMedia !== "boolean" || !Object.hasOwn(campaignNames, input.status)
     || !date(input.createdAt) || !date(input.updatedAt) || !date(input.expiresAt) || input.updatedAt < input.createdAt || input.expiresAt < input.createdAt) throw new TypeError("invalid_campaign");
   const counts = {};
@@ -148,8 +159,8 @@ export function parseCampaign(input, { detail = false } = {}) {
   const result = { id: input.id, clientCampaignId: input.clientCampaignId, title: input.title, body: input.body, mediaId: input.mediaId, allowRepeatMedia: input.allowRepeatMedia,
     status: input.status, createdAt: input.createdAt, updatedAt: input.updatedAt, expiresAt: input.expiresAt, counts };
   if (input.formatVersion !== undefined || input.audienceMode !== undefined) {
-    if (input.formatVersion !== 2 || !["selected", "all", "filtered"].includes(input.audienceMode)) throw new TypeError("invalid_campaign");
-    result.formatVersion = 2; result.audienceMode = input.audienceMode;
+    if (input.formatVersion !== 2 && !typedVideo || !["selected", "all", "filtered"].includes(input.audienceMode)) throw new TypeError("invalid_campaign");
+    result.formatVersion = input.formatVersion; if (typedVideo) result.videoId = input.videoId; result.audienceMode = input.audienceMode;
   }
   if (detail) {
     if (!Array.isArray(input.recipients) || input.recipients.length !== counts.total) throw new TypeError("invalid_campaign");
@@ -175,9 +186,9 @@ export function mergeCampaign(previous, incoming) {
 }
 export function acceptCampaign(state, ticket, input) {
   if (!currentBroadcast(state, ticket) || !state.pending) return null;
-  const campaign = parseCampaign(input.campaign); const expected = state.pending.payload;
+  const campaign = parseCampaign(input.campaign, { video: state.session?.videoEnabled === true }); const expected = state.pending.payload;
   if (typeof input.duplicate !== "boolean" || campaign.clientCampaignId !== expected.clientCampaignId || campaign.title !== expected.title || campaign.body !== expected.body
-    || campaign.mediaId !== expected.mediaId || campaign.allowRepeatMedia !== expected.allowRepeatMedia || campaign.counts.total !== state.pending.expectedCount) throw new TypeError("invalid_campaign_acknowledgement");
+    || campaign.mediaId !== expected.mediaId || campaign.videoId !== expected.videoId || campaign.allowRepeatMedia !== expected.allowRepeatMedia || campaign.counts.total !== state.pending.expectedCount) throw new TypeError("invalid_campaign_acknowledgement");
   state.pending = null; state.selected.clear(); state.audienceMode = "selected"; state.draft = { title: "", body: "", mediaId: null, allowRepeatMedia: false }; invalidatePreview(state); return campaign;
 }
 export function parseRecipientPage(input, { campaignId, afterId = null, limit = 50 } = {}) {

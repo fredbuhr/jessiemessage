@@ -19,6 +19,8 @@ let photoCursor = null; let photoMore = false; let photosBusy = false; let photo
 let contactAfter = null; let contactBack = []; let selectedPage = 0; let contactsDirty = false;
 let recipientPage = null; let recipientAfter = null; let recipientBack = []; let recipientEpoch = 0; let recipientsBusy = false; let detailElements = null;
 let previewBusy = false; let sendBusy = false; let logoutBusy = false;
+let videoDraft = null; let videoTransfer = null;
+const MAX_VIDEO_BYTES = 104857600;
 const visible = () => document.visibilityState === "visible";
 const validId = (value) => typeof value === "string" && value.length === 32 && /^[0-9a-f]{32}$/.test(value);
 const node = (tag, value, className) => { const element = document.createElement(tag); if (value !== undefined) ui.text(element, value); if (className) element.className = className; return element; };
@@ -27,15 +29,22 @@ const textNode = (tag, source, params = {}, className) => { const element = node
 const stale = () => Object.assign(new Error("stale_response"), { stale: true });
 function notice(text, error = false, target = "session-status", params = {}) { const element = el(target); ui.text(element, text, params); element.classList.toggle("is-error", error); }
 function clearPhoto() { photoEpoch += 1; if (photoUrl) URL.revokeObjectURL(photoUrl); photoUrl = null; replace(el("photo-preview")); }
+function clearVideo() {
+  const draft = videoDraft; videoDraft = null;
+  if (videoTransfer) { videoTransfer.controller.abort(); videoTransfer = null; }
+  for (const player of el("video-preview").querySelectorAll("video")) { player.pause?.(); player.removeAttribute("src"); player.load?.(); }
+  replace(el("video-preview")); if (draft?.url) URL.revokeObjectURL(draft.url);
+  el("video-file").value = ""; el("video-progress").value = 0;
+}
 function clearDisplay() {
   el("broadcast-content").hidden = true; el("logout").hidden = true; el("reload").hidden = true;
   for (const id of ["contacts", "selected", "preview-list", "history", "campaign-detail"]) replace(el(id));
-  for (const id of ["session-status", "contacts-status", "preview-status", "send-status", "history-status", "photo-status"]) notice("", false, id);
+  for (const id of ["session-status", "contacts-status", "preview-status", "send-status", "history-status", "photo-status", "video-status"]) notice("", false, id);
   el("campaign-form").reset(); el("filters").reset(); replace(el("photo-select"), Object.assign(node("option", "Sans photo"), { value: "" }));
   for (const id of ["tag-filter", "group-filter"]) replace(el(id), Object.assign(node("option", id === "tag-filter" ? "Tous les tags" : "Tous les groupes"), { value: "" }));
-  for (const id of ["more-contacts", "more-history", "more-photos", "uncertain", "repeat-choice", "photo-field", "campaign-detail"]) el(id).hidden = true;
+  for (const id of ["more-contacts", "more-history", "more-photos", "uncertain", "repeat-choice", "photo-field", "campaign-detail", "video-options", "video-progress", "upload-video", "remove-video", "cancel-video"]) el(id).hidden = true;
   el("audience-mode").value = "selected"; el("audience-options").hidden = true;
-  el("composition").disabled = false; el("acknowledge").checked = false; el("allow-repeat").checked = false; clearPhoto();
+  el("composition").disabled = false; el("acknowledge").checked = false; el("allow-repeat").checked = false; clearPhoto(); clearVideo();
 }
 function clearPrivate(isVisible = false) {
   for (const controller of controllers) controller.abort(); controllers.clear(); cancelSessionCheck?.(); clearTimeout(pollTimer); cancelSessionCheck = null; pollTimer = null; sessionPaused = false;
@@ -72,8 +81,8 @@ async function request(path, { ticket = broadcastTicket(state), body, timeout = 
 function errorText(error) {
   if (error.status === 429) return "Trop de demandes. Patiente un moment avant de réessayer.";
   if (error.code === "recipients_unavailable") return "Un destinataire n’est plus éligible. Vérifie de nouveau les destinataires.";
-  if (error.code === "repeat_confirmation_required") return "Cette photo a déjà été partagée. Vérifie l’avertissement avant de confirmer.";
-  if (error.code === "media_unavailable") return "Cette photo n’est plus disponible. Choisis une autre photo.";
+  if (error.code === "repeat_confirmation_required") return state.draft.videoId ? "Cette vidéo a déjà été partagée. Vérifie l’avertissement avant de confirmer." : "Cette photo a déjà été partagée. Vérifie l’avertissement avant de confirmer.";
+  if (error.code === "media_unavailable") return state.draft.videoId ? "Cette vidéo n’est plus disponible. Choisis une autre vidéo." : "Cette photo n’est plus disponible. Choisis une autre photo.";
   if (error.status === 409) return "La demande ne peut pas être confirmée. Consulte l’historique avant de préparer une autre diffusion.";
   if (error.status === 403) return "Ta connexion doit être actualisée. Actualise la page, puis confirme de nouveau ta demande.";
   if (error.status === 404) return "Cet élément n’est plus accessible. Actualise la page.";
@@ -99,7 +108,7 @@ async function checkSession(ticket) {
     // Feature checks renew the SQL session, while this endpoint also renews the
     // browser cookie. Keep both proofs bound to the account owning this draft.
     const session = await request("/api/auth/session", { ticket });
-    if (!acceptBroadcastSession(state, ticket, { ...session, mediaEnabled: state.session.mediaEnabled, largeAudiencesEnabled: state.session.largeAudiencesEnabled })) {
+    if (!acceptBroadcastSession(state, ticket, { ...session, mediaEnabled: state.session.mediaEnabled, largeAudiencesEnabled: state.session.largeAudiencesEnabled, ...(state.session.videoEnabled === true ? { videoEnabled: true } : {}) })) {
       if (state.visible) await bootstrap("La session a changé. Consulte l’historique avant de préparer une nouvelle diffusion."); else signOut();
       return;
     }
@@ -129,9 +138,10 @@ function renderControls() {
   el("audience-mode").value = state.audienceMode;
   el("filters").hidden = state.audienceMode === "all";
   for (const tag of ["input", "select", "button"]) for (const input of el("filters").querySelectorAll(tag)) input.disabled = frozen || state.csrfFailed;
-  el("preview").disabled = frozen || previewBusy || state.csrfFailed || manual && state.selected.size === 0 || state.audienceMode === "filtered" && contactsDirty;
+  const videoWaiting = !!videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid);
+  el("preview").disabled = frozen || previewBusy || !!videoTransfer || videoWaiting || state.csrfFailed || manual && state.selected.size === 0 || state.audienceMode === "filtered" && contactsDirty;
   ui.text(el("preview"), previewBusy ? "Vérification…" : "Vérifier les destinataires");
-  el("confirm").disabled = sendBusy || !canConfirmBroadcast(state);
+  el("confirm").disabled = sendBusy || !!videoTransfer || videoWaiting || !canConfirmBroadcast(state);
   ui.text(el("confirm"), selected ? selected > 1 ? "Confirmer pour {count} clients" : "Confirmer pour {count} client" : "Confirmer la diffusion", { count: ui.numberParam(selected) });
   ui.text(el("acknowledge-label"), selected > 1 ? "Je confirme le contenu et l’envoi individuel à {count} clients." : "Je confirme le contenu et l’envoi individuel à {count} client.", { count: ui.numberParam(selected) });
   el("clear-selection").disabled = frozen || state.selected.size === 0; el("clear-selection").hidden = !manual;
@@ -154,6 +164,16 @@ function renderControls() {
   ui.text(el("selected-page"), "Page {page} / {pages}", { page: ui.numberParam(selectedPage + 1), pages: ui.numberParam(Math.max(1, Math.ceil(state.selected.size / 50))) });
   el("more-history").hidden = !historyMore; el("more-history").disabled = historyBusy;
   el("more-photos").hidden = !photoMore; el("more-photos").disabled = photosBusy || frozen;
+  el("photo-select").disabled = frozen || !!videoTransfer || state.csrfFailed;
+  el("load-photos").disabled = frozen || !!videoTransfer || state.csrfFailed;
+  el("video-options").hidden = state.session?.videoEnabled !== true;
+  el("pick-video").disabled = frozen || !!videoTransfer || state.csrfFailed;
+  el("video-file").disabled = frozen || !!videoTransfer || state.csrfFailed;
+  el("upload-video").hidden = !videoDraft || !!videoDraft.id || videoDraft.failed === true || !!videoTransfer;
+  el("upload-video").disabled = frozen || !videoDraft?.ready || videoDraft.invalid || state.csrfFailed;
+  el("remove-video").hidden = !videoDraft || !!videoTransfer; el("remove-video").disabled = frozen || state.csrfFailed;
+  el("cancel-video").hidden = !videoTransfer; el("cancel-video").disabled = frozen;
+  el("video-progress").hidden = !videoTransfer;
   el("refresh-history").disabled = historyBusy;
   for (const input of el("contacts").querySelectorAll("input")) input.disabled = frozen || state.csrfFailed;
   for (const button of el("selected").querySelectorAll("button")) button.disabled = frozen || state.csrfFailed;
@@ -183,18 +203,20 @@ function renderPreview() {
   replace(el("preview-list")); el("repeat-choice").hidden = !state.preview?.repeatCount;
   el("allow-repeat").checked = state.draft.allowRepeatMedia; el("preview-sample").hidden = !state.preview || !state.preview.audience && state.preview.recipients.length <= 50;
   if (!state.preview) { notice("", false, "preview-status"); return; }
-  const rows = state.preview.recipients.slice(0, 50).map((recipient) => textNode("li", "{name} · {status}{repeat}", { name: recipient.client.pseudonym, status: ui.messageParam(recipient.eligible ? "Prêt à recevoir" : reasonNames[recipient.reason]), repeat: ui.messageParam(recipient.repeatMedia ? " · photo déjà partagée" : "") }));
+  ui.text(el("repeat-label"), state.draft.videoId ? "Je souhaite renvoyer cette vidéo aux clients qui l’ont déjà reçue." : "Je souhaite renvoyer cette photo aux clients qui l’ont déjà reçue.");
+  const rows = state.preview.recipients.slice(0, 50).map((recipient) => textNode("li", "{name} · {status}{repeat}", { name: recipient.client.pseudonym, status: ui.messageParam(recipient.eligible ? "Prêt à recevoir" : reasonNames[recipient.reason]), repeat: ui.messageParam(recipient.repeatMedia ? state.draft.videoId ? " · vidéo déjà partagée" : " · photo déjà partagée" : "") }));
   replace(el("preview-list"), ...rows);
   ui.text(el("preview-sample"), "Les {count} premiers clients sont affichés ci-dessous.", { count: ui.numberParam(rows.length) });
   const all = state.preview.eligibleCount === state.selected.size;
-  const repeat = ui.messageParam(state.preview.repeatCount ? state.preview.repeatCount > 1 ? " Photo déjà partagée avec {count} clients." : " Photo déjà partagée avec {count} client." : "", { count: ui.numberParam(state.preview.repeatCount) });
+  const repeat = ui.messageParam(state.preview.repeatCount ? state.draft.videoId ? state.preview.repeatCount > 1 ? " Vidéo déjà partagée avec {count} clients." : " Vidéo déjà partagée avec {count} client." : state.preview.repeatCount > 1 ? " Photo déjà partagée avec {count} clients." : " Photo déjà partagée avec {count} client." : "", { count: ui.numberParam(state.preview.repeatCount) });
   if (state.preview.audience) {
     notice("{eligible} clients éligibles sur {total} · {excluded} exclus.{repeat}", state.preview.eligibleCount === 0, "preview-status", { eligible: ui.numberParam(state.preview.eligibleCount), total: ui.numberParam(state.preview.totalCount), excluded: ui.numberParam(state.preview.excludedCount), repeat });
   } else notice("{eligible} / {selected} destinataires éligibles.{repeat}{warning}", !all, "preview-status", { eligible: ui.numberParam(state.preview.eligibleCount), selected: ui.numberParam(state.selected.size), repeat, warning: ui.messageParam(all ? "" : " Retire les destinataires non éligibles avant de confirmer.") });
 }
 function compositionChanged() {
-  state.acknowledged = false; el("acknowledge").checked = false; el("campaign-body").maxLength = state.draft.mediaId ? 1000 : 4096;
-  ui.text(el("body-help"), state.draft.mediaId ? "Légende facultative · 1 000 caractères maximum." : "De 1 à 4 096 caractères.");
+  const attachment = state.draft.mediaId || state.draft.videoId || videoDraft;
+  state.acknowledged = false; el("acknowledge").checked = false; el("campaign-body").maxLength = attachment ? 1000 : 4096;
+  ui.text(el("body-help"), attachment ? "Légende facultative · 1 000 caractères maximum." : "De 1 à 4 096 caractères.");
   renderSelection(); renderPreview();
 }
 function contactQuery(afterId = null) {
@@ -231,10 +253,11 @@ async function loadLabels() {
   for (const [element, kind] of [["tag-filter", "tag"], ["group-filter", "group"]]) for (const label of labels.filter((value) => value.kind === kind).sort((a, b) => a.name.localeCompare(b.name, "fr"))) { const option = rawNode("option", label.name); option.value = label.id; el(element).append(option); }
 }
 async function preview() {
-  if (state.audienceMode === "selected" && !state.selected.size || state.audienceMode === "filtered" && contactsDirty || previewBusy || state.pending || state.csrfFailed) return;
-  previewBusy = true; const ticket = previewTicket(state); notice("Vérification des accès et de la photo…", false, "preview-status"); renderControls();
+  if (state.audienceMode === "selected" && !state.selected.size || state.audienceMode === "filtered" && contactsDirty || previewBusy || state.pending || state.csrfFailed
+    || videoTransfer || videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid)) return;
+  previewBusy = true; const ticket = previewTicket(state); notice(ticket.videoId ? "Vérification des accès et de la vidéo…" : "Vérification des accès et de la photo…", false, "preview-status"); renderControls();
   try {
-    const data = await request("/api/broadcast/admin/preview", { ticket, body: ticket.audience ? { audience: ticket.audience, mediaId: ticket.mediaId } : { conversationIds: ticket.ids, mediaId: ticket.mediaId } });
+    const data = await request("/api/broadcast/admin/preview", { ticket, body: { ...(ticket.audience ? { audience: ticket.audience } : { conversationIds: ticket.ids }), mediaId: ticket.mediaId, ...(ticket.videoId ? { videoId: ticket.videoId } : {}) } });
     if (acceptPreview(state, ticket, data)) { el("acknowledge").checked = false; renderPreview(); }
   } catch (error) { report(error, "preview-status"); }
   finally { if (currentBroadcast(state, ticket)) { previewBusy = false; renderControls(); } }
@@ -270,15 +293,103 @@ async function showPhoto() {
   } catch (error) { if (currentBroadcast(state, ticket) && epoch === photoEpoch) report(error, "photo-status"); }
   finally { clearTimeout(timer); controllers.delete(controller); }
 }
+function attachmentChanged() {
+  state.previewEpoch += 1; state.preview = null; state.draft.allowRepeatMedia = false;
+  compositionChanged();
+}
+function chooseVideo() {
+  const file = el("video-file").files?.[0]; el("video-file").value = "";
+  if (!file || state.session?.videoEnabled !== true || state.pending || sendBusy || videoTransfer || state.csrfFailed || !visible()) return;
+  if (file.type !== "video/mp4" || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > MAX_VIDEO_BYTES) {
+    notice("Choisis une vidéo MP4 de 100 Mo maximum.", true, "video-status"); return;
+  }
+  if (state.draft.body.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une vidéo.", true, "video-status"); return; }
+  clearVideo(); clearPhoto(); el("photo-select").value = ""; updateComposition(state, { mediaId: null, videoId: null });
+  const ticket = broadcastTicket(state), draft = { file, url: URL.createObjectURL(file), ready: false, invalid: false, id: null };
+  videoDraft = draft;
+  const player = node("video"); player.controls = true; player.preload = "metadata"; player.playsInline = true;
+  ui.attr(player, "aria-label", "Vidéo choisie pour cette diffusion"); player.src = draft.url;
+  player.addEventListener("loadedmetadata", () => {
+    if (videoDraft !== draft || !currentBroadcast(state, ticket) || !visible()) return;
+    draft.ready = true; draft.invalid = false;
+    notice("Vérifie l’aperçu, puis charge la vidéo avant de vérifier les destinataires.", false, "video-status"); renderControls();
+  });
+  player.addEventListener("error", () => {
+    if (videoDraft !== draft || !currentBroadcast(state, ticket) || !visible()) return;
+    draft.ready = false; draft.invalid = true;
+    notice("Cette vidéo ne peut pas être lue. Choisis une autre vidéo MP4.", true, "video-status"); renderControls();
+  });
+  replace(el("video-preview"), player); notice("Préparation de l’aperçu vidéo…", false, "video-status"); attachmentChanged();
+}
+function removeVideo() {
+  if (state.pending || sendBusy || videoTransfer) return;
+  clearVideo(); updateComposition(state, { videoId: null }); attachmentChanged(); notice("", false, "video-status");
+}
+async function uploadVideo() {
+  const draft = videoDraft;
+  if (!draft?.ready || draft.invalid || draft.id || draft.failed || videoTransfer || state.session?.videoEnabled !== true || state.pending || sendBusy || state.csrfFailed || !visible()) return;
+  const ticket = broadcastTicket(state), transfer = { controller: new AbortController(), cancelled: false, draft };
+  videoTransfer = transfer; controllers.add(transfer.controller); el("video-progress").value = 0;
+  notice("Chargement de la vidéo… {percent} %", false, "video-status", { percent: ui.numberParam(0) }); renderControls();
+  const current = () => currentBroadcast(state, ticket) && visible() && videoDraft === draft && videoTransfer === transfer && !transfer.controller.signal.aborted;
+  try {
+    await verifySession(ticket); if (!current()) throw stale();
+    const result = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest(); let done = false;
+      const abort = () => { xhr.abort(); finish(Object.assign(new Error("video_upload_cancelled"), { cancelled: transfer.cancelled })); };
+      const finish = (error, value) => {
+        if (done) return; done = true; transfer.controller.signal.removeEventListener("abort", abort);
+        if (error) reject(error); else resolve(value);
+      };
+      xhr.open("POST", "/api/video/admin/assets"); xhr.withCredentials = true; xhr.timeout = 300000;
+      xhr.setRequestHeader("Content-Type", "video/mp4"); xhr.setRequestHeader("X-CSRF-Token", state.session.csrf);
+      xhr.upload.addEventListener("progress", (event) => {
+        if (!current() || !Number.isFinite(event.loaded)) return;
+        const percent = Math.max(0, Math.min(100, Math.floor(event.loaded * 100 / draft.file.size)));
+        el("video-progress").value = percent; notice("Chargement de la vidéo… {percent} %", false, "video-status", { percent: ui.numberParam(percent) });
+      });
+      xhr.addEventListener("load", () => {
+        let value = {}; try { if (xhr.responseText.length <= 8192) value = JSON.parse(xhr.responseText); } catch {}
+        if (xhr.status < 200 || xhr.status >= 300) { finish(Object.assign(new Error("video_upload_failed"), { status: xhr.status, code: value.error })); return; }
+        if (!validId(value.id) || value.bytes !== draft.file.size || value.mime !== "video/mp4" || Object.keys(value).length !== 3) { finish(new Error("invalid_video_response")); return; }
+        finish(null, value);
+      });
+      xhr.addEventListener("error", () => finish(new Error("video_upload_failed")));
+      xhr.addEventListener("timeout", () => finish(new Error("video_upload_timeout")));
+      xhr.addEventListener("abort", () => finish(Object.assign(new Error("video_upload_cancelled"), { cancelled: transfer.cancelled })));
+      transfer.controller.signal.addEventListener("abort", abort, { once: true });
+      if (!current()) { finish(stale()); return; }
+      try { xhr.send(draft.file); } catch (error) { finish(error); }
+    });
+    if (!current()) throw stale(); await verifySession(ticket); if (!current()) throw stale();
+    if (!updateComposition(state, { videoId: result.id })) throw stale();
+    draft.id = result.id; compositionChanged(); notice("Vidéo chargée. Vérifie maintenant les destinataires avant de confirmer la diffusion.", false, "video-status");
+  } catch (error) {
+    if (!currentBroadcast(state, ticket) || !visible() || videoDraft !== draft || videoTransfer !== transfer) return;
+    draft.failed = true;
+    if (error.cancelled || transfer.cancelled) notice("Chargement annulé. Choisis de nouveau la vidéo pour la charger.", false, "video-status");
+    else if (error.status === 401 || error.status === 403 || error.status === 429) report(error, "video-status");
+    else notice(error.status === 413 ? "Choisis une vidéo MP4 de 100 Mo maximum." : "Le chargement n’a pas été confirmé. Choisis de nouveau la vidéo pour réessayer.", true, "video-status");
+  } finally {
+    controllers.delete(transfer.controller);
+    if (videoTransfer === transfer) { videoTransfer = null; renderControls(); }
+  }
+}
+function cancelVideoUpload() {
+  if (!videoTransfer) return;
+  const transfer = videoTransfer; transfer.cancelled = true; transfer.draft.failed = true;
+  videoTransfer = null; transfer.controller.abort(); controllers.delete(transfer.controller);
+  notice("Chargement annulé. Choisis de nouveau la vidéo pour la charger.", false, "video-status"); renderControls();
+}
 function newId() { return [...crypto.getRandomValues(new Uint8Array(16))].map((value) => value.toString(16).padStart(2, "0")).join(""); }
 async function send(retry = false) {
-  if (sendBusy) return;
+  if (sendBusy || videoTransfer || !retry && videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid)) return;
   const payload = retry ? retryCampaign(state) : prepareCampaign(state, newId()); if (!payload) return;
   const ticket = broadcastTicket(state); sendBusy = true; renderControls(); notice("Confirmation de cette diffusion…", false, "send-status");
   try {
     const result = await request("/api/broadcast/admin/campaigns", { ticket, body: payload });
     const campaign = acceptCampaign(state, ticket, result); if (!campaign) return;
-    rememberCampaign(campaign); el("campaign-form").reset(); el("photo-select").value = ""; clearPhoto(); compositionChanged();
+    rememberCampaign(campaign); el("campaign-form").reset(); el("photo-select").value = ""; clearPhoto(); clearVideo(); notice("", false, "video-status"); compositionChanged();
     notice(campaign.counts.total > 1 ? "Diffusion enregistrée pour {count} clients. Suis les remises et les éventuels destinataires ignorés dans l’historique." : "Diffusion enregistrée pour {count} client. Suis les remises et les éventuels destinataires ignorés dans l’historique.", false, "send-status", { count: ui.numberParam(campaign.counts.total) });
     renderHistory(); await showCampaign(campaign.id); void loadHistory();
   } catch (error) {
@@ -295,9 +406,10 @@ function renderHistory() {
     button.addEventListener("click", () => { void showCampaign(campaign.id); }); return button;
   }); replace(el("history"), ...rows);
 }
+const parseSessionCampaign = (input) => parseCampaign(input, { video: state.session?.videoEnabled === true });
 function parseHistoryPage(page, afterId) {
   if (!Array.isArray(page?.campaigns) || page.campaigns.length > 20 || typeof page.hasMore !== "boolean" || page.nextCursor !== null && !validId(page.nextCursor)) throw new TypeError("invalid_history");
-  let previous = afterId; const parsed = page.campaigns.map((value) => { const campaign = parseCampaign(value); if (previous !== null && campaign.id <= previous) throw new TypeError("invalid_history"); previous = campaign.id; return campaign; });
+  let previous = afterId; const parsed = page.campaigns.map((value) => { const campaign = parseSessionCampaign(value); if (previous !== null && campaign.id <= previous) throw new TypeError("invalid_history"); previous = campaign.id; return campaign; });
   if (page.hasMore && (!parsed.length || previous !== page.nextCursor)) throw new TypeError("invalid_history"); return parsed;
 }
 async function loadHistory(more = false, { restartArchive = false } = {}) {
@@ -311,12 +423,12 @@ async function loadHistory(more = false, { restartArchive = false } = {}) {
       const previousLive = [...campaigns.values()].filter((campaign) => ["queued", "running"].includes(campaign.status));
       const activity = await request("/api/broadcast/admin/activity", { ticket });
       if (!Array.isArray(activity?.campaigns) || activity.campaigns.length > 30) throw new TypeError("invalid_activity");
-      for (const value of activity.campaigns) { const campaign = parseCampaign(value); if (incoming.has(campaign.id)) throw new TypeError("invalid_activity"); incoming.set(campaign.id, campaign); }
+      for (const value of activity.campaigns) { const campaign = parseSessionCampaign(value); if (incoming.has(campaign.id)) throw new TypeError("invalid_activity"); incoming.set(campaign.id, campaign); }
       // A campaign which just completed may have fallen outside the recent
       // window. Resolve the previously live rows before accepting the snapshot.
       for (const campaign of previousLive.filter((campaign) => !incoming.has(campaign.id)).slice(0, 10)) {
         try {
-          const current = parseCampaign(await request(`/api/broadcast/admin/campaigns/${campaign.id}/summary`, { ticket }));
+          const current = parseSessionCampaign(await request(`/api/broadcast/admin/campaigns/${campaign.id}/summary`, { ticket }));
           if (current.id !== campaign.id) throw new TypeError("invalid_history"); incoming.set(current.id, current);
         } catch (error) { if (error.status === 404 && !error.stale) forgetCampaign(campaign.id); else throw error; }
       }
@@ -366,8 +478,9 @@ function renderDetail(campaign) {
   }
   const elements = detailElements; ui.rawText(elements.heading, campaign.title);
   ui.text(elements.summary, "{status} · {counts}", { status: ui.messageParam(campaignNames[campaign.status]), counts: countSummary(campaign) });
-  if (campaign.body) ui.rawText(elements.body, campaign.body); else ui.text(elements.body, "Photo sans légende");
-  elements.photo.hidden = !campaign.mediaId; elements.paused.hidden = campaign.status !== "paused";
+  if (campaign.body) ui.rawText(elements.body, campaign.body); else ui.text(elements.body, campaign.videoId ? "Vidéo sans légende" : "Photo sans légende");
+  ui.text(elements.photo, campaign.videoId ? "Une vidéo jointe" : "Une photo jointe");
+  elements.photo.hidden = !campaign.mediaId && !campaign.videoId; elements.paused.hidden = campaign.status !== "paused";
   elements.cancel.hidden = !["queued", "running"].includes(campaign.status) || campaign.counts.pending + campaign.counts.sending === 0;
   ui.text(elements.cancel, "Annuler les {count} envois en attente", { count: ui.numberParam(campaign.counts.pending + campaign.counts.sending) });
   renderRecipientPage();
@@ -403,7 +516,7 @@ async function showCampaign(id, refresh = false, refreshRecipients = false) {
   }
   const epoch = detailEpoch;
   try {
-    const result = parseCampaign(await request(`/api/broadcast/admin/campaigns/${id}/summary`));
+    const result = parseSessionCampaign(await request(`/api/broadcast/admin/campaigns/${id}/summary`));
     if (result.id !== id) throw new TypeError("invalid_campaign_summary");
     if (detailId !== id || detailEpoch !== epoch) return;
     const current = rememberCampaign(result); renderDetail(current); renderHistory();
@@ -415,7 +528,7 @@ async function cancelCampaign(id) {
   if (state.csrfFailed || detailId !== id) return; const ticket = broadcastTicket(state); const epoch = detailEpoch;
   for (const button of el("campaign-detail").querySelectorAll("button")) button.disabled = true;
   try {
-    const campaign = parseCampaign(await request(`/api/broadcast/admin/campaigns/${id}/cancel`, { ticket, body: {} })); rememberCampaign(campaign); renderHistory();
+    const campaign = parseSessionCampaign(await request(`/api/broadcast/admin/campaigns/${id}/cancel`, { ticket, body: {} })); rememberCampaign(campaign); renderHistory();
     if (detailId === id && epoch === detailEpoch) { detailEpoch += 1; recipientEpoch += 1; recipientPage = null; recipientsBusy = false; recipientAfter = null; recipientBack = []; await showCampaign(id, true); } notice("Les envois encore en attente ont été annulés. Les messages déjà remis restent dans les conversations.", false, "history-status");
   } catch (error) { report(error, "history-status"); if (detailId === id && epoch === detailEpoch && !error.stale) void showCampaign(id, true); }
 }
@@ -472,7 +585,16 @@ el("selected-previous").addEventListener("click", () => { if (!state.pending && 
 el("selected-more").addEventListener("click", () => { if (!state.pending && (selectedPage + 1) * 50 < state.selected.size) { selectedPage += 1; renderSelection(); } });
 el("clear-selection").addEventListener("click", () => { if (clearSelection(state)) compositionChanged(); });
 for (const [element, key] of [["campaign-title", "title"], ["campaign-body", "body"]]) el(element).addEventListener("input", () => { updateComposition(state, { [key]: el(element).value }); el("acknowledge").checked = false; renderControls(); });
-el("photo-select").addEventListener("change", () => { updateComposition(state, { mediaId: el("photo-select").value || null }); el("campaign-body").maxLength = state.draft.mediaId ? 1000 : 4096; ui.text(el("body-help"), state.draft.mediaId ? "Légende facultative · 1 000 caractères maximum." : "De 1 à 4 096 caractères."); compositionChanged(); void showPhoto(); });
+el("photo-select").addEventListener("change", () => {
+  if (state.pending || videoTransfer || state.csrfFailed) return;
+  const mediaId = el("photo-select").value || null; if (mediaId) { clearVideo(); notice("", false, "video-status"); }
+  updateComposition(state, { mediaId }); compositionChanged(); void showPhoto();
+});
+el("pick-video").addEventListener("click", () => { if (!el("pick-video").disabled && state.session?.videoEnabled === true) el("video-file").click(); });
+el("video-file").addEventListener("change", chooseVideo);
+el("upload-video").addEventListener("click", () => { void uploadVideo(); });
+el("remove-video").addEventListener("click", removeVideo);
+el("cancel-video").addEventListener("click", cancelVideoUpload);
 el("allow-repeat").addEventListener("change", () => { updateComposition(state, { allowRepeatMedia: el("allow-repeat").checked }); el("acknowledge").checked = false; renderControls(); });
 el("acknowledge").addEventListener("change", () => { state.acknowledged = el("acknowledge").checked; renderControls(); });
 el("load-photos").addEventListener("click", () => { void loadPhotos(); }); el("more-photos").addEventListener("click", () => { void loadPhotos(true); });
