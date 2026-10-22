@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_180_hosted_identity",
+  "status": "application180_identity_user_reported_metadata_pending",
+  "date": "2026-10-22",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "surface": "admin_readiness",
+    "description": "User supplied the four displayed startup identity fields from the live administration readiness page; no direct agent PID or startup-log observation.",
+    "startupDisplayIsUiTextOnly": true,
+    "observationTimestampProvided": false
+  },
+  "displayedFields": {
+    "Version de l’application": "1.8.0",
+    "Commit au démarrage": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+    "Version Node.js": "v24.22.1",
+    "Relevé au démarrage": "22/10/2026 13:33:40"
+  },
+  "sourceTree": "324c3563fc6b1cfce669bcf58d90962c23c966b8",
+  "schemaEvidence": "jm180-hosted-schema36.json",
+  "schemaIsNotPartOfDisplayedIdentity": true,
+  "rollbackEvidence": "jm180-hosted-schema36.json",
+  "currentState": {
+    "applicationVersion": "1.8.0",
+    "source": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+    "nodeVersion": "v24.22.1",
+    "metadataCheckpointVersion": "1.7.1",
+    "metadataCheckpointSchema": 33,
+    "metadataAlignmentPending": true,
+    "latestLastVerified": "1.7.1",
+    "rollback172Prechecked": true,
+    "rollback172Started": false,
+    "publicHttpChecksPending": true,
+    "hostedFunctionalChecksPending": true,
+    "deliveryComplete": false
+  },
+  "limits": [
+    "Startup display text is preserved exactly; no epoch or timezone conversion is inferred.",
+    "SQL36 and hosted prechecks come from the separately linked user-reported schema proof, not from the four displayed identity fields.",
+    "No direct agent observation of PID, socket, startup log or Manager fields is claimed.",
+    "G4 remains in progress: metadata alignment, public HTTP and hosted functional checks remain."
+  ]
+}
