@@ -1,0 +1,57 @@
+name: Align existing 1.7.1 latest release marker
+
+on:
+  push:
+    branches: [ops/align-release171-latest-20261022]
+    paths: [.github/workflows/align-release171-latest.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  align-existing-release:
+    if: github.repository == 'fredbuhr/jessiemessage' && github.ref == 'refs/heads/ops/align-release171-latest-20261022'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify existing release and align only latest marker
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import datetime, hashlib, json, os, urllib.request
+          root = "https://api.github.com/repos/fredbuhr/jessiemessage"
+          release_id = 420135576
+          source = "c2d7b3b31c6d0955892829f808dc4135d7d8debf"
+          tree = "d4945207f25375abb5d89c3a23ae91b6e34ea115"
+          def request(path, body=None):
+              payload = None if body is None else json.dumps(body).encode()
+              headers = {"Authorization": "Bearer " + os.environ["GITHUB_TOKEN"], "Accept": "application/vnd.github+json",
+                         "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "JessieMessage-release-metadata-alignment"}
+              if payload is not None: headers["Content-Type"] = "application/json"
+              req = urllib.request.Request(root + path, data=payload, headers=headers, method="GET" if payload is None else "PATCH")
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  return json.load(response)
+          before = request("/releases/" + str(release_id))
+          assert before["id"] == release_id and before["tag_name"] == "v1.7.1"
+          assert before["target_commitish"] == source and before["draft"] is False and before["prerelease"] is False
+          tag = request("/git/ref/tags/v1.7.1")["object"]
+          assert tag["type"] == "commit" and tag["sha"] == source
+          assert request("/git/commits/" + source)["tree"]["sha"] == tree
+          old_latest = request("/releases/latest")
+          if old_latest["id"] != release_id:
+              request("/releases/" + str(release_id), {"make_latest": "true"})
+          after = request("/releases/" + str(release_id))
+          latest = request("/releases/latest")
+          immutable = ["id", "tag_name", "target_commitish", "name", "body", "draft", "prerelease", "published_at", "created_at"]
+          assert all(before[key] == after[key] for key in immutable)
+          assert before.get("assets", []) == after.get("assets", [])
+          assert latest["id"] == release_id and latest["tag_name"] == "v1.7.1" and latest["target_commitish"] == source
+          assert request("/git/ref/tags/v1.7.1")["object"]["sha"] == source
+          print(json.dumps({"status": "latest_release_aligned", "observedAtUTC": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "releaseId": release_id, "tag": "v1.7.1", "source": source, "tree": tree,
+              "previousLatest": old_latest["tag_name"], "latest": latest["tag_name"],
+              "releaseBodySha256": hashlib.sha256(after["body"].encode()).hexdigest(),
+              "tagSourceUnchanged": True, "releaseContentUnchanged": True, "assetsUnchanged": True,
+              "newReleaseCreated": False, "applicationDeployed": False}, separators=(",", ":")))
+          PY
