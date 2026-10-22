@@ -4,11 +4,13 @@
     "Notifications": "Notifications",
     "Un petit signe quand un message arrive, même si l’application est fermée.": "A little heads-up when a message arrives, even when the app is closed.",
     "Les alertes restent discrètes : aucun nom, texte ou photo du message n’apparaît.": "Alerts stay discreet: no name, message text or photo is shown.",
-    "Ces réglages concernent uniquement cet appareil.": "These settings apply only to this device.",
+    "Ces réglages concernent cet appareil, à cette adresse Jessie.": "These settings apply to this device at this Jessie address.",
+    "Les notifications doivent être reconnectées à cette connexion sur cet appareil.": "Notifications need to be reconnected to this sign-in on this device.",
     "Préparation des notifications…": "Preparing notifications…",
     "Notifications désactivées sur cet appareil.": "Notifications are off on this device.",
     "Notifications activées sur cet appareil.": "Notifications are on on this device.",
     "Activer sur cet appareil": "Turn on on this device",
+    "Reconnecter sur cet appareil": "Reconnect on this device",
     "Désactiver sur cet appareil": "Turn off on this device",
     "Vérifier à nouveau": "Check again",
     "Activation en cours…": "Turning notifications on…",
@@ -52,7 +54,7 @@
     const controllers = new Set(), base = `/api/notifications/${role}`, sessionPath = role === "admin" ? "/api/auth/session" : "/api/access/session";
     const card = document.createElement("section"); card.className = "notification-card";
     const heading = document.createElement("h2"); ui.text(heading, "Notifications"); card.append(heading);
-    for (const source of ["Un petit signe quand un message arrive, même si l’application est fermée.", "Les alertes restent discrètes : aucun nom, texte ou photo du message n’apparaît.", "Ces réglages concernent uniquement cet appareil."]) {
+    for (const source of ["Un petit signe quand un message arrive, même si l’application est fermée.", "Les alertes restent discrètes : aucun nom, texte ou photo du message n’apparaît.", "Ces réglages concernent cet appareil, à cette adresse Jessie."]) {
       const note = document.createElement("p"); note.className = "notification-note"; ui.text(note, source); card.append(note);
     }
     const status = document.createElement("p"); status.className = "notification-status"; status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite"); card.append(status);
@@ -65,8 +67,9 @@
     host.replaceChildren(card); host.hidden = true;
     const current = (ticket = epoch) => !disposed && ticket === epoch && visible() && isCurrent();
     const stale = () => fixedError("stale_view");
-    function state(source, { error = false, canEnable = false, canDisable = false, retry = false, reset = false } = {}) {
+    function state(source, { error = false, canEnable = false, canDisable = false, retry = false, reset = false, reconnect = false } = {}) {
       ui.text(status, source); status.classList.toggle("is-error", error);
+      ui.text(enableButton, reconnect ? "Reconnecter sur cet appareil" : "Activer sur cet appareil");
       enableButton.hidden = !canEnable; disableButton.hidden = !canDisable; retryButton.hidden = !retry; resetButton.hidden = !reset;
       for (const node of buttons) node.disabled = busy;
       card.setAttribute("aria-busy", String(busy));
@@ -123,6 +126,7 @@
     function showPermissionState() {
       if (Notification.permission === "denied") state("Le navigateur a bloqué les notifications. Autorise-les dans les réglages de ce site, puis vérifie à nouveau.", { canDisable: enabled, retry: true });
       else if (enabled && Notification.permission === "granted") state("Notifications activées sur cet appareil.", { canDisable: true, retry: true });
+      else if (localSubscription && Notification.permission === "granted") state("Les notifications doivent être reconnectées à cette connexion sur cet appareil.", { canEnable: ready, retry: true, reconnect: true });
       else state("Notifications désactivées sur cet appareil.", { canEnable: ready, canDisable: enabled, retry: true });
     }
     async function prepare() {

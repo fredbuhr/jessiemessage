@@ -36,7 +36,7 @@ before(async () => {
     renewClient: async (hash, id, options) => {
       captured.push({ kind: "renewClient", hash, id, options });
       if (state.storeError) throw Object.assign(new Error("Sensitive SQL detail"), { code: state.storeError });
-      return state.renewed === undefined ? { id: id.toString("hex"), accessExpiresAt: Math.max(options.now, options.expectedExpiresAt) + options.accessDays * 86400000 } : state.renewed;
+      return state.renewed === undefined ? { id: id.toString("hex"), calculatedAt: options.now, accessExpiresAt: Math.max(options.now, options.expectedExpiresAt) + options.accessDays * 86400000 } : state.renewed;
     },
     createInvitation: async (options) => ({ id: options.id, expiresAt: options.expiresAt, accessDays: options.accessDays }),
   };
@@ -316,10 +316,12 @@ test("renewal never reaches persistence for an unauthorized actor or denied user
 
 test("renewal rebuilds its DTO and rejects mismatched identities, shortening or fabricated expiration", async () => {
   const expectedExpiresAt = now + 100000, accessExpiresAt = expectedExpiresAt + 86400000;
-  state.renewed = { id: "a".repeat(32), accessExpiresAt, session: "private session", approved: true };
+  state.renewed = { id: "a".repeat(32), calculatedAt: now, accessExpiresAt, session: "private session", approved: true };
   assert.deepEqual(await service.renewClient(token, "a".repeat(32), { expectedExpiresAt, accessDays: 1 }), { id: "a".repeat(32), accessExpiresAt });
-  for (const result of [false, {}, { id: "b".repeat(32), accessExpiresAt }, { id: "a".repeat(32), accessExpiresAt: null },
-    { id: "a".repeat(32), accessExpiresAt: expectedExpiresAt - 1 }, { id: "a".repeat(32), accessExpiresAt: accessExpiresAt + 1 }]) {
+  for (const result of [false, {}, { id: "a".repeat(32), accessExpiresAt },
+    { id: "a".repeat(32), calculatedAt: now - 1, accessExpiresAt }, { id: "a".repeat(32), calculatedAt: Infinity, accessExpiresAt },
+    { id: "b".repeat(32), calculatedAt: now, accessExpiresAt }, { id: "a".repeat(32), calculatedAt: now, accessExpiresAt: null },
+    { id: "a".repeat(32), calculatedAt: now, accessExpiresAt: expectedExpiresAt - 1 }, { id: "a".repeat(32), calculatedAt: now, accessExpiresAt: accessExpiresAt + 1 }]) {
     state.renewed = result;
     await assert.rejects(service.renewClient(token, "a".repeat(32), { expectedExpiresAt, accessDays: 1 }), { code: "AUTH_UNAVAILABLE" });
   }

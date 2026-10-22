@@ -25,7 +25,7 @@ function requestShape(value, registryId) {
 export function createWitnessTransport({ destinationId, pairedAt, pairingFingerprint, registryId, authorize, provisioning = false, pollMilliseconds = 20000 }) {
   if (!validId(destinationId) || !Number.isSafeInteger(pairedAt) || pairedAt < 1 || typeof pairingFingerprint !== "string" || !REGISTRY_HEX.test(pairingFingerprint) || !REGISTRY_HEX.test(registryId)
     || typeof authorize !== "function" || typeof provisioning !== "boolean" || !Number.isSafeInteger(pollMilliseconds) || pollMilliseconds < 1 || pollMilliseconds > 20000) throw fail();
-  const allowed = createRequestOriginGuard("https://jessiemessage.com"), waiters = new Set(), transfers = new Set();
+  const allowed = createRequestOriginGuard("https://jessiemessage.com"), waiters = new Set(), polls = new Set(), transfers = new Set();
   let job = null, closed = false, requests = 0, window = 0;
   async function identity(token) {
     const current = await authorize(token);
@@ -57,11 +57,14 @@ export function createWitnessTransport({ destinationId, pairedAt, pairingFingerp
       if (!["poll", "response"].includes(action)) { reply(response, 404, { error: "not_found" }); return true; }
       if (closed) throw fail();
       const now = Date.now(); if (now - window >= 60000 || now < window) { window = now; requests = 0; }
-      if (++requests > 240 || waiters.size >= 2 || transfers.size >= 2) { reply(response, 429, { error: "try_again_later" }); return true; }
+      if (++requests > 240 || polls.size >= 2 || transfers.size >= 2) { reply(response, 429, { error: "try_again_later" }); return true; }
       if (request.headers.origin !== undefined || request.headers.cookie !== undefined || Object.keys(request.headers).some(name => name.startsWith("sec-fetch-"))
         || request.headers["x-jessie-backup"] !== "1") { reply(response, 403, { error: "request_rejected" }); return true; }
       const match = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(request.headers.authorization ?? "");
       if (!match) { reply(response, 401, { error: "copy_authorization_required" }); return true; }
+      // Authorization can wait. Reserve admission before yielding, including
+      // polls that have not reached their long-poll waiter yet.
+      (action === "poll" ? polls : transfers).add(request);
       await identity(match[1]);
       if (request.method !== (action === "poll" ? "GET" : "POST")) { reply(response, 405, { error: "method_not_allowed" }); return true; }
       if (action === "poll") {
@@ -82,7 +85,7 @@ export function createWitnessTransport({ destinationId, pairedAt, pairingFingerp
         if (!selected) { reply(response, 409, { error: "witness_request_expired" }); return true; }
         const declared = request.headers["content-length"];
         if (declared !== undefined && (!/^\d+$/.test(declared) || Number(declared) > REGISTRY_MAX_BYTES + 2048)) { reply(response, 413, { error: "request_too_large" }); return true; }
-        cancellation = setTimeout(() => request.destroy(), 20000); transfers.add(request);
+        cancellation = setTimeout(() => request.destroy(), 20000);
         const chunks = []; let length = 0;
         for await (const chunk of request) { if ((length += chunk.length) > REGISTRY_MAX_BYTES + 2048) throw fail(); chunks.push(chunk); }
         const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks)));
@@ -99,7 +102,7 @@ export function createWitnessTransport({ destinationId, pairedAt, pairingFingerp
         reply(response, 200, { version: 1, recorded: true });
       }
     } catch { if (!response.headersSent && !response.destroyed) reply(response, 503, { error: "witness_unavailable" }); }
-    finally { clearTimeout(cancellation); transfers.delete(request); if (!request.complete) request.resume(); }
+    finally { clearTimeout(cancellation); polls.delete(request); transfers.delete(request); if (!request.complete) request.resume(); }
     return true;
   }
   function close() { closed = true; job?.finish(null); wake(); for (const request of transfers) request.destroy(); }

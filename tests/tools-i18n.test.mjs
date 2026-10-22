@@ -97,15 +97,34 @@ test("broadcast language switches translate live counts/status/date but preserve
     tools.campaigns.set(campaign.id,campaign);tools.renderHistory();tools.renderDetail(campaign);`);
   const before = h.run("JSON.stringify({draft:tools.state.draft,ids:[...tools.state.selected.keys()],ack:tools.state.acknowledged})");
   h.switch("en");
-  assert.equal(h.ids.get("confirm").textContent, "Confirm for 1 client");
+  assert.equal(h.ids.get("confirm").textContent, "Send to 1 client");
+  assert.equal(h.ids.get("preview").textContent, "Check and prepare to send");
+  assert.equal(h.ids.get("acknowledge-label").textContent, "Individual delivery prepared for 1 client.");
   assert.match(h.ids.get("preview-list").textContent, /En attente · Access inactive · photo already shared/);
   assert.match(h.ids.get("campaign-detail").textContent, /En attentePending · 2 delivered/); assert.match(h.ids.get("campaign-detail").textContent, /Supprimer/);
   assert.ok(h.ids.get("history").textContent.includes(new Date(1792050000000).toLocaleString("en-US")), h.ids.get("history").textContent);
   assert.match(h.ids.get("selected").textContent, /En attenteRemove/); assert.match(h.ids.get("contacts").textContent, /SupprimerEn attente · Active access/);
   assert.equal(h.run("JSON.stringify({draft:tools.state.draft,ids:[...tools.state.selected.keys()],ack:tools.state.acknowledged})"), before); assert.equal(h.calls.length, 0);
-  h.switch("fr"); assert.equal(h.ids.get("confirm").textContent, "Confirmer pour 1 client");
+  h.switch("fr"); assert.equal(h.ids.get("confirm").textContent, "Envoyer à 1 client");
   h.run("tools.clearPrivate()"); h.switch("en");
   assert.equal(h.ids.get("broadcast-content").hidden, true); assert.equal(h.ids.get("campaign-detail").textContent, ""); assert.equal(h.ids.get("selected").textContent, "");
+});
+
+test("FR/EN selected counts update immediately while eligibility remains unprepared and no request is sent", () => {
+  const h = harness(); h.model("broadcast-model.js");
+  const executable = files["broadcast.js"].replace(/^import \{([^\n]+)\} from "\/broadcast-model\.js";/, "const {$1} = model;");
+  h.run(`(() => {${executable}\nglobalThis.tools = {state,renderSelection,clearPrivate};})();`); h.visible();
+  h.run(`document.getElementById("broadcast-content").hidden=false;tools.state.visible=true;tools.state.session={id:"${id(1)}",csrf:"${"a".repeat(43)}",expiresAt:Date.now()+3600000,mediaEnabled:true,largeAudiencesEnabled:true};
+    for(const value of [3,5])tools.state.contacts.set(value.toString(16).padStart(32,"0"),{id:value.toString(16).padStart(32,"0"),client:{id:(value+1).toString(16).padStart(32,"0"),pseudonym:"Synthetic"},nickname:"",canSend:true});
+    model.selectRecipient(tools.state,"${id(3)}",true);tools.renderSelection();`);
+  assert.equal(h.ids.get("acknowledge-label").textContent, "1 destinataire choisi · à vérifier.");
+  h.switch("en"); assert.equal(h.ids.get("acknowledge-label").textContent, "1 recipient selected · needs checking.");
+  h.run(`model.selectRecipient(tools.state,"${id(5)}",true);tools.renderSelection();`);
+  assert.equal(h.ids.get("acknowledge-label").textContent, "2 recipients selected · need checking.");
+  h.run(`model.selectRecipient(tools.state,"${id(3)}",false);tools.renderSelection();`);
+  assert.equal(h.ids.get("acknowledge-label").textContent, "1 recipient selected · needs checking.");
+  assert.equal(h.ids.get("confirm").disabled, true); assert.equal(h.calls.length, 0);
+  h.switch("fr"); assert.equal(h.ids.get("acknowledge-label").textContent, "1 destinataire choisi · à vérifier."); h.run("tools.clearPrivate()");
 });
 
 test("CRM switching preserves raw names, label collisions, notes, inputs and selected conversation without requests", async () => {

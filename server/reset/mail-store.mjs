@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { canonicalEmail } from "../auth/config.mjs";
+import { createSessionClock } from "../auth/session-policy.mjs";
 import { assertResetSchema, ResetStoreError } from "./store.mjs";
 
 const fail = (code) => { throw new ResetStoreError(code); };
@@ -13,8 +14,9 @@ const timestamp = (value) => {
 };
 const version = (value) => { const result = Number(value); if (!Number.isSafeInteger(result) || result < 1 || result > 4294967295) fail("RESET_DATABASE_STATE"); return result; };
 
-export function createResetMailStore(pool) {
+export function createResetMailStore(pool, { clock } = {}) {
   if (!pool || typeof pool.getConnection !== "function") fail("RESET_STORE_INPUT");
+  const freshNow = createSessionClock(clock);
   let nextPruneAt = null;
   async function run(operation, transaction = false) {
     let connection, begun = false;
@@ -36,9 +38,12 @@ export function createResetMailStore(pool) {
       instant(now);
       if (!Number.isSafeInteger(leaseMilliseconds) || leaseMilliseconds < 1000 || leaseMilliseconds > 300000
         || now + leaseMilliseconds > 253402300799999) fail("RESET_STORE_INPUT");
-      const candidates = await run((connection) => connection.query(`SELECT id, recipient_user_id, reset_id
+      const candidates = await run((connection) => {
+        now = freshNow(now);
+        return connection.query(`SELECT id, recipient_user_id, reset_id
         FROM password_reset_outbox WHERE (status = 'pending' AND available_at <= ?) OR (status = 'sending' AND lease_until <= ?)
-        ORDER BY available_at, created_at, id LIMIT 16`, [sqlDate(now), sqlDate(now)]));
+        ORDER BY available_at, created_at, id LIMIT 16`, [sqlDate(now), sqlDate(now)]);
+      });
       for (const candidate of candidates) {
         bytes(candidate.id); bytes(candidate.recipient_user_id); bytes(candidate.reset_id);
         const claimed = await run(async (connection) => {
@@ -48,6 +53,7 @@ export function createResetMailStore(pool) {
           const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [candidate.recipient_user_id]))[0];
           const reset = (await connection.query("SELECT * FROM client_password_resets WHERE id = ? FOR UPDATE", [candidate.reset_id]))[0];
           const job = (await connection.query("SELECT * FROM password_reset_outbox WHERE id = ? FOR UPDATE", [candidate.id]))[0];
+          now = freshNow(now);
           if (!job || !job.recipient_user_id.equals(candidate.recipient_user_id) || !job.reset_id.equals(candidate.reset_id)) return null;
           const ready = (job.status === "pending" && timestamp(job.available_at) <= now)
             || (job.status === "sending" && timestamp(job.lease_until) <= now);
@@ -79,7 +85,8 @@ export function createResetMailStore(pool) {
           await connection.query(`UPDATE password_reset_outbox SET status = 'sending', attempts = attempts + 1,
             lease_token = ?, lease_until = ?, last_error = NULL WHERE id = ?`, [leaseToken, sqlDate(leaseUntil), job.id]);
           return { id: job.id, resetId: job.reset_id, userId: job.recipient_user_id, recipientEmail,
-            payloadEncrypted: job.payload_encrypted, leaseToken, attempts: attempts + 1, expiresAt };
+            payloadEncrypted: job.payload_encrypted, leaseToken, leaseUntil, attempts: attempts + 1,
+            expiresAt: Math.min(expiresAt, timestamp(reset.expires_at)) };
         }, true);
         if (claimed) return claimed;
       }

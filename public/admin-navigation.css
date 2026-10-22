@@ -1,0 +1,16 @@
+/* Shared navigation for administrator tools; the dashboard owns the full list. */
+.admin-tool-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+.admin-navigation { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0; }
+.admin-navigation > a, .admin-navigation > button {
+  display:inline-flex; align-items:center; justify-content:center; min-height:44px;
+  padding:10px 14px; border:1px solid #655061; border-radius:12px;
+  color:#f4e6ee; background:#241b27; font:inherit; font-size:14px;
+  font-weight:600; line-height:1.4; text-align:center; text-decoration:none; cursor:pointer;
+}
+.admin-navigation > a:hover, .admin-navigation > button:hover { background:#392837; border-color:#a37c92; }
+.admin-navigation > a:focus-visible, .admin-navigation > button:focus-visible { outline:3px solid #f5e4c9; outline-offset:3px; }
+.admin-navigation > [hidden] { display:none; }
+@media(max-width:680px) {
+  .admin-navigation { width:100%; }
+  .admin-navigation > a, .admin-navigation > button { flex:1 1 auto; }
+}

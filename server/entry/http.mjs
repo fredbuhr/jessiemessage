@@ -27,14 +27,14 @@ function administratorChoice(value, now, chatEnabled) {
   const session = safeSession(value);
   identity(session);
   if (session.expiresAt <= now) return null;
-  return { state: "connected", href: chatEnabled ? "/admin/messages" : "/admin" };
+  return { state: "connected", href: "/admin" };
 }
 
 /** A neutral entry decision only. The parent keeps this SQL-capable handler
  * behind admission; each destination still authorizes its own private data. */
-export function createEntryHandler({ clientSession = null, adminSession = null, chatEnabled = false, deviceTransition = false, clock = Date.now } = {}) {
+export function createEntryHandler({ clientSession = null, adminSession = null, chatEnabled = false, deviceTransition = false, legacyOrigin = false, clock = Date.now } = {}) {
   if (clientSession !== null && typeof clientSession !== "function" || adminSession !== null && typeof adminSession !== "function"
-    || typeof chatEnabled !== "boolean" || typeof deviceTransition !== "boolean" || typeof clock !== "function") throw new TypeError("A valid private entry configuration is required.");
+    || typeof chatEnabled !== "boolean" || typeof deviceTransition !== "boolean" || typeof legacyOrigin !== "boolean" || typeof clock !== "function") throw new TypeError("A valid private entry configuration is required.");
   return async (request, response) => {
     let url;
     const rawUrl = request.url ?? "/";
@@ -60,7 +60,7 @@ export function createEntryHandler({ clientSession = null, adminSession = null, 
       if (results.some((result) => result.status !== "fulfilled")) fail();
       const now = clock();
       if (!instant(now)) fail();
-      const client = clientSession === null ? null : clientChoice(results[0].value, now, chatEnabled, deviceTransition ? "/connect-device/client" : "/access");
+      const client = clientSession === null ? null : clientChoice(results[0].value, now, chatEnabled, deviceTransition && legacyOrigin ? "/connect-device/client" : "/access");
       const administrator = adminSession === null ? null : administratorChoice(results[1].value, now, chatEnabled);
       reply(response, method, 200, { status: client === null && administrator === null ? "unavailable" : "available", client, administrator });
     } catch {

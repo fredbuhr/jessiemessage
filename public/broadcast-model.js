@@ -29,6 +29,7 @@ export function suspendBroadcast(state) {
   // An aborted confirmation may already have committed. Keep its exact key and
   // immutable payload for an explicit retry after the owner is verified again.
   if (state.pending) state.pending.status = "uncertain";
+  else { state.preview = null; state.draft.allowRepeatMedia = false; }
   return broadcastTicket(state);
 }
 export function broadcastTicket(state) { return { epoch: state.epoch, adminId: state.session?.id ?? null }; }
@@ -74,13 +75,14 @@ export function clearSelection(state) { if (state.pending) return false; state.s
 export function updateComposition(state, input) {
   if (state.pending) return false;
   const previousMedia = state.draft.mediaId, previousVideo = state.draft.videoId ?? null;
+  const contentChanged = ["title", "body"].some(key => Object.hasOwn(input, key) && input[key] !== state.draft[key]);
   if (Object.hasOwn(input, "videoId")) {
     if (!state.session?.videoEnabled || input.videoId !== null && (!id(input.videoId) || state.session.videoCreationEnabled === false)) return false;
     state.draft.videoId = input.videoId; if (input.videoId !== null) state.draft.mediaId = null;
   }
   if (input.mediaId !== undefined && input.mediaId !== null) state.draft.videoId = null;
   for (const key of ["title", "body", "mediaId", "allowRepeatMedia"]) if (Object.hasOwn(input, key)) state.draft[key] = input[key];
-  if (state.draft.mediaId !== previousMedia || (state.draft.videoId ?? null) !== previousVideo) invalidatePreview(state); else state.acknowledged = false;
+  if (contentChanged || state.draft.mediaId !== previousMedia || (state.draft.videoId ?? null) !== previousVideo) invalidatePreview(state); else state.acknowledged = false;
   return true;
 }
 export function updateAudience(state, { mode = state.audienceMode, filters = state.audienceFilters } = {}) {
@@ -100,7 +102,7 @@ export function audienceValue(state) {
   if (state.audienceMode === "filtered") return Object.freeze({ mode: "filtered", filters: Object.freeze({ ...state.audienceFilters }) });
   return Object.freeze({ mode: "selected", conversationIds: Object.freeze([...state.selected.keys()].sort()) });
 }
-export function confirmationCount(state) { return state.session?.largeAudiencesEnabled ? state.preview?.eligibleCount ?? 0 : state.selected.size; }
+export function confirmationCount(state) { return state.preview?.eligibleCount ?? 0; }
 export function previewTicket(state) { return { ...broadcastTicket(state), previewEpoch: state.previewEpoch, ids: [...state.selected.keys()].sort(), mediaId: state.draft.mediaId,
   ...(state.draft.videoId ? { videoId: state.draft.videoId } : {}),
   ...(state.session?.largeAudiencesEnabled ? { audience: audienceValue(state) } : {}) }; }
@@ -133,12 +135,13 @@ export function compositionValid(state) {
     || typeof draft.allowRepeatMedia !== "boolean") return false;
   return new TextEncoder().encode(draft.body).length <= (draft.mediaId === null && !draft.videoId ? 16384 : 4096);
 }
-export function canConfirmBroadcast(state, now = Date.now()) {
+export function canReviewBroadcast(state, now = Date.now()) {
   return state.visible && !!state.session && state.session.expiresAt > now && !state.pending && !state.csrfFailed
     && (state.session.largeAudiencesEnabled ? state.preview?.eligibleCount > 0 && !!state.preview.previewToken && JSON.stringify(state.preview.audience) === JSON.stringify(audienceValue(state))
       : state.selected.size > 0 && state.selected.size <= 100 && state.preview?.eligibleCount === state.selected.size)
-    && compositionValid(state) && !!state.preview && (state.preview.repeatCount === 0 || state.draft.allowRepeatMedia) && state.acknowledged;
+    && compositionValid(state) && !!state.preview && (state.preview.repeatCount === 0 || state.draft.allowRepeatMedia);
 }
+export function canConfirmBroadcast(state, now = Date.now()) { return canReviewBroadcast(state, now) && state.acknowledged; }
 export function prepareCampaign(state, clientCampaignId, now = Date.now()) {
   if (!id(clientCampaignId) || !canConfirmBroadcast(state, now)) return null;
   const payload = Object.freeze({ clientCampaignId, title: state.draft.title, body: state.draft.body, mediaId: state.draft.mediaId,

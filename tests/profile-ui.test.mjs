@@ -46,7 +46,7 @@ class Element {
   close() { this.open = false; this.emit("close"); }
 }
 
-function harness({ role = "client", avatarsEnabled = true, avatar = false, intercept, binary, prepareAvatar, language = "fr", bitmap } = {}) {
+function harness({ role = "client", avatarsEnabled = true, avatar = false, intercept, binary, prepareAvatar, language = "fr", bitmap, coarse = false } = {}) {
   const events = new Map(), windowEvents = new Map(), calls = [], binaryCalls = [], created = [], revoked = [], saved = [], errors = [];
   const add = (map, name, handler) => { if (!map.has(name)) map.set(name, new Set()); map.get(name).add(handler); };
   const document = { visibilityState: "visible", createElement(tag) { return new Element(tag, document); },
@@ -56,7 +56,7 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
   const base = `/api/profile/${role}`;
   const state = { owner: true, profile: { pseudonym: "Envoyer", version: "1", avatarId: avatar ? id(1) : null, avatarUrl: avatar ? `${base}/avatar?v=1` : null } };
   const dictionary = new Map();
-  const context = vm.createContext({ document, Blob, AbortController, DOMException, console,
+  const context = vm.createContext({ matchMedia: () => ({ matches: coarse }), document, Blob, AbortController, DOMException, console,
     __prepareImageUpload: async file => file,
     createImageBitmap: async () => bitmap,
     window: { addEventListener: (name, handler) => add(windowEvents, name, handler), removeEventListener: (name, handler) => windowEvents.get(name)?.delete(handler) },
@@ -245,4 +245,15 @@ test("the default avatar crop makes a 256px central JPEG and releases the bitmap
   assert.equal(result.type, "image/jpeg"); assert.deepEqual(options, [{ type: "image/jpeg", quality: 0.88, width: 256, height: 256 }]);
   assert.deepEqual(draw[0].slice(1), [80, 0, 160, 160, 0, 0, 256, 256]);
   assert.equal(bitmap.closed, true); assert.equal(canvas.width, 0); assert.equal(canvas.height, 0); h.ui.destroy();
+});
+
+test("touch profile loading and saving do not open a keyboard; desktop name focus remains available", async () => {
+  for (const coarse of [true, false]) {
+    const h = harness({ coarse }); await h.ui.open();
+    assert.equal(h.document.activeElement, h.element(coarse ? "profile-close" : "profile-pseudonym"));
+    h.element("profile-pseudonym").focus(); h.element("profile-pseudonym").value = "Synthetic deliberate edit";
+    await h.save();
+    assert.equal(h.document.activeElement, h.button); assert.equal(h.element("profile-dialog").open, false);
+    await h.ui.open(); assert.equal(h.document.activeElement, h.element(coarse ? "profile-close" : "profile-pseudonym")); h.ui.destroy();
+  }
 });

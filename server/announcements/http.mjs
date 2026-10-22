@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { announcementView } from "./service.mjs";
 import { fields, id, instant, validateRemove, validateSave } from "./validation.mjs";
 
@@ -83,7 +83,6 @@ export function createAnnouncementsHandler(service, { origin = "https://jessieme
     } catch (error) {
       if (!response.headersSent && !response.destroyed) {
         const mapped = publicError(error), headers = mapped.retry ? { "Retry-After": String(mapped.retry) } : {};
-        if (mapped.status === 401 && (method === "POST" || hasSessionCookie(request, cookies[target.role]))) headers["Set-Cookie"] = clearCookie(cookies[target.role]);
         if (mapped.status === 401 && target.kind === "page") {
           reply(response, method, 303, Buffer.alloc(0), { ...headers, Location: "/admin/login?continue=%2Fadmin%2Fannouncements", "Content-Type": "text/plain; charset=utf-8" }); return true;
         }

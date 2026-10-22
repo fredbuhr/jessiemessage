@@ -1,10 +1,11 @@
 "use strict";
 const notificationReference = globalThis.JessieNotificationLink?.read() ?? null;
+const clientsPage = location.pathname === "/admin/clients";
 // A closed list keeps login return links on enabled administration pages.
 const adminContinueTarget = (() => {
   if (!location.search) return null;
   const query = new URLSearchParams(location.search);
-  const allowed = new Set(["/admin/messages", "/admin/broadcasts", "/admin/announcements", "/admin/tasks", "/admin/readiness", "/admin/backups", "/admin/privacy", "/admin/closures"]);
+  const allowed = new Set(["/admin/clients", "/admin/messages", "/admin/broadcasts", "/admin/announcements", "/admin/tasks", "/admin/readiness", "/admin/backups", "/admin/privacy", "/admin/closures"]);
   return query.size === 1 && query.getAll("continue").length === 1 && allowed.has(query.get("continue")) ? query.get("continue") : null;
 })();
 
@@ -102,6 +103,8 @@ function signedOut(message = "", { preserveCredentials = false } = {}) {
   cancelSessionCheck?.(); cancelSessionCheck = null;
   form.hidden = suspended;
   connected.hidden = true;
+  document.body.classList.remove("is-admin-home");
+  document.body.classList.remove("is-admin-clients");
   adminUI.text(title, "Ton espace Jessie.");
   intro.hidden = false;
   if (!preserveCredentials) clearCredentials();
@@ -116,8 +119,19 @@ function signedIn(session) {
     signedOut("Ta session a expiré. Reconnecte-toi pour continuer.");
     return;
   }
+  if (location.pathname === "/admin/login" && notificationReference) {
+    clearCredentials();
+    location.replace(`/admin/messages#notification=${notificationReference}`);
+    return;
+  }
   if (adminContinueTarget) {
+    clearCredentials();
     location.replace(adminContinueTarget + (notificationReference ? `#notification=${notificationReference}` : ""));
+    return;
+  }
+  if (location.pathname === "/admin/login") {
+    clearCredentials();
+    location.replace("/admin");
     return;
   }
   invalidate();
@@ -129,13 +143,14 @@ function signedIn(session) {
   form.hidden = true;
   connected.hidden = false;
   intro.hidden = true;
-  adminUI.text(title, "Ton espace Jessie.");
+  document.body.classList.add(clientsPage ? "is-admin-clients" : "is-admin-home");
+  document.getElementById("admin-dashboard").hidden = clientsPage;
+  adminUI.text(title, clientsPage ? "Invitations et clients" : "Administration");
   adminUI.rawText(document.getElementById("connected-name"), session.user.pseudonym);
   notice("");
   document.getElementById("session-retry").hidden = true;
   planSessionCheck(session.expiresAt);
-  if (location.pathname === "/admin/login") history.replaceState(null, "", notificationReference ? `/admin#notification=${notificationReference}` : "/admin");
-  void loadAccess();
+  if (clientsPage) void loadAccess();
   if (session.user.role === "admin") {
     void loadChatAccess();
     if (globalThis.JessieNotifications) {

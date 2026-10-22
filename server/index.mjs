@@ -24,6 +24,7 @@ const publicFiles = new Map([
   ["/index.html", ["index.html", "text/html; charset=utf-8"]],
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
   ["/app.js", ["app.js", "text/javascript; charset=utf-8"]],
+  ["/admin-navigation.css", ["admin-navigation.css", "text/css; charset=utf-8"]],
   ["/app", ["entry.html", "text/html; charset=utf-8"]],
   ["/help", ["help.html", "text/html; charset=utf-8"]],
   ["/help.css", ["help.css", "text/css; charset=utf-8"]],
@@ -99,10 +100,10 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
   const privateHandlers = [closureHandler, privacyHandler, backupHandler, notificationsHandler, quickRepliesHandler, tasksHandler, announcementsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, profileHandler, videoHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
-  const adminPages = new Map([["/admin", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"], ["/admin/announcements", "announcementsHandler"], ["/admin/tasks", "tasksHandler"],
+  const adminPages = new Map([["/admin", "authHandler"], ["/admin/clients", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"], ["/admin/announcements", "announcementsHandler"], ["/admin/tasks", "tasksHandler"],
     ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"], ["/admin/privacy", "privacyHandler"], ["/admin/closures", "closureHandler"]]);
   const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, announcementsHandler, tasksHandler, readinessHandler, backupHandler, privacyHandler, closureHandler };
-  const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
+  const protectedFiles = new Set(["/admin", "/admin/clients", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
     "/manual-backups.js", "/manual-backups.css", "/i18n-manual-backups.js",
     "/admin/privacy", "/privacy.js", "/privacy.css", "/i18n-privacy.js", "/admin/closures", "/closures.js", "/closures.css", "/i18n-closures.js", "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/i18n-broadcast.js",
     "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/client-archive.js", "/conversation-download.js", "/readiness.js", "/readiness-model.js", "/readiness.css",
@@ -216,7 +217,9 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
       // Authentication is registered only by explicit private configuration.
       // Private routes require their explicitly configured feature handlers.
       // Never serve arbitrary file paths from the filesystem.
-      const file = pathname === "/sw.js" && activeNotifications ? ["sw.js", "text/javascript; charset=utf-8"] : publicFiles.get(pathname);
+      const clientEntry = activeHandlers !== legacyChain && accessHandler && ["/", "/index.html", "/app"].includes(pathname);
+      const file = clientEntry ? ["access.html", "text/html; charset=utf-8"]
+        : pathname === "/sw.js" && activeNotifications ? ["sw.js", "text/javascript; charset=utf-8"] : publicFiles.get(pathname);
       if (!file) {
         reply(response, method, 404, "text/plain; charset=utf-8", "Not found");
         return;
@@ -394,7 +397,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     const { createVerificationTransport } = await import("./mail/transport.mjs");
     const { startMailWorker } = await import("./mail/worker.mjs");
     const accessStore = createAccessStore(pool, { clock });
-    const mailStore = createMailStore(pool);
+    const mailStore = createMailStore(pool, { clock });
     await accessStore.assertSchema(schemaOptions);
     await mailStore.assertSchema(schemaOptions);
     const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
@@ -410,7 +413,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const { createResetService } = await import("./reset/service.mjs");
       const { createResetHandler } = await import("./reset/http.mjs");
       const resetStore = createResetStore(pool, { clock });
-      resetMailStore = createResetMailStore(pool);
+      resetMailStore = createResetMailStore(pool, { clock });
       await resetStore.assertSchema(schemaOptions);
       await resetMailStore.assertSchema(schemaOptions);
       const resetService = await createResetService({ store: resetStore, authStore: store, mailKey: resetConfig.key, clock });
@@ -603,7 +606,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const { createDeviceTransitionHandler } = await import("./transition/http.mjs");
       transitionHandler = createDeviceTransitionHandler({ authService: service, accessService, clock, admission: null });
       legacyHandlers.entryHandler = createEntryHandler({ adminSession: (token) => service.session(token),
-        clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, clock });
+        clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, deviceTransition: true, legacyOrigin: true, clock });
     }
     const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, videoHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, quickRepliesHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin, parentGateway,
       legacyHandlers, transitionHandler,

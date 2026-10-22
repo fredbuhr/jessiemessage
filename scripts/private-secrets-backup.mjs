@@ -81,6 +81,11 @@ async function assertNotificationsProfile(scope, selected) {
   catch (error) { if (error.code !== "ENOENT") throw error; }
 }
 async function assertProfile(scope, selected) {
+  // This historical helper has no video profile. Refuse new incomplete
+  // archives while keeping the existing payload formats and readers intact.
+  await scope.assertReady();
+  try { await lstat(scope.file("runtime-video.json")); fail("PRIVATE_SECRETS_SOURCE"); }
+  catch (error) { if (error.code !== "ENOENT") throw error; }
   if (selected.profile === PRIMARY_CRM_PROFILE) return;
   // A legacy new archive cannot silently omit the newly prepared CRM key.
   await scope.assertReady();

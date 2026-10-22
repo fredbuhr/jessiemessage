@@ -62,3 +62,15 @@ test("entry session resolution is admitted before any configured session callbac
   assert.equal((await fetch(base + "/app")).status, 200);
   assert.equal(admitted, 1); assert.equal(sessions, 0);
 });
+
+
+test("configured client entry serves the sign-in document directly at root and installed app without a role/migration landing", async t => {
+  const base = await listening(t, { accessHandler: async () => false });
+  for (const path of ["/", "/app", "/index.html"]) for (const method of ["GET", "HEAD"]) {
+    const response = await fetch(base + path, { method }); assert.equal(response.status, 200); assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.equal(response.headers.get("location"), null); assert.equal(response.headers.get("set-cookie"), null);
+    const html = await response.text();
+    if (method === "HEAD") assert.equal(html, "");
+    else { assert.match(html, /id="client-login-form"/); assert.match(html, /id="entry-role-choice"/); assert.doesNotMatch(html, /connect-device|id="entry-options"/); }
+  }
+});

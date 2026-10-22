@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
-import { AUTH_HEADERS, checkMutation, clearCookie, hasSessionCookie, httpError, readJson, reply, safeSession, sameText, sessionToken } from "../auth/http.mjs";
+import { AUTH_HEADERS, checkMutation, httpError, readJson, reply, safeSession, sameText, sessionToken } from "../auth/http.mjs";
 import { BackupCopyError } from "./copy-state.mjs";
 import { ManualBackupError } from "./manual-backup-files.mjs";
 
@@ -92,7 +92,6 @@ export function createManualBackupHandler(service, { origin, actor }) {
       if (response.headersSent) { if (!response.writableFinished) response.destroy(); }
       else if (!response.destroyed) {
         const { status, code } = mapped(error), headers = {};
-        if (status === 401 && (method === "POST" || hasSessionCookie(request))) headers["Set-Cookie"] = clearCookie();
         if (status === 429) headers["Retry-After"] = "60";
         if (method === "POST") { headers.Connection = "close"; request.resume(); }
         reply(response, method, status, { error: code }, headers);

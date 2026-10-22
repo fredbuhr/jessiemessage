@@ -16,7 +16,7 @@ function fixture(purpose = "verification", overrides = {}) {
   const seal = purpose === "verification" ? sealVerificationPayload : sealResetPayload;
   for (let index = 0; index < 3; index++) {
     const id = randomBytes(16), email = `worker-${index}@example.invalid`;
-    jobs.push({ id, recipientEmail: email, leaseToken: randomBytes(16), attempts: 8, payloadEncrypted: seal({ email, token: newToken() }, key, id) });
+    jobs.push({ id, recipientEmail: email, expiresAt: now + 200000, leaseUntil: now + 120000, leaseToken: randomBytes(16), attempts: 8, payloadEncrypted: seal({ email, token: newToken() }, key, id) });
   }
   const state = { claimGate: null, sendGate: null, closeError: false, releaseResult: true };
   const store = {

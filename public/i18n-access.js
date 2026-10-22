@@ -131,3 +131,12 @@ globalThis.JessieI18n?.register({
   "La demande a été interrompue. Consulte tes e-mails ou réessaie.": "The request was interrupted. Check your email or try again.",
   "Pour utiliser un lien de récupération, ouvre-le à nouveau depuis ton e-mail. Tu peux aussi demander un nouveau lien.": "To use a recovery link, open it again from your email. You can also request a new link.",
 });
+
+// Fixed navigation copy; account values remain raw.
+globalThis.JessieI18n?.register({
+  "Choisir un espace": "Choose a space",
+  "Ma conversation": "My conversation",
+  "Administration": "Administration",
+  "Choisis ton espace.": "Choose your space.",
+  "Tes deux espaces sont connectés sur cet appareil.": "Both spaces are signed in on this device."
+});

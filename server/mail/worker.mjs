@@ -44,6 +44,16 @@ export async function runMailBatch({ store, transport, key, clock = Date.now, ba
         continue;
       }
       if (signal?.aborted) { await store.releaseClaim(job.id, job.leaseToken, { now: clock() }); break; }
+      const sendAt = clock();
+      if (!Number.isSafeInteger(sendAt) || sendAt < 0 || sendAt > 253402300799999
+        || !Number.isSafeInteger(job.expiresAt) || job.expiresAt <= sendAt || job.expiresAt > 253402300799999
+        || !Number.isSafeInteger(job.leaseUntil) || job.leaseUntil <= sendAt || job.leaseUntil > job.expiresAt) {
+        // No transport has started. A stale lease cannot authorize an SMTP
+        // attempt; its CAS remains untouched if another worker has replaced it.
+        await store.markFailed(job.id, job.leaseToken, { now: sendAt, code: "MAIL_DELIVERY_FAILED" });
+        failed += 1;
+        continue;
+      }
       try {
         if (await transport[deliveryMethod]({ ...payload, jobId: job.id }) !== true) throw new Error();
       } catch {

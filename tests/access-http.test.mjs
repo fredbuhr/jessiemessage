@@ -172,7 +172,7 @@ test("client sessions reject duplicate or noncanonical cookies without looking u
   const { base, calls } = await fixture(t);
   for (const cookie of ["__Host-jessie_client=", `${clientCookie}; ${clientCookie}`, "__Host-jessie_client=bad", `__Host-jessie_client=${clientToken}=`, `__Host-jessie_client=${"A".repeat(42)}B`, `preference=${"x".repeat(8192)}; ${clientCookie}`]) {
     const response = await fetch(`${base}/api/access/session`, { headers: { Cookie: cookie } }); assert.equal(response.status, 401);
-    assert.match(response.headers.get("set-cookie"), /^__Host-jessie_client=;.*Max-Age=0; Secure; HttpOnly; SameSite=Strict$/);
+    assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.equal(calls.length, 0);
 });
@@ -189,20 +189,20 @@ test("unauthenticated client reads without their cookie deny access without chan
   assert.equal(calls.length, 0);
 });
 
-test("client reads still clear an invalid cookie when its SQL session is absent", async (t) => {
+test("client reads reject an absent SQL session without changing cookies", async (t) => {
   const { base, calls } = await fixture(t, { session: () => null });
   const response = await fetch(`${base}/api/access/session`, { headers: { Cookie: clientCookie } });
   assert.equal(response.status, 401);
-  assert.match(response.headers.get("set-cookie"), /^__Host-jessie_client=;.*Max-Age=0; Secure; HttpOnly; SameSite=Strict$/);
+  assert.equal(response.headers.get("set-cookie"), null);
   assert.deepEqual(calls, [["session", clientToken]]);
 });
 
-test("explicit client logout without a session still clears its cookie", async (t) => {
+test("client logout without a session rejects without changing cookies", async (t) => {
   const { base, calls } = await fixture(t);
   for (const path of ["logout", "logout-all"]) {
     const response = await post(base, `/api/access/${path}`, {}, headers());
     assert.equal(response.status, 401);
-    assert.match(response.headers.get("set-cookie"), /^__Host-jessie_client=;.*Max-Age=0/);
+    assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.equal(calls.length, 0);
 });

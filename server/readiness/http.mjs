@@ -1,7 +1,7 @@
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { readFile } from "node:fs/promises";
 import { canonicalEmail } from "../auth/config.mjs";
-import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { SITE_CONTACT_EMAIL } from "../site.mjs";
 import { safeOperationsSnapshot } from "../operations/dto.mjs";
 import { safeRelease } from "../release.mjs";
@@ -119,7 +119,6 @@ export function createReadinessHandler(service, { origin }) {
       if (!response.headersSent && !response.destroyed) {
         const { status, code, retry } = mappedError(error);
         const headers = retry ? { "Retry-After": String(retry) } : {};
-        if (status === 401 && (method === "POST" || hasSessionCookie(request, COOKIE))) headers["Set-Cookie"] = clearCookie(COOKIE);
         // An untrusted mutation is rejected before a JSON reader can consume its body.
         if (method === "POST" || [400, 408, 413].includes(status)) { headers.Connection = "close"; request.resume(); }
         reply(response, method, status, { error: code }, headers);

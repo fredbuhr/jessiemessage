@@ -80,13 +80,13 @@ test("CRM capabilities require current administrator authentication and expose o
 
 test("CRM never accepts client cookies, forged admin cookies, duplicate cookies or noncanonical tokens", async (t) => {
   const { base, calls } = await fixture(t);
-  for (const [header, cleared] of [[null, false], [`__Host-jessie_client=${clientToken}`, false], ["unrelated=value", false],
+  for (const [header] of [[null, false], [`__Host-jessie_client=${clientToken}`, false], ["unrelated=value", false],
     ["__Host-jessie_session_extra=wrong", false], ["__Host-jessie_session=", true], [`__Host-jessie_session=${clientToken}`, true],
     [`${cookie}; ${cookie}`, true], [`${cookie}; __Host-jessie_session=wrong`, true], [`__Host-jessie_session=${"A".repeat(42)}B`, true], [`${cookie}=`, true]]) {
     const response = await get(base, `${root}/contacts`, header ? { Cookie: header } : {});
     assert.equal(response.status, 401); privateHeaders(response);
     assert.deepEqual(await response.json(), { error: "authentication_required" });
-    assert.equal(response.headers.get("set-cookie"), cleared ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
+    assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.equal(calls.some(([name]) => name === "contacts"), false);
   const response = await get(base, `${root}/contacts`, { Cookie: `__Host-jessie_client=${clientToken}; ${cookie}` });
@@ -111,10 +111,10 @@ test("all private CRM assets authenticate GET and HEAD before reading any source
   const { base, calls } = await fixture(t);
   for (const endpoint of ["/crm.js", "/crm-model.js", "/crm.css"]) {
     for (const method of ["GET", "HEAD"]) {
-      for (const [headers, cleared] of [[{}, false], [{ Cookie: `__Host-jessie_client=${clientToken}` }, false], [{ Cookie: `__Host-jessie_session=${clientToken}` }, true]]) {
+      for (const [headers] of [[{}, false], [{ Cookie: `__Host-jessie_client=${clientToken}` }, false], [{ Cookie: `__Host-jessie_session=${clientToken}` }, true]]) {
         const response = await fetch(`${base}${endpoint}`, { method, headers });
         assert.equal(response.status, 401); privateHeaders(response);
-        assert.equal(response.headers.get("set-cookie"), cleared ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : null);
+        assert.equal(response.headers.get("set-cookie"), null);
         if (method === "HEAD") assert.equal(await response.text(), "");
         else assert.deepEqual(await response.json(), { error: "authentication_required" });
       }
@@ -145,7 +145,7 @@ test("anonymous mutations and CSRF failures finish before a JSON body reader is 
     const res = { headersSent: false, destroyed: false, writeHead(code, values) { responseStatus = code; responseHeaders = values; }, end(value) { body = value; } };
     assert.equal(await handler(req, res), true);
     assert.equal(responseStatus, status); assert.deepEqual(JSON.parse(body), { error });
-    assert.equal(responseHeaders["Set-Cookie"], status === 401 ? "__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict" : undefined);
+    assert.equal(responseHeaders["Set-Cookie"], undefined);
     assert.equal(req.listenerCount("data"), 0); assert.equal(req.listenerCount("end"), 0);
     assert.equal(responseHeaders.Connection, "close"); req.destroy();
   }
@@ -363,7 +363,7 @@ test("CRM conflicts and operation failures expose only bounded public codes", as
     service.profile = async () => { throw Object.assign(new Error("private notes client@example.invalid ciphertext credentials"), { code, retryAfter: 17.2 }); };
     const response = await get(base, profilePath); assert.equal(response.status, status, code); privateHeaders(response);
     assert.deepEqual(await response.json(), { error });
-    assert.equal(response.headers.get("set-cookie")?.startsWith("__Host-jessie_session=;") ?? false, status === 401);
+    assert.equal(response.headers.get("set-cookie"), null);
     if (status === 429) assert.equal(response.headers.get("retry-after"), "18");
   }
   for (const [retryAfter, expected] of [[-5, "1"], [Infinity, "60"], [99999, "3600"]]) {

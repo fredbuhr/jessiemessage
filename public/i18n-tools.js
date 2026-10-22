@@ -1,6 +1,7 @@
 (() => {
   "use strict";
   const messages = {
+    "Accueil admin": "Admin home", "Messages": "Messages",
     "Choisis quelques clients, tous tes clients ou tous les résultats de tes filtres.": "Choose a few clients, all your clients or all results matching your filters.",
     "Cette diffusion n’est plus accessible.": "This broadcast is no longer available.",
     "À qui envoyer ?": "Who should receive this?",

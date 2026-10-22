@@ -320,9 +320,10 @@ test("a pending conversation load cannot take focus after the user already moved
 test("deleting a focused message selects its tombstone, while another active control keeps focus", async () => {
   for (const move of [false, true]) {
     let f; const gate = pause();
-    f = liveHarness({ intercept: (path) => path.endsWith("/delete") ? gate.promise : path.endsWith("/messages?limit=50") ? response(200, {
+    f = liveHarness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path) => path.endsWith("/delete") ? gate.promise : path.endsWith("/messages?limit=50") ? response(200, {
       conversation: f.conversation(), messages: [message(1, "me")], eventCursor: "1", hasMoreBefore: false,
     }) : undefined }); await flush();
+    for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
     const button = f.element("messages").children[0].querySelector(".delete-message"); await revealMessageDetails(button.parentElement.parentElement); button.focus();
     for (const handler of button.events.get("click")) handler({}); await flush(); await f.click("accept-delete"); if (move) f.element("message-body").focus();
     gate.resolve(response(200, { message: message(1, "me", { body: null, deletedAt: now }) })); await flush();

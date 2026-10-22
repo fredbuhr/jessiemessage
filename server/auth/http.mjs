@@ -26,12 +26,14 @@ const routeMethods = new Map([
   ["/admin/login", ["GET", "HEAD"]],
   ["/admin/login/", ["GET", "HEAD"]],
   ["/admin", ["GET", "HEAD"]],
+  ["/admin/clients", ["GET", "HEAD"]],
   ["/admin-login.js", ["GET", "HEAD"]],
   ["/admin-login.css", ["GET", "HEAD"]],
 ]);
 const publicFiles = new Map([
   ["/admin/login", ["admin-login.html", "text/html; charset=utf-8"]],
   ["/admin", ["admin-login.html", "text/html; charset=utf-8"]],
+  ["/admin/clients", ["admin-login.html", "text/html; charset=utf-8"]],
   ["/admin-login.js", ["admin-login.js", "text/javascript; charset=utf-8"]],
   ["/admin-login.css", ["admin-login.css", "text/css; charset=utf-8"]],
 ]);
@@ -214,12 +216,13 @@ export function createAuthHandler(service, { origin, clock = Date.now }) {
         const session = await service.login({ ...body, peerAddress: peerAddress(request) ?? "unknown" });
         const data = safeSession(session);
         reply(response, method, 200, data, { "Set-Cookie": sessionCookie(session.token, data.expiresAt, COOKIE_NAME, { role: "admin", now: clock() }) });
-      } else if (pathname === "/api/auth/session" || pathname === "/api/auth/logout" || pathname === "/api/auth/logout-all" || pathname === "/api/auth/devices" || deviceId || pathname === "/admin") {
+      } else if (pathname === "/api/auth/session" || pathname === "/api/auth/logout" || pathname === "/api/auth/logout-all" || pathname === "/api/auth/devices" || deviceId || pathname === "/admin" || pathname === "/admin/clients") {
         const token = sessionToken(request);
         const session = token ? await service.session(token) : null;
         if (!session) {
-          const headers = method === "POST" || hasSessionCookie(request) ? { "Set-Cookie": clearCookie() } : {};
-          if (pathname === "/admin") reply(response, method, 303, "", { Location: "/admin/login", ...headers });
+          // A delayed refusal must not erase a cookie installed by a newer login.
+          const headers = {};
+          if (pathname === "/admin" || pathname === "/admin/clients") reply(response, method, 303, "", { Location: pathname === "/admin" ? "/admin/login" : "/admin/login?continue=%2Fadmin%2Fclients", ...headers });
           else reply(response, method, 401, { error: "authentication_required" }, headers);
           return true;
         }
@@ -231,7 +234,7 @@ export function createAuthHandler(service, { origin, clock = Date.now }) {
           const page = await service.devices(token, { cursor: query.get("cursor") });
           reply(response, method, 200, page);
         }
-        else if (pathname === "/admin") {
+        else if (pathname === "/admin" || pathname === "/admin/clients") {
           const [file, type] = publicFiles.get(pathname);
           reply(response, method, 200, await readFile(new URL(file, publicRoot)), { "Content-Type": type });
         } else {

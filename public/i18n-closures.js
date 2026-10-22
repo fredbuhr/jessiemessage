@@ -1,4 +1,5 @@
 globalThis.JessieI18n?.register({
+  "Accueil admin": "Admin home", "Messages": "Messages",
   "Administration": "Administration",
   "Contact": "Contact",
   "JessieMessage — Fermeture des comptes": "JessieMessage — Account closures",

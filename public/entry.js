@@ -118,7 +118,7 @@ async function checkAccess() {
       const { client, administrator } = state.entry;
       const destinations = [];
       if (client?.state === "active" && client.href === "/messages") destinations.push(client.href);
-      if (administrator?.state === "connected" && administrator.href === "/admin/messages") destinations.push(administrator.href);
+      if (administrator?.state === "connected" && ["/admin", "/admin/messages"].includes(administrator.href)) destinations.push(administrator.href);
       // A single authenticated role opens its conversation. If both roles are
       // connected, keep the explicit choice instead of guessing an identity.
       const connectedRoles = Number(Boolean(client && client.state !== "signed_out")) + Number(administrator?.state === "connected");

@@ -77,20 +77,19 @@ test("capabilities authenticate both roles and only expose the public VAPID key 
 
 test("role cookies reject other-role tokens, duplicates and noncanonical encodings before any service call", async (t) => {
   const { base, calls } = await fixture(t);
-  for (const role of ["admin", "client"]) for (const [header, clears] of [[undefined, false], [cookie(role === "admin" ? "client" : "admin"), false], [`${cookie(role).split("=")[0]}=`, true], [`${cookie(role)}; ${cookie(role)}`, true], [`${cookie(role)}=`, true], [`${role === "admin" ? "__Host-jessie_session" : "__Host-jessie_client"}=${"!".repeat(43)}`, true]]) {
+  for (const role of ["admin", "client"]) for (const header of [undefined, cookie(role === "admin" ? "client" : "admin"), `${cookie(role).split("=")[0]}=`, `${cookie(role)}; ${cookie(role)}`, `${cookie(role)}=`, `${role === "admin" ? "__Host-jessie_session" : "__Host-jessie_client"}=${"!".repeat(43)}`]) {
     const response = await fetch(`${base}${path("capabilities", role)}`, { headers: header ? { Cookie: header } : {} });
     assert.equal(response.status, 401); assert.deepEqual(await response.json(), { error: "authentication_required" });
-    if (clears) assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=;.*Max-Age=0`));
-    else assert.equal(response.headers.get("set-cookie"), null);
+    assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.equal(calls.length, 0);
 });
 
-test("unauthenticated notification POST still clears only the requested role cookie", async (t) => {
+test("unauthenticated notification POST denies the request without changing browser cookies", async (t) => {
   const { base, calls } = await fixture(t);
   for (const role of ["admin", "client"]) {
     const response = await post(base, "status", { endpoint }, role, { Cookie: "" });
-    assert.equal(response.status, 401); assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=;.*Max-Age=0`));
+    assert.equal(response.status, 401); assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.equal(calls.length, 0);
 });
@@ -193,8 +192,29 @@ test("bounded errors distinguish conflict, device limit, authorization and retry
     service.capabilities = async () => { throw Object.assign(new Error(endpoint), { code, retryAfter: 90000, endpoint, privateKey: "private-key" }); };
     const response = await fetch(`${base}${path("capabilities", "client")}`, { headers: headers("client") });
     assert.equal(response.status, status, code); assert.deepEqual(await response.json(), { error: expected });
-    assert.equal(response.headers.has("set-cookie"), status === 401); if (status === 429) assert.equal(response.headers.get("retry-after"), "3600");
+    assert.equal(response.headers.has("set-cookie"), false); if (status === 429) assert.equal(response.headers.get("retry-after"), "3600");
   }
   service.capabilities = async () => { throw Object.assign(new Error("private"), { httpStatus: 400, publicCode: "private_endpoint" }); };
   const response = await fetch(`${base}${path()}`, { headers: headers() }); assert.equal(response.status, 503); privateFields(await response.json());
+});
+
+test("an old notification request denied after a new sign-in cannot erase the replacement role cookie", async t => {
+  for (const role of ["admin", "client"]) {
+    let resume, entered;
+    const waiting = new Promise(resolve => { resume = resolve; }), started = new Promise(resolve => { entered = resolve; });
+    const f = await fixture(t, { capabilities: async () => {
+      entered(); await waiting;
+      throw Object.assign(new Error("Synthetic revoked old session"), { code: "CHAT_UNAUTHORIZED" });
+    } });
+    const old = fetch(`${f.base}${path("capabilities", role)}`, { headers: headers(role) });
+    await started;
+    // The browser has received B while the service operation for A is pending.
+    const replacement = `${cookie(role).split("=")[0]}=${Buffer.alloc(32, 19).toString("base64url")}`;
+    let browserCookie = replacement;
+    resume(); const late = await old;
+    assert.equal(late.status, 401);
+    const changed = late.headers.get("set-cookie");
+    if (changed) browserCookie = changed.split(";", 1)[0];
+    assert.equal(changed, null); assert.equal(browserCookie, replacement);
+  }
 });

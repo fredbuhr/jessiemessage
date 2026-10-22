@@ -1,0 +1,22 @@
+{
+  "type": "jm183-corrective-progress",
+  "version": 1,
+  "recordedAtUTC": "2026-10-22T21:31:31.793035+00:00",
+  "status": "implementation_and_targeted_tests_in_progress",
+  "branch": "fix/messaging-183",
+  "base": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "candidateVersion": "1.8.3",
+  "activeVersion": "1.8.2",
+  "activeSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "productionNode": "v24.22.1",
+  "localNode": "v24.19.0",
+  "schemaMigrations": 36,
+  "nativeQualificationAcquired": false,
+  "merged": false,
+  "published": false,
+  "deployed": false,
+  "productionDataAccessed": false,
+  "hostedBackupTestPerformed": false,
+  "realNotificationSent": false,
+  "nextAction": "Finish composed route/chat tests and independent review, freeze source, then open qualification PR."
+}

@@ -309,7 +309,8 @@ test("text, selection and attachment stay hidden until one fresh owner proof all
     proof.resolve(response(actor())); await f.ui.resumePrivate();
     assert.equal(f.node("broadcast-content").hidden, false); assert.equal(f.node("campaign-body").value, "Synthetic confirmed body");
     assert.equal(f.node("selected").children.length, 1); assert.equal(f.ui.state.draft.mediaId, id(70));
-    assert.equal(f.node("acknowledge").checked, false); assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+    assert.equal(f.ui.state.preview, null); assert.equal(f.node("confirm").disabled, true);
+    assert.equal(f.calls.some(call => call.options.method === "POST"), false);
   } finally { proof.resolve(response(actor())); f.close(); }
 });
 
@@ -435,6 +436,67 @@ const recipientRows = (start, length) => Array.from({ length }, (_, index) => ({
 const recipientPage = (campaignId, rows, hasMore = false) => ({ campaignId, recipients: rows, hasMore, nextCursor: hasMore ? rows.at(-1).conversationId : null });
 const largeActor = () => ({ ...actor(), largeAudiencesEnabled: true });
 
+test("selected recipients progress 1 to 2 to 1, prepare their exact edited content and send with one final action", async () => {
+  const creates = [], previews = []; let stored;
+  const f = fixture((path, options) => {
+    if (path === "/api/broadcast/admin/preview") {
+      const input = JSON.parse(options.body); previews.push(input);
+      const ids = input.audience.conversationIds;
+      return response({ recipients: ids.map(conversationId => ({ conversationId, client: { id: id(1000 + Number.parseInt(conversationId, 16)), pseudonym: "Synthetic client" }, eligible: true, reason: null, repeatMedia: false })),
+        totalCount: ids.length, eligibleCount: ids.length, excludedCount: 0, repeatCount: 0, previewToken: `v1.prepared.${previews.length}` });
+    }
+    if (path === "/api/broadcast/admin/campaigns" && options.method === "POST") {
+      const input = JSON.parse(options.body); creates.push(input);
+      stored = campaign(60, { ...input, formatVersion: 2, audienceMode: "selected", counts: manyCounts(input.audience.conversationIds.length) });
+      return response({ campaign: stored, duplicate: false }, 201);
+    }
+    if (path === `/api/broadcast/admin/campaigns/${id(60)}/summary`) return response(stored);
+    return null;
+  }, largeActor());
+  const choose = (index, checked) => {
+    const checkbox = f.node("contacts").querySelectorAll("input")[index]; checkbox.checked = checked;
+    checkbox.listeners.get("change")();
+  };
+  try {
+    for (const value of [1, 2]) f.ui.state.contacts.set(id(value), { id: id(value), client: { id: id(value + 1000), pseudonym: `Synthetic ${value}` }, nickname: "", canSend: true });
+    model.updateComposition(f.ui.state, { title: "Synthetic selection", body: "First synthetic body" }); f.ui.renderSelection();
+    choose(0, true);
+    assert.match(f.node("selected-count").textContent, /^1 destinataire choisi$/);
+    assert.match(f.node("acknowledge-label").textContent, /^1 destinataire choisi · à vérifier\.$/);
+    assert.equal(f.node("confirm").disabled, true);
+    await f.ui.preview(); assert.equal(f.node("confirm").disabled, false); assert.match(f.node("confirm").textContent, /^Envoyer à 1 client$/);
+    assert.equal(creates.length, 0, "preparation does not send");
+    choose(1, true); assert.equal(f.ui.state.preview, null); assert.match(f.node("acknowledge-label").textContent, /^2 destinataires choisis/); assert.equal(f.node("confirm").disabled, true);
+    await f.ui.preview(); assert.match(f.node("confirm").textContent, /^Envoyer à 2 clients$/);
+    choose(0, false); assert.equal(f.ui.state.selected.size, 1); assert.match(f.node("acknowledge-label").textContent, /^1 destinataire choisi/);
+    await f.ui.preview(); assert.equal(f.node("confirm").disabled, false);
+    f.node("campaign-body").value = "Edited synthetic body"; f.node("campaign-body").listeners.get("input")();
+    assert.equal(f.ui.state.preview, null); assert.equal(f.node("confirm").disabled, true);
+    await f.ui.send(); assert.equal(creates.length, 0, "a content edit must be prepared again");
+    await f.ui.preview(); assert.equal(f.node("confirm").disabled, false); assert.equal(f.ui.state.acknowledged, false);
+    await f.ui.send();
+    assert.equal(creates.length, 1); assert.equal(creates[0].body, "Edited synthetic body");
+    assert.deepEqual(creates[0].audience.conversationIds, [id(2)]); assert.equal(creates[0].previewToken, "v1.prepared.4");
+    assert.equal(f.ui.state.pending, null); assert.equal(f.ui.state.selected.size, 0);
+  } finally { f.close(); }
+});
+
+test("zero eligible recipients and a late preparation for an old selection never enable send", async () => {
+  const held = deferred(); let calls = 0;
+  const f = fixture(path => path === "/api/broadcast/admin/preview" ? (++calls === 1 ? held.promise : response({ recipients: [{ conversationId: id(2), client: { id: id(1002), pseudonym: "Unavailable synthetic client" }, eligible: false, reason: "access_inactive", repeatMedia: false }], totalCount: 1, eligibleCount: 0, excludedCount: 1, repeatCount: 0, previewToken: "v1.none.signature" })) : null, largeActor());
+  try {
+    for (const value of [1, 2]) f.ui.state.contacts.set(id(value), { id: id(value), client: { id: id(value + 1000), pseudonym: "Synthetic" }, nickname: "", canSend: true });
+    model.selectRecipient(f.ui.state, id(1), true); model.updateComposition(f.ui.state, { title: "Synthetic", body: "Synthetic body" });
+    const old = f.ui.preview(); await flush();
+    model.selectRecipient(f.ui.state, id(1), false); model.selectRecipient(f.ui.state, id(2), true); f.ui.renderSelection();
+    held.resolve(response({ recipients: [{ conversationId: id(1), client: { id: id(1001), pseudonym: "Old synthetic selection" }, eligible: true, reason: null, repeatMedia: false }], totalCount: 1, eligibleCount: 1, excludedCount: 0, repeatCount: 0, previewToken: "v1.old.signature" }));
+    await old; assert.equal(f.ui.state.preview, null); assert.equal(f.node("confirm").disabled, true);
+    await f.ui.preview(); assert.equal(f.node("confirm").disabled, true);
+    assert.equal(f.node("acknowledge-label").textContent, "Aucun destinataire éligible pour cet envoi.");
+    await f.ui.send(); assert.equal(f.calls.some(call => call.path === "/api/broadcast/admin/campaigns" && call.options.method === "POST"), false);
+  } finally { f.close(); }
+});
+
 test("global2500 preview and a lost POST response retain one immutable confirmation while scope controls stay frozen", async () => {
   let stored = null, first = true; const posts = [];
   const f = fixture((path, options) => {
@@ -539,9 +601,9 @@ test("an edited filter clears the real confirmation even when canonical criteria
     f.ui.state.contacts.set(id(99), { id: id(99), client: { id: id(98), pseudonym: "Synthetic client" }, nickname: "", canSend: true });
     model.selectRecipient(f.ui.state, id(99), true); model.updateComposition(f.ui.state, { title: "Synthetic confirmed draft", body: "Synthetic body" });
     model.acceptPreview(f.ui.state, model.previewTicket(f.ui.state), { recipients: [{ conversationId: id(99), client: { id: id(98), pseudonym: "Synthetic client" }, eligible: true, reason: null, repeatMedia: false }], totalCount: 1, eligibleCount: 1, excludedCount: 0, repeatCount: 0, previewToken: "v1.opaque.signature" });
-    f.ui.state.acknowledged = true; f.node("acknowledge").checked = true; f.ui.renderControls(); assert.equal(f.node("confirm").disabled, false);
+    f.ui.state.acknowledged = true; f.ui.renderControls(); assert.equal(f.node("confirm").disabled, false);
     f.node("search").value = " "; f.node("filters").listeners.get("input")();
-    assert.equal(f.ui.state.audienceFilters.q, ""); assert.equal(f.node("acknowledge").checked, false);
+    assert.equal(f.ui.state.audienceFilters.q, ""); assert.equal(f.ui.state.preview, null);
     assert.equal(f.ui.state.acknowledged, false); assert.equal(f.node("confirm").disabled, true); assert.equal(model.canConfirmBroadcast(f.ui.state), false);
   } finally { f.close(); }
 });

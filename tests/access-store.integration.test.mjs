@@ -498,7 +498,7 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       });
       const before = await protectedRows();
       assert.deepEqual(await store.renewClient(admin.tokenHash, fixture.user.id, { now, expectedExpiresAt: fixture.expiresAt, accessDays: 7 }),
-        { id: fixture.user.id.toString("hex"), accessExpiresAt: fixture.expiresAt + 7 * 86400000 });
+        { id: fixture.user.id.toString("hex"), accessExpiresAt: fixture.expiresAt + 7 * 86400000, calculatedAt: now });
       assert.deepEqual(await protectedRows(), before);
       assert.equal((await lookup(fixture.session)).access.expiresAt, fixture.expiresAt + 7 * 86400000);
       await assert.rejects(store.renewClient(admin.tokenHash, fixture.user.id, { now, expectedExpiresAt: fixture.expiresAt, accessDays: 7 }), (error) => error.code === "ACCESS_CONFLICT");
@@ -511,7 +511,7 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
         { now, expectedExpiresAt: fixture.expiresAt, accessDays: 3 })));
       const successes = results.filter((result) => result.status === "fulfilled"), failures = results.filter((result) => result.status === "rejected");
       assert.equal(successes.length, 1); assert.equal(failures.length, 1);
-      assert.deepEqual(successes[0].value, { id: fixture.user.id.toString("hex"), accessExpiresAt: now + 3 * 86400000 });
+      assert.deepEqual(successes[0].value, { id: fixture.user.id.toString("hex"), accessExpiresAt: now + 3 * 86400000, calculatedAt: now });
       assert.equal(failures[0].reason.code, "ACCESS_CONFLICT");
       assert.equal((await lookup(fixture.session)).access.state, "active");
       assert.equal((await lookup(fixture.session)).access.expiresAt, now + 3 * 86400000);
@@ -598,7 +598,7 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0].access_expires_at, microExpiry);
       const expired = await renewable(now - 1000);
       assert.deepEqual(await store.renewClient(admin.tokenHash, expired.user.id, { now, expectedExpiresAt: expired.expiresAt, accessDays: 3650 }),
-        { id: expired.user.id.toString("hex"), accessExpiresAt: now + 3650 * 86400000 });
+        { id: expired.user.id.toString("hex"), accessExpiresAt: now + 3650 * 86400000, calculatedAt: now });
     });
 
     await t.test("concurrent client revocation and renewal leave revoked access and revoked sessions authoritative", async () => {

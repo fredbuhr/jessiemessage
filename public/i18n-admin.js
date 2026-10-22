@@ -158,3 +158,24 @@
   }
   globalThis.JessieI18n?.register(dictionary);
 })();
+
+// Fixed navigation copy; account values remain raw.
+globalThis.JessieI18n?.register({
+  "Messagerie": "Messaging",
+  "Administration": "Administration",
+  "Outils d’administration": "Administration tools",
+  "Choisis un outil pour gérer ton espace.": "Choose a tool to manage your space.",
+  "Inviter, valider et gérer les accès.": "Invite clients, approve and manage access.",
+  "Écrire à plusieurs clients.": "Write to several clients.",
+  "Partager les nouvelles de ton espace.": "Share news from your space.",
+  "Tâches privées": "Private tasks",
+  "Retrouver tes notes et tes rappels.": "Find your notes and reminders.",
+  "Créer et télécharger une copie chiffrée.": "Create and download an encrypted copy.",
+  "Consulter les mesures du serveur.": "View server measurements.",
+  "Consulter et fermer un accès définitivement.": "Review and permanently close an account.",
+  "Retrouver tes notes privées.": "Find your private notes."
+});
+
+globalThis.JessieI18n?.register({"Accueil admin":"Admin home"});
+
+globalThis.JessieI18n?.register({"Diffusions":"Broadcasts","Annonces":"Announcements"});

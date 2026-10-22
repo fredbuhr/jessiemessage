@@ -1,4 +1,4 @@
-import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { ownerId, quickRepliesView, validateSave, MAX_QUICK_REPLIES_BYTES } from "./validation.mjs";
 
 const cookie = "__Host-jessie_session", route = "/api/admin/quick-replies";
@@ -37,7 +37,6 @@ export function createQuickRepliesHandler(service, { origin, writable = service?
     } catch (error) {
       if (!response.headersSent && !response.destroyed) {
         const mapped = publicError(error), headers = mapped.retry ? { "Retry-After": String(mapped.retry) } : {};
-        if (mapped.status === 401 && (method === "POST" || hasSessionCookie(request, cookie))) headers["Set-Cookie"] = clearCookie(cookie);
         if (method === "POST" || [400, 408, 413].includes(mapped.status)) { headers.Connection = "close"; request.resume(); }
         reply(response, method, mapped.status, { error: mapped.code }, headers);
       }

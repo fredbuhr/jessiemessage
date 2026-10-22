@@ -183,7 +183,7 @@ test("session endpoint returns the CSRF token only for a canonical authenticated
     const result = await fetch(`${base}/api/auth/session`, { headers: { Cookie: header } });
     assert.equal(result.status, 401);
     assert.deepEqual(await result.json(), { error: "authentication_required" });
-    assert.match(result.headers.get("set-cookie"), /Max-Age=0; Secure; HttpOnly; SameSite=Strict/);
+    assert.equal(result.headers.get("set-cookie"), null);
   }
   assert.equal(calls.length, before);
 });
@@ -203,12 +203,12 @@ test("unauthenticated admin reads without their cookie deny access without chang
   assert.equal(calls.length, 0);
 });
 
-test("admin reads still clear an invalid cookie when its SQL session is absent", async (t) => {
+test("admin reads reject an absent SQL session without changing cookies", async (t) => {
   const { base, calls } = await fixture(t, { async session(value) { calls.push(["session", value]); return null; } });
   for (const path of ["/api/auth/session", "/api/auth/devices", "/admin"]) {
     const response = await fetch(`${base}${path}`, { headers: { Cookie: cookie }, redirect: "manual" });
     assert.equal(response.status, path === "/admin" ? 303 : 401);
-    assert.match(response.headers.get("set-cookie"), /^__Host-jessie_session=;.*Max-Age=0; Secure; HttpOnly; SameSite=Strict$/);
+    assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.deepEqual(calls, Array.from({ length: 3 }, () => ["session", token]));
 });
@@ -236,12 +236,12 @@ test("logout checks origin, session and CSRF before revoking or accepting a body
   }
 });
 
-test("logout without a session returns 401 and clears the stale cookie", async (t) => {
+test("logout without a session returns 401 without changing cookies", async (t) => {
   const { base, calls } = await fixture(t);
   for (const path of ["/api/auth/logout", "/api/auth/logout-all"]) {
     const response = await post(base, path, {}, mutationHeaders({ "X-CSRF-Token": csrf }));
     assert.equal(response.status, 401);
-    assert.match(response.headers.get("set-cookie"), /Max-Age=0/);
+    assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.equal(calls.length, 0);
 });

@@ -1,4 +1,4 @@
-import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { canonicalProfileName, isProfileId, isProfileVersion, ownAvatarUrl, MAX_AVATAR_THUMBNAIL_BYTES } from "./validation.mjs";
 
 const COOKIES = { admin: "__Host-jessie_session", client: "__Host-jessie_client" };
@@ -89,7 +89,6 @@ export function createProfileHandler(service, { origin }) {
     } catch (error) {
       if (!response.headersSent && !response.destroyed) {
         const value = errorReply(error), headers = value.retry ? { "Retry-After": String(value.retry) } : {};
-        if (value.status === 401 && (method === "POST" || hasSessionCookie(request, COOKIES[current.role]))) headers["Set-Cookie"] = clearCookie(COOKIES[current.role]);
         if (method === "POST") { headers.Connection = "close"; request.resume(); }
         reply(response, method, value.status, { error: value.code }, headers);
       }

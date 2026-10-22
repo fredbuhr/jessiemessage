@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
-import { AUTH_HEADERS, checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionToken } from "../auth/http.mjs";
+import { AUTH_HEADERS, checkMutation, httpError, isToken, readJson, reply, safeSession, sameText, sessionToken } from "../auth/http.mjs";
 import { BackupCopyError, copyFields } from "./copy-state.mjs";
 import { createCopyKit, createCopyUpdateKit } from "./copy-kit.mjs";
 import { createVerificationKit } from "./verification-kit.mjs";
@@ -120,7 +120,6 @@ export function createBackupCopyHandler(service, { origin, actor, kit = createCo
       if (response.headersSent) { if (!response.writableFinished) response.destroy(); }
       else if (!response.destroyed) {
         const { status, code } = mapped(error, selected.agent), headers = {};
-        if (status === 401 && !selected.agent && (method === "POST" || hasSessionCookie(request))) headers["Set-Cookie"] = clearCookie("__Host-jessie_session");
         if (status === 429) headers["Retry-After"] = "60";
         if (method === "POST") { headers.Connection = "close"; request.resume(); }
         reply(response, method, status, { error: code }, headers);

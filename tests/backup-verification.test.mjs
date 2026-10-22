@@ -59,5 +59,5 @@ test("verification download requires current admin, origin, CSRF and closed boun
 test("revocation while preparing verification suppresses the entire ZIP", async t => {
   const f = await fixture(t, true), response = await f.post({ captureId: id });
   assert.equal(response.status, 401); assert.equal(f.reads(), 1); assert.equal(response.headers.get("content-type"), "application/json; charset=utf-8");
-  assert.match(response.headers.get("set-cookie"), /Max-Age=0/); assert.doesNotMatch(await response.text(), /PK|fingerprint|sha256/);
+  assert.equal(response.headers.get("set-cookie"), null); assert.doesNotMatch(await response.text(), /PK|fingerprint|sha256/);
 });

@@ -50,6 +50,7 @@ fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .selected-list button { flex-shrink: 0; font-size: 12px; padding: 8px 0; }
 .confirmation { padding-top: 16px; margin-top: 24px; border-top: 1px solid #554353; }
 .confirmation .button { width: 100%; margin-top: 4px; }
+.confirmation-count { font-size: 14px; font-weight: 650; line-height: 1.7; color: #f5eef2; }
 .preview-list { padding-left: 20px; max-height: 240px; overflow: auto; color: #bcaebb; font-size: 12px; line-height: 1.9; }
 .photo-preview img { display: block; max-width: 100%; max-height: 230px; margin: 15px auto; border-radius: 12px; object-fit: contain; }
 .history-card { margin-top: 22px; }

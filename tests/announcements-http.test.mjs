@@ -78,7 +78,7 @@ test("admin HTML navigation with an expired or missing session redirects before 
   const response = await get(f, "/admin/announcements", { redirect: "manual", headers: { Cookie: cookie, Accept: "text/html" } });
   assert.equal(response.status, 303); privateResponse(response);
   assert.equal(response.headers.get("location"), "/admin/login?continue=%2Fadmin%2Fannouncements");
-  assert.match(response.headers.get("set-cookie"), /__Host-jessie_session=;.*Max-Age=0/);
+  assert.equal(response.headers.get("set-cookie"), null);
   assert.equal(await response.text(), "");
   const missing = await get(f, "/admin/announcements", { redirect: "manual", headers: { Accept: "text/html" } }); assert.equal(missing.status, 303);
   await failure(await get(f, "/announcements.js"), 401, "unauthorized");
