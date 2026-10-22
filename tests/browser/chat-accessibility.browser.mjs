@@ -1149,7 +1149,7 @@ test("Chrome: clients have no quick replies; Escape, full drafts and returning t
 
 async function openPersonalRepliesBrowser(page, language = "fr") {
   await loaded(page, "/admin/messages"); await page.click(".contact");
-  await waitUntil(() => page.execute("return !document.querySelector('#open-quick-replies').disabled"), "quick replies are available in the selected conversation");
+  await waitUntil(() => page.execute("const reply=document.querySelector('#open-quick-replies'),body=document.querySelector('#message-body');return !reply.hidden&&!reply.disabled&&!body.disabled&&!body.readOnly&&body.getClientRects().length>0"), "quick replies and the editable message field are ready in the selected conversation");
   if (language === "en") await toggleChatLanguage(page);
   await clickComposerAction(page, "#open-quick-replies");
   await waitUntil(() => page.execute("return !document.querySelector('#new-personal-reply').disabled"), "personal catalogue loaded");
@@ -1174,7 +1174,8 @@ for (const [width, language] of [[320, "fr"], [1280, "en"]]) test(`Chrome ${widt
     await first.click("#new-personal-reply"); await fillPersonalReply(first, "Autre réponse", "À conserver depuis la première session");
     await waitUntil(() => fixture.quickReplies.version === "2", "other session adds a reply");
     await second.click("#personal-reply-save");
-    await waitUntil(() => second.execute("return document.querySelector('#personal-reply-save').disabled && document.querySelector('#personal-replies-status').textContent.length>0"), "conflict blocks another mutation");
+    const conflictText = language === "fr" ? "Les réponses ont changé ailleurs. Ton brouillon est conservé. Recharge la liste avant de réessayer." : "Replies changed elsewhere. Your draft is preserved. Reload the list before trying again.";
+    await waitUntil(() => second.execute("return document.querySelector('#personal-reply-save').disabled && document.querySelector('#personal-replies-status').textContent===arguments[0]", conflictText), "the completed conflict response blocks another mutation");
     assert.equal(fixture.quickReplyRequests.length, 3); assert.equal(await second.execute("return document.querySelector('#personal-reply-body').value"), "Brouillon conservé");
     assert.match(await second.execute("return document.querySelector('#personal-replies-status').textContent"), language === "fr" ? /changé ailleurs/ : /changed elsewhere/);
     await second.click("#reload-personal-replies");
