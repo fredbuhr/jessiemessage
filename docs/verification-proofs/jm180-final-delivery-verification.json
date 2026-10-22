@@ -688,6 +688,11 @@
     "nodeVersion": "v24.22.1",
     "schemaMigrations": 36,
     "hostedInterfaceAcceptancePending": true,
-    "g4Complete": false
+    "g4Complete": false,
+    "hostedInterfaceProof": "jm180-hosted-interface.json",
+    "hostedInterfaceAcceptancePendingFor": [
+      "manual admin backup creation, completion and download",
+      "saved personal reply persistence and draft insertion"
+    ]
   }
 }

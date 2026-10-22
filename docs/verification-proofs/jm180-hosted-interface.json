@@ -1,0 +1,134 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_180_hosted_interface",
+  "status": "partial_acceptance_video_user_reported_backup_and_saved_reply_pending",
+  "date": "2026-10-22",
+  "userReported": {
+    "provenance": "USER_REPORTED",
+    "video": {
+      "add": "passed",
+      "removeBeforeSend": "passed",
+      "send": "passed",
+      "delete": "passed",
+      "device": "unknown",
+      "recipient": "unknown",
+      "privateContentIncludedInProof": false
+    },
+    "backup": {
+      "status": "not_tested",
+      "creation": "unconfirmed",
+      "completion": "unconfirmed",
+      "download": "unconfirmed"
+    },
+    "composer": {
+      "unsentTextDisappearsOnReload": true,
+      "reportedObject": "unsent composer text",
+      "design": "ephemeral composer draft",
+      "doesNotEstablishSavedPersonalReplyPersistence": true
+    },
+    "personalReplies": {
+      "savedReplyPersistence": "unconfirmed",
+      "savedReplyInsertion": "unconfirmed"
+    }
+  },
+  "directAnonymousHttp": {
+    "provenance": "DIRECT_ANONYMOUS_HTTP",
+    "mode": "read_only_no_browser_no_authenticated_account",
+    "availabilityAndLogin": {
+      "observedAtUtc": "2026-10-22T12:19:59.501627+00:00",
+      "mode": "anonymous_read_only_no_browser",
+      "results": [
+        {
+          "url": "https://jessiemessage.com/api/health",
+          "finalUrl": "https://jessiemessage.com/api/health",
+          "status": 200,
+          "bytes": 15,
+          "sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+          "maintenanceTextPresent": false,
+          "health": "{\"status\":\"ok\"}"
+        },
+        {
+          "url": "https://jessiemessage.com/api/ready",
+          "finalUrl": "https://jessiemessage.com/api/ready",
+          "status": 200,
+          "bytes": 18,
+          "sha256": "31bf75f4c0a97cc1f7b60df824fa390b3be9ba014f29b63c87c698ba63d9a9fd",
+          "maintenanceTextPresent": false,
+          "health": "{\"status\":\"ready\"}"
+        },
+        {
+          "url": "https://jessiemessage.com/admin/login?continue=%2Fadmin%2Fbackups",
+          "finalUrl": "https://jessiemessage.com/admin/login?continue=%2Fadmin%2Fbackups",
+          "status": 200,
+          "bytes": 12702,
+          "sha256": "d6a4adba277981d978511e6d88276eb8597ffe92e91288a534caa4afc015607c",
+          "maintenanceTextPresent": false,
+          "health": null
+        },
+        {
+          "url": "https://jessiemessage.com/admin/login/?continue=%2Fadmin%2Fbackups",
+          "errorType": "HTTPError",
+          "detail": "HTTP Error 404: Not Found"
+        }
+      ]
+    },
+    "backupAndSlashPaths": {
+      "observedAtUtc": "2026-10-22T12:21:00.172584+00:00",
+      "mode": "anonymous_read_only_no_browser",
+      "results": [
+        {
+          "url": "https://jessiemessage.com/admin/backups",
+          "finalUrl": "https://jessiemessage.com/admin/login?continue=%2Fadmin%2Fbackups",
+          "status": 200,
+          "bytes": 12702,
+          "sha256": "d6a4adba277981d978511e6d88276eb8597ffe92e91288a534caa4afc015607c",
+          "maintenanceTextPresent": false,
+          "loginFormPresent": true
+        },
+        {
+          "url": "https://jessiemessage.com/admin/login/?continue=%2Fadmin%2Fbackups",
+          "finalUrl": "https://jessiemessage.com/admin/login/?continue=%2Fadmin%2Fbackups",
+          "status": 404,
+          "bytes": 9,
+          "sha256": "e3ebaa16dd9d9b9fc107c42183fb6cf9d22927e1af03dbbdfa0ccc38e4e4ac31",
+          "maintenanceTextPresent": false,
+          "loginFormPresent": false
+        }
+      ],
+      "localLoginAsset": {
+        "bytes": 12702,
+        "sha256": "d6a4adba277981d978511e6d88276eb8597ffe92e91288a534caa4afc015607c"
+      }
+    },
+    "canonicalLoginMatchesRepositoryAsset": true,
+    "trailingSlashBody": "Not found",
+    "trailingSlashBodyBytes": 9,
+    "maintenancePageReproduced": false
+  },
+  "screenshotObservation": {
+    "provenance": "USER_SUPPLIED_IMAGE_INSPECTED_BY_AGENT",
+    "displayedUrl": "https://jessiemessage.com/admin/login/?continue=%2Fadmin%2Fbackups",
+    "visibleMessage": "This website is currently undergoing maintenance",
+    "causeEstablished": false,
+    "providerMaintenanceConfirmed": false,
+    "interpretation": "The image shows the Infomaniak page at that URL; anonymous checks did not reproduce it. The source recognizes the canonical login without trailing slash and does not add the slash."
+  },
+  "remainingControls": [
+    {
+      "id": "manual_backup",
+      "criterion": "Create a manual backup, confirm completion and download the archive."
+    },
+    {
+      "id": "saved_personal_reply",
+      "criterion": "Save a personal reply, verify persistence after reload and insert it into the composer."
+    }
+  ],
+  "g4Complete": false,
+  "limits": [
+    "The video result is user reported; device, recipient and private contents are not known or reproduced.",
+    "An ephemeral unsent composer draft is distinct from a saved personal reply.",
+    "The maintenance page screenshot does not establish the cause, provider maintenance or current global service unavailability.",
+    "Anonymous HTTP success does not validate authenticated backup creation or download.",
+    "Physical devices, complete upper manual-restore CLI execution and real hosting performance remain outside the proven scope."
+  ]
+}
