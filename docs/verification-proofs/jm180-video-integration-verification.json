@@ -1,26 +1,26 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage-video-integration-verification",
+  "status": "qualification_failed",
   "branch": "feat/video-messaging",
   "pr": "https://github.com/fredbuhr/jessiemessage/pull/125",
-  "status": "qualification_failed",
-  "source": "5752a4ea7679a56db1c7c7bca798f3a57b55b3f9",
-  "tree": "209042f7a28400378ce6e063ce6ed82f93424ce1",
+  "source": "762f08c924170202b6b8aa9fb9edb890910c135c",
+  "tree": "492a1a1837e9e5e3c71fa9a87661a4dadc73434e",
   "ci": {
-    "id": 39717914928,
-    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39717914928",
+    "id": 39719634729,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39719634729",
     "attempt": 1,
     "status": "completed",
     "conclusion": "failure",
     "successfulJobs": 4,
     "totalJobs": 5
   },
-  "testedMerge": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+  "testedMerge": "1877c479d9bca42818b67178e80656a1f94df3f0",
   "testedTreeEqualsSource": true,
   "jobs": [
     {
       "name": "verify",
-      "id": 119624368319,
+      "id": 119629863785,
       "conclusion": "success",
       "counts": {
         "tests": 3756,
@@ -32,20 +32,20 @@
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-corrective-verify.log",
-        "sha256": "d01f230969205d059d8e88fa34dbf8a9ebabbfc828d67e975cbbe30d6ff8d520",
-        "bytes": 530085,
+        "filename": "jm180-g2-final-verify.log",
+        "sha256": "a88cbcb1296c2218d1e53ba77a564ed399e7b345d298b3b18cf0a04afec63eaf",
+        "bytes": 530080,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+      "checkout": "1877c479d9bca42818b67178e80656a1f94df3f0",
       "nodeVersion": "v24.22.1"
     },
     {
       "name": "browser",
-      "id": 119624368350,
+      "id": 119629864087,
       "conclusion": "failure",
       "counts": {
         "tests": 213,
@@ -57,20 +57,20 @@
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-corrective-browser.log",
-        "sha256": "bcea2d662a6261a25e7180e0022bb717c151be5b4437d3361d37b83e0a5151d9",
-        "bytes": 46371,
+        "filename": "jm180-g2-final-browser.log",
+        "sha256": "d49bd05b68dcb7fdf0c65f3ff5ebb028c057e250b9bc71b525bb65d088c2c5e3",
+        "bytes": 46916,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+      "checkout": "1877c479d9bca42818b67178e80656a1f94df3f0",
       "nodeVersion": "v24.22.1"
     },
     {
       "name": "https",
-      "id": 119624368159,
+      "id": 119629863992,
       "conclusion": "success",
       "counts": {
         "tests": 4,
@@ -82,20 +82,20 @@
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-corrective-https.log",
-        "sha256": "622350887291e6fc73b882544cce1bf478505092c3a4eed9ff554be470a8b429",
-        "bytes": 34460,
+        "filename": "jm180-g2-final-https.log",
+        "sha256": "2dec6eb89991b6751d67c4ccce4f5205768e05666fc6b939a8eb1ee9a5b83b49",
+        "bytes": 34462,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+      "checkout": "1877c479d9bca42818b67178e80656a1f94df3f0",
       "nodeVersion": "v24.22.1"
     },
     {
       "name": "mariadb1011",
-      "id": 119624368253,
+      "id": 119629864107,
       "conclusion": "success",
       "counts": {
         "tests": 564,
@@ -107,20 +107,20 @@
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-corrective-mariadb1011.log",
-        "sha256": "63259e8d6494e59de8263a81de46ad8a37692d24bc5f6c6404fc4e44de1a2419",
-        "bytes": 321386,
+        "filename": "jm180-g2-final-mariadb1011.log",
+        "sha256": "ca80453e59eae51b724cae55d5993e31264d0190dbe3ae830a3b29ace13d3a03",
+        "bytes": 321724,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+      "checkout": "1877c479d9bca42818b67178e80656a1f94df3f0",
       "nodeVersion": "v24.22.1"
     },
     {
       "name": "mariadb114",
-      "id": 119624368315,
+      "id": 119629863985,
       "conclusion": "success",
       "counts": {
         "tests": 564,
@@ -132,27 +132,23 @@
         "todo": 0
       },
       "log": {
-        "filename": "jm180-g2-corrective-mariadb114.log",
-        "sha256": "505b7be0edfd5dd28e67408ccc206d50a192fcdb457b1b5761554d90e1b488a8",
-        "bytes": 321971,
+        "filename": "jm180-g2-final-mariadb114.log",
+        "sha256": "492871cca749d73bcd8cdc4b2feaa269f9739174d80405a4941f7cf88c94f175",
+        "bytes": 321714,
         "encoding": "utf-8",
         "lineEndings": "LF",
         "finalNewline": true,
         "bomPreserved": true
       },
-      "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+      "checkout": "1877c479d9bca42818b67178e80656a1f94df3f0",
       "nodeVersion": "v24.22.1"
     }
   ],
+  "failureSummary": "Centering/stable geometry does not repair the command offset: native clicks remain79–80px below the button.",
   "previousRuns": [
     {
-      "formatVersion": 1,
-      "type": "jessiemessage-video-integration-verification",
-      "status": "qualification_failed",
       "source": "2f02d7df95072acc029d573550665105e18dcfde",
       "tree": "0ebef681f4a00c0ea998689b7df2a64c47993a67",
-      "branch": "feat/video-messaging",
-      "pr": "https://github.com/fredbuhr/jessiemessage/pull/125",
       "ci": {
         "id": 39716624778,
         "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39716624778",
@@ -291,45 +287,320 @@
           "nodeVersion": "v24.22.1"
         }
       ],
-      "failures": [
-        "General: sanitized AUTH_DATABASE_CONFIG category was wrapped after pool initialization moved into cleanup try; restore the existing safe category.",
-        "General: private-UI catalogue test did not load the new broadcast catalogue; retain all translation checks and asset protection.",
-        "MariaDB10.11/11.4: first native two-root capture failed; backup schema assertion still selected33. Correct explicit video assertion and qualify again. Five dependent subtests/parent account for six failures on each engine.",
-        "Chrome: two broadcast upload waits failed; six new chat video scenarios passed. Cause and correction still under investigation."
+      "failureSummary": "Initial: startup sanitized error category and catalogue test regressed; capture failed due schema/dump33 callsites. Chrome mobile upload test never activated the button."
+    },
+    {
+      "source": "5752a4ea7679a56db1c7c7bca798f3a57b55b3f9",
+      "tree": "209042f7a28400378ce6e063ce6ed82f93424ce1",
+      "ci": {
+        "id": 39717914928,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39717914928",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
+        "successfulJobs": 4,
+        "totalJobs": 5
+      },
+      "testedMerge": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+      "testedTreeEqualsSource": true,
+      "jobs": [
+        {
+          "name": "verify",
+          "id": 119624368319,
+          "conclusion": "success",
+          "counts": {
+            "tests": 3756,
+            "suites": 0,
+            "pass": 3709,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 47,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-corrective-verify.log",
+            "sha256": "d01f230969205d059d8e88fa34dbf8a9ebabbfc828d67e975cbbe30d6ff8d520",
+            "bytes": 530085,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "browser",
+          "id": 119624368350,
+          "conclusion": "failure",
+          "counts": {
+            "tests": 213,
+            "suites": 0,
+            "pass": 211,
+            "fail": 2,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-corrective-browser.log",
+            "sha256": "bcea2d662a6261a25e7180e0022bb717c151be5b4437d3361d37b83e0a5151d9",
+            "bytes": 46371,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "https",
+          "id": 119624368159,
+          "conclusion": "success",
+          "counts": {
+            "tests": 4,
+            "suites": 0,
+            "pass": 4,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-corrective-https.log",
+            "sha256": "622350887291e6fc73b882544cce1bf478505092c3a4eed9ff554be470a8b429",
+            "bytes": 34460,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "mariadb1011",
+          "id": 119624368253,
+          "conclusion": "success",
+          "counts": {
+            "tests": 564,
+            "suites": 0,
+            "pass": 564,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-corrective-mariadb1011.log",
+            "sha256": "63259e8d6494e59de8263a81de46ad8a37692d24bc5f6c6404fc4e44de1a2419",
+            "bytes": 321386,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "mariadb114",
+          "id": 119624368315,
+          "conclusion": "success",
+          "counts": {
+            "tests": 564,
+            "suites": 0,
+            "pass": 564,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-corrective-mariadb114.log",
+            "sha256": "505b7be0edfd5dd28e67408ccc206d50a192fcdb457b1b5761554d90e1b488a8",
+            "bytes": 321971,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "7a8a50da4be2628bd92a71d95b423cd1b01c99c7",
+          "nodeVersion": "v24.22.1"
+        }
       ],
-      "nativePassedDespiteFailedRun": [
-        "Actual configured SQL36 index, MFA/client native cookies, primary authority forced to owned loopback with attestation, H264 upload/decode/seek and Range206, both roles, idempotency, gallery and deleted-content404.",
-        "SQL36 video broadcast ordinary-message delivery, shared source, repeat controls and unavailable-media rechecks."
+      "failureSummary": "Corrective: all non-browser jobs succeed. Two mobile upload tests still do not activate a handler; no raw POST."
+    },
+    {
+      "source": "0d89921b078dc3466830d9c6788225b9d53fcb5e",
+      "tree": "83da71469fe12e43a1dc1b5e06666ea6f087047f",
+      "ci": {
+        "id": 39718902423,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39718902423",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
+        "successfulJobs": 4,
+        "totalJobs": 5
+      },
+      "testedMerge": "2fb46e236bb4203ec19da65b1f83d6962bcc8713",
+      "testedTreeEqualsSource": true,
+      "jobs": [
+        {
+          "name": "verify",
+          "id": 119627537247,
+          "conclusion": "success",
+          "counts": {
+            "tests": 3756,
+            "suites": 0,
+            "pass": 3709,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 47,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-trace-verify.log",
+            "sha256": "e77343b15eeed7f031cf96271710d1190ca832ddc61e99362b4adeb625cac3ee",
+            "bytes": 530070,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "2fb46e236bb4203ec19da65b1f83d6962bcc8713",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "browser",
+          "id": 119627537340,
+          "conclusion": "failure",
+          "counts": {
+            "tests": 213,
+            "suites": 0,
+            "pass": 211,
+            "fail": 2,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-trace-browser.log",
+            "sha256": "4c0494875acd671806035b42aa496f3411d0860d5de5b7fe345ac70e79a34d6b",
+            "bytes": 46919,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "2fb46e236bb4203ec19da65b1f83d6962bcc8713",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "https",
+          "id": 119627537314,
+          "conclusion": "success",
+          "counts": {
+            "tests": 4,
+            "suites": 0,
+            "pass": 4,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-trace-https.log",
+            "sha256": "a0f2878d0e384163bcda7ab5471dcf527f641fc71d252dba9f577c9b86cbd332",
+            "bytes": 34522,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "2fb46e236bb4203ec19da65b1f83d6962bcc8713",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "mariadb1011",
+          "id": 119627537098,
+          "conclusion": "success",
+          "counts": {
+            "tests": 564,
+            "suites": 0,
+            "pass": 564,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-trace-mariadb1011.log",
+            "sha256": "25e411e400e309a27b166870c7190f4cafa6a24f9676741bf7f76310adaf81b2",
+            "bytes": 321876,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "2fb46e236bb4203ec19da65b1f83d6962bcc8713",
+          "nodeVersion": "v24.22.1"
+        },
+        {
+          "name": "mariadb114",
+          "id": 119627537371,
+          "conclusion": "success",
+          "counts": {
+            "tests": 564,
+            "suites": 0,
+            "pass": 564,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": {
+            "filename": "jm180-g2-trace-mariadb114.log",
+            "sha256": "3a1a276b9bb3182c2482b9b1fe91f3ba98748392d0e39649633a203e25caf08b",
+            "bytes": 321823,
+            "encoding": "utf-8",
+            "lineEndings": "LF",
+            "finalNewline": true,
+            "bomPreserved": true
+          },
+          "checkout": "2fb46e236bb4203ec19da65b1f83d6962bcc8713",
+          "nodeVersion": "v24.22.1"
+        }
       ],
-      "limits": [
-        "No deployment, release, merge or hosted migration/activation. Production1.7.1/Node24.22.1/SQL33 unchanged.",
-        "Local missing procfs/MariaDB/GPG/ChromeDriver are not counted as native successes.",
-        "The two-root capture/restoration fixture did not complete in this failed run."
-      ]
+      "failureSummary": "Native event trace proves both clicks target the section below the enabled button."
     }
   ],
-  "failures": [
-    "Chrome: two broadcast-video tests stop before the useful upload handler; no raw POST, no error, visible ready enabled controls. Both first cases are390px. The added native pointer/click trace must distinguish actual activation before further changes."
-  ],
-  "nativePassedDespiteFailedRun": [
-    "Actual configured SQL36 index, MFA/client native cookies, primary authority forced to owned loopback with attestation, H264 upload/decode/seek and Range206, both roles, idempotency, gallery and deleted-content404.",
-    "SQL36 video broadcast ordinary-message delivery, shared source, repeat controls and unavailable-media rechecks.",
-    "Both MariaDB engines564/564 without omissions: seven-record native SQL36 capture/dumps/tar and authenticated two-root clone, interrupted copy, root/corruption refusals, cleanup and idempotent refunds/rebind, real later closure with retained v3 campaign, mixed original v1/v2 receipts, quarantine, reconciliation and explicit publication with a drained real IPC shim."
+  "broadcastBrowserDiagnosis": {
+    "evidence": "Trusted pointer events hit SECTION#video-options at y549/550 while the button is y447–493, even after stable geometry and a correct DOM hit test. No raw POST or product guard execution occurred.",
+    "nextAction": "Use one native W3C viewport pointer action at the visible DOM center, retaining isTrusted/target assertions. No coordinate subtraction, JS click, upload retry or product guard change."
+  },
+  "scope": {
+    "runtimeProfile": "photos-notify-recovery-crm-broadcast-video",
+    "privateConfigurationFiles": 7,
+    "normalMigrations": 33,
+    "candidateMigrations": 36,
+    "candidateApplicationTables": 35,
+    "candidatePhysicalTables": 36,
+    "manifestVersion": 11,
+    "snapshotVersion": 3,
+    "operationalReceiptVersion": 12,
+    "operationalStateVersion": 2
+  },
+  "nativeVerified": [
+    "Both engines564/564 on current source: real SQL36 capture/dumps/tar with photos/videos, interrupted copy, root/corruption refusals, authenticated recovery/refunds/rebind, v3 shared campaign, real later closure, retained original v1/v2 receipts, quarantine, reconciliation and explicit publication/drain.",
+    "Actual configured application HTTPS, independent MFA/client cookies, forced loopback primary attestation, H264 upload/decode/seek/Range206, two roles, gallery, idempotency and deleted-content404."
   ],
   "limits": [
-    "No deployment, release, merge or hosted migration/activation. Production1.7.1/Node24.22.1/SQL33 unchanged.",
-    "Local missing native prerequisites are not native successes.",
-    "New native restore fixture calls actual import/copy/recovery functions, not the high-level import/resume operator wrappers; those wrappers have targeted profile tests.",
-    "Native producer/drain in the restore fixture is a genuine IPC/HTTP synthetic shim; the configured application SQL36 is separately exercised by the real HTTPS browser fixture.",
-    "Physical phones, real hosting memory/throughput and combined G3 qualification remain unverified."
-  ],
-  "broadcastBrowserRootCause": {
-    "diagnosticRun": 39718902423,
-    "source": "0d89921b078dc3466830d9c6788225b9d53fcb5e",
-    "tree": "83da71469fe12e43a1dc1b5e06666ea6f087047f",
-    "testedMerge": "2fb46e236bb4203ec19da65b1f83d6962bcc8713",
-    "evidence": "Both trusted native clicks reached SECTION#video-options at x195/y836 or837 while the enabled upload button rect was x41/y734/width308/height46. No click reached the button, so no product upload handler or raw POST ran.",
-    "correction": "Center the button and wait for stable native geometry before the same real WebDriver click; retain isTrusted/target assertions. No programmatic click, server guard change, network bypass or upload retry.",
-    "nativeJobsAtObservation": "Still in progress; their eventual conclusions must be read rather than inferred."
-  }
+    "No merge, release, hosted migration/activation or deployment. Production1.7.1/Node24.22.1/SQL33 unchanged.",
+    "Local missing native prerequisites remain omissions; 47 general CI omissions are45 opt-in SQL suites plus2 negative procfs cases, distinct from native jobs.",
+    "New native restore fixture calls real import/copy/recovery functions; high-level operator import/resume wrappers are covered by targeted profile tests, not executed end-to-end by this fixture.",
+    "Restore producer is a genuine synthetic IPC/HTTP shim. The complete configured application is exercised separately by HTTPS.",
+    "Physical devices, real hosting throughput/memory and combined G3 qualification remain unverified."
+  ]
 }

@@ -120,6 +120,34 @@ export function createWebDriverRequester(driverUrl, fetchRequest = globalThis.fe
   };
 }
 
+// Element-click can apply a second mobile viewport offset in ChromeDriver.
+// Measure and hit-test CSS viewport coordinates, then send one native pointer
+// action sequence through the same local W3C transport. No DOM event is sent.
+export function createWebDriverPointerClick(request, endpoint) {
+  if (typeof request !== "function" || typeof endpoint !== "string" || !/^\/session\/[^/?#]+$/.test(endpoint)) throw new Error("Invalid WebDriver pointer transport");
+  return async selector => {
+    if (typeof selector !== "string" || !selector.length || selector.length > 512 || /[\0\r\n]/.test(selector)) throw new Error("Invalid WebDriver pointer target");
+    const point = await request("POST", `${endpoint}/execute/sync`, { script: `
+      const node=document.querySelector(arguments[0]);
+      if(!node?.isConnected||node.matches(':disabled')||!node.getClientRects().length)return null;
+      const rect=node.getBoundingClientRect(),width=innerWidth,height=innerHeight;
+      if(![rect.left,rect.top,rect.width,rect.height,width,height].every(Number.isFinite)||rect.width<=0||rect.height<=0)return null;
+      const x=Math.floor(rect.left+rect.width/2),y=Math.floor(rect.top+rect.height/2);
+      if(x<0||y<0||x>=width||y>=height)return null;
+      const hit=document.elementFromPoint(x,y);
+      if(!hit||(hit!==node&&!node.contains(hit)))return null;
+      return {x,y,width,height};`, args: [selector] });
+    if (!point || ![point.x, point.y, point.width, point.height].every(Number.isSafeInteger)
+      || point.width < 1 || point.height < 1 || point.width > 32768 || point.height > 32768
+      || point.x < 0 || point.y < 0 || point.x >= point.width || point.y >= point.height) throw new Error("WebDriver pointer target is not visible and enabled");
+    await request("POST", `${endpoint}/actions`, { actions: [{ type: "pointer", id: "viewport-pointer", parameters: { pointerType: "mouse" }, actions: [
+      { type: "pointerMove", duration: 0, origin: "viewport", x: point.x, y: point.y },
+      { type: "pointerDown", button: 0 }, { type: "pointerUp", button: 0 }
+    ] }] });
+    return { x: point.x, y: point.y };
+  };
+}
+
 // The driver can create Chrome before POST /session returns its session id.
 // Killing only the driver then leaves descendants holding its output pipes.
 // Keep ownership in this closure: callers cannot supply a PID or process group.
@@ -228,6 +256,7 @@ export async function startWebDriver() {
           return request("POST", `${endpoint}/url`, { url: navigation.url(path) });
         },
         async click(selector) { await request("POST", `${endpoint}/element/${await find(selector)}/click`, {}); },
+        pointerClick: createWebDriverPointerClick(request, endpoint),
         async type(selector, text) {
           const element = await find(selector);
           await request("POST", `${endpoint}/element/${element}/clear`, {});

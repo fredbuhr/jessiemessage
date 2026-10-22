@@ -24,9 +24,11 @@ addEventListener('unhandledrejection',event=>window.__scaleErrors.push(String(ev
 addEventListener('securitypolicyviolation',event=>window.__scaleErrors.push('CSP:'+event.violatedDirective));
 for(const type of ['pointerdown','pointerup','click'])addEventListener(type,event=>{
   const target=event.target,button=document.getElementById('upload-video'),rect=button?.getBoundingClientRect();
+  const box=value=>({x:Math.round(value.x),y:Math.round(value.y),width:Math.round(value.width),height:Math.round(value.height)}),visual=window.visualViewport;
   window.__scalePointerEvents.push({type,targetId:target?.id??null,targetTag:target?.tagName??null,buttonId:target?.closest?.('button')?.id??null,
     trusted:event.isTrusted,fieldsetDisabled:document.getElementById('composition')?.disabled??null,
-    x:Math.round(event.clientX),y:Math.round(event.clientY),uploadRect:rect?{x:Math.round(rect.x),y:Math.round(rect.y),width:Math.round(rect.width),height:Math.round(rect.height)}:null});
+    x:Math.round(event.clientX),y:Math.round(event.clientY),uploadRect:rect?box(rect):null,uploadClientRects:Array.from(button?.getClientRects()??[],box),
+    viewport:{width:innerWidth,height:innerHeight,scrollX,scrollY,visual:visual?{width:visual.width,height:visual.height,offsetLeft:visual.offsetLeft,offsetTop:visual.offsetTop,pageLeft:visual.pageLeft,pageTop:visual.pageTop,scale:visual.scale}:null}});
   if(window.__scalePointerEvents.length>18)window.__scalePointerEvents.shift();
 },true);
 // Advance only the product's 30-second history poll, retaining its actual
@@ -282,10 +284,10 @@ async function clickVideoButton(page, buttonId) {
   assert.ok(["x", "y", "width", "height"].every(name => Math.abs(geometry.first[name] - geometry.second[name]) < 0.5),
     `${buttonId}: native target geometry must settle across two animation frames: ${JSON.stringify(geometry)}`);
   await page.execute("window.__scalePointerEvents.length=0");
-  await page.click(`#${buttonId}`);
+  const pointer = await page.pointerClick(`#${buttonId}`);
   const events = await page.execute("return window.__scalePointerEvents");
   assert.ok(events.some(event => event.type === "click" && event.buttonId === buttonId && event.trusted && event.fieldsetDisabled === false),
-    `Native ${buttonId} click must reach the enabled button: ${JSON.stringify(events)}`);
+    `Native ${buttonId} click must reach the enabled button: ${JSON.stringify({ pointer, events })}`);
 }
 
 test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry", { timeout: 120000 }, async () => {
