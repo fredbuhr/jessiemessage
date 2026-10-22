@@ -1,19 +1,19 @@
 # Reprendre JessieMessage
 
-**22 octobre 2026 — production et checkpoint privé : 1.8.1 / Node v24.22.1 / SQL36. Livraison publiée et latest GitHub : 1.8.2, préparée et précontrôlée, non démarrée.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans nouvelle observation du processus par l’agent. La 1.8.2 est fusionnée, qualifiée sur main et publiée ; sa préparation et son CHECK sont acquis, sa bascule reste à effectuer.
+**22 octobre 2026 — application active rapportée : 1.8.2 / Node v24.22.1 / SQL36 ; latest GitHub : v1.8.2. Le checkpoint privé reste1.8.1, alignement final en attente.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans nouvelle observation du processus par l’agent. Fusion, qualification, publication, préparation, CHECK et identité active182 sont acquis ; ne pas rejouer ces opérations.
 
 ## État de livraison courant
 
 | Élément | Référence acquise |
 | --- | --- |
-| Application active | **1.8.1**, source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, arbre `eb427f887248fa9db5c656c3773e016f8688efc9` ; [tag/release v1.8.1](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.1). |
-| Identité au démarrage | Node **v24.22.1**, relevé UI exact **`22/10/2026 15:30:16`** ; [preuve d’identité](verification-proofs/jm181-hosted-identity.json). L’epoch **`1792675816926`** vient séparément du vrai journal relu par le writer. |
-| Base | **SQL36** : 33 migrations de base conservées et 3 migrations vidéo appliquées ; [reçu de migration/précontrôles](verification-proofs/jm180-hosted-schema36.json). Aucune migration au démarrage ni pour la 1.8.1. |
-| Préparation et qualification | [Préparation/CHECK181](verification-proofs/jm181-hosted-preparation.json) acquis ; [CI PR/main 1.8.1](verification-proofs/jm181-verification.json) **5/5 chacune** sur leurs sources exactes. |
-| Checkpoint privé | **1.8.1 / SQL36**, SHA-256 `53bd5312c42f34934de04d1e4e7994a864892cdf5a945c6a72c7b4c46ef5be76` ; [reçu final](verification-proofs/jm181-hosted-metadata.json), `publicReady:true`, métadonnées seules, **sans redémarrage**, anciens états et autres blocs préservés. |
+| Application active | **1.8.2**, source `78e6b8b2f6b19020c060345b9313a81829e9c8da`, arbre `7b722ca1fbd3416acecffa3c122e967511184d4c` ; [tag/release v1.8.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.2). |
+| Identité au démarrage | Node **v24.22.1**, relevé UI exact **`22/10/2026 21:04:19`** ; [preuve d’identité USER_REPORTED](verification-proofs/jm182-hosted-identity.json). Aucun epoch déduit de ce texte ; le writer relira le journal réel. |
+| Base | **SQL36** : 33 migrations de base et 3 migrations vidéo ; [preuve SQL36 antérieure](verification-proofs/jm180-hosted-schema36.json), migrations inchangées et CHECK182 acquis. Aucune migration au démarrage ni pour1.8.2. |
+| Préparation et qualification | [Préparation/CHECK182](verification-proofs/jm182-hosted-preparation.json) acquis ; [CI main182](verification-proofs/jm182-main-ci.json) **5/5**, qualification de branche conservée séparément. |
+| Checkpoint privé | Encore **1.8.1 / SQL36**, SHA-256 `53bd5312c42f34934de04d1e4e7994a864892cdf5a945c6a72c7b4c46ef5be76` ; [reçu181 antérieur](verification-proofs/jm181-hosted-metadata.json). Alignement182 en attente ; ne pas déclarer le nouveau reçu acquis. |
 | Repli compatible SQL36 | **1.7.2**, source `6b3319a77c307ed7d6b003fe33de36807c70c266`, arbre `924d500375a69ae50bc63414b15df71271e2bf8a` ; préparé et **précontrôlé sur l’hôte, jamais démarré**, selon le reçu SQL36. |
-| Dernier état actif antérieur | **1.8.0**, source `fd6e53b14b520231b0b307a2761331dd8c740a5b`, arbre `324c3563fc6b1cfce669bcf58d90962c23c966b8` ; [reçu historique](verification-proofs/jm180-hosted-metadata.json) inchangé. |
-| Disponibilité et interface | [HTTP anonyme 1.8.1](verification-proofs/jm181-public-http.json) acquis ; liste commune des réponses rapides et [parcours vidéo](verification-proofs/jm180-hosted-interface.json) rapportés fonctionnels. La [sauvegarde hébergée](verification-proofs/jm181-hosted-interface.json) reste **non vérifiée et reportée à un autre jour à la demande de l’utilisateur**. |
+| Dernier état actif antérieur | **1.8.1**, source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, arbre `eb427f887248fa9db5c656c3773e016f8688efc9` ; [reçu historique](verification-proofs/jm181-hosted-metadata.json) inchangé. |
+| Disponibilité et interface | L’identité182 vient de l’administration selon l’utilisateur. Aucun run de sonde déjà disponible n’est postérieur à cette activation ; le lecteur public de l’agent n’a pas pu accéder aux deux endpoints, sans conclusion sur l’application. Le writer vérifiera le HTTP courant avant écriture. Les parcours vidéo/réponses précédemment rapportés restent distincts des essais182 ; sauvegarde hébergée **reportée et non vérifiée**. |
 
 **Ne rejouer ni préparation, CHECK, migration, bascule ou writer déjà acquis. Ne démarrer ni 1.7.1 ni 1.6.0 sur SQL36.** `main` peut avancer pour les preuves ; le tag et le commit réellement exécuté restent la référence de production.
 
@@ -37,25 +37,25 @@ Le lot 2 qualifie brouillons texte dans le même onglet après rechargement, dem
 
 Le [diagnostic SQL A12](capacity-182.md) est acquis sur les deux versions natives ; ces mesures synthétiques ne justifient pas d’ajouter un index ou une migration au lot. Aucun débit ni nombre de clients simultanés du mutualisé n’est garanti.
 
-**Préparation et CHECK182 acquis, ne pas les rejouer :** [deux résultats et marque de fin rapportés](verification-proofs/jm182-hosted-preparation.json), source/arbre publiés exacts, Node24.22.1, SQL36 attendu inchangé ; précontrôle `passed`, `pendingClosures:false`, `started:false`. Empreinte du reçu `ba1aa8d0527dd8bbff76c86e274c9681ce9b6546bfd997a47e44988a92e3157f`, recalculée depuis les champs rapportés. Lanceur `eed42b10e0787ccd75e02524ffa814c83fffb41e1954d28e99721145660e0bdb`, CHECK `a6c4435dcb8eb71a7b9801c223aa0e5f0c1b3b784270d212df679a924e5954cd`. Les empreintes de journaux vides appartiennent à la préparation avant CHECK ; elles ne décrivent pas le journal après le contrôle. Aucun démarrage, migration ou changement Manager n’est acquis.
+**Préparation et CHECK182 acquis, ne pas les rejouer :** [deux résultats et marque de fin rapportés](verification-proofs/jm182-hosted-preparation.json), source/arbre publiés exacts, Node24.22.1, SQL36 attendu inchangé ; précontrôle `passed`, `pendingClosures:false`, `started:false` à cette étape antérieure à l’activation. Empreinte du reçu `ba1aa8d0527dd8bbff76c86e274c9681ce9b6546bfd997a47e44988a92e3157f`, recalculée depuis les champs rapportés. Lanceur `eed42b10e0787ccd75e02524ffa814c83fffb41e1954d28e99721145660e0bdb`, CHECK `a6c4435dcb8eb71a7b9801c223aa0e5f0c1b3b784270d212df679a924e5954cd`. Les empreintes de journaux vides appartiennent à la préparation avant CHECK ; elles ne décrivent pas le journal après le contrôle ou le démarrage.
 
-**Prochaine action personnelle : activer les lanceurs préparés via le Manager.** Arrêter le service Node239143 nommé `recette.jessiemessage.com`, remplacer Run par `bash /srv/customer/jessiemessage-private/start-primary-release182-78e6b8b2.sh` et Build par `bash /srv/customer/jessiemessage-private/check-primary-release182-78e6b8b2.sh`, conserver le port3000, enregistrer puis démarrer une fois. Les commandes181 actives restent conservées dans le tableau ci-dessous pour le repli immédiat ; le repli technique172 reste préservé. Relever ensuite l’identité réelle dans l’administration : version1.8.2, commit `78e6b8b2f6b19020c060345b9313a81829e9c8da`, Node24.22.1 et date de démarrage. Ne pas rejouer fusion, publication, CI, préparation ou CHECK déjà acquis. Aucun parcours de sauvegarde n’est rouvert.
+**Identité active182 acquise selon l’utilisateur**, source et Node exacts, relevé UI `22/10/2026 21:04:19`. Ne pas rejouer l’arrêt, la modification Manager ou le démarrage. **Prochaine action personnelle : exécuter une fois le writer182 qualifié dans le terminal SSH**, puis fournir son reçu JSON. Il vérifiera le journal de démarrage réel, le HTTP courant, la publication et les états privés avant d’aligner uniquement les métadonnées. Aucun parcours de sauvegarde n’est rouvert.
 
-Le writer182 est **qualifié et publié, non exécuté sur l’hôte** : [qualification native39835184817](verification-proofs/jm182-metadata-operator-verification.json), **19/19 tests**, tentative1, droits lecture seule du workflow ; aucun alignement latest rejoué. Source opérateur `9a52b4840b65d2c825020ffa81d4bdc2d29fc268`, `ops/record-release182.py`, SHA-256 `48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1`. Ses gardes exigent le reçu réel ci-dessus, le checkpoint181 `53bd5312…`, les anciens blocs et repli, l’identité de démarrage182 unique et exacte, le HTTP public et la publication/tag/latest182 vérifiés en GET. **Son exécution sera donnée après réception de l’identité active182**, sans redémarrage ni migration ; ne pas l’exécuter avant.
+Le writer182 est **qualifié et publié, exécution hébergée encore en attente** : [qualification native39835184817](verification-proofs/jm182-metadata-operator-verification.json), **19/19 tests**, tentative1, droits lecture seule du workflow ; aucun alignement latest rejoué. Source opérateur `9a52b4840b65d2c825020ffa81d4bdc2d29fc268`, `ops/record-release182.py`, SHA-256 `48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1`. Ses gardes exigent le reçu réel ci-dessus, le checkpoint181 `53bd5312…`, les anciens blocs et repli, l’identité de démarrage182 unique et exacte, le HTTP public et la publication/tag/latest182 vérifiés en GET. L’identité préalable est désormais reçue ; cette opération ne redémarre pas le service et ne migre pas la base.
 
 ## Accès et commandes de l’application active
 
 Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec **le même runtime et la même base**. Recette est une origine de compatibilité pour les anciens appareils/PWA/Push, jamais une cible de qualification destructive. Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks), [connexion admin directe](https://jessiemessage.com/admin/login).
 
-| Champ Manager | Valeur active 1.8.1 — référence, pas consigne de redémarrage |
+| Champ Manager | Lanceurs182 préparés pour l’identité active rapportée — référence, pas consigne de redémarrage |
 | --- | --- |
-| Run | `bash /srv/customer/jessiemessage-private/start-primary-release181-1ae4c751.sh` |
-| Build | `bash /srv/customer/jessiemessage-private/check-primary-release181-1ae4c751.sh` |
+| Run | `bash /srv/customer/jessiemessage-private/start-primary-release182-78e6b8b2.sh` |
+| Build | `bash /srv/customer/jessiemessage-private/check-primary-release182-78e6b8b2.sh` |
 | Port | **3000** |
-| Checkout | `/srv/customer/jessiemessage-operator/production-181-1ae4c751` |
-| Journal | `/srv/customer/jessiemessage-private/jm181-node24221.log` — ne pas tronquer. |
+| Checkout | `/srv/customer/jessiemessage-operator/production-182-78e6b8b2` |
+| Journal | `/srv/customer/jessiemessage-private/jm182-node24221.log` — ne pas tronquer. |
 
-Le repli 1.7.2 conserve les lanceurs `start-primary-release172-6b3319a7.sh` et `check-primary-release172-6b3319a7.sh` sous `/srv/customer/jessiemessage-private`, précontrôlés sans démarrage. Les anciens lanceurs 1.7.1/1.6.0 restent historiques et inutilisables sur SQL36. Le Node privé officiel est épinglé ; ne pas remplacer le binaire système du fournisseur.
+Les lanceurs181 antérieurs `start-primary-release181-1ae4c751.sh` et `check-primary-release181-1ae4c751.sh` restent conservés sous `/srv/customer/jessiemessage-private`. Le repli technique1.7.2 conserve ses lanceurs `start-primary-release172-6b3319a7.sh` et `check-primary-release172-6b3319a7.sh`, précontrôlés sans démarrage. Les anciens lanceurs1.7.1/1.6.0 restent historiques et inutilisables sur SQL36. Le Node privé officiel est épinglé ; ne pas remplacer le binaire système du fournisseur.
 
 ## Domaines et éléments à préserver
 

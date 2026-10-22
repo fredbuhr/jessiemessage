@@ -1,0 +1,53 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_182_hosted_identity",
+  "status": "application182_identity_user_reported_metadata_pending",
+  "date": "2026-10-22",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "surface": "admin_readiness",
+    "description": "User supplied the four displayed startup identity fields from the live administration readiness page after the instructed Manager activation. No direct agent PID, Manager or startup-log observation.",
+    "startupDisplayIsUiTextOnly": true,
+    "observationTimestampProvided": false
+  },
+  "displayedFields": {
+    "Version de l’application": "1.8.2",
+    "Commit au démarrage": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "Version Node.js": "v24.22.1",
+    "Relevé au démarrage": "22/10/2026 21:04:19"
+  },
+  "sourceTree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+  "schemaEvidence": "jm180-hosted-schema36.json",
+  "schemaIsNotPartOfDisplayedIdentity": true,
+  "hostedPreparationEvidence": "jm182-hosted-preparation.json",
+  "qualificationEvidence": "jm182-main-ci.json",
+  "publicationEvidence": "jm182-publication.json",
+  "currentState": {
+    "applicationVersion": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "metadataCheckpointVersion": "1.8.1",
+    "metadataCheckpointSchema": 36,
+    "metadataCheckpointSha256": "53bd5312c42f34934de04d1e4e7994a864892cdf5a945c6a72c7b4c46ef5be76",
+    "metadataAlignmentPending": true,
+    "latestLastVerified": "v1.8.2",
+    "rollback172Prechecked": true,
+    "rollback172Started": false,
+    "hostedFunctionalChecksComplete": false
+  },
+  "publicAvailability": {
+    "existingMonitorAfterReportedStartupObserved": false,
+    "previousHealthyMonitorRun": 39832723552,
+    "previousMonitorDoesNotQualifyCurrentStartup": true,
+    "agentPublicReaderAttempt": "api/health and api/ready inaccessible via the information reader; no application availability conclusion",
+    "nextCheck": "Qualified metadata writer checks current anonymous HTTP from the host before any metadata write."
+  },
+  "limits": [
+    "Startup display text is preserved exactly; no epoch or timezone conversion is inferred into startup evidence.",
+    "SQL36 and prechecks come from the separately linked proofs, not the four identity fields.",
+    "No new direct agent PID, socket, process-binary, Manager, startup-log or logged-in session observation.",
+    "The metadata writer is qualified and must still run after this identity; no metadata alignment is inferred.",
+    "A10 D01-D07, A11 topology and untried physical-device cases remain explicit; hosted backup UI remains deferred by user."
+  ]
+}

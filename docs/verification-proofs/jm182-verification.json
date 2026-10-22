@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage182-delivery-state",
-  "recordedAtUTC": "2026-10-22T18:54:27.731254+00:00",
-  "status": "published_staged_prechecked_activation_pending",
+  "recordedAtUTC": "2026-10-22T19:07:05.239960+00:00",
+  "status": "activated_user_reported_metadata_pending",
   "version": "1.8.2",
   "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
   "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
@@ -27,7 +27,7 @@
     "checkLauncherExpected": "/srv/customer/jessiemessage-private/check-primary-release182-78e6b8b2.sh",
     "stagingReceiptAcquired": true,
     "precheckAcquired": true,
-    "activationAcquired": false,
+    "activationAcquired": true,
     "metadataAcquired": false,
     "metadataWriterReady": true,
     "noMigration": true,
@@ -43,17 +43,22 @@
       "nativeSyntheticTests": 19,
       "requiresReal182StartupBeforeExecution": true,
       "hostedExecutionAcquired": false
-    }
+    },
+    "hostedIdentityEvidence": "jm182-hosted-identity.json"
   },
   "production": {
-    "version": "1.8.1",
-    "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
-    "tree": "eb427f887248fa9db5c656c3773e016f8688efc9",
+    "version": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
     "node": "v24.22.1",
     "schema": 36,
-    "provenance": "existing_user_reported_private_identity_and_receipts",
+    "provenance": "user_reported_admin_readiness_after_activation",
     "checkpointSha256": "53bd5312c42f34934de04d1e4e7994a864892cdf5a945c6a72c7b4c46ef5be76",
-    "newPrivateProcessObservation": false
+    "newPrivateProcessObservation": false,
+    "startupDisplayedText": "22/10/2026 21:04:19",
+    "identityEvidence": "jm182-hosted-identity.json",
+    "metadataCheckpointVersion": "1.8.1",
+    "metadataAlignmentPending": true
   },
   "rollback": {
     "version": "1.7.2",
@@ -63,13 +68,13 @@
     "started": false
   },
   "remaining": [
-    "Hosted preparation and CHECK182 are acquired; do not repeat. Activate the exact prepared launchers, then acquire the real application identity.",
-    "Activate exact launchers only after hosted prechecks; acquire real identity and grouped available-device/HTTP checks.",
+    "Activation182 acquired by user-reported readiness identity; do not repeat preparation, CHECK, Manager changes or startup.",
+    "Record exact real startup and current public HTTP with the qualified metadata writer; complete remaining grouped available-device checks without real-client sends.",
     "A11 finite private network peer observation remains conditional; no proxy trust is inferred.",
     "Qualified metadata writer is published on the exact operator source; execute only after real1.8.2 startup identity, preserving prior sections atomically.",
     "A10 facts D01-D07 remain unestablished; physical-device coverage stays explicit; hosted backup UI test remains deferred by user."
   ],
-  "nextAction": "User activates the exact prepared Run and Build launchers through Infomaniak Manager and supplies the real administrator-readiness release identity.",
+  "nextAction": "User executes the pinned qualified record-release182.py once in their own Infomaniak terminal and returns the guarded metadata receipt; no restart, migration or backup action.",
   "operationsNotRepeated": [
     "PR merge",
     "existing successful branch/main CI",
@@ -77,6 +82,7 @@
     "old hosted preparations or migration"
   ],
   "cloudBrowserUsed": false,
-  "deploymentPerformed": false,
-  "hostedBackupTestPerformed": false
+  "deploymentPerformed": true,
+  "hostedBackupTestPerformed": false,
+  "deploymentEvidenceKind": "USER_REPORTED_ADMIN_READINESS"
 }
